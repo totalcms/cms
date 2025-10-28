@@ -169,6 +169,9 @@ return [
 		if (isset($sessionConfig['cookie_path'])) {
 			ini_set('session.cookie_path', $sessionConfig['cookie_path']);
 		}
+		if (isset($sessionConfig['gc_maxlifetime'])) {
+			ini_set('session.gc_maxlifetime', (string)$sessionConfig['gc_maxlifetime']);
+		}
 
 		return new PhpSession($sessionConfig);
 	},
@@ -339,7 +342,7 @@ HTACCESS;
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(DeckCompatibilityChecker::class),
-		$container->get(TemplateRepository::class),
+		$container->get(TemplateLister::class),
 		$container->get(TotalFormFactory::class),
 		$container->get(ServerChecker::class),
 		$container->get(CacheReporter::class),

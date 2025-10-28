@@ -91,7 +91,12 @@ readonly class JumpStartExporter
 				$this->jumpstart->addReservedCollection($collection->schema);
 				continue;
 			}
-			$this->jumpstart->addCustomCollection($collection->toArray());
+
+			// Exclude totalObjects and lastUpdated (these are calculated on import)
+			$collectionData = $collection->toArray();
+			unset($collectionData['totalObjects'], $collectionData['lastUpdated'], $collectionData['count']);
+
+			$this->jumpstart->addCustomCollection($collectionData);
 		}
 	}
 

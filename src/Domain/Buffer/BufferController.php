@@ -7,22 +7,41 @@ namespace TotalCMS\Domain\Buffer;
 // ---------------------------------------------------------------------------------
 class BufferController
 {
+	private int $initialBufferLevel = 0;
+	private bool $bufferStarted     = false;
+
+	public function __construct()
+	{
+		// Remember the buffer level when we start
+		// This allows us to work correctly even if PHP has automatic buffering
+		$this->initialBufferLevel = ob_get_level();
+	}
+
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function start(bool $force = false): bool
 	{
-		// Don't start a new buffer if one is already started
-		if (!$force && $this->isBuffering()) {
+		// Always start our own buffer if we haven't already
+		// This ensures we can capture content even when PHP has automatic buffering
+		if (!$force && $this->bufferStarted) {
 			return true;
 		}
 
-		return ob_start();
+		$this->bufferStarted = ob_start();
+
+		return $this->bufferStarted;
 	}
 
 	public function end(): string
 	{
-		$buffer = $this->isBuffering() ? ob_get_clean() : '';
+		// Only end our buffer if we started one
+		if (!$this->bufferStarted) {
+			return '';
+		}
 
-		return $buffer ?: '';
+		$buffer              = ob_get_clean() ?: '';
+		$this->bufferStarted = false;
+
+		return $buffer;
 	}
 
 	public function get(): string
@@ -35,6 +54,7 @@ class BufferController
 
 	public function isBuffering(): bool
 	{
-		return ob_get_level() > 0;
+		// Return true if WE started a buffer, not just if any buffer exists
+		return $this->bufferStarted && ob_get_level() > $this->initialBufferLevel;
 	}
 }

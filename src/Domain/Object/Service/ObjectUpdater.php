@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -18,6 +19,7 @@ readonly class ObjectUpdater
 		private ObjectFactory $factory,
 		private IndexBuilder $indexBuilder,
 		private PropertyDataProcessorInterface $propertyProcessor,
+		private CollectionSaver $collectionSaver,
 	) {
 	}
 
@@ -36,6 +38,9 @@ readonly class ObjectUpdater
 		$object->properties = $object->properties->map(fn ($property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
+
+		// Update lastUpdated timestamp
+		$this->collectionSaver->updateLastUpdated($collection);
 
 		// Pass the updated object for immediate index update when queueRebuildOnSave is enabled
 		$this->indexBuilder->smartBuildIndex($collection, $object);

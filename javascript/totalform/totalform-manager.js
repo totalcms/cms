@@ -51,7 +51,13 @@ export default class TotalFormManager {
 	formListeners() {
 		this.forms.forEach(form => {
 			form.form.addEventListener("error", event => {
-				if (form.validated) this.error(event.detail.error);
+				if (form.validated) {
+					this.error(event.detail.error);
+					return;
+				}
+				// Validation error - clear processing state
+				this.unsavedCounter = 0;
+				this.bannerStatus();
 			});
 			form.form.addEventListener("success", () => this.success());
 		});

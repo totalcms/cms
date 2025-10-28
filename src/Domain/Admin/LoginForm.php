@@ -40,8 +40,8 @@ readonly class LoginForm implements \Stringable
 
 		// Determine the action URL
 		$action = $this->collection === null || $this->collection === ''
-			? "{$this->api}/login/{$this->collection}"
-			: "{$this->api}/login";
+			? "{$this->api}/login"
+			: "{$this->api}/login/{$this->collection}";
 
 		// Build form fields
 		$fields = [];

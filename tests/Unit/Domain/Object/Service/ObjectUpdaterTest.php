@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -24,6 +25,7 @@ final class ObjectUpdaterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $factory;
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
 
 	protected function setUp(): void
 	{
@@ -32,13 +34,15 @@ final class ObjectUpdaterTest extends TestCase
 		$this->factory           = $this->createMock(ObjectFactory::class);
 		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
+		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
 
 		$this->updater = new ObjectUpdater(
 			$this->objectFetcher,
 			$this->repository,
 			$this->factory,
 			$this->indexBuilder,
-			$this->propertyProcessor
+			$this->propertyProcessor,
+			$this->collectionSaver
 		);
 	}
 

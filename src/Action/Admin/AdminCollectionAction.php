@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -16,6 +17,7 @@ readonly class AdminCollectionAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private CollectionFetcher $collectionFetcher,
+		private ObjectFetcher $objectFetcher,
 	) {
 	}
 
@@ -46,6 +48,17 @@ readonly class AdminCollectionAction
 		// Validate collection exists (skip for index, new, and special routes)
 		$collection = $args['collection'] ?? '';
 		if ($collection !== '' && $collection !== 'new' && !$this->collectionFetcher->collectionExists($collection)) {
+			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+			]);
+		}
+
+		// Validate object exists (skip for add/edit keywords)
+		$id = $args['id'] ?? '';
+		if ($collection !== '' && $collection !== 'new'
+			&& !in_array($id, ['', 'add', 'edit'], true)
+			&& !str_starts_with($id, '-')
+			&& !$this->objectFetcher->existsObject($collection, $id)) {
 			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
 				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
 			]);

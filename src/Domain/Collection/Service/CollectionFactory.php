@@ -6,6 +6,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
 readonly class CollectionFactory
@@ -66,9 +67,10 @@ readonly class CollectionFactory
 			throw new \DomainException("Cannot generate collection $collectionId. No reserved schema found.");
 		}
 
-		$collection         = new CollectionData();
-		$collection->id     = $collectionId;
-		$collection->schema = $collectionId;
+		$collection              = new CollectionData();
+		$collection->id          = $collectionId;
+		$collection->schema      = $collectionId;
+		$collection->lastUpdated = DateData::cleanDate();
 
 		return $collection;
 	}

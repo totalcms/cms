@@ -1,17 +1,44 @@
 {# Edit Object Form #}
 {% set canSave = cms.canAccessCollection(url.collection, url.id ? 'update' : 'create') %}
 {% set canDelete = cms.canAccessCollection(url.collection, 'delete') %}
-{% set form = cms.form.builder(url.collection, {
-	id           : url.id,
-	save         : canSave ? "Save" : false,
-	delete       : canDelete ? "Delete" : false,
-	helpStyle    : 'label',
-	helpOnFocus  : true,
-	deleteActions : [
-		{
-			"action" : "redirect",
-			"link"   : "collections/#{url.collection}"
-		}
-	],
-}) %}
+
+{# Default hardcoded options #}
+{% set defaultOptions = {
+	id          : url.id,
+	save        : canSave ? "Save" : false,
+	delete      : canDelete ? "Delete" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+} %}
+
+{# Default hardcoded actions #}
+{% set defaultDeleteActions = [
+	{
+		"action" : "redirect",
+		"link"   : "collections/#{url.collection}"
+	}
+] %}
+
+{# Merge formSettings from collection, prepending formSettings actions #}
+{% set formSettings = collection.formSettings ? collection.formSettings : {} %}
+{% set finalOptions = defaultOptions|merge(formSettings) %}
+
+{# Prepend formSettings actions to default actions #}
+{% if formSettings.editActions is defined %}
+	{% set finalOptions = finalOptions|merge({
+		editActions: formSettings.editActions
+	}) %}
+{% endif %}
+
+{% if formSettings.deleteActions is defined %}
+	{% set finalOptions = finalOptions|merge({
+		deleteActions: formSettings.deleteActions|merge(defaultDeleteActions)
+	}) %}
+{% else %}
+	{% set finalOptions = finalOptions|merge({
+		deleteActions: defaultDeleteActions
+	}) %}
+{% endif %}
+
+{% set form = cms.form.builder(url.collection, finalOptions) %}
 {{ form.autoBuild() }}

@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Collection\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Property\Data\DateData;
 
 /**
  * Service.
@@ -30,6 +31,25 @@ readonly class CollectionSaver
 	{
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
+		// Initialize totalObjects if not set
+		if (!isset($data['totalObjects']) || $data['totalObjects'] === 0) {
+			$objectIds            = $this->indexRepository->fetchObjectIds($data['id']);
+			$data['totalObjects'] = count($objectIds);
+		}
+
+		// Clean lastUpdated to ensure proper ISO 8601 format
+		if (!isset($data['lastUpdated']) || $data['lastUpdated'] === '') {
+			$data['lastUpdated'] = DateData::cleanDate();
+		} else {
+			// Clean the provided date to ensure it's in the correct format
+			$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
+		}
+
+		// Ensure formSettings is an array (handle empty strings from form)
+		if (isset($data['formSettings']) && $data['formSettings'] === '') {
+			$data['formSettings'] = [];
+		}
+
 		$collection = $this->factory->generateCollection($data);
 
 		if ($this->storage->collectionExists($collection->id)) {
@@ -51,6 +71,16 @@ readonly class CollectionSaver
 	public function updateCollection(string $collectionId, array $data): CollectionData
 	{
 		$data['count'] = $this->initializeCount($collectionId, $data);
+
+		// Clean lastUpdated to ensure proper ISO 8601 format
+		if (isset($data['lastUpdated']) && $data['lastUpdated'] !== '') {
+			$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
+		}
+
+		// Ensure formSettings is an array (handle empty strings from form)
+		if (isset($data['formSettings']) && $data['formSettings'] === '') {
+			$data['formSettings'] = [];
+		}
 
 		$collection = $this->factory->generateCollection($data);
 
@@ -107,6 +137,65 @@ readonly class CollectionSaver
 		} else {
 			$collectionArray['count']++;
 		}
+
+		return $this->updateCollection($collectionId, $collectionArray);
+	}
+
+	/**
+	 * Increment totalObjects and update lastUpdated for a collection.
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function incrementTotalObjects(string $collectionId): CollectionData
+	{
+		$collection = $this->storage->fetchCollection($collectionId);
+
+		if (!$collection instanceof CollectionData) {
+			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+		}
+
+		$collectionArray                 = $collection->toArray();
+		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + 1;
+		$collectionArray['lastUpdated']  = DateData::cleanDate();
+
+		return $this->updateCollection($collectionId, $collectionArray);
+	}
+
+	/**
+	 * Decrement totalObjects and update lastUpdated for a collection.
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function decrementTotalObjects(string $collectionId): CollectionData
+	{
+		$collection = $this->storage->fetchCollection($collectionId);
+
+		if (!$collection instanceof CollectionData) {
+			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+		}
+
+		$collectionArray                 = $collection->toArray();
+		$collectionArray['totalObjects'] = max(0, ($collectionArray['totalObjects'] ?? 0) - 1);
+		$collectionArray['lastUpdated']  = DateData::cleanDate();
+
+		return $this->updateCollection($collectionId, $collectionArray);
+	}
+
+	/**
+	 * Update lastUpdated timestamp for a collection (for updates/patches without count changes).
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function updateLastUpdated(string $collectionId): CollectionData
+	{
+		$collection = $this->storage->fetchCollection($collectionId);
+
+		if (!$collection instanceof CollectionData) {
+			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+		}
+
+		$collectionArray                = $collection->toArray();
+		$collectionArray['lastUpdated'] = DateData::cleanDate();
 
 		return $this->updateCollection($collectionId, $collectionArray);
 	}

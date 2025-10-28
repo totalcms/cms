@@ -203,56 +203,79 @@ final class SettingsValidatorTest extends TestCase
 
 	// ==================== Cache Section ====================
 
-	public function testProcessCacheDecodesBackendConfigurations(): void
+	public function testProcessCacheConvertsBackendTogglesToBooleans(): void
+	{
+		$testCases = [
+			['apcu' => 'on', 'expected' => true],
+			['redis'      => '1', 'expected' => true],
+			['memcached'  => true, 'expected' => true],
+			['filesystem' => 'off', 'expected' => false],
+			['apcu'       => '0', 'expected' => false],
+			['redis'      => false, 'expected' => false],
+		];
+
+		foreach ($testCases as $testCase) {
+			$backend = array_key_first($testCase);
+			$result  = $this->validator->processSection('cache', [$backend => $testCase[$backend]]);
+			$this->assertEquals(
+				$testCase['expected'],
+				$result[$backend],
+				"Cache backend '{$backend}' value '{$testCase[$backend]}' should convert to " . ($testCase['expected'] ? 'true' : 'false')
+			);
+		}
+	}
+
+	public function testProcessCacheDecodesConfigurationObjects(): void
 	{
 		$redisConfig     = ['host' => '127.0.0.1', 'port' => 6379];
 		$memcachedConfig = ['host' => 'localhost', 'port' => 11211];
 
 		$data = [
-			'redis'     => json_encode($redisConfig),
-			'memcached' => json_encode($memcachedConfig),
+			'redis'           => 'on',
+			'memcached'       => 'on',
+			'redisConfig'     => json_encode($redisConfig),
+			'memcachedConfig' => json_encode($memcachedConfig),
 		];
 
 		$result = $this->validator->processSection('cache', $data);
 
-		$this->assertIsArray($result['redis']);
-		$this->assertEquals($redisConfig, $result['redis']);
-		$this->assertIsArray($result['memcached']);
-		$this->assertEquals($memcachedConfig, $result['memcached']);
+		$this->assertTrue($result['redis']);
+		$this->assertTrue($result['memcached']);
+		$this->assertIsArray($result['redisConfig']);
+		$this->assertEquals($redisConfig, $result['redisConfig']);
+		$this->assertIsArray($result['memcachedConfig']);
+		$this->assertEquals($memcachedConfig, $result['memcachedConfig']);
 	}
 
 	public function testProcessCacheHandlesAllBackends(): void
 	{
-		$apcuConfig       = ['enabled' => true];
-		$redisConfig      = ['host' => '127.0.0.1'];
-		$memcachedConfig  = ['host' => 'localhost'];
-		$filesystemConfig = ['path' => '/tmp/cache'];
-
 		$data = [
-			'apcu'       => json_encode($apcuConfig),
-			'redis'      => json_encode($redisConfig),
-			'memcached'  => json_encode($memcachedConfig),
-			'filesystem' => json_encode($filesystemConfig),
+			'apcu'       => 'on',
+			'redis'      => '1',
+			'memcached'  => true,
+			'filesystem' => 'on',
 		];
 
 		$result = $this->validator->processSection('cache', $data);
 
-		$this->assertEquals($apcuConfig, $result['apcu']);
-		$this->assertEquals($redisConfig, $result['redis']);
-		$this->assertEquals($memcachedConfig, $result['memcached']);
-		$this->assertEquals($filesystemConfig, $result['filesystem']);
+		$this->assertTrue($result['apcu']);
+		$this->assertTrue($result['redis']);
+		$this->assertTrue($result['memcached']);
+		$this->assertTrue($result['filesystem']);
 	}
 
 	public function testProcessCacheHandlesInvalidJSON(): void
 	{
 		$data = [
-			'redis' => 'invalid-json{',
+			'redis'       => 'on',
+			'redisConfig' => 'invalid-json{',
 		];
 
 		$result = $this->validator->processSection('cache', $data);
 
+		$this->assertTrue($result['redis']);
 		// Invalid JSON should remain as string
-		$this->assertIsString($result['redis']);
+		$this->assertIsString($result['redisConfig']);
 	}
 
 	// ==================== Auth Section ====================

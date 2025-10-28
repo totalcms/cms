@@ -3,11 +3,9 @@
 /**
  * Admin View Integration Test.
  *
- * Tests admin views for errors by importing jumpstart demo data and visiting
+ * Tests admin views for errors by creating minimal test collections and visiting
  * predetermined URLs to ensure all admin views render without errors.
  */
-
-use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 
 use function Nekofar\Slim\Pest\get;
 
@@ -16,21 +14,37 @@ beforeAll(function (): void {
 
 	echo "\n🔄 Setting up admin view tests...\n";
 
-	// Import jumpstart demo data ONCE for all tests
-	echo "📦 Importing jumpstart demo data...\n";
-	$app               = bootstrap();
-	$container         = $app->getContainer();
-	$jumpStartImporter = $container->get(JumpStartImporter::class);
-	$demoDataPath      = jumpstartResourcePath('demo.json');
+	// Create minimal collections programmatically (much faster than jumpstart import)
+	echo "📦 Creating test collections...\n";
 
-	if (file_exists($demoDataPath)) {
-		$demoData = json_decode(file_get_contents($demoDataPath), true);
-		$jumpStartImporter->importFromDefinition($demoData);
-		echo "✅ Demo data imported successfully\n";
-	} else {
-		echo "⚠️  Demo data file not found at: $demoDataPath\n";
-	}
+	$app       = bootstrap();
+	$container = $app->getContainer();
 
+	// Get the collection saver service to create collections
+	$collectionSaver = $container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class);
+
+	// Create blog collection
+	$collectionSaver->saveCollection([
+		'id'     => 'blog',
+		'name'   => 'Blog',
+		'schema' => 'blog',
+	]);
+
+	// Create products collection (using blog schema as template)
+	$collectionSaver->saveCollection([
+		'id'     => 'products',
+		'name'   => 'Products',
+		'schema' => 'blog', // Use blog schema since products.json doesn't exist
+	]);
+
+	// Create feed collection
+	$collectionSaver->saveCollection([
+		'id'     => 'feed',
+		'name'   => 'Feed',
+		'schema' => 'feed',
+	]);
+
+	echo "✅ Test collections created successfully\n";
 	echo "🚀 Starting admin view tests...\n\n";
 });
 

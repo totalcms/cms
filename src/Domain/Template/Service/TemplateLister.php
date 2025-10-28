@@ -26,6 +26,8 @@ readonly class TemplateLister
 	/**
 	 * List custom templates.
 	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
 	 * @return array<string>
 	 */
 	public function listCustomTemplates(?string $folder = null, bool $recursive = false): array
@@ -35,6 +37,8 @@ readonly class TemplateLister
 
 	/**
 	 * List all templates.
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return array<string>
 	 */

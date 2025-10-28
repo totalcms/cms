@@ -5,6 +5,9 @@ namespace TotalCMS\Domain\Collection\Repository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
+use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -29,6 +32,7 @@ class CollectionRepository extends StorageRepository
 		private readonly CollectionFactory $factory,
 		private readonly SchemaValidator $validator,
 		private readonly CacheManager $cacheManager,
+		private readonly IndexRepository $indexRepository,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -77,9 +81,40 @@ class CollectionRepository extends StorageRepository
 
 	public function fetchCollection(string $collection): ?CollectionData
 	{
-		$metaFile = $this->buildMetaPath($collection);
+		$metaFile       = $this->buildMetaPath($collection);
+		$collectionData = $this->fetchAndDeserialize($metaFile, CollectionData::class);
 
-		return $this->fetchAndDeserialize($metaFile, CollectionData::class);
+		if ($collectionData === null) {
+			return null;
+		}
+
+		// Auto-calculate totalObjects and lastUpdated if missing (backward compatibility)
+		// Calculate in-memory only - values persist on next normal save operation
+		if ($collectionData->lastUpdated === '') {
+			$collectionData->totalObjects = $this->calculateObjectCount($collection);
+			$collectionData->lastUpdated  = DateData::cleanDate();
+		}
+
+		return $collectionData;
+	}
+
+	/**
+	 * Calculate the number of objects in a collection from the index.
+	 */
+	private function calculateObjectCount(string $collection): int
+	{
+		try {
+			$index = $this->indexRepository->fetchIndex($collection);
+
+			if (!$index instanceof IndexData) {
+				return 0;
+			}
+
+			return $index->objects->count();
+		} catch (\Exception) {
+			// No index or error reading - return 0
+			return 0;
+		}
 	}
 
 	public function deleteCollection(string $collection): bool

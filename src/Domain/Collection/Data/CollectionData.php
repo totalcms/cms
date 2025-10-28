@@ -34,6 +34,8 @@ class CollectionData
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
 	public bool $prettyUrl          = false;           // use pretty URLs for the collection
 	public int $count               = 0;                    // total number of objects created in this collection
+	public int $totalObjects        = 0;                 // current number of objects in this collection
+	public string $lastUpdated      = '';                // ISO 8601 datetime of last object modification
 
 	/** @var array<string> */
 	public array $groups = [];        // access groups that can access this collection
@@ -46,6 +48,9 @@ class CollectionData
 
 	/** @var array<string,array<string,mixed>> */
 	public array $customProperties = [];  // Custom properties for specific objects
+
+	/** @var array<string,mixed> */
+	public array $formSettings = [];  // Custom settings for the object creation/edit forms
 
 	public function __construct()
 	{
@@ -83,6 +88,8 @@ class CollectionData
 			'prettyUrl'          => $this->prettyUrl ?? false,
 			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
 			'count'              => $this->count ?? 0,
+			'totalObjects'       => $this->totalObjects ?? 0,
+			'lastUpdated'        => $this->lastUpdated ?? '',
 		];
 
 		if ($this->properties !== []) {
@@ -91,6 +98,10 @@ class CollectionData
 
 		if ($this->customProperties !== []) {
 			$collection['customProperties'] = $this->customProperties;
+		}
+
+		if ($this->formSettings !== []) {
+			$collection['formSettings'] = $this->formSettings;
 		}
 
 		return $collection;

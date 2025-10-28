@@ -123,7 +123,7 @@ class SchemaField extends PropertyField
 			'placeholder' => '{ "key": "value" }',
 			'settings'    => ['rows' => 3],
 			'help'        => 'Extra schema definitions for this property in valid JSON format',
-			'value'       => $this->extra === [] ? '' : json_encode($this->extra, JSON_PRETTY_PRINT),
+			'value'       => $this->extra === [] ? '' : $this->extra,
 		]);
 
 		return HTMLUtils::details('Property Info', $content);

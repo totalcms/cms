@@ -72,8 +72,25 @@ $settings['cache'] = [
 	],
 ];
 
-// Path to cms data folder
-$settings['datadir'] = $settings['docroot'] . '/tcms-data';
+// Path to tcms-data folder - smart detection
+// Priority:
+// 1. DOCUMENT_ROOT/../tcms-data if it exists
+// 2. DOCUMENT_ROOT/tcms-data if it exists
+// 3. DOCUMENT_ROOT/../tcms-data if parent directory is writable
+// 4. DOCUMENT_ROOT/tcms-data as last resort
+// Note: DOCUMENT_ROOT/tcms.php can always override this default
+$parentDatadir = dirname($settings['docroot']) . '/tcms-data';
+$localDatadir  = $settings['docroot'] . '/tcms-data';
+
+if (file_exists($parentDatadir)) {
+	$settings['datadir'] = $parentDatadir;
+} elseif (file_exists($localDatadir)) {
+	$settings['datadir'] = $localDatadir;
+} elseif (is_writable(dirname($settings['docroot']))) {
+	$settings['datadir'] = $parentDatadir;
+} else {
+	$settings['datadir'] = $localDatadir;
+}
 
 // Error Handling
 $settings['error'] = [
@@ -108,7 +125,11 @@ $settings['session'] = [
 	'cookie_secure'          => $settings['is_https'], // Only secure cookies over HTTPS
 	'cookie_httponly'        => true,
 	'cookie_lifetime'        => 0,
-	'gc_maxlifetime'         => 7200,
+	// Session timeout for non-persistent logins (24 hours = 86400 seconds)
+	// Note: Users with "Keep me logged in" enabled never timeout (handled by persistent login tokens)
+	// This value affects server-side session garbage collection only
+	// Can be overridden in tcms.php if needed for specific use cases
+	'gc_maxlifetime'         => 86400, // 24 hours - generous for long form sessions
 	'use_trans_sid'          => false,
 	'use_only_cookies'       => true,
 	// 'sid_length'             => 64,

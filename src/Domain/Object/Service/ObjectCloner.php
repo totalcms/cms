@@ -50,6 +50,9 @@ readonly class ObjectCloner
 		// Increment the collection count since we've added a new object
 		$this->collectionSaver->incrementCount($to['collection']);
 
+		// Increment totalObjects and update lastUpdated
+		$this->collectionSaver->incrementTotalObjects($to['collection']);
+
 		return $object;
 	}
 

@@ -1,3 +1,9 @@
+# Session Configuration
+# Set session timeout to 24 hours (86400 seconds) for non-persistent logins
+# Note: This matches config/defaults.php and can be overridden in tcms.php
+# Users with "Keep me logged in" never timeout (handled separately by persistent tokens)
+# php_value session.gc_maxlifetime 86400
+
 # Redirect to front controller
 RewriteEngine On
 # RewriteBase /

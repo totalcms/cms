@@ -67,10 +67,10 @@ class CollectionRefiner
 			}
 
 			$filteredCollection = $this->filterByRule(
-				collection : $filteredCollection,
-				property   : $rule['property'],
-				value      : strval($value),
-				operator   : $rule['operator'],
+				collection  : $filteredCollection,
+				property    : $rule['property'],
+				filterValue : strval($value),
+				operator    : $rule['operator'],
 			);
 		}
 
@@ -119,10 +119,10 @@ class CollectionRefiner
 
 		foreach ($values as $value) {
 			$filtered = $this->filterByRule(
-				collection : $collection,
-				property   : $property,
-				value      : strval($value),
-				operator   : $operator,
+				collection  : $collection,
+				property    : $property,
+				filterValue : strval($value),
+				operator    : $operator,
 			);
 
 			foreach ($filtered as $item) {
@@ -158,10 +158,10 @@ class CollectionRefiner
 			}
 
 			$filteredCollection = $this->filterByRule(
-				collection : $filteredCollection,
-				property   : $property,
-				value      : strval($value),
-				operator   : $operator,
+				collection  : $filteredCollection,
+				property    : $property,
+				filterValue : strval($value),
+				operator    : $operator,
 			);
 		}
 
@@ -192,12 +192,13 @@ class CollectionRefiner
 
 	/**
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<array<string,mixed>> $collection
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByRule(array $collection, string $property, string $value = '', string $operator = 'equal'): array
+	public function filterByRule(array $collection, string $property, string $filterValue = '', string $operator = 'equal'): array
 	{
 		// If rule is prepended by not-, then invert the result
 		$not = false;
@@ -206,9 +207,9 @@ class CollectionRefiner
 			$operator = mb_substr($operator, 4);
 		}
 		// If value is prepended by !, then invert the result
-		if (self::starts($value, '!')) {
-			$not   = true;
-			$value = mb_substr($value, 1);
+		if (self::starts($filterValue, '!')) {
+			$not         = true;
+			$filterValue = mb_substr($filterValue, 1);
 		}
 
 		// Cache reflection results to avoid repeated reflection calls
@@ -227,34 +228,34 @@ class CollectionRefiner
 		$methodExists = self::$methodCache[$operator];
 
 		// If operator requires a value and it's empty, return all records
-		if ($numParams === 2 && $value === '') {
+		if ($numParams === 2 && $filterValue === '') {
 			return $collection;
 		}
 
-		return array_filter($collection, function (array $record) use ($property, $value, $operator, $not, $numParams, $methodExists) {
-			$item = self::getPropertyValueForRecord($record, $property);
+		return array_filter($collection, function (array $record) use ($property, $filterValue, $operator, $not, $numParams, $methodExists) {
+			$propertyValue = self::getPropertyValueForRecord($record, $property);
 
-			if ($item === null) {
+			if ($propertyValue === null) {
 				return false;
 			}
 
 			if ($methodExists) {
-				if (is_array($item)) {
-					$found = self::filterArrayByRule($item, $value, $operator);
+				if (is_array($propertyValue)) {
+					$found = self::filterArrayByRule($propertyValue, $filterValue, $operator);
 
 					return $not ? !$found : $found;
 				}
 
 				$found = match ($numParams) {
-					1       => self::$operator($item),
-					2       => self::$operator($item, $value),
+					1       => self::$operator($propertyValue),
+					2       => self::$operator($propertyValue, $filterValue),
 					default => false,
 				};
 
 				return $not ? !$found : $found;
 			}
 
-			return $record[$property] == $value;
+			return $record[$property] == $filterValue;
 		});
 	}
 
@@ -467,6 +468,34 @@ class CollectionRefiner
 		return $time >= strtotime('today') && $time < strtotime('tomorrow');
 	}
 
+	/**
+	 * Check if date is today or within N days in the future.
+	 * Example: If today is Jan 15 and days=3, matches Jan 15, 16, 17, 18.
+	 */
+	protected static function todayPlusDays(string $date, int|string $days): bool
+	{
+		$time       = strtotime($date);
+		$todayStart = strtotime('today');
+		$rangeEnd   = strtotime("+$days days", $todayStart);
+
+		// Date must be >= today's start AND < (today + days + 1 day)
+		return $time >= $todayStart && $time < strtotime('+1 day', (int)$rangeEnd);
+	}
+
+	/**
+	 * Check if date is today or within N days in the past.
+	 * Example: If today is Jan 15 and days=3, matches Jan 12, 13, 14, 15.
+	 */
+	protected static function todayMinusDays(string $date, int|string $days): bool
+	{
+		$time       = strtotime($date);
+		$todayEnd   = strtotime('tomorrow'); // Start of tomorrow = end of today range
+		$rangeStart = strtotime("-$days days", strtotime('today'));
+
+		// Date must be >= (today - days) AND < tomorrow
+		return $time >= $rangeStart && $time < $todayEnd;
+	}
+
 	protected static function after(string $date, string $dateAfter): bool
 	{
 		return strtotime($date) > strtotime($dateAfter);
@@ -475,5 +504,204 @@ class CollectionRefiner
 	protected static function before(string $date, string $dateBefore): bool
 	{
 		return strtotime($date) < strtotime($dateBefore);
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Numeric Range Filtering
+	// ---------------------------------------------------------------------------------
+
+	/**
+	 * Check if value is between two numbers (inclusive).
+	 * Usage: {price: {operator: 'between', value: '10,100'}}.
+	 */
+	protected static function between(string $value, string $range): bool
+	{
+		$parts = array_map('trim', explode(',', $range));
+		if (count($parts) !== 2) {
+			return false;
+		}
+
+		[$min, $max] = $parts;
+		$num         = (float)$value;
+
+		return $num >= (float)$min && $num <= (float)$max;
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Calendar Period Filtering
+	// ---------------------------------------------------------------------------------
+
+	/**
+	 * Check if date is in current week (Monday-Sunday).
+	 */
+	protected static function thisWeek(string $date): bool
+	{
+		$time      = strtotime($date);
+		$weekStart = strtotime('monday this week');
+		$weekEnd   = strtotime('sunday this week 23:59:59');
+
+		return $time >= $weekStart && $time <= $weekEnd;
+	}
+
+	/**
+	 * Check if date is in current month.
+	 */
+	protected static function thisMonth(string $date): bool
+	{
+		$time       = strtotime($date);
+		$monthStart = strtotime('first day of this month');
+		$monthEnd   = strtotime('last day of this month 23:59:59');
+
+		return $time >= $monthStart && $time <= $monthEnd;
+	}
+
+	/**
+	 * Check if date is in current year.
+	 */
+	protected static function thisYear(string $date): bool
+	{
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+
+		return date('Y', $timestamp) === date('Y');
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Text Length Filtering
+	// ---------------------------------------------------------------------------------
+
+	/**
+	 * Check if text is longer than N characters.
+	 * Usage: {summary: {operator: 'longerThan', value: 100}}.
+	 */
+	protected static function longerThan(string $text, int|string $length): bool
+	{
+		return mb_strlen($text) > (int)$length;
+	}
+
+	/**
+	 * Check if text is shorter than N characters.
+	 * Usage: {summary: {operator: 'shorterThan', value: 50}}.
+	 */
+	protected static function shorterThan(string $text, int|string $length): bool
+	{
+		return mb_strlen($text) < (int)$length;
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Array Counting
+	// ---------------------------------------------------------------------------------
+
+	/**
+	 * Check if array has at least N items.
+	 * Usage: {tags: {operator: 'hasMin', value: 3}}.
+	 *
+	 * @param array<mixed>|string $value
+	 */
+	protected static function hasMin(array|string $value, int|string $min): bool
+	{
+		if (is_string($value)) {
+			$decoded = json_decode($value, true);
+			$value   = is_array($decoded) ? $decoded : [];
+		}
+
+		return count($value) >= (int)$min;
+	}
+
+	/**
+	 * Check if array has at most N items.
+	 * Usage: {tags: {operator: 'hasMax', value: 5}}.
+	 *
+	 * @param array<mixed>|string $value
+	 */
+	protected static function hasMax(array|string $value, int|string $max): bool
+	{
+		if (is_string($value)) {
+			$decoded = json_decode($value, true);
+			$value   = is_array($decoded) ? $decoded : [];
+		}
+
+		return count($value) <= (int)$max;
+	}
+
+	/**
+	 * Check if array has exactly N items.
+	 * Usage: {tags: {operator: 'hasCount', value: 3}}.
+	 *
+	 * @param array<mixed>|string $value
+	 */
+	protected static function hasCount(array|string $value, int|string $count): bool
+	{
+		if (is_string($value)) {
+			$decoded = json_decode($value, true);
+			$value   = is_array($decoded) ? $decoded : [];
+		}
+
+		return count($value) === (int)$count;
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Day-of-Week Filtering
+	// ---------------------------------------------------------------------------------
+
+	/**
+	 * Check if date is a weekday (Monday-Friday).
+	 */
+	protected static function isWeekday(string $date): bool
+	{
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+		$dayNum = (int)date('N', $timestamp);
+
+		return $dayNum <= 5;
+	}
+
+	/**
+	 * Check if date is a weekend (Saturday-Sunday).
+	 */
+	protected static function isWeekend(string $date): bool
+	{
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+		$dayNum = (int)date('N', $timestamp);
+
+		return $dayNum >= 6;
+	}
+
+	/**
+	 * Check if date is on a specific day of week.
+	 * Usage: {date: {operator: 'dayOfWeek', value: 'Monday'}}
+	 * Or: {date: {operator: 'dayOfWeek', value: '1'}} (1=Mon, 7=Sun).
+	 */
+	protected static function dayOfWeek(string $date, int|string $day): bool
+	{
+		$dayMap = [
+			'monday'    => 1,
+			'tuesday'   => 2,
+			'wednesday' => 3,
+			'thursday'  => 4,
+			'friday'    => 5,
+			'saturday'  => 6,
+			'sunday'    => 7,
+		];
+
+		$targetDay = is_numeric($day) ? (int)$day : ($dayMap[strtolower($day)] ?? 0);
+
+		if ($targetDay === 0) {
+			return false;
+		}
+
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+
+		return (int)date('N', $timestamp) === $targetDay;
 	}
 }

@@ -217,11 +217,11 @@ th.gridjs-th-sort .gridjs-th-content {
 }
 
 th.gridjs-th-sort:hover {
-	background-color: oklch(95% 0 0)!important;
+	background-color: oklch(var(--totalform-nearwhite))!important;
 }
 
 th.gridjs-th-sort:focus {
-	background-color: oklch(95% 0 0)!important;
+	background-color: oklch(var(--totalform-nearwhite))!important;
 }
 
 th.gridjs-th-fixed {

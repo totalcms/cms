@@ -37,6 +37,9 @@ readonly class ObjectSaver
 		// Increment the collection count for newly created objects
 		$this->collectionSaver->incrementCount($collection);
 
+		// Increment totalObjects and update lastUpdated
+		$this->collectionSaver->incrementTotalObjects($collection);
+
 		// Pass the new object for immediate index append when queueRebuildOnSave is enabled
 		$this->indexBuilder->smartBuildIndex($collection, $object);
 

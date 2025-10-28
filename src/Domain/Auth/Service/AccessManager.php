@@ -92,8 +92,9 @@ class AccessManager
 			return true;
 		}
 
-		if ($collection === '') {
-			$collection = $this->defaultAuthCollection;
+		if ($collection === '' && $this->userID !== '') {
+			// No specific collection required, just check if user is valid
+			return true;
 		}
 
 		if ($this->userCollection !== $collection) {

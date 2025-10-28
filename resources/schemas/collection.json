@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\n---Overrides---\nproperties properties\ncustomProperties customProperties\n---\ncount count",
+	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\n---Overrides---\nformSettings formSettings\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -84,7 +84,7 @@
 			"type"  : "array",
 			"label" : "Allow unauthenticated users to perform these operations on this collection",
 			"field" : "multicheckbox",
-			"default" : ["read"],
+			"default" : [],
 			"options" : [
 				{"label": "Create", "value": "create"},
 				{"label": "Read", "value": "read"},
@@ -139,7 +139,7 @@
         },
         "count": {
 			"type"    : "integer",
-			"label"   : "Objects Created",
+			"label"   : "Total Objects Created",
 			"help"    : "Total number of objects that have been created in this collection.",
 			"default" : 0,
 			"minimum" : 0,
@@ -148,6 +148,36 @@
 				"readonly": true
 			}
         },
+        "totalObjects": {
+			"type"    : "integer",
+			"label"   : "Current Object Count",
+			"help"    : "Current number of objects that have been created in this collection.",
+			"default" : 0,
+			"minimum" : 0,
+			"field"   : "number",
+			"settings" : {
+				"readonly": true
+			}
+        },
+		"lastUpdated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Last Updated Date",
+			"help"     : "The date and time when an object in this collection was last updated.",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"readonly": true
+			}
+		},
+		"formSettings": {
+			"type"     : "object",
+			"label"    : "Object Form Settings",
+			"help"     : "Custom settings for the object creation/edit forms. Available options: helpStyle, helpOnHover, helpOnFocus, newActions, editActions, deleteActions",
+			"field"    : "json",
+			"settings" : {
+				"rows" : 5
+			}
+		},
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
 			"help"  : "Override schema property attributes for this collection.",

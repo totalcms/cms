@@ -7,7 +7,7 @@
 {% macro statsCard(stats) %}
 <div class="dashboard-stats">
 	<div class="stat-card">
-		<div class="stat-icon">📚</div>
+		<div class="stat-icon icon-collections"></div>
 		<div class="stat-content">
 			<div class="stat-value">{{ stats.collections }}</div>
 			<div class="stat-label">Collections</div>
@@ -15,26 +15,34 @@
 	</div>
 
 	<div class="stat-card">
-		<div class="stat-icon">📄</div>
+		<div class="stat-icon icon-objects"></div>
 		<div class="stat-content">
-			<div class="stat-value">{{ stats.totalObjects }}</div>
-			<div class="stat-label">Total Objects</div>
+			<div class="stat-value">{{ stats.totalObjects | number_format(0, '.', ',') }}</div>
+			<div class="stat-label">Objects</div>
 		</div>
 	</div>
 
 	<div class="stat-card">
-		<div class="stat-icon">🔷</div>
+		<div class="stat-icon icon-schema"></div>
 		<div class="stat-content">
 			<div class="stat-value">{{ stats.schemas }}</div>
-			<div class="stat-label">Custom Schemas</div>
+			<div class="stat-label">Schemas</div>
 		</div>
 	</div>
 
 	<div class="stat-card">
-		<div class="stat-icon">📋</div>
+		<div class="stat-icon icon-puzzle"></div>
 		<div class="stat-content">
 			<div class="stat-value">{{ stats.templates }}</div>
 			<div class="stat-label">Templates</div>
+		</div>
+	</div>
+
+	<div class="stat-card">
+		<div class="stat-icon icon-terminal"></div>
+		<div class="stat-content">
+			<div class="stat-value">{{ stats.totalJobs }}</div>
+			<div class="stat-label">Queued Jobs</div>
 		</div>
 	</div>
 </div>
@@ -46,33 +54,33 @@
 	<h2>Quick Actions</h2>
 	<div class="quick-actions">
 		<a href="collections/new" class="action-button">
-			<span class="action-icon">➕</span>
+			<span class="action-icon icon-collections"></span>
 			<span class="action-text">New Collection</span>
 		</a>
 
 		<a href="schemas/new" class="action-button">
-			<span class="action-icon">🔷</span>
+			<span class="action-icon icon-schema"></span>
 			<span class="action-text">New Schema</span>
 		</a>
 
-		<a href="templates" class="action-button">
-			<span class="action-icon">📋</span>
-			<span class="action-text">Browse Templates</span>
-		</a>
-
-		<a href="utils/project-setup" class="action-button">
-			<span class="action-icon">📦</span>
-			<span class="action-text">Import/Export</span>
-		</a>
-
-		<a href="docs" class="action-button">
-			<span class="action-icon">📖</span>
-			<span class="action-text">Documentation</span>
+		<a href="templates/new" class="action-button">
+			<span class="action-icon icon-puzzle"></span>
+			<span class="action-text">New Template</span>
 		</a>
 
 		{% if cms.isAdmin() %}
+		<a href="utils/logs" class="action-button">
+			<span class="action-icon icon-warn"></span>
+			<span class="action-text">Log Analyzer</span>
+		</a>
+
+		<a href="utils/jobqueue" class="action-button">
+			<span class="action-icon icon-terminal"></span>
+			<span class="action-text">Job Queue Manager</span>
+		</a>
+
 		<a href="utils/cache-manager" class="action-button">
-			<span class="action-icon">🗑️</span>
+			<span class="action-icon icon-clean-o"></span>
 			<span class="action-text">Clear Cache</span>
 		</a>
 		{% endif %}
@@ -83,7 +91,7 @@
 {# Collections Overview Table #}
 {% macro collectionsTable(collections) %}
 <div class="dashboard-section">
-	<h2>Your Collections</h2>
+	<h2>Recent Collections</h2>
 	{% if collections|length > 0 %}
 	<div class="collections-table">
 		<table>
@@ -100,11 +108,15 @@
 				<tr>
 					<td>
 						<div class="collection-name">
-							<span class="collection-icon">{{ collection.icon }}</span>
+							<span class="collection-icon schema-{{ collection.schema }}"></span>
 							<a href="{{ collection.viewUrl }}">{{ collection.name }}</a>
 						</div>
 					</td>
-					<td><code>{{ collection.schema }}</code></td>
+					<td class="schema-cell">
+						<a href="schemas/{{ collection.schema }}" class="schema-link">
+							<code>{{ collection.schema }}</code>
+						</a>
+					</td>
 					<td>
 						<span class="object-count {% if collection.objectCount == 0 %}empty{% endif %}">
 							{{ collection.objectCount }}
@@ -112,11 +124,13 @@
 					</td>
 					<td class="actions-column">
 						<div class="table-actions">
-							<a href="{{ collection.addUrl }}" class="btn-small" title="Add new {{ collection.name }}">
-								➕ Add
+							<a href="{{ collection.addUrl }}" class="btn-small btn-icon" title="Add new {{ collection.name }}">
+								<span class="btn-icon-svg icon-add"></span>
+								Add
 							</a>
-							<a href="{{ collection.viewUrl }}" class="btn-small" title="View all {{ collection.name }}">
-								👁️ View
+							<a href="{{ collection.viewUrl }}" class="btn-small btn-icon" title="View all {{ collection.name }}">
+								<span class="btn-icon-svg icon-view"></span>
+								View
 							</a>
 						</div>
 					</td>
@@ -141,7 +155,7 @@
 	<div class="recent-activity-list">
 		{% for object in recentObjects %}
 		<div class="activity-item">
-			<div class="activity-icon">{{ object.collectionIcon }}</div>
+			<div class="activity-icon schema-{{ object.schema }}"></div>
 			<div class="activity-content">
 				<div class="activity-title">
 					<a href="{{ object.editUrl }}">{{ object.displayName }}</a>
@@ -156,7 +170,7 @@
 	</div>
 	{% else %}
 	<div class="empty-state">
-		<p>No recent activity yet. Start creating content to see it here!</p>
+		<p>No recent activity yet.</p>
 	</div>
 	{% endif %}
 </div>
@@ -165,19 +179,21 @@
 {# Empty Collections Alert #}
 {% macro emptyCollectionsAlert(emptyCollections) %}
 {% if emptyCollections|length > 0 %}
-<div class="dashboard-section">
-	<div class="alert alert-info">
-		<h3>📭 Empty Collections</h3>
-		<p>The following collections have no objects yet:</p>
-		<ul class="empty-collections-list">
-			{% for collection in emptyCollections %}
-			<li>
-				<strong>{{ collection.name }}</strong>
-				<a href="{{ collection.addUrl }}" class="btn-small">Add first {{ collection.name }}</a>
-			</li>
-			{% endfor %}
-		</ul>
-	</div>
+<div class="dashboard-section empty-collections-section">
+	<h2>Empty Collections</h2>
+	<p>The following collections have no objects yet:</p>
+	<ul class="empty-collections-list">
+		{% for collection in emptyCollections %}
+		<li>
+			<span class="collection-icon schema-{{ collection.schema }}"></span>
+			<span class="collection-name">{{ collection.name }}</span>
+			<a href="{{ collection.addUrl }}" class="btn-small btn-icon">
+				<span class="btn-icon-svg icon-add"></span>
+				Add
+			</a>
+		</li>
+		{% endfor %}
+	</ul>
 </div>
 {% endif %}
 {% endmacro %}
@@ -190,7 +206,7 @@
 		<div class="status-grid">
 			<div class="status-item">
 				<span class="status-label">Total CMS Version:</span>
-				<span class="status-value">{{ status.totalcmsVersion }}</span>
+				<span class="status-value">{{ cms.version }}</span>
 			</div>
 
 			<div class="status-item">
@@ -200,7 +216,7 @@
 
 			<div class="status-item">
 				<span class="status-label">Environment:</span>
-				<span class="status-value status-badge status-{{ status.environment }}">{{ status.environment }}</span>
+				<span class="status-value status-badge status-{{ status.environment }}">{{ status.environment | upper }}</span>
 			</div>
 
 			<div class="status-item">
@@ -231,6 +247,13 @@
 				</span>
 			</div>
 		</div>
+
+		<div class="status-actions">
+			<a href="utils/server-checker" class="btn-small btn-icon">
+				<span class="btn-icon-svg icon-health"></span>
+				Server Checker
+			</a>
+		</div>
 	</div>
 </div>
 {% endmacro %}
@@ -251,14 +274,33 @@
 </div>
 {% endmacro %}
 
-{# Two Column Layout Helper #}
-{% macro twoColumn(leftContent, rightContent) %}
-<div class="dashboard-two-column">
-	<div class="dashboard-column-left">
-		{{ leftContent|raw }}
-	</div>
-	<div class="dashboard-column-right">
-		{{ rightContent|raw }}
+{# New User Welcome - Shows when no collections exist #}
+{% macro newUserWelcome() %}
+<div class="dashboard-new-user-welcome">
+	<h1>Welcome to Total CMS 3! 👋</h1>
+	<p>Get started by importing sample data or creating your first collection from scratch.</p>
+
+	<div class="getting-started-options">
+		<a href="utils/project-setup" class="getting-started-card">
+			<div class="card-icon icon-flag"></div>
+			<h3>Project Setup</h3>
+			<p>Import sample data, use JumpStart templates, or migrate from other CMS platforms to quickly get started.</p>
+			<span class="card-action">Get Started →</span>
+		</a>
+
+		<a href="collections/new" class="getting-started-card">
+			<div class="card-icon icon-collections"></div>
+			<h3>Create First Collection</h3>
+			<p>Build your first collection from scratch by choosing a schema and adding your content.</p>
+			<span class="card-action">Create Collection →</span>
+		</a>
+
+		<a href="docs" class="getting-started-card">
+			<div class="card-icon icon-docs"></div>
+			<h3>Read Documentation</h3>
+			<p>Learn about Total CMS features, Twig templating, and how to build powerful content-driven sites.</p>
+			<span class="card-action">View Docs →</span>
+		</a>
 	</div>
 </div>
 {% endmacro %}

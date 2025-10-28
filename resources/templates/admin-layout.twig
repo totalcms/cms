@@ -33,9 +33,9 @@
 	</script>
 
     <base href="{{ cms.api }}/admin/">
-	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css"/>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css"/>
+	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css?v={{ cms.version }}"/>
+	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css?v={{ cms.version }}"/>
+	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>
 
 	{% set accentColor = cms.config('dashboard', 'accent') %}
 	{% if accentColor %}
@@ -48,7 +48,7 @@
 <body>
     {% block content %}{% endblock %}
 
-	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
+	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 
 	{% block bodyBelow %}{% endblock %}
 	{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}

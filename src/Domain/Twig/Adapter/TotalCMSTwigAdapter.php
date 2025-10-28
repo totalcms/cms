@@ -29,6 +29,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
@@ -54,6 +55,7 @@ class TotalCMSTwigAdapter
 	public string $logout;
 	public string $domain;
 	public string $clearcache;
+	public string $version;
 
 	public function __construct(
 		private readonly Config $config,
@@ -65,7 +67,7 @@ class TotalCMSTwigAdapter
 		private readonly SchemaLister $schemaLister,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
-		private readonly TemplateRepository $templateRepository,
+		private readonly TemplateLister $templateLister,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -85,6 +87,7 @@ class TotalCMSTwigAdapter
 		$this->dashboard  = $this->api . '/admin';
 		$this->logout     = $this->api . '/logout';
 		$this->domain     = $this->getDomainName();
+		$this->version    = $this->getVersion();
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -316,6 +319,18 @@ NGINX;
 	private function getDomainName(): string
 	{
 		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+	}
+
+	private function getVersion(): string
+	{
+		$versionFile = __DIR__ . '/../../../../version.txt';
+		if (file_exists($versionFile)) {
+			$version = file_get_contents($versionFile);
+
+			return $version !== false ? trim($version) : '';
+		}
+
+		return '';
 	}
 
 	/** @return array<string,string> */
@@ -1490,7 +1505,7 @@ NGINX;
 	public function templatesByFolder(): array
 	{
 		// Get all templates recursively
-		$templates = $this->templateRepository->listCustomTemplates(null, true);
+		$templates = $this->templateLister->listCustomTemplates(null, true);
 
 		$folders = [];
 
@@ -1802,85 +1817,105 @@ NGINX;
 	 */
 	public function dashboardStats(): array
 	{
-		$collections = $this->collectionLister->listCustomCollections();
+		$collections = $this->collectionLister->listAllCollections();
 		$schemas     = $this->schemaLister->listCustomSchemas();
-		$templates   = $this->templateRepository->listCustomTemplates(null, true);
+		$templates   = $this->templateLister->listCustomTemplates();
 
-		// Count total objects across all collections
+		// Sum totalObjects from all collections (much faster than counting index objects)
 		$totalObjects = 0;
 		foreach ($collections as $collection) {
-			try {
-				$index = $this->indexReader->fetchIndex($collection->id);
-				$totalObjects += $index->objects->count();
-			} catch (\Exception) {
-				// Skip if collection has no index
-				continue;
-			}
+			$totalObjects += $collection->totalObjects;
 		}
+
+		// Get job queue stats
+		$jobManager = new JobManager(new JobRepository());
+		$totalJobs  = count($jobManager->getPendingJobs()) + count($jobManager->getFailedJobs());
 
 		return [
 			'collections'  => count($collections),
 			'schemas'      => count($schemas),
 			'templates'    => count($templates),
 			'totalObjects' => $totalObjects,
+			'totalJobs'    => $totalJobs,
 		];
 	}
 
 	/**
-	 * Get collection overview with object counts and metadata.
+	 * Get recent collections (top 10 by last updated).
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	public function dashboardCollections(): array
+	public function dashboardRecentCollections(): array
 	{
-		$collections = $this->collectionLister->listCustomCollections();
-		$result      = [];
+		// Get all collections
+		$collections = $this->collectionLister->listAllCollections();
+
+		$result = [];
 
 		foreach ($collections as $collection) {
-			$objectCount  = 0;
-			$lastModified = null;
-
-			try {
-				$index       = $this->indexReader->fetchIndex($collection->id);
-				$objectCount = $index->objects->count();
-
-				// Get last modified from most recent object if available
-				$firstObject = $index->objects->first();
-				if ($firstObject !== null && isset($firstObject['onUpdate'])) {
-					$lastModified = $firstObject['onUpdate'];
-				}
-			} catch (\Exception) {
-				// Collection has no index yet
+			if (!$this->canAccessCollection($collection->id)) {
+				continue;
 			}
-
 			$result[] = [
 				'id'           => $collection->id,
 				'name'         => $collection->name,
-				'icon'         => '📚', // Default collection icon
 				'schema'       => $collection->schema,
-				'objectCount'  => $objectCount,
-				'lastModified' => $lastModified,
-				'addUrl'       => "collections/{$collection->id}/new",
+				'objectCount'  => $collection->totalObjects,
+				'lastModified' => $collection->lastUpdated !== '' ? $collection->lastUpdated : null,
+				'addUrl'       => "collections/{$collection->id}/add",
 				'viewUrl'      => "collections/{$collection->id}",
 			];
+		}
+
+		// Sort by lastUpdated (most recent first)
+		usort($result, function (array $a, array $b): int {
+			// Handle null lastModified values (put them at the end)
+			if ($a['lastModified'] === null && $b['lastModified'] === null) {
+				return 0;
+			}
+			if ($a['lastModified'] === null) {
+				return 1;
+			}
+			if ($b['lastModified'] === null) {
+				return -1;
+			}
+
+			// Sort by date descending (most recent first)
+			return $b['lastModified'] <=> $a['lastModified'];
+		});
+
+		// Return top 10 most recently updated
+		return array_slice($result, 0, 10);
+	}
+
+	/**
+	 * Get collections that have no objects (might need attention).
+	 * Always checks ALL collections, not just custom ones.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardEmptyCollections(): array
+	{
+		$collections = $this->collectionLister->listAllCollections();
+		$result      = [];
+
+		foreach ($collections as $collection) {
+			// Only include empty collections using cached totalObjects field
+			if ($collection->totalObjects === 0 && $this->canAccessCollection($collection->id)) {
+				$result[] = [
+					'id'      => $collection->id,
+					'name'    => $collection->name,
+					'schema'  => $collection->schema,
+					'addUrl'  => "collections/{$collection->id}/add",
+					'viewUrl' => "collections/{$collection->id}",
+				];
+			}
 		}
 
 		// Sort by name
 		usort($result, fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
 
 		return $result;
-	}
-
-	/**
-	 * Get collections that have no objects (might need attention).
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
-	public function dashboardEmptyCollections(): array
-	{
-		$allCollections = $this->dashboardCollections();
-
-		return array_filter($allCollections, fn (array $collection): bool => $collection['objectCount'] === 0);
 	}
 
 	/**
@@ -1891,9 +1926,10 @@ NGINX;
 	public function dashboardSystemStatus(): array
 	{
 		$cacheStats    = $this->cacheReporter->getCacheStats();
+		$services      = $cacheStats['services'] ?? [];
 		$enabledCaches = array_filter(
-			$cacheStats,
-			fn ($cache): bool => is_array($cache) && isset($cache['enabled']) && $cache['enabled'] === true
+			$services,
+			fn ($cache): bool => is_array($cache) && isset($cache['available']) && $cache['available'] === true
 		);
 
 		$licenseStatus = $this->license->getSidebarStatus();
@@ -1927,17 +1963,6 @@ NGINX;
 			try {
 				$index = $this->indexReader->fetchIndex($collection->id);
 
-				// Get icon from schema if available
-				$icon = '📚'; // Default icon
-				try {
-					$schema = $this->schemaFetcher->fetchSchema($collection->schema);
-					if (property_exists($schema, 'icon') && $schema->icon !== null && $schema->icon !== '') {
-						$icon = $schema->icon;
-					}
-				} catch (\Exception) {
-					// Use default icon
-				}
-
 				foreach ($index->objects as $object) {
 					if (!isset($object['onUpdate']) && !isset($object['onCreate'])) {
 						continue;
@@ -1952,7 +1977,7 @@ NGINX;
 						'id'             => $object['id'] ?? '',
 						'collection'     => $collection->id,
 						'collectionName' => $collection->name,
-						'collectionIcon' => $icon,
+						'schema'         => $collection->schema,
 						'timestamp'      => $timestamp,
 						'editUrl'        => "collections/{$collection->id}/{$object['id']}",
 						// Try to get a display name from common fields
