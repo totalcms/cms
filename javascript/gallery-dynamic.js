@@ -47,8 +47,7 @@ class DynamicGallery {
 	 */
 	parseDynamicElements() {
 		try {
-			const content = this.templateElement.textContent.trim();
-			return JSON.parse(content);
+			return JSON.parse(this.templateElement.innerHTML);
 		} catch (error) {
 			console.error('Failed to parse dynamic gallery data:', error);
 			return [];
