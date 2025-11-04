@@ -85,7 +85,7 @@ readonly class LoginForm implements \Stringable
 		// Submit button
 		$submitButton = HTMLUtils::button($this->submitLabel, [
 			'type'  => 'submit',
-			'class' => 'cms-button',
+			'class' => 'cms-button no-icon',
 		]);
 
 		// Build the form

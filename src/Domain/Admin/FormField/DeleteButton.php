@@ -13,6 +13,6 @@ readonly class DeleteButton
 
 	public function build(): string
 	{
-		return HTMLUtils::button($this->label, ['class' => 'cms-delete']);
+		return HTMLUtils::button($this->label, ['class' => 'cms-delete cms-button']);
 	}
 }
