@@ -174,20 +174,20 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
 ```
 
-### Dynamic Gallery (Trigger-Based Lightbox)
+### Gallery Launcher (Trigger-Based Lightbox)
 
-Dynamic galleries allow you to open a lightbox from custom trigger elements like buttons, links, or thumbnails. Perfect for launching galleries without showing a visible grid.
+The gallery launcher allows you to open a lightbox from custom trigger elements like buttons, links, or thumbnails. Perfect for launching galleries without showing a visible grid.
 
 ```twig
-{# Basic dynamic gallery #}
-{{ cms.galleryDynamic('id') }}                   {# Outputs hidden template with gallery data #}
+{# Basic gallery launcher #}
+{{ cms.galleryLauncher('id') }}                   {# Outputs hidden template with gallery data #}
 <button data-gallery="gallery-id">View Photos</button>
 
 {# Custom thumbnail and full-size settings #}
-{{ cms.galleryDynamic('id', {w: 300, h: 200}, {w: 1920, fit: 'contain'}) }}
+{{ cms.galleryLauncher('id', {w: 300, h: 200}, {w: 1920, fit: 'contain'}) }}
 
 {# With options #}
-{{ cms.galleryDynamic('id', {w: 300}, {w: 1920}, {
+{{ cms.galleryLauncher('id', {w: 300}, {w: 1920}, {
     collection: 'gallery',
     property: 'gallery',
     captions: true,                              {# Show alt text as captions #}
@@ -198,17 +198,17 @@ Dynamic galleries allow you to open a lightbox from custom trigger elements like
 }) }}
 ```
 
-#### Triggering Dynamic Galleries
+#### Triggering Gallery Launchers
 
 **Method 1: Using data-gallery attribute (recommended)**
 ```twig
-{{ cms.galleryDynamic('vacation') }}
+{{ cms.galleryLauncher('vacation') }}
 <button data-gallery="gallery-vacation">View All Photos</button>
 ```
 
 **Method 2: Using CSS selector**
 ```twig
-{{ cms.galleryDynamic('vacation', {}, {}, {
+{{ cms.galleryLauncher('vacation', {}, {}, {
     trigger: '.open-gallery-btn'                 {# Any element with this class triggers gallery #}
 }) }}
 <button class="open-gallery-btn">View Gallery</button>
@@ -217,7 +217,7 @@ Dynamic galleries allow you to open a lightbox from custom trigger elements like
 
 **Method 3: Combined (both data-gallery and CSS selector)**
 ```twig
-{{ cms.galleryDynamic('vacation', {}, {}, {
+{{ cms.galleryLauncher('vacation', {}, {}, {
     trigger: '.gallery-thumb'
 }) }}
 <button data-gallery="gallery-vacation">View All</button>
@@ -229,7 +229,7 @@ Dynamic galleries allow you to open a lightbox from custom trigger elements like
 
 **By image filename (recommended):**
 ```twig
-{{ cms.galleryDynamic('vacation') }}
+{{ cms.galleryLauncher('vacation') }}
 
 {# These thumbnails open gallery at their specific image #}
 <img data-gallery="gallery-vacation"
@@ -243,16 +243,16 @@ Dynamic galleries allow you to open a lightbox from custom trigger elements like
 
 **By index (zero-based):**
 ```twig
-{{ cms.galleryDynamic('vacation') }}
+{{ cms.galleryLauncher('vacation') }}
 <button data-gallery="gallery-vacation" data-gallery-index="0">First Image</button>
 <button data-gallery="gallery-vacation" data-gallery-index="5">Image #6</button>
 ```
 
-#### Complete Dynamic Gallery Example
+#### Complete Gallery Launcher Example
 
 ```twig
-{# Create the dynamic gallery #}
-{{ cms.galleryDynamic('products',
+{# Create the gallery launcher #}
+{{ cms.galleryLauncher('products',
     {w: 400, h: 300},           {# Thumbnail settings #}
     {w: 1920, fit: 'contain'},  {# Full-size settings #}
     {
@@ -285,14 +285,14 @@ Dynamic galleries allow you to open a lightbox from custom trigger elements like
 </div>
 ```
 
-**Dynamic Gallery Options:**
+**Gallery Launcher Options:**
 - `trigger` - CSS selector for trigger elements (in addition to data-gallery)
 - `captions` - Show image alt text as captions (true/false)
 - `galleryId` - Custom gallery ID (default: `{collection}-{id}`)
 - All standard LightGallery options: `speed`, `loop`, `download`, `counter`, `plugins`, etc.
-- Note: Grid-specific options (`maxVisible`, `viewAllText`) don't apply to dynamic galleries
+- Note: Grid-specific options (`maxVisible`, `viewAllText`) don't apply to gallery launchers
 
-**When to Use Dynamic Galleries:**
+**When to Use Gallery Launchers:**
 - Custom thumbnail layouts that don't fit the grid pattern
 - Opening galleries from buttons or text links
 - Multiple different triggers for the same gallery
@@ -478,12 +478,12 @@ Common parameters for image transformations:
 </div>
 ```
 
-### Create a dynamic gallery with custom triggers
+### Create a gallery launcher with custom triggers
 ```twig
 {% set product = cms.object('products', 'widget-pro') %}
 
-{# Output the dynamic gallery (hidden template) #}
-{{ cms.galleryDynamic(product.id, {w: 300, h: 300}, {w: 1920}, {
+{# Output the gallery launcher (hidden template) #}
+{{ cms.galleryLauncher(product.id, {w: 300, h: 300}, {w: 1920}, {
     captions: true,
     trigger: '.product-thumb',
     plugins: ['zoom', 'fullscreen']

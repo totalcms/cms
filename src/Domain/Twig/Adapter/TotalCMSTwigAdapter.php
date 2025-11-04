@@ -1269,7 +1269,7 @@ NGINX;
 	 * @param array<string,string|int> $fullSettings
 	 * @param array<string,mixed> $options
 	 */
-	public function galleryDynamic(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
+	public function galleryLauncher(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
