@@ -1262,6 +1262,77 @@ NGINX;
 	}
 
 	/**
+	 * Generate a dynamic gallery that can be triggered programmatically.
+	 * Returns a template tag with JSON data for JavaScript initialization.
+	 *
+	 * @param array<string,string|int> $thumbSettings
+	 * @param array<string,string|int> $fullSettings
+	 * @param array<string,mixed> $options
+	 */
+	public function galleryDynamic(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		if ($thumbSettings === []) {
+			$thumbSettings = ['w' => 300, 'h' => 200];
+		}
+
+		$images = $this->data($options['collection'], $id, $options['property']);
+
+		// Check if captions should be shown in subHtml
+		$showCaptions = isset($options['captions']) && $options['captions'];
+
+		// Build dynamicEl array for lightGallery
+		$dynamicEl = [];
+		foreach ($images as $image) {
+			$item = [
+				'src'    => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+				'thumb'  => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
+				'lgSize' => "{$image['width']}-{$image['height']}",
+				'name'   => $image['name'], // Include name for image-based index lookup
+			];
+
+			// Add subHtml if captions are enabled and alt text exists
+			if ($showCaptions && !empty($image['alt'])) {
+				$item['subHtml'] = htmlspecialchars((string)$image['alt']);
+			}
+
+			$dynamicEl[] = $item;
+		}
+
+		// Generate unique gallery ID (allow override via options)
+		$galleryId = $options['galleryId'] ?? "{$options['collection']}-{$id}";
+
+		// Remove options that shouldn't be in JS settings
+		unset($options['collection']);
+		unset($options['property']);
+		unset($options['captions']);
+		unset($options['galleryId']);
+
+		// Build template attributes
+		$attributes = [
+			'data-gallery-id' => $galleryId,
+			'data-settings'   => (string)json_encode($options),
+		];
+
+		// Convert attributes to HTML string
+		$attributesString = '';
+		foreach ($attributes as $key => $value) {
+			$attributesString .= sprintf(' %s="%s"', $key, htmlspecialchars($value, ENT_QUOTES));
+		}
+
+		// Return template tag with JSON content
+		return sprintf(
+			'<template%s>%s</template>',
+			$attributesString,
+			htmlspecialchars((string)json_encode($dynamicEl), ENT_QUOTES)
+		);
+	}
+
+	/**
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
