@@ -18,6 +18,10 @@ export default class TotalField {
 		this.type = container.dataset.type;
 		this.property = this.input.name;
 
+		// Extract label text from the label element
+		const labelElement = this.container.querySelector('label');
+		this.label = labelElement ? labelElement.textContent.trim() : this.property;
+
         // Define option defaults
         const defaults = {
 			form        : null,

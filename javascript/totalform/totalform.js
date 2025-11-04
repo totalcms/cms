@@ -430,7 +430,7 @@ export default class TotalForm {
 			this.unsaved();
 			if (this.autosave) this.save();
 		});
-		this.form.addEventListener("field-error", e => this.error(e.detail.message));
+		this.form.addEventListener("field-error", e => this.error(e.detail.message, e.detail.field));
     }
 
 	validate() {
@@ -694,10 +694,20 @@ export default class TotalForm {
         return this.state === "processing";
     }
 
-    error(error) {
+    error(error, field = null) {
 		this.changeState("error", {error:error});
 		this.validated = false;
-        console.error("Form Error:", error);
+
+		// Include field information in error message if available
+		if (field) {
+			const fieldLabel = field.label || field.property || 'unknown field';
+			const fieldProperty = field.property || 'unknown';
+			console.error(`Form Error [${fieldProperty}]:`, error);
+			console.error(`  Field Label: "${fieldLabel}"`);
+			console.error(`  Field Element:`, field.input);
+		} else {
+			console.error("Form Error:", error);
+		}
     }
 
 	isError() {
