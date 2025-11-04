@@ -227,10 +227,11 @@ class DepotField extends FormField
 	protected function folderDialog(array $data = []): string
 	{
 		$content = $this->form->field('name', [
-			'field' => 'text',
-			'label' => 'Folder Name',
-			'help'  => 'The name of the folder.',
-			'value' => $data['name'] ?? '',
+			'field'    => 'text',
+			'label'    => 'Folder Name',
+			'help'     => 'The name of the folder.',
+			'value'    => $data['name'] ?? '',
+			'required' => false, // Not required - folder renaming feature is incomplete, validation will be done in JS when implemented
 		]);
 
 		$content .= $this->closeSection();

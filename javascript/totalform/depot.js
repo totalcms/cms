@@ -169,6 +169,8 @@ export default class DepotField extends TotalField {
 
         const dialog = new Dialog(dialogNode);
         dialog.open();
+
+		// TODO: Handle folder rename - make sure folder name is not blank
     }
 
     initEditDialog(node) {
