@@ -42,3 +42,32 @@
 
 {% set form = cms.form.builder(url.collection, finalOptions) %}
 {{ form.autoBuild() }}
+
+{% if url.id %}
+<script>
+function duplicateObject(event) {
+	event.preventDefault();
+
+	// Create a temporary form to POST the object ID to /admin/collections/{collection}/add
+	const tempForm               = document.createElement('form');
+	      tempForm.method        = 'POST';
+	      tempForm.action        = 'collections/{{ url.collection }}/add';
+	      tempForm.style.display = 'none';
+
+	// Just send the object ID - server will fetch and filter the data
+	const input = document.createElement('input');
+	input.type = 'hidden';
+	input.name = 'duplicate';
+	input.value = '{{ url.id }}';
+	tempForm.appendChild(input);
+
+	document.body.appendChild(tempForm);
+	tempForm.submit();
+}
+</script>
+<style>
+#collection-actions .duplicate {
+	display: list-item !important;
+}
+</style>
+{% endif %}

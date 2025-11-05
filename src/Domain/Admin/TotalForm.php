@@ -145,6 +145,7 @@ class TotalForm implements \Stringable
 	 * @param array<int,array<string,mixed>> $newActions Array of action objects
 	 * @param array<int,array<string,mixed>> $editActions Array of action objects
 	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
+	 * @param array<string,mixed> $data Duplicate data for prefilling form
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
@@ -169,6 +170,7 @@ class TotalForm implements \Stringable
 		protected array $newActions              = [],
 		protected array $editActions             = [],
 		protected array $deleteActions           = [],
+		protected array $data                    = [],
 		protected bool $autosave                 = false,
 		protected bool $helpOnHover              = false,
 		protected bool $helpOnFocus              = false,
