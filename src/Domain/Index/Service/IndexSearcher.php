@@ -132,7 +132,11 @@ readonly class IndexSearcher
 	private static function searchValue(mixed $value, string $query): bool
 	{
 		if (is_scalar($value)) { // Checks if value is a string, int, float, or bool
-			return stripos((string)$value, $query) !== false;
+			// Use word boundary matching for more precise results
+			// This prevents "table" from matching "reputable"
+			$pattern = '/\b' . preg_quote($query, '/') . '/i';
+
+			return preg_match($pattern, (string)$value) === 1;
 		}
 
 		return false;
