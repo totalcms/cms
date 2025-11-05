@@ -1,0 +1,74 @@
+<?php
+
+namespace TotalCMS\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
+use Slim\Routing\RouteContext;
+use TotalCMS\Support\Config;
+use TotalCMS\Renderer\RedirectRenderer;
+
+/**
+ * Middleware to check if Total CMS has been set up (tcms-data folder exists).
+ * If not, redirect to the setup page.
+ *
+ * This middleware runs BEFORE authentication to allow initial setup without auth.
+ */
+readonly class SetupCheckMiddleware implements MiddlewareInterface
+{
+	public function __construct(
+		private Config $config,
+		private RedirectRenderer $redirectRenderer,
+	) {
+	}
+
+	public function process(
+		ServerRequestInterface $request,
+		RequestHandlerInterface $handler,
+	): ResponseInterface {
+		// Get the matched route
+		$routeContext = RouteContext::fromRequest($request);
+		$route = $routeContext->getRoute();
+
+		// Skip setup check for setup routes and login/first-user creation
+		if ($route !== null) {
+			$routeName = $route->getName();
+			// TODO : remove login?
+			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset' || $routeName === 'login')) {
+				return $handler->handle($request);
+			}
+		}
+
+		// Check if tcms-data exists in any of the expected locations
+		if ($this->dataDirExists()) {
+			// Data directory exists, continue normal flow
+			return $handler->handle($request);
+		}
+
+		// Data directory doesn't exist, redirect to setup page
+		return $this->redirectRenderer->redirectFor(new Response(), 'setup-data-path');
+	}
+
+	/**
+	 * Check if tcms-data directory is properly set up.
+	 *
+	 * A directory is considered "set up" if it contains an auth collection,
+	 * which indicates that the user has completed setup and created their first account.
+	 * System files like .system/access-groups.json are auto-created and don't count.
+	 */
+	private function dataDirExists(): bool
+	{
+		if ($this->config->datadir === '' || !is_dir($this->config->datadir)) {
+			return false;
+		}
+
+		// Check if auth collection exists (indicates setup is complete)
+		$authCollection = $this->config->auth['collection'] ?? 'auth';
+		$authPath       = $this->config->datadir . '/' . $authCollection;
+
+		return is_dir($authPath);
+	}
+}

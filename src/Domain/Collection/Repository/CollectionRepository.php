@@ -62,6 +62,14 @@ class CollectionRepository extends StorageRepository
 		}
 
 		// Cache miss - fetch from filesystem
+		// Check if directory exists before trying to list it (prevents auto-creation during setup)
+		if (!$this->filesystem->directoryExists('')) {
+			// Directory doesn't exist - return empty array and cache it
+			$this->cacheManager->storeComputedData('collections_list', [], CacheManager::TTL_COLLECTIONS_LIST);
+
+			return [];
+		}
+
 		$collections = [];
 		foreach ($this->filesystem->listDirectories('') as $id) {
 			$collection = $this->fetchCollection($id);

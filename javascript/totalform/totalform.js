@@ -108,8 +108,12 @@ export default class TotalForm {
 			this.autosave = true;
 		}
 
-		// Don't run the beforeunload event when inside iframes
-		if (window === window.top) {
+		// Check if this form uses AJAX (default is true if not specified)
+		const usesAjax = this.form.dataset.ajax !== "false";
+
+		// Don't run the beforeunload event when inside iframes or for non-AJAX forms
+		// Non-AJAX forms handle their own submission and don't need unsaved change warnings
+		if (window === window.top && usesAjax) {
 			window.onbeforeunload = e => {
 				if (this.isUnsaved()) {
 					e.preventDefault();

@@ -16,6 +16,7 @@ use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
 use TotalCMS\Middleware\Security\CorsMiddleware;
+use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\TotalCMS;
 
 return function (App $app): void {
@@ -24,6 +25,7 @@ return function (App $app): void {
 	$app->add(BetaMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(SessionStartMiddleware::class);
+	$app->add(SetupCheckMiddleware::class);
 	$app->add(CorsMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
 	$app->add(LicenseValidationMiddleware::class);

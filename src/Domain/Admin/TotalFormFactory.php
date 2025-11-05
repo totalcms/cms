@@ -859,6 +859,7 @@ readonly class TotalFormFactory
 	{
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
+		// Use empty collection string to prevent fetching/creating any collection
 		return new ObjectForm(
 			objectFetcher     : $this->objectFetcher,
 			collectionFetcher : $this->collectionFetcher,
@@ -868,7 +869,7 @@ readonly class TotalFormFactory
 			schemaLister      : $this->schemaLister,
 			accessGroupLister : $this->accessGroupLister,
 			api               : $this->api,
-			collection        : 'text',
+			collection        : '',
 		);
 	}
 

@@ -43,6 +43,8 @@ export default class TotalFormManager {
 		const totalforms = [];
 		const forms = Array.from(document.querySelectorAll("form.totalform"));
 		for (const form of forms) {
+			// Skip simple forms - they handle their own initialization
+			if (form.classList.contains("simple-form")) continue;
 			totalforms.push(new TotalForm(form));
 		}
 		return totalforms;

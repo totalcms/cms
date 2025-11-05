@@ -454,3 +454,8 @@
 		mask-image : var(--icon-angle);
 	}
 }
+.form-field.icon-folder .form-group-icon {
+	&:after {
+		mask-image : var(--icon-folder);
+	}
+}
