@@ -64,16 +64,19 @@ readonly class CollectionSaver
 	 * update Collection data.
 	 *
 	 * @param array<string,mixed> $data The collection data to save
+	 * @param CollectionData|null $existingCollection Optional existing collection to avoid double-fetching
 	 *
 	 * @throws \UnexpectedValueException
 	 */
-	public function updateCollection(string $collectionId, array $data): CollectionData
+	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null): CollectionData
 	{
 		$data['count']       = $this->initializeCount($collectionId, $data);
 		$data['lastUpdated'] = DateData::cleanDate();
 
-		// Fetch existing collection to preserve system-managed fields
-		$existingCollection = $this->storage->fetchCollection($collectionId);
+		// Fetch existing collection to preserve system-managed fields if not provided
+		if ($existingCollection === null) {
+			$existingCollection = $this->storage->fetchCollection($collectionId);
+		}
 
 		if (!$existingCollection instanceof CollectionData) {
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
@@ -164,7 +167,7 @@ readonly class CollectionSaver
 		$collectionArray                 = $collection->toArray();
 		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + 1;
 
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}
 
 	/**
@@ -183,7 +186,7 @@ readonly class CollectionSaver
 		$collectionArray                 = $collection->toArray();
 		$collectionArray['totalObjects'] = max(0, ($collectionArray['totalObjects'] ?? 0) - 1);
 
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}
 
 	/**
@@ -201,7 +204,7 @@ readonly class CollectionSaver
 
 		$collectionArray = $collection->toArray();
 
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}
 
 	/**	@param array<string,mixed> $data */
