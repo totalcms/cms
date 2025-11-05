@@ -187,7 +187,7 @@ class TotalCMSTwigFunctions
 			return false;
 		}
 
-		return $file['size'] !== 0;
+		return intval($file['size']) !== 0;
 	}
 
 	public static function imageExists(mixed $image): bool
