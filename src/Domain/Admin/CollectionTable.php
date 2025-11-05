@@ -61,7 +61,7 @@ readonly class CollectionTable
 	private function buildCloneDialog(): string
 	{
 		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
-		$header        = HTMLUtils::element('h3', 'Duplicate ' . $labelSingular);
+		$header        = HTMLUtils::element('h3', 'Clone ' . $labelSingular);
 
 		$collections = $this->collectionLister->listCollectionsWithSchema($this->schemaData->id);
 
@@ -273,7 +273,7 @@ readonly class CollectionTable
 		]);
 		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
 
-		$clone = HTMLUtils::element('a', 'Duplicate ' . $labelSingular, [
+		$clone = HTMLUtils::element('a', 'Clone ' . $labelSingular, [
 			'href' => implode('/', [
 				'/collections',
 				$this->collectionData->id,
