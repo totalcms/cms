@@ -85,7 +85,7 @@ readonly class AdminCollectionAction
 
 				// Fetch the object to duplicate and convert to array
 				// ObjectForm will handle filtering file properties
-				$objectToDuplicate          = $this->objectFetcher->fetchObject($collection, $duplicateId);
+				$objectToDuplicate             = $this->objectFetcher->fetchObject($collection, $duplicateId);
 				$templateData['duplicateData'] = $objectToDuplicate->toArray();
 			}
 		}

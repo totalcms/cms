@@ -74,7 +74,7 @@ readonly class CollectionSaver
 		$data['lastUpdated'] = DateData::cleanDate();
 
 		// Fetch existing collection to preserve system-managed fields if not provided
-		if ($existingCollection === null) {
+		if (!$existingCollection instanceof CollectionData) {
 			$existingCollection = $this->storage->fetchCollection($collectionId);
 		}
 

@@ -1321,7 +1321,7 @@ NGINX;
 		// Convert attributes to HTML string
 		$attributesString = '';
 		foreach ($attributes as $key => $value) {
-			$attributesString .= sprintf(' %s="%s"', $key, htmlspecialchars($value, ENT_QUOTES));
+			$attributesString .= sprintf(' %s="%s"', $key, htmlspecialchars((string)$value, ENT_QUOTES));
 		}
 
 		// Return template tag with JSON content

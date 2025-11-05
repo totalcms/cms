@@ -61,7 +61,7 @@ readonly class AdminSchemaAction
 				$schemaToDuplicate = $this->schemaFetcher->fetchRawSchema($duplicateId);
 
 				// Convert to array and append '-duplicate' to ID
-				$duplicateData = $schemaToDuplicate->toArray();
+				$duplicateData       = $schemaToDuplicate->toArray();
 				$duplicateData['id'] = $duplicateId . '-duplicate';
 
 				$templateData['duplicateData'] = $duplicateData;
