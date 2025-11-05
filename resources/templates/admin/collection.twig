@@ -30,7 +30,7 @@
 				{% endif %}
 				{# Show duplicate link only when editing an object (css in edit.twig) #}
 				{% if cms.canAccessCollection(collection, 'create') %}
-				<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">Duplicate Object</a></li>
+				<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
 				{% endif %}
 				<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
 				{% if cms.canAccessCollection(collection, 'create') %}

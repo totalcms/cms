@@ -52,18 +52,22 @@ readonly class AdminSchemaAction
 		// Handle POST request for schema duplication
 		if ($request->getMethod() === 'POST') {
 			$postData = (array)$request->getParsedBody();
-			// Decode JSON strings back to arrays for fields that should be arrays
-			$arrayFields = ['properties', 'required', 'index', 'inheritFrom'];
-			foreach ($arrayFields as $field) {
-				if (isset($postData[$field]) && is_string($postData[$field])) {
-					$postData[$field] = json_decode($postData[$field], true) ?? [];
-				}
+
+			// Check if this is a duplication request (contains 'duplicate' with schema ID)
+			if (isset($postData['duplicate']) && is_string($postData['duplicate'])) {
+				$duplicateId = $postData['duplicate'];
+
+				// Fetch the schema to duplicate
+				$schemaToDuplicate = $this->schemaFetcher->fetchRawSchema($duplicateId);
+
+				// Convert to array and append '-duplicate' to ID
+				$duplicateData = $schemaToDuplicate->toArray();
+				$duplicateData['id'] = $duplicateId . '-duplicate';
+
+				$templateData['duplicateData'] = $duplicateData;
+				// Force the schema to be 'new' for duplication
+				$templateData['url']['schema'] = 'new';
 			}
-			// Set the schema ID to the one being duplicated
-			$postData['id'] .= '-duplicate';
-			$templateData['duplicateData'] = $postData;
-			// Force the schema to be 'new' for duplication
-			$templateData['url']['schema'] = 'new';
 		}
 
 		return $this->twigRenderer->template($response, 'admin/schema.twig', $templateData);
