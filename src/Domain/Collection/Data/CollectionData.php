@@ -41,7 +41,7 @@ class CollectionData
 	public array $groups = [];        // access groups that can access this collection
 
 	/** @var array<string> */
-	public array $publicOperations = ['read'];  // operations allowed publicly (create, read, update, delete)
+	public array $publicOperations = [];  // operations allowed publicly (create, read, update, delete)
 
 	/** @var array<string,array<string,mixed>> */
 	public array $properties = [];        // Rules for fields defined in schemaToMetaProps
