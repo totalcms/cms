@@ -36,6 +36,26 @@
 .fr-box {
     width: 100%;
 }
+.fr-toolbar .fr-command.fr-btn.fr-open:not(:hover):not(:focus):not(:active),
+.fr-desktop .fr-command:hover:not(.fr-table-cell),
+.fr-desktop .fr-command:focus:not(.fr-table-cell),
+.fr-desktop .fr-command.fr-btn-hover:not(.fr-table-cell),
+.fr-desktop .fr-command.fr-expanded:not(.fr-table-cell),
+.fr-command.fr-btn+.fr-dropdown-menu .fr-dropdown-wrapper .fr-dropdown-content ul.fr-dropdown-list li a.fr-active,
+.fr-toolbar .fr-more-toolbar {
+	background-color: oklch(var(--totalform-nearwhite));
+}
+.fr-command.fr-btn+.fr-dropdown-menu {
+	background-color: oklch(var(--totalform-white));
+}
+.fr-command.fr-btn.fr-options.fr-btn-hover,
+.fr-command.fr-btn.fr-options:hover,
+.fr-command.fr-btn.fr-options:focus {
+	border-color: oklch(var(--totalform-nearwhite));
+}
+.fr-toolbar .fr-command.fr-btn.fr-dropdown.fr-active,
+.fr-popup .fr-command.fr-btn.fr-dropdown.fr-active,
+.fr-modal .fr-command.fr-btn.fr-dropdown.fr-active,
 .fr-box.fr-basic .fr-wrapper {
 	background-color: oklch(var(--totalform-white));
 	border-color: oklch(var(--totalform-border-color));
@@ -49,6 +69,9 @@
 	background-color: oklch(var(--totalform-white));
 	color: oklch(var(--totalform-text-color));
 }
+.fr-toolbar .fr-command.fr-btn.fr-dropdown.fr-active:hover,
+.fr-popup .fr-command.fr-btn.fr-dropdown.fr-active:hover,
+.fr-modal .fr-command.fr-btn.fr-dropdown.fr-active:hover,
 .fr-toolbar .fr-command.fr-btn {
 	color: oklch(var(--totalform-text-color));
 	&:hover, &:focus {
