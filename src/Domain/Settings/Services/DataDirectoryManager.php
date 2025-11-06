@@ -26,7 +26,7 @@ readonly class DataDirectoryManager
 	 */
 	private function createSecurityFile(string $path): void
 	{
-		$htaccessPath = $path . '/.htaccess';
+		$htaccessPath    = $path . '/.htaccess';
 		$htaccessContent = <<<'HTACCESS'
 # Deny direct access to all files and folders in tcms-data
 # This protects sensitive data including API keys, collections, and user data
@@ -98,6 +98,7 @@ HTACCESS;
 		}
 
 		$files = @scandir($path);
+
 		return $files !== false && count($files) === 2;
 	}
 

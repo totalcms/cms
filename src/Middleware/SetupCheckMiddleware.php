@@ -8,8 +8,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
-use TotalCMS\Support\Config;
 use TotalCMS\Renderer\RedirectRenderer;
+use TotalCMS\Support\Config;
 
 /**
  * Middleware to check if Total CMS has been set up (tcms-data folder exists).
@@ -31,10 +31,10 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 	): ResponseInterface {
 		// Get the matched route
 		$routeContext = RouteContext::fromRequest($request);
-		$route = $routeContext->getRoute();
+		$route        = $routeContext->getRoute();
 
 		// Skip setup check for setup routes and login/first-user creation
-		if ($route !== null) {
+		if ($route instanceof \Slim\Interfaces\RouteInterface) {
 			$routeName = $route->getName();
 			// TODO : remove login?
 			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset' || $routeName === 'login')) {

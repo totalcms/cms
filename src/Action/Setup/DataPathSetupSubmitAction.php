@@ -50,7 +50,7 @@ readonly class DataPathSetupSubmitAction
 			try {
 				$this->directoryManager->validateAbsolutePath($dataPath);
 				$this->directoryManager->validateParentDirectory($dataPath);
-			} catch (\InvalidArgumentException | \RuntimeException $e) {
+			} catch (\InvalidArgumentException|\RuntimeException $e) {
 				$flash->add('error', $e->getMessage());
 
 				return $this->redirectRenderer->redirectFor($response, 'setup-data-path');

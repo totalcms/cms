@@ -97,7 +97,7 @@ describe('Data Path Setup Feature', function (): void {
 		recursiveDelete(cmsDataDir());
 
 		$response = post('/setup/data-path', [
-			'location' => 'custom',
+			'location'   => 'custom',
 			'customPath' => 'relative/path',
 		]);
 
@@ -110,7 +110,7 @@ describe('Data Path Setup Feature', function (): void {
 		recursiveDelete(cmsDataDir());
 
 		$response = post('/setup/data-path', [
-			'location' => 'custom',
+			'location'   => 'custom',
 			'customPath' => '/nonexistent/parent/path/data',
 		]);
 
