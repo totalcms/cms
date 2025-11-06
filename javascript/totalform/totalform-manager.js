@@ -108,7 +108,12 @@ export default class TotalFormManager {
 			button.addEventListener("click", event => {
 				event.preventDefault();
 
-				const totalform = event.target.closest("form").totalform;
+				const form = event.target.closest("form");
+				const totalform = form.totalform;
+
+				// Skip if this is a simple-form (they handle their own submission)
+				if (!totalform) return;
+
 				if (!totalform.validate()) return;
 
  				// Only one form to save
