@@ -432,7 +432,7 @@ NGINX;
 		return $this->fileAccessManager->verfiyPasswordOnly($password);
 	}
 
-	public function config(string $key, ?string $setting): mixed
+	public function config(string $key, ?string $setting = null): mixed
 	{
 		if ($setting === null) {
 			return $this->config->$key;
