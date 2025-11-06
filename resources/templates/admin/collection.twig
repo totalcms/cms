@@ -61,7 +61,7 @@
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
 				<ul>
-				{% for collection in sortByKey(collections) %}
+				{% for collection in sortByKey(collections, "name") %}
 					<li class="collection-{{collection.schema}}">
 						<a {% if url.collection == collection.id %}class="active"{% endif %}
 							href="collections/{{ collection.id }}"
