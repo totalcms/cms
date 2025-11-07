@@ -213,9 +213,11 @@ class ImageGenerator
 			$params['markw'] = '100w';
 		}
 
-		if (isset($params['marktext']) && !isset($params['marktextw'])) {
-			$params['marktextw'] = '100w';
-		}
+		// Don't auto-set marktextw for text watermarks - allow fixed-size text via marktextsize
+		// Users can explicitly set marktextw if they want scaling behavior
+		// if (isset($params['marktext']) && !isset($params['marktextw'])) {
+		// 	$params['marktextw'] = '100w';
+		// }
 
 		// Merge schema watermark settings (schema overrides URL parameters for maximum security)
 		$schemaWatermarks = $this->getSchemaWatermarkSettings();
@@ -365,7 +367,9 @@ class ImageGenerator
 		}
 
 		$imageMark = $this->watermarkFactory->createImageWatermark($this->params);
-		$textMark  = $this->watermarkFactory->createTextWatermark($this->params);
+		// Use requested width if specified, otherwise use original image width
+		$effectiveWidth = isset($this->params['w']) ? (int)$this->params['w'] : $imageData->width;
+		$textMark  = $this->watermarkFactory->createTextWatermark($this->params, $effectiveWidth);
 
 		$hasImageMark = $imageMark instanceof Watermark && !$imageMark->isEmpty();
 		$hasTextMark  = $textMark  instanceof Watermark && !$textMark->isEmpty();
