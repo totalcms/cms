@@ -14,7 +14,10 @@
 	{{ dashboard.newUserWelcome() }}
 {% else %}
 	{# Display welcome message #}
-	{{ dashboard.welcomeMessage() }}
+	{{ include([
+		'whitelabel/admin-welcome.twig',
+		'admin-welcome-message.twig'
+	], ignore_missing = true) }}
 
 	{# Display quick stats #}
 	{{ dashboard.statsCard(stats) }}

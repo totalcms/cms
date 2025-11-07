@@ -258,22 +258,6 @@
 </div>
 {% endmacro %}
 
-{# Welcome Message #}
-{% macro welcomeMessage(userName = null) %}
-<div class="dashboard-welcome">
-	<h1>
-		{% if userName %}
-			Welcome back, {{ userName }}! 👋
-		{% else %}
-			Welcome to Total CMS 3! 👋
-		{% endif %}
-	</h1>
-	<p class="dashboard-subtitle">
-		Manage your content, schemas, and templates all in one place.
-	</p>
-</div>
-{% endmacro %}
-
 {# New User Welcome - Shows when no collections exist #}
 {% macro newUserWelcome() %}
 <div class="dashboard-new-user-welcome">

@@ -1,0 +1,18 @@
+{#
+	Admin Dashboard Welcome Message
+
+	Override this template in tcms-data/templates/admin-welcome-message.twig
+	to customize the welcome message on your admin dashboard.
+#}
+<div class="dashboard-welcome">
+	<h1>
+		{% if cms.userData.name and cms.userData.name != 'Admin' %}
+			Welcome back, {{ cms.userData.name }}! 👋
+		{% else %}
+			Welcome to Total CMS 3! 👋
+		{% endif %}
+	</h1>
+	<p class="dashboard-subtitle">
+		Manage your content, schemas, and templates all in one place.
+	</p>
+</div>
