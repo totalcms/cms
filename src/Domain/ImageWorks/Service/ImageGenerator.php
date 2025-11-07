@@ -226,7 +226,8 @@ class ImageGenerator
 			$params = array_merge($params, $schemaWatermarks);
 		}
 
-		return array_filter($params);
+		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide
+		return array_filter($params, fn($value) => $value !== null && $value !== '');
 	}
 
 	/**

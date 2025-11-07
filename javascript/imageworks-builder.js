@@ -84,7 +84,12 @@ document.addEventListener("DOMContentLoaded", event => {
 		const data = { cache : Date.now() };
 		for (const [key, value] of Object.entries(formData)) {
 			if (value !== '') {
-				data[key] = value;
+				// Convert literal \n in marktext to actual newlines
+				if (key === 'marktext') {
+					data[key] = value.replace(/\\n/g, '\n');
+				} else {
+					data[key] = value;
+				}
 			}
 		}
 		return data;
