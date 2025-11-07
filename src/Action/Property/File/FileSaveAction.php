@@ -130,6 +130,22 @@ readonly class FileSaveAction
 	 */
 	private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
 	{
+		// Check for upload errors
+		$error = $file->getError();
+		if ($error !== UPLOAD_ERR_OK) {
+			$errorMessages = [
+				UPLOAD_ERR_INI_SIZE   => 'File exceeds upload_max_filesize in php.ini',
+				UPLOAD_ERR_FORM_SIZE  => 'File exceeds MAX_FILE_SIZE in HTML form',
+				UPLOAD_ERR_PARTIAL    => 'File was only partially uploaded',
+				UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
+				UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary upload directory',
+				UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+				UPLOAD_ERR_EXTENSION  => 'File upload stopped by PHP extension',
+			];
+			$message = $errorMessages[$error] ?? 'Unknown upload error (code: ' . $error . ')';
+			throw new \RuntimeException($message);
+		}
+
 		// Get chunk information from the request
 		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
 		$totalChunks      = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
