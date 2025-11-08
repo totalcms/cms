@@ -403,8 +403,19 @@ class TotalForm implements \Stringable
 	protected function fieldContent(): string
 	{
 		if ($this->fields !== [] && !isset($this->fields['id'])) {
-			// Add the ID field if it does not exist
-			$this->addField('id', ['required' => true]);
+			// Check if we should skip ID field for AddOnly forms with autogen
+			$skipIdField = false;
+			if ($this->addOnly && isset($this->schemaData->properties['id'])) {
+				$settings = $this->schemaData->properties['id']['settings'] ?? [];
+				if (isset($settings['autogen']) && !empty($settings['autogen'])) {
+					$skipIdField = true;
+				}
+			}
+
+			// Add the ID field if it does not exist (unless it should be skipped)
+			if (!$skipIdField) {
+				$this->addField('id', ['required' => true]);
+			}
 		}
 
 		$content = '';
@@ -526,6 +537,14 @@ class TotalForm implements \Stringable
 
 		$properties = array_keys($this->schemaData->properties);
 		foreach ($properties as $property) {
+			// Skip ID field in AddOnly forms if it has autogen configured
+			if ($property === 'id' && $this->addOnly) {
+				$settings = $this->schemaData->properties[$property]['settings'] ?? [];
+				if (isset($settings['autogen']) && !empty($settings['autogen'])) {
+					continue; // Skip this field - ID will be auto-generated
+				}
+			}
+
 			$this->addField($property);
 		}
 	}
