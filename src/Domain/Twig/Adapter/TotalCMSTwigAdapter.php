@@ -1927,6 +1927,10 @@ NGINX;
 			if (!$this->canAccessCollection($collection->id)) {
 				continue;
 			}
+			// Skip auth collections (frequently updated on login, clutters recent list)
+			if ($collection->schema === 'auth') {
+				continue;
+			}
 			$result[] = [
 				'id'           => $collection->id,
 				'name'         => $collection->name,

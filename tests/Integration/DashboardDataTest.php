@@ -77,15 +77,15 @@ describe('Dashboard Data Methods', function (): void {
 		// Get dashboard collections
 		$collections = $adapter->dashboardRecentCollections();
 
-		// Should be sorted by lastUpdated (most recent first) - includes auth collection
-		expect($collections)->toHaveCount(4); // 3 created + auth
+		// Should be sorted by lastUpdated (most recent first) - auth collection excluded
+		expect($collections)->toHaveCount(3); // 3 created (auth is filtered out)
 
 		// Verify all our collections are present
 		$ids = array_column($collections, 'id');
 		expect($ids)->toContain('newest-gallery');
 		expect($ids)->toContain('new-pages');
 		expect($ids)->toContain('old-blog');
-		expect($ids)->toContain('auth');
+		expect($ids)->not->toContain('auth'); // Auth collections are excluded from recent list
 
 		// Verify newest-gallery is more recent than old-blog
 		$galleryIndex = array_search('newest-gallery', $ids);

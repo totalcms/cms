@@ -96,11 +96,10 @@ class CollectionRepository extends StorageRepository
 			return null;
 		}
 
-		// Auto-calculate totalObjects and lastUpdated if missing (backward compatibility)
+		// Auto-calculate totalObjects if missing (backward compatibility)
 		// Calculate in-memory only - values persist on next normal save operation
-		if ($collectionData->lastUpdated === '') {
+		if ($collectionData->totalObjects === 0) {
 			$collectionData->totalObjects = $this->calculateObjectCount($collection);
-			$collectionData->lastUpdated  = DateData::cleanDate();
 		}
 
 		return $collectionData;
