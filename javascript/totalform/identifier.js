@@ -45,7 +45,7 @@ export default class Identifier extends TotalField {
 		if (this.options.autogen && !this.isLocked()) {
 			// autogen example: ${title}-${timestamp}
 			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
-			const reservedNames = ["now", "timestamp", "uuid", "uid", "id", "oid"];
+			const reservedNames = ["now", "timestamp", "uuid", "uid", "id", "oid", "currentyear", "currentyear2", "currentmonth", "currentday"];
 			autogenNames.forEach(name => {
 				// Skip reserved names and oid patterns (oid, oid-00000, etc.)
 				if (reservedNames.includes(name) || name.startsWith('oid-')) return;
@@ -89,13 +89,21 @@ export default class Identifier extends TotalField {
 		}
 
 		// Add some default data
+		const now = new Date();
 		data.now       = Date.now();
-		data.timestamp = new Date().toISOString().slice(0, -5).replace(/-|:/g, '');
+		data.timestamp = now.toISOString().slice(0, -5).replace(/-|:/g, '');
 		data.uuid      = this.generateUuid();
 		data.uid       = Math.random().toString(36).substring(2,9);
 		data.oid       = this.getCollectionCount();
 
+		// Date components for autogen
+		data.currentyear  = now.getFullYear().toString();
+		data.currentyear2 = now.getFullYear().toString().slice(-2);
+		data.currentmonth = String(now.getMonth() + 1).padStart(2, '0'); // 01-12
+		data.currentday   = String(now.getDate()).padStart(2, '0');       // 01-31
+
 		// Examples: ${title}-${timestamp}, ${title}-${now}, ${title}-${uuid}, ${title}-${oid}, ${title}-${oid-00000}
+		// Date examples: ${currentyear}-${oid-00000}, ${currentyear2}-${currentmonth}-${currentday}
 
 		// Magic happens here - enhanced to handle oid zero-padding
 		const autogen = this.options.autogen.replace(/\${(.*?)}/g, (match, key) => {
