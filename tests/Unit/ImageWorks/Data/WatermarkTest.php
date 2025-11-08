@@ -264,20 +264,21 @@ final class WatermarkTest extends TestCase
 
 	public function testArrayFilterBehaviorWithFalsyValues(): void
 	{
-		// Test that array_filter removes falsy values like '0'
+		// Test that array_filter preserves '0' values (valid for Glide positioning)
+		// but still filters out null values
 		$watermark = new Watermark(
 			mark: 'falsy_test.png',
-			markx: '0',    // This will be filtered out
-			marky: '0',    // This will be filtered out
-			markpad: '0'   // This will be filtered out
+			markx: '0',    // Should be preserved (0 pixels is valid)
+			marky: '0',    // Should be preserved (0 pixels is valid)
+			markpad: '0'   // Should be preserved (0 pixels is valid)
 		);
 
 		$array = $watermark->toArray();
 
-		$this->assertEquals(['mark' => 'falsy_test.png'], $array);
-		$this->assertArrayNotHasKey('markx', $array);
-		$this->assertArrayNotHasKey('marky', $array);
-		$this->assertArrayNotHasKey('markpad', $array);
+		$this->assertEquals('falsy_test.png', $array['mark']);
+		$this->assertEquals('0', $array['markx']);
+		$this->assertEquals('0', $array['marky']);
+		$this->assertEquals('0', $array['markpad']);
 	}
 
 	public function testWatermarkFitOptions(): void
