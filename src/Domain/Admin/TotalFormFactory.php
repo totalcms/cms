@@ -376,6 +376,7 @@ readonly class TotalFormFactory
 			'schemaLister'      => $this->schemaLister,
 			'accessGroupLister' => $this->accessGroupLister,
 			'csrfManager'       => $this->csrfManager,
+			'config'            => $this->config,
 		]);
 
 		return new ObjectForm(...$options);

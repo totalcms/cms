@@ -22,6 +22,12 @@
 			"label"   : "Dashboard Accent Color",
 			"help"    : "The accent color used throughout the admin dashboard.",
 			"default" : "#4d91e2"
+		},
+		"keepIdOnDuplicate": {
+			"type"    : "toggle",
+			"label"   : "Keep ID on Duplicate Object?",
+			"help"    : "When enabled, duplicating an object will keep the original ID (user must change it manually before saving). When disabled (default), the ID field is cleared to allow autogen rules to work.",
+			"default" : false
 		}
 	}
 }

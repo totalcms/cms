@@ -18,6 +18,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
@@ -32,6 +33,7 @@ class TotalForm implements \Stringable
 	public ?CollectionData $collectionData = null;
 	public ?ObjectData $objectData         = null;
 	public ?SchemaData $schemaData         = null;
+	public bool $isDuplicate               = false;
 
 	public const FIELDS_BY_TYPE = [
 		'Text (String) Fields' => [
@@ -178,6 +180,7 @@ class TotalForm implements \Stringable
 		protected bool $useFormGrid              = true,
 		protected bool $addOnly                  = false,
 		protected ?CSRFTokenManager $csrfManager = null,
+		protected ?Config $config                = null,
 	) {
 		$this->init();
 		$this->initClass();

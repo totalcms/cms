@@ -34,8 +34,12 @@ class ObjectForm extends TotalForm
 		// Handle duplicate object - filter out file-based properties and store raw data
 		if ($this->id === '' && $this->data !== []) {
 			$this->duplicateData = $this->filterFileProperties($this->data);
-			// Blank out ID to allow autogen rules to work
-			$this->duplicateData['id'] = '';
+			$this->isDuplicate   = true;
+			// Blank out ID to allow autogen rules to work (unless keepIdOnDuplicate setting is enabled)
+			$keepId = $this->config?->dashboard['keepIdOnDuplicate'] ?? false;
+			if (!$keepId) {
+				$this->duplicateData['id'] = '';
+			}
 		}
 	}
 

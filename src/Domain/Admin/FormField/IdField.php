@@ -15,7 +15,9 @@ class IdField extends FormField
 			$this->required = true;
 		}
 
-		if (!empty($this->value)) {
+		// Only set readonly if we have a value AND we're not in duplicate mode
+		// In duplicate mode, user needs to edit the ID before saving
+		if (!empty($this->value) && !$this->form->isDuplicate) {
 			$this->readonly = true;
 		}
 	}
