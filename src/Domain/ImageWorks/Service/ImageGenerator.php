@@ -229,7 +229,7 @@ class ImageGenerator
 		}
 
 		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide
-		return array_filter($params, fn($value) => $value !== null && $value !== '');
+		return array_filter($params, fn ($value): bool => $value !== null && $value !== '');
 	}
 
 	/**
@@ -369,7 +369,7 @@ class ImageGenerator
 		$imageMark = $this->watermarkFactory->createImageWatermark($this->params);
 		// Use requested width if specified, otherwise use original image width
 		$effectiveWidth = isset($this->params['w']) ? (int)$this->params['w'] : $imageData->width;
-		$textMark  = $this->watermarkFactory->createTextWatermark($this->params, $effectiveWidth);
+		$textMark       = $this->watermarkFactory->createTextWatermark($this->params, $effectiveWidth);
 
 		$hasImageMark = $imageMark instanceof Watermark && !$imageMark->isEmpty();
 		$hasTextMark  = $textMark  instanceof Watermark && !$textMark->isEmpty();

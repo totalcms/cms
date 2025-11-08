@@ -64,14 +64,14 @@ readonly class WatermarkFactory
 			try {
 				if ($this->filesystem->fileExists($watermarkPath)) {
 					$watermarkContent = $this->filesystem->read($watermarkPath);
-					$watermarkSize = @getimagesizefromstring($watermarkContent);
+					$watermarkSize    = @getimagesizefromstring($watermarkContent);
 					if ($watermarkSize !== false && $watermarkSize[0] > $baseImageWidth) {
 						// Watermark is wider than base image, scale it down to 90% for safety margin
 						// (allows room for x/y offsets without overflowing)
 						$markw = '90w';
 					}
 				}
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Silently fail - just don't auto-scale if we can't check dimensions
 			}
 		}
