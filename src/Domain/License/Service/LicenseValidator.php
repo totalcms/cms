@@ -228,18 +228,24 @@ readonly class LicenseValidator
 
 			// Check for API error responses
 			if (isset($decodedResponse['error'])) {
+				$errorMessage = is_array($decodedResponse['error'])
+					? json_encode($decodedResponse['error'])
+					: $decodedResponse['error'];
 				throw new LicenseException(
-					$decodedResponse['error'],
+					$errorMessage,
 					$decodedResponse['code'] ?? $httpCode
 				);
 			}
 
 			// Check for HTTP error codes
 			if ($httpCode >= 400) {
-				throw new LicenseException(
-					$decodedResponse['error'] ?? 'HTTP Error',
-					$httpCode
-				);
+				$errorMessage = 'HTTP Error';
+				if (isset($decodedResponse['error'])) {
+					$errorMessage = is_array($decodedResponse['error'])
+						? json_encode($decodedResponse['error'])
+						: $decodedResponse['error'];
+				}
+				throw new LicenseException($errorMessage, $httpCode);
 			}
 
 			return $decodedResponse;
