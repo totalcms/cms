@@ -190,6 +190,7 @@ body {
 			&.schema-text, &.collection-text { --collection-icon : var(--icon-text) }
 			&.schema-toggle, &.collection-toggle { --collection-icon : var(--icon-toggle) }
 			&.schema-url, &.collection-url { --collection-icon : var(--icon-link) }
+			&.schema-code, &.collection-code { --collection-icon : var(--icon-file-code) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
 			&.cache-manager { --collection-icon : var(--icon-clean-o) }

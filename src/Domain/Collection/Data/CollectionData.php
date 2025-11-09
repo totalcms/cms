@@ -157,6 +157,7 @@ class CollectionData
 		$defaults = [
 			'auth'       => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
 			'blog'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'code'       => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'playground' => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'mailer'     => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
 			'color'      => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],

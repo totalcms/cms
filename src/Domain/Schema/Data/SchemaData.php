@@ -26,6 +26,7 @@ class SchemaData
 		'auth',
 		'blog-legacy',
 		'blog',
+		'code',
 		'color',
 		'date',
 		'depot',

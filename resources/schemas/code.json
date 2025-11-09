@@ -1,0 +1,28 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/code.json",
+    "id"          : "code",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Code object",
+    "properties"  : {
+        "id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Code ID",
+			"help"    : "A unique ID for this code snippet. No spaces or special characters.",
+			"field"   : "id"
+        },
+        "code": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/code.json",
+			"label"   : "Code",
+			"help"    : "Add your code here.",
+			"field"   : "code"
+        }
+    },
+    "required": [
+        "id"
+    ],
+    "index": [
+        "id",
+		"code"
+    ]
+}

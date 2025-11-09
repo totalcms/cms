@@ -76,6 +76,10 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.text('id', {collection: 'custom'}) }}     {# Custom collection #}
 {{ cms.text('id', {property: 'content'}) }}      {# Custom property #}
 
+{{ cms.code('id') }}                             {# Get code snippet (default collection: code) #}
+{{ cms.code('id', {collection: 'custom'}) }}     {# Custom collection #}
+{{ cms.code('id', {property: 'snippet'}) }}      {# Custom property #}
+
 {{ cms.styledtext('id') }}                       {# Get styled text (HTML) #}
 {{ cms.styledtext('id', {collection: 'custom', property: 'html'}) }}
 ```

@@ -935,6 +935,17 @@ NGINX;
 	}
 
 	/** @param array<string,string> $options */
+	public function code(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'code',
+			'property'   => 'code',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
+	}
+
+	/** @param array<string,string> $options */
 	public function styledtext(string $id, array $options = []): string
 	{
 		$options = array_merge([

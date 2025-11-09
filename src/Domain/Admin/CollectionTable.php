@@ -215,6 +215,10 @@ readonly class CollectionTable
 			case 'svg':
 				return $value;
 
+			case 'code':
+				// Escape HTML entities to prevent code from executing in the table
+				return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+
 			case 'password':
 				return '********';
 		}
