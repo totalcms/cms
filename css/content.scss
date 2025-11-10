@@ -45,8 +45,13 @@ body>.cms-twig-error {
 	height       : auto !important;
 	aspect-ratio : 16 / 9;
 }
+svg.cms-qr-code,
 img.cms-image {
+	display   : inline-block;
 	max-width : 100%;
 	height    : auto;
 	width     : auto;
+}
+svg.cms-qr-code > rect {
+	fill  : transparent;
 }
