@@ -312,8 +312,9 @@ readonly class TotalFormFactory
 	public function playground(string $id = '', array $options = []): string
 	{
 		$options = array_merge([
-			'save'   => 'Save',
-			'delete' => 'Delete',
+			'save'        => 'Save',
+			'delete'      => 'Delete',
+			'class'       => "playground-form no-unsaved-warning",
 		], $options);
 		$options['id'] = $id;
 
