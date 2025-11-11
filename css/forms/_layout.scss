@@ -84,7 +84,10 @@
 	&.unsaved {
 		--totalform-border-color : var(--totalform-changed);
 		--totalform-icon-bg      : var(--totalform-changed);
-		--totalform-icon-color   : var(--totalform-purewhite);
+
+		&:not(.schemaProperties-field) {
+			--totalform-icon-color : var(--totalform-purewhite);
+		}
 	}
 	&:not(.deck-field).error {
 		--totalform-border-color : var(--totalform-error);
