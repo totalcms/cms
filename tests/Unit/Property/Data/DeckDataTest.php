@@ -201,12 +201,12 @@ describe('DeckData', function (): void {
 		expect($deck->hasItem('nonexistent'))->toBe(false);
 	});
 
-	test('DeckData → transform returns stdClass for empty deck', function (): void {
+	test('DeckData → transform returns empty array for empty deck', function (): void {
 		$deck = new DeckData();
 
 		$result = $deck->transform();
 
-		expect($result)->toBeInstanceOf(stdClass::class);
+		expect($result)->toBe([]);
 	});
 
 	test('DeckData → transform returns deck array for non-empty deck', function (): void {

@@ -134,7 +134,7 @@ class PropertyFactoryTest extends TestCase
 		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
-		$this->assertInstanceOf(\stdClass::class, $deck->transform());
+		$this->assertSame([], $deck->transform());
 	}
 
 	public function testCreateDeckWithNullValue(): void
@@ -146,7 +146,7 @@ class PropertyFactoryTest extends TestCase
 		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
-		$this->assertInstanceOf(\stdClass::class, $deck->transform());
+		$this->assertSame([], $deck->transform());
 	}
 
 	public function testCreateDeckWithNonArrayValue(): void
@@ -158,7 +158,7 @@ class PropertyFactoryTest extends TestCase
 		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
-		$this->assertInstanceOf(\stdClass::class, $deck->transform());
+		$this->assertSame([], $deck->transform());
 	}
 
 	public function testCreateDeckWithoutDeckref(): void

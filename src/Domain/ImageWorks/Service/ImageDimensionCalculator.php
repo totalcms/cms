@@ -85,6 +85,11 @@ class ImageDimensionCalculator
 		}
 
 		// Only height specified - maintain aspect ratio
+		// PHPStan knows $targetHeight must be non-null here due to early return at line 30
+		if ($targetHeight === null) {
+			return ['width' => $originalWidth, 'height' => $originalHeight];
+		}
+
 		return [
 			'width'  => (int)round($targetHeight * $aspectRatio),
 			'height' => $targetHeight,
