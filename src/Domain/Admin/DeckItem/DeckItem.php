@@ -91,12 +91,19 @@ class DeckItem
 			// Generate form fields for each property in the schema
 			foreach ($schema->properties as $propertyName => $propertySchema) {
 				$fieldValue = $this->itemData[$propertyName] ?? '';
+				$defaultValue = $propertySchema['default'] ?? '';
+
+				// Apply default value if field value is empty (not set in itemData)
+				// This handles new deck items where defaults should be used
+				if ($fieldValue === '' && $defaultValue !== '') {
+					$fieldValue = $defaultValue;
+				}
 
 				$fieldConfig = [
 					'field'        => $propertySchema['field'] ?? 'text',
 					'label'        => $propertySchema['label'] ?? ucfirst($propertyName),
 					'help'         => $propertySchema['help'] ?? '',
-					'default'      => $propertySchema['default'] ?? '',
+					'default'      => $defaultValue,
 					'placeholder'  => $propertySchema['placeholder'] ?? '',
 					'options'      => $propertySchema['options'] ?? [],
 					'settings'     => $propertySchema['settings'] ?? [],
@@ -110,8 +117,10 @@ class DeckItem
 				$filteredAttributes = TotalForm::filterFieldAttributes($attributeSettings);
 				$fieldConfig = array_merge($fieldConfig, $filteredAttributes);
 
-				// For template items (empty itemId) ensure field is empty
-				if ($this->itemId === '') {
+				// For template items (empty itemId), keep the default value if present
+				// The template is cloned by JavaScript to create new items, so defaults should be preserved
+				// Only clear value if there's no default (to show placeholder instead)
+				if ($this->itemId === '' && $defaultValue === '') {
 					$fieldConfig['value'] = '';
 				}
 
