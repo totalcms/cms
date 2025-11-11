@@ -55,11 +55,15 @@ class DeckData extends PropertyData
 		return true;
 	}
 
-	/** @return array<int|string,array<string,mixed>> */
-	public function transform(): array
+	/** @return array<int|string,array<string,mixed>>|object */
+	public function transform(): array|object
 	{
-		// Return empty array for empty deck
-		// Note: JSON serialization will convert empty associative arrays to {}
+		// Return empty object (stdClass) for empty deck to ensure JSON serialization as {}
+		// This is required because empty PHP arrays serialize as [] in JSON, not {}
+		if ($this->deck === []) {
+			return new \stdClass();
+		}
+
 		return $this->deck;
 	}
 
@@ -130,13 +134,7 @@ class DeckData extends PropertyData
 	{
 		$data = $this->transform();
 
-		// Force empty deck to serialize as {} instead of []
-		$flags = JSON_UNESCAPED_SLASHES;
-		if ($data === []) {
-			$flags |= JSON_FORCE_OBJECT;
-		}
-
-		$json = json_encode($data, $flags);
+		$json = json_encode($data, JSON_UNESCAPED_SLASHES);
 		if ($json === false) {
 			return '';
 		}
