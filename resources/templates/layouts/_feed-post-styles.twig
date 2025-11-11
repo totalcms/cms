@@ -1,0 +1,112 @@
+<style>
+{% verbatim %}
+	/* Container Layouts */
+	.tcms-feed-post {
+		width: 100%;
+	}
+
+	.feed-post-centered {
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.feed-post-narrow {
+		max-width: 600px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.feed-post-full-width {
+		max-width: 100%;
+	}
+
+	/* Hero Image */
+	.feed-hero {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		overflow: hidden;
+		margin-bottom: 2rem;
+	}
+
+	.feed-hero-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* Featured Badge */
+	.feed-featured-badge {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		background: rgba(0, 0, 0, 0.8);
+		color: white;
+		padding: 1rem;
+		border-radius: 0.25rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+	.feed-featured-badge svg {
+		width: 1.5rem;
+		height: 1.5rem;
+		display: block;
+	}
+
+	/* Header */
+	.feed-header {
+		margin-bottom: 2rem;
+	}
+
+	.feed-title {
+		margin: 0 0 1rem 0;
+		font-size: 2.5rem;
+		line-height: 1.2;
+	}
+
+	/* Meta */
+	.feed-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+		color: #666;
+		font-size: 0.9rem;
+	}
+
+	/* Content */
+	.feed-content {
+		margin-bottom: 2rem;
+		line-height: 1.7;
+	}
+
+	/* Footer */
+	.feed-footer {
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid #e0e0e0;
+		color: #666;
+		font-size: 0.875rem;
+	}
+
+	/* Responsive */
+	@media (max-width: 768px) {
+		.feed-title {
+			font-size: 2rem;
+		}
+
+		.feed-featured-badge {
+			top: 0.5rem;
+			right: 0.5rem;
+			padding: 0.75rem;
+			font-size: 0.75rem;
+		}
+		.feed-featured-badge svg {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
+	}
+{% endverbatim %}
+</style>
