@@ -169,7 +169,9 @@ describe('Cache Repository Integration', function (): void {
 		// Test that TTL constants are reasonable for their use cases
 		expect(CacheManager::TTL_COLLECTIONS_LIST)->toBeLessThan(CacheManager::TTL_RESERVED_SCHEMAS);
 		expect(CacheManager::TTL_INDEX_DATA)->toBeGreaterThan(CacheManager::TTL_API_RESPONSE);
-		expect(CacheManager::TTL_OBJECT_DATA)->toBe(CacheManager::DEFAULT_TTL);
+
+		// Object data TTL should be longer than default for performance (objects change infrequently)
+		expect(CacheManager::TTL_OBJECT_DATA)->toBeGreaterThan(CacheManager::DEFAULT_TTL);
 
 		// Session TTL should be reasonable for web sessions
 		expect(CacheManager::TTL_SESSION_DATA)->toBeGreaterThan(300); // At least 5 minutes
