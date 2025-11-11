@@ -15,6 +15,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
+use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
@@ -1217,10 +1218,13 @@ NGINX;
 				$figureContent .= $caption;
 			}
 
+			// Calculate the actual dimensions after ImageWorks processing
+			$processedDimensions = ImageDimensionCalculator::calculateFromImageData($image, $fullSettings);
+
 			$figure = HTMLUtils::element('figure', $figureContent, [
 				'class'        => 'cms-gallery-item',
 				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
-				'data-lg-size' => "{$image['width']}-{$image['height']}",
+				'data-lg-size' => "{$processedDimensions['width']}-{$processedDimensions['height']}",
 			]);
 			$gallery .= $figure;
 		}
