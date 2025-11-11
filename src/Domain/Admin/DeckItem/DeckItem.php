@@ -90,7 +90,7 @@ class DeckItem
 
 			// Generate form fields for each property in the schema
 			foreach ($schema->properties as $propertyName => $propertySchema) {
-				$fieldValue = $this->itemData[$propertyName] ?? '';
+				$fieldValue   = $this->itemData[$propertyName] ?? '';
 				$defaultValue = $propertySchema['default'] ?? '';
 
 				// Apply default value if field value is empty (not set in itemData)
@@ -113,9 +113,9 @@ class DeckItem
 
 				// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
 				// This ensures they're available as constructor parameters for FormField
-				$attributeSettings = $propertySchema['settings'] ?? [];
+				$attributeSettings  = $propertySchema['settings'] ?? [];
 				$filteredAttributes = TotalForm::filterFieldAttributes($attributeSettings);
-				$fieldConfig = array_merge($fieldConfig, $filteredAttributes);
+				$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
 
 				// For template items (empty itemId), keep the default value if present
 				// The template is cloned by JavaScript to create new items, so defaults should be preserved

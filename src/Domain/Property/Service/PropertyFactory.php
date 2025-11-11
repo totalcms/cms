@@ -164,12 +164,7 @@ readonly class PropertyFactory
 			$processedDeckData = $this->createDeck($deckPropertySchema, $singleItemDeck);
 			$processedDeck     = $processedDeckData->transform();
 
-			// Return the processed item data (transform() always returns array)
-			if (isset($processedDeck[$itemData['id']])) {
-				return $processedDeck[$itemData['id']];
-			}
-
-			return $itemData;
+			return $processedDeck[$itemData['id']] ?? $itemData;
 		} catch (\Exception) {
 			// If processing fails, return original data
 			return $itemData;
