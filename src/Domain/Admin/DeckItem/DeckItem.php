@@ -104,6 +104,12 @@ class DeckItem
 					'deck_context' => true, // Indicate this field is within a deck item
 				];
 
+				// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
+				// This ensures they're available as constructor parameters for FormField
+				$attributeSettings = $propertySchema['settings'] ?? [];
+				$filteredAttributes = TotalForm::filterFieldAttributes($attributeSettings);
+				$fieldConfig = array_merge($fieldConfig, $filteredAttributes);
+
 				// For template items (empty itemId) ensure field is empty
 				if ($this->itemId === '') {
 					$fieldConfig['value'] = '';
