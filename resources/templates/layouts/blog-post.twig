@@ -82,7 +82,7 @@
 				{# Featured Badge #}
 				{% if post.featured %}
 					<div class="blog-featured-badge">
-						<span>Featured</span>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="currentColor"><path d="M31.144,11.643,21.3,10.212l-4.4-8.92a1.041,1.041,0,0,0-1.794,0l-4.4,8.92L.856,11.643A1,1,0,0,0,.3,13.348l7.124,6.944L5.744,30.1A1,1,0,0,0,7.195,31.15L16,26.521l8.805,4.629A1,1,0,0,0,26.256,30.1l-1.682-9.8L31.7,13.348a1,1,0,0,0-.555-1.705Z" fill="currentColor"></path></g></svg>
 					</div>
 				{% endif %}
 			</div>
@@ -154,17 +154,17 @@
 			{% endif %}
 		</header>
 
-		{# Main Content #}
-		{% if post.content %}
-			<div class="blog-content">
-				{{ post.content|raw }}
-			</div>
-		{% endif %}
-
 		{# Media Embed (Video/Audio) #}
 		{% if opts.showMedia and post.media %}
 			<div class="blog-media">
 				{{ embed(post.media) }}
+			</div>
+		{% endif %}
+
+		{# Main Content #}
+		{% if post.content %}
+			<div class="blog-content">
+				{{ post.content|raw }}
 			</div>
 		{% endif %}
 
@@ -190,6 +190,7 @@
 		{% endif %}
 
 		{# Footer Meta (Updated/Created dates) #}
+		{% if opts.showMeta %}
 		<footer class="blog-footer">
 			{% if post.updated %}
 				<p class="blog-updated">
@@ -197,6 +198,7 @@
 				</p>
 			{% endif %}
 		</footer>
+		{% endif %}
 
 	</article>
 
