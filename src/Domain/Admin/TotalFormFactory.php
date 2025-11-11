@@ -314,7 +314,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'save'        => 'Save',
 			'delete'      => 'Delete',
-			'class'       => "playground-form no-unsaved-warning",
+			'class'       => 'playground-form no-unsaved-warning',
 		], $options);
 		$options['id'] = $id;
 

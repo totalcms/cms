@@ -28,7 +28,7 @@ class BarcodeGenerator
 			$svg = $barcodeObj->getInlineSvgCode();
 
 			// Add cms-barcode class to the SVG element
-			return (string) preg_replace('/<svg/', '<svg class="cms-barcode"', $svg, 1);
+			return (string)preg_replace('/<svg/', '<svg class="cms-barcode"', $svg, 1);
 		} catch (\Exception $e) {
 			throw new \InvalidArgumentException("Unable to generate barcode with type: {$type}. Error: " . $e->getMessage(), $e->getCode(), $e);
 		}

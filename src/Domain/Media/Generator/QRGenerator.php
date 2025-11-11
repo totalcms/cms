@@ -31,7 +31,7 @@ class QRGenerator
 		$svg = $this->stripFirstLine($this->writer->writeString($text));
 
 		// Add cms-qr-code class to the SVG element
-		return (string) preg_replace('/<svg/', '<svg class="cms-qr-code"', $svg, 1);
+		return (string)preg_replace('/<svg/', '<svg class="cms-qr-code"', $svg, 1);
 	}
 
 	private function stripFirstLine(string $text): string

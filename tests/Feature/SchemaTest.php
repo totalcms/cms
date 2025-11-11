@@ -137,7 +137,7 @@ it('converts string boolean defaults to actual booleans when saving schema', fun
 	postJson('/schemas', $schema)->assertOk()->assertJson();
 
 	// Read the saved schema file to verify boolean conversion
-	$savedFile = schemaPath($schema['id']);
+	$savedFile    = schemaPath($schema['id']);
 	$savedContent = json_decode(file_get_contents($savedFile), true);
 
 	// Verify that string "true" was converted to boolean true in the saved file

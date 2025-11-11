@@ -144,8 +144,8 @@ class ImageDimensionCalculatorTest extends TestCase
 	public function testCalculateFromImageDataArray(): void
 	{
 		$imageData = [
-			'name' => 'test.jpg',
-			'width' => 1920,
+			'name'   => 'test.jpg',
+			'width'  => 1920,
 			'height' => 1080,
 		];
 

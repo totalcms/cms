@@ -13,6 +13,7 @@ class ImageDimensionCalculator
 	 * @param int $originalWidth Original image width
 	 * @param int $originalHeight Original image height
 	 * @param array<string,string|int> $params ImageWorks parameters (w, h, fit, etc.)
+	 *
 	 * @return array{width: int, height: int} Processed dimensions
 	 */
 	public static function calculate(int $originalWidth, int $originalHeight, array $params): array
@@ -21,9 +22,9 @@ class ImageDimensionCalculator
 			return ['width' => $originalWidth, 'height' => $originalHeight];
 		}
 
-		$targetWidth = isset($params['w']) ? (int)$params['w'] : null;
+		$targetWidth  = isset($params['w']) ? (int)$params['w'] : null;
 		$targetHeight = isset($params['h']) ? (int)$params['h'] : null;
-		$fit = $params['fit'] ?? null;
+		$fit          = $params['fit'] ?? null;
 
 		// If no dimensions specified, return original
 		if ($targetWidth === null && $targetHeight === null) {
@@ -48,7 +49,7 @@ class ImageDimensionCalculator
 			// crop, crop-top-left, crop-top, crop-top-right, crop-left, crop-center,
 			// crop-right, crop-bottom-left, crop-bottom, crop-bottom-right, crop-focalpoint
 			return [
-				'width' => $targetWidth ?? $originalWidth,
+				'width'  => $targetWidth ?? $originalWidth,
 				'height' => $targetHeight ?? $originalHeight,
 			];
 		}
@@ -56,7 +57,7 @@ class ImageDimensionCalculator
 		if ($fit === 'stretch') {
 			// Stretch: output target dimensions, distorts to fit (but never larger than original)
 			return [
-				'width' => $targetWidth ?? $originalWidth,
+				'width'  => $targetWidth ?? $originalWidth,
 				'height' => $targetHeight ?? $originalHeight,
 			];
 		}
@@ -65,12 +66,12 @@ class ImageDimensionCalculator
 		// Also handles: contain, max, fill, fill-max
 		if ($targetWidth !== null && $targetHeight !== null) {
 			// Both dimensions specified - fit within bounds maintaining aspect ratio
-			$widthRatio = $targetWidth / $originalWidth;
+			$widthRatio  = $targetWidth / $originalWidth;
 			$heightRatio = $targetHeight / $originalHeight;
-			$ratio = min($widthRatio, $heightRatio);
+			$ratio       = min($widthRatio, $heightRatio);
 
 			return [
-				'width' => (int)round($originalWidth * $ratio),
+				'width'  => (int)round($originalWidth * $ratio),
 				'height' => (int)round($originalHeight * $ratio),
 			];
 		}
@@ -78,14 +79,14 @@ class ImageDimensionCalculator
 		if ($targetWidth !== null) {
 			// Only width specified - maintain aspect ratio
 			return [
-				'width' => $targetWidth,
+				'width'  => $targetWidth,
 				'height' => (int)round($targetWidth / $aspectRatio),
 			];
 		}
 
 		// Only height specified - maintain aspect ratio
 		return [
-			'width' => (int)round($targetHeight * $aspectRatio),
+			'width'  => (int)round($targetHeight * $aspectRatio),
 			'height' => $targetHeight,
 		];
 	}
@@ -95,11 +96,12 @@ class ImageDimensionCalculator
 	 *
 	 * @param array<string,mixed> $image Image data with width/height keys
 	 * @param array<string,string|int> $params ImageWorks parameters
+	 *
 	 * @return array{width: int, height: int} Processed dimensions
 	 */
 	public static function calculateFromImageData(array $image, array $params): array
 	{
-		$originalWidth = (int)($image['width'] ?? 0);
+		$originalWidth  = (int)($image['width'] ?? 0);
 		$originalHeight = (int)($image['height'] ?? 0);
 
 		return self::calculate($originalWidth, $originalHeight, $params);
