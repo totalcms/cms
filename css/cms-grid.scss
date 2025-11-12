@@ -177,7 +177,7 @@
 				border-radius : var(--cms-card-border-radius) 0 0 var(--cms-card-border-radius);
 				overflow      : hidden;
 				position      : relative;
-				
+
 				img {
 					position   : absolute;
 					top        : 0;
@@ -196,24 +196,24 @@
 				padding        : var(--cms-card-padding);
 			}
 		}
-		
+
 		/* Responsive adjustments for list view */
 		@media (max-width: 600px) {
 			.cms-grid-item {
 				grid-template-columns : 120px 1fr;
-				
+
 				.cms-image {
 					width : 120px;
 				}
 			}
 		}
-		
+
 		@media (max-width: 480px) {
 			.cms-grid-item {
 				grid-template-columns : 1fr;
 				grid-template-rows    : 200px auto;
 				padding               : var(--cms-card-padding);
-				
+
 				.cms-image {
 					margin        : calc(var(--cms-card-padding) * -1) calc(var(--cms-card-padding) * -1) var(--cms-item-spacing);
 					width         : auto;
@@ -221,7 +221,7 @@
 					min-height    : auto;
 					border-radius : var(--cms-image-border-radius) var(--cms-image-border-radius) 0 0;
 				}
-				
+
 				.cms-content {
 					padding : 0;
 				}

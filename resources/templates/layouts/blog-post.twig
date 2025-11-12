@@ -17,7 +17,10 @@
  *     categoriesAsLinks: true,
  *     categoryBaseUrl: '/blog/category/',
  *     tagsAsLinks: true,
- *     tagBaseUrl: '/blog/tag/'
+ *     tagBaseUrl: '/blog/tag/',
+ *     showRelated: true,
+ *     relatedLimit: 3,
+ *     relatedBy: 'tags'
  * }) }}
  */
 #}
@@ -37,6 +40,12 @@
 		- showExtra: true - Display extra content if present
 		- showMeta: true - Show date, author, categories, tags
 		- dateFormat: 'F j, Y' - PHP date format
+		- showRelated: true - Show related posts section
+		- relatedLimit: 3 - Number of related posts to show
+		- relatedBy: 'tags' - Match by: 'tags', 'categories', or 'both'
+		- relatedCompact: true - Compact mode (image + title) or detailed mode (image + title + summary + date + tags)
+		- textRelatedPosts: 'Related Posts' - Localization for related posts heading
+		- textLastUpdated: 'Last updated:' - Localization for last updated text
 	#}
 	{% set defaults = {
 		collection: 'blog',
@@ -50,7 +59,13 @@
 		showMedia: true,
 		showExtra: true,
 		showMeta: true,
-		dateFormat: 'F j, Y'
+		dateFormat: 'F j, Y',
+		showRelated: true,
+		relatedLimit: 3,
+		relatedBy: 'tags',
+		relatedCompact: true,
+		textRelatedPosts: 'Related Posts',
+		textLastUpdated: 'Last updated:'
 	} %}
 	{% set opts = defaults|merge(options) %}
 
@@ -194,13 +209,92 @@
 		<footer class="blog-footer">
 			{% if post.updated %}
 				<p class="blog-updated">
-					Last updated: <time datetime="{{ post.updated }}">{{ post.updated|date(opts.dateFormat) }}</time>
+					{{ opts.textLastUpdated }} <time datetime="{{ post.updated }}">{{ post.updated|date(opts.dateFormat) }}</time>
 				</p>
 			{% endif %}
 		</footer>
 		{% endif %}
 
 	</article>
+
+	{# Related Posts Section #}
+	{% if opts.showRelated %}
+		{# Build dynamic filters based on options #}
+		{% set filters = [
+			{property: 'id', operator: 'not-equal', value: id},
+			{property: 'draft', operator: 'isfalse'}
+		] %}
+
+		{# Add tag/category filters based on relatedBy option #}
+		{% if opts.relatedBy == 'tags' and post.tags %}
+			{% set filters = filters|merge([{property: 'tags', operator: 'contains', value: post.tags, logic: 'or'}]) %}
+		{% elseif opts.relatedBy == 'categories' and post.categories %}
+			{% set filters = filters|merge([{property: 'categories', operator: 'contains', value: post.categories, logic: 'or'}]) %}
+		{% elseif opts.relatedBy == 'both' %}
+			{% if post.tags %}
+				{% set filters = filters|merge([{property: 'tags', operator: 'contains', value: post.tags, logic: 'or'}]) %}
+			{% endif %}
+			{% if post.categories %}
+				{% set filters = filters|merge([{property: 'categories', operator: 'contains', value: post.categories, logic: 'or'}]) %}
+			{% endif %}
+		{% endif %}
+
+		{# Apply filters to get candidate posts #}
+		{% set candidatePosts = cms.objects(opts.collection)|filterCollection(filters) %}
+
+		{# Calculate match scores for sorting (categories weighted higher) #}
+		{% set relatedPosts = [] %}
+		{% for blogPost in candidatePosts %}
+			{% set matchScore = 0 %}
+
+			{# Score matching tags (1 point each) #}
+			{% if post.tags and blogPost.tags %}
+				{% for tag in post.tags %}
+					{% if tag in blogPost.tags %}
+						{% set matchScore = matchScore + 1 %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+
+			{# Score matching categories (2 points each - weighted higher) #}
+			{% if post.categories and blogPost.categories %}
+				{% for category in post.categories %}
+					{% if category in blogPost.categories %}
+						{% set matchScore = matchScore + 2 %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+
+			{# Add post with its match score #}
+			{% set relatedPosts = relatedPosts|merge([{
+				post: blogPost,
+				score: matchScore
+			}]) %}
+		{% endfor %}
+
+		{# Sort by match score (highest first) and limit results #}
+		{% set relatedPosts = relatedPosts|sort((a, b) => b.score <=> a.score)|slice(0, opts.relatedLimit) %}
+
+		{# Display related posts if we have any #}
+		{% if relatedPosts|length > 0 %}
+			{# Extract just the posts from the scored array #}
+			{% set relatedPostsOnly = [] %}
+			{% for item in relatedPosts %}
+				{% set relatedPostsOnly = relatedPostsOnly|merge([item.post]) %}
+			{% endfor %}
+
+			<aside class="blog-related-posts">
+				<h2 class="related-posts-title">{{ opts.textRelatedPosts }}</h2>
+
+				{% set gridClasses = opts.relatedCompact ? 'related-posts compact' : 'related-posts' %}
+				{% set gridTemplate = opts.relatedCompact ? 'grid/blog-compact.twig' : 'grid/blog.twig' %}
+
+				{% cmsgrid relatedPostsOnly from opts.collection with gridClasses as 'article' %}
+					{% include gridTemplate %}
+				{% endcmsgrid %}
+			</aside>
+		{% endif %}
+	{% endif %}
 
 	{# Include minimal layout styles #}
 	{% include 'layouts/_blog-post-styles.twig' %}
@@ -245,6 +339,47 @@
  * Custom date format:
  * {{ blog.post('my-post-id', {
  *     dateFormat: 'M d, Y'
+ * }) }}
+ *
+ * With related posts by tags (compact mode - default):
+ * {{ blog.post('my-post-id', {
+ *     showRelated: true,
+ *     relatedLimit: 3,
+ *     relatedBy: 'tags',
+ *     relatedCompact: true
+ * }) }}
+ *
+ * With related posts by categories (detailed mode):
+ * {{ blog.post('my-post-id', {
+ *     showRelated: true,
+ *     relatedLimit: 4,
+ *     relatedBy: 'categories',
+ *     relatedCompact: false
+ * }) }}
+ *
+ * With related posts by both tags and categories (detailed mode with wider cards):
+ * {{ blog.post('my-post-id', {
+ *     showRelated: true,
+ *     relatedLimit: 6,
+ *     relatedBy: 'both',
+ *     relatedCompact: false
+ * }) }}
+ *
+ * Without related posts:
+ * {{ blog.post('my-post-id', {
+ *     showRelated: false
+ * }) }}
+ *
+ * With localized text (French example):
+ * {{ blog.post('my-post-id', {
+ *     textRelatedPosts: 'Articles similaires',
+ *     textLastUpdated: 'Dernière mise à jour:'
+ * }) }}
+ *
+ * With localized text (Spanish example):
+ * {{ blog.post('my-post-id', {
+ *     textRelatedPosts: 'Artículos relacionados',
+ *     textLastUpdated: 'Última actualización:'
  * }) }}
  */
 #}

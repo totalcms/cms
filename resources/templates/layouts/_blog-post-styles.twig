@@ -173,5 +173,55 @@
 			font-size: 0.75rem;
 		}
 	}
+
+	/* Related Posts Section */
+	.blog-related-posts {
+		margin-top: 4rem;
+		padding-top: 3rem;
+	}
+
+	.related-posts-title {
+		font-size: 1.875rem;
+		font-weight: 700;
+		margin-bottom: 2rem;
+	}
+
+	/* Minimal customizations for related posts - most styling comes from cms-grid base */
+	.cms-grid.related-posts {
+		/* Override image aspect ratio for related posts */
+		--cms-image-aspect-ratio : 3 / 2;
+		--cms-card-border        : none;
+	}
+
+	.related-posts.compact h3 {
+		font-size: 1.5rem;
+	}
+
+	/* Wide mode - ensure content wrapper is flex column for proper layout */
+	.cms-grid.related-posts.wide .cms-content {
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Add subtle image zoom on hover */
+	.cms-grid.related-posts .cms-grid-item:hover .cms-image img {
+		transform: scale(1.05);
+	}
+
+	.cms-grid.related-posts .cms-image img {
+		transition: transform 0.3s ease;
+	}
+
+	@media (max-width: 640px) {
+		.blog-related-posts {
+			margin-top: 3rem;
+			padding-top: 2rem;
+		}
+
+		.related-posts-title {
+			font-size: 1.5rem;
+			margin-bottom: 1.5rem;
+		}
+	}
 {% endverbatim %}
 </style>
