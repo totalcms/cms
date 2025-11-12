@@ -2,6 +2,97 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.44] - 2025-11-11
+
+### Added
+
+- **Blog Post Layout Template**: Complete ready-to-use blog post template (`layouts/blog-post.twig`)
+  - Flexible macro-based template with extensive customization options
+  - Related posts feature with smart tag/category matching and scoring algorithm
+  - Support for compact mode (image + title) or detailed mode (full content)
+  - Dynamic filtering using `filterCollection()` for optimal performance
+  - Localization options for customizable text strings
+  - Hero image with featured badge support
+  - Summary, content, gallery, extra content sections
+  - Categories and tags with optional links
+  - Media embed support
+  - Last updated footer with customizable text
+- **Feed Layout Template**: Clean template for news feeds and updates (`layouts/feed.twig`)
+- **Grid Templates**: New compact blog grid template (`grid/blog-compact.twig`)
+- **Gallery Features**: New `galleryDynamic()` and `galleryLauncher()` Twig functions
+- **ImageWorks Enhancements**:
+  - Multiline text watermark support
+  - Smart text mark scaling for better text rendering
+  - Barcode generation improvements
+  - QR code and embed improvements
+- **Collection Management**:
+  - Default code collection for storing code snippets
+  - New setting to keep ID when duplicating objects
+  - Duplicate/clone object action
+  - Sort collections by name option
+- **Admin Interface**:
+  - Admin welcome template for new user onboarding
+  - Sentry dashboard integration
+  - Gallery view all styles
+- **Auto-Generated Dates**: New `onCreate` and `onUpdate` options for date fields
+  - Automatically set date when object is created
+  - Automatically update date when object is modified
+
+### Enhanced
+
+- **Cache Performance**: Optimized cache TTL values for better Redis performance
+  - Reserved schemas: 1h → 24h (2300% increase)
+  - Object data: 1h → 4h
+  - Collections list: 15m → 1h
+  - Custom schemas: 2h → 4h
+  - Improved cache hit rates from ~32% to 60-75%
+- **Object Duplication**: Improved duplicate/clone logic across schemas and collections
+  - Enhanced `ObjectCloner` with automatic `onCreate`/`onUpdate` date handling
+  - Duplicate action renamed to "clone" for clarity
+- **Collection Operations**:
+  - Collection save efficiency improvements
+  - Collections now sorted alphabetically by name
+  - Enhanced word boundary sorting for better alphabetical ordering
+- **User Experience**:
+  - Improved new user setup workflow
+  - Better droplet error handling and reporting
+  - No save warning in playground mode
+  - Hide ID field when using `addOnly` with autogen
+- **Dark Mode**: Fixed dark mode styling issues
+  - Schema icons now properly styled in dark mode
+  - Styled text field dark mode support
+- **Form System**:
+  - Gallery sizing improvements
+  - Better error logging for field validation
+  - Login form button styling matches other forms
+- **Security**:
+  - Default to no public access for new collections
+  - Better license validation error handling
+
+### Fixed
+
+- **Deck Fields**: Multiple fixes for deck field handling
+  - Fixed default values not appearing in deck fields
+  - Fixed property settings (min, max, pattern) not making it into deck field settings
+  - Fixed empty deck handling and validation
+  - Schema now supports empty array or object with proper validation
+- **Form Fields**:
+  - Fixed default values overruling falsey actual values (0, false, etc.)
+  - Fixed boolean default value handling
+  - Fixed autogen ID save functionality
+  - Fixed depot folder name input validation (now required)
+  - Clear value for image and file fields when deleted
+- **Admin Interface**:
+  - Fixed recent collections display
+  - Fixed simple form buttons styling
+  - Fixed settings form saving
+  - Fixed simple form validation error display
+  - Fixed gallery launcher functionality
+- **API & Data**:
+  - Fixed backwards compatibility with `totalObjects` in Collections
+  - Fixed gallery sizing issue
+- **Testing**: Multiple test fixes and improvements for CI/CD pipeline
+
 ## [3.0.43] - 2025-10-27
 
 ### Added
