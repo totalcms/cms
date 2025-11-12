@@ -609,6 +609,7 @@ return [
 	AccessControlService::class => fn (ContainerInterface $container): AccessControlService => new AccessControlService(
 		$container->get(UserValidationService::class),
 		$container->get(AccessGroupLister::class),
+		$container->get(PhpSession::class),
 	),
 
 	TotalCmsOneImporter::class => fn (ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(
