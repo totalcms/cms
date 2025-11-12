@@ -64,18 +64,22 @@ class ObjectForm extends TotalForm
 			$defaults['required'] = $this->isRequired($name);
 		}
 
+		// Handle ID field hiding (must be checked before object data check)
+		if ($name === 'id' && !isset($options['deck_context'])) {
+			// Hide the ID field if requested
+			if ($this->hideID) {
+				$options['field'] = 'hidden';
+			}
+
+			// Set ID value if form has an ID
+			if ($this->id !== '') {
+				$options['value'] = $this->id;
+			}
+		}
+
 		// Get the value from the object data if it exists (for editing)
 		if ($this->id !== '' && $this->objectData instanceof ObjectData) {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
-
-			// A DeckItem will set the deck_context option if it is a deck field
-			if ($name === 'id' && !isset($options['deck_context'])) {
-				$options['value'] = $this->id;
-				// Hide the ID field if requested
-				if ($this->hideID) {
-					$options['field'] = 'hidden';
-				}
-			}
 
 			// Set value from object data
 			if (!isset($options['value'])) {
