@@ -10,7 +10,7 @@ White label templates let you inject custom content into specific areas of the a
 
 ## Available Templates
 
-Total CMS provides eight white label template locations:
+Total CMS provides nine white label template locations:
 
 | Template File | Location | Description |
 |--------------|----------|-------------|
@@ -19,7 +19,8 @@ Total CMS provides eight white label template locations:
 | `whitelabel/download-auth-above.twig` | Download auth page | Content displayed above the download authentication form |
 | `whitelabel/download-auth-below.twig` | Download auth page | Content displayed below the download authentication form |
 | `whitelabel/admin-logo.twig` | Admin header | Custom logo replacing the Total CMS logo |
-| `whitelabel/admin-home.twig` | Admin home page | Custom content for the dashboard home page |
+| `whitelabel/admin-welcome.twig` | Admin home page | Custom welcome message (lighter alternative to admin-home.twig) |
+| `whitelabel/admin-home.twig` | Admin home page | Custom content for the entire dashboard home page |
 | `whitelabel/admin-head.twig` | Admin `<head>` section | Custom content injected before closing `</head>` tag |
 | `whitelabel/admin-body-below.twig` | Admin body bottom | Custom content injected before closing `</body>` tag |
 
@@ -45,6 +46,7 @@ tcms-data/
   templates/
     whitelabel/
       admin-logo.twig
+      admin-welcome.twig
       admin-home.twig
       admin-head.twig
       admin-body-below.twig
@@ -85,6 +87,47 @@ Or with an SVG:
 ```
 
 **Important:** The `<a class="custom-logo">` wrapper is required for proper styling and layout.
+
+### Admin Welcome Message
+
+**File:** `whitelabel/admin-welcome.twig`
+
+Customize just the welcome message at the top of the admin dashboard (lighter alternative to replacing the entire home page):
+
+```twig
+<div class="dashboard-welcome">
+	<h1>Welcome to {{ cms.config('siteName') ?: 'Your CMS' }}! 👋</h1>
+	<p class="dashboard-subtitle">
+		Manage your website content with ease.
+	</p>
+</div>
+```
+
+**With Personalized Greeting:**
+
+```twig
+<div class="dashboard-welcome">
+	<h1>
+		{% if cms.user %}
+			Hello {{ cms.user.name }}, welcome back! 🎉
+		{% else %}
+			Welcome to Your Custom CMS! 👋
+		{% endif %}
+	</h1>
+	<p class="dashboard-subtitle">
+		{% set hour = "now"|date("H") %}
+		{% if hour >= 5 and hour < 12 %}
+			Good morning! Ready to create something amazing?
+		{% elseif hour >= 12 and hour < 17 %}
+			Good afternoon! Let's get some work done.
+		{% else %}
+			Good evening! Time to wrap up the day.
+		{% endif %}
+	</p>
+</div>
+```
+
+**Note:** Use `whitelabel/admin-welcome.twig` when you only want to customize the welcome message. Use `whitelabel/admin-home.twig` (shown below) when you need to replace the entire dashboard home page.
 
 ### Login Page - Above Form
 

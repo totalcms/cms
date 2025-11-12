@@ -7,7 +7,6 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -62,6 +61,14 @@ class CollectionRepository extends StorageRepository
 		}
 
 		// Cache miss - fetch from filesystem
+		// Check if directory exists before trying to list it (prevents auto-creation during setup)
+		if (!$this->filesystem->directoryExists('')) {
+			// Directory doesn't exist - return empty array and cache it
+			$this->cacheManager->storeComputedData('collections_list', [], CacheManager::TTL_COLLECTIONS_LIST);
+
+			return [];
+		}
+
 		$collections = [];
 		foreach ($this->filesystem->listDirectories('') as $id) {
 			$collection = $this->fetchCollection($id);
@@ -88,11 +95,10 @@ class CollectionRepository extends StorageRepository
 			return null;
 		}
 
-		// Auto-calculate totalObjects and lastUpdated if missing (backward compatibility)
+		// Auto-calculate totalObjects if missing (backward compatibility)
 		// Calculate in-memory only - values persist on next normal save operation
-		if ($collectionData->lastUpdated === '') {
+		if ($collectionData->totalObjects === 0) {
 			$collectionData->totalObjects = $this->calculateObjectCount($collection);
-			$collectionData->lastUpdated  = DateData::cleanDate();
 		}
 
 		return $collectionData;

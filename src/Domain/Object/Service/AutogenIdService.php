@@ -19,6 +19,13 @@ readonly class AutogenIdService
 	/**
 	 * Generate an ID using autogen pattern from schema settings.
 	 *
+	 * Examples:
+	 * - "${title}-${oid-00000}" - Title with padded OID
+	 * - "${currentyear}-${oid-00000}" - Year-based IDs (2025-00001)
+	 * - "${currentyear2}${currentmonth}${currentday}-${oid-000}" - Date-based (251107-001)
+	 *
+	 * Reserved names: now, timestamp, uuid, uid, oid, currentyear, currentyear2, currentmonth, currentday
+	 *
 	 * @param string $pattern The autogen pattern (e.g., "${title}-${oid-00000}")
 	 * @param string $collection The collection ID for OID counter
 	 * @param array<string,mixed> $objectData Object data for field replacement
@@ -76,6 +83,12 @@ readonly class AutogenIdService
 		$data['uuid']      = self::generateUuid();
 		$data['uid']       = self::generateUid();
 		$data['oid']       = (string)$this->getNextOid($collection);
+
+		// Date components for autogen
+		$data['currentyear']  = date('Y');    // 2025
+		$data['currentyear2'] = date('y');    // 25
+		$data['currentmonth'] = date('m');    // 01-12
+		$data['currentday']   = date('d');    // 01-31
 
 		return $data;
 	}
@@ -168,6 +181,12 @@ readonly class AutogenIdService
 		$data['uuid']      = self::generateUuid();
 		$data['uid']       = self::generateUid();
 		$data['oid']       = (string)($oidCount + 1);
+
+		// Date components for autogen
+		$data['currentyear']  = date('Y');    // 2025
+		$data['currentyear2'] = date('y');    // 25
+		$data['currentmonth'] = date('m');    // 01-12
+		$data['currentday']   = date('d');    // 01-31
 
 		return $data;
 	}

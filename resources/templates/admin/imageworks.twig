@@ -94,18 +94,24 @@
 			flip      : "Flips the image. Accepts v, h and both.",
 			"or" 	  : "Rotates the image. Accepts auto, 0, 90, 180 or 270. Default is auto. " ~
 					  	"The auto option uses Exif data to automatically orient images correctly.",
-			marktext      : "The text to display as a watermark on the image.",
+			marktext      : "The text to display as a watermark on the image. Add line breaks using \\n.",
 			marktextfont  : "Select a custom font for the text watermark from the configured watermark-fonts depot. " ~
 							"The depot supports both TTF and OTF font files.",
 			marktextsize  : "Sets the size of the text watermark in pixels. Use values between 10 and 500.",
 			marktextcolor : "Sets the color of the text. Accepts hex values (without hashtag) like 'ffffff' for white.",
 			marktextbg    : "Sets the background color behind the text. Accepts hex values (without hashtag) or leave empty for transparent.",
-			marktextpad   : "Sets the padding around the text in pixels. Use values between 0 and 100.",
+			marktextpad   : "Sets the padding around the text in pixels. Use values between 0 and 100. " ~
+						"WARNING: Cannot be used with marktextx/marktexty as it overrides those values.",
 			marktextpos   : "Sets the position of the text watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
 						  	"top, bottom, left, right, center.",
-			marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees.",
+			marktextx     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
+						"Cannot be used with marktextpad (padding overrides this).",
+		marktexty     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
+						"Cannot be used with marktextpad (padding overrides this).",
+		marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees.",
 			marktextw     : "Sets the maximum width of the text area in pixels or using relative dimensions. " ~
-						    "For relative dimensions, 50w represents 50% of the width of the image.",
+						    "For relative dimensions, 50w represents 50% of the width of the image. " ~
+					    "Leave empty to automatically scale only when text is wider than the image (ensures consistent text height while preventing overflow).",
 			marktextalpha : "Sets the transparency of the text watermark. Use values between 0 (transparent) and 100 (opaque).",
 		}
 	%}

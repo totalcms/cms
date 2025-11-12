@@ -31,5 +31,13 @@
 	}) %}
 {% endif %}
 
+{# Handle duplicate data if present #}
+{% if duplicateData is defined %}
+	{% set finalOptions = finalOptions|merge({
+		data: duplicateData
+	}) %}
+{% endif %}
+
+
 {% set form = cms.form.builder(url.collection, finalOptions) %}
 {{ form.autoBuild() }}

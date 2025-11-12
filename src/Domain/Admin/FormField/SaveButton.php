@@ -14,7 +14,7 @@ readonly class SaveButton
 	public function build(): string
 	{
 		return HTMLUtils::button($this->label, [
-			'class' => 'cms-save',
+			'class' => 'cms-save cms-button',
 			'type'  => 'submit',
 		]);
 	}

@@ -102,6 +102,8 @@ export default class FilePreview {
 				if (confirm("Are you sure that you want to delete this file?")) {
 					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+						// Clear values before removing the container
+						this.clearValue();
 						this.container.remove();
 					});
 				}

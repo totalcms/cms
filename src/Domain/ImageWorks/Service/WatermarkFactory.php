@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
 readonly class WatermarkFactory
@@ -10,6 +11,7 @@ readonly class WatermarkFactory
 	public function __construct(
 		private TextWatermarkFactory $textWatermarkFactory,
 		private Config $config,
+		private StorageAdapterInterface $filesystem,
 	) {
 	}
 
@@ -41,8 +43,11 @@ readonly class WatermarkFactory
 		);
 	}
 
-	/** @param array<string,mixed> $params watermark parameters */
-	public function createTextWatermark(array $params = []): ?Watermark
+	/**
+	 * @param array<string,mixed> $params watermark parameters
+	 * @param int $baseImageWidth width of the base image for auto-scaling check
+	 */
+	public function createTextWatermark(array $params = [], int $baseImageWidth = 0): ?Watermark
 	{
 		if (!isset($params['marktext']) || empty($params['marktext'])) {
 			return null;
@@ -51,10 +56,30 @@ readonly class WatermarkFactory
 		// Generate the text watermark image
 		$textWatermarkPath = $this->textWatermarkFactory->generateTextWatermark($params);
 
+		// Auto-scale if watermark is wider than base image (unless user explicitly set marktextw)
+		$markw = $params['marktextw'] ?? null;
+		if ($markw === null && $baseImageWidth > 0) {
+			// Get watermark dimensions
+			$watermarkPath = TextWatermarkFactory::WATERMARK_DIR . '/' . $textWatermarkPath;
+			try {
+				if ($this->filesystem->fileExists($watermarkPath)) {
+					$watermarkContent = $this->filesystem->read($watermarkPath);
+					$watermarkSize    = @getimagesizefromstring($watermarkContent);
+					if ($watermarkSize !== false && $watermarkSize[0] > $baseImageWidth) {
+						// Watermark is wider than base image, scale it down to 90% for safety margin
+						// (allows room for x/y offsets without overflowing)
+						$markw = '90w';
+					}
+				}
+			} catch (\Exception) {
+				// Silently fail - just don't auto-scale if we can't check dimensions
+			}
+		}
+
 		return new Watermark(
 			mark      : $textWatermarkPath,
 			markpos   : $params['marktextpos'] ?? 'center',
-			markw     : $params['marktextw'] ?? '100w',
+			markw     : $markw, // Auto-scales only if watermark is too wide
 			markh     : $params['marktexth'] ?? null,
 			markx     : $params['marktextx'] ?? null,
 			marky     : $params['marktexty'] ?? null,

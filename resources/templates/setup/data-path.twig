@@ -1,0 +1,72 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}Total CMS Setup - Data Path Configuration{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="setup-header">
+		<h1>Welcome to Total CMS</h1>
+		<p>Let's configure where Total CMS should store its data.</p>
+	</section>
+
+	{# Display flash messages #}
+	{% for message in flash.get('error') %}
+		<div class="cms-error" role="alert">
+			{{ message }}
+		</div>
+	{% endfor %}
+
+	{% for message in flash.get('success') %}
+		<div class="cms-success" role="alert">
+			{{ message }}
+		</div>
+	{% endfor %}
+
+	{% set formFields %}
+		{{ cms.form.field("radio", "location", {
+			label    : "Where should Total CMS store data?",
+			required : true,
+			value    : "default",
+			options  : [
+				{value: "default", label: "Default (Recommended) <span class='path-preview'>" ~ defaultPath ~ "</span>"},
+				{value: "docroot", label: "Document Root <span class='path-preview'>" ~ docrootPath ~ "</span>"},
+				{value: "custom", label: "Custom Path"}
+			]
+		}) }}
+
+		{{ cms.form.field("text", "customPath", {
+			help        : "Enter the full path where the data folder should be created",
+			placeholder : "/path/to/custom-folder",
+			value       : customPath,
+			class       : "icon-folder",
+			settings    : {
+				visibility : {
+					watch : "location",
+					value : "custom"
+				}
+			}
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple(cms.api ~ '/setup/data-path', formFields, {
+		class  : "setup-form",
+		method : "POST",
+		label  : "Continue to Setup",
+		ajax   : false,
+	}) }}
+</main>
+
+<style>
+.help {
+	width               : 100%;
+	background-position : 0 3px;
+}
+.path-preview {
+	font-size            : 0.875em;
+	font-style           : italic;
+	color                : oklch(var(--totalform-darkgray));
+	margin-top           : 0.25rem;
+	padding-inline-start : 0.5rem;
+}
+</style>
+{% endblock %}

@@ -15,6 +15,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
+use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
@@ -432,7 +433,7 @@ NGINX;
 		return $this->fileAccessManager->verfiyPasswordOnly($password);
 	}
 
-	public function config(string $key, ?string $setting): mixed
+	public function config(string $key, ?string $setting = null): mixed
 	{
 		if ($setting === null) {
 			return $this->config->$key;
@@ -935,6 +936,17 @@ NGINX;
 	}
 
 	/** @param array<string,string> $options */
+	public function code(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'code',
+			'property'   => 'code',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
+	}
+
+	/** @param array<string,string> $options */
 	public function styledtext(string $id, array $options = []): string
 	{
 		$options = array_merge([
@@ -1206,10 +1218,13 @@ NGINX;
 				$figureContent .= $caption;
 			}
 
+			// Calculate the actual dimensions after ImageWorks processing
+			$processedDimensions = ImageDimensionCalculator::calculateFromImageData($image, $fullSettings);
+
 			$figure = HTMLUtils::element('figure', $figureContent, [
 				'class'        => 'cms-gallery-item',
 				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
-				'data-lg-size' => "{$image['width']}-{$image['height']}",
+				'data-lg-size' => "{$processedDimensions['width']}-{$processedDimensions['height']}",
 			]);
 			$gallery .= $figure;
 		}
@@ -1259,6 +1274,77 @@ NGINX;
 		}
 
 		return HTMLUtils::element('div', $gallery, $attributes);
+	}
+
+	/**
+	 * Generate a dynamic gallery that can be triggered programmatically.
+	 * Returns a template tag with JSON data for JavaScript initialization.
+	 *
+	 * @param array<string,string|int> $thumbSettings
+	 * @param array<string,string|int> $fullSettings
+	 * @param array<string,mixed> $options
+	 */
+	public function galleryLauncher(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		if ($thumbSettings === []) {
+			$thumbSettings = ['w' => 300, 'h' => 200];
+		}
+
+		$images = $this->data($options['collection'], $id, $options['property']);
+
+		// Check if captions should be shown in subHtml
+		$showCaptions = isset($options['captions']) && $options['captions'];
+
+		// Build dynamicEl array for lightGallery
+		$dynamicEl = [];
+		foreach ($images as $image) {
+			$item = [
+				'src'    => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+				'thumb'  => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
+				'lgSize' => "{$image['width']}-{$image['height']}",
+				'name'   => $image['name'], // Include name for image-based index lookup
+			];
+
+			// Add subHtml if captions are enabled and alt text exists
+			if ($showCaptions && !empty($image['alt'])) {
+				$item['subHtml'] = htmlspecialchars((string)$image['alt']);
+			}
+
+			$dynamicEl[] = $item;
+		}
+
+		// Generate unique gallery ID (allow override via options)
+		$galleryId = $options['galleryId'] ?? "{$options['collection']}-{$id}";
+
+		// Remove options that shouldn't be in JS settings
+		unset($options['collection']);
+		unset($options['property']);
+		unset($options['captions']);
+		unset($options['galleryId']);
+
+		// Build template attributes
+		$attributes = [
+			'data-gallery-id' => $galleryId,
+			'data-settings'   => (string)json_encode($options),
+		];
+
+		// Convert attributes to HTML string
+		$attributesString = '';
+		foreach ($attributes as $key => $value) {
+			$attributesString .= sprintf(' %s="%s"', $key, htmlspecialchars((string)$value, ENT_QUOTES));
+		}
+
+		// Return template tag with JSON content
+		return sprintf(
+			'<template%s>%s</template>',
+			$attributesString,
+			htmlspecialchars((string)json_encode($dynamicEl), ENT_QUOTES)
+		);
 	}
 
 	/**
@@ -1854,6 +1940,10 @@ NGINX;
 
 		foreach ($collections as $collection) {
 			if (!$this->canAccessCollection($collection->id)) {
+				continue;
+			}
+			// Skip auth collections (frequently updated on login, clutters recent list)
+			if ($collection->schema === 'auth') {
 				continue;
 			}
 			$result[] = [

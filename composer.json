@@ -111,7 +111,6 @@
     }
   },
   "scripts": {
-    "esbuild": "yarn build",
     "build": "bin/build.sh",
     "cs": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.php-cs-fixer.php",
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",

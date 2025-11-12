@@ -133,6 +133,18 @@ export default class SimpleForm {
 		new FormData(this.form).forEach((value, key) => {
 			data[key] = value;
 		});
+
+		// FormData doesn't include unchecked checkboxes/toggles, so we need to explicitly add them
+		const checkboxes = this.form.querySelectorAll('input[type="checkbox"]');
+		checkboxes.forEach(checkbox => {
+			if (!data.hasOwnProperty(checkbox.name)) {
+				data[checkbox.name] = false;
+			} else {
+				// Convert checkbox values to boolean
+				data[checkbox.name] = checkbox.checked;
+			}
+		});
+
 		return data;
 	}
 }

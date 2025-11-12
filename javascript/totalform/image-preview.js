@@ -149,6 +149,8 @@ export default class ImagePreview {
 						deleteApi  = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
 					}
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+						// Clear values before removing the container
+						this.clearValue();
 						this.container.remove();
 					});
 				}

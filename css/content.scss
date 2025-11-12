@@ -16,9 +16,10 @@
 	display : none;
 }
 .cms-error,
+.cms-success,
 .cms-twig-error,
 .cms-twig-info {
-	--alert-color    : 63% 0.22 32.01;
+	--alert-color    : var(--totalform-error);
 	padding          : 0.625rem;
 	color            : oklch(var(--alert-color));
 	border           : 1px solid oklch(var(--alert-color));
@@ -30,8 +31,11 @@
 	text-wrap        : wrap;
 	z-index          : 9999;
 }
+.cms-success {
+	--alert-color : var(--totalform-success);
+}
 .cms-twig-info {
-	--alert-color : 65% 0.14 253.93;
+	--alert-color : var(--totalform-info);
 }
 body>.cms-twig-error {
 	margin : 0.625rem;
@@ -41,8 +45,14 @@ body>.cms-twig-error {
 	height       : auto !important;
 	aspect-ratio : 16 / 9;
 }
+svg.cms-barcode,
+svg.cms-qr-code,
 img.cms-image {
+	display   : inline-block;
 	max-width : 100%;
 	height    : auto;
 	width     : auto;
+}
+svg.cms-qr-code > rect {
+	fill  : transparent;
 }

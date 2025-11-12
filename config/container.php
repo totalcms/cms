@@ -94,6 +94,7 @@ use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Domain\Settings\Repository\InstallationRepository;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
@@ -132,7 +133,9 @@ use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\Security\RateLimitMiddleware;
+use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
@@ -196,31 +199,10 @@ return [
 
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container): StorageFilesystemAdapter {
-		$rootPath   = $container->get(Config::class)->datadir;
+		$rootPath = $container->get(Config::class)->datadir;
 
-		// Ensure data directory exists with security protection
-		if (!is_dir($rootPath)) {
-			@mkdir($rootPath, 0755, true);
-
-			// Create .htaccess file to deny direct web access (Apache)
-			$htaccessPath = $rootPath . '/.htaccess';
-			if (!file_exists($htaccessPath)) {
-				$htaccessContent = <<<'HTACCESS'
-# Deny direct access to all files and folders in tcms-data
-# This protects sensitive data including API keys, collections, and user data
-
-<IfModule mod_authz_core.c>
-	Require all denied
-</IfModule>
-<IfModule !mod_authz_core.c>
-	Order deny,allow
-	Deny from all
-</IfModule>
-HTACCESS;
-				@file_put_contents($htaccessPath, $htaccessContent);
-			}
-		}
-
+		// Note: LocalFilesystemAdapter may create the directory on first write operation
+		// but not on instantiation. The setup wizard is responsible for creating the directory.
 		$filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
 		return new StorageFilesystemAdapter($filesystem);
@@ -527,6 +509,10 @@ HTACCESS;
 		$container->get(TwigEngine::class)
 	),
 
+	RedirectRenderer::class => fn (ContainerInterface $container): RedirectRenderer => new RedirectRenderer(
+		$container->get(RouteParserInterface::class)
+	),
+
 	// Cache Services
 	FilesystemService::class => fn (ContainerInterface $container): FilesystemService => new FilesystemService($container->get(Config::class)),
 
@@ -754,6 +740,8 @@ HTACCESS;
 		$container->get(InstallationRepository::class),
 	),
 
+	DataDirectoryManager::class => fn (): DataDirectoryManager => new DataDirectoryManager(),
+
 	// Mailer Services
 	EmailSender::class => fn (ContainerInterface $container): EmailSender => new EmailSender(
 		$container->get(Config::class),
@@ -776,5 +764,10 @@ HTACCESS;
 		$container->get(APCuService::class),
 		$container->get(JsonRenderer::class),
 		$container->get(Config::class),
+	),
+
+	SetupCheckMiddleware::class => fn (ContainerInterface $container): SetupCheckMiddleware => new SetupCheckMiddleware(
+		$container->get(Config::class),
+		$container->get(RedirectRenderer::class),
 	),
 ];

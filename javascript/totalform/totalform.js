@@ -108,8 +108,15 @@ export default class TotalForm {
 			this.autosave = true;
 		}
 
-		// Don't run the beforeunload event when inside iframes
-		if (window === window.top) {
+		// Check if this form uses AJAX (default is true if not specified)
+		const usesAjax = this.form.dataset.ajax !== "false";
+
+		// Check if unsaved changes warning should be shown (default is true if not specified)
+		const warnUnsaved = this.form.classList.contains("no-unsaved-warning") ? false : true;
+
+		// Don't run the beforeunload event when inside iframes, for non-AJAX forms, or when explicitly disabled
+		// Non-AJAX forms handle their own submission and don't need unsaved change warnings
+		if (window === window.top && usesAjax && warnUnsaved) {
 			window.onbeforeunload = e => {
 				if (this.isUnsaved()) {
 					e.preventDefault();
@@ -430,7 +437,7 @@ export default class TotalForm {
 			this.unsaved();
 			if (this.autosave) this.save();
 		});
-		this.form.addEventListener("field-error", e => this.error(e.detail.message));
+		this.form.addEventListener("field-error", e => this.error(e.detail.message, e.detail.field));
     }
 
 	validate() {
@@ -694,10 +701,20 @@ export default class TotalForm {
         return this.state === "processing";
     }
 
-    error(error) {
+    error(error, field = null) {
 		this.changeState("error", {error:error});
 		this.validated = false;
-        console.error("Form Error:", error);
+
+		// Include field information in error message if available
+		if (field) {
+			const fieldLabel = field.label || field.property || 'unknown field';
+			const fieldProperty = field.property || 'unknown';
+			console.error(`Form Error [${fieldProperty}]:`, error);
+			console.error(`  Field Label: "${fieldLabel}"`);
+			console.error(`  Field Element:`, field.input);
+		} else {
+			console.error("Form Error:", error);
+		}
     }
 
 	isError() {

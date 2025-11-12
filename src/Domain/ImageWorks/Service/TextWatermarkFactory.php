@@ -95,9 +95,12 @@ readonly class TextWatermarkFactory
 
 		// Calculate initial dimensions based on whether we have TTF support
 		if ($fontPath && function_exists('imageftbbox')) {
+			// Count lines in text (number of \n + 1)
+			$lineCount = substr_count($text, "\n") + 1;
+
 			// Start with larger dimensions and adjust if needed
 			$initialWidth  = max(200, strlen($text) * $fontSize);
-			$initialHeight = max(100, $fontSize * 2);
+			$initialHeight = max(100, $fontSize * 2 * $lineCount);
 
 			// Create temporary image to calculate actual text size
 			$tempImage = imagecreatetruecolor($initialWidth, $initialHeight);
@@ -125,13 +128,17 @@ readonly class TextWatermarkFactory
 
 			// Add extra width padding to balance font bearing - small additional padding on right
 			$width = $textWidth + ($padding * 2) + ($fontSize * 0.1);
-			// Add extra height for descenders and rotation space - increase margin for rotated text
-			$extraHeight = $angle == 0 ? ($fontSize * 0.5) : ($fontSize * 0.8);
+			// Add extra height for descenders and rotation space
+			// Multiply by line count to ensure enough space for multi-line text
+			$extraHeight = $angle == 0 ? ($fontSize * 0.5 * $lineCount) : ($fontSize * 0.8 * $lineCount);
 			$height      = $textHeight + ($padding * 2) + $extraHeight;
 		} else {
 			// Fallback for built-in fonts
+			// Count lines in text (number of \n + 1)
+			$lineCount = substr_count($text, "\n") + 1;
+
 			$width  = strlen($text) * ($fontSize * 0.6) + ($padding * 2);
-			$height = $fontSize * 1.5 + ($padding * 2);
+			$height = ($fontSize * 1.5 * $lineCount) + ($padding * 2);
 		}
 
 		// Ensure minimum dimensions and convert to int
@@ -189,11 +196,10 @@ readonly class TextWatermarkFactory
 		if ($fontPath && function_exists('imagettftext')) {
 			// Use TTF font - position text correctly for both rotated and non-rotated text
 			if ($angle === 0) {
-				// No rotation - position text with baseline well above bottom
+				// No rotation - position text from top to accommodate multi-line text
 				$x = $padding;
-				// Position baseline high enough to show descenders
-				// TTF baseline is where the text sits, descenders go below this line
-				$y = $height - $padding - ($fontSize * 0.5); // Leave 50% of font size for descenders
+				// Position baseline from top - works for both single and multi-line text
+				$y = $padding + $fontSize;
 			} else {
 				// With rotation - calculate proper centered positioning
 				$textBox = imageftbbox($fontSize, $angle, $fontPath, $text);

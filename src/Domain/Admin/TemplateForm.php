@@ -94,6 +94,7 @@ class TemplateForm extends TotalForm
 			$newActions,
 			$editActions,
 			$deleteActions,
+			[], // data
 			$autosave,
 			$helpOnHover,
 			$helpOnFocus,

@@ -55,15 +55,11 @@ class DeckData extends PropertyData
 		return true;
 	}
 
-	/** @return array<int|string,array<string,mixed>>|object */
-	public function transform(): array|object
+	/** @return array<int|string,array<string,mixed>> */
+	public function transform(): array
 	{
-		// Return empty object (stdClass) for empty deck to ensure JSON serialization as {}
-		// This prevents empty decks from being serialized as [] which fails schema validation
-		if ($this->deck === []) {
-			return new \stdClass();
-		}
-
+		// Return empty array for empty deck (serializes as [] in JSON)
+		// Schema now supports both empty arrays and non-empty objects
 		return $this->deck;
 	}
 
@@ -132,7 +128,9 @@ class DeckData extends PropertyData
 
 	public function __toString(): string
 	{
-		$json = json_encode($this->transform(), JSON_UNESCAPED_SLASHES);
+		$data = $this->transform();
+
+		$json = json_encode($data, JSON_UNESCAPED_SLASHES);
 		if ($json === false) {
 			return '';
 		}

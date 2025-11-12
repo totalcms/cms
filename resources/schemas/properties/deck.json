@@ -1,36 +1,47 @@
 {
   "$id"               : "https://www.totalcms.co/schemas/properties/deck.json",
   "$schema"           : "https://json-schema.org/draft/2020-12/schema",
-  "type"              : "object",
-  "patternProperties" : {
-    "^[0-9a-zA-Z_]+$": {
+  "oneOf": [
+    {
+      "type": "array",
+      "maxItems": 0,
+      "description": "Empty deck represented as an empty array"
+    },
+    {
       "type": "object",
-      "description": "A deck item with a unique name key",
       "patternProperties": {
         "^[0-9a-zA-Z_]+$": {
-          "anyOf": [
-            {"type": "string"},
-            {"type": "number"},
-            {"type": "boolean"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/color.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/email.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/empty.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/list.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/password.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/phone.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/slug.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/svg.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/time.json"},
-			{"$ref": "https://www.totalcms.co/schemas/properties/url.json"}
-          ],
-          "description": "Deck item property values must be basic types or supported property schemas (no file-based properties)"
+          "type": "object",
+          "description": "A deck item with a unique name key",
+          "patternProperties": {
+            "^[0-9a-zA-Z_]+$": {
+              "anyOf": [
+                {"type": "string"},
+                {"type": "number"},
+                {"type": "boolean"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/color.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/email.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/empty.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/list.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/password.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/phone.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/slug.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/svg.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/time.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/url.json"}
+              ],
+              "description": "Deck item property values must be basic types or supported property schemas (no file-based properties)"
+            }
+          },
+          "additionalProperties": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Non-empty deck represented as an object with named items"
     }
-  },
-  "additionalProperties": false,
+  ],
   "description": "A deck contains a dictionary of named objects with custom schema-defined properties",
   "examples": [
     {

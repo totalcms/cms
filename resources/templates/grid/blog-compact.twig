@@ -1,0 +1,7 @@
+{# Blog Grid Item Template - Compact (Image + Title only) #}
+<a href="{{ cms.objectUrl(collection|default("blog"), object.id) }}" title="{{ object.title }}" class="link-container">
+	{% if object.image %}
+		{{ cms.imageFromData(object.image, object.id, {w: 600, h: 400, fit: 'crop-focalpoint'}, {collection: collection|default("blog"), loading: 'lazy'}) }}
+	{% endif %}
+	<h3 class="cms-title">{{ object.title }}</h3>
+</a>

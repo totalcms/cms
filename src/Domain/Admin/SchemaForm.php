@@ -92,6 +92,7 @@ class SchemaForm extends TotalForm
 			$newActions,
 			$editActions,
 			$deleteActions,
+			$data,
 			$autosave,
 			$helpOnHover,
 			$helpOnFocus,

@@ -41,7 +41,7 @@
 		max-width : fit-content;
 		min-width : 100px;
 
-		&:has(.not-found) {
+		&:has(.not-found), &:has(.total-preview:empty) {
 			width : 100%;
 
 			.dz-overlay {

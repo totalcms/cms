@@ -282,9 +282,11 @@ export default class Droplet {
 			console.warn("Pre-Upload Validation Errors:",this.testSet.errors);
 			return;
 		}
-		if (!message) {
-			console.error("Undefined Droplet Error");
+		if (!message || message === '') {
+			console.error("Upload error with undefined message. File:", file.name, "Status:", file.status, "XHR:", file.xhr);
+			message = "Upload failed. Please check server logs for details.";
 		}
+		console.error("Droplet upload error:", message);
 		this.field.error(message);
     }
 

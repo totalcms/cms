@@ -1,0 +1,385 @@
+{#
+/**
+ * Blog Post Template
+ *
+ * A flexible, ready-to-use blog post template that displays all blog fields.
+ * Uses Total CMS Twig functions for optimal integration.
+ *
+ * Usage:
+ * {% import 'layouts/blog-post.twig' as blog %}
+ * {{ blog.post('post-id') }}
+ *
+ * With options:
+ * {{ blog.post('post-id', {
+ *     collection: 'blog',
+ *     layout: 'centered',
+ *     showSummary: true,
+ *     categoriesAsLinks: true,
+ *     categoryBaseUrl: '/blog/category/',
+ *     tagsAsLinks: true,
+ *     tagBaseUrl: '/blog/tag/',
+ *     showRelated: true,
+ *     relatedLimit: 3,
+ *     relatedBy: 'tags'
+ * }) }}
+ */
+#}
+
+{% macro post(id, options = {}) %}
+	{#
+		Default options:
+		- collection: 'blog' - Collection to fetch from
+		- layout: 'centered' - Options: 'full-width', 'centered', 'narrow'
+		- showSummary: true - Show summary as lead paragraph
+		- categoriesAsLinks: false - Display categories as links vs badges
+		- tagsAsLinks: false - Display tags as links vs badges
+		- categoryBaseUrl: '/category/' - Base URL for category links
+		- tagBaseUrl: '/tag/' - Base URL for tag links
+		- showGallery: true - Display gallery if present
+		- showMedia: true - Display media embed if present
+		- showExtra: true - Display extra content if present
+		- showMeta: true - Show date, author, categories, tags
+		- dateFormat: 'F j, Y' - PHP date format
+		- showRelated: true - Show related posts section
+		- relatedLimit: 3 - Number of related posts to show
+		- relatedBy: 'tags' - Match by: 'tags', 'categories', or 'both'
+		- relatedCompact: true - Compact mode (image + title) or detailed mode (image + title + summary + date + tags)
+		- textRelatedPosts: 'Related Posts' - Localization for related posts heading
+		- textLastUpdated: 'Last updated:' - Localization for last updated text
+	#}
+	{% set defaults = {
+		collection: 'blog',
+		layout: 'centered',
+		showSummary: true,
+		categoriesAsLinks: false,
+		tagsAsLinks: false,
+		categoryBaseUrl: '/category/',
+		tagBaseUrl: '/tag/',
+		showGallery: true,
+		showMedia: true,
+		showExtra: true,
+		showMeta: true,
+		dateFormat: 'F j, Y',
+		showRelated: true,
+		relatedLimit: 3,
+		relatedBy: 'tags',
+		relatedCompact: true,
+		textRelatedPosts: 'Related Posts',
+		textLastUpdated: 'Last updated:'
+	} %}
+	{% set opts = defaults|merge(options) %}
+
+	{# Get the blog post #}
+	{% set post = cms.object(opts.collection, id) %}
+
+	{# Redirect to 404 if post is draft or doesn't exist #}
+	{{ cms.redirectIfNotFound(post) }}
+	{% if post.draft %}
+		{{ cms.redirectIfNotFound(null) }}
+	{% endif %}
+
+	{# Determine layout class #}
+	{% set layoutClass = 'blog-post-' ~ opts.layout %}
+
+	<article class="tcms-blog-post {{ layoutClass }}{% if post.featured %} is-featured{% endif %}">
+
+		{# Hero Image #}
+		{% if post.image.size > 0 %}
+			<div class="blog-hero">
+				{{ cms.image(id, {w: 1920, h: 1080, fit: 'crop-focalpoint'}, {
+					collection : opts.collection ,
+					property   : 'image',
+					loading    : 'eager',
+					alt        : post.image.alt ?: post.title,
+					class      : 'blog-hero-image'
+				}) }}
+
+				{# Featured Badge #}
+				{% if post.featured %}
+					<div class="blog-featured-badge">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="currentColor"><path d="M31.144,11.643,21.3,10.212l-4.4-8.92a1.041,1.041,0,0,0-1.794,0l-4.4,8.92L.856,11.643A1,1,0,0,0,.3,13.348l7.124,6.944L5.744,30.1A1,1,0,0,0,7.195,31.15L16,26.521l8.805,4.629A1,1,0,0,0,26.256,30.1l-1.682-9.8L31.7,13.348a1,1,0,0,0-.555-1.705Z" fill="currentColor"></path></g></svg>
+					</div>
+				{% endif %}
+			</div>
+		{% endif %}
+
+		{# Post Header #}
+		<header class="blog-header">
+			<h1 class="blog-title">{{ post.title }}</h1>
+
+			{# Meta Information #}
+			{% if opts.showMeta %}
+				<div class="blog-meta">
+					{% if post.date %}
+						<time datetime="{{ post.date }}" class="blog-date">
+							{{ post.date|date(opts.dateFormat) }}
+						</time>
+					{% endif %}
+
+					{% if post.author %}
+						<span class="blog-author">by {{ post.author }}</span>
+					{% endif %}
+				</div>
+			{% endif %}
+
+			{# Categories and Tags #}
+			{% if opts.showMeta and (post.categories or post.tags) %}
+				<div class="blog-taxonomy">
+					{# Categories #}
+					{% if post.categories %}
+						<div class="blog-categories">
+							{% if opts.categoriesAsLinks %}
+								{% for category in post.categories %}
+									<a href="{{ opts.categoryBaseUrl }}{{ category|url_encode }}" class="blog-category-link">
+										{{ category }}
+									</a>
+								{% endfor %}
+							{% else %}
+								{% for category in post.categories %}
+									<span class="blog-category-badge">{{ category }}</span>
+								{% endfor %}
+							{% endif %}
+						</div>
+					{% endif %}
+
+					{# Tags #}
+					{% if post.tags %}
+						<div class="blog-tags">
+							{% if opts.tagsAsLinks %}
+								{% for tag in post.tags %}
+									<a href="{{ opts.tagBaseUrl }}{{ tag|url_encode }}" class="blog-tag-link">
+										#{{ tag }}
+									</a>
+								{% endfor %}
+							{% else %}
+								{% for tag in post.tags %}
+									<span class="blog-tag-badge">#{{ tag }}</span>
+								{% endfor %}
+							{% endif %}
+						</div>
+					{% endif %}
+				</div>
+			{% endif %}
+
+			{# Summary/Lead Paragraph #}
+			{% if opts.showSummary and post.summary %}
+				<div class="blog-summary">
+					{{ post.summary|raw }}
+				</div>
+			{% endif %}
+		</header>
+
+		{# Media Embed (Video/Audio) #}
+		{% if opts.showMedia and post.media %}
+			<div class="blog-media">
+				{{ embed(post.media) }}
+			</div>
+		{% endif %}
+
+		{# Main Content #}
+		{% if post.content %}
+			<div class="blog-content">
+				{{ post.content|raw }}
+			</div>
+		{% endif %}
+
+		{# Gallery #}
+		{% if opts.showGallery and post.gallery %}
+			<div class="blog-gallery">
+				{{ cms.gallery(id,
+					{w: 300,  h: 300 },
+					{w: 1920, h: 1080 },
+					{
+						collection: opts.collection,
+						property: 'gallery',
+					}
+				) }}
+			</div>
+		{% endif %}
+
+		{# Extra Content #}
+		{% if opts.showExtra and post.extra %}
+			<div class="blog-extra">
+				{{ post.extra|raw }}
+			</div>
+		{% endif %}
+
+		{# Footer Meta (Updated/Created dates) #}
+		{% if opts.showMeta %}
+		<footer class="blog-footer">
+			{% if post.updated %}
+				<p class="blog-updated">
+					{{ opts.textLastUpdated }} <time datetime="{{ post.updated }}">{{ post.updated|date(opts.dateFormat) }}</time>
+				</p>
+			{% endif %}
+		</footer>
+		{% endif %}
+
+	</article>
+
+	{# Related Posts Section #}
+	{% if opts.showRelated %}
+		{# Build dynamic filters based on options #}
+		{% set filters = [
+			{property: 'id', operator: 'not-equal', value: id},
+			{property: 'draft', operator: 'isfalse'}
+		] %}
+
+		{# Add tag/category filters based on relatedBy option #}
+		{% if opts.relatedBy == 'tags' and post.tags %}
+			{% set filters = filters|merge([{property: 'tags', operator: 'contains', value: post.tags, logic: 'or'}]) %}
+		{% elseif opts.relatedBy == 'categories' and post.categories %}
+			{% set filters = filters|merge([{property: 'categories', operator: 'contains', value: post.categories, logic: 'or'}]) %}
+		{% elseif opts.relatedBy == 'both' %}
+			{% if post.tags %}
+				{% set filters = filters|merge([{property: 'tags', operator: 'contains', value: post.tags, logic: 'or'}]) %}
+			{% endif %}
+			{% if post.categories %}
+				{% set filters = filters|merge([{property: 'categories', operator: 'contains', value: post.categories, logic: 'or'}]) %}
+			{% endif %}
+		{% endif %}
+
+		{# Apply filters to get candidate posts #}
+		{% set candidatePosts = cms.objects(opts.collection)|filterCollection(filters) %}
+
+		{# Calculate match scores for sorting (categories weighted higher) #}
+		{% set relatedPosts = [] %}
+		{% for blogPost in candidatePosts %}
+			{% set matchScore = 0 %}
+
+			{# Score matching tags (1 point each) #}
+			{% if post.tags and blogPost.tags %}
+				{% for tag in post.tags %}
+					{% if tag in blogPost.tags %}
+						{% set matchScore = matchScore + 1 %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+
+			{# Score matching categories (2 points each - weighted higher) #}
+			{% if post.categories and blogPost.categories %}
+				{% for category in post.categories %}
+					{% if category in blogPost.categories %}
+						{% set matchScore = matchScore + 2 %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+
+			{# Add post with its match score #}
+			{% set relatedPosts = relatedPosts|merge([{
+				post: blogPost,
+				score: matchScore
+			}]) %}
+		{% endfor %}
+
+		{# Sort by match score (highest first) and limit results #}
+		{% set relatedPosts = relatedPosts|sort((a, b) => b.score <=> a.score)|slice(0, opts.relatedLimit) %}
+
+		{# Display related posts if we have any #}
+		{% if relatedPosts|length > 0 %}
+			{# Extract just the posts from the scored array #}
+			{% set relatedPostsOnly = [] %}
+			{% for item in relatedPosts %}
+				{% set relatedPostsOnly = relatedPostsOnly|merge([item.post]) %}
+			{% endfor %}
+
+			<aside class="blog-related-posts">
+				<h2 class="related-posts-title">{{ opts.textRelatedPosts }}</h2>
+
+				{% set gridClasses = opts.relatedCompact ? 'related-posts compact' : 'related-posts' %}
+				{% set gridTemplate = opts.relatedCompact ? 'grid/blog-compact.twig' : 'grid/blog.twig' %}
+
+				{% cmsgrid relatedPostsOnly from opts.collection with gridClasses as 'article' %}
+					{% include gridTemplate %}
+				{% endcmsgrid %}
+			</aside>
+		{% endif %}
+	{% endif %}
+
+	{# Include minimal layout styles #}
+	{% include 'layouts/_blog-post-styles.twig' %}
+
+{% endmacro %}
+
+{#
+/**
+ * Usage Examples:
+ *
+ * Basic usage (all defaults):
+ * {% import 'layouts/blog-post.twig' as blog %}
+ * {{ blog.post('my-post-id') }}
+ *
+ * Centered layout with summary:
+ * {{ blog.post('my-post-id', {
+ *     layout: 'centered',
+ *     showSummary: true
+ * }) }}
+ *
+ * Using a different collection:
+ * {{ blog.post('my-post-id', {
+ *     collection: 'news'
+ * }) }}
+ *
+ * Narrow layout with category/tag links:
+ * {{ blog.post('my-post-id', {
+ *     layout: 'narrow',
+ *     categoriesAsLinks: true,
+ *     categoryBaseUrl: '/blog/category/',
+ *     tagsAsLinks: true,
+ *     tagBaseUrl: '/blog/tag/'
+ * }) }}
+ *
+ * Full-width without gallery or extra content:
+ * {{ blog.post('my-post-id', {
+ *     layout: 'full-width',
+ *     showGallery: false,
+ *     showExtra: false
+ * }) }}
+ *
+ * Custom date format:
+ * {{ blog.post('my-post-id', {
+ *     dateFormat: 'M d, Y'
+ * }) }}
+ *
+ * With related posts by tags (compact mode - default):
+ * {{ blog.post('my-post-id', {
+ *     showRelated: true,
+ *     relatedLimit: 3,
+ *     relatedBy: 'tags',
+ *     relatedCompact: true
+ * }) }}
+ *
+ * With related posts by categories (detailed mode):
+ * {{ blog.post('my-post-id', {
+ *     showRelated: true,
+ *     relatedLimit: 4,
+ *     relatedBy: 'categories',
+ *     relatedCompact: false
+ * }) }}
+ *
+ * With related posts by both tags and categories (detailed mode with wider cards):
+ * {{ blog.post('my-post-id', {
+ *     showRelated: true,
+ *     relatedLimit: 6,
+ *     relatedBy: 'both',
+ *     relatedCompact: false
+ * }) }}
+ *
+ * Without related posts:
+ * {{ blog.post('my-post-id', {
+ *     showRelated: false
+ * }) }}
+ *
+ * With localized text (French example):
+ * {{ blog.post('my-post-id', {
+ *     textRelatedPosts: 'Articles similaires',
+ *     textLastUpdated: 'Dernière mise à jour:'
+ * }) }}
+ *
+ * With localized text (Spanish example):
+ * {{ blog.post('my-post-id', {
+ *     textRelatedPosts: 'Artículos relacionados',
+ *     textLastUpdated: 'Última actualización:'
+ * }) }}
+ */
+#}

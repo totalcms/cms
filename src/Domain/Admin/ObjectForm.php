@@ -10,6 +10,9 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  */
 class ObjectForm extends TotalForm
 {
+	/** @var array<string,mixed> Duplicate data for prefilling form (raw values, not PropertyData) */
+	private array $duplicateData = [];
+
 	protected function init(): void
 	{
 		parent::init();
@@ -27,6 +30,17 @@ class ObjectForm extends TotalForm
 		}
 
 		$this->initCollectionData();
+
+		// Handle duplicate object - filter out file-based properties and store raw data
+		if ($this->id === '' && $this->data !== []) {
+			$this->duplicateData = $this->filterFileProperties($this->data);
+			$this->isDuplicate   = true;
+			// Blank out ID to allow autogen rules to work (unless keepIdOnDuplicate setting is enabled)
+			$keepId = $this->config?->dashboard['keepIdOnDuplicate'] ?? false;
+			if (!$keepId) {
+				$this->duplicateData['id'] = '';
+			}
+		}
 	}
 
 	/**
@@ -50,8 +64,8 @@ class ObjectForm extends TotalForm
 			$defaults['required'] = $this->isRequired($name);
 		}
 
-		// Get the value from the object data if it exists
-		if ($this->id !== '') {
+		// Get the value from the object data if it exists (for editing)
+		if ($this->id !== '' && $this->objectData instanceof ObjectData) {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
 
 			// A DeckItem will set the deck_context option if it is a deck field
@@ -63,13 +77,22 @@ class ObjectForm extends TotalForm
 				}
 			}
 
-			// if the value is not already set, try to get it from the object data
-			if (!isset($options['value']) && $this->objectData instanceof ObjectData) {
+			// Set value from object data
+			if (!isset($options['value'])) {
 				$value = $this->objectData->toArray()[$name] ?? null;
 				// Use strict checks to preserve zero values (0, 0.0, '0')
 				if ($value !== '' && $value !== null) {
 					$options['value'] = $value;
 				}
+			}
+		}
+
+		// Get the value from duplicate data if it exists (for duplicating)
+		if ($this->duplicateData !== [] && !isset($options['value'])) {
+			$value = $this->duplicateData[$name] ?? null;
+			// Use strict checks to preserve zero values (0, 0.0, '0')
+			if ($value !== '' && $value !== null) {
+				$options['value'] = $value;
 			}
 		}
 
@@ -147,5 +170,46 @@ class ObjectForm extends TotalForm
 		$this->collectionData = $collectionData;
 		$this->schema         = $this->collectionData->schema;
 		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->schema);
+	}
+
+	/**
+	 * Filter out file-based properties from duplicate data.
+	 * Excludes: file, image, depot, gallery (but keeps SVG).
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filterFileProperties(array $data): array
+	{
+		$excludedTypes = ['file', 'image', 'depot', 'gallery'];
+
+		if (!$this->schemaData instanceof SchemaData) {
+			return $data;
+		}
+
+		foreach ($this->schemaData->properties as $propertyName => $propertySchema) {
+			// Get the property type from $ref or type field
+			$propertyType = null;
+
+			if (isset($propertySchema['$ref'])) {
+				// Extract type from $ref URL
+				foreach (SchemaData::PROPERTY_TYPE_TO_REF as $type => $ref) {
+					if ($propertySchema['$ref'] === $ref) {
+						$propertyType = $type;
+						break;
+					}
+				}
+			} elseif (isset($propertySchema['type'])) {
+				$propertyType = $propertySchema['type'];
+			}
+
+			// Remove property if it's a file-based type
+			if ($propertyType !== null && in_array($propertyType, $excludedTypes, true)) {
+				unset($data[$propertyName]);
+			}
+		}
+
+		return $data;
 	}
 }

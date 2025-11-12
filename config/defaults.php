@@ -236,9 +236,10 @@ $settings['htmlclean'] = [
 ];
 
 $settings['dashboard'] = [
-	'pagination' => 50, // Default pagination for dashboard tables
-	'title'      => 'Total CMS Admin', // Browser title for admin dashboard pages
-	// 'accent'     => '#4d91e2', // Dashboard accent color
+	'pagination'        => 50, // Default pagination for dashboard tables
+	'title'             => 'Total CMS Admin', // Browser title for admin dashboard pages
+	// 'accent'            => '#4d91e2', // Dashboard accent color
+	// 'keepIdOnDuplicate' => false, // Keep ID when duplicating objects (default: false - ID is cleared)
 ];
 
 // https://www.php.net/manual/en/timezones.php

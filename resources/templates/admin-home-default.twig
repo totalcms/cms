@@ -9,12 +9,15 @@
 {% set systemStatus = cms.dashboardSystemStatus() %}
 
 
-{% if stats.collections == 0 %}
-	{# Show new user welcome if no collections exist #}
+{% if stats.collections <= 3 %}
+	{# Show new user welcome if no user collections exist (accounts for system collections: auth, playground, mailer) #}
 	{{ dashboard.newUserWelcome() }}
 {% else %}
 	{# Display welcome message #}
-	{{ dashboard.welcomeMessage() }}
+	{{ include([
+		'whitelabel/admin-welcome.twig',
+		'admin-welcome-message.twig'
+	], ignore_missing = true) }}
 
 	{# Display quick stats #}
 	{{ dashboard.statsCard(stats) }}

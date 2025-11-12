@@ -76,6 +76,10 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.text('id', {collection: 'custom'}) }}     {# Custom collection #}
 {{ cms.text('id', {property: 'content'}) }}      {# Custom property #}
 
+{{ cms.code('id') }}                             {# Get code snippet (default collection: code) #}
+{{ cms.code('id', {collection: 'custom'}) }}     {# Custom collection #}
+{{ cms.code('id', {property: 'snippet'}) }}      {# Custom property #}
+
 {{ cms.styledtext('id') }}                       {# Get styled text (HTML) #}
 {{ cms.styledtext('id', {collection: 'custom', property: 'html'}) }}
 ```
@@ -145,6 +149,8 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 
 ## Galleries
 
+### Standard Gallery (Grid with Lightbox)
+
 ```twig
 {# Complete gallery with lightbox #}
 {{ cms.gallery('id') }}                          {# Default 300x200 thumbs #}
@@ -171,6 +177,131 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.galleryImage('id', 'random') }}           {# Random image #}
 {{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
 ```
+
+### Gallery Launcher (Trigger-Based Lightbox)
+
+The gallery launcher allows you to open a lightbox from custom trigger elements like buttons, links, or thumbnails. Perfect for launching galleries without showing a visible grid.
+
+```twig
+{# Basic gallery launcher #}
+{{ cms.galleryLauncher('id') }}                   {# Outputs hidden template with gallery data #}
+<button data-gallery="gallery-id">View Photos</button>
+
+{# Custom thumbnail and full-size settings #}
+{{ cms.galleryLauncher('id', {w: 300, h: 200}, {w: 1920, fit: 'contain'}) }}
+
+{# With options #}
+{{ cms.galleryLauncher('id', {w: 300}, {w: 1920}, {
+    collection: 'gallery',
+    property: 'gallery',
+    captions: true,                              {# Show alt text as captions #}
+    speed: 600,
+    loop: true,
+    download: false,
+    plugins: ['zoom', 'thumbnail', 'fullscreen']
+}) }}
+```
+
+#### Triggering Gallery Launchers
+
+**Method 1: Using data-gallery attribute (recommended)**
+```twig
+{{ cms.galleryLauncher('vacation') }}
+<button data-gallery="gallery-vacation">View All Photos</button>
+```
+
+**Method 2: Using CSS selector**
+```twig
+{{ cms.galleryLauncher('vacation', {}, {}, {
+    trigger: '.open-gallery-btn'                 {# Any element with this class triggers gallery #}
+}) }}
+<button class="open-gallery-btn">View Gallery</button>
+<a class="open-gallery-btn">See Photos</a>
+```
+
+**Method 3: Combined (both data-gallery and CSS selector)**
+```twig
+{{ cms.galleryLauncher('vacation', {}, {}, {
+    trigger: '.gallery-thumb'
+}) }}
+<button data-gallery="gallery-vacation">View All</button>
+<img class="gallery-thumb" src="thumb1.jpg">
+<img class="gallery-thumb" src="thumb2.jpg">
+```
+
+#### Opening at Specific Image
+
+**By image filename (recommended):**
+```twig
+{{ cms.galleryLauncher('vacation') }}
+
+{# These thumbnails open gallery at their specific image #}
+<img data-gallery="gallery-vacation"
+     data-gallery-image="sunset.jpg"
+     src="sunset-thumb.jpg">
+
+<img data-gallery="gallery-vacation"
+     data-gallery-image="beach.jpg"
+     src="beach-thumb.jpg">
+```
+
+**By index (zero-based):**
+```twig
+{{ cms.galleryLauncher('vacation') }}
+<button data-gallery="gallery-vacation" data-gallery-index="0">First Image</button>
+<button data-gallery="gallery-vacation" data-gallery-index="5">Image #6</button>
+```
+
+#### Complete Gallery Launcher Example
+
+```twig
+{# Create the gallery launcher #}
+{{ cms.galleryLauncher('products',
+    {w: 400, h: 300},           {# Thumbnail settings #}
+    {w: 1920, fit: 'contain'},  {# Full-size settings #}
+    {
+        captions: true,
+        speed: 400,
+        loop: true,
+        trigger: '.product-image',
+        plugins: ['zoom', 'fullscreen']
+    }
+) }}
+
+{# Display product thumbnails that trigger the gallery #}
+<div class="product-grid">
+    <img class="product-image"
+         data-gallery-image="front-view.jpg"
+         src="thumb-front.jpg"
+         alt="Front view">
+
+    <img class="product-image"
+         data-gallery-image="side-view.jpg"
+         src="thumb-side.jpg"
+         alt="Side view">
+
+    <img class="product-image"
+         data-gallery-image="detail.jpg"
+         src="thumb-detail.jpg"
+         alt="Close-up detail">
+
+    <button data-gallery="gallery-products">View All Images</button>
+</div>
+```
+
+**Gallery Launcher Options:**
+- `trigger` - CSS selector for trigger elements (in addition to data-gallery)
+- `captions` - Show image alt text as captions (true/false)
+- `galleryId` - Custom gallery ID (default: `{collection}-{id}`)
+- All standard LightGallery options: `speed`, `loop`, `download`, `counter`, `plugins`, etc.
+- Note: Grid-specific options (`maxVisible`, `viewAllText`) don't apply to gallery launchers
+
+**When to Use Gallery Launchers:**
+- Custom thumbnail layouts that don't fit the grid pattern
+- Opening galleries from buttons or text links
+- Multiple different triggers for the same gallery
+- Launching galleries from specific images in your custom layout
+- Image-based navigation where clicking a product photo opens full gallery
 
 ## File Downloads & Streaming
 
@@ -348,6 +479,36 @@ Common parameters for image transformations:
         maxVisible: 4,
         viewAllText: 'View all images'
     }) }}
+</div>
+```
+
+### Create a gallery launcher with custom triggers
+```twig
+{% set product = cms.object('products', 'widget-pro') %}
+
+{# Output the gallery launcher (hidden template) #}
+{{ cms.galleryLauncher(product.id, {w: 300, h: 300}, {w: 1920}, {
+    captions: true,
+    trigger: '.product-thumb',
+    plugins: ['zoom', 'fullscreen']
+}) }}
+
+{# Display custom layout with gallery triggers #}
+<div class="product-images">
+    <img class="product-thumb main-image"
+         data-gallery-image="front.jpg"
+         src="{{ cms.galleryPath(product.id, 'front.jpg', {w: 600, h: 400}) }}">
+
+    <div class="thumbnail-strip">
+        <img class="product-thumb"
+             data-gallery-image="side.jpg"
+             src="{{ cms.galleryPath(product.id, 'side.jpg', {w: 100, h: 100}) }}">
+        <img class="product-thumb"
+             data-gallery-image="detail.jpg"
+             src="{{ cms.galleryPath(product.id, 'detail.jpg', {w: 100, h: 100}) }}">
+    </div>
+
+    <button data-gallery="gallery-{{ product.id }}">View All Photos</button>
 </div>
 ```
 

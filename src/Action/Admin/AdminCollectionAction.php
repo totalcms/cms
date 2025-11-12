@@ -64,7 +64,7 @@ readonly class AdminCollectionAction
 			]);
 		}
 
-		return $this->twigRenderer->template($response, 'admin/collection.twig', [
+		$templateData = [
 			'url' => [
 				'path'       => $request->getUri()->getPath(),
 				'query'      => $request->getUri()->getQuery(),
@@ -73,6 +73,23 @@ readonly class AdminCollectionAction
 				'collection' => $args['collection'] ?? '',
 				'id'         => $args['id'] ?? '',
 			],
-		]);
+		];
+
+		// Handle POST request for object duplication
+		if ($request->getMethod() === 'POST' && $id === 'add') {
+			$postData = (array)$request->getParsedBody();
+
+			// Check if this is a duplication request (contains 'duplicate' with object ID)
+			if (isset($postData['duplicate']) && is_string($postData['duplicate'])) {
+				$duplicateId = $postData['duplicate'];
+
+				// Fetch the object to duplicate and convert to array
+				// ObjectForm will handle filtering file properties
+				$objectToDuplicate             = $this->objectFetcher->fetchObject($collection, $duplicateId);
+				$templateData['duplicateData'] = $objectToDuplicate->toArray();
+			}
+		}
+
+		return $this->twigRenderer->template($response, 'admin/collection.twig', $templateData);
 	}
 }

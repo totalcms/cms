@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -16,12 +17,19 @@ readonly class FirstLoginChecker
 		private CollectionFetcher $collectionFetcher,
 		private IndexReader $indexReader,
 		private Config $config,
+		private AccessGroupManager $accessGroupManager,
 	) {
 		$this->collection = $this->config->auth['collection'];
 	}
 
 	public function isNewInstallation(): bool
 	{
+		// If data directory doesn't exist, it's definitely a new installation
+		// Check this BEFORE trying to fetch collection to avoid auto-creating the directory
+		if (!is_dir($this->config->datadir)) {
+			return true;
+		}
+
 		// Try to fetch the collection, which will create it if it's a reserved collection
 		try {
 			$this->collectionFetcher->fetchCollection($this->collection);
@@ -36,6 +44,9 @@ readonly class FirstLoginChecker
 
 	public function createFirstUser(string $email, string $password): void
 	{
+		// Create default access groups before creating first user
+		$this->accessGroupManager->createDefaultGroups();
+
 		$this->objectSaver->saveObject($this->collection, [
 			'id'       => 'admin',
 			'name'     => 'Admin',

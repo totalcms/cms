@@ -38,7 +38,8 @@ readonly class Watermark
 			'markalpha' => $this->markalpha,
 		];
 
-		return array_filter($params);
+		// Only filter out null values, preserve 0 and other falsy values that are valid for Glide
+		return array_filter($params, fn (?string $value): bool => $value !== null);
 	}
 
 	/**

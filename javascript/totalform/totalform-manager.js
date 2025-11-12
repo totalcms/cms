@@ -43,6 +43,8 @@ export default class TotalFormManager {
 		const totalforms = [];
 		const forms = Array.from(document.querySelectorAll("form.totalform"));
 		for (const form of forms) {
+			// Skip simple forms - they handle their own initialization
+			if (form.classList.contains("simple-form")) continue;
 			totalforms.push(new TotalForm(form));
 		}
 		return totalforms;
@@ -106,7 +108,12 @@ export default class TotalFormManager {
 			button.addEventListener("click", event => {
 				event.preventDefault();
 
-				const totalform = event.target.closest("form").totalform;
+				const form = event.target.closest("form");
+				const totalform = form.totalform;
+
+				// Skip if this is a simple-form (they handle their own submission)
+				if (!totalform) return;
+
 				if (!totalform.validate()) return;
 
  				// Only one form to save

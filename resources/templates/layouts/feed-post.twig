@@ -1,0 +1,147 @@
+{#
+/**
+ * Feed Post Template
+ *
+ * A flexible, ready-to-use feed post template that displays all feed fields.
+ * Uses Total CMS Twig functions for optimal integration.
+ *
+ * Usage:
+ * {% import 'layouts/feed-post.twig' as feed %}
+ * {{ feed.post('post-id') }}
+ *
+ * With options:
+ * {{ feed.post('post-id', {
+ *     collection: 'feed',
+ *     layout: 'centered'
+ * }) }}
+ */
+#}
+
+{% macro post(id, options = {}) %}
+	{#
+		Default options:
+		- collection: 'feed' - Collection to fetch from
+		- layout: 'centered' - Options: 'full-width', 'centered', 'narrow'
+		- showMeta: true - Show created/updated dates
+		- dateFormat: 'F j, Y' - PHP date format
+	#}
+	{% set defaults = {
+		collection: 'feed',
+		layout: 'centered',
+		showMeta: true,
+		dateFormat: 'F j, Y'
+	} %}
+	{% set opts = defaults|merge(options) %}
+
+	{# Get the feed post #}
+	{% set post = cms.object(opts.collection, id) %}
+
+	{# Redirect to 404 if post doesn't exist #}
+	{{ cms.redirectIfNotFound(post) }}
+
+	{# Determine layout class #}
+	{% set layoutClass = 'feed-post-' ~ opts.layout %}
+
+	<article class="tcms-feed-post {{ layoutClass }}{% if post.featured %} is-featured{% endif %}">
+
+		{# Hero Image #}
+		{% if post.image.size > 0 %}
+			<div class="feed-hero">
+				{{ cms.image(id, {w: 1920, h: 1080, fit: 'crop-focalpoint'}, {
+					collection : opts.collection,
+					property   : 'image',
+					loading    : 'eager',
+					alt        : post.image.alt ?: post.title,
+					class      : 'feed-hero-image'
+				}) }}
+
+				{# Featured Badge #}
+				{% if post.featured %}
+					<div class="feed-featured-badge">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+						</svg>
+					</div>
+				{% endif %}
+			</div>
+		{% endif %}
+
+		{# Post Header #}
+		<header class="feed-header">
+			<h1 class="feed-title">{{ post.title }}</h1>
+
+			{# Meta Information #}
+			{% if opts.showMeta %}
+				<div class="feed-meta">
+					{% if post.created %}
+						<time datetime="{{ post.created }}" class="feed-date">
+							{{ post.created|date(opts.dateFormat) }}
+						</time>
+					{% endif %}
+				</div>
+			{% endif %}
+		</header>
+
+		{# Main Content #}
+		{% if post.content %}
+			<div class="feed-content">
+				{{ post.content|raw }}
+			</div>
+		{% endif %}
+
+		{# Footer Meta (Updated date) #}
+		<footer class="feed-footer">
+			{% if post.updated and post.updated != post.created %}
+				<p class="feed-updated">
+					Last updated: <time datetime="{{ post.updated }}">{{ post.updated|date(opts.dateFormat) }}</time>
+				</p>
+			{% endif %}
+		</footer>
+
+	</article>
+
+	{# Include minimal layout styles #}
+	{% include 'layouts/_feed-post-styles.twig' %}
+
+{% endmacro %}
+
+
+{#
+/**
+ * Usage Examples:
+ *
+ * Basic usage (all defaults):
+ * {% import 'layouts/feed-post.twig' as feed %}
+ * {{ feed.post('my-post-id') }}
+ *
+ * Centered layout:
+ * {{ feed.post('my-post-id', {
+ *     layout: 'centered'
+ * }) }}
+ *
+ * Using a different collection:
+ * {{ feed.post('my-post-id', {
+ *     collection: 'news'
+ * }) }}
+ *
+ * Narrow layout:
+ * {{ feed.post('my-post-id', {
+ *     layout: 'narrow'
+ * }) }}
+ *
+ * Full-width layout:
+ * {{ feed.post('my-post-id', {
+ *     layout: 'full-width'
+ * }) }}
+ *
+ * Custom date format:
+ * {{ feed.post('my-post-id', {
+ *     dateFormat: 'M d, Y'
+ * }) }}
+ *
+ * Hide meta information:
+ * {{ feed.post('my-post-id', {
+ *     showMeta: false
+ * }) }}
+ */
+#}

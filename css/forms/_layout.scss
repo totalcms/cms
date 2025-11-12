@@ -84,7 +84,10 @@
 	&.unsaved {
 		--totalform-border-color : var(--totalform-changed);
 		--totalform-icon-bg      : var(--totalform-changed);
-		--totalform-icon-color   : var(--totalform-purewhite);
+
+		&:not(.schemaProperties-field) {
+			--totalform-icon-color : var(--totalform-purewhite);
+		}
 	}
 	&:not(.deck-field).error {
 		--totalform-border-color : var(--totalform-error);
@@ -106,17 +109,13 @@
 }
 
 .cms-button,
-.cms-save,
-.cms-delete,
 .cms-add {
 	width  : fit-content;
 	cursor : pointer;
 }
 
 .totalform {
-	.cms-button,
-	.cms-save,
-	.cms-delete {
+	.cms-button {
 		appearance       : none;
 		border-radius    : var(--totalform-radius);
 		background-color : oklch(var(--totalform-darkgray));
@@ -154,12 +153,16 @@
 				background-color : oklch(var(--totalform-darkgray));
 			}
 		}
-	}
-	.cms-save:before {
-		mask-image : var(--icon-save);
-	}
-	.cms-delete:before {
-		mask-image : var(--icon-trash-o);
+
+		&.no-icon:before {
+			display : none;
+		}
+		&.cms-save:before {
+			mask-image : var(--icon-save);
+		}
+		&.cms-delete:before {
+			mask-image : var(--icon-trash-o);
+		}
 	}
 
 	// Processing state animation for buttons

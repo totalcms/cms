@@ -28,6 +28,10 @@
 				{% if cms.canAccessSchema(collectionSchema, 'read') %}
 				<li class="schema"><a href="schemas/{{ collectionSchema }}">Edit Schema</a></li>
 				{% endif %}
+				{# Show duplicate link only when editing an object (css in edit.twig) #}
+				{% if cms.canAccessCollection(collection, 'create') %}
+				<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
+				{% endif %}
 				<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
 				{% if cms.canAccessCollection(collection, 'create') %}
 				<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>
@@ -57,7 +61,7 @@
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
 				<ul>
-				{% for collection in sortByKey(collections) %}
+				{% for collection in sortByKey(collections, "name") %}
 					<li class="collection-{{collection.schema}}">
 						<a {% if url.collection == collection.id %}class="active"{% endif %}
 							href="collections/{{ collection.id }}"
@@ -93,13 +97,13 @@
 		{{ _self.collectionHeader(url.collection, labelPlural) }}
 		{% include "admin/collection/index.twig" %}
 
-	{% elseif url.id in ["add"] %}
+	{% elseif url.id == "add" %}
 		{{ _self.collectionHeader(url.collection, "new " ~ labelSingular) }}
-		{% include "admin/collection/" ~ url.id ~ ".twig" %}
+		{% include "admin/collection/add.twig" %}
 
-	{% elseif url.id in ["edit"] %}
+	{% elseif url.id == "edit" %}
 		{{ _self.collectionHeader(url.collection) }}
-		{% include "admin/collection/" ~ url.id ~ ".twig" %}
+		{% include "admin/collection/edit.twig" %}
 
 	{% elseif url.id in ["-factory", "-import", "-export", "-sitemap", "-feeds"] %}
 		{% set pageName = url.id | replace({"-":""}) %}
@@ -119,6 +123,10 @@ document.addEventListener("keydown", function (event) {
 	if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
 		event.preventDefault();
 		window.location.href = "collections/{{ url.collection }}/add";
+	}
+	if (window.duplicateObject && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d") {
+		event.preventDefault();
+		duplicateObject(event);
 	}
 });
 </script>

@@ -43,6 +43,11 @@ class TotalCMSTwigFunctions
 		'print_r',
 		'json_pretty',
 		'embed',
+		'youtube',
+		'vimeo',
+		'video',
+		'audio',
+		'iframe',
 		'imageExists',
 		'fileExists',
 		'svgSymbol',
@@ -187,7 +192,7 @@ class TotalCMSTwigFunctions
 			return false;
 		}
 
-		return $file['size'] !== 0;
+		return intval($file['size']) !== 0;
 	}
 
 	public static function imageExists(mixed $image): bool

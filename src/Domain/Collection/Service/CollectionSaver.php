@@ -37,13 +37,12 @@ readonly class CollectionSaver
 			$data['totalObjects'] = count($objectIds);
 		}
 
-		// Clean lastUpdated to ensure proper ISO 8601 format
+		// Preserve lastUpdated from existing collection if not provided
 		if (!isset($data['lastUpdated']) || $data['lastUpdated'] === '') {
-			$data['lastUpdated'] = DateData::cleanDate();
-		} else {
-			// Clean the provided date to ensure it's in the correct format
-			$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
+			$data['lastUpdated'] = 'now';
 		}
+		// Clean the provided lastUpdated to ensure proper ISO 8601 format
+		$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
 
 		// Ensure formSettings is an array (handle empty strings from form)
 		if (isset($data['formSettings']) && $data['formSettings'] === '') {
@@ -65,16 +64,27 @@ readonly class CollectionSaver
 	 * update Collection data.
 	 *
 	 * @param array<string,mixed> $data The collection data to save
+	 * @param CollectionData|null $existingCollection Optional existing collection to avoid double-fetching
 	 *
 	 * @throws \UnexpectedValueException
 	 */
-	public function updateCollection(string $collectionId, array $data): CollectionData
+	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null): CollectionData
 	{
-		$data['count'] = $this->initializeCount($collectionId, $data);
+		$data['count']       = $this->initializeCount($collectionId, $data);
+		$data['lastUpdated'] = DateData::cleanDate();
 
-		// Clean lastUpdated to ensure proper ISO 8601 format
-		if (isset($data['lastUpdated']) && $data['lastUpdated'] !== '') {
-			$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
+		// Fetch existing collection to preserve system-managed fields if not provided
+		if (!$existingCollection instanceof CollectionData) {
+			$existingCollection = $this->storage->fetchCollection($collectionId);
+		}
+
+		if (!$existingCollection instanceof CollectionData) {
+			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+		}
+
+		// Preserve totalObjects from existing collection if not provided
+		if (!isset($data['totalObjects'])) {
+			$data['totalObjects'] = $existingCollection->totalObjects ?? 0;
 		}
 
 		// Ensure formSettings is an array (handle empty strings from form)
@@ -142,7 +152,7 @@ readonly class CollectionSaver
 	}
 
 	/**
-	 * Increment totalObjects and update lastUpdated for a collection.
+	 * Increment totalObjects for a collection.
 	 *
 	 * @throws \UnexpectedValueException
 	 */
@@ -156,13 +166,12 @@ readonly class CollectionSaver
 
 		$collectionArray                 = $collection->toArray();
 		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + 1;
-		$collectionArray['lastUpdated']  = DateData::cleanDate();
 
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}
 
 	/**
-	 * Decrement totalObjects and update lastUpdated for a collection.
+	 * Decrement totalObjects for a collection.
 	 *
 	 * @throws \UnexpectedValueException
 	 */
@@ -176,9 +185,8 @@ readonly class CollectionSaver
 
 		$collectionArray                 = $collection->toArray();
 		$collectionArray['totalObjects'] = max(0, ($collectionArray['totalObjects'] ?? 0) - 1);
-		$collectionArray['lastUpdated']  = DateData::cleanDate();
 
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}
 
 	/**
@@ -194,10 +202,9 @@ readonly class CollectionSaver
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
-		$collectionArray                = $collection->toArray();
-		$collectionArray['lastUpdated'] = DateData::cleanDate();
+		$collectionArray = $collection->toArray();
 
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}
 
 	/**	@param array<string,mixed> $data */

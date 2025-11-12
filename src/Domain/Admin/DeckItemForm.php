@@ -162,6 +162,9 @@ class DeckItemForm extends TotalForm
 		// Get defaults from deck schema
 		$defaults = $this->deckFieldDefaults($name);
 
+		// Merge in attribute settings (min, max, pattern, etc.) - CRITICAL for deck fields
+		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
+
 		// Set required from deck schema
 		if (!isset($options['required'])) {
 			$defaults['required'] = $this->isDeckFieldRequired($name);
@@ -187,6 +190,24 @@ class DeckItemForm extends TotalForm
 		}
 
 		return array_merge($defaults, $options);
+	}
+
+	/**
+	 * Override to extract field attributes from deck schema settings.
+	 * This is critical for deck fields to get min, max, pattern, etc.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function fieldAttributeSettings(string $property): array
+	{
+		if ($this->deckref === '' || !$this->schemaData instanceof SchemaData) {
+			return [];
+		}
+
+		// Get the deck schema settings for this property
+		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
+
+		return self::filterFieldAttributes($schema);
 	}
 
 	/**

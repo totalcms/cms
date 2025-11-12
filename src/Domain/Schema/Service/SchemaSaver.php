@@ -63,6 +63,7 @@ readonly class SchemaSaver
 		}
 
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
+		$schemaData['properties'] = self::normalizeDefaultValues($schemaData['properties']);
 		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (!isset($schema->id)) {
@@ -99,6 +100,48 @@ readonly class SchemaSaver
 			if (isset($options['type']) && array_key_exists($options['type'], SchemaData::PROPERTY_TYPE_TO_REF)) {
 				$properties[$key]['$ref'] = SchemaData::PROPERTY_TYPE_TO_REF[$options['type']];
 				unset($properties[$key]['type']);
+			}
+		}
+
+		return $properties;
+	}
+
+	/**
+	 * Normalize default values - convert string booleans to actual booleans.
+	 *
+	 * @param array<string,array<string,mixed>> $properties
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public static function normalizeDefaultValues(array $properties): array
+	{
+		foreach ($properties as $key => $options) {
+			// Check if this property has a default value
+			if (!isset($options['default'])) {
+				continue;
+			}
+
+			// Check if this is a boolean field type
+			$isBooleanField = false;
+
+			// Check by type
+			if (isset($options['type']) && $options['type'] === 'boolean') {
+				$isBooleanField = true;
+			}
+
+			// Check by field type (toggle, checkbox)
+			if (isset($options['field']) && in_array($options['field'], ['toggle', 'checkbox'], true)) {
+				$isBooleanField = true;
+			}
+
+			// Convert string "true"/"false" to boolean for boolean fields
+			if ($isBooleanField && is_string($options['default'])) {
+				$default = strtolower($options['default']);
+				if ($default === 'true' || $default === '1') {
+					$properties[$key]['default'] = true;
+				} elseif ($default === 'false' || $default === '0') {
+					$properties[$key]['default'] = false;
+				}
 			}
 		}
 

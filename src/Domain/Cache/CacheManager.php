@@ -37,17 +37,18 @@ class CacheManager
 	];
 
 	// Cache TTL constants for different data types
-	public const DEFAULT_TTL             = 3600;              // 1 hour - default TTL for most data
-	public const TTL_COLLECTIONS_LIST    = 900;      // 15 minutes - collections don't change often
-	public const TTL_INDEX_DATA          = 1800;           // 30 minutes - indexes change when objects are added/removed
-	public const TTL_OBJECT_IDS          = 900;            // 15 minutes - changes when objects are added/removed
-	public const TTL_OBJECT_DATA         = 3600;          // 1 hour - individual objects change infrequently
-	public const TTL_RESERVED_SCHEMAS    = 3600;     // 1 hour - reserved schemas never change
-	public const TTL_RESERVED_SCHEMA_IDS = 3600;  // 1 hour - reserved schema IDs never change
-	public const TTL_CUSTOM_SCHEMA       = 7200;        // 2 hours - custom schemas change infrequently
-	public const TTL_API_RESPONSE        = 900;          // 15 minutes - API responses can be cached briefly
-	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer
-	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens
+	// Increased TTLs for production performance - cache invalidation via .cache_version handles updates
+	public const DEFAULT_TTL             = 7200;              // 2 hours - default TTL for most data
+	public const TTL_COLLECTIONS_LIST    = 3600;      // 1 hour - collections rarely change in production
+	public const TTL_INDEX_DATA          = 3600;           // 1 hour - indexes change when objects are added/removed
+	public const TTL_OBJECT_IDS          = 1800;            // 30 minutes - changes when objects are added/removed
+	public const TTL_OBJECT_DATA         = 14400;          // 4 hours - individual objects change infrequently
+	public const TTL_RESERVED_SCHEMAS    = 86400;     // 24 hours - reserved schemas NEVER change
+	public const TTL_RESERVED_SCHEMA_IDS = 86400;  // 24 hours - reserved schema IDs NEVER change
+	public const TTL_CUSTOM_SCHEMA       = 14400;        // 4 hours - custom schemas change infrequently
+	public const TTL_API_RESPONSE        = 1800;          // 30 minutes - API responses can be cached longer
+	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
+	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)
 
 	private string $versionFile = '.cache_version';
 	private readonly string $domainPrefix;

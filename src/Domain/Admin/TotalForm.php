@@ -18,6 +18,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
@@ -32,6 +33,7 @@ class TotalForm implements \Stringable
 	public ?CollectionData $collectionData = null;
 	public ?ObjectData $objectData         = null;
 	public ?SchemaData $schemaData         = null;
+	public bool $isDuplicate               = false;
 
 	public const FIELDS_BY_TYPE = [
 		'Text (String) Fields' => [
@@ -145,6 +147,7 @@ class TotalForm implements \Stringable
 	 * @param array<int,array<string,mixed>> $newActions Array of action objects
 	 * @param array<int,array<string,mixed>> $editActions Array of action objects
 	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
+	 * @param array<string,mixed> $data Duplicate data for prefilling form
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
@@ -169,6 +172,7 @@ class TotalForm implements \Stringable
 		protected array $newActions              = [],
 		protected array $editActions             = [],
 		protected array $deleteActions           = [],
+		protected array $data                    = [],
 		protected bool $autosave                 = false,
 		protected bool $helpOnHover              = false,
 		protected bool $helpOnFocus              = false,
@@ -176,6 +180,7 @@ class TotalForm implements \Stringable
 		protected bool $useFormGrid              = true,
 		protected bool $addOnly                  = false,
 		protected ?CSRFTokenManager $csrfManager = null,
+		protected ?Config $config                = null,
 	) {
 		$this->init();
 		$this->initClass();
@@ -401,8 +406,19 @@ class TotalForm implements \Stringable
 	protected function fieldContent(): string
 	{
 		if ($this->fields !== [] && !isset($this->fields['id'])) {
-			// Add the ID field if it does not exist
-			$this->addField('id', ['required' => true]);
+			// Check if we should skip ID field for AddOnly forms with autogen
+			$skipIdField = false;
+			if ($this->addOnly && isset($this->schemaData->properties['id'])) {
+				$settings = $this->schemaData->properties['id']['settings'] ?? [];
+				if (isset($settings['autogen']) && !empty($settings['autogen'])) {
+					$skipIdField = true;
+				}
+			}
+
+			// Add the ID field if it does not exist (unless it should be skipped)
+			if (!$skipIdField) {
+				$this->addField('id', ['required' => true]);
+			}
 		}
 
 		$content = '';
@@ -524,6 +540,14 @@ class TotalForm implements \Stringable
 
 		$properties = array_keys($this->schemaData->properties);
 		foreach ($properties as $property) {
+			// Skip ID field in AddOnly forms if it has autogen configured
+			if ($property === 'id' && $this->addOnly) {
+				$settings = $this->schemaData->properties[$property]['settings'] ?? [];
+				if (isset($settings['autogen']) && !empty($settings['autogen'])) {
+					continue; // Skip this field - ID will be auto-generated
+				}
+			}
+
 			$this->addField($property);
 		}
 	}

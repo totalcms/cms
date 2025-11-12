@@ -32,6 +32,10 @@
 		})();
 	</script>
 
+	{% if cms.config('sentry') %}
+	<script src="https://js.sentry-cdn.com/ebe837e74d2740037be208a5d11fe257.min.js" crossorigin="anonymous"></script>
+	{% endif %}
+
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css?v={{ cms.version }}"/>

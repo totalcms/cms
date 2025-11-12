@@ -312,8 +312,9 @@ readonly class TotalFormFactory
 	public function playground(string $id = '', array $options = []): string
 	{
 		$options = array_merge([
-			'save'   => 'Save',
-			'delete' => 'Delete',
+			'save'        => 'Save',
+			'delete'      => 'Delete',
+			'class'       => 'playground-form no-unsaved-warning',
 		], $options);
 		$options['id'] = $id;
 
@@ -376,6 +377,7 @@ readonly class TotalFormFactory
 			'schemaLister'      => $this->schemaLister,
 			'accessGroupLister' => $this->accessGroupLister,
 			'csrfManager'       => $this->csrfManager,
+			'config'            => $this->config,
 		]);
 
 		return new ObjectForm(...$options);
@@ -830,6 +832,15 @@ readonly class TotalFormFactory
 	 * @param array<string,mixed> $formOptions
 	 * @param array<string,mixed> $fieldOptions
 	 */
+	public function code(string $id, array $formOptions = [], array $fieldOptions = []): string
+	{
+		return $this->singleFieldFormBuilder($id, 'code', 'code', 'code', $formOptions, $fieldOptions);
+	}
+
+	/**
+	 * @param array<string,mixed> $formOptions
+	 * @param array<string,mixed> $fieldOptions
+	 */
 	public function textarea(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		return $this->singleFieldFormBuilder($id, 'text', 'text', 'textarea', $formOptions, $fieldOptions);
@@ -859,6 +870,7 @@ readonly class TotalFormFactory
 	{
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
+		// Use empty collection string to prevent fetching/creating any collection
 		return new ObjectForm(
 			objectFetcher     : $this->objectFetcher,
 			collectionFetcher : $this->collectionFetcher,
@@ -868,7 +880,7 @@ readonly class TotalFormFactory
 			schemaLister      : $this->schemaLister,
 			accessGroupLister : $this->accessGroupLister,
 			api               : $this->api,
-			collection        : 'text',
+			collection        : '',
 		);
 	}
 

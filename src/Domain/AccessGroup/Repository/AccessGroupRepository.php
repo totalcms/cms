@@ -19,7 +19,6 @@ class AccessGroupRepository extends StorageRepository
 		StorageAdapterInterface $filesystem,
 	) {
 		parent::__construct($filesystem);
-		$this->createDefaultGroups();
 	}
 
 	/**
