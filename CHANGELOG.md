@@ -34,9 +34,6 @@ All notable changes to Total CMS will be documented in this file.
   - Admin welcome template for new user onboarding
   - Sentry dashboard integration
   - Gallery view all styles
-- **Auto-Generated Dates**: New `onCreate` and `onUpdate` options for date fields
-  - Automatically set date when object is created
-  - Automatically update date when object is modified
 
 ### Enhanced
 
@@ -52,7 +49,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Collection Operations**:
   - Collection save efficiency improvements
   - Collections now sorted alphabetically by name
-  - Enhanced word boundary sorting for better alphabetical ordering
+  - Enhanced word boundary checks for better searching
 - **User Experience**:
   - Improved new user setup workflow
   - Better droplet error handling and reporting

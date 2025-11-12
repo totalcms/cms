@@ -171,7 +171,7 @@ if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     GIT_HASH=$(git rev-parse --short HEAD)
     # Update version in version.txt file
     echo "$NEW_VERSION ($GIT_HASH)" > version.txt
-	cp version.txt dist/version
+	cp version.txt dist/version.txt
     print_success "Version updated to $NEW_VERSION ($GIT_HASH)"
 else
     print_info "Version unchanged ($CURRENT_VERSION)"
