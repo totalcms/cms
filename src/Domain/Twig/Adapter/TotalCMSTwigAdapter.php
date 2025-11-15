@@ -18,7 +18,6 @@ use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
-use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -81,6 +80,7 @@ class TotalCMSTwigAdapter
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
 		public LicenseStatus $license,
+		private readonly JobManager $jobManager,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -135,11 +135,7 @@ class TotalCMSTwigAdapter
 	 */
 	public function jobQueuePendingInfo(): string
 	{
-		$jobManager = new JobManager(
-			new JobRepository()
-		);
-
-		$pendingJobs = $jobManager->getPendingJobs();
+		$pendingJobs = $this->jobManager->getPendingJobs();
 
 		if ($pendingJobs === []) {
 			return '';
@@ -185,11 +181,7 @@ class TotalCMSTwigAdapter
 	 */
 	public function jobQueueFailedInfo(): string
 	{
-		$jobManager = new JobManager(
-			new JobRepository()
-		);
-
-		$failedJobs = $jobManager->getFailedJobs();
+		$failedJobs = $this->jobManager->getFailedJobs();
 
 		if ($failedJobs === []) {
 			return '';
@@ -1914,8 +1906,7 @@ NGINX;
 		}
 
 		// Get job queue stats
-		$jobManager = new JobManager(new JobRepository());
-		$totalJobs  = count($jobManager->getPendingJobs()) + count($jobManager->getFailedJobs());
+		$totalJobs = count($this->jobManager->getPendingJobs()) + count($this->jobManager->getFailedJobs());
 
 		return [
 			'collections'  => count($collections),

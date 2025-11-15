@@ -3,27 +3,40 @@
 namespace TotalCMS\Domain\JobQueue\Repository;
 
 use TotalCMS\Domain\JobQueue\Data\JobData;
+use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 readonly class JobRepository
 {
 	private \PDO $db;
-	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';
 
-	public function __construct()
+	public function __construct(private Config $config)
 	{
 		$this->db = $this->createDb();
 	}
 
+	private function getDbPath(): string
+	{
+		return $this->config->datadir . '/.system/jobqueue';
+	}
+
 	private function dbExists(): bool
 	{
-		return file_exists(self::DB_PATH);
+		return file_exists($this->getDbPath());
 	}
 
 	private function createDb(): \PDO
 	{
+		$dbPath = $this->getDbPath();
 		$exists = $this->dbExists();
-		$db     = new \PDO('sqlite:' . self::DB_PATH);
+
+		// Ensure directory exists before creating database
+		$dir = dirname($dbPath);
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+
+		$db = new \PDO('sqlite:' . $dbPath);
 
 		if (!$exists) {
 			$db->exec(<<<SQL

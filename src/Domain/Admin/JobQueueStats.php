@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
@@ -10,17 +9,16 @@ readonly class JobQueueStats implements \Stringable
 {
 	public function __construct(
 		private string $api,
+		private JobManager $jobManager,
 		private string $collection = '',
 	) {
 	}
 
 	public function tableByType(string $header = 'Job Queue by Type'): string
 	{
-		$jobManager = new JobManager(new JobRepository());
-
 		$stats = $this->collection === ''
-			? $jobManager->queueByType()
-			: $jobManager->queueByTypeForCollection($this->collection);
+			? $this->jobManager->queueByType()
+			: $this->jobManager->queueByTypeForCollection($this->collection);
 
 		$rows = '';
 		foreach ($stats as $key => $value) {
@@ -44,11 +42,9 @@ readonly class JobQueueStats implements \Stringable
 
 	public function tableByStatus(string $header = 'Job Queue by Status'): string
 	{
-		$jobManager = new JobManager(new JobRepository());
-
 		$stats = $this->collection === ''
-			? $jobManager->queueByStatus()
-			: $jobManager->queueByStatusForCollection($this->collection);
+			? $this->jobManager->queueByStatus()
+			: $this->jobManager->queueByStatusForCollection($this->collection);
 
 		$rows = '';
 		foreach ($stats as $key => $value) {

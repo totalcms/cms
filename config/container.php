@@ -57,6 +57,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
@@ -310,6 +311,7 @@ return [
 		$container->get(CSRFTokenManager::class),
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
+		$container->get(JobManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -337,6 +339,7 @@ return [
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
 		$container->get(LicenseStatus::class),
+		$container->get(JobManager::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
