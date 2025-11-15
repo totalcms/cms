@@ -892,6 +892,7 @@ readonly class TotalFormFactory
 	/**
 	 * Generate a single field HTML for a given collection, object, and property.
 	 * This allows you to create individual form fields without building a full form.
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $options Field options to override defaults
 	 *
@@ -903,11 +904,12 @@ readonly class TotalFormFactory
 			'form' => $this->dummyForm(),
 			'name' => $name,
 		], $options);
-		$field = new FormField(...$options);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			$field = new $typeClass(...$options);
+		} else {
+			$field = new FormField(...$options);
 		}
 
 		return $field->build();
