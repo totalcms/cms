@@ -314,7 +314,11 @@ class FormField
 	 */
 	protected function buildRelationalOptions(): array
 	{
-		$settings      = $this->settings['relationalOptions'];
+		$settings = $this->settings['relationalOptions'];
+		if (!is_array($settings)) {
+			return []; // Invalid settings, return empty array
+		}
+
 		$labelJoin     = $settings['join'] ?? ' ';
 		$labelProperty = trim($settings['label'] ?? 'id');
 		$valueProperty = trim($settings['value'] ?? 'id');
