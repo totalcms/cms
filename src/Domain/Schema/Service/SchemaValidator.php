@@ -97,14 +97,6 @@ readonly class SchemaValidator
 			if ($this->isArrayType($property) && is_array($value) && count($value) === 0) {
 				$emptyFields[] = $property['label'] ?? $fieldName;
 			}
-
-			// Check if file/image field has size of 0 (no file uploaded)
-			if ($this->isFileType($property) && is_array($value)) {
-				$size = $value['size'] ?? null;
-				if ($size === null || $size === 0) {
-					$emptyFields[] = $property['label'] ?? $fieldName;
-				}
-			}
 		}
 
 		if ($emptyFields !== []) {
@@ -164,31 +156,10 @@ readonly class SchemaValidator
 
 		$arrayRefs = [
 			'https://www.totalcms.co/schemas/properties/list.json',
-			'https://www.totalcms.co/schemas/properties/gallery.json',
 			'https://www.totalcms.co/schemas/properties/deck.json',
 		];
 
 		return in_array($property['$ref'], $arrayRefs, true);
-	}
-
-	/**
-	 * Check if a property is a file-based type (file or image).
-	 *
-	 * @param array<string,mixed> $property
-	 */
-	private function isFileType(array $property): bool
-	{
-		// Check for file-based $ref
-		if (!isset($property['$ref'])) {
-			return false;
-		}
-
-		$fileRefs = [
-			'https://www.totalcms.co/schemas/properties/file.json',
-			'https://www.totalcms.co/schemas/properties/image.json',
-		];
-
-		return in_array($property['$ref'], $fileRefs, true);
 	}
 
 }
