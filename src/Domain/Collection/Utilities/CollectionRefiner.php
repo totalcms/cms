@@ -49,7 +49,7 @@ class CollectionRefiner
 				return [];
 			}
 
-			if (!isset($rule['property'], $rule['operator'])) {
+			if (!isset($rule['property'])) {
 				// Skip invalid rules
 				continue;
 			}
@@ -60,7 +60,7 @@ class CollectionRefiner
 					collection : $filteredCollection,
 					property   : $rule['property'],
 					values     : $value,
-					operator   : $rule['operator'],
+					operator   : $rule['operator'] ?? 'equal',
 					logic      : $rule['logic'] ?? 'or',
 				);
 				continue;
@@ -70,7 +70,7 @@ class CollectionRefiner
 				collection  : $filteredCollection,
 				property    : $rule['property'],
 				filterValue : strval($value),
-				operator    : $rule['operator'],
+				operator    : $rule['operator'] ?? 'equal',
 			);
 		}
 
