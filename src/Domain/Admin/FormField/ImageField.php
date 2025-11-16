@@ -47,7 +47,7 @@ class ImageField extends FormField
 			'name'     => $this->name,
 			'required' => $this->required ? '' : null,
 		];
-		$inputAttrs = array_filter($inputAttrs, fn ($x): bool => !is_null($x));
+		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
 
 		$input    = HTMLUtils::inlineElement('input', $inputAttrs);
 		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);

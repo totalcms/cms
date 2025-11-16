@@ -994,6 +994,7 @@ NGINX;
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
 	 * @param array<string,mixed> $options
@@ -1196,6 +1197,7 @@ NGINX;
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $thumbSettings
 	 * @param array<string,string|int> $fullSettings
@@ -1221,11 +1223,11 @@ NGINX;
 		// Performance optimization: Accept full object to avoid re-fetching
 		if (is_array($idOrObject)) {
 			// Object passed directly - extract ID and gallery data
-			$id = $idOrObject['id'] ?? '';
+			$id     = $idOrObject['id'] ?? '';
 			$images = $idOrObject[$options['property']] ?? [];
 		} else {
 			// Original behavior: ID string passed, fetch object data
-			$id = $idOrObject;
+			$id     = $idOrObject;
 			$images = $this->data($options['collection'], $id, $options['property']);
 		}
 
@@ -1312,6 +1314,7 @@ NGINX;
 	/**
 	 * Generate a dynamic gallery that can be triggered programmatically.
 	 * Returns a template tag with JSON data for JavaScript initialization.
+	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
@@ -1332,10 +1335,10 @@ NGINX;
 
 		// Performance optimization: Extract gallery data from object if passed
 		if (is_array($idOrObject)) {
-			$id = $idOrObject['id'] ?? '';
+			$id     = $idOrObject['id'] ?? '';
 			$images = $idOrObject[$options['property']] ?? [];
 		} else {
-			$id = $idOrObject;
+			$id     = $idOrObject;
 			$images = $this->data($options['collection'], $id, $options['property']);
 		}
 
@@ -1429,11 +1432,13 @@ NGINX;
 	}
 
 	/**
-	 * Get an image object from inside a gallery by it's name
+	 * Get an image object from inside a gallery by it's name.
+	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
+	 *
 	 * @return array<string,mixed>|null
 	 */
 	public function galleryImageData(string|array $idOrObject, string $name, array $options = []): ?array
@@ -1467,6 +1472,7 @@ NGINX;
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
@@ -1566,7 +1572,8 @@ NGINX;
 	}
 
 	/**
-	 * Get an alt tag for an image
+	 * Get an alt tag for an image.
+	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
@@ -1594,7 +1601,7 @@ NGINX;
 	}
 
 	/**
-	 * Get an alt tag for a gallery image
+	 * Get an alt tag for a gallery image.
 	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options

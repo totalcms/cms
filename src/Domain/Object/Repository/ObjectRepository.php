@@ -82,6 +82,7 @@ class ObjectRepository extends StorageRepository
 		if ($cached !== null && is_array($cached)) {
 			// Store in request cache for subsequent access in this request
 			$this->requestCache[$cacheKey] = $cached;
+
 			return $this->factory->generateObject($collection, $cached);
 		}
 

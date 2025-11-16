@@ -53,6 +53,7 @@ class IndexRepository extends StorageRepository
 				$indexData = new IndexData($cached);
 				// Store in request cache for subsequent access in this request
 				$this->requestCache[$cacheKey] = $indexData;
+
 				return $indexData;
 			} catch (\Exception) {
 				// Cache contains invalid data, fall through to filesystem

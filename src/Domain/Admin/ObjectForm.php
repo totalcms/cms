@@ -103,10 +103,8 @@ class ObjectForm extends TotalForm
 		}
 
 		// Deep merge settings to preserve schema settings when overriding specific values
-		if (isset($defaults['settings']) && isset($options['settings'])) {
-			if (is_array($defaults['settings']) && is_array($options['settings'])) {
-				$options['settings'] = array_merge($defaults['settings'], $options['settings']);
-			}
+		if (isset($defaults['settings']) && isset($options['settings']) && (is_array($defaults['settings']) && is_array($options['settings']))) {
+			$options['settings'] = array_merge($defaults['settings'], $options['settings']);
 		}
 
 		return array_merge($defaults, $options);

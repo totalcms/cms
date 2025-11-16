@@ -161,5 +161,4 @@ readonly class SchemaValidator
 
 		return in_array($property['$ref'], $arrayRefs, true);
 	}
-
 }
