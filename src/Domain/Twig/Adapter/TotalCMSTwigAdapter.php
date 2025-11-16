@@ -1025,7 +1025,8 @@ NGINX;
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
-			'alt'           => $image['alt'],
+			'alt'           => $this->alt($idOrObject, $options),
+			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'],
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
@@ -1071,11 +1072,12 @@ NGINX;
 		}
 
 		// Get alt text from various possible keys
-		$alt = $imageData['alt'] ?? $imageData['exif']['title'] ?? $imageData['exif']['description'] ?? $id;
+		$alt = $options['alt'] ?? $imageData['alt'] ?? $imageData['exif']['title'] ?? $imageData['exif']['description'] ?? $id;
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
 			'alt'           => $alt,
+			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'],
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
@@ -1237,7 +1239,7 @@ NGINX;
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
 				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
-				'alt'           => $image['alt'],
+				'alt'           => $this->galleryAlt($idOrObject, $image['name'], $options),
 				'loading'       => 'lazy',
 				'draggable'     => 'false',
 				'oncontextmenu' => 'return false;',
@@ -1414,12 +1416,11 @@ NGINX;
 		}
 
 		$image = $this->galleryImageData($idOrObject, $name, $options);
-		$alt   = $image['alt'] ?? $this->galleryAlt($idOrObject, $name, $options);
 		$link  = $image['link'] ?? '';
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
-			'alt'           => $alt,
+			'alt'           => $this->galleryAlt($idOrObject, $name, $options),
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
 		]);
@@ -1593,11 +1594,21 @@ NGINX;
 			$image = $this->data($options['collection'], $idOrObject, $options['property']);
 		}
 
-		if (!is_array($image) || !array_key_exists('alt', $image)) {
+		if (!is_array($image)) {
 			return '';
 		}
 
-		return $image['alt'];
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return $image['name'] ?? '';
 	}
 
 	/**
@@ -1615,11 +1626,21 @@ NGINX;
 
 		$image = $this->galleryImageData($idOrObject, $name, $options);
 
-		if (!is_array($image) || !array_key_exists('alt', $image)) {
+		if (!is_array($image)) {
 			return '';
 		}
 
-		return $image['alt'];
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return $image['name'] ?? '';
 	}
 
 	/**
