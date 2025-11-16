@@ -1,4 +1,5 @@
 import TotalCMS from '../totalcms';
+import FieldVisibility from './field-visibility';
 
 //-----------------------------------------------
 // Total CMS Simple Form constructor
@@ -14,6 +15,9 @@ export default class SimpleForm {
 			console.error("form not found");
 			return false;
 		}
+
+		// Create lightweight field wrappers for visibility support
+		this.fields = this.createFieldWrappers();
 
 		this.method  = this.form.dataset.method || "POST";
 		this.route   = this.form.dataset.route;
@@ -35,7 +39,69 @@ export default class SimpleForm {
 				this.form.submit();
 			});
 		}
+
+		// Initialize field visibility if there are fields
+		if (this.fields.length > 0) {
+			this.visibility = new FieldVisibility(this.form, this.fields);
+			this.visibility.initialize();
+		}
     }
+
+	//-------------------------
+	// Lightweight Field Wrappers
+	//-------------------------
+	createFieldWrappers() {
+		const fieldContainers = Array.from(this.form.querySelectorAll('.form-field'));
+		return fieldContainers.map(container => this.createFieldWrapper(container));
+	}
+
+	createFieldWrapper(container) {
+		const input = container.querySelector('input,textarea,select');
+		const property = input ? input.name : '';
+
+		return {
+			container: container,
+			property: property,
+			input: input,
+
+			getValue() {
+				if (!input) return '';
+
+				switch (input.type) {
+					case 'checkbox':
+						return input.checked;
+					case 'radio':
+						const checked = container.querySelector('input[type="radio"]:checked');
+						return checked ? checked.value : '';
+					default:
+						return input.value;
+				}
+			},
+
+			show() {
+				container.style.display = '';
+				container.classList.remove('field-hidden');
+				container.classList.add('field-visible');
+				if (input && input.hasAttribute('data-original-required')) {
+					input.required = true;
+				}
+			},
+
+			hide() {
+				container.style.display = 'none';
+				container.classList.remove('field-visible');
+				container.classList.add('field-hidden');
+				if (input && input.required) {
+					input.setAttribute('data-original-required', 'true');
+					input.required = false;
+				}
+				if (input) {
+					input.setCustomValidity("");
+				}
+				container.classList.remove("error");
+			}
+		};
+	}
 
     isDomNode(node){
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
