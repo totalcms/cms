@@ -1023,9 +1023,14 @@ NGINX;
 			$image = $this->data($options['collection'], $idOrObject, $options['property']);
 		}
 
+		// Calculate dimensions for layout stability (prevents CLS)
+		$dimensions = ImageDimensionCalculator::calculateFromImageData($image, $imageworks);
+
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
 			'alt'           => $this->alt($idOrObject, $options),
+			'width'         => $dimensions['width'],
+			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'],
 			'draggable'     => 'false',
@@ -1237,9 +1242,14 @@ NGINX;
 		$showCaptions = isset($options['captions']) && $options['captions'];
 
 		foreach ($images as $image) {
+			// Calculate dimensions for layout stability (prevents CLS)
+			$thumbDimensions = ImageDimensionCalculator::calculateFromImageData($image, $thumbSettings);
+
 			$img = HTMLUtils::inlineElement('img', [
 				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
 				'alt'           => $this->galleryAlt($idOrObject, $image['name'], $options),
+				'width'         => $thumbDimensions['width'],
+				'height'        => $thumbDimensions['height'],
 				'loading'       => 'lazy',
 				'draggable'     => 'false',
 				'oncontextmenu' => 'return false;',
@@ -1418,9 +1428,14 @@ NGINX;
 		$image = $this->galleryImageData($idOrObject, $name, $options);
 		$link  = $image['link'] ?? '';
 
+		// Calculate dimensions for layout stability (prevents CLS)
+		$dimensions = ImageDimensionCalculator::calculateFromImageData($image ?? [], $imageworks);
+
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
 			'alt'           => $this->galleryAlt($idOrObject, $name, $options),
+			'width'         => $dimensions['width'],
+			'height'        => $dimensions['height'],
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
 		]);
