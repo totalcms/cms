@@ -15,6 +15,14 @@ class IndexRepository extends StorageRepository
 {
 	private const INDEX_FILE = '.index.json';
 
+	/**
+	 * Request-level memoization cache for indexes.
+	 * Stores IndexData objects to avoid multiple cache/filesystem reads within a single request.
+	 *
+	 * @var array<string,IndexData>
+	 */
+	private array $requestCache = [];
+
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly CacheManager $cacheManager,
@@ -29,20 +37,29 @@ class IndexRepository extends StorageRepository
 	 */
 	public function fetchIndex(string $collection): ?IndexData
 	{
-		// Try cache first (Redis preferred for fast index access)
 		$cacheKey = "index:{$collection}";
-		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
+		// Try request-level cache first (fastest - in-memory)
+		if (isset($this->requestCache[$cacheKey])) {
+			return $this->requestCache[$cacheKey];
+		}
+
+		// Try persistent cache second (Redis/APCu/etc - fast)
+		$cached = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
 			// Reconstruct IndexData from cached array of objects
 			try {
-				return new IndexData($cached);
+				$indexData = new IndexData($cached);
+				// Store in request cache for subsequent access in this request
+				$this->requestCache[$cacheKey] = $indexData;
+				return $indexData;
 			} catch (\Exception) {
 				// Cache contains invalid data, fall through to filesystem
 			}
 		}
 
-		// Cache miss - fetch from filesystem
+		// Cache miss - fetch from filesystem (slowest)
 		$indexFile = $this->buildIndexPath($collection);
 
 		if (!$this->filesystem->fileExists($indexFile)) {
@@ -57,8 +74,9 @@ class IndexRepository extends StorageRepository
 				// Clear cache if index is empty to prevent serving stale data
 				$this->cacheManager->clearComputedData($cacheKey);
 			} else {
-				// Cache non-empty indexes
+				// Cache non-empty indexes in both caches
 				$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), CacheManager::TTL_INDEX_DATA);
+				$this->requestCache[$cacheKey] = $indexData;
 			}
 		}
 
@@ -120,7 +138,10 @@ class IndexRepository extends StorageRepository
 	 */
 	private function invalidateIndexCache(string $collection): void
 	{
-		// Clear index data cache
+		// Clear request cache (in-memory)
+		unset($this->requestCache["index:{$collection}"]);
+
+		// Clear persistent index data cache
 		$this->cacheManager->clearComputedData("index:{$collection}");
 
 		// Clear object IDs cache (index changes usually mean object list changed)

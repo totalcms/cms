@@ -14,6 +14,14 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 class ObjectRepository extends StorageRepository
 {
+	/**
+	 * Request-level memoization cache for objects.
+	 * Stores raw object data to avoid multiple cache/filesystem reads within a single request.
+	 *
+	 * @var array<string,array<string,mixed>>
+	 */
+	private array $requestCache = [];
+
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly ObjectFactory $factory,
@@ -61,23 +69,31 @@ class ObjectRepository extends StorageRepository
 
 	public function fetchObject(string $collection, string $id): ?ObjectData
 	{
-		// Try cache first (Redis preferred for fast object access)
 		$cacheKey = "object:{$collection}:{$id}";
-		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
+		// Try request-level cache first (fastest - in-memory)
+		if (isset($this->requestCache[$cacheKey])) {
+			return $this->factory->generateObject($collection, $this->requestCache[$cacheKey]);
+		}
+
+		// Try persistent cache second (Redis/APCu/etc - fast)
+		$cached = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
-			// Return cached object (data is stored as array for serialization)
+			// Store in request cache for subsequent access in this request
+			$this->requestCache[$cacheKey] = $cached;
 			return $this->factory->generateObject($collection, $cached);
 		}
 
-		// Cache miss - fetch from filesystem
+		// Cache miss - fetch from filesystem (slowest)
 		$objectFile = $this->buildObjectPath($collection, $id);
 
 		if ($this->filesystem->fileExists($objectFile)) {
 			$contents = json_decode($this->filesystem->read($objectFile), true);
 			if (is_array($contents)) {
-				// Cache the raw data (not the ObjectData instance) for 1 hour
+				// Cache the raw data in both caches
 				$this->cacheManager->storeComputedData($cacheKey, $contents, CacheManager::TTL_OBJECT_DATA);
+				$this->requestCache[$cacheKey] = $contents;
 
 				return $this->factory->generateObject($collection, $contents);
 			}
@@ -111,7 +127,10 @@ class ObjectRepository extends StorageRepository
 	 */
 	private function invalidateObjectCache(string $objectCacheKey, string $collection): void
 	{
-		// Remove the specific object from cache
+		// Remove from request cache (in-memory)
+		unset($this->requestCache[$objectCacheKey]);
+
+		// Remove the specific object from persistent cache
 		$this->cacheManager->clearComputedData($objectCacheKey);
 
 		// Also invalidate collection index cache (objects list has changed)
