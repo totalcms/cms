@@ -2,7 +2,7 @@
 {% if object.image %}
     <div class="cms-image">
 		<a href="{{ cms.objectUrl(collection|default("blog"), object.id) }}" title="{{ object.title }}" class="link-container">
-        {{ cms.imageFromData(object.image, object.id, {}, {collection: collection|default("blog")}) }}
+        {{ cms.imageFromData(object.image, object.id, {w: 600, h: 400, fit: 'crop-focalpoint'}, {collection: collection|default("blog")}) }}
 		</a>
     </div>
 {% endif %}

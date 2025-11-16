@@ -1,7 +1,7 @@
 {# Feed Grid Item Template #}
 {% if object.image %}
     <div class="cms-image">
-        {{ cms.imageFromData(object.image, object.id, {}, {collection: collection|default("feed")}) }}
+        {{ cms.imageFromData(object.image, object.id, {w: 600, h: 400, fit: 'crop-focalpoint'}, {collection: collection|default("feed")}) }}
     </div>
 {% endif %}
 
