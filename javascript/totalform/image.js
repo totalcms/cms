@@ -104,6 +104,44 @@ export default class ImageField extends TotalField {
 		this.setupPreview(image);
 	}
 
+	validate() {
+		// Clear any previous custom validity and call parent validation
+		this.input.setCustomValidity("");
+
+		if (!this.isVisible()) return true;
+
+		// Check if field is required
+		if (this.input.required) {
+			this.input.value = this.property; // Set a dummy value to satisfy HTML5 required validation
+			// Check if image has been uploaded using the preview's hasImage method
+			if (!this.hasImage()) {
+				const message = `${this.label} is required - please upload an image`;
+				this.input.setCustomValidity(message);
+				this.input.reportValidity();
+				this.error(message);
+				return false;
+			}
+		}
+
+		return super.validate();
+	}
+
+	hasImage() {
+		// Check if the preview container has the "not-found" class
+		const preview = this.previewContainer.querySelector(".dz-preview");
+		if (preview && preview.classList.contains("not-found")) {
+			return false;
+		}
+
+		// Check if there's an image with a valid src
+		const img = this.previewContainer.querySelector(".dz-preview img");
+		if (!img || !img.src) {
+			return false;
+		}
+
+		return true;
+	}
+
 	schema() {
         return {
             type     : "image",

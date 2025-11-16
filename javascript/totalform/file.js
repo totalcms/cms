@@ -106,6 +106,38 @@ export default class FileField extends TotalField {
 		this.setupPreview(fileData);
 	}
 
+	validate() {
+		// Clear any previous custom validity and call parent validation
+		this.input.setCustomValidity("");
+
+		if (!this.isVisible()) return true;
+
+		// Check if field is required
+		if (this.input.required) {
+			this.input.value = this.property; // Set a dummy value to satisfy HTML5 required validation
+			// Check if file has been uploaded using the preview's hasFile method
+			if (!this.hasFile()) {
+				const message = `${this.label} is required - please upload a file`;
+				this.input.setCustomValidity(message);
+				this.input.reportValidity();
+				this.error(message);
+				return false;
+			}
+		}
+
+		return super.validate();
+	}
+
+	hasFile() {
+		// Check if the preview container has the "not-found" class
+		const preview = this.previewContainer.querySelector(".dz-preview");
+		if (preview && preview.classList.contains("not-found")) {
+			return false;
+		}
+
+		return true;
+	}
+
 	schema() {
         return {
             type     : "file",

@@ -41,7 +41,15 @@ class ImageField extends FormField
 
 		$previewTemplate = HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
 
-		$input    = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
+		$inputAttrs = [
+			'id'       => 'field-' . $this->uuid,
+			'type'     => 'text',
+			'name'     => $this->name,
+			'required' => $this->required ? '' : null,
+		];
+		$inputAttrs = array_filter($inputAttrs, fn ($x): bool => !is_null($x));
+
+		$input    = HTMLUtils::inlineElement('input', $inputAttrs);
 		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
 		$preview  = HTMLUtils::element('div', $previewTemplate, ['class' => 'total-preview']);
 		$template = HTMLUtils::element('template', $previewTemplate, ['id' => 'template-' . $this->uuid]);
