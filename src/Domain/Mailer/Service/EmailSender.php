@@ -28,10 +28,11 @@ readonly class EmailSender
 	 * Send an email using PHPMailer.
 	 *
 	 * @param array<string,mixed> $emailData
+	 * @param int $timeout SMTP connection timeout in seconds (default: 30)
 	 *
 	 * @return array{success:bool,message:string,error?:string}
 	 */
-	public function send(array $emailData): array
+	public function send(array $emailData, int $timeout = 30): array
 	{
 		$mail = new PHPMailer(true);
 
@@ -44,6 +45,7 @@ readonly class EmailSender
 				$mail->isSMTP();
 				$mail->Host     = $smtpConfig['host'] ?? '127.0.0.1';
 				$mail->Port     = (int)($smtpConfig['port'] ?? 25);
+				$mail->Timeout  = $timeout; // Set SMTP connection timeout
 
 				// Only use SMTP auth if username is provided
 				if (isset($smtpConfig['username']) && $smtpConfig['username'] !== '') {
@@ -135,10 +137,16 @@ readonly class EmailSender
 				'error'   => $e->getMessage(),
 			]);
 
+			// Provide helpful error message
+			$errorMsg = $e->getMessage();
+			if ($errorMsg === '') {
+				$errorMsg = 'SMTP connection failed. Please verify your SMTP settings (host, port, username, password).';
+			}
+
 			return [
 				'success' => false,
-				'message' => 'Failed to send email',
-				'error'   => $e->getMessage(),
+				'message' => $errorMsg,
+				'error'   => $errorMsg,
 			];
 		}
 	}
