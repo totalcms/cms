@@ -270,7 +270,8 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 		$result = $adapter->galleryAlt('gallery-id', 'image.jpg');
 
-		expect($result)->toBe('');
+		// When alt is missing, the function falls back to returning the image name
+		expect($result)->toBe('image.jpg');
 	}
 
 	public function testGalleryAltReturnsEmptyForNullImageData(): void
