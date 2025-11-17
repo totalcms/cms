@@ -41,7 +41,7 @@ class CheckboxField extends FormField
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
 			'type'             => $this->inputType,
-			'required'         => null, // this has to be false or else you cannot save an unchecked box
+			'required'         => $this->required ? '' : null, // Required checkboxes must be checked
 			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 			'checked'          => boolval($this->value) ? '' : null,
 		];

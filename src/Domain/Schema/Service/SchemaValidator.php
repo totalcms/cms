@@ -97,6 +97,11 @@ readonly class SchemaValidator
 			if ($this->isArrayType($property) && is_array($value) && count($value) === 0) {
 				$emptyFields[] = $property['label'] ?? $fieldName;
 			}
+
+			// Check if boolean field is false (required booleans must be true)
+			if ($this->isBooleanType($property) && $value !== true) {
+				$emptyFields[] = $property['label'] ?? $fieldName;
+			}
 		}
 
 		if ($emptyFields !== []) {
@@ -160,5 +165,30 @@ readonly class SchemaValidator
 		];
 
 		return in_array($property['$ref'], $arrayRefs, true);
+	}
+
+	/**
+	 * Check if a property is a boolean type.
+	 *
+	 * @param array<string,mixed> $property
+	 */
+	private function isBooleanType(array $property): bool
+	{
+		// Direct type check
+		if (($property['type'] ?? null) === 'boolean') {
+			return true;
+		}
+
+		// Check for boolean-based $ref
+		if (!isset($property['$ref'])) {
+			return false;
+		}
+
+		$booleanRefs = [
+			'https://www.totalcms.co/schemas/properties/checkbox.json',
+			'https://www.totalcms.co/schemas/properties/toggle.json',
+		];
+
+		return in_array($property['$ref'], $booleanRefs, true);
 	}
 }

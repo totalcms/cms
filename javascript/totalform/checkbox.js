@@ -18,6 +18,22 @@ export default class Checkbox extends TotalField {
 		this.setValue(false);
 	}
 
+	validate() {
+		if (!this.isVisible()) return true;
+		this.input.setCustomValidity('');
+
+		// For required checkboxes, validate that they are checked
+		if (this.input.hasAttribute('required') && !this.input.checked) {
+			this.input.setCustomValidity('This field must be checked.');
+		}
+
+		// Call parent validation
+		if (this.input.checkValidity()) return true;
+		this.input.reportValidity();
+		this.error(this.input.validationMessage);
+		return false;
+	}
+
     schema() {
         return {
             "type":"boolean",
