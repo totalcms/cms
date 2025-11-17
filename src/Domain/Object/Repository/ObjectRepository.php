@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Object\Repository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
@@ -205,7 +206,7 @@ class ObjectRepository extends StorageRepository
 
 			// Use IndexRepository to leverage caching
 			$indexData = $this->indexRepository->fetchIndex($collection);
-			if ($indexData === null || $indexData->objects->isEmpty()) {
+			if (!$indexData instanceof IndexData || $indexData->objects->isEmpty()) {
 				continue; // No index yet, no duplicates possible
 			}
 

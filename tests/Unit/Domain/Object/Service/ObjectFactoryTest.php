@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
-use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -51,11 +50,10 @@ final class ObjectFactoryTest extends TestCase
 		// PropertyFactory should be called with null for the missing 'email' property
 		$this->propertyFactory->expects($this->exactly(2))
 			->method('generateProperty')
-			->willReturnCallback(function ($propertySchema, $value) {
+			->willReturnCallback(fn ($propertySchema, $value): StringData =>
 				// First call: name property with value
 				// Second call: email property with null (missing)
-				return new StringData($value ?? '');
-			});
+				new StringData($value ?? ''));
 
 		$objectData = [
 			'id'   => 'test-1',
@@ -83,7 +81,7 @@ final class ObjectFactoryTest extends TestCase
 			->willReturn($schema);
 
 		$this->propertyFactory->method('generateProperty')
-			->willReturnCallback(fn ($schema, $value) => new StringData($value ?? ''));
+			->willReturnCallback(fn ($schema, $value): StringData => new StringData($value ?? ''));
 
 		$objectData = [
 			'id'    => 'test-2',
@@ -111,7 +109,7 @@ final class ObjectFactoryTest extends TestCase
 			->willReturn($schema);
 
 		$this->propertyFactory->method('generateProperty')
-			->willReturnCallback(fn ($schema, $value) => new StringData($value ?? ''));
+			->willReturnCallback(fn ($schema, $value): StringData => new StringData($value ?? ''));
 
 		$objectData = [
 			'id'    => 'test-3',
@@ -140,7 +138,7 @@ final class ObjectFactoryTest extends TestCase
 			->willReturn($schema);
 
 		$this->propertyFactory->method('generateProperty')
-			->willReturnCallback(fn ($schema, $value) => new StringData($value ?? ''));
+			->willReturnCallback(fn ($schema, $value): StringData => new StringData($value ?? ''));
 
 		$objectData = [
 			'id'          => 'test-4',
@@ -202,7 +200,7 @@ final class ObjectFactoryTest extends TestCase
 			->willReturn('generated-id');
 
 		$this->propertyFactory->method('generateProperty')
-			->willReturnCallback(fn ($schema, $value) => new StringData($value ?? ''));
+			->willReturnCallback(fn ($schema, $value): StringData => new StringData($value ?? ''));
 
 		$objectData = [
 			'name' => 'John Doe',
@@ -235,7 +233,7 @@ final class ObjectFactoryTest extends TestCase
 			->willReturn('autogen-from-name');
 
 		$this->propertyFactory->method('generateProperty')
-			->willReturnCallback(fn ($schema, $value) => new StringData($value ?? ''));
+			->willReturnCallback(fn ($schema, $value): StringData => new StringData($value ?? ''));
 
 		$objectData = [
 			'id'   => '', // Empty ID should trigger autogen
@@ -268,7 +266,7 @@ final class ObjectFactoryTest extends TestCase
 				$this->anything(),
 				$this->identicalTo(null)
 			)
-			->willReturnCallback(fn ($schema, $value) => new StringData($value ?? ''));
+			->willReturnCallback(fn ($schema, $value): StringData => new StringData($value ?? ''));
 
 		$objectData = [
 			'id' => 'test-5',

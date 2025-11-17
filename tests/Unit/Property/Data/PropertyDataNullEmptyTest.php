@@ -403,7 +403,7 @@ describe('PropertyData Empty and Default Value Handling', function (): void {
 				'Multiple   Spaces'   => 'multiple-spaces',
 			];
 
-			foreach ($inputs as $input => $expected) {
+			foreach (array_keys($inputs) as $input) {
 				$data = new SlugData($input);
 				expect($data->slug)->toBeString();
 				expect($data->slug)->not->toContain(' ');
