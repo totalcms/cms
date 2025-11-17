@@ -5,8 +5,10 @@ namespace TotalCMS\Domain\Object\Repository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -28,6 +30,8 @@ class ObjectRepository extends StorageRepository
 		private readonly SchemaValidator $validator,
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CacheManager $cacheManager,
+		private readonly SchemaRepository $schemaRepository,
+		private readonly IndexRepository $indexRepository,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -50,6 +54,9 @@ class ObjectRepository extends StorageRepository
 		if ($this->validator->validateSchema($object->toArray(), $collectionInfo->schema) === false) {
 			throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
 		}
+
+		// Validate unique property constraints
+		$this->validateUniqueProperties($object, $collectionInfo, $collection);
 
 		$objectFile = $this->buildObjectPath($collection, $object->id);
 
@@ -145,6 +152,78 @@ class ObjectRepository extends StorageRepository
 
 		if ($this->filesystem->directoryExists($fromPath)) {
 			$this->filesystem->copyDirectory($fromPath, $toPath);
+		}
+	}
+
+	/**
+	 * Validate unique property constraints using cached index data.
+	 *
+	 * NOTE: This validation is placed in the Repository (not in a separate validator service)
+	 * to avoid circular dependency issues. ObjectRepository is part of IndexSearcher's
+	 * dependency chain, so we cannot use IndexSearcher or any service that depends on it.
+	 * Instead, we use IndexRepository and SchemaRepository directly, which leverage caching
+	 * for better performance and don't create any circular dependencies.
+	 *
+	 * @throws \DomainException if duplicate value found
+	 */
+	private function validateUniqueProperties(ObjectData $object, CollectionData $collectionInfo, string $collection): void
+	{
+		// Use SchemaRepository to leverage caching
+		$schema     = $this->schemaRepository->getSchema($collectionInfo->schema);
+		$objectData = $object->toArray();
+
+		// Check each property for unique constraint
+		foreach ($schema->properties as $property => $propertyConfig) {
+			// Skip if not marked as unique
+			if (!isset($propertyConfig['unique']) || $propertyConfig['unique'] !== true) {
+				continue;
+			}
+
+			// Verify property is in the index (required for uniqueness checking)
+			if (!in_array($property, $schema->index, true)) {
+				$label = $propertyConfig['label'] ?? $property;
+				throw new \DomainException("Property '{$label}' is marked as unique but is not included in the schema index. Add '{$property}' to the index array in the schema.");
+			}
+
+			// Skip if property not set (isset returns false for null too)
+			if (!isset($objectData[$property])) {
+				continue;
+			}
+
+			$value = $objectData[$property];
+
+			// Skip empty values
+			if ($value === '' || $value === []) {
+				continue;
+			}
+
+			// Convert to string for comparison
+			$searchValue = is_scalar($value) ? (string)$value : '';
+			if ($searchValue === '') {
+				continue;
+			}
+
+			// Use IndexRepository to leverage caching
+			$indexData = $this->indexRepository->fetchIndex($collection);
+			if ($indexData === null || $indexData->objects->isEmpty()) {
+				continue; // No index yet, no duplicates possible
+			}
+
+			// Use Collection's first() method to efficiently find duplicates (stops at first match)
+			$duplicate = $indexData->objects->first(function (array $existingObject) use ($property, $searchValue, $object): bool {
+				// Skip current object when editing
+				if (($existingObject['id'] ?? '') === $object->id) {
+					return false;
+				}
+
+				// Check if property value matches
+				return isset($existingObject[$property]) && (string)$existingObject[$property] === $searchValue;
+			});
+
+			if ($duplicate !== null) {
+				$label = $propertyConfig['label'] ?? $property;
+				throw new \DomainException("{$label} must be unique. The value '{$searchValue}' already exists in this collection.");
+			}
 		}
 	}
 
