@@ -138,12 +138,15 @@ export default class TotalField {
 		this.input.setCustomValidity("");
 		this.container.classList.remove("error");
 
-		if (this.isUnsaved() && !hadError) return;
-
+		// Check if value actually changed first - if not, return early
 		if (this.storedValue === this.getValue()) return;
-		this.storedValue = this.getValue();
 
+		// Value changed - update stored value and dispatch event
+		this.storedValue = this.getValue();
 		this.container.classList.add("unsaved");
+
+		// Always dispatch field-change when value changes
+		// This ensures form state is updated (e.g., from "error" to "unsaved")
 		if (this.isSubField()) {
 			this.dispatcher.dispatchEvent("subfield-change", { field: this });
 			return;
