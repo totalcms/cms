@@ -72,19 +72,16 @@ readonly class ObjectFactory
 				continue;
 			}
 			if (!array_key_exists($property, $objectData)) {
-				$objectData[$property] = null;
-
-				// do not inclue the property if it does not exist and not required
-				// this can happen when a new property has been added to a schema,
-				// but existing objects do not have the property set
-				// also let the property be included if it has a default value
-				// the schema validation will pass a missing value if it has a default value
-				if (
-					!in_array($property, $schema->required)
-					&& !array_key_exists('default', $propertySchema)
-				) {
+				// Skip missing properties during object loading (even if required)
+				// This allows objects to be loaded for indexing even if they're missing
+				// fields that were added later to the schema. Validation happens during
+				// save/update, not during read/index operations.
+				// Only include the property if it has a default value in the schema.
+				if (!array_key_exists('default', $propertySchema)) {
 					continue;
 				}
+
+				$objectData[$property] = null;
 			}
 
 			$value = $objectData[$property];
