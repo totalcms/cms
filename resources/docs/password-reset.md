@@ -83,6 +83,7 @@ When creating custom password reset email templates, the following variables are
 |----------|------|-------------|
 | `name` | string | User's name from their account (may be empty) |
 | `email` | string | Email address receiving the reset link |
+| `user` | ObjectData | Complete user object with all fields from the auth collection |
 | `resetUrl` | string | Complete password reset URL with token |
 | `expiryMinutes` | integer | Number of minutes before token expires |
 | `collection` | string | Authentication collection name |
@@ -131,6 +132,11 @@ When creating custom password reset email templates, the following variables are
 </body>
 </html>
 ```
+
+**Note**: The `user` variable provides access to all fields from the user's account. For example:
+- `{{ user.name }}` - User's name
+- `{{ user.email }}` - User's email address
+- `{{ user.customField }}` - Any custom fields you've added to your auth collection
 
 ## User Workflow
 

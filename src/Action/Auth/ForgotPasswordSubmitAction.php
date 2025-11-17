@@ -110,6 +110,7 @@ readonly class ForgotPasswordSubmitAction
 			return $this->emailService->sendEmail($mailerId, [
 				'email'         => $email,
 				'name'          => $userName,
+				'user'          => $user,
 				'resetUrl'      => $resetUrl,
 				'expiryMinutes' => $expiryMinutes,
 				'collection'    => $collection,
