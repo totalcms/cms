@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class PhoneData extends PropertyData
 {
-	public function __construct(public string $phone, public array $settings = [])
+	public function __construct(public string $phone = '', public array $settings = [])
 	{
 	}
 

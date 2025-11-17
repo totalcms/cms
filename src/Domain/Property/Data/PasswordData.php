@@ -9,7 +9,7 @@ class PasswordData extends PropertyData
 {
 	public string $hash = '';
 
-	public function __construct(string $password, public array $settings = [])
+	public function __construct(string $password = '', public array $settings = [])
 	{
 		if ($password !== '') {
 			// Only set the hash if a password is defined

@@ -72,15 +72,10 @@ readonly class ObjectFactory
 				continue;
 			}
 			if (!array_key_exists($property, $objectData)) {
-				// Skip missing properties during object loading (even if required)
+				// Set missing properties to null - PropertyFactory will handle them gracefully
 				// This allows objects to be loaded for indexing even if they're missing
 				// fields that were added later to the schema. Validation happens during
 				// save/update, not during read/index operations.
-				// Only include the property if it has a default value in the schema.
-				if (!array_key_exists('default', $propertySchema)) {
-					continue;
-				}
-
 				$objectData[$property] = null;
 			}
 

@@ -9,7 +9,7 @@ class UrlData extends PropertyData
 {
 	public string $url;
 
-	public function __construct(string $url, public array $settings = [])
+	public function __construct(string $url = '', public array $settings = [])
 	{
 		$this->url = $this->cleanUrl($url);
 	}
