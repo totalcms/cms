@@ -45,3 +45,5 @@ public/assets
 /tests/tcms-data/text
 /tests/tcms-data/toggle
 /tests/tcms-data/url
+/tests/tcms-data/.system/.bundle
+/tests/tcms-data/.system/jobqueue

@@ -140,8 +140,8 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {# Custom collections and properties #}
 {{ cms.image('id', {}, {collection: 'products', property: 'photo'}) }}
 
-{# Create image from existing data #}
-{{ cms.imageFromData(imageData, 'id', {w: 600}) }}
+{# Pass object directly (recommended) #}
+{{ cms.image(object, {w: 600}, {collection: 'products', property: 'image'}) }}
 
 {# Loading options #}
 {{ cms.image('id', {}, {loading: 'eager'}) }}    {# Default is 'lazy' #}

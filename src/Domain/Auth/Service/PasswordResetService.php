@@ -90,7 +90,7 @@ readonly class PasswordResetService
 		$token = $this->generateToken();
 
 		// Get token expiry from config (in minutes)
-		$expiryMinutes = $this->config->auth['resetTokenExpiry'] ?? 30;
+		$expiryMinutes = (int)($this->config->auth['resetTokenExpiry'] ?? 30);
 		$ttl           = $expiryMinutes * 60; // Convert to seconds
 
 		// Store token data in cache

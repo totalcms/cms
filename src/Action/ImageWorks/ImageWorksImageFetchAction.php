@@ -27,7 +27,7 @@ readonly class ImageWorksImageFetchAction
 		$queryParams['fm'] = $args['format'];
 
 		try {
-			$image = $this->imageGenerator->generateImage($collection, $id, $property, $queryParams);
+			$image = $this->imageGenerator->generateImage($collection, $id, $property, $queryParams, $request);
 		} catch (\Exception $e) {
 			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
 		}

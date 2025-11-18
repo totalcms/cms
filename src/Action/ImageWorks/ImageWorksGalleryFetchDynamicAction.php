@@ -32,7 +32,7 @@ readonly class ImageWorksGalleryFetchDynamicAction
 		$queryParams = $request->getQueryParams();
 
 		try {
-			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $action, $queryParams);
+			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $action, $queryParams, $request);
 		} catch (\Exception $e) {
 			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
 		}

@@ -1,6 +1,7 @@
 import TotalCMS from '../totalcms';
 import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
+import FieldVisibility from './field-visibility';
 import Identifier from './identifier';
 import Checkbox from './checkbox';
 import RadioField from './radio';
@@ -99,10 +100,11 @@ export default class TotalForm {
 		this.setupFieldsForEdit();
 
 		this.dispatcher = new TotalDispatcher(this.form);
+		this.visibility = new FieldVisibility(this.form, this.fields);
 
         this.eventListeners();
         this.registerButtons();
-		this.initializeVisibility();
+		this.visibility.initialize();
 
 		if (this.form.classList.contains("autosave")) {
 			this.autosave = true;
@@ -173,7 +175,10 @@ export default class TotalForm {
 	getId() {
 		if (this.isEditMode()) return this.id;
 
-		const idField = this.fields.filter(field => field.property === "id").shift();
+		// Filter for main form's ID field, excluding subfields (like deck item IDs)
+		const idField = this.fields.filter(field => {
+			return field.property === "id" && !field.isSubField();
+		}).shift();
 		if (idField) return idField.getValue();
 
 		console.warn("ID field not found");
@@ -314,111 +319,6 @@ export default class TotalForm {
             default:
                 console.warn("Unknown field",field);
 				return new TotalField(field, options);
-        }
-    }
-
-    //-------------------------
-    // Field Visibility
-    //-------------------------
-    initializeVisibility() {
-        const fieldsWithOptions = Array.from(this.form.querySelectorAll('[data-options]'));
-
-        fieldsWithOptions.forEach(fieldElement => {
-            const options = JSON.parse(fieldElement.dataset.options || '{}');
-            const visibility = options.visibility;
-
-            // Skip fields without visibility settings
-            if (!visibility || !visibility.watch) return;
-
-            const watchField = visibility.watch;
-
-            // Find the watched field element
-            const watchedFieldElement = this.form.querySelector(`[style*="grid-area: ${watchField}"]`);
-            if (!watchedFieldElement) return;
-
-            // Set up change listener on the watched field
-            watchedFieldElement.addEventListener('change', () => {
-                this.updateFieldVisibility(fieldElement, visibility);
-            });
-
-            // Initial visibility evaluation
-            this.updateFieldVisibility(fieldElement, visibility);
-        });
-    }
-
-    updateFieldVisibility(fieldElement, visibility) {
-        const watchField = visibility.watch;
-        const expectedValue = visibility.value;
-        const operator = visibility.operator || '==';
-
-        // Get the watched field object
-        const watchedField = this.fields.find(f => f.property === watchField);
-        if (!watchedField) {
-            // If watched field not found, hide by default
-            const field = this.fields.find(f => f.container === fieldElement);
-            if (field) field.hide();
-            return;
-        }
-
-        const currentValue = watchedField.getValue();
-
-        // Evaluate the condition
-        const isVisible = this.evaluateVisibilityCondition(currentValue, expectedValue, operator);
-
-        // Get the field object and toggle visibility
-        const field = this.fields.find(f => f.container === fieldElement);
-        if (field) {
-            isVisible ? field.show() : field.hide();
-        }
-    }
-
-    evaluateVisibilityCondition(currentValue, expectedValue, operator) {
-        // Handle array expected values (multiple possible values)
-        if (Array.isArray(expectedValue)) {
-            return expectedValue.some(value =>
-                this.evaluateVisibilityCondition(currentValue, value, operator)
-            );
-        }
-
-        // Handle array current values (checkboxes, multiselect, etc.)
-        if (Array.isArray(currentValue)) {
-            // Support operators for array values
-            switch (operator) {
-                case 'in':
-                case '==':
-                    return currentValue.includes(expectedValue);
-                case 'not_in':
-                case '!=':
-                    return !currentValue.includes(expectedValue);
-                case 'empty':
-                    return currentValue.length === 0;
-                case 'not_empty':
-                    return currentValue.length > 0;
-                default:
-                    return currentValue.includes(expectedValue);
-            }
-        }
-
-        // Evaluate based on operator
-        switch (operator) {
-            case '==':
-                return currentValue == expectedValue;
-            case '!=':
-                return currentValue != expectedValue;
-            case '>':
-                return Number(currentValue) > Number(expectedValue);
-            case '<':
-                return Number(currentValue) < Number(expectedValue);
-            case '>=':
-                return Number(currentValue) >= Number(expectedValue);
-            case '<=':
-                return Number(currentValue) <= Number(expectedValue);
-            case 'in':
-                return Array.isArray(expectedValue) && expectedValue.includes(currentValue);
-            case 'not_in':
-                return Array.isArray(expectedValue) && !expectedValue.includes(currentValue);
-            default:
-                return currentValue == expectedValue;
         }
     }
 
@@ -722,6 +622,11 @@ export default class TotalForm {
 	}
 
     success(response = null) {
+		// Extract ID from response for new objects
+		if (response && response.id && (!this.id || this.id.length === 0)) {
+			this.id = response.id;
+			this.form.dataset.id = response.id;
+		}
 		this.setupEditMode();
 		this.changeState("success", response);
 		this.validated = false;

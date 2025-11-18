@@ -247,6 +247,112 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		expect($result)->toBeNull();
 	}
 
+	public function testGalleryImageDataWithNumericIndexReturnsCorrectImage(): void
+	{
+		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+
+		$galleryData = [
+			['name' => 'image1.jpg', 'alt' => 'Image 1'],
+			['name' => 'image2.jpg', 'alt' => 'Image 2'],
+			['name' => 'image3.jpg', 'alt' => 'Image 3'],
+		];
+
+		$adapter->method('data')
+			->with('gallery', 'gallery-id', 'gallery')
+			->willReturn($galleryData);
+
+		// Test 1-based indexing: index 1 returns first image
+		$result = $adapter->galleryImageData('gallery-id', 1);
+		expect($result)->toBe(['name' => 'image1.jpg', 'alt' => 'Image 1']);
+	}
+
+	public function testGalleryImageDataWithNumericIndexReturnsThirdImage(): void
+	{
+		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+
+		$galleryData = [
+			['name' => 'image1.jpg', 'alt' => 'Image 1'],
+			['name' => 'image2.jpg', 'alt' => 'Image 2'],
+			['name' => 'image3.jpg', 'alt' => 'Image 3'],
+		];
+
+		$adapter->method('data')
+			->with('gallery', 'gallery-id', 'gallery')
+			->willReturn($galleryData);
+
+		// Test 1-based indexing: index 3 returns third image
+		$result = $adapter->galleryImageData('gallery-id', 3);
+		expect($result)->toBe(['name' => 'image3.jpg', 'alt' => 'Image 3']);
+	}
+
+	public function testGalleryImageDataWithNumericIndexOutOfBoundsReturnsNull(): void
+	{
+		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+
+		$galleryData = [
+			['name' => 'image1.jpg', 'alt' => 'Image 1'],
+			['name' => 'image2.jpg', 'alt' => 'Image 2'],
+		];
+
+		$adapter->method('data')
+			->with('gallery', 'gallery-id', 'gallery')
+			->willReturn($galleryData);
+
+		// Index 5 is out of bounds for a 2-item gallery
+		$result = $adapter->galleryImageData('gallery-id', 5);
+		expect($result)->toBeNull();
+	}
+
+	public function testGalleryImageDataWithZeroIndexReturnsNull(): void
+	{
+		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+
+		$galleryData = [
+			['name' => 'image1.jpg', 'alt' => 'Image 1'],
+			['name' => 'image2.jpg', 'alt' => 'Image 2'],
+		];
+
+		$adapter->method('data')
+			->with('gallery', 'gallery-id', 'gallery')
+			->willReturn($galleryData);
+
+		// Index 0 is invalid for 1-based indexing
+		$result = $adapter->galleryImageData('gallery-id', 0);
+		expect($result)->toBeNull();
+	}
+
+	public function testGalleryAltWithNumericIndex(): void
+	{
+		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['galleryImageData']);
+
+		$adapter->method('galleryImageData')
+			->with('gallery-id', 2, ['collection' => 'gallery', 'property' => 'gallery'])
+			->willReturn(['name' => 'image2.jpg', 'alt' => 'Second image alt']);
+
+		$result = $adapter->galleryAlt('gallery-id', 2);
+
+		expect($result)->toBe('Second image alt');
+	}
+
+	public function testGalleryImageDataWithStringNumericIndex(): void
+	{
+		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+
+		$galleryData = [
+			['name' => 'image1.jpg', 'alt' => 'Image 1'],
+			['name' => 'image2.jpg', 'alt' => 'Image 2'],
+			['name' => 'image3.jpg', 'alt' => 'Image 3'],
+		];
+
+		$adapter->method('data')
+			->with('gallery', 'gallery-id', 'gallery')
+			->willReturn($galleryData);
+
+		// String numeric "2" should work the same as integer 2
+		$result = $adapter->galleryImageData('gallery-id', '2');
+		expect($result)->toBe(['name' => 'image2.jpg', 'alt' => 'Image 2']);
+	}
+
 	public function testGalleryAltReturnsCorrectAlt(): void
 	{
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['galleryImageData']);
@@ -270,7 +376,8 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 		$result = $adapter->galleryAlt('gallery-id', 'image.jpg');
 
-		expect($result)->toBe('');
+		// When alt is missing, the function falls back to returning the image name
+		expect($result)->toBe('image.jpg');
 	}
 
 	public function testGalleryAltReturnsEmptyForNullImageData(): void

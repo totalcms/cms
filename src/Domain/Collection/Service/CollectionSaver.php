@@ -16,6 +16,7 @@ readonly class CollectionSaver
 		private CollectionRepository $storage,
 		private CollectionFactory $factory,
 		private IndexRepository $indexRepository,
+		private CollectionFetcher $collectionFetcher,
 	) {
 	}
 
@@ -56,6 +57,9 @@ readonly class CollectionSaver
 		}
 
 		$this->storage->saveCollection($collection);
+
+		// Clear request-level cache so subsequent fetches get fresh data
+		$this->collectionFetcher->clearCache($collection->id);
 
 		return $collection;
 	}
@@ -99,6 +103,9 @@ readonly class CollectionSaver
 		}
 
 		$this->storage->saveCollection($collection);
+
+		// Clear request-level cache so subsequent fetches get fresh data
+		$this->collectionFetcher->clearCache($collectionId);
 
 		return $collection;
 	}

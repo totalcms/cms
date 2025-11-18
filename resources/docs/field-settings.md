@@ -111,6 +111,72 @@ For depot (multiple file) fields, the setting works the same way:
 
 ✅ **Security:** Setting to `false` makes files publicly accessible. Use with caution for sensitive content.
 
+## Deck Item Label
+
+The `deckItemLabel` setting controls how deck items are labeled in the admin interface. It uses the same template syntax as the `autogen` setting (see ID field autogen documentation), but displays raw values without slugification.
+
+**Default:** `${id}` (displays the item's ID)
+
+### Basic Usage
+
+```json
+{
+	"reviews": {
+		"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+		"label": "Customer Reviews",
+		"settings": {
+			"deckref": "https://www.totalcms.co/schemas/custom/review.json",
+			"deckItemLabel": "${rating} - ${name}"
+		}
+	}
+}
+```
+
+### Supported Placeholders
+
+- **Field values:** `${fieldName}` - Any field from the deck item schema
+- **Multiple fields:** `${id} - ${title}` - Combine multiple fields with separators
+- **Dynamic values (new items only):**
+  - `${oid}` - Deck item count (1, 2, 3...)
+  - `${oid-00000}` - Zero-padded deck item count (00001, 00002...)
+  - `${uid}` - Random unique ID
+  - `${uuid}` - Full UUID
+  - `${now}` - Current timestamp
+  - `${currentyear}`, `${currentmonth}`, `${currentday}` - Date components
+
+### Examples
+
+**Simple ID display:**
+```json
+"deckItemLabel": "${id}"
+```
+
+**Rating and name:**
+```json
+"deckItemLabel": "${rating} ★ - ${name}"
+```
+
+**Sequential numbering:**
+```json
+"deckItemLabel": "Item ${oid}: ${title}"
+```
+
+**Zero-padded numbers:**
+```json
+"deckItemLabel": "Review ${oid-00000}"
+```
+Result: "Review 00001", "Review 00002", etc.
+
+### Important Notes
+
+⚠️ **No slugification:** Values are displayed as-is without URL-safe transformation. If a field contains "The Big Red Fox", the label will show exactly that.
+
+⚠️ **Twig compatibility:** Deck item IDs are automatically sanitized to use underscores instead of hyphens for Twig dot notation access (`mydeck.item_id`).
+
+⚠️ **SVG support:** If a field contains SVG code, it will be displayed as a small icon in the label.
+
+⚠️ **Long text:** Labels automatically truncate with ellipsis (...) if content is too long.
+
 ## Image and Gallery Watermarks
 
 Watermark settings allow you to automatically apply watermarks to images and gallery images. These settings are enforced at the image generation level and **cannot be bypassed via URL manipulation**, making them ideal for protecting photography and copyrighted content.
@@ -770,6 +836,101 @@ The following can be used on text fields to limit the number of characters.
   "readonly"  : true,
   "disabled"  : true,
   "class"     : "custom-class"
+}
+```
+
+## Password Fields
+
+Password fields automatically include a confirmation field and built-in validation to ensure both passwords match.
+
+### Automatic Features
+
+**Dual Input Fields:**
+- Main password field
+- Confirmation password field (automatically appends `-confirm` to the field ID and name)
+
+**Validation:**
+- Automatically validates that both password fields match before form submission
+- Displays "Passwords do not match" error if values differ
+- Both fields must pass validation (e.g., minlength, pattern) individually
+
+### Custom Placeholder for Confirmation Field
+
+Use the `confirmPlaceholder` setting to customize the placeholder text for the confirmation field:
+
+```json
+{
+  "confirmPlaceholder" : "Confirm your new password"
+}
+```
+
+**Example with all settings:**
+```json
+{
+  "password": {
+    "$ref"        : "https://www.totalcms.co/schemas/properties/password.json",
+    "label"       : "Password",
+    "placeholder" : "Enter your password",
+    "minLength"   : 8,
+    "settings"    : {
+      "minlength"          : 8,
+      "confirmPlaceholder" : "Confirm your password"
+    }
+  }
+}
+```
+
+**Default behavior:**
+If `confirmPlaceholder` is not specified, the confirmation field will use the same placeholder as the main password field.
+
+### How Validation Works
+
+The password field JavaScript automatically:
+1. Finds the confirmation field using the main field's ID + `-confirm`
+2. Compares both field values during form validation
+3. Sets custom validity message if passwords don't match
+4. Prevents form submission until passwords match
+
+**HTML structure generated:**
+```html
+<!-- Main password field -->
+<input type="password" id="field-abc123" name="password" placeholder="Enter your password">
+
+<!-- Confirmation field (automatically created) -->
+<input type="password" id="field-abc123-confirm" name="password-confirm" placeholder="Confirm your password">
+```
+
+### Common Use Cases
+
+**User registration:**
+```json
+{
+  "password": {
+    "$ref"        : "https://www.totalcms.co/schemas/properties/password.json",
+    "label"       : "Password",
+    "placeholder" : "Create a password",
+    "minLength"   : 8,
+    "settings"    : {
+      "minlength"          : 8,
+      "confirmPlaceholder" : "Confirm your password"
+    }
+  }
+}
+```
+
+**Password reset:**
+```json
+{
+  "newPassword": {
+    "$ref"        : "https://www.totalcms.co/schemas/properties/password.json",
+    "label"       : "New Password",
+    "placeholder" : "Enter new password",
+    "minLength"   : 8,
+    "settings"    : {
+      "minlength"          : 8,
+      "confirmPlaceholder" : "Re-enter new password"
+    }
+  }
 }
 ```
 

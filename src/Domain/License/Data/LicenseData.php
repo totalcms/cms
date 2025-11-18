@@ -7,7 +7,9 @@ namespace TotalCMS\Domain\License\Data;
  */
 readonly class LicenseData
 {
-	public const CACHE_TTL = 24 * 60 * 60; // 24 hours
+	public const CACHE_KEY         = 'license_validation';
+	public const CACHE_TTL         = 24 * 60 * 60;      // 24 hours - when to try refreshing
+	public const CACHE_STORAGE_TTL = 7 * 24 * 60 * 60;  // 7 days - how long to keep in cache
 
 	public function __construct(
 		public bool $valid,

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -607,6 +608,9 @@ class CacheManager
 		$results        = [];
 		$overallSuccess = true;
 
+		// Preserve license data before clearing (critical for system operation)
+		$licenseData = $this->getLicenseData(LicenseData::CACHE_KEY);
+
 		// Clear all available cache services
 		foreach ($this->cacheServices as $name => $service) {
 			if (!$service->isAvailable()) {
@@ -622,6 +626,12 @@ class CacheManager
 				$results[$name] = ['cleared' => false, 'reason' => $e->getMessage()];
 				$overallSuccess = false;
 			}
+		}
+
+		// Restore license data after clearing
+		if ($licenseData instanceof LicenseData) {
+			$this->storeLicenseData(LicenseData::CACHE_KEY, $licenseData, LicenseData::CACHE_STORAGE_TTL);
+			$results['license'] = ['preserved' => true, 'reason' => 'restored after clear'];
 		}
 
 		// Clear text watermark cache (clear all cached watermarks)

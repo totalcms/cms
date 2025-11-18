@@ -21,9 +21,17 @@ class ColorData extends PropertyData
 	public array $oklch;
 
 	/** @param string|array<string,mixed> $color */
-	public function __construct(string|array $color, public array $settings = [])
+	public function __construct(string|array $color = '', public array $settings = [])
 	{
 		if (is_string($color)) {
+			// Handle empty string with default black color
+			if ($color === '') {
+				$this->hex   = '#000000';
+				$this->oklch = self::hexToOklch($this->hex);
+
+				return;
+			}
+
 			// If it's an OKLCH string, preserve the color space by extracting OKLCH directly
 			if (str_starts_with($color, 'oklch')) {
 				$this->oklch = $this->oklchStringToArray($color);

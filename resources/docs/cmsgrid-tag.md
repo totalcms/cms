@@ -96,10 +96,10 @@ Access via `cms.grid.*` for formatted HTML output:
 
 ## Image Handling
 
-Use `cms.imageFromData()` with the collection context:
+Use `cms.image()` with the object and collection context:
 ```twig
 {% if object.image %}
-    {{ cms.imageFromData(object.image, object.id, {w: 400}, {collection: collection}) }}
+    {{ cms.image(object, {w: 400}, {collection: collection, property: 'image'}) }}
 {% endif %}
 ```
 
@@ -142,7 +142,7 @@ The grid system includes comprehensive CSS with design system variables:
 ```twig
 {% cmsgrid cms.objects('products') from 'products' with 'products grid compact' %}
     {% if object.image %}
-        {{ cms.imageFromData(object.image, object.id, {w: 300, h: 300}, {collection: collection}) }}
+        {{ cms.image(object, {w: 300, h: 300}, {collection: collection, property: 'image'}) }}
     {% endif %}
     <h4>{{ object.name }}</h4>
     <p class="price">{{ cms.grid.price(object.price) }}</p>
@@ -155,7 +155,7 @@ The grid system includes comprehensive CSS with design system variables:
 ### Team Members
 ```twig
 {% cmsgrid cms.objects('team') from 'team' with 'team grid' %}
-    {{ cms.imageFromData(object.photo, object.id, {w: 200, h: 200}, {collection: collection}) }}
+    {{ cms.image(object, {w: 200, h: 200}, {collection: collection, property: 'photo'}) }}
     <h3>{{ object.name }}</h3>
     <p class="role">{{ object.position }}</p>
     <p>{{ cms.grid.excerpt(object.bio, 100) }}</p>

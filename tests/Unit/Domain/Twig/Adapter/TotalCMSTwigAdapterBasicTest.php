@@ -111,10 +111,38 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	public function testJobQueuePendingInfoReturnsEmptyStringForNoPendingJobs(): void
 	{
 		// Clear any existing jobs from previous tests
-		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository();
-		$jobRepository->clearQueue();
+		$config = new \TotalCMS\Support\Config([
+			'env'        => 'test',
+			'template'   => sys_get_temp_dir(),
+			'dashboard'  => [],
+			'datadir'    => sys_get_temp_dir() . '/totalcms-test',
+			'tmpdir'     => sys_get_temp_dir(),
+			'cachedir'   => sys_get_temp_dir() . '/cache',
+			'cache'      => [],
+			'logger'     => [],
+			'error'      => [],
+			'domain'     => 'test.com',
+			'url'        => 'http://test.com',
+			'api'        => 'http://test.com/api',
+			'locale'     => 'en_US',
+			'session'    => [],
+			'auth'       => [],
+			'debug'      => false,
+			'notfound'   => '/404',
+			'imageworks' => [],
+			'smtp'       => [],
+			'mailer'     => [],
+		]);
+		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository($config);
+		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
+		$jobManager->clearQueue();
 
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+
+		// Use reflection to inject the jobManager into the adapter
+		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$property   = $reflection->getProperty('jobManager');
+		$property->setValue($adapter, $jobManager);
 
 		$result = $adapter->jobQueuePendingInfo();
 
@@ -124,10 +152,38 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	public function testJobQueueFailedInfoReturnsEmptyStringForNoFailedJobs(): void
 	{
 		// Clear any existing jobs from previous tests
-		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository();
-		$jobRepository->clearQueue();
+		$config = new \TotalCMS\Support\Config([
+			'env'        => 'test',
+			'template'   => sys_get_temp_dir(),
+			'dashboard'  => [],
+			'datadir'    => sys_get_temp_dir() . '/totalcms-test',
+			'tmpdir'     => sys_get_temp_dir(),
+			'cachedir'   => sys_get_temp_dir() . '/cache',
+			'cache'      => [],
+			'logger'     => [],
+			'error'      => [],
+			'domain'     => 'test.com',
+			'url'        => 'http://test.com',
+			'api'        => 'http://test.com/api',
+			'locale'     => 'en_US',
+			'session'    => [],
+			'auth'       => [],
+			'debug'      => false,
+			'notfound'   => '/404',
+			'imageworks' => [],
+			'smtp'       => [],
+			'mailer'     => [],
+		]);
+		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository($config);
+		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
+		$jobManager->clearQueue();
 
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+
+		// Use reflection to inject the jobManager into the adapter
+		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$property   = $reflection->getProperty('jobManager');
+		$property->setValue($adapter, $jobManager);
 
 		$result = $adapter->jobQueueFailedInfo();
 
@@ -301,23 +357,5 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		expect($result)->toBeString();
 		expect($result)->toContain('Previous');
 		expect($result)->toContain('Next');
-	}
-
-	public function testImageFromDataWithEmptyData(): void
-	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-
-		$result = $adapter->imageFromData([], 'test-id');
-
-		expect($result)->toBe('');
-	}
-
-	public function testImageFromDataWithEmptyId(): void
-	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-
-		$result = $adapter->imageFromData(['filename' => 'test.jpg'], '');
-
-		expect($result)->toBe('');
 	}
 }

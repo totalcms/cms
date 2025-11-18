@@ -19,8 +19,10 @@ class ObjectForm extends TotalForm
 
 		$this->route = "/collections/{$this->collection}";
 
+		$objectExists = $this->objectFetcher->existsObject($this->collection, $this->id);
+
 		// For addOnly forms, never load existing objects even if an ID is somehow present
-		if (!$this->addOnly && $this->id !== '' && $this->objectFetcher->existsObject($this->collection, $this->id)) {
+		if (!$this->addOnly && $this->id !== '' && $objectExists) {
 			// If the form is for editing an existing item, change the method to PUT
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
@@ -64,18 +66,22 @@ class ObjectForm extends TotalForm
 			$defaults['required'] = $this->isRequired($name);
 		}
 
+		// Handle ID field hiding (must be checked before object data check)
+		if ($name === 'id' && !isset($options['deck_context'])) {
+			// Hide the ID field if requested
+			if ($this->hideID) {
+				$options['field'] = 'hidden';
+			}
+
+			// Set ID value if form has an ID
+			if ($this->id !== '') {
+				$options['value'] = $this->id;
+			}
+		}
+
 		// Get the value from the object data if it exists (for editing)
 		if ($this->id !== '' && $this->objectData instanceof ObjectData) {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
-
-			// A DeckItem will set the deck_context option if it is a deck field
-			if ($name === 'id' && !isset($options['deck_context'])) {
-				$options['value'] = $this->id;
-				// Hide the ID field if requested
-				if ($this->hideID) {
-					$options['field'] = 'hidden';
-				}
-			}
 
 			// Set value from object data
 			if (!isset($options['value'])) {
@@ -94,6 +100,11 @@ class ObjectForm extends TotalForm
 			if ($value !== '' && $value !== null) {
 				$options['value'] = $value;
 			}
+		}
+
+		// Deep merge settings to preserve schema settings when overriding specific values
+		if (isset($defaults['settings']) && isset($options['settings']) && (is_array($defaults['settings']) && is_array($options['settings']))) {
+			$options['settings'] = array_merge($defaults['settings'], $options['settings']);
 		}
 
 		return array_merge($defaults, $options);

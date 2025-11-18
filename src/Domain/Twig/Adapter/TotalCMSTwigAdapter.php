@@ -18,7 +18,6 @@ use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
-use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -81,6 +80,7 @@ class TotalCMSTwigAdapter
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
 		public LicenseStatus $license,
+		private readonly JobManager $jobManager,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -135,11 +135,7 @@ class TotalCMSTwigAdapter
 	 */
 	public function jobQueuePendingInfo(): string
 	{
-		$jobManager = new JobManager(
-			new JobRepository()
-		);
-
-		$pendingJobs = $jobManager->getPendingJobs();
+		$pendingJobs = $this->jobManager->getPendingJobs();
 
 		if ($pendingJobs === []) {
 			return '';
@@ -185,11 +181,7 @@ class TotalCMSTwigAdapter
 	 */
 	public function jobQueueFailedInfo(): string
 	{
-		$jobManager = new JobManager(
-			new JobRepository()
-		);
-
-		$failedJobs = $jobManager->getFailedJobs();
+		$failedJobs = $this->jobManager->getFailedJobs();
 
 		if ($failedJobs === []) {
 			return '';
@@ -615,9 +607,9 @@ NGINX;
 
 	// Get collection meta data
 	/** @return array<string,mixed> */
-	public function collection(string $collection): array
+	public function collection(string $collectionId): array
 	{
-		$collection = $this->collectionFetcher->fetchCollection($collection);
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
 		if (!$collection instanceof CollectionData) {
 			return [];
@@ -1001,10 +993,13 @@ NGINX;
 	}
 
 	/**
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
 	 * @param array<string,mixed> $options
 	 */
-	public function image(?string $id, array $imageworks = [], array $options = []): string
+	public function image(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'image',
@@ -1012,20 +1007,31 @@ NGINX;
 			'loading'    => 'lazy',
 		], $options);
 
-		if ($id === null || $id === '') {
+		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
 			return '';
 		}
 
-		$imagePath = $this->imagePath($id, $imageworks, $options);
+		$imagePath = $this->imagePath($idOrObject, $imageworks, $options);
 		if ($imagePath === '') {
 			return '';
 		}
 
-		$image = $this->data($options['collection'], $id, $options['property']);
+		// Performance optimization: Extract image data from object if passed
+		if (is_array($idOrObject)) {
+			$image = $idOrObject[$options['property']] ?? [];
+		} else {
+			$image = $this->data($options['collection'], $idOrObject, $options['property']);
+		}
+
+		// Calculate dimensions for layout stability (prevents CLS)
+		$dimensions = ImageDimensionCalculator::calculateFromImageData($image, $imageworks);
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
-			'alt'           => $image['alt'],
+			'alt'           => $this->alt($idOrObject, $options),
+			'width'         => $dimensions['width'],
+			'height'        => $dimensions['height'],
+			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'],
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
@@ -1038,83 +1044,50 @@ NGINX;
 		return $html;
 	}
 
-	/**
-	 * Create image HTML from provided image data (without fetching from CMS).
-	 *
-	 * @param array<string,mixed> $imageData Image data array
-	 * @param string $id of the object with the image
-	 * @param array<string,string|int> $imageworks Imageworks processing options
-	 * @param array<string,mixed> $options Additional options
-	 *
-	 * @return string Image HTML
-	 */
-	public function imageFromData(array $imageData, string $id, array $imageworks = [], array $options = []): string
-	{
-		if ($imageData === []) {
-			return '';
-		}
-
-		$options = array_merge([
-			'collection' => 'image',
-			'property'   => 'image',
-			'loading'    => 'lazy',
-		], $options);
-
-		if ($id === '') {
-			return '';
-		}
-
-		// Build path using buildImageworksAPI if we have enough data
-		$imagePath = self::buildImageworksAPI($this->api, $id, $imageData, $imageworks, $options);
-		if ($imagePath === '') {
-			return '';
-		}
-
-		// Get alt text from various possible keys
-		$alt = $imageData['alt'] ?? $imageData['exif']['title'] ?? $imageData['exif']['description'] ?? $id;
-
-		$html = HTMLUtils::inlineElement('img', [
-			'src'           => $imagePath,
-			'alt'           => $alt,
-			'loading'       => $options['loading'],
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
-
-		// Add link wrapper if present
-		$link = $imageData['link'] ?? '';
-		if (!empty($link)) {
-			$html = HTMLUtils::element('a', $html, ['href' => $link]);
-		}
-
-		return $html;
-	}
-
 	// Get the image path for an image property
 	/**
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function imagePath(?string $id, array $imageworks = [], array $options = []): string
+	public function imagePath(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'image',
 			'property'   => 'image',
 		], $options);
 
-		if ($id === null || $id === '') {
+		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
 			return '';
 		}
 
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
-		$image = $this->data($collection, $id, $property);
+		// Performance optimization: Accept full object to avoid re-fetching
+		if (is_array($idOrObject)) {
+			// Object passed directly - extract ID and image data
+			$id = $idOrObject['id'] ?? '';
+			if ($id === '') {
+				return '';
+			}
+
+			// Try to get image data from the object
+			$image = $idOrObject[$property] ?? null;
+			if (!is_array($image) || !array_key_exists('size', $image) || $image['size'] === 0) {
+				return '';
+			}
+
+			return self::buildImageworksAPI($this->api, $id, $image, $imageworks, $options);
+		}
+
+		// Original behavior: ID string passed, fetch object data
+		$image = $this->data($collection, $idOrObject, $property);
 		if (!is_array($image) || !array_key_exists('size', $image) || $image['size'] === 0) {
 			return '';
 		}
 
-		return self::buildImageworksAPI($this->api, $id, $image, $imageworks, $options);
+		return self::buildImageworksAPI($this->api, $idOrObject, $image, $imageworks, $options);
 	}
 
 	/**
@@ -1177,11 +1150,14 @@ NGINX;
 	}
 
 	/**
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $thumbSettings
 	 * @param array<string,string|int> $fullSettings
 	 * @param array<string,mixed> $options
 	 */
-	public function gallery(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
+	public function gallery(string|array|null $idOrObject, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
@@ -1194,15 +1170,33 @@ NGINX;
 
 		$gallery = '';
 
-		$images = $this->data($options['collection'], $id, $options['property']);
+		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+			return $gallery;
+		}
+
+		// Performance optimization: Accept full object to avoid re-fetching
+		if (is_array($idOrObject)) {
+			// Object passed directly - extract ID and gallery data
+			$id     = $idOrObject['id'] ?? '';
+			$images = $idOrObject[$options['property']] ?? [];
+		} else {
+			// Original behavior: ID string passed, fetch object data
+			$id     = $idOrObject;
+			$images = $this->data($options['collection'], $id, $options['property']);
+		}
 
 		// Check if captions should be shown
 		$showCaptions = isset($options['captions']) && $options['captions'];
 
 		foreach ($images as $image) {
+			// Calculate dimensions for layout stability (prevents CLS)
+			$thumbDimensions = ImageDimensionCalculator::calculateFromImageData($image, $thumbSettings);
+
 			$img = HTMLUtils::inlineElement('img', [
 				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
-				'alt'           => $image['alt'],
+				'alt'           => $this->galleryAlt($idOrObject, $image['name'], $options),
+				'width'         => $thumbDimensions['width'],
+				'height'        => $thumbDimensions['height'],
 				'loading'       => 'lazy',
 				'draggable'     => 'false',
 				'oncontextmenu' => 'return false;',
@@ -1280,11 +1274,14 @@ NGINX;
 	 * Generate a dynamic gallery that can be triggered programmatically.
 	 * Returns a template tag with JSON data for JavaScript initialization.
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $thumbSettings
 	 * @param array<string,string|int> $fullSettings
 	 * @param array<string,mixed> $options
 	 */
-	public function galleryLauncher(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
+	public function galleryLauncher(string|array $idOrObject, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
@@ -1295,7 +1292,14 @@ NGINX;
 			$thumbSettings = ['w' => 300, 'h' => 200];
 		}
 
-		$images = $this->data($options['collection'], $id, $options['property']);
+		// Performance optimization: Extract gallery data from object if passed
+		if (is_array($idOrObject)) {
+			$id     = $idOrObject['id'] ?? '';
+			$images = $idOrObject[$options['property']] ?? [];
+		} else {
+			$id     = $idOrObject;
+			$images = $this->data($options['collection'], $id, $options['property']);
+		}
 
 		// Check if captions should be shown in subHtml
 		$showCaptions = isset($options['captions']) && $options['captions'];
@@ -1304,8 +1308,8 @@ NGINX;
 		$dynamicEl = [];
 		foreach ($images as $image) {
 			$item = [
-				'src'    => $this->galleryPath($id, $image['name'], $fullSettings, $options),
-				'thumb'  => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
+				'src'    => $this->galleryPath($idOrObject, $image['name'], $fullSettings, $options),
+				'thumb'  => $this->galleryPath($idOrObject, $image['name'], $thumbSettings, $options),
 				'lgSize' => "{$image['width']}-{$image['height']}",
 				'name'   => $image['name'], // Include name for image-based index lookup
 			];
@@ -1348,32 +1352,37 @@ NGINX;
 	}
 
 	/**
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryImage(?string $id, ?string $name, array $imageworks = [], array $options = []): string
+	public function galleryImage(string|array|null $idOrObject, string|int|null $name, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		if ($id === null || $id === '' || $id === '0' || ($name === null || $name === '' || $name === '0')) {
+		if ($idOrObject === null || $idOrObject === '' || $idOrObject === [] || $name === null || $name === '') {
 			return '';
 		}
 
-		$imagePath = $this->galleryPath($id, $name, $imageworks, $options);
+		$imagePath = $this->galleryPath($idOrObject, $name, $imageworks, $options);
 		if ($imagePath === '') {
 			return '';
 		}
 
-		$image = $this->galleryImageData($id, $name, $options);
-		$alt   = $image['alt'] ?? $this->galleryAlt($id, $name, $options);
+		$image = $this->galleryImageData($idOrObject, $name, $options);
 		$link  = $image['link'] ?? '';
+
+		// Calculate dimensions for layout stability (prevents CLS)
+		$dimensions = ImageDimensionCalculator::calculateFromImageData($image ?? [], $imageworks);
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
-			'alt'           => $alt,
+			'alt'           => $this->galleryAlt($idOrObject, $name, $options),
+			'width'         => $dimensions['width'],
+			'height'        => $dimensions['height'],
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
 		]);
@@ -1385,25 +1394,41 @@ NGINX;
 		return $html;
 	}
 
-	// get an image object from inside a gallery by it's name
 	/**
+	 * Get an image object from inside a gallery by it's name.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 *
-	 * @return array<string,mixed>
+	 * @return array<string,mixed>|null
 	 */
-	public function galleryImageData(string $id, string $name, array $options = []): ?array
+	public function galleryImageData(string|array $idOrObject, string|int $name, array $options = []): ?array
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		$gallery = $this->data($options['collection'], $id, $options['property']);
-		if (!is_array($gallery)) {
+		// Performance optimization: Extract gallery data from object if passed
+		if (is_array($idOrObject)) {
+			$gallery = $idOrObject[$options['property']] ?? null;
+		} else {
+			$gallery = $this->data($options['collection'], $idOrObject, $options['property']);
+		}
+
+		if (!is_array($gallery) || $gallery === []) {
 			return null;
 		}
 
-		$image = array_filter($gallery, fn (array $image): bool => pathinfo((string)$image['name'])['filename'] === $name);
+		// Check if name is a numeric index (1-based for user-friendliness)
+		if (is_numeric($name)) {
+			$index  = (int)$name - 1; // Convert to 0-based
+			$values = array_values($gallery); // Re-index array
+
+			return $values[$index] ?? null;
+		}
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
@@ -1415,23 +1440,39 @@ NGINX;
 	}
 
 	/**
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryPath(?string $id, ?string $name, array $imageworks = [], array $options = []): string
+	public function galleryPath(string|array|null $idOrObject, string|int|null $name, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		if ($id === null || $id === '' || $name === null || $name === '') {
+		if ($idOrObject === null || $idOrObject === '' || $idOrObject === [] || $name === null || $name === '') {
 			return '';
 		}
 
-		$image = $this->galleryImageData($id, $name, $options) ?? [];
+		// Extract ID for URL building
+		if (is_array($idOrObject)) {
+			$id = $idOrObject['id'] ?? '';
+			if ($id === '') {
+				return '';
+			}
+		} else {
+			$id = $idOrObject;
+		}
 
-		return self::buildImageworksGalleryAPI($this->api, $id, $name, $image, $imageworks, $options);
+		$image = $this->galleryImageData($idOrObject, $name, $options) ?? [];
+
+		// When $name is a numeric index (int or string), get the actual filename from the resolved image
+		$imageName = is_numeric($name) ? (string)($image['name'] ?? '') : $name;
+
+		return self::buildImageworksGalleryAPI($this->api, $id, $imageName, $image, $imageworks, $options);
 	}
 
 	/**
@@ -1502,40 +1543,75 @@ NGINX;
 		return $api;
 	}
 
-	// Get an alt tag for an image
-	/** @param array<string,string> $options */
-	public function alt(string $id, array $options = []): string
+	/**
+	 * Get an alt tag for an image.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
+	 * @param array<string,mixed> $options
+	 */
+	public function alt(string|array $idOrObject, array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'image',
 			'property'   => 'image',
 		], $options);
 
-		$image = $this->data($options['collection'], $id, $options['property']);
+		// Performance optimization: Extract image data from object if passed
+		if (is_array($idOrObject)) {
+			$image = $idOrObject[$options['property']] ?? null;
+		} else {
+			$image = $this->data($options['collection'], $idOrObject, $options['property']);
+		}
 
-		if (!is_array($image) || !array_key_exists('alt', $image)) {
+		if (!is_array($image)) {
 			return '';
 		}
 
-		return $image['alt'];
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return $image['name'] ?? '';
 	}
 
-	// Get an alt tag for a gallery image
-	/** @param array<string,string> $options */
-	public function galleryAlt(string $id, string $name, array $options = []): string
+	/**
+	 * Get an alt tag for a gallery image.
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
+	 * @param array<string,mixed> $options
+	 */
+	public function galleryAlt(string|array $idOrObject, string|int $name, array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		$image = $this->galleryImageData($id, $name, $options);
+		$image = $this->galleryImageData($idOrObject, $name, $options);
 
-		if (!is_array($image) || !array_key_exists('alt', $image)) {
+		if (!is_array($image)) {
 			return '';
 		}
 
-		return $image['alt'];
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return $image['name'] ?? '';
 	}
 
 	/**
@@ -1914,8 +1990,7 @@ NGINX;
 		}
 
 		// Get job queue stats
-		$jobManager = new JobManager(new JobRepository());
-		$totalJobs  = count($jobManager->getPendingJobs()) + count($jobManager->getFailedJobs());
+		$totalJobs = count($this->jobManager->getPendingJobs()) + count($this->jobManager->getFailedJobs());
 
 		return [
 			'collections'  => count($collections),

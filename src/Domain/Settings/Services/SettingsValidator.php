@@ -75,13 +75,16 @@ readonly class SettingsValidator
 	/**
 	 * Clean empty values from form data.
 	 *
+	 * Note: Empty strings are preserved to allow users to intentionally clear field values.
+	 * Only null values are filtered out as they typically indicate unset form fields.
+	 *
 	 * @param array<string,mixed> $data
 	 *
 	 * @return array<string,mixed>
 	 */
 	private function cleanFormData(array $data): array
 	{
-		return array_filter($data, fn (mixed $value): bool => $value !== '');
+		return array_filter($data, fn (mixed $value): bool => $value !== null);
 	}
 
 	/**
@@ -212,14 +215,18 @@ readonly class SettingsValidator
 		}
 
 		// Convert numeric fields to integers
-		if (isset($data['maxAttempts'])) {
-			$data['maxAttempts'] = (int)$data['maxAttempts'];
-		}
-		if (isset($data['deniedTimeout'])) {
-			$data['deniedTimeout'] = (int)$data['deniedTimeout'];
-		}
-		if (isset($data['persistentLoginDays'])) {
-			$data['persistentLoginDays'] = (int)$data['persistentLoginDays'];
+		$numericFields = [
+			'maxAttempts',
+			'downloadMaxAttempts',
+			'deniedTimeout',
+			'persistentLoginDays',
+			'resetTokenExpiry',
+		];
+
+		foreach ($numericFields as $field) {
+			if (isset($data[$field])) {
+				$data[$field] = (int)$data[$field];
+			}
 		}
 
 		return $data;

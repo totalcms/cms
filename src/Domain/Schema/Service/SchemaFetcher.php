@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
@@ -12,7 +12,7 @@ readonly class SchemaFetcher
 {
 	public function __construct(
 		private SchemaRepository $storage,
-		private CollectionRepository $collectionRepository,
+		private CollectionFetcher $collectionFetcher,
 		private CacheManager $cacheManager,
 	) {
 	}
@@ -51,7 +51,7 @@ readonly class SchemaFetcher
 	 */
 	public function fetchSchemaForCollection(string $collection): SchemaData
 	{
-		$collectionData = $this->collectionRepository->fetchCollection($collection);
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 
 		if (!$collectionData instanceof CollectionData) {
 			throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);
@@ -65,7 +65,7 @@ readonly class SchemaFetcher
 	 */
 	public function fetchRawSchemaForCollection(string $collection): SchemaData
 	{
-		$collectionData = $this->collectionRepository->fetchCollection($collection);
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 
 		if (!$collectionData instanceof CollectionData) {
 			throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);

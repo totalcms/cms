@@ -100,6 +100,32 @@ describe('PasswordField', function (): void {
 		expect($placeholderCount)->toBe(2);
 	});
 
+	test('PasswordField → uses confirmPlaceholder setting for confirm field', function (): void {
+		$field = new PasswordField(
+			$this->form,
+			'password',
+			placeholder: 'Enter password',
+			settings: ['confirmPlaceholder' => 'Confirm your password']
+		);
+
+		$html = $field->build();
+
+		// Main input should have main placeholder
+		expect($html)->toContain('placeholder="Enter password"');
+		// Confirm input should have confirm placeholder
+		expect($html)->toContain('placeholder="Confirm your password"');
+	});
+
+	test('PasswordField → uses same placeholder when confirmPlaceholder not set', function (): void {
+		$field = new PasswordField($this->form, 'password', placeholder: 'Enter password');
+
+		$html = $field->build();
+
+		// Both inputs should have the same placeholder when confirmPlaceholder is not set
+		$placeholderCount = substr_count($html, 'placeholder="Enter password"');
+		expect($placeholderCount)->toBe(2);
+	});
+
 	test('PasswordField → getValue returns correct value', function (): void {
 		$field = new PasswordField($this->form, 'password', value: 'secret123');
 

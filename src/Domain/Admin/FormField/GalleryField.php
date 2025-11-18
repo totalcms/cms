@@ -34,11 +34,15 @@ class GalleryField extends ImageField
 		}
 		$previews = HTMLUtils::element('div', $previews, ['class' => 'total-preview']);
 
-		$input = HTMLUtils::inlineElement('input', [
-			'id'   => 'field-' . $this->uuid,
-			'type' => 'text',
-			'name' => $this->name,
-		]);
+		$inputAttrs = [
+			'id'       => 'field-' . $this->uuid,
+			'type'     => 'text',
+			'name'     => $this->name,
+			'required' => $this->required ? '' : null,
+		];
+		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
+
+		$input   = HTMLUtils::inlineElement('input', $inputAttrs);
 		$overlay = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
 
 		$imagePreview    = $this->imagePreview('', '');

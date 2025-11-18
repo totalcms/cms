@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
@@ -43,6 +44,7 @@ class ImageGenerator
 		string $id,
 		string $property,
 		array $params,
+		?ServerRequestInterface $request = null,
 	): ResponseInterface {
 		$imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
@@ -55,7 +57,7 @@ class ImageGenerator
 		$this->property   = $property;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
-		return $this->responseFromImageData($imageData);
+		return $this->responseFromImageData($imageData, $request);
 	}
 
 	/** @param array<string,mixed> $params */
@@ -65,6 +67,7 @@ class ImageGenerator
 		string $property,
 		string $name,
 		array $params,
+		?ServerRequestInterface $request = null,
 	): ResponseInterface {
 		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
@@ -93,7 +96,7 @@ class ImageGenerator
 		$this->property   = $property;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
-		return $this->responseFromImageData($imageData);
+		return $this->responseFromImageData($imageData, $request);
 	}
 
 	/** @param array<string,mixed> $params */
@@ -103,6 +106,7 @@ class ImageGenerator
 		string $property,
 		string $name,
 		array $params,
+		?ServerRequestInterface $request = null,
 	): ResponseInterface {
 		// Create dummy ImageData object
 		$imageData         = new ImageData();
@@ -115,7 +119,7 @@ class ImageGenerator
 		$this->property   = $property;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
-		return $this->responseFromImageData($imageData);
+		return $this->responseFromImageData($imageData, $request);
 	}
 
 	/** @param array<ImageData> $images */
@@ -286,16 +290,90 @@ class ImageGenerator
 		return isset($params['h']) && (int)$params['h'] > $limit;
 	}
 
-	private function returnOriginalImage(ImageData $imageData): ResponseInterface
+	private function returnOriginalImage(ImageData $imageData, ?ServerRequestInterface $request = null): ResponseInterface
 	{
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
 		$imagePath = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name);
 		$response  = $this->glideFactory->originalImage($imagePath);
 
+		// Generate cache headers
+		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request);
+
+		// Check if we should return 304 Not Modified
+		if ($cacheHeaders['not_modified']) {
+			return (new Response())
+				->withStatus(304)
+				->withHeader('Cache-Control', $cacheHeaders['cache_control'])
+				->withHeader('ETag', $cacheHeaders['etag']);
+		}
+
 		return (new Response())
 			->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
+			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
+			->withHeader('ETag', $cacheHeaders['etag'])
+			->withHeader('Last-Modified', $cacheHeaders['last_modified'])
 			->withBody($response['stream']);
+	}
+
+	/**
+	 * Generate cache headers and check for conditional requests.
+	 *
+	 * @param array<string,mixed> $params Optional params for processed images
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function generateCacheHeaders(string $imagePath, ?ServerRequestInterface $request = null, array $params = []): array
+	{
+		// Try to get file modification time for ETag and Last-Modified
+		try {
+			$lastModified = $this->filesystem->flysystem()->lastModified($imagePath);
+		} catch (\Exception) {
+			$lastModified = time();
+		}
+
+		// Generate ETag from path, modification time, and params (for processed images)
+		$etagBase     = $imagePath . $lastModified . serialize($params);
+		$etag         = '"' . md5($etagBase) . '"';
+		$lastModDate  = gmdate('D, d M Y H:i:s', $lastModified) . ' GMT';
+		$cacheControl = 'public, max-age=31536000, immutable';
+
+		$notModified = false;
+
+		// Check conditional headers if request is provided
+		if ($request instanceof ServerRequestInterface) {
+			// Check If-None-Match (ETag)
+			$ifNoneMatch = $request->getHeaderLine('If-None-Match');
+			if ($ifNoneMatch === $etag) {
+				$notModified = true;
+			}
+
+			// Check If-Modified-Since (Last-Modified)
+			$ifModifiedSince = $request->getHeaderLine('If-Modified-Since');
+			if ($ifModifiedSince !== '' && strtotime($ifModifiedSince) >= $lastModified) {
+				$notModified = true;
+			}
+		}
+
+		return [
+			'etag'          => $etag,
+			'last_modified' => $lastModDate,
+			'cache_control' => $cacheControl,
+			'not_modified'  => $notModified,
+		];
+	}
+
+	/**
+	 * Add cache headers to a PSR-7 response.
+	 *
+	 * @param array<string,mixed> $cacheHeaders
+	 */
+	private function addCacheHeaders(ResponseInterface $response, array $cacheHeaders): ResponseInterface
+	{
+		return $response
+			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
+			->withHeader('ETag', $cacheHeaders['etag'])
+			->withHeader('Last-Modified', $cacheHeaders['last_modified']);
 	}
 
 	/**
@@ -360,10 +438,22 @@ class ImageGenerator
 		return $finalResponse;
 	}
 
-	private function responseFromImageData(ImageData $imageData): ResponseInterface
+	private function responseFromImageData(ImageData $imageData, ?ServerRequestInterface $request = null): ResponseInterface
 	{
 		if ($this->params === []) {
-			return $this->returnOriginalImage($imageData);
+			return $this->returnOriginalImage($imageData, $request);
+		}
+
+		// Generate cache headers for processed images
+		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name);
+		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request, $this->params);
+
+		// Check if we should return 304 Not Modified
+		if ($cacheHeaders['not_modified']) {
+			return (new Response())
+				->withStatus(304)
+				->withHeader('Cache-Control', $cacheHeaders['cache_control'])
+				->withHeader('ETag', $cacheHeaders['etag']);
 		}
 
 		$imageMark = $this->watermarkFactory->createImageWatermark($this->params);
@@ -385,24 +475,30 @@ class ImageGenerator
 		$params = $this->filterWatermarkParams();
 
 		if ($hasImageMark && $hasTextMark) {
-			return $this->handleBothWatermarks($glide, $imageData, $imageMark, $textMark, $params);
+			$response = $this->handleBothWatermarks($glide, $imageData, $imageMark, $textMark, $params);
+
+			return $this->addCacheHeaders($response, $cacheHeaders);
 		}
 
 		if ($hasTextMark) {
 			// Only text watermark provided, return image with params
-			$params = array_merge($params, $textMark->toArray());
+			$params   = array_merge($params, $textMark->toArray());
+			$response = $glide->getImageResponse($imageData->name, $params);
 
-			return $glide->getImageResponse($imageData->name, $params);
+			return $this->addCacheHeaders($response, $cacheHeaders);
 		}
 
 		if ($hasImageMark) {
 			// Only image watermark provided, return image with params
-			$params = array_merge($params, $imageMark->toArray());
+			$params   = array_merge($params, $imageMark->toArray());
+			$response = $glide->getImageResponse($imageData->name, $params);
 
-			return $glide->getImageResponse($imageData->name, $params);
+			return $this->addCacheHeaders($response, $cacheHeaders);
 		}
 
 		// No watermarks provided, return image with params
-		return $glide->getImageResponse($imageData->name, $params);
+		$response = $glide->getImageResponse($imageData->name, $params);
+
+		return $this->addCacheHeaders($response, $cacheHeaders);
 	}
 }

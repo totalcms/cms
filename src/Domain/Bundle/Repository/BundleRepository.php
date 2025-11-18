@@ -3,18 +3,38 @@
 namespace TotalCMS\Domain\Bundle\Repository;
 
 use TotalCMS\Domain\Bundle\Data\BundleData;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Support\Config;
 
 class BundleRepository extends StorageRepository
 {
-	public const RESOURCES   = __DIR__ . '/../../../../resources/';
-	public const BUNDLE      = self::RESOURCES . 'bundle';
-	public const LOCALBUNDLE = self::RESOURCES . '.bundle';
-	public const VALIDITY    = 60 * 60;
+	public const RESOURCES = __DIR__ . '/../../../../resources/';
+	public const BUNDLE    = self::RESOURCES . 'bundle';
+	public const VALIDITY  = 60 * 60;
+
+	public function __construct(
+		StorageAdapterInterface $filesystem,
+		private readonly Config $config,
+	) {
+		parent::__construct($filesystem);
+	}
+
+	private function getLocalBundlePath(): string
+	{
+		return $this->config->datadir . '/.system/.bundle';
+	}
 
 	public function saveLocalBundle(BundleData $bundle): bool
 	{
-		file_put_contents(self::LOCALBUNDLE, base64_encode($bundle->toJSON()));
+		$localBundlePath = $this->getLocalBundlePath();
+		$dir             = dirname($localBundlePath);
+
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+
+		file_put_contents($localBundlePath, base64_encode($bundle->toJSON()));
 
 		if (!$this->localBundleExists()) {
 			throw new \RuntimeException('Unable to save local bundle.');
@@ -53,18 +73,20 @@ class BundleRepository extends StorageRepository
 	{
 		$this->localValidity();
 
-		return file_exists(self::LOCALBUNDLE);
+		return file_exists($this->getLocalBundlePath());
 	}
 
 	private function localValidity(): void
 	{
-		if (!file_exists(self::LOCALBUNDLE)) {
+		$localBundlePath = $this->getLocalBundlePath();
+
+		if (!file_exists($localBundlePath)) {
 			return;
 		}
 
-		$time = time() - filemtime(self::LOCALBUNDLE);
+		$time = time() - filemtime($localBundlePath);
 		if ($time > self::VALIDITY) {
-			unlink(self::LOCALBUNDLE);
+			unlink($localBundlePath);
 		}
 	}
 }

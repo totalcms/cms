@@ -12,6 +12,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -54,6 +55,7 @@ readonly class TotalFormFactory
 		private CSRFTokenManager $csrfManager,
 		private SettingsSchemaFetcher $settingsSchemaFetcher,
 		private SettingsFetcher $settingsFetcher,
+		private JobManager $jobManager,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -158,7 +160,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueStats(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']        = $this->api;
+		$options['jobManager'] = $this->jobManager;
 
 		$stats = new JobQueueStats(...$options);
 
@@ -168,7 +171,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueByStatus(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']        = $this->api;
+		$options['jobManager'] = $this->jobManager;
 
 		$header = $options['header'] ?? null;
 		unset($options['header']);
@@ -181,7 +185,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueByType(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']        = $this->api;
+		$options['jobManager'] = $this->jobManager;
 
 		$header = $options['header'] ?? null;
 		unset($options['header']);
@@ -888,6 +893,8 @@ readonly class TotalFormFactory
 	 * Generate a single field HTML for a given collection, object, and property.
 	 * This allows you to create individual form fields without building a full form.
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $options Field options to override defaults
 	 *
 	 * @return string The rendered field HTML
@@ -898,11 +905,12 @@ readonly class TotalFormFactory
 			'form' => $this->dummyForm(),
 			'name' => $name,
 		], $options);
-		$field = new FormField(...$options);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			$field = new $typeClass(...$options);
+		} else {
+			$field = new FormField(...$options);
 		}
 
 		return $field->build();

@@ -99,9 +99,9 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			}
 		}
 
-		// Require default auth collection
-		$defaultAuthCollection = $this->config->auth['collection'];
-		if (!$this->accessManager->userLoggedIn($defaultAuthCollection)) {
+		// Check if user is logged in (any auth collection)
+		// Pass empty string to accept any authenticated user, regardless of which collection they're in
+		if (!$this->accessManager->userLoggedIn('')) {
 			return $this->redirectToDenied($request);
 		}
 

@@ -8,7 +8,7 @@ class FolderData extends PropertyData
 	public array $files = [];
 
 	/** @param array<array<string,mixed>> $files */
-	public function __construct(public string $name, array $files = [])
+	public function __construct(public string $name = '', array $files = [])
 	{
 		$this->files = self::buildFolder($files);
 	}

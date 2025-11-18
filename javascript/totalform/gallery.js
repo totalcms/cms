@@ -123,6 +123,37 @@ export default class GalleryField extends ImageField {
 		this.setupPreview(image);
 	}
 
+	validate() {
+		// Clear any previous custom validity and call parent validation
+		this.input.setCustomValidity("");
+
+		if (!this.isVisible()) return true;
+
+		// Check if field is required
+		if (this.input.required) {
+			// Check if gallery has images by checking each preview
+			if (!this.preview || !Array.isArray(this.preview) || this.preview.length === 0) {
+				const message = `${this.label} is required - please upload at least one image`;
+				this.input.setCustomValidity(message);
+				this.input.reportValidity();
+				this.error(message);
+				return false;
+			}
+
+			// Check if all images in the gallery are valid
+			if (!this.hasImage()) {
+				const message = `${this.label} is required - please upload at least one image`;
+				this.input.setCustomValidity(message);
+				this.input.reportValidity();
+				this.error(message);
+				return false;
+			}
+			this.input.value = this.property; // Set a dummy value to satisfy HTML5 required validation
+		}
+
+		return super.validate();
+	}
+
 	schema() {
         return {
             type     : "gallery",

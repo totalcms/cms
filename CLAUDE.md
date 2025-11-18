@@ -34,11 +34,11 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ## Common Development Commands
 
 ### Build and Development
-```bash
-# Frontend asset building (primary development command)
-composer run esbuild
-yarn build
 
+You do not need to work about Frontend asset building (primary development command)
+There is a watch script in dev that will autobuild all front end assets
+
+```bash
 # Development with file watching (typically runs in background)
 bin/watch.sh
 

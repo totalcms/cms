@@ -70,6 +70,35 @@
 		{% endif %}
 
 		{{ cms.form.settings(currentSection) }}
+
+		{% if currentSection == 'smtp' %}
+		<section class="dash-content-section" style="margin-top: 40px;">
+			<h2>Test SMTP Configuration</h2>
+
+			{% if testResult is defined %}
+				{% if testResult.success %}
+					<p class="cms-success" role="alert">{{ testResult.message }}</p>
+				{% else %}
+					<p class="cms-error" role="alert">{{ testResult.message }}</p>
+				{% endif %}
+			{% else %}
+				<p>Send a test email to verify your SMTP settings are working correctly.</p>
+
+				{{ cms.form.simple('/admin/settings/smtp?test=1', '
+					<div class="field-wrapper field-email">
+						<label for="test_email">Test Email Address</label>
+						<input type="email" id="test_email" name="test_email" placeholder="your@email.com" required />
+						<div class="help">Enter the email address where you want to receive the test email.</div>
+					</div>
+				', {
+					'method': 'POST',
+					'label': 'Send Test Email',
+					'buttonClass': 'cms-secondary',
+					'ajax': false
+				}) }}
+			{% endif %}
+		</section>
+		{% endif %}
 	</section>
 </main>
 

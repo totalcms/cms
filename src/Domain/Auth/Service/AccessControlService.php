@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use Odan\Session\PhpSession;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Service for checking user access permissions based on assigned access groups.
@@ -15,6 +17,7 @@ readonly class AccessControlService
 	public function __construct(
 		private UserValidationService $userValidation,
 		private AccessGroupLister $accessGroupLister,
+		private PhpSession $session,
 	) {
 	}
 
@@ -423,8 +426,12 @@ readonly class AccessControlService
 	 */
 	private function getUserAccessGroups(string $userId): array
 	{
-		// Fetch user data
-		$user = $this->userValidation->validateUserById($userId);
+		// Get the collection the user is authenticated from (stored in session)
+		// This ensures we fetch the user from the correct auth collection (e.g., 'staff', 'auth')
+		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?: '';
+
+		// Fetch user data from their actual auth collection
+		$user = $this->userValidation->validateUserById($userId, $collection);
 		if ($user === []) {
 			return [];
 		}

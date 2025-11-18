@@ -57,6 +57,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
@@ -157,6 +158,12 @@ return [
 		// Ensure session directory exists
 		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
 			@mkdir($sessionConfig['save_path'], 0755, true);
+		}
+
+		// CRITICAL: Set cache_limiter BEFORE any other session configuration
+		// This prevents PHP from sending no-cache headers automatically
+		if (isset($sessionConfig['cache_limiter'])) {
+			session_cache_limiter($sessionConfig['cache_limiter']);
 		}
 
 		// Force session settings to prevent hosting provider overrides
@@ -310,6 +317,7 @@ return [
 		$container->get(CSRFTokenManager::class),
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
+		$container->get(JobManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -337,6 +345,7 @@ return [
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
 		$container->get(LicenseStatus::class),
+		$container->get(JobManager::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
@@ -609,6 +618,7 @@ return [
 	AccessControlService::class => fn (ContainerInterface $container): AccessControlService => new AccessControlService(
 		$container->get(UserValidationService::class),
 		$container->get(AccessGroupLister::class),
+		$container->get(PhpSession::class),
 	),
 
 	TotalCmsOneImporter::class => fn (ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(

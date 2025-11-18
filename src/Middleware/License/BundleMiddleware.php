@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 
 /**
@@ -24,10 +25,28 @@ readonly class BundleMiddleware implements MiddlewareInterface
 	{
 		$method = $request->getMethod();
 
-		if ($method !== 'GET') {
+		// Skip bundle check during setup to prevent premature file creation
+		if ($method !== 'GET' && !$this->isSetupRoute($request)) {
 			$this->bundleChecker->check();
 		}
 
 		return $handler->handle($request);
+	}
+
+	/**
+	 * Check if the current request is a setup route.
+	 */
+	private function isSetupRoute(ServerRequestInterface $request): bool
+	{
+		$routeContext = RouteContext::fromRequest($request);
+		$route        = $routeContext->getRoute();
+
+		if ($route instanceof \Slim\Interfaces\RouteInterface) {
+			$routeName = $route->getName();
+
+			return $routeName !== null && str_starts_with($routeName, 'setup-');
+		}
+
+		return false;
 	}
 }

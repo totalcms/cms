@@ -29,15 +29,26 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
+		// Skip setup check entirely in preview environment
+		// Preview uses pre-configured datadir and doesn't need setup workflow
+		if ($this->config->env === 'preview') {
+			return $handler->handle($request);
+		}
+
 		// Get the matched route
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		// Skip setup check for setup routes and login/first-user creation
+		// Skip setup check for setup routes and public assets
 		if ($route instanceof \Slim\Interfaces\RouteInterface) {
 			$routeName = $route->getName();
-			// TODO : remove login?
-			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset' || $routeName === 'login')) {
+			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset')) {
+				return $handler->handle($request);
+			}
+
+			// Allow login page if data directory exists (for first user creation)
+			// even if auth collection doesn't exist yet
+			if ($routeName === 'login' && $this->dataDirBasicExists()) {
 				return $handler->handle($request);
 			}
 		}
@@ -53,6 +64,16 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 	}
 
 	/**
+	 * Check if tcms-data directory exists (basic check).
+	 *
+	 * Used to allow login page access for first user creation.
+	 */
+	private function dataDirBasicExists(): bool
+	{
+		return $this->config->datadir !== '' && is_dir($this->config->datadir);
+	}
+
+	/**
 	 * Check if tcms-data directory is properly set up.
 	 *
 	 * A directory is considered "set up" if it contains an auth collection,
@@ -61,7 +82,7 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 	 */
 	private function dataDirExists(): bool
 	{
-		if ($this->config->datadir === '' || !is_dir($this->config->datadir)) {
+		if (!$this->dataDirBasicExists()) {
 			return false;
 		}
 

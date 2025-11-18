@@ -34,7 +34,7 @@ class CollectionData
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
 	public bool $prettyUrl          = false;           // use pretty URLs for the collection
 	public int $count               = 0;                    // total number of objects created in this collection
-	public int $totalObjects        = 0;                 // current number of objects in this collection
+	public int $totalObjects        = -1;                // current number of objects (-1 = not calculated yet)
 	public string $lastUpdated      = '';                // ISO 8601 datetime of last object modification
 
 	/** @var array<string> */
@@ -88,7 +88,7 @@ class CollectionData
 			'prettyUrl'          => $this->prettyUrl ?? false,
 			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
 			'count'              => $this->count ?? 0,
-			'totalObjects'       => $this->totalObjects ?? 0,
+			'totalObjects'       => max($this->totalObjects, 0),
 			'lastUpdated'        => $this->lastUpdated ?? '',
 		];
 

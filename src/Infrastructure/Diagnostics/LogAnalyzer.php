@@ -116,8 +116,8 @@ class LogAnalyzer
 
 		fclose($handle);
 
-		// Return most recent lines first
-		return array_reverse(array_slice($lines, -$maxLines));
+		// Return lines in natural order (oldest first) to preserve stack trace readability
+		return array_slice($lines, -$maxLines);
 	}
 
 	public function defaultLogfile(): string

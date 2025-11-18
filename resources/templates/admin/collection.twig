@@ -28,6 +28,12 @@
 				{% if cms.canAccessSchema(collectionSchema, 'read') %}
 				<li class="schema"><a href="schemas/{{ collectionSchema }}">Edit Schema</a></li>
 				{% endif %}
+				{# Show object link only when editing an object (css in edit.twig) #}
+				{% if collectionData.url and page %}
+				<li class="object-link" style="display:none">
+					<a href="{{ cms.objectUrl(collection, page) }}" target="_blank">Preview</a>
+				</li>
+				{% endif %}
 				{# Show duplicate link only when editing an object (css in edit.twig) #}
 				{% if cms.canAccessCollection(collection, 'create') %}
 				<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
