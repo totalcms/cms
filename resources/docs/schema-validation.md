@@ -312,6 +312,91 @@ You can combine multiple validation keywords for comprehensive data validation.
 }
 ```
 
+## Unique Values
+
+### unique
+
+Ensure that a property's value is unique across all objects in the collection.
+
+```json
+{
+	"unique": true
+}
+```
+
+**Example - Email field:**
+```json
+{
+	"email": {
+		"$ref": "https://www.totalcms.co/schemas/properties/email.json",
+		"label": "Email Address",
+		"unique": true
+	}
+}
+```
+
+**Example - Username field:**
+```json
+{
+	"username": {
+		"type": "string",
+		"field": "text",
+		"label": "Username",
+		"unique": true,
+		"minLength": 3,
+		"maxLength": 20
+	}
+}
+```
+
+**Important requirements:**
+- **Must be indexed**: Unique properties must be included in the schema's `index` array for performance
+- **Case-sensitive**: Uniqueness validation is case-sensitive (e.g., "test@example.com" and "TEST@example.com" are considered different)
+- **Empty values allowed**: Multiple objects can have empty/null values for a unique field
+- **Update behavior**: When updating an object, you can keep the same value, but cannot change to a value used by another object
+
+**Use cases:**
+- User emails (prevent duplicate registrations)
+- Usernames (ensure unique login identifiers)
+- Product SKUs (avoid inventory conflicts)
+- Slug fields (ensure unique URLs)
+
+**Error message:**
+When a duplicate value is detected, users will see an error message like:
+```
+Email must be unique. The value 'john@example.com' already exists in another object.
+```
+
+**Schema setup example with index:**
+```json
+{
+	"id": "user",
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string",
+			"label": "ID",
+			"field": "input"
+		},
+		"email": {
+			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
+			"label": "Email",
+			"unique": true
+		},
+		"username": {
+			"type": "string",
+			"label": "Username",
+			"field": "text",
+			"unique": true
+		}
+	},
+	"required": ["id", "email", "username"],
+	"index": ["id", "email", "username"]
+}
+```
+
+**Note:** If you mark a property as unique but don't include it in the index, you'll receive a helpful error message prompting you to add it to the index.
+
 ## Disabling Automatic Required Validation
 
 If you want to allow empty values for a required field, explicitly set:
@@ -418,6 +503,33 @@ When validation fails, Total CMS will display clear error messages to users:
 		"label": "Product Images",
 		"minItems": 3,
 		"maxItems": 20
+	}
+}
+```
+
+### Unique username with validation
+```json
+{
+	"username": {
+		"type": "string",
+		"field": "text",
+		"label": "Username",
+		"unique": true,
+		"minLength": 3,
+		"maxLength": 20,
+		"pattern": "^[a-z0-9_-]+$"
+	}
+}
+```
+
+### Unique email address
+```json
+{
+	"email": {
+		"$ref": "https://www.totalcms.co/schemas/properties/email.json",
+		"label": "Email Address",
+		"unique": true,
+		"maxLength": 255
 	}
 }
 ```
