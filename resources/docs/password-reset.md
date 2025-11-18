@@ -194,6 +194,25 @@ For custom authentication collections:
 /reset-password/{token}  (automatically uses correct collection from token)
 ```
 
+### URL Parameters
+
+The forgot password form supports an `email` query parameter to pre-fill the email field:
+
+```
+/forgot-password?email=user@example.com
+/forgot-password/clients?email=client@company.com
+```
+
+This is useful for:
+- Directing users from other parts of your application
+- Pre-filling the email when you already know their address
+- Creating custom "reset password" links in user profiles
+
+**Example usage:**
+```html
+<a href="/forgot-password?email={{ user.email }}">Reset your password</a>
+```
+
 ## Template Customization
 
 ### Whitelabel Templates
