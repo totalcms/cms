@@ -29,6 +29,12 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
+		// Skip setup check entirely in preview environment
+		// Preview uses pre-configured datadir and doesn't need setup workflow
+		if ($this->config->env === 'preview') {
+			return $handler->handle($request);
+		}
+
 		// Get the matched route
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
