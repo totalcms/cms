@@ -37,7 +37,10 @@ export default class Identifier extends TotalField {
     }
 
 	changed() {
-		this.form.setId(this.getValue());
+		// Don't update form ID when in deck context (deck items have their own IDs)
+		if (!this.isInDeck) {
+			this.form.setId(this.getValue());
+		}
 		// don't trigger change events for ID field
 		// turning this on will cause infinite event loops
 		return;
