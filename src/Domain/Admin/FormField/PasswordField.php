@@ -16,9 +16,16 @@ class PasswordField extends FormField
 		$mainInput  = HTMLUtils::inlineElement('input', $attributes);
 
 		// Confirm Password Input
-		$attributes['name'] .= '-confirm';
-		$attributes['id'] .= '-confirm';
-		$confirmInput = HTMLUtils::inlineElement('input', $attributes);
+		$confirmAttributes = $attributes;
+		$confirmAttributes['name'] .= '-confirm';
+		$confirmAttributes['id'] .= '-confirm';
+
+		// Use confirmPlaceholder setting if provided, otherwise use same placeholder
+		if (isset($this->settings['confirmPlaceholder']) && $this->settings['confirmPlaceholder'] !== '') {
+			$confirmAttributes['placeholder'] = $this->settings['confirmPlaceholder'];
+		}
+
+		$confirmInput = HTMLUtils::inlineElement('input', $confirmAttributes);
 
 		$icon = $this->icon ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';
 
