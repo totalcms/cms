@@ -341,7 +341,7 @@ class ImageGenerator
 		$notModified = false;
 
 		// Check conditional headers if request is provided
-		if ($request !== null) {
+		if ($request instanceof ServerRequestInterface) {
 			// Check If-None-Match (ETag)
 			$ifNoneMatch = $request->getHeaderLine('If-None-Match');
 			if ($ifNoneMatch === $etag) {
