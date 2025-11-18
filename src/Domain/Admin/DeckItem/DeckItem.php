@@ -137,12 +137,12 @@ class DeckItem
 	protected function generateLabel(): string
 	{
 		// Replace placeholders in the pattern with actual values
-		$label = (string)preg_replace_callback('/\$\{(.*?)\}/', function ($matches) {
+		$label = (string)preg_replace_callback('/\$\{(.*?)\}/', function ($matches): string {
 			$fieldName = $matches[1];
 
 			// Special handling for 'id' field
 			if ($fieldName === 'id') {
-				return $this->itemId !== '' ? $this->itemId : '';
+				return $this->itemId;
 			}
 
 			// Get value from item data
