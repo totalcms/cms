@@ -215,14 +215,18 @@ readonly class SettingsValidator
 		}
 
 		// Convert numeric fields to integers
-		if (isset($data['maxAttempts'])) {
-			$data['maxAttempts'] = (int)$data['maxAttempts'];
-		}
-		if (isset($data['deniedTimeout'])) {
-			$data['deniedTimeout'] = (int)$data['deniedTimeout'];
-		}
-		if (isset($data['persistentLoginDays'])) {
-			$data['persistentLoginDays'] = (int)$data['persistentLoginDays'];
+		$numericFields = [
+			'maxAttempts',
+			'downloadMaxAttempts',
+			'deniedTimeout',
+			'persistentLoginDays',
+			'resetTokenExpiry',
+		];
+
+		foreach ($numericFields as $field) {
+			if (isset($data[$field])) {
+				$data[$field] = (int)$data[$field];
+			}
 		}
 
 		return $data;

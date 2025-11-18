@@ -100,7 +100,7 @@ readonly class ForgotPasswordSubmitAction
 		$resetUrl = $this->config->url . $this->config->api . '/reset-password/' . $token;
 
 		// Get expiry minutes from config
-		$expiryMinutes = $this->config->auth['resetTokenExpiry'] ?? 30;
+		$expiryMinutes = (int)($this->config->auth['resetTokenExpiry'] ?? 30);
 
 		// Check if custom mailer is configured
 		$mailerId = $this->config->auth['forgotPasswordMailerId'] ?? '';
