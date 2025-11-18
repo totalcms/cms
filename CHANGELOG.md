@@ -2,6 +2,67 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.45] - 2025-11-18
+
+### Added
+
+- **Gallery Numeric Index**: Access gallery images by numeric index (1-based)
+  - `cms.galleryImage(gallery, 1)` returns the first image
+  - `cms.galleryImage(gallery, 3)` returns the third image
+  - Works with `galleryPath()`, `galleryAlt()`, and `galleryImageData()`
+- **Unique Property Support**: Schema properties can now enforce uniqueness across objects
+- **SMTP Tester**: New utility to test SMTP email configuration
+- **Deck Item Labels**: Custom labels for deck field items with `deckItemLabel` setting
+- **Preview Action**: Object preview action in admin interface
+
+### Enhanced
+
+- **Performance Improvements**:
+  - Major image processing performance optimizations
+  - Request-level memoization for collection and object fetching
+  - Reduced response times from ~2000ms to ~340ms in some cases
+- **License Caching**: Improved resilience during license server outages
+  - Separated cache refresh interval (24h) from storage TTL (7d)
+  - License data preserved when clearing all caches
+- **Asset Caching**: Better `/assets` endpoint caching
+- **Image Caching**: Improved image cache headers with robots indexing support
+- **Form System**:
+  - Schema field settings now merge with Twig macro settings
+  - Better property defaults when not set in request
+  - Less strict field change event handling
+  - Schema descriptions no longer required
+  - Default to `equal` operator for `filterCollection()`
+- **Password Reset**: User information included in password reset emails
+- **Image Alt Text**: Improved automatic alt text generation
+- **Focal Point Cropping**: Better crop focal point for blog post related images
+- **Required Validation**: Enhanced validation for image, file, and gallery fields
+- **Relational Options**: Can set to `false` to disable; validates array type
+- **Data Organization**: Moved `.bundle` and job queue to `tcms-data` directory
+
+### Fixed
+
+- **Setup Flow**: Fixed login redirect to setup on first load
+- **Preview Environment**: Skip setup check when in preview environment
+- **License Validation**: Better handling when license server is unavailable
+- **Deck Fields**:
+  - Fixed deck ID setting form conflicts
+  - Fixed form ID conflicts with deck items
+- **Auth Settings**: Fixed settings being saved as strings instead of proper types
+- **Empty Settings**: Fixed saving empty settings values
+- **Single Field Forms**: Fixed ID field showing when no object exists
+- **Access Controls**: Fixed access controls for non-default auth collections
+- **Required Fields**: Fixed empty indexes when new required field is added
+- **Checkbox/Toggle**: Fixed not saving when value is false
+- **Custom Emails**: Fixed user name display in custom emails
+- **Log Content**: Fixed log content ordering
+- **Custom Path Setup**: Fixed custom path configuration in setup
+- **Preview Admin Embed**: Fixed admin embed in preview mode
+
+### Removed
+
+- **imageFromData**: Removed deprecated `imageFromData` Twig function
+
+
 ## [3.0.44] - 2025-11-11
 
 ### Added
