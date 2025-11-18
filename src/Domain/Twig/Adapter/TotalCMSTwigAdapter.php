@@ -1044,59 +1044,6 @@ NGINX;
 		return $html;
 	}
 
-	/**
-	 * Create image HTML from provided image data (without fetching from CMS).
-	 *
-	 * @param array<string,mixed> $imageData Image data array
-	 * @param string $id of the object with the image
-	 * @param array<string,string|int> $imageworks Imageworks processing options
-	 * @param array<string,mixed> $options Additional options
-	 *
-	 * @return string Image HTML
-	 */
-	public function imageFromData(array $imageData, string $id, array $imageworks = [], array $options = []): string
-	{
-		if ($imageData === []) {
-			return '';
-		}
-
-		$options = array_merge([
-			'collection' => 'image',
-			'property'   => 'image',
-			'loading'    => 'lazy',
-		], $options);
-
-		if ($id === '') {
-			return '';
-		}
-
-		// Build path using buildImageworksAPI if we have enough data
-		$imagePath = self::buildImageworksAPI($this->api, $id, $imageData, $imageworks, $options);
-		if ($imagePath === '') {
-			return '';
-		}
-
-		// Get alt text from various possible keys
-		$alt = $options['alt'] ?? $imageData['alt'] ?? $imageData['exif']['title'] ?? $imageData['exif']['description'] ?? $id;
-
-		$html = HTMLUtils::inlineElement('img', [
-			'src'           => $imagePath,
-			'alt'           => $alt,
-			'class'         => $options['class'] ?? null,
-			'loading'       => $options['loading'],
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
-
-		// Add link wrapper if present
-		$link = $imageData['link'] ?? '';
-		if (!empty($link)) {
-			$html = HTMLUtils::element('a', $html, ['href' => $link]);
-		}
-
-		return $html;
-	}
-
 	// Get the image path for an image property
 	/**
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string

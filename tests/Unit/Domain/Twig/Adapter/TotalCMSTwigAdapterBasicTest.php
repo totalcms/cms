@@ -359,21 +359,4 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		expect($result)->toContain('Next');
 	}
 
-	public function testImageFromDataWithEmptyData(): void
-	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-
-		$result = $adapter->imageFromData([], 'test-id');
-
-		expect($result)->toBe('');
-	}
-
-	public function testImageFromDataWithEmptyId(): void
-	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-
-		$result = $adapter->imageFromData(['filename' => 'test.jpg'], '');
-
-		expect($result)->toBe('');
-	}
 }

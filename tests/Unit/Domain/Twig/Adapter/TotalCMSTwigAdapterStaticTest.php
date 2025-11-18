@@ -268,18 +268,6 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		expect($adapter->imagePath('test-id'))->toBe('');
 	}
 
-	public function testImageFromDataMethodEdgeCases(): void
-	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-
-		// Test with empty data
-		expect($adapter->imageFromData([], 'test-id'))->toBe('');
-
-		// Test with empty ID
-		expect($adapter->imageFromData(['filename' => 'test.jpg'], ''))->toBe('');
-
-		// Note: imageFromData requires string $id parameter, so we can't pass null
-	}
 
 	public function testGalleryPathMethodEdgeCases(): void
 	{
