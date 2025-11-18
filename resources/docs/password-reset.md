@@ -77,16 +77,18 @@ You can create custom password reset email templates using the Mailer collection
 
 ### Available Twig Variables
 
-When creating custom password reset email templates, the following variables are available:
+When creating custom password reset email templates, the following variables are available via the `data` object:
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `name` | string | User's name from their account (may be empty) |
-| `email` | string | Email address receiving the reset link |
-| `user` | ObjectData | Complete user object with all fields from the auth collection |
-| `resetUrl` | string | Complete password reset URL with token |
-| `expiryMinutes` | integer | Number of minutes before token expires |
-| `collection` | string | Authentication collection name |
+| `data.name` | string | User's name from their account (may be empty) |
+| `data.email` | string | Email address receiving the reset link |
+| `data.user` | array | Complete user object with all fields from the auth collection |
+| `data.resetUrl` | string | Complete password reset URL with token |
+| `data.expiryMinutes` | integer | Number of minutes before token expires |
+| `data.collection` | string | Authentication collection name |
+
+**Note**: All variables must be accessed via the `data` object (e.g., `{{ data.resetUrl }}`), which is consistent with all custom mailer templates in Total CMS.
 
 ### Example Custom Template
 
@@ -101,23 +103,23 @@ When creating custom password reset email templates, the following variables are
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2>Password Reset Request</h2>
 
-        {% if name %}
-            <p>Hello {{ name }},</p>
+        {% if data.name %}
+            <p>Hello {{ data.name }},</p>
         {% else %}
             <p>Hello,</p>
         {% endif %}
 
-        <p>We received a request to reset your password for your account at {{ email }}.</p>
+        <p>We received a request to reset your password for your account at {{ data.email }}.</p>
 
         <p style="margin: 30px 0;">
-            <a href="{{ resetUrl }}"
+            <a href="{{ data.resetUrl }}"
                style="background-color: #007bff; color: white; padding: 12px 24px;
                       text-decoration: none; border-radius: 4px; display: inline-block;">
                 Reset Your Password
             </a>
         </p>
 
-        <p>This link will expire in {{ expiryMinutes }} minutes for security reasons.</p>
+        <p>This link will expire in {{ data.expiryMinutes }} minutes for security reasons.</p>
 
         <p>If you didn't request this password reset, you can safely ignore this email.
            Your password will remain unchanged.</p>
@@ -126,17 +128,17 @@ When creating custom password reset email templates, the following variables are
 
         <p style="font-size: 12px; color: #666;">
             If the button doesn't work, copy and paste this link into your browser:<br>
-            <a href="{{ resetUrl }}">{{ resetUrl }}</a>
+            <a href="{{ data.resetUrl }}">{{ data.resetUrl }}</a>
         </p>
     </div>
 </body>
 </html>
 ```
 
-**Note**: The `user` variable provides access to all fields from the user's account. For example:
-- `{{ user.name }}` - User's name
-- `{{ user.email }}` - User's email address
-- `{{ user.customField }}` - Any custom fields you've added to your auth collection
+**Note**: The `data.user` variable provides access to all fields from the user's account. For example:
+- `{{ data.user.name }}` - User's name
+- `{{ data.user.email }}` - User's email address
+- `{{ data.user.customField }}` - Any custom fields you've added to your auth collection
 
 ## User Workflow
 
