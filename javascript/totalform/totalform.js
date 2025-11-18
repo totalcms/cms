@@ -175,7 +175,10 @@ export default class TotalForm {
 	getId() {
 		if (this.isEditMode()) return this.id;
 
-		const idField = this.fields.filter(field => field.property === "id").shift();
+		// Filter for main form's ID field, excluding subfields (like deck item IDs)
+		const idField = this.fields.filter(field => {
+			return field.property === "id" && !field.isSubField();
+		}).shift();
 		if (idField) return idField.getValue();
 
 		console.warn("ID field not found");
@@ -619,6 +622,11 @@ export default class TotalForm {
 	}
 
     success(response = null) {
+		// Extract ID from response for new objects
+		if (response && response.id && (!this.id || this.id.length === 0)) {
+			this.id = response.id;
+			this.form.dataset.id = response.id;
+		}
 		this.setupEditMode();
 		this.changeState("success", response);
 		this.validated = false;
