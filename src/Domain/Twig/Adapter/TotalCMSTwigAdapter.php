@@ -607,9 +607,9 @@ NGINX;
 
 	// Get collection meta data
 	/** @return array<string,mixed> */
-	public function collection(string $collection): array
+	public function collection(string $collectionId): array
 	{
-		$collection = $this->collectionFetcher->fetchCollection($collection);
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
 		if (!$collection instanceof CollectionData) {
 			return [];

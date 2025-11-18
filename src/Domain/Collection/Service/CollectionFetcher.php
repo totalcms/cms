@@ -8,9 +8,12 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 /**
  * Service.
  */
-readonly class CollectionFetcher
+class CollectionFetcher
 {
-	public function __construct(private CollectionRepository $storage)
+	/** @var array<string, CollectionData|null> Request-level cache for fetched collections */
+	private array $cache = [];
+
+	public function __construct(private readonly CollectionRepository $storage)
 	{
 	}
 
@@ -21,16 +24,29 @@ readonly class CollectionFetcher
 	 */
 	public function fetchCollection(string $collectionId): ?CollectionData
 	{
+		// Check request-level cache first
+		if (array_key_exists($collectionId, $this->cache)) {
+			return $this->cache[$collectionId];
+		}
+
 		if ($this->collectionExists($collectionId)) {
-			return $this->storage->getCollection($collectionId);
+			$collection = $this->storage->getCollection($collectionId);
+			$this->cache[$collectionId] = $collection;
+
+			return $collection;
 		}
 
 		if ($this->storage->isReservedCollection($collectionId)) {
 			// If the collection is not found or invalid, try to create it
 			$this->storage->saveReservedCollection($collectionId);
 
-			return $this->storage->getCollection($collectionId);
+			$collection = $this->storage->getCollection($collectionId);
+			$this->cache[$collectionId] = $collection;
+
+			return $collection;
 		}
+
+		$this->cache[$collectionId] = null;
 
 		return null;
 	}
@@ -38,5 +54,18 @@ readonly class CollectionFetcher
 	public function collectionExists(string $collectionId): bool
 	{
 		return $this->storage->collectionExists($collectionId);
+	}
+
+	/**
+	 * Clear the request-level cache.
+	 * Useful after saving/updating a collection.
+	 */
+	public function clearCache(?string $collectionId = null): void
+	{
+		if ($collectionId !== null) {
+			unset($this->cache[$collectionId]);
+		} else {
+			$this->cache = [];
+		}
 	}
 }

@@ -97,7 +97,8 @@ class CollectionRepository extends StorageRepository
 
 		// Auto-calculate totalObjects if missing (backward compatibility)
 		// Calculate in-memory only - values persist on next normal save operation
-		if ($collectionData->totalObjects === 0) {
+		// Use -1 as sentinel for "not calculated" to distinguish from "actually 0 objects"
+		if ($collectionData->totalObjects < 0) {
 			$collectionData->totalObjects = $this->calculateObjectCount($collection);
 		}
 
