@@ -132,7 +132,8 @@ final class SettingsValidatorTest extends TestCase
 
 		$result = $this->validator->processSection('dashboard', $data);
 
-		$this->assertArrayNotHasKey('title', $result, 'Empty values should be removed');
+		$this->assertArrayHasKey('title', $result, 'Empty strings should be preserved to allow clearing values');
+		$this->assertEquals('', $result['title']);
 		$this->assertEquals(50, $result['pagination']);
 		$this->assertEquals('#4d91e2', $result['accent']);
 	}
@@ -459,7 +460,8 @@ final class SettingsValidatorTest extends TestCase
 
 		$result = $this->validator->processSection('general', $data);
 
-		$this->assertArrayNotHasKey('datadir', $result);
+		$this->assertArrayHasKey('datadir', $result, 'Empty strings should be preserved to allow clearing values');
+		$this->assertEquals('', $result['datadir']);
 		$this->assertEquals('UTC', $result['timezone']);
 		$this->assertTrue($result['debug']);
 	}
@@ -488,7 +490,8 @@ final class SettingsValidatorTest extends TestCase
 
 		$result = $this->validator->processSection('unknown', $data);
 
-		$this->assertArrayNotHasKey('field2', $result);
+		$this->assertArrayHasKey('field2', $result, 'Empty strings should be preserved to allow clearing values');
+		$this->assertEquals('', $result['field2']);
 		$this->assertEquals('value1', $result['field1']);
 		$this->assertEquals('value3', $result['field3']);
 	}
