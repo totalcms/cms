@@ -14,7 +14,6 @@ use TotalCMS\Support\Config;
  */
 readonly class LicenseValidator
 {
-	private const CACHE_KEY  = 'license_validation';
 	private const JWT_SECRET = 'VwRmMdlSNBD1soVXlNklfzKTkXpU5Bnc4cAiQrCi3tvsHfVpz3L2XDrCxv3UImAj';
 
 	public function __construct(
@@ -64,7 +63,7 @@ readonly class LicenseValidator
 	 */
 	private function getCachedLicense(): ?LicenseData
 	{
-		$cached = $this->cacheManager->getLicenseData(self::CACHE_KEY);
+		$cached = $this->cacheManager->getLicenseData(LicenseData::CACHE_KEY);
 
 		return $cached instanceof LicenseData ? $cached : null;
 	}
@@ -74,7 +73,7 @@ readonly class LicenseValidator
 	 */
 	private function cacheLicense(LicenseData $licenseData): void
 	{
-		$this->cacheManager->storeLicenseData(self::CACHE_KEY, $licenseData, LicenseData::CACHE_TTL);
+		$this->cacheManager->storeLicenseData(LicenseData::CACHE_KEY, $licenseData, LicenseData::CACHE_STORAGE_TTL);
 	}
 
 	/**
@@ -82,7 +81,7 @@ readonly class LicenseValidator
 	 */
 	public function clearCache(): void
 	{
-		$this->cacheManager->clearLicenseData(self::CACHE_KEY);
+		$this->cacheManager->clearLicenseData(LicenseData::CACHE_KEY);
 	}
 
 	/**
