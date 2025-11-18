@@ -21,7 +21,7 @@ describe('LicenseValidator Caching', function (): void {
 			validationToken: 'token',
 			updatesValid: true,
 			trialDaysRemaining: null,
-			timestamp: time() - (1 * 60 * 60) // 1 hour ago
+			timestamp: time() - (60 * 60) // 1 hour ago
 		);
 
 		expect($freshLicense->isCacheValid())->toBe(true);

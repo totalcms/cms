@@ -1424,8 +1424,9 @@ NGINX;
 
 		// Check if name is a numeric index (1-based for user-friendliness)
 		if (is_numeric($name)) {
-			$index = (int)$name - 1; // Convert to 0-based
+			$index  = (int)$name - 1; // Convert to 0-based
 			$values = array_values($gallery); // Re-index array
+
 			return $values[$index] ?? null;
 		}
 
