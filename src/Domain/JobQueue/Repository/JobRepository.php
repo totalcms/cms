@@ -6,13 +6,12 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
-readonly class JobRepository
+class JobRepository
 {
-	private \PDO $db;
+	private ?\PDO $db = null;
 
-	public function __construct(private Config $config)
+	public function __construct(private readonly Config $config)
 	{
-		$this->db = $this->createDb();
 	}
 
 	private function getDbPath(): string
@@ -25,8 +24,18 @@ readonly class JobRepository
 		return file_exists($this->getDbPath());
 	}
 
-	private function createDb(): \PDO
+	/**
+	 * Lazy-load database connection - only creates the database when first needed.
+	 * This prevents unnecessary file creation during setup or when job queue is not used.
+	 *
+	 * @return \PDO
+	 */
+	private function getDb(): \PDO
 	{
+		if ($this->db !== null) {
+			return $this->db;
+		}
+
 		$dbPath = $this->getDbPath();
 		$exists = $this->dbExists();
 
@@ -36,10 +45,10 @@ readonly class JobRepository
 			mkdir($dir, 0755, true);
 		}
 
-		$db = new \PDO('sqlite:' . $dbPath);
+		$this->db = new \PDO('sqlite:' . $dbPath);
 
 		if (!$exists) {
-			$db->exec(<<<SQL
+			$this->getDb()->exec(<<<SQL
 				CREATE TABLE jobqueue (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					type TEXT NOT NULL,
@@ -54,7 +63,7 @@ readonly class JobRepository
 			SQL);
 		}
 
-		return $db;
+		return $this->db;
 	}
 
 	private function markInProgress(JobData $job): JobData
@@ -79,7 +88,7 @@ readonly class JobRepository
 				lastError = :lastError
 			WHERE id = :id
 		SQL;
-		$stmt = $this->db->prepare($sql);
+		$stmt = $this->getDb()->prepare($sql);
 		$stmt->bindValue(':id', $job->id);
 		$stmt->bindValue(':status', $job->status);
 		$stmt->bindValue(':attempts', $job->attempts);
@@ -97,7 +106,7 @@ readonly class JobRepository
 			ORDER BY id ASC
 			LIMIT 1
 		SQL;
-		$stmt = $this->db->prepare($sql);
+		$stmt = $this->getDb()->prepare($sql);
 		$stmt->execute();
 
 		if (!$stmt) {
@@ -118,7 +127,7 @@ readonly class JobRepository
 
 	public function hasReindexQueuedFromCollection(string $collection): bool
 	{
-		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' and collection = :collection LIMIT 1");
+		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' and collection = :collection LIMIT 1");
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
 		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -128,7 +137,7 @@ readonly class JobRepository
 
 	public function hasPendingJobs(): bool
 	{
-		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' LIMIT 1");
+		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' LIMIT 1");
 		$stmt->execute();
 		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -137,7 +146,7 @@ readonly class JobRepository
 
 	public function delete(JobData $job): bool
 	{
-		$stmt = $this->db->prepare('DELETE FROM jobqueue WHERE id = :id');
+		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue WHERE id = :id');
 		$stmt->bindValue(':id', $job->id);
 
 		return $stmt->execute();
@@ -152,7 +161,7 @@ readonly class JobRepository
 
 	public function fetchJobById(int $id): JobData
 	{
-		$stmt = $this->db->prepare('SELECT * FROM jobqueue WHERE id = :id');
+		$stmt = $this->getDb()->prepare('SELECT * FROM jobqueue WHERE id = :id');
 		$stmt->bindValue(':id', $id);
 		$stmt->execute();
 		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -173,13 +182,13 @@ readonly class JobRepository
 			INSERT INTO jobqueue (type, payload, collection)
 			VALUES (:type, :payload, :collection)
 		SQL;
-		$stmt = $this->db->prepare($sql);
+		$stmt = $this->getDb()->prepare($sql);
 		$stmt->bindValue(':type', $type);
 		$stmt->bindValue(':payload', $payload);
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
 
-		$id = $this->db->lastInsertId();
+		$id = $this->getDb()->lastInsertId();
 		if (!$id) {
 			throw new \DomainException('Failed to insert job into the queue');
 		}
@@ -193,14 +202,14 @@ readonly class JobRepository
 		$results = [];
 
 		foreach (JobData::TYPE_LIST as $type) {
-			$stmt = $this->db->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type');
+			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type');
 			$stmt->bindValue(':type', $type);
 			$stmt->execute();
 			$results[ucfirst($type)] = $stmt ? intval($stmt->fetchColumn()) : 0;
 		}
 		ksort($results);
 
-		// $stmt  = $this->db->query('SELECT COUNT(*) as total FROM jobqueue');
+		// $stmt  = $this->getDb()->query('SELECT COUNT(*) as total FROM jobqueue');
 		// $total = $stmt ? intval($stmt->fetchColumn()) : 0;
 		// $results['Total'] = $total;
 
@@ -210,13 +219,13 @@ readonly class JobRepository
 	/** @return array<string,int>  */
 	public function queueByStatus(): array
 	{
-		$stmt  = $this->db->query('SELECT COUNT(*) as total FROM jobqueue');
+		$stmt  = $this->getDb()->query('SELECT COUNT(*) as total FROM jobqueue');
 		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
 
 		$results = [];
 
 		foreach (JobData::STATUS_LIST as $status) {
-			$stmt = $this->db->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status');
+			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status');
 			$stmt->bindValue(':status', $status);
 			$stmt->execute();
 			$results[$status] = $stmt ? intval($stmt->fetchColumn()) : 0;
@@ -237,7 +246,7 @@ readonly class JobRepository
 		$results = [];
 
 		foreach (JobData::TYPE_LIST as $type) {
-			$stmt = $this->db->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type AND collection = :collection');
+			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type AND collection = :collection');
 			$stmt->bindValue(':type', $type);
 			$stmt->bindValue(':collection', $collection);
 			$stmt->execute();
@@ -245,7 +254,7 @@ readonly class JobRepository
 		}
 		ksort($results);
 
-		// $stmt  = $this->db->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
+		// $stmt  = $this->getDb()->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
 		// $stmt->bindValue(':collection', $collection);
 		// $total = $stmt ? intval($stmt->fetchColumn()) : 0;
 		// $results['Total'] = $total;
@@ -256,7 +265,7 @@ readonly class JobRepository
 	/** @return array<string,int>  */
 	public function queueByStatusForCollection(string $collection): array
 	{
-		$stmt = $this->db->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
+		$stmt = $this->getDb()->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
 		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
@@ -264,7 +273,7 @@ readonly class JobRepository
 		$results = [];
 
 		foreach (JobData::STATUS_LIST as $status) {
-			$stmt = $this->db->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status AND collection = :collection');
+			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status AND collection = :collection');
 			$stmt->bindValue(':status', $status);
 			$stmt->bindValue(':collection', $collection);
 			$stmt->execute();
@@ -282,14 +291,14 @@ readonly class JobRepository
 
 	public function clearQueue(): bool
 	{
-		$stmt = $this->db->prepare('DELETE FROM jobqueue');
+		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue');
 
 		return $stmt->execute();
 	}
 
 	public function clearQueueForCollection(string $collection): bool
 	{
-		$stmt = $this->db->prepare('DELETE FROM jobqueue WHERE collection = :collection');
+		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue WHERE collection = :collection');
 		$stmt->bindValue(':collection', $collection);
 
 		return $stmt->execute();
@@ -312,7 +321,7 @@ readonly class JobRepository
 			$sql .= ' LIMIT :limit';
 		}
 
-		$stmt = $this->db->prepare($sql);
+		$stmt = $this->getDb()->prepare($sql);
 		$stmt->bindValue(':status', JobData::STATUS_PENDING);
 		if ($limit !== null) {
 			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
@@ -344,7 +353,7 @@ readonly class JobRepository
 			$sql .= ' LIMIT :limit';
 		}
 
-		$stmt = $this->db->prepare($sql);
+		$stmt = $this->getDb()->prepare($sql);
 		$stmt->bindValue(':status', JobData::STATUS_FAILED);
 		if ($limit !== null) {
 			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
