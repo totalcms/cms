@@ -1356,7 +1356,7 @@ NGINX;
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryImage(string|array|null $idOrObject, ?string $name, array $imageworks = [], array $options = []): string
+	public function galleryImage(string|array|null $idOrObject, string|int|null $name, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
@@ -1404,7 +1404,7 @@ NGINX;
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	public function galleryImageData(string|array $idOrObject, string $name, array $options = []): ?array
+	public function galleryImageData(string|array $idOrObject, string|int $name, array $options = []): ?array
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
@@ -1418,11 +1418,16 @@ NGINX;
 			$gallery = $this->data($options['collection'], $idOrObject, $options['property']);
 		}
 
-		if (!is_array($gallery)) {
+		if (!is_array($gallery) || $gallery === []) {
 			return null;
 		}
 
-		$image = array_filter($gallery, fn (array $image): bool => pathinfo((string)$image['name'])['filename'] === $name);
+		// Check if name is a numeric index (1-based for user-friendliness)
+		if (is_numeric($name)) {
+			$index = (int)$name - 1; // Convert to 0-based
+			$values = array_values($gallery); // Re-index array
+			return $values[$index] ?? null;
+		}
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
@@ -1440,7 +1445,7 @@ NGINX;
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryPath(string|array|null $idOrObject, ?string $name, array $imageworks = [], array $options = []): string
+	public function galleryPath(string|array|null $idOrObject, string|int|null $name, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
@@ -1463,7 +1468,10 @@ NGINX;
 
 		$image = $this->galleryImageData($idOrObject, $name, $options) ?? [];
 
-		return self::buildImageworksGalleryAPI($this->api, $id, $name, $image, $imageworks, $options);
+		// When $name is a numeric index (int or string), get the actual filename from the resolved image
+		$imageName = is_numeric($name) ? (string)($image['name'] ?? '') : $name;
+
+		return self::buildImageworksGalleryAPI($this->api, $id, $imageName, $image, $imageworks, $options);
 	}
 
 	/**
@@ -1579,7 +1587,7 @@ NGINX;
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 */
-	public function galleryAlt(string|array $idOrObject, string $name, array $options = []): string
+	public function galleryAlt(string|array $idOrObject, string|int $name, array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
