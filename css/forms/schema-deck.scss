@@ -69,10 +69,11 @@
 	}
 }
 
-.deck-item button:active,
+.drag-ghost,
+.deck-item .sort-handle:active,
 .properties-field button:active,
 .customProperties-object > summary:active {
-	cursor : grabbing;
+	cursor : grabbing !important;
 }
 
 .customProperties-field summary {
@@ -222,11 +223,40 @@
 	}
 }
 .deck-item {
-	padding : 0.5rem;
+	padding               : 0.5rem 1rem;
+	grid-template-columns : auto max-content max-content max-content;
 
 	&:before, &:after {
 		display : none;
 	}
+
+	.deck-item-label {
+		appearance       : none;
+		border           : none;
+		background-color : transparent;
+		display          : inline-block;
+		cursor           : grab;
+		mask-image       : none;
+		padding          : 0.5rem 0;
+		min-width        : 250px;
+		text-align       : left;
+		overflow         : hidden;
+		text-overflow    : ellipsis;
+		white-space      : nowrap;
+		color            : oklch(var(--totalform-darkgray));
+		font-weight      : normal;
+		border-radius    : var(--totalform-radius);
+		transition       : background-color 200ms ease-in-out;
+
+		svg {
+			display         : inline-block;
+			max-height      : 1rem;
+			max-width       : 1.5rem;
+			width           : auto;
+			height          : auto;
+		}
+	}
+
 }
 
 .property-field {

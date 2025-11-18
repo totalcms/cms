@@ -36,7 +36,7 @@ class DeckData extends PropertyData
 		foreach ($deck as $name => $item) {
 			// Allow both string and int keys, validate the string representation
 			$stringName = (string)$name;
-			// Allow alphanumeric characters and underscores
+			// Allow alphanumeric characters and underscores (no hyphens for Twig dot notation)
 			if (!preg_match('/^\w+$/', $stringName)) {
 				return false;
 			}

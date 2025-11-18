@@ -25,6 +25,9 @@ export default class DeckField extends TotalField {
         }
         this.initSortable();
 
+        // Initialize oid counter based on existing items (never decreases)
+        this.initOidCounter();
+
         // Get template for new items
         this.template = this.container.querySelector("template.deck-template");
 
@@ -33,18 +36,19 @@ export default class DeckField extends TotalField {
         this.addButton?.addEventListener("click", this.addItem.bind(this));
     }
 
-    manualIdSync(deckItem) {
-        const deckItemIdField = deckItem.container.querySelector("input[name='deck-item-id']");
-        const dialogIdField = deckItem.dialog.dialog.querySelector("input[name='id']");
-
-        if (!deckItemIdField || !dialogIdField) return;
-
-        // If dialog ID field has a value (from autogen) but deck-item-id doesn't, sync it
-        if (dialogIdField.value && !deckItemIdField.value) {
-            const sanitizedValue = dialogIdField.value.replace(/-/g, '_');
-            deckItemIdField.value = sanitizedValue;
-        }
+    initOidCounter() {
+        // Initialize the counter based on the number of existing items
+        // This counter will only increase, never decrease (even when items are deleted)
+        const existingCount = this.container.querySelectorAll('.deck-item').length;
+        this.oidCounter = existingCount;
     }
+
+    getNextOid() {
+        // Increment and return the next oid
+        this.oidCounter++;
+        return this.oidCounter;
+    }
+
 
     initSortable() {
         // Destroy existing sortable instance if it exists
@@ -81,11 +85,11 @@ export default class DeckField extends TotalField {
         const deckItems = parent.querySelectorAll(`.${this.fieldClass}`);
         const itemElement = deckItems[deckItems.length - 1];
 
-        // Clear the ID field and focus on it
-        const idInput = itemElement.querySelector("input[name='deck-item-id']");
-        if (idInput) {
-            idInput.value = '';
-            idInput.focus();
+        // Focus on the edit button to open the dialog
+        const editButton = itemElement.querySelector("button.edit");
+        if (editButton) {
+            // Small delay to allow DOM to settle
+            setTimeout(() => editButton.click(), 100);
         }
 
         // Initialize the new item
@@ -101,42 +105,12 @@ export default class DeckField extends TotalField {
         this.initActionbar(itemElement);
         this.form?.processFields();
 
-        // After processing fields (which may trigger autogen), manually sync any generated ID
-        setTimeout(() => {
-            this.manualIdSync(newItem);
-        }, 0);
-
 		return newItem;
     }
 
     initActionbar(itemElement) {
         const trash = itemElement.querySelector("button.trash");
         const duplicate = itemElement.querySelector("button.duplicate");
-        const idInput = itemElement.querySelector("input[name='deck-item-id']");
-
-        // Ensure item IDs are properly formatted
-        idInput?.addEventListener("change", () => {
-            // Replace hyphens with underscores and ensure lowercase
-            const oldValue = idInput.value;
-            const newValue = slugify(oldValue, { lower: true }).replace(/-/g, "_");
-
-            if (oldValue !== newValue) {
-                idInput.value = newValue;
-
-                // Update the item's data-item-id attribute
-                itemElement.setAttribute('data-item-id', newValue);
-                itemElement.className = itemElement.className.replace(/deck-item-\S+/, `deck-item-${newValue}`);
-
-                // Update button titles
-                const editBtn = itemElement.querySelector("button.edit");
-                const duplicateBtn = itemElement.querySelector("button.duplicate");
-                const trashBtn = itemElement.querySelector("button.trash");
-
-                if (editBtn) editBtn.setAttribute("title", `Edit ${newValue} item`);
-                if (duplicateBtn) duplicateBtn.setAttribute("title", `Duplicate ${newValue} item`);
-                if (trashBtn) trashBtn.setAttribute("title", `Delete ${newValue} item`);
-            }
-        });
 
         trash?.addEventListener("click", () => this.removeItem(itemElement));
         duplicate?.addEventListener("click", () => this.duplicateItem(itemElement));
@@ -156,15 +130,7 @@ export default class DeckField extends TotalField {
         // Clone the item element
         const clone = itemElement.cloneNode(true);
 
-        // Update the ID input - clear it for new item and make it editable
-        const idInput = clone.querySelector("input[name='deck-item-id']");
-        if (idInput) {
-            idInput.value = ''; // Clear the ID for new item
-            idInput.removeAttribute('readonly'); // Make it editable again
-            idInput.removeAttribute('disabled'); // Remove any disabled state
-        }
-
-        // Also clear the dialog ID field
+        // Clear the dialog ID field
         const dialogIdInput = clone.querySelector("dialog input[name='id']");
         if (dialogIdInput) {
             dialogIdInput.value = '';
@@ -185,12 +151,15 @@ export default class DeckField extends TotalField {
         const parent = itemElement.parentNode;
         parent.insertBefore(clone, itemElement.nextSibling);
 
-        // Focus on the new item's ID field
-        const newIdInput = clone.querySelector("input[name='deck-item-id']");
-        newIdInput?.focus();
-
         // Initialize the duplicated item (this will properly initialize all form fields)
         this.newItem(clone);
+
+        // Open the dialog to edit the duplicated item
+        const editButton = clone.querySelector("button.edit");
+        if (editButton) {
+            setTimeout(() => editButton.click(), 100);
+        }
+
 		this.changed();
     }
 

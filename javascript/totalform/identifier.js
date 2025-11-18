@@ -121,7 +121,11 @@ export default class Identifier extends TotalField {
 			// Standard replacement for all other placeholders
 			return data[key] || "";
 		});
-		return this.slugify(autogen);
+
+		const slugified = this.slugify(autogen);
+
+		// For deck context, replace hyphens with underscores for Twig dot notation compatibility
+		return this.isInDeck ? slugified.replace(/-/g, '_') : slugified;
 	}
 
 	getCollectionCount() {

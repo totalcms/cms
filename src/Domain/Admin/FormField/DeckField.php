@@ -16,7 +16,8 @@ class DeckField extends FormField
 	/** @var array<string,DeckItem> */
 	protected array $deckItems = [];
 
-	protected string $deckref = '';
+	protected string $deckref       = '';
+	protected string $deckItemLabel = '';
 
 	public function init(): void
 	{
@@ -26,7 +27,8 @@ class DeckField extends FormField
 		$this->icon      = false;
 
 		// Extract deckref from settings if available
-		$this->deckref = $this->settings['deckref'] ?? '';
+		$this->deckref       = $this->settings['deckref'] ?? '';
+		$this->deckItemLabel = $this->settings['deckItemLabel'] ?? '${id}';
 
 		// Initialize deck items from value
 		if (is_array($this->value)) {
@@ -75,6 +77,11 @@ class DeckField extends FormField
 			$attributes['data-deckref'] = $this->deckref;
 		}
 
+		// Add deck item label pattern as a data attribute
+		if ($this->deckItemLabel !== '') {
+			$attributes['data-deck-label-pattern'] = $this->deckItemLabel;
+		}
+
 		return $attributes;
 	}
 
@@ -86,10 +93,11 @@ class DeckField extends FormField
 	protected function createDeckItem(string $itemId, array $itemData): DeckItem
 	{
 		return new DeckItem(
-			form     : $this->form,
-			itemId   : $itemId,
-			itemData : $itemData,
-			deckref  : $this->deckref,
+			form            : $this->form,
+			itemId          : $itemId,
+			itemData        : $itemData,
+			deckref         : $this->deckref,
+			deckItemLabel   : $this->deckItemLabel,
 		);
 	}
 }

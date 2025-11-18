@@ -22,37 +22,29 @@ class DeckItem
 		protected string $itemId,
 		protected array $itemData = [],
 		protected string $deckref = '',
+		protected string $deckItemLabel = '${id}',
 	) {
 		$this->schemaFetcher = $form->getSchemaFetcher();
 	}
 
 	public function build(): string
 	{
-		$inputAttributes = [
-			'autocomplete' => 'off',
-			'type'         => 'text',
-			'name'         => 'deck-item-id',
-			'placeholder'  => 'item-id',
-			'required'     => '',
-			'value'        => $this->itemId,
-		];
+		$dialog = $this->buildDialog();
 
-		// For existing deck items, make the ID field readonly
-		if ($this->itemId !== '') {
-			$inputAttributes['readonly'] = '';
-		}
+		// Generate the initial label from the pattern
+		$labelText = $this->generateLabel();
+		$label     = HTMLUtils::button($labelText, ['class' => 'deck-item-label sort-handle', 'type' => 'button']);
 
-		$dialog  = $this->buildDialog();
-		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
-		$buttons = HTMLUtils::button('', ['class' => 'edit sort-handle', 'title' => "Edit {$this->itemId} item"]);
+		// Edit button (separate from label, but both will be clickable)
+		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$this->itemId} item"]);
 
 		// Add duplicate and delete buttons
 		$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => "Duplicate {$this->itemId} item"]);
 		$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$this->itemId} item"]);
 
-		return HTMLUtils::element('div', $input . $buttons . $dialog, [
-			'class'        => "deck-item deck-item-{$this->itemId}",
-			'data-item-id' => $this->itemId,
+		return HTMLUtils::element('div', $label . $buttons . $dialog, [
+			'class'                   => "deck-item deck-item-{$this->itemId}",
+			'data-deck-label-pattern' => $this->deckItemLabel,
 		]);
 	}
 
@@ -136,5 +128,40 @@ class DeckItem
 		}
 
 		return $content;
+	}
+
+	/**
+	 * Generate label text from the pattern and item data.
+	 * Does NOT slugify - just raw display of values.
+	 */
+	protected function generateLabel(): string
+	{
+		// Replace placeholders in the pattern with actual values
+		$label = (string)preg_replace_callback('/\$\{(.*?)\}/', function ($matches) {
+			$fieldName = $matches[1];
+
+			// Special handling for 'id' field
+			if ($fieldName === 'id') {
+				return $this->itemId !== '' ? $this->itemId : '';
+			}
+
+			// Get value from item data
+			$value = $this->itemData[$fieldName] ?? '';
+
+			// Convert to string and trim
+			$value = is_string($value) ? trim($value) : '';
+
+			return $value;
+		}, $this->deckItemLabel);
+
+		// Trim the final label
+		$label = trim($label);
+
+		// If empty, return "Unknown"
+		if ($label === '') {
+			return 'Unknown';
+		}
+
+		return $label;
 	}
 }

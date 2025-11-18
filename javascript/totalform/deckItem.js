@@ -13,12 +13,16 @@ export default class DeckItem {
 
         this.dialog = this.setupDialog();
         this.deck.form.processFields();
-		setTimeout(() => this.setupIdSync(), 0);
+		setTimeout(() => this.setupLabelUpdate(), 0);
     }
 
     setupDialog() {
+		// Get both the label button and edit button as dialog triggers
+		const labelButton = this.container.querySelector('.deck-item-label');
+		const editButton = this.container.querySelector("button.edit");
+
         return new Dialog(this.container.querySelector("dialog"), {
-            open: this.container.querySelector("button.edit"),
+            open: [labelButton, editButton].filter(Boolean), // Open dialog when either button is clicked
             close: ".close",
             onOpen: () => {
                 if (this.dialogOpened) return;
@@ -26,6 +30,8 @@ export default class DeckItem {
             },
             onClose: () => {
                 this.dialogOpened = false;
+				// Update label when dialog closes
+				this.updateLabel();
             }
         });
     }
@@ -35,136 +41,88 @@ export default class DeckItem {
 		idField?.totalfield?.error(message);
 	}
 
-    setupIdSync() {
-        const deckItemIdField = this.container.querySelector("input[name='deck-item-id']");
-        const dialogIdField = this.dialog.dialog.querySelector("input[name='id']");
+	setupLabelUpdate() {
+		// Update the label initially (in case it was auto-generated)
+		this.updateLabel();
+	}
 
-        if (!deckItemIdField || !dialogIdField) return;
+	updateLabel() {
+		const labelElement = this.container.querySelector('.deck-item-label');
+		if (!labelElement) return;
 
-        // Skip sync if deck-item-id field is readonly (existing items)
-        if (deckItemIdField.hasAttribute('readonly') || deckItemIdField.hasAttribute('disabled')) {
-            return;
-        }
+		const pattern = this.container.getAttribute('data-deck-label-pattern') || '${id}';
+		const labelText = this.generateLabel(pattern);
 
-        // Flag to prevent infinite loops during synchronization
-        let syncing = false;
+		labelElement.innerHTML = labelText;
+	}
 
-        // Helper function to sanitize ID values (replace hyphens with underscores)
-        const sanitizeId = (value) => {
-            return value.replace(/-/g, '_');
-        };
+	generateLabel(pattern) {
+		// Get all field data from the dialog
+		const fieldData = this.getValue() || {};
 
-        // Use MutationObserver to detect all value changes (programmatic and user input)
-        const syncFromDeckItem = () => {
-            const sanitizedValue = sanitizeId(deckItemIdField.value);
-            if (syncing || dialogIdField.value === sanitizedValue) return;
-            syncing = true;
-            // Update the deck item field with sanitized value if needed
-            if (deckItemIdField.value !== sanitizedValue) {
-                deckItemIdField.value = sanitizedValue;
-            }
-            dialogIdField.value = sanitizedValue;
-			dialogIdField.classList.remove("error");
-            dialogIdField.closest(".form-field")?.classList.remove("error");
-            syncing = false;
-        };
+		// Check if this is a new item (no existing ID)
+		const isNewItem = !this.container.getAttribute('data-item-id') ||
+		                  this.container.getAttribute('data-item-id') === '';
 
-        const syncFromDialog = () => {
-            const sanitizedValue = sanitizeId(dialogIdField.value);
-            if (syncing || deckItemIdField.value === sanitizedValue) return;
-            syncing = true;
-            // Update the dialog field with sanitized value if needed
-            if (dialogIdField.value !== sanitizedValue) {
-                dialogIdField.value = sanitizedValue;
-            }
-            deckItemIdField.value = sanitizedValue;
-            dialogIdField.classList.remove("error");
-            dialogIdField.closest(".form-field")?.classList.remove("error");
-            syncing = false;
-        };
+		// Only generate dynamic values for new items
+		if (isNewItem) {
+			const now = new Date();
+			fieldData.now = Date.now();
+			fieldData.timestamp = now.toISOString().slice(0, -5).replace(/-|:/g, '');
+			fieldData.uuid = this.generateUuid();
+			fieldData.uid = Math.random().toString(36).substring(2, 9);
+			fieldData.oid = this.deck.getNextOid();
+			fieldData.currentyear = now.getFullYear().toString();
+			fieldData.currentyear2 = now.getFullYear().toString().slice(-2);
+			fieldData.currentmonth = String(now.getMonth() + 1).padStart(2, '0');
+			fieldData.currentday = String(now.getDate()).padStart(2, '0');
+		}
 
-        // Store current values to detect property changes
-        let lastDeckItemValue = deckItemIdField.value;
-        let lastDialogValue = dialogIdField.value;
+		// Replace placeholders in the pattern
+		let label = pattern.replace(/\${(.*?)}/g, (match, key) => {
+			// Check if this is an oid with zero-padding format: oid-00000
+			if (key.startsWith('oid-') && /^oid-0+$/.test(key)) {
+				const zeros = key.substring(4);
+				const paddingLength = zeros.length;
+				const oidValue = this.deck.getNextOid();
+				return oidValue.toString().padStart(paddingLength, '0');
+			}
 
-        // Observe changes to the deck-item-id field
-        const deckItemObserver = new MutationObserver(() => {
-            // Check if the value property has changed (not just the attribute)
-            if (deckItemIdField.value !== lastDeckItemValue) {
-                lastDeckItemValue = deckItemIdField.value;
-                syncFromDeckItem();
-            }
-        });
+			// Get value from field data
+			const value = fieldData[key] || '';
 
-        // Observe changes to the dialog id field
-        const dialogObserver = new MutationObserver(() => {
-            // Check if the value property has changed (not just the attribute)
-            if (dialogIdField.value !== lastDialogValue) {
-                lastDialogValue = dialogIdField.value;
-                syncFromDialog();
-            }
-        });
+			// Check if value looks like SVG
+			if (typeof value === 'string' && value.trim().startsWith('<svg')) {
+				return `<span class="deck-label-svg">${value}</span>`;
+			}
 
-        // Configure observers to watch for any changes to the elements
-        const observerConfig = {
-            attributes: true,
-            attributeOldValue: true,
-            childList: true,
-            subtree: true
-        };
+			return value;
+		});
 
-        deckItemObserver.observe(deckItemIdField, observerConfig);
-        dialogObserver.observe(dialogIdField, observerConfig);
+		// Trim whitespace
+		label = label.trim();
 
-        // Also listen for various events that might indicate value changes
-        const events = ['input', 'change', 'paste', 'keyup', 'focus', 'blur'];
-        events.forEach(eventType => {
-            deckItemIdField.addEventListener(eventType, () => {
-                if (deckItemIdField.value !== lastDeckItemValue) {
-                    lastDeckItemValue = deckItemIdField.value;
-                    syncFromDeckItem();
-                }
-            });
-            dialogIdField.addEventListener(eventType, () => {
-                if (dialogIdField.value !== lastDialogValue) {
-                    lastDialogValue = dialogIdField.value;
-                    syncFromDialog();
-                }
-            });
-        });
+		// If empty, return "Unknown"
+		if (label === '' || label === 'null' || label === 'undefined') {
+			return 'Unknown';
+		}
 
-        // Periodic check for programmatic changes (fallback)
-        const syncChecker = setInterval(() => {
-            if (deckItemIdField.value !== lastDeckItemValue) {
-                lastDeckItemValue = deckItemIdField.value;
-                syncFromDeckItem();
-            }
-            if (dialogIdField.value !== lastDialogValue) {
-                lastDialogValue = dialogIdField.value;
-                syncFromDialog();
-            }
-        }, 100);
+		return label;
+	}
 
-        // Store references for cleanup
-        this.idSyncData = {
-            lastDeckItemValue,
-            lastDialogValue,
-            syncChecker
-        };
-
-        // Store observers for cleanup if needed
-        this.idSyncObservers = {
-            deckItemObserver,
-            dialogObserver
-        };
-    }
+	generateUuid() {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			const r = Math.random() * 16 | 0;
+			const v = c == 'x' ? r : (r & 0x3 | 0x8);
+			return v.toString(16);
+		});
+	}
 
 
     getItemId() {
-        const idInput = this.container.querySelector("input[name='deck-item-id']");
-        const id = idInput ? idInput.value : this.container.getAttribute('data-item-id') || '';
-        // Ensure ID is always returned as a string, even if it's numeric
-        return String(id);
+		// Get ID directly from the dialog's ID field
+		const dialogIdField = this.dialog.dialog.querySelector("input[name='id']");
+		return dialogIdField ? String(dialogIdField.value) : '';
     }
 
     getValue() {
@@ -192,7 +150,7 @@ export default class DeckItem {
 
         // Fallback: collect any remaining input fields that don't have TotalField instances
         const formFields = this.dialog.dialog.querySelectorAll('input, textarea, select');
-        
+
         for (const field of formFields) {
             if (field.name && !data.hasOwnProperty(field.name)) {
                 // Handle different field types for fields without TotalField instances
@@ -258,18 +216,8 @@ export default class DeckItem {
 
     }
 
-    // Cleanup method to disconnect observers when deck item is destroyed
+    // Cleanup method when deck item is destroyed
     destroy() {
-        if (this.idSyncObservers) {
-            this.idSyncObservers.deckItemObserver?.disconnect();
-            this.idSyncObservers.dialogObserver?.disconnect();
-            this.idSyncObservers = null;
-        }
-
-        if (this.idSyncData?.syncChecker) {
-            clearInterval(this.idSyncData.syncChecker);
-            this.idSyncData = null;
-        }
 		this.container.remove();
     }
 
