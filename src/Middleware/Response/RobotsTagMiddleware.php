@@ -25,7 +25,8 @@ class RobotsTagMiddleware implements MiddlewareInterface
 		$response = $handler->handle($request);
 
 		$currentRoute = $request->getUri()->getPath();
-		if (str_starts_with($currentRoute, '/imageworks')) {
+		// Check if path contains /imageworks/ (handles base paths like /rw_common/plugins/stacks/tcms/imageworks/)
+		if (str_contains($currentRoute, '/imageworks/')) {
 			// allow indexing of images
 			return $response->withHeader('X-Robots-Tag', 'index, follow');
 		}
