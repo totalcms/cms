@@ -49,17 +49,33 @@ class StaticPublicAssetsAction
 			throw new HttpNotFoundException($request, 'Asset not found');
 		}
 
-		$filesize = filesize($assetPath);
-		$mimeType = MimeLookup::getMimeType($assetPath);
-		$stream   = fopen($assetPath, 'r');
+		$filesize     = filesize($assetPath);
+		$lastModified = filemtime($assetPath);
+		$mimeType     = MimeLookup::getMimeType($assetPath);
+		$stream       = fopen($assetPath, 'r');
 
-		if ($filesize === false || $stream === false) {
+		if ($filesize === false || $lastModified === false || $stream === false) {
 			throw new \RuntimeException('Failed to read asset file');
+		}
+
+		// Generate ETag from file path and modification time
+		$etag = '"' . md5($assetPath . $lastModified) . '"';
+
+		// Check for conditional requests
+		$ifNoneMatch = $request->getHeaderLine('If-None-Match');
+		if ($ifNoneMatch === $etag) {
+			return $response
+				->withStatus(304)
+				->withHeader('Cache-Control', 'public, max-age=31536000, immutable')
+				->withHeader('ETag', $etag);
 		}
 
 		return $response
 			->withHeader('Content-Type', $mimeType)
 			->withHeader('Content-Length', (string)$filesize)
+			->withHeader('Cache-Control', 'public, max-age=31536000, immutable')
+			->withHeader('ETag', $etag)
+			->withHeader('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified) . ' GMT')
 			->withBody(Stream::create($stream));
 	}
 }
