@@ -358,5 +358,4 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		expect($result)->toContain('Previous');
 		expect($result)->toContain('Next');
 	}
-
 }

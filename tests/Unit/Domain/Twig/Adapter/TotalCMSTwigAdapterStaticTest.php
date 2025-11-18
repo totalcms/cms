@@ -268,7 +268,6 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		expect($adapter->imagePath('test-id'))->toBe('');
 	}
 
-
 	public function testGalleryPathMethodEdgeCases(): void
 	{
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
