@@ -27,12 +27,10 @@ class JobRepository
 	/**
 	 * Lazy-load database connection - only creates the database when first needed.
 	 * This prevents unnecessary file creation during setup or when job queue is not used.
-	 *
-	 * @return \PDO
 	 */
 	private function getDb(): \PDO
 	{
-		if ($this->db !== null) {
+		if ($this->db instanceof \PDO) {
 			return $this->db;
 		}
 

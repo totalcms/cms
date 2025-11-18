@@ -88,7 +88,7 @@ class CollectionData
 			'prettyUrl'          => $this->prettyUrl ?? false,
 			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
 			'count'              => $this->count ?? 0,
-			'totalObjects'       => $this->totalObjects >= 0 ? $this->totalObjects : 0,
+			'totalObjects'       => max($this->totalObjects, 0),
 			'lastUpdated'        => $this->lastUpdated ?? '',
 		];
 

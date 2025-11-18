@@ -30,7 +30,7 @@ class CollectionFetcher
 		}
 
 		if ($this->collectionExists($collectionId)) {
-			$collection = $this->storage->getCollection($collectionId);
+			$collection                 = $this->storage->getCollection($collectionId);
 			$this->cache[$collectionId] = $collection;
 
 			return $collection;
@@ -40,7 +40,7 @@ class CollectionFetcher
 			// If the collection is not found or invalid, try to create it
 			$this->storage->saveReservedCollection($collectionId);
 
-			$collection = $this->storage->getCollection($collectionId);
+			$collection                 = $this->storage->getCollection($collectionId);
 			$this->cache[$collectionId] = $collection;
 
 			return $collection;
