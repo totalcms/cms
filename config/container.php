@@ -160,6 +160,12 @@ return [
 			@mkdir($sessionConfig['save_path'], 0755, true);
 		}
 
+		// CRITICAL: Set cache_limiter BEFORE any other session configuration
+		// This prevents PHP from sending no-cache headers automatically
+		if (isset($sessionConfig['cache_limiter'])) {
+			session_cache_limiter($sessionConfig['cache_limiter']);
+		}
+
 		// Force session settings to prevent hosting provider overrides
 		if (isset($sessionConfig['name'])) {
 			ini_set('session.name', $sessionConfig['name']);

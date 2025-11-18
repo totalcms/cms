@@ -28,7 +28,7 @@ readonly class ImageWorksUploadFetchAction
 		$query = $request->getQueryParams();
 
 		try {
-			$image = $this->imageGenerator->generateUploadImage($collection, $id, $property, $name, $query);
+			$image = $this->imageGenerator->generateUploadImage($collection, $id, $property, $name, $query, $request);
 		} catch (\Exception $e) {
 			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
 		}

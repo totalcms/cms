@@ -122,6 +122,7 @@ $settings['session'] = [
 	'cookie_path'            => '/', // Explicit path for cookie isolation
 	'cookie_samesite'        => 'Lax',
 	'cache_expire'           => 0,
+	'cache_limiter'          => '', // Empty string prevents PHP from sending cache headers, allowing responses to control their own caching
 	'cookie_secure'          => $settings['is_https'], // Only secure cookies over HTTPS
 	'cookie_httponly'        => true,
 	'cookie_lifetime'        => 0,
