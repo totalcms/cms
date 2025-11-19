@@ -211,6 +211,20 @@ class TotalCMS
 		return $this->access->userData();
 	}
 
+	/**
+	 * Disable browser caching for authenticated users.
+	 * Call this at the top of pages that should not be cached when a user is logged in.
+	 * This prevents stale cached pages from being shown after logout.
+	 */
+	public function noCacheIfAuthenticated(string $collection = ''): void
+	{
+		if ($this->access->userLoggedIn($collection)) {
+			header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+			header('Pragma: no-cache');
+			header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+		}
+	}
+
 	// ---------------------------------------------------------------------------------
 	// Public methods for buffer control and Twig rendering
 	// ---------------------------------------------------------------------------------
