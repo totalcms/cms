@@ -1105,7 +1105,7 @@ NGINX;
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
-		if ($image === [] || !array_key_exists('name', $image)) {
+		if ($image === [] || !array_key_exists('name', $image) || $image['name'] === '') {
 			return '';
 		}
 
