@@ -26,6 +26,7 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
 	$app->redirect('/', '/admin', 301);
@@ -70,5 +71,5 @@ return function (App $app): void {
 
 		// Catch-all 404 route - MUST BE LAST
 		$group->any('/{path:.*}', Admin404Action::class)->setName('admin-404');
-	})->add(AuthMiddleware::class);
+	})->add(AuthMiddleware::class)->add(NoCacheMiddleware::class);
 };
