@@ -324,6 +324,12 @@ class CollectionRefiner
 		return $haystack == $needle;
 	}
 
+	protected static function notEqual(mixed $haystack, mixed $needle): bool
+	{
+		// Use loose comparison to handle string/number conversions
+		return $haystack != $needle;
+	}
+
 	protected static function contains(string $haystack, string $needle): bool
 	{
 		return mb_strpos($haystack, $needle) !== false;
@@ -349,6 +355,11 @@ class CollectionRefiner
 	protected static function equalCaseInsensitive(string $haystack, string $needle): bool
 	{
 		return mb_strtolower($haystack) === mb_strtolower($needle);
+	}
+
+	protected static function notEqualCaseInsensitive(string $haystack, string $needle): bool
+	{
+		return mb_strtolower($haystack) !== mb_strtolower($needle);
 	}
 
 	protected static function containsCaseInsensitive(string $haystack, string $needle): bool

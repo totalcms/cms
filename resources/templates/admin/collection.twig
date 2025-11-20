@@ -134,6 +134,13 @@ document.addEventListener("keydown", function (event) {
 		event.preventDefault();
 		duplicateObject(event);
 	}
+	if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'p') {
+		const objectLink = document.querySelector('#collection-actions .object-link');
+		if (objectLink && window.getComputedStyle(objectLink).display !== 'none') {
+			event.preventDefault();
+			objectLink.querySelector('a').click();
+		}
+	}
 });
 </script>
 

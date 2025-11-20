@@ -1105,7 +1105,7 @@ NGINX;
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
-		if ($image === [] || !array_key_exists('name', $image)) {
+		if ($image === [] || !array_key_exists('name', $image) || $image['name'] === '') {
 			return '';
 		}
 
@@ -1188,6 +1188,14 @@ NGINX;
 		// Check if captions should be shown
 		$showCaptions = isset($options['captions']) && $options['captions'];
 
+		// Check if only featured images should be shown in grid (but all in lightbox)
+		$featuredOnly = isset($options['featuredOnly']) && $options['featuredOnly'];
+		$allImages    = $images; // Keep all images for lightbox
+		if ($featuredOnly) {
+			$images = array_filter($images, fn (array $img): bool => !empty($img['featured']));
+			$images = array_values($images); // Re-index array
+		}
+
 		foreach ($images as $image) {
 			// Calculate dimensions for layout stability (prevents CLS)
 			$thumbDimensions = ImageDimensionCalculator::calculateFromImageData($image, $thumbSettings);
@@ -1215,18 +1223,48 @@ NGINX;
 			// Calculate the actual dimensions after ImageWorks processing
 			$processedDimensions = ImageDimensionCalculator::calculateFromImageData($image, $fullSettings);
 
-			$figure = HTMLUtils::element('figure', $figureContent, [
+			$figureAttrs = [
 				'class'        => 'cms-gallery-item',
 				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 				'data-lg-size' => "{$processedDimensions['width']}-{$processedDimensions['height']}",
-			]);
+			];
+
+			// Add image name for mapping when using featuredOnly mode
+			if ($featuredOnly) {
+				$figureAttrs['data-gallery-image'] = $image['name'];
+			}
+
+			$figure = HTMLUtils::element('figure', $figureContent, $figureAttrs);
 			$gallery .= $figure;
+		}
+
+		// Build dynamic elements for all images when featuredOnly is enabled
+		$dynamicTemplate = '';
+		if ($featuredOnly && count($allImages) > count($images)) {
+			$dynamicEl = [];
+			foreach ($allImages as $img) {
+				$item = [
+					'src'    => $this->galleryPath($id, $img['name'], $fullSettings, $options),
+					'thumb'  => $this->galleryPath($id, $img['name'], $thumbSettings, $options),
+					'lgSize' => "{$img['width']}-{$img['height']}",
+					'name'   => $img['name'],
+				];
+				if ($showCaptions && !empty($img['alt'])) {
+					$item['subHtml'] = htmlspecialchars((string)$img['alt']);
+				}
+				$dynamicEl[] = $item;
+			}
+			$dynamicTemplate = sprintf(
+				'<template class="cms-gallery-dynamic">%s</template>',
+				(string)json_encode($dynamicEl)
+			);
 		}
 
 		// Don't add these to the gallery settings
 		unset($options['collection']);
 		unset($options['property']);
 		unset($options['captions']); // Remove captions option from JS settings
+		unset($options['featuredOnly']); // Remove featuredOnly from JS settings
 
 		// Extract custom class before encoding settings
 		$customClass = '';
@@ -1267,7 +1305,14 @@ NGINX;
 			}
 		}
 
-		return HTMLUtils::element('div', $gallery, $attributes);
+		$output = HTMLUtils::element('div', $gallery, $attributes);
+
+		// Append dynamic template if featuredOnly mode has additional images
+		if ($dynamicTemplate !== '') {
+			$output .= $dynamicTemplate;
+		}
+
+		return $output;
 	}
 
 	/**

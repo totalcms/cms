@@ -32,9 +32,26 @@ class Gallery {
 	 */
 	constructor(element) {
 		this.element = element;
+		this.dynamicEl = this.parseDynamicElements();
 		this.settings = this.parseSettings();
 		this.handleMaxVisible();
 		this.init();
+	}
+
+	/**
+	 * Parse dynamic elements from sibling template (for featuredOnly mode)
+	 * @returns {Array|null} Array of gallery items or null
+	 */
+	parseDynamicElements() {
+		const template = this.element.nextElementSibling;
+		if (template && template.matches('template.cms-gallery-dynamic')) {
+			try {
+				return JSON.parse(template.innerHTML);
+			} catch (error) {
+				console.error('Failed to parse dynamic gallery data:', error);
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -103,7 +120,42 @@ class Gallery {
 	 * Initialize the lightGallery instance
 	 */
 	init() {
-		this.instance = lightGallery(this.element, this.settings);
+		// If we have dynamic elements (featuredOnly mode), use dynamic mode
+		if (this.dynamicEl) {
+			this.initDynamicMode();
+		} else {
+			this.instance = lightGallery(this.element, this.settings);
+		}
+	}
+
+	/**
+	 * Initialize in dynamic mode for featuredOnly galleries
+	 * Grid shows featured images, lightbox shows all images
+	 */
+	initDynamicMode() {
+		// Configure for dynamic mode
+		const dynamicSettings = {
+			...this.settings,
+			dynamic: true,
+			dynamicEl: this.dynamicEl,
+		};
+
+		// Remove selector as we're using dynamic mode
+		delete dynamicSettings.selector;
+
+		// Initialize lightGallery on the container
+		this.instance = lightGallery(this.element, dynamicSettings);
+
+		// Bind click handlers to grid items
+		const gridItems = this.element.querySelectorAll('.cms-gallery-item');
+		gridItems.forEach(item => {
+			item.addEventListener('click', (e) => {
+				e.preventDefault();
+				const imageName = item.dataset.galleryImage;
+				const index = this.dynamicEl.findIndex(el => el.name === imageName);
+				this.instance.openGallery(index >= 0 ? index : 0);
+			});
+		});
 	}
 
 	/**

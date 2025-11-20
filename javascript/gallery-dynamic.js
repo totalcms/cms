@@ -149,12 +149,12 @@ class DynamicGallery {
 			console.warn(`Image "${imageName}" not found in gallery "${this.galleryId}". Opening at first image.`);
 		}
 
-		// Check for explicit index
+		// Check for explicit index (1-based for user convenience)
 		const galleryIndex = trigger.dataset.galleryIndex;
 		if (galleryIndex !== undefined) {
 			const index = parseInt(galleryIndex, 10);
-			if (index >= 0 && index < this.dynamicEl.length) {
-				return index;
+			if (index >= 1 && index <= this.dynamicEl.length) {
+				return index - 1; // Convert to 0-based for internal use
 			}
 			console.warn(`Index ${index} out of range for gallery "${this.galleryId}". Opening at first image.`);
 		}
