@@ -1192,7 +1192,7 @@ NGINX;
 		$featuredOnly = isset($options['featuredOnly']) && $options['featuredOnly'];
 		$allImages    = $images; // Keep all images for lightbox
 		if ($featuredOnly) {
-			$images = array_filter($images, fn ($img): bool => !empty($img['featured']));
+			$images = array_filter($images, fn (array $img): bool => !empty($img['featured']));
 			$images = array_values($images); // Re-index array
 		}
 

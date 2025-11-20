@@ -2,6 +2,27 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.46] - 2025-11-19
+
+### Added
+
+- **Emergency License Cache Clear**: New `/emergency/cache/clear-license` endpoint for clearing license cache during debugging
+- **Frontend Cache Control**: `noCacheIfAuthenticated()` method in TotalCMS PHP API to disable browser caching for logged-in users on custom pages
+- **Admin Keyboard Shortcuts**: Cmd+P (or Ctrl+P) shortcut to preview objects in admin interface
+- **Featured-Only Gallery Display**: New `featuredOnly` option for `cms.gallery()`
+  - Grid displays only featured images
+  - Lightbox shows all images from gallery
+  - Clicking featured image opens lightbox at correct position
+
+### Enhanced
+
+- **Gallery Index**: `data-gallery-index` attribute now uses 1-based indexing for better user experience
+- **Admin Caching**: No-cache headers automatically added to all admin routes to prevent stale content
+
+### Fixed
+
+- **Featured Toggle**: Featured button icon now updates immediately when clicked without requiring unhover/rehover
+
 ## [3.0.45] - 2025-11-18
 
 ### Added
