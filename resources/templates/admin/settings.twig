@@ -84,7 +84,7 @@
 			{% else %}
 				<p>Send a test email to verify your SMTP settings are working correctly.</p>
 
-				{{ cms.form.simple('/admin/settings/smtp?test=1', '
+				{{ cms.form.simple('settings/smtp?test=1', '
 					<div class="field-wrapper field-email">
 						<label for="test_email">Test Email Address</label>
 						<input type="email" id="test_email" name="test_email" placeholder="your@email.com" required />
