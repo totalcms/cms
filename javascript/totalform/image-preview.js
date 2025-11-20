@@ -66,6 +66,10 @@ export default class ImagePreview {
 		return this.featuredField.totalfield.getValue();
 	}
 
+	tempToggleFeaturedActionButton() {
+		this.container.classList.toggle("featured");
+	}
+
 	toggleFeaturedActionButton() {
 		if (this.isFeatured()) {
 			this.container.classList.add("featured");
@@ -76,6 +80,7 @@ export default class ImagePreview {
 
 	toggleFeaturedField() {
 		this.featuredField.totalfield.setValue(!this.isFeatured());
+	  	setTimeout(() => this.toggleFeaturedActionButton(), 0);
 	}
 
 	setupDownload() {
@@ -107,6 +112,7 @@ export default class ImagePreview {
 		if (featureButton) {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
+				this.tempToggleFeaturedActionButton();
 				let featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 				if (this.isGallery()) {
 					const name = this.getValue().name;
