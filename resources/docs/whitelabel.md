@@ -14,15 +14,15 @@ Total CMS provides nine white label template locations:
 
 | Template File | Location | Description |
 |--------------|----------|-------------|
-| `whitelabel/login-above.twig` | Login page | Content displayed above the login form |
-| `whitelabel/login-below.twig` | Login page | Content displayed below the login form |
-| `whitelabel/download-auth-above.twig` | Download auth page | Content displayed above the download authentication form |
-| `whitelabel/download-auth-below.twig` | Download auth page | Content displayed below the download authentication form |
-| `whitelabel/admin-logo.twig` | Admin header | Custom logo replacing the Total CMS logo |
-| `whitelabel/admin-welcome.twig` | Admin home page | Custom welcome message (lighter alternative to admin-home.twig) |
-| `whitelabel/admin-home.twig` | Admin home page | Custom content for the entire dashboard home page |
-| `whitelabel/admin-head.twig` | Admin `<head>` section | Custom content injected before closing `</head>` tag |
-| `whitelabel/admin-body-below.twig` | Admin body bottom | Custom content injected before closing `</body>` tag |
+| `whitelabel/login-above` | Login page | Content displayed above the login form |
+| `whitelabel/login-below` | Login page | Content displayed below the login form |
+| `whitelabel/download-auth-above` | Download auth page | Content displayed above the download authentication form |
+| `whitelabel/download-auth-below` | Download auth page | Content displayed below the download authentication form |
+| `whitelabel/admin-logo` | Admin header | Custom logo replacing the Total CMS logo |
+| `whitelabel/admin-welcome` | Admin home page | Custom welcome message (lighter alternative to admin-home) |
+| `whitelabel/admin-home` | Admin home page | Custom content for the entire dashboard home page |
+| `whitelabel/admin-head` | Admin `<head>` section | Custom content injected before closing `</head>` tag |
+| `whitelabel/admin-body-below` | Admin body bottom | Custom content injected before closing `</body>` tag |
 
 ## Setup
 
