@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Action\Export;
 
+use Odan\Session\FlashInterface;
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,16 +15,21 @@ final class ExportCsvActionTest extends TestCase
 {
 	private ExportCsvAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $objectExporter;
+	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
 		$this->objectExporter = $this->createMock(ObjectExporter::class);
+		$this->session        = $this->createMock(SessionInterface::class);
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 		$this->response       = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ExportCsvAction($this->objectExporter);
+		$flash = $this->createMock(FlashInterface::class);
+		$this->session->method('getFlash')->willReturn($flash);
+
+		$this->action = new ExportCsvAction($this->objectExporter, $this->session);
 	}
 
 	public function testExportsCsvSuccessfully(): void
@@ -36,7 +43,7 @@ final class ExportCsvActionTest extends TestCase
 		$this->objectExporter->expects($this->once())
 			->method('exportAllObjectsForCSv')
 			->with('users')
-			->willReturn($csvData);
+			->willReturn(['data' => $csvData, 'errors' => []]);
 
 		$responseWithHeaders = $this->createMock(ResponseInterface::class);
 		$this->response->expects($this->exactly(2))
@@ -54,7 +61,7 @@ final class ExportCsvActionTest extends TestCase
 
 	public function testSetsCsvContentType(): void
 	{
-		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn([['id'], ['1']]);
+		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn(['data' => [['id'], ['1']], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->method('withBody')->willReturnSelf();
@@ -67,7 +74,7 @@ final class ExportCsvActionTest extends TestCase
 
 	public function testSetsContentDispositionHeader(): void
 	{
-		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn([]);
+		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
@@ -87,7 +94,7 @@ final class ExportCsvActionTest extends TestCase
 
 	public function testUsesCollectionNameInFilename(): void
 	{
-		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn([]);
+		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->expects($this->once())
@@ -102,7 +109,7 @@ final class ExportCsvActionTest extends TestCase
 		$this->objectExporter->expects($this->once())
 			->method('exportAllObjectsForCSv')
 			->with('empty-collection')
-			->willReturn([]);
+			->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->method('withBody')->willReturnSelf();
@@ -114,7 +121,7 @@ final class ExportCsvActionTest extends TestCase
 
 	public function testReturnsResponseWithBody(): void
 	{
-		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn([['id'], ['1']]);
+		$this->objectExporter->method('exportAllObjectsForCSv')->willReturn(['data' => [['id'], ['1']], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 

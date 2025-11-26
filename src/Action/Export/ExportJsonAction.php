@@ -3,7 +3,7 @@
 namespace TotalCMS\Action\Export;
 
 use Nyholm\Psr7\Stream;
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
@@ -12,7 +12,7 @@ readonly class ExportJsonAction
 {
 	public function __construct(
 		private ObjectExporter $objectExporter,
-		private PhpSession $session,
+		private SessionInterface $session,
 	) {
 	}
 
