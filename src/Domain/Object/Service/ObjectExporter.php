@@ -2,17 +2,25 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
 
 readonly class ObjectExporter
 {
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
 		private SchemaFetcher $schemaFetcher,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('object-exporter');
 	}
 
 	/** @return array<array<string,mixed>> */
@@ -29,7 +37,45 @@ readonly class ObjectExporter
 		return $objects;
 	}
 
-	/** @return array<array<int,string>> */
+	/**
+	 * Export all objects for JSON format with error tracking.
+	 *
+	 * @return array{data: array<array<string,mixed>>, errors: array<string>}
+	 */
+	public function exportAllObjectsForJson(string $collection): array
+	{
+		$objects   = [];
+		$objectIds = $this->storage->fetchObjectIds($collection);
+		$errors    = [];
+
+		foreach ($objectIds as $id) {
+			try {
+				$object    = $this->objectFetcher->fetchObject($collection, $id);
+				$objects[] = $object->toArray();
+			} catch (\Throwable $e) {
+				// Log the error with details for debugging
+				$this->logger->warning('Skipping object during JSON export due to data mismatch', [
+					'collection' => $collection,
+					'object_id'  => $id,
+					'error'      => $e->getMessage(),
+					'exception'  => $e::class,
+					'hint'       => 'This usually happens when the schema was modified after objects were created. Check if the stored data type matches the current schema.',
+				]);
+				$errors[] = $id;
+			}
+		}
+
+		return [
+			'data'   => $objects,
+			'errors' => $errors,
+		];
+	}
+
+	/**
+	 * Export all objects for CSV format.
+	 *
+	 * @return array{data: array<array<int,string>>, errors: array<string>}
+	 */
 	public function exportAllObjectsForCSv(string $collection): array
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -43,16 +89,32 @@ readonly class ObjectExporter
 
 		$objects   = [array_values($properties)];
 		$objectIds = $this->storage->fetchObjectIds($collection);
+		$errors    = [];
 
 		foreach ($objectIds as $id) {
-			$object = $this->objectFetcher->fetchObject($collection, $id)->forCsv();
-			$csv    = [];
-			foreach ($properties as $property) {
-				$csv[] = $object[$property] ?? '';
+			try {
+				$object = $this->objectFetcher->fetchObject($collection, $id)->forCsv();
+				$csv    = [];
+				foreach ($properties as $property) {
+					$csv[] = $object[$property] ?? '';
+				}
+				$objects[] = $csv;
+			} catch (\Throwable $e) {
+				// Log the error with details for debugging
+				$this->logger->warning('Skipping object during CSV export due to data mismatch', [
+					'collection' => $collection,
+					'object_id'  => $id,
+					'error'      => $e->getMessage(),
+					'exception'  => $e::class,
+					'hint'       => 'This usually happens when the schema was modified after objects were created. Check if the stored data type matches the current schema.',
+				]);
+				$errors[] = $id;
 			}
-			$objects[] = $csv;
 		}
 
-		return $objects;
+		return [
+			'data'   => $objects,
+			'errors' => $errors,
+		];
 	}
 }
