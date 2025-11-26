@@ -21,8 +21,7 @@
         }
     },
     "required": [
-        "id",
-        "email"
+        "id"
     ],
     "index": [
         "id",

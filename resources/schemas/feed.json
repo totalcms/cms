@@ -63,8 +63,7 @@
 		"title",
 		"content",
 		"created",
-		"updated",
-		"featured"
+		"updated"
 	],
 	"index": [
 		"id",

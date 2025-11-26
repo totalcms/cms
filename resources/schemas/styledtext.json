@@ -21,8 +21,7 @@
         }
     },
     "required": [
-        "id",
-        "styledtext"
+        "id"
     ],
     "index": [
         "id",
