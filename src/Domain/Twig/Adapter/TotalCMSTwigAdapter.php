@@ -443,29 +443,57 @@ NGINX;
 		return '';
 	}
 
-	// Get all schemas
-	/** @return array<array<string,mixed>> */
+	/**
+	 * Get all accessible schemas (filtered by edition).
+	 *
+	 * @return array<array<string,mixed>>
+	 */
 	public function schemas(): array
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
+		// Filter by edition accessibility
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
+
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
-	// Get all reserved schemas
-	/** @return array<array<string,mixed>> */
+	/**
+	 * Get all accessible reserved schemas (filtered by edition).
+	 * Blog, blog-legacy, depot require Standard+.
+	 *
+	 * @return array<array<string,mixed>>
+	 */
 	public function reservedSchemas(): array
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
+		// Filter by edition accessibility
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
+
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
-	// Get all custom schemas
-	/** @return array<array<string,mixed>> */
+	/**
+	 * Get all accessible custom schemas (Pro edition only).
+	 *
+	 * @return array<array<string,mixed>>
+	 */
 	public function customSchemas(): array
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
+
+		// Filter by edition accessibility (custom schemas require Pro)
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
 
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}

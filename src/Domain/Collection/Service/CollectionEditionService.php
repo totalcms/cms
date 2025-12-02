@@ -10,8 +10,9 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 /**
  * Service for checking collection accessibility based on license edition.
  *
- * Collections using custom schemas require Pro edition. This service provides
- * methods to check accessibility and list inaccessible collections for UI display.
+ * - Blog, blog-legacy, depot schemas require Standard edition
+ * - Custom schemas require Pro edition
+ * - All other reserved schemas are available to all editions
  */
 readonly class CollectionEditionService
 {
@@ -38,16 +39,31 @@ readonly class CollectionEditionService
 
 	/**
 	 * Check if a schema is accessible with current edition.
-	 * Reserved (built-in) schemas are always accessible.
-	 * Custom schemas require Pro edition.
+	 *
+	 * - Blog/blog-legacy schemas require BLOG_SCHEMA feature (Standard+)
+	 * - Depot schema requires DEPOT_SCHEMA feature (Standard+)
+	 * - Custom schemas require CUSTOM_SCHEMAS feature (Pro)
+	 * - All other reserved schemas are always accessible
 	 */
 	public function isSchemaAccessible(string $schemaId): bool
 	{
-		if (!$this->schemaFetcher->isCustomSchema($schemaId)) {
-			return true; // Reserved schemas always accessible
+		// Check blog schemas (Standard+)
+		if ($schemaId === 'blog' || $schemaId === 'blog-legacy') {
+			return $this->editionFeatures->can(EditionFeature::BLOG_SCHEMA);
 		}
 
-		return $this->editionFeatures->can(EditionFeature::CUSTOM_SCHEMAS);
+		// Check depot schema (Standard+)
+		if ($schemaId === 'depot') {
+			return $this->editionFeatures->can(EditionFeature::DEPOT_SCHEMA);
+		}
+
+		// Check custom schemas (Pro)
+		if ($this->schemaFetcher->isCustomSchema($schemaId)) {
+			return $this->editionFeatures->can(EditionFeature::CUSTOM_SCHEMAS);
+		}
+
+		// All other reserved schemas are always accessible
+		return true;
 	}
 
 	/**
@@ -57,13 +73,9 @@ readonly class CollectionEditionService
 	 */
 	public function getInaccessibleCollections(): array
 	{
-		if ($this->editionFeatures->can(EditionFeature::CUSTOM_SCHEMAS)) {
-			return []; // Pro has access to all
-		}
-
 		$inaccessible = [];
 		foreach ($this->collectionLister->listAllCollections() as $collection) {
-			if ($this->schemaFetcher->isCustomSchema($collection->schema)) {
+			if (!$this->isSchemaAccessible($collection->schema)) {
 				$inaccessible[] = $collection;
 			}
 		}

@@ -9,6 +9,7 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\EditionFeatureMiddleware;
+use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 
 return function (App $app): void {
 	$container = $app->getContainer();
@@ -21,7 +22,8 @@ return function (App $app): void {
 		$group->get('', Schema\SchemaListAction::class)->setName('schema-list');
 		$group->get('/{id}', Schema\SchemaFetchAction::class)->setName('schema-fetch');
 		$group->map(['HEAD'], '/{id}', Schema\SchemaExistsAction::class)->setName('schema-exists');
-	})->add(SchemaAccessMiddleware::class)
+	})->add(SchemaEditionMiddleware::class)
+		->add(SchemaAccessMiddleware::class)
 		->add(DualAuthMiddleware::class);
 
 	// Mutation schema routes (session-only, no API keys, Pro edition for custom schemas)
@@ -29,10 +31,11 @@ return function (App $app): void {
 		$group->post('', Schema\SchemaSaveAction::class)->setName('schema-save');
 		$group->put('/{id}', Schema\SchemaUpdateAction::class)->setName('schema-update');
 		$group->delete('/{id}', Schema\SchemaDeleteAction::class)->setName('schema-delete');
-	})->add(new EditionFeatureMiddleware(
-		$container->get(EditionFeatureService::class),
-		EditionFeature::CUSTOM_SCHEMAS
-	))
+	})->add(SchemaEditionMiddleware::class)
+		->add(new EditionFeatureMiddleware(
+			$container->get(EditionFeatureService::class),
+			EditionFeature::CUSTOM_SCHEMAS
+		))
 		->add(SchemaAccessMiddleware::class)
 		->add(AuthMiddleware::class);
 };

@@ -137,6 +137,7 @@ use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\EditionFeatureMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
+use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\Security\RateLimitMiddleware;
@@ -637,6 +638,11 @@ return [
 	),
 
 	CollectionEditionMiddleware::class => fn (ContainerInterface $container): CollectionEditionMiddleware => new CollectionEditionMiddleware(
+		$container->get(CollectionEditionService::class),
+		$container->get(EditionFeatureService::class),
+	),
+
+	SchemaEditionMiddleware::class => fn (ContainerInterface $container): SchemaEditionMiddleware => new SchemaEditionMiddleware(
 		$container->get(CollectionEditionService::class),
 		$container->get(EditionFeatureService::class),
 	),
