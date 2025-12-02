@@ -234,11 +234,11 @@ class TotalCMSTwigAdapter
 	/**
 	 * @SuppressWarnings("PHPMD.ExitExpression")
 	 *
-	 * @param array<mixed> $object
+	 * @param array<mixed>|string|null $object
 	 */
-	public function redirectIfNotFound(array $object = []): void
+	public function redirectIfNotFound(array|string|null $object = []): void
 	{
-		if ($object === []) {
+		if ($object === [] || $object === null || $object === '') {
 			$notfound = $this->config->notfound;
 			if ($notfound !== '') {
 				http_response_code(404);
