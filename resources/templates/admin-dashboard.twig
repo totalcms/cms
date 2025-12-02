@@ -110,7 +110,7 @@
             </nav>
 
             {% set licenseStatus = cms.license.getSidebarStatus() %}
-            {% if licenseStatus.showIcon %}
+            {% if licenseStatus.showIcon and cms.isAdmin() %}
             <a href="utils/license-manager"
 				class="license-status license-{{ licenseStatus.severity }}"
 				title="{{ licenseStatus.tooltip }}">License Status</a>
