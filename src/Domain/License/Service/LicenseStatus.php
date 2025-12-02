@@ -135,4 +135,55 @@ readonly class LicenseStatus
 			tooltip: "Trial expires in {$daysRemaining} days. Click for license options."
 		);
 	}
+
+	/**
+	 * Check if license is a trial license.
+	 */
+	public function isTrial(): bool
+	{
+		try {
+			$license = $this->licenseValidator->validateLicense();
+
+			return $license->trial;
+		} catch (\Exception) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check if license is a development license.
+	 */
+	public function isDevelopment(): bool
+	{
+		try {
+			$license = $this->licenseValidator->validateLicense();
+
+			return $license->edition === 'development';
+		} catch (\Exception) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check if edition simulation is allowed.
+	 * Only development and trial licenses can simulate editions.
+	 */
+	public function canSimulateEdition(): bool
+	{
+		return $this->isTrial() || $this->isDevelopment();
+	}
+
+	/**
+	 * Get the current license edition.
+	 */
+	public function getEdition(): string
+	{
+		try {
+			$license = $this->licenseValidator->validateLicense();
+
+			return $license->edition;
+		} catch (\Exception) {
+			return 'unknown';
+		}
+	}
 }

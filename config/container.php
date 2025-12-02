@@ -62,6 +62,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
@@ -130,6 +131,7 @@ use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\License\EditionFeatureMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
@@ -606,6 +608,11 @@ return [
 	LicenseStatus::class => fn (ContainerInterface $container): LicenseStatus => new LicenseStatus(
 		$container->get(LicenseValidator::class),
 		$container->get(LoggerFactory::class),
+	),
+
+	EditionFeatureService::class => fn (ContainerInterface $container): EditionFeatureService => new EditionFeatureService(
+		$container->get(LicenseValidator::class),
+		$container->get(SettingsFetcher::class),
 	),
 
 	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(

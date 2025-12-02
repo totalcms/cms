@@ -39,6 +39,15 @@
 	},
 } %}
 
+{% if cms.license.canSimulateEdition() %}
+	{% set sections = sections|merge({
+		'license': {
+			'label': 'License',
+			'description': 'License and edition simulation settings'
+		}
+	}) %}
+{% endif %}
+
 {% block dashcontent %}
 
 <aside class="dash-content-sidebar">
