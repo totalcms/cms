@@ -16,7 +16,7 @@ use TotalCMS\Support\Config;
  */
 readonly class TextWatermarkFactory
 {
-	public const WATERMARK_DIR = '.watermarks';
+	public const WATERMARK_DIR = '.system/watermarks';
 	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
 	private LoggerInterface $logger;
 
@@ -427,55 +427,5 @@ readonly class TextWatermarkFactory
 	private function generateTempPath(): string
 	{
 		return 'text_watermark_' . uniqid() . '.png';
-	}
-
-	/**
-	 * Clean up temporary watermark files (for backwards compatibility).
-	 */
-	public function cleanup(string $watermarkPath): void
-	{
-		$fullPath = self::WATERMARK_DIR . '/' . $watermarkPath;
-		if ($this->filesystem->fileExists($fullPath)) {
-			$this->filesystem->delete($fullPath);
-		}
-	}
-
-	/**
-	 * Clear cached watermarks older than specified time.
-	 *
-	 * @param int $maxAge Maximum age in seconds (default: 30 days)
-	 *
-	 * @return int Number of files cleaned up
-	 */
-	public function clearOldCache(int $maxAge = 2592000): int
-	{
-		$cleaned    = 0;
-		$cutoffTime = time() - $maxAge;
-
-		try {
-			$files = $this->filesystem->listFiles(self::WATERMARK_DIR);
-
-			foreach ($files as $file) {
-				if (str_starts_with($file, 'text_watermark_')) {
-					$fullPath = self::WATERMARK_DIR . '/' . $file;
-
-					// Use flysystem directly to get file metadata
-					$lastModified = $this->filesystem->flysystem()->lastModified($fullPath);
-
-					if ($lastModified && $lastModified < $cutoffTime) {
-						$this->filesystem->delete($fullPath);
-						$cleaned++;
-					}
-				}
-			}
-		} catch (\Exception $e) {
-			// Log error but don't fail
-			$this->logger->warning('Error cleaning watermark cache', [
-				'error'     => $e->getMessage(),
-				'exception' => $e::class,
-			]);
-		}
-
-		return $cleaned;
 	}
 }

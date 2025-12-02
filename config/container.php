@@ -51,6 +51,7 @@ use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -560,7 +561,7 @@ return [
 		$container->get(RedisService::class),
 		$container->get(MemcachedService::class),
 		$container->get(APCuService::class),
-		$container->get(TextWatermarkFactory::class),
+		$container->get(WatermarkCleanupService::class),
 		$container->get(DevModeManager::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class)
@@ -681,6 +682,11 @@ return [
 		$container->get(TemplateSaver::class),
 		$container->get(FactoryImporter::class),
 		$container->get(LoggerFactory::class),
+	),
+
+	WatermarkCleanupService::class => fn (ContainerInterface $container): WatermarkCleanupService => new WatermarkCleanupService(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(LoggerFactory::class)
 	),
 
 	TextWatermarkFactory::class => fn (ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
