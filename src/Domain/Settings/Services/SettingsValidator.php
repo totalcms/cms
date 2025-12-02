@@ -26,6 +26,7 @@ readonly class SettingsValidator
 			'auth',
 			'htmlclean',
 			'mailer',
+			'license',
 		];
 	}
 

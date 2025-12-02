@@ -42,8 +42,8 @@
 {% if cms.license.canSimulateEdition() %}
 	{% set sections = sections|merge({
 		'license': {
-			'label': 'License',
-			'description': 'License and edition simulation settings'
+			'label': 'Trial Simulation',
+			'description': 'License and edition simulation settings during trial period'
 		}
 	}) %}
 {% endif %}

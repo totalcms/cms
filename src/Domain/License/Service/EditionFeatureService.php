@@ -164,6 +164,15 @@ readonly class EditionFeatureService
 	}
 
 	/**
+	 * Check if edition simulation is allowed for the current license.
+	 * Only development and trial licenses can simulate editions.
+	 */
+	public function canSimulateEdition(): bool
+	{
+		return $this->canSimulate($this->getActualEdition());
+	}
+
+	/**
 	 * Get edition info for display in admin UI.
 	 *
 	 * @return array<string,mixed>

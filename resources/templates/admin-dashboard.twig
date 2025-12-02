@@ -76,7 +76,7 @@
                         <a class="schemas" href="schemas" title="Schemas">Schemas</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessTemplates() %}
+                    {% if cms.canAccessTemplates() and cms.edition.can('templates') %}
                     <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
                         <a class="templates" href="templates" title="Templates">Templates</a>
                     </li>
