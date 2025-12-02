@@ -1473,6 +1473,26 @@ NGINX;
 			return $values[$index] ?? null;
 		}
 
+		// Handle keyword names (first, last, random, featured)
+		$values = array_values($gallery);
+		if ($name === 'first') {
+			return $values[0] ?? null;
+		}
+		if ($name === 'last') {
+			return $values[count($values) - 1] ?? null;
+		}
+		if ($name === 'random') {
+			return $values[array_rand($values)] ?? null;
+		}
+		if ($name === 'featured') {
+			$featured = array_filter($values, fn (array $img): bool => !empty($img['featured']));
+			if ($featured !== []) {
+				return $featured[array_rand($featured)];
+			}
+			// Fall back to random if no featured images
+			return $values[array_rand($values)] ?? null;
+		}
+
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
 				return $image;
