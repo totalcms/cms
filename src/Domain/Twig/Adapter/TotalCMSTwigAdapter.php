@@ -707,15 +707,14 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $fileOptions
 	 * @param array<string,mixed> $options
 	 */
-	public function depotDownload(string $id, string $name, array $fileOptions = [], array $options = []): string
+	public function depotDownload(string $id, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
-		$path       = $fileOptions['path'] ?? '';
-		$password   = $fileOptions['pwd'] ?? '';
+		$path       = $options['path'] ?? '';
+		$password   = $options['pwd'] ?? '';
 
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
@@ -765,15 +764,14 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $fileOptions
 	 * @param array<string,mixed> $options
 	 */
-	public function depotStream(string $id, string $name, array $fileOptions = [], array $options = []): string
+	public function depotStream(string $id, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
-		$path       = $fileOptions['path'] ?? '';
-		$password   = $fileOptions['pwd'] ?? '';
+		$path       = $options['path'] ?? '';
+		$password   = $options['pwd'] ?? '';
 
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
