@@ -592,6 +592,100 @@
 	}
 }
 
+// Inaccessible collections alert (edition downgrade)
+.inaccessible-collections-alert {
+	border-color: oklch(var(--totalform-warning));
+	background: oklch(var(--totalform-warning) / 0.05);
+
+	h2 {
+		color: oklch(var(--totalform-warning));
+	}
+
+	.alert-warning-text {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+		color: oklch(var(--totalform-text-color));
+		line-height: 1.5;
+
+		.icon-warn {
+			width: 1.25rem;
+			height: 1.25rem;
+			background-color: oklch(var(--totalform-warning));
+			flex-shrink: 0;
+			margin-top: 0.125rem;
+			mask-image: var(--icon-warn);
+		}
+	}
+
+	.inaccessible-collections-list {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 1.5rem 0;
+
+		li {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			padding: 0.75rem 1rem;
+			margin-bottom: 0.5rem;
+			background: oklch(var(--totalform-white));
+			border: 1px solid oklch(var(--totalform-border-color));
+			border-radius: var(--totalform-radius);
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+
+			.collection-icon {
+				width: 1.25rem;
+				height: 1.25rem;
+				background-color: oklch(var(--totalform-text-color));
+				flex-shrink: 0;
+				mask-image: var(--icon-collections);
+
+				// Schema-based icons
+				&.schema-auth { mask-image: var(--icon-user); }
+				&.schema-blog-legacy,
+				&.schema-blog { mask-image: var(--icon-blog); }
+				&.schema-feed { mask-image: var(--icon-feed); }
+				&.schema-color { mask-image: var(--icon-paint-brush); }
+				&.schema-date { mask-image: var(--icon-date); }
+				&.schema-depot { mask-image: var(--icon-depot); }
+				&.schema-email { mask-image: var(--icon-email); }
+				&.schema-file { mask-image: var(--icon-file); }
+				&.schema-gallery { mask-image: var(--icon-gallery); }
+				&.schema-image { mask-image: var(--icon-image); }
+				&.schema-number { mask-image: var(--icon-number); }
+				&.schema-playground { mask-image: var(--icon-twig-playground); }
+				&.schema-mailer { mask-image: var(--icon-mailer); }
+				&.schema-styledtext { mask-image: var(--icon-styledtext); }
+				&.schema-svg { mask-image: var(--icon-svg); }
+				&.schema-text { mask-image: var(--icon-text); }
+				&.schema-toggle { mask-image: var(--icon-toggle); }
+				&.schema-url { mask-image: var(--icon-link); }
+			}
+
+			.collection-name {
+				flex: 1;
+				font-weight: 500;
+				color: oklch(var(--totalform-text-color));
+			}
+
+			.collection-schema-badge {
+				font-family: 'Fira Code', monospace;
+				font-size: 0.75rem;
+				padding: 0.25rem 0.5rem;
+				background: oklch(var(--totalform-nearwhite));
+				border: 1px solid oklch(var(--totalform-border-color));
+				border-radius: 3px;
+				color: oklch(var(--totalform-text-color));
+			}
+		}
+	}
+}
+
 // Empty state
 .empty-state {
 	text-align: center;

@@ -26,6 +26,7 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
@@ -42,10 +43,10 @@ return function (App $app): void {
 		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate')->add(TemplateAccessMiddleware::class);
 
 		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);
-		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionMetaAccessMiddleware::class);
+		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionEditionMiddleware::class)->add(CollectionMetaAccessMiddleware::class);
 
-		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionAccessMiddleware::class);
-		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionAccessMiddleware::class);
+		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
 
 		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs')->add(DocsAccessMiddleware::class);
 

@@ -47,6 +47,14 @@ readonly class SchemaFetcher
 	}
 
 	/**
+	 * Check if a schema ID is a custom (non-reserved) schema.
+	 */
+	public function isCustomSchema(string $schemaId): bool
+	{
+		return !in_array($schemaId, SchemaData::RESERVED_SCHEMAS, true);
+	}
+
+	/**
 	 * Fetch a schema for a collection with inheritance resolved (flattened).
 	 */
 	public function fetchSchemaForCollection(string $collection): SchemaData

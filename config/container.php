@@ -44,6 +44,7 @@ use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
@@ -133,6 +134,7 @@ use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\EditionFeatureMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
@@ -337,6 +339,7 @@ return [
 		$container->get(ObjectFetcher::class),
 		$container->get(CollectionLister::class),
 		$container->get(CollectionFetcher::class),
+		$container->get(CollectionEditionService::class),
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(DeckCompatibilityChecker::class),
@@ -624,6 +627,18 @@ return [
 	EditionFeatureService::class => fn (ContainerInterface $container): EditionFeatureService => new EditionFeatureService(
 		$container->get(LicenseValidator::class),
 		$container->get(SettingsFetcher::class),
+	),
+
+	CollectionEditionService::class => fn (ContainerInterface $container): CollectionEditionService => new CollectionEditionService(
+		$container->get(EditionFeatureService::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionLister::class),
+	),
+
+	CollectionEditionMiddleware::class => fn (ContainerInterface $container): CollectionEditionMiddleware => new CollectionEditionMiddleware(
+		$container->get(CollectionEditionService::class),
+		$container->get(EditionFeatureService::class),
 	),
 
 	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(

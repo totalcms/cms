@@ -10,6 +10,7 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
@@ -65,6 +66,7 @@ class TotalCMSTwigAdapter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly CollectionLister $collectionLister,
 		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionEditionService $collectionEditionService,
 		private readonly SchemaLister $schemaLister,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
@@ -573,11 +575,30 @@ NGINX;
 		}
 	}
 
-	// Get all collections
-	/** @return array<object> */
+	/**
+	 * Get all accessible collections (filtered by edition).
+	 *
+	 * @return array<CollectionData>
+	 */
 	public function collections(): array
 	{
-		return $this->collectionLister->listAllCollections();
+		$collections = $this->collectionLister->listAllCollections();
+
+		return array_filter(
+			$collections,
+			fn (CollectionData $c): bool => $this->collectionEditionService->isSchemaAccessible($c->schema)
+		);
+	}
+
+	/**
+	 * Get collections that are inaccessible due to edition restrictions.
+	 * Used for dashboard alerts.
+	 *
+	 * @return array<CollectionData>
+	 */
+	public function getInaccessibleCollections(): array
+	{
+		return $this->collectionEditionService->getInaccessibleCollections();
 	}
 
 	/** @return array<string,list<object>> */
@@ -607,10 +628,19 @@ NGINX;
 		return $categories;
 	}
 
-	// Get collection meta data
-	/** @return array<string,mixed> */
+	/**
+	 * Get a single collection by ID.
+	 * Returns empty array if collection doesn't exist or is inaccessible due to edition.
+	 *
+	 * @return array<string,mixed>
+	 */
 	public function collection(string $collectionId): array
 	{
+		// Check edition accessibility first
+		if (!$this->collectionEditionService->isAccessible($collectionId)) {
+			return [];
+		}
+
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
 		if (!$collection instanceof CollectionData) {
