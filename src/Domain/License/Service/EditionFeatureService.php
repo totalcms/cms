@@ -129,20 +129,24 @@ readonly class EditionFeatureService
 
 	/**
 	 * Get the simulated edition from settings, if configured.
+	 *
+	 * Pro edition (or empty/none) means no simulation - use actual license.
+	 * Only Lite and Standard can be simulated.
 	 */
 	private function getSimulatedEdition(): ?Edition
 	{
 		$licenseSettings = $this->settingsFetcher->loadSection('license');
-		$simulated       = $licenseSettings['simulateEdition'] ?? null;
+		$simulated       = (string) ($licenseSettings['simulateEdition'] ?? 'pro');
 
-		if ($simulated === null || $simulated === '' || $simulated === 'none') {
+		// Pro, empty, or none means no simulation
+		if ($simulated === 'pro' || $simulated === '' || $simulated === 'none') {
 			return null;
 		}
 
 		$edition = Edition::tryFrom(strtolower($simulated));
 
-		// Only allow simulating lite, standard, pro, or enterprise
-		if ($edition === Edition::LITE || $edition === Edition::STANDARD || $edition === Edition::PRO || $edition === Edition::ENTERPRISE) {
+		// Only allow simulating lite or standard
+		if ($edition === Edition::LITE || $edition === Edition::STANDARD) {
 			return $edition;
 		}
 

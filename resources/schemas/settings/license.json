@@ -7,14 +7,12 @@
 		"simulateEdition": {
 			"type"        : "select",
 			"label"       : "Simulate Edition",
-			"placeholder" : "Use Actual License",
-			"help"        : "Test how the CMS behaves with different license editions. Only available for development and trial licenses. Select an edition to simulate its feature restrictions, or leave blank to use your actual license edition.",
+			"help"        : "Test how the CMS behaves with different license editions. Only available for development and trial licenses. Pro disables simulation and uses full features.",
+			"default"     : "pro",
 			"options"     : [
-				{"value": "",           "label": "Use Actual License (No Simulation)"},
-				{"value": "lite",       "label": "Lite Edition"},
-				{"value": "standard",   "label": "Standard Edition"},
-				{"value": "pro",        "label": "Pro Edition"},
-				{"value": "enterprise", "label": "Enterprise Edition"}
+				{"value": "pro",      "label": "Pro"},
+				{"value": "standard", "label": "Standard"},
+				{"value": "lite",     "label": "Lite"}
 			]
 		}
 	}
