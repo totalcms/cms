@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
@@ -30,6 +32,7 @@ readonly class TwigEngine
 		Config $config,
 		TotalCMSTwigExtension $extension,
 		DevModeManager $devModeManager,
+		EditionFeatureService $editionFeatures,
 	) {
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		if (!file_exists($internalTemplates)) {
@@ -37,8 +40,9 @@ readonly class TwigEngine
 		}
 		$paths = [$internalTemplates];
 
-		$customTemplates  = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
-		if (file_exists($customTemplates)) {
+		// Only add custom templates path if edition allows templates feature
+		$customTemplates = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
+		if (file_exists($customTemplates) && $editionFeatures->can(EditionFeature::TEMPLATES)) {
 			$paths[] = $customTemplates;
 		}
 

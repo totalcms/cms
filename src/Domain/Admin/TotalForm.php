@@ -22,6 +22,7 @@ use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  *
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
@@ -321,6 +322,7 @@ class TotalForm implements \Stringable
 
 	/**
 	 * Get properties from collection objects with optional filtering.
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string>        $properties Properties to fetch
 	 * @param string               $collection Collection name (defaults to current collection)

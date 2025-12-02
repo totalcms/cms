@@ -528,7 +528,8 @@ return [
 	TwigEngine::class => fn (ContainerInterface $container): TwigEngine => new TwigEngine(
 		$container->get(Config::class),
 		$container->get(TotalCMSTwigExtension::class),
-		$container->get(DevModeManager::class)
+		$container->get(DevModeManager::class),
+		$container->get(EditionFeatureService::class),
 	),
 
 	TwigRenderer::class => fn (ContainerInterface $container): TwigRenderer => new TwigRenderer(
