@@ -1,5 +1,14 @@
 {% import 'dashboard-widgets.twig' as dashboard %}
 
+{# Edition simulation warning #}
+{% if cms.edition.isSimulating %}
+<div class="simulation-warning">
+	<span class="icon-warn"></span>
+	You are simulating <strong>{{ cms.edition.current | capitalize }}</strong> edition.
+	<a href="settings/license">Disable simulation</a>
+</div>
+{% endif %}
+
 {# Get dashboard data #}
 {% set stats = cms.dashboardStats() %}
 {% set collections = cms.dashboardRecentCollections() %}
