@@ -300,6 +300,13 @@ class DepotField extends FormField
 			'readonly' => true,
 			'value'    => $fileData['name'] ?? '',
 		]);
+		$content .= $this->form->field('ext', [
+			'field'    => 'text',
+			'label'    => 'Extension',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $fileData['ext'] ?? '',
+		]);
 		$content .= $this->form->field('size', [
 			'field'    => 'number',
 			'label'    => 'Size',
