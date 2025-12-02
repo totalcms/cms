@@ -364,9 +364,13 @@ return [
 
 	QRCodeTwigAdapter::class => fn (ContainerInterface $container): QRCodeTwigAdapter => new QRCodeTwigAdapter($container->get(QRGenerator::class)),
 
-	QRGenerator::class => fn (ContainerInterface $container): QRGenerator => new QRGenerator(),
+	QRGenerator::class => fn (ContainerInterface $container): QRGenerator => new QRGenerator(
+		$container->get(EditionFeatureService::class)
+	),
 
-	BarcodeGenerator::class => fn (ContainerInterface $container): BarcodeGenerator => new BarcodeGenerator(),
+	BarcodeGenerator::class => fn (ContainerInterface $container): BarcodeGenerator => new BarcodeGenerator(
+		$container->get(EditionFeatureService::class)
+	),
 
 	BarcodeTwigAdapter::class => fn (ContainerInterface $container): BarcodeTwigAdapter => new BarcodeTwigAdapter($container->get(BarcodeGenerator::class)),
 
@@ -676,6 +680,7 @@ return [
 	TextWatermarkFactory::class => fn (ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
 		$container->get(StorageAdapterInterface::class),
 		$container->get(Config::class),
+		$container->get(EditionFeatureService::class),
 		$container->get(LoggerFactory::class)
 	),
 
@@ -774,6 +779,7 @@ return [
 		$container->get(EmailSender::class),
 		$container->get(TwigEngine::class),
 		$container->get(Config::class),
+		$container->get(EditionFeatureService::class),
 		$container->get(LoggerFactory::class),
 	),
 

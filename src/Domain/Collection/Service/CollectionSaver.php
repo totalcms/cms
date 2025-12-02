@@ -5,6 +5,8 @@ namespace TotalCMS\Domain\Collection\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\DateData;
 
 /**
@@ -17,6 +19,7 @@ readonly class CollectionSaver
 		private CollectionFactory $factory,
 		private IndexRepository $indexRepository,
 		private CollectionFetcher $collectionFetcher,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -27,9 +30,13 @@ readonly class CollectionSaver
 	 *
 	 * @throws \DomainException
 	 * @throws \UnexpectedValueException
+	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
 	 */
 	public function saveCollection(array $data): CollectionData
 	{
+		// Check edition requirements for schema-specific features
+		$this->validateSchemaEdition($data['schema'] ?? '');
+
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
 		// Initialize totalObjects if not set
@@ -225,5 +232,25 @@ readonly class CollectionSaver
 		}
 
 		return $data['count'];
+	}
+
+	/**
+	 * Validate that the schema is allowed for the current edition.
+	 *
+	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
+	 */
+	private function validateSchemaEdition(string $schema): void
+	{
+		// Map schemas to their required edition features
+		$schemaToFeature = [
+			'blog'        => EditionFeature::BLOG_SCHEMA,
+			'blog-legacy' => EditionFeature::BLOG_SCHEMA,
+			'depot'       => EditionFeature::DEPOT_SCHEMA,
+		];
+
+		// Check if this schema requires a specific edition feature
+		if (isset($schemaToFeature[$schema])) {
+			$this->editionFeatures->canOrFail($schemaToFeature[$schema]);
+		}
 	}
 }

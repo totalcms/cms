@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -21,6 +23,7 @@ readonly class TextWatermarkFactory
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 		private Config $config,
+		private EditionFeatureService $editionFeatures,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -33,10 +36,15 @@ readonly class TextWatermarkFactory
 	 *
 	 * @param array<string,mixed> $params Text watermark parameters
 	 *
+	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
+	 *
 	 * @return string Path to generated watermark image
 	 */
 	public function generateTextWatermark(array $params): string
 	{
+		// Text watermarks require Pro edition
+		$this->editionFeatures->canOrFail(EditionFeature::TEXT_WATERMARKS);
+
 		$text = $params['marktext'] ?? '';
 		if (empty($text)) {
 			throw new \InvalidArgumentException('Text watermark requires marktext parameter');
