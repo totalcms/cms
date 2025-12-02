@@ -85,10 +85,12 @@ export default class Identifier extends TotalField {
 		} else {
 			// Get the field data from the form (original behavior)
 			data = this.form.generateData();
-			// Filter out non-string values from data
+			// Filter to only string and number values (convert numbers to strings)
 			data = Object.entries(data).reduce((acc, [key, value]) => {
 				if (typeof value === 'string') {
 					acc[key] = value;
+				} else if (typeof value === 'number') {
+					acc[key] = String(value);
 				}
 				return acc;
 			}, {});
