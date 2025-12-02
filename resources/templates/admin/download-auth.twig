@@ -6,7 +6,9 @@
 <main class="login-layout admin-layout">
 
 	<section class="download-auth-above">
-		{{ include('whitelabel/download-auth-above.twig', ignore_missing = true) }}
+		{% if cms.edition.can('whitelabel_templates') %}
+			{{ include('whitelabel/download-auth-above.twig', ignore_missing = true) }}
+		{% endif %}
 	</section>
 
 	<section class="login-form">
@@ -30,7 +32,9 @@
 	</section>
 
 	<section class="download-auth-below">
-		{{ include('whitelabel/download-auth-below.twig', ignore_missing = true) }}
+		{% if cms.edition.can('whitelabel_templates') %}
+			{{ include('whitelabel/download-auth-below.twig', ignore_missing = true) }}
+		{% endif %}
 	</section>
 
 </main>

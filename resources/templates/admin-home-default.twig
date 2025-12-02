@@ -24,11 +24,12 @@
 	{{ dashboard.newUserWelcome() }}
 {% else %}
 	{# Display welcome message #}
-	{{ include([
-		'whitelabel/admin-welcome.twig',
-		'admin-welcome.twig',
-		'admin-welcome-message.twig'
-	], ignore_missing = true) }}
+	{{ include(cms.edition.can('whitelabel_templates')
+		? ['whitelabel/admin-welcome.twig', 'admin-welcome.twig', 'admin-welcome-message.twig']
+		: cms.edition.can('templates')
+		? ['admin-welcome.twig', 'admin-welcome-message.twig']
+		: ['admin-welcome-message.twig']
+	, ignore_missing = true) }}
 
 	{# Display quick stats #}
 	{{ dashboard.statsCard(stats) }}

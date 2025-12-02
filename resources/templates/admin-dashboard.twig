@@ -47,7 +47,9 @@
 	{% endif %}
 
 	{% block head %}{% endblock %}
-	{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
+	{% if cms.edition.can('whitelabel_templates') %}
+		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
+	{% endif %}
 </head>
 <body>
 
@@ -61,10 +63,10 @@
             <nav>
                 <ul class="menu">
                     <li class="menu-item">
-						{{ include([
-							'whitelabel/admin-logo.twig',
-							'admin-logo-default.twig'
-						], ignore_missing = true) }}
+						{{ include(cms.edition.can('whitelabel_templates')
+							? ['whitelabel/admin-logo.twig', 'admin-logo-default.twig']
+							: ['admin-logo-default.twig']
+						, ignore_missing = true) }}
                     </li>
                     {% if cms.canAccessCollectionsOperation('read') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
@@ -185,6 +187,8 @@
 	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 
 	{% block bodyBelow %}{% endblock %}
-	{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
+	{% if cms.edition.can('whitelabel_templates') %}
+		{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
+	{% endif %}
 </body>
 </html>
