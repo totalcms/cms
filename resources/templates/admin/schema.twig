@@ -27,7 +27,7 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.canAccessSchemasOperation('create') %}
+	{% if cms.canAccessSchemasOperation('create') and cms.edition.can('custom_schemas') %}
 	<footer>
 		<a class="dash-button full transparent" href="schemas/new" title="Create a new schema">+ New Schema</a>
 	</footer>

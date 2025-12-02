@@ -1,15 +1,14 @@
 {% extends "admin-dashboard.twig" %}
 
-{% set adminMenu = [
-	{
-		"title" : "Access Groups",
-		"path"  : "access-groups",
-	},
-	{
-		"title" : "API Keys",
-		"path"  : "api-keys",
-	},
-] %}
+{% set adminMenu = [] %}
+
+{% if cms.edition.can('access_groups') %}
+	{% set adminMenu = adminMenu | merge([{"title": "Access Groups", "path": "access-groups"}]) %}
+{% endif %}
+
+{% if cms.edition.can('api_keys') %}
+	{% set adminMenu = adminMenu | merge([{"title": "API Keys", "path": "api-keys"}]) %}
+{% endif %}
 
 {% set menu = [
 	{

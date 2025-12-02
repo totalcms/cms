@@ -109,6 +109,7 @@ use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
@@ -324,6 +325,10 @@ return [
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
 
+	EditionTwigAdapter::class => fn (ContainerInterface $container): EditionTwigAdapter => new EditionTwigAdapter(
+		$container->get(EditionFeatureService::class),
+	),
+
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
 		$container->get(Config::class),
 		$container->get(IndexReader::class),
@@ -347,6 +352,7 @@ return [
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
 		$container->get(LicenseStatus::class),
+		$container->get(EditionTwigAdapter::class),
 		$container->get(JobManager::class),
 	),
 

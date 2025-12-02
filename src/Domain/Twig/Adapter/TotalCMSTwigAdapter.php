@@ -19,6 +19,7 @@ use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -80,6 +81,7 @@ class TotalCMSTwigAdapter
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
 		public LicenseStatus $license,
+		public EditionTwigAdapter $edition,
 		private readonly JobManager $jobManager,
 	) {
 		$this->env        = $this->config->env;
