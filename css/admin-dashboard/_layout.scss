@@ -646,3 +646,63 @@ pre {
 		}
 	}
 }
+
+// Edition restriction alert
+.edition-alert {
+	display       : flex;
+	gap           : 1rem;
+	padding       : 1rem 1.25rem;
+	margin-block  : 1.5rem;
+	background    : oklch(var(--totalform-warning) / 0.1);
+	border        : 1px solid oklch(var(--totalform-warning) / 0.3);
+	border-radius : var(--totalform-radius);
+
+	.icon-warn {
+		width            : 1.5rem;
+		height           : 1.5rem;
+		background-color : oklch(var(--totalform-warning));
+		flex-shrink      : 0;
+		margin-top       : 0.125rem;
+		mask-image       : var(--icon-warn);
+	}
+
+	.edition-alert-content {
+		flex : 1;
+
+		strong {
+			display       : block;
+			margin-bottom : 0.25rem;
+			color         : oklch(var(--totalform-warning));
+		}
+
+		p {
+			margin      : 0 0 0.5rem 0;
+			font-size   : 0.9375rem;
+			line-height : 1.5;
+		}
+
+		ul {
+			margin         : 0 0 0.75rem 0;
+			padding-left   : 1.25rem;
+			font-size      : 0.9375rem;
+			line-height    : 1.6;
+
+			li {
+				margin-bottom : 0.25rem;
+			}
+
+			code {
+				font-family : 'Fira Code', monospace;
+				font-size   : 0.8125rem;
+				padding     : 0.125rem 0.375rem;
+				background  : oklch(var(--totalform-white));
+				border      : 1px solid oklch(var(--totalform-border-color));
+				border-radius : 3px;
+			}
+		}
+
+		.dash-button {
+			margin-top : 0.5rem;
+		}
+	}
+}

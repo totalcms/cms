@@ -629,6 +629,17 @@ NGINX;
 		return $this->collectionEditionService->getInaccessibleCollections();
 	}
 
+	/**
+	 * Get schemas that are inaccessible due to edition restrictions.
+	 * Used for admin alerts on schema listing page.
+	 *
+	 * @return array<string>
+	 */
+	public function getInaccessibleSchemas(): array
+	{
+		return $this->collectionEditionService->getInaccessibleSchemas();
+	}
+
 	/** @return array<string,list<object>> */
 	public function collectionsByCategory(): array
 	{

@@ -261,11 +261,6 @@
 {# Inaccessible Collections Alert - Shows when edition downgrade blocks collections #}
 {% macro inaccessibleCollectionsAlert(inaccessibleCollections) %}
 {% if inaccessibleCollections|length > 0 %}
-{% if cms.env == "dev" %}
-	{% set licenseUrl = "/admin/utils/license-manager" %}
-{% else %}
-	{% set licenseUrl = "/admin/utils/license-manager" %}
-{% endif %}
 <div class="dashboard-section inaccessible-collections-alert">
 	<h2>Collections Unavailable</h2>
 	<p class="alert-warning-text">
@@ -282,7 +277,7 @@
 		</li>
 		{% endfor %}
 	</ul>
-	<a href="{{ licenseUrl }}" class="dash-button">
+	<a href="utils/license-manager" class="dash-button">
 		Upgrade to Regain Access
 	</a>
 </div>

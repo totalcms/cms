@@ -6,6 +6,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 
 /**
  * Service for checking collection accessibility based on license edition.
@@ -19,6 +20,7 @@ readonly class CollectionEditionService
 	public function __construct(
 		private EditionFeatureService $editionFeatures,
 		private SchemaFetcher $schemaFetcher,
+		private SchemaLister $schemaLister,
 		private CollectionFetcher $collectionFetcher,
 		private CollectionLister $collectionLister,
 	) {
@@ -89,5 +91,45 @@ readonly class CollectionEditionService
 	public function hasInaccessibleCollections(): bool
 	{
 		return count($this->getInaccessibleCollections()) > 0;
+	}
+
+	/**
+	 * Get list of inaccessible schemas (for admin alerts).
+	 *
+	 * @return array<string> Schema IDs that are inaccessible
+	 */
+	public function getInaccessibleSchemas(): array
+	{
+		$inaccessible = [];
+
+		// Check blog schemas
+		if (!$this->isSchemaAccessible('blog')) {
+			$inaccessible[] = 'blog';
+		}
+		if (!$this->isSchemaAccessible('blog-legacy')) {
+			$inaccessible[] = 'blog-legacy';
+		}
+
+		// Check depot schema
+		if (!$this->isSchemaAccessible('depot')) {
+			$inaccessible[] = 'depot';
+		}
+
+		// Check all custom schemas
+		foreach ($this->schemaLister->listCustomSchemas() as $schema) {
+			if (!$this->isSchemaAccessible($schema->id)) {
+				$inaccessible[] = $schema->id;
+			}
+		}
+
+		return $inaccessible;
+	}
+
+	/**
+	 * Check if there are any inaccessible schemas.
+	 */
+	public function hasInaccessibleSchemas(): bool
+	{
+		return count($this->getInaccessibleSchemas()) > 0;
 	}
 }

@@ -633,6 +633,7 @@ return [
 	CollectionEditionService::class => fn (ContainerInterface $container): CollectionEditionService => new CollectionEditionService(
 		$container->get(EditionFeatureService::class),
 		$container->get(SchemaFetcher::class),
+		$container->get(SchemaLister::class),
 		$container->get(CollectionFetcher::class),
 		$container->get(CollectionLister::class),
 	),

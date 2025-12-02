@@ -13,7 +13,7 @@
 			<div class="content" style="margin-bottom:2rem">
 				<p>Choose a CSV file where the first row contains the names of the object properties
 				that you will be adding to each object imported.
-				<a href="/admin/docs/import">See Import Docs</a>.</p>
+				<a href="docs/import">See Import Docs</a>.</p>
 
 				{{ cms.form.importCollection(url.collection, {
 					input : 'csv'
@@ -25,7 +25,7 @@
 			<summary>JSON Import into {{ url.collection | title }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>Choose a JSON file. The main stucture of the JSON document should be an array of objects.
-				<a href="/admin/docs/import">See Import Docs</a>.</p>
+				<a href="docs/import">See Import Docs</a>.</p>
 				{{ cms.form.importCollection(url.collection, {
 					input : 'json'
 				}) }}
