@@ -135,7 +135,13 @@ body {
 	details:not(:first-child) {
 		margin-top : 1.5rem;
 	}
-
+	details summary {
+		display : none;
+	}
+	// show summary only if there are unfiltered items
+	details:has(ul li:not(.filtered)) summary {
+		display : list-item;
+	}
 	header {
 		padding       : 1.5rem 1rem;
 		border-bottom : 1px solid oklch(var(--totalform-lightgray));
