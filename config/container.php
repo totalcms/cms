@@ -645,11 +645,19 @@ return [
 	CollectionEditionMiddleware::class => fn (ContainerInterface $container): CollectionEditionMiddleware => new CollectionEditionMiddleware(
 		$container->get(CollectionEditionService::class),
 		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
 	),
 
 	SchemaEditionMiddleware::class => fn (ContainerInterface $container): SchemaEditionMiddleware => new SchemaEditionMiddleware(
 		$container->get(CollectionEditionService::class),
 		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
 	),
 
 	TemplatesEditionMiddleware::class => fn (ContainerInterface $container): TemplatesEditionMiddleware => new TemplatesEditionMiddleware(

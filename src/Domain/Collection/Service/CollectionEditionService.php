@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -131,5 +132,46 @@ readonly class CollectionEditionService
 	public function hasInaccessibleSchemas(): bool
 	{
 		return count($this->getInaccessibleSchemas()) > 0;
+	}
+
+	/**
+	 * Get the required edition for a schema.
+	 *
+	 * @return Edition|null The required edition, or null if accessible to all editions
+	 */
+	public function getRequiredEditionForSchema(string $schemaId): ?Edition
+	{
+		// Blog schemas require Standard
+		if ($schemaId === 'blog' || $schemaId === 'blog-legacy') {
+			return Edition::STANDARD;
+		}
+
+		// Depot schema requires Standard
+		if ($schemaId === 'depot') {
+			return Edition::STANDARD;
+		}
+
+		// Custom schemas require Pro
+		if ($this->schemaFetcher->isCustomSchema($schemaId)) {
+			return Edition::PRO;
+		}
+
+		// Reserved schemas are available to all editions
+		return null;
+	}
+
+	/**
+	 * Get the required edition for a collection.
+	 *
+	 * @return Edition|null The required edition, or null if accessible to all editions
+	 */
+	public function getRequiredEditionForCollection(string $collectionId): ?Edition
+	{
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if ($collection === null) {
+			return null;
+		}
+
+		return $this->getRequiredEditionForSchema($collection->schema);
 	}
 }
