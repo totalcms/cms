@@ -27,7 +27,9 @@ use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
+use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
+use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
@@ -40,8 +42,8 @@ return function (App $app): void {
 		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema')->add(SchemaEditionMiddleware::class)->add(SchemaAccessMiddleware::class);
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate')->add(SchemaEditionMiddleware::class)->add(SchemaAccessMiddleware::class);
 
-		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template')->add(TemplateAccessMiddleware::class);
-		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate')->add(TemplateAccessMiddleware::class);
+		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template')->add(TemplatesEditionMiddleware::class)->add(TemplateAccessMiddleware::class);
+		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate')->add(TemplatesEditionMiddleware::class)->add(TemplateAccessMiddleware::class);
 
 		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);
 		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionEditionMiddleware::class)->add(CollectionMetaAccessMiddleware::class);
@@ -62,8 +64,8 @@ return function (App $app): void {
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground')->add(PlaygroundAccessMiddleware::class);
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post')->add(PlaygroundAccessMiddleware::class);
 
-		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail')->add(MailerAccessMiddleware::class);
-		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post')->add(MailerAccessMiddleware::class);
+		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail')->add(MailerEditionMiddleware::class)->add(MailerAccessMiddleware::class);
+		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post')->add(MailerEditionMiddleware::class)->add(MailerAccessMiddleware::class);
 
 		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(AdminOnlyMiddleware::class);
 		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(AdminOnlyMiddleware::class);
