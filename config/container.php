@@ -324,6 +324,7 @@ return [
 		$container->get(SchemaLister::class),
 		$container->get(AccessGroupLister::class),
 		$container->get(CollectionEditionService::class),
+		$container->get(EditionFeatureService::class),
 		$container->get(SchemaFactory::class),
 		$container->get(TemplateRepository::class),
 		$container->get(CSRFTokenManager::class),

@@ -10,6 +10,8 @@ use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -160,6 +162,7 @@ class TotalForm implements \Stringable
 		protected SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
+		protected EditionFeatureService $editionFeatures,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',
@@ -224,6 +227,32 @@ class TotalForm implements \Stringable
 		}
 	}
 
+	/**
+	 * Filter form actions based on edition.
+	 * - mailer actions require Standard edition
+	 * - webhook actions require Pro edition
+	 *
+	 * @param array<int,array<string,mixed>> $actions
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function filterActionsByEdition(array $actions): array
+	{
+		if ($actions === []) {
+			return [];
+		}
+
+		return array_values(array_filter($actions, function (array $action): bool {
+			$actionType = $action['action'] ?? '';
+
+			return match ($actionType) {
+				'mailer'  => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
+				'webhook' => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
+				default   => true, // Allow unknown actions through
+			};
+		}));
+	}
+
 	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();
@@ -269,8 +298,9 @@ class TotalForm implements \Stringable
 			'deleteActions' => 'data-delete-actions',
 		];
 		foreach ($actions as $action => $attribute) {
-			if ($this->$action !== []) {
-				$json = json_encode($this->$action);
+			$filteredActions = $this->filterActionsByEdition($this->$action);
+			if ($filteredActions !== []) {
+				$json = json_encode($filteredActions);
 				if ($json) {
 					$attributes[$attribute] = $json;
 				}

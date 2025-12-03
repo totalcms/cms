@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -42,6 +43,7 @@ class TemplateForm extends TotalForm
 		public SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
+		protected EditionFeatureService $editionFeatures,
 		protected TemplateRepository $templateRepository,
 		public string $api,
 		public string $path         = '',
@@ -82,6 +84,7 @@ class TemplateForm extends TotalForm
 			$schemaLister,
 			$accessGroupLister,
 			$collectionEditionService,
+			$editionFeatures,
 			$api,
 			$collection,
 			$id,

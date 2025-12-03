@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -37,6 +38,7 @@ class CollectionForm extends TotalForm
 		protected SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
+		protected EditionFeatureService $editionFeatures,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -79,6 +81,7 @@ class CollectionForm extends TotalForm
 			$schemaLister,
 			$accessGroupLister,
 			$collectionEditionService,
+			$editionFeatures,
 			$api,
 			$collection,
 			$id,

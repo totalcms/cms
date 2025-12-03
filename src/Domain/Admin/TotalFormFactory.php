@@ -11,6 +11,7 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
@@ -52,6 +53,7 @@ readonly class TotalFormFactory
 		private SchemaLister $schemaLister,
 		private AccessGroupLister $accessGroupLister,
 		private CollectionEditionService $collectionEditionService,
+		private EditionFeatureService $editionFeatures,
 		private SchemaFactory $schemaFactory,
 		private TemplateRepository $templateRepository,
 		private CSRFTokenManager $csrfManager,
@@ -90,6 +92,7 @@ readonly class TotalFormFactory
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
 		]);
 
@@ -265,6 +268,7 @@ readonly class TotalFormFactory
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
 			'schemaFactory'            => $this->schemaFactory,
 			'csrfManager'              => $this->csrfManager,
 		]);
@@ -292,6 +296,7 @@ readonly class TotalFormFactory
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
 			'templateRepository'       => $this->templateRepository,
 			'csrfManager'              => $this->csrfManager,
 		]);
@@ -365,6 +370,7 @@ readonly class TotalFormFactory
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
 		]);
 
@@ -388,6 +394,7 @@ readonly class TotalFormFactory
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 		]);
@@ -416,6 +423,7 @@ readonly class TotalFormFactory
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
 		]);
 
@@ -893,6 +901,7 @@ readonly class TotalFormFactory
 			schemaLister             : $this->schemaLister,
 			accessGroupLister        : $this->accessGroupLister,
 			collectionEditionService : $this->collectionEditionService,
+			editionFeatures          : $this->editionFeatures,
 			api                      : $this->api,
 			collection               : '',
 		);

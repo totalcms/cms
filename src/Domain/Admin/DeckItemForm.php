@@ -6,6 +6,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -42,6 +43,7 @@ class DeckItemForm extends TotalForm
 		SchemaLister $schemaLister,
 		AccessGroupLister $accessGroupLister,
 		CollectionEditionService $collectionEditionService,
+		EditionFeatureService $editionFeatures,
 		string $api,
 		string $collection             = '',
 		string $id                     = '',
@@ -76,6 +78,7 @@ class DeckItemForm extends TotalForm
 			schemaLister             : $schemaLister,
 			accessGroupLister        : $accessGroupLister,
 			collectionEditionService : $collectionEditionService,
+			editionFeatures          : $editionFeatures,
 			api                      : $api,
 			collection        : $collection,
 			id                : $id,
