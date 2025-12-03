@@ -36,7 +36,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testConstantsAreDefined(): void
 	{
-		$this->assertEquals('.watermarks', TextWatermarkFactory::WATERMARK_DIR);
+		$this->assertEquals('.system/watermarks', TextWatermarkFactory::WATERMARK_DIR);
 	}
 
 	public function testGenerateTextWatermarkThrowsExceptionWhenTextEmpty(): void
@@ -70,7 +70,7 @@ class TextWatermarkFactoryTest extends TestCase
 		// Mock filesystem to indicate cached file exists
 		$this->mockFilesystem->expects($this->once())
 			->method('fileExists')
-			->with($this->stringStartsWith('.watermarks/'))
+			->with($this->stringStartsWith('.system/watermarks/'))
 			->willReturn(true);
 
 		$result = $this->factory->generateTextWatermark($params);
@@ -97,14 +97,14 @@ class TextWatermarkFactoryTest extends TestCase
 		// Mock filesystem to indicate no cached file exists
 		$this->mockFilesystem->expects($this->once())
 			->method('fileExists')
-			->with($this->stringStartsWith('.watermarks/'))
+			->with($this->stringStartsWith('.system/watermarks/'))
 			->willReturn(false);
 
 		// Mock the file save operation
 		$this->mockFilesystem->expects($this->once())
 			->method('write')
 			->with(
-				$this->stringStartsWith('.watermarks/'),
+				$this->stringStartsWith('.system/watermarks/'),
 				$this->isType('string')
 			)
 			->willReturn(true);
@@ -136,14 +136,14 @@ class TextWatermarkFactoryTest extends TestCase
 		// Mock filesystem for no cache initially
 		$this->mockFilesystem->expects($this->once())
 			->method('fileExists')
-			->with($this->stringStartsWith('.watermarks/'))
+			->with($this->stringStartsWith('.system/watermarks/'))
 			->willReturn(false);
 
 		// Mock the file save operation
 		$this->mockFilesystem->expects($this->once())
 			->method('write')
 			->with(
-				$this->stringStartsWith('.watermarks/'),
+				$this->stringStartsWith('.system/watermarks/'),
 				$this->isType('string')
 			)
 			->willReturn(true);

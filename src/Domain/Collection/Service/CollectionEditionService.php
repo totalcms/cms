@@ -34,7 +34,8 @@ readonly class CollectionEditionService
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 		if ($collection === null) {
-			return false;
+			// Collection doesn't exist - allow through so action can return proper 404
+			return true;
 		}
 
 		return $this->isSchemaAccessible($collection->schema);

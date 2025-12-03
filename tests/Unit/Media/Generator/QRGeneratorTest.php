@@ -14,7 +14,7 @@ describe('QRGenerator', function (): void {
 	});
 
 	test('QRGenerator → creates instance with custom size', function (): void {
-		$generator = new QRGenerator(256);
+		$generator = new QRGenerator(editionFeatures: null, size: 256);
 
 		expect($generator)->toBeInstanceOf(QRGenerator::class);
 	});

@@ -3,9 +3,11 @@
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -19,13 +21,15 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 describe('ObjectForm File Property Filtering', function (): void {
 	beforeEach(function (): void {
 		// Mock dependencies
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->indexReader       = $this->createMock(IndexReader::class);
-		$this->indexFilter       = $this->createMock(IndexFilter::class);
-		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
-		$this->schemaLister      = $this->createMock(SchemaLister::class);
-		$this->accessGroupLister = $this->createMock(AccessGroupLister::class);
+		$this->objectFetcher            = $this->createMock(ObjectFetcher::class);
+		$this->collectionFetcher        = $this->createMock(CollectionFetcher::class);
+		$this->indexReader              = $this->createMock(IndexReader::class);
+		$this->indexFilter              = $this->createMock(IndexFilter::class);
+		$this->schemaFetcher            = $this->createMock(SchemaFetcher::class);
+		$this->schemaLister             = $this->createMock(SchemaLister::class);
+		$this->accessGroupLister        = $this->createMock(AccessGroupLister::class);
+		$this->collectionEditionService = $this->createMock(CollectionEditionService::class);
+		$this->editionFeatures          = $this->createMock(EditionFeatureService::class);
 
 		// Create mock schema with various property types
 		$this->schemaData             = new SchemaData();
@@ -74,6 +78,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -108,6 +114,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -136,6 +144,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -163,6 +173,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -191,6 +203,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -223,6 +237,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -266,6 +282,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -301,6 +319,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -323,6 +343,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			data: []
@@ -355,6 +377,8 @@ describe('ObjectForm File Property Filtering', function (): void {
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			accessGroupLister: $this->accessGroupLister,
+			collectionEditionService: $this->collectionEditionService,
+			editionFeatures: $this->editionFeatures,
 			api: '/api',
 			collection: 'test-collection',
 			id: 'existing-object-id', // Explicitly set ID for editing

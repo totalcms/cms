@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mailer\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Mailer\Data\MailerData;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
@@ -21,15 +22,19 @@ final class EmailServiceTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $emailSender;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
 	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
 	private \PHPUnit\Framework\MockObject\MockObject $logger;
 
 	protected function setUp(): void
 	{
-		$this->mailerFetcher = $this->createMock(MailerFetcher::class);
-		$this->emailSender   = $this->createMock(EmailSender::class);
-		$this->twigEngine    = $this->createMock(TwigEngine::class);
-		$this->config        = $this->createMock(Config::class);
-		$this->logger        = $this->createMock(LoggerInterface::class);
+		$this->mailerFetcher   = $this->createMock(MailerFetcher::class);
+		$this->emailSender     = $this->createMock(EmailSender::class);
+		$this->twigEngine      = $this->createMock(TwigEngine::class);
+		$this->config          = $this->createMock(Config::class);
+		$this->editionFeatures = $this->createMock(EditionFeatureService::class);
+		// By default, allow mailer actions (can be overridden in individual tests)
+		$this->editionFeatures->method('can')->willReturn(true);
+		$this->logger          = $this->createMock(LoggerInterface::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -40,6 +45,7 @@ final class EmailServiceTest extends TestCase
 			$this->emailSender,
 			$this->twigEngine,
 			$this->config,
+			$this->editionFeatures,
 			$loggerFactory
 		);
 	}
