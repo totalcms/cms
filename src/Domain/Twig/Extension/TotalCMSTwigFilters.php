@@ -7,6 +7,7 @@ use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Config;
@@ -98,6 +99,7 @@ class TotalCMSTwigFilters
 		'dateIsToday',
 		'price',
 		'mailto',
+		'prefixSlug',
 	];
 
 	/** @return array<TwigFilter> */
@@ -185,6 +187,41 @@ class TotalCMSTwigFilters
 	public static function mailto(string $email, string $subject = '', string $body = '', string $title = ''): string
 	{
 		return HTMLUtils::mailtoLink(email: $email, subject: $subject, body: $body, title: $title);
+	}
+
+	/**
+	 * Slugify and prefix a string or array of strings.
+	 *
+	 * @param string|array<mixed>|null $value String or array of strings to process
+	 * @param string $prefix Prefix to prepend to each slugified item (default: '')
+	 * @param string $separator Separator to join items (default: ' ')
+	 *
+	 * @return string Joined string of slugified and prefixed items
+	 */
+	public static function prefixSlug(string|array|null $value, string $prefix = '', string $separator = ' '): string
+	{
+		if ($value === null || $value === '' || $value === []) {
+			return '';
+		}
+
+		// Convert string to single-item array
+		$items = is_string($value) ? [$value] : $value;
+
+		$processed = [];
+		foreach ($items as $item) {
+			if (!is_string($item) || $item === '') {
+				continue;
+			}
+
+			$slug = SlugData::slugify($prefix . $item);
+			if ($slug === '' || $slug === $prefix) {
+				continue;
+			}
+
+			$processed[] = $slug;
+		}
+
+		return implode($separator, $processed);
 	}
 
 	// -------------------------
