@@ -33,7 +33,7 @@ class QRGenerator
 	private function generateSVG(string $text): string
 	{
 		// QR codes require Standard edition or higher
-		if ($this->editionFeatures !== null) {
+		if ($this->editionFeatures instanceof EditionFeatureService) {
 			$this->editionFeatures->canOrFail(EditionFeature::QR_CODES);
 		}
 

@@ -76,8 +76,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 				return $this->jsonRenderer->json(
 					$this->responseFactory->createResponse()->withStatus(403),
 					['error' => [
-						'message' => 'External REST API access requires the Pro edition or higher.',
-						'edition' => $edition->value,
+						'message'  => 'External REST API access requires the Pro edition or higher.',
+						'edition'  => $edition->value,
 						'required' => 'pro',
 					]]
 				);

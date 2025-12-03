@@ -10,10 +10,10 @@ use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -25,8 +25,8 @@ use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
- * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
@@ -230,7 +230,7 @@ class TotalForm implements \Stringable
 	/**
 	 * Filter form actions based on edition.
 	 * - mailer actions require Standard edition
-	 * - webhook actions require Pro edition
+	 * - webhook actions require Pro edition.
 	 *
 	 * @param array<int,array<string,mixed>> $actions
 	 *
@@ -354,6 +354,7 @@ class TotalForm implements \Stringable
 
 	/**
 	 * Get properties from collection objects with optional filtering.
+	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string>        $properties Properties to fetch

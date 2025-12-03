@@ -12,8 +12,8 @@ use TotalCMS\Middleware\License\EditionFeatureMiddleware;
 
 return function (App $app): void {
 	$container = $app->getContainer();
-	if ($container === null) {
-		throw new \RuntimeException('Container not available');
+	if (!$container instanceof Psr\Container\ContainerInterface) {
+		throw new RuntimeException('Container not available');
 	}
 
 	// API endpoints for managing API keys (requires super admin + Pro edition)

@@ -67,10 +67,10 @@ final class DevModeApiTest extends TestCase
 			'imageworks' => [],
 		]);
 
-		$filesystemService    = new FilesystemService($config);
-		$opcacheService       = new OPcacheService();
-		$redisService         = new RedisService($config);
-		$memcachedService     = new MemcachedService($config);
+		$filesystemService         = new FilesystemService($config);
+		$opcacheService            = new OPcacheService();
+		$redisService              = new RedisService($config);
+		$memcachedService          = new MemcachedService($config);
 		$apcuService               = new APCuService($config);
 		$watermarkCleanupService   = $this->createMock(WatermarkCleanupService::class);
 

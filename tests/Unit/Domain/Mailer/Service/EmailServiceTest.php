@@ -6,8 +6,8 @@ namespace Tests\Unit\Domain\Mailer\Service;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;

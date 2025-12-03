@@ -11,10 +11,10 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -82,12 +82,12 @@ readonly class TotalFormFactory
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
 		$options = array_merge($options, [
-			'route'             => $route,
-			'api'               => $this->api,
-			'objectFetcher'     => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
+			'route'                    => $route,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
@@ -259,11 +259,11 @@ readonly class TotalFormFactory
 			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'               => $this->api,
-			'objectFetcher'     => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
@@ -287,11 +287,11 @@ readonly class TotalFormFactory
 			'id'         => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'                => $this->api,
-			'objectFetcher'      => $this->objectFetcher,
-			'collectionFetcher'  => $this->collectionFetcher,
-			'collectionReader'   => $this->collectionReader,
-			'indexFilter'        => $this->indexFilter,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
@@ -361,11 +361,11 @@ readonly class TotalFormFactory
 			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'               => $this->api,
-			'objectFetcher'     => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
 			'schemaLister'             => $this->schemaLister,
 			'accessGroupLister'        => $this->accessGroupLister,
@@ -384,11 +384,11 @@ readonly class TotalFormFactory
 	{
 		$options = array_merge($options, [
 			// These options cannot be overridden
-			'collection'        => $collection,
-			'api'               => $this->api,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
+			'collection'               => $collection,
+			'api'                      => $this->api,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
 			'objectFetcher'            => $this->objectFetcher,
 			'schemaFetcher'            => $this->schemaFetcher,
 			'schemaLister'             => $this->schemaLister,
@@ -411,13 +411,13 @@ readonly class TotalFormFactory
 	{
 		$options = array_merge($options, [
 			// These options cannot be overridden
-			'collection'        => $collection,
-			'property'          => $property,
-			'id'                => $options['id'] ?? '',
-			'api'               => $this->api,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
+			'collection'               => $collection,
+			'property'                 => $property,
+			'id'                       => $options['id'] ?? '',
+			'api'                      => $this->api,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
 			'objectFetcher'            => $this->objectFetcher,
 			'schemaFetcher'            => $this->schemaFetcher,
 			'schemaLister'             => $this->schemaLister,

@@ -20,7 +20,6 @@ use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -802,7 +801,7 @@ NGINX;
 		}
 
 		$query = http_build_query(array_filter([
-			'path' => trim($path, '/'),
+			'path' => trim((string)$path, '/'),
 			'pwd'  => $password,
 		]));
 
@@ -859,7 +858,7 @@ NGINX;
 		}
 
 		$query = http_build_query(array_filter([
-			'path' => trim($path, '/'),
+			'path' => trim((string)$path, '/'),
 			'pwd'  => $password,
 		]));
 
@@ -1560,6 +1559,7 @@ NGINX;
 			if ($featured !== []) {
 				return $featured[array_rand($featured)];
 			}
+
 			// Fall back to random if no featured images
 			return $values[array_rand($values)] ?? null;
 		}

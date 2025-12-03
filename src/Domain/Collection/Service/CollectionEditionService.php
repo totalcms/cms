@@ -33,7 +33,7 @@ readonly class CollectionEditionService
 	public function isAccessible(string $collectionId): bool
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			// Collection doesn't exist - allow through so action can return proper 404
 			return true;
 		}
@@ -169,7 +169,7 @@ readonly class CollectionEditionService
 	public function getRequiredEditionForCollection(string $collectionId): ?Edition
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			return null;
 		}
 

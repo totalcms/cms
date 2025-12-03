@@ -100,7 +100,7 @@ readonly class EditionFeatureService
 		// Check for simulation override (only available in dev/trial mode)
 		if ($this->canSimulate($actualEdition)) {
 			$simulatedEdition = $this->getSimulatedEdition();
-			if ($simulatedEdition !== null) {
+			if ($simulatedEdition instanceof Edition) {
 				return $simulatedEdition;
 			}
 		}
@@ -136,7 +136,7 @@ readonly class EditionFeatureService
 	private function getSimulatedEdition(): ?Edition
 	{
 		$licenseSettings = $this->settingsFetcher->loadSection('license');
-		$simulated       = (string) ($licenseSettings['simulateEdition'] ?? 'pro');
+		$simulated       = (string)($licenseSettings['simulateEdition'] ?? 'pro');
 
 		// Pro, empty, or none means no simulation
 		if ($simulated === 'pro' || $simulated === '' || $simulated === 'none') {
@@ -164,7 +164,7 @@ readonly class EditionFeatureService
 			return false;
 		}
 
-		return $this->getSimulatedEdition() !== null;
+		return $this->getSimulatedEdition() instanceof Edition;
 	}
 
 	/**
@@ -187,11 +187,11 @@ readonly class EditionFeatureService
 		$effectiveEdition = $this->getEdition();
 
 		return [
-			'actual'      => $actualEdition->value,
-			'effective'   => $effectiveEdition->value,
-			'level'       => $effectiveEdition->level(),
+			'actual'       => $actualEdition->value,
+			'effective'    => $effectiveEdition->value,
+			'level'        => $effectiveEdition->level(),
 			'isSimulating' => $this->isSimulating(),
-			'canSimulate' => $this->canSimulate($actualEdition),
+			'canSimulate'  => $this->canSimulate($actualEdition),
 		];
 	}
 }

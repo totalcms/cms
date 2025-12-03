@@ -6,11 +6,11 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 

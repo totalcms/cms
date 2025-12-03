@@ -25,7 +25,7 @@ class BarcodeGenerator
 	private function generateSVG(string $data, string $type, int $width = -1, int $height = -1, string $color = 'black'): string
 	{
 		// Barcodes require Pro edition
-		if ($this->editionFeatures !== null) {
+		if ($this->editionFeatures instanceof EditionFeatureService) {
 			$this->editionFeatures->canOrFail(EditionFeature::BARCODES);
 		}
 

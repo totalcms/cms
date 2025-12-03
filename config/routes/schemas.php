@@ -13,8 +13,8 @@ use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 
 return function (App $app): void {
 	$container = $app->getContainer();
-	if ($container === null) {
-		throw new \RuntimeException('Container not available');
+	if (!$container instanceof Psr\Container\ContainerInterface) {
+		throw new RuntimeException('Container not available');
 	}
 
 	// Read-only schema routes (allow API keys)

@@ -8,16 +8,16 @@ namespace TotalCMS\Domain\License\Data;
 enum EditionFeature: string
 {
 	// Schema features
-	case BLOG_SCHEMA = 'blog_schema';
-	case DEPOT_SCHEMA = 'depot_schema';
+	case BLOG_SCHEMA    = 'blog_schema';
+	case DEPOT_SCHEMA   = 'depot_schema';
 	case CUSTOM_SCHEMAS = 'custom_schemas';
 
 	// Watermark features
 	case IMAGE_WATERMARKS = 'image_watermarks';
-	case TEXT_WATERMARKS = 'text_watermarks';
+	case TEXT_WATERMARKS  = 'text_watermarks';
 
 	// Form action features
-	case MAILER_ACTIONS = 'mailer_actions';
+	case MAILER_ACTIONS  = 'mailer_actions';
 	case WEBHOOK_ACTIONS = 'webhook_actions';
 
 	// API features
@@ -28,12 +28,12 @@ enum EditionFeature: string
 	case BARCODES = 'barcodes';
 
 	// Template features
-	case TEMPLATES = 'templates';
+	case TEMPLATES            = 'templates';
 	case WHITELABEL_TEMPLATES = 'whitelabel_templates';
 
 	// Utility features
 	case ACCESS_GROUPS = 'access_groups';
-	case API_KEYS = 'api_keys';
+	case API_KEYS      = 'api_keys';
 
 	/**
 	 * Get a human-readable label for this feature.
@@ -41,20 +41,20 @@ enum EditionFeature: string
 	public function label(): string
 	{
 		return match ($this) {
-			self::BLOG_SCHEMA => 'Blog Schema',
-			self::DEPOT_SCHEMA => 'Depot Schema',
-			self::CUSTOM_SCHEMAS => 'Custom Schemas',
-			self::IMAGE_WATERMARKS => 'Image Watermarks',
-			self::TEXT_WATERMARKS => 'Text Watermarks',
-			self::MAILER_ACTIONS => 'Mailer Form Actions',
-			self::WEBHOOK_ACTIONS => 'Webhook Form Actions',
-			self::EXTERNAL_REST_API => 'External REST API',
-			self::QR_CODES => 'QR Codes',
-			self::BARCODES => 'Barcodes',
-			self::TEMPLATES => 'Templates',
+			self::BLOG_SCHEMA          => 'Blog Schema',
+			self::DEPOT_SCHEMA         => 'Depot Schema',
+			self::CUSTOM_SCHEMAS       => 'Custom Schemas',
+			self::IMAGE_WATERMARKS     => 'Image Watermarks',
+			self::TEXT_WATERMARKS      => 'Text Watermarks',
+			self::MAILER_ACTIONS       => 'Mailer Form Actions',
+			self::WEBHOOK_ACTIONS      => 'Webhook Form Actions',
+			self::EXTERNAL_REST_API    => 'External REST API',
+			self::QR_CODES             => 'QR Codes',
+			self::BARCODES             => 'Barcodes',
+			self::TEMPLATES            => 'Templates',
 			self::WHITELABEL_TEMPLATES => 'Whitelabel Templates',
-			self::ACCESS_GROUPS => 'Access Groups',
-			self::API_KEYS => 'API Keys',
+			self::ACCESS_GROUPS        => 'Access Groups',
+			self::API_KEYS             => 'API Keys',
 		};
 	}
 

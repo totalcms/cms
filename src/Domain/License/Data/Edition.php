@@ -4,17 +4,17 @@ namespace TotalCMS\Domain\License\Data;
 
 /**
  * License edition levels with hierarchy support.
- * Lite < Standard < Pro
+ * Lite < Standard < Pro.
  */
 enum Edition: string
 {
-	case LITE = 'lite';
-	case STANDARD = 'standard';
-	case PRO = 'pro';
-	case ENTERPRISE = 'enterprise';
+	case LITE        = 'lite';
+	case STANDARD    = 'standard';
+	case PRO         = 'pro';
+	case ENTERPRISE  = 'enterprise';
 	case DEVELOPMENT = 'development';
-	case TRIAL = 'trial';
-	case UNKNOWN = 'unknown';
+	case TRIAL       = 'trial';
+	case UNKNOWN     = 'unknown';
 
 	/**
 	 * Get the hierarchy level for this edition.
@@ -23,8 +23,8 @@ enum Edition: string
 	public function level(): int
 	{
 		return match ($this) {
-			self::UNKNOWN => 0,
-			self::LITE => 1,
+			self::UNKNOWN  => 0,
+			self::LITE     => 1,
 			self::STANDARD => 2,
 			self::PRO, self::ENTERPRISE, self::DEVELOPMENT, self::TRIAL => 3,
 		};

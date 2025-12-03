@@ -7,9 +7,9 @@ use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -153,7 +153,7 @@ class CollectionForm extends TotalForm
 		$schemaField = $this->fields['schema'];
 		if ($schemaField instanceof SelectField) {
 			$customSchemas = $this->customSchemas();
-			$options = ['Reserved Schemas' => $this->reservedSchemas()];
+			$options       = ['Reserved Schemas' => $this->reservedSchemas()];
 
 			// Only include Custom Schemas group if there are any
 			if (count($customSchemas) > 0) {
@@ -198,7 +198,7 @@ class CollectionForm extends TotalForm
 	/** @return array<string> */
 	private function customSchemas(): array
 	{
-		$schemas = $this->schemaLister->listCustomSchemas();
+		$schemas   = $this->schemaLister->listCustomSchemas();
 		$schemaIds = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 
 		// Filter out custom schemas not accessible for current edition (Pro only)

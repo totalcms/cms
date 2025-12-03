@@ -9,6 +9,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -59,7 +60,7 @@ readonly class CollectionEditionMiddleware implements MiddlewareInterface
 
 			$message = sprintf(
 				'This collection requires the %s edition. Current edition: %s.',
-				$requiredEdition ? ucfirst($requiredEdition->value) : 'Pro',
+				$requiredEdition instanceof Edition ? ucfirst($requiredEdition->value) : 'Pro',
 				ucfirst($currentEdition->value)
 			);
 
