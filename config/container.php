@@ -319,6 +319,7 @@ return [
 		$container->get(SchemaFetcher::class),
 		$container->get(SchemaLister::class),
 		$container->get(AccessGroupLister::class),
+		$container->get(CollectionEditionService::class),
 		$container->get(SchemaFactory::class),
 		$container->get(TemplateRepository::class),
 		$container->get(CSRFTokenManager::class),

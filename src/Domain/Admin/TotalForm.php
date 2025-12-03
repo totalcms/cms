@@ -8,6 +8,7 @@ use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -158,6 +159,7 @@ class TotalForm implements \Stringable
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
+		protected CollectionEditionService $collectionEditionService,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',

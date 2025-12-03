@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -35,6 +36,7 @@ class CollectionForm extends TotalForm
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
+		protected CollectionEditionService $collectionEditionService,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -76,6 +78,7 @@ class CollectionForm extends TotalForm
 			$schemaFetcher,
 			$schemaLister,
 			$accessGroupLister,
+			$collectionEditionService,
 			$api,
 			$collection,
 			$id,
@@ -146,10 +149,15 @@ class CollectionForm extends TotalForm
 		// Generate the schema field options
 		$schemaField = $this->fields['schema'];
 		if ($schemaField instanceof SelectField) {
-			$schemaField->setOptions([
-				'Custom Schemas'   => $this->customSchemas(),
-				'Reserved Schemas' => $this->reservedSchemas(),
-			]);
+			$customSchemas = $this->customSchemas();
+			$options = ['Reserved Schemas' => $this->reservedSchemas()];
+
+			// Only include Custom Schemas group if there are any
+			if (count($customSchemas) > 0) {
+				$options = ['Custom Schemas' => $customSchemas] + $options;
+			}
+
+			$schemaField->setOptions($options);
 			if ($this->method === 'PUT') {
 				// disable schema for edit mode
 				$schemaField->disable();
@@ -178,15 +186,25 @@ class CollectionForm extends TotalForm
 			$ignore[] = 'blog-legacy';
 		}
 
-		return array_filter($schemas, fn (string $schema): bool => !in_array($schema, $ignore));
+		// Filter out schemas not accessible for current edition
+		$schemas = array_filter($schemas, fn (string $schema): bool => !in_array($schema, $ignore));
+
+		return array_filter($schemas, fn (string $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema));
 	}
 
 	/** @return array<string> */
 	private function customSchemas(): array
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
+		$schemaIds = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 
-		return array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
+		// Filter out custom schemas not accessible for current edition (Pro only)
+		$schemaIds = array_filter($schemaIds, fn (string $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema));
+
+		// Sort alphabetically
+		sort($schemaIds);
+
+		return $schemaIds;
 	}
 
 	/**
