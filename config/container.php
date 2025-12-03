@@ -134,6 +134,8 @@ use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
+use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\EditionFeatureMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
@@ -670,6 +672,22 @@ return [
 	MailerEditionMiddleware::class => fn (ContainerInterface $container): MailerEditionMiddleware => new MailerEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	AccessGroupsEditionMiddleware::class => fn (ContainerInterface $container): AccessGroupsEditionMiddleware => new AccessGroupsEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	ApiKeysEditionMiddleware::class => fn (ContainerInterface $container): ApiKeysEditionMiddleware => new ApiKeysEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
