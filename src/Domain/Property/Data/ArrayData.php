@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Array type property data.
  */
-class ArrayData extends PropertyData
+class ArrayData extends PropertyData implements \Stringable
 {
 	/** @var array<string> */
 	public array $data;

@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-class GalleryData extends PropertyData
+class GalleryData extends PropertyData implements \Stringable
 {
 	/** @var array<ImageData> */
 	public array $images = [];

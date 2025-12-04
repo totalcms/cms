@@ -52,7 +52,7 @@ class CsvImporter
 		$cleanedRecords = [];
 		foreach ($records as $record) {
 			// Trim all values in the record
-			$trimmedRecord = array_map('trim', $record);
+			$trimmedRecord = array_map(trim(...), $record);
 
 			// Remove columns with empty headers
 			$filteredRecord = array_intersect_key($trimmedRecord, array_flip($headers));

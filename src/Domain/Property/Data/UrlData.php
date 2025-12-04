@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * String type property data.
  */
-class UrlData extends PropertyData
+class UrlData extends PropertyData implements \Stringable
 {
 	public string $url;
 

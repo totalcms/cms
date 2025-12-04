@@ -259,7 +259,7 @@ class SchemaForm extends TotalForm
 			$schemaIds  = array_map(fn (SchemaData $schema): string => $schema->id, $allSchemas);
 
 			// Remove 'schema' and 'collection' schemas and the current schema being edited
-			$schemaIds = array_filter($schemaIds, fn (string $id): bool => $id !== 'schema' && $id !== 'collection' && $id !== $this->id);
+			$schemaIds = array_filter($schemaIds, fn (string $id): bool => !in_array($id, ['schema', 'collection', $this->id], true));
 
 			$options['options'] = array_values($schemaIds);
 		}

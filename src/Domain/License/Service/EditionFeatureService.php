@@ -139,7 +139,7 @@ readonly class EditionFeatureService
 		$simulated       = (string)($licenseSettings['simulateEdition'] ?? 'pro');
 
 		// Pro, empty, or none means no simulation
-		if ($simulated === 'pro' || $simulated === '' || $simulated === 'none') {
+		if (in_array($simulated, ['pro', '', 'none'], true)) {
 			return null;
 		}
 

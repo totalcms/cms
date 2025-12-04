@@ -178,7 +178,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testToStringWithObjectThatHasToStringMethod(): void
 	{
-		$factory = (fn (): object => new class {
+		$factory = (fn (): object => new class implements \Stringable {
 			public function __toString(): string
 			{
 				return 'CustomToString';

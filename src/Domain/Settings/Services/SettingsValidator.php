@@ -179,7 +179,7 @@ readonly class SettingsValidator
 		// Convert cache backend toggles to booleans
 		foreach (['apcu', 'redis', 'memcached', 'filesystem'] as $backend) {
 			if (isset($data[$backend])) {
-				$data[$backend] = $data[$backend] === 'on' || $data[$backend] === '1' || $data[$backend] === true;
+				$data[$backend] = in_array($data[$backend], ['on', '1', true], true);
 			}
 		}
 
@@ -212,7 +212,7 @@ readonly class SettingsValidator
 	{
 		// Handle toggle field
 		if (isset($data['enable'])) {
-			$data['enable'] = $data['enable'] === 'on' || $data['enable'] === '1' || $data['enable'] === true;
+			$data['enable'] = in_array($data['enable'], ['on', '1', true], true);
 		}
 
 		// Convert numeric fields to integers
@@ -244,7 +244,7 @@ readonly class SettingsValidator
 	{
 		// Handle toggle field
 		if (isset($data['enabled'])) {
-			$data['enabled'] = $data['enabled'] === 'on' || $data['enabled'] === '1' || $data['enabled'] === true;
+			$data['enabled'] = in_array($data['enabled'], ['on', '1', true], true);
 		}
 
 		// Parse JSON arrays

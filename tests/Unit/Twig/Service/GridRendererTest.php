@@ -69,7 +69,7 @@ final class GridRendererTest extends TestCase
 	public function testTagsWithNullLinkBase(): void
 	{
 		$tags   = ['php', 'web'];
-		$result = $this->gridRenderer->tags($tags, null);
+		$result = $this->gridRenderer->tags($tags);
 
 		$this->assertIsString($result);
 		$this->assertStringContainsString('php', $result);

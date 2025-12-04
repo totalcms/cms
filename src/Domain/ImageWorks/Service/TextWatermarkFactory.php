@@ -138,7 +138,7 @@ readonly class TextWatermarkFactory
 			$width = $textWidth + ($padding * 2) + ($fontSize * 0.1);
 			// Add extra height for descenders and rotation space
 			// Multiply by line count to ensure enough space for multi-line text
-			$extraHeight = $angle == 0 ? ($fontSize * 0.5 * $lineCount) : ($fontSize * 0.8 * $lineCount);
+			$extraHeight = $angle === 0 ? ($fontSize * 0.5 * $lineCount) : ($fontSize * 0.8 * $lineCount);
 			$height      = $textHeight + ($padding * 2) + $extraHeight;
 		} else {
 			// Fallback for built-in fonts

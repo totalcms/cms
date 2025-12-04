@@ -192,7 +192,7 @@ class CollectionForm extends TotalForm
 		// Filter out schemas not accessible for current edition
 		$schemas = array_filter($schemas, fn (string $schema): bool => !in_array($schema, $ignore));
 
-		return array_filter($schemas, fn (string $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema));
+		return array_filter($schemas, $this->collectionEditionService->isSchemaAccessible(...));
 	}
 
 	/** @return array<string> */
@@ -202,7 +202,7 @@ class CollectionForm extends TotalForm
 		$schemaIds = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 
 		// Filter out custom schemas not accessible for current edition (Pro only)
-		$schemaIds = array_filter($schemaIds, fn (string $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema));
+		$schemaIds = array_filter($schemaIds, $this->collectionEditionService->isSchemaAccessible(...));
 
 		// Sort alphabetically
 		sort($schemaIds);

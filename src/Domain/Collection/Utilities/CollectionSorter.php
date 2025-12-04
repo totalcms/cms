@@ -72,7 +72,7 @@ class CollectionSorter
 
 		$collection = $this->collection;
 
-		usort($collection, function ($a, $b) use ($processedRules): int {
+		usort($collection, function (array $a, array $b) use ($processedRules): int {
 			// Get unique identifiers for cache lookup
 			$aId = $this->getItemId($a);
 			$bId = $this->getItemId($b);

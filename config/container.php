@@ -152,7 +152,7 @@ use TotalCMS\Support\Config;
 
 return [
 	// Application settings
-	Config::class => fn (): Config => Config::init(),
+	Config::class => Config::init(...),
 
 	App::class => function (ContainerInterface $container): App {
 		AppFactory::setContainer($container);

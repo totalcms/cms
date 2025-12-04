@@ -241,7 +241,7 @@ class TotalCMSTwigAdapter
 	 */
 	public function redirectIfNotFound(array|string|null $object = []): void
 	{
-		if ($object === [] || $object === null || $object === '') {
+		if (in_array($object, [[], null, ''], true)) {
 			$notfound = $this->config->notfound;
 			if ($notfound !== '') {
 				http_response_code(404);
@@ -1075,7 +1075,7 @@ NGINX;
 			'loading'    => 'lazy',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+		if (in_array($idOrObject, [null, '', []], true)) {
 			return '';
 		}
 
@@ -1125,7 +1125,7 @@ NGINX;
 			'property'   => 'image',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+		if (in_array($idOrObject, [null, '', []], true)) {
 			return '';
 		}
 
@@ -1238,7 +1238,7 @@ NGINX;
 
 		$gallery = '';
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+		if (in_array($idOrObject, [null, '', []], true)) {
 			return $gallery;
 		}
 
@@ -1476,7 +1476,7 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === [] || $name === null || $name === '') {
+		if (in_array($idOrObject, [null, '', []], true) || $name === null || $name === '') {
 			return '';
 		}
 
@@ -1587,7 +1587,7 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === [] || $name === null || $name === '') {
+		if (in_array($idOrObject, [null, '', []], true) || $name === null || $name === '') {
 			return '';
 		}
 
@@ -1814,7 +1814,7 @@ NGINX;
 			if ($folder !== null) {
 				// Convert folder path to group name (e.g., "pages/blog" -> "Pages / Blog")
 				$parts     = explode('/', str_replace('-', ' ', $folder));
-				$groupName = implode(' / ', array_map('ucwords', $parts));
+				$groupName = implode(' / ', array_map(ucwords(...), $parts));
 			}
 
 			// Create template entry

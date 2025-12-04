@@ -17,7 +17,7 @@ class FakerImageGD extends Base
 	private static function hex2rgb(string $hex): array
 	{
 		$rgb = str_split(ltrim($hex, '#'), 2);
-		$rgb = array_map('intval', array_map('hexdec', $rgb));
+		$rgb = array_map(intval(...), array_map(hexdec(...), $rgb));
 		$rgb = array_map(fn (int $value): int => max(0, min($value, 255)), $rgb);
 
 		if (count($rgb) !== 3) {

@@ -96,7 +96,7 @@ class QRGenerator
 	/** @param array<string,string> $data */
 	public function event(array $data): string
 	{
-		$data = array_map('htmlspecialchars', $data);
+		$data = array_map(htmlspecialchars(...), $data);
 		$data = array_merge([
 			'title'    => '',
 			'desc'     => '',
@@ -125,7 +125,7 @@ EVENT;
 	/** @param array<string,string> $data */
 	public function vcf(array $data): string
 	{
-		$data = array_map('htmlspecialchars', $data);
+		$data = array_map(htmlspecialchars(...), $data);
 		$data = array_merge([
 			'first'   => '',
 			'last'    => '',

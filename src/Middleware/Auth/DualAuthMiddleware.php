@@ -251,7 +251,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			}
 
 			// Normalize to lowercase and check if operation is allowed
-			$publicOperations = array_map('strtolower', $collection->publicOperations);
+			$publicOperations = array_map(strtolower(...), $collection->publicOperations);
 
 			return in_array($operation, $publicOperations, true);
 		} catch (\Throwable) {

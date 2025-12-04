@@ -105,7 +105,7 @@ class HTMLSanitizer
 	 */
 	private static function processCustomIframeDomains(string $html, array $allowedDomains): string
 	{
-		$domainPattern = '(' . implode('|', array_map('preg_quote', $allowedDomains)) . ')';
+		$domainPattern = '(' . implode('|', array_map(preg_quote(...), $allowedDomains)) . ')';
 
 		// Keep iframes from allowed domains
 		preg_match_all('/<iframe[^>]*>.*?<\/iframe>/is', $html, $iframes);

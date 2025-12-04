@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Boolean type property data.
  */
-class BooleanData extends PropertyData
+class BooleanData extends PropertyData implements \Stringable
 {
 	public bool $status;
 

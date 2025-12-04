@@ -79,7 +79,7 @@ final class ExportZipActionTest extends TestCase
 
 		$this->response->expects($this->exactly(3))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value): ResponseInterface {
+			->willReturnCallback(function ($name, string $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('blog-export.zip', $value);

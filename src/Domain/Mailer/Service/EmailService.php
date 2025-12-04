@@ -154,7 +154,7 @@ readonly class EmailService
 			return [];
 		}
 
-		$emails    = array_map('trim', explode("\n", $emailList));
+		$emails    = array_map(trim(...), explode("\n", $emailList));
 		$processed = [];
 
 		foreach ($emails as $email) {

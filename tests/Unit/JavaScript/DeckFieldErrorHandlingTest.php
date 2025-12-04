@@ -226,7 +226,7 @@ final class DeckFieldErrorHandlingTest extends TestCase
 		$itemIds   = [];
 		$errors    = [];
 		$deckField = $this->createMockDeckField();
-		$items     = array_map(fn (): MockDeckItem => $this->createMockDeckItem(), $deckItems);
+		$items     = array_map($this->createMockDeckItem(...), $deckItems);
 
 		foreach ($deckItems as $index => $item) {
 			$itemId   = $item['id'] ?? '';

@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * String type property data.
  */
-class ImageData extends PropertyData
+class ImageData extends PropertyData implements \Stringable
 {
 	public ListData $tags;
 	public DateData $uploadDate;

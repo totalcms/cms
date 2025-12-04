@@ -200,7 +200,7 @@ class TotalCMSTwigFilters
 	 */
 	public static function prefixSlug(string|array|null $value, string $prefix = '', string $separator = ' '): string
 	{
-		if ($value === null || $value === '' || $value === []) {
+		if (in_array($value, [null, '', []], true)) {
 			return '';
 		}
 

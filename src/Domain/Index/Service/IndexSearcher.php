@@ -16,7 +16,7 @@ readonly class IndexSearcher
 	{
 		$index = $this->reader->fetchIndex($collection);
 
-		return $index->objects->filter(fn ($object): bool => $this->searchProperty($object, $property, $query));
+		return $index->objects->filter(fn (array $object): bool => $this->searchProperty($object, $property, $query));
 	}
 
 	/**
@@ -48,7 +48,7 @@ readonly class IndexSearcher
 		}
 
 		// Filter the collection based on match logic
-		$results = $results->filter(function ($object) use ($queries, $matchOR): bool {
+		$results = $results->filter(function (array $object) use ($queries, $matchOR): bool {
 			if ($matchOR) {
 				return $this->filterOR($object, $queries);
 			}
@@ -60,9 +60,9 @@ readonly class IndexSearcher
 			if (is_string($priorityProperties)) {
 				$priorityProperties = explode(',', $priorityProperties);
 			}
-			$priorityProperties = array_map('trim', $priorityProperties);
+			$priorityProperties = array_map(trim(...), $priorityProperties);
 			// Sort the filtered collection by priority
-			$results = $results->sort(function ($a, $b) use ($priorityProperties, $queries): int {
+			$results = $results->sort(function (array $a, array $b) use ($priorityProperties, $queries): int {
 				$priorityA = $this->getPriorityScore($a, $priorityProperties, $queries);
 				$priorityB = $this->getPriorityScore($b, $priorityProperties, $queries);
 
@@ -185,7 +185,7 @@ readonly class IndexSearcher
 		preg_match_all('/"([^"]+)"|(\S+)/', $query, $matches);
 
 		// Extract the terms from the matches, removing quotes
-		$terms = array_map(function ($term1, $term2): string {
+		$terms = array_map(function (string $term1, string $term2): string {
 			return $term1 ?: $term2; // Use non-empty value
 		}, $matches[1], $matches[2]);
 

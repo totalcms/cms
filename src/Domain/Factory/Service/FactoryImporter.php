@@ -164,7 +164,7 @@ readonly class FactoryImporter
 				try {
 					$paths                 = $this->faker->$method(...$args);
 					$objectData[$property] = array_map(
-						fn ($path): array => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
+						fn (string $path): array => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
 						$paths
 					);
 				} catch (\Exception $e) {

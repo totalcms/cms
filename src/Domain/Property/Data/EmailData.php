@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Email type property data.
  */
-class EmailData extends PropertyData
+class EmailData extends PropertyData implements \Stringable
 {
 	public string $email;
 

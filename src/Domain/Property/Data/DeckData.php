@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Deck type property data - a dictionary of named objects.
  */
-class DeckData extends PropertyData
+class DeckData extends PropertyData implements \Stringable
 {
 	/** @var array<string|int,array<string,mixed>> */
 	public array $deck;
