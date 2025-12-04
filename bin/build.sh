@@ -2,8 +2,16 @@
 
 echo "Building the application..."
 
-# Build frontend assets
-bin/build-assets.sh
+PRODUCTION=0
+for arg in "$@"; do
+    if [ "$arg" = "--production" ]; then
+		# Build frontend assets (production mode = no sourcemaps)
+		bin/build-assets.sh --production
+	else
+		# Build frontend assets (development mode = with sourcemaps)
+		bin/build-assets.sh
+    fi
+done
 
 if [ $? -ne 0 ]; then
     echo "Failed to build frontend assets. Exiting..."

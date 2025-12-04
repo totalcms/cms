@@ -5,6 +5,15 @@ const { globPlugin }     = require('esbuild-plugin-glob');
 const { sassPlugin }     = require("esbuild-sass-plugin");
 const { createImporter } = require("sass-extended-importer");
 
+// Production mode optimizations
+const isProduction = process.env.PRODUCTION === '1';
+const sourcemap = !isProduction;
+const drop = isProduction ? ['console', 'debugger'] : [];
+
+if (isProduction) {
+    console.log('Building in production mode (no sourcemaps, no console/debugger)');
+}
+
 esbuild.build({
     entryPoints : [
 		"javascript/admin.js",
@@ -17,17 +26,19 @@ esbuild.build({
 		"javascript/swagger.js",
 		"javascript/mailto-decoder.js",
 	],
-	format    : "esm",
-	platform  : "browser",
-	bundle    : true,
-	minify    : true,
-	metafile  : true,
-	splitting : true,
-	sourcemap : true,
-	keepNames : true,
-	target    : "esnext",
-	outdir    : 'public/assets',
-	external  : [],
+	format        : "esm",
+	platform      : "browser",
+	bundle        : true,
+	minify        : true,
+	metafile      : true,
+	splitting     : true,
+	sourcemap     : sourcemap,
+	drop          : drop,
+	legalComments : 'external',
+	keepNames     : true,
+	target        : "esnext",
+	outdir        : 'public/assets',
+	external      : [],
 	plugins   : [
 		clean({
             patterns: ['public/assets'],
@@ -39,11 +50,12 @@ esbuild.build({
     entryPoints : [
         "css/*.scss",
     ],
-    bundle    : true,
-    minify    : true,
-    metafile  : true,
-    sourcemap : true,
-    outdir      : 'public/assets',
+    bundle        : true,
+    minify        : true,
+    metafile      : true,
+    sourcemap     : sourcemap,
+    legalComments : 'external',
+    outdir        : 'public/assets',
     external    : [
 		"gallery/*",
 		"fonts/*",
