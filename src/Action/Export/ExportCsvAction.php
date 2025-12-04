@@ -38,7 +38,7 @@ readonly class ExportCsvAction
 			$flash->add('warning', $message);
 		}
 
-		$csv = Writer::createFromString('');
+		$csv = Writer::fromString('');
 		$csv->insertAll($objects);
 		$csvData = $csv->toString();
 

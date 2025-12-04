@@ -80,7 +80,7 @@ class CsvImporter
 		$importCount = 0;
 
 		// Take the uploaded file and update object with related data
-		$csv = Reader::createFromString((string)$file->getStream());
+		$csv = Reader::fromString((string)$file->getStream());
 		$csv->setHeaderOffset(0);
 
 		$cleanedRecords = $this->cleanCsvData($csv);
