@@ -27,9 +27,10 @@ readonly class CollectionFactory
 	 */
 	public function generateCollection(array $data): CollectionData
 	{
+		/** @var CollectionData $collection */
 		$collection = $this->serializer->denormalize($data, CollectionData::class);
 
-		if (!$collection instanceof CollectionData || !$collection->isValid()) {
+		if (!$collection->isValid()) {
 			throw new \UnexpectedValueException('Invalid Collection data provided');
 		}
 

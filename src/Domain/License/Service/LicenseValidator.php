@@ -175,6 +175,10 @@ readonly class LicenseValidator
 		$url         = $this->getApiBaseUrl() . $endpoint;
 		$jsonPayload = json_encode($payload);
 
+		if ($url === '') {
+			throw new LicenseException('Invalid license API URL');
+		}
+
 		if ($jsonPayload === false) {
 			throw new LicenseException('Failed to encode request payload');
 		}
