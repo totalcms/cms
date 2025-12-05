@@ -28,11 +28,8 @@ readonly class SchemaFactory
 	 */
 	public function generateSchema(array $schemaData): SchemaData
 	{
+		/** @var SchemaData $schema */
 		$schema = $this->serializer->denormalize($schemaData, SchemaData::class);
-
-		if (!$schema instanceof SchemaData) {
-			throw new \UnexpectedValueException('Invalid Schema data provided');
-		}
 
 		return $schema;
 	}

@@ -168,7 +168,8 @@ class Cipher
 	{
 		$cipher = 'aes-256-cbc';  // Cipher algorithm
 		$ivlen  = openssl_cipher_iv_length($cipher);
-		if ($ivlen === false) {
+		// @phpstan-ignore function.alreadyNarrowedType (openssl_cipher_iv_length can return false at runtime)
+		if (!is_int($ivlen)) {
 			throw new \Exception('Failed to get IV length');
 		}
 		$iv = openssl_random_pseudo_bytes($ivlen);  // Generate a random IV
@@ -184,7 +185,8 @@ class Cipher
 		$data   = base64_decode($data);
 
 		$ivlen = openssl_cipher_iv_length($cipher);
-		if ($ivlen === false) {
+		// @phpstan-ignore function.alreadyNarrowedType (openssl_cipher_iv_length can return false at runtime)
+		if (!is_int($ivlen)) {
 			throw new \Exception('Failed to get IV length');
 		}
 
