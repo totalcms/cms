@@ -8,7 +8,7 @@ use TotalCMS\Support\Config;
 /**
  * Date property data.
  */
-class DateData extends PropertyData
+class DateData extends PropertyData implements \Stringable
 {
 	public string $date;
 

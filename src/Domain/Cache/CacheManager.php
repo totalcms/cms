@@ -10,7 +10,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -64,7 +64,7 @@ class CacheManager
 		private readonly RedisService $redisService,
 		private readonly MemcachedService $memcachedService,
 		private readonly APCuService $apcuService,
-		private readonly TextWatermarkFactory $textWatermarkFactory,
+		private readonly WatermarkCleanupService $watermarkCleanupService,
 		private readonly DevModeManager $devModeManager,
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
@@ -636,7 +636,7 @@ class CacheManager
 
 		// Clear text watermark cache (clear all cached watermarks)
 		try {
-			$this->textWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
+			$this->watermarkCleanupService->clearOldCache(0); // Clear all watermarks regardless of age
 			$results['watermarks'] = ['cleared' => true, 'reason' => 'success'];
 		} catch (\Exception $e) {
 			// Log error but don't fail the entire cache clear operation

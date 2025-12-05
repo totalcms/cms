@@ -87,7 +87,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$collection->id = 'test-id';
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collection, &$createdCollections): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function (array $data) use ($collection): \PHPUnit\Framework\MockObject\MockObject {
 				$collection->id = $data['id'];
 
 				return $collection;
@@ -203,7 +203,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function ($data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function (array $data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
 				if (isset($data['url'])) {
 					$this->assertEquals('/blog/', $data['url']);
 					$this->assertTrue($data['prettyUrl']);
@@ -517,7 +517,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function ($data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function (array $data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
 				if (isset($data['url']) && str_contains((string)$data['url'], '?permalink=')) {
 					$this->assertFalse($data['prettyUrl']);
 				}

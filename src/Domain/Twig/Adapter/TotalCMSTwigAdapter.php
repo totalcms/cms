@@ -10,6 +10,7 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
@@ -64,6 +65,7 @@ class TotalCMSTwigAdapter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly CollectionLister $collectionLister,
 		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionEditionService $collectionEditionService,
 		private readonly SchemaLister $schemaLister,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
@@ -80,6 +82,7 @@ class TotalCMSTwigAdapter
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
 		public LicenseStatus $license,
+		public EditionTwigAdapter $edition,
 		private readonly JobManager $jobManager,
 	) {
 		$this->env        = $this->config->env;
@@ -234,11 +237,11 @@ class TotalCMSTwigAdapter
 	/**
 	 * @SuppressWarnings("PHPMD.ExitExpression")
 	 *
-	 * @param array<mixed> $object
+	 * @param array<mixed>|string|null $object
 	 */
-	public function redirectIfNotFound(array $object = []): void
+	public function redirectIfNotFound(array|string|null $object = []): void
 	{
-		if ($object === []) {
+		if (in_array($object, [[], null, ''], true)) {
 			$notfound = $this->config->notfound;
 			if ($notfound !== '') {
 				http_response_code(404);
@@ -439,29 +442,57 @@ NGINX;
 		return '';
 	}
 
-	// Get all schemas
-	/** @return array<array<string,mixed>> */
+	/**
+	 * Get all accessible schemas (filtered by edition).
+	 *
+	 * @return array<array<string,mixed>>
+	 */
 	public function schemas(): array
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
+		// Filter by edition accessibility
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
+
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
-	// Get all reserved schemas
-	/** @return array<array<string,mixed>> */
+	/**
+	 * Get all accessible reserved schemas (filtered by edition).
+	 * Blog, blog-legacy, depot require Standard+.
+	 *
+	 * @return array<array<string,mixed>>
+	 */
 	public function reservedSchemas(): array
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
+		// Filter by edition accessibility
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
+
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
-	// Get all custom schemas
-	/** @return array<array<string,mixed>> */
+	/**
+	 * Get all accessible custom schemas (Pro edition only).
+	 *
+	 * @return array<array<string,mixed>>
+	 */
 	public function customSchemas(): array
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
+
+		// Filter by edition accessibility (custom schemas require Pro)
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
 
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
@@ -571,11 +602,41 @@ NGINX;
 		}
 	}
 
-	// Get all collections
-	/** @return array<object> */
+	/**
+	 * Get all accessible collections (filtered by edition).
+	 *
+	 * @return array<CollectionData>
+	 */
 	public function collections(): array
 	{
-		return $this->collectionLister->listAllCollections();
+		$collections = $this->collectionLister->listAllCollections();
+
+		return array_filter(
+			$collections,
+			fn (CollectionData $c): bool => $this->collectionEditionService->isSchemaAccessible($c->schema)
+		);
+	}
+
+	/**
+	 * Get collections that are inaccessible due to edition restrictions.
+	 * Used for dashboard alerts.
+	 *
+	 * @return array<CollectionData>
+	 */
+	public function getInaccessibleCollections(): array
+	{
+		return $this->collectionEditionService->getInaccessibleCollections();
+	}
+
+	/**
+	 * Get schemas that are inaccessible due to edition restrictions.
+	 * Used for admin alerts on schema listing page.
+	 *
+	 * @return array<string>
+	 */
+	public function getInaccessibleSchemas(): array
+	{
+		return $this->collectionEditionService->getInaccessibleSchemas();
 	}
 
 	/** @return array<string,list<object>> */
@@ -605,10 +666,19 @@ NGINX;
 		return $categories;
 	}
 
-	// Get collection meta data
-	/** @return array<string,mixed> */
+	/**
+	 * Get a single collection by ID.
+	 * Returns empty array if collection doesn't exist or is inaccessible due to edition.
+	 *
+	 * @return array<string,mixed>
+	 */
 	public function collection(string $collectionId): array
 	{
+		// Check edition accessibility first
+		if (!$this->collectionEditionService->isAccessible($collectionId)) {
+			return [];
+		}
+
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
 		if (!$collection instanceof CollectionData) {
@@ -707,15 +777,14 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $fileOptions
 	 * @param array<string,mixed> $options
 	 */
-	public function depotDownload(string $id, string $name, array $fileOptions = [], array $options = []): string
+	public function depotDownload(string $id, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
-		$path       = $fileOptions['path'] ?? '';
-		$password   = $fileOptions['pwd'] ?? '';
+		$path       = $options['path'] ?? '';
+		$password   = $options['pwd'] ?? '';
 
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
@@ -732,7 +801,7 @@ NGINX;
 		}
 
 		$query = http_build_query(array_filter([
-			'path' => trim($path, '/'),
+			'path' => trim((string)$path, '/'),
 			'pwd'  => $password,
 		]));
 
@@ -765,15 +834,14 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $fileOptions
 	 * @param array<string,mixed> $options
 	 */
-	public function depotStream(string $id, string $name, array $fileOptions = [], array $options = []): string
+	public function depotStream(string $id, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
-		$path       = $fileOptions['path'] ?? '';
-		$password   = $fileOptions['pwd'] ?? '';
+		$path       = $options['path'] ?? '';
+		$password   = $options['pwd'] ?? '';
 
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
@@ -790,7 +858,7 @@ NGINX;
 		}
 
 		$query = http_build_query(array_filter([
-			'path' => trim($path, '/'),
+			'path' => trim((string)$path, '/'),
 			'pwd'  => $password,
 		]));
 
@@ -1007,7 +1075,7 @@ NGINX;
 			'loading'    => 'lazy',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+		if (in_array($idOrObject, [null, '', []], true)) {
 			return '';
 		}
 
@@ -1057,7 +1125,7 @@ NGINX;
 			'property'   => 'image',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+		if (in_array($idOrObject, [null, '', []], true)) {
 			return '';
 		}
 
@@ -1170,7 +1238,7 @@ NGINX;
 
 		$gallery = '';
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === []) {
+		if (in_array($idOrObject, [null, '', []], true)) {
 			return $gallery;
 		}
 
@@ -1408,7 +1476,7 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === [] || $name === null || $name === '') {
+		if (in_array($idOrObject, [null, '', []], true) || $name === null || $name === '') {
 			return '';
 		}
 
@@ -1475,6 +1543,27 @@ NGINX;
 			return $values[$index] ?? null;
 		}
 
+		// Handle keyword names (first, last, random, featured)
+		$values = array_values($gallery);
+		if ($name === 'first') {
+			return $values[0] ?? null;
+		}
+		if ($name === 'last') {
+			return $values[count($values) - 1] ?? null;
+		}
+		if ($name === 'random') {
+			return $values[array_rand($values)] ?? null;
+		}
+		if ($name === 'featured') {
+			$featured = array_filter($values, fn (array $img): bool => !empty($img['featured']));
+			if ($featured !== []) {
+				return $featured[array_rand($featured)];
+			}
+
+			// Fall back to random if no featured images
+			return $values[array_rand($values)] ?? null;
+		}
+
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
 				return $image;
@@ -1498,7 +1587,7 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if ($idOrObject === null || $idOrObject === '' || $idOrObject === [] || $name === null || $name === '') {
+		if (in_array($idOrObject, [null, '', []], true) || $name === null || $name === '') {
 			return '';
 		}
 
@@ -1725,7 +1814,7 @@ NGINX;
 			if ($folder !== null) {
 				// Convert folder path to group name (e.g., "pages/blog" -> "Pages / Blog")
 				$parts     = explode('/', str_replace('-', ' ', $folder));
-				$groupName = implode(' / ', array_map('ucwords', $parts));
+				$groupName = implode(' / ', array_map(ucwords(...), $parts));
 			}
 
 			// Create template entry

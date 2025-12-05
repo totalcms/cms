@@ -14,15 +14,15 @@ Total CMS provides nine white label template locations:
 
 | Template File | Location | Description |
 |--------------|----------|-------------|
-| `whitelabel/login-above.twig` | Login page | Content displayed above the login form |
-| `whitelabel/login-below.twig` | Login page | Content displayed below the login form |
-| `whitelabel/download-auth-above.twig` | Download auth page | Content displayed above the download authentication form |
-| `whitelabel/download-auth-below.twig` | Download auth page | Content displayed below the download authentication form |
-| `whitelabel/admin-logo.twig` | Admin header | Custom logo replacing the Total CMS logo |
-| `whitelabel/admin-welcome.twig` | Admin home page | Custom welcome message (lighter alternative to admin-home.twig) |
-| `whitelabel/admin-home.twig` | Admin home page | Custom content for the entire dashboard home page |
-| `whitelabel/admin-head.twig` | Admin `<head>` section | Custom content injected before closing `</head>` tag |
-| `whitelabel/admin-body-below.twig` | Admin body bottom | Custom content injected before closing `</body>` tag |
+| `whitelabel/login-above` | Login page | Content displayed above the login form |
+| `whitelabel/login-below` | Login page | Content displayed below the login form |
+| `whitelabel/download-auth-above` | Download auth page | Content displayed above the download authentication form |
+| `whitelabel/download-auth-below` | Download auth page | Content displayed below the download authentication form |
+| `whitelabel/admin-logo` | Admin header | Custom logo replacing the Total CMS logo |
+| `whitelabel/admin-welcome` | Admin home page | Custom welcome message (lighter alternative to admin-home) |
+| `whitelabel/admin-home` | Admin home page | Custom content for the entire dashboard home page |
+| `whitelabel/admin-head` | Admin `<head>` section | Custom content injected before closing `</head>` tag |
+| `whitelabel/admin-body-below` | Admin body bottom | Custom content injected before closing `</body>` tag |
 
 ## Setup
 
@@ -337,6 +337,56 @@ Replace the entire admin home page with custom content:
 }
 </style>
 ```
+
+### Dashboard Widgets
+
+When customizing the admin home page, you can use the built-in dashboard widgets macro for a consistent look. Import the widgets macro and use the available components:
+
+```twig
+{% import 'dashboard-widgets.twig' as dashboard %}
+
+{# Get dashboard data #}
+{% set stats = cms.dashboardStats() %}
+{% set collections = cms.dashboardRecentCollections() %}
+{% set emptyCollections = cms.dashboardEmptyCollections() %}
+{% set systemStatus = cms.dashboardSystemStatus() %}
+
+{# Display welcome message #}
+{{ dashboard.welcomeMessage('Admin') }}
+
+{# Display quick stats #}
+{{ dashboard.statsCard(stats) }}
+
+{# Display quick actions #}
+{{ dashboard.quickActions() }}
+
+{# Collections table #}
+{{ dashboard.collectionsTable(collections) }}
+
+{# Recent activity #}
+{{ dashboard.recentActivity() }}
+
+{# Empty collections alert #}
+{{ dashboard.emptyCollectionsAlert(emptyCollections) }}
+
+{# System status (admin only) #}
+{% if cms.isAdmin() %}
+	{{ dashboard.systemStatus(systemStatus) }}
+{% endif %}
+```
+
+**Available Widgets:**
+
+| Widget | Description |
+|--------|-------------|
+| `dashboard.statsCard(stats)` | Quick statistics overview |
+| `dashboard.quickActions()` | Quick action buttons |
+| `dashboard.collectionsTable(collections)` | Collections table with recent activity |
+| `dashboard.recentActivity()` | Recent activity feed |
+| `dashboard.emptyCollectionsAlert(emptyCollections)` | Alert for collections without content |
+| `dashboard.systemStatus(systemStatus)` | System information (PHP version, cache status, etc.) |
+| `dashboard.welcomeMessage(name)` | Welcome message with optional name |
+| `dashboard.newUserWelcome()` | Welcome screen for new users |
 
 ## Available Variables
 

@@ -22,7 +22,7 @@ class PaginationGenerator
 			return '';
 		}
 
-		$prevPage = $currentPage == 1 ? $currentPage : $currentPage - 1;
+		$prevPage = $currentPage === 1 ? $currentPage : $currentPage - 1;
 		$prevLink = HTMLUtils::element('a', $prevContent, [
 			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
 			'class' => 'pagination-prev',
@@ -60,7 +60,7 @@ class PaginationGenerator
 			return '';
 		}
 
-		$prevPage = $currentPage == 1 ? $currentPage : $currentPage - 1;
+		$prevPage = $currentPage === 1 ? $currentPage : $currentPage - 1;
 		$prevLink = HTMLUtils::element('a', $prevContent, [
 			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
 			'class' => 'pagination-prev',
@@ -79,7 +79,7 @@ class PaginationGenerator
 				'href' => self::buildPageUrl($pageKey, $i, $getData),
 			]);
 			$page = HTMLUtils::element('li', $link, [
-				'class' => $i == $currentPage ? 'active' : '',
+				'class' => $i === $currentPage ? 'active' : '',
 			]);
 			$pages .= $page;
 		}

@@ -433,13 +433,13 @@ class CollectionRefiner
 	/** @param string|int|bool $haystack */
 	protected static function istrue(mixed $haystack): bool
 	{
-		return $haystack === true || $haystack === 'true' || $haystack === '1' || $haystack === 1;
+		return in_array($haystack, [true, 'true', '1', 1], true);
 	}
 
 	/** @param string|int|bool $haystack */
 	protected static function isfalse(mixed $haystack): bool
 	{
-		return $haystack === false || $haystack === 'false' || $haystack === '0' || $haystack === 0;
+		return in_array($haystack, [false, 'false', '0', 0], true);
 	}
 
 	protected static function isempty(mixed $haystack): bool
@@ -527,7 +527,7 @@ class CollectionRefiner
 	 */
 	protected static function between(string $value, string $range): bool
 	{
-		$parts = array_map('trim', explode(',', $range));
+		$parts = array_map(trim(...), explode(',', $range));
 		if (count($parts) !== 2) {
 			return false;
 		}

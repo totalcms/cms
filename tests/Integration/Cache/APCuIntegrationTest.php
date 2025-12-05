@@ -11,7 +11,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Support\Config;
 
 final class APCuIntegrationTest extends TestCase
@@ -33,10 +33,10 @@ final class APCuIntegrationTest extends TestCase
 		$memcachedService  = new MemcachedService($this->config);
 		$devModeManager    = new DevModeManager();
 
-		// Create real TextWatermarkFactory instance for testing
-		$mockStorage          = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
-		$mockLoggerFactory    = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
-		$textWatermarkFactory = new TextWatermarkFactory($mockStorage, $this->config, $mockLoggerFactory);
+		// Create WatermarkCleanupService for cache cleanup testing
+		$mockStorage                = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
+		$mockLoggerFactory          = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$watermarkCleanupService    = new WatermarkCleanupService($mockStorage, $mockLoggerFactory);
 
 		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
 		$this->cacheManager        = new CacheManager(
@@ -45,7 +45,7 @@ final class APCuIntegrationTest extends TestCase
 			$redisService,
 			$memcachedService,
 			$this->apcuService,
-			$textWatermarkFactory,
+			$watermarkCleanupService,
 			$devModeManager,
 			$this->config,
 			$mockLoggerFactoryForCache

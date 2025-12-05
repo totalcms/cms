@@ -32,7 +32,7 @@ readonly class AdminSchemaAction
 
 		// Validate schema exists (skip for index, new, and import)
 		$schema = $args['schema'] ?? '';
-		if ($schema !== '' && $schema !== 'new' && $schema !== '-import' && !$this->schemaFetcher->schemaExists($schema)) {
+		if (!in_array($schema, ['', 'new', '-import'], true) && !$this->schemaFetcher->schemaExists($schema)) {
 			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
 				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
 			]);

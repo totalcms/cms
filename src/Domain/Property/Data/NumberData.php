@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Number type property data.
  */
-class NumberData extends PropertyData
+class NumberData extends PropertyData implements \Stringable
 {
 	public float $number;
 

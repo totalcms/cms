@@ -196,12 +196,12 @@ describe('FileUploadValidator', function (): void {
 			) {
 			}
 
-			public function getClientFilename(): ?string
+			public function getClientFilename(): string
 			{
 				return $this->filename;
 			}
 
-			public function getSize(): ?int
+			public function getSize(): int
 			{
 				return $this->size;
 			}
@@ -211,7 +211,7 @@ describe('FileUploadValidator', function (): void {
 				return $this->error;
 			}
 
-			public function getClientMediaType(): ?string
+			public function getClientMediaType(): string
 			{
 				return $this->mimeType;
 			}

@@ -11,7 +11,7 @@
 			"help"    : "A unique ID for this feed item. No spaces or special characters.",
 			"field"   : "id",
 			"factory" : "uuid",
-			"settings" : { "autogen" : "${title}-${uuid}" }
+			"settings" : { "autogen" : "${title}-${uid}" }
 		},
 		"featured": {
 			"type"    : "boolean",
@@ -63,8 +63,7 @@
 		"title",
 		"content",
 		"created",
-		"updated",
-		"featured"
+		"updated"
 	],
 	"index": [
 		"id",

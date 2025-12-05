@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * String type property data.
  */
-class PasswordData extends PropertyData
+class PasswordData extends PropertyData implements \Stringable
 {
 	public string $hash = '';
 

@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -14,13 +16,14 @@ use TotalCMS\Support\Config;
  */
 readonly class TextWatermarkFactory
 {
-	public const WATERMARK_DIR = '.watermarks';
+	public const WATERMARK_DIR = '.system/watermarks';
 	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
 	private LoggerInterface $logger;
 
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 		private Config $config,
+		private EditionFeatureService $editionFeatures,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -33,10 +36,15 @@ readonly class TextWatermarkFactory
 	 *
 	 * @param array<string,mixed> $params Text watermark parameters
 	 *
+	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
+	 *
 	 * @return string Path to generated watermark image
 	 */
 	public function generateTextWatermark(array $params): string
 	{
+		// Text watermarks require Pro edition
+		$this->editionFeatures->canOrFail(EditionFeature::TEXT_WATERMARKS);
+
 		$text = $params['marktext'] ?? '';
 		if (empty($text)) {
 			throw new \InvalidArgumentException('Text watermark requires marktext parameter');
@@ -130,7 +138,7 @@ readonly class TextWatermarkFactory
 			$width = $textWidth + ($padding * 2) + ($fontSize * 0.1);
 			// Add extra height for descenders and rotation space
 			// Multiply by line count to ensure enough space for multi-line text
-			$extraHeight = $angle == 0 ? ($fontSize * 0.5 * $lineCount) : ($fontSize * 0.8 * $lineCount);
+			$extraHeight = $angle === 0 ? ($fontSize * 0.5 * $lineCount) : ($fontSize * 0.8 * $lineCount);
 			$height      = $textHeight + ($padding * 2) + $extraHeight;
 		} else {
 			// Fallback for built-in fonts
@@ -419,55 +427,5 @@ readonly class TextWatermarkFactory
 	private function generateTempPath(): string
 	{
 		return 'text_watermark_' . uniqid() . '.png';
-	}
-
-	/**
-	 * Clean up temporary watermark files (for backwards compatibility).
-	 */
-	public function cleanup(string $watermarkPath): void
-	{
-		$fullPath = self::WATERMARK_DIR . '/' . $watermarkPath;
-		if ($this->filesystem->fileExists($fullPath)) {
-			$this->filesystem->delete($fullPath);
-		}
-	}
-
-	/**
-	 * Clear cached watermarks older than specified time.
-	 *
-	 * @param int $maxAge Maximum age in seconds (default: 30 days)
-	 *
-	 * @return int Number of files cleaned up
-	 */
-	public function clearOldCache(int $maxAge = 2592000): int
-	{
-		$cleaned    = 0;
-		$cutoffTime = time() - $maxAge;
-
-		try {
-			$files = $this->filesystem->listFiles(self::WATERMARK_DIR);
-
-			foreach ($files as $file) {
-				if (str_starts_with($file, 'text_watermark_')) {
-					$fullPath = self::WATERMARK_DIR . '/' . $file;
-
-					// Use flysystem directly to get file metadata
-					$lastModified = $this->filesystem->flysystem()->lastModified($fullPath);
-
-					if ($lastModified && $lastModified < $cutoffTime) {
-						$this->filesystem->delete($fullPath);
-						$cleaned++;
-					}
-				}
-			}
-		} catch (\Exception $e) {
-			// Log error but don't fail
-			$this->logger->warning('Error cleaning watermark cache', [
-				'error'     => $e->getMessage(),
-				'exception' => $e::class,
-			]);
-		}
-
-		return $cleaned;
 	}
 }

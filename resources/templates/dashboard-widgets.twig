@@ -258,6 +258,32 @@
 </div>
 {% endmacro %}
 
+{# Inaccessible Collections Alert - Shows when edition downgrade blocks collections #}
+{% macro inaccessibleCollectionsAlert(inaccessibleCollections) %}
+{% if inaccessibleCollections|length > 0 %}
+<div class="dashboard-section inaccessible-collections-alert">
+	<h2>Collections Unavailable</h2>
+	<p class="alert-warning-text">
+		<span class="icon-warn"></span>
+		{{ inaccessibleCollections|length }} collection(s) use custom schemas which require Pro edition.
+		Your data is safe, but you cannot access these collections until you upgrade.
+	</p>
+	<ul class="inaccessible-collections-list">
+		{% for collection in inaccessibleCollections %}
+		<li>
+			<span class="collection-icon schema-{{ collection.schema }}"></span>
+			<span class="collection-name">{{ collection.label ?? collection.id }}</span>
+			<span class="collection-schema-badge">{{ collection.schema }}</span>
+		</li>
+		{% endfor %}
+	</ul>
+	<a href="utils/license-manager" class="dash-button">
+		Upgrade to Regain Access
+	</a>
+</div>
+{% endif %}
+{% endmacro %}
+
 {# New User Welcome - Shows when no collections exist #}
 {% macro newUserWelcome() %}
 <div class="dashboard-new-user-welcome">

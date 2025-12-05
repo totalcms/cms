@@ -14,7 +14,7 @@ use function matthieumastadenis\couleur\utils\okLch\oklchToHex;
 /**
  * Color property data.
  */
-class ColorData extends PropertyData
+class ColorData extends PropertyData implements \Stringable
 {
 	public string $hex;
 	/** @var array<string,float> */

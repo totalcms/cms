@@ -2,43 +2,71 @@
 
 Total CMS is licensed on a per domain basis.
 There are 3 different pricing tiers that will
-control what collections you will have access to.
-
-Below list will list out the collections that particular license has access to.
+control what features you will have access to.
 
 ## Lite
 
+Basic collection schemas available to all editions:
+
+* code
+* color
 * date
 * email
+* file
+* gallery
 * image
 * number
+* styledtext
 * svg
 * text
 * toggle
 * url
-* gallery
 
 ## Standard
 
 Everything in Lite including:
 
+**Schemas:**
 * blog
-* feed
-* color
 * depot
-* file
-* watermarking images
 
-## Professional
+**Features:**
+* Image watermarks
+* Mailer form actions
+* QR codes
+* Templates
+* Access groups
+
+## Pro
 
 Everything in Standard including:
 
-* custom collection schemas
-* ratings
-* podcast
-* menu
-* site search
+**Schemas:**
+* Custom schemas
+
+**Features:**
+* Text watermarks
+* Webhook form actions
+* External REST API
+* Barcodes
+* Whitelabel templates
+* API keys
 
 ## Free Trial
 
-You can install Total CMS and use it for 45days for free on any domain.
+You can install Total CMS and use it for 45 days for free on any domain.
+Trial licenses have full Pro-level access.
+
+## Development License
+
+Development licenses have full Pro-level access.
+
+## Edition Simulation
+
+During a trial or with a development license, you can simulate lower editions
+(Lite or Standard) via the admin settings. This allows you to test how your
+site will behave with different license tiers before purchasing.
+
+**Important:** If you create data using features from a higher edition and
+later purchase a lower edition, your data will not be deleted. However, you
+will lose access to that data until you upgrade to an edition that supports it.

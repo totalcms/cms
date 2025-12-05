@@ -30,6 +30,10 @@
       "type"     : "string",
       "$comment" : "The name of the original file including the extension"
     },
+    "ext": {
+      "type"     : "string",
+      "$comment" : "The file extension"
+    },
     "mime": {
       "type"     : "string",
       "$comment" : "The file mime type"

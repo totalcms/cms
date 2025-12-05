@@ -10,7 +10,7 @@ use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;
  * Automatically sanitizes SVG content to prevent XSS attacks while
  * preserving valid SVG functionality.
  */
-class SvgData extends PropertyData
+class SvgData extends PropertyData implements \Stringable
 {
 	public function __construct(public string $svg = '', public array $settings = [])
 	{

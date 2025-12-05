@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * List type property data.
  */
-class ListData extends PropertyData
+class ListData extends PropertyData implements \Stringable
 {
 	/** @var array<string> */
 	public array $list;
@@ -31,7 +31,7 @@ class ListData extends PropertyData
 		$list = array_filter($list);
 		$list = array_unique($list);
 		$list = array_values($list);
-		$list = array_map('strval', $list);
+		$list = array_map(strval(...), $list);
 
 		if (!$this->verifyList($list)) {
 			throw new \InvalidArgumentException('List must be a list:' . json_encode($list));

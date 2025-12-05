@@ -1,5 +1,14 @@
 {% import 'dashboard-widgets.twig' as dashboard %}
 
+{# Edition simulation warning #}
+{% if cms.edition.isSimulating %}
+<div class="simulation-warning">
+	<span class="icon-warn"></span>
+	You are simulating <strong>{{ cms.edition.current | capitalize }}</strong> edition.
+	<a href="settings/license">Disable simulation</a>
+</div>
+{% endif %}
+
 {# Get dashboard data #}
 {% set stats = cms.dashboardStats() %}
 {% set collections = cms.dashboardRecentCollections() %}
@@ -7,6 +16,7 @@
 {# {% set recentObjects = cms.dashboardRecentObjects() %} #}
 {% set emptyCollections = cms.dashboardEmptyCollections() %}
 {% set systemStatus = cms.dashboardSystemStatus() %}
+{% set inaccessibleCollections = cms.getInaccessibleCollections() %}
 
 
 {% if stats.collections <= 3 %}
@@ -14,10 +24,12 @@
 	{{ dashboard.newUserWelcome() }}
 {% else %}
 	{# Display welcome message #}
-	{{ include([
-		'whitelabel/admin-welcome.twig',
-		'admin-welcome-message.twig'
-	], ignore_missing = true) }}
+	{{ include(cms.edition.can('whitelabel_templates')
+		? ['whitelabel/admin-welcome.twig', 'admin-welcome.twig', 'admin-welcome-message.twig']
+		: cms.edition.can('templates')
+		? ['admin-welcome.twig', 'admin-welcome-message.twig']
+		: ['admin-welcome-message.twig']
+	, ignore_missing = true) }}
 
 	{# Display quick stats #}
 	{{ dashboard.statsCard(stats) }}
@@ -30,6 +42,9 @@
 		<div class="dashboard-main">
 			{# Collections overview table #}
 			{{ dashboard.collectionsTable(collections) }}
+
+			{# Inaccessible collections alert (edition downgrade) #}
+			{{ dashboard.inaccessibleCollectionsAlert(inaccessibleCollections) }}
 
 			{# Empty collections alert #}
 			{{ dashboard.emptyCollectionsAlert(emptyCollections) }}
@@ -44,38 +59,5 @@
 				{{ dashboard.systemStatus(systemStatus) }}
 			{% endif %}
 		</div>
-	</div>
-
-	{# Custom dashboard override instructions #}
-	<div class="dashboard-section dashboard-help">
-		<details>
-			<summary>Customize Your Dashboard</summary>
-			<div class="help-content">
-				<p>You can customize this dashboard by creating your own <code>admin-home.twig</code> template in <code>tcms-data/templates/</code>.</p>
-
-				<h4>Available Dashboard Widgets:</h4>
-				<ul>
-					<li><code>{% verbatim %}{{ dashboard.statsCard(cms.dashboardStats()) }}{% endverbatim %}</code> - Quick statistics</li>
-					<li><code>{% verbatim %}{{ dashboard.quickActions() }}{% endverbatim %}</code> - Quick action buttons</li>
-					<li><code>{% verbatim %}{{ dashboard.collectionsTable(cms.dashboardCollections()) }}{% endverbatim %}</code> - Collections table</li>
-					<li><code>{% verbatim %}{{ dashboard.recentActivity(cms.dashboardRecentObjects()) }}{% endverbatim %}</code> - Recent activity</li>
-					<li><code>{% verbatim %}{{ dashboard.emptyCollectionsAlert(cms.dashboardEmptyCollections()) }}{% endverbatim %}</code> - Empty collections alert</li>
-					<li><code>{% verbatim %}{{ dashboard.systemStatus(cms.dashboardSystemStatus()) }}{% endverbatim %}</code> - System information</li>
-				</ul>
-
-				<h4>Example Custom Dashboard:</h4>
-				<pre><code>{% verbatim %}{% import 'dashboard-widgets.twig' as dashboard %}
-
-	{{ dashboard.welcomeMessage('Admin') }}
-	{{ dashboard.statsCard(cms.dashboardStats()) }}
-	{{ dashboard.quickActions() }}
-
-	{# Your custom content here #}
-	<h2>My Custom Section</h2>
-	<p>Add your own content!</p>{% endverbatim %}</code></pre>
-
-				<p>See the <a href="docs">documentation</a> for more details.</p>
-			</div>
-		</details>
 	</div>
 {% endif %}

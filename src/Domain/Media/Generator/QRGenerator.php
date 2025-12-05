@@ -6,6 +6,8 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 
 // ---------------------------------------------------------------------------------
 // QRGenerator
@@ -14,8 +16,10 @@ class QRGenerator
 {
 	private readonly Writer $writer;
 
-	public function __construct(int $size = 512)
-	{
+	public function __construct(
+		private readonly ?EditionFeatureService $editionFeatures = null,
+		int $size = 512,
+	) {
 		// TODO: ImagickImageBackEnd and GDLibRenderer for PNG support
 
 		$margin   = 0;
@@ -28,6 +32,11 @@ class QRGenerator
 
 	private function generateSVG(string $text): string
 	{
+		// QR codes require Standard edition or higher
+		if ($this->editionFeatures instanceof EditionFeatureService) {
+			$this->editionFeatures->canOrFail(EditionFeature::QR_CODES);
+		}
+
 		$svg = $this->stripFirstLine($this->writer->writeString($text));
 
 		// Add cms-qr-code class to the SVG element
@@ -87,7 +96,7 @@ class QRGenerator
 	/** @param array<string,string> $data */
 	public function event(array $data): string
 	{
-		$data = array_map('htmlspecialchars', $data);
+		$data = array_map(htmlspecialchars(...), $data);
 		$data = array_merge([
 			'title'    => '',
 			'desc'     => '',
@@ -116,7 +125,7 @@ EVENT;
 	/** @param array<string,string> $data */
 	public function vcf(array $data): string
 	{
-		$data = array_map('htmlspecialchars', $data);
+		$data = array_map(htmlspecialchars(...), $data);
 		$data = array_merge([
 			'first'   => '',
 			'last'    => '',

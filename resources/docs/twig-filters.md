@@ -169,6 +169,58 @@ Formats phone numbers by country.
 {% endfor %}
 ```
 
+#### `prefixSlug(string|array $value, string $prefix = '', string $separator = ' '): string`
+Slugifies and optionally prefixes a string or array of strings. Useful for generating CSS classes, HTML attributes, or URL-safe identifiers from user content.
+
+```twig
+{# Basic array with prefix - great for tag CSS classes #}
+{{ post.tags | prefixSlug('tag-') }}
+{# Input: ['Web Design', 'UI/UX'] → Output: "tag-web-design tag-ui-ux" #}
+
+{# Single string #}
+{{ "Hello World" | prefixSlug('prefix-') }}
+{# Output: "prefix-hello-world" #}
+
+{# Custom separator #}
+{{ post.tags | prefixSlug('tag-', ', ') }}
+{# Input: ['php', 'javascript'] → Output: "tag-php, tag-javascript" #}
+
+{# No prefix - just slugify and join #}
+{{ post.tags | prefixSlug }}
+{# Input: ['Web Design', 'UI/UX'] → Output: "web-design ui-ux" #}
+
+{# Empty items are automatically filtered out #}
+{{ ['foo', '', 'bar'] | prefixSlug('x-') }}
+{# Output: "x-foo x-bar" #}
+```
+
+**Parameters:**
+- **`value`** - String or array of strings to process
+- **`prefix`** - String to prepend to each slugified item (default: `''`)
+- **`separator`** - String used to join items (default: `' '` space)
+
+**Real-World Examples:**
+
+```twig
+{# Generate CSS classes for tags #}
+<article class="{{ post.tags | prefixSlug('tag-') }}">
+    {{ post.content }}
+</article>
+
+{# Create data attributes #}
+<div data-categories="{{ post.categories | prefixSlug('', ',') }}">
+
+{# Filter controls #}
+{% for tag in allTags %}
+    <button class="filter-btn" data-filter=".tag-{{ tag | prefixSlug }}">
+        {{ tag }}
+    </button>
+{% endfor %}
+
+{# Body class based on page sections #}
+<body class="page-{{ page.id | prefixSlug }} {{ page.sections | prefixSlug('section-') }}">
+```
+
 #### `svgToSymbol(string $svg, string $symbolId): string`
 Converts SVG to symbol for icon systems.
 

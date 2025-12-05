@@ -14,4 +14,21 @@
 	bottom of this page.
 	</p>
 	<a class="dash-button transparent" href="utils/project-setup">Project Setup Tool</a>
+
+	{% set inaccessibleCollections = cms.getInaccessibleCollections() %}
+	{% if inaccessibleCollections|length > 0 %}
+	<div class="edition-alert">
+		<span class="icon-warn"></span>
+		<div class="edition-alert-content">
+			<strong>{{ inaccessibleCollections|length }} collection(s) unavailable</strong>
+			<p>The following collections use schemas that require a higher edition:</p>
+			<ul>
+			{% for collection in inaccessibleCollections %}
+				<li>{{ collection.label ?? collection.id }} <code>{{ collection.schema }}</code></li>
+			{% endfor %}
+			</ul>
+			<a href="utils/license-manager" class="dash-button">Upgrade to Regain Access</a>
+		</div>
+	</div>
+	{% endif %}
 </section>

@@ -37,7 +37,7 @@ class ImageSaver extends FileSaver
 		// Keep existing alt and tags only if they have values
 		$existingAlt  = trim($imageProp->alt ?? '');
 		$existingTags = $imageProp->tags->list ?? [];
-		if (strlen($existingAlt) > 0) {
+		if ($existingAlt !== '') {
 			$existingData['alt'] = $existingAlt;
 		}
 		if (count($existingTags) > 0) {

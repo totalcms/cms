@@ -7,7 +7,7 @@ use Cocur\Slugify\Slugify;
 /**
  * Slug type property data.
  */
-class SlugData extends PropertyData
+class SlugData extends PropertyData implements \Stringable
 {
 	// Regular expression for allowed characters in slug.
 	private const SLUGREGEX = '/([^A-Za-z0-9_])+/';

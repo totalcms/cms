@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
 use TotalCMS\Support\Config;
 
-class CodeData extends PropertyData
+class CodeData extends PropertyData implements \Stringable
 {
 	public function __construct(public string $code = '', public array $settings = [])
 	{

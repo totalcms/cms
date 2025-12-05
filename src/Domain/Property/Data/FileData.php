@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * String type property data.
  */
-class FileData extends PropertyData
+class FileData extends PropertyData implements \Stringable
 {
 	public ListData $tags;
 	public PasswordData $password;
@@ -14,6 +14,7 @@ class FileData extends PropertyData
 	public string $mime;
 	public string $label;
 	public string $name;
+	public string $ext;
 	public string $download;
 	public string $comments;
 	public int $size;
@@ -30,6 +31,7 @@ class FileData extends PropertyData
 		$this->protected  = $file['protected'] ?? $defaultProtected;
 
 		$this->name     = $file['name'] ?? '';
+		$this->ext      = pathinfo($this->name, PATHINFO_EXTENSION);
 		$this->download = empty($file['download']) ? $this->name : $file['download'];
 		$this->mime     = $file['mime'] ?? '';
 		$this->comments = $file['comments'] ?? '';
@@ -53,6 +55,7 @@ class FileData extends PropertyData
 			'mime'       => $this->mime,
 			'download'   => $this->download,
 			'name'       => $this->name,
+			'ext'        => $this->ext,
 			'comments'   => $this->comments,
 			'size'       => $this->size,
 			'count'      => $this->count,

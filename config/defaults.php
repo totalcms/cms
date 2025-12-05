@@ -243,6 +243,12 @@ $settings['dashboard'] = [
 	// 'keepIdOnDuplicate' => false, // Keep ID when duplicating objects (default: false - ID is cleared)
 ];
 
+// License settings
+// Only applicable for development and trial editions
+$settings['license'] = [
+	'simulateEdition' => null, // Set to 'lite', 'standard', or 'pro' to test edition restrictions
+];
+
 // https://www.php.net/manual/en/timezones.php
 // DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();

@@ -300,7 +300,7 @@ class ImageMetaReader
 				// Extract keywords from dc:subject
 				// Extract individual keywords from RDF bag/seq
 				if (preg_match('/<dc:subject>(.*?)<\/dc:subject>/s', $xmp, $subjectMatch) && preg_match_all('/<rdf:li>(.*?)<\/rdf:li>/', $subjectMatch[1], $keywordMatches)) {
-					$xmpData['keywords'] = array_map('trim', $keywordMatches[1]);
+					$xmpData['keywords'] = array_map(trim(...), $keywordMatches[1]);
 				}
 
 				// Extract location information from photoshop and IPTC4XMP fields
@@ -403,7 +403,7 @@ class ImageMetaReader
 		}
 
 		// Clean up keywords: trim whitespace, remove empty values, make unique
-		$keywords = array_unique(array_filter(array_map('trim', $keywords)));
+		$keywords = array_unique(array_filter(array_map(trim(...), $keywords)));
 
 		// Sort alphabetically for consistent output
 		sort($keywords);

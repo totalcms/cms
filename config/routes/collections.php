@@ -10,6 +10,7 @@ use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
+use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 
 return function (App $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
@@ -18,7 +19,8 @@ return function (App $app): void {
 		$group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
 		$group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
 		$group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
-	})->add(CollectionMetaAccessMiddleware::class)
+	})->add(CollectionEditionMiddleware::class)
+		->add(CollectionMetaAccessMiddleware::class)
 		->add(AuthMiddleware::class);
 
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
@@ -29,7 +31,8 @@ return function (App $app): void {
 		$group->map(['HEAD'], '/{collection}', Collection\CollectionExistsAction::class)->setName('collection-exists');
 		// Collection Schema
 		$group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
-	})->add(CollectionMetaAccessMiddleware::class)
+	})->add(CollectionEditionMiddleware::class)
+		->add(CollectionMetaAccessMiddleware::class)
 		->add(DualAuthMiddleware::class);
 
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
@@ -70,6 +73,7 @@ return function (App $app): void {
 		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
-	})->add(CollectionAccessMiddleware::class)
+	})->add(CollectionEditionMiddleware::class)
+		->add(CollectionAccessMiddleware::class)
 		->add(DualAuthMiddleware::class);
 };

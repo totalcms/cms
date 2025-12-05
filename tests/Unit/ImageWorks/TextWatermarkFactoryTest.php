@@ -4,6 +4,7 @@ namespace Tests\Unit\ImageWorks;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -16,17 +17,20 @@ class TextWatermarkFactoryTest extends TestCase
 	private TextWatermarkFactory $textWatermarkFactory;
 	private \PHPUnit\Framework\MockObject\MockObject $mockFilesystem;
 	private Config $mockConfig;
+	private \PHPUnit\Framework\MockObject\MockObject $mockEditionFeatures;
 	private \PHPUnit\Framework\MockObject\MockObject $mockLoggerFactory;
 
 	protected function setUp(): void
 	{
-		$this->mockFilesystem    = $this->createMock(StorageAdapterInterface::class);
-		$this->mockConfig        = $this->createTestConfig(['watermarkFontsDepot' => 'watermark-fonts']);
-		$this->mockLoggerFactory = $this->createMock(LoggerFactory::class);
+		$this->mockFilesystem       = $this->createMock(StorageAdapterInterface::class);
+		$this->mockConfig           = $this->createTestConfig(['watermarkFontsDepot' => 'watermark-fonts']);
+		$this->mockEditionFeatures  = $this->createMock(EditionFeatureService::class);
+		$this->mockLoggerFactory    = $this->createMock(LoggerFactory::class);
 
 		$this->textWatermarkFactory = new TextWatermarkFactory(
 			$this->mockFilesystem,
 			$this->mockConfig,
+			$this->mockEditionFeatures,
 			$this->mockLoggerFactory
 		);
 	}
@@ -224,6 +228,7 @@ class TextWatermarkFactoryTest extends TestCase
 		$customFactory = new TextWatermarkFactory(
 			$this->mockFilesystem,
 			$customConfig,
+			$this->mockEditionFeatures,
 			$this->mockLoggerFactory
 		);
 
@@ -303,48 +308,5 @@ class TextWatermarkFactoryTest extends TestCase
 
 		$this->assertStringEndsWith('/resources/fonts/RobotoRegular.ttf', $result);
 		$this->assertFileExists($result);
-	}
-
-	public function testClearOldCache(): void
-	{
-		// Mock file listing
-		$files = [
-			'text_watermark_abc123.png',
-			'text_watermark_def456.png',
-			'other_file.png',
-		];
-
-		$this->mockFilesystem
-			->expects($this->once())
-			->method('listFiles')
-			->with('.watermarks')
-			->willReturn($files);
-
-		// Mock flysystem for lastModified calls
-		$mockFlysystem = $this->createMock(\League\Flysystem\FilesystemOperator::class);
-		$this->mockFilesystem
-			->expects($this->exactly(2)) // Only called for text_watermark_ files
-			->method('flysystem')
-			->willReturn($mockFlysystem);
-
-		// Mock old timestamps that should be deleted
-		$oldTimestamp = time() - 3600; // 1 hour ago
-		$mockFlysystem
-			->expects($this->exactly(2))
-			->method('lastModified')
-			->willReturn($oldTimestamp);
-
-		// Expect delete calls for old watermark files
-		$this->mockFilesystem
-			->expects($this->exactly(2))
-			->method('delete')
-			->with($this->logicalOr(
-				'.watermarks/text_watermark_abc123.png',
-				'.watermarks/text_watermark_def456.png'
-			));
-
-		$result = $this->textWatermarkFactory->clearOldCache(1800); // 30 minutes
-
-		$this->assertEquals(2, $result);
 	}
 }

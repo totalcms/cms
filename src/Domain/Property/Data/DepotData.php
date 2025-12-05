@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-class DepotData extends PropertyData
+class DepotData extends PropertyData implements \Stringable
 {
 	/** @var array<FileData|FolderData> */
 	public array $files = [];

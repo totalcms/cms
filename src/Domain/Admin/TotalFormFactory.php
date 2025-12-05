@@ -8,11 +8,13 @@ use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -50,6 +52,8 @@ readonly class TotalFormFactory
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
 		private AccessGroupLister $accessGroupLister,
+		private CollectionEditionService $collectionEditionService,
+		private EditionFeatureService $editionFeatures,
 		private SchemaFactory $schemaFactory,
 		private TemplateRepository $templateRepository,
 		private CSRFTokenManager $csrfManager,
@@ -78,16 +82,18 @@ readonly class TotalFormFactory
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
 		$options = array_merge($options, [
-			'route'             => $route,
-			'api'               => $this->api,
-			'objectFetcher'     => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'schemaLister'      => $this->schemaLister,
-			'accessGroupLister' => $this->accessGroupLister,
-			'csrfManager'       => $this->csrfManager,
+			'route'                    => $route,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
+			'csrfManager'              => $this->csrfManager,
 		]);
 
 		$form = new TotalForm(...$options);
@@ -253,16 +259,18 @@ readonly class TotalFormFactory
 			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'               => $this->api,
-			'objectFetcher'     => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'schemaLister'      => $this->schemaLister,
-			'accessGroupLister' => $this->accessGroupLister,
-			'schemaFactory'     => $this->schemaFactory,
-			'csrfManager'       => $this->csrfManager,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
+			'schemaFactory'            => $this->schemaFactory,
+			'csrfManager'              => $this->csrfManager,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -279,16 +287,18 @@ readonly class TotalFormFactory
 			'id'         => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'                => $this->api,
-			'objectFetcher'      => $this->objectFetcher,
-			'collectionFetcher'  => $this->collectionFetcher,
-			'collectionReader'   => $this->collectionReader,
-			'indexFilter'        => $this->indexFilter,
-			'schemaFetcher'      => $this->schemaFetcher,
-			'schemaLister'       => $this->schemaLister,
-			'accessGroupLister'  => $this->accessGroupLister,
-			'templateRepository' => $this->templateRepository,
-			'csrfManager'        => $this->csrfManager,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
+			'templateRepository'       => $this->templateRepository,
+			'csrfManager'              => $this->csrfManager,
 		]);
 
 		$form = new TemplateForm(...$options);
@@ -351,15 +361,17 @@ readonly class TotalFormFactory
 			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'               => $this->api,
-			'objectFetcher'     => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'schemaLister'      => $this->schemaLister,
-			'accessGroupLister' => $this->accessGroupLister,
-			'csrfManager'       => $this->csrfManager,
+			'api'                      => $this->api,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
+			'csrfManager'              => $this->csrfManager,
 		]);
 
 		$form = new CollectionForm(...$options);
@@ -372,17 +384,19 @@ readonly class TotalFormFactory
 	{
 		$options = array_merge($options, [
 			// These options cannot be overridden
-			'collection'        => $collection,
-			'api'               => $this->api,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
-			'objectFetcher'     => $this->objectFetcher,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'schemaLister'      => $this->schemaLister,
-			'accessGroupLister' => $this->accessGroupLister,
-			'csrfManager'       => $this->csrfManager,
-			'config'            => $this->config,
+			'collection'               => $collection,
+			'api'                      => $this->api,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
+			'objectFetcher'            => $this->objectFetcher,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
+			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
 		]);
 
 		return new ObjectForm(...$options);
@@ -397,18 +411,20 @@ readonly class TotalFormFactory
 	{
 		$options = array_merge($options, [
 			// These options cannot be overridden
-			'collection'        => $collection,
-			'property'          => $property,
-			'id'                => $options['id'] ?? '',
-			'api'               => $this->api,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'indexFilter'       => $this->indexFilter,
-			'objectFetcher'     => $this->objectFetcher,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'schemaLister'      => $this->schemaLister,
-			'accessGroupLister' => $this->accessGroupLister,
-			'csrfManager'       => $this->csrfManager,
+			'collection'               => $collection,
+			'property'                 => $property,
+			'id'                       => $options['id'] ?? '',
+			'api'                      => $this->api,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionReader'         => $this->collectionReader,
+			'indexFilter'              => $this->indexFilter,
+			'objectFetcher'            => $this->objectFetcher,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures'          => $this->editionFeatures,
+			'csrfManager'              => $this->csrfManager,
 		]);
 
 		return new DeckItemForm(...$options);
@@ -877,15 +893,17 @@ readonly class TotalFormFactory
 		// It will not be used, but it is required to create a FormField instance.
 		// Use empty collection string to prevent fetching/creating any collection
 		return new ObjectForm(
-			objectFetcher     : $this->objectFetcher,
-			collectionFetcher : $this->collectionFetcher,
-			collectionReader  : $this->collectionReader,
-			indexFilter       : $this->indexFilter,
-			schemaFetcher     : $this->schemaFetcher,
-			schemaLister      : $this->schemaLister,
-			accessGroupLister : $this->accessGroupLister,
-			api               : $this->api,
-			collection        : '',
+			objectFetcher            : $this->objectFetcher,
+			collectionFetcher        : $this->collectionFetcher,
+			collectionReader         : $this->collectionReader,
+			indexFilter              : $this->indexFilter,
+			schemaFetcher            : $this->schemaFetcher,
+			schemaLister             : $this->schemaLister,
+			accessGroupLister        : $this->accessGroupLister,
+			collectionEditionService : $this->collectionEditionService,
+			editionFeatures          : $this->editionFeatures,
+			api                      : $this->api,
+			collection               : '',
 		);
 	}
 

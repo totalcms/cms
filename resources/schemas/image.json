@@ -21,8 +21,7 @@
         }
     },
     "required": [
-        "id",
-        "image"
+        "id"
     ],
     "index": [
         "id",

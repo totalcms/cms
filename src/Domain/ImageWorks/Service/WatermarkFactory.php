@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
@@ -12,6 +14,7 @@ readonly class WatermarkFactory
 		private TextWatermarkFactory $textWatermarkFactory,
 		private Config $config,
 		private StorageAdapterInterface $filesystem,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -26,6 +29,11 @@ readonly class WatermarkFactory
 	public function createImageWatermark(array $params = []): ?Watermark
 	{
 		if (!isset($params['mark']) || empty($params['mark'])) {
+			return null;
+		}
+
+		// Silently skip image watermarks if edition doesn't support it
+		if (!$this->editionFeatures->can(EditionFeature::IMAGE_WATERMARKS)) {
 			return null;
 		}
 
@@ -50,6 +58,11 @@ readonly class WatermarkFactory
 	public function createTextWatermark(array $params = [], int $baseImageWidth = 0): ?Watermark
 	{
 		if (!isset($params['marktext']) || empty($params['marktext'])) {
+			return null;
+		}
+
+		// Silently skip text watermarks if edition doesn't support it
+		if (!$this->editionFeatures->can(EditionFeature::TEXT_WATERMARKS)) {
 			return null;
 		}
 

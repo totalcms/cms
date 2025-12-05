@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mailer\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -21,6 +23,7 @@ readonly class EmailService
 		private EmailSender $emailSender,
 		private TwigEngine $twigEngine,
 		private Config $config,
+		private EditionFeatureService $editionFeatures,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('email.log')->createLogger('email-service');
@@ -36,6 +39,19 @@ readonly class EmailService
 	 */
 	public function sendEmail(string $mailerId, array $data = []): array
 	{
+		// Mailer actions require Standard edition or higher
+		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
+			$this->logger->warning('Mailer action blocked by edition', [
+				'mailerId' => $mailerId,
+				'edition'  => $this->editionFeatures->getEdition()->value,
+			]);
+
+			return [
+				'success' => false,
+				'message' => 'Mailer actions require the Standard edition or higher',
+			];
+		}
+
 		try {
 			// Fetch mailer object
 			$mailer = $this->mailerFetcher->fetchMailer($mailerId);
@@ -138,7 +154,7 @@ readonly class EmailService
 			return [];
 		}
 
-		$emails    = array_map('trim', explode("\n", $emailList));
+		$emails    = array_map(trim(...), explode("\n", $emailList));
 		$processed = [];
 
 		foreach ($emails as $email) {

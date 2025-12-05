@@ -8,9 +8,12 @@ use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -23,6 +26,7 @@ use TotalCMS\Support\Config;
 /**
  * Total Form Builder.
  *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
@@ -157,6 +161,8 @@ class TotalForm implements \Stringable
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
+		protected CollectionEditionService $collectionEditionService,
+		protected EditionFeatureService $editionFeatures,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',
@@ -216,9 +222,40 @@ class TotalForm implements \Stringable
 		if ($this->helpStyle !== '') {
 			$this->class .= " help-{$this->helpStyle}";
 		}
-		if ($this->method !== 'POST') {
+		if ($this->isEditMode()) {
 			$this->class .= ' edit-mode';
 		}
+	}
+
+	/**
+	 * Filter form actions based on edition.
+	 * - mailer actions require Standard edition
+	 * - webhook actions require Pro edition.
+	 *
+	 * @param array<int,array<string,mixed>> $actions
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	protected function filterActionsByEdition(array $actions): array
+	{
+		if ($actions === []) {
+			return [];
+		}
+
+		return array_values(array_filter($actions, function (array $action): bool {
+			$actionType = $action['action'] ?? '';
+
+			return match ($actionType) {
+				'mailer'  => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
+				'webhook' => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
+				default   => true, // Allow unknown actions through
+			};
+		}));
+	}
+
+	public function isEditMode(): bool
+	{
+		return strtoupper($this->method) !== 'POST' && $this->id !== '';
 	}
 
 	public function autoBuild(string $content = ''): string
@@ -266,8 +303,9 @@ class TotalForm implements \Stringable
 			'deleteActions' => 'data-delete-actions',
 		];
 		foreach ($actions as $action => $attribute) {
-			if ($this->$action !== []) {
-				$json = json_encode($this->$action);
+			$filteredActions = $this->filterActionsByEdition($this->$action);
+			if ($filteredActions !== []) {
+				$json = json_encode($filteredActions);
 				if ($json) {
 					$attributes[$attribute] = $json;
 				}
@@ -321,6 +359,8 @@ class TotalForm implements \Stringable
 
 	/**
 	 * Get properties from collection objects with optional filtering.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string>        $properties Properties to fetch
 	 * @param string               $collection Collection name (defaults to current collection)

@@ -42,12 +42,12 @@ readonly class ApiKeyData
 	 */
 	public function getMaskedKey(): string
 	{
-		if (strlen($this->key) < 12) {
+		if (strlen((string)$this->key) < 12) {
 			return $this->key;
 		}
 
 		// Show tcms_abc1...
-		return substr($this->key, 0, 10) . '...';
+		return substr((string)$this->key, 0, 10) . '...';
 	}
 
 	/**

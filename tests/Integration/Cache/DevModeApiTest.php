@@ -17,7 +17,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -67,21 +67,12 @@ final class DevModeApiTest extends TestCase
 			'imageworks' => [],
 		]);
 
-		$filesystemService    = new FilesystemService($config);
-		$opcacheService       = new OPcacheService();
-		$redisService         = new RedisService($config);
-		$memcachedService     = new MemcachedService($config);
-		$apcuService          = new APCuService($config);
-		$mockLoggerFactory    = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
-		$textWatermarkFactory = new TextWatermarkFactory(
-			new \TotalCMS\Domain\Storage\StorageFilesystemAdapter(
-				new \League\Flysystem\Filesystem(
-					new \League\Flysystem\Local\LocalFilesystemAdapter('/tmp')
-				)
-			),
-			$config,
-			$mockLoggerFactory
-		);
+		$filesystemService         = new FilesystemService($config);
+		$opcacheService            = new OPcacheService();
+		$redisService              = new RedisService($config);
+		$memcachedService          = new MemcachedService($config);
+		$apcuService               = new APCuService($config);
+		$watermarkCleanupService   = $this->createMock(WatermarkCleanupService::class);
 
 		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
 		$this->cacheManager        = new CacheManager(
@@ -90,7 +81,7 @@ final class DevModeApiTest extends TestCase
 			$redisService,
 			$memcachedService,
 			$apcuService,
-			$textWatermarkFactory,
+			$watermarkCleanupService,
 			$this->devModeManager,
 			$config,
 			$mockLoggerFactoryForCache

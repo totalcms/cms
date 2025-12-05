@@ -145,7 +145,7 @@ describe('Watermark', function (): void {
 	});
 
 	test('Watermark → isEmpty returns true when mark is explicitly null', function (): void {
-		$watermark = new Watermark(mark: null);
+		$watermark = new Watermark();
 
 		expect($watermark->isEmpty())->toBe(true);
 	});

@@ -12,11 +12,19 @@
 }
 </style>
 
-<iframe src="{{ licenseUrl }}" 
-		width="100%" 
-		height="100%" 
+<iframe src="{{ licenseUrl }}"
+		width="100%"
+		height="100%"
 		frameborder="0"
 		allowtransparency="true"
 		style="border: none; background: transparent !important; background-color: transparent !important; display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
 	<p>Your browser does not support iframes. Please visit <a href="{{ licenseUrl }}" target="_blank">{{ licenseUrl }}</a> directly.</p>
 </iframe>
+
+{% if cms.edition.isSimulating %}
+<div class="simulation-warning simulation-warning-fixed">
+	<span class="icon-warn"></span>
+	You are simulating <strong>{{ cms.edition.current | capitalize }}</strong> edition.
+	<a href="/admin/settings/license">Disable simulation</a>
+</div>
+{% endif %}

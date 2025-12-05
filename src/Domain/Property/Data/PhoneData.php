@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Phone Number type property data.
  */
-class PhoneData extends PropertyData
+class PhoneData extends PropertyData implements \Stringable
 {
 	public function __construct(public string $phone = '', public array $settings = [])
 	{

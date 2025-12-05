@@ -3,9 +3,11 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
@@ -39,6 +41,8 @@ class SchemaForm extends TotalForm
 		protected SchemaFetcher $schemaFetcher,
 		public SchemaLister $schemaLister,
 		protected AccessGroupLister $accessGroupLister,
+		protected CollectionEditionService $collectionEditionService,
+		protected EditionFeatureService $editionFeatures,
 		protected SchemaFactory $schemaFactory,
 		public string $api,
 		public string $collection = '',
@@ -77,6 +81,8 @@ class SchemaForm extends TotalForm
 			$schemaFetcher,
 			$schemaLister,
 			$accessGroupLister,
+			$collectionEditionService,
+			$editionFeatures,
 			$api,
 			$collection,
 			$id,
@@ -253,7 +259,7 @@ class SchemaForm extends TotalForm
 			$schemaIds  = array_map(fn (SchemaData $schema): string => $schema->id, $allSchemas);
 
 			// Remove 'schema' and 'collection' schemas and the current schema being edited
-			$schemaIds = array_filter($schemaIds, fn (string $id): bool => $id !== 'schema' && $id !== 'collection' && $id !== $this->id);
+			$schemaIds = array_filter($schemaIds, fn (string $id): bool => !in_array($id, ['schema', 'collection', $this->id], true));
 
 			$options['options'] = array_values($schemaIds);
 		}

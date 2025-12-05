@@ -23,4 +23,16 @@
 
 	<a style="margin-top:3rem" class="dash-button transparent" href="schemas/-import">Import New Schema</a>
 
+	{% set inaccessibleSchemas = cms.getInaccessibleSchemas() %}
+	{% if inaccessibleSchemas|length > 0 %}
+	<div class="edition-alert">
+		<span class="icon-warn"></span>
+		<div class="edition-alert-content">
+			<strong>{{ inaccessibleSchemas|length }} schema(s) unavailable</strong>
+			<p>The following schemas require a higher edition: {{ inaccessibleSchemas|join(', ') }}</p>
+			<a href="utils/license-manager" class="dash-button">Upgrade to Regain Access</a>
+		</div>
+	</div>
+	{% endif %}
+
 </section>

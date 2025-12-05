@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
@@ -23,6 +24,7 @@ readonly class AdminSettingsSaveSectionAction
 		private SettingsValidator $settingsValidator,
 		private EmailSender $emailSender,
 		private TwigRenderer $twigRenderer,
+		private EditionFeatureService $editionFeatureService,
 	) {
 	}
 
@@ -42,6 +44,14 @@ readonly class AdminSettingsSaveSectionAction
 				'success' => false,
 				'message' => 'Invalid settings section',
 			], 400);
+		}
+
+		// License settings can only be saved during trial/development
+		if ($section === 'license' && !$this->editionFeatureService->canSimulateEdition()) {
+			return $this->renderer->json($response, [
+				'success' => false,
+				'message' => 'Edition simulation is only available during trial or development',
+			], 403);
 		}
 
 		// Check if this is an SMTP test request

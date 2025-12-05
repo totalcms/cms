@@ -47,7 +47,7 @@ class GridRenderer
 		}
 		// Convert string to array if needed
 		if (is_string($tags)) {
-			$tags = array_map('trim', explode(',', $tags));
+			$tags = array_map(trim(...), explode(',', $tags));
 		}
 
 		return HTMLUtils::tagList($tags, $linkBase);

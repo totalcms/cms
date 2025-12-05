@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
@@ -22,6 +23,7 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $validator;
 	private \PHPUnit\Framework\MockObject\MockObject $emailSender;
 	private \PHPUnit\Framework\MockObject\MockObject $twigRenderer;
+	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -33,6 +35,7 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 		$this->validator         = $this->createMock(SettingsValidator::class);
 		$this->emailSender       = $this->createMock(EmailSender::class);
 		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
+		$this->editionFeatures   = $this->createMock(EditionFeatureService::class);
 		$this->request           = $this->createMock(ServerRequestInterface::class);
 		$this->response          = $this->createMock(ResponseInterface::class);
 
@@ -42,7 +45,8 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 			$this->installationSaver,
 			$this->validator,
 			$this->emailSender,
-			$this->twigRenderer
+			$this->twigRenderer,
+			$this->editionFeatures
 		);
 	}
 

@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Action\Export;
 
+use Odan\Session\FlashInterface;
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,16 +15,21 @@ final class ExportJsonActionTest extends TestCase
 {
 	private ExportJsonAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $objectExporter;
+	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
 		$this->objectExporter = $this->createMock(ObjectExporter::class);
+		$this->session        = $this->createMock(SessionInterface::class);
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 		$this->response       = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ExportJsonAction($this->objectExporter);
+		$flash = $this->createMock(FlashInterface::class);
+		$this->session->method('getFlash')->willReturn($flash);
+
+		$this->action = new ExportJsonAction($this->objectExporter, $this->session);
 	}
 
 	public function testExportsJsonSuccessfully(): void
@@ -33,9 +40,9 @@ final class ExportJsonActionTest extends TestCase
 		];
 
 		$this->objectExporter->expects($this->once())
-			->method('exportAllObjects')
+			->method('exportAllObjectsForJson')
 			->with('products')
-			->willReturn($objects);
+			->willReturn(['data' => $objects, 'errors' => []]);
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
@@ -52,7 +59,7 @@ final class ExportJsonActionTest extends TestCase
 
 	public function testSetsJsonContentType(): void
 	{
-		$this->objectExporter->method('exportAllObjects')->willReturn([]);
+		$this->objectExporter->method('exportAllObjectsForJson')->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->method('withBody')->willReturnSelf();
@@ -64,11 +71,11 @@ final class ExportJsonActionTest extends TestCase
 
 	public function testSetsContentDispositionHeader(): void
 	{
-		$this->objectExporter->method('exportAllObjects')->willReturn([]);
+		$this->objectExporter->method('exportAllObjectsForJson')->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value): ResponseInterface {
+			->willReturnCallback(function ($name, string $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('collection-blog.json', $value);
@@ -85,9 +92,9 @@ final class ExportJsonActionTest extends TestCase
 	public function testHandlesEmptyCollection(): void
 	{
 		$this->objectExporter->expects($this->once())
-			->method('exportAllObjects')
+			->method('exportAllObjectsForJson')
 			->with('empty')
-			->willReturn([]);
+			->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->method('withBody')->willReturnSelf();
@@ -99,7 +106,7 @@ final class ExportJsonActionTest extends TestCase
 
 	public function testReturnsResponseWithJsonBody(): void
 	{
-		$this->objectExporter->method('exportAllObjects')->willReturn([['id' => '1']]);
+		$this->objectExporter->method('exportAllObjectsForJson')->willReturn(['data' => [['id' => '1']], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 
@@ -116,7 +123,7 @@ final class ExportJsonActionTest extends TestCase
 
 	public function testUsesCollectionNameInFilename(): void
 	{
-		$this->objectExporter->method('exportAllObjects')->willReturn([]);
+		$this->objectExporter->method('exportAllObjectsForJson')->willReturn(['data' => [], 'errors' => []]);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->method('withBody')->willReturnSelf();

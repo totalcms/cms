@@ -74,8 +74,15 @@ readonly class AutogenIdService
 	 */
 	private function prepareReplacementData(string $collection, array $objectData): array
 	{
-		// Start with object data (filter to strings only like JavaScript version)
-		$data = array_filter($objectData, fn ($value): bool => is_string($value));
+		// Start with object data (filter to strings and numbers, convert numbers to strings)
+		$data = [];
+		foreach ($objectData as $key => $value) {
+			if (is_string($value)) {
+				$data[$key] = $value;
+			} elseif (is_numeric($value)) {
+				$data[$key] = (string)$value;
+			}
+		}
 
 		// Add special autogen variables
 		$data['now']       = (string)(time() * 1000); // JavaScript Date.now() equivalent
@@ -172,8 +179,15 @@ readonly class AutogenIdService
 	 */
 	private static function prepareReplacementDataWithOid(array $objectData, int $oidCount): array
 	{
-		// Start with object data (filter to strings only like JavaScript version)
-		$data = array_filter($objectData, fn ($value): bool => is_string($value));
+		// Start with object data (filter to strings and numbers, convert numbers to strings)
+		$data = [];
+		foreach ($objectData as $key => $value) {
+			if (is_string($value)) {
+				$data[$key] = $value;
+			} elseif (is_numeric($value)) {
+				$data[$key] = (string)$value;
+			}
+		}
 
 		// Add special autogen variables
 		$data['now']       = (string)(time() * 1000); // JavaScript Date.now() equivalent

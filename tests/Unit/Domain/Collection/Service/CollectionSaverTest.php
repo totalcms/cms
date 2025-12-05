@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 
 final class CollectionSaverTest extends TestCase
 {
@@ -19,6 +20,7 @@ final class CollectionSaverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $factory;
 	private \PHPUnit\Framework\MockObject\MockObject $indexRepository;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
 
 	protected function setUp(): void
 	{
@@ -26,6 +28,7 @@ final class CollectionSaverTest extends TestCase
 		$this->factory            = $this->createMock(CollectionFactory::class);
 		$this->indexRepository    = $this->createMock(IndexRepository::class);
 		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
+		$this->editionFeatures    = $this->createMock(EditionFeatureService::class);
 
 		// Setup factory mock to return valid CollectionData from arrays
 		$this->factory
@@ -44,7 +47,8 @@ final class CollectionSaverTest extends TestCase
 			$this->repository,
 			$this->factory,
 			$this->indexRepository,
-			$this->collectionFetcher
+			$this->collectionFetcher,
+			$this->editionFeatures
 		);
 	}
 

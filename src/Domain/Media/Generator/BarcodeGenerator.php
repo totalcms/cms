@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\Media\Generator;
 
 use Com\Tecnick\Barcode\Barcode;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 
 /**
  * Barcode Generator utility using tecnickcom/tc-lib-barcode.
@@ -11,8 +13,9 @@ class BarcodeGenerator
 {
 	private readonly Barcode $barcode;
 
-	public function __construct()
-	{
+	public function __construct(
+		private readonly ?EditionFeatureService $editionFeatures = null,
+	) {
 		$this->barcode = new Barcode();
 	}
 
@@ -21,6 +24,11 @@ class BarcodeGenerator
 	 */
 	private function generateSVG(string $data, string $type, int $width = -1, int $height = -1, string $color = 'black'): string
 	{
+		// Barcodes require Pro edition
+		if ($this->editionFeatures instanceof EditionFeatureService) {
+			$this->editionFeatures->canOrFail(EditionFeature::BARCODES);
+		}
+
 		try {
 			$barcodeObj = $this->barcode->getBarcodeObj($type, $data, $width, $height, $color);
 

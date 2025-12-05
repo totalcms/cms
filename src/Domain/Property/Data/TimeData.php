@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 /**
  * Time type property data.
  */
-class TimeData extends PropertyData
+class TimeData extends PropertyData implements \Stringable
 {
 	public string $time;
 

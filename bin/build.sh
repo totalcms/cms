@@ -2,8 +2,16 @@
 
 echo "Building the application..."
 
-# Build frontend assets
-bin/build-assets.sh
+PRODUCTION=0
+for arg in "$@"; do
+    if [ "$arg" = "--production" ]; then
+		# Build frontend assets (production mode = no sourcemaps)
+		bin/build-assets.sh --production
+	else
+		# Build frontend assets (development mode = with sourcemaps)
+		bin/build-assets.sh
+    fi
+done
 
 if [ $? -ne 0 ]; then
     echo "Failed to build frontend assets. Exiting..."
@@ -62,11 +70,6 @@ find vendor -empty -type d -delete 2>/dev/null
 
 # generate bundle to verify installation
 php bin/make-bundle.php
-
-# generate beta expiration date
-EXPIRE=`date -v +45d +"%Y-%m-%d"`
-echo "Beta expiration date: $EXPIRE"
-echo $EXPIRE | base64 > resources/beta
 
 # move required files to dist
 echo "Moving required files to dist..."

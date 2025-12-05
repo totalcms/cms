@@ -189,7 +189,7 @@ class HTMLUtils
 	// -------------------------
 	public static function mergeClasses(string ...$classes): string
 	{
-		return implode(' ', array_filter(array_map('trim', $classes)));
+		return implode(' ', array_filter(array_map(trim(...), $classes)));
 	}
 
 	/**

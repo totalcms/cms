@@ -20,6 +20,10 @@ details.cms-accordion {
 		color            : oklch(var(--totalform-text-color));
 		transition       : all 200ms ease;
 
+		small {
+			font-size   : 0.8rem;
+			font-weight : normal;
+		}
 		// &::marker {
 		// 	content : "▶";
 		// }

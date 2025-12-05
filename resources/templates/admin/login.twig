@@ -6,10 +6,12 @@
 <main class="login-layout admin-layout">
 
 	<section class="login-above">
-		{{ include([
-			'whitelabel/login-above.twig',
-			'login-above-default.twig'
-		], ignore_missing = true) }}
+		{{ include(cms.edition.can('whitelabel_templates')
+			? ['whitelabel/login-above.twig', 'login-above.twig', 'login-above-default.twig']
+			: cms.edition.can('templates')
+			? ['login-above.twig', 'login-above-default.twig']
+			: ['login-above-default.twig']
+		, ignore_missing = true) }}
 	</section>
 
 	{% set authCollection = cms.objects(cms.config('auth','collection')) %}
@@ -31,7 +33,9 @@
 	}) }}
 
 	<section class="login-below">
-		{{ include('whitelabel/login-below.twig', ignore_missing = true) }}
+		{% if cms.edition.can('whitelabel_templates') %}
+			{{ include('whitelabel/login-below.twig', ignore_missing = true) }}
+		{% endif %}
 	</section>
 </main>
 {% endblock %}

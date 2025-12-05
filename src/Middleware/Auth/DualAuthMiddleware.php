@@ -15,6 +15,8 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -37,6 +39,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private PersistentLoginService $persistentLoginService,
 		private CollectionFetcher $collectionFetcher,
 		private OperationDetector $operationDetector,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -66,6 +69,20 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// Try API key authentication first
 		$apiKeyAuth = $this->authenticator->authenticate($request);
 		if ($apiKeyAuth instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+			// Check if External REST API feature is available for current edition
+			if (!$this->editionFeatures->can(EditionFeature::EXTERNAL_REST_API)) {
+				$edition = $this->editionFeatures->getEdition();
+
+				return $this->jsonRenderer->json(
+					$this->responseFactory->createResponse()->withStatus(403),
+					['error' => [
+						'message'  => 'External REST API access requires the Pro edition or higher.',
+						'edition'  => $edition->value,
+						'required' => 'pro',
+					]]
+				);
+			}
+
 			// API key is valid, add it to request attributes and proceed
 			$request = $request->withAttribute('apiKey', $apiKeyAuth);
 			$request = $request->withAttribute('authMethod', 'apikey');
@@ -234,7 +251,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			}
 
 			// Normalize to lowercase and check if operation is allowed
-			$publicOperations = array_map('strtolower', $collection->publicOperations);
+			$publicOperations = array_map(strtolower(...), $collection->publicOperations);
 
 			return in_array($operation, $publicOperations, true);
 		} catch (\Throwable) {

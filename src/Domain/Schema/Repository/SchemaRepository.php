@@ -144,7 +144,7 @@ class SchemaRepository extends StorageRepository
 			$contents = file_get_contents($schemaFile);
 		}
 
-		if ($contents === '' || $contents === null || $contents === false) {
+		if (in_array($contents, ['', null, false], true)) {
 			return null;
 		}
 

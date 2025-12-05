@@ -164,7 +164,7 @@ class FormGridBuilder
 	private function cleanupFormGrid(): array
 	{
 		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
-		$lines = $lines === false ? [] : array_map('trim', $lines);
+		$lines = $lines === false ? [] : array_map(trim(...), $lines);
 
 		return array_filter($lines, function (string $line): bool {
 			return $line !== '' && $line !== '0'; // Filter out empty lines

@@ -30,7 +30,7 @@ readonly class ObjectSaver
 		}
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
+		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
 

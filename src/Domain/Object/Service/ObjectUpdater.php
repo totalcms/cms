@@ -35,7 +35,7 @@ readonly class ObjectUpdater
 		}
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
+		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
 
@@ -54,7 +54,7 @@ readonly class ObjectUpdater
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
+		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;

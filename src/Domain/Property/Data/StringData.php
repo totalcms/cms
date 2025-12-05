@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Data;
 use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
 use TotalCMS\Support\Config;
 
-class StringData extends PropertyData
+class StringData extends PropertyData implements \Stringable
 {
 	public function __construct(public string $text = '', public array $settings = [])
 	{

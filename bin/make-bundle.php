@@ -6,6 +6,7 @@ const BASEDIR = __DIR__ . '/../';
 $folders      = [
 	'config',
 	'resources/schemas',
+	'resources/templates',
 	'src/Middleware',
 	'src/Domain',
 ];

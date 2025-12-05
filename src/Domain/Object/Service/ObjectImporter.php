@@ -291,7 +291,7 @@ class ObjectImporter
 	private function convertList(string $list): array
 	{
 		$list = explode(',', $list);
-		$list = array_map('trim', $list);
+		$list = array_map(trim(...), $list);
 
 		return array_filter($list);
 	}
