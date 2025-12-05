@@ -181,13 +181,15 @@ class DepotField extends FormField
 
 	protected function actionbar(): string
 	{
+		$addFolderDisabled = $this->form->isEditMode() ? '' : 'disabled';
+
 		return <<<HTML
 		<div class="actionbar">
 			<button type="button" class="edit" title="Edit File Info" disabled></button>
 			<button type="button" class="links" title="Download Links" disabled></button>
 			<button type="button" class="download" title="Download File" disabled></button>
 			<button type="button" class="upload dz-clickable" title="Upload"></button>
-			<button type="button" class="add-folder" title="New Folder"></button>
+			<button type="button" class="add-folder" title="New Folder" {$addFolderDisabled}></button>
 			<button type="button" class="trash" title="Delete File" disabled></button>
 		</div>
 		HTML;

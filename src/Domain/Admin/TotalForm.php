@@ -222,7 +222,7 @@ class TotalForm implements \Stringable
 		if ($this->helpStyle !== '') {
 			$this->class .= " help-{$this->helpStyle}";
 		}
-		if ($this->method !== 'POST') {
+		if ($this->isEditMode()) {
 			$this->class .= ' edit-mode';
 		}
 	}
@@ -251,6 +251,11 @@ class TotalForm implements \Stringable
 				default   => true, // Allow unknown actions through
 			};
 		}));
+	}
+
+	public function isEditMode(): bool
+	{
+		return strtoupper($this->method) !== 'POST' && $this->id !== '';
 	}
 
 	public function autoBuild(string $content = ''): string
