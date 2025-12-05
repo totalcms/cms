@@ -27,7 +27,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Toggle Field**: No longer required in schema definitions
 - **Auth Active Field**: Changed to toggle field type
 - **Default Collections**: Allow blank saves in default collections
-- **License Status**: Only shown to admin users
+- **License Status Icon**: Only shown to admin users
 - **Dashboard**: Moved help content to documentation; fixed whitelabel display
 
 ### Fixed
