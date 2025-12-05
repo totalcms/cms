@@ -2,6 +2,45 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.47] - 2025-12-05
+
+### Added
+
+- **Edition-Based Feature Limiting**: Comprehensive edition-level access control system
+  - Middleware enforcement for templates, mailers, API keys, and access groups
+  - Service-level edition checks throughout the application
+  - Twig-level edition checks for template-based restrictions
+  - Custom collection visibility based on edition
+  - Whitelabel support for Standard edition
+  - Edition simulation for testing different access levels
+- **prefixSlug Twig Filter**: New filter to add prefixes to URL slugs
+- **File Extension Property**: `file.ext` property now available for depot files
+- **Watermark Cleanup Service**: New service to manage watermark file cleanup
+
+### Enhanced
+
+- **Depot Field**: Disable add-folder button on new object forms until object is saved
+- **Admin Sidebar**: Hide empty sidebar groups when filtering
+- **Form Actions**: Edition-based limits on form actions
+- **Export Logging**: Improved logging for export operations
+- **redirectIfNotFound**: More flexible redirect support
+- **Toggle Field**: No longer required in schema definitions
+- **Auth Active Field**: Changed to toggle field type
+- **Default Collections**: Allow blank saves in default collections
+- **License Status**: Only shown to admin users
+- **Dashboard**: Moved help content to documentation; fixed whitelabel display
+
+### Fixed
+
+- **Depot on New Objects**: Fixed depot field not working correctly when creating new objects
+- **Gallery Macros**: Fixed `first` and `last` gallery macros
+- **Number Fields with Autogen**: Fixed autogeneration for number fields and fields with question marks
+- **depotDownload Macros**: Fixed issues with depot download macros
+- **CSV Deprecations**: Fixed PHP deprecation warnings in CSV handling
+- **Profile Picture**: Fixed alignment when licensed
+- **Edition Simulation**: Fixed simulation mode in settings
+- **Schema/Collection Access**: Fixed access denied handling for schemas and collections by edition
+
 ## [3.0.46] - 2025-11-19
 
 ### Added

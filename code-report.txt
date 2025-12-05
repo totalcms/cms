@@ -1,29 +1,29 @@
 
 File Counts:
-	php     : 495
-	tests   : 273
+	php     : 505
+	tests   : 270
 	js      : 70
 	scss    : 109
-	json    : 55
+	json    : 56
 	twig    : 78
 	html    : 2
 	sh      : 9
 	md      : 55
 
-Total Files: 1146
+Total Files: 1154
 
 Code Line Counts:
-	php     : 34109
-	tests   : 46367
-	js      : 6985
-	scss    : 10302
-	json    : 5800
-	twig    : 5766
+	php     : 35307
+	tests   : 46254
+	js      : 6990
+	scss    : 10427
+	json    : 5813
+	twig    : 5839
 	html    : 234
-	sh      : 379
-	md      : 14832
+	sh      : 389
+	md      : 14889
 
-Total Lines of Code: 124774
+Total Lines of Code: 126142
 
 Distribution Stats:
-	Dist Files:     4702
+	Dist Files:     4772
