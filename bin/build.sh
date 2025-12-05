@@ -71,11 +71,6 @@ find vendor -empty -type d -delete 2>/dev/null
 # generate bundle to verify installation
 php bin/make-bundle.php
 
-# generate beta expiration date
-EXPIRE=`date -v +45d +"%Y-%m-%d"`
-echo "Beta expiration date: $EXPIRE"
-echo $EXPIRE | base64 > resources/beta
-
 # move required files to dist
 echo "Moving required files to dist..."
 rm -rf dist
