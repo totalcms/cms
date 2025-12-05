@@ -492,8 +492,11 @@ export default class DepotField extends TotalField {
     {
         const data = {};
         for (const field of file.querySelectorAll(".form-field")) {
-            const name = field.querySelector("[name]").name;
-            data[name] = field.totalfield.getValue();
+            const nameEl = field.querySelector("[name]");
+            if (!nameEl) continue;
+            const name = nameEl.name;
+            // Use totalfield if available, otherwise fall back to raw input value
+            data[name] = field.totalfield ? field.totalfield.getValue() : (nameEl.value || null);
         }
         return data;
     }
@@ -510,6 +513,8 @@ export default class DepotField extends TotalField {
                 });
                 continue;
             }
+            // Skip files that are still being processed/uploaded (not yet on server)
+            if (item.classList.contains("dz-processing")) continue;
             files.push(this.getFileData(item));
         }
         return files;

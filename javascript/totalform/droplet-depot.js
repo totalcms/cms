@@ -178,11 +178,13 @@ export default class DepotDroplet
             uploadFolder.appendChild(file.previewElement);
         }
 
+		// Process fields first to initialize any new form fields in the preview
+		this.field.fileAdded(file);
+
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
 			this.field.changed();
         }
-		this.field.fileAdded(file);
     }
 
     is_folder(item) {
