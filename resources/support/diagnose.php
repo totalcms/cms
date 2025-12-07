@@ -72,14 +72,38 @@ echo "\n";
 
 // Required Extensions
 echo "== Required Extensions ==\n";
-$required = ['json', 'mbstring', 'curl', 'fileinfo', 'gd', 'dom', 'xml', 'session', 'hash', 'openssl', 'pdo'];
+$required = [
+    'json'      => 'JSON data storage',
+    'mbstring'  => 'Unicode/multibyte strings',
+    'curl'      => 'HTTP requests (Guzzle)',
+    'openssl'   => 'Encryption and TLS',
+    'dom'       => 'DOM document processing',
+    'libxml'    => 'XML parsing',
+    'xml'       => 'XML infrastructure',
+    'gd'        => 'Image processing',
+    'exif'      => 'Image metadata reading',
+    'fileinfo'  => 'MIME type detection',
+    'session'   => 'User sessions',
+    'hash'      => 'Token validation',
+    'pdo'       => 'Database abstraction',
+];
 $missingExtensions = [];
-foreach ($required as $ext) {
+foreach ($required as $ext => $purpose) {
     $loaded = extension_loaded($ext);
     $status = $loaded ? "OK" : "MISSING <<<";
-    echo "$ext: $status\n";
+    echo "$ext: $status ($purpose)\n";
     if (!$loaded) {
         $missingExtensions[] = $ext;
+    }
+}
+
+// Check GD FreeType support (needed for text on images)
+if (extension_loaded('gd')) {
+    $gdInfo = gd_info();
+    $ftSupport = $gdInfo['FreeType Support'] ?? false;
+    echo "gd-freetype: " . ($ftSupport ? "OK" : "MISSING <<<") . " (text on images)\n";
+    if (!$ftSupport) {
+        $missingExtensions[] = 'gd-freetype';
     }
 }
 echo "\n";
@@ -89,15 +113,47 @@ if (!empty($missingExtensions)) {
     echo "!! Please enable in your hosting control panel: " . implode(', ', $missingExtensions) . " !!\n\n";
 }
 
+// Optional Extensions
+echo "== Optional Extensions ==\n";
+$optional = [
+    'xmlwriter' => 'QR code generation',
+    'opcache'   => 'Bytecode caching (2-5x faster)',
+    'apcu'      => 'In-memory caching',
+    'redis'     => 'Distributed caching',
+    'memcached' => 'Distributed caching',
+    'imagick'   => 'Advanced image processing',
+    'intl'      => 'Internationalization',
+];
+foreach ($optional as $ext => $purpose) {
+    $loaded = extension_loaded($ext);
+    $status = $loaded ? "OK" : "not installed";
+    echo "$ext: $status ($purpose)\n";
+}
+echo "\n";
+
 // Directory Check
 echo "== Directory Structure ==\n";
-echo "Base Directory: $baseDir\n";
-echo "Writable: " . (is_writable($baseDir) ? 'Yes' : 'No') . "\n";
+echo "TCMS Directory: $baseDir\n";
+echo "DOCUMENT_ROOT: " . ($_SERVER['DOCUMENT_ROOT'] ?? 'not set') . "\n";
 
-$tcmsDataDir = $baseDir . '/tcms-data';
+$docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+$tcmsDataDir = $docRoot . '/tcms-data';
+echo "tcms-data path: $tcmsDataDir\n";
 echo "tcms-data exists: " . (is_dir($tcmsDataDir) ? 'Yes' : 'No') . "\n";
 if (is_dir($tcmsDataDir)) {
     echo "tcms-data writable: " . (is_writable($tcmsDataDir) ? 'Yes' : 'No') . "\n";
+
+    // Check subdirectories
+    $subdirs = ['collections', 'depot', 'cache', 'logs', '.system'];
+    echo "Subdirectories:\n";
+    foreach ($subdirs as $subdir) {
+        $subpath = $tcmsDataDir . '/' . $subdir;
+        if (is_dir($subpath)) {
+            echo "  $subdir/: exists, " . (is_writable($subpath) ? 'writable' : 'NOT writable') . "\n";
+        } else {
+            echo "  $subdir/: missing\n";
+        }
+    }
 }
 echo "\n";
 
@@ -188,6 +244,133 @@ try {
     echo "Line: " . $e->getLine() . "\n";
     echo "\nStack Trace:\n";
     echo $e->getTraceAsString() . "\n";
+}
+
+
+// Test key class loading
+echo "\n== Class Loading Test ==\n";
+$testClasses = [
+    'Slim\\App',
+    'DI\\Container',
+    'Twig\\Environment',
+    'TotalCMS\\App',
+    'TotalCMS\\Domain\\Settings\\Settings',
+    'TotalCMS\\Domain\\Collection\\CollectionService',
+];
+
+foreach ($testClasses as $class) {
+    if (class_exists($class, true)) {
+        echo "$class: OK\n";
+    } else {
+        echo "$class: FAILED TO LOAD <<<\n";
+    }
+}
+
+// Try to actually bootstrap the application
+echo "\n== Application Bootstrap Test ==\n";
+try {
+    // Check for required config files
+    $configDir = $baseDir . '/config';
+    echo "Config directory: " . (is_dir($configDir) ? 'exists' : 'MISSING') . "\n";
+
+    if (is_dir($configDir)) {
+        $configFiles = ['defaults.php', 'container.php', 'routes.php', 'middleware.php', 'settings.php'];
+        foreach ($configFiles as $configFile) {
+            $configPath = $configDir . '/' . $configFile;
+            if (file_exists($configPath)) {
+                echo "  $configFile: OK\n";
+            } else {
+                echo "  $configFile: MISSING <<<\n";
+            }
+        }
+    }
+
+    // Try loading the settings directly (this is what fails first usually)
+    echo "\nAttempting to load settings.php...\n";
+    $settingsPath = $configDir . '/settings.php';
+    if (file_exists($settingsPath)) {
+        $settings = require $settingsPath;
+        echo "SUCCESS: settings.php loaded\n";
+        echo "  env: " . ($settings['env'] ?? 'not set') . "\n";
+        echo "  datadir: " . ($settings['datadir'] ?? 'not set') . "\n";
+        echo "  domain: " . ($settings['domain'] ?? 'not set') . "\n";
+
+        // Check the datadir
+        $datadir = $settings['datadir'] ?? '';
+        if ($datadir) {
+            echo "\nDatadir check:\n";
+            echo "  Path: $datadir\n";
+            echo "  Exists: " . (is_dir($datadir) ? 'Yes' : 'No') . "\n";
+            if (is_dir($datadir)) {
+                echo "  Writable: " . (is_writable($datadir) ? 'Yes' : 'No') . "\n";
+            } else {
+                echo "  !! Datadir does not exist - this will cause Total CMS to fail !!\n";
+            }
+        }
+    }
+
+    // Try to load the App class and create container
+    if (class_exists('TotalCMS\\App')) {
+        echo "\nAttempting to create DI container...\n";
+
+        // Load container definitions
+        $containerPath = $configDir . '/container.php';
+        if (file_exists($containerPath)) {
+            $containerBuilder = new \DI\ContainerBuilder();
+            $containerBuilder->addDefinitions($containerPath);
+
+            // Try to build the container
+            $container = $containerBuilder->build();
+            echo "SUCCESS: DI Container created\n";
+
+            // Try to get Config
+            echo "\nAttempting to load Config...\n";
+            try {
+                $config = $container->get('TotalCMS\\Support\\Config');
+                echo "SUCCESS: Config loaded\n";
+                echo "  datadir: " . $config->datadir . "\n";
+                echo "  env: " . $config->env . "\n";
+            } catch (Throwable $e) {
+                echo "FAILED: " . $e->getMessage() . "\n";
+            }
+
+            // Try to get the Slim App
+            echo "\nAttempting to create Slim App...\n";
+            try {
+                $app = $container->get('Slim\\App');
+                echo "SUCCESS: Slim App created\n";
+            } catch (Throwable $e) {
+                echo "FAILED: " . $e->getMessage() . "\n";
+                echo "File: " . $e->getFile() . "\n";
+                echo "Line: " . $e->getLine() . "\n";
+            }
+        }
+    }
+} catch (Throwable $e) {
+    echo "BOOTSTRAP FAILED: " . get_class($e) . "\n";
+    echo "Message: " . $e->getMessage() . "\n";
+    echo "File: " . $e->getFile() . "\n";
+    echo "Line: " . $e->getLine() . "\n";
+    echo "\nStack Trace:\n";
+    echo $e->getTraceAsString() . "\n";
+}
+
+// Check for tcms.php in document root
+echo "\n== tcms.php Configuration ==\n";
+$tcmsPhpPath = $docRoot . '/tcms.php';
+echo "tcms.php path: $tcmsPhpPath\n";
+if (file_exists($tcmsPhpPath)) {
+    echo "Status: Found\n";
+    // Don't re-require it since settings.php already did
+} else {
+    echo "Status: NOT FOUND\n";
+    echo "\nFor Stacks integration, create this file with:\n";
+    echo "-----------------------------------\n";
+    echo "<?php\n";
+    echo "return [\n";
+    echo "    'datadir' => '$docRoot/tcms-data',\n";
+    echo "];\n";
+    echo "-----------------------------------\n";
 }
 
 echo "\n== PHP Configuration Details ==\n";
