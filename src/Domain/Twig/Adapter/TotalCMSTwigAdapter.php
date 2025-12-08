@@ -239,10 +239,10 @@ class TotalCMSTwigAdapter
 	 *
 	 * @param array<mixed>|string|null $object
 	 */
-	public function redirectIfNotFound(array|string|null $object = []): void
+	public function redirectIfNotFound(array|string|null $object = [], string $redirectUrl = ''): void
 	{
 		if (in_array($object, [[], null, ''], true)) {
-			$notfound = $this->config->notfound;
+			$notfound = $redirectUrl !== '' ? $redirectUrl : $this->config->notfound;
 			if ($notfound !== '') {
 				http_response_code(404);
 				header('Location: ' . $notfound);
