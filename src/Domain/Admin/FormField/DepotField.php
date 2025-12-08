@@ -56,10 +56,11 @@ class DepotField extends FormField
 			'value'       => $depot['protected'] ?? $defaultProtected,
 		]);
 		$content .= $this->form->field('password', [
-			'field' => 'password',
-			'label' => 'Password',
-			'help'  => 'Require a password to download files from this depot. This overrides all collection level access controls.',
-			'value' => $depot['password'] ?? '',
+			'field'    => 'password',
+			'label'    => 'Password',
+			'help'     => 'Require a password to download files from this depot. This overrides all collection level access controls.',
+			'value'    => $depot['password'] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->closeSection();
 
