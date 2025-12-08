@@ -75,6 +75,7 @@ class TotalCMSTwigFilters
 		'hue',
 		'adjustColor',
 		'htmlencode',
+		'htmldecode',
 		'obfuscate',
 		'deobfuscate',
 		'encrypt',
@@ -140,6 +141,11 @@ class TotalCMSTwigFilters
 	public static function htmlencode(string $string): string
 	{
 		return HTMLUtils::htmlencode($string);
+	}
+
+	public static function htmldecode(string $string): string
+	{
+		return html_entity_decode($string);
 	}
 
 	public static function obfuscate(string $string): string

@@ -49,6 +49,14 @@ Extracts directory from path.
 
 ### String Trimming
 
+#### `trim(string $string): string`
+Removes whitespace from both sides.
+
+```twig
+{{ "  Hello World  " | trim }}
+{# Output: "Hello World" #}
+```
+
 #### `rtrim(string $string): string`
 Removes whitespace from the right side.
 
@@ -63,6 +71,24 @@ Removes whitespace from the left side.
 ```twig
 {{ "  Hello World  " | ltrim }}
 {# Output: "Hello World  " #}
+```
+
+### Case Conversion
+
+#### `ucwords(string $string): string`
+Capitalizes the first letter of each word.
+
+```twig
+{{ "hello world" | ucwords }}
+{# Output: "Hello World" #}
+```
+
+#### `lcfirst(string $string): string`
+Lowercases the first character of a string.
+
+```twig
+{{ "Hello World" | lcfirst }}
+{# Output: "hello World" #}
 ```
 
 ### Text Truncation
@@ -363,6 +389,78 @@ Encodes text to HTML entities, useful for obfuscating email addresses from scrap
 <span>Contact: {{ contact.email | htmlencode }}</span>
 ```
 
+#### `htmldecode(string $text): string`
+Decodes HTML entities back to their original characters. Alias for `html_entity_decode`.
+
+```twig
+{{ "&amp;copy; 2024" | htmldecode }}
+{# Output: © 2024 #}
+
+{{ "&lt;div&gt;Hello&lt;/div&gt;" | htmldecode }}
+{# Output: <div>Hello</div> #}
+
+{# Useful when processing content from external sources #}
+{{ externalContent.title | htmldecode }}
+```
+
+### URL Encoding
+
+#### `urlencode(string $string): string`
+URL-encodes a string.
+
+```twig
+{{ "hello world" | urlencode }}
+{# Output: hello+world #}
+
+<a href="/search?q={{ searchTerm | urlencode }}">Search</a>
+```
+
+#### `urldecode(string $string): string`
+Decodes a URL-encoded string.
+
+```twig
+{{ "hello+world" | urldecode }}
+{# Output: hello world #}
+```
+
+#### `rawurlencode(string $string): string`
+URL-encodes a string according to RFC 3986 (spaces become %20).
+
+```twig
+{{ "hello world" | rawurlencode }}
+{# Output: hello%20world #}
+```
+
+### Security Filters
+
+#### `obfuscate(string $string): string`
+Obfuscates a string for basic protection. Reversible with `deobfuscate`.
+
+```twig
+{{ "secret-data" | obfuscate }}
+```
+
+#### `deobfuscate(string $string): string`
+Reverses obfuscation applied by `obfuscate`.
+
+```twig
+{{ obfuscatedString | deobfuscate }}
+```
+
+#### `encrypt(string $string): string`
+Encrypts a string using the application's encryption key.
+
+```twig
+{{ sensitiveData | encrypt }}
+```
+
+#### `decrypt(string $string): string`
+Decrypts a string that was encrypted with `encrypt`.
+
+```twig
+{{ encryptedData | decrypt }}
+```
+
 #### `mailto(string $email, string $subject = '', string $body = '', string $title = ''): string`
 Creates an obfuscated mailto link that protects email addresses from spam bots. The email is not visible in the raw HTML source and is decoded via JavaScript.
 
@@ -459,6 +557,21 @@ Converts to modern OKLCH format.
 background: {{ brand.primary | oklch }};
 ```
 
+#### `color(array $color, int $alpha = 100, bool $wrap = true): string`
+Alias for `oklch`. Converts to OKLCH format.
+
+```twig
+background: {{ brand.primary | color }};
+background: {{ brand.primary | color(50) }}; {# 50% opacity #}
+```
+
+#### `colour(array $color, int $alpha = 100, bool $wrap = true): string`
+British spelling alias for `oklch`.
+
+```twig
+background: {{ brand.primary | colour }};
+```
+
 ### Color Adjustment
 
 #### `lightness(array $color, string $lightness): array`
@@ -535,6 +648,19 @@ Sorts array by keys in reverse order.
 {% endfor %}
 ```
 
+#### `sortBy(array $array, string $key): array`
+Sorts an array of objects/arrays by a specific key.
+
+```twig
+{% set products = cms.objects('products') | sortBy('price') %}
+{% for product in products %}
+    <div>{{ product.name }} - ${{ product.price }}</div>
+{% endfor %}
+
+{# Sort users alphabetically by name #}
+{% set users = cms.objects('users') | sortBy('name') %}
+```
+
 #### `shuffle(array $array): array`
 Randomly shuffles array elements.
 
@@ -543,6 +669,28 @@ Randomly shuffles array elements.
 {% for testimonial in testimonials %}
     <blockquote>{{ testimonial.quote }}</blockquote>
 {% endfor %}
+```
+
+#### `paginate(array $array, int $limit, int $page = 1): array`
+Returns a paginated slice of an array.
+
+```twig
+{% set page = get.page | default(1) | int %}
+{% set perPage = 10 %}
+{% set posts = cms.objects('blog') | paginate(perPage, page) %}
+
+{% for post in posts %}
+    <article>{{ post.title }}</article>
+{% endfor %}
+
+{# Pagination with navigation #}
+{% set allPosts = cms.objects('blog') %}
+{% set totalPages = (allPosts | length / perPage) | round(0, 'ceil') %}
+<nav>
+    {% for p in 1..totalPages %}
+        <a href="?page={{ p }}" {{ p == page ? 'class="active"' : '' }}>{{ p }}</a>
+    {% endfor %}
+</nav>
 ```
 
 ## Developer Filters

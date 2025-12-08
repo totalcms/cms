@@ -51,6 +51,15 @@ class TotalCMSTwigFunctions
 		'imageExists',
 		'fileExists',
 		'svgSymbol',
+		// Friendly aliases for PHP functions
+		'contains',
+		'startsWith',
+		'endsWith',
+		'indexOf',
+		'lastIndexOf',
+		'buildQuery',
+		'parseJson',
+		'typeof',
 	];
 
 	/** @return array<TwigFunction> */
@@ -203,6 +212,54 @@ class TotalCMSTwigFunctions
 	public static function svgSymbol(string $id): string
 	{
 		return '<svg><use href="#' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '"></use></svg>';
+	}
+
+	// -------------------------
+	// Friendly PHP Aliases
+	// -------------------------
+
+	public static function contains(string $haystack, string $needle): bool
+	{
+		return str_contains($haystack, $needle);
+	}
+
+	public static function startsWith(string $haystack, string $needle): bool
+	{
+		return str_starts_with($haystack, $needle);
+	}
+
+	public static function endsWith(string $haystack, string $needle): bool
+	{
+		return str_ends_with($haystack, $needle);
+	}
+
+	public static function indexOf(string $haystack, string $needle, int $offset = 0): int|false
+	{
+		return strpos($haystack, $needle, $offset);
+	}
+
+	public static function lastIndexOf(string $haystack, string $needle, int $offset = 0): int|false
+	{
+		return strrpos($haystack, $needle, $offset);
+	}
+
+	/** @param array<string,mixed> $data */
+	public static function buildQuery(array $data): string
+	{
+		return http_build_query($data);
+	}
+
+	/** @return array<mixed>|null */
+	public static function parseJson(string $json): ?array
+	{
+		$result = json_decode($json, true);
+
+		return is_array($result) ? $result : null;
+	}
+
+	public static function typeof(mixed $variable): string
+	{
+		return gettype($variable);
 	}
 
 	// -------------------------
