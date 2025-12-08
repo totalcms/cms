@@ -27,7 +27,7 @@ class QRGenerator
 	 */
 	private function getWriter(): Writer
 	{
-		if ($this->writer === null) {
+		if (!$this->writer instanceof Writer) {
 			// TODO: ImagickImageBackEnd and GDLibRenderer for PNG support
 			$margin   = 0;
 			$renderer = new ImageRenderer(
