@@ -241,6 +241,7 @@ class TotalCMSTwigAdapter
 	 */
 	public function redirectIfNotFound(array|string|null $object = [], string $redirectUrl = ''): void
 	{
+		$redirectUrl = trim($redirectUrl);
 		if (in_array($object, [[], null, ''], true)) {
 			$notfound = $redirectUrl !== '' ? $redirectUrl : $this->config->notfound;
 			if ($notfound !== '') {
