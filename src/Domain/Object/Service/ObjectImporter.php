@@ -290,7 +290,8 @@ class ObjectImporter
 	/** @return array<string> */
 	private function convertList(string $list): array
 	{
-		$list = explode(',', $list);
+		// Support both comma and pipe delimiters
+		$list = preg_split('/[,|]/', $list) ?: [];
 		$list = array_map(trim(...), $list);
 
 		return array_filter($list);
