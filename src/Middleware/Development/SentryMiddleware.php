@@ -14,6 +14,7 @@ use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpUnauthorizedException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Support\Version;
 
 class SentryMiddleware implements MiddlewareInterface
 {
@@ -79,6 +80,9 @@ class SentryMiddleware implements MiddlewareInterface
 
 		// Decode the DSN
 		$options['dsn'] = Cipher::deobfuscate($options['dsn'], self::SALT);
+
+		// Add release version for tracking errors by release
+		$options['release'] = Version::formatted();
 
 		// Set up the before_send callback to filter events
 		$options['before_send'] = static function (Event $event, ?EventHint $hint): ?Event {

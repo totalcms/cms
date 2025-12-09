@@ -35,6 +35,7 @@ use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * Twig Adapter with Total CMS.
@@ -320,14 +321,7 @@ NGINX;
 
 	private function getVersion(): string
 	{
-		$versionFile = __DIR__ . '/../../../../version.txt';
-		if (file_exists($versionFile)) {
-			$version = file_get_contents($versionFile);
-
-			return $version !== false ? trim($version) : '';
-		}
-
-		return '';
+		return Version::get();
 	}
 
 	/** @return array<string,string> */

@@ -8,6 +8,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * License validation service.
@@ -105,22 +106,11 @@ readonly class LicenseValidator
 	}
 
 	/**
-	 * Get current CMS version from version.txt file.
+	 * Get current CMS version.
 	 */
 	private function getCurrentVersion(): string
 	{
-		$versionFile = __DIR__ . '/../../../../version.txt';
-		if (file_exists($versionFile)) {
-			$content = file_get_contents($versionFile);
-			if ($content !== false) {
-				// Extract version from "3.0.39 (24a576e9)" format
-				preg_match('/^(\d+\.\d+\.\d+)/', trim($content), $matches);
-
-				return $matches[1] ?? '3.0.0';
-			}
-		}
-
-		return '3.0.0'; // fallback version
+		return Version::number();
 	}
 
 	/**
