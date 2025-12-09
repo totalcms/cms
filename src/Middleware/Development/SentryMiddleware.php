@@ -45,6 +45,9 @@ class SentryMiddleware implements MiddlewareInterface
 			'Invalid email',
 			'Invalid JSON structure',
 			'duplicate column names',
+			'must be unique',
+			'Cannot override a built-in template',
+			'Cannot delete a built-in template',
 		],
 	];
 
