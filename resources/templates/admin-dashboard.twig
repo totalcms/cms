@@ -32,9 +32,7 @@
 		})();
 	</script>
 
-	{% if cms.config('sentry') %}
-	<script src="https://js.sentry-cdn.com/ebe837e74d2740037be208a5d11fe257.min.js" crossorigin="anonymous"></script>
-	{% endif %}
+	{% include 'partials/sentry.twig' %}
 
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content-bundled.css?v={{ cms.version }}"/>
