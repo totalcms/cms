@@ -6,27 +6,53 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Sentry\Event;
+use Sentry\EventHint;
+use Slim\Exception\HttpBadRequestException;
+use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
+use Slim\Exception\HttpUnauthorizedException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 
 class SentryMiddleware implements MiddlewareInterface
 {
-	public const SALT             = 's3ntryR0cks';
+	public const SALT = 's3ntryR0cks';
+
+	/** @var array<string,mixed> */
 	private const DEFAULT_OPTIONS = [
-		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
-		// Specify a fixed sample rate
-		'traces_sample_rate' => 1.0,
-		// Set a sampling rate for profiling - this is relative to traces_sample_rate
-		'profiles_sample_rate' => 1.0,
+		'dsn'                  => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
+		'traces_sample_rate'   => 0,
+		'profiles_sample_rate' => 0,
 		'ignore_exceptions'    => [
 			HttpNotFoundException::class,
 			HttpMethodNotAllowedException::class,
+			HttpUnauthorizedException::class,
+			HttpForbiddenException::class,
+			HttpBadRequestException::class,
+			\League\Csv\SyntaxError::class,
+		],
+		'user_error_exceptions' => [
+			\DomainException::class,
+			\InvalidArgumentException::class,
+		],
+		'user_error_messages' => [
+			'Required field(s) cannot be empty',
+			'already exists in',
+			'Unable to delete schema',
+			'Schema Validation Failed',
+			'Collection does not exist',
+			'Invalid email',
+			'Invalid JSON structure',
+			'duplicate column names',
 		],
 	];
 
+	/** @var array<string,mixed> */
+	private static array $filterConfig = [];
+
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
-	public function __construct(private readonly bool $enable = true)
+	public function __construct(private readonly bool $enabled = true)
 	{
 	}
 
@@ -34,7 +60,7 @@ class SentryMiddleware implements MiddlewareInterface
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
-		if ($this->enable) {
+		if ($this->enabled) {
 			self::initSentry();
 		}
 
@@ -43,8 +69,24 @@ class SentryMiddleware implements MiddlewareInterface
 
 	public static function initSentry(): void
 	{
-		$options        = self::DEFAULT_OPTIONS;
+		$options = self::DEFAULT_OPTIONS;
+
+		// Store config for use in before_send callback
+		self::$filterConfig = $options;
+
+		// Decode the DSN
 		$options['dsn'] = Cipher::deobfuscate($options['dsn'], self::SALT);
+
+		// Set up the before_send callback to filter events
+		$options['before_send'] = static function (Event $event, ?EventHint $hint): ?Event {
+			return self::filterEvent($event, $hint);
+		};
+
+		// Remove our custom keys that Sentry doesn't understand
+		unset(
+			$options['user_error_exceptions'],
+			$options['user_error_messages']
+		);
 
 		try {
 			\Sentry\init($options);
@@ -53,5 +95,38 @@ class SentryMiddleware implements MiddlewareInterface
 
 			throw $exception;
 		}
+	}
+
+	/**
+	 * Filter events before sending to Sentry.
+	 * Returns null to drop the event, or the event to send it.
+	 */
+	private static function filterEvent(Event $event, ?EventHint $hint): ?Event
+	{
+		if ($hint === null || $hint->exception === null) {
+			return $event;
+		}
+
+		$exception = $hint->exception;
+		$config    = self::$filterConfig;
+
+		// Check if this exception class should be filtered as a user error
+		$userErrorExceptions = $config['user_error_exceptions'] ?? [];
+		$userErrorMessages   = $config['user_error_messages'] ?? [];
+
+		foreach ($userErrorExceptions as $exceptionClass) {
+			if ($exception instanceof $exceptionClass) {
+				// Check if the message matches any user error patterns
+				$message = $exception->getMessage();
+				foreach ($userErrorMessages as $pattern) {
+					if (stripos($message, $pattern) !== false) {
+						// This is a user error - don't send to Sentry
+						return null;
+					}
+				}
+			}
+		}
+
+		return $event;
 	}
 }
