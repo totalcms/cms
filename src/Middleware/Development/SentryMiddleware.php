@@ -97,6 +97,11 @@ class SentryMiddleware implements MiddlewareInterface
 
 		try {
 			\Sentry\init($options);
+
+			// Add build hash as a tag for tracking beta builds
+			\Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
+				$scope->setTag('build', Version::build());
+			});
 		} catch (\Throwable $exception) {
 			\Sentry\captureException($exception);
 

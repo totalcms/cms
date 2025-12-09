@@ -12,6 +12,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Sentry configuration
+SENTRY_ORG="aspect-services-llc"  # Sentry org slug
+SENTRY_PROJECT="total-cms"      # Your Sentry project slug
+SENTRY_AUTH_TOKEN="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"  # Set via environment variable
+
 # Function to print colored output
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -32,6 +37,64 @@ print_error() {
 # Function to check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Function to notify Sentry of new release
+notify_sentry_release() {
+    local version=$1
+    local git_hash=$2
+    local release_version="totalcms@${version}"
+
+    if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+        print_warning "SENTRY_AUTH_TOKEN not set - skipping Sentry release notification"
+        print_info "Set it with: export SENTRY_AUTH_TOKEN=your-token"
+        return 0
+    fi
+
+    if ! command_exists sentry-cli; then
+        print_warning "sentry-cli not installed - skipping Sentry release notification"
+        print_info "Install with: brew install getsentry/tools/sentry-cli"
+        return 0
+    fi
+
+    print_info "Creating Sentry release: $release_version"
+
+    # Create the release
+    if sentry-cli releases new "$release_version" \
+        --org "$SENTRY_ORG" \
+        --project "$SENTRY_PROJECT"; then
+        print_success "Sentry release created"
+    else
+        print_warning "Failed to create Sentry release"
+        return 0
+    fi
+
+    # Associate commits with the release
+    print_info "Associating commits with Sentry release..."
+    if sentry-cli releases set-commits "$release_version" --auto \
+        --org "$SENTRY_ORG"; then
+        print_success "Commits associated with release"
+    else
+        print_warning "Failed to associate commits (this is optional)"
+    fi
+
+    # Mark the release as deployed
+    print_info "Marking release as deployed..."
+    if sentry-cli releases deploys "$release_version" new \
+        --org "$SENTRY_ORG" \
+        --env production; then
+        print_success "Release marked as deployed to production"
+    else
+        print_warning "Failed to mark release as deployed"
+    fi
+
+    # Finalize the release
+    if sentry-cli releases finalize "$release_version" \
+        --org "$SENTRY_ORG"; then
+        print_success "Sentry release finalized"
+    else
+        print_warning "Failed to finalize Sentry release"
+    fi
 }
 
 # Check prerequisites
@@ -163,12 +226,13 @@ print_success "Assets built"
 
 bin/code-report.sh > code-report.txt
 
+# Get current git commit hash (needed for version and Sentry)
+GIT_HASH=$(git rev-parse --short HEAD)
+
 # Update version if changed (after build to prevent overwriting)
 print_info "Comparing versions: '$NEW_VERSION' vs '$CURRENT_VERSION'"
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     print_info "Updating version to $NEW_VERSION..."
-    # Get current git commit hash
-    GIT_HASH=$(git rev-parse --short HEAD)
     # Update version in version.txt file
     echo "$NEW_VERSION-$GIT_HASH" > version.txt
 	cp version.txt dist/version.txt
@@ -199,6 +263,9 @@ print_info "Generating file checksums..."
 find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.css" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./cache/*" -not -path "./tmp/*" -exec sha256sum {} \; > checksums.txt
 print_success "Checksums generated"
 
+# Notify Sentry of new release
+notify_sentry_release "$NEW_VERSION" "$GIT_HASH"
+
 # Summary
 echo
 print_success "Release preparation complete!"
@@ -214,6 +281,7 @@ echo "  ✓ Autoloader optimized"
 echo "  ✓ Caches cleared"
 echo "  ✓ Permissions set"
 echo "  ✓ Checksums generated"
+echo "  ✓ Sentry release notified"
 echo
 echo "Next steps:"
 echo "  1. Review the changes one more time"

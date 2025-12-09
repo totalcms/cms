@@ -4,10 +4,10 @@
 # cat templates/totalform/* > templates/totalform.twig
 # cat templates/content/* > templates/content.twig
 
-# Check for --production flag
+# Check for --release or --production flag
 PRODUCTION=0
 for arg in "$@"; do
-    if [ "$arg" = "--production" ]; then
+    if [ "$arg" = "--release" ] || [ "$arg" = "--production" ]; then
         PRODUCTION=1
     fi
 done

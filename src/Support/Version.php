@@ -47,10 +47,25 @@ class Version
 	}
 
 	/**
-	 * Get formatted version for Sentry releases (e.g., "totalcms@3.0.47-baee5e0e").
+	 * Get just the build/commit hash (e.g., "baee5e0e").
+	 */
+	public static function build(): string
+	{
+		$version = self::get();
+
+		// Extract build hash from "3.0.47-baee5e0e" format
+		if (preg_match('/^[\d.]+[-]([a-f0-9]+)$/', $version, $matches)) {
+			return $matches[1];
+		}
+
+		return 'unknown';
+	}
+
+	/**
+	 * Get formatted version for Sentry releases (e.g., "totalcms@3.0.47").
 	 */
 	public static function formatted(): string
 	{
-		return 'totalcms@' . self::get();
+		return 'totalcms@' . self::number();
 	}
 }
