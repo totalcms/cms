@@ -13,9 +13,9 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Sentry configuration
-SENTRY_ORG="aspect-services-llc"  # Sentry org slug
-SENTRY_PROJECT="total-cms"      # Your Sentry project slug
-SENTRY_AUTH_TOKEN="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"  # Set via environment variable
+SENTRY_ORG="aspect-services-llc"
+SENTRY_PROJECTS=("total-cms" "totalcms-dashboard")  # Backend and frontend projects
+SENTRY_AUTH_TOKEN="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"
 
 # Function to print colored output
 print_info() {
@@ -57,44 +57,45 @@ notify_sentry_release() {
         return 0
     fi
 
-    print_info "Creating Sentry release: $release_version"
+    # Create release for each Sentry project (backend and frontend)
+    for project in "${SENTRY_PROJECTS[@]}"; do
+        print_info "Creating Sentry release for $project: $release_version"
 
-    # Create the release
-    if sentry-cli releases new "$release_version" \
-        --org "$SENTRY_ORG" \
-        --project "$SENTRY_PROJECT"; then
-        print_success "Sentry release created"
-    else
-        print_warning "Failed to create Sentry release"
-        return 0
-    fi
+        # Create the release
+        if sentry-cli releases new "$release_version" \
+            --org "$SENTRY_ORG" \
+            --project "$project"; then
+            print_success "Sentry release created for $project"
+        else
+            print_warning "Failed to create Sentry release for $project"
+            continue
+        fi
 
-    # Associate commits with the release
-    print_info "Associating commits with Sentry release..."
-    if sentry-cli releases set-commits "$release_version" --auto \
-        --org "$SENTRY_ORG"; then
-        print_success "Commits associated with release"
-    else
-        print_warning "Failed to associate commits (this is optional)"
-    fi
+        # Associate commits with the release
+        if sentry-cli releases set-commits "$release_version" --auto \
+            --org "$SENTRY_ORG"; then
+            print_success "Commits associated with $project release"
+        else
+            print_warning "Failed to associate commits for $project (optional)"
+        fi
 
-    # Mark the release as deployed
-    print_info "Marking release as deployed..."
-    if sentry-cli releases deploys "$release_version" new \
-        --org "$SENTRY_ORG" \
-        --env production; then
-        print_success "Release marked as deployed to production"
-    else
-        print_warning "Failed to mark release as deployed"
-    fi
+        # Mark the release as deployed
+        if sentry-cli releases deploys "$release_version" new \
+            --org "$SENTRY_ORG" \
+            --env production; then
+            print_success "$project release marked as deployed"
+        else
+            print_warning "Failed to mark $project release as deployed"
+        fi
 
-    # Finalize the release
-    if sentry-cli releases finalize "$release_version" \
-        --org "$SENTRY_ORG"; then
-        print_success "Sentry release finalized"
-    else
-        print_warning "Failed to finalize Sentry release"
-    fi
+        # Finalize the release
+        if sentry-cli releases finalize "$release_version" \
+            --org "$SENTRY_ORG"; then
+            print_success "$project release finalized"
+        else
+            print_warning "Failed to finalize $project release"
+        fi
+    done
 }
 
 # Check prerequisites
