@@ -18,7 +18,7 @@ readonly class FileFetcher
 		$file = $this->propFetcher->fetchProperty($collection, $id, $property);
 
 		if (!$file instanceof FileData) {
-			throw new \RuntimeException('Unable to reteive file data');
+			throw new \RuntimeException('Unable to retrieve file data');
 		}
 
 		return $file;

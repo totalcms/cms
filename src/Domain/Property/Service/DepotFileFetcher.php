@@ -19,14 +19,14 @@ readonly class DepotFileFetcher
 		$depot = $this->propFetcher->fetchProperty($collection, $id, $property);
 
 		if (!$depot instanceof DepotData) {
-			throw new \RuntimeException('Unable to reteive depot data');
+			throw new \RuntimeException('Unable to retrieve depot data');
 		}
 
 		$depotManager = new DepotPropertyManager($depot);
 		$file         = $depotManager->fetchFile($name, $subpath);
 
 		if (!$file instanceof FileData) {
-			throw new \RuntimeException('Unable to reteive file data');
+			throw new \RuntimeException('Unable to retrieve file data');
 		}
 
 		return $file;
