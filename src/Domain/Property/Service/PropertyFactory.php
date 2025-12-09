@@ -48,6 +48,11 @@ readonly class PropertyFactory
 			$value = $className::defaultValue($value, $propertySchema['default']);
 		}
 
+		// Handle array passed to string type (schema/form mismatch)
+		if (is_array($value) && $type === 'string') {
+			$value = json_encode($value);
+		}
+
 		$settings = $propertySchema['settings'] ?? [];
 
 		$property = null === $value ? new $className(settings: $settings) : new $className($value, $settings);
