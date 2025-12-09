@@ -460,9 +460,9 @@ export default class DepotField extends TotalField {
 
     setFileLinksUrl(file, data) {
         const frame = file.querySelector(".file-links-dialog iframe");
-        const url = new URL(frame.dataset.src);
+        const url = new URL(frame.dataset.src, window.location.origin);
         url.searchParams.set("name", data.name);
-        frame.dataset.src = url.toString();
+        frame.dataset.src = url.pathname + url.search;
     }
 
     setFileAttribute(file, attribute, value) {
@@ -474,7 +474,10 @@ export default class DepotField extends TotalField {
     }
 
     getFileAttribute(file, attribute) {
-        const field = file.querySelector(`[name=${attribute}]`).closest(".form-field");
+        const input = file.querySelector(`[name=${attribute}]`);
+        if (!input) return null;
+        const field = input.closest(".form-field");
+        if (!field) return null;
         return field.totalfield ? field.totalfield.getValue() : null;
     }
 
@@ -521,11 +524,13 @@ export default class DepotField extends TotalField {
     }
 
     getValue() {
-		const password = this.container.querySelector("[name=password]").closest(".form-field");
-		const protect  = this.container.querySelector("[name=protected]").closest(".form-field");
+		const passwordInput = this.container.querySelector("[name=password]");
+		const protectInput  = this.container.querySelector("[name=protected]");
+		const password = passwordInput?.closest(".form-field");
+		const protect  = protectInput?.closest(".form-field");
 		const depot    = {
-            "password"  : password.totalfield.getValue(),
-            "protected" : protect.totalfield.getValue(),
+            "password"  : password?.totalfield?.getValue() ?? "",
+            "protected" : protect?.totalfield?.getValue() ?? false,
             files       : this.getFolderData(this.browser),
         };
         return depot;
