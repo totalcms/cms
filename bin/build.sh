@@ -77,6 +77,10 @@ find vendor -name ".gitattributes" -delete
 find vendor -name ".editorconfig" -delete
 find vendor -empty -type d -delete 2>/dev/null
 
+# generate documentation search index
+echo "Building documentation search index..."
+php bin/build-docs-index.php
+
 # generate bundle to verify installation
 php bin/make-bundle.php
 

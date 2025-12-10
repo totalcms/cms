@@ -1,0 +1,163 @@
+// Documentation Search Component Styles
+
+// Homepage wrapper
+.doc-homepage {
+	max-width : 800px;
+}
+
+.doc-search-wrapper {
+	max-width : 100%;
+	margin    : 0;
+}
+
+.doc-search-input {
+	width            : 100%;
+	padding          : 1rem 1.25rem;
+	font-size        : 1.125rem;
+	border           : 2px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-white));
+	transition       : border-color 0.2s ease, box-shadow 0.2s ease;
+
+	&:focus {
+		outline      : none;
+		border-color : oklch(var(--totalform-accent));
+		box-shadow   : 0 0 0 3px oklch(var(--totalform-accent) / 0.15);
+	}
+
+	&::placeholder {
+		color : oklch(var(--totalform-mediumgray));
+	}
+}
+
+.doc-search-results {
+	margin-top : 1.5rem;
+}
+
+.doc-search-result {
+	display         : block;
+	padding         : 1.25rem;
+	margin-bottom   : 1rem;
+	background      : oklch(var(--totalform-white));
+	border          : 1px solid oklch(var(--totalform-border-color));
+	border-radius   : var(--totalform-radius);
+	text-decoration : none;
+	color           : oklch(var(--totalform-text-color));
+	transition      : border-color 0.2s ease, box-shadow 0.2s ease;
+
+	&:hover {
+		border-color : oklch(var(--totalform-accent));
+		box-shadow   : 0 2px 8px oklch(var(--totalform-accent) / 0.1);
+	}
+
+	h3 {
+		margin      : 0 0 0.5rem 0;
+		font-size   : 1.125rem;
+		color       : oklch(var(--totalform-darkgray));
+		font-weight : 600;
+	}
+
+	p {
+		margin      : 0;
+		font-size   : 0.9375rem;
+		line-height : 1.6;
+		color       : oklch(var(--totalform-darkgray));
+	}
+}
+
+.doc-search-sections {
+	display   : flex;
+	flex-wrap : wrap;
+	gap       : 0.5rem;
+	margin    : 0.5rem 0;
+
+	span {
+		font-size     : 0.75rem;
+		padding       : 0.25rem 0.5rem;
+		background    : oklch(var(--totalform-nearwhite));
+		border-radius : 3px;
+		color         : oklch(var(--totalform-mediumgray));
+	}
+}
+
+.doc-search-no-results,
+.doc-search-error {
+	padding    : 2rem;
+	color      : oklch(var(--totalform-mediumgray));
+	font-style : italic;
+}
+
+.doc-search-error {
+	color : oklch(var(--totalform-error));
+}
+
+.search-highlight {
+	background    : oklch(var(--totalform-accent) / 0.15);
+	color         : oklch(var(--totalform-accent));
+	padding       : 0.1em 0.2em;
+	border-radius : 2px;
+	font-weight   : 600;
+}
+
+// Intro text for docs homepage
+.doc-search-intro {
+	margin-bottom : 2rem;
+
+	h1 {
+		margin-bottom : 0.5rem;
+		color         : oklch(var(--totalform-darkgray));
+	}
+
+	p {
+		color     : oklch(var(--totalform-mediumgray));
+		font-size : 1.125rem;
+		max-width : 50ch;
+	}
+}
+
+// Quick links section
+.doc-quick-links {
+	display               : grid;
+	grid-template-columns : repeat(auto-fit, minmax(200px, 1fr));
+	gap                   : 1rem;
+	margin-top            : 2rem;
+	padding-top           : 2rem;
+	border-top            : 1px solid oklch(var(--totalform-border-color));
+
+	h3 {
+		grid-column   : 1 / -1;
+		margin        : 0 0 0.5rem 0;
+		font-size     : 0.875rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color         : oklch(var(--totalform-mediumgray));
+	}
+
+	a {
+		display         : flex;
+		align-items     : center;
+		gap             : 0.5rem;
+		padding         : 0.75rem 1rem;
+		background      : oklch(var(--totalform-nearwhite));
+		border-radius   : var(--totalform-radius);
+		text-decoration : none;
+		color           : oklch(var(--totalform-text-color));
+		font-weight     : 500;
+		transition      : background-color 0.2s ease;
+
+		&:hover {
+			background : oklch(var(--totalform-accent) / 0.1);
+			color      : oklch(var(--totalform-accent));
+		}
+
+		&::before {
+			content          : "";
+			width            : 1rem;
+			height           : 1rem;
+			background-color : currentColor;
+			mask-image       : var(--icon-bookmark);
+			mask-size        : contain;
+			mask-repeat      : no-repeat;
+		}
+	}
+}

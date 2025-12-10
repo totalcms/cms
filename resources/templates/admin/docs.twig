@@ -1,6 +1,13 @@
 {% extends "admin-dashboard.twig" %}
 
 {% set menu = [ {
+	"title": "Start Here",
+	"sub": [
+		{ "title": "Getting Started", "path": "getting-started" },
+		{ "title": "Installation", "path": "installation" },
+		{ "title": "Configuration", "path": "configuration" },
+	]
+},{
 	"title": "Dashboard",
 	"sub": [
 		{ "title": "Overview", "path": "dashboard" },
@@ -48,7 +55,6 @@
 		{ "title": "Security",      "path": "security" },
 		{ "title": "Authentication","path": "auth" },
 		{ "title": "Password Reset","path": "password-reset" },
-		{ "title": "Configuration", "path": "configuration" },
 		{ "title": "Filesystem", 	"path": "filesystem" },
 		{ "title": "Licenses", 		"path": "licenses" },
 		{ "title": "Data Model", 	"path": "data-model" },

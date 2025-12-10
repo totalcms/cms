@@ -14,6 +14,7 @@ import SlugifyInput from './totalform/slugify-inputs';
 import DevModeToggle from './devmode';
 import ThemeSwitcher from './theme-switcher';
 import initExternalLinks from './external-links';
+import DocSearch from './totalform/doc-search';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
@@ -99,6 +100,12 @@ document.addEventListener("DOMContentLoaded", event => {
 			mobileOverlay.classList.remove('active');
 			mobileOverlay.style.display = 'none';
 		});
+	}
+
+	// Initialize documentation search on docs homepage
+	const docSearchContainer = document.getElementById('doc-search-container');
+	if (docSearchContainer) {
+		new DocSearch(docSearchContainer);
 	}
 
 	initExternalLinks();

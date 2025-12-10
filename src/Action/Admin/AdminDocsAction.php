@@ -49,6 +49,15 @@ readonly class AdminDocsAction
 		$docsDir      = __DIR__ . '/../../../resources/docs';
 		$htmlFile     = "{$docsDir}/{$page}.html";
 		$markdownFile = "{$docsDir}/{$page}.md";
+		$jsonFile     = "{$docsDir}/{$page}.json";
+
+		// Serve JSON files directly (e.g., search-index.json)
+		if (file_exists($jsonFile)) {
+			$jsonContents = file_get_contents($jsonFile);
+			$response->getBody()->write($jsonContents !== false ? $jsonContents : '{}');
+
+			return $response->withHeader('Content-Type', 'application/json');
+		}
 
 		// If neither file exists, return 404
 		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
