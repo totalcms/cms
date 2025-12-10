@@ -121,6 +121,9 @@ export default class ImagePreview {
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeaturedField();
+				}).catch(error => {
+					console.error("Failed to update featured status", error);
+					alert("Failed to update featured status. A network or timeout error occurred. Please try again.");
 				});
 			});
 		}
@@ -138,6 +141,9 @@ export default class ImagePreview {
 				}
 				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
 					this.container.classList.toggle("cleared-cache");
+				}).catch(error => {
+					console.error("Failed to clear image cache", error);
+					alert("Failed to clear cache. A network or timeout error occurred. Please try again.");
 				});
 			});
 		}
@@ -158,6 +164,9 @@ export default class ImagePreview {
 						// Clear values before removing the container
 						this.clearValue();
 						this.container.remove();
+					}).catch(error => {
+						console.error("Failed to delete image", error);
+						alert("Failed to delete image. A network or timeout error occurred. Please try again.");
 					});
 				}
 			});

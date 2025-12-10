@@ -68,6 +68,9 @@ export default class ImageField extends TotalField {
 		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
 			console.log("Image Meta Autosaved", response);
 			this.saved();
+		}).catch(error => {
+			console.error("Image Meta Autosave failed", error);
+			// Keep unsaved state so user knows to retry
 		});
 	}
 
