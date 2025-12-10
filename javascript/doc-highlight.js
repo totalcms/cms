@@ -3,11 +3,13 @@
 // Parses #:~:text= fragments and highlights all matches
 //-----------------------------------------------
 
+let currentHighlightIndex = -1;
+let allHighlights = [];
+
 export default function initDocHighlight() {
 	try {
 		const params = new URLSearchParams(window.location.search);
 		const highlightText = params.get('highlight');
-		const scrollTo = params.get('scrollto');
 
 		if (!highlightText) {
 			return;
@@ -30,43 +32,74 @@ export default function initDocHighlight() {
 			}
 		}
 
-		// Scroll to scrollto text if provided, otherwise first match
-		if (scrollTo) {
-			const scrollTarget = findTextInContent(content, scrollTo);
-			if (scrollTarget) {
-				scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				return;
-			}
+		// Collect all highlights for navigation
+		allHighlights = Array.from(content.querySelectorAll('.doc-text-highlight'));
+
+		// Only show navigation if there are multiple highlights
+		if (allHighlights.length > 1) {
+			createNavigationUI();
 		}
 
+		// Scroll to first match
 		if (firstMatch) {
 			firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			setCurrentHighlight(firstMatch);
 		}
 	} catch (e) {
 		console.error('DocHighlight error:', e);
 	}
 }
 
-function findTextInContent(container, searchText) {
-	const searchLower = searchText.toLowerCase();
+function setCurrentHighlight(element) {
+	// Remove current class from all
+	allHighlights.forEach(h => h.classList.remove('doc-text-highlight-current'));
 
-	// First check headings (h1-h6) for the section header
-	const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
-	for (const heading of headings) {
-		if (heading.textContent.toLowerCase().includes(searchLower)) {
-			return heading;
-		}
+	// Find index of this element
+	currentHighlightIndex = allHighlights.indexOf(element);
+	if (currentHighlightIndex >= 0) {
+		element.classList.add('doc-text-highlight-current');
 	}
 
-	// Then look for a highlight mark containing this text
-	const marks = container.querySelectorAll('.doc-text-highlight');
-	for (const mark of marks) {
-		if (mark.textContent.toLowerCase().includes(searchLower)) {
-			return mark;
-		}
+	updateNavigationCounter();
+}
+
+function navigateHighlight(direction) {
+	if (allHighlights.length === 0) return;
+
+	currentHighlightIndex += direction;
+
+	// Wrap around
+	if (currentHighlightIndex >= allHighlights.length) {
+		currentHighlightIndex = 0;
+	} else if (currentHighlightIndex < 0) {
+		currentHighlightIndex = allHighlights.length - 1;
 	}
 
-	return null;
+	const target = allHighlights[currentHighlightIndex];
+	target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+	setCurrentHighlight(target);
+}
+
+function updateNavigationCounter() {
+	const counter = document.querySelector('.doc-highlight-counter');
+	if (counter) {
+		counter.textContent = `${currentHighlightIndex + 1} / ${allHighlights.length}`;
+	}
+}
+
+function createNavigationUI() {
+	const nav = document.createElement('div');
+	nav.className = 'doc-highlight-nav';
+	nav.innerHTML = `
+		<button class="doc-highlight-prev" title="Previous match">&uarr;</button>
+		<span class="doc-highlight-counter">1 / ${allHighlights.length}</span>
+		<button class="doc-highlight-next" title="Next match">&darr;</button>
+	`;
+
+	nav.querySelector('.doc-highlight-prev').addEventListener('click', () => navigateHighlight(-1));
+	nav.querySelector('.doc-highlight-next').addEventListener('click', () => navigateHighlight(1));
+
+	document.body.appendChild(nav);
 }
 
 function highlightTextNodes(container, searchText) {

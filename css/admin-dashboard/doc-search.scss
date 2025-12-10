@@ -105,6 +105,52 @@
 	color         : oklch(var(--totalform-accent));
 	padding       : 0.1em 0.2em;
 	border-radius : 2px;
+
+	&.doc-text-highlight-current {
+		background : oklch(var(--totalform-accent) / 0.4);
+		outline    : 2px solid oklch(var(--totalform-accent));
+	}
+}
+
+// Highlight navigation UI
+.doc-highlight-nav {
+	position         : fixed;
+	top              : 1rem;
+	right            : 1rem;
+	display          : flex;
+	align-items      : center;
+	gap              : 0.5rem;
+	background       : oklch(var(--totalform-white));
+	border           : 2px solid oklch(var(--totalform-accent));
+	border-radius    : var(--totalform-radius);
+	padding          : 0.5rem 0.75rem;
+	box-shadow       : 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index          : 1000;
+
+	button {
+		width            : 2rem;
+		height           : 2rem;
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : var(--totalform-radius);
+		background       : oklch(var(--totalform-nearwhite));
+		cursor           : pointer;
+		font-size        : 1rem;
+		line-height      : 1;
+		transition       : background-color 0.15s ease, border-color 0.15s ease;
+
+		&:hover {
+			background   : oklch(var(--totalform-accent) / 0.1);
+			border-color : oklch(var(--totalform-accent));
+		}
+	}
+
+	.doc-highlight-counter {
+		font-size   : 0.875rem;
+		color       : oklch(var(--totalform-accent));
+		min-width   : 4rem;
+		text-align  : center;
+		font-weight : 600;
+	}
 }
 
 // Intro text for docs homepage

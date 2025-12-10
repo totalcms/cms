@@ -150,17 +150,6 @@ export default class DocSearch {
 		const html = results.map(({ doc }) => {
 			// Find a relevant excerpt containing the search term
 			let excerpt = doc.excerpt;
-			let textFragment = '';
-
-			// First, check if any term matches a section header
-			let matchedSection = null;
-			for (const term of terms) {
-				matchedSection = doc.sections.find(s => s.toLowerCase().includes(term));
-				if (matchedSection) {
-					textFragment = matchedSection;
-					break;
-				}
-			}
 
 			// Try to find a better excerpt containing one of the terms
 			for (const term of terms) {
@@ -171,28 +160,12 @@ export default class DocSearch {
 					excerpt = (start > 0 ? '...' : '') +
 						doc.content.slice(start, end) +
 						(end < doc.content.length ? '...' : '');
-
-					// If no section header matched, just use the search term
-					if (!textFragment) {
-						textFragment = term;
-					}
 					break;
 				}
 			}
 
-			// Build URL with highlight and optional scrollto params
-			let url = `docs/${doc.path}`;
-			const params = new URLSearchParams();
-
-			// Always highlight the search terms
-			params.set('highlight', terms.join(' '));
-
-			// If matched a section header, scroll to that instead of first match
-			if (matchedSection) {
-				params.set('scrollto', matchedSection);
-			}
-
-			url += `?${params.toString()}`;
+			// Build URL with highlight param
+			const url = `docs/${doc.path}?highlight=${encodeURIComponent(terms.join(' '))}`;
 
 			// Highlight terms in excerpt
 			let highlightedExcerpt = this.escapeHtml(excerpt);
