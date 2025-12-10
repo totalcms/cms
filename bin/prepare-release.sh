@@ -13,9 +13,9 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Sentry configuration
+# Auth token is stored in ~/.sentryclirc via `sentry-cli login`
 SENTRY_ORG="aspect-services-llc"
 SENTRY_PROJECTS=("total-cms" "totalcms-dashboard")  # Backend and frontend projects
-SENTRY_AUTH_TOKEN="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"
 
 # Function to print colored output
 print_info() {
@@ -44,13 +44,16 @@ upload_sourcemaps() {
     local version=$1
     local release_version="totalcms@${version}"
 
-    if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-        print_warning "SENTRY_AUTH_TOKEN not set - skipping source map upload"
+    if ! command_exists sentry-cli; then
+        print_warning "sentry-cli not installed - skipping source map upload"
+        print_info "Install with: brew install getsentry/tools/sentry-cli"
         return 0
     fi
 
-    if ! command_exists sentry-cli; then
-        print_warning "sentry-cli not installed - skipping source map upload"
+    # Check if sentry-cli is authenticated (via ~/.sentryclirc or SENTRY_AUTH_TOKEN)
+    if ! sentry-cli info >/dev/null 2>&1; then
+        print_warning "sentry-cli not authenticated - skipping source map upload"
+        print_info "Run: sentry-cli login"
         return 0
     fi
 
@@ -83,15 +86,16 @@ notify_sentry_release() {
     local git_hash=$2
     local release_version="totalcms@${version}"
 
-    if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-        print_warning "SENTRY_AUTH_TOKEN not set - skipping Sentry release notification"
-        print_info "Set it with: export SENTRY_AUTH_TOKEN=your-token"
-        return 0
-    fi
-
     if ! command_exists sentry-cli; then
         print_warning "sentry-cli not installed - skipping Sentry release notification"
         print_info "Install with: brew install getsentry/tools/sentry-cli"
+        return 0
+    fi
+
+    # Check if sentry-cli is authenticated (via ~/.sentryclirc or SENTRY_AUTH_TOKEN)
+    if ! sentry-cli info >/dev/null 2>&1; then
+        print_warning "sentry-cli not authenticated - skipping Sentry release notification"
+        print_info "Run: sentry-cli login"
         return 0
     fi
 
@@ -156,6 +160,18 @@ fi
 
 if ! command_exists php; then
     print_error "php is not installed"
+    exit 1
+fi
+
+if ! command_exists sentry-cli; then
+    print_error "sentry-cli is not installed"
+    print_info "Install with: brew install getsentry/tools/sentry-cli"
+    exit 1
+fi
+
+if ! sentry-cli info >/dev/null 2>&1; then
+    print_error "sentry-cli is not authenticated"
+    print_info "Run: sentry-cli login"
     exit 1
 fi
 
