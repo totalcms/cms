@@ -6,7 +6,7 @@ export default class DocSearch {
 	constructor(container, options = {}) {
 		this.container = container;
 		this.options = Object.assign({
-			indexUrl: '/admin/docs/search-index',
+			indexUrl: 'docs/search-index',
 			minQueryLength: 2,
 			maxResults: 20,
 			highlightClass: 'search-highlight',
