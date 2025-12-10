@@ -39,6 +39,44 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to upload source maps to Sentry
+upload_sourcemaps() {
+    local version=$1
+    local release_version="totalcms@${version}"
+
+    if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+        print_warning "SENTRY_AUTH_TOKEN not set - skipping source map upload"
+        return 0
+    fi
+
+    if ! command_exists sentry-cli; then
+        print_warning "sentry-cli not installed - skipping source map upload"
+        return 0
+    fi
+
+    # Upload source maps for frontend project only
+    print_info "Uploading source maps to Sentry..."
+
+    # ~/assets matches URLs like https://domain.com/anything/assets/file.js
+    # The ~ is a wildcard for protocol+host, and Sentry matches from the end
+    if sentry-cli sourcemaps upload \
+        --org "$SENTRY_ORG" \
+        --project "totalcms-dashboard" \
+        --release "$release_version" \
+        --url-prefix "~/assets" \
+        dist/public/assets; then
+        print_success "Source maps uploaded to Sentry"
+    else
+        print_warning "Failed to upload source maps to Sentry"
+        return 1
+    fi
+
+    # Delete source maps from dist (keep them private)
+    print_info "Removing source maps from distribution..."
+    find dist/public/assets -name "*.map" -type f -delete
+    print_success "Source maps removed from distribution"
+}
+
 # Function to notify Sentry of new release
 notify_sentry_release() {
     local version=$1
@@ -264,6 +302,9 @@ print_info "Generating file checksums..."
 find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.css" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./cache/*" -not -path "./tmp/*" -exec sha256sum {} \; > checksums.txt
 print_success "Checksums generated"
 
+# Upload source maps to Sentry (before deleting them from dist)
+upload_sourcemaps "$NEW_VERSION"
+
 # Notify Sentry of new release
 notify_sentry_release "$NEW_VERSION" "$GIT_HASH"
 
@@ -282,6 +323,7 @@ echo "  ✓ Autoloader optimized"
 echo "  ✓ Caches cleared"
 echo "  ✓ Permissions set"
 echo "  ✓ Checksums generated"
+echo "  ✓ Source maps uploaded to Sentry"
 echo "  ✓ Sentry release notified"
 echo
 echo "Next steps:"

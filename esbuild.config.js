@@ -7,11 +7,12 @@ const { createImporter } = require("sass-extended-importer");
 
 // Production mode optimizations
 const isProduction = process.env.PRODUCTION === '1';
-const sourcemap = !isProduction;
+// Always generate sourcemaps - for production they get uploaded to Sentry then deleted
+const sourcemap = true;
 const drop = isProduction ? ['console', 'debugger'] : [];
 
 if (isProduction) {
-    console.log('Building in production mode (no sourcemaps, no console/debugger)');
+    console.log('Building in production mode (sourcemaps for Sentry, no console/debugger)');
 }
 
 esbuild.build({

@@ -27,6 +27,9 @@
 				// Ignore server validation errors shown in UI
 				if (message.includes('400 Bad Request')) return null;
 
+				// Ignore Froala editor internal errors (third-party library)
+				if (error.name === 'IndexSizeError') return null;
+
 				return event;
 			}
 		});
