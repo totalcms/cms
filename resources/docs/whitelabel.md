@@ -30,41 +30,36 @@ Total CMS provides thirteen white label template locations:
 
 ## Setup
 
-### 1. Create Templates Directory
+### Creating White Label Templates
 
-You can create the `whitelabel` directory in two ways:
-
-**Option A: Using the Dashboard (Recommended)**
+**Using the Dashboard (Recommended)**
 
 1. Navigate to `/admin/templates` in the Total CMS dashboard
-2. Click "New Folder"
-3. Name it `whitelabel`
-4. Create your template files inside this folder using the dashboard's template editor
+2. Click "New Template"
+3. Enter the template path including the folder prefix, for example: `whitelabel/login-above`
+4. Add your custom content and save
 
-**Option B: Manually**
+The `whitelabel/` folder structure is created automatically when you save templates with that path prefix. You don't need to create the folder separately.
 
-Create a `whitelabel` directory inside your templates directory:
+**Example template names:**
+- `whitelabel/admin-logo`
+- `whitelabel/login-above`
+- `whitelabel/admin-welcome`
+
+**Manually via File System**
+
+If you prefer to create files directly, place them in your templates directory:
 
 ```
 tcms-data/
   templates/
     whitelabel/
       admin-logo.twig
-      admin-welcome.twig
-      admin-home.twig
-      admin-head.twig
-      admin-body-below.twig
       login-above.twig
-      login-below.twig
-      forgot-password-above.twig
-      forgot-password-below.twig
-      reset-password-above.twig
-      reset-password-below.twig
-      download-auth-above.twig
-      download-auth-below.twig
+      ...
 ```
 
-### 2. Create Your Templates
+### Template Guidelines
 
 Only create the templates you want to customize. If a white label template doesn't exist, Total CMS will use its default content.
 
