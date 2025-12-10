@@ -27,6 +27,10 @@ readonly class LoginForm implements \Stringable
 		private string $submitLabel            = 'Sign in',
 		private string $class                  = '',
 		private ?array $flashMessages          = null,
+		private string $emailLabel             = 'Email',
+		private string $passwordLabel          = 'Password',
+		private string $rememberLabel          = 'Keep me signed in',
+		private string $forgotPasswordLabel    = 'Forgot Password?',
 	) {
 	}
 
@@ -74,7 +78,7 @@ readonly class LoginForm implements \Stringable
 
 			$forgotPasswordLink = HTMLUtils::element(
 				'p',
-				HTMLUtils::element('a', 'Forgot Password?', [
+				HTMLUtils::element('a', $this->forgotPasswordLabel, [
 					'href'  => $forgotPasswordUrl,
 					'class' => 'login-forgot-password',
 				]),
@@ -145,7 +149,7 @@ readonly class LoginForm implements \Stringable
 		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
-		$label = HTMLUtils::element('label', 'Email', ['for' => "field-{$uuid}"]);
+		$label = HTMLUtils::element('label', $this->emailLabel, ['for' => "field-{$uuid}"]);
 		$help  = HTMLUtils::element('p', 'Email address for the login', [
 			'class' => 'help cms-hide',
 			'id'    => "help-{$uuid}",
@@ -174,7 +178,7 @@ readonly class LoginForm implements \Stringable
 		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
-		$label = HTMLUtils::element('label', 'Password', ['for' => "field-{$uuid}"]);
+		$label = HTMLUtils::element('label', $this->passwordLabel, ['for' => "field-{$uuid}"]);
 		$help  = HTMLUtils::element('p', 'Password to login', [
 			'class' => 'cms-hide help',
 			'id'    => "help-{$uuid}",
@@ -197,7 +201,7 @@ readonly class LoginForm implements \Stringable
 			'aria-describedby' => "help-{$uuid}",
 		]);
 
-		$label = HTMLUtils::element('label', 'Keep me signed in', ['for' => "field-{$uuid}"]);
+		$label = HTMLUtils::element('label', $this->rememberLabel, ['for' => "field-{$uuid}"]);
 		$group = HTMLUtils::element('div', $input . $label, ['class' => 'form-group']);
 
 		$help = HTMLUtils::element('p', 'Stay logged in until you explicitly logout or clear browser data', [

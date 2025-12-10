@@ -26,11 +26,15 @@
 	{% for message in flash.get('error') %}
 		{% set errorMessages = errorMessages|merge([message]) %}
 	{% endfor %}
-	{{ cms.form.loginForm({
+	{% set formOptions = {
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
 		flashMessages : errorMessages
-	}) }}
+	} %}
+	{% if loginFormOptions is defined %}
+		{% set formOptions = formOptions|merge(loginFormOptions) %}
+	{% endif %}
+	{{ cms.form.loginForm(formOptions) }}
 
 	<section class="login-below">
 		{% if cms.edition.can('whitelabel_templates') %}
