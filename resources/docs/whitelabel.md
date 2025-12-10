@@ -10,12 +10,16 @@ White label templates let you inject custom content into specific areas of the a
 
 ## Available Templates
 
-Total CMS provides nine white label template locations:
+Total CMS provides thirteen white label template locations:
 
 | Template File | Location | Description |
 |--------------|----------|-------------|
 | `whitelabel/login-above` | Login page | Content displayed above the login form |
 | `whitelabel/login-below` | Login page | Content displayed below the login form |
+| `whitelabel/forgot-password-above` | Forgot password page | Content displayed above the forgot password form |
+| `whitelabel/forgot-password-below` | Forgot password page | Content displayed below the forgot password form |
+| `whitelabel/reset-password-above` | Reset password page | Content displayed above the reset password form |
+| `whitelabel/reset-password-below` | Reset password page | Content displayed below the reset password form |
 | `whitelabel/download-auth-above` | Download auth page | Content displayed above the download authentication form |
 | `whitelabel/download-auth-below` | Download auth page | Content displayed below the download authentication form |
 | `whitelabel/admin-logo` | Admin header | Custom logo replacing the Total CMS logo |
@@ -52,6 +56,10 @@ tcms-data/
       admin-body-below.twig
       login-above.twig
       login-below.twig
+      forgot-password-above.twig
+      forgot-password-below.twig
+      reset-password-above.twig
+      reset-password-below.twig
       download-auth-above.twig
       download-auth-below.twig
 ```
@@ -141,6 +149,44 @@ Customize just the welcome message at the top of the admin dashboard (lighter al
 </div>
 ```
 
+#### Localizing Login Form Labels
+
+You can customize all login form labels for localization by setting the `loginFormOptions` variable in your `login-above.twig` template:
+
+```twig
+{% set loginFormOptions = {
+	emailLabel: 'Correo Electrónico',
+	passwordLabel: 'Contraseña',
+	rememberLabel: 'Mantenerme conectado',
+	submitLabel: 'Iniciar sesión',
+	forgotPasswordLabel: '¿Olvidó su contraseña?'
+} %}
+
+<div class="login-branding">
+	<img src="/images/company-logo.png" alt="Your Company">
+	<h2>Portal de Clientes</h2>
+</div>
+```
+
+**Available Label Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `emailLabel` | Email | Label for the email input field |
+| `passwordLabel` | Password | Label for the password input field |
+| `rememberLabel` | Keep me signed in | Label for the persistent login checkbox |
+| `submitLabel` | Sign in | Text for the submit button |
+| `forgotPasswordLabel` | Forgot Password? | Text for the forgot password link |
+
+You can also use `loginFormOptions` to control other form behavior:
+
+```twig
+{% set loginFormOptions = {
+	emailLabel: 'Email Address',
+	showForgotPassword: false
+} %}
+```
+
 ### Login Page - Below Form
 
 **File:** `whitelabel/login-below.twig`
@@ -163,6 +209,28 @@ Customize just the welcome message at the top of the admin dashboard (lighter al
 </div>
 ```
 
+#### Localizing Download Auth Form Labels
+
+You can customize the download authentication form labels by setting the `downloadAuthFormOptions` variable:
+
+```twig
+{% set downloadAuthFormOptions = {
+	passwordLabel: 'Contraseña',
+	submitLabel: 'Descargar'
+} %}
+
+<div class="download-header">
+	<h2>Acceso Seguro a Archivos</h2>
+</div>
+```
+
+**Available Label Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `passwordLabel` | Password | Label for the password input field |
+| `submitLabel` | Download | Text for the submit button |
+
 ### Download Authentication - Below Form
 
 **File:** `whitelabel/download-auth-below.twig`
@@ -175,6 +243,62 @@ Customize just the welcome message at the top of the admin dashboard (lighter al
 	</p>
 </div>
 ```
+
+### Forgot Password - Above Form
+
+**File:** `whitelabel/forgot-password-above.twig`
+
+#### Localizing Forgot Password Form Labels
+
+You can customize the forgot password form labels by setting the `forgotPasswordFormOptions` variable:
+
+```twig
+{% set forgotPasswordFormOptions = {
+	emailLabel: 'Correo Electrónico',
+	submitLabel: 'Enviar Enlace de Restablecimiento',
+	backToLoginLabel: '&larr; Volver al Inicio de Sesión'
+} %}
+
+<div class="forgot-password-header">
+	<h2>¿Olvidó su Contraseña?</h2>
+</div>
+```
+
+**Available Label Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `emailLabel` | Email | Label for the email input field |
+| `submitLabel` | Send Reset Link | Text for the submit button |
+| `backToLoginLabel` | &larr; Back to Login | Text for the back to login link |
+
+### Reset Password - Above Form
+
+**File:** `whitelabel/reset-password-above.twig`
+
+#### Localizing Reset Password Form Labels
+
+You can customize the reset password form labels by setting the `resetPasswordFormOptions` variable:
+
+```twig
+{% set resetPasswordFormOptions = {
+	passwordLabel: 'Nueva Contraseña',
+	confirmPasswordLabel: 'Confirmar Contraseña',
+	submitLabel: 'Restablecer Contraseña'
+} %}
+
+<div class="reset-password-header">
+	<h2>Restablecer su Contraseña</h2>
+</div>
+```
+
+**Available Label Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `passwordLabel` | New Password | Label for the new password input field |
+| `confirmPasswordLabel` | Confirm Password | Label for the confirm password input field |
+| `submitLabel` | Reset Password | Text for the submit button |
 
 ### Admin Head Section
 
