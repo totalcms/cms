@@ -6,12 +6,14 @@ if (window.self !== window.top) {
 }
 
 const macroContent = document.getElementById("twig-macro");
-const urlParams = new URLSearchParams(window.location.search);
-const data = {};
-for (const [key, value] of urlParams.entries()) {
-	data[key] = value;
+if (macroContent) {
+	const urlParams = new URLSearchParams(window.location.search);
+	const data = {};
+	for (const [key, value] of urlParams.entries()) {
+		data[key] = value;
+	}
+	if (macroContent.dataset.pwd) {
+		data.pwd = macroContent.dataset.pwd;
+	}
+	macroContent.textContent = data.name ? MacroBuilder.depotDownload(data) : MacroBuilder.download(data);
 }
-if (macroContent.dataset.pwd) {
-	data.pwd = macroContent.dataset.pwd;
-}
-macroContent.textContent = data.name ? MacroBuilder.depotDownload(data) : MacroBuilder.download(data);
