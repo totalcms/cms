@@ -149,6 +149,17 @@ export default class DocSearch {
 		const html = results.map(({ doc }) => {
 			// Find a relevant excerpt containing the search term
 			let excerpt = doc.excerpt;
+			let textFragment = '';
+
+			// First, check if any term matches a section header
+			let matchedSection = null;
+			for (const term of terms) {
+				matchedSection = doc.sections.find(s => s.toLowerCase().includes(term));
+				if (matchedSection) {
+					textFragment = matchedSection;
+					break;
+				}
+			}
 
 			// Try to find a better excerpt containing one of the terms
 			for (const term of terms) {
@@ -159,8 +170,19 @@ export default class DocSearch {
 					excerpt = (start > 0 ? '...' : '') +
 						doc.content.slice(start, end) +
 						(end < doc.content.length ? '...' : '');
+
+					// If no section header matched, just use the search term
+					if (!textFragment) {
+						textFragment = term;
+					}
 					break;
 				}
+			}
+
+			// Build URL with text fragment if we found a match
+			let url = `docs/${doc.path}`;
+			if (textFragment) {
+				url += `#:~:text=${encodeURIComponent(textFragment)}`;
 			}
 
 			// Highlight terms in excerpt
@@ -180,7 +202,7 @@ export default class DocSearch {
 				: '';
 
 			return `
-				<a href="docs/${doc.path}" class="doc-search-result">
+				<a href="${url}" class="doc-search-result">
 					<h3>${this.escapeHtml(doc.title)}</h3>
 					${sectionsHtml}
 					<p>${highlightedExcerpt}</p>
