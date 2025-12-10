@@ -18,7 +18,7 @@ Total CMS is a modern, flat-file content management system built with PHP. It pr
 
 Join the Total CMS community to get help, share ideas, and connect with other users:
 
-<p><a class="dash-button" href="https://community.weavers.space/groups/total-cms">Total CMS Community</a></p>
+<p><a class="dash-button" href="https://community.weavers.space/total-cms">Total CMS Community</a></p>
 
 ## Video Tutorials
 
@@ -61,6 +61,6 @@ Once you have Total CMS installed and configured, explore these areas based on y
 
 ## Need Help?
 
-- **[Community Forum](https://community.weavers.space/groups/total-cms)** - Ask questions and get help from the community
+- **[Community Forum](https://community.weavers.space/total-cms)** - Ask questions and get help from the community
 - **[Video Tutorials](https://www.youtube.com/playlist?list=PLAwL8Kl4ijMq3gNlxzeB9wsBKYfab08Cr)** - Visual learning resources
 - **Documentation** - Use the search above or browse the sidebar

@@ -7,6 +7,12 @@
 		}) }}
 	</section>
 
+	<p><strong>Note:</strong> If you are importing a lot of new objects, you may want to enable the
+	<code>Queue Rebuild Index on Save</code> option in your
+	<a href="collections/{{ url.collection }}/edit">collection settings</a>. This process may take some time.
+	You will also want to make sure that you have configured the cron job from the
+	<a href="utils/jobqueue">Job Queue Manager</a>.</p>
+
 	<section class="import-forms">
 		<details class="cms-accordion">
 			<summary>CSV Import into {{ url.collection | title }}</summary>
