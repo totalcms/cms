@@ -15,6 +15,7 @@ import DevModeToggle from './devmode';
 import ThemeSwitcher from './theme-switcher';
 import initExternalLinks from './external-links';
 import DocSearch from './totalform/doc-search';
+import initDocHighlight from './doc-highlight';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
@@ -107,6 +108,9 @@ document.addEventListener("DOMContentLoaded", event => {
 	if (docSearchContainer) {
 		new DocSearch(docSearchContainer);
 	}
+
+	// Highlight search terms in docs
+	initDocHighlight();
 
 	initExternalLinks();
 });

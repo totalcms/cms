@@ -180,10 +180,10 @@ export default class DocSearch {
 				}
 			}
 
-			// Build URL with text fragment if we found a match
+			// Build URL with highlight param
 			let url = `docs/${doc.path}`;
 			if (textFragment) {
-				url += `#:~:text=${encodeURIComponent(textFragment)}`;
+				url += `?highlight=${encodeURIComponent(textFragment)}`;
 			}
 
 			// Highlight terms in excerpt

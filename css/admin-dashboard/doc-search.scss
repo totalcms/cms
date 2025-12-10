@@ -99,6 +99,14 @@
 	font-weight   : 600;
 }
 
+// Text fragment highlighting on doc pages
+.doc-text-highlight {
+	background    : oklch(var(--totalform-accent) / 0.2);
+	color         : oklch(var(--totalform-accent));
+	padding       : 0.1em 0.2em;
+	border-radius : 2px;
+}
+
 // Intro text for docs homepage
 .doc-search-intro {
 	margin-bottom : 2rem;
