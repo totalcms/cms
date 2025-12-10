@@ -23,6 +23,7 @@ export default class DocSearch {
 		this.createUI();
 		await this.loadIndex();
 		this.bindEvents();
+		this.searchInput.focus();
 	}
 
 	createUI() {
