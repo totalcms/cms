@@ -612,6 +612,7 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(Config::class),
 		$container->get(UserValidationService::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	LogoutService::class => fn (ContainerInterface $container): LogoutService => new LogoutService(

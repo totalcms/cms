@@ -176,6 +176,10 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		$last = $this->session->get(SessionKeys::LAST_ACTIVITY) ?? $now;
 		$max  = $this->config->session['gc_maxlifetime'];
 
+		// Check for persistent login - use hasPersistentLoginOrCookie() to handle
+		// the case where session was garbage collected but cookie still exists
+		$isPersistentLogin = $this->persistentLoginService->hasPersistentLoginOrCookie();
+
 		$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
 
 		if ($now - $last > $max / 4) {
@@ -185,17 +189,15 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// Check if session has expired
 		if ($now - $last > $max) {
-			// For persistent logins, extend the session lifetime instead of destroying
-			if ($this->persistentLoginService->hasPersistentLogin()) {
-				// Reset last activity to prevent immediate re-expiration
-				$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
+			if ($isPersistentLogin) {
 				// Clean up expired tokens periodically
 				$this->persistentLoginService->cleanupExpiredTokens();
-			} else {
-				// Session has expired for non-persistent login. Clear and destroy the session.
-				$this->session->clear();
-				$this->session->destroy();
+
+				return;
 			}
+			// Session has expired for non-persistent login. Clear and destroy the session.
+			$this->session->clear();
+			$this->session->destroy();
 		}
 	}
 

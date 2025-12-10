@@ -4,9 +4,11 @@ namespace Tests\Unit\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 final class PersistentLoginServiceTest extends TestCase
@@ -15,12 +17,18 @@ final class PersistentLoginServiceTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private Config $config;
 	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
+	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 	private string $tmpDir;
 
 	protected function setUp(): void
 	{
 		$this->session       = $this->createMock(SessionInterface::class);
 		$this->userValidator = $this->createMock(UserValidationService::class);
+		$this->loggerFactory = $this->createMock(LoggerFactory::class);
+
+		// Mock the logger factory to return a null logger
+		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
+		$this->loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		// Create a temporary directory for token storage
 		$this->tmpDir = sys_get_temp_dir() . '/totalcms_test_' . uniqid();
@@ -31,7 +39,8 @@ final class PersistentLoginServiceTest extends TestCase
 		$this->service = new PersistentLoginService(
 			$this->session,
 			$this->config,
-			$this->userValidator
+			$this->userValidator,
+			$this->loggerFactory
 		);
 	}
 
@@ -226,6 +235,122 @@ final class PersistentLoginServiceTest extends TestCase
 		$result = $this->service->restoreFromPersistentToken();
 
 		$this->assertFalse($result);
+	}
+
+	// ==================== Has Persistent Cookie Tests ====================
+
+	public function testHasPersistentCookieReturnsFalseWhenNoCookie(): void
+	{
+		// Save current state
+		$savedCookie = $_COOKIE['tcms_persistent_token'] ?? null;
+		unset($_COOKIE['tcms_persistent_token']);
+
+		$result = $this->service->hasPersistentCookie();
+
+		$this->assertFalse($result);
+
+		// Restore state
+		if ($savedCookie !== null) {
+			$_COOKIE['tcms_persistent_token'] = $savedCookie;
+		}
+	}
+
+	public function testHasPersistentCookieReturnsTrueWhenCookieExists(): void
+	{
+		// Save current state
+		$savedCookie = $_COOKIE['tcms_persistent_token'] ?? null;
+
+		// Set the persistent cookie
+		$_COOKIE['tcms_persistent_token'] = 'selector:token';
+
+		$result = $this->service->hasPersistentCookie();
+
+		$this->assertTrue($result);
+
+		// Restore state
+		if ($savedCookie !== null) {
+			$_COOKIE['tcms_persistent_token'] = $savedCookie;
+		} else {
+			unset($_COOKIE['tcms_persistent_token']);
+		}
+	}
+
+	public function testHasPersistentCookieReturnsFalseWhenCookieIsEmpty(): void
+	{
+		// Save current state
+		$savedCookie = $_COOKIE['tcms_persistent_token'] ?? null;
+
+		// Set empty cookie
+		$_COOKIE['tcms_persistent_token'] = '';
+
+		$result = $this->service->hasPersistentCookie();
+
+		$this->assertFalse($result);
+
+		// Restore state
+		if ($savedCookie !== null) {
+			$_COOKIE['tcms_persistent_token'] = $savedCookie;
+		} else {
+			unset($_COOKIE['tcms_persistent_token']);
+		}
+	}
+
+	// ==================== Has Persistent Login Or Cookie Tests ====================
+
+	public function testHasPersistentLoginOrCookieReturnsTrueWhenSessionHasFlag(): void
+	{
+		$this->session->expects($this->once())
+			->method('get')
+			->with(SessionKeys::AUTH_PERSISTENT_LOGIN, false)
+			->willReturn(true);
+
+		$result = $this->service->hasPersistentLoginOrCookie();
+
+		$this->assertTrue($result);
+	}
+
+	public function testHasPersistentLoginOrCookieReturnsTrueWhenCookieExists(): void
+	{
+		// Save current state
+		$savedCookie = $_COOKIE['tcms_persistent_token'] ?? null;
+
+		$this->session->method('get')
+			->with(SessionKeys::AUTH_PERSISTENT_LOGIN, false)
+			->willReturn(false);
+
+		// Set the persistent cookie
+		$_COOKIE['tcms_persistent_token'] = 'selector:token';
+
+		$result = $this->service->hasPersistentLoginOrCookie();
+
+		$this->assertTrue($result);
+
+		// Restore state
+		if ($savedCookie !== null) {
+			$_COOKIE['tcms_persistent_token'] = $savedCookie;
+		} else {
+			unset($_COOKIE['tcms_persistent_token']);
+		}
+	}
+
+	public function testHasPersistentLoginOrCookieReturnsFalseWhenNeitherExists(): void
+	{
+		// Save current state
+		$savedCookie = $_COOKIE['tcms_persistent_token'] ?? null;
+		unset($_COOKIE['tcms_persistent_token']);
+
+		$this->session->method('get')
+			->with(SessionKeys::AUTH_PERSISTENT_LOGIN, false)
+			->willReturn(false);
+
+		$result = $this->service->hasPersistentLoginOrCookie();
+
+		$this->assertFalse($result);
+
+		// Restore state
+		if ($savedCookie !== null) {
+			$_COOKIE['tcms_persistent_token'] = $savedCookie;
+		}
 	}
 
 	// ==================== Helper Methods ====================
