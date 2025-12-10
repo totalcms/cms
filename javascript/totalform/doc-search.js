@@ -180,11 +180,19 @@ export default class DocSearch {
 				}
 			}
 
-			// Build URL with highlight param
+			// Build URL with highlight and optional scrollto params
 			let url = `docs/${doc.path}`;
-			if (textFragment) {
-				url += `?highlight=${encodeURIComponent(textFragment)}`;
+			const params = new URLSearchParams();
+
+			// Always highlight the search terms
+			params.set('highlight', terms.join(' '));
+
+			// If matched a section header, scroll to that instead of first match
+			if (matchedSection) {
+				params.set('scrollto', matchedSection);
 			}
+
+			url += `?${params.toString()}`;
 
 			// Highlight terms in excerpt
 			let highlightedExcerpt = this.escapeHtml(excerpt);

@@ -5,11 +5,11 @@
 
 export default function initDocHighlight() {
 	try {
-		// Get highlight term from query parameter
 		const params = new URLSearchParams(window.location.search);
-		const searchText = params.get('highlight');
+		const highlightText = params.get('highlight');
+		const scrollTo = params.get('scrollto');
 
-		if (!searchText) {
+		if (!highlightText) {
 			return;
 		}
 
@@ -19,14 +19,57 @@ export default function initDocHighlight() {
 			return;
 		}
 
-		// Highlight all matches (browser handles scrolling via text fragment)
-		highlightText(content, searchText);
+		// Highlight all matches for each term
+		const terms = highlightText.split(' ').filter(t => t.length > 0);
+		let firstMatch = null;
+
+		for (const term of terms) {
+			const match = highlightTextNodes(content, term);
+			if (!firstMatch && match) {
+				firstMatch = match;
+			}
+		}
+
+		// Scroll to scrollto text if provided, otherwise first match
+		if (scrollTo) {
+			const scrollTarget = findTextInContent(content, scrollTo);
+			if (scrollTarget) {
+				scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				return;
+			}
+		}
+
+		if (firstMatch) {
+			firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
 	} catch (e) {
 		console.error('DocHighlight error:', e);
 	}
 }
 
-function highlightText(container, searchText) {
+function findTextInContent(container, searchText) {
+	const searchLower = searchText.toLowerCase();
+
+	// First check headings (h1-h6) for the section header
+	const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
+	for (const heading of headings) {
+		if (heading.textContent.toLowerCase().includes(searchLower)) {
+			return heading;
+		}
+	}
+
+	// Then look for a highlight mark containing this text
+	const marks = container.querySelectorAll('.doc-text-highlight');
+	for (const mark of marks) {
+		if (mark.textContent.toLowerCase().includes(searchLower)) {
+			return mark;
+		}
+	}
+
+	return null;
+}
+
+function highlightTextNodes(container, searchText) {
 	const walker = document.createTreeWalker(
 		container,
 		NodeFilter.SHOW_TEXT,
@@ -70,10 +113,7 @@ function highlightText(container, searchText) {
 		textNode.parentNode.replaceChild(fragment, textNode);
 	});
 
-	// Scroll to first match
-	if (firstMatch) {
-		firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-	}
+	return firstMatch;
 }
 
 function escapeRegex(string) {
