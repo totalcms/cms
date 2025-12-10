@@ -85,9 +85,7 @@ class SentryMiddleware implements MiddlewareInterface
 		$options['release'] = Version::formatted();
 
 		// Set up the before_send callback to filter events
-		$options['before_send'] = static function (Event $event, ?EventHint $hint): ?Event {
-			return self::filterEvent($event, $hint);
-		};
+		$options['before_send'] = (static fn (Event $event, ?EventHint $hint): ?Event => self::filterEvent($event, $hint));
 
 		// Remove our custom keys that Sentry doesn't understand
 		unset(
@@ -115,7 +113,7 @@ class SentryMiddleware implements MiddlewareInterface
 	 */
 	private static function filterEvent(Event $event, ?EventHint $hint): ?Event
 	{
-		if ($hint === null || $hint->exception === null) {
+		if (!$hint instanceof EventHint || $hint->exception === null) {
 			return $event;
 		}
 
@@ -131,7 +129,7 @@ class SentryMiddleware implements MiddlewareInterface
 				// Check if the message matches any user error patterns
 				$message = $exception->getMessage();
 				foreach ($userErrorMessages as $pattern) {
-					if (stripos($message, $pattern) !== false) {
+					if (stripos($message, (string)$pattern) !== false) {
 						// This is a user error - don't send to Sentry
 						return null;
 					}
