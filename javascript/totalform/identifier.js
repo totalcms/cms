@@ -261,6 +261,11 @@ export default class Identifier extends TotalField {
 		}
 
         this.api.existsAPI(api).then(response => {
+			// Handle network errors or undefined response gracefully
+			if (!response) {
+				this.idAvailable(); // Assume available on network error
+				return;
+			}
 			response.ok ? this.idExists() : this.idAvailable();
 		});
     }

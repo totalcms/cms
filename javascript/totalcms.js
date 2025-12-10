@@ -199,6 +199,9 @@ export default class TotalCMS {
 			})
 		}).catch(error => {
 			console.error("Exists API Request Failed", error);
+			// Return a mock response indicating "not found" on network errors
+			// This allows the ID validation to continue gracefully
+			return { ok: false, status: 0, networkError: true };
 		});
 	}
 
