@@ -50,7 +50,16 @@ readonly class LicenseStatus
 				return new LicenseStatusData(showIcon: false);
 			}
 
-			// Updates expired but license valid
+			// DNS not verified for valid license - show warning
+			if ($license->valid && !$license->trial && !$license->dnsVerified) {
+				return new LicenseStatusData(
+					showIcon : true,
+					severity : 'warning',
+					tooltip  : 'DNS verification required. Please verify domain ownership in your license portal.'
+				);
+			}
+
+			// Development license
 			if ($license->edition === 'development') {
 				return new LicenseStatusData(
 					showIcon : true,
@@ -101,6 +110,7 @@ readonly class LicenseStatus
 	{
 		return $license->valid
 			&& $license->updatesValid
+			&& $license->dnsVerified
 			&& !$license->trial;
 	}
 
