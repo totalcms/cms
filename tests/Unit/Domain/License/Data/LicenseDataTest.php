@@ -83,6 +83,7 @@ describe('LicenseData', function (): void {
 			validationToken: null,
 			updatesValid: true,
 			trialDaysRemaining: null,
+			dnsVerified: false,
 			timestamp: time() - (25 * 60 * 60) // 25 hours ago
 		);
 
@@ -99,6 +100,7 @@ describe('LicenseData', function (): void {
 			validationToken: 'token123',
 			updatesValid: false,
 			trialDaysRemaining: 15,
+			dnsVerified: true,
 			timestamp: 1234567890
 		);
 
@@ -113,6 +115,7 @@ describe('LicenseData', function (): void {
 			'validationToken'    => 'token123',
 			'updatesValid'       => false,
 			'trialDaysRemaining' => 15,
+			'dnsVerified'        => true,
 			'timestamp'          => 1234567890,
 		]);
 	});
