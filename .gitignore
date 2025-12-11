@@ -47,3 +47,4 @@ public/assets
 /tests/tcms-data/url
 /tests/tcms-data/.system/.bundle
 /tests/tcms-data/.system/jobqueue
+/resources/docs/search-index.json
