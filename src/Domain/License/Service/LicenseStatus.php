@@ -110,7 +110,7 @@ readonly class LicenseStatus
 	{
 		return $license->valid
 			&& $license->updatesValid
-			&& $license->dnsVerified
+			&& ($license->dnsVerified ?? false) // backwards compatibility
 			&& !$license->trial;
 	}
 
