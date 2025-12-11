@@ -192,6 +192,11 @@ export default class TotalForm {
 		const fields = Array.from(this.form.getElementsByClassName("form-field"));
 		const fieldObjects = [];
         fields.forEach(field => {
+			// Skip fields inside <template> elements (e.g., deck templates)
+			if (field.closest('template')) {
+				return;
+			}
+
 			// skip if field is already processed
 			if (field.totalfield && !field.totalfield.isSubField()) {
 				fieldObjects.push(field.totalfield);

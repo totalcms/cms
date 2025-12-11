@@ -11,6 +11,13 @@ export default class SVGField extends TotalField {
 
     constructor(container, options) {
         super(container, options);
+
+        // Skip if Froala is already initialized on this input
+        if (this.input.dataset.froalaInitialized) {
+            return;
+        }
+        this.input.dataset.froalaInitialized = 'true';
+
         this.initFroala();
     }
 

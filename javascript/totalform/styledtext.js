@@ -69,6 +69,12 @@ export default class StyledTextField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
+        // Skip if Froala is already initialized on this input
+        if (this.input.dataset.froalaInitialized) {
+            return;
+        }
+        this.input.dataset.froalaInitialized = 'true';
+
         // get final options... defaultConfig() -> global window.totalcms options -> options from arguments
         this.options = Object.assign({}, this.defaultConfig(), this.options);
 
