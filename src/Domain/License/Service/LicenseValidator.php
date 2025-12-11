@@ -30,6 +30,12 @@ readonly class LicenseValidator
 	 */
 	public function validateLicense(bool $forceRefresh = false): LicenseData
 	{
+		// Skip license validation for preview environment
+		// This prevents rate limiting when many users preview simultaneously
+		if ($this->isPreviewEnvironment()) {
+			return LicenseData::preview($this->config->domain);
+		}
+
 		// Check cache first (unless force refresh)
 		if (!$forceRefresh) {
 			$cached = $this->getCachedLicense();
@@ -154,6 +160,14 @@ readonly class LicenseValidator
 		} catch (\Exception $e) {
 			throw new LicenseException('JWT token validation failed: ' . $e->getMessage());
 		}
+	}
+
+	/**
+	 * Check if running in preview environment.
+	 */
+	private function isPreviewEnvironment(): bool
+	{
+		return $this->config->env === 'preview';
 	}
 
 	/**

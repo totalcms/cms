@@ -11,6 +11,7 @@ readonly class LicenseData
 	public const CACHE_TTL         = 24 * 60 * 60;      // 24 hours - when to try refreshing
 	public const CACHE_STORAGE_TTL = 7 * 24 * 60 * 60;  // 7 days - how long to keep in cache
 
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(
 		public bool $valid,
 		public bool $trial,
@@ -23,6 +24,25 @@ readonly class LicenseData
 		public bool $dnsVerified = false,
 		public int $timestamp = 0,
 	) {
+	}
+
+	/**
+	 * Create a preview license (for local preview environment).
+	 */
+	public static function preview(string $domain): self
+	{
+		return new self(
+			valid              : true,
+			trial              : false,
+			domain             : $domain,
+			edition            : Edition::PRO->value,
+			message            : 'Preview mode',
+			validationToken    : null,
+			updatesValid       : true,
+			trialDaysRemaining : null,
+			dnsVerified        : false,
+			timestamp          : time(),
+		);
 	}
 
 	/**
