@@ -1,9 +1,11 @@
 /**
  * Highlight.js Syntax Highlighting for Documentation
  * Light theme by default, dark theme via prefers-color-scheme
+ *
+ * Note: Do NOT import 'variables' here - it would override the custom
+ * accent color set via inline styles in admin-dashboard.twig.
+ * CSS variables (--totalform-*) are already defined by admin.css/dashboard.css.
  */
-
-@use 'variables';
 
 // Light theme (Atom One Light)
 @import 'highlight.js/styles/atom-one-light.css';
