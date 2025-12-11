@@ -11,8 +11,17 @@
 		{% endif %}
 	</section>
 
+	{% set formOptions = {} %}
+	{% if cms.edition.can('templates') %}
+		{% set json = include(cms.edition.can('whitelabel_templates')
+			? ['whitelabel/download-auth-options.twig', 'download-auth-options.twig']
+			: ['download-auth-options.twig']
+		, ignore_missing = true) %}
+		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
+		{% set formOptions = formOptions|merge(decoded) %}
+	{% endif %}
+
 	{# TODO: Refactor to use cms.form.downloadAuthForm() method for consistency #}
-	{% set formOptions = downloadAuthFormOptions | default({}) %}
 	<section class="login-form">
 		<form class="totalform" method="post" data-disabled="true">
 			<div class="form-field password-field" data-type="password">

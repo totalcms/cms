@@ -31,9 +31,16 @@
 		redirect      : getData.redirect ?? null,
 		flashMessages : errorMessages
 	} %}
-	{% if loginFormOptions is defined %}
-		{% set formOptions = formOptions|merge(loginFormOptions) %}
+
+	{% if cms.edition.can('templates') %}
+		{% set json = include(cms.edition.can('whitelabel_templates')
+			? ['whitelabel/login-options.twig', 'login-options.twig']
+			: ['login-options.twig']
+		, ignore_missing = true) %}
+		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
+		{% set formOptions = formOptions|merge(decoded) %}
 	{% endif %}
+
 	{{ cms.form.loginForm(formOptions) }}
 
 	<section class="login-below">
