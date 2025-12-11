@@ -66,7 +66,22 @@ readonly class LicenseValidator
 	{
 		$cached = $this->cacheManager->getLicenseData(LicenseData::CACHE_KEY);
 
-		return $cached instanceof LicenseData ? $cached : null;
+		if (!$cached instanceof LicenseData) {
+			return null;
+		}
+
+		// Check for old cached objects missing new properties (e.g., dnsVerified)
+		// Accessing an uninitialized typed property throws an Error
+		try {
+			$cached->toArray(); // This will throw if any property is uninitialized
+		} catch (\Error) {
+			// Clear invalid cache and return null to trigger fresh API call
+			$this->clearCache();
+
+			return null;
+		}
+
+		return $cached;
 	}
 
 	/**
