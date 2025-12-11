@@ -50,8 +50,8 @@ readonly class LicenseStatus
 				return new LicenseStatusData(showIcon: false);
 			}
 
-			// DNS not verified for valid license - show warning
-			if ($license->valid && !$license->trial && !$license->dnsVerified) {
+			// DNS not verified for valid license - show warning w/ backwards compatibility check
+			if ($license->valid && !$license->trial && !($license->dnsVerified ?? false)) {
 				return new LicenseStatusData(
 					showIcon : true,
 					severity : 'warning',
