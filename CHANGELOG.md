@@ -2,6 +2,28 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.49] - 2025-12-11
+
+
+### Enhanced
+
+- **Import Performance Optimization**: Job queue automatically enables `queueRebuildOnSave` during import/update/factory jobs
+  - Index rebuilds only once per collection after all jobs complete instead of after each object
+  - Significantly improves bulk import performance
+- **Deck Schema Select**: Schema options in deck field dropdown are now sorted alphabetically
+
+### Fixed
+
+- **Deck Autogen ID**: Fixed identifier autogeneration not working in deck items
+  - Autogen like `${title}-${now}` now correctly updates when title field changes
+  - Lock condition now checks for existing saved data instead of any value
+- **Deck Required Field Validation**: Required fields in deck schemas now properly validate
+  - JavaScript validation calls `validate()` on each field inside deck items
+  - PHP properly passes `required` attribute to deck fields from schema definition
+- **Froala in Deck**: Fixed duplicate Froala editors appearing in styled text and SVG fields inside decks
+- **Preview License Validation**: Disabled license API calls in preview environment to prevent rate limiting
+- **Cached License Compatibility**: Fixed "property must not be accessed before initialization" errors when license cache contains old data format
+
 ## [3.0.48] - 2025-12-11
 
 ### Added
