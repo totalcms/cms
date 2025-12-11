@@ -17,7 +17,9 @@ if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
 } elseif (file_exists($previewDomainFile)) {
 	$settings['datadir'] .= '-' . file_get_contents($previewDomainFile);
 }
-mkdir($settings['datadir'], 0777, true);
+if (!is_dir($settings['datadir'])) {
+	mkdir($settings['datadir'], 0777, true);
+}
 
 $settings['docroot']   = $settings['root'];
 $settings['api']       = '/site-assets/stacks/ws.tcms3.core/tcms/public/index.php';
