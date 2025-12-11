@@ -1,5 +1,10 @@
 {% extends "admin-dashboard.twig" %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ cms.api }}/assets/highlight.css?v={{ cms.version }}">
+<script type="module" src="{{ cms.api }}/assets/docs-highlight.js?v={{ cms.version }}"></script>
+{% endblock %}
+
 {% set menu = [ {
 	"title": "Start Here",
 	"sub": [
