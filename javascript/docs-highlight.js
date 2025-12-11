@@ -34,5 +34,43 @@ hljs.registerLanguage('http', () => ({ contains: [] }));
 // Initialize highlighting
 hljs.highlightAll();
 
+// Add copy buttons to all code blocks
+function addCopyButtons() {
+	document.querySelectorAll('pre').forEach(pre => {
+		// Skip if already has a copy button
+		if (pre.querySelector('.docs-copy-btn')) return;
+
+		// Create wrapper for positioning
+		pre.style.position = 'relative';
+
+		// Create copy button
+		const button = document.createElement('button');
+		button.className = 'docs-copy-btn';
+		button.textContent = 'Copy';
+		button.title = 'Copy to clipboard';
+
+		button.addEventListener('click', () => {
+			const code = pre.querySelector('code');
+			const text = code ? code.textContent : pre.textContent;
+
+			navigator.clipboard.writeText(text).then(() => {
+				button.textContent = 'Copied!';
+				button.classList.add('copied');
+
+				setTimeout(() => {
+					button.textContent = 'Copy';
+					button.classList.remove('copied');
+				}, 2000);
+			}).catch(err => {
+				console.warn('Copy failed:', err);
+			});
+		});
+
+		pre.appendChild(button);
+	});
+}
+
+addCopyButtons();
+
 // Export for potential manual use
 export { hljs };

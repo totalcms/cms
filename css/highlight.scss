@@ -3,8 +3,43 @@
  * Light theme by default, dark theme via prefers-color-scheme
  */
 
+@use 'variables';
+
 // Light theme (Atom One Light)
 @import 'highlight.js/styles/atom-one-light.css';
+
+// Copy button for code blocks
+.docs-copy-btn {
+	position         : absolute;
+	top              : 0.5rem;
+	right            : 0.5rem;
+	padding          : 0.25rem 0.5rem;
+	font-size        : 0.75rem;
+	font-weight      : 500;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-purewhite));
+	color            : oklch(var(--totalform-gray));
+	cursor           : pointer;
+	opacity          : 0;
+	transition       : opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+
+	&:hover {
+		background-color : oklch(var(--totalform-accent));
+		border-color     : oklch(var(--totalform-accent));
+		color            : oklch(var(--totalform-purewhite));
+	}
+
+	&.copied {
+		background-color : oklch(var(--totalform-success));
+		border-color     : oklch(var(--totalform-success));
+		color            : oklch(var(--totalform-purewhite));
+	}
+}
+
+pre:hover .docs-copy-btn {
+	opacity : 1;
+}
 
 // Dark theme override
 @media (prefers-color-scheme: dark) {
