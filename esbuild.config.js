@@ -7,11 +7,12 @@ const { createImporter } = require("sass-extended-importer");
 
 // Production mode optimizations
 const isProduction = process.env.PRODUCTION === '1';
-const sourcemap = !isProduction;
+// Always generate sourcemaps - for production they get uploaded to Sentry then deleted
+const sourcemap = true;
 const drop = isProduction ? ['console', 'debugger'] : [];
 
 if (isProduction) {
-    console.log('Building in production mode (no sourcemaps, no console/debugger)');
+    console.log('Building in production mode (sourcemaps for Sentry, no console/debugger)');
 }
 
 esbuild.build({
@@ -25,6 +26,7 @@ esbuild.build({
 		"javascript/totalcms.js",
 		"javascript/swagger.js",
 		"javascript/mailto-decoder.js",
+		"javascript/docs-highlight.js",
 	],
 	format        : "esm",
 	platform      : "browser",
@@ -87,7 +89,8 @@ esbuild.build({
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
 				"css/lightgallery/",
-                "node_modules/gridjs/dist/theme/"
+                "node_modules/gridjs/dist/theme/",
+                "node_modules/highlight.js/styles/"
             ],
             importer: createImporter(),
         }),

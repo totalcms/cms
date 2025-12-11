@@ -26,11 +26,22 @@
 	{% for message in flash.get('error') %}
 		{% set errorMessages = errorMessages|merge([message]) %}
 	{% endfor %}
-	{{ cms.form.loginForm({
+	{% set formOptions = {
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
 		flashMessages : errorMessages
-	}) }}
+	} %}
+
+	{% if cms.edition.can('templates') %}
+		{% set json = include(cms.edition.can('whitelabel_templates')
+			? ['whitelabel/login-options.twig', 'login-options.twig']
+			: ['login-options.twig']
+		, ignore_missing = true) %}
+		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
+		{% set formOptions = formOptions|merge(decoded) %}
+	{% endif %}
+
+	{{ cms.form.loginForm(formOptions) }}
 
 	<section class="login-below">
 		{% if cms.edition.can('whitelabel_templates') %}

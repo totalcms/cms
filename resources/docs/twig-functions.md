@@ -4,7 +4,7 @@ Total CMS provides powerful custom Twig functions for form handling, string mani
 
 ## Form and UI Functions
 
-### `selectOptions(array $options): array`
+### `selectOptions(array $options, string $label, string $value): array`
 Converts simple arrays to proper select option format.
 
 ```twig
@@ -28,47 +28,140 @@ Converts simple arrays to proper select option format.
     {% endfor %}
 </select>
 
-{# Using with form field #}
-{% set statusOptions = selectOptions(['draft', 'published', 'archived']) %}
-{{ formSelect('status', statusOptions, post.status) }}
+{# Using with custom label and value keys #}
+{% set users = cms.objects('users') %}
+{% set userOptions = selectOptions(users, 'name', 'id') %}
+<select name="author">
+    {% for option in userOptions %}
+        <option value="{{ option.value }}">{{ option.label }}</option>
+    {% endfor %}
+</select>
 ```
 
-## Utility Functions
+## Math Functions
 
-### `uniqid(): string`
-Generates unique identifiers for HTML elements and temporary values.
+### `floor(number): int`
+Rounds a number down to the nearest integer.
 
 ```twig
-{# Unique form field IDs #}
-{% set fieldId = uniqid() %}
-<label for="email-{{ fieldId }}">Email Address</label>
-<input type="email" id="email-{{ fieldId }}" name="email">
+{{ floor(4.7) }} {# Output: 4 #}
+{{ floor(9.99) }} {# Output: 9 #}
 
-{# Unique modal IDs #}
-{% for product in cms.objects('products') %}
-    {% set modalId = uniqid() %}
-    <button data-modal="#modal-{{ modalId }}">View {{ product.name }}</button>
-    <div id="modal-{{ modalId }}" class="modal">
-        <h2>{{ product.name }}</h2>
-        <p>{{ product.description }}</p>
-    </div>
+{# Calculate pages #}
+{% set totalItems = 47 %}
+{% set perPage = 10 %}
+{% set fullPages = floor(totalItems / perPage) %}
+```
+
+### `ceil(number): int`
+Rounds a number up to the nearest integer.
+
+```twig
+{{ ceil(4.1) }} {# Output: 5 #}
+{{ ceil(9.01) }} {# Output: 10 #}
+
+{# Calculate total pages needed #}
+{% set totalItems = 47 %}
+{% set perPage = 10 %}
+{% set totalPages = ceil(totalItems / perPage) %}
+```
+
+## String Functions
+
+### `addslashes(string): string`
+Escapes special characters with backslashes.
+
+```twig
+{% set text = "He said \"Hello\"" %}
+{{ addslashes(text) }} {# Output: He said \"Hello\" #}
+```
+
+### `chunk_split(string, length, separator): string`
+Splits a string into smaller chunks.
+
+```twig
+{% set serial = "ABCD1234EFGH5678" %}
+{{ chunk_split(serial, 4, '-') }} {# Output: ABCD-1234-EFGH-5678- #}
+```
+
+### `explode(delimiter, string): array`
+Splits a string into an array by a delimiter.
+
+```twig
+{% set tags = "php,javascript,python" %}
+{% set tagArray = explode(',', tags) %}
+{% for tag in tagArray %}
+    <span class="tag">{{ tag }}</span>
 {% endfor %}
+```
 
-{# Temporary file names #}
-{% set tempId = uniqid() %}
-<input type="hidden" name="temp_upload_id" value="{{ tempId }}">
+### `str_pad(string, length, pad_string, pad_type): string`
+Pads a string to a certain length.
 
-{# CSS animation delays #}
-{% for item in gallery.images %}
-    <div class="image-{{ uniqid() }}" style="animation-delay: {{ loop.index * 0.1 }}s;">
-        <img src="{{ item.url }}" alt="{{ item.alt }}">
-    </div>
-{% endfor %}
+```twig
+{{ str_pad('42', 5, '0', 0) }} {# Output: 00042 (STR_PAD_LEFT = 0) #}
+{{ str_pad('42', 5, '0', 1) }} {# Output: 42000 (STR_PAD_RIGHT = 1) #}
+```
+
+### `strlen(string): int`
+Returns the length of a string.
+
+```twig
+{{ strlen('Hello World') }} {# Output: 11 #}
+
+{% if strlen(post.excerpt) > 200 %}
+    {{ post.excerpt | slice(0, 200) }}...
+{% else %}
+    {{ post.excerpt }}
+{% endif %}
+```
+
+### `indexOf(haystack, needle, offset): int|false`
+Finds the position of the first occurrence of a substring. Alias for `strpos`.
+
+```twig
+{{ indexOf('Hello World', 'World') }} {# Output: 6 #}
+
+{% if indexOf(email, '@') %}
+    Valid email format
+{% endif %}
+
+{# With offset - start searching from position 5 #}
+{{ indexOf('Hello Hello', 'Hello', 5) }} {# Output: 6 #}
+```
+
+### `lastIndexOf(haystack, needle, offset): int|false`
+Finds the position of the last occurrence of a substring. Alias for `strrpos`.
+
+```twig
+{% set filename = "document.backup.pdf" %}
+{% set lastDot = lastIndexOf(filename, '.') %}
+{# lastDot = 15 #}
+
+{# Get file extension #}
+{% set ext = filename | slice(lastIndexOf(filename, '.') + 1) %}
+{# ext = "pdf" #}
+```
+
+### `wordwrap(string, width, break, cut): string`
+Wraps a string to a given number of characters.
+
+```twig
+{% set longText = "This is a very long line that needs to be wrapped" %}
+{{ wordwrap(longText, 20, '<br>', false) }}
+```
+
+### `similar_text(string1, string2): int`
+Returns the number of matching characters between two strings.
+
+```twig
+{% set similarity = similar_text('Hello', 'Hallo') %}
+{# similarity = 4 #}
 ```
 
 ## String Testing Functions
 
-### `contains(string $string, string $contains): bool`
+### `contains(string, substring): bool`
 Checks if a string contains a substring.
 
 ```twig
@@ -100,14 +193,9 @@ Checks if a string contains a substring.
         {% endif %}
     </a>
 {% endfor %}
-
-{# Email validation #}
-{% if not contains(user.email, '@') %}
-    <span class="error">Invalid email address</span>
-{% endif %}
 ```
 
-### `startsWith(string $string, string $starts): bool`
+### `startsWith(string, prefix): bool`
 Checks if a string starts with a specific substring.
 
 ```twig
@@ -135,16 +223,9 @@ Checks if a string starts with a specific substring.
         {{ page.title }}
     </a>
 {% endfor %}
-
-{# Phone number formatting #}
-{% if startsWith(contact.phone, '+1') %}
-    {{ contact.phone | formatPhone('US') }}
-{% else %}
-    +1{{ contact.phone | formatPhone('US') }}
-{% endif %}
 ```
 
-### `endsWith(string $string, string $ends): bool`
+### `endsWith(string, suffix): bool`
 Checks if a string ends with a specific substring.
 
 ```twig
@@ -174,21 +255,82 @@ Checks if a string ends with a specific substring.
         {% endif %}
     </a>
 {% endfor %}
+```
 
-{# Image format detection #}
-{% set hero = cms.image('hero-banner') %}
-{% if endsWith(hero.image | lower, '.webp') %}
-    {# Modern format available #}
-    <img src="{{ hero.image }}" alt="{{ hero.alt }}">
-{% else %}
-    {# Convert to WebP #}
-    <img src="{{ hero.image | webp }}" alt="{{ hero.alt }}">
-{% endif %}
+## Hashing Functions
+
+### `md5(string): string`
+Generates an MD5 hash of a string.
+
+```twig
+{{ md5('hello@example.com') }}
+{# Useful for Gravatar URLs #}
+<img src="https://www.gravatar.com/avatar/{{ md5(user.email | lower | trim) }}">
+```
+
+### `sha1(string): string`
+Generates a SHA1 hash of a string.
+
+```twig
+{{ sha1('some-data') }}
+```
+
+## Utility Functions
+
+### `uniqid(): string`
+Generates unique identifiers for HTML elements and temporary values.
+
+```twig
+{# Unique form field IDs #}
+{% set fieldId = uniqid() %}
+<label for="email-{{ fieldId }}">Email Address</label>
+<input type="email" id="email-{{ fieldId }}" name="email">
+
+{# Unique modal IDs #}
+{% for product in cms.objects('products') %}
+    {% set modalId = uniqid() %}
+    <button data-modal="#modal-{{ modalId }}">View {{ product.name }}</button>
+    <div id="modal-{{ modalId }}" class="modal">
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+    </div>
+{% endfor %}
+```
+
+### `buildQuery(array): string`
+Generates a URL-encoded query string from an array. Alias for `http_build_query`.
+
+```twig
+{% set params = {page: 2, sort: 'date', order: 'desc'} %}
+<a href="/blog?{{ buildQuery(params) }}">Page 2</a>
+{# Output: /blog?page=2&sort=date&order=desc #}
+
+{# Build search URL with filters #}
+{% set filters = {category: 'tech', author: 'joe', featured: true} %}
+<a href="/search?{{ buildQuery(filters) }}">View Results</a>
 ```
 
 ## Type Checking Functions
 
-### `istype(mixed $variable, string $type): bool`
+### `typeof(variable): string`
+Returns the type of a variable as a string. Alias for `gettype`.
+
+```twig
+{{ typeof('hello') }}   {# Output: string #}
+{{ typeof(42) }}        {# Output: integer #}
+{{ typeof([1, 2, 3]) }} {# Output: array #}
+{{ typeof(true) }}      {# Output: boolean #}
+{{ typeof(null) }}      {# Output: NULL #}
+
+{# Conditional rendering based on type #}
+{% if typeof(value) == 'array' %}
+    {% for item in value %}{{ item }}{% endfor %}
+{% else %}
+    {{ value }}
+{% endif %}
+```
+
+### `istype(variable, type): bool`
 Checks if a variable is of a specific type.
 
 ```twig
@@ -219,38 +361,59 @@ Checks if a variable is of a specific type.
 {% endfor %}
 ```
 
+## Array Sorting Functions
+
+### `ksort(array): array`
+Sorts an array by key in ascending order.
+
+```twig
+{% set data = {z: 'last', a: 'first', m: 'middle'} %}
+{% set sorted = ksort(data) %}
+{# Result: {a: 'first', m: 'middle', z: 'last'} #}
+```
+
+### `krsort(array): array`
+Sorts an array by key in descending order.
+
+```twig
+{% set data = {a: 'first', m: 'middle', z: 'last'} %}
+{% set sorted = krsort(data) %}
+{# Result: {z: 'last', m: 'middle', a: 'first'} #}
+```
+
+### `sortByKey(array, key): array`
+Sorts an array of objects/arrays by a specific key.
+
+```twig
+{% set products = cms.objects('products') %}
+{% set sortedByPrice = sortByKey(products, 'price') %}
+
+{% for product in sortedByPrice %}
+    <div class="product">
+        <h3>{{ product.name }}</h3>
+        <span class="price">${{ product.price }}</span>
+    </div>
+{% endfor %}
+
+{# Sort users by name #}
+{% set users = sortByKey(cms.objects('users'), 'name') %}
+```
+
 ## Debugging Functions
 
-### `print_r(mixed $variable): string`
+### `print_r(variable): string`
 Pretty-prints variables for debugging.
 
 ```twig
 {% if app.debug %}
     <details>
         <summary>Debug: Post Data</summary>
-        <pre>{{ print_r(post) }}</pre>
+        {{ print_r(post) }}
     </details>
-
-    <details>
-        <summary>Debug: Request Data</summary>
-        <pre>{{ print_r(app.request) }}</pre>
-    </details>
-{% endif %}
-
-{# Development mode data inspection #}
-{% if config.env == 'development' %}
-    <div class="debug-panel">
-        <h3>Template Variables</h3>
-        <pre>{{ print_r({
-            'post': post,
-            'user': app.user,
-            'config': config
-        }) }}</pre>
-    </div>
 {% endif %}
 ```
 
-### `var_dump(mixed $variable): string`
+### `var_dump(variable): string`
 Detailed variable dump with type information.
 
 ```twig
@@ -259,22 +422,32 @@ Detailed variable dump with type information.
         {{ var_dump(complexObject) }}
     </div>
 {% endif %}
-
-{# API debugging #}
-{% if config.api.debug %}
-    <script>
-        console.log({{ var_dump(apiResponse) | raw }});
-    </script>
-{% endif %}
 ```
 
-### `json_decode(mixed $variable): array`
-Decodes JSON strings to arrays.
+### `json_pretty(variable): string`
+Outputs a variable as formatted JSON.
+
+```twig
+{% if cms.config('debug') %}
+    <pre>{{ json_pretty(data) }}</pre>
+{% endif %}
+
+{# Output:
+{
+    "name": "John",
+    "email": "john@example.com",
+    "active": true
+}
+#}
+```
+
+### `parseJson(string): array`
+Decodes JSON strings to arrays. Alias for `json_decode`.
 
 ```twig
 {# Process stored JSON configuration #}
 {% set settings = cms.object('config', 'app-settings') %}
-{% set config = json_decode(settings.json_config) %}
+{% set config = parseJson(settings.json_config) %}
 
 <div class="app-config">
     {% for key, value in config %}
@@ -284,15 +457,12 @@ Decodes JSON strings to arrays.
     {% endfor %}
 </div>
 
-{# Parse JSON metadata #}
-{% set product = cms.object('product', 'laptop') %}
-{% set features = json_decode(product.features_json) %}
-
-<ul class="features">
-    {% for feature in features %}
-        <li>{{ feature.name }}: {{ feature.value }}</li>
-    {% endfor %}
-</ul>
+{# Parse API response #}
+{% set data = parseJson(apiResponse) %}
+{% if data %}
+    <h2>{{ data.title }}</h2>
+    <p>{{ data.description }}</p>
+{% endif %}
 ```
 
 ## File System Functions
@@ -322,16 +492,6 @@ Checks if an image file exists.
         {% endif %}
     {% endfor %}
 </div>
-
-{# Profile picture with fallback #}
-{% set user = cms.object('users', 'joeworkman') %}
-<div class="profile">
-    {% if user.avatar and imageExists(user.avatar) %}
-        <img src="{{ user.avatar.url }}" alt="{{ user.name }}" class="avatar">
-    {% else %}
-        <div class="avatar-placeholder">{{ user.name | slice(0, 1) }}</div>
-    {% endif %}
-</div>
 ```
 
 ### `fileExists(file): bool`
@@ -348,19 +508,6 @@ Checks if a file exists.
 {% else %}
     <span class="unavailable">Manual currently unavailable</span>
 {% endif %}
-
-{# Resource listing #}
-{% set resources = cms.depot('downloads') %}
-<ul class="resources">
-    {% for resource in resources.files %}
-        {% if fileExists(resource) %}
-            <li>
-                <a href="{{ resource.url }}" download>{{ resource.filename }}</a>
-                <span class="size">{{ resource.url | filesize }}</span>
-            </li>
-        {% endif %}
-    {% endfor %}
-</ul>
 ```
 
 ### `svgSymbol(id): string`
@@ -393,7 +540,7 @@ To use this function, define your SVG symbols in a sprite:
 
 ## Media Embedding Functions
 
-### `embed(url, array options)`
+### `embed(url, options)`
 Auto-detects and embeds various media types.
 
 ```twig
@@ -428,7 +575,31 @@ Auto-detects and embeds various media types.
 </article>
 ```
 
-### `vimeo(url, array options)`
+### `youtube(url, options)`
+Embeds YouTube videos with specific options.
+
+```twig
+{# YouTube playlist #}
+<div class="playlist">
+    {% for video in playlist.videos %}
+        <div class="video-card">
+            <h4>{{ video.title }}</h4>
+            {{ youtube(video.youtube_url, {
+                width: 560,
+                height: 315,
+                rel: 0,
+                showinfo: 0,
+                autoplay: 0,
+                modestbranding: 1,
+                privacy_enhanced: true
+            }) }}
+            <p>{{ video.description }}</p>
+        </div>
+    {% endfor %}
+</div>
+```
+
+### `vimeo(url, options)`
 Embeds Vimeo videos with specific options.
 
 ```twig
@@ -451,89 +622,9 @@ Embeds Vimeo videos with specific options.
         </div>
     {% endfor %}
 </div>
-
-{# Hero video background #}
-{% set hero = cms.object('hero', 'homepage') %}
-<section class="hero">
-    {{ vimeo(hero.background_video, {
-        width: '100%',
-        height: '100%',
-        autoplay: true,
-        loop: true,
-        muted: true,
-        controls: false,
-        background: true
-    }) }}
-</section>
 ```
 
-### `youtube(url, array options)`
-Embeds YouTube videos with specific options.
-
-```twig
-{# YouTube playlist #}
-<div class="playlist">
-    {% for video in playlist.videos %}
-        <div class="video-card">
-            <h4>{{ video.title }}</h4>
-            {{ youtube(video.youtube_url, {
-                width: 560,
-                height: 315,
-                rel: 0,
-                showinfo: 0,
-                autoplay: 0,
-                modestbranding: 1,
-                privacy_enhanced: true
-            }) }}
-            <p>{{ video.description }}</p>
-        </div>
-    {% endfor %}
-</div>
-
-{# Responsive YouTube embed #}
-{% set tutorial = cms.object('tutorial', 'getting-started') %}
-<div class="video-wrapper">
-    {{ youtube(tutorial.video_url, {
-        width: '100%',
-        height: 'auto',
-        responsive: true,
-        privacy_enhanced: true
-    }) }}
-</div>
-```
-
-### `audio(url, array attrs)`
-Creates HTML5 audio players.
-
-```twig
-{# Podcast episode player #}
-<div class="podcast-player">
-    <h2>{{ episode.title }}</h2>
-    {{ audio(episode.audio_file, {
-        controls: true,
-        preload: 'metadata',
-        class: 'podcast-audio'
-    }) }}
-    <p>{{ episode.description }}</p>
-</div>
-
-{# Music gallery #}
-<div class="music-library">
-    {% for track in tracks %}
-        <div class="track">
-            <h3>{{ track.title }}</h3>
-            <p>{{ track.artist }}</p>
-            {{ audio(track.file, {
-                controls: true,
-                preload: 'none',
-                class: 'track-player'
-            }) }}
-        </div>
-    {% endfor %}
-</div>
-```
-
-### `video(url, array attrs)`
+### `video(url, options)`
 Creates HTML5 video players.
 
 ```twig
@@ -564,11 +655,23 @@ Creates HTML5 video players.
         controls: false,
         class: 'hero-bg-video'
     }) }}
-    <div class="hero-content">
-        <h1>{{ hero.title }}</h1>
-        <p>{{ hero.subtitle }}</p>
-    </div>
 </section>
+```
+
+### `audio(url, options)`
+Creates HTML5 audio players.
+
+```twig
+{# Podcast episode player #}
+<div class="podcast-player">
+    <h2>{{ episode.title }}</h2>
+    {{ audio(episode.audio_file, {
+        controls: true,
+        preload: 'metadata',
+        class: 'podcast-audio'
+    }) }}
+    <p>{{ episode.description }}</p>
+</div>
 ```
 
 ### `iframe(url)`
@@ -584,57 +687,6 @@ Creates iframe embeds for external content.
 {# Map embed #}
 <div class="map-container">
     {{ iframe(location.map_embed_url) }}
-</div>
-
-{# Social media feeds #}
-{% for social in cms.objects('social-feeds') %}
-    <div class="social-embed">
-        <h3>{{ social.platform | title }}</h3>
-        {{ iframe(social.embed_url) }}
-    </div>
-{% endfor %}
-```
-
-## Real-World Examples
-
-### Dynamic Navigation with File Checks
-
-```twig
-<nav class="main-navigation">
-    {% for page in cms.objects('navigation') %}
-        {% if page.type == 'link' %}
-            <a href="{{ page.url }}"
-               {{ startsWith(page.url, 'http') ? 'target="_blank"' : '' }}>
-                {{ page.title }}
-            </a>
-        {% elseif page.type == 'file' and fileExists(page.file) %}
-            <a href="{{ page.file.url }}" download>{{ page.title }}</a>
-        {% endif %}
-    {% endfor %}
-</nav>
-```
-
-### Smart Media Gallery
-
-```twig
-{% set gallery = cms.objects('gallery', 'portfolio') %}
-<div class="media-gallery">
-    {% for item in gallery.items %}
-        {% set itemId = uniqid() %}
-        <div class="gallery-item" id="item-{{ itemId }}">
-            {% if contains(item.url, 'youtube.com') %}
-                {{ youtube(item.url, {width: 560, height: 315}) }}
-            {% elseif contains(item.url, 'vimeo.com') %}
-                {{ vimeo(item.url, {width: 560, height: 315}) }}
-            {% elseif endsWith(item.url, '.mp4') %}
-                {{ video(item.url, {controls: true, width: 560}) }}
-            {% elseif imageExists(item) %}
-                <img src="{{ item.url }}" alt="{{ item.alt }}">
-            {% else %}
-                <div class="placeholder">Media not available</div>
-            {% endif %}
-        </div>
-    {% endfor %}
 </div>
 ```
 

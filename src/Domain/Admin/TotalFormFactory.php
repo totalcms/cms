@@ -116,7 +116,7 @@ readonly class TotalFormFactory
 	/**
 	 * Create a login form.
 	 *
-	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages
+	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages, emailLabel, passwordLabel, rememberLabel, forgotPasswordLabel
 	 */
 	public function loginForm(array $options = []): string
 	{

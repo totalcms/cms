@@ -100,10 +100,18 @@ export default class AdminTable {
 			const row = target.closest(".gridjs-tr");
 			if (row) {
 				row.remove();
-				// Update grid data if needed
-				this.grid.updateConfig({
-					data: this.grid.config.data.filter(item => item[0] !== e.detail?.id),
-				}).forceRender();
+				// Update grid's internal data state if available
+				// GridJS stores data in config.store.state.data when initialized from table
+				const gridData = this.grid.config.store?.state?.data;
+				if (gridData && Array.isArray(gridData)) {
+					const deletedId = e.detail?.id;
+					const filteredData = gridData.filter(item => {
+						// Data can be array of arrays or array of objects
+						const itemId = Array.isArray(item) ? item[0] : item.id;
+						return itemId !== deletedId;
+					});
+					this.grid.updateConfig({ data: filteredData }).forceRender();
+				}
 			}
 		}
 	}

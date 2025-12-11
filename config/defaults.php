@@ -25,6 +25,7 @@ if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
 // Settings
 $settings = [];
 
+// Sentry Error Tracking - set to false to disable
 $settings['sentry'] = true;
 
 // Default env to production

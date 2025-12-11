@@ -26,10 +26,10 @@
 		{{ cms.form.field("radio", "location", {
 			label    : "Where should Total CMS store data?",
 			required : true,
-			value    : "default",
+			value    : "docroot",
 			options  : [
-				{value: "default", label: "Default (Recommended) <span class='path-preview'>" ~ defaultPath ~ "</span>"},
-				{value: "docroot", label: "Document Root <span class='path-preview'>" ~ docrootPath ~ "</span>"},
+				{value: "docroot", label: "Document Root (Default) <span class='path-preview'>" ~ docrootPath ~ "</span>"},
+				{value: "default", label: "Above Document Root (Recommended) <span class='path-preview'>" ~ defaultPath ~ "</span>"},
 				{value: "custom", label: "Custom Path"}
 			]
 		}) }}

@@ -355,6 +355,12 @@ pre {
 	code {
 		font-family : 'Fira Code', 'Source Code Pro', monospace;
 	}
+
+	// Override highlight.js background to use our theme colors
+	code.hljs {
+		background : transparent;
+		padding    : 0;
+	}
 }
 
 .performance-warning {

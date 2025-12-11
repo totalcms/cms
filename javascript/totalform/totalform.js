@@ -193,13 +193,13 @@ export default class TotalForm {
 		const fieldObjects = [];
         fields.forEach(field => {
 			// skip if field is already processed
-			if (field.totalfield) {
+			if (field.totalfield && !field.totalfield.isSubField()) {
 				fieldObjects.push(field.totalfield);
 				return;
 			}
 
 			const object = this.generateFieldObject(field);
-            if (object === null) return; // if the object is not set, skip it
+            if (object === null || object.isSubField()) return; // if the object is not set, skip it
             fieldObjects.push(object);
 
 			// Mark as dirty

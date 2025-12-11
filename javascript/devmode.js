@@ -71,6 +71,7 @@ export default class DevModeToggle {
 		// Revert toggle state on error
 		this.toggle.checked = !originalState;
 		console.error('Error toggling dev mode:', error);
+		this.updateHelpText('Failed to toggle dev mode. A network or timeout error occurred. Please try again.');
 	}
 
 	updateHelpText(html) {

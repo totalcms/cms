@@ -88,8 +88,9 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		$last = $this->session->get(SessionKeys::LAST_ACTIVITY) ?? $now;
 		$max  = $this->config->session['gc_maxlifetime'];
 
-		// For persistent logins, never timeout - always consider active
-		$isPersistentLogin = $this->persistentLoginService->hasPersistentLogin();
+		// Check for persistent login - use hasPersistentLoginOrCookie() to handle
+		// the case where session was garbage collected but cookie still exists
+		$isPersistentLogin = $this->persistentLoginService->hasPersistentLoginOrCookie();
 
 		$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
 

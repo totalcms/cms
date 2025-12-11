@@ -7,6 +7,7 @@ use Redis;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * Run tests against the system to.
@@ -507,13 +508,6 @@ class ServerChecker
 
 	public function getVersion(): string
 	{
-		$version = false;
-		$file    = __DIR__ . '/../../../version.txt';
-
-		if (file_exists($file)) {
-			$version = file_get_contents($file);
-		}
-
-		return $version ? trim($version) : 'Unknown';
+		return Version::get();
 	}
 }

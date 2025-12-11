@@ -105,6 +105,9 @@ export default class FilePreview {
 						// Clear values before removing the container
 						this.clearValue();
 						this.container.remove();
+					}).catch(error => {
+						console.error("Failed to delete file", error);
+						alert("Failed to delete file. A network or timeout error occurred. Please try again.");
 					});
 				}
 			});

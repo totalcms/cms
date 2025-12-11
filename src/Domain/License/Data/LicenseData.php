@@ -20,6 +20,7 @@ readonly class LicenseData
 		public ?string $validationToken,
 		public bool $updatesValid,
 		public ?int $trialDaysRemaining,
+		public bool $dnsVerified = false,
 		public int $timestamp = 0,
 	) {
 	}
@@ -40,6 +41,7 @@ readonly class LicenseData
 			validationToken     : $response['validationToken'] ?? null,
 			updatesValid        : $response['updatesValid'] ?? false,
 			trialDaysRemaining  : $response['trialDaysRemaining'] ?? null,
+			dnsVerified         : $response['dnsVerified'] ?? false,
 			timestamp           : time(),
 		);
 	}
@@ -68,6 +70,7 @@ readonly class LicenseData
 			'validationToken'    => $this->validationToken,
 			'updatesValid'       => $this->updatesValid,
 			'trialDaysRemaining' => $this->trialDaysRemaining,
+			'dnsVerified'        => $this->dnsVerified,
 			'timestamp'          => $this->timestamp,
 		];
 	}

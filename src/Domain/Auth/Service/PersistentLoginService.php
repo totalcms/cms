@@ -3,7 +3,9 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -17,28 +19,42 @@ class PersistentLoginService
 	public const PERSISTENT_COOKIE_NAME = 'tcms_persistent_token';
 
 	private readonly string $tokenDir;
+	private readonly LoggerInterface $logger;
 
 	public function __construct(
 		private readonly SessionInterface $session,
 		private readonly Config $config,
 		private readonly UserValidationService $userValidator,
+		LoggerFactory $loggerFactory,
 	) {
 		$this->tokenDir = $this->config->tmpdir . '/persistent_tokens';
 		if (!is_dir($this->tokenDir)) {
 			@mkdir($this->tokenDir, 0755, true);
 		}
+		$this->logger = $loggerFactory->addFileHandler('totalcms-access.log')->createLogger('persistent-login');
 	}
 
 	/**
 	 * Create a persistent login token and cookie for the current user.
+	 *
+	 * @return string|null The selector of the created token, or null on failure
 	 */
-	public function createPersistentToken(): void
+	public function createPersistentToken(): ?string
 	{
 		$userId     = $this->session->get(SessionKeys::AUTH_USER);
 		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION);
 
 		if (!$userId || !$collection) {
-			return;
+			$this->logger->debug('Cannot create persistent token: no user or collection in session');
+
+			return null;
+		}
+
+		// Check if headers have been sent (cookie would fail)
+		if (headers_sent($file, $line)) {
+			$this->logger->warning("Cannot create persistent token: headers already sent at $file:$line");
+
+			return null;
 		}
 
 		// Generate secure random token
@@ -46,25 +62,38 @@ class PersistentLoginService
 		$selector    = bin2hex(random_bytes(16));
 		$hashedToken = password_hash($token, PASSWORD_DEFAULT);
 
+		$persistentDays = $this->config->auth['persistentLoginDays'] ?? 30;
+		$expiry         = time() + ($persistentDays * 24 * 60 * 60);
+
 		// Store token data
 		$tokenData = [
 			'user_id'    => $userId,
 			'collection' => $collection,
 			'token_hash' => $hashedToken,
 			'created_at' => time(),
-			'expires_at' => time() + ($this->config->auth['persistentLoginDays'] * 24 * 60 * 60),
+			'expires_at' => $expiry,
 		];
 
 		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
-		file_put_contents($tokenFile, json_encode($tokenData, JSON_THROW_ON_ERROR));
+
+		try {
+			$written = file_put_contents($tokenFile, json_encode($tokenData, JSON_THROW_ON_ERROR));
+			if ($written === false) {
+				$this->logger->error('Failed to write persistent token file', ['file' => $tokenFile]);
+
+				return null;
+			}
+		} catch (\JsonException $e) {
+			$this->logger->error('Failed to encode persistent token data', ['error' => $e->getMessage()]);
+
+			return null;
+		}
 
 		// Set persistent cookie with selector:token
-		$cookieValue    = $selector . ':' . $token;
-		$persistentDays = $this->config->auth['persistentLoginDays'] ?? 30;
-		$expiry         = time() + ($persistentDays * 24 * 60 * 60);
-
+		$cookieValue  = $selector . ':' . $token;
 		$cookieParams = session_get_cookie_params();
-		setcookie(
+
+		$cookieSet = setcookie(
 			self::PERSISTENT_COOKIE_NAME,
 			$cookieValue,
 			[
@@ -72,10 +101,22 @@ class PersistentLoginService
 				'path'     => $cookieParams['path'],
 				'domain'   => $cookieParams['domain'],
 				'secure'   => $cookieParams['secure'],
-				'httponly' => true, // Always httponly for security
+				'httponly' => true,
 				'samesite' => $cookieParams['samesite'],
 			]
 		);
+
+		if (!$cookieSet) {
+			// Cookie failed - clean up the token file we just created
+			$this->logger->error('Failed to set persistent cookie, cleaning up token file');
+			@unlink($tokenFile);
+
+			return null;
+		}
+
+		$this->logger->info('Created persistent login token', ['user' => $userId, 'selector' => $selector]);
+
+		return $selector;
 	}
 
 	/**
@@ -91,7 +132,7 @@ class PersistentLoginService
 		}
 
 		// Check for persistent cookie
-		if (!isset($_COOKIE[self::PERSISTENT_COOKIE_NAME])) {
+		if (!$this->hasPersistentCookie()) {
 			return false;
 		}
 
@@ -99,6 +140,7 @@ class PersistentLoginService
 		$parts       = explode(':', (string)$cookieValue, 2);
 
 		if (count($parts) !== 2) {
+			$this->logger->debug('Invalid persistent cookie format');
 			$this->clearPersistentCookie();
 
 			return false;
@@ -109,6 +151,7 @@ class PersistentLoginService
 
 		// Check if token file exists
 		if (!file_exists($tokenFile)) {
+			$this->logger->debug('Persistent token file not found', ['selector' => $selector]);
 			$this->clearPersistentCookie();
 
 			return false;
@@ -117,6 +160,7 @@ class PersistentLoginService
 		// Load and validate token data
 		$tokenFileContents = file_get_contents($tokenFile);
 		if ($tokenFileContents === false) {
+			$this->logger->warning('Failed to read persistent token file', ['selector' => $selector]);
 			$this->clearPersistentToken($selector);
 
 			return false;
@@ -124,13 +168,15 @@ class PersistentLoginService
 		$tokenData = json_decode($tokenFileContents, true);
 
 		if (!$tokenData || !$this->isValidTokenData($tokenData)) {
+			$this->logger->warning('Invalid persistent token data structure', ['selector' => $selector]);
 			$this->clearPersistentToken($selector);
 
 			return false;
 		}
 
-		// Verify token
+		// Verify token hash
 		if (!password_verify($token, (string)$tokenData['token_hash'])) {
+			$this->logger->warning('Persistent token verification failed', ['selector' => $selector]);
 			$this->clearPersistentToken($selector);
 
 			return false;
@@ -138,6 +184,7 @@ class PersistentLoginService
 
 		// Check if token has expired
 		if (time() > $tokenData['expires_at']) {
+			$this->logger->debug('Persistent token expired', ['selector' => $selector]);
 			$this->clearPersistentToken($selector);
 
 			return false;
@@ -151,25 +198,51 @@ class PersistentLoginService
 			);
 
 			if ($userExists === []) {
+				$this->logger->warning('User no longer exists for persistent token', [
+					'selector' => $selector,
+					'user_id'  => $tokenData['user_id'],
+				]);
 				$this->clearPersistentToken($selector);
 
 				return false;
 			}
-		} catch (\Throwable) {
+		} catch (\Throwable $e) {
+			$this->logger->warning('User validation failed for persistent token', [
+				'selector' => $selector,
+				'user_id'  => $tokenData['user_id'],
+				'error'    => $e->getMessage(),
+			]);
 			$this->clearPersistentToken($selector);
 
 			return false;
 		}
 
-		// Restore session
+		// Restore session FIRST
 		$this->session->set(SessionKeys::AUTH_USER, $tokenData['user_id']);
 		$this->session->set(SessionKeys::AUTH_COLLECTION, $tokenData['collection']);
 		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, true);
 		$this->session->set(SessionKeys::LAST_ACTIVITY, time());
 
-		// Generate new token for security (token rotation)
-		$this->clearPersistentToken($selector);
-		$this->createPersistentToken();
+		$this->logger->info('Restored session from persistent token', [
+			'user_id'  => $tokenData['user_id'],
+			'selector' => $selector,
+		]);
+
+		// Token rotation: Create new token FIRST, only delete old if successful
+		$newSelector = $this->createPersistentToken();
+
+		if ($newSelector !== null) {
+			// New token created successfully, safe to delete old one
+			$this->clearPersistentTokenFile($selector);
+			$this->logger->debug('Token rotation complete', [
+				'old_selector' => $selector,
+				'new_selector' => $newSelector,
+			]);
+		} else {
+			// New token failed - keep old token active (don't delete it)
+			// User remains logged in, but next restoration will use same token
+			$this->logger->warning('Token rotation failed, keeping old token', ['selector' => $selector]);
+		}
 
 		return true;
 	}
@@ -179,24 +252,53 @@ class PersistentLoginService
 	 */
 	public function clearPersistentLogin(): void
 	{
+		// Try to clear token file if we can identify it from cookie
+		if ($this->hasPersistentCookie()) {
+			$parts = explode(':', (string)$_COOKIE[self::PERSISTENT_COOKIE_NAME], 2);
+			if (count($parts) === 2) {
+				$this->clearPersistentTokenFile($parts[0]);
+			}
+		}
+
 		// Clear cookie
 		$this->clearPersistentCookie();
 
-		// Try to clear token file if we can identify it
-		if (isset($_COOKIE[self::PERSISTENT_COOKIE_NAME])) {
-			$parts = explode(':', (string)$_COOKIE[self::PERSISTENT_COOKIE_NAME], 2);
-			if (count($parts) === 2) {
-				$this->clearPersistentToken($parts[0]);
-			}
-		}
+		$this->logger->debug('Cleared persistent login');
 	}
 
 	/**
 	 * Check if current session has persistent login enabled.
+	 *
+	 * Note: This checks the SESSION flag. Use hasPersistentCookie() to check for the cookie.
 	 */
 	public function hasPersistentLogin(): bool
 	{
 		return $this->session->get(SessionKeys::AUTH_PERSISTENT_LOGIN, false) === true;
+	}
+
+	/**
+	 * Check if a persistent login cookie exists.
+	 *
+	 * This checks the actual cookie from the request, independent of session state.
+	 * Use this to determine if restoration should be attempted.
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public function hasPersistentCookie(): bool
+	{
+		return isset($_COOKIE[self::PERSISTENT_COOKIE_NAME])
+			&& $_COOKIE[self::PERSISTENT_COOKIE_NAME] !== '';
+	}
+
+	/**
+	 * Check if user has persistent login (either by session flag OR cookie).
+	 *
+	 * This is useful for middleware to determine if a user should be considered
+	 * for persistent login behavior even when their session has expired.
+	 */
+	public function hasPersistentLoginOrCookie(): bool
+	{
+		return $this->hasPersistentLogin() || $this->hasPersistentCookie();
 	}
 
 	/**
@@ -260,13 +362,22 @@ class PersistentLoginService
 	}
 
 	/**
-	 * Clear persistent token file.
+	 * Clear persistent token file only (does not clear cookie).
 	 */
-	private function clearPersistentToken(string $selector): void
+	private function clearPersistentTokenFile(string $selector): void
 	{
 		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
 		if (file_exists($tokenFile)) {
-			unlink($tokenFile);
+			@unlink($tokenFile);
 		}
+	}
+
+	/**
+	 * Clear persistent token file AND cookie.
+	 */
+	private function clearPersistentToken(string $selector): void
+	{
+		$this->clearPersistentTokenFile($selector);
+		$this->clearPersistentCookie();
 	}
 }

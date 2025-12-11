@@ -116,6 +116,9 @@
     //     }
     // }
 }
+.totalform:not(.edit-mode) .actionbar {
+	display : none;
+}
 
 .featured {
 	button.featured {

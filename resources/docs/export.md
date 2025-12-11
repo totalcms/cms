@@ -19,15 +19,3 @@ Total CMS supports multiple export formats:
 3. Choose export options:
    - Format (JSON, CSV)
 4. Click "Export"
-
-## Export via API
-
-### Basic Export
-
-```bash
-# Export entire collection as JSON
-GET /api/export/collections/{collection}
-
-# Export with specific format
-GET /api/export/collections/{collection}/csv
-```

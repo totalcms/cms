@@ -69,6 +69,9 @@ export default class FileField extends TotalField {
 		this.form.api.postAPI(updateApi, this.getValue(), "put").then(response => {
 			console.log("File Meta Autosaved", response);
 			this.saved();
+		}).catch(error => {
+			console.error("File Meta Autosave failed", error);
+			// Keep unsaved state so user knows to retry
 		});
 	}
 

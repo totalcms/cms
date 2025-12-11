@@ -32,11 +32,10 @@
 		})();
 	</script>
 
-	{% if cms.config('sentry') %}
-	<script src="https://js.sentry-cdn.com/ebe837e74d2740037be208a5d11fe257.min.js" crossorigin="anonymous"></script>
-	{% endif %}
+	{% include 'partials/sentry.twig' %}
 
     <base href="{{ cms.api }}/admin/">
+	<link rel="modulepreload" href="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>

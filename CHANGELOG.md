@@ -2,6 +2,31 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.48] - 2025-12-11
+
+### Added
+
+- **Documentation Syntax Highlighting**: Code blocks in documentation now have syntax highlighting using highlight.js
+  - Supports Twig, JSON, JavaScript, Bash, HTML, PHP, CSS, and Apache configs
+  - Copy-to-clipboard button appears on hover for all code blocks
+  - Light/dark theme support via `prefers-color-scheme`
+- **DNS Verification Status**: License status icon shows warning when domain DNS is not verified
+- **Standard Edition Whitelabel Templates**: Select whitelabel templates now available in Standard edition
+  - `login-above`, `forgot-password-above`, `reset-password-above`, `download-auth-above`, `admin-welcome`
+  - Form options templates for customizing form labels (login, forgot-password, reset-password, download-auth)
+- **markdownInline Filter**: New Twig filter for inline markdown processing without wrapper tags
+
+### Enhanced
+
+- **Persistent Login**: Complete overhaul of "Keep Me Logged In" functionality
+  - Safe token rotation prevents login loss on cookie failures
+  - Direct cookie checking independent of PHP session garbage collection
+  - Comprehensive logging for debugging persistent login issues
+- **Whitelabel Documentation**: Updated with JSON template approach for form label customization
+- **REST API Documentation**: Cleaned up to reflect actual available routes
+- **Twig Filters**: `sortCollection` and `filterCollection` now accept null values gracefully
+
+
 ## [3.0.47] - 2025-12-05
 
 ### Added
@@ -27,7 +52,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Toggle Field**: No longer required in schema definitions
 - **Auth Active Field**: Changed to toggle field type
 - **Default Collections**: Allow blank saves in default collections
-- **License Status**: Only shown to admin users
+- **License Status Icon**: Only shown to admin users
 - **Dashboard**: Moved help content to documentation; fixed whitelabel display
 
 ### Fixed

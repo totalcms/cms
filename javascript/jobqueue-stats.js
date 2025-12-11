@@ -34,6 +34,9 @@ export default class JobQueueStatsTable {
                     this.updateCount(status.toLowerCase(), data[type][status]);
                 }
             }
+        }).catch(error => {
+            // Silently ignore network errors for background polling
+            console.error("Job queue stats fetch failed", error);
         });
     }
 

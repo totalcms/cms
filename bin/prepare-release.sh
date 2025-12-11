@@ -12,6 +12,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Sentry configuration
+# Auth token is stored in ~/.sentryclirc via `sentry-cli login`
+SENTRY_ORG="aspect-services-llc"
+SENTRY_PROJECTS=("total-cms" "totalcms-dashboard")  # Backend and frontend projects
+
 # Function to print colored output
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -34,6 +39,107 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to upload source maps to Sentry
+upload_sourcemaps() {
+    local version=$1
+    local release_version="totalcms@${version}"
+
+    if ! command_exists sentry-cli; then
+        print_warning "sentry-cli not installed - skipping source map upload"
+        print_info "Install with: brew install getsentry/tools/sentry-cli"
+        return 0
+    fi
+
+    # Check if sentry-cli is authenticated (via ~/.sentryclirc or SENTRY_AUTH_TOKEN)
+    if ! sentry-cli info >/dev/null 2>&1; then
+        print_warning "sentry-cli not authenticated - skipping source map upload"
+        print_info "Run: sentry-cli login"
+        return 0
+    fi
+
+    # Upload source maps for frontend project only
+    print_info "Uploading source maps to Sentry..."
+
+    # ~/assets matches URLs like https://domain.com/anything/assets/file.js
+    # The ~ is a wildcard for protocol+host, and Sentry matches from the end
+    if sentry-cli sourcemaps upload \
+        --org "$SENTRY_ORG" \
+        --project "totalcms-dashboard" \
+        --release "$release_version" \
+        --url-prefix "~/assets" \
+        dist/public/assets; then
+        print_success "Source maps uploaded to Sentry"
+    else
+        print_warning "Failed to upload source maps to Sentry"
+        return 1
+    fi
+
+    # Delete source maps from dist (keep them private)
+    print_info "Removing source maps from distribution..."
+    find dist/public/assets -name "*.map" -type f -delete
+    print_success "Source maps removed from distribution"
+}
+
+# Function to notify Sentry of new release
+notify_sentry_release() {
+    local version=$1
+    local git_hash=$2
+    local release_version="totalcms@${version}"
+
+    if ! command_exists sentry-cli; then
+        print_warning "sentry-cli not installed - skipping Sentry release notification"
+        print_info "Install with: brew install getsentry/tools/sentry-cli"
+        return 0
+    fi
+
+    # Check if sentry-cli is authenticated (via ~/.sentryclirc or SENTRY_AUTH_TOKEN)
+    if ! sentry-cli info >/dev/null 2>&1; then
+        print_warning "sentry-cli not authenticated - skipping Sentry release notification"
+        print_info "Run: sentry-cli login"
+        return 0
+    fi
+
+    # Create release for each Sentry project (backend and frontend)
+    for project in "${SENTRY_PROJECTS[@]}"; do
+        print_info "Creating Sentry release for $project: $release_version"
+
+        # Create the release
+        if sentry-cli releases new "$release_version" \
+            --org "$SENTRY_ORG" \
+            --project "$project"; then
+            print_success "Sentry release created for $project"
+        else
+            print_warning "Failed to create Sentry release for $project"
+            continue
+        fi
+
+        # Associate commits with the release
+        if sentry-cli releases set-commits "$release_version" --auto \
+            --org "$SENTRY_ORG"; then
+            print_success "Commits associated with $project release"
+        else
+            print_warning "Failed to associate commits for $project (optional)"
+        fi
+
+        # Mark the release as deployed
+        if sentry-cli releases deploys "$release_version" new \
+            --org "$SENTRY_ORG" \
+            --env production; then
+            print_success "$project release marked as deployed"
+        else
+            print_warning "Failed to mark $project release as deployed"
+        fi
+
+        # Finalize the release
+        if sentry-cli releases finalize "$release_version" \
+            --org "$SENTRY_ORG"; then
+            print_success "$project release finalized"
+        else
+            print_warning "Failed to finalize $project release"
+        fi
+    done
+}
+
 # Check prerequisites
 print_info "Checking prerequisites..."
 
@@ -54,6 +160,18 @@ fi
 
 if ! command_exists php; then
     print_error "php is not installed"
+    exit 1
+fi
+
+if ! command_exists sentry-cli; then
+    print_error "sentry-cli is not installed"
+    print_info "Install with: brew install getsentry/tools/sentry-cli"
+    exit 1
+fi
+
+if ! sentry-cli info >/dev/null 2>&1; then
+    print_error "sentry-cli is not authenticated"
+    print_info "Run: sentry-cli login"
     exit 1
 fi
 
@@ -163,14 +281,15 @@ print_success "Assets built"
 
 bin/code-report.sh > code-report.txt
 
+# Get current git commit hash (needed for version and Sentry)
+GIT_HASH=$(git rev-parse --short HEAD)
+
 # Update version if changed (after build to prevent overwriting)
 print_info "Comparing versions: '$NEW_VERSION' vs '$CURRENT_VERSION'"
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     print_info "Updating version to $NEW_VERSION..."
-    # Get current git commit hash
-    GIT_HASH=$(git rev-parse --short HEAD)
     # Update version in version.txt file
-    echo "$NEW_VERSION ($GIT_HASH)" > version.txt
+    echo "$NEW_VERSION-$GIT_HASH" > version.txt
 	cp version.txt dist/version.txt
     print_success "Version updated to $NEW_VERSION ($GIT_HASH)"
 else
@@ -199,6 +318,12 @@ print_info "Generating file checksums..."
 find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.css" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./cache/*" -not -path "./tmp/*" -exec sha256sum {} \; > checksums.txt
 print_success "Checksums generated"
 
+# Upload source maps to Sentry (before deleting them from dist)
+upload_sourcemaps "$NEW_VERSION"
+
+# Notify Sentry of new release
+notify_sentry_release "$NEW_VERSION" "$GIT_HASH"
+
 # Summary
 echo
 print_success "Release preparation complete!"
@@ -214,6 +339,8 @@ echo "  ✓ Autoloader optimized"
 echo "  ✓ Caches cleared"
 echo "  ✓ Permissions set"
 echo "  ✓ Checksums generated"
+echo "  ✓ Source maps uploaded to Sentry"
+echo "  ✓ Sentry release notified"
 echo
 echo "Next steps:"
 echo "  1. Review the changes one more time"

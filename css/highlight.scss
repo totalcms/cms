@@ -1,0 +1,113 @@
+/**
+ * Highlight.js Syntax Highlighting for Documentation
+ * Light theme by default, dark theme via prefers-color-scheme
+ *
+ * Note: Do NOT import 'variables' here - it would override the custom
+ * accent color set via inline styles in admin-dashboard.twig.
+ * CSS variables (--totalform-*) are already defined by admin.css/dashboard.css.
+ */
+
+// Light theme (Atom One Light)
+@import 'highlight.js/styles/atom-one-light.css';
+
+// Copy button for code blocks
+.docs-copy-btn {
+	position         : absolute;
+	top              : 0.5rem;
+	right            : 0.5rem;
+	padding          : 0.25rem 0.5rem;
+	font-size        : 0.75rem;
+	font-weight      : 500;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-purewhite));
+	color            : oklch(var(--totalform-gray));
+	cursor           : pointer;
+	opacity          : 0;
+	transition       : opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+
+	&:hover {
+		background-color : oklch(var(--totalform-accent));
+		border-color     : oklch(var(--totalform-accent));
+		color            : oklch(var(--totalform-purewhite));
+	}
+
+	&.copied {
+		background-color : oklch(var(--totalform-success));
+		border-color     : oklch(var(--totalform-success));
+		color            : oklch(var(--totalform-purewhite));
+	}
+}
+
+pre:hover .docs-copy-btn {
+	opacity : 1;
+}
+
+// Dark theme override
+@media (prefers-color-scheme: dark) {
+	// Import dark theme styles
+	// Note: We override the light theme colors for dark mode
+	.hljs {
+		color: #abb2bf;
+		background: #282c34;
+	}
+	.hljs-comment,
+	.hljs-quote {
+		color: #5c6370;
+		font-style: italic;
+	}
+	.hljs-doctag,
+	.hljs-keyword,
+	.hljs-formula {
+		color: #c678dd;
+	}
+	.hljs-section,
+	.hljs-name,
+	.hljs-selector-tag,
+	.hljs-deletion,
+	.hljs-subst {
+		color: #e06c75;
+	}
+	.hljs-literal {
+		color: #56b6c2;
+	}
+	.hljs-string,
+	.hljs-regexp,
+	.hljs-addition,
+	.hljs-attribute,
+	.hljs-meta .hljs-string {
+		color: #98c379;
+	}
+	.hljs-attr,
+	.hljs-variable,
+	.hljs-template-variable,
+	.hljs-type,
+	.hljs-selector-class,
+	.hljs-selector-attr,
+	.hljs-selector-pseudo,
+	.hljs-number {
+		color: #d19a66;
+	}
+	.hljs-symbol,
+	.hljs-bullet,
+	.hljs-link,
+	.hljs-meta,
+	.hljs-selector-id,
+	.hljs-title {
+		color: #61aeee;
+	}
+	.hljs-built_in,
+	.hljs-title.class_,
+	.hljs-class .hljs-title {
+		color: #e6c07b;
+	}
+	.hljs-emphasis {
+		font-style: italic;
+	}
+	.hljs-strong {
+		font-weight: bold;
+	}
+	.hljs-link {
+		text-decoration: underline;
+	}
+}

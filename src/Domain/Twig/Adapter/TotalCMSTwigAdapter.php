@@ -35,6 +35,7 @@ use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * Twig Adapter with Total CMS.
@@ -239,10 +240,11 @@ class TotalCMSTwigAdapter
 	 *
 	 * @param array<mixed>|string|null $object
 	 */
-	public function redirectIfNotFound(array|string|null $object = []): void
+	public function redirectIfNotFound(array|string|null $object = [], string $redirectUrl = ''): void
 	{
+		$redirectUrl = trim($redirectUrl);
 		if (in_array($object, [[], null, ''], true)) {
-			$notfound = $this->config->notfound;
+			$notfound = $redirectUrl !== '' ? $redirectUrl : $this->config->notfound;
 			if ($notfound !== '') {
 				http_response_code(404);
 				header('Location: ' . $notfound);
@@ -319,14 +321,7 @@ NGINX;
 
 	private function getVersion(): string
 	{
-		$versionFile = __DIR__ . '/../../../../version.txt';
-		if (file_exists($versionFile)) {
-			$version = file_get_contents($versionFile);
-
-			return $version !== false ? trim($version) : '';
-		}
-
-		return '';
+		return Version::get();
 	}
 
 	/** @return array<string,string> */

@@ -1,6 +1,17 @@
 {% extends "admin-dashboard.twig" %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ cms.api }}/assets/highlight.css?v={{ cms.version }}">
+<script type="module" src="{{ cms.api }}/assets/docs-highlight.js?v={{ cms.version }}"></script>
+{% endblock %}
+
 {% set menu = [ {
+	"title": "Start Here",
+	"sub": [
+		{ "title": "Getting Started", "path": "getting-started" },
+		{ "title": "Installation", "path": "installation" },
+	]
+},{
 	"title": "Dashboard",
 	"sub": [
 		{ "title": "Overview", "path": "dashboard" },
@@ -46,9 +57,9 @@
 		{ "title": "Sitemap Builder", "path": "sitemap-builder" },
 		{ "title": "Migration from v1", "path": "migration-total-cms-one" },
 		{ "title": "Security",      "path": "security" },
+		{ "title": "Configuration", "path": "configuration" },
 		{ "title": "Authentication","path": "auth" },
 		{ "title": "Password Reset","path": "password-reset" },
-		{ "title": "Configuration", "path": "configuration" },
 		{ "title": "Filesystem", 	"path": "filesystem" },
 		{ "title": "Licenses", 		"path": "licenses" },
 		{ "title": "Data Model", 	"path": "data-model" },

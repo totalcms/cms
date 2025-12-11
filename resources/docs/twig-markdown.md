@@ -22,37 +22,53 @@ Total CMS uses **ParsedownExtra** which extends the standard Parsedown library w
 
 ## Basic Usage
 
-### The `|markdown_to_html` Filter
+### The `|markdown` Filter
 
-Twig provides a built-in `|markdown_to_html` filter for processing markdown content:
-
-```twig
-{# Standard Twig markdown processing #}
-{{ content|markdown_to_html }}
-
-{# Process markdown from a collection object #}
-{{ post.content|markdown_to_html }}
-
-{# Combine with other filters #}
-{{ article.body|markdown_to_html|raw }}
-```
-
-### The `|markdown` Alias
-
-Total CMS provides a shorter `|markdown` alias for the built-in `|markdown_to_html` filter:
+Use the `|markdown` filter to process full markdown content including block elements (paragraphs, headers, lists, etc.):
 
 ```twig
-{# Shorter syntax using Total CMS alias #}
+{# Process markdown content #}
 {{ content|markdown }}
 
-{# Both filters produce identical output #}
+{# Process markdown from a collection object #}
 {{ post.content|markdown }}
 
-{# Use whichever naming convention you prefer #}
+{# Combine with other filters #}
 {{ article.body|markdown|raw }}
 ```
 
-Both `|markdown_to_html` (Twig's native filter) and `|markdown` (Total CMS alias) are functionally identical and can be used interchangeably throughout your templates.
+### The `|markdownInline` Filter
+
+Use `|markdownInline` when you need to process markdown within existing HTML elements without adding wrapper tags like `<p>`:
+
+```twig
+{# In headings - no <p> wrapper added #}
+<h2>{{ page.title|markdownInline }}</h2>
+
+{# In list items #}
+<ul>
+    {% for feature in product.features %}
+        <li>{{ feature|markdownInline }}</li>
+    {% endfor %}
+</ul>
+
+{# In existing paragraphs #}
+<p class="tagline">{{ product.tagline|markdownInline }}</p>
+```
+
+**Comparison:**
+
+```twig
+{# markdown filter - adds <p> wrapper #}
+{{ "Visit our **website**"|markdown }}
+{# Output: <p>Visit our <strong>website</strong></p> #}
+
+{# markdownInline filter - no wrapper #}
+{{ "Visit our **website**"|markdownInline }}
+{# Output: Visit our <strong>website</strong> #}
+```
+
+**Supported inline syntax:** bold (`**text**`), italic (`*text*`), code (`` `code` ``), links (`[text](url)`), and images (`![alt](url)`).
 
 ### Processing Collection Content
 

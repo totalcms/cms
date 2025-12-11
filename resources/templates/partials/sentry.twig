@@ -1,0 +1,39 @@
+{% if cms.config('sentry') %}
+<script src="https://js.sentry-cdn.com/ebe837e74d2740037be208a5d11fe257.min.js" crossorigin="anonymous"></script>
+<script>
+	Sentry.onLoad(function() {
+		Sentry.init({
+			release: "totalcms@{{ cms.version | split('-') | first }}",
+			beforeSend(event, hint) {
+				const error = hint.originalException;
+				if (!error) return event;
+
+				const message = error.message || '';
+
+				// Ignore browser extension errors
+				if (message.includes('runtime.sendMessage')) return null;
+
+				// Ignore JSON parse errors (user input issues)
+				if (error.name === 'SyntaxError' && (
+					message.includes('JSON') ||
+					message.includes('Unexpected token') ||
+					message.includes('Expected') ||
+					message.includes('Unterminated')
+				)) return null;
+
+				// Ignore pattern matching errors (validation)
+				if (message.includes('did not match the expected pattern')) return null;
+
+				// Ignore server validation errors shown in UI
+				if (message.includes('400 Bad Request')) return null;
+
+				// Ignore Froala editor internal errors (third-party library)
+				if (error.name === 'IndexSizeError') return null;
+
+				return event;
+			}
+		});
+		Sentry.setTag('build', '{{ cms.version | split('-') | last }}');
+	});
+</script>
+{% endif %}

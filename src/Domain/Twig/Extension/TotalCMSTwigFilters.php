@@ -75,6 +75,7 @@ class TotalCMSTwigFilters
 		'hue',
 		'adjustColor',
 		'htmlencode',
+		'htmldecode',
 		'obfuscate',
 		'deobfuscate',
 		'encrypt',
@@ -140,6 +141,11 @@ class TotalCMSTwigFilters
 	public static function htmlencode(string $string): string
 	{
 		return HTMLUtils::htmlencode($string);
+	}
+
+	public static function htmldecode(string $string): string
+	{
+		return html_entity_decode($string);
 	}
 
 	public static function obfuscate(string $string): string
@@ -575,15 +581,15 @@ class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>>|null $collection
 	 * @param array<array<string,mixed>> $rules
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public static function filterCollection(array $collection, array $rules): array
+	public static function filterCollection(?array $collection, array $rules): array
 	{
-		if ($rules === []) {
-			return $collection;
+		if ($collection === null || $collection === [] || $rules === []) {
+			return $collection ?? [];
 		}
 
 		$refiner = new CollectionRefiner($collection);
@@ -592,15 +598,15 @@ class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>>|null $collection
 	 * @param array<array<string,mixed>> $rules
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public static function sortCollection(array $collection, array $rules): array
+	public static function sortCollection(?array $collection, array $rules): array
 	{
-		if ($rules === []) {
-			return $collection;
+		if ($collection === null || $collection === [] || $rules === []) {
+			return $collection ?? [];
 		}
 
 		$sorter = new CollectionSorter($collection);

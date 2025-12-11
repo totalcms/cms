@@ -14,20 +14,30 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 // ---------------------------------------------------------------------------------
 class QRGenerator
 {
-	private readonly Writer $writer;
+	private ?Writer $writer = null;
 
 	public function __construct(
 		private readonly ?EditionFeatureService $editionFeatures = null,
-		int $size = 512,
+		private readonly int $size = 512,
 	) {
-		// TODO: ImagickImageBackEnd and GDLibRenderer for PNG support
+	}
 
-		$margin   = 0;
-		$renderer = new ImageRenderer(
-			new RendererStyle($size, $margin),
-			new SvgImageBackEnd()
-		);
-		$this->writer = new Writer($renderer);
+	/**
+	 * Lazy-load the writer to avoid requiring xmlwriter extension until actually needed.
+	 */
+	private function getWriter(): Writer
+	{
+		if (!$this->writer instanceof Writer) {
+			// TODO: ImagickImageBackEnd and GDLibRenderer for PNG support
+			$margin   = 0;
+			$renderer = new ImageRenderer(
+				new RendererStyle($this->size, $margin),
+				new SvgImageBackEnd()
+			);
+			$this->writer = new Writer($renderer);
+		}
+
+		return $this->writer;
 	}
 
 	private function generateSVG(string $text): string
@@ -37,7 +47,7 @@ class QRGenerator
 			$this->editionFeatures->canOrFail(EditionFeature::QR_CODES);
 		}
 
-		$svg = $this->stripFirstLine($this->writer->writeString($text));
+		$svg = $this->stripFirstLine($this->getWriter()->writeString($text));
 
 		// Add cms-qr-code class to the SVG element
 		return (string)preg_replace('/<svg/', '<svg class="cms-qr-code"', $svg, 1);
