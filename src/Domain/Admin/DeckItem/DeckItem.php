@@ -80,6 +80,9 @@ class DeckItem
 			// Fetch the schema for this deck
 			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
 
+			// Get the list of required fields from the schema
+			$requiredFields = $schema->required ?? [];
+
 			// Generate form fields for each property in the schema
 			foreach ($schema->properties as $propertyName => $propertySchema) {
 				$fieldValue   = $this->itemData[$propertyName] ?? '';
@@ -101,6 +104,7 @@ class DeckItem
 					'settings'     => $propertySchema['settings'] ?? [],
 					'value'        => $fieldValue,
 					'deck_context' => true, // Indicate this field is within a deck item
+					'required'     => in_array($propertyName, $requiredFields, true),
 				];
 
 				// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level

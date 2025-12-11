@@ -208,14 +208,12 @@ class SchemaField extends PropertyField
 	 */
 	private function getDeckCompatibleSchemaOptions(): array
 	{
-		$options = [
-			['label' => '', 'value' => ''],
-		];
+		$schemaOptions = [];
 
 		try {
 			// Check if the form has schemaLister available
 			if (!($this->form instanceof SchemaForm)) {
-				return $options;
+				return [['label' => '', 'value' => '']];
 			}
 
 			$deckChecker = new DeckCompatibilityChecker();
@@ -229,7 +227,7 @@ class SchemaField extends PropertyField
 				// Check if the schema is deck compatible
 				if ($deckChecker->isCompatible($schemaArray)) {
 					// Use schema ID as label and $id as value
-					$options[] = [
+					$schemaOptions[] = [
 						'label' => $schemaArray['id'],
 						'value' => $schemaArray['$id'],
 					];
@@ -240,6 +238,10 @@ class SchemaField extends PropertyField
 			// This prevents breaking the form if services aren't available
 		}
 
-		return $options;
+		// Sort options alphabetically by label
+		usort($schemaOptions, fn ($a, $b) => strcasecmp($a['label'], $b['label']));
+
+		// Add empty option at the beginning
+		return array_merge([['label' => '', 'value' => '']], $schemaOptions);
 	}
 }

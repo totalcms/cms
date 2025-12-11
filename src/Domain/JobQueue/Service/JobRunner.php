@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\JobQueue\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
@@ -26,6 +28,7 @@ readonly class JobRunner
 		private ObjectExporter $objectExporter,
 		private IndexBuilder $indexBuilder,
 		private FactoryImporter $factoryImporter,
+		private CollectionRepository $collectionRepository,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -75,10 +78,77 @@ readonly class JobRunner
 
 	public function processPendingJobs(): void
 	{
+		// Get collections with pending import/update/factory jobs and enable queueRebuildOnSave
+		$collectionsToOptimize = $this->enableQueueRebuildForImportCollections();
+
+		// Process all jobs
 		while ($this->jobRepository->hasPendingJobs()) {
 			$this->processNextJob();
 		}
+
+		// Rebuild indexes and restore settings for optimized collections
+		$this->finalizeOptimizedCollections($collectionsToOptimize);
+
 		$this->logger->info('Processed all pending jobs');
+	}
+
+	/**
+	 * Find collections with pending import/update/factory jobs and enable queueRebuildOnSave.
+	 *
+	 * @return array<CollectionData> Map of collection ID to original queueRebuildOnSave setting
+	 */
+	private function enableQueueRebuildForImportCollections(): array
+	{
+		$pendingJobs = $this->jobRepository->fetchPendingJobs();
+
+		// Find unique collections with import-type jobs
+		$importCollections = [];
+		foreach ($pendingJobs as $job) {
+			if (in_array($job->type, [JobData::TYPE_IMPORT, JobData::TYPE_UPDATE, JobData::TYPE_FACTORY], true)) {
+				$importCollections[] = $job->collection;
+			}
+		}
+
+		// Enable queueRebuildOnSave for each collection, storing original settings
+		$collectionTempEnabledRebuild = [];
+		foreach ($importCollections as $collectionId) {
+			$collection = $this->collectionRepository->fetchCollection($collectionId);
+			if (!$collection instanceof CollectionData || $collection->queueRebuildOnSave === true) {
+				continue;
+			}
+
+			// Enable if not already enabled
+			$collection->queueRebuildOnSave = true;
+			$this->collectionRepository->saveCollection($collection);
+			$this->logger->info('Enabled queueRebuildOnSave for import optimization', [
+				'collection' => $collectionId,
+			]);
+
+			// Store original setting
+			$collectionTempEnabledRebuild[] = $collection;
+		}
+
+		return $collectionTempEnabledRebuild;
+	}
+
+	/**
+	 * Rebuild indexes and restore original queueRebuildOnSave settings.
+	 *
+	 * @param array<CollectionData> $collectionsToDisableRebuild Map of collection ID to original setting
+	 */
+	private function finalizeOptimizedCollections(array $collectionsToDisableRebuild): void
+	{
+		foreach ($collectionsToDisableRebuild as $collection) {
+			// Rebuild the index for this collection
+			$this->indexBuilder->buildIndex($collection->id);
+			$this->logger->info('Rebuilt index after import', ['collection' => $collection->id]);
+
+			$collection->queueRebuildOnSave = false;
+			$this->collectionRepository->saveCollection($collection);
+			$this->logger->info('Restored queueRebuildOnSave setting', [
+				'collection' => $collection->id,
+			]);
+		}
 	}
 
 	/** @SuppressWarnings("PHPMD.ElseExpression") */

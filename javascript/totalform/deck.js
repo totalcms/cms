@@ -252,6 +252,11 @@ export default class DeckField extends TotalField {
 			}
 
             itemIds.push(itemId);
+
+			// Validate fields inside this deck item
+			if (!item.validate()) {
+				isValid = false;
+			}
         });
 
 		this.valid = isValid;

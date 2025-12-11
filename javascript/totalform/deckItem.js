@@ -228,4 +228,21 @@ export default class DeckItem {
     saved() {
         this.container.classList.remove("unsaved");
     }
+
+	validate() {
+		let isValid = true;
+
+		// Validate all form fields within this deck item's dialog
+		const formFieldContainers = this.dialog.dialog.querySelectorAll('.form-field');
+
+		for (const container of formFieldContainers) {
+			if (container.totalfield && typeof container.totalfield.validate === 'function') {
+				if (!container.totalfield.validate()) {
+					isValid = false;
+				}
+			}
+		}
+
+		return isValid;
+	}
 }
