@@ -581,15 +581,15 @@ class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>>|null $collection
 	 * @param array<array<string,mixed>> $rules
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public static function filterCollection(array $collection, array $rules): array
+	public static function filterCollection(?array $collection, array $rules): array
 	{
-		if ($rules === []) {
-			return $collection;
+		if ($collection === null || $collection === [] || $rules === []) {
+			return $collection ?? [];
 		}
 
 		$refiner = new CollectionRefiner($collection);
@@ -598,15 +598,15 @@ class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>>|null $collection
 	 * @param array<array<string,mixed>> $rules
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public static function sortCollection(array $collection, array $rules): array
+	public static function sortCollection(?array $collection, array $rules): array
 	{
-		if ($rules === []) {
-			return $collection;
+		if ($collection === null || $collection === [] || $rules === []) {
+			return $collection ?? [];
 		}
 
 		$sorter = new CollectionSorter($collection);
