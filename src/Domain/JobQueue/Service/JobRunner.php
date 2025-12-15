@@ -294,4 +294,159 @@ readonly class JobRunner
 			]);
 		}
 	}
+
+	/**
+	 * Get queue statistics by status.
+	 *
+	 * @return array<string,int>
+	 */
+	public function getQueueStatus(): array
+	{
+		return $this->jobRepository->queueByStatus();
+	}
+
+	/**
+	 * Reset stuck in-progress jobs (from crashed processes) back to pending.
+	 *
+	 * @return int Number of jobs reset
+	 */
+	public function resetStuckJobs(): int
+	{
+		$count = $this->jobRepository->resetInProgressJobs();
+		if ($count > 0) {
+			$this->logger->info('Reset stuck in-progress jobs', ['count' => $count]);
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Get queue statistics by job type.
+	 *
+	 * @return array<string,int>
+	 */
+	public function getQueueByType(): array
+	{
+		return $this->jobRepository->queueByType();
+	}
+
+	/**
+	 * Check if there are pending jobs.
+	 */
+	public function hasPendingJobs(): bool
+	{
+		return $this->jobRepository->hasPendingJobs();
+	}
+
+	/**
+	 * Enable queue rebuild optimization for import-type jobs.
+	 * Call this before processing jobs, and call finalizeImportOptimization() after.
+	 *
+	 * @return array<CollectionData> Collections that were optimized
+	 */
+	public function enableImportOptimization(): array
+	{
+		return $this->enableQueueRebuildForImportCollections();
+	}
+
+	/**
+	 * Finalize import optimization by rebuilding indexes and restoring settings.
+	 *
+	 * @param array<CollectionData> $collections Collections to finalize
+	 */
+	public function finalizeImportOptimization(array $collections): void
+	{
+		$this->finalizeOptimizedCollections($collections);
+	}
+
+	/**
+	 * Process and return the next job with details.
+	 *
+	 * @return array{success: bool, job: array<string,mixed>, error?: string}|null
+	 */
+	public function processNextJobWithDetails(): ?array
+	{
+		if (!$this->jobRepository->hasPendingJobs()) {
+			return null;
+		}
+
+		$job = $this->jobRepository->fetchNextJob();
+		try {
+			$this->processJob($job);
+			$this->jobRepository->delete($job);
+			$this->logger->info('Job processed successfully', $job->toArray());
+
+			return [
+				'success' => true,
+				'job'     => $job->toArray(),
+			];
+		} catch (\Throwable $e) {
+			$this->jobRepository->markFailed($job, $e->getMessage());
+
+			$logContext = array_merge($job->toArray(), [
+				'error'        => $e->getMessage(),
+				'backtrace'    => "\n" . $e->getTraceAsString() . "\n",
+				'attempt'      => $job->attempts,
+				'max_attempts' => self::MAX_RETRY_ATTEMPTS,
+			]);
+
+			if ($job->attempts >= self::MAX_RETRY_ATTEMPTS) {
+				$this->logger->error('Job failed and exceeded max retry attempts', $logContext);
+			} else {
+				$this->logger->error('Job failed, can be retried', $logContext);
+			}
+
+			return [
+				'success' => false,
+				'job'     => $job->toArray(),
+				'error'   => $e->getMessage(),
+			];
+		}
+	}
+
+	/**
+	 * Retry failed jobs and return statistics.
+	 *
+	 * @return array{total_failed: int, retried: int, skipped: int}
+	 */
+	public function retryFailedJobsWithStats(): array
+	{
+		$failedJobs   = $this->jobRepository->fetchFailedJobs();
+		$retriedCount = 0;
+		$skippedCount = 0;
+
+		foreach ($failedJobs as $job) {
+			if ($job->attempts >= self::MAX_RETRY_ATTEMPTS) {
+				$this->logger->warning('Job exceeded max retry attempts, skipping', [
+					'job_id'       => $job->id,
+					'attempts'     => $job->attempts,
+					'max_attempts' => self::MAX_RETRY_ATTEMPTS,
+					'type'         => $job->type,
+					'collection'   => $job->collection,
+				]);
+				$skippedCount++;
+				continue;
+			}
+
+			$this->jobRepository->resetJobStatus($job);
+			$this->logger->info('Job retried', array_merge($job->toArray(), [
+				'attempt'      => $job->attempts + 1,
+				'max_attempts' => self::MAX_RETRY_ATTEMPTS,
+			]));
+			$retriedCount++;
+		}
+
+		$this->logger->info('Retry summary', [
+			'total_failed' => count($failedJobs),
+			'retried'      => $retriedCount,
+			'skipped'      => $skippedCount,
+			'max_attempts' => self::MAX_RETRY_ATTEMPTS,
+		]);
+
+		return [
+			'total_failed' => count($failedJobs),
+			'retried'      => $retriedCount,
+			'skipped'      => $skippedCount,
+		];
+	}
 }
