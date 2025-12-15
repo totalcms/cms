@@ -135,6 +135,67 @@ class IndexRepository extends StorageRepository
 	}
 
 	/**
+	 * Open a streaming index writer for memory-efficient index building.
+	 * Uses php://temp which keeps data in memory until 2MB, then spills to disk.
+	 *
+	 * @return resource File handle for streaming writes
+	 */
+	public function openIndexStream(string $collection)
+	{
+		// Use php://temp for efficient memory/disk hybrid streaming
+		$handle = fopen('php://temp/maxmemory:2097152', 'w+');
+		if ($handle === false) {
+			throw new \RuntimeException('Failed to open temp stream for index writing');
+		}
+
+		// Write opening bracket
+		fwrite($handle, '{"objects":[');
+
+		return $handle;
+	}
+
+	/**
+	 * Write a single index entry to the streaming index.
+	 *
+	 * @param resource $handle
+	 * @param array<string,mixed> $entry
+	 */
+	public function writeIndexEntry($handle, array $entry, bool $isFirst): void
+	{
+		if (!$isFirst) {
+			fwrite($handle, ',');
+		}
+		$json = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		if ($json === false) {
+			throw new \RuntimeException('Failed to encode index entry: ' . json_last_error_msg());
+		}
+		fwrite($handle, $json);
+	}
+
+	/**
+	 * Close the streaming index writer and save to filesystem.
+	 *
+	 * @param resource $handle
+	 */
+	public function closeIndexStream($handle, string $collection): void
+	{
+		// Write closing bracket
+		fwrite($handle, ']}');
+
+		// Rewind stream to beginning for reading
+		rewind($handle);
+
+		// Write stream to filesystem via Flysystem
+		$indexFile = $this->buildIndexPath($collection);
+		$this->filesystem->flysystem()->writeStream($indexFile, $handle);
+
+		fclose($handle);
+
+		// Invalidate caches
+		$this->invalidateIndexCache($collection);
+	}
+
+	/**
 	 * Invalidate index-related caches for a collection.
 	 */
 	private function invalidateIndexCache(string $collection): void
