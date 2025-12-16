@@ -1,11 +1,11 @@
 {# Collection Object Table #}
-{% set objects = cms.objects(url.collection) %}
 {% set collection = cms.collection(url.collection) %}
-{% set labelPlural = cms.collection(url.collection).labelPlural|default('objects') %}
+{% set labelPlural = collection.labelPlural|default('objects') %}
+{# Use totalObjects from collection metadata - avoids loading full index #}
+{% set actualObjectCount = collection.totalObjects|default(0) %}
 
 {# Performance warning for large collections without queue rebuild enabled #}
 {% set performanceThreshold = 2500 %}
-{% set actualObjectCount = objects | length %}
 
 {% if actualObjectCount >= performanceThreshold and not collection.queueRebuildOnSave %}
 	<div class="performance-warning">
@@ -16,7 +16,7 @@
 	</div>
 {% endif %}
 
-{% if objects|length > 0 %}
+{% if actualObjectCount > 0 %}
 
 	{{ cms.form.collectionTable(url.collection) }}
 

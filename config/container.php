@@ -330,6 +330,7 @@ return [
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
 		$container->get(JobManager::class),
+		$container->get(CacheManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
