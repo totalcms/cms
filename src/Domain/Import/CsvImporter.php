@@ -10,6 +10,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LoggerFactory;
 
 class CsvImporter
@@ -118,11 +119,11 @@ class CsvImporter
 	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
-		// if (!isset($record['id'])) {
-		// 	$this->logger->warning('Skipping import of record without ID');
+		// Slugify ID to ensure consistent format
+		if (isset($record['id'])) {
+			$record['id'] = SlugData::slugify((string)$record['id']);
+		}
 
-		// 	return false;
-		// }
 		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);
@@ -151,8 +152,13 @@ class CsvImporter
 	 */
 	public function updateObject(int $offset, array $record): bool
 	{
+		// Slugify ID to ensure consistent format
+		if (isset($record['id'])) {
+			$record['id'] = SlugData::slugify((string)$record['id']);
+		}
+
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
+			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'] ?? 'no-id', $offset));
 
 			return false;
 		}

@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\GallerySaver;
@@ -84,6 +85,10 @@ class ObjectImporter
 		if (empty($objectData['id'])) {
 			throw new \InvalidArgumentException('Object ID is required for updating');
 		}
+
+		// Slugify ID to match the format used during import
+		$objectData['id'] = SlugData::slugify($objectData['id']);
+
 		if (!$this->objectFetcher->existsObject($collection, $objectData['id'])) {
 			throw new \InvalidArgumentException('Object does not exist');
 		}
