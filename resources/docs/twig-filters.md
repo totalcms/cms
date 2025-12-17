@@ -693,6 +693,47 @@ Returns a paginated slice of an array.
 </nav>
 ```
 
+#### `unique(array $array): array`
+Removes duplicate values from an array.
+
+```twig
+{% set tags = ["php", "javascript", "php", "css", "javascript"] %}
+{{ tags | unique | join(', ') }}
+{# Output: php, javascript, css #}
+
+{# Get unique categories from blog posts #}
+{% set allCategories = [] %}
+{% for post in cms.objects('blog') %}
+    {% set allCategories = allCategories | merge([post.category]) %}
+{% endfor %}
+{% set uniqueCategories = allCategories | unique %}
+
+{# Build category filter #}
+<select name="category">
+    <option value="">All Categories</option>
+    {% for category in uniqueCategories %}
+        <option value="{{ category }}">{{ category | titleize }}</option>
+    {% endfor %}
+</select>
+
+{# Unique tags across all posts #}
+{% set allTags = [] %}
+{% for post in cms.objects('blog') %}
+    {% set allTags = allTags | merge(post.tags) %}
+{% endfor %}
+{% set uniqueTags = allTags | unique | sort %}
+
+<div class="tag-cloud">
+    {% for tag in uniqueTags %}
+        <a href="/blog?tag={{ tag | urlencode }}">{{ tag }}</a>
+    {% endfor %}
+</div>
+
+{# Remove duplicate authors #}
+{% set authors = posts | map(p => p.author) | unique %}
+<p>Authors: {{ authors | join(', ') }}</p>
+```
+
 ## Developer Filters
 
 ### Type Conversion
