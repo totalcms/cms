@@ -75,23 +75,19 @@ $settings['cache'] = [
 
 // Path to tcms-data folder - smart detection
 // Priority:
+// Auto-detect tcms-data directory:
 // 1. DOCUMENT_ROOT/../tcms-data if it exists
 // 2. DOCUMENT_ROOT/tcms-data if it exists
-// 3. DOCUMENT_ROOT/../tcms-data if parent directory is writable
-// 4. DOCUMENT_ROOT/tcms-data as last resort
-// Note: DOCUMENT_ROOT/tcms.php can always override this default
+// 3. Default to DOCUMENT_ROOT/tcms-data (setup wizard will create it)
+// Note: DOCUMENT_ROOT/tcms.php can override this for custom paths
 $parentDatadir = dirname($settings['docroot']) . '/tcms-data';
 $localDatadir  = $settings['docroot'] . '/tcms-data';
 
-if (file_exists($parentDatadir)) {
-	$settings['datadir'] = $parentDatadir;
-} elseif (file_exists($localDatadir)) {
-	$settings['datadir'] = $localDatadir;
-} elseif (is_writable(dirname($settings['docroot']))) {
-	$settings['datadir'] = $parentDatadir;
-} else {
-	$settings['datadir'] = $localDatadir;
-}
+// Auto-detect datadir: only use directories that actually exist
+// Priority: parent (above docroot) > local (in docroot)
+// Default to local (docroot) path
+// The setup wizard will create the chosen directory
+$settings['datadir'] = is_dir($parentDatadir) ? $parentDatadir : $localDatadir;
 
 // Error Handling
 $settings['error'] = [
