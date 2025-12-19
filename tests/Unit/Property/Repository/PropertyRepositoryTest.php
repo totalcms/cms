@@ -432,7 +432,7 @@ class PropertyRepositoryTest extends TestCase
 		$white     = imagecolorallocate($image, 255, 255, 255);
 		imagefill($image, 0, 0, $white);
 		imagejpeg($image, $tempImage);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		$this->mockFilesystem
 			->expects($this->once())
@@ -488,7 +488,7 @@ class PropertyRepositoryTest extends TestCase
 		$white     = imagecolorallocate($image, 255, 255, 255);
 		imagefill($image, 0, 0, $white);
 		imagejpeg($image, $tempImage);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		$this->mockFilesystem
 			->expects($this->once())

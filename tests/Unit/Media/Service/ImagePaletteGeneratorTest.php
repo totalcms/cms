@@ -54,7 +54,7 @@ final class ImagePaletteGeneratorTest extends TestCase
 		imagefilledrectangle($image, $width / 2, $height / 2, $width, $height, $yellow);
 
 		imagejpeg($image, $imagePath, 90);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		return $imagePath;
 	}
@@ -168,7 +168,7 @@ final class ImagePaletteGeneratorTest extends TestCase
 		$red     = imagecolorallocate($image, 255, 0, 0);
 		imagefill($image, 0, 0, $red);
 		imagepng($image, $pngPath);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		$palette = ImagePaletteGenerator::getPalette($pngPath);
 
@@ -222,7 +222,7 @@ final class ImagePaletteGeneratorTest extends TestCase
 		$red       = imagecolorallocate($image, 255, 0, 0);
 		imagefill($image, 0, 0, $red);
 		imagejpeg($image, $imagePath, 90);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		$palette = ImagePaletteGenerator::getPalette($imagePath);
 
@@ -274,7 +274,7 @@ final class ImagePaletteGeneratorTest extends TestCase
 		}
 
 		imagejpeg($image, $imagePath, 90);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		$palette = ImagePaletteGenerator::getPalette($imagePath);
 
@@ -324,7 +324,7 @@ final class ImagePaletteGeneratorTest extends TestCase
 		imagefilledrectangle($image, 25, 25, 75, 75, $red);
 
 		imagepng($image, $imagePath);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		$palette = ImagePaletteGenerator::getPalette($imagePath);
 
