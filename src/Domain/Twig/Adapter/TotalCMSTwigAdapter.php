@@ -2408,18 +2408,24 @@ NGINX;
 		string $method = 'header',
 		int $httpStatus = 301
 	): string {
+		// Only redirect for pretty URLs - query string URLs don't need canonical redirects
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collection instanceof CollectionData || !$collection->prettyUrl) {
+			return '';
+		}
+
 		$canonicalUrl = $this->objectUrl($collectionId, $idOrObject);
 		if ($canonicalUrl === '') {
 			return ''; // No URL configured, no redirect needed
 		}
 
-		// Get current path without query string
+		// Compare paths (ignore query strings like UTM params)
 		$requestUri  = $_SERVER['REQUEST_URI'] ?? '';
 		$currentPath = strtok($requestUri, '?') ?: '';
 
-		// Check if current path matches canonical (case-insensitive, ignore trailing slashes)
 		$canonicalNormalized = rtrim(strtolower($canonicalUrl), '/');
 		$currentNormalized   = rtrim(strtolower($currentPath), '/');
+
 		if ($canonicalNormalized === $currentNormalized) {
 			return ''; // Already on canonical URL, no redirect needed
 		}
