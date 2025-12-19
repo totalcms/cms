@@ -1,4 +1,35 @@
 {# Edit Collection #}
+
+{# URL Template Warnings #}
+{% set urlValidation = cms.validateUrlTemplateFields(url.collection) %}
+{% if urlValidation.prettyUrlDisabled or urlValidation.notIndexed is not empty or urlValidation.notRequired is not empty %}
+<div class="warning-box url-template-warning">
+	<div>
+		<strong>URL Template Warning:</strong>
+		{% if urlValidation.prettyUrlDisabled %}
+		<p>
+			Template URLs require Pretty URLs to be enabled. <strong>Pretty URLs is disabled</strong> but your URL contains template syntax.
+			Currently, URLs will use query string format (<code>?id=xxx</code>) instead.
+		</p>
+		{% endif %}
+		{% if urlValidation.notIndexed is not empty %}
+		<p>
+			The following fields are <strong>not indexed</strong>:
+			<strong>{{ urlValidation.notIndexed | join(', ') }}</strong>.
+			These fields won't be available when generating URLs in sitemaps or feeds.
+		</p>
+		{% endif %}
+		{% if urlValidation.notRequired is not empty %}
+		<p>
+			The following fields are <strong>not required</strong>:
+			<strong>{{ urlValidation.notRequired | join(', ') }}</strong>.
+			Empty values will cause broken URLs with missing segments.
+		</p>
+		{% endif %}
+	</div>
+</div>
+{% endif %}
+
 {{ cms.form.collection({
 	id           : url.collection,
 	save         : cms.canAccessCollectionMeta(url.collection, 'update') ? "Save" : false,

@@ -47,6 +47,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -351,6 +352,7 @@ return [
 		$container->get(SchemaFetcher::class),
 		$container->get(DeckCompatibilityChecker::class),
 		$container->get(TemplateLister::class),
+		$container->get(ObjectUrlBuilder::class),
 		$container->get(TotalFormFactory::class),
 		$container->get(ServerChecker::class),
 		$container->get(CacheReporter::class),
