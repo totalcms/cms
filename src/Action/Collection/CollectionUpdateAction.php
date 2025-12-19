@@ -33,6 +33,9 @@ readonly class CollectionUpdateAction
 	{
 		$data = (array)$request->getParsedBody();
 
+		// Remove system-managed fields to trigger self-healing recalculation
+		unset($data['totalObjects']);
+
 		return $this->renderer->jsonItem(
 			$response,
 			$this->service->updateCollection($args['collection'], $data),

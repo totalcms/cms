@@ -736,6 +736,7 @@ return [
 		$container->get(ObjectRepository::class),
 		$container->get(IndexBuilder::class),
 		$container->get(CollectionFetcher::class),
+		$container->get(CollectionSaver::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyRepository::class),
 		$container->get(CacheManager::class),
