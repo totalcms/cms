@@ -117,7 +117,8 @@ readonly class TextWatermarkFactory
 			}
 
 			$textBox = imageftbbox($fontSize, $angle, $fontPath, $text);
-			imagedestroy($tempImage);
+			// Note: imagedestroy() removed - deprecated in PHP 8.5, GD images are auto-garbage collected since PHP 8.0
+			unset($tempImage);
 
 			if (!is_array($textBox)) {
 				throw new \RuntimeException('Failed to create text bounding box');
@@ -166,7 +167,6 @@ readonly class TextWatermarkFactory
 			imagesavealpha($image, true);
 			$transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
 			if ($transparent === false) {
-				imagedestroy($image);
 				throw new \RuntimeException('Failed to allocate transparent color');
 			}
 			imagefill($image, 0, 0, $transparent);
@@ -180,7 +180,6 @@ readonly class TextWatermarkFactory
 				max(0, min(255, $backgroundColor[2]))
 			);
 			if ($bgColor === false) {
-				imagedestroy($image);
 				throw new \RuntimeException('Failed to allocate background color');
 			}
 			imagefill($image, 0, 0, $bgColor);
@@ -196,7 +195,6 @@ readonly class TextWatermarkFactory
 			$alpha
 		);
 		if ($textColor === false) {
-			imagedestroy($image);
 			throw new \RuntimeException('Failed to allocate text color');
 		}
 
@@ -230,7 +228,6 @@ readonly class TextWatermarkFactory
 
 			$result = imagettftext($image, $fontSize, $angle, (int)$x, (int)$y, $textColor, $fontPath, $text);
 			if ($result === false) {
-				imagedestroy($image);
 				throw new \RuntimeException('Failed to render TTF text');
 			}
 		} else {
@@ -246,11 +243,11 @@ readonly class TextWatermarkFactory
 		$fullPath = sys_get_temp_dir() . '/' . $filename;
 
 		if (!imagepng($image, $fullPath)) {
-			imagedestroy($image);
 			throw new \RuntimeException('Failed to save text watermark image');
 		}
 
-		imagedestroy($image);
+		// Note: imagedestroy() removed - deprecated in PHP 8.5, GD images are auto-garbage collected since PHP 8.0
+		unset($image);
 
 		// Store in filesystem for Glide to access
 		$watermarkPath = self::WATERMARK_DIR . '/' . $filename;

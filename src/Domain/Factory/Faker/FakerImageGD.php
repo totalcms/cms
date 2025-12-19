@@ -109,7 +109,7 @@ class FakerImageGD extends Base
 		}
 
 		imagepng($image, $filepath);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		if (file_exists($filepath) === false) {
 			throw new \RuntimeException('Failed to save image to disk.');
@@ -185,7 +185,7 @@ class FakerImageGD extends Base
 		}
 
 		imagepng($image, $filepath);
-		imagedestroy($image);
+		unset($image); // GD images are auto-garbage collected since PHP 8.0
 
 		if (file_exists($filepath) === false) {
 			throw new \RuntimeException('Failed to save image to disk.');
