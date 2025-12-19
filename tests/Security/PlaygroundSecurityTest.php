@@ -16,6 +16,10 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
+	// Create the playground collection for tests (reserved collections no longer auto-create)
+	$container = $this->app->getContainer();
+	$collectionFetcher = $container->get(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher->fetchOrCreateReserved('playground');
 });
 
 describe('Playground Security', function (): void {

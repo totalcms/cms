@@ -98,4 +98,44 @@ describe('Factory Operations', function (): void {
 			expect($response->getStatusCode())->toBeIn([200, 201, 404, 405]);
 		}
 	});
+
+	it('updates collection count and totalObjects after factory import', function (): void {
+		// Create test collection
+		$collection = [
+			'id'     => 'factory-count-test',
+			'name'   => 'Factory Count Test',
+			'schema' => 'text',
+		];
+
+		postJson('/collections', $collection)->assertOk();
+
+		// Check initial counts
+		$response = get('/collections/factory-count-test');
+		$response->assertOk();
+		$initialData = json_decode((string) $response->getBody(), true);
+		$initialCount = $initialData['data']['count'] ?? 0;
+		$initialTotalObjects = $initialData['data']['totalObjects'] ?? 0;
+
+		// Run factory import
+		$factoryParams = [
+			'count'  => 5,
+			'locale' => 'en_US',
+		];
+
+		$factoryResponse = post('/api/collections/factory-count-test/factory', $factoryParams);
+
+		// If factory was successful, verify counts were updated
+		if ($factoryResponse->getStatusCode() === 200 || $factoryResponse->getStatusCode() === 201) {
+			$response = get('/collections/factory-count-test');
+			$response->assertOk();
+			$updatedData = json_decode((string) $response->getBody(), true);
+
+			$newCount = $updatedData['data']['count'] ?? 0;
+			$newTotalObjects = $updatedData['data']['totalObjects'] ?? 0;
+
+			// Both count and totalObjects should have increased by 5
+			expect($newCount)->toBe($initialCount + 5);
+			expect($newTotalObjects)->toBe($initialTotalObjects + 5);
+		}
+	});
 });

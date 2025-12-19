@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -23,6 +24,7 @@ final class SitemapBuilderFilterTest extends TestCase
 	private IndexFilter $mockIndexFilter;
 	private \PHPUnit\Framework\MockObject\MockObject $mockIndexReader;
 	private \PHPUnit\Framework\MockObject\MockObject $mockCollectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $mockObjectUrlBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
 
 	protected function setUp(): void
@@ -31,16 +33,27 @@ final class SitemapBuilderFilterTest extends TestCase
 		$mockIndexReader             = $this->createMock(IndexReader::class);
 		$this->mockIndexFilter       = new IndexFilter($mockIndexReader);
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->mockObjectUrlBuilder  = $this->createMock(ObjectUrlBuilder::class);
 		$this->mockConfig            = $this->createMock(Config::class);
 
 		$this->sitemapBuilder = new SitemapBuilder(
 			$this->mockIndexFilter,
 			$this->mockCollectionFetcher,
+			$this->mockObjectUrlBuilder,
 			$this->mockConfig
 		);
 
 		// Mock config domain
 		$this->mockConfig->domain = 'example.com';
+
+		// Mock ObjectUrlBuilder to return simple URL based on object id
+		$this->mockObjectUrlBuilder
+			->method('buildUrl')
+			->willReturnCallback(fn (CollectionData $collection, array $object): string => '/blog/' . $object['id']);
+
+		$this->mockObjectUrlBuilder
+			->method('hasEmptySegments')
+			->willReturn(false);
 
 		// Store the mock IndexReader for use in setupMocksWithTestData
 		$this->mockIndexReader = $mockIndexReader;
