@@ -30,9 +30,9 @@ readonly class FirstLoginChecker
 			return true;
 		}
 
-		// Try to fetch the collection, which will create it if it's a reserved collection
+		// Ensure the auth collection exists (reserved collections don't auto-create)
 		try {
-			$this->collectionFetcher->fetchCollection($this->collection);
+			$this->collectionFetcher->fetchOrCreateReserved($this->collection);
 			$index = $this->indexReader->fetchIndex($this->collection);
 
 			return $index->objects->isEmpty();
