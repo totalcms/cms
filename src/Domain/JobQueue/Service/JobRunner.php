@@ -113,7 +113,7 @@ readonly class JobRunner
 		$collectionTempEnabledRebuild = [];
 		foreach ($importCollections as $collectionId) {
 			$collection = $this->collectionRepository->fetchCollection($collectionId);
-			if (!$collection instanceof CollectionData || $collection->queueRebuildOnSave === true) {
+			if (!$collection instanceof CollectionData || $collection->queueRebuildOnSave) {
 				continue;
 			}
 

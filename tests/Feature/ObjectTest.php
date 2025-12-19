@@ -26,8 +26,8 @@ beforeEach(function (): void {
 	}
 	$this->setUpApp(bootstrap());
 	// Create the blog collection for tests (reserved collections no longer auto-create)
-	$container = $this->app->getContainer();
-	$collectionFetcher = $container->get(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$container         = $this->app->getContainer();
+	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('blog');
 });
 

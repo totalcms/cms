@@ -112,8 +112,8 @@ describe('Factory Operations', function (): void {
 		// Check initial counts
 		$response = get('/collections/factory-count-test');
 		$response->assertOk();
-		$initialData = json_decode((string) $response->getBody(), true);
-		$initialCount = $initialData['data']['count'] ?? 0;
+		$initialData         = json_decode((string)$response->getBody(), true);
+		$initialCount        = $initialData['data']['count'] ?? 0;
 		$initialTotalObjects = $initialData['data']['totalObjects'] ?? 0;
 
 		// Run factory import
@@ -128,9 +128,9 @@ describe('Factory Operations', function (): void {
 		if ($factoryResponse->getStatusCode() === 200 || $factoryResponse->getStatusCode() === 201) {
 			$response = get('/collections/factory-count-test');
 			$response->assertOk();
-			$updatedData = json_decode((string) $response->getBody(), true);
+			$updatedData = json_decode((string)$response->getBody(), true);
 
-			$newCount = $updatedData['data']['count'] ?? 0;
+			$newCount        = $updatedData['data']['count'] ?? 0;
 			$newTotalObjects = $updatedData['data']['totalObjects'] ?? 0;
 
 			// Both count and totalObjects should have increased by 5

@@ -119,7 +119,7 @@ output("Total CMS Job Processor\n");
 printSeparator();
 
 if ($verbose) {
-	output("Memory limit: " . ini_get('memory_limit') . "\n");
+	output('Memory limit: ' . ini_get('memory_limit') . "\n");
 }
 
 $startTime = microtime(true);
@@ -175,13 +175,13 @@ try {
 	// Enable import optimization (defers index rebuilding until all imports are done)
 	$optimizedCollections = $jobRunner->enableImportOptimization();
 	if (count($optimizedCollections) > 0 && $verbose) {
-		output("  Optimizing " . count($optimizedCollections) . " collection(s) for bulk import\n");
+		output('  Optimizing ' . count($optimizedCollections) . " collection(s) for bulk import\n");
 	}
 
 	// Track processing stats
-	$processed = 0;
-	$succeeded = 0;
-	$failed    = 0;
+	$processed        = 0;
+	$succeeded        = 0;
+	$failed           = 0;
 	$jobsByCollection = [];
 	$jobsByType       = [];
 
@@ -216,7 +216,7 @@ try {
 			$error = $result['error'] ?? 'Unknown error';
 			if ($verbose) {
 				output(sprintf("  [FAIL] #%-5d %-10s %s\n", $job['id'], $type, $collection));
-				output("         Error: " . substr($error, 0, 60) . (strlen($error) > 60 ? '...' : '') . "\n");
+				output('         Error: ' . substr($error, 0, 60) . (strlen($error) > 60 ? '...' : '') . "\n");
 			}
 		}
 
@@ -264,7 +264,7 @@ try {
 	printTableRow($finalStatus);
 } catch (Throwable $e) {
 	output("\nError: " . $e->getMessage() . "\n");
-	output("File: " . $e->getFile() . ":" . $e->getLine() . "\n");
+	output('File: ' . $e->getFile() . ':' . $e->getLine() . "\n");
 	if ($verbose) {
 		output("Stack trace:\n" . $e->getTraceAsString() . "\n");
 	}

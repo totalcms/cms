@@ -28,6 +28,7 @@ readonly class ObjectUrlBuilder
 	 *
 	 * @param CollectionData $collectionData The collection configuration
 	 * @param array<string,mixed> $object The object data (must include 'id')
+	 *
 	 * @return string The rendered URL
 	 */
 	public function buildUrl(CollectionData $collectionData, array $object): string
@@ -38,7 +39,7 @@ readonly class ObjectUrlBuilder
 			return '';
 		}
 
-		$id = (string) ($object['id'] ?? '');
+		$id = (string)($object['id'] ?? '');
 
 		// If prettyUrl is disabled, always use query string format (ignore template syntax)
 		if (!$collectionData->prettyUrl) {
@@ -48,6 +49,7 @@ readonly class ObjectUrlBuilder
 		// If no template syntax, use simple pretty URL format
 		if (!$this->isTemplateUrl($url)) {
 			$url = rtrim($url, '/');
+
 			return sprintf('%s/%s', $url, $id);
 		}
 
@@ -64,30 +66,27 @@ readonly class ObjectUrlBuilder
 	 * Render a URL template with object data.
 	 * Supports basic Twig-like syntax: {{ field }} and {{ field | filter | filter }}
 	 * All values are automatically slugified for URL safety unless 'raw' filter is used.
-	 * Available filters: lower, upper, trim, raw (skip auto-slugify)
+	 * Available filters: lower, upper, trim, raw (skip auto-slugify).
 	 *
 	 * @param string $template The URL template
 	 * @param array<string,mixed> $data The object data
+	 *
 	 * @return string The rendered URL
 	 */
 	private function renderUrlTemplate(string $template, array $data): string
 	{
 		// Match {{ field }} or {{ field | filter | filter }}
-		return (string) preg_replace_callback(
+		return (string)preg_replace_callback(
 			'/\{\{\s*(\w+)(\s*\|[^}]*)?\s*\}\}/',
 			function (array $matches) use ($data): string {
-				$field = $matches[1];
+				$field   = $matches[1];
 				$filters = isset($matches[2]) ? trim($matches[2]) : '';
 
 				// Get the value from data
 				$value = $data[$field] ?? '';
 
 				// Convert to string
-				if (is_array($value)) {
-					$value = '';
-				} else {
-					$value = (string) $value;
-				}
+				$value = is_array($value) ? '' : (string)$value;
 
 				// Check for 'raw' filter which skips auto-slugify
 				$skipSlugify = str_contains($filters, 'raw');
@@ -114,12 +113,13 @@ readonly class ObjectUrlBuilder
 	 *
 	 * @param string $value The value to filter
 	 * @param string $filterString Filters like "| lower | trim"
+	 *
 	 * @return string The filtered value
 	 */
 	private function applyFilters(string $value, string $filterString): string
 	{
 		// Parse filters: "| lower | trim" -> ['lower', 'trim']
-		$filters = array_filter(array_map('trim', explode('|', $filterString)));
+		$filters = array_filter(array_map(trim(...), explode('|', $filterString)));
 
 		foreach ($filters as $filter) {
 			$value = match ($filter) {
@@ -143,7 +143,7 @@ readonly class ObjectUrlBuilder
 		$text = strtolower($text);
 
 		// Replace non-alphanumeric characters with hyphens
-		$text = (string) preg_replace('/[^a-z0-9]+/', '-', $text);
+		$text = (string)preg_replace('/[^a-z0-9]+/', '-', $text);
 
 		// Remove leading/trailing hyphens
 		return trim($text, '-');
@@ -165,13 +165,14 @@ readonly class ObjectUrlBuilder
 	public function hasEmptySegments(string $url): bool
 	{
 		// Match consecutive slashes (empty segment)
-		return (bool) preg_match('#//+#', $url);
+		return (bool)preg_match('#//+#', $url);
 	}
 
 	/**
 	 * Extract field names from a Twig template string.
 	 *
 	 * @param string $template The Twig template string
+	 *
 	 * @return array<string> Field names found in template
 	 */
 	public function extractTemplateFields(string $template): array
@@ -195,6 +196,7 @@ readonly class ObjectUrlBuilder
 	 *
 	 * @param string $urlTemplate The URL template string
 	 * @param string $schemaId The schema ID to check against
+	 *
 	 * @return array{notIndexed: array<string>, notRequired: array<string>}
 	 */
 	public function validateTemplateFields(string $urlTemplate, string $schemaId): array
@@ -234,6 +236,6 @@ readonly class ObjectUrlBuilder
 	private function containsIdTemplate(string $url): bool
 	{
 		// Check for {{ id }} with optional whitespace
-		return (bool) preg_match('/\{\{\s*id\s*(?:\|[^}]*)?\}\}/', $url);
+		return (bool)preg_match('/\{\{\s*id\s*(?:\|[^}]*)?\}\}/', $url);
 	}
 }

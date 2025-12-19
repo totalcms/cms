@@ -18,15 +18,15 @@ final class ObjectUrlBuilderTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
-		$this->builder = new ObjectUrlBuilder($this->schemaFetcher);
+		$this->builder       = new ObjectUrlBuilder($this->schemaFetcher);
 	}
 
 	private function createCollection(string $url, bool $prettyUrl = true): CollectionData
 	{
-		$collection = new CollectionData();
-		$collection->id = 'test-collection';
-		$collection->schema = 'blog';
-		$collection->url = $url;
+		$collection            = new CollectionData();
+		$collection->id        = 'test-collection';
+		$collection->schema    = 'blog';
+		$collection->url       = $url;
 		$collection->prettyUrl = $prettyUrl;
 
 		return $collection;
@@ -39,7 +39,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlReturnsEmptyStringWhenUrlEmpty(): void
 	{
 		$collection = $this->createCollection('');
-		$object = ['id' => 'my-post'];
+		$object     = ['id' => 'my-post'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -49,7 +49,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlUsesQueryStringWhenPrettyUrlDisabled(): void
 	{
 		$collection = $this->createCollection('/news/', false);
-		$object = ['id' => 'my-post'];
+		$object     = ['id' => 'my-post'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -60,7 +60,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	{
 		// Even with template syntax, should use query string when prettyUrl is disabled
 		$collection = $this->createCollection('/news/{{ category }}/{{ id }}', false);
-		$object = ['id' => 'my-post', 'category' => 'tech'];
+		$object     = ['id' => 'my-post', 'category' => 'tech'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -70,7 +70,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlUsesSimplePrettyUrlWithoutTemplate(): void
 	{
 		$collection = $this->createCollection('/news/');
-		$object = ['id' => 'my-post'];
+		$object     = ['id' => 'my-post'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -80,7 +80,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlTrimsTrailingSlashForSimplePrettyUrl(): void
 	{
 		$collection = $this->createCollection('/news');
-		$object = ['id' => 'my-post'];
+		$object     = ['id' => 'my-post'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -90,7 +90,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlRendersTemplateWithObjectData(): void
 	{
 		$collection = $this->createCollection('/news/{{ category }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => 'technology'];
+		$object     = ['id' => 'my-post', 'category' => 'technology'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -100,7 +100,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlAutoAppendsIdWhenNotInTemplate(): void
 	{
 		$collection = $this->createCollection('/news/{{ category }}');
-		$object = ['id' => 'my-post', 'category' => 'tech'];
+		$object     = ['id' => 'my-post', 'category' => 'tech'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -110,7 +110,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlSlugifiesValues(): void
 	{
 		$collection = $this->createCollection('/news/{{ category }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => 'Technology & Science'];
+		$object     = ['id' => 'my-post', 'category' => 'Technology & Science'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -120,7 +120,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlHandlesMissingFieldsAsEmptyStrings(): void
 	{
 		$collection = $this->createCollection('/news/{{ category }}/{{ id }}');
-		$object = ['id' => 'my-post']; // category missing
+		$object     = ['id' => 'my-post']; // category missing
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -130,7 +130,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlHandlesArrayValuesAsEmpty(): void
 	{
 		$collection = $this->createCollection('/news/{{ tags }}/{{ id }}');
-		$object = ['id' => 'my-post', 'tags' => ['tech', 'news']];
+		$object     = ['id' => 'my-post', 'tags' => ['tech', 'news']];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -144,7 +144,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlAppliesLowerFilter(): void
 	{
 		$collection = $this->createCollection('/news/{{ category | lower }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => 'TECHNOLOGY'];
+		$object     = ['id' => 'my-post', 'category' => 'TECHNOLOGY'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -154,7 +154,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlAppliesUpperFilter(): void
 	{
 		$collection = $this->createCollection('/news/{{ category | upper | raw }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => 'technology'];
+		$object     = ['id' => 'my-post', 'category' => 'technology'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -164,7 +164,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlAppliesTrimFilter(): void
 	{
 		$collection = $this->createCollection('/news/{{ category | trim }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => '  tech  '];
+		$object     = ['id' => 'my-post', 'category' => '  tech  '];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -174,7 +174,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlRawFilterSkipsSlugify(): void
 	{
 		$collection = $this->createCollection('/news/{{ category | raw }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => 'Technology & Science'];
+		$object     = ['id' => 'my-post', 'category' => 'Technology & Science'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -185,7 +185,7 @@ final class ObjectUrlBuilderTest extends TestCase
 	public function testBuildUrlAppliesMultipleFilters(): void
 	{
 		$collection = $this->createCollection('/news/{{ category | trim | lower }}/{{ id }}');
-		$object = ['id' => 'my-post', 'category' => '  TECH  '];
+		$object     = ['id' => 'my-post', 'category' => '  TECH  '];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
@@ -273,9 +273,9 @@ final class ObjectUrlBuilderTest extends TestCase
 
 	public function testValidateTemplateFieldsReturnsNotIndexedFields(): void
 	{
-		$schema = new SchemaData();
-		$schema->id = 'blog';
-		$schema->index = ['title', 'date'];
+		$schema           = new SchemaData();
+		$schema->id       = 'blog';
+		$schema->index    = ['title', 'date'];
 		$schema->required = ['title'];
 
 		$this->schemaFetcher
@@ -290,9 +290,9 @@ final class ObjectUrlBuilderTest extends TestCase
 
 	public function testValidateTemplateFieldsReturnsNotRequiredFields(): void
 	{
-		$schema = new SchemaData();
-		$schema->id = 'blog';
-		$schema->index = ['title', 'category'];
+		$schema           = new SchemaData();
+		$schema->id       = 'blog';
+		$schema->index    = ['title', 'category'];
 		$schema->required = ['title'];
 
 		$this->schemaFetcher
@@ -307,9 +307,9 @@ final class ObjectUrlBuilderTest extends TestCase
 
 	public function testValidateTemplateFieldsExcludesIdFromValidation(): void
 	{
-		$schema = new SchemaData();
-		$schema->id = 'blog';
-		$schema->index = []; // id not in index
+		$schema           = new SchemaData();
+		$schema->id       = 'blog';
+		$schema->index    = []; // id not in index
 		$schema->required = []; // id not in required
 
 		$this->schemaFetcher

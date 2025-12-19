@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Feed\Service;
 
 use FeedWriter\Item;
 use FeedWriter\RSS2;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -88,7 +87,7 @@ class RssBuilder
 				continue;
 			}
 
-			$item = $this->createItem($collectionData, $object, $url);
+			$item = $this->createItem($object, $url);
 			$this->feed->addItem($item);
 		}
 
@@ -96,7 +95,7 @@ class RssBuilder
 	}
 
 	/** @param array<string,mixed> $object */
-	private function createItem(CollectionData $collection, array $object, string $url): Item
+	private function createItem(array $object, string $url): Item
 	{
 		$id      = $object['id'];
 		$title   = $object[$this->fieldMap['title']] ?? false;

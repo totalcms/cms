@@ -314,7 +314,7 @@ readonly class TotalFormFactory
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		$cacheKey       = null;
 
-		if ($collectionData !== null && $collectionData->totalObjects > 1000) {
+		if ($collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData && $collectionData->totalObjects > 1000) {
 			// Use lastUpdated as cache buster - changes whenever objects are modified
 			$lastUpdated = $collectionData->lastUpdated ?? '';
 			$cacheKey    = "table:{$collection}:" . md5($lastUpdated);

@@ -707,6 +707,7 @@ NGINX;
 		if ($this->objectUrlBuilder->isTemplateUrl($collectionData->url)) {
 			try {
 				$object = $this->objectFetcher->fetchObject($collectionId, $idOrObject);
+
 				return $this->objectUrlBuilder->buildUrl($collectionData, $object->toArray());
 			} catch (\Exception) {
 				// Fall back to legacy behavior if object fetch fails
@@ -2351,7 +2352,7 @@ NGINX;
 			return $empty;
 		}
 
-		$result = $this->objectUrlBuilder->validateTemplateFields($collection->url, $collection->schema);
+		$result                      = $this->objectUrlBuilder->validateTemplateFields($collection->url, $collection->schema);
 		$result['prettyUrlDisabled'] = !$collection->prettyUrl;
 
 		return $result;
@@ -2397,6 +2398,7 @@ NGINX;
 	 * @param string|array<string,mixed> $idOrObject Object ID or full object data
 	 * @param string $method Redirect method: 'header' (HTTP redirect), 'meta' (meta refresh), 'js' (JavaScript), or 'both' (meta+js)
 	 * @param int $httpStatus HTTP status code (301 permanent, 302 temporary) - used with 'header' method
+	 *
 	 * @return string HTML for redirect, or empty string if no redirect needed (header method exits immediately)
 	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -2406,7 +2408,7 @@ NGINX;
 		string $collectionId,
 		string|array $idOrObject,
 		string $method = 'header',
-		int $httpStatus = 301
+		int $httpStatus = 301,
 	): string {
 		// Only redirect for pretty URLs - query string URLs don't need canonical redirects
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
@@ -2431,8 +2433,8 @@ NGINX;
 		}
 
 		// Preserve query parameters from the current request
-		$queryString = parse_url($requestUri, PHP_URL_QUERY);
-		if ($queryString !== null && $queryString !== false && $queryString !== '') {
+		$queryString = parse_url((string)$requestUri, PHP_URL_QUERY);
+		if (!in_array($queryString, [null, false, ''], true)) {
 			$canonicalUrl .= '?' . $queryString;
 		}
 
@@ -2479,6 +2481,7 @@ NGINX;
 	 *
 	 * @param string $collectionId Collection ID
 	 * @param string|array<string,mixed> $idOrObject Object ID or full object data
+	 *
 	 * @return string The absolute canonical URL
 	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
