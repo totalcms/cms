@@ -137,7 +137,7 @@ readonly class TwigLintService
 		$maxLineNum  = strlen((string)$endLine);
 
 		for ($i = $startLine; $i <= $endLine; $i++) {
-			$lineNum    = str_pad((string)$i, $maxLineNum, ' ', STR_PAD_LEFT);
+			$lineNum     = str_pad((string)$i, $maxLineNum, ' ', STR_PAD_LEFT);
 			$lineContent = $lines[$i - 1] ?? '';
 
 			if ($i === $errorLine) {

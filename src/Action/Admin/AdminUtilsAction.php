@@ -219,7 +219,7 @@ readonly class AdminUtilsAction
 			];
 		}
 
-		if (!str_starts_with($realPath, $documentRoot)) {
+		if (!str_starts_with($realPath, (string)$documentRoot)) {
 			return [
 				'success' => false,
 				'error'   => [
