@@ -58,8 +58,8 @@
         },
         "url": {
 			"type"        : "string",
-			"label"       : "Object Path or URL",
-			"help"        : "The base url or path for objects stored in this collection.",
+			"label"       : "Object Path",
+			"help"        : "The url path to objects stored in this collection.",
 			"placeholder" : "/objects/object.php",
 			"field"       : "text"
         },
