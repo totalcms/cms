@@ -178,4 +178,38 @@ class CollectionData
 
 		return $defaults[$schemaId] ?? ['labelPlural' => '', 'labelSingular' => ''];
 	}
+
+	/**
+	 * Normalize a URL to just the path component.
+	 * Strips the scheme and domain if present.
+	 *
+	 * Examples:
+	 *   https://example.com/page/ => /page/
+	 *   /page/ => /page/
+	 *   page/ => /page/
+	 */
+	public static function normalizeUrlToPath(string $url): string
+	{
+		if ($url === '') {
+			return '';
+		}
+
+		// Parse the URL to extract just the path
+		$parsed = parse_url($url);
+
+		// If it has a host, it's a full URL - extract just the path
+		if (isset($parsed['host'])) {
+			$path = $parsed['path'] ?? '/';
+		} else {
+			// No host means it's already a path (or relative)
+			$path = $url;
+		}
+
+		// Ensure path starts with /
+		if ($path !== '' && $path[0] !== '/') {
+			$path = '/' . $path;
+		}
+
+		return $path;
+	}
 }

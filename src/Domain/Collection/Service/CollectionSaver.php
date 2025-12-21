@@ -37,6 +37,11 @@ readonly class CollectionSaver
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 
+		// Normalize URL to path only (strip domain if present)
+		if (isset($data['url']) && $data['url'] !== '') {
+			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
+		}
+
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
 		// Initialize totalObjects if not set
@@ -81,6 +86,11 @@ readonly class CollectionSaver
 	 */
 	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null): CollectionData
 	{
+		// Normalize URL to path only (strip domain if present)
+		if (isset($data['url']) && $data['url'] !== '') {
+			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
+		}
+
 		$data['count']       = $this->initializeCount($collectionId, $data);
 		$data['lastUpdated'] = DateData::cleanDate();
 
