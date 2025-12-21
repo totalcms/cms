@@ -90,10 +90,20 @@ readonly class AdminUtilsAction
 
 		// Handle twig-debugger page
 		$lintResults = null;
-		if ($page === 'twig-debugger' && $request->getMethod() === 'POST') {
-			$post = (array)$request->getParsedBody();
-			if (isset($post['filepath']) && $post['filepath'] !== '') {
-				$lintResults = $this->lintTwigFile((string)$post['filepath']);
+		if ($page === 'twig-debugger') {
+			$filepath = null;
+
+			// Check POST first, then query params
+			if ($request->getMethod() === 'POST') {
+				$post     = (array)$request->getParsedBody();
+				$filepath = isset($post['filepath']) && $post['filepath'] !== '' ? (string)$post['filepath'] : null;
+			} else {
+				$query    = $request->getQueryParams();
+				$filepath = isset($query['filepath']) && $query['filepath'] !== '' ? (string)$query['filepath'] : null;
+			}
+
+			if ($filepath !== null) {
+				$lintResults = $this->lintTwigFile($filepath);
 			}
 		}
 
