@@ -247,6 +247,7 @@ class TotalCMS
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
 	 * @param array<mixed> $data
 	 */
@@ -257,8 +258,10 @@ class TotalCMS
 		try {
 			return $this->twigEngine->renderString($content, $data);
 		} catch (\Throwable $th) {
-			$error = sprintf('processBufferMacros: %s', $th->getMessage());
-			$error = HTMLUtils::element('p', $error, ['class' => 'cms-twig-error']);
+			$scriptName  = $_SERVER['SCRIPT_NAME'] ?? '';
+			$debuggerUrl = $this->config->api . '/admin/utils/twig-debugger?filepath=' . $scriptName;
+			$error       = sprintf('Twig Error: %s <a href="%s">Check in Debugger</a>', $th->getMessage(), $debuggerUrl);
+			$error       = HTMLUtils::element('p', $error, ['class' => 'cms-twig-error']);
 
 			$this->logger->error(sprintf('%s: %s', $error, $th->getTraceAsString()));
 

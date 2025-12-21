@@ -36,15 +36,18 @@ class CollectionFetcher
 			return $collection;
 		}
 
-		if ($this->storage->isReservedCollection($collectionId)) {
-			// If the collection is not found or invalid, try to create it
-			$this->storage->saveReservedCollection($collectionId);
-
-			$collection                 = $this->storage->getCollection($collectionId);
-			$this->cache[$collectionId] = $collection;
-
-			return $collection;
-		}
+		// Disabled: Auto-creating reserved collections caused issues where typing
+		// a reserved collection ID (like "blog") in the new collection form would
+		// auto-create it before the user could finish, showing "already exists" error.
+		// if ($this->storage->isReservedCollection($collectionId)) {
+		// 	// If the collection is not found or invalid, try to create it
+		// 	$this->storage->saveReservedCollection($collectionId);
+		//
+		// 	$collection                 = $this->storage->getCollection($collectionId);
+		// 	$this->cache[$collectionId] = $collection;
+		//
+		// 	return $collection;
+		// }
 
 		$this->cache[$collectionId] = null;
 
@@ -54,6 +57,28 @@ class CollectionFetcher
 	public function collectionExists(string $collectionId): bool
 	{
 		return $this->storage->collectionExists($collectionId);
+	}
+
+	/**
+	 * Fetch a reserved collection, creating it if it doesn't exist.
+	 * Use this for explicit creation (e.g., project setup), not for general fetching.
+	 */
+	public function fetchOrCreateReserved(string $collectionId): ?CollectionData
+	{
+		// If it already exists, just fetch it
+		if ($this->collectionExists($collectionId)) {
+			return $this->fetchCollection($collectionId);
+		}
+
+		// Only create if it's a reserved collection
+		if (!$this->storage->isReservedCollection($collectionId)) {
+			return null;
+		}
+
+		$this->storage->saveReservedCollection($collectionId);
+		$this->clearCache($collectionId);
+
+		return $this->fetchCollection($collectionId);
 	}
 
 	/**

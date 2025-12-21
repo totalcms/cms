@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -38,6 +39,9 @@ readonly class ObjectFactory
 				throw new \UnexpectedValueException('Object data must contain an ID or schema must have autogen settings for ID field.');
 			}
 		}
+
+		// Ensure ID is properly slugified (handles CSV imports with non-slug IDs)
+		$objectData['id'] = SlugData::slugify($objectData['id']);
 
 		$properties = $this->generateProperties($objectData, $schema);
 

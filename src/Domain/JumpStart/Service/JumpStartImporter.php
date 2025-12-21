@@ -187,7 +187,7 @@ class JumpStartImporter
 
 	private function createReservedCollection(string $collectionType): void
 	{
-		$collection = $this->collectionFetcher->fetchCollection($collectionType);
+		$collection = $this->collectionFetcher->fetchOrCreateReserved($collectionType);
 		if (!$collection instanceof CollectionData) {
 			throw new \Exception("Error creating Reserved Collection: {$collectionType}");
 		}

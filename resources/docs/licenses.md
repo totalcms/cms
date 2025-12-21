@@ -13,6 +13,7 @@ Basic collection schemas available to all editions:
 * date
 * email
 * file
+* feed
 * gallery
 * image
 * number

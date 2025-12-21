@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
@@ -71,6 +72,7 @@ class TotalCMSTwigAdapter
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
 		private readonly TemplateLister $templateLister,
+		private readonly ObjectUrlBuilder $objectUrlBuilder,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -683,14 +685,37 @@ NGINX;
 		return $collection->toArray();
 	}
 
-	public function objectUrl(string $collection, string $id): string
+	/**
+	 * Get URL for an object. Supports templated URLs when full object is provided.
+	 *
+	 * @param string $collectionId Collection ID
+	 * @param string|array<string,mixed> $idOrObject Object ID string or full object array
+	 */
+	public function objectUrl(string $collectionId, string|array $idOrObject): string
 	{
-		$collection = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collection instanceof CollectionData) {
+		$collectionData = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collectionData instanceof CollectionData) {
 			return '';
 		}
 
-		return CollectionData::objectUrl($collection, $id);
+		// If full object array provided, use ObjectUrlBuilder directly
+		if (is_array($idOrObject)) {
+			return $this->objectUrlBuilder->buildUrl($collectionData, $idOrObject);
+		}
+
+		// If template URL but only ID provided, we need the full object
+		if ($this->objectUrlBuilder->isTemplateUrl($collectionData->url)) {
+			try {
+				$object = $this->objectFetcher->fetchObject($collectionId, $idOrObject);
+
+				return $this->objectUrlBuilder->buildUrl($collectionData, $object->toArray());
+			} catch (\Exception) {
+				// Fall back to legacy behavior if object fetch fails
+			}
+		}
+
+		// Legacy behavior for non-template URLs or fallback
+		return CollectionData::objectUrl($collectionData, $idOrObject);
 	}
 
 	/**
@@ -2289,5 +2314,193 @@ NGINX;
 
 		// Return only the 10 most recent
 		return array_slice($recentObjects, 0, 10);
+	}
+
+	// -------------------------
+	// URL Template Methods
+	// -------------------------
+
+	/**
+	 * Check if a collection uses a templated URL.
+	 */
+	public function hasTemplateUrl(string $collectionId): bool
+	{
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collection instanceof CollectionData) {
+			return false;
+		}
+
+		return $this->objectUrlBuilder->isTemplateUrl($collection->url);
+	}
+
+	/**
+	 * Validate URL template fields against schema index and required fields.
+	 * Returns array with 'notIndexed', 'notRequired', and 'prettyUrlDisabled' fields.
+	 *
+	 * @return array{notIndexed: array<string>, notRequired: array<string>, prettyUrlDisabled: bool}
+	 */
+	public function validateUrlTemplateFields(string $collectionId): array
+	{
+		$empty = ['notIndexed' => [], 'notRequired' => [], 'prettyUrlDisabled' => false];
+
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collection instanceof CollectionData) {
+			return $empty;
+		}
+
+		if (!$this->objectUrlBuilder->isTemplateUrl($collection->url)) {
+			return $empty;
+		}
+
+		$result                      = $this->objectUrlBuilder->validateTemplateFields($collection->url, $collection->schema);
+		$result['prettyUrlDisabled'] = !$collection->prettyUrl;
+
+		return $result;
+	}
+
+	/**
+	 * Check if an object's URL has empty segments (missing template data).
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object ID string or full object array
+	 */
+	public function objectUrlHasEmptySegments(string $collectionId, string|array $idOrObject): bool
+	{
+		$url = $this->objectUrl($collectionId, $idOrObject);
+
+		return $url !== '' && $this->objectUrlBuilder->hasEmptySegments($url);
+	}
+
+	/**
+	 * Get the fields used in a collection's URL template.
+	 *
+	 * @return array<string>
+	 */
+	public function getUrlTemplateFields(string $collectionId): array
+	{
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collection instanceof CollectionData) {
+			return [];
+		}
+
+		if (!$this->objectUrlBuilder->isTemplateUrl($collection->url)) {
+			return [];
+		}
+
+		return $this->objectUrlBuilder->extractTemplateFields($collection->url);
+	}
+
+	/**
+	 * Redirect to the canonical object URL if current path doesn't match.
+	 * Returns empty string if no redirect needed, otherwise returns redirect HTML.
+	 * Query parameters from the current URL are preserved on the redirect.
+	 *
+	 * @param string $collectionId Collection ID
+	 * @param string|array<string,mixed> $idOrObject Object ID or full object data
+	 * @param string $method Redirect method: 'header' (HTTP redirect), 'meta' (meta refresh), 'js' (JavaScript), or 'both' (meta+js)
+	 * @param int $httpStatus HTTP status code (301 permanent, 302 temporary) - used with 'header' method
+	 *
+	 * @return string HTML for redirect, or empty string if no redirect needed (header method exits immediately)
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 */
+	public function redirectToCanonicalUrl(
+		string $collectionId,
+		string|array $idOrObject,
+		string $method = 'header',
+		int $httpStatus = 301,
+	): string {
+		// Only redirect for pretty URLs - query string URLs don't need canonical redirects
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collection instanceof CollectionData || !$collection->prettyUrl) {
+			return '';
+		}
+
+		$canonicalUrl = $this->objectUrl($collectionId, $idOrObject);
+		if ($canonicalUrl === '') {
+			return ''; // No URL configured, no redirect needed
+		}
+
+		// Compare paths (ignore query strings like UTM params)
+		$requestUri  = $_SERVER['REQUEST_URI'] ?? '';
+		$currentPath = strtok($requestUri, '?') ?: '';
+
+		$canonicalNormalized = rtrim(strtolower($canonicalUrl), '/');
+		$currentNormalized   = rtrim(strtolower($currentPath), '/');
+
+		if ($canonicalNormalized === $currentNormalized) {
+			return ''; // Already on canonical URL, no redirect needed
+		}
+
+		// Preserve query parameters from the current request
+		$queryString = parse_url((string)$requestUri, PHP_URL_QUERY);
+		if (!in_array($queryString, [null, false, ''], true)) {
+			$canonicalUrl .= '?' . $queryString;
+		}
+
+		// HTTP header redirect (best for SEO, must be called before any output)
+		if ($method === 'header') {
+			if (!headers_sent()) {
+				http_response_code($httpStatus);
+				header('Location: ' . $canonicalUrl);
+				exit;
+			}
+			// Fall back to meta refresh if headers already sent
+			$method = 'meta';
+		}
+
+		$html = '';
+
+		if ($method === 'meta' || $method === 'both') {
+			$html .= sprintf(
+				'<meta http-equiv="refresh" content="0;url=%s">',
+				htmlspecialchars($canonicalUrl, ENT_QUOTES)
+			);
+		}
+
+		if ($method === 'js' || $method === 'both') {
+			$html .= sprintf(
+				'<script>window.location.replace(%s);</script>',
+				json_encode($canonicalUrl)
+			);
+		}
+
+		// Add canonical link tag for SEO
+		$html .= sprintf(
+			'<link rel="canonical" href="%s">',
+			htmlspecialchars($canonicalUrl, ENT_QUOTES)
+		);
+
+		return $html;
+	}
+
+	/**
+	 * Get the canonical (absolute) URL for an object.
+	 * Useful for generating <link rel="canonical"> tags, redirects, and SEO.
+	 * Always returns an absolute URL with scheme and domain.
+	 *
+	 * @param string $collectionId Collection ID
+	 * @param string|array<string,mixed> $idOrObject Object ID or full object data
+	 *
+	 * @return string The absolute canonical URL
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public function canonicalObjectUrl(string $collectionId, string|array $idOrObject): string
+	{
+		$url = $this->objectUrl($collectionId, $idOrObject);
+
+		if ($url === '') {
+			return $url;
+		}
+
+		// Make URL absolute
+		if (!str_starts_with($url, 'http')) {
+			$scheme = $_SERVER['REQUEST_SCHEME'] ?? 'https';
+			$host   = $_SERVER['HTTP_HOST'] ?? $this->config->domain;
+			$url    = $scheme . '://' . $host . $url;
+		}
+
+		return $url;
 	}
 }

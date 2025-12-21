@@ -239,7 +239,7 @@ class SchemaField extends PropertyField
 		}
 
 		// Sort options alphabetically by label
-		usort($schemaOptions, fn ($a, $b) => strcasecmp($a['label'], $b['label']));
+		usort($schemaOptions, fn (array $a, array $b): int => strcasecmp((string)$a['label'], (string)$b['label']));
 
 		// Add empty option at the beginning
 		return array_merge([['label' => '', 'value' => '']], $schemaOptions);

@@ -118,7 +118,7 @@ final class JobRunnerTest extends TestCase
 		$this->collectionRepository
 			->expects($this->exactly(2))
 			->method('saveCollection')
-			->willReturnCallback(function (CollectionData $c) use (&$savedCollections) {
+			->willReturnCallback(function (CollectionData $c) use (&$savedCollections): void {
 				$savedCollections[] = $c->queueRebuildOnSave;
 			});
 
@@ -239,9 +239,7 @@ final class JobRunnerTest extends TestCase
 		$this->collectionRepository
 			->expects($this->exactly(2))
 			->method('fetchCollection')
-			->willReturnCallback(function ($id) use ($collection1, $collection2) {
-				return $id === 'collection-1' ? $collection1 : $collection2;
-			});
+			->willReturnCallback(fn ($id): CollectionData => $id === 'collection-1' ? $collection1 : $collection2);
 
 		// Each collection saved twice (enable + restore)
 		$this->collectionRepository
@@ -253,7 +251,7 @@ final class JobRunnerTest extends TestCase
 		$this->indexBuilder
 			->expects($this->exactly(2))
 			->method('buildIndex')
-			->willReturnCallback(function ($id) use (&$rebuiltCollections) {
+			->willReturnCallback(function ($id) use (&$rebuiltCollections): IndexData {
 				$rebuiltCollections[] = $id;
 
 				return new IndexData();

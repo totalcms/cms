@@ -101,6 +101,7 @@ class TotalCMSTwigFilters
 		'price',
 		'mailto',
 		'prefixSlug',
+		'unique',
 	];
 
 	/** @return array<TwigFilter> */
@@ -166,6 +167,16 @@ class TotalCMSTwigFilters
 	public static function decrypt(string $string): string
 	{
 		return Cipher::decrypt($string);
+	}
+
+	/**
+	 * @param array<mixed> $array
+	 *
+	 * @return array<mixed>
+	 */
+	public static function unique(array $array, int $flags = SORT_STRING): array
+	{
+		return array_unique($array, $flags);
 	}
 
 	public static function svgToSymbol(string $svg, string $symbolId): string

@@ -1,15 +1,16 @@
 <?php
 
 use Slim\App;
+use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Emergency\EmergencyCacheClearAction;
 use TotalCMS\Action\Emergency\EmergencyLicenseCacheClearAction;
+use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
-	// Emergency cache clear endpoint - bypasses normal authentication
+	// Emergency endpoints - bypass normal authentication
 	// Only accessible from localhost with emergency key for security
-	$app->get('/emergency/cache/clear', EmergencyCacheClearAction::class)->setName('emergency-cache-clear');
-
-	// Emergency license cache clear endpoint - for debugging license issues
-	// Clears only license cache, then visit /admin/utils/license-manager to refresh
-	$app->get('/emergency/cache/clear-license', EmergencyLicenseCacheClearAction::class)->setName('emergency-license-cache-clear');
+	$app->group('/emergency', function (RouteCollectorProxy $group): void {
+		$group->get('/cache/clear', EmergencyCacheClearAction::class)->setName('emergency-cache-clear');
+		$group->get('/cache/clear-license', EmergencyLicenseCacheClearAction::class)->setName('emergency-license-cache-clear');
+	})->add(NoCacheMiddleware::class);
 };

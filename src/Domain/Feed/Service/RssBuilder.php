@@ -4,8 +4,8 @@ namespace TotalCMS\Domain\Feed\Service;
 
 use FeedWriter\Item;
 use FeedWriter\RSS2;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
@@ -28,6 +28,7 @@ class RssBuilder
 	public function __construct(
 		private readonly IndexFilter $indexFilter,
 		private readonly CollectionFetcher $collectionFetcher,
+		private readonly ObjectUrlBuilder $objectUrlBuilder,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly Config $config,
 	) {
@@ -79,7 +80,14 @@ class RssBuilder
 		}
 
 		foreach ($objects as $object) {
-			$item = $this->createItem($collectionData, $object);
+			$url = $this->objectUrlBuilder->buildUrl($collectionData, $object);
+
+			// Skip objects with broken URLs (empty segments from missing template data)
+			if ($url === '' || $this->objectUrlBuilder->hasEmptySegments($url)) {
+				continue;
+			}
+
+			$item = $this->createItem($object, $url);
 			$this->feed->addItem($item);
 		}
 
@@ -87,7 +95,7 @@ class RssBuilder
 	}
 
 	/** @param array<string,mixed> $object */
-	private function createItem(CollectionData $collection, array $object): Item
+	private function createItem(array $object, string $url): Item
 	{
 		$id      = $object['id'];
 		$title   = $object[$this->fieldMap['title']] ?? false;
@@ -96,7 +104,6 @@ class RssBuilder
 		$media   = $object[$this->fieldMap['media']] ?? false;
 		$date    = $object[$this->fieldMap['date']] ?? time();
 		$mime    = $this->mimeType($media);
-		$url     = CollectionData::objectUrl($collection, $object['id']);
 
 		if (!str_starts_with($url, 'http')) {
 			$url = 'https://' . $this->config->domain . $url;

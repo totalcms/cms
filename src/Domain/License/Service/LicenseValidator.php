@@ -207,72 +207,71 @@ readonly class LicenseValidator
 			throw new LicenseException('Failed to initialize cURL');
 		}
 
-		try {
-			curl_setopt_array($curl, [
-				CURLOPT_URL            => $url,
-				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_POST           => true,
-				CURLOPT_POSTFIELDS     => $jsonPayload,
-				CURLOPT_HTTPHEADER     => [
-					'Content-Type: application/json',
-					'User-Agent: Total CMS/' . $this->getCurrentVersion(),
-				],
-				CURLOPT_TIMEOUT        => 30,
-				CURLOPT_CONNECTTIMEOUT => 10,
-				CURLOPT_FOLLOWLOCATION => true,
-				CURLOPT_MAXREDIRS      => 3,
-				CURLOPT_SSL_VERIFYPEER => true,
-				CURLOPT_SSL_VERIFYHOST => 2,
-				CURLOPT_USERAGENT      => 'Total CMS/' . $this->getCurrentVersion(),
-			]);
+		curl_setopt_array($curl, [
+			CURLOPT_URL            => $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_POST           => true,
+			CURLOPT_POSTFIELDS     => $jsonPayload,
+			CURLOPT_HTTPHEADER     => [
+				'Content-Type: application/json',
+				'User-Agent: Total CMS/' . $this->getCurrentVersion(),
+			],
+			CURLOPT_TIMEOUT        => 30,
+			CURLOPT_CONNECTTIMEOUT => 10,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_MAXREDIRS      => 3,
+			CURLOPT_SSL_VERIFYPEER => true,
+			CURLOPT_SSL_VERIFYHOST => 2,
+			CURLOPT_USERAGENT      => 'Total CMS/' . $this->getCurrentVersion(),
+		]);
 
-			$response  = curl_exec($curl);
-			$httpCode  = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-			$curlError = curl_error($curl);
+		$response  = curl_exec($curl);
+		$httpCode  = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		$curlError = curl_error($curl);
 
-			if ($response === false || $curlError !== '') {
-				throw new LicenseException(
-					'HTTP request failed: ' . ($curlError ?: 'Unknown cURL error')
-				);
-			}
+		// Note: curl_close() not needed - deprecated in PHP 8.5, no effect since PHP 8.0
+		// Curl handles are automatically cleaned up when they go out of scope
 
-			if (!is_string($response)) {
-				throw new LicenseException('Invalid response type from cURL');
-			}
+		if ($response === false || $curlError !== '') {
+			throw new LicenseException(
+				'HTTP request failed: ' . ($curlError ?: 'Unknown cURL error')
+			);
+		}
 
-			$decodedResponse = json_decode($response, true);
+		if (!is_string($response)) {
+			throw new LicenseException('Invalid response type from cURL');
+		}
 
-			if ($decodedResponse === null) {
-				throw new LicenseException(
-					'Invalid JSON response from license server. HTTP Code: ' . $httpCode
-				);
-			}
+		$decodedResponse = json_decode($response, true);
 
-			// Check for API error responses
+		if ($decodedResponse === null) {
+			throw new LicenseException(
+				'Invalid JSON response from license server. HTTP Code: ' . $httpCode
+			);
+		}
+
+		// Check for API error responses
+		if (isset($decodedResponse['error'])) {
+			$errorMessage = is_array($decodedResponse['error'])
+				? json_encode($decodedResponse['error'])
+				: $decodedResponse['error'];
+			throw new LicenseException(
+				$errorMessage,
+				$decodedResponse['code'] ?? $httpCode
+			);
+		}
+
+		// Check for HTTP error codes
+		if ($httpCode >= 400) {
+			$errorMessage = 'HTTP Error';
 			if (isset($decodedResponse['error'])) {
 				$errorMessage = is_array($decodedResponse['error'])
 					? json_encode($decodedResponse['error'])
 					: $decodedResponse['error'];
-				throw new LicenseException(
-					$errorMessage,
-					$decodedResponse['code'] ?? $httpCode
-				);
 			}
-
-			// Check for HTTP error codes
-			if ($httpCode >= 400) {
-				$errorMessage = 'HTTP Error';
-				if (isset($decodedResponse['error'])) {
-					$errorMessage = is_array($decodedResponse['error'])
-						? json_encode($decodedResponse['error'])
-						: $decodedResponse['error'];
-				}
-				throw new LicenseException($errorMessage, $httpCode);
-			}
-
-			return $decodedResponse;
-		} finally {
-			curl_close($curl);
+			throw new LicenseException($errorMessage, $httpCode);
 		}
+
+		return $decodedResponse;
 	}
 }

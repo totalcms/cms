@@ -6,7 +6,7 @@ use TotalCMS\Domain\Settings\Services\SettingsSaver;
 $settings = require __DIR__ . '/defaults.php';
 
 // This is used to keep stacks integration working
-// Make sure this always comes before the env settings though or preview may break
+// Make sure this always comes before the env settings though or Stacks preview may break
 if (file_exists(__DIR__ . '/tcms.php')) {
 	require __DIR__ . '/tcms.php';
 }

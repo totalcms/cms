@@ -38,6 +38,7 @@
 
 	{# Redirect to 404 if post doesn't exist #}
 	{{ cms.redirectIfNotFound(post) }}
+	{{ cms.redirectToCanonicalUrl(opts.collection, post) }}
 
 	{# Determine layout class #}
 	{% set layoutClass = 'feed-post-' ~ opts.layout %}

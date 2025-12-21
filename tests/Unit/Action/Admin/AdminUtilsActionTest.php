@@ -10,8 +10,10 @@ use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminUtilsActionTest extends TestCase
@@ -19,9 +21,11 @@ final class AdminUtilsActionTest extends TestCase
 	private AdminUtilsAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
+	private \PHPUnit\Framework\MockObject\MockObject $twigLintService;
 	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $accessGroupLister;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
@@ -30,9 +34,11 @@ final class AdminUtilsActionTest extends TestCase
 	{
 		$this->renderer              = $this->createMock(TwigRenderer::class);
 		$this->twigEngine            = $this->createMock(TwigEngine::class);
+		$this->twigLintService       = $this->createMock(TwigLintService::class);
 		$this->apiKeyFetcher         = $this->createMock(ApiKeyFetcher::class);
 		$this->accessGroupLister     = $this->createMock(AccessGroupLister::class);
 		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
+		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
 		$this->schemaLister          = $this->createMock(SchemaLister::class);
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
@@ -40,9 +46,11 @@ final class AdminUtilsActionTest extends TestCase
 		$this->action = new AdminUtilsAction(
 			$this->renderer,
 			$this->twigEngine,
+			$this->twigLintService,
 			$this->apiKeyFetcher,
 			$this->accessGroupLister,
 			$this->collectionRepository,
+			$this->collectionFetcher,
 			$this->schemaLister
 		);
 	}

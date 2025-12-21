@@ -6,6 +6,7 @@ use Faker\Generator as FakerGenerator;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -32,6 +33,7 @@ readonly class FactoryImporter
 		private ObjectRepository $objectRepository,
 		private IndexBuilder $indexBuilder,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionSaver $collectionSaver,
 		private SchemaFetcher $schemaFetcher,
 		private PropertyRepository $propertyRepository,
 		private CacheManager $cacheManager,
@@ -241,6 +243,12 @@ readonly class FactoryImporter
 
 		// Rebuild index
 		$this->indexBuilder->buildIndex($collection);
+
+		// Update collection counts for the imported objects
+		if ($importCount > 0) {
+			$this->collectionSaver->incrementCount($collection, $importCount);
+			$this->collectionSaver->incrementTotalObjects($collection, $importCount);
+		}
 
 		// Clean cache
 		$this->cleanCache();

@@ -37,6 +37,7 @@ final class CollectionSaverTest extends TestCase
 				$collection               = new CollectionData();
 				$collection->id           = $data['id'] ?? '';
 				$collection->schema       = $data['schema'] ?? 'blog';
+				$collection->count        = $data['count'] ?? 0;
 				$collection->totalObjects = $data['totalObjects'] ?? 0;
 				$collection->lastUpdated  = $data['lastUpdated'] ?? '';
 
@@ -282,5 +283,143 @@ final class CollectionSaverTest extends TestCase
 		$result = $this->saver->decrementTotalObjects('test-collection');
 
 		expect($result->totalObjects)->toBe(0);
+	}
+
+	public function testIncrementTotalObjectsWithIncrementBy(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->totalObjects = 5;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		$this->repository
+			->expects($this->once())
+			->method('fetchCollection')
+			->with('test-collection')
+			->willReturn($collectionData);
+
+		$this->repository
+			->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(function (CollectionData $collection): bool {
+				// Verify totalObjects incremented by 10
+				expect($collection->totalObjects)->toBe(15);
+
+				return true;
+			}));
+
+		$result = $this->saver->incrementTotalObjects('test-collection', 10);
+
+		expect($result)->toBeInstanceOf(CollectionData::class);
+		expect($result->totalObjects)->toBe(15);
+	}
+
+	public function testIncrementCountWithIncrementBy(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 5;
+		$collectionData->totalObjects = 5;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		// fetchCollection is called twice: once in incrementCount, once in updateCollection
+		$this->repository
+			->method('fetchCollection')
+			->with('test-collection')
+			->willReturn($collectionData);
+
+		$this->repository
+			->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(function (CollectionData $collection): bool {
+				// Verify count incremented by 10
+				expect($collection->count)->toBe(15);
+
+				return true;
+			}));
+
+		$result = $this->saver->incrementCount('test-collection', 10);
+
+		expect($result)->toBeInstanceOf(CollectionData::class);
+	}
+
+	public function testUpdateCollectionRecalculatesTotalObjectsWhenNotProvided(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 10;
+		$collectionData->totalObjects = 5; // Old value
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		// fetchCollection should NOT be called since we pass existingCollection
+		$this->repository
+			->expects($this->never())
+			->method('fetchCollection');
+
+		// Mock index repository to return 8 object IDs (the "real" count)
+		$this->indexRepository
+			->expects($this->atLeastOnce())
+			->method('fetchObjectIds')
+			->with('test-collection')
+			->willReturn(['obj1', 'obj2', 'obj3', 'obj4', 'obj5', 'obj6', 'obj7', 'obj8']);
+
+		$this->repository
+			->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(function (CollectionData $collection): bool {
+				// Verify totalObjects was recalculated from index (8 objects)
+				expect($collection->totalObjects)->toBe(8);
+
+				return true;
+			}));
+
+		// Update without providing totalObjects - should trigger recalculation
+		$result = $this->saver->updateCollection('test-collection', [
+			'id'     => 'test-collection',
+			'schema' => 'blog',
+			'name'   => 'Updated Name',
+			// Note: totalObjects NOT provided
+		], $collectionData);
+
+		expect($result)->toBeInstanceOf(CollectionData::class);
+		expect($result->totalObjects)->toBe(8);
+	}
+
+	public function testUpdateCollectionCorrectsCountWhenLessThanTotalObjects(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 3; // Less than totalObjects (incorrect)
+		$collectionData->totalObjects = 10;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		// fetchCollection should NOT be called since we pass existingCollection
+		$this->repository
+			->expects($this->never())
+			->method('fetchCollection');
+
+		$this->repository
+			->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(function (CollectionData $collection): bool {
+				// Verify count was corrected to match totalObjects
+				expect($collection->count)->toBe(10);
+
+				return true;
+			}));
+
+		// Update with totalObjects provided but count is wrong
+		$result = $this->saver->updateCollection('test-collection', [
+			'id'           => 'test-collection',
+			'schema'       => 'blog',
+			'count'        => 3, // Wrong value
+			'totalObjects' => 10,
+		], $collectionData);
+
+		expect($result)->toBeInstanceOf(CollectionData::class);
 	}
 }

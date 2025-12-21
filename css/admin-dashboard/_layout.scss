@@ -204,6 +204,7 @@ body {
 			&.macro-builder { --collection-icon : var(--icon-build) }
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }
 			&.server-checker { --collection-icon : var(--icon-health) }
+			&.twig-debugger { --collection-icon : var(--icon-twig-playground) }
 			&.playground-snippet { --collection-icon : var(--icon-macro) }
 			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
 			&.api-keys { --collection-icon : var(--icon-apikey) }
@@ -363,19 +364,68 @@ pre {
 	}
 }
 
+// Standard warning box - use for all warning messages
+.warning-box {
+	display               : grid;
+	grid-template-columns : auto 1fr;
+	gap                   : 0.75rem;
+	padding               : 0.75rem 1rem;
+	margin-bottom         : 1rem;
+	background            : oklch(var(--totalform-warning) / 0.15);
+	border                : 1px solid oklch(var(--totalform-warning) / 0.3);
+	border-radius         : var(--totalform-radius);
+	font-size             : 0.9375rem;
+	color                 : oklch(var(--totalform-darkgray));
+	align-items           : start;
+
+	&::before {
+		content          : '';
+		width            : 1.25rem;
+		height           : 1.25rem;
+		background-color : oklch(var(--totalform-warning));
+		mask-image       : var(--icon-warn);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		flex-shrink      : 0;
+		margin-top       : 0.125rem;
+	}
+
+	strong {
+		color : oklch(var(--totalform-warning));
+	}
+
+	p {
+		margin : 0;
+
+		&:not(:last-child) {
+			margin-bottom : 0.5rem;
+		}
+	}
+
+	a {
+		color       : oklch(var(--totalform-warning));
+		font-weight : 500;
+
+		&:hover {
+			text-decoration : underline;
+		}
+	}
+
+	code {
+		background    : oklch(var(--totalform-nearwhite));
+		padding       : 0.1em 0.4em;
+		border-radius : 3px;
+		font-size     : 0.875em;
+	}
+}
+
 .performance-warning {
-	background    : oklch(var(--totalform-nearwhite));
-	border        : 1px solid oklch(var(--totalform-warning));
-	border-radius : var(--totalform-radius);
-	padding       : 1rem;
-	color         : oklch(var(--totalform-darkgray));
-	display       : grid;
-	gap           : 0.5rem;
-	align-self    : start;
+	@extend .warning-box;
+	align-self : start;
 
 	h4 {
-		margin-top : 0;
-		color      : oklch(var(--totalform-warning));
+		margin : 0;
+		color  : oklch(var(--totalform-warning));
 	}
 }
 
@@ -661,15 +711,16 @@ pre {
 
 // Edition simulation warning
 .simulation-warning {
-	display          : flex;
-	align-items      : center;
-	gap              : 0.75rem;
-	padding          : 0.75rem 1rem;
-	margin-bottom    : 1.5rem;
-	background       : oklch(var(--totalform-warning) / 0.15);
-	border           : 1px solid oklch(var(--totalform-warning) / 0.3);
-	border-radius    : var(--totalform-radius);
-	font-size        : 0.9375rem;
+	@extend .warning-box;
+	display       : flex;
+	align-items   : center;
+	gap           : 0.75rem;
+	margin-bottom : 1.5rem;
+
+	// Hide the ::before icon since we use .icon-warn span
+	&::before {
+		display : none;
+	}
 
 	.icon-warn {
 		width            : 1.25rem;
@@ -677,20 +728,12 @@ pre {
 		background-color : oklch(var(--totalform-warning));
 		flex-shrink      : 0;
 		mask-image       : var(--icon-warn);
-	}
-
-	strong {
-		color : oklch(var(--totalform-warning));
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
 	}
 
 	a {
 		margin-left : auto;
-		color       : oklch(var(--totalform-warning));
-		font-weight : 500;
-
-		&:hover {
-			text-decoration : underline;
-		}
 	}
 
 	&.simulation-warning-fixed {

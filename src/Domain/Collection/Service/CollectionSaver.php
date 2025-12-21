@@ -37,6 +37,11 @@ readonly class CollectionSaver
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 
+		// Normalize URL to path only (strip domain if present)
+		if (isset($data['url']) && $data['url'] !== '') {
+			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
+		}
+
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
 		// Initialize totalObjects if not set
@@ -81,6 +86,11 @@ readonly class CollectionSaver
 	 */
 	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null): CollectionData
 	{
+		// Normalize URL to path only (strip domain if present)
+		if (isset($data['url']) && $data['url'] !== '') {
+			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
+		}
+
 		$data['count']       = $this->initializeCount($collectionId, $data);
 		$data['lastUpdated'] = DateData::cleanDate();
 
@@ -93,9 +103,15 @@ readonly class CollectionSaver
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
-		// Preserve totalObjects from existing collection if not provided
+		// Recalculate totalObjects from index if not explicitly provided (self-healing)
 		if (!isset($data['totalObjects'])) {
-			$data['totalObjects'] = $existingCollection->totalObjects ?? 0;
+			$objectIds            = $this->indexRepository->fetchObjectIds($collectionId);
+			$data['totalObjects'] = count($objectIds);
+		}
+
+		// Ensure count >= totalObjects (count is lifetime, totalObjects is current)
+		if ($data['count'] < $data['totalObjects']) {
+			$data['count'] = $data['totalObjects'];
 		}
 
 		// Ensure formSettings is an array (handle empty strings from form)
@@ -144,7 +160,7 @@ readonly class CollectionSaver
 	 *
 	 * @throws \UnexpectedValueException
 	 */
-	public function incrementCount(string $collectionId): CollectionData
+	public function incrementCount(string $collectionId, int $incrementBy = 1): CollectionData
 	{
 		$collection = $this->storage->fetchCollection($collectionId);
 
@@ -159,7 +175,7 @@ readonly class CollectionSaver
 			$objectIds                = $this->indexRepository->fetchObjectIds($collectionId);
 			$collectionArray['count'] = count($objectIds);
 		} else {
-			$collectionArray['count']++;
+			$collectionArray['count'] += $incrementBy;
 		}
 
 		return $this->updateCollection($collectionId, $collectionArray);
@@ -170,7 +186,7 @@ readonly class CollectionSaver
 	 *
 	 * @throws \UnexpectedValueException
 	 */
-	public function incrementTotalObjects(string $collectionId): CollectionData
+	public function incrementTotalObjects(string $collectionId, int $incrementBy = 1): CollectionData
 	{
 		$collection = $this->storage->fetchCollection($collectionId);
 
@@ -179,7 +195,7 @@ readonly class CollectionSaver
 		}
 
 		$collectionArray                 = $collection->toArray();
-		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + 1;
+		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + $incrementBy;
 
 		return $this->updateCollection($collectionId, $collectionArray, $collection);
 	}

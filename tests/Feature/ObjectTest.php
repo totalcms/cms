@@ -25,6 +25,10 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
+	// Create the blog collection for tests (reserved collections no longer auto-create)
+	$container         = $this->app->getContainer();
+	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher->fetchOrCreateReserved('blog');
 });
 
 it('saves a new object', function (): void {

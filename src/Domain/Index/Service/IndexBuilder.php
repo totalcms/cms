@@ -15,6 +15,9 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class IndexBuilder
 {
+	private const STREAMING_THRESHOLD = 500; // Batch size for garbage collection during streaming.
+	private const GC_BATCH_SIZE       = 100; // Batch size for garbage collection during streaming.
+
 	private LoggerInterface $logger;
 
 	public function __construct(
@@ -32,8 +35,24 @@ readonly class IndexBuilder
 
 	public function buildIndex(string $collection): IndexData
 	{
-		$objectIds  = $this->storage->fetchObjectIds($collection);
-		$index      = new IndexData();
+		$objectIds = $this->storage->fetchObjectIds($collection);
+
+		// Use streaming for large collections to minimize memory usage
+		if (count($objectIds) > self::STREAMING_THRESHOLD) {
+			return $this->buildIndexStreaming($collection, $objectIds);
+		}
+
+		return $this->buildIndexStandard($collection, $objectIds);
+	}
+
+	/**
+	 * Standard index building for small collections.
+	 *
+	 * @param array<string> $objectIds
+	 */
+	private function buildIndexStandard(string $collection, array $objectIds): IndexData
+	{
+		$index = new IndexData();
 
 		if (count($objectIds) > 0) {
 			$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -65,6 +84,72 @@ readonly class IndexBuilder
 		$this->storage->saveIndex($collection, $index);
 
 		return $index;
+	}
+
+	/**
+	 * Memory-efficient streaming index building for large collections.
+	 * Writes index entries directly to file instead of accumulating in memory.
+	 *
+	 * @param array<string> $objectIds
+	 */
+	private function buildIndexStreaming(string $collection, array $objectIds): IndexData
+	{
+		$this->logger->info('Building index using streaming mode', [
+			'collection'   => $collection,
+			'object_count' => count($objectIds),
+		]);
+
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$indexProps = $schema->index;
+
+		// Open streaming writer
+		$handle  = $this->storage->openIndexStream($collection);
+		$isFirst = true;
+		$count   = 0;
+
+		foreach ($objectIds as $id) {
+			try {
+				$object = $this->objectFetcher->fetchObject($collection, $id);
+
+				// Extract only indexed properties
+				$summary = $object->properties
+					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
+					->map(fn ($property): mixed => $property->transform());
+				$summary->put('id', $id);
+
+				// Write directly to file
+				$this->storage->writeIndexEntry($handle, $summary->toArray(), $isFirst);
+				$isFirst = false;
+				$count++;
+
+				// Explicitly free memory
+				unset($object, $summary);
+			} catch (\Throwable $e) {
+				$this->logger->warning('Skipping object during index build due to error', [
+					'collection' => $collection,
+					'object_id'  => $id,
+					'error'      => $e->getMessage(),
+					'exception'  => $e::class,
+				]);
+			}
+
+			// Force garbage collection periodically
+			if ($count % self::GC_BATCH_SIZE === 0) {
+				gc_collect_cycles();
+			}
+		}
+
+		// Finalize the index file
+		$this->storage->closeIndexStream($handle, $collection);
+
+		$this->logger->info('Streaming index build complete', [
+			'collection'    => $collection,
+			'indexed_count' => $count,
+		]);
+
+		// Return empty IndexData - the index was written directly to file
+		// Callers needing the data should fetch it fresh from the repository
+		return new IndexData();
 	}
 
 	/**

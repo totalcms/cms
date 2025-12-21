@@ -40,7 +40,7 @@ readonly class LicenseData
 			validationToken    : null,
 			updatesValid       : true,
 			trialDaysRemaining : null,
-			dnsVerified        : false,
+			dnsVerified        : true,
 			timestamp          : time(),
 		);
 	}

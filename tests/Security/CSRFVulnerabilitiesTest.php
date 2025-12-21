@@ -6,8 +6,8 @@ use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 describe('CSRF Vulnerabilities', function (): void {
 	it('identifies missing CSRF protection on state-changing operations', function (): void {
 		// Check that CSRF protection middleware exists
-		expect(CSRFProtectionMiddleware::class)->toBeClass();
-		expect(CSRFTokenManager::class)->toBeClass();
+		expect(class_exists(CSRFProtectionMiddleware::class))->toBeTrue();
+		expect(class_exists(CSRFTokenManager::class))->toBeTrue();
 
 		// State-changing operations that should require CSRF tokens
 		$stateChangingOperations = [

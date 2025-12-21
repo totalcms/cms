@@ -377,4 +377,47 @@ class JobRepository
 
 		return $this->updateJobStatus($job, JobData::STATUS_PENDING);
 	}
+
+	/**
+	 * Fetch all in-progress jobs (typically stuck jobs from crashed processes).
+	 *
+	 * @return array<JobData>
+	 */
+	public function fetchInProgressJobs(): array
+	{
+		$sql = <<<SQL
+			SELECT * FROM jobqueue
+			WHERE status = :status
+			ORDER BY id ASC
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':status', JobData::STATUS_IN_PROGRESS);
+		$stmt->execute();
+
+		$jobs = [];
+		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$jobs[] = JobData::fromArray($record);
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * Reset all in-progress jobs to pending (for recovery from crashed processes).
+	 *
+	 * @return int Number of jobs reset
+	 */
+	public function resetInProgressJobs(): int
+	{
+		$inProgressJobs = $this->fetchInProgressJobs();
+		$count          = 0;
+
+		foreach ($inProgressJobs as $job) {
+			$this->resetJobStatus($job);
+			$count++;
+		}
+
+		return $count;
+	}
 }

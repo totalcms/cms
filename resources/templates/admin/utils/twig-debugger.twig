@@ -1,0 +1,105 @@
+<h1>Twig Debugger</h1>
+
+<section class="dash-content-section twig-lint">
+	<p>Check a webpage for Twig syntax errors. Enter the path to a file relative to the document root.</p>
+
+	{% set formFields %}
+		{{ cms.form.field("text", "filepath", {
+			label       : "File Path",
+			placeholder : "/page/index.php",
+			help        : "Path relative to document root (e.g., /page/index.php)",
+			value       : postData.filepath | default(getData.filepath) | default(''),
+			required    : true
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple(url.path, formFields, {
+		method : "POST",
+		label  : "Check File",
+		ajax   : false
+	}) }}
+
+	{% if lintResults %}
+	<div class="lint-results">
+		{% if lintResults.success %}
+			<div class="lint-success">
+				<h3>No Syntax Errors Found</h3>
+				<p>The file <code>{{ lintResults.file }}</code> passed Twig syntax validation.</p>
+			</div>
+		{% else %}
+			<div class="lint-error">
+				<h3>Syntax Error Found</h3>
+				<p class="error-message">{{ lintResults.error.message }}</p>
+
+				{% if lintResults.error.line > 0 %}
+				<p class="error-location">
+					<strong>File:</strong> <code>{{ lintResults.file }}</code><br>
+					<strong>Line:</strong> {{ lintResults.error.line }} of {{ lintResults.totalLines }} total
+				</p>
+				{% endif %}
+
+				{% if lintResults.error.context %}
+				<h4>Context</h4>
+				<pre class="error-context"><code>{{ lintResults.error.context | e }}</code></pre>
+				{% endif %}
+			</div>
+		{% endif %}
+	</div>
+	{% endif %}
+</section>
+
+<style>
+.lint-results {
+	margin-top : 4rem;
+	max-width  : 800px;
+}
+
+.lint-success h3 {
+	color: oklch(var(--totalform-success));
+	margin: 0 0 0.5rem;
+}
+
+.lint-error h3 {
+	color: oklch(var(--totalform-error));
+	margin: 0 0 0.5rem;
+}
+
+.lint-error .error-message {
+	font-weight: 500;
+	color: oklch(var(--totalform-error));
+	margin-bottom: 1rem;
+}
+
+.lint-error .error-location {
+	margin-bottom: 1rem;
+}
+
+.lint-error .error-location code {
+	background: oklch(var(--totalform-nearwhite));
+	padding: 0.2rem 0.4rem;
+	border-radius: 3px;
+}
+
+.lint-error h4 {
+	margin: 1rem 0 0.5rem;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.error-context {
+	background: oklch(var(--totalform-nearblack));
+	color: oklch(var(--totalform-nearwhite));
+	padding: 1rem;
+	border-radius: var(--totalform-radius);
+	overflow-x: auto;
+	font-size: 0.85rem;
+	line-height: 1.5;
+}
+
+.error-context code {
+	font-family: "Fira Code", SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+	white-space: pre;
+}
+</style>

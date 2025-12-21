@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Setup;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Renderer\RedirectRenderer;
@@ -18,6 +19,7 @@ readonly class DataPathSetupSubmitAction
 	public function __construct(
 		private DataDirectoryManager $directoryManager,
 		private InstallationSettingsSaver $installationSettingsSaver,
+		private CacheManager $cacheManager,
 		private PhpSession $session,
 		private RedirectRenderer $redirectRenderer,
 	) {
@@ -58,7 +60,7 @@ readonly class DataPathSetupSubmitAction
 		}
 
 		// Create directory if it doesn't exist
-		if (!file_exists($dataPath)) {
+		if (!is_dir($dataPath)) {
 			try {
 				$this->directoryManager->createDirectory($dataPath);
 			} catch (\RuntimeException $e) {
@@ -77,10 +79,20 @@ readonly class DataPathSetupSubmitAction
 			return $this->redirectRenderer->redirectFor($response, 'setup-data-path');
 		}
 
-		// Clean up empty default directory if user chose a different path
-		$defaultPath = dirname($docroot) . '/tcms-data';
-		if ($location !== 'default') {
-			$this->directoryManager->cleanupEmptyDefaultDirectory($defaultPath, $dataPath);
+		// Clean up empty alternative directory if user chose a different path
+		// If user chose 'default' (above docroot), clean up docroot/tcms-data
+		// If user chose 'docroot', clean up above-docroot/tcms-data
+		$parentPath  = dirname($docroot) . '/tcms-data';
+		$docrootPath = $docroot . '/tcms-data';
+
+		if ($location === 'default') {
+			$this->directoryManager->cleanupEmptyDefaultDirectory($docrootPath, $dataPath);
+		} elseif ($location === 'docroot') {
+			$this->directoryManager->cleanupEmptyDefaultDirectory($parentPath, $dataPath);
+		} else {
+			// Custom path - clean up both potential default locations
+			$this->directoryManager->cleanupEmptyDefaultDirectory($parentPath, $dataPath);
+			$this->directoryManager->cleanupEmptyDefaultDirectory($docrootPath, $dataPath);
 		}
 
 		// Save to tcms.php if custom path
@@ -96,9 +108,11 @@ readonly class DataPathSetupSubmitAction
 			}
 		}
 
-		// Success! Redirect to login page for first-time user creation
-		// $flash->add('success', 'Data path configured successfully! Now create your first user.');
+		// Clear any stale cache data from previous installations
+		// This ensures the login page correctly shows "Setup First User Account"
+		$this->cacheManager->clearAllCaches();
 
+		// Success! Redirect to login page for first-time user creation
 		return $this->redirectRenderer->redirectFor($response, 'login');
 	}
 }

@@ -30,6 +30,17 @@
 	word-wrap        : anywhere;
 	text-wrap        : wrap;
 	z-index          : 9999;
+
+	a {
+		color           : oklch(var(--alert-color));
+		text-decoration : underline;
+		font-weight     : 700;
+
+		&:hover {
+			color           : oklch(var(--alert-color));
+			text-decoration : none;
+		}
+	}
 }
 .cms-success {
 	--alert-color : var(--totalform-success);
@@ -38,7 +49,13 @@
 	--alert-color : var(--totalform-info);
 }
 body>.cms-twig-error {
-	margin : 0.625rem;
+	display  : block;
+	// position : fixed;
+	// bottom   : 0;
+	// right    : 0;
+	// left     : 0;
+	// z-index  : 999999;
+	margin   : 0.625rem;
 }
 .cms-video-embed {
 	width        : 100% !important;
