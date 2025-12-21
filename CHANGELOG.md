@@ -2,6 +2,51 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.50] - 2025-12-21
+
+### Added
+
+- **Twig Debugger Utility**: New admin utility at `/admin/utils/twig-debugger` for checking Twig syntax errors
+  - Shows error line number with surrounding context
+  - Supports direct linking via `?filepath=/path/to/file` query parameter
+  - Twig error pages now include a link to debug the file directly
+- **Auth Collection Auto-Creation**: First admin login automatically creates the auth collection if it doesn't exist
+- **ObjectUrlBuilder**: New URL template system for collections supporting Twig-like syntax
+  - Template URLs like `/campsites/{{ region }}/{{ county | lower }}/{{ id }}`
+  - Supports filters: `slug`, `lower`, `upper`, `trim`, `raw`
+  - Auto-appends `{{ id }}` if not present in template
+  - Admin UI shows URL template fields used and warnings for empty segments
+- **Canonical URL Twig Functions**: New functions for generating absolute URLs
+  - `cms.canonicalObjectUrl(collection, object)` - absolute URL for an object
+  - `cms.objectUrl(collection, object)` - now supports full object array for templated URLs
+  - `cms.objectUrlHasEmptySegments(collection, object)` - check for missing template data
+  - `cms.collectionUrlFields(collection)` - get fields used in URL template
+- **unique Twig Filter**: New filter to remove duplicate values from arrays
+- **Documentation**: New guides for Form Grid Layout and Object Linking
+
+### Enhanced
+
+- **Sitemap & RSS Feeds**: Now use ObjectUrlBuilder for templated URL support
+- **Twig Date Handling**: Date filters now default to the timezone configured in settings
+- **Collection Table Performance**: Improved loading performance for collection tables
+- **Index Builder Memory**: More memory-efficient index building for large collections
+- **Job Queue Processing**: Improved verbose output, memory management, and in-progress job handling
+- **Import ID Normalization**: IDs are now normalized during import for consistency
+- **Warning Styles**: Standardized warning message styling across admin interface
+
+### Fixed
+
+- **PHP 8.5 Compatibility**: Fixed `imagedestroy()` and `curl` deprecation warnings
+- **Collection Object Count**: Fixed `totalObjects` count display in collections
+- **Collection Performance Warning**: Fixed performance warning appearing incorrectly
+- **Pretty URLs Redirect**: Skip `redirectToCanonicalUrl` when pretty URLs are disabled
+- **DNS Warning in Preview**: Fixed DNS verification warning appearing in preview mode
+- **New Install Caching**: Fixed caching and cleanup issues during new installation setup
+
+### Changed
+
+- **Reserved Schema Collections**: Disabled automatic creation of reserved schema collections on startup
+
 ## [3.0.49] - 2025-12-11
 
 
