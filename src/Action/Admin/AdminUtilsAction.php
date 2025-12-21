@@ -88,9 +88,9 @@ readonly class AdminUtilsAction
 			$accessGroupsData = $this->createAccessGroupData($action);
 		}
 
-		// Handle twig-checker page
+		// Handle twig-debugger page
 		$lintResults = null;
-		if ($page === 'twig-checker' && $request->getMethod() === 'POST') {
+		if ($page === 'twig-debugger' && $request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
 			if (isset($post['filepath']) && $post['filepath'] !== '') {
 				$lintResults = $this->lintTwigFile((string)$post['filepath']);

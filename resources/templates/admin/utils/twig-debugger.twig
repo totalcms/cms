@@ -1,26 +1,23 @@
-<h1>Twig Checker</h1>
+<h1>Twig Debugger</h1>
 
 <section class="dash-content-section twig-lint">
 	<p>Check a webpage for Twig syntax errors. Enter the path to a file relative to the document root.</p>
 
-	<form method="post" class="totalform">
-		<fieldset>
-			<div class="field-row">
-				<label for="filepath">File Path</label>
-				<div class="field">
-					<input type="text" id="filepath" name="filepath"
-						placeholder="/page/index.php"
-						value="{{ postData.filepath | default('') }}"
-						required />
-				</div>
-				<p class="help">Path relative to document root (e.g., /page/index.php)</p>
-			</div>
-		</fieldset>
+	{% set formFields %}
+		{{ cms.form.field("text", "filepath", {
+			label       : "File Path",
+			placeholder : "/page/index.php",
+			help        : "Path relative to document root (e.g., /page/index.php)",
+			value       : postData.filepath | default(getData.filepath) | default(''),
+			required    : true
+		}) }}
+	{% endset %}
 
-		<section class="buttons">
-			<button type="submit" class="primary">Lint File</button>
-		</section>
-	</form>
+	{{ cms.form.simple(url.path, formFields, {
+		method : "POST",
+		label  : "Check File",
+		ajax   : false
+	}) }}
 
 	{% if lintResults %}
 	<div class="lint-results">
@@ -52,42 +49,13 @@
 </section>
 
 <style>
-.twig-lint {
-	max-width: 800px;
-}
-
-.twig-lint form {
-	margin-bottom: 2rem;
-}
-
-.twig-lint input[type="text"] {
-	width: 100%;
-	max-width: 500px;
-}
-
 .lint-results {
-	margin-top: 2rem;
-	padding: 1.5rem;
-	border-radius: var(--totalform-radius);
-}
-
-.lint-success {
-	background: oklch(var(--totalform-success) / 0.1);
-	border: 1px solid oklch(var(--totalform-success));
-	border-radius: var(--totalform-radius);
-	padding: 1rem;
+	margin-top: 4rem;
 }
 
 .lint-success h3 {
 	color: oklch(var(--totalform-success));
 	margin: 0 0 0.5rem;
-}
-
-.lint-error {
-	background: oklch(var(--totalform-error) / 0.1);
-	border: 1px solid oklch(var(--totalform-error));
-	border-radius: var(--totalform-radius);
-	padding: 1rem;
 }
 
 .lint-error h3 {
@@ -130,7 +98,7 @@
 }
 
 .error-context code {
-	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+	font-family: "Fira Code", SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 	white-space: pre;
 }
 </style>

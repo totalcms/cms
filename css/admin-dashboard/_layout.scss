@@ -204,6 +204,7 @@ body {
 			&.macro-builder { --collection-icon : var(--icon-build) }
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }
 			&.server-checker { --collection-icon : var(--icon-health) }
+			&.twig-debugger { --collection-icon : var(--icon-twig-playground) }
 			&.playground-snippet { --collection-icon : var(--icon-macro) }
 			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
 			&.api-keys { --collection-icon : var(--icon-apikey) }
