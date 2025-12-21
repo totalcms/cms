@@ -10,6 +10,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
+use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extension\StringLoaderExtension;
 use Twig\Extra\Html\HtmlExtension;
@@ -62,6 +63,8 @@ readonly class TwigEngine
 			'strict_variables' => false,
 			'use_yield'        => false,
 		]);
+
+		$this->twig->getExtension(CoreExtension::class)->setTimezone($config->timezone);
 
 		$this->twig->addExtension($extension);
 		$this->twig->addExtension(new StringExtension());
