@@ -34,13 +34,13 @@
 				{% if lintResults.error.line > 0 %}
 				<p class="error-location">
 					<strong>File:</strong> <code>{{ lintResults.file }}</code><br>
-					<strong>Line:</strong> {{ lintResults.error.line }}
+					<strong>Line:</strong> {{ lintResults.error.line }} of {{ lintResults.totalLines }} total
 				</p>
 				{% endif %}
 
 				{% if lintResults.error.context %}
 				<h4>Context</h4>
-				<pre class="error-context"><code>{{ lintResults.error.context }}</code></pre>
+				<pre class="error-context"><code>{{ lintResults.error.context | e }}</code></pre>
 				{% endif %}
 			</div>
 		{% endif %}

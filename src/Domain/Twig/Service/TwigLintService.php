@@ -92,8 +92,9 @@ readonly class TwigLintService
 				'file'    => $filename,
 			];
 		} catch (SyntaxError $e) {
-			$errorLine = $e->getTemplateLine();
-			$context   = $this->getErrorContext($content, $errorLine, $contextLines);
+			$errorLine  = $e->getTemplateLine();
+			$context    = $this->getErrorContext($content, $errorLine, $contextLines);
+			$totalLines = count(explode("\n", str_replace(["\r\n", "\r"], "\n", $content)));
 
 			return [
 				'success' => false,
@@ -102,7 +103,8 @@ readonly class TwigLintService
 					'line'    => $errorLine,
 					'context' => $context,
 				],
-				'file'    => $filename,
+				'file'       => $filename,
+				'totalLines' => $totalLines,
 			];
 		} catch (\Exception $e) {
 			return [
@@ -122,6 +124,8 @@ readonly class TwigLintService
 	 */
 	private function getErrorContext(string $content, int $errorLine, int $contextLines): string
 	{
+		// Normalize line endings and split
+		$content    = str_replace(["\r\n", "\r"], "\n", $content);
 		$lines      = explode("\n", $content);
 		$totalLines = count($lines);
 
