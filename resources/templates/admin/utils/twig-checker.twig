@@ -1,0 +1,136 @@
+<h1>Twig Checker</h1>
+
+<section class="dash-content-section twig-lint">
+	<p>Check a webpage for Twig syntax errors. Enter the path to a file relative to the document root.</p>
+
+	<form method="post" class="totalform">
+		<fieldset>
+			<div class="field-row">
+				<label for="filepath">File Path</label>
+				<div class="field">
+					<input type="text" id="filepath" name="filepath"
+						placeholder="/page/index.php"
+						value="{{ postData.filepath | default('') }}"
+						required />
+				</div>
+				<p class="help">Path relative to document root (e.g., /page/index.php)</p>
+			</div>
+		</fieldset>
+
+		<section class="buttons">
+			<button type="submit" class="primary">Lint File</button>
+		</section>
+	</form>
+
+	{% if lintResults %}
+	<div class="lint-results">
+		{% if lintResults.success %}
+			<div class="lint-success">
+				<h3>No Syntax Errors Found</h3>
+				<p>The file <code>{{ lintResults.file }}</code> passed Twig syntax validation.</p>
+			</div>
+		{% else %}
+			<div class="lint-error">
+				<h3>Syntax Error Found</h3>
+				<p class="error-message">{{ lintResults.error.message }}</p>
+
+				{% if lintResults.error.line > 0 %}
+				<p class="error-location">
+					<strong>File:</strong> <code>{{ lintResults.file }}</code><br>
+					<strong>Line:</strong> {{ lintResults.error.line }}
+				</p>
+				{% endif %}
+
+				{% if lintResults.error.context %}
+				<h4>Context</h4>
+				<pre class="error-context"><code>{{ lintResults.error.context }}</code></pre>
+				{% endif %}
+			</div>
+		{% endif %}
+	</div>
+	{% endif %}
+</section>
+
+<style>
+.twig-lint {
+	max-width: 800px;
+}
+
+.twig-lint form {
+	margin-bottom: 2rem;
+}
+
+.twig-lint input[type="text"] {
+	width: 100%;
+	max-width: 500px;
+}
+
+.lint-results {
+	margin-top: 2rem;
+	padding: 1.5rem;
+	border-radius: var(--totalform-radius);
+}
+
+.lint-success {
+	background: oklch(var(--totalform-success) / 0.1);
+	border: 1px solid oklch(var(--totalform-success));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+}
+
+.lint-success h3 {
+	color: oklch(var(--totalform-success));
+	margin: 0 0 0.5rem;
+}
+
+.lint-error {
+	background: oklch(var(--totalform-error) / 0.1);
+	border: 1px solid oklch(var(--totalform-error));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+}
+
+.lint-error h3 {
+	color: oklch(var(--totalform-error));
+	margin: 0 0 0.5rem;
+}
+
+.lint-error .error-message {
+	font-weight: 500;
+	color: oklch(var(--totalform-error));
+	margin-bottom: 1rem;
+}
+
+.lint-error .error-location {
+	margin-bottom: 1rem;
+}
+
+.lint-error .error-location code {
+	background: oklch(var(--totalform-nearwhite));
+	padding: 0.2rem 0.4rem;
+	border-radius: 3px;
+}
+
+.lint-error h4 {
+	margin: 1rem 0 0.5rem;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.error-context {
+	background: oklch(var(--totalform-nearblack));
+	color: oklch(var(--totalform-nearwhite));
+	padding: 1rem;
+	border-radius: var(--totalform-radius);
+	overflow-x: auto;
+	font-size: 0.85rem;
+	line-height: 1.5;
+}
+
+.error-context code {
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+	white-space: pre;
+}
+</style>

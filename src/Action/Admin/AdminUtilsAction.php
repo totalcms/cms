@@ -12,6 +12,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Renderer\TwigRenderer;
 
 readonly class AdminUtilsAction
@@ -19,6 +20,7 @@ readonly class AdminUtilsAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private TwigEngine $twigEngine,
+		private TwigLintService $twigLintService,
 		private ApiKeyFetcher $apiKeyFetcher,
 		private AccessGroupLister $accessGroupLister,
 		private CollectionRepository $collectionRepository,
@@ -86,6 +88,15 @@ readonly class AdminUtilsAction
 			$accessGroupsData = $this->createAccessGroupData($action);
 		}
 
+		// Handle twig-checker page
+		$lintResults = null;
+		if ($page === 'twig-checker' && $request->getMethod() === 'POST') {
+			$post = (array)$request->getParsedBody();
+			if (isset($post['filepath']) && $post['filepath'] !== '') {
+				$lintResults = $this->lintTwigFile((string)$post['filepath']);
+			}
+		}
+
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
 			'page'   => $page,
 			'action' => $action,
@@ -99,6 +110,7 @@ readonly class AdminUtilsAction
 			'totalcms1DetectionData' => $totalcms1DetectionData,
 			'apiKeys'                => $apiKeys,
 			'accessGroupsData'       => $accessGroupsData,
+			'lintResults'            => $lintResults,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
@@ -162,5 +174,53 @@ readonly class AdminUtilsAction
 			}
 			$this->collectionFetcher->fetchOrCreateReserved($schemaId);
 		}
+	}
+
+	/**
+	 * Lint a Twig file for syntax errors.
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 *
+	 * @return array{success: bool, error?: array{message: string, line: int, context: string}, file: string}
+	 */
+	private function lintTwigFile(string $relativePath): array
+	{
+		// Construct full path from document root
+		$documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+
+		// Clean the path - remove leading slashes for consistency
+		$relativePath = ltrim($relativePath, '/');
+
+		// Build absolute path
+		$absolutePath = $documentRoot . '/' . $relativePath;
+
+		// Security check: ensure the path is within document root
+		$realPath = realpath($absolutePath);
+
+		if ($realPath === false) {
+			return [
+				'success' => false,
+				'error'   => [
+					'message' => "File not found: {$relativePath}",
+					'line'    => 0,
+					'context' => '',
+				],
+				'file'    => $relativePath,
+			];
+		}
+
+		if (!str_starts_with($realPath, $documentRoot)) {
+			return [
+				'success' => false,
+				'error'   => [
+					'message' => 'Access denied: path outside document root',
+					'line'    => 0,
+					'context' => '',
+				],
+				'file'    => $relativePath,
+			];
+		}
+
+		return $this->twigLintService->lintFile($realPath);
 	}
 }
