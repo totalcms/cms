@@ -174,31 +174,59 @@ class Cipher
 		}
 		$iv = openssl_random_pseudo_bytes($ivlen);  // Generate a random IV
 
-		$encrypted = openssl_encrypt($data, $cipher, $key, 0, $iv);
+		// Derive separate keys for encryption and HMAC from the provided key
+		$encKey  = hash('sha256', $key . 'encrypt', true);
+		$hmacKey = hash('sha256', $key . 'hmac', true);
 
-		return base64_encode($iv . $encrypted);  // Encode the IV with the ciphertext
+		$encrypted = openssl_encrypt($data, $cipher, $encKey, OPENSSL_RAW_DATA, $iv);
+		if ($encrypted === false) {
+			throw new \Exception('Encryption failed');
+		}
+
+		// Create HMAC of IV + ciphertext for authentication
+		$hmac = hash_hmac('sha256', $iv . $encrypted, $hmacKey, true);
+
+		// Format: HMAC (32 bytes) + IV (16 bytes) + ciphertext
+		return base64_encode($hmac . $iv . $encrypted);
 	}
 
 	public static function decrypt(string $data, string $key = self::SALT): string
 	{
-		$cipher = 'aes-256-cbc';
-		$data   = base64_decode($data);
+		$cipher  = 'aes-256-cbc';
+		$decoded = base64_decode($data, true);
 
-		$ivlen = openssl_cipher_iv_length($cipher);
+		if ($decoded === false) {
+			throw new \Exception('Invalid encrypted data: base64 decode failed');
+		}
+
+		$ivlen   = openssl_cipher_iv_length($cipher);
+		$hmacLen = 32; // SHA-256 produces 32 bytes
 		// @phpstan-ignore function.alreadyNarrowedType (openssl_cipher_iv_length can return false at runtime)
 		if (!is_int($ivlen)) {
 			throw new \Exception('Failed to get IV length');
 		}
 
-		// Validate that we have enough data for IV + at least some ciphertext
-		if (strlen($data) < $ivlen + 1) {
+		// Validate that we have enough data for HMAC + IV + at least some ciphertext
+		if (strlen($decoded) < $hmacLen + $ivlen + 1) {
 			throw new \Exception('Invalid encrypted data: insufficient length');
 		}
 
-		$iv         = substr($data, 0, $ivlen);  // Extract the IV from the encoded string
-		$ciphertext = substr($data, $ivlen);
+		// Extract HMAC, IV, and ciphertext
+		$hmac       = substr($decoded, 0, $hmacLen);
+		$iv         = substr($decoded, $hmacLen, $ivlen);
+		$ciphertext = substr($decoded, $hmacLen + $ivlen);
 
-		$decrypted = openssl_decrypt($ciphertext, $cipher, $key, 0, $iv);
+		// Derive the same keys used for encryption
+		$encKey  = hash('sha256', $key . 'encrypt', true);
+		$hmacKey = hash('sha256', $key . 'hmac', true);
+
+		// Verify HMAC before decryption (authenticate-then-decrypt)
+		$expectedHmac = hash_hmac('sha256', $iv . $ciphertext, $hmacKey, true);
+		if (!hash_equals($expectedHmac, $hmac)) {
+			throw new \Exception('Decryption failed');
+		}
+
+		$decrypted = openssl_decrypt($ciphertext, $cipher, $encKey, OPENSSL_RAW_DATA, $iv);
 		if ($decrypted === false) {
 			throw new \Exception('Decryption failed');
 		}
