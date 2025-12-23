@@ -775,12 +775,21 @@ NGINX;
 		return $object->toArray();
 	}
 
-	/** @param array<string,string> $options */
-	public function download(string $id, array $options = []): string
+	/**
+	 * @param string|array<string,mixed> $idOrObject
+	 * @param array<string,mixed> $options
+	 */
+	public function download(string|array $idOrObject, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'file';
 		$property   = $options['property'] ?? 'file';
 		$password   = $options['pwd'] ?? '';
+
+		// Performance optimization: Accept full object to avoid re-fetching
+		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		if ($id === '') {
+			return '';
+		}
 
 		$url = "{$this->api}/download/{$collection}/{$id}/{$property}";
 
@@ -797,14 +806,21 @@ NGINX;
 	}
 
 	/**
+	 * @param string|array<string,mixed> $idOrObject
 	 * @param array<string,mixed> $options
 	 */
-	public function depotDownload(string $id, string $name, array $options = []): string
+	public function depotDownload(string|array $idOrObject, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
 		$path       = $options['path'] ?? '';
 		$password   = $options['pwd'] ?? '';
+
+		// Performance optimization: Accept full object to avoid re-fetching
+		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		if ($id === '') {
+			return '';
+		}
 
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
@@ -832,12 +848,21 @@ NGINX;
 		return $url;
 	}
 
-	/** @param array<string,string> $options */
-	public function stream(string $id, array $options = []): string
+	/**
+	 * @param string|array<string,mixed> $idOrObject
+	 * @param array<string,mixed> $options
+	 */
+	public function stream(string|array $idOrObject, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'file';
 		$property   = $options['property'] ?? 'file';
 		$password   = $options['pwd'] ?? '';
+
+		// Performance optimization: Accept full object to avoid re-fetching
+		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		if ($id === '') {
+			return '';
+		}
 
 		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}";
 
@@ -854,14 +879,21 @@ NGINX;
 	}
 
 	/**
+	 * @param string|array<string,mixed> $idOrObject
 	 * @param array<string,mixed> $options
 	 */
-	public function depotStream(string $id, string $name, array $options = []): string
+	public function depotStream(string|array $idOrObject, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
 		$path       = $options['path'] ?? '';
 		$password   = $options['pwd'] ?? '';
+
+		// Performance optimization: Accept full object to avoid re-fetching
+		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		if ($id === '') {
+			return '';
+		}
 
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
