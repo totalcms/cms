@@ -52,4 +52,13 @@ readonly class AccessGroupLister
 	{
 		return $this->repository->exists($id);
 	}
+
+	/**
+	 * Ensure the 'default' group exists, creating it if necessary.
+	 * Used for backwards compatibility with existing installations.
+	 */
+	public function ensureDefaultGroupExists(): ?AccessGroupData
+	{
+		return $this->repository->ensureDefaultGroupExists();
+	}
 }
