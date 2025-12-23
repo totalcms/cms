@@ -38,11 +38,16 @@
 <div class="schema-inherited-properties">
 	<h3>Inherited Properties (Read-Only)</h3>
 	<p>The following properties are inherited from other schemas and cannot be modified directly.
-		To change them, edit the source schema.</p>
+		To change them, edit the source schema or override the property.</p>
 	<div class="inherited-properties-list">
 		{% for propName, prop in inheritedProps %}
 			<div class="schema-field {{ prop.field }}-field {{ prop.type }}-type">
 				<span class="property-name">{{ propName }}</span>
+				<button type="button"
+						class="button override"
+						data-property-name="{{ propName }}"
+						data-property-definition="{{ prop.definition|merge({type: prop.type, field: prop.field})|json_encode|e('html_attr') }}"
+						title="Override this property"></button>
 				<span class="property-source">from <a href="schemas/{{ prop.source }}">{{ prop.source }}</a></span>
 			</div>
 		{% endfor %}
@@ -92,7 +97,8 @@
 	gap     : 0.5rem;
 }
 .inherited-properties-list .schema-field {
-	grid-template-columns : 1fr auto;
+	grid-template-columns : 1fr auto auto;
+	gap: 0.5rem;
 }
 
 .schema-deck-compatibility {
