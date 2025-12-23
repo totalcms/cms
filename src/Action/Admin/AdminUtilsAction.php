@@ -50,7 +50,8 @@ readonly class AdminUtilsAction
 			$page = $args['page'] ?? 'index';
 		}
 
-		$action  = $args['action'] ?? '';
+		$query   = $request->getQueryParams();
+		$action  = $args['action'] ?? $query['action'] ?? '';
 		$results = '';
 
 		if ($request->getMethod() === 'POST') {
