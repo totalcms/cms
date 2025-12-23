@@ -237,9 +237,12 @@ class AccessGroupRepository extends StorageRepository
 	 */
 	public function delete(string $id): bool
 	{
-		// Prevent deletion of admin group
+		// Prevent deletion of protected groups
 		if ($id === 'admin') {
 			throw new \RuntimeException('Cannot delete the admin group');
+		}
+		if ($id === 'default') {
+			throw new \RuntimeException('Cannot delete the default group');
 		}
 
 		$data   = $this->readFile();

@@ -160,6 +160,9 @@ readonly class AdminUtilsAction
 	/** @return array<string,mixed> */
 	private function createAccessGroupData(string $action): array
 	{
+		// Ensure the default group exists for backwards compatibility
+		$this->accessGroupLister->ensureDefaultGroupExists();
+
 		$isEdit = $action !== 'new' && $action !== '';
 
 		return [
