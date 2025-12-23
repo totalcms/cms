@@ -799,7 +799,7 @@ NGINX;
 		}
 
 		if (!empty($password)) {
-			$url .= '?pwd=' . urlencode($password);
+			$url .= '?pwd=' . urlencode((string)$password);
 		}
 
 		return $url;
@@ -872,7 +872,7 @@ NGINX;
 		}
 
 		if (!empty($password)) {
-			$url .= '?pwd=' . urlencode($password);
+			$url .= '?pwd=' . urlencode((string)$password);
 		}
 
 		return $url;
