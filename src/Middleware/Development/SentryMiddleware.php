@@ -65,6 +65,7 @@ class SentryMiddleware implements MiddlewareInterface
 			'Collection for Schema not found',
 			'Does not match object ID',
 			'Unable to retrieve file data',
+			'Unable to locate object property',
 		],
 	];
 
