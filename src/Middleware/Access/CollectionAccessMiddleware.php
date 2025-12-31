@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Collection Access Middleware.
@@ -30,6 +31,16 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		}
 
 		$collection = $route->getArgument('collection');
+		$objectId   = $route->getArgument('id');
+
+		// Allow users to update their own profile (self-profile update)
+		// Users should always be able to update their own record in their auth collection
+		if ($operation === 'update' && $collection && $objectId) {
+			$authCollection = $this->session->get(SessionKeys::AUTH_COLLECTION);
+			if ($collection === $authCollection && $objectId === $userId) {
+				return true;
+			}
+		}
 
 		// Check access permissions
 		if ($collection) {
