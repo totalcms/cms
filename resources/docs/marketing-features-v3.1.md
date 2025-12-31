@@ -43,9 +43,6 @@ Full Twig integration with 50+ custom filters and functions designed specificall
 ### Flexible API
 RESTful API with token authentication for headless CMS implementations.
 
-### Git-Friendly Storage
-Flat-file JSON storage means your entire CMS can live in version control alongside your code.
-
 ### JumpStart Templates
 Package and reuse entire project configurations—perfect for agency starter kits.
 
@@ -78,11 +75,6 @@ Generate QR codes and barcodes directly in your templates.
 ### Multi-Layer Caching
 Intelligent caching with automatic failover—APCu, Redis, Memcached, or filesystem.
 
-### Memory-Efficient Exports
-Export massive datasets without memory issues using streaming technology.
-
-### Emergency Cache Clear
-Customers can clear their own cache instantly without admin access.
 
 ---
 
@@ -120,17 +112,17 @@ Rate limiting on login attempts protects against automated attacks.
 
 ## Migration & Portability
 
-### WordPress Import
-Migrate your existing WordPress content with a few clicks.
+### Total CMS 1 Upgrade
+Existing Total CMS users can upgrade instantly with automatic migration.
 
 ### Alloy CMS Import
 Seamlessly transition from Alloy CMS with full content preservation.
 
-### Total CMS 1 Upgrade
-Existing Total CMS users can upgrade instantly with automatic migration.
-
 ### CSV Import
 Bulk import content from spreadsheets for quick data population.
+
+### JSON Import
+Bulk import content with standardized JSON data.
 
 ---
 
@@ -155,7 +147,7 @@ Display filtered, sorted, and paginated content grids with a single template tag
 ### Production Ready
 Battle-tested and stable—Total CMS 3.1 is ready for your most important projects.
 
-### PHP 8.4 Compatible
+### PHP 8.5 Compatible
 Full support for the latest PHP version with modern language features.
 
 ### Enhanced Documentation

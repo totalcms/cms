@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Total CMS Edition Comparison</title>
+  <style>
+    :root {
+      --compare-accent: #4f46e5;
+      --compare-success: #22c55e;
+      --compare-muted: #cbd5e1;
+      --compare-bg: #ffffff;
+      --compare-bg-alt: #f8fafc;
+      --compare-border: #e2e8f0;
+      --compare-text: #1e293b;
+      --compare-text-muted: #64748b;
+      --compare-category-bg: #f1f5f9;
+      --compare-header-bg: linear-gradient(135deg, #333 0%, #000 100%);
+      --compare-radius: 12px;
+      --compare-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .edition-compare {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      color: var(--compare-text);
+    }
+
+    .edition-compare__container {
+      background: var(--compare-bg);
+      border-radius: var(--compare-radius);
+      box-shadow: var(--compare-shadow);
+      overflow: hidden;
+    }
+
+    .edition-compare__header {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, 100px);
+      gap: 1px;
+      background: var(--compare-header-bg);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .edition-compare__header-cell {
+      padding: 1.25rem 1rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .edition-compare__header-cell:first-child {
+      text-align: left;
+      font-size: 1.1rem;
+    }
+
+    .edition-compare__header-cell small {
+      display: block;
+      font-weight: 400;
+      opacity: 0.85;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .edition-compare__category {
+      background: var(--compare-category-bg);
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--compare-text-muted);
+      border-top: 1px solid var(--compare-border);
+    }
+
+    .edition-compare__row {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, 100px);
+      gap: 1px;
+      border-top: 1px solid var(--compare-border);
+      transition: background-color 0.15s ease;
+    }
+
+    .edition-compare__row:hover {
+      background: var(--compare-bg-alt);
+    }
+
+    .edition-compare__cell {
+      padding: 0.875rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .edition-compare__cell:first-child {
+      justify-content: flex-start;
+      font-size: 0.9rem;
+    }
+
+    .edition-compare__check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .edition-compare__check--yes {
+      background: var(--compare-success);
+      color: white;
+    }
+
+    .edition-compare__check--no {
+      background: var(--compare-muted);
+      color: white;
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 640px) {
+      .edition-compare__header,
+      .edition-compare__row {
+        grid-template-columns: 1fr repeat(3, 60px);
+      }
+
+      .edition-compare__header-cell {
+        padding: 1rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .edition-compare__header-cell:first-child {
+        font-size: 0.9rem;
+      }
+
+      .edition-compare__header-cell small {
+        display: none;
+      }
+
+      .edition-compare__cell {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .edition-compare__cell:first-child {
+        font-size: 0.8rem;
+      }
+
+      .edition-compare__check {
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+      }
+
+      .edition-compare__category {
+        font-size: 0.75rem;
+        padding: 0.625rem 0.75rem;
+      }
+    }
+
+    /* Sticky category headers on scroll */
+    .edition-compare__category {
+      position: sticky;
+      top: 60px;
+      z-index: 5;
+    }
+
+    @media (max-width: 640px) {
+      .edition-compare__category {
+        top: 52px;
+      }
+    }
+  </style>
+</head>
+<body style="padding: 2rem; background: #f1f5f9;">
+
+<div class="edition-compare">
+  <div class="edition-compare__container">
+
+    <div class="edition-compare__header">
+      <div class="edition-compare__header-cell">Features</div>
+      <div class="edition-compare__header-cell">Lite</div>
+      <div class="edition-compare__header-cell">Standard</div>
+      <div class="edition-compare__header-cell">Pro</div>
+    </div>
+
+    <!-- Schemas -->
+    <div class="edition-compare__category">Schemas</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Auth</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Color</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Date</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Email</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Feed</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">File</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Gallery</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Image</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Code</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Number</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Styled Text</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">SVG</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Text</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Toggle</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">URL</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Blog</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Depot</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Custom Schemas</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+    <!-- ImageWorks -->
+    <div class="edition-compare__category">ImageWorks</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Dynamic Images</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Image Watermarks</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Text Watermarks</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="edition-compare__category">Dashboard</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Admin Dashboard</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Basic Whitelabel</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Full Whitelabel</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Mailer</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Templates</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Playground</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Access Groups</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">API Keys</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Cache Manager</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Image Batcher</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Job Queue Manager</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Log Analyzer</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Pretty URL Builder</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+    <!-- Twig -->
+    <div class="edition-compare__category">Twig</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">QR Codes</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Barcodes</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Factory</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">CMS Grid</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Custom Filters</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Custom Functions</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">CMS Adapter</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+    <!-- Data Access -->
+    <div class="edition-compare__category">Data Access</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Factory</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">RSS</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Sitemap</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">CSV</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">JSON</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Jumpstart</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">PHP API</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">REST API</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="edition-compare__category">Form Actions</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Webhooks</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Mailer</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Redirect</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Refresh</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Back</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Redirect to Object</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+    <!-- Form Fields -->
+    <div class="edition-compare__category">Form Fields</div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Color</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Date</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Email</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Deck</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">File</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Gallery</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Image</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Code</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Number</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Styled Text</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">SVG</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Text</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Toggle</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">URL</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Checkbox</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Depot</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Range</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">List</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Select</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Multi-Select</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Identifier</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Hidden</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">JSON</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Password</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Phone</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Textarea</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Time</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Price</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Datetime</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Multi-Checkbox</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+    <div class="edition-compare__row">
+      <div class="edition-compare__cell">Radio</div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+      <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
