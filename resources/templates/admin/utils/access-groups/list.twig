@@ -12,11 +12,18 @@
 	{% if groups|length > 0 %}
 		<div class="access-groups-grid">
 			{% for group in groups %}
-			<article class="access-group-card{% if group.id == 'admin' %} admin-group{% endif %}">
+			<article class="access-group-card{% if group.id in ['admin', 'default'] %} admin-group{% endif %}">
 				<header>
 					<h3>{{ group.id }}</h3>
 					{% if group.id == 'admin' %}
 						<span class="built-in-badge">Built-in</span>
+					{% elseif group.id == 'default' %}
+						<div class="actions">
+							<a href="utils/access-groups/{{ group.id }}"
+							   class="edit-button"
+							   title="Edit Access Group">Edit</a>
+							<span class="built-in-badge">Built-in</span>
+						</div>
 					{% else %}
 						<div class="actions">
 							<a href="utils/access-groups/{{ group.id }}"
@@ -184,8 +191,9 @@
 }
 
 .actions {
-	display : flex;
-	gap     : 1rem;
+	display     : flex;
+	gap         : 1rem;
+	align-items : center;
 }
 
 .edit-button {

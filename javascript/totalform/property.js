@@ -42,11 +42,17 @@ export default class PropertyField {
 		const fieldIcon = this.container.querySelector("[name=field]");
 		const typeIcon  = this.container.querySelector("[name=type]");
 
+		const newProperty = this.container.classList.contains('new-property');
+
 		let newclass = `${this.fieldClass} ${fieldIcon.value}-field`;
 		if (typeIcon) {
 			newclass += ` ${typeIcon.value}-type`;
 		}
 		this.container.className = newclass;
+
+		if (newProperty) {
+			this.container.classList.add('new-property');
+		}
 	}
 
 	getName(){

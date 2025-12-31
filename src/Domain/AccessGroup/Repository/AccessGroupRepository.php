@@ -15,6 +15,150 @@ class AccessGroupRepository extends StorageRepository
 {
 	private const FILE_PATH = '.system/access-groups.json';
 
+	/** @var array<string,mixed> */
+	private const ADMIN_GROUP_TEMPLATE = [
+		'id'          => 'admin',
+		'description' => 'Full administrative access to all features',
+		'operations'  => ['create', 'read', 'update', 'delete'],
+		'permissions' => [
+			'collectionsMeta' => [
+				'operations' => ['create', 'read', 'update', 'delete'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'collections' => [
+				'operations' => ['create', 'read', 'update', 'delete'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'schemas' => [
+				'operations' => ['create', 'read', 'update', 'delete'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'templates'  => true,
+			'mailer'     => true,
+			'playground' => true,
+			'docs'       => true,
+			'utils'      => [
+				'all'     => true,
+				'allowed' => [],
+			],
+			'settings' => [
+				'all'     => true,
+				'allowed' => [],
+			],
+		],
+	];
+
+	/** @var array<string,mixed> */
+	private const EDITOR_GROUP_TEMPLATE = [
+		'id'          => 'editor',
+		'description' => 'Content editors - can create and edit content',
+		'operations'  => ['create', 'read', 'update', 'delete'],
+		'permissions' => [
+			'collectionsMeta' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'collections' => [
+				'operations' => ['create', 'read', 'update', 'delete'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'schemas' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'templates'  => true,
+			'mailer'     => true,
+			'playground' => false,
+			'docs'       => true,
+			'utils'      => [
+				'all'     => false,
+				'allowed' => ['jumpstart', 'project-setup', 'image-batcher'],
+			],
+			'settings' => [
+				'all'     => false,
+				'allowed' => ['general', 'dashboard'],
+			],
+		],
+	];
+
+	/** @var array<string,mixed> */
+	private const VIEWER_GROUP_TEMPLATE = [
+		'id'          => 'viewer',
+		'description' => 'Read-only access to view content',
+		'operations'  => ['read'],
+		'permissions' => [
+			'collectionsMeta' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'collections' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'schemas' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'templates'  => false,
+			'mailer'     => false,
+			'playground' => false,
+			'docs'       => true,
+			'utils'      => [
+				'all'     => false,
+				'allowed' => [],
+			],
+			'settings' => [
+				'all'     => false,
+				'allowed' => [],
+			],
+		],
+	];
+
+	/** @var array<string,mixed> */
+	private const DEFAULT_GROUP_TEMPLATE = [
+		'id'          => 'default',
+		'description' => 'Default access for users without group assignments',
+		'operations'  => ['read'],
+		'permissions' => [
+			'collectionsMeta' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'collections' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'schemas' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
+			'templates'  => false,
+			'mailer'     => false,
+			'playground' => false,
+			'docs'       => true,
+			'utils'      => [
+				'all'     => false,
+				'allowed' => [],
+			],
+			'settings' => [
+				'all'     => false,
+				'allowed' => [],
+			],
+		],
+	];
+
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 	) {
@@ -93,9 +237,12 @@ class AccessGroupRepository extends StorageRepository
 	 */
 	public function delete(string $id): bool
 	{
-		// Prevent deletion of admin group
+		// Prevent deletion of protected groups
 		if ($id === 'admin') {
 			throw new \RuntimeException('Cannot delete the admin group');
+		}
+		if ($id === 'default') {
+			throw new \RuntimeException('Cannot delete the default group');
 		}
 
 		$data   = $this->readFile();
@@ -131,6 +278,23 @@ class AccessGroupRepository extends StorageRepository
 	}
 
 	/**
+	 * Ensure the 'default' group exists, creating it if necessary.
+	 * Used for backwards compatibility with existing installations.
+	 */
+	public function ensureDefaultGroupExists(): ?AccessGroupData
+	{
+		$existing = $this->findById('default');
+		if ($existing instanceof AccessGroupData) {
+			return $existing;
+		}
+
+		$defaultGroup = new AccessGroupData(self::DEFAULT_GROUP_TEMPLATE);
+		$this->save($defaultGroup);
+
+		return $defaultGroup;
+	}
+
+	/**
 	 * Create default access groups if they don't exist.
 	 */
 	public function createDefaultGroups(): void
@@ -139,106 +303,20 @@ class AccessGroupRepository extends StorageRepository
 			return;
 		}
 
-		// Admin group - full access (immutable)
 		if (!$this->exists('admin')) {
-			$adminGroup = new AccessGroupData([
-				'id'          => 'admin',
-				'description' => 'Full administrative access to all features',
-				'methods'     => ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-				'permissions' => [
-					'collections' => [
-						'methods' => ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-						'all'     => true,
-						'allowed' => [],
-					],
-					'schemas' => [
-						'methods' => ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-						'all'     => true,
-						'allowed' => [],
-					],
-					'templates'  => true,
-					'mailer'     => true,
-					'playground' => true,
-					'docs'       => true,
-					'utils'      => [
-						'all'     => true,
-						'allowed' => [],
-					],
-					'settings' => [
-						'all'     => true,
-						'allowed' => [],
-					],
-				],
-			]);
-			$this->save($adminGroup);
+			$this->save(new AccessGroupData(self::ADMIN_GROUP_TEMPLATE));
 		}
 
-		// Editor group - content creation and editing
 		if (!$this->exists('editor')) {
-			$editorGroup = new AccessGroupData([
-				'id'          => 'editor',
-				'description' => 'Content editors - can create and edit content',
-				'methods'     => ['GET', 'POST', 'PUT', 'DELETE'],
-				'permissions' => [
-					'collections' => [
-						'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
-						'all'     => true,
-						'allowed' => [],
-					],
-					'schemas' => [
-						'methods' => ['GET'],
-						'all'     => true,
-						'allowed' => [],
-					],
-					'templates'  => true,
-					'mailer'     => true,
-					'playground' => false,
-					'docs'       => true,
-					'utils'      => [
-						'all'     => false,
-						'allowed' => ['jumpstart', 'project-setup', 'image-batcher'],
-					],
-					'settings' => [
-						'all'     => false,
-						'allowed' => ['general', 'dashboard'],
-					],
-				],
-			]);
-			$this->save($editorGroup);
+			$this->save(new AccessGroupData(self::EDITOR_GROUP_TEMPLATE));
 		}
 
-		// Viewer group - read-only access
 		if (!$this->exists('viewer')) {
-			$viewerGroup = new AccessGroupData([
-				'id'          => 'viewer',
-				'description' => 'Read-only access to view content',
-				'methods'     => ['GET'],
-				'permissions' => [
-					'collections' => [
-						'methods' => ['GET'],
-						'all'     => true,
-						'allowed' => [],
-					],
-					'schemas' => [
-						'methods' => ['GET'],
-						'all'     => true,
-						'allowed' => [],
-					],
-					'templates'  => false,
-					'mailer'     => false,
-					'playground' => false,
-					'docs'       => true,
-					'utils'      => [
-						'all'     => false,
-						'allowed' => [],
-					],
-					'settings' => [
-						'all'     => false,
-						'allowed' => [],
-					],
-				],
-			]);
-			$this->save($viewerGroup);
+			$this->save(new AccessGroupData(self::VIEWER_GROUP_TEMPLATE));
+		}
+
+		if (!$this->exists('default')) {
+			$this->save(new AccessGroupData(self::DEFAULT_GROUP_TEMPLATE));
 		}
 	}
 

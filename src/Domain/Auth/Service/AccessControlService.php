@@ -438,7 +438,15 @@ readonly class AccessControlService
 
 		// Get user's group IDs
 		$groupIds = $user['groups'] ?? [];
+
+		// If user has no groups assigned, fall back to the 'default' group
+		// This also ensures the default group exists for backwards compatibility
 		if (empty($groupIds)) {
+			$defaultGroup = $this->accessGroupLister->ensureDefaultGroupExists();
+			if ($defaultGroup instanceof AccessGroupData) {
+				return [$defaultGroup];
+			}
+
 			return [];
 		}
 

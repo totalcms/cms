@@ -50,7 +50,8 @@ readonly class AdminUtilsAction
 			$page = $args['page'] ?? 'index';
 		}
 
-		$action  = $args['action'] ?? '';
+		$query   = $request->getQueryParams();
+		$action  = $args['action'] ?? $query['action'] ?? '';
 		$results = '';
 
 		if ($request->getMethod() === 'POST') {
@@ -160,6 +161,9 @@ readonly class AdminUtilsAction
 	/** @return array<string,mixed> */
 	private function createAccessGroupData(string $action): array
 	{
+		// Ensure the default group exists for backwards compatibility
+		$this->accessGroupLister->ensureDefaultGroupExists();
+
 		$isEdit = $action !== 'new' && $action !== '';
 
 		return [

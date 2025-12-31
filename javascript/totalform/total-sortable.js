@@ -11,10 +11,16 @@ export default class TotalSortable {
 		this.isDragging = false;
 		this.sortable = null;
 
+		// Firefox has issues with native HTML5 drag and drop - use fallback
+		const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+
 		options = Object.assign({
-			animation     : 150,
-			ghostClass    : 'drag-ghost',
-			forceFallback : false,
+			animation         : 150,
+			ghostClass        : 'drag-ghost',
+			forceFallback     : isFirefox,
+			fallbackOnBody    : isFirefox,
+			fallbackTolerance : isFirefox ? 3 : 0,
+			swapThreshold     : 0.65,
 		}, options);
 
 		// Wrap onStart callback

@@ -101,7 +101,8 @@
 		&.trash {
 			mask-image : var(--icon-trash);
 		}
-		&.duplicate {
+		&.duplicate,
+		&.override {
 			mask-image : var(--icon-duplicate);
 		}
     }
@@ -134,7 +135,8 @@
 		border-color : oklch(var(--totalform-lightgray));
 	}
 
-	&:has(.form-field.unsaved) {
+	&:has(.form-field.unsaved),
+	&.new-property {
 		border-color: oklch(var(--totalform-changed)) !important;
 	}
 	&:has(.form-field.error) {
@@ -209,7 +211,8 @@
 		&.trash {
 			mask-image : var(--icon-trash);
 		}
-		&.duplicate {
+		&.duplicate,
+		&.override {
 			mask-image : var(--icon-duplicate);
 		}
 	}

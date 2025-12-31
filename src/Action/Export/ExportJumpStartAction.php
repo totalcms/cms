@@ -36,13 +36,13 @@ readonly class ExportJumpStartAction
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
 
 		// Use streaming to avoid memory exhaustion with large datasets
-		$tempFile = tmpfile();
+		$tempFile = \tmpfile();
 		if ($tempFile === false) {
 			throw new \RuntimeException('Failed to create temporary file for export');
 		}
 
 		$jumpStartData->streamJsonToFile($tempFile);
-		rewind($tempFile);
+		\rewind($tempFile);
 
 		return $response->withBody(Stream::create($tempFile));
 	}

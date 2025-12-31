@@ -20,6 +20,11 @@ export default class GalleryField extends ImageField {
 	watchPreviews() {
 		// Watch for changes in previews
 		const observer = new MutationObserver((mutationsList, observer) => {
+			// Skip if currently sorting - SortableJS moves elements which triggers mutations
+			if (this.previewContainer.classList.contains('sorting')) {
+				return;
+			}
+
 			for (const mutation of mutationsList) {
 				if (mutation.type === 'childList') {
 					// Only setup if nodes were actually added or removed (not just moved by Sortable)
@@ -72,11 +77,11 @@ export default class GalleryField extends ImageField {
 			animation : 500,
 			handle    : ".move",
 			draggable : ".image-preview",
-			onEnd     : (event) => {
-				// Set the order of the preview data to match the new order
-				const moved = this.preview[event.oldIndex];
-				this.preview.splice(event.newIndex, 0, moved);
-				this.preview.splice(event.newIndex, 1);
+			onEnd     : () => {
+				// Rebuild preview array from DOM order (SortableJS has already reordered the DOM)
+				this.preview = Array.from(this.previewContainer.children)
+					.filter(el => el.preview)
+					.map(el => el.preview);
 
 				// Update the order of the images in the CMS
 				this.autosave(true);

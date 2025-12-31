@@ -119,6 +119,10 @@ export default class PropertiesField extends TotalField {
 		const properties = {};
 		for (const field of propertyFields) {
 			const property = field.totalfield;
+			if (!property) {
+				console.warn('PropertiesField: Skipping uninitialized field', field);
+				continue;
+			}
 			properties[property.getName()] = property.getValue()
 		}
 		return properties;

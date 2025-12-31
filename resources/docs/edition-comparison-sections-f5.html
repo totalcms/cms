@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Total CMS 3 Features</title>
+  <!-- Foundation 5 CSS would be loaded by parent site -->
+  <style>
+    :root {
+      --compare-accent: #333;
+      --compare-success: #22c55e;
+      --compare-muted: #cbd5e1;
+      --compare-bg: #ffffff;
+      --compare-bg-alt: #f8fafc;
+      --compare-border: #e2e8f0;
+      --compare-text: #1e293b;
+      --compare-text-muted: #64748b;
+      --compare-category-bg: #f1f5f9;
+      --compare-header-bg: linear-gradient(135deg, #333 0%, #000 100%);
+      --compare-radius: 12px;
+      --compare-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 3rem 0 4rem;
+      margin-bottom: 2rem;
+    }
+
+    .hero__title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      margin: 0 0 1rem;
+      color: var(--compare-text);
+      letter-spacing: -0.02em;
+    }
+
+    .hero__subtitle {
+      font-size: 1.25rem;
+      color: var(--compare-text-muted);
+      max-width: 700px;
+      margin: 0 auto 2rem;
+    }
+
+    .hero__badges {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero__badge {
+      background: var(--compare-category-bg);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--compare-text-muted);
+    }
+
+    /* Stats */
+    .stat {
+      padding: 1.5rem 1rem;
+    }
+
+    .stat__number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--compare-text);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat__label {
+      font-size: 0.9rem;
+      color: var(--compare-text-muted);
+    }
+
+    /* Highlight Section */
+    .highlight-section {
+      background: var(--compare-category-bg);
+      padding: 4rem 1.5rem;
+      margin: 2rem 0;
+	  border-radius: 10px;
+    }
+
+    .highlight-section__title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 1rem;
+      color: var(--compare-text);
+    }
+
+    .highlight-section__subtitle {
+      color: var(--compare-text-muted);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    /* Feature Cards */
+    .feature-card {
+      background: var(--compare-bg);
+      border-radius: var(--compare-radius);
+      padding: 1.5rem;
+      box-shadow: var(--compare-shadow);
+      /* height: 100%; */
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card__icon {
+      width: 48px;
+      height: 48px;
+      background: var(--compare-category-bg);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card__title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--compare-text);
+    }
+
+    .feature-card__description {
+      font-size: 0.9rem;
+      color: var(--compare-text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Feature Section */
+    .feature-section {
+      padding: 4rem 0;
+      border-bottom: 1px solid var(--compare-border);
+    }
+
+    .feature-section:last-of-type {
+      border-bottom: none;
+    }
+
+    .feature-section__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--compare-success);
+      margin: 0 0 0.5rem;
+    }
+
+    .feature-section__title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 1rem;
+      color: var(--compare-text);
+    }
+
+    .feature-section__description {
+      color: var(--compare-text-muted);
+      font-size: 1rem;
+      margin: 0 0 1.5rem;
+    }
+
+    .feature-section__list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .feature-section__list li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--compare-text-muted);
+      font-size: 0.95rem;
+    }
+
+    .feature-section__list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--compare-success);
+      font-weight: 600;
+    }
+
+    .feature-section__image {
+      background: var(--compare-category-bg);
+      border-radius: var(--compare-radius);
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--compare-text-muted);
+      font-size: 0.875rem;
+      /* border: 2px dashed var(--compare-border); */
+      overflow: hidden;
+    }
+
+    .feature-section__image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border: none;
+    }
+
+    /* Comparison Table */
+    .edition-compare {
+      background: var(--compare-bg);
+      border-radius: var(--compare-radius);
+      box-shadow: var(--compare-shadow);
+      overflow: hidden;
+      border: 1px solid var(--compare-border);
+      margin-top: 2rem;
+    }
+
+    .edition-compare__header {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, 90px);
+      background: var(--compare-header-bg);
+      color: white;
+    }
+
+    .edition-compare__header-cell {
+      padding: 1rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .edition-compare__header-cell:first-child {
+      text-align: left;
+    }
+
+    .edition-compare__row {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, 90px);
+      border-top: 1px solid var(--compare-border);
+      transition: background-color 0.15s ease;
+    }
+
+    .edition-compare__row:hover {
+      background: var(--compare-bg-alt);
+    }
+
+    .edition-compare__cell {
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    .edition-compare__cell:first-child {
+      justify-content: flex-start;
+    }
+
+    .edition-compare__check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .edition-compare__check--yes {
+      background: var(--compare-success);
+      color: white;
+    }
+
+    .edition-compare__check--no {
+      background: var(--compare-muted);
+      color: white;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: 4rem 2rem;
+      background: var(--compare-header-bg);
+      color: white;
+      border-radius: var(--compare-radius);
+      margin: 4rem 0 2rem;
+    }
+
+    .cta-section__title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 1rem;
+    }
+
+    .cta-section__subtitle {
+      opacity: 0.85;
+      max-width: 500px;
+      margin: 0 auto 2rem;
+    }
+
+    .cta-section__buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta-section__button {
+      display: inline-block;
+      padding: 0.875rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease;
+    }
+
+    .cta-section__button:hover {
+      transform: translateY(-2px);
+    }
+
+    .cta-section__button--primary {
+      background: white;
+      color: var(--compare-text);
+    }
+
+    .cta-section__button--secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Vertical centering helper for Foundation */
+    .valign-middle {
+      display: flex;
+      align-items: center;
+      /* min-height: 100%; */
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 640px) {
+      .hero__title {
+        font-size: 2rem;
+      }
+
+      .hero__subtitle {
+        font-size: 1.1rem;
+      }
+
+      .feature-section {
+        padding: 3rem 0;
+      }
+
+      .feature-section__title {
+        font-size: 1.35rem;
+      }
+
+      .feature-section__image {
+        min-height: 200px;
+        margin-bottom: 1.5rem;
+      }
+
+      .edition-compare__header,
+      .edition-compare__row {
+        grid-template-columns: 1fr repeat(3, 60px);
+      }
+
+      .edition-compare__header-cell,
+      .edition-compare__cell {
+        padding: 0.625rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .edition-compare__check {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+      }
+
+      .stat__number {
+        font-size: 2rem;
+      }
+
+      .cta-section {
+        padding: 3rem 1.5rem;
+        border-radius: 0;
+        margin-left: -0.9375rem;
+        margin-right: -0.9375rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<header class="hero text-center">
+  <div class="row">
+    <div class="small-12 columns">
+      <h1 class="hero__title">Total CMS 3</h1>
+      <p class="hero__subtitle">A modern, file-based content management system built for Stacks. No database required. No server configuration. Just simple, powerful content management.</p>
+      <div class="hero__badges">
+        <span class="hero__badge">PHP 8.2+</span>
+        <span class="hero__badge">No Database</span>
+        <span class="hero__badge">Twig Templates</span>
+        <span class="hero__badge">REST API</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Stats Row -->
+<div class="row text-center" data-equalizer>
+  <div class="small-6 medium-3 columns">
+    <div class="stat" data-equalizer-watch>
+      <div class="stat__number">15+</div>
+      <div class="stat__label">Content Types</div>
+    </div>
+  </div>
+  <div class="small-6 medium-3 columns">
+    <div class="stat" data-equalizer-watch>
+      <div class="stat__number">30+</div>
+      <div class="stat__label">Form Fields</div>
+    </div>
+  </div>
+  <div class="small-6 medium-3 columns">
+    <div class="stat" data-equalizer-watch>
+      <div class="stat__number">50+</div>
+      <div class="stat__label">Twig Filters</div>
+    </div>
+  </div>
+  <div class="small-6 medium-3 columns">
+    <div class="stat" data-equalizer-watch>
+      <div class="stat__number">0</div>
+      <div class="stat__label">Database Tables</div>
+    </div>
+  </div>
+</div>
+
+<!-- Core Features Highlight -->
+<div class="highlight-section">
+  <div class="row">
+    <div class="small-12 columns text-center">
+      <h2 class="highlight-section__title">Everything You Need</h2>
+      <p class="highlight-section__subtitle">Total CMS includes all the tools you need to build dynamic, content-driven websites.</p>
+    </div>
+  </div>
+
+  <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-3">
+    <li>
+      <div class="feature-card">
+        <div class="feature-card__icon">&#128451;</div>
+        <h3 class="feature-card__title">No Database Required</h3>
+        <p class="feature-card__description">Store all your content in simple JSON files. No MySQL, no server configuration, just files you can control and deploy anywhere.</p>
+      </div>
+    </li>
+    <li>
+      <div class="feature-card">
+        <div class="feature-card__icon">&#128221;</div>
+        <h3 class="feature-card__title">Pre-Built Admin Dashboard</h3>
+        <p class="feature-card__description">Manage your content with an intuitive, user-friendly interface designed for editors of all skill levels.</p>
+      </div>
+    </li>
+    <li>
+      <div class="feature-card">
+        <div class="feature-card__icon">&#128247;</div>
+        <h3 class="feature-card__title">Smart Image Processing</h3>
+        <p class="feature-card__description">Resize, crop, and optimize images on-the-fly. Add watermarks, extract EXIF data, and generate responsive srcsets automatically.</p>
+      </div>
+    </li>
+    <li>
+      <div class="feature-card">
+        <div class="feature-card__icon">&#128274;</div>
+        <h3 class="feature-card__title">Built-in Security</h3>
+        <p class="feature-card__description">User authentication, CSRF protection, brute force prevention, and SVG sanitization included out of the box.</p>
+      </div>
+    </li>
+    <li>
+      <div class="feature-card">
+        <div class="feature-card__icon">&#9889;</div>
+        <h3 class="feature-card__title">Multi-Layer Caching</h3>
+        <p class="feature-card__description">Intelligent caching with automatic failover. APCu, Redis, Memcached, or filesystem—Total CMS picks the fastest available option.</p>
+      </div>
+    </li>
+    <li>
+      <div class="feature-card">
+        <div class="feature-card__icon">&#128230;</div>
+        <h3 class="feature-card__title">One-Click Backups</h3>
+        <p class="feature-card__description">Export entire projects instantly with JumpStart. Perfect for backups, migrations, or creating reusable starter kits.</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<!-- Schemas Section -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Content Types</p>
+          <h2 class="feature-section__title">Schemas</h2>
+          <p class="feature-section__description">Schemas define the structure of your content. Each type provides specialized editing interfaces and validation rules designed for that specific content type.</p>
+          <ul class="feature-section__list">
+            <li>15+ built-in content types ready to use</li>
+            <li>Blog posts with categories, tags, and scheduling</li>
+            <li>Galleries with drag-and-drop image management</li>
+            <li>Pro users can create unlimited custom schemas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-schemas.jpg?w=1000&q=75&dpr=1&format=auto" alt="Schema editor in Total CMS">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Text, Number, Date, Toggle, URL</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Image, Gallery, File, SVG</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Styled Text (Rich Editor)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Color, Email, Code, Feed</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Blog (posts, categories, tags)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Depot (file library)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Custom Schemas</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ImageWorks Section (reversed) -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 medium-push-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Media Processing</p>
+          <h2 class="feature-section__title">ImageWorks</h2>
+          <p class="feature-section__description">Powerful on-the-fly image processing. Resize, crop, and transform images dynamically without storing multiple versions on your server.</p>
+          <ul class="feature-section__list">
+            <li>Smart focal point detection for perfect crops</li>
+            <li>Automatic responsive image generation</li>
+            <li>EXIF metadata extraction for alt text</li>
+            <li>Text and image watermarks with custom fonts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 medium-pull-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-imageworks.jpg?w=1000&q=75&dpr=1&format=auto" alt="ImageWorks processing">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Dynamic Resize & Crop</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Format Conversion & Optimization</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Image Watermarks</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Text Watermarks (custom fonts)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- For Agencies Section -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">For Agencies</p>
+          <h2 class="feature-section__title">Client-Ready Dashboard</h2>
+          <p class="feature-section__description">A clean, intuitive admin interface that clients can use without training. Customize the branding to make it yours.</p>
+          <ul class="feature-section__list">
+            <li>Simple interface clients can use immediately</li>
+            <li>Whitelabel with your logo and colors</li>
+            <li>Access groups to control who can edit what</li>
+            <li>Built-in email notifications with templates</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-dash.jpg?w=1000&q=75&dpr=1&format=auto" alt="Admin Dashboard">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Admin Dashboard</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Basic Whitelabel (logo, colors)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Full Whitelabel (complete rebrand)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Access Groups</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Email Templates & Mailer</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Twig Templates</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- For Developers Section (reversed) -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 medium-push-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">For Developers</p>
+          <h2 class="feature-section__title">Twig Templating</h2>
+          <p class="feature-section__description">Full Twig integration with 50+ custom filters and functions designed specifically for content management. Test templates live in the Playground.</p>
+          <ul class="feature-section__list">
+            <li>Powerful CMS Grid tag for content loops</li>
+            <li>Custom filters for dates, text, colors, and more</li>
+            <li>Factory data for realistic test content</li>
+            <li>QR codes and barcodes in templates</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 medium-pull-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-playground.jpg?w=1000&q=75&dpr=1&format=auto" alt="Twig Playground">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Template Playground</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">CMS Grid & Custom Filters</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Factory Data</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">QR Codes</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Barcodes</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Data Access Section -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Flexibility</p>
+          <h2 class="feature-section__title">Data Access</h2>
+          <p class="feature-section__description">Access your content however you need it. Generate RSS feeds, sitemaps, export to CSV, or build headless applications with the REST API.</p>
+          <ul class="feature-section__list">
+            <li>Automatic RSS feed generation</li>
+            <li>SEO-friendly XML sitemaps</li>
+            <li>Export data as CSV or JSON</li>
+            <li>Full REST API for headless CMS</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-export.jpg?w=1000&q=75&dpr=1&format=auto" alt="Data Access">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">RSS Feeds</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">XML Sitemaps</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">CSV & JSON Export</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">JumpStart (backup/restore)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">PHP API</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">REST API</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">API Keys</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Migration Section (reversed) -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 medium-push-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Migration</p>
+          <h2 class="feature-section__title">Easy Upgrades</h2>
+          <p class="feature-section__description">Already using another CMS? Total CMS makes it easy to migrate your content with built-in import tools.</p>
+          <ul class="feature-section__list">
+            <li>Automatic Total CMS 1 migration</li>
+            <li>Alloy CMS content import</li>
+            <li>CSV bulk import for spreadsheets</li>
+            <li>JSON import for structured data</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 medium-pull-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-setup.jpg?w=1000&q=75&dpr=1&format=auto" alt="Migration tools">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Form Actions Section -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Automation</p>
+          <h2 class="feature-section__title">Form Actions</h2>
+          <p class="feature-section__description">Control what happens after form submissions. Send emails, trigger webhooks, or redirect users. Chain multiple actions together for complex workflows.</p>
+          <ul class="feature-section__list">
+            <li>Email notifications with templates</li>
+            <li>Webhook integrations (Zapier, Make, etc.)</li>
+            <li>Smart redirects after submission</li>
+            <li>Chain multiple actions together</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-mailer.jpg?w=1000&q=75&dpr=1&format=auto" alt="Form Actions">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Redirect / Refresh / Back</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Redirect to Object</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Email Notifications</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Webhooks</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Admin Tools Section (reversed) -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 medium-push-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Built-in Tools</p>
+          <h2 class="feature-section__title">Admin Utilities</h2>
+          <p class="feature-section__description">Everything you need to manage your site is built right in. No plugins, no extensions, no extra costs.</p>
+          <ul class="feature-section__list">
+            <li>Cache manager with one-click clearing</li>
+            <li>Image batch processor</li>
+            <li>Background job queue</li>
+            <li>Log analyzer for debugging</li>
+            <li>Pretty URL builder</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 medium-pull-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-utils.jpg?w=1000&q=75&dpr=1&format=auto" alt="Admin Tools">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Form Fields Section -->
+<section class="feature-section">
+  <div class="row">
+    <div class="small-12 medium-6 columns">
+      <div class="valign-middle">
+        <div>
+          <p class="feature-section__label">Form Builder</p>
+          <h2 class="feature-section__title">30+ Field Types</h2>
+          <p class="feature-section__description">Build any form you can imagine with our comprehensive field library. From simple text inputs to complex gallery uploaders, each field type provides the right editing experience.</p>
+          <ul class="feature-section__list">
+            <li>Text, number, date, time, phone, email</li>
+            <li>Image and gallery uploaders</li>
+            <li>Rich text editor with markdown</li>
+            <li>Selects, checkboxes, radio buttons</li>
+            <li>Color pickers with OKLCH support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="small-12 medium-6 columns">
+      <div class="feature-section__image">
+        <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-field-types.jpg?w=1000&q=75&dpr=1&format=auto" alt="Form Builder">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Basic Fields (text, number, date, etc.)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Media Fields (image, gallery, file)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Select & Radio</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Multi-Select & Multi-Checkbox</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">List Field</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Depot Field</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Deck (repeatable sections)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<div class="row">
+  <div class="small-12 columns">
+    <div class="cta-section text-center">
+      <h2 class="cta-section__title">Ready to Get Started?</h2>
+      <p class="cta-section__subtitle">Try Total CMS free with no time limits. Upgrade when you're ready.</p>
+      <div class="cta-section__buttons">
+        <a href="#" class="cta-section__button cta-section__button--primary">Download Free</a>
+        <a href="#" class="cta-section__button cta-section__button--secondary">View Documentation</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
