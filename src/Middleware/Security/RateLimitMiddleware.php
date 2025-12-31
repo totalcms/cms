@@ -30,11 +30,11 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// Get rate limit config
+		// Get rate limit config (cast to int since JSON settings come as strings)
 		$mailerConfig     = $this->config->mailer ?? [];
-		$perIpLimit       = $mailerConfig['ratePerIp'] ?? 10;
-		$perTemplateLimit = $mailerConfig['ratePerTemplate'] ?? 50;
-		$window           = $mailerConfig['rateWindow'] ?? 300; // 5 minutes
+		$perIpLimit       = (int) ($mailerConfig['ratePerIp'] ?? 10);
+		$perTemplateLimit = (int) ($mailerConfig['ratePerTemplate'] ?? 50);
+		$window           = (int) ($mailerConfig['rateWindow'] ?? 300); // 5 minutes
 
 		// Get identifier (IP address)
 		$ip    = $this->getClientIp($request);
