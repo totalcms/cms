@@ -120,6 +120,9 @@ export default class TotalCMS {
             headers : new Headers(headers),
             body: JSON.stringify(data)
         }).then(response => {
+			if (!response) {
+				throw new Error('No response received from server');
+			}
 			if (!response.ok) {
 				return response.json().then(json => {
 					const error = new Error(json.error.message);
@@ -144,6 +147,9 @@ export default class TotalCMS {
             headers : new Headers(headers),
             body: data
         }).then(response => {
+			if (!response) {
+				throw new Error('No response received from server');
+			}
 			if (!response.ok) {
 				return response.json().then(json => {
 					const error = new Error(json.error.message);
@@ -175,6 +181,9 @@ export default class TotalCMS {
             mode    : this.options.cors ? "cors" : "same-origin",
             headers : new Headers(headers)
 		}).then(response => {
+			if (!response) {
+				throw new Error('No response received from server');
+			}
             if (!response.ok) {
                 response.json().then(json => console.error("fetchAPI Error",json));
                 throw Error(response.statusText);
