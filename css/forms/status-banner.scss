@@ -64,6 +64,7 @@
 
         &:after {
 			animation  : none;
+			rotate     : 0deg; // Reset rotation for Firefox
 			mask-image : var(--icon-success);
 			opacity    : 1;
 			scale      : 1.2;
@@ -75,6 +76,7 @@
 
         &:after {
 			animation  : none;
+			rotate     : 0deg; // Reset rotation for Firefox
 			mask-image : var(--icon-error);
 			opacity    : 1;
 			scale      : 1.2;
