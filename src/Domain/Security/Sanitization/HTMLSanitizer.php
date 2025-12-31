@@ -164,16 +164,17 @@ class HTMLSanitizer
 	 */
 	private static function handleAllowedTags(string $html, array $config): string
 	{
-		if (!isset($config['allowed_tags'])) {
+		// Skip if allowed_tags is not set or not an array
+		if (!isset($config['allowed_tags']) || !is_array($config['allowed_tags'])) {
 			return $html;
 		}
 
 		$allowedTags = $config['allowed_tags'];
 		// For simplicity, just remove specific disallowed tags for tests
-		if (!in_array('div', $allowedTags)) {
+		if (!in_array('div', $allowedTags, true)) {
 			$html = (string)preg_replace('/<\/?div[^>]*>/i', '', $html);
 		}
-		if (!in_array('strong', $allowedTags)) {
+		if (!in_array('strong', $allowedTags, true)) {
 			$html = (string)preg_replace('/<\/?strong[^>]*>/i', '', $html);
 		}
 
