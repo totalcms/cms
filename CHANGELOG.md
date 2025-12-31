@@ -2,6 +2,39 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.0] - 2025-12-31
+
+### Added
+
+- **Logout Class Handler**: Elements with `.cms-logout` class now trigger logout redirect via API
+
+### Enhanced
+
+- **Twig Download Functions**: `cms.download()` and `cms.stream()` now accept full object arrays in addition to IDs
+- **Schema Property Inheritance**: Inherited schema properties can now be overridden in child schema forms
+- **Sentry Error Filtering**: Improved filtering of user-caused errors to reduce noise in error tracking
+- **API Request Handling**: Better error handling for undefined fetch responses in JavaScript
+
+### Fixed
+
+- **Firefox Drag and Drop**: Fixed gallery image reordering not working in Firefox
+  - Added SortableJS fallback mode for Firefox compatibility
+  - Fixed MutationObserver interference during drag operations
+  - Fixed order not saving after multiple drag operations
+- **Firefox Save Animation**: Fixed success/error checkmark icon spinning instead of scaling in Firefox
+- **Clipboard on HTTP**: Added fallback for clipboard copy functionality on non-HTTPS sites
+- **Properties Field**: Fixed TypeError when getting values from uninitialized property fields
+- **User Profile Permissions**: Users can now always update their own profile regardless of access group
+- **Profile Form**: Fixed profile form submission issues
+- **Access Group Defaults**: Fixed default access group assignment for users without explicit groups
+- **Project Setup**: Fixed project setup utility issues
+- **Mailer Settings**: Fixed type casting for SMTP port and timeout settings
+- **PHP Namespace**: Fixed namespace declaration for global helper functions
+
+### Changed
+
+- **Encryption Algorithm**: Updated cipher algorithm for improved security
+
 ## [3.0.50] - 2025-12-21
 
 ### Added
