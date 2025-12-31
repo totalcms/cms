@@ -41,14 +41,15 @@ export default class TotalForm {
     constructor(formRef, options = {}) {
         this.form = this.setForm(formRef);
 		formRef.totalform = this;
+		this.fields = []; // Initialize early to prevent undefined errors on disabled forms
 
 		if (formRef.dataset.disabled !== undefined) {
-			return false;
+			return;
 		}
 
 		if (!formRef || !this.form) {
 			console.error("form not found");
-			return false;
+			return;
 		}
 
 		// Define option defaults
@@ -94,7 +95,6 @@ export default class TotalForm {
 		// If an ID is set, we are in edit mode
 		if (formIDSet) this.setupEditMode();
 
-		this.fields   = []; // set to empty array to avoid issues with ID autogen field
 		this.processFields();
 		this.droplets = this.fields.filter(field => field.isDroplet());
 		this.setupFieldsForEdit();
