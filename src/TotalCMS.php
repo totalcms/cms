@@ -18,6 +18,7 @@ use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\DeckItemSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
@@ -193,6 +194,17 @@ class TotalCMS
 	public function mailer(): EmailService
 	{
 		return $this->container->get(EmailService::class);
+	}
+
+	/**
+	 * Get the deck item saver for adding items to deck properties.
+	 *
+	 * Usage:
+	 *   $totalcms->deckItemSaver()->saveDeckItem('users', $userId, 'deposits', $itemId, $itemData);
+	 */
+	public function deckItemSaver(): DeckItemSaver
+	{
+		return $this->container->get(DeckItemSaver::class);
 	}
 
 	/**
