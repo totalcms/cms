@@ -10,6 +10,9 @@ export default class JobQueueStatsTable {
 		});
         this.route = "/jobqueue/stats";
 
+        // Determine which data key this table uses based on its class
+        this.dataKey = this.table.classList.contains("jobqueue-by-status") ? "status" : "type";
+
         const collection = this.table.dataset.collection || "";
         if (collection.length > 0) {
             this.route = `/jobqueue/stats/${collection}`;
@@ -29,10 +32,14 @@ export default class JobQueueStatsTable {
 
     updateQueueStats() {
         this.api.fetchAPI(this.route).then(data => {
-            for (const type in data) {
-                for (const status in data[type]) {
-                    this.updateCount(status.toLowerCase(), data[type][status]);
-                }
+            if (!data || !data[this.dataKey]) {
+                console.warn("Job queue stats: No data received for", this.dataKey);
+                return;
+            }
+            // Only update fields for this table's data type
+            const stats = data[this.dataKey];
+            for (const field in stats) {
+                this.updateCount(field.toLowerCase(), stats[field]);
             }
         }).catch(error => {
             // Silently ignore network errors for background polling
