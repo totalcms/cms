@@ -3,6 +3,7 @@
 namespace TotalCMS;
 
 use DI\Container;
+use Monolog\Level;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -15,6 +16,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
+use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -180,6 +182,42 @@ class TotalCMS
 	public function jobRunner(): JobRunner
 	{
 		return $this->container->get(JobRunner::class);
+	}
+
+	/**
+	 * Get the email service for sending emails via configured mailer templates.
+	 *
+	 * Usage:
+	 *   $result = $totalcms->mailer()->sendEmail('error-notification', ['error' => $message]);
+	 */
+	public function mailer(): EmailService
+	{
+		return $this->container->get(EmailService::class);
+	}
+
+	/**
+	 * Create a logger for custom scripts.
+	 *
+	 * Logs will appear in the Log Analyzer in the admin dashboard.
+	 *
+	 * @param string $name The logger name (used as channel and filename)
+	 * @param bool $console Also output to console (useful for CLI scripts)
+	 * @param Level|null $level Log level (null uses system default)
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function createLogger(string $name, bool $console = false, ?Level $level = null): LoggerInterface
+	{
+		$loggerFactory = $this->container->get(LoggerFactory::class);
+
+		$loggerFactory->addFileHandler($name . '.log', level: $level);
+
+		if ($console) {
+			$consoleLevel = ($level === Level::Debug) ? Level::Debug : Level::Info;
+			$loggerFactory->addConsoleHandler($consoleLevel);
+		}
+
+		return $loggerFactory->createLogger($name);
 	}
 
 	// ---------------------------------------------------------------------------------
