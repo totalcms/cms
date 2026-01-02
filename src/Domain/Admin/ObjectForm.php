@@ -58,6 +58,12 @@ class ObjectForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
+		// For deck context fields, skip parent schema lookup - the DeckItem already
+		// provides complete field configuration from the deck schema
+		if (isset($options['deck_context']) && $options['deck_context'] === true) {
+			return $options;
+		}
+
 		$defaults = $this->fieldDefaults($name);
 		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
