@@ -1008,6 +1008,91 @@ Checks if a date is today.
 {% endif %}
 ```
 
+### Recurring Date Operations
+
+#### `recurringMonthDate(mixed $date, mixed $targetDate = null): string`
+Gets the recurring date for a target month. Useful for subscription billing dates - automatically handles end-of-month clamping (e.g., Jan 31st becomes Feb 28th).
+
+```twig
+{# Get this month's billing date based on subscription start #}
+{{ subscription.startDate | recurringMonthDate | date('M j, Y') }}
+
+{# Get billing date for a specific month #}
+{{ subscription.startDate | recurringMonthDate('2026-03-01') | date('M j, Y') }}
+
+{# Calculate next payment date #}
+{% set nextPayment = membership.startDate | recurringMonthDate %}
+<p>Your next payment is on {{ nextPayment | date('F j, Y') }}</p>
+
+{# Show payment schedule #}
+{% set months = ['2026-01-01', '2026-02-01', '2026-03-01'] %}
+<ul>
+{% for month in months %}
+    <li>{{ subscription.startDate | recurringMonthDate(month) | date('F j, Y') }}</li>
+{% endfor %}
+</ul>
+```
+
+**End-of-month clamping examples:**
+- January 31st → February 28th (or 29th in leap year)
+- January 31st → March 31st (no clamping needed)
+- January 30th → February 28th (clamped)
+- January 15th → February 15th (no clamping needed)
+
+#### `dateIsRecurringDate(mixed $date, mixed $compareDate = null): bool`
+Checks if a comparison date falls on the recurring day of the original date. Useful for determining if today is a billing day for a subscription.
+
+```twig
+{# Check if today is the billing day #}
+{% if subscription.startDate | dateIsRecurringDate %}
+    <div class="alert alert-warning">Payment due today!</div>
+{% endif %}
+
+{# Check against a specific date #}
+{% if subscription.startDate | dateIsRecurringDate(checkDate) %}
+    <p>This is a billing day for this subscription.</p>
+{% endif %}
+
+{# Billing reminder logic #}
+{% set tomorrow = "now" | dateAdd('+1 day') %}
+{% if subscription.startDate | dateIsRecurringDate(tomorrow) %}
+    <div class="notice">Payment due tomorrow!</div>
+{% endif %}
+
+{# Process payments for today #}
+{% for member in members %}
+    {% if member.billingDate | dateIsRecurringDate %}
+        <div class="payment-due">{{ member.name }} - Payment due today</div>
+    {% endif %}
+{% endfor %}
+```
+
+**Real-World Example - Subscription Management:**
+```twig
+{% set subscription = cms.object('subscriptions', user.id) %}
+
+<div class="subscription-info">
+    <h3>{{ subscription.plan }} Plan</h3>
+    <p>Started: {{ subscription.startDate | date('F j, Y') }}</p>
+    <p>Next billing: {{ subscription.startDate | recurringMonthDate | date('F j, Y') }}</p>
+
+    {% if subscription.startDate | dateIsRecurringDate %}
+        <div class="alert alert-info">
+            Your payment is being processed today.
+        </div>
+    {% endif %}
+
+    {# Show upcoming billing dates #}
+    <h4>Upcoming Payments</h4>
+    <ul>
+        {% for i in 1..3 %}
+            {% set futureMonth = "now" | dateAdd('+' ~ i ~ ' months') %}
+            <li>{{ subscription.startDate | recurringMonthDate(futureMonth) | date('F j, Y') }}</li>
+        {% endfor %}
+    </ul>
+</div>
+```
+
 ### Smart Date Strings
 
 The date filters support natural language strings powered by Chronos:
