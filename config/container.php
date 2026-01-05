@@ -317,7 +317,6 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(CollectionFetcher::class),
-		$container->get(CollectionLister::class),
 		$container->get(IndexReader::class),
 		$container->get(IndexFilter::class),
 		$container->get(SchemaFetcher::class),
@@ -331,7 +330,6 @@ return [
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
 		$container->get(JobManager::class),
-		$container->get(CacheManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -367,6 +365,7 @@ return [
 		$container->get(LicenseStatus::class),
 		$container->get(EditionTwigAdapter::class),
 		$container->get(JobManager::class),
+		$container->get(CacheManager::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),

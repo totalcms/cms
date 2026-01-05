@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -27,6 +28,7 @@ readonly class CollectionTable
 		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
 		private IndexReader $collectionReader,
+		private ObjectUrlBuilder $objectUrlBuilder,
 		private string $api,
 		private string $collection,
 	) {
@@ -252,19 +254,33 @@ readonly class CollectionTable
 		return $objects;
 	}
 
-	private function buildObjectActionButton(string $id): string
+	/** @param array<string,mixed> $object */
+	private function buildObjectActionButton(array $object): string
 	{
+		$id            = (string)($object['id'] ?? '');
+		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
+
+		// Edit link - same as clicking the row, but can be cmd+clicked to open in new tab
+		$edit = HTMLUtils::element('a', 'Edit ' . $labelSingular, [
+			'href' => implode('/', [
+				'collections',
+				$this->collectionData->id,
+				$id,
+			]),
+		]);
+		$edit = HTMLUtils::element('li', $edit, ['class' => 'edit']);
+
 		$link = '';
 		if ($this->collectionData->url !== '') {
-			$link = HTMLUtils::element('a', 'Link to Webpage', [
+			$objectUrl = $this->objectUrlBuilder->buildUrl($this->collectionData, $object);
+			$link      = HTMLUtils::element('a', 'Link to Webpage', [
 				'target' => '_blank',
-				'href'   => CollectionData::objectUrl($this->collectionData, $id),
+				'href'   => $objectUrl,
 			]);
 			$link = HTMLUtils::element('li', $link, ['class' => 'link']);
 		}
 
-		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
-		$delete        = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
+		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
 			'class'        => 'delete-action',
 			'data-method'  => 'DELETE',
 			'data-confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
@@ -287,7 +303,7 @@ readonly class CollectionTable
 		]);
 		$clone = HTMLUtils::element('li', $clone, ['class' => 'clone']);
 
-		$actions = HTMLUtils::element('ul', $link . $clone . $delete);
+		$actions = HTMLUtils::element('ul', $edit . $link . $clone . $delete);
 		$popover = HTMLUtils::element('nav', $actions, [
 			'popover' => '',
 			'class'   => 'object-action-popover',
@@ -306,7 +322,7 @@ readonly class CollectionTable
 	{
 		$rows = '';
 		foreach ($this->sortObjects() as $object) {
-			$button = $this->buildObjectActionButton($object['id']);
+			$button = $this->buildObjectActionButton($object);
 			// add the action button to the first column
 			$cell = HTMLUtils::element('td', $button, ['class' => 'action']);
 			// order the columns by the index in the schema

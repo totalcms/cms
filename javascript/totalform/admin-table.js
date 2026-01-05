@@ -165,7 +165,7 @@ export default class AdminTable {
 
 	initCellClickListener() {
 		// Use GridJS's built-in cellClick event (this is already efficient)
-		this.grid.on('cellClick', e => {
+		this.grid.on('cellClick', (e) => {
 			const cell = e.currentTarget;
 			// Ignore clicks on buttons and links
 			if (cell.querySelector("button,a")) return;
@@ -175,7 +175,13 @@ export default class AdminTable {
 			if (idCell) {
 				const id = idCell.innerText;
 				if (id) {
-					window.location.href = `${window.location.href}/${id}`;
+					const url = `${window.location.href}/${id}`;
+					// Support cmd+click (Mac) / ctrl+click (Windows/Linux) to open in new tab
+					if (e.metaKey || e.ctrlKey) {
+						window.open(url, '_blank');
+					} else {
+						window.location.href = url;
+					}
 				}
 			}
 		});
