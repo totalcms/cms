@@ -5,6 +5,8 @@
 	display       : grid;
 	gap           : 1rem;
 	align-content : start;
+	min-width     : 0;
+	max-width     : 100%;
 
 	&:not(:first-of-type) {
 		margin-top : 1rem;
@@ -64,8 +66,9 @@
 }
 
 .form-field {
-	position : relative;
-	width    : 100%;
+	position  : relative;
+	width     : 100%;
+	min-width : 0;
 
 	&:is(:visible):not(:first-of-type) {
 		margin-top : 1rem;
@@ -234,6 +237,8 @@ button.cms-add {
 	border-radius : var(--totalform-radius);
 	transition    : box-shadow 200ms ease-in-out;
 	box-shadow    : 0 0 0 oklch(var(--totalform-shadow));
+	min-width     : 0;
+	max-width     : 100%;
 
     &:has(:focus), &:has(.is-focused) {
         box-shadow: 0 1px 2px oklch(var(--totalform-shadow));
