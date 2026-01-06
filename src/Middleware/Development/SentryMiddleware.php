@@ -40,6 +40,7 @@ class SentryMiddleware implements MiddlewareInterface
 			\RuntimeException::class,
 			\UnexpectedValueException::class,
 			\League\Flysystem\UnableToWriteFile::class,
+			\Error::class,
 		],
 		'user_error_messages' => [
 			'Required field(s) cannot be empty',
@@ -66,6 +67,7 @@ class SentryMiddleware implements MiddlewareInterface
 			'Does not match object ID',
 			'Unable to retrieve file data',
 			'Unable to locate object property',
+			'Error fetching Collection with id',
 		],
 	];
 
