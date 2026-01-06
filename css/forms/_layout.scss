@@ -37,6 +37,11 @@
         color       : oklch(var(--totalform-label-color));
         transition  : opacity 0.5s;
         width       : max-content;
+
+		// overflow      : hidden;
+		// white-space   : nowrap;
+		// text-overflow : ellipsis;
+		max-width     : 100%;
     }
 
 	section {
