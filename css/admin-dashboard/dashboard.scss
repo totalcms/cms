@@ -947,3 +947,13 @@
 		}
 	}
 }
+.devmode-widget {
+	label {
+		display: none;
+	}
+	.help {
+		background : none;
+		padding    : 0;
+		font-size  : 1rem;
+	}
+}
