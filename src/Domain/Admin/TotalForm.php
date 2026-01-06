@@ -278,15 +278,18 @@ class TotalForm implements \Stringable
 
 	public function build(string $content = ''): string
 	{
-		$formgrid = null;
+		$formId       = null;
+		$formStyleTag = '';
 
 		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$this->class .= ' formgrid';
+			$formId       = 'form-' . bin2hex(random_bytes(8));
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
-			$formgrid     = $gridBuilder->toCssGridAreas();
+			$formStyleTag = $gridBuilder->toStyleTag($formId);
 		}
 
 		$attributes = array_filter([
+			'id'                    => $formId,
 			'class'                 => "totalform {$this->class}",
 			'data-form'             => $this->formType,
 			'data-schema'           => $this->schema,
@@ -296,7 +299,6 @@ class TotalForm implements \Stringable
 			'data-api'              => $this->api,
 			'data-route'            => $this->route,
 			'data-id'               => $this->id === '' ? null : $this->id,
-			'style'                 => $formgrid === null || $formgrid === '' ? null : $formgrid,
 		]);
 
 		$actions = [
@@ -329,7 +331,14 @@ class TotalForm implements \Stringable
 			'class' => 'form-inline-fields',
 		]);
 
-		return HTMLUtils::element('form', $content, $attributes);
+		$form = HTMLUtils::element('form', $content, $attributes);
+
+		// Wrap in container div for container queries (formgrid responsive layout)
+		if ($formId !== null) {
+			$form = HTMLUtils::element('div', $form, ['id' => $formId . '-container']);
+		}
+
+		return $formStyleTag . $form;
 	}
 
 	public function layout2Columns(string $col1, string $col2): string
