@@ -36,7 +36,11 @@ readonly class ExportJumpStartAction
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
 
 		// Use streaming to avoid memory exhaustion with large datasets
-		$tempFile = \tmpfile();
+		// php://temp is used as fallback since some hosts disable tmpfile()
+		$tempFile = @\tmpfile();
+		if ($tempFile === false) {
+			$tempFile = \fopen('php://temp', 'r+');
+		}
 		if ($tempFile === false) {
 			throw new \RuntimeException('Failed to create temporary file for export');
 		}
