@@ -13,14 +13,26 @@ use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Object\Service\ObjectCloner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectRemover;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Property\Service\DeckItemFetcher;
+use TotalCMS\Domain\Property\Service\DeckItemRemover;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
+use TotalCMS\Domain\Property\Service\DeckItemUpdater;
+use TotalCMS\Domain\Property\Service\FileSaver;
+use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
@@ -205,6 +217,138 @@ class TotalCMS
 	public function deckItemSaver(): DeckItemSaver
 	{
 		return $this->container->get(DeckItemSaver::class);
+	}
+
+	/**
+	 * Get the deck item updater for updating existing deck items.
+	 *
+	 * Usage:
+	 *   $totalcms->deckItemUpdater()->updateDeckItem('users', $userId, 'deposits', $itemId, $itemData);
+	 */
+	public function deckItemUpdater(): DeckItemUpdater
+	{
+		return $this->container->get(DeckItemUpdater::class);
+	}
+
+	/**
+	 * Get the deck item remover for deleting deck items.
+	 *
+	 * Usage:
+	 *   $totalcms->deckItemRemover()->removeDeckItem('users', $userId, 'deposits', $itemId);
+	 */
+	public function deckItemRemover(): DeckItemRemover
+	{
+		return $this->container->get(DeckItemRemover::class);
+	}
+
+	/**
+	 * Get the deck item fetcher for retrieving specific deck items.
+	 *
+	 * Usage:
+	 *   $item = $totalcms->deckItemFetcher()->fetchDeckItem('users', $userId, 'deposits', $itemId);
+	 */
+	public function deckItemFetcher(): DeckItemFetcher
+	{
+		return $this->container->get(DeckItemFetcher::class);
+	}
+
+	/**
+	 * Get the object saver for creating new objects.
+	 *
+	 * Usage:
+	 *   $object = $totalcms->objectSaver()->saveObject('blog', ['id' => 'my-post', 'title' => 'Hello']);
+	 */
+	public function objectSaver(): ObjectSaver
+	{
+		return $this->container->get(ObjectSaver::class);
+	}
+
+	/**
+	 * Get the object updater for updating existing objects.
+	 *
+	 * Usage:
+	 *   $object = $totalcms->objectUpdater()->updateObject('blog', 'my-post', ['title' => 'Updated Title']);
+	 */
+	public function objectUpdater(): ObjectUpdater
+	{
+		return $this->container->get(ObjectUpdater::class);
+	}
+
+	/**
+	 * Get the object remover for deleting objects.
+	 *
+	 * Usage:
+	 *   $totalcms->objectRemover()->removeObject('blog', 'my-post');
+	 */
+	public function objectRemover(): ObjectRemover
+	{
+		return $this->container->get(ObjectRemover::class);
+	}
+
+	/**
+	 * Get the object cloner for duplicating objects.
+	 *
+	 * Usage:
+	 *   $clonedObject = $totalcms->objectCloner()->cloneObject('blog', 'my-post', 'my-post-copy');
+	 */
+	public function objectCloner(): ObjectCloner
+	{
+		return $this->container->get(ObjectCloner::class);
+	}
+
+	/**
+	 * Get the schema fetcher for retrieving schema definitions.
+	 *
+	 * Usage:
+	 *   $schema = $totalcms->schemaFetcher()->fetchSchema('blog');
+	 */
+	public function schemaFetcher(): SchemaFetcher
+	{
+		return $this->container->get(SchemaFetcher::class);
+	}
+
+	/**
+	 * Get the schema lister for listing available schemas.
+	 *
+	 * Usage:
+	 *   $schemas = $totalcms->schemaLister()->listSchemas();
+	 */
+	public function schemaLister(): SchemaLister
+	{
+		return $this->container->get(SchemaLister::class);
+	}
+
+	/**
+	 * Get the index builder for rebuilding collection indexes.
+	 *
+	 * Usage:
+	 *   $totalcms->indexBuilder()->rebuildIndex('blog');
+	 */
+	public function indexBuilder(): IndexBuilder
+	{
+		return $this->container->get(IndexBuilder::class);
+	}
+
+	/**
+	 * Get the file saver for programmatically saving files.
+	 *
+	 * Usage:
+	 *   $totalcms->fileSaver()->saveFile('documents', 'doc-id', 'file', $uploadedFile);
+	 */
+	public function fileSaver(): FileSaver
+	{
+		return $this->container->get(FileSaver::class);
+	}
+
+	/**
+	 * Get the image saver for programmatically saving images.
+	 *
+	 * Usage:
+	 *   $totalcms->imageSaver()->saveImage('gallery', 'gallery-id', 'image', $uploadedFile);
+	 */
+	public function imageSaver(): ImageSaver
+	{
+		return $this->container->get(ImageSaver::class);
 	}
 
 	/**
