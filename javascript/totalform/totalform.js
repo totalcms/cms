@@ -538,6 +538,10 @@ export default class TotalForm {
 		// Simple forms without IDs should always use POST
 		if (!this.id || this.id.length === 0) return;
 
+		// Deck forms have their route fully set by PHP (includes parent object ID and optionally item ID)
+		// Don't modify the route for deck forms
+		if (this.type === "deck") return;
+
 		// Set the method to PUT or PATCH for editing existing objects
 		this.method = this.form.dataset.method||"PUT";
 		if (this.method.toUpperCase() === "POST") this.method = "PUT";
