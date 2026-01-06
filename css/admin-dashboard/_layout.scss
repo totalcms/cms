@@ -297,13 +297,24 @@ body {
 		max-width : 800px;
 	}
 	header {
-		display     : flex;
-		gap         : 0.75rem;
-		align-items : end;
-		position    : relative;
+		display   : flex;
+		flex-wrap : wrap;
+		gap       : 0.75rem;
+		position  : relative;
 
 		h1 {
-			flex-grow : 1;
+			flex           : 1 1 0;
+			min-width      : 300px;
+			overflow       : hidden;
+			text-overflow  : ellipsis;
+			white-space    : nowrap;
+		}
+
+		.actions {
+			display    : flex;
+			flex-wrap  : wrap;
+			gap        : 0.75rem;
+			flex-shrink: 0;
 		}
 	}
 }
@@ -650,15 +661,6 @@ pre {
 		padding : 1rem;
 
 		header {
-			flex-wrap   : wrap;
-			align-items : center;
-			gap         : 0.75rem;
-
-			h1 {
-				flex  : 1 1 100%;
-				width : 100%;
-			}
-
 			.dash-button {
 				flex : 0 0 auto;
 			}
