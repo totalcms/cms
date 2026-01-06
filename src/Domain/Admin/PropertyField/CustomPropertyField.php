@@ -100,7 +100,7 @@ class CustomPropertyField
 			return '';
 		}
 
-		$options = HTMLUtils::option('Override New Property', '', [
+		$options = HTMLUtils::option('Override Property', '', [
 			'class'    => 'placeholder',
 			'disabled' => 'disabled',
 			'selected' => 'selected',

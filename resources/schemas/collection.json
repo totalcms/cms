@@ -182,12 +182,12 @@
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
 			"help"  : "Override schema property attributes for this collection.",
-			"label" : "Form Field Overrides",
+			"label" : "Schema Overrides",
 			"field" : "properties"
 		},
 		"customProperties": {
 			"type"              : "object",
-			"label"             : "Object Form Overrides",
+			"label"             : "Object Specific Overrides",
 			"field"             : "customProperties",
 			"help"              : "Custom values for the form fields for specific objects.",
 			"patternProperties" : {

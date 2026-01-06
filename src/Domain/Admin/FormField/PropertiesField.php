@@ -67,7 +67,7 @@ class PropertiesField extends FormField
 			return '';
 		}
 
-		$options = HTMLUtils::option('Override New Property', '', [
+		$options = HTMLUtils::option('Override Property', '', [
 			'class'    => 'placeholder',
 			'disabled' => 'disabled',
 			'selected' => 'selected',

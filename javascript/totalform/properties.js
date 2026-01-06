@@ -73,6 +73,9 @@ export default class PropertiesField extends TotalField {
 
 		const propertyField = Array.from(parent.getElementsByClassName(this.fieldClass)).pop();
 
+		// Mark as new property for styling
+		propertyField.classList.add('new-property');
+
 		propertyField.classList.remove('-field');
 		propertyField.classList.add(`${property.field}-field`);
 
