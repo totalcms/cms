@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -37,6 +38,7 @@ class TemplateForm extends TotalForm
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
+		protected CollectionLister $collectionLister,
 		protected IndexReader $collectionReader,
 		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
@@ -78,6 +80,7 @@ class TemplateForm extends TotalForm
 		parent::__construct(
 			$objectFetcher,
 			$collectionFetcher,
+			$collectionLister,
 			$collectionReader,
 			$indexFilter,
 			$schemaFetcher,

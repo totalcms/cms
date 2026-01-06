@@ -96,10 +96,11 @@
 			}
 		},
         "category": {
-			"type"  : "string",
-			"label" : "Category",
-			"help"  : "Add a category to organize the collections in the side panel",
-			"field" : "text"
+			"type"     : "string",
+			"label"    : "Category",
+			"help"     : "Add a category to organize the collections in the side panel",
+			"field"    : "text",
+			"settings" : { "propertyOptions": "collections" }
         },
         "labelPlural": {
 			"type"        : "string",

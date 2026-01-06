@@ -301,9 +301,28 @@ class FormField
 		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
 	}
 
-	/** @return array<string> */
+	/**
+	 * Build options for propertyOptions setting.
+	 * Supports:
+	 * - true: fetch unique values from current collection for this property
+	 * - "collections": fetch unique category values from all collections
+	 * - "schemas": fetch unique category values from all schemas
+	 *
+	 * @return array<string>
+	 */
 	protected function buildOptionsForProperty(): array
 	{
+		$source = $this->settings['propertyOptions'] ?? true;
+
+		if ($source === 'collections') {
+			return $this->form->categoryListForCollections();
+		}
+
+		if ($source === 'schemas') {
+			return $this->form->categoryListForSchemas();
+		}
+
+		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}
 
@@ -365,7 +384,9 @@ class FormField
 	 */
 	protected function buildOptions(string $options = ''): string
 	{
-		if (isset($this->settings['propertyOptions']) && $this->settings['propertyOptions'] === true) {
+		// propertyOptions can be true (use current collection) or a string source ("collections", "schemas")
+		$propertyOptions = $this->settings['propertyOptions'] ?? null;
+		if ($propertyOptions === true || is_string($propertyOptions)) {
 			$this->options = array_merge($this->options, $this->buildOptionsForProperty());
 		}
 		if (isset($this->settings['relationalOptions'])) {

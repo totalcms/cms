@@ -10,6 +10,7 @@ use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -156,6 +157,7 @@ class TotalForm implements \Stringable
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
+		protected CollectionLister $collectionLister,
 		protected IndexReader $collectionReader,
 		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
@@ -355,6 +357,28 @@ class TotalForm implements \Stringable
 
 		// array_filter removes any empty values
 		return array_filter($collection->objects->pluck($property)->flatten()->unique()->toArray());
+	}
+
+	/**
+	 * Get a list of unique category values from all collections.
+	 * Used for propertyOptions: "collections" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function categoryListForCollections(): array
+	{
+		return $this->collectionLister->listCategories();
+	}
+
+	/**
+	 * Get a list of unique category values from all schemas.
+	 * Used for propertyOptions: "schemas" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function categoryListForSchemas(): array
+	{
+		return $this->schemaLister->listCategories();
 	}
 
 	/**

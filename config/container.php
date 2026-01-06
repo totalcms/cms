@@ -317,6 +317,7 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(CollectionFetcher::class),
+		$container->get(CollectionLister::class),
 		$container->get(IndexReader::class),
 		$container->get(IndexFilter::class),
 		$container->get(SchemaFetcher::class),
