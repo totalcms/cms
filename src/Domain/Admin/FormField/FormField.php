@@ -306,7 +306,7 @@ class FormField
 	 * Supports:
 	 * - true: fetch unique values from current collection for this property
 	 * - "collections": fetch unique category values from all collections
-	 * - "schemas": fetch unique category values from all schemas
+	 * - "schemas": fetch unique category values from all schemas.
 	 *
 	 * @return array<string>
 	 */

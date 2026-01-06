@@ -953,7 +953,7 @@ class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 			$target  = $targetDate !== null ? self::parseDate($targetDate) : Chronos::now();
 
-			$originalDay = $chronos->day;
+			$originalDay       = $chronos->day;
 			$daysInTargetMonth = $target->daysInMonth;
 
 			$clampedDay = min($originalDay, $daysInTargetMonth);
@@ -978,7 +978,7 @@ class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 			$compare = $compareDate !== null ? self::parseDate($compareDate) : Chronos::now();
 
-			$originalDay = $chronos->day;
+			$originalDay        = $chronos->day;
 			$daysInCompareMonth = $compare->daysInMonth;
 
 			// Clamp the original day to the compare month's max days
