@@ -44,9 +44,10 @@ bbb540c756be41f8b1925d9a096e8fbecb877b050c9ecc679fb6de0a9551710d  ./dist/config/
 b81fe4963c32d8fa20c18ba508784e59511ec9f994563b98c6946bade22cb16b  ./dist/config/routes/assets.php
 0a1da2b9c74ea85c3ced6d3dbb39473b46ff3352a121c58aa6c7e340b5098ae6  ./dist/config/local.stacks.php
 beee585040bffd0d1b05ca15d8b55b5b8dda1a0d34de052abf8525b07151a2e6  ./dist/resources/bin/processJobs.php
-cf3ff5b59403247eb5285f10a2e2588d57610fd7c05a1c7198f6ec89f6758097  ./dist/resources/support/diagnose.php
+ef3d453befa8a00120b358a610cf5cea2b029fcd2e408608aae6428ec02ef1fa  ./dist/resources/support/diagnose.php
 63a36c0087251c4ef3937afbf734fb986873a1545a2938a2dd7ee59a480fd5f9  ./dist/resources/templates/docs/swagger.php
 2237704bbd611b89f64303fe5e9446fb451d0bf77f4c80ab3c91cf590198ff6a  ./dist/public/index.php
+230f5da206fdb039f3ebfdc294ee141b7b5ea411aabc74eec3d43277138aaa2e  ./dist/public/diagnose.php
 a0af5d4b6713144f564cef42023b5f153e196e2ce4046e5ddc2747e609382430  ./dist/public/assets/image-batcher.js
 9f4bd65d5b8f72bd3e1727c837129e3ac4ee5e16224a3669da957521c119eca2  ./dist/public/assets/chunk-KZQ7KEVS.js
 34e978d2edc1b5c6966c60abd247416cc884286a69d8db018c84d60a49c9fdb0  ./dist/public/assets/content-bundled.css
@@ -990,7 +991,7 @@ cb857b77c71c27b9fd671f234ab256725c23c0a2c00115414c7ba3356b7ce718  ./dist/vendor/
 454e34396a7149f5a1dfe00f855d44defabe0bdfced2499b9344ceb5fb8f975c  ./dist/vendor/composer/autoload_real.php
 4e0066233c6ea7904e1a24a6cbd944a81028e07eb95048cd52e83a8bc522a407  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-5c6b9090c8ca4dadcb4c8d4b12689ffd3bd2a6e0c9569cc8e98b1a906d4fa5d3  ./dist/vendor/composer/installed.php
+4f59c70ebb73128804909bb657e173de7979c13028305f274612e48b4afe4a7a  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
@@ -4084,7 +4085,7 @@ c4e5ac73e0bb3bb471690a26e3176efcab8442cdc48621fb9221355da55edda2  ./dist/src/Ren
 4d27f73dfc6f8f2be4e9bd20e4cdd902d7892483b5de435e5083725c7c3826e5  ./dist/src/Renderer/XmlRenderer.php
 fd78e9a7c002743307dcbf9fa4eabdad8b83099af288cff73a8137301cf7bc6b  ./dist/src/Renderer/TwigRenderer.php
 c4f5ff3fce6ef5e41ac6702c207e7702cf2f0d6c202a12c3ecac0838209260ec  ./dist/src/Renderer/TemplateRenderer.php
-830d24337cc8607753a0f743c8681425c64fa067382e18d4291560d6e3b05ad8  ./dist/src/TotalCMS.php
+5d473a6c44222a1a2566fd078d6a5e3ac560e75ba4fedd33bcb8e3f09785155e  ./dist/src/TotalCMS.php
 967c77e65ce07e01344e12102017baae9d7fd5ff559e914f1bf0f8bd7ac25986  ./dist/src/Traits/LoggerAwareTrait.php
 178fbef67ae14308624b66e70c11d0f4ae8c975038c51cce2ae2dfc7d4e2affb  ./dist/src/Transformer/IndexTransformer.php
 46c6cfc860fa3aeb74000a5804bbf54bac0effee40fab6d451738d0b09324568  ./dist/src/Transformer/ObjectMetaTransformer.php
@@ -4549,7 +4550,7 @@ b81fe4963c32d8fa20c18ba508784e59511ec9f994563b98c6946bade22cb16b  ./config/route
 0a1da2b9c74ea85c3ced6d3dbb39473b46ff3352a121c58aa6c7e340b5098ae6  ./config/local.stacks.php
 b0270c2332a7983403ed0e9e675213c9f9fd8de5d65ebcea4eebccca3c205c9f  ./esbuild.config.js
 beee585040bffd0d1b05ca15d8b55b5b8dda1a0d34de052abf8525b07151a2e6  ./resources/bin/processJobs.php
-cf3ff5b59403247eb5285f10a2e2588d57610fd7c05a1c7198f6ec89f6758097  ./resources/support/diagnose.php
+ef3d453befa8a00120b358a610cf5cea2b029fcd2e408608aae6428ec02ef1fa  ./resources/support/diagnose.php
 63a36c0087251c4ef3937afbf734fb986873a1545a2938a2dd7ee59a480fd5f9  ./resources/templates/docs/swagger.php
 84ec41c6806cb9f07ecd305a1b44ceedf28a31855851657d7bffbffa03b9303a  ./tests/Unit/Middleware/Response/PreviewRouteMiddlewareTest.php
 b68ec31d2080a0cc03d02897e0219b23dbfcd1bc0aef92eeb79dd2e0260119ce  ./tests/Unit/Middleware/ApiKeyAuthMiddlewareTest.php
@@ -4861,6 +4862,7 @@ d9cde826cefad8d34ecb7a3b2bd0c1d13a12bb6f0a6583a9a2c769234ffc5ed8  ./tests/Domain
 4a4459b320302d6b85361f023a36469b455a6385d33ddbb3ad26f579a2d99763  ./tests/TestCase.php
 5fc1545c667863445d2d953556604be38508012f5e0d4b0478a03efcc8deb765  ./rector.php
 2237704bbd611b89f64303fe5e9446fb451d0bf77f4c80ab3c91cf590198ff6a  ./public/index.php
+230f5da206fdb039f3ebfdc294ee141b7b5ea411aabc74eec3d43277138aaa2e  ./public/diagnose.php
 a0af5d4b6713144f564cef42023b5f153e196e2ce4046e5ddc2747e609382430  ./public/assets/image-batcher.js
 9f4bd65d5b8f72bd3e1727c837129e3ac4ee5e16224a3669da957521c119eca2  ./public/assets/chunk-KZQ7KEVS.js
 34e978d2edc1b5c6966c60abd247416cc884286a69d8db018c84d60a49c9fdb0  ./public/assets/content-bundled.css
@@ -5016,7 +5018,7 @@ c4e5ac73e0bb3bb471690a26e3176efcab8442cdc48621fb9221355da55edda2  ./src/Renderer
 4d27f73dfc6f8f2be4e9bd20e4cdd902d7892483b5de435e5083725c7c3826e5  ./src/Renderer/XmlRenderer.php
 fd78e9a7c002743307dcbf9fa4eabdad8b83099af288cff73a8137301cf7bc6b  ./src/Renderer/TwigRenderer.php
 c4f5ff3fce6ef5e41ac6702c207e7702cf2f0d6c202a12c3ecac0838209260ec  ./src/Renderer/TemplateRenderer.php
-830d24337cc8607753a0f743c8681425c64fa067382e18d4291560d6e3b05ad8  ./src/TotalCMS.php
+5d473a6c44222a1a2566fd078d6a5e3ac560e75ba4fedd33bcb8e3f09785155e  ./src/TotalCMS.php
 967c77e65ce07e01344e12102017baae9d7fd5ff559e914f1bf0f8bd7ac25986  ./src/Traits/LoggerAwareTrait.php
 178fbef67ae14308624b66e70c11d0f4ae8c975038c51cce2ae2dfc7d4e2affb  ./src/Transformer/IndexTransformer.php
 46c6cfc860fa3aeb74000a5804bbf54bac0effee40fab6d451738d0b09324568  ./src/Transformer/ObjectMetaTransformer.php
