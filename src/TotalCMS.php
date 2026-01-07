@@ -20,6 +20,7 @@ use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectCloner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectPropertyIncrementer;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -294,6 +295,18 @@ class TotalCMS
 	public function objectCloner(): ObjectCloner
 	{
 		return $this->container->get(ObjectCloner::class);
+	}
+
+	/**
+	 * Get the property incrementer for incrementing/decrementing numeric properties.
+	 *
+	 * Usage:
+	 *   $result = $totalcms->propertyIncrementer()->incrementProperty('products', 'item-1', 'stock', 5);
+	 *   $result = $totalcms->propertyIncrementer()->decrementProperty('products', 'item-1', 'stock', 1);
+	 */
+	public function propertyIncrementer(): ObjectPropertyIncrementer
+	{
+		return $this->container->get(ObjectPropertyIncrementer::class);
 	}
 
 	/**
