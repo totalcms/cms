@@ -12,6 +12,9 @@
 
 				const message = error.message || '';
 
+				// Ignore cross-origin "Script error." (no details available due to browser security)
+				if (message === 'Script error.' || message === 'Script error') return null;
+
 				// Ignore browser extension errors
 				if (message.includes('runtime.sendMessage')) return null;
 

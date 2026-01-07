@@ -137,9 +137,14 @@ class SchemaField extends PropertyField
 		$content .= $this->buildPropertyInfo();
 
 		$close = HTMLUtils::button('Close', ['class' => 'close']);
+		$docs  = HTMLUtils::element('a', 'Search Docs', [
+			'href'   => 'docs',
+			'target' => '_blank',
+			'class'  => 'docs-link',
+		]);
 
 		$content  = HTMLUtils::scroller($content);
-		$content .= HTMLUtils::element('section', $close);
+		$content .= HTMLUtils::element('section', $close . $docs);
 
 		return HTMLUtils::dialog($content, 'small');
 	}

@@ -60,6 +60,36 @@ dialog.cms-modal {
 		display  : grid;
 		gap      : 0.5rem;
 
+		&:has(.docs-link) {
+			display         : flex;
+			justify-content : space-between;
+			align-items     : center;
+		}
+
+		.docs-link {
+			display         : flex;
+			align-items     : center;
+			gap             : 0.4rem;
+			font-size       : 0.9rem;
+			color           : oklch(var(--totalform-accent));
+			text-decoration : none;
+
+			&::after {
+				content          : '';
+				display          : inline-block;
+				width            : 1rem;
+				height           : 1rem;
+				background-color : oklch(var(--totalform-accent));
+				mask-image       : var(--icon-docs);
+				mask-size        : contain;
+				mask-repeat      : no-repeat;
+			}
+
+			&:hover {
+				text-decoration : underline;
+			}
+		}
+
 		&.scroller {
 			max-height    : 100%;
 			overflow-y    : auto;

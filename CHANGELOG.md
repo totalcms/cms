@@ -2,6 +2,43 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.1] - 2026-01-06
+
+### Added
+
+- **Dashboard Dev Mode Toggle**: Quick toggle for development mode directly from dashboard
+- **Property Field Documentation Links**: Direct links to documentation from property field dialogs
+- **Object Form Navigation**: Cmd+click (Ctrl+click on Windows) to open object forms in new tab
+- **Edit Object Action**: New edit action for object management in the collection table
+- **Recurring Date Filters**: New `recurringMonthDate` Twig filters for recurring event handling
+- **Automation Services**: Exposed additional services in TotalCMS for automations:
+  - Mailer service for sending emails
+  - Logger service for custom logging
+  - Deck item saver for deck operations
+  - Property incrementer for numeric property operations
+- **Property Options Categories**: Extended `propertyOptions` to support Collection and Schema categories
+
+### Enhanced
+
+- **HEIC Image Conversion**: Now uses PHP ImageMagick extension instead of shell commands for improved reliability and compatibility
+- **Mobile Form Layouts**: Better responsive layouts for form grids on mobile devices
+- **Form Header Responsiveness**: Improved form header behavior on smaller screens
+- **Job Queue Statistics**: Enhanced JavaScript for better job stats display
+- **Sentry Error Filtering**: Updated ignore rules to reduce noise from user-caused errors
+
+### Fixed
+
+- **Deck Item Forms**: Resolved issues with deck item form handling
+- **Deck Property Conflicts**: Fixed conflict when deck schema has same property name as parent schema
+- **Form Layout Issues**: Various fixes for form layout rendering
+- **Collection Form Styling**: Fixed collection form styles and labels
+- **Temporary Files**: Moved away from `tmpfile()` for better server compatibility
+
+### Changed
+
+- **Dashboard**: Temporarily removed recent activity section
+- **Test Suite**: Improved test coverage with new unit tests
+
 ## [3.1.0] - 2025-12-31
 
 ### Added

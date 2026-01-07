@@ -5,6 +5,8 @@
 	display       : grid;
 	gap           : 1rem;
 	align-content : start;
+	min-width     : 0;
+	max-width     : 100%;
 
 	&:not(:first-of-type) {
 		margin-top : 1rem;
@@ -35,6 +37,11 @@
         color       : oklch(var(--totalform-label-color));
         transition  : opacity 0.5s;
         width       : max-content;
+
+		// overflow      : hidden;
+		// white-space   : nowrap;
+		// text-overflow : ellipsis;
+		max-width     : 100%;
     }
 
 	section {
@@ -64,8 +71,9 @@
 }
 
 .form-field {
-	position : relative;
-	width    : 100%;
+	position  : relative;
+	width     : 100%;
+	min-width : 0;
 
 	&:is(:visible):not(:first-of-type) {
 		margin-top : 1rem;
@@ -85,7 +93,7 @@
 		--totalform-border-color : var(--totalform-changed);
 		--totalform-icon-bg      : var(--totalform-changed);
 
-		&:not(.schemaProperties-field) {
+		&:not(.schemaProperties-field):not(.properties-field):not(.customProperties-field) {
 			--totalform-icon-color : var(--totalform-purewhite);
 		}
 	}
@@ -234,6 +242,8 @@ button.cms-add {
 	border-radius : var(--totalform-radius);
 	transition    : box-shadow 200ms ease-in-out;
 	box-shadow    : 0 0 0 oklch(var(--totalform-shadow));
+	min-width     : 0;
+	max-width     : 100%;
 
     &:has(:focus), &:has(.is-focused) {
         box-shadow: 0 1px 2px oklch(var(--totalform-shadow));

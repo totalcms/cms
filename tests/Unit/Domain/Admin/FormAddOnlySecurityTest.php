@@ -4,6 +4,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -21,6 +22,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		// Mock dependencies
 		$this->objectFetcher            = $this->createMock(ObjectFetcher::class);
 		$this->collectionFetcher        = $this->createMock(CollectionFetcher::class);
+		$this->collectionLister         = $this->createMock(CollectionLister::class);
 		$this->indexReader              = $this->createMock(IndexReader::class);
 		$this->indexFilter              = $this->createMock(IndexFilter::class);
 		$this->schemaFetcher            = $this->createMock(SchemaFetcher::class);
@@ -48,6 +50,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$form = new ObjectForm(
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
+			collectionLister: $this->collectionLister,
 			collectionReader: $this->indexReader,
 			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
@@ -78,6 +81,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$form = new ObjectForm(
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
+			collectionLister: $this->collectionLister,
 			collectionReader: $this->indexReader,
 			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
@@ -105,6 +109,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$form = new ObjectForm(
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
+			collectionLister: $this->collectionLister,
 			collectionReader: $this->indexReader,
 			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
@@ -135,6 +140,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$form = new ObjectForm(
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
+			collectionLister: $this->collectionLister,
 			collectionReader: $this->indexReader,
 			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
@@ -168,6 +174,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$form = new ObjectForm(
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
+			collectionLister: $this->collectionLister,
 			collectionReader: $this->indexReader,
 			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
@@ -197,6 +204,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$form = new ObjectForm(
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
+			collectionLister: $this->collectionLister,
 			collectionReader: $this->indexReader,
 			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,

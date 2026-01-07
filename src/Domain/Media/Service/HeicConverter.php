@@ -8,6 +8,8 @@ namespace TotalCMS\Domain\Media\Service;
  * HEIC is the default image format for iOS devices but is not supported by
  * most web browsers. This service automatically converts HEIC files to JPEG
  * when they are uploaded.
+ *
+ * Uses the Imagick PHP extension (preferred) or falls back to CLI if available.
  */
 class HeicConverter
 {
@@ -60,25 +62,47 @@ class HeicConverter
 			$destinationPath = str_replace(['.heic', '.heif', '.HEIC', '.HEIF'], '.jpg', $sourcePath);
 		}
 
-		// Check if ImageMagick is available
-		if (!$this->isImageMagickAvailable()) {
-			return [
-				'success' => false,
-				'error'   => 'ImageMagick is not available on this server',
-			];
+		// Try Imagick extension first (preferred - no exec() needed)
+		if ($this->isImagickExtensionAvailable()) {
+			return $this->convertWithImagickExtension($sourcePath, $destinationPath, $quality);
 		}
 
-		// Convert using ImageMagick
-		$result = $this->convertWithImageMagick($sourcePath, $destinationPath, $quality);
+		// Fall back to CLI if available
+		if ($this->isImageMagickCliAvailable()) {
+			return $this->convertWithImageMagickCli($sourcePath, $destinationPath, $quality);
+		}
 
-		return $result;
+		return [
+			'success' => false,
+			'error'   => 'ImageMagick is not available on this server (neither Imagick extension nor CLI)',
+		];
 	}
 
 	/**
-	 * Check if ImageMagick is available.
+	 * Check if the Imagick PHP extension is available with HEIC support.
 	 */
-	private function isImageMagickAvailable(): bool
+	private function isImagickExtensionAvailable(): bool
 	{
+		if (!extension_loaded('imagick')) {
+			return false;
+		}
+
+		// Check if HEIC format is supported
+		$formats = \Imagick::queryFormats('HEIC');
+
+		return count($formats) > 0;
+	}
+
+	/**
+	 * Check if ImageMagick CLI is available.
+	 */
+	private function isImageMagickCliAvailable(): bool
+	{
+		// Check if exec() is available (some hosts disable it)
+		if (!function_exists('exec')) {
+			return false;
+		}
+
 		// Try to find ImageMagick binary
 		$which = PHP_OS_FAMILY === 'Windows' ? 'where' : 'which';
 		exec("{$which} convert 2>&1", $output, $returnVar);
@@ -94,7 +118,7 @@ class HeicConverter
 	}
 
 	/**
-	 * Convert HEIC to JPEG using ImageMagick.
+	 * Convert HEIC to JPEG using the Imagick PHP extension.
 	 *
 	 * @param string $sourcePath Source HEIC file
 	 * @param string $destinationPath Destination JPEG file
@@ -102,12 +126,58 @@ class HeicConverter
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function convertWithImageMagick(string $sourcePath, string $destinationPath, int $quality): array
+	private function convertWithImagickExtension(string $sourcePath, string $destinationPath, int $quality): array
+	{
+		try {
+			$imagick = new \Imagick($sourcePath);
+			$imagick->setImageFormat('jpeg');
+			$imagick->setImageCompressionQuality(max(1, min(100, $quality)));
+
+			// Strip metadata to reduce file size (optional, preserves image data)
+			$imagick->stripImage();
+
+			$imagick->writeImage($destinationPath);
+			$imagick->clear();
+			$imagick->destroy();
+
+			// Verify the output file was created
+			if (!file_exists($destinationPath)) {
+				return [
+					'success' => false,
+					'error'   => 'Conversion completed but output file was not created',
+				];
+			}
+
+			return [
+				'success'      => true,
+				'path'         => $destinationPath,
+				'original'     => $sourcePath,
+				'size'         => filesize($destinationPath),
+				'size_reduced' => filesize($sourcePath) - filesize($destinationPath),
+			];
+		} catch (\ImagickException $e) {
+			return [
+				'success' => false,
+				'error'   => 'Failed to convert HEIC to JPEG: ' . $e->getMessage(),
+			];
+		}
+	}
+
+	/**
+	 * Convert HEIC to JPEG using ImageMagick CLI.
+	 *
+	 * @param string $sourcePath Source HEIC file
+	 * @param string $destinationPath Destination JPEG file
+	 * @param int $quality JPEG quality (1-100)
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function convertWithImageMagickCli(string $sourcePath, string $destinationPath, int $quality): array
 	{
 		// Escape paths for shell command
 		$source      = escapeshellarg($sourcePath);
 		$destination = escapeshellarg($destinationPath);
-		$quality     = max(1, min(100, $quality)); // Ensure quality is between 1-100
+		$quality     = max(1, min(100, $quality));
 
 		// Try 'magick' command first (ImageMagick 7+)
 		$command = "magick {$source} -quality {$quality} {$destination} 2>&1";

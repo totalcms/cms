@@ -258,7 +258,7 @@ final class ApiKeyRepositoryTest extends TestCase
 
 		$found = $this->repository->findById('test-id');
 		$this->assertNotNull($found->lastUsed);
-		$this->assertStringContainsString('2025', $found->lastUsed);
+		$this->assertStringContainsString(date('Y'), $found->lastUsed);
 	}
 
 	public function testUpdateLastUsedDoesNothingWhenKeyNotFound(): void

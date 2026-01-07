@@ -51,8 +51,13 @@
 		</div>
 
 		<div class="dashboard-sidebar">
-			{# Recent activity #}
-			{{ dashboard.recentActivity() }}
+			{# Development mode toggle #}
+			{% if cms.isAdmin() %}
+				{{ dashboard.devModeToggle() }}
+			{% endif %}
+
+			{# Recent activity - disabled until optimized #}
+			{# {{ dashboard.recentActivity() }} #}
 
 			{# System status #}
 			{% if cms.isAdmin() %}

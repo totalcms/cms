@@ -46,4 +46,22 @@ readonly class SchemaLister
 	{
 		return $this->storage->listCustomSchemas();
 	}
+
+	/**
+	 * Get a sorted list of unique category values from all schemas.
+	 *
+	 * @return array<string>
+	 */
+	public function listCategories(): array
+	{
+		$schemas    = $this->listAllSchemas();
+		$categories = array_map(fn (SchemaData $s): string => $s->category ?? '', $schemas);
+
+		// Filter out empty values and get unique sorted list
+		$categories = array_filter($categories, fn (string $c): bool => $c !== '');
+		$categories = array_unique($categories);
+		sort($categories);
+
+		return $categories;
+	}
 }

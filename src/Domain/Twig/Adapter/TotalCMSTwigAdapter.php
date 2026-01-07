@@ -3,10 +3,12 @@
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Admin\CollectionTable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -87,6 +89,7 @@ class TotalCMSTwigAdapter
 		public LicenseStatus $license,
 		public EditionTwigAdapter $edition,
 		private readonly JobManager $jobManager,
+		private readonly CacheManager $cacheManager,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -716,6 +719,48 @@ NGINX;
 
 		// Legacy behavior for non-template URLs or fallback
 		return CollectionData::objectUrl($collectionData, $idOrObject);
+	}
+
+	/**
+	 * Render a collection table for the admin interface.
+	 */
+	public function collectionTable(string $collection): string
+	{
+		// Try to get cached table HTML for large collections
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		$cacheKey       = null;
+
+		if ($collectionData instanceof CollectionData && $collectionData->totalObjects > 1000) {
+			// Use lastUpdated as cache buster - changes whenever objects are modified
+			$lastUpdated = $collectionData->lastUpdated ?? '';
+			$cacheKey    = "table:{$collection}:" . md5($lastUpdated);
+
+			$cached = $this->cacheManager->getComputedData($cacheKey);
+			if ($cached !== null && is_string($cached)) {
+				return $cached;
+			}
+		}
+
+		$options = [
+			'config'            => $this->config,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionLister'  => $this->collectionLister,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'collectionReader'  => $this->indexReader,
+			'objectUrlBuilder'  => $this->objectUrlBuilder,
+			'api'               => $this->api,
+			'collection'        => $collection,
+		];
+
+		$table  = new CollectionTable(...$options);
+		$result = $table->build();
+
+		// Cache the rendered HTML for large collections (1 hour TTL)
+		if ($cacheKey !== null) {
+			$this->cacheManager->storeComputedData($cacheKey, $result, CacheManager::TTL_INDEX_DATA);
+		}
+
+		return $result;
 	}
 
 	/**

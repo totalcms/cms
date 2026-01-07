@@ -98,6 +98,8 @@ class TotalCMSTwigFilters
 		'dateIsPast',
 		'dateIsFuture',
 		'dateIsToday',
+		'recurringMonthDate',
+		'dateIsRecurringDate',
 		'price',
 		'mailto',
 		'prefixSlug',
@@ -929,6 +931,60 @@ class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->isToday();
+		} catch (\Exception) {
+			return false;
+		}
+	}
+
+	/**
+	 * Get the recurring date for a target month.
+	 *
+	 * Useful for subscription billing dates - if someone signed up on Jan 31st,
+	 * their February billing date would be Feb 28th (clamped to end of month).
+	 *
+	 * @param mixed $date The original date (e.g., subscription start date)
+	 * @param mixed $targetDate Optional target date/month (defaults to current month)
+	 *
+	 * @return string ISO 8601 date string
+	 */
+	public static function recurringMonthDate(mixed $date, mixed $targetDate = null): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			$target  = $targetDate !== null ? self::parseDate($targetDate) : Chronos::now();
+
+			$originalDay       = $chronos->day;
+			$daysInTargetMonth = $target->daysInMonth;
+
+			$clampedDay = min($originalDay, $daysInTargetMonth);
+
+			return $target->day($clampedDay)->format('c');
+		} catch (\Exception) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Check if a comparison date falls on the recurring day of the original date.
+	 *
+	 * Useful for checking if today is a billing day for a subscription.
+	 *
+	 * @param mixed $date The original date (e.g., subscription start date)
+	 * @param mixed $compareDate Optional date to compare against (defaults to today)
+	 */
+	public static function dateIsRecurringDate(mixed $date, mixed $compareDate = null): bool
+	{
+		try {
+			$chronos = self::parseDate($date);
+			$compare = $compareDate !== null ? self::parseDate($compareDate) : Chronos::now();
+
+			$originalDay        = $chronos->day;
+			$daysInCompareMonth = $compare->daysInMonth;
+
+			// Clamp the original day to the compare month's max days
+			$expectedDay = min($originalDay, $daysInCompareMonth);
+
+			return $compare->day === $expectedDay;
 		} catch (\Exception) {
 			return false;
 		}

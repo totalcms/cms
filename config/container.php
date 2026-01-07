@@ -331,7 +331,6 @@ return [
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
 		$container->get(JobManager::class),
-		$container->get(CacheManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -367,6 +366,7 @@ return [
 		$container->get(LicenseStatus::class),
 		$container->get(EditionTwigAdapter::class),
 		$container->get(JobManager::class),
+		$container->get(CacheManager::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),

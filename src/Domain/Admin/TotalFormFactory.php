@@ -7,7 +7,6 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -61,7 +60,6 @@ readonly class TotalFormFactory
 		private SettingsSchemaFetcher $settingsSchemaFetcher,
 		private SettingsFetcher $settingsFetcher,
 		private JobManager $jobManager,
-		private CacheManager $cacheManager,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -88,6 +86,7 @@ readonly class TotalFormFactory
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
 			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
 			'collectionReader'         => $this->collectionReader,
 			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
@@ -264,6 +263,7 @@ readonly class TotalFormFactory
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
 			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
 			'collectionReader'         => $this->collectionReader,
 			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
@@ -292,6 +292,7 @@ readonly class TotalFormFactory
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
 			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
 			'collectionReader'         => $this->collectionReader,
 			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
@@ -306,44 +307,6 @@ readonly class TotalFormFactory
 		$form = new TemplateForm(...$options);
 
 		return $form->autoBuild();
-	}
-
-	public function collectionTable(string $collection): string
-	{
-		// Try to get cached table HTML for large collections
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		$cacheKey       = null;
-
-		if ($collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData && $collectionData->totalObjects > 1000) {
-			// Use lastUpdated as cache buster - changes whenever objects are modified
-			$lastUpdated = $collectionData->lastUpdated ?? '';
-			$cacheKey    = "table:{$collection}:" . md5($lastUpdated);
-
-			$cached = $this->cacheManager->getComputedData($cacheKey);
-			if ($cached !== null && is_string($cached)) {
-				return $cached;
-			}
-		}
-
-		$options = [
-			'config'            => $this->config,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionLister'  => $this->collectionLister,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'api'               => $this->api,
-			'collection'        => $collection,
-		];
-
-		$table  = new CollectionTable(...$options);
-		$result = $table->build();
-
-		// Cache the rendered HTML for large collections (1 hour TTL)
-		if ($cacheKey !== null) {
-			$this->cacheManager->storeComputedData($cacheKey, $result, CacheManager::TTL_INDEX_DATA);
-		}
-
-		return $result;
 	}
 
 	/** @param array<string,mixed> $options */
@@ -387,6 +350,7 @@ readonly class TotalFormFactory
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
 			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
 			'collectionReader'         => $this->collectionReader,
 			'indexFilter'              => $this->indexFilter,
 			'schemaFetcher'            => $this->schemaFetcher,
@@ -410,6 +374,7 @@ readonly class TotalFormFactory
 			'collection'               => $collection,
 			'api'                      => $this->api,
 			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
 			'collectionReader'         => $this->collectionReader,
 			'indexFilter'              => $this->indexFilter,
 			'objectFetcher'            => $this->objectFetcher,
@@ -439,6 +404,7 @@ readonly class TotalFormFactory
 			'id'                       => $options['id'] ?? '',
 			'api'                      => $this->api,
 			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
 			'collectionReader'         => $this->collectionReader,
 			'indexFilter'              => $this->indexFilter,
 			'objectFetcher'            => $this->objectFetcher,
@@ -918,6 +884,7 @@ readonly class TotalFormFactory
 		return new ObjectForm(
 			objectFetcher            : $this->objectFetcher,
 			collectionFetcher        : $this->collectionFetcher,
+			collectionLister         : $this->collectionLister,
 			collectionReader         : $this->collectionReader,
 			indexFilter              : $this->indexFilter,
 			schemaFetcher            : $this->schemaFetcher,

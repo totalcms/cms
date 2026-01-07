@@ -19,6 +19,11 @@
 			border-color : oklch(var(--totalform-error)) !important;
 		}
 	}
+
+	select[name="addProperty"] {
+		// do not allow changing border color on error/unsaved state
+		border-color : var(--totalform-lightgray);
+	}
 }
 
 .deck-field>.form-group>input {
@@ -184,6 +189,11 @@
 	}
 	&:hover > input {
 		background-color : oklch(var(--totalform-lightgray) / 50%);
+	}
+
+	> label {
+		font-size   : 1rem;
+		line-height : 2;
 	}
 
 	> button {

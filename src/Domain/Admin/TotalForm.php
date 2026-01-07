@@ -10,6 +10,7 @@ use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -156,6 +157,7 @@ class TotalForm implements \Stringable
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
+		protected CollectionLister $collectionLister,
 		protected IndexReader $collectionReader,
 		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
@@ -276,15 +278,18 @@ class TotalForm implements \Stringable
 
 	public function build(string $content = ''): string
 	{
-		$formgrid = null;
+		$formId       = null;
+		$formStyleTag = '';
 
 		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$this->class .= ' formgrid';
+			$formId       = 'form-' . bin2hex(random_bytes(8));
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
-			$formgrid     = $gridBuilder->toCssGridAreas();
+			$formStyleTag = $gridBuilder->toStyleTag($formId);
 		}
 
 		$attributes = array_filter([
+			'id'                    => $formId,
 			'class'                 => "totalform {$this->class}",
 			'data-form'             => $this->formType,
 			'data-schema'           => $this->schema,
@@ -294,7 +299,6 @@ class TotalForm implements \Stringable
 			'data-api'              => $this->api,
 			'data-route'            => $this->route,
 			'data-id'               => $this->id === '' ? null : $this->id,
-			'style'                 => $formgrid === null || $formgrid === '' ? null : $formgrid,
 		]);
 
 		$actions = [
@@ -327,7 +331,14 @@ class TotalForm implements \Stringable
 			'class' => 'form-inline-fields',
 		]);
 
-		return HTMLUtils::element('form', $content, $attributes);
+		$form = HTMLUtils::element('form', $content, $attributes);
+
+		// Wrap in container div for container queries (formgrid responsive layout)
+		if ($formId !== null) {
+			$form = HTMLUtils::element('div', $form, ['id' => $formId . '-container']);
+		}
+
+		return $formStyleTag . $form;
 	}
 
 	public function layout2Columns(string $col1, string $col2): string
@@ -355,6 +366,28 @@ class TotalForm implements \Stringable
 
 		// array_filter removes any empty values
 		return array_filter($collection->objects->pluck($property)->flatten()->unique()->toArray());
+	}
+
+	/**
+	 * Get a list of unique category values from all collections.
+	 * Used for propertyOptions: "collections" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function categoryListForCollections(): array
+	{
+		return $this->collectionLister->listCategories();
+	}
+
+	/**
+	 * Get a list of unique category values from all schemas.
+	 * Used for propertyOptions: "schemas" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function categoryListForSchemas(): array
+	{
+		return $this->schemaLister->listCategories();
 	}
 
 	/**

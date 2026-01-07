@@ -81,7 +81,7 @@
 
 		<a href="utils/cache-manager" class="action-button">
 			<span class="action-icon icon-clean-o"></span>
-			<span class="action-text">Clear Cache</span>
+			<span class="action-text">Cache Manager</span>
 		</a>
 		{% endif %}
 	</div>
@@ -144,6 +144,16 @@
 		<p>No collections yet. <a href="collections/new">Create your first collection</a> to get started!</p>
 	</div>
 	{% endif %}
+</div>
+{% endmacro %}
+
+{# Development Mode Toggle #}
+{% macro devModeToggle() %}
+<div class="dashboard-section devmode-widget">
+	<h2>Development Mode</h2>
+	<div class="devmode-controls">
+		{{ cms.form.devmode() }}
+	</div>
 </div>
 {% endmacro %}
 

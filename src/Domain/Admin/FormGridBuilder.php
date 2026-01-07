@@ -86,6 +86,149 @@ class FormGridBuilder
 	}
 
 	/**
+	 * Generate a <style> tag with mobile-first responsive grid CSS.
+	 * Uses container queries so the form responds to its available space,
+	 * not the viewport (useful when sidebar is open on tablets).
+	 *
+	 * Note: Container queries require styling descendants, not the container itself.
+	 * The wrapper div has container-type, and the form inside responds to it.
+	 */
+	public function toStyleTag(string $formId): string
+	{
+		$desktopAreas = $this->getDesktopGridAreas();
+		$mobileAreas  = $this->getMobileGridAreas();
+
+		if ($desktopAreas === [] || $mobileAreas === []) {
+			return '';
+		}
+
+		$columnCount     = $this->getColumnCount();
+		$desktopAreasStr = implode("\n\t\t\t", array_map(fn (string $area): string => "'$area'", $desktopAreas));
+		$mobileAreasStr  = implode("\n\t\t", array_map(fn (string $area): string => "'$area'", $mobileAreas));
+
+		return <<<HTML
+<style>
+#$formId-container {
+	container-type: inline-size;
+}
+#$formId {
+	grid-template-areas:
+		$mobileAreasStr;
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#$formId {
+		grid-template-areas:
+			$desktopAreasStr;
+		grid-template-columns: repeat($columnCount, 1fr);
+	}
+}
+</style>
+HTML;
+	}
+
+	/**
+	 * Get desktop grid areas as an array of strings.
+	 *
+	 * @return array<string>
+	 */
+	private function getDesktopGridAreas(): array
+	{
+		$gridLines      = [];
+		$sectionCounter = 0;
+		$columnCount    = $this->getColumnCount();
+
+		// Generates extra "." columns for headers and dividers
+		$extraColumns = '';
+		for ($i = 1; $i < $columnCount; $i++) {
+			$extraColumns .= ' .';
+		}
+
+		foreach ($this->lines as $line) {
+			// Process dividers: ---
+			if (self::DIVIDER === $line) {
+				$sectionCounter++;
+				$gridLines[] = "section-divider-$sectionCounter $extraColumns";
+				continue;
+			}
+
+			// Process section headers: ---Title---
+			if (preg_match(self::HEADER_REGEX, $line)) {
+				$sectionCounter++;
+				$gridLines[] = "section-header-$sectionCounter $extraColumns";
+				continue;
+			}
+
+			// Process regular grid areas
+			$normalized = (string)preg_replace('/\s+/', ' ', $line);
+			$columns    = explode(' ', $normalized);
+
+			// Validate each area name
+			foreach ($columns as $area) {
+				if (!$this->isValidGridAreaName($area)) {
+					continue 2;
+				}
+			}
+
+			// Escape area names for CSS
+			$escapedAreas = array_map(fn (string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
+			$gridLines[]  = implode(' ', $escapedAreas);
+		}
+
+		return $gridLines;
+	}
+
+	/**
+	 * Get grid areas flattened to single column for mobile.
+	 * Each area gets its own row, maintaining the formgrid order.
+	 *
+	 * @return array<string>
+	 */
+	private function getMobileGridAreas(): array
+	{
+		$mobileAreas    = [];
+		$sectionCounter = 0;
+		$seenAreas      = [];
+
+		foreach ($this->lines as $line) {
+			// Process dividers: ---
+			if (self::DIVIDER === $line) {
+				$sectionCounter++;
+				$mobileAreas[] = "section-divider-$sectionCounter";
+				continue;
+			}
+
+			// Process section headers: ---Title---
+			if (preg_match(self::HEADER_REGEX, $line)) {
+				$sectionCounter++;
+				$mobileAreas[] = "section-header-$sectionCounter";
+				continue;
+			}
+
+			// Process regular grid areas - split into individual rows
+			$normalized = (string)preg_replace('/\s+/', ' ', $line);
+			$columns    = explode(' ', $normalized);
+
+			foreach ($columns as $area) {
+				// Skip invalid names and dots (empty cells)
+				if (!$this->isValidGridAreaName($area) || $area === '.') {
+					continue;
+				}
+
+				// Skip duplicate areas (e.g., 'id id' becomes just 'id')
+				if (isset($seenAreas[$area])) {
+					continue;
+				}
+				$seenAreas[$area] = true;
+
+				$mobileAreas[] = htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
+			}
+		}
+
+		return $mobileAreas;
+	}
+
+	/**
 	 * Build HTML for section headers and dividers.
 	 */
 	public function buildGridSectionHtml(): string

@@ -6,6 +6,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -37,6 +38,7 @@ class DeckItemForm extends TotalForm
 	public function __construct(
 		ObjectFetcher $objectFetcher,
 		CollectionFetcher $collectionFetcher,
+		CollectionLister $collectionLister,
 		IndexReader $collectionReader,
 		IndexFilter $indexFilter,
 		SchemaFetcher $schemaFetcher,
@@ -72,6 +74,7 @@ class DeckItemForm extends TotalForm
 		parent::__construct(
 			objectFetcher            : $objectFetcher,
 			collectionFetcher        : $collectionFetcher,
+			collectionLister         : $collectionLister,
 			collectionReader         : $collectionReader,
 			indexFilter              : $indexFilter,
 			schemaFetcher            : $schemaFetcher,

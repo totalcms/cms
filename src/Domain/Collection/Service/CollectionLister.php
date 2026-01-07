@@ -32,4 +32,22 @@ readonly class CollectionLister
 
 		return array_filter($collections, fn (CollectionData $collection): bool => $collection->schema === $schemaId);
 	}
+
+	/**
+	 * Get a sorted list of unique category values from all collections.
+	 *
+	 * @return array<string>
+	 */
+	public function listCategories(): array
+	{
+		$collections = $this->listAllCollections();
+		$categories  = array_map(fn (CollectionData $c): string => $c->category, $collections);
+
+		// Filter out empty values and get unique sorted list
+		$categories = array_filter($categories, fn (string $c): bool => $c !== '');
+		$categories = array_unique($categories);
+		sort($categories);
+
+		return $categories;
+	}
 }

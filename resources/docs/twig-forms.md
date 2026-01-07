@@ -1075,13 +1075,6 @@ Complete example:
 }) }}
 ```
 
-### Collection Data Table
-
-```twig
-{# Display collection data in a table #}
-{{ cms.form.collectionTable('blog') }}
-```
-
 ### Import Forms
 
 ```twig

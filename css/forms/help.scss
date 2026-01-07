@@ -5,13 +5,13 @@
 	width               : max-content;
 	margin              : 0;
 	max-width           : 100%;
-	padding             : 0 1.1rem;
+	padding             : 0 1.25rem;
 	font-size           : var(--totalform-help-size);
 	font-style          : italic;
 	pointer-events      : none;
 	background-repeat   : no-repeat;
 	background-size     : 1rem;
-	background-position : 0 center;
+	background-position : 0 2px;
 	background-image    : var(--icon-help);
 	color               : oklch(var(--totalform-help-color));
 
