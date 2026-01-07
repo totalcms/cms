@@ -31,7 +31,13 @@ register_shutdown_function(function () {
 	}
 });
 
-$baseDir = dirname(__DIR__); // Go up one level from public/ to the tcms root
+// Use TCMS_BASE_DIR if defined (when loaded via public/diagnose.php)
+// Otherwise fall back to dirname(__DIR__) (when this file is copied to public/ directly)
+if (defined('TCMS_BASE_DIR')) {
+	$baseDir = TCMS_BASE_DIR;
+} else {
+	$baseDir = dirname(__DIR__);
+}
 
 echo "=== Total CMS Diagnostic Report ===\n";
 echo 'Generated: ' . date('Y-m-d H:i:s T') . "\n\n";
@@ -383,4 +389,3 @@ echo "\n== Additional Actions ==\n";
 echo "Clear OPcache: Add ?clear_opcache=1 to the URL\n";
 
 echo "\n== End of Diagnostic Report ==\n";
-echo "\n*** DELETE THIS FILE AFTER DIAGNOSIS ***\n";
