@@ -3,8 +3,8 @@
 namespace Tests\Unit\Domain\Sitemap\Data;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Sitemap\Data\SitemapLocation;
 use Thepixeldeveloper\Sitemap\Url;
+use TotalCMS\Domain\Sitemap\Data\SitemapLocation;
 
 final class SitemapLocationTest extends TestCase
 {

@@ -25,7 +25,7 @@ final class LicenseExceptionTest extends TestCase
 
 	public function testConstructorWithPreviousException(): void
 	{
-		$previous = new \Exception('Previous error');
+		$previous  = new \Exception('Previous error');
 		$exception = new LicenseException('License error', 500, $previous);
 
 		$this->assertSame('License error', $exception->getMessage());

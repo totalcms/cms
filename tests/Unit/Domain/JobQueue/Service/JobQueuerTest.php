@@ -155,7 +155,7 @@ final class JobQueuerTest extends TestCase
 			->with(
 				JobData::TYPE_FACTORY,
 				'products',
-				$this->callback(function ($payload) {
+				$this->callback(function ($payload): bool {
 					$data = json_decode($payload, true);
 
 					return $data['quantity'] === 10 && isset($data['rules']['title']);

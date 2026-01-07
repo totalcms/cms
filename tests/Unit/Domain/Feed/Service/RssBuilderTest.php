@@ -14,21 +14,21 @@ use TotalCMS\Support\Config;
 
 final class RssBuilderTest extends TestCase
 {
-	private IndexFilter $indexFilter;
-	private CollectionFetcher $collectionFetcher;
-	private ObjectUrlBuilder $objectUrlBuilder;
-	private SchemaFetcher $schemaFetcher;
-	private Config $config;
+	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectUrlBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
 	private RssBuilder $builder;
 
 	protected function setUp(): void
 	{
-		$this->indexFilter = $this->createMock(IndexFilter::class);
+		$this->indexFilter       = $this->createMock(IndexFilter::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->objectUrlBuilder = $this->createMock(ObjectUrlBuilder::class);
-		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
-		$this->config = $this->createMock(Config::class);
-		$this->config->domain = 'example.com';
+		$this->objectUrlBuilder  = $this->createMock(ObjectUrlBuilder::class);
+		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
+		$this->config            = $this->createMock(Config::class);
+		$this->config->domain    = 'example.com';
 
 		$this->builder = new RssBuilder(
 			$this->indexFilter,
@@ -64,10 +64,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedReturnsRssFeed(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -87,10 +87,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedWithItems(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -123,10 +123,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedSkipsItemsWithEmptyUrls(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -154,10 +154,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedSkipsItemsWithEmptySegments(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -188,10 +188,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedAutoFiltersDraftsForBlogSchema(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'blog';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'blog';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -203,9 +203,7 @@ final class RssBuilderTest extends TestCase
 		// Expect exclude filter to be applied
 		$this->indexFilter->expects($this->once())
 			->method('fetchFilteredIndex')
-			->with('test', $this->callback(function ($options) {
-				return isset($options['exclude']) && $options['exclude'] === 'draft:true';
-			}))
+			->with('test', $this->callback(fn ($options): bool => isset($options['exclude']) && $options['exclude'] === 'draft:true'))
 			->willReturn([]);
 
 		$this->builder->buildFeed('test');
@@ -213,10 +211,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedSortsByDateNewestFirst(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -251,10 +249,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedAppliesLimit(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')
@@ -292,10 +290,10 @@ final class RssBuilderTest extends TestCase
 
 	public function testBuildFeedWithCustomLimit(): void
 	{
-		$collectionData = $this->createMock(CollectionData::class);
+		$collectionData         = $this->createMock(CollectionData::class);
 		$collectionData->schema = 'generic';
 
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'generic';
 
 		$this->collectionFetcher->method('fetchCollection')

@@ -19,7 +19,7 @@ final class SitemapTest extends TestCase
 
 	public function testNewLocationReturnsLocationInstance(): void
 	{
-		$sitemap = new Sitemap();
+		$sitemap  = new Sitemap();
 		$location = $sitemap->newLocation('https://example.com/page');
 
 		$this->assertInstanceOf(SitemapLocation::class, $location);
@@ -62,7 +62,7 @@ final class SitemapTest extends TestCase
 
 	public function testAddLocationFromInstance(): void
 	{
-		$sitemap = new Sitemap();
+		$sitemap  = new Sitemap();
 		$location = $sitemap->newLocation('https://example.com/custom');
 		$sitemap->addLocation($location);
 

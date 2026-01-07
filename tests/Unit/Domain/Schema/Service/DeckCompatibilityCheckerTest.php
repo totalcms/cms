@@ -35,8 +35,8 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	{
 		$schema = [
 			'properties' => [
-				'title' => ['type' => 'string'],
-				'count' => ['type' => 'number'],
+				'title'  => ['type' => 'string'],
+				'count'  => ['type' => 'number'],
 				'active' => ['type' => 'boolean'],
 			],
 		];
@@ -236,9 +236,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	{
 		$schema = [
 			'properties' => [
-				'photo' => ['type' => 'image'],
+				'photo'    => ['type' => 'image'],
 				'document' => ['type' => 'file'],
-				'title' => ['type' => 'string'],
+				'title'    => ['type' => 'string'],
 			],
 		];
 

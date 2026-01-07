@@ -35,11 +35,11 @@ describe('AccessGroupSaveAction', function (): void {
 
 	it('handles create with permissions', function (): void {
 		$response = postJson('/access-groups', [
-			'id'                   => 'editor-group',
-			'description'          => 'Editor access group',
-			'operations'           => ['create', 'read', 'update'],
-			'permissions-simple'   => ['templates', 'docs'],
-			'collections-all'      => ['all'],
+			'id'                     => 'editor-group',
+			'description'            => 'Editor access group',
+			'operations'             => ['create', 'read', 'update'],
+			'permissions-simple'     => ['templates', 'docs'],
+			'collections-all'        => ['all'],
 			'collections-operations' => ['read', 'update'],
 		]);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 405, 500]);

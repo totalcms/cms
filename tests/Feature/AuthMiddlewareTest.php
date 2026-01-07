@@ -1,7 +1,6 @@
 <?php
 
 use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\post;
 use function Nekofar\Slim\Pest\postJson;
 
 beforeAll(function (): void {

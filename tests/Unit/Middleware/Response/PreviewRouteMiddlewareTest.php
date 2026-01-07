@@ -4,7 +4,6 @@ namespace Tests\Unit\Middleware\Response;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
@@ -45,9 +44,7 @@ final class PreviewRouteMiddlewareTest extends TestCase
 		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->expects($this->once())
 			->method('handle')
-			->with($this->callback(function (ServerRequestInterface $req): bool {
-				return $req->getUri()->getPath() === '/collections/blog';
-			}))
+			->with($this->callback(fn (ServerRequestInterface $req): bool => $req->getUri()->getPath() === '/collections/blog'))
 			->willReturn($response);
 
 		$middleware->process($request, $handler);
@@ -80,9 +77,7 @@ final class PreviewRouteMiddlewareTest extends TestCase
 		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->expects($this->once())
 			->method('handle')
-			->with($this->callback(function (ServerRequestInterface $req): bool {
-				return $req->getUri()->getPath() === '/users/123';
-			}))
+			->with($this->callback(fn (ServerRequestInterface $req): bool => $req->getUri()->getPath() === '/users/123'))
 			->willReturn($response);
 
 		$middleware->process($request, $handler);
@@ -92,7 +87,7 @@ final class PreviewRouteMiddlewareTest extends TestCase
 	{
 		$middleware = new PreviewRouteMiddleware('tcms/public');
 
-		$request         = $this->factory->createServerRequest('GET', '/tcms/public/test');
+		$request          = $this->factory->createServerRequest('GET', '/tcms/public/test');
 		$expectedResponse = $this->factory->createResponse(201);
 
 		$handler = $this->createMock(RequestHandlerInterface::class);

@@ -9,7 +9,7 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Traits\LoggerAwareTrait;
 
 /**
- * Test class that uses LoggerAwareTrait
+ * Test class that uses LoggerAwareTrait.
  */
 class LoggerAwareTestClass
 {
@@ -31,7 +31,7 @@ final class LoggerAwareTraitTest extends TestCase
 	public function testGetLoggerReturnsLoggerInterface(): void
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$mockLogger = new NullLogger();
+		$mockLogger    = new NullLogger();
 
 		$loggerFactory->expects($this->once())
 			->method('addFileHandler')
@@ -43,7 +43,7 @@ final class LoggerAwareTraitTest extends TestCase
 			->willReturn($mockLogger);
 
 		$testClass = new LoggerAwareTestClass($loggerFactory);
-		$logger = $testClass->getTestLogger();
+		$logger    = $testClass->getTestLogger();
 
 		$this->assertInstanceOf(LoggerInterface::class, $logger);
 	}
@@ -51,7 +51,7 @@ final class LoggerAwareTraitTest extends TestCase
 	public function testGetLoggerReturnsSameInstance(): void
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$mockLogger = new NullLogger();
+		$mockLogger    = new NullLogger();
 
 		$loggerFactory->expects($this->once())
 			->method('addFileHandler')
@@ -73,7 +73,7 @@ final class LoggerAwareTraitTest extends TestCase
 	public function testLoggerIsCached(): void
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$mockLogger = new NullLogger();
+		$mockLogger    = new NullLogger();
 
 		// Should only be called once even with multiple getLogger calls
 		$loggerFactory->expects($this->once())
