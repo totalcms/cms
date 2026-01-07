@@ -2,6 +2,13 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.2] - 2026-01-07
+
+### Added
+
+- **Diagnose Tool**: New support diagnostic tool to help troubleshoot installations on servers
+
+
 ## [3.1.1] - 2026-01-06
 
 ### Added
