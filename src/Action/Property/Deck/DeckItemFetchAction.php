@@ -30,12 +30,12 @@ readonly class DeckItemFetchAction
 			);
 
 			if ($item === null) {
-				return $this->renderer->json($response, ['error' => 'Deck item not found'], 404);
+				return $this->renderer->json($response, ['error' => 'Deck item not found'])->withStatus(404);
 			}
 
 			return $this->renderer->json($response, $item);
 		} catch (\InvalidArgumentException $e) {
-			return $this->renderer->json($response, ['error' => $e->getMessage()], 400);
+			return $this->renderer->json($response, ['error' => $e->getMessage()])->withStatus(400);
 		}
 	}
 }

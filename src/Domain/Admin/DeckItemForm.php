@@ -342,6 +342,14 @@ class DeckItemForm extends TotalForm
 
 		// Add all other fields from deck schema (schemaData is already the deck schema)
 		foreach (array_keys($schemaData->properties) as $propertyName) {
+			// Skip ID field in AddOnly forms if it has autogen configured
+			if ($propertyName === 'id' && $this->addOnly) {
+				$settings = $schemaData->properties[$propertyName]['settings'] ?? [];
+				if (isset($settings['autogen']) && !empty($settings['autogen'])) {
+					continue; // Skip this field - ID will be auto-generated
+				}
+			}
+
 			$this->addField($propertyName);
 		}
 	}

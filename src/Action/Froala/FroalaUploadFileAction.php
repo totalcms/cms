@@ -35,7 +35,7 @@ readonly class FroalaUploadFileAction
 		}
 
 		if ($type === null) {
-			return $this->renderer->json($response, ['error' => 'No file found for upload'], 400);
+			return $this->renderer->json($response, ['error' => 'No file found for upload'])->withStatus(400);
 		}
 		$file = $files[$type];
 
@@ -52,7 +52,7 @@ readonly class FroalaUploadFileAction
 			return $this->renderer->json($response, [
 				'error'   => 'File upload validation failed',
 				'details' => $criticalErrors,
-			], 400);
+			])->withStatus(400);
 		}
 
 		// Ensure temp directory exists with secure permissions
@@ -73,7 +73,7 @@ readonly class FroalaUploadFileAction
 			return $this->renderer->json($response, [
 				'error'   => 'File content validation failed',
 				'details' => $mimeValidation['errors'],
-			], 400);
+			])->withStatus(400);
 		}
 
 		$path = $this->saver->save(

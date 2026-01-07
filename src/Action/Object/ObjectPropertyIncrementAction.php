@@ -38,7 +38,7 @@ readonly class ObjectPropertyIncrementAction
 
 			return $this->renderer->json($response, $result);
 		} catch (\InvalidArgumentException|\OutOfRangeException $e) {
-			return $this->renderer->json($response, ['error' => $e->getMessage()], 400);
+			return $this->renderer->json($response, ['error' => $e->getMessage()])->withStatus(400);
 		}
 	}
 }

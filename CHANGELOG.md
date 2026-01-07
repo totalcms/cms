@@ -2,6 +2,18 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.3] - 2026-01-07
+
+### Added
+
+- **Deck Item Autogen**: Deck item creation now supports autogen ID patterns from deck schemas
+
+### Fixed
+
+- **API Error Status Codes**: Fixed multiple API actions returning 200 status on errors instead of proper error codes (400/404/500)
+- **Form Error Display**: Fixed error messages not displaying in status banner when API returns string errors
+- **Deck Item Forms**: Fixed addOnly deck item forms to properly skip ID field when autogen is configured
+
 ## [3.1.2] - 2026-01-07
 
 ### Added
