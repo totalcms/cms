@@ -92,6 +92,7 @@ $required = [
 	'session'   => 'User sessions',
 	'hash'      => 'Token validation',
 	'pdo'       => 'Database abstraction',
+	'pdo_sqlite' => 'Job queue database',
 ];
 $missingExtensions = [];
 foreach ($required as $ext => $purpose) {
