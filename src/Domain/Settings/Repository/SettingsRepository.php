@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Settings\Repository;
 
-use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 
 /**
@@ -11,11 +10,6 @@ use TotalCMS\Domain\Storage\StorageRepository;
 class SettingsRepository extends StorageRepository
 {
 	private const SETTINGS_FILE = '.system/settings.json';
-
-	public function __construct(StorageFilesystemAdapter $filesystem)
-	{
-		parent::__construct($filesystem);
-	}
 
 	/**
 	 * Load all settings from settings.json.
