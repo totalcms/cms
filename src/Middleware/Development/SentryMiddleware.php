@@ -68,6 +68,15 @@ class SentryMiddleware implements MiddlewareInterface
 			'Unable to retrieve file data',
 			'Unable to locate object property',
 			'Error fetching Collection with id',
+			// PHP file upload errors
+			'File exceeds upload_max_filesize',
+			'Uploaded file exceeds MAX_FILE_SIZE',
+			'No file was uploaded',
+			'Missing temporary upload directory',
+			'Failed to write file to disk',
+			'File upload stopped by PHP extension',
+			// Server configuration errors
+			'Class "finfo" not found',
 		],
 	];
 
