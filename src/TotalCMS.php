@@ -65,7 +65,11 @@ class TotalCMS
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 
-		// CLI mode, no need to start the session
+		// Initialize services needed for both CLI and web
+		$this->cacheManager = $this->container->get(CacheManager::class);
+		$this->config       = $this->container->get(Config::class);
+
+		// CLI mode, no need to start the session or buffer
 		if (PHP_SAPI === 'cli') {
 			return;
 		}
@@ -74,10 +78,8 @@ class TotalCMS
 		$sessionStarted       = false;
 
 		try {
-			$this->buffer       = $this->container->get(BufferController::class);
-			$this->twigEngine   = $this->container->get(TwigEngine::class);
-			$this->cacheManager = $this->container->get(CacheManager::class);
-			$this->config       = $this->container->get(Config::class);
+			$this->buffer     = $this->container->get(BufferController::class);
+			$this->twigEngine = $this->container->get(TwigEngine::class);
 
 			// Handle any existing session conflicts before creating PhpSession
 			$preservedSessionData = $this->handleSessionConflict();
