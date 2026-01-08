@@ -152,7 +152,7 @@ class RssBuilder
 
 		$defaultLink = $this->homepage();
 		// Ensure we have a valid link (Laminas requires valid URI)
-		if (empty($defaultLink) || $defaultLink === 'http://') {
+		if (in_array($defaultLink, ['', '0', 'http://'], true)) {
 			$defaultLink = 'https://' . ($this->config->domain ?: 'localhost');
 		}
 
