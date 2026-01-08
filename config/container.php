@@ -84,6 +84,7 @@ use TotalCMS\Domain\Property\Service\DeckItemFetcher;
 use TotalCMS\Domain\Property\Service\DeckItemRemover;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
 use TotalCMS\Domain\Property\Service\DeckItemUpdater;
+use TotalCMS\Domain\Property\Service\DeckItemValidator;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
@@ -94,6 +95,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
@@ -793,16 +795,23 @@ return [
 		$container->get(ObjectFetcher::class),
 	),
 
+	DeckItemValidator::class => fn (ContainerInterface $container): DeckItemValidator => new DeckItemValidator(
+		$container->get(SchemaFetcher::class),
+		$container->get(SchemaValidator::class),
+	),
+
 	DeckItemSaver::class => fn (ContainerInterface $container): DeckItemSaver => new DeckItemSaver(
 		$container->get(ObjectFetcher::class),
 		$container->get(ObjectUpdater::class),
 		$container->get(PropertyFactory::class),
+		$container->get(DeckItemValidator::class),
 	),
 
 	DeckItemUpdater::class => fn (ContainerInterface $container): DeckItemUpdater => new DeckItemUpdater(
 		$container->get(ObjectFetcher::class),
 		$container->get(ObjectUpdater::class),
 		$container->get(PropertyFactory::class),
+		$container->get(DeckItemValidator::class),
 	),
 
 	DeckItemRemover::class => fn (ContainerInterface $container): DeckItemRemover => new DeckItemRemover(

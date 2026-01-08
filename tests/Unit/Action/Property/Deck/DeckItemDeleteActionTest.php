@@ -87,14 +87,21 @@ final class DeckItemDeleteActionTest extends TestCase
 		$this->deckItemRemover->method('removeDeckItem')
 			->willThrowException(new \InvalidArgumentException('Item not found'));
 
+		$statusResponse = $this->createMock(ResponseInterface::class);
+
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['error' => 'Item not found'], 400)
+			->with($this->response, ['error' => 'Item not found'])
 			->willReturn($this->response);
+
+		$this->response->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($statusResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
 
-		$this->assertSame($this->response, $result);
+		$this->assertSame($statusResponse, $result);
 	}
 
 	public function testReturnsJsonItemWithTransformer(): void

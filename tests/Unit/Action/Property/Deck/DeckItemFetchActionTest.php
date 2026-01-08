@@ -67,14 +67,21 @@ final class DeckItemFetchActionTest extends TestCase
 
 		$this->deckItemFetcher->method('fetchDeckItem')->willReturn(null);
 
+		$statusResponse = $this->createMock(ResponseInterface::class);
+
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['error' => 'Deck item not found'], 404)
+			->with($this->response, ['error' => 'Deck item not found'])
 			->willReturn($this->response);
+
+		$this->response->expects($this->once())
+			->method('withStatus')
+			->with(404)
+			->willReturn($statusResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
 
-		$this->assertSame($this->response, $result);
+		$this->assertSame($statusResponse, $result);
 	}
 
 	public function testPassesAllArgsToFetcher(): void
@@ -110,14 +117,21 @@ final class DeckItemFetchActionTest extends TestCase
 		$this->deckItemFetcher->method('fetchDeckItem')
 			->willThrowException(new \InvalidArgumentException('Invalid property'));
 
+		$statusResponse = $this->createMock(ResponseInterface::class);
+
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['error' => 'Invalid property'], 400)
+			->with($this->response, ['error' => 'Invalid property'])
 			->willReturn($this->response);
+
+		$this->response->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($statusResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
 
-		$this->assertSame($this->response, $result);
+		$this->assertSame($statusResponse, $result);
 	}
 
 	public function testReturnsItemData(): void

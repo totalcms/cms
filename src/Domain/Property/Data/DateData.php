@@ -22,6 +22,11 @@ class DateData extends PropertyData implements \Stringable
 
 	public static function defaultValue(mixed $value, mixed $default): mixed
 	{
+		// If value is empty, use the default (e.g., "now")
+		if (isset($default) && ($value === null || $value === '')) {
+			return self::cleanDate((string)$default);
+		}
+
 		return self::cleanDate($value);
 	}
 

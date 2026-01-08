@@ -104,19 +104,13 @@ readonly class PropertyFactory
 
 				$processedItemData = [];
 
-				// Process each field in the item using PropertyFactory
-				foreach ($itemData as $fieldName => $fieldValue) {
-					$fieldSchema = $deckSchema->properties[$fieldName] ?? null;
-
-					if ($fieldSchema) {
-						// Use PropertyFactory for proper data conversion (dates, colors, etc.)
-						$propertyObject                = $this->generateProperty($fieldSchema, $fieldValue);
-						$processedItemData[$fieldName] = $propertyObject->transform();
-					}
-					// else {
-					// Field not in schema, skip it (proper schema validation)
-					// This ensures only schema-defined fields are included
-					// }
+				// Iterate over schema properties (like ObjectFactory does for objects)
+				// This ensures all schema properties are processed with proper defaults
+				foreach ($deckSchema->properties as $fieldName => $fieldSchema) {
+					$fieldValue = $itemData[$fieldName] ?? null;
+					// Use generateProperty for proper data conversion and default handling
+					$propertyObject                = $this->generateProperty($fieldSchema, $fieldValue);
+					$processedItemData[$fieldName] = $propertyObject->transform();
 				}
 
 				$processedDeckData[$itemId] = $processedItemData;

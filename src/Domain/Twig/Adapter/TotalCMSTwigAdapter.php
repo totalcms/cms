@@ -61,6 +61,7 @@ class TotalCMSTwigAdapter
 	public string $domain;
 	public string $clearcache;
 	public string $version;
+	public string $currentUrl;
 
 	public function __construct(
 		private readonly Config $config,
@@ -98,6 +99,7 @@ class TotalCMSTwigAdapter
 		$this->logout     = $this->api . '/logout';
 		$this->domain     = $this->getDomainName();
 		$this->version    = $this->getVersion();
+		$this->currentUrl = $_SERVER['REQUEST_URI'] ?? '';
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

@@ -2,6 +2,30 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.3] - 2026-01-07
+
+### Added
+
+- **Deck Item Autogen**: Deck item creation now supports autogen ID patterns from deck schemas
+- **Deck Item Validation**: Deck items are now validated against their schema on create/update (same as objects)
+- **Twig currentUrl Property**: New `cms.currentUrl` property for getting the current request URI in templates
+
+### Changed
+
+- **RSS Feed Library**: Migrated from mibe/feedwriter to laminas/laminas-feed for PHP 8.4 compatibility (fixes deprecation warnings)
+
+### Fixed
+
+- **API Error Status Codes**: Fixed multiple API actions returning 200 status on errors instead of proper error codes (400/404/500)
+- **Form Error Display**: Fixed error messages not displaying in status banner when API returns string errors
+- **Deck Item Forms**: Fixed addOnly deck item forms to properly skip ID field when autogen is configured
+- **Deck Item Defaults**: Fixed schema default values not being applied to new deck items
+- **Date Field Defaults**: Fixed date fields with default value "now" not being applied when value is empty
+
+### Enhanced
+
+- **Sentry Error Filtering**: Added file upload errors and missing PHP extension errors to ignore list
+
 ## [3.1.2] - 2026-01-07
 
 ### Added

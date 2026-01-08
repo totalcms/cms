@@ -35,7 +35,7 @@ readonly class DeckItemUpdateAction
 
 			return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 		} catch (\InvalidArgumentException $e) {
-			return $this->renderer->json($response, ['error' => $e->getMessage()], 400);
+			return $this->renderer->json($response, ['error' => $e->getMessage()])->withStatus(400);
 		}
 	}
 }

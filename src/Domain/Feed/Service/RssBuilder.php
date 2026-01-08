@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Feed\Service;
 
-use FeedWriter\Item;
-use FeedWriter\RSS2;
+use Laminas\Feed\Writer\Entry;
+use Laminas\Feed\Writer\Feed;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -23,7 +23,7 @@ class RssBuilder
 
 	/** @var array<string,string> */
 	private array $fieldMap = self::DEFAULT_FIELD_MAP;
-	private readonly RSS2 $feed;
+	private readonly Feed $feed;
 
 	public function __construct(
 		private readonly IndexFilter $indexFilter,
@@ -32,7 +32,7 @@ class RssBuilder
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly Config $config,
 	) {
-		$this->feed = new RSS2();
+		$this->feed = new Feed();
 	}
 
 	/** @param array<string,string> $fieldMap */
@@ -87,15 +87,15 @@ class RssBuilder
 				continue;
 			}
 
-			$item = $this->createItem($object, $url);
-			$this->feed->addItem($item);
+			$entry = $this->createEntry($object, $url);
+			$this->feed->addEntry($entry);
 		}
 
-		return $this->feed->generateFeed();
+		return $this->feed->export('rss');
 	}
 
 	/** @param array<string,mixed> $object */
-	private function createItem(array $object, string $url): Item
+	private function createEntry(array $object, string $url): Entry
 	{
 		$id      = $object['id'];
 		$title   = $object[$this->fieldMap['title']] ?? false;
@@ -109,24 +109,35 @@ class RssBuilder
 			$url = 'https://' . $this->config->domain . $url;
 		}
 
-		$item = $this->feed->createNewItem();
-		$item->setLink($url);
-		$item->setId($id, true);
-		$item->setDate(date(DATE_RSS, strtotime($date)));
+		$entry = $this->feed->createEntry();
+		$entry->setLink($url);
+		$entry->setId($id);
+		$entry->setDateModified(strtotime($date));
+
 		if ($title) {
-			$item->setTitle($title);
-		}
-		if ($author) {
-			$item->setAuthor($author);
-		}
-		if ($content) {
-			$item->setDescription($content);
-		}
-		if ($media) {
-			$item->addEnclosure($media, 0, $mime);
+			$entry->setTitle($title);
+		} else {
+			// Laminas requires a title, use ID as fallback
+			$entry->setTitle($id);
 		}
 
-		return $item;
+		if ($author) {
+			$entry->addAuthor(['name' => $author]);
+		}
+
+		if ($content) {
+			$entry->setDescription($content);
+		}
+
+		if ($media) {
+			$entry->setEnclosure([
+				'uri'    => $media,
+				'type'   => $mime,
+				'length' => 0,
+			]);
+		}
+
+		return $entry;
 	}
 
 	/** @param array<string,string|false> $options */
@@ -139,32 +150,50 @@ class RssBuilder
 			}
 		}
 
+		$defaultLink = $this->homepage();
+		// Ensure we have a valid link (Laminas requires valid URI)
+		if (in_array($defaultLink, ['', '0', 'http://'], true)) {
+			$defaultLink = 'https://' . ($this->config->domain ?: 'localhost');
+		}
+
 		$options = array_merge([
-			'link'        => $this->homepage(),
+			'link'        => $defaultLink,
 			'rssurl'      => false,
 			'image'       => false,
-			'name'        => $this->domainName() . ' Feed',
+			'name'        => ($this->domainName() ?: 'RSS') . ' Feed',
 			'description' => false,
 			'language'    => false,
 		], $options);
 
-		$this->feed->setDate(time());
-		$this->feed->setChannelElement('generator', 'Total CMS');
+		$this->feed->setDateModified(time());
+		$this->feed->setGenerator('Total CMS');
 		$this->feed->setLink(strval($options['link']));
+
 		if ($options['language']) {
-			$this->feed->setChannelElement('language', $options['language']);
+			$this->feed->setLanguage($options['language']);
 		}
+
 		if ($options['rssurl']) {
-			$this->feed->setSelfLink($options['rssurl']);
+			$this->feed->setFeedLink($options['rssurl'], 'rss');
 		}
+
 		if ($options['image']) {
-			$this->feed->setImage($options['image'], strval($options['name']), strval($options['link']));
+			$this->feed->setImage([
+				'uri'   => $options['image'],
+				'title' => strval($options['name']),
+				'link'  => strval($options['link']),
+			]);
 		}
+
 		if ($options['name']) {
 			$this->feed->setTitle($options['name']);
 		}
+
 		if ($options['description']) {
 			$this->feed->setDescription($options['description']);
+		} else {
+			// Laminas requires a description
+			$this->feed->setDescription(strval($options['name']));
 		}
 	}
 

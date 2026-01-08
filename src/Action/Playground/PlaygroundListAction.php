@@ -22,7 +22,7 @@ readonly class PlaygroundListAction
 
 			return $this->renderer->json($response, ['snippets' => $snippets]);
 		} catch (\Exception $e) {
-			return $this->renderer->json($response, ['error' => $e->getMessage()], 500);
+			return $this->renderer->json($response, ['error' => $e->getMessage()])->withStatus(500);
 		}
 	}
 }

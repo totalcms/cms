@@ -125,7 +125,9 @@ export default class TotalCMS {
 			}
 			if (!response.ok) {
 				return response.json().then(json => {
-					const error = new Error(json.error.message);
+					// Handle both string errors and object errors with message property
+					const errorMessage = typeof json.error === 'string' ? json.error : (json.error?.message || 'Unknown error');
+					const error = new Error(errorMessage);
 					error.data = json;
 					throw error;
 				});
@@ -152,7 +154,9 @@ export default class TotalCMS {
 			}
 			if (!response.ok) {
 				return response.json().then(json => {
-					const error = new Error(json.error.message);
+					// Handle both string errors and object errors with message property
+					const errorMessage = typeof json.error === 'string' ? json.error : (json.error?.message || 'Unknown error');
+					const error = new Error(errorMessage);
 					error.data = json;
 					throw error;
 				});

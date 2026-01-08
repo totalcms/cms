@@ -56,14 +56,25 @@ final class DateDataTest extends TestCase
 	{
 		$result = DateData::defaultValue('', '2024-12-31');
 
-		$this->assertEquals('', $result);
+		// When value is empty, the default should be applied
+		$this->assertStringContainsString('2024-12-31', $result);
 	}
 
 	public function testDefaultValueWithNullValue(): void
 	{
 		$result = DateData::defaultValue(null, '2024-12-31');
 
-		$this->assertEquals('', $result);
+		// When value is null, the default should be applied
+		$this->assertStringContainsString('2024-12-31', $result);
+	}
+
+	public function testDefaultValueWithNowDefault(): void
+	{
+		$result = DateData::defaultValue(null, 'now');
+
+		// When value is null and default is "now", should return current date
+		$this->assertNotEmpty($result);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $result);
 	}
 
 	public function testCleanDateWithEmptyString(): void

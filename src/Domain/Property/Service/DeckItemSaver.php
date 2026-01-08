@@ -16,6 +16,7 @@ readonly class DeckItemSaver
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
 		private PropertyFactory $propertyFactory,
+		private DeckItemValidator $deckItemValidator,
 	) {
 	}
 
@@ -47,6 +48,9 @@ readonly class DeckItemSaver
 
 		// Process the individual deck item data
 		$processedItemData = $this->propertyFactory->processIndividualDeckItem($collection, $propertyName, $itemData);
+
+		// Validate the processed item against the deck schema
+		$this->deckItemValidator->validate($collection, $propertyName, $processedItemData);
 
 		// Create new deck data with the added item
 		$newDeckData          = $property->deck;

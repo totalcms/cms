@@ -7,7 +7,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Property\Deck\DeckItemCreateAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class DeckItemCreateActionTest extends TestCase
@@ -15,17 +17,26 @@ final class DeckItemCreateActionTest extends TestCase
 	private DeckItemCreateAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $deckItemSaver;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $autogenIdService;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->deckItemSaver = $this->createMock(DeckItemSaver::class);
-		$this->renderer      = $this->createMock(JsonRenderer::class);
-		$this->request       = $this->createMock(ServerRequestInterface::class);
-		$this->response      = $this->createMock(ResponseInterface::class);
+		$this->deckItemSaver    = $this->createMock(DeckItemSaver::class);
+		$this->renderer         = $this->createMock(JsonRenderer::class);
+		$this->schemaFetcher    = $this->createMock(SchemaFetcher::class);
+		$this->autogenIdService = $this->createMock(AutogenIdService::class);
+		$this->request          = $this->createMock(ServerRequestInterface::class);
+		$this->response         = $this->createMock(ResponseInterface::class);
 
-		$this->action = new DeckItemCreateAction($this->renderer, $this->deckItemSaver);
+		$this->action = new DeckItemCreateAction(
+			$this->renderer,
+			$this->deckItemSaver,
+			$this->schemaFetcher,
+			$this->autogenIdService
+		);
 	}
 
 	public function testCreatesDeckItemSuccessfully(): void
@@ -81,10 +92,16 @@ final class DeckItemCreateActionTest extends TestCase
 
 		$this->deckItemSaver->expects($this->never())->method('saveDeckItem');
 
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$jsonResponse->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($this->response);
+
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['error' => 'Deck item id is required'], 400)
-			->willReturn($this->response);
+			->with($this->response, ['error' => 'Deck item id is required'])
+			->willReturn($jsonResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
 
@@ -105,10 +122,16 @@ final class DeckItemCreateActionTest extends TestCase
 
 		$this->deckItemSaver->expects($this->never())->method('saveDeckItem');
 
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$jsonResponse->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($this->response);
+
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['error' => 'Deck item id is required'], 400)
-			->willReturn($this->response);
+			->with($this->response, ['error' => 'Deck item id is required'])
+			->willReturn($jsonResponse);
 
 		($this->action)($this->request, $this->response, $args);
 	}
@@ -159,10 +182,16 @@ final class DeckItemCreateActionTest extends TestCase
 		$this->deckItemSaver->method('saveDeckItem')
 			->willThrowException(new \InvalidArgumentException('Invalid deck item'));
 
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$jsonResponse->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($this->response);
+
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['error' => 'Invalid deck item'], 400)
-			->willReturn($this->response);
+			->with($this->response, ['error' => 'Invalid deck item'])
+			->willReturn($jsonResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
 
