@@ -12,6 +12,8 @@ class ColorField extends FormField
 	{
 		parent::init();
 
+		$this->icon = false;
+
 		if (empty($this->value)) {
 			$this->value = null;
 		} elseif (is_array($this->value)) {
@@ -30,6 +32,7 @@ class ColorField extends FormField
 			'type'             => $this->inputType,
 			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 			'value'            => $this->value,
+			'list'             => $this->datalist ? "datalist-{$this->uuid}" : null,
 		];
 
 		// Remove null values from the attributes array
