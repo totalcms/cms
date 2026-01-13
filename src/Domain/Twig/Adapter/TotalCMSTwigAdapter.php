@@ -370,6 +370,35 @@ NGINX;
 	}
 
 	/**
+	 * Set the locale for internationalization (dates, numbers, relative time).
+	 * Useful for multilingual sites to switch locale per page.
+	 *
+	 * Usage in Twig: {{ cms.setLocale('de_DE') }}
+	 *
+	 * @param string $locale The locale code (e.g., 'de_DE', 'fr_FR', 'ja_JP')
+	 * @return string Empty string (no output in template)
+	 */
+	public function setLocale(string $locale): string
+	{
+		\Locale::setDefault($locale);
+		\Cake\I18n\I18n::setLocale($locale);
+
+		return '';
+	}
+
+	/**
+	 * Get the current locale.
+	 *
+	 * Usage in Twig: {{ cms.getLocale() }}
+	 *
+	 * @return string The current locale code
+	 */
+	public function getLocale(): string
+	{
+		return \Cake\I18n\I18n::getLocale();
+	}
+
+	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 */
 	public function login(string $collection = '', ?string $redirect = null): string
