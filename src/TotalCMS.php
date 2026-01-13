@@ -454,6 +454,18 @@ class TotalCMS
 	}
 
 	/**
+	 * Disable cache reads for the current process.
+	 * Useful for CLI scripts that need fresh data on every read.
+	 * This is in-memory only and does not affect other processes (e.g., web server).
+	 *
+	 * Note: Cache writes still occur to warm shared caches with fresh data.
+	 */
+	public function disableCache(): void
+	{
+		$this->cacheManager->disableCache();
+	}
+
+	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.Superglobals")

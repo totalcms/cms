@@ -15,7 +15,7 @@ readonly class ObjectFetcher
 	}
 
 	/**
-	 * get a collection object.
+	 * Get a collection object.
 	 */
 	public function fetchObject(string $collection, string $id): ObjectData
 	{
