@@ -16,6 +16,11 @@ if (php_sapi_name() == 'cli-server') {
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Define ROOT for CakePHP I18n translations (resources/locales/)
+if (!defined('ROOT')) {
+	define('ROOT', dirname(__DIR__));
+}
+
 $container = new Container(require __DIR__ . '/container.php');
 
 // Sentry Logger

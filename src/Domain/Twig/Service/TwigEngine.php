@@ -2,6 +2,9 @@
 
 namespace TotalCMS\Domain\Twig\Service;
 
+use Cake\Chronos\Chronos;
+use Cake\I18n\I18n;
+use Cake\I18n\RelativeTimeFormatter;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -14,6 +17,7 @@ use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extension\StringLoaderExtension;
 use Twig\Extra\Html\HtmlExtension;
+use Twig\Extra\Intl\IntlExtension;
 use Twig\Extra\Markdown\MarkdownExtension;
 use Twig\Extra\Markdown\MarkdownRuntime;
 use Twig\Extra\String\StringExtension;
@@ -71,6 +75,16 @@ readonly class TwigEngine
 		$this->twig->addExtension(new StringLoaderExtension());
 		$this->twig->addExtension(new HtmlExtension());
 		$this->twig->addExtension(new MarkdownExtension());
+
+		// Configure locale for internationalization
+		// Set PHP's default locale for IntlExtension and other intl functions
+		\Locale::setDefault($config->locale);
+		// Set CakePHP I18n locale for RelativeTimeFormatter translations
+		I18n::setLocale($config->locale);
+		// Configure Chronos to use locale-aware RelativeTimeFormatter
+		Chronos::diffFormatter(new RelativeTimeFormatter());
+
+		$this->twig->addExtension(new IntlExtension());
 
 		$this->twig->addRuntimeLoader(new class implements RuntimeLoaderInterface {
 			public function load(string $class)

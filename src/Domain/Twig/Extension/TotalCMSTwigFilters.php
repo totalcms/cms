@@ -753,6 +753,7 @@ class TotalCMSTwigFilters
 
 	/**
 	 * Get relative date string (e.g., "2 days ago", "in 3 weeks").
+	 * Uses Chronos with RelativeTimeFormatter for locale-aware output.
 	 */
 	public static function dateRelative(mixed $date): string
 	{

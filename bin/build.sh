@@ -13,6 +13,10 @@ for arg in "$@"; do
     fi
 done
 
+# Update git submodules (locale translations)
+echo "Updating locale translations..."
+git submodule update --init --remote vendor-locales/cakephp-localized
+
 # Build frontend assets
 if [ $RELEASE -eq 1 ]; then
     # Release build: production mode (no sourcemaps)

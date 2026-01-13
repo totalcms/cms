@@ -1,0 +1,3 @@
+[submodule "vendor-locales/cakephp-localized"]
+	path = vendor-locales/cakephp-localized
+	url = https://github.com/cakephp/localized.git
