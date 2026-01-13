@@ -85,11 +85,11 @@ find vendor -empty -type d -delete 2>/dev/null
 echo "Trimming symfony/intl to supported locales..."
 INTL_DATA="vendor/symfony/intl/Resources/data"
 if [ -d "$INTL_DATA" ]; then
-    # Locales to keep (only languages with full cakephp/localized support)
+    # Locales to keep (matching settings/general.json locale options)
     # ar=Arabic, cs=Czech, da=Danish, de=German, en=English, es=Spanish,
-    # fr=French, hu=Hungarian, it=Italian, ja=Japanese, nl=Dutch, no=Norwegian,
+    # fr=French, hu=Hungarian, it=Italian, ja=Japanese, km=Khmer, nl=Dutch, no=Norwegian,
     # pl=Polish, pt=Portuguese, ru=Russian, tr=Turkish, uk=Ukrainian, vi=Vietnamese, zh=Chinese
-    KEEP_PATTERN="^(ar|cs|da|de|en|es|fr|hu|it|ja|nl|no|pl|pt|ru|tr|uk|vi|zh|meta)"
+    KEEP_PATTERN="^(ar|cs|da|de|en|es|fr|hu|it|ja|km|nl|no|pl|pt|ru|tr|uk|vi|zh|meta)"
     for subdir in currencies languages locales regions scripts timezones; do
         if [ -d "$INTL_DATA/$subdir" ]; then
             for file in "$INTL_DATA/$subdir"/*.php; do
