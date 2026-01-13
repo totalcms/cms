@@ -26,6 +26,7 @@ class ServerChecker
 		// 'pdo',
 	];
 	private const OPTIONAL_SOFTWARE = [
+		'intl',
 		'imagick',
 		'opcache',
 		'apcu',
@@ -180,6 +181,7 @@ class ServerChecker
 	private function getExtensionDescription(string $extension): string
 	{
 		return match ($extension) {
+			'intl'      => 'Internationalization extension for locale-aware formatting of dates, numbers, and currencies',
 			'imagick'   => 'Advanced image processing library with support for 200+ image formats',
 			'opcache'   => 'PHP bytecode cache that dramatically improves performance',
 			'apcu'      => 'Fast in-memory user cache for single-server applications',
@@ -195,6 +197,7 @@ class ServerChecker
 	private function getExtensionRecommendation(string $extension): string
 	{
 		return match ($extension) {
+			'intl'      => 'Recommended for multilingual sites or sites needing locale-aware date, number, and currency formatting',
 			'imagick'   => 'Recommended for sites with heavy image processing, advanced image effects, or PDF generation needs',
 			'opcache'   => 'Recommended for all production sites - provides 2-5x performance improvement with no downsides',
 			'apcu'      => 'Recommended for most sites - zero-config caching that works immediately on single-server setups',
@@ -210,6 +213,7 @@ class ServerChecker
 	private function getExtensionPerformanceImpact(string $extension): string
 	{
 		return match ($extension) {
+			'intl'      => 'Low impact: Enables Twig intl filters (format_date, format_number, format_currency)',
 			'imagick'   => 'High impact for image operations, no impact if not used',
 			'opcache'   => 'Very high impact: 2-5x faster page loads, 50% less memory usage',
 			'apcu'      => 'Medium-high impact: Much faster than filesystem cache, instant setup',
@@ -229,6 +233,7 @@ class ServerChecker
 			'opcache' => (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
 					   && function_exists('opcache_get_status')
 					   && opcache_get_status() !== false,
+			'intl'      => extension_loaded('intl') && class_exists('Locale') && class_exists('NumberFormatter'),
 			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
 			'redis'     => extension_loaded('redis') && class_exists('Redis'),
 			'memcached' => extension_loaded('memcached') && class_exists('Memcached'),

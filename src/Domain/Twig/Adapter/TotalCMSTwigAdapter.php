@@ -372,6 +372,7 @@ NGINX;
 	/**
 	 * Set the locale for internationalization (dates, numbers, relative time).
 	 * Useful for multilingual sites to switch locale per page.
+	 * Requires the PHP intl extension to be installed.
 	 *
 	 * Usage in Twig: {{ cms.setLocale('de_DE') }}
 	 *
@@ -380,21 +381,31 @@ NGINX;
 	 */
 	public function setLocale(string $locale): string
 	{
-		\Locale::setDefault($locale);
-		\Cake\I18n\I18n::setLocale($locale);
+		// Locale functions require the intl extension
+		// I18n::setLocale() internally calls \Locale::setDefault()
+		if (extension_loaded('intl')) {
+			\Locale::setDefault($locale);
+			\Cake\I18n\I18n::setLocale($locale);
+		}
 
 		return '';
 	}
 
 	/**
 	 * Get the current locale.
+	 * Requires the PHP intl extension to be installed.
 	 *
 	 * Usage in Twig: {{ cms.getLocale() }}
 	 *
-	 * @return string The current locale code
+	 * @return string The current locale code (defaults to 'en_US' if intl not available)
 	 */
 	public function getLocale(): string
 	{
+		// I18n::getLocale() internally calls \Locale::getDefault()
+		if (!extension_loaded('intl')) {
+			return 'en_US';
+		}
+
 		return \Cake\I18n\I18n::getLocale();
 	}
 

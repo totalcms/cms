@@ -76,15 +76,19 @@ readonly class TwigEngine
 		$this->twig->addExtension(new HtmlExtension());
 		$this->twig->addExtension(new MarkdownExtension());
 
-		// Configure locale for internationalization
-		// Set PHP's default locale for IntlExtension and other intl functions
-		\Locale::setDefault($config->locale);
-		// Set CakePHP I18n locale for RelativeTimeFormatter translations
-		I18n::setLocale($config->locale);
-		// Configure Chronos to use locale-aware RelativeTimeFormatter
-		Chronos::diffFormatter(new RelativeTimeFormatter());
+		// Configure locale for internationalization (requires intl extension)
+		if (extension_loaded('intl')) {
+			// Set PHP's default locale for IntlExtension and other intl functions
+			\Locale::setDefault($config->locale);
+			// Set CakePHP I18n locale for RelativeTimeFormatter translations
+			// Note: I18n::setLocale() internally calls \Locale::setDefault()
+			I18n::setLocale($config->locale);
+			$this->twig->addExtension(new IntlExtension());
+		}
 
-		$this->twig->addExtension(new IntlExtension());
+		// Configure Chronos to use locale-aware RelativeTimeFormatter
+		// This works without intl but translations will default to English
+		Chronos::diffFormatter(new RelativeTimeFormatter());
 
 		$this->twig->addRuntimeLoader(new class implements RuntimeLoaderInterface {
 			public function load(string $class)

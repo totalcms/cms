@@ -70,7 +70,7 @@ class TotalCMS
 		$this->config       = $this->container->get(Config::class);
 
 		// CLI mode, no need to start the session or buffer
-		if (PHP_SAPI === 'cli') {
+		if (PHP_SAPI === 'cli' && !self::isPreview()) {
 			return;
 		}
 
