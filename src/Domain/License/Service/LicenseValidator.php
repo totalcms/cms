@@ -20,6 +20,7 @@ readonly class LicenseValidator
 	public function __construct(
 		private Config $config,
 		private CacheManager $cacheManager,
+		private ?OfflineLicenseValidator $offlineValidator = null,
 	) {
 	}
 
@@ -34,6 +35,12 @@ readonly class LicenseValidator
 		// This prevents rate limiting when many users preview simultaneously
 		if ($this->isPreviewEnvironment()) {
 			return LicenseData::preview($this->config->domain);
+		}
+
+		// Check for offline license first (takes precedence over online)
+		$offlineLicense = $this->validateOfflineLicense();
+		if ($offlineLicense !== null) {
+			return $offlineLicense;
 		}
 
 		// Check cache first (unless force refresh)
@@ -63,6 +70,40 @@ readonly class LicenseValidator
 			// The middleware will handle this gracefully with read-only mode
 			throw new LicenseException('License validation failed and no cached data available: ' . $e->getMessage(), 0, $e);
 		}
+	}
+
+	/**
+	 * Check for valid offline license.
+	 */
+	private function validateOfflineLicense(): ?LicenseData
+	{
+		if ($this->offlineValidator === null) {
+			return null;
+		}
+
+		return $this->offlineValidator->validate();
+	}
+
+	/**
+	 * Check if an offline license file exists.
+	 */
+	public function hasOfflineLicense(): bool
+	{
+		return $this->offlineValidator !== null && $this->offlineValidator->hasOfflineLicense();
+	}
+
+	/**
+	 * Get offline license details for display.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function getOfflineLicenseDetails(): ?array
+	{
+		if ($this->offlineValidator === null) {
+			return null;
+		}
+
+		return $this->offlineValidator->getDetails();
 	}
 
 	/**

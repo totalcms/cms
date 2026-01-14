@@ -196,4 +196,38 @@ readonly class LicenseStatus
 			return 'unknown';
 		}
 	}
+
+	/**
+	 * Check if an offline license file exists.
+	 */
+	public function hasOfflineLicense(): bool
+	{
+		return $this->licenseValidator->hasOfflineLicense();
+	}
+
+	/**
+	 * Get offline license details for display.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function getOfflineLicenseDetails(): ?array
+	{
+		return $this->licenseValidator->getOfflineLicenseDetails();
+	}
+
+	/**
+	 * Check if the current license is an offline license.
+	 */
+	public function isOffline(): bool
+	{
+		// If we have an offline license file and it validates successfully,
+		// the license is considered offline
+		if (!$this->hasOfflineLicense()) {
+			return false;
+		}
+
+		$details = $this->getOfflineLicenseDetails();
+
+		return $details !== null && ($details['valid'] ?? false);
+	}
 }

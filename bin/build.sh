@@ -134,15 +134,16 @@ rm -f dist/resources/.bundle
 rm -f dist/resources/jobqueue
 rm -f dist/resources/bin/.processJobs
 
-# Handle version.txt
+# Handle version.json
 if [ $RELEASE -eq 1 ]; then
-    # Official release: use existing version.txt (from prepare-release.sh)
-    if [ -f "version.txt" ]; then
-        cp version.txt dist
-        VERSION=$(cat version.txt)
-        echo "Official release build using version: $VERSION"
+    # Official release: use existing version.json (from prepare-release.sh)
+    if [ -f "version.json" ]; then
+        cp version.json dist
+        VERSION=$(php -r "echo json_decode(file_get_contents('version.json'))->version;")
+        BUILD=$(php -r "echo json_decode(file_get_contents('version.json'))->build;")
+        echo "Official release build using version: $VERSION-$BUILD"
     else
-        echo "ERROR: --release flag used but version.txt does not exist"
+        echo "ERROR: --release flag used but version.json does not exist"
         echo "Run prepare-release.sh first to create an official release"
         exit 1
     fi
@@ -150,7 +151,7 @@ else
     # Beta/dev build: generate version from git
     VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
     BUILD=$(git rev-parse --short HEAD)
-    echo "$VERSION-$BUILD" > version.txt
-    cp version.txt dist
+    php bin/generate-version.php "$VERSION" "$BUILD"
+    cp version.json dist
     echo "Beta build for v$VERSION ($BUILD) is complete."
 fi
