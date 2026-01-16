@@ -81,6 +81,8 @@ class SentryMiddleware implements MiddlewareInterface
 			'Class "finfo" not found',
 			// License API rate limiting (not a bug, user/bot issue)
 			'Rate limit exceeded',
+			// Bot/scanner probing for non-existent collections
+			'Collection not found',
 		],
 	];
 
