@@ -12,6 +12,10 @@
 
 				const message = error.message || '';
 
+				// Ignore errors from known corrupted installations
+				const ignoredDomains = ['komiksdiner'];
+				if (ignoredDomains.some(domain => window.location.hostname.includes(domain))) return null;
+
 				// Ignore cross-origin "Script error." (no details available due to browser security)
 				if (message === 'Script error.' || message === 'Script error') return null;
 
@@ -35,10 +39,15 @@
 				// Ignore Froala editor internal errors (third-party library)
 				if (error.name === 'IndexSizeError') return null;
 
+				// Ignore SyntaxError (corrupted files or unsupported browsers)
+				if (error.name === 'SyntaxError') return null;
+
 				return event;
 			}
 		});
-		Sentry.setTag('build', '{{ cms.version | split('-') | last }}');
+		if (typeof Sentry.setTag === 'function') {
+			Sentry.setTag('build', '{{ cms.version | split('-') | last }}');
+		}
 	});
 </script>
 {% endif %}
