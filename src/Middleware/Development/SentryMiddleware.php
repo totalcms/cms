@@ -13,6 +13,7 @@ use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpUnauthorizedException;
+use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Version;
 
@@ -41,6 +42,7 @@ class SentryMiddleware implements MiddlewareInterface
 			\UnexpectedValueException::class,
 			\League\Flysystem\UnableToWriteFile::class,
 			\Error::class,
+			LicenseException::class,
 		],
 		'user_error_messages' => [
 			'Required field(s) cannot be empty',
@@ -77,6 +79,8 @@ class SentryMiddleware implements MiddlewareInterface
 			'File upload stopped by PHP extension',
 			// Server configuration errors
 			'Class "finfo" not found',
+			// License API rate limiting (not a bug, user/bot issue)
+			'Rate limit exceeded',
 		],
 	];
 
