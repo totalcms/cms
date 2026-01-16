@@ -64,6 +64,7 @@ readonly class SchemaSaver
 
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schemaData['properties'] = self::normalizeDefaultValues($schemaData['properties']);
+		$schemaData               = self::sanitizeRequiredAndIndex($schemaData);
 		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (!isset($schema->id)) {
@@ -86,6 +87,40 @@ readonly class SchemaSaver
 		$this->storage->saveSchema($schema);
 
 		return $schema;
+	}
+
+	/**
+	 * Sanitize required and index arrays to only contain existing properties.
+	 *
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function sanitizeRequiredAndIndex(array $schemaData): array
+	{
+		if (!isset($schemaData['properties']) || !is_array($schemaData['properties'])) {
+			return $schemaData;
+		}
+
+		$validProperties = array_keys($schemaData['properties']);
+
+		// Sanitize required array
+		if (isset($schemaData['required']) && is_array($schemaData['required'])) {
+			$schemaData['required'] = array_values(array_filter(
+				$schemaData['required'],
+				fn ($prop) => in_array($prop, $validProperties, true)
+			));
+		}
+
+		// Sanitize index array
+		if (isset($schemaData['index']) && is_array($schemaData['index'])) {
+			$schemaData['index'] = array_values(array_filter(
+				$schemaData['index'],
+				fn ($prop) => in_array($prop, $validProperties, true)
+			));
+		}
+
+		return $schemaData;
 	}
 
 	/**
