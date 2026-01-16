@@ -34,6 +34,7 @@ class SentryMiddleware implements MiddlewareInterface
 			HttpBadRequestException::class,
 			\League\Csv\SyntaxError::class,
 			\League\Flysystem\UnableToCreateDirectory::class,
+			\ParseError::class, // Corrupted PHP files - user installation issue
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
@@ -79,6 +80,10 @@ class SentryMiddleware implements MiddlewareInterface
 			'File upload stopped by PHP extension',
 			// Server configuration errors
 			'Class "finfo" not found',
+			'No space left on device',
+			// Corrupted installation - missing class files
+			'Class "TotalCMS\\',
+			'Callable TotalCMS\\',
 			// License API rate limiting (not a bug, user/bot issue)
 			'Rate limit exceeded',
 			// Bot/scanner probing for non-existent collections
