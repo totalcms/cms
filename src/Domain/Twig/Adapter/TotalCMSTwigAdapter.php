@@ -2551,10 +2551,14 @@ NGINX;
 			return ''; // Already on canonical URL, no redirect needed
 		}
 
-		// Preserve query parameters from the current request
+		// Preserve query parameters from the current request (except 'id' which is now in the URL path)
 		$queryString = parse_url((string)$requestUri, PHP_URL_QUERY);
 		if (!in_array($queryString, [null, false, ''], true)) {
-			$canonicalUrl .= '?' . $queryString;
+			parse_str($queryString, $params);
+			unset($params['id']);
+			if ($params !== []) {
+				$canonicalUrl .= '?' . http_build_query($params);
+			}
 		}
 
 		// HTTP header redirect (best for SEO, must be called before any output)
