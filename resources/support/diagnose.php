@@ -79,19 +79,19 @@ echo "\n";
 // Required Extensions
 echo "== Required Extensions ==\n";
 $required = [
-	'json'      => 'JSON data storage',
-	'mbstring'  => 'Unicode/multibyte strings',
-	'curl'      => 'HTTP requests (Guzzle)',
-	'openssl'   => 'Encryption and TLS',
-	'dom'       => 'DOM document processing',
-	'libxml'    => 'XML parsing',
-	'xml'       => 'XML infrastructure',
-	'gd'        => 'Image processing',
-	'exif'      => 'Image metadata reading',
-	'fileinfo'  => 'MIME type detection',
-	'session'   => 'User sessions',
-	'hash'      => 'Token validation',
-	'pdo'       => 'Database abstraction',
+	'json'       => 'JSON data storage',
+	'mbstring'   => 'Unicode/multibyte strings',
+	'curl'       => 'HTTP requests (Guzzle)',
+	'openssl'    => 'Encryption and TLS',
+	'dom'        => 'DOM document processing',
+	'libxml'     => 'XML parsing',
+	'xml'        => 'XML infrastructure',
+	'gd'         => 'Image processing',
+	'exif'       => 'Image metadata reading',
+	'fileinfo'   => 'MIME type detection',
+	'session'    => 'User sessions',
+	'hash'       => 'Token validation',
+	'pdo'        => 'Database abstraction',
 	'pdo_sqlite' => 'Job queue database',
 ];
 $missingExtensions = [];

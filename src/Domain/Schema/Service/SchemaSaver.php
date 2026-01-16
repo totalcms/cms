@@ -108,7 +108,7 @@ readonly class SchemaSaver
 		if (isset($schemaData['required']) && is_array($schemaData['required'])) {
 			$schemaData['required'] = array_values(array_filter(
 				$schemaData['required'],
-				fn ($prop) => in_array($prop, $validProperties, true)
+				fn ($prop): bool => in_array($prop, $validProperties, true)
 			));
 		}
 
@@ -116,7 +116,7 @@ readonly class SchemaSaver
 		if (isset($schemaData['index']) && is_array($schemaData['index'])) {
 			$schemaData['index'] = array_values(array_filter(
 				$schemaData['index'],
-				fn ($prop) => in_array($prop, $validProperties, true)
+				fn ($prop): bool => in_array($prop, $validProperties, true)
 			));
 		}
 

@@ -51,7 +51,7 @@ class TotalCMS
 	private readonly Container $container;
 	private TwigEngine $twigEngine;
 	private readonly LoggerInterface $logger;
-	private CacheManager $cacheManager;
+	private readonly CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;
 	public Config $config;

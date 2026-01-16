@@ -377,6 +377,7 @@ NGINX;
 	 * Usage in Twig: {{ cms.setLocale('de_DE') }}
 	 *
 	 * @param string $locale The locale code (e.g., 'de_DE', 'fr_FR', 'ja_JP')
+	 *
 	 * @return string Empty string (no output in template)
 	 */
 	public function setLocale(string $locale): string
