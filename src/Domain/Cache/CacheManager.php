@@ -58,6 +58,13 @@ class CacheManager
 	/** @var array<string,CacheInterface> Available cache services */
 	private array $cacheServices = [];
 
+	/**
+	 * In-memory flag to bypass cache reads for current process.
+	 * When true, getData() returns null, forcing fresh filesystem reads.
+	 * Cache writes still occur to warm shared caches.
+	 */
+	private bool $cacheDisabled = false;
+
 	public function __construct(
 		private readonly FilesystemService $filesystemService,
 		private readonly OPcacheService $opcacheService,
@@ -84,6 +91,35 @@ class CacheManager
 
 		// Create domain-specific prefix to prevent cache collisions between installations
 		$this->domainPrefix = md5($this->config->domain);
+	}
+
+	/**
+	 * Disable cache reads for the current process.
+	 * Useful for CLI scripts that need fresh data on every read.
+	 * This is in-memory only and does not affect other processes.
+	 *
+	 * Note: Cache writes still occur to warm shared caches (Redis, filesystem)
+	 * with fresh data that the web server can use.
+	 */
+	public function disableCache(): void
+	{
+		$this->cacheDisabled = true;
+	}
+
+	/**
+	 * Re-enable caching for the current process.
+	 */
+	public function enableCache(): void
+	{
+		$this->cacheDisabled = false;
+	}
+
+	/**
+	 * Check if caching is currently disabled for this process.
+	 */
+	public function isCacheDisabled(): bool
+	{
+		return $this->cacheDisabled;
 	}
 
 	/**
@@ -157,10 +193,9 @@ class CacheManager
 
 	public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
 	{
-		// Skip caching entirely when development mode is active
-		if ($this->devModeManager->isDevModeActive()) {
-			return false;
-		}
+		// Note: We always store data even when cacheDisabled or devMode is active.
+		// These flags only bypass reads - we still want to populate cache with fresh data
+		// so that when the flags are turned off, the cache is warm and accurate.
 
 		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
 		if ($this->apcuService->isAvailable()) {
@@ -185,6 +220,11 @@ class CacheManager
 
 	public function getData(string $key): mixed
 	{
+		// Skip cache reads when cache is disabled or dev mode is active
+		if ($this->cacheDisabled || $this->devModeManager->isDevModeActive()) {
+			return null;
+		}
+
 		// Check memory caches first (fastest)
 		if ($this->apcuService->isAvailable()) {
 			$result = $this->apcuService->get($key);

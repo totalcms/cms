@@ -159,7 +159,7 @@ Check if a file exists in your Total CMS file system.
 Check if an image property exists for an object before attempting to display it.
 
 ```twig
-{% if imageExists(post.id, 'image') %}
+{% if imageExists(post.image) %}
     {{ cms.image(post.id, {collection: 'blog', property: 'image'}) }}
 {% else %}
     <img src="placeholder.jpg">
@@ -603,7 +603,7 @@ Always check existence before accessing files or images:
 
 ```twig
 {# Check if image exists #}
-{% if imageExists(post.id, 'hero') %}
+{% if imageExists(post.image) %}
     {{ cms.image(post.id, {property: 'hero'}) }}
 {% endif %}
 

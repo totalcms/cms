@@ -370,6 +370,47 @@ NGINX;
 	}
 
 	/**
+	 * Set the locale for internationalization (dates, numbers, relative time).
+	 * Useful for multilingual sites to switch locale per page.
+	 * Requires the PHP intl extension to be installed.
+	 *
+	 * Usage in Twig: {{ cms.setLocale('de_DE') }}
+	 *
+	 * @param string $locale The locale code (e.g., 'de_DE', 'fr_FR', 'ja_JP')
+	 *
+	 * @return string Empty string (no output in template)
+	 */
+	public function setLocale(string $locale): string
+	{
+		// Locale functions require the intl extension
+		// I18n::setLocale() internally calls \Locale::setDefault()
+		if (extension_loaded('intl')) {
+			\Locale::setDefault($locale);
+			\Cake\I18n\I18n::setLocale($locale);
+		}
+
+		return '';
+	}
+
+	/**
+	 * Get the current locale.
+	 * Requires the PHP intl extension to be installed.
+	 *
+	 * Usage in Twig: {{ cms.getLocale() }}
+	 *
+	 * @return string The current locale code (defaults to 'en_US' if intl not available)
+	 */
+	public function getLocale(): string
+	{
+		// I18n::getLocale() internally calls \Locale::getDefault()
+		if (!extension_loaded('intl')) {
+			return 'en_US';
+		}
+
+		return \Cake\I18n\I18n::getLocale();
+	}
+
+	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 */
 	public function login(string $collection = '', ?string $redirect = null): string
@@ -2511,10 +2552,14 @@ NGINX;
 			return ''; // Already on canonical URL, no redirect needed
 		}
 
-		// Preserve query parameters from the current request
+		// Preserve query parameters from the current request (except 'id' which is now in the URL path)
 		$queryString = parse_url((string)$requestUri, PHP_URL_QUERY);
 		if (!in_array($queryString, [null, false, ''], true)) {
-			$canonicalUrl .= '?' . $queryString;
+			parse_str($queryString, $params);
+			unset($params['id']);
+			if ($params !== []) {
+				$canonicalUrl .= '?' . http_build_query($params);
+			}
 		}
 
 		// HTTP header redirect (best for SEO, must be called before any output)

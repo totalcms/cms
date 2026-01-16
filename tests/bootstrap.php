@@ -11,3 +11,8 @@ if (!is_dir($sessionPath)) {
 ini_set('session.save_path', $sessionPath);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
+// Define ROOT for CakePHP I18n translations (resources/locales/)
+if (!defined('ROOT')) {
+	define('ROOT', dirname(__DIR__));
+}

@@ -2,6 +2,35 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.4] - 2026-01-16
+
+### Added
+
+- **Localization Support**: Comprehensive internationalization for dates, numbers, currencies, and relative time strings
+  - New `cms.locale()` and `cms.getLocale()` Twig functions
+  - Support for 30+ languages including Arabic, Chinese, Japanese, Korean, and European languages
+  - Khmer (Cambodian) locale support
+- **Deployment Documentation**: New deployment guide with Git configuration, cache clearing instructions, and CI/CD examples
+- **Featured Image Indicator**: Visual indicator for featured images in image fields
+- **Color Field Datalist**: Color fields now support datalist for predefined color options
+
+### Enhanced
+
+- **Collection Sorting**: Improved sort with better shuffle support and text-aware key sorting
+- **Schema Save**: Automatically cleans up required and index properties on save
+- **CLI Cache Support**: CacheManager can now be used in TotalCMS CLI scripts
+- **TotalCMS::clearCache()**: Now returns detailed results array for programmatic use
+- **Diagnose Tool**: Added pdo_sqlite extension check
+- **Sentry Error Filtering**: Now ignores Collection not found errors and license rate limit errors
+
+### Fixed
+
+- **Property Factory**: Fixed handling of array types in property factory
+- **Canonical Redirects**: Removed id URL parameter from redirect canonical URLs
+- **SVG Styles**: Fixed SVG rendering styles
+- **INTL Extension**: Graceful fallback when PHP INTL extension is not installed
+- **List Selection**: Fixed click-to-select behavior in lists
+
 ## [3.1.3] - 2026-01-07
 
 ### Added

@@ -23,7 +23,7 @@ readonly class SitemapBuilder
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if (is_null($collectionData)) {
-			throw new \Exception('Collection not found: ' . $collection);
+			throw new \DomainException('Collection not found: ' . $collection);
 		}
 
 		$dateProperty = $options['date'] ?? 'updated';

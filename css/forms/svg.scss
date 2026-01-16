@@ -1,7 +1,6 @@
 // Form field wrapper - constrain to form width
 .form-field[data-type="svg"] {
 	max-width: 100%;
-	overflow: hidden; // Prevent expanding beyond form
 }
 
 .svg-field {

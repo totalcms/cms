@@ -59,7 +59,8 @@ class FormField
 		$this->field     = $this->field === '' ? $this->defaultFieldType : $this->field;
 		$this->inputType = $this->inputType === '' ? $this->defaultInputType : $this->inputType;
 
-		$this->datalist = (isset($this->settings['propertyOptions'])
+		$this->datalist = ($this->options !== []
+			|| isset($this->settings['propertyOptions'])
 			|| isset($this->settings['relationalOptions'])
 			|| isset($this->settings['accessGroupOptions'])
 			|| isset($this->settings['datalistOptions']));

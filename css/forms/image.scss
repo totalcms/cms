@@ -129,3 +129,40 @@ dialog.image-link-dialog {
 		margin-bottom : 0;
 	}
 }
+
+// Featured indicator for image previews (visible when actionbar is hidden)
+.image-preview.featured {
+	position : relative;
+
+	&:before {
+		content          : ' ';
+		position         : absolute;
+		z-index          : 2;
+		bottom           : 0.75rem;
+		left             : 0.75rem;
+		width            : 1rem;
+		height           : 1rem;
+		opacity          : 0.8;
+		background-color : oklch(100% 0 0 / 0.8);
+		mask-image       : var(--icon-featured);
+		transition       : opacity 300ms ease-in-out;
+		pointer-events   : none;
+	}
+
+	// Hide featured indicator when actionbar is visible (on hover)
+	&:hover:before {
+		opacity : 0;
+	}
+
+	// Always hide on touch devices since actionbar is always visible
+	@media (hover: none) {
+		&:before {
+			display : none;
+		}
+	}
+	@media (pointer: coarse) {
+		&:before {
+			display : none;
+		}
+	}
+}

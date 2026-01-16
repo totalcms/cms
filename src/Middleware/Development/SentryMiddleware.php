@@ -13,6 +13,7 @@ use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpUnauthorizedException;
+use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Version;
 
@@ -33,6 +34,7 @@ class SentryMiddleware implements MiddlewareInterface
 			HttpBadRequestException::class,
 			\League\Csv\SyntaxError::class,
 			\League\Flysystem\UnableToCreateDirectory::class,
+			\ParseError::class, // Corrupted PHP files - user installation issue
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
@@ -41,6 +43,7 @@ class SentryMiddleware implements MiddlewareInterface
 			\UnexpectedValueException::class,
 			\League\Flysystem\UnableToWriteFile::class,
 			\Error::class,
+			LicenseException::class,
 		],
 		'user_error_messages' => [
 			'Required field(s) cannot be empty',
@@ -77,6 +80,14 @@ class SentryMiddleware implements MiddlewareInterface
 			'File upload stopped by PHP extension',
 			// Server configuration errors
 			'Class "finfo" not found',
+			'No space left on device',
+			// Corrupted installation - missing class files
+			'Class "TotalCMS\\',
+			'Callable TotalCMS\\',
+			// License API rate limiting (not a bug, user/bot issue)
+			'Rate limit exceeded',
+			// Bot/scanner probing for non-existent collections
+			'Collection not found',
 		],
 	];
 

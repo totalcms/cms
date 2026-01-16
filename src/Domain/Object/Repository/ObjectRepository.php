@@ -85,6 +85,7 @@ class ObjectRepository extends StorageRepository
 		}
 
 		// Try persistent cache second (Redis/APCu/etc - fast)
+		// Note: CacheManager handles disableCache() check internally
 		$cached = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {

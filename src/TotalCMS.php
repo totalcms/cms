@@ -51,7 +51,7 @@ class TotalCMS
 	private readonly Container $container;
 	private TwigEngine $twigEngine;
 	private readonly LoggerInterface $logger;
-	private CacheManager $cacheManager;
+	private readonly CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;
 	public Config $config;
@@ -65,8 +65,12 @@ class TotalCMS
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 
-		// CLI mode, no need to start the session
-		if (PHP_SAPI === 'cli') {
+		// Initialize services needed for both CLI and web
+		$this->cacheManager = $this->container->get(CacheManager::class);
+		$this->config       = $this->container->get(Config::class);
+
+		// CLI mode, no need to start the session or buffer
+		if (PHP_SAPI === 'cli' && !self::isPreview()) {
 			return;
 		}
 
@@ -74,10 +78,8 @@ class TotalCMS
 		$sessionStarted       = false;
 
 		try {
-			$this->buffer       = $this->container->get(BufferController::class);
-			$this->twigEngine   = $this->container->get(TwigEngine::class);
-			$this->cacheManager = $this->container->get(CacheManager::class);
-			$this->config       = $this->container->get(Config::class);
+			$this->buffer     = $this->container->get(BufferController::class);
+			$this->twigEngine = $this->container->get(TwigEngine::class);
 
 			// Handle any existing session conflicts before creating PhpSession
 			$preservedSessionData = $this->handleSessionConflict();
@@ -446,9 +448,26 @@ class TotalCMS
 		$this->buffer->end();
 	}
 
-	public function clearCache(): void
+	/**
+	 * Clear all caches.
+	 *
+	 * @return array<string,array<string,mixed>> Results per cache backend
+	 */
+	public function clearCache(): array
 	{
-		$this->cacheManager->clearAllCaches();
+		return $this->cacheManager->clearAllCaches();
+	}
+
+	/**
+	 * Disable cache reads for the current process.
+	 * Useful for CLI scripts that need fresh data on every read.
+	 * This is in-memory only and does not affect other processes (e.g., web server).
+	 *
+	 * Note: Cache writes still occur to warm shared caches with fresh data.
+	 */
+	public function disableCache(): void
+	{
+		$this->cacheManager->disableCache();
 	}
 
 	/**

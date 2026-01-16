@@ -20,6 +20,7 @@
     "php": "^8.2",
     "bacon/bacon-qr-code": "^3.0",
     "cakephp/chronos": "^3.1",
+    "cakephp/i18n": "^5.2",
     "cakephp/validation": "^5.0",
     "cocur/slugify": "^4.0",
     "embed/embed": "^4.3",
@@ -67,6 +68,7 @@
     "thepixeldeveloper/sitemap": "dev-master#ee4cbd1406f1250534860b8c9b74020fee0c3650",
     "twig/cssinliner-extra": "^3.21",
     "twig/html-extra": "^3.21",
+    "twig/intl-extra": "^3.22",
     "twig/markdown-extra": "^3.21",
     "twig/string-extra": "^3.21",
     "twig/twig": "^3.10",
@@ -104,7 +106,10 @@
   "autoload": {
     "psr-4": {
       "TotalCMS\\": "src/"
-    }
+    },
+    "files": [
+      "vendor/cakephp/i18n/functions_global.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
