@@ -448,9 +448,14 @@ class TotalCMS
 		$this->buffer->end();
 	}
 
-	public function clearCache(): void
+	/**
+	 * Clear all caches.
+	 *
+	 * @return array<string,array<string,mixed>> Results per cache backend
+	 */
+	public function clearCache(): array
 	{
-		$this->cacheManager->clearAllCaches();
+		return $this->cacheManager->clearAllCaches();
 	}
 
 	/**
