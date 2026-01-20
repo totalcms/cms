@@ -20,6 +20,7 @@ class NoCacheMiddleware implements MiddlewareInterface
 		return $response
 			->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
 			->withHeader('Pragma', 'no-cache')
-			->withHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
+			->withHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT')
+			->withHeader('X-Accel-Expires', '0');
 	}
 }
