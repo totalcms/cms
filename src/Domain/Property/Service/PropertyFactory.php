@@ -53,6 +53,15 @@ readonly class PropertyFactory
 			$value = json_encode($value);
 		}
 
+		// Handle JSON string passed to array types (form sends JSON strings for complex fields)
+		$arrayTypes = ['image', 'gallery', 'file', 'depot', 'deck'];
+		if (is_string($value) && in_array($type, $arrayTypes, true) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
+			$decoded = json_decode($value, true);
+			if (is_array($decoded)) {
+				$value = $decoded;
+			}
+		}
+
 		$settings = $propertySchema['settings'] ?? [];
 
 		$property = null === $value ? new $className(settings: $settings) : new $className($value, $settings);

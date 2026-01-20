@@ -127,6 +127,11 @@ class TotalCMSTwigFunctions
 				return 0;
 			}
 
+			// Use case-insensitive comparison for strings
+			if (is_string($a[$key]) && is_string($b[$key])) {
+				return strcasecmp($a[$key], $b[$key]);
+			}
+
 			return $a[$key] <=> $b[$key];
 		});
 

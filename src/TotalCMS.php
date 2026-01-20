@@ -51,7 +51,7 @@ class TotalCMS
 	private readonly Container $container;
 	private TwigEngine $twigEngine;
 	private readonly LoggerInterface $logger;
-	private CacheManager $cacheManager;
+	private readonly CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;
 	public Config $config;
@@ -448,9 +448,14 @@ class TotalCMS
 		$this->buffer->end();
 	}
 
-	public function clearCache(): void
+	/**
+	 * Clear all caches.
+	 *
+	 * @return array<string,array<string,mixed>> Results per cache backend
+	 */
+	public function clearCache(): array
 	{
-		$this->cacheManager->clearAllCaches();
+		return $this->cacheManager->clearAllCaches();
 	}
 
 	/**

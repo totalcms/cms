@@ -9,7 +9,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
 beforeEach(function (): void {
 	// Reset locale to English before each test
-	\Locale::setDefault('en_US');
+	Locale::setDefault('en_US');
 	I18n::setLocale('en_US');
 	// Initialize the RelativeTimeFormatter for Chronos (as done in TwigEngine)
 	Chronos::diffFormatter(new RelativeTimeFormatter());
@@ -17,7 +17,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
 	// Reset locale after each test to avoid affecting other tests
-	\Locale::setDefault('en_US');
+	Locale::setDefault('en_US');
 	I18n::setLocale('en_US');
 });
 
@@ -27,9 +27,9 @@ describe('Localization', function (): void {
 	// -------------------------
 
 	test('setLocale updates PHP Locale', function (): void {
-		\Locale::setDefault('de_DE');
+		Locale::setDefault('de_DE');
 
-		expect(\Locale::getDefault())->toBe('de_DE');
+		expect(Locale::getDefault())->toBe('de_DE');
 	});
 
 	test('setLocale updates CakePHP I18n locale', function (): void {
@@ -39,15 +39,15 @@ describe('Localization', function (): void {
 	});
 
 	test('locale can be changed multiple times', function (): void {
-		\Locale::setDefault('en_US');
+		Locale::setDefault('en_US');
 		I18n::setLocale('en_US');
 		expect(I18n::getLocale())->toBe('en_US');
 
-		\Locale::setDefault('de_DE');
+		Locale::setDefault('de_DE');
 		I18n::setLocale('de_DE');
 		expect(I18n::getLocale())->toBe('de_DE');
 
-		\Locale::setDefault('ja_JP');
+		Locale::setDefault('ja_JP');
 		I18n::setLocale('ja_JP');
 		expect(I18n::getLocale())->toBe('ja_JP');
 	});
@@ -77,7 +77,7 @@ describe('Localization', function (): void {
 	// -------------------------
 
 	test('dateRelative returns German strings when locale is de_DE', function (): void {
-		\Locale::setDefault('de_DE');
+		Locale::setDefault('de_DE');
 		I18n::setLocale('de_DE');
 
 		$pastDate = date('Y-m-d', strtotime('-2 months'));
@@ -89,7 +89,7 @@ describe('Localization', function (): void {
 	});
 
 	test('dateRelative handles days in German', function (): void {
-		\Locale::setDefault('de_DE');
+		Locale::setDefault('de_DE');
 		I18n::setLocale('de_DE');
 
 		$pastDate = date('Y-m-d', strtotime('-3 days'));
@@ -104,7 +104,7 @@ describe('Localization', function (): void {
 	// -------------------------
 
 	test('dateRelative returns French strings when locale is fr_FR', function (): void {
-		\Locale::setDefault('fr_FR');
+		Locale::setDefault('fr_FR');
 		I18n::setLocale('fr_FR');
 
 		$pastDate = date('Y-m-d', strtotime('-2 months'));
@@ -120,7 +120,7 @@ describe('Localization', function (): void {
 	// -------------------------
 
 	test('dateRelative returns Spanish strings when locale is es_ES', function (): void {
-		\Locale::setDefault('es_ES');
+		Locale::setDefault('es_ES');
 		I18n::setLocale('es_ES');
 
 		$pastDate = date('Y-m-d', strtotime('-2 months'));
@@ -136,7 +136,7 @@ describe('Localization', function (): void {
 	// -------------------------
 
 	test('dateRelative returns Japanese strings when locale is ja_JP', function (): void {
-		\Locale::setDefault('ja_JP');
+		Locale::setDefault('ja_JP');
 		I18n::setLocale('ja_JP');
 
 		$pastDate = date('Y-m-d', strtotime('-2 months'));
@@ -197,14 +197,14 @@ describe('Localization', function (): void {
 		$date2 = date('Y-m-d');
 
 		// Test English
-		\Locale::setDefault('en_US');
+		Locale::setDefault('en_US');
 		I18n::setLocale('en_US');
 		$resultEn = TotalCMSTwigFilters::dateDiff($date1, $date2);
 		expect($resultEn)->toBeString();
 		expect($resultEn)->not->toBeEmpty();
 
 		// Test German
-		\Locale::setDefault('de_DE');
+		Locale::setDefault('de_DE');
 		I18n::setLocale('de_DE');
 		$resultDe = TotalCMSTwigFilters::dateDiff($date1, $date2);
 		expect($resultDe)->toBeString();
@@ -226,10 +226,10 @@ describe('Localization', function (): void {
 		];
 
 		foreach ($supportedLocales as $locale) {
-			\Locale::setDefault($locale);
+			Locale::setDefault($locale);
 			I18n::setLocale($locale);
 
-			expect(\Locale::getDefault())->toBe($locale);
+			expect(Locale::getDefault())->toBe($locale);
 			expect(I18n::getLocale())->toBe($locale);
 		}
 	});
@@ -243,7 +243,7 @@ describe('Localization', function (): void {
 		$pastDate = date('Y-m-d', strtotime('-2 months'));
 
 		foreach ($supportedLocales as $locale) {
-			\Locale::setDefault($locale);
+			Locale::setDefault($locale);
 			I18n::setLocale($locale);
 
 			$result = TotalCMSTwigFilters::dateRelative($pastDate);
@@ -263,20 +263,20 @@ describe('Localization', function (): void {
 		$number = 1234567.89;
 
 		// English (US)
-		\Locale::setDefault('en_US');
-		$formatter = new \NumberFormatter('en_US', \NumberFormatter::DECIMAL);
+		Locale::setDefault('en_US');
+		$formatter = new NumberFormatter('en_US', NumberFormatter::DECIMAL);
 		$resultUs  = $formatter->format($number);
 		expect($resultUs)->toBe('1,234,567.89');
 
 		// German
-		\Locale::setDefault('de_DE');
-		$formatter = new \NumberFormatter('de_DE', \NumberFormatter::DECIMAL);
+		Locale::setDefault('de_DE');
+		$formatter = new NumberFormatter('de_DE', NumberFormatter::DECIMAL);
 		$resultDe  = $formatter->format($number);
 		expect($resultDe)->toBe('1.234.567,89');
 
 		// French - uses narrow no-break space (U+202F) as thousands separator
-		\Locale::setDefault('fr_FR');
-		$formatter = new \NumberFormatter('fr_FR', \NumberFormatter::DECIMAL);
+		Locale::setDefault('fr_FR');
+		$formatter = new NumberFormatter('fr_FR', NumberFormatter::DECIMAL);
 		$resultFr  = $formatter->format($number);
 		// Normalize whitespace for comparison (narrow no-break space)
 		$normalizedFr = preg_replace('/[\s\x{00A0}\x{202F}]+/u', ' ', $resultFr);
@@ -287,15 +287,15 @@ describe('Localization', function (): void {
 		$amount = 99.99;
 
 		// English (US) formatting USD
-		\Locale::setDefault('en_US');
-		$formatter = new \NumberFormatter('en_US', \NumberFormatter::CURRENCY);
+		Locale::setDefault('en_US');
+		$formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
 		$resultUs  = $formatter->formatCurrency($amount, 'USD');
 		expect($resultUs)->toContain('$');
 		expect($resultUs)->toContain('99.99');
 
 		// German formatting EUR
-		\Locale::setDefault('de_DE');
-		$formatter = new \NumberFormatter('de_DE', \NumberFormatter::CURRENCY);
+		Locale::setDefault('de_DE');
+		$formatter = new NumberFormatter('de_DE', NumberFormatter::CURRENCY);
 		$resultDe  = $formatter->formatCurrency($amount, 'EUR');
 		expect($resultDe)->toContain('€');
 		expect($resultDe)->toContain('99,99');
@@ -305,21 +305,21 @@ describe('Localization', function (): void {
 		$timestamp = strtotime('2024-12-31 15:30:00');
 
 		// English (US)
-		\Locale::setDefault('en_US');
-		$formatter = new \IntlDateFormatter(
+		Locale::setDefault('en_US');
+		$formatter = new IntlDateFormatter(
 			'en_US',
-			\IntlDateFormatter::LONG,
-			\IntlDateFormatter::NONE
+			IntlDateFormatter::LONG,
+			IntlDateFormatter::NONE
 		);
 		$resultUs = $formatter->format($timestamp);
 		expect($resultUs)->toBe('December 31, 2024');
 
 		// German
-		\Locale::setDefault('de_DE');
-		$formatter = new \IntlDateFormatter(
+		Locale::setDefault('de_DE');
+		$formatter = new IntlDateFormatter(
 			'de_DE',
-			\IntlDateFormatter::LONG,
-			\IntlDateFormatter::NONE
+			IntlDateFormatter::LONG,
+			IntlDateFormatter::NONE
 		);
 		$resultDe = $formatter->format($timestamp);
 		expect($resultDe)->toBe('31. Dezember 2024');
@@ -331,25 +331,25 @@ describe('Localization', function (): void {
 
 	test('country names are localized', function (): void {
 		// English
-		\Locale::setDefault('en_US');
-		$usInEnglish = \Locale::getDisplayRegion('en_US', 'en_US');
+		Locale::setDefault('en_US');
+		$usInEnglish = Locale::getDisplayRegion('en_US', 'en_US');
 		expect($usInEnglish)->toBe('United States');
 
 		// German
-		\Locale::setDefault('de_DE');
-		$usInGerman = \Locale::getDisplayRegion('en_US', 'de_DE');
+		Locale::setDefault('de_DE');
+		$usInGerman = Locale::getDisplayRegion('en_US', 'de_DE');
 		expect($usInGerman)->toBe('Vereinigte Staaten');
 	});
 
 	test('language names are localized', function (): void {
 		// English
-		\Locale::setDefault('en_US');
-		$germanInEnglish = \Locale::getDisplayLanguage('de_DE', 'en_US');
+		Locale::setDefault('en_US');
+		$germanInEnglish = Locale::getDisplayLanguage('de_DE', 'en_US');
 		expect($germanInEnglish)->toBe('German');
 
 		// German
-		\Locale::setDefault('de_DE');
-		$germanInGerman = \Locale::getDisplayLanguage('de_DE', 'de_DE');
+		Locale::setDefault('de_DE');
+		$germanInGerman = Locale::getDisplayLanguage('de_DE', 'de_DE');
 		expect($germanInGerman)->toBe('Deutsch');
 	});
 });
