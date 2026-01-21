@@ -1,17 +1,229 @@
 {% do cms.license.forceRefresh() %}
 
+{% set offlineDetails = cms.license.getOfflineLicenseDetails() %}
+{% set isOffline = cms.license.isOffline() %}
+
 {% if cms.env == "dev" %}
 	{% set licenseUrl = "https://license.totalcms.test/store/" ~ cms.domain %}
 {% else %}
 	{% set licenseUrl = "https://license.totalcms.co/store/" ~ cms.domain %}
 {% endif %}
 
+{# Offline License Section #}
+{% if offlineDetails is not null %}
+<div class="offline-license-panel">
+	<div class="offline-license-header">
+		<span class="icon-lock"></span>
+		<h3>Offline License</h3>
+		{% if isOffline %}
+			<span class="badge badge-success">Active</span>
+		{% else %}
+			<span class="badge badge-error">Invalid</span>
+		{% endif %}
+	</div>
+
+	<div class="offline-license-details">
+		{% if offlineDetails.error is defined %}
+			<div class="alert alert-error">
+				<strong>License Error:</strong> {{ offlineDetails.error }}
+			</div>
+		{% else %}
+			<table class="offline-license-table">
+				<tr>
+					<th>Domain:</th>
+					<td>
+						{{ offlineDetails.domain }}
+						{% if not offlineDetails.domainMatch %}
+							<span class="badge badge-error">Mismatch (current: {{ offlineDetails.currentDomain }})</span>
+						{% endif %}
+					</td>
+				</tr>
+				<tr>
+					<th>Edition:</th>
+					<td>{{ offlineDetails.edition | capitalize }}</td>
+				</tr>
+				<tr>
+					<th>License Key:</th>
+					<td><code>{{ offlineDetails.licenseKey }}</code></td>
+				</tr>
+				<tr>
+					<th>Updates Valid Until:</th>
+					<td>
+						{{ offlineDetails.updatesValidUntil }}
+						{% if offlineDetails.updatesValid %}
+							<span class="badge badge-success">Valid</span>
+						{% else %}
+							<span class="badge badge-warning">Expired</span>
+						{% endif %}
+					</td>
+				</tr>
+				{% if offlineDetails.issuedAt %}
+				<tr>
+					<th>Issued:</th>
+					<td>{{ offlineDetails.issuedAt }}</td>
+				</tr>
+				{% endif %}
+			</table>
+		{% endif %}
+	</div>
+
+	<div class="offline-license-actions">
+		<p class="offline-license-note">
+			To update this license, place a new file at:<br>
+			<code>tcms-data/{{ cms.license.getOfflineLicenseFilename() }}</code>
+		</p>
+	</div>
+</div>
+
 <style>
+.offline-license-panel {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin-bottom: 1rem;
+}
+.offline-license-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+.offline-license-header h3 {
+	margin: 0;
+	flex: 1;
+}
+.offline-license-header .icon-lock {
+	font-size: 1.25rem;
+	color: oklch(var(--totalform-accent));
+}
+.offline-license-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.offline-license-table th {
+	text-align: left;
+	padding: 0.5rem 1rem 0.5rem 0;
+	width: 160px;
+	color: oklch(var(--totalform-darkgray));
+}
+.offline-license-table td {
+	padding: 0.5rem 0;
+}
+.offline-license-table code {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.85rem;
+}
+.badge {
+	display: inline-block;
+	padding: 0.2rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+.badge-success {
+	background: oklch(var(--totalform-success) / 0.15);
+	color: oklch(var(--totalform-success));
+}
+.badge-error {
+	background: oklch(var(--totalform-error) / 0.15);
+	color: oklch(var(--totalform-error));
+}
+.badge-warning {
+	background: oklch(var(--totalform-warning) / 0.15);
+	color: oklch(var(--totalform-warning));
+}
+.offline-license-actions {
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid oklch(var(--totalform-border-color));
+}
+.offline-license-note {
+	font-size: 0.85rem;
+	color: oklch(var(--totalform-darkgray));
+	margin: 0;
+}
+.offline-license-note code {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.8rem;
+	word-break: break-all;
+}
 .dash-main-content {
 	position: relative !important;
 }
 </style>
 
+{% else %}
+{# No offline license - show instructions for manual placement #}
+<div class="offline-license-panel offline-license-empty">
+	<div class="offline-license-header">
+		<span class="icon-lock"></span>
+		<h3>Offline License</h3>
+	</div>
+	<p>For air-gapped installations that cannot contact the license server, place an offline license file at:</p>
+	<div class="offline-license-path">
+		<code>tcms-data/{{ cms.license.getOfflineLicenseFilename() }}</code>
+	</div>
+	<p class="offline-license-note">
+		The file will be automatically moved to a secure location. Offline licenses are available for Pro and Enterprise editions.
+		<a href="https://totalcms.co/docs/offline-licenses" target="_blank">Learn more</a>
+	</p>
+</div>
+
+<style>
+.offline-license-panel {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin-bottom: 1rem;
+}
+.offline-license-empty p {
+	color: oklch(var(--totalform-darkgray));
+	margin: 0.5rem 0 1rem;
+}
+.offline-license-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+.offline-license-header h3 {
+	margin: 0;
+}
+.offline-license-header .icon-lock {
+	font-size: 1.25rem;
+	color: oklch(var(--totalform-accent));
+}
+.offline-license-path {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.75rem 1rem;
+	border-radius: var(--totalform-radius);
+	margin: 1rem 0;
+}
+.offline-license-path code {
+	font-size: 0.9rem;
+	word-break: break-all;
+}
+.offline-license-note {
+	font-size: 0.85rem;
+	margin-top: 1rem;
+}
+.offline-license-note a {
+	color: oklch(var(--totalform-accent));
+}
+.dash-main-content {
+	position: relative !important;
+}
+</style>
+{% endif %}
+
+{# Online license iframe - only show if not using offline license #}
+{% if not isOffline %}
 <iframe src="{{ licenseUrl }}"
 		width="100%"
 		height="100%"
@@ -20,6 +232,7 @@
 		style="border: none; background: transparent !important; background-color: transparent !important; display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
 	<p>Your browser does not support iframes. Please visit <a href="{{ licenseUrl }}" target="_blank">{{ licenseUrl }}</a> directly.</p>
 </iframe>
+{% endif %}
 
 {% if cms.edition.isSimulating %}
 <div class="simulation-warning simulation-warning-fixed">

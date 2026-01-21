@@ -432,79 +432,87 @@ class CacheManager
 	}
 
 	/**
-	 * Store license data - bypasses dev mode since license validation should always be cached.
+	 * Store license data - MANDATORY caching that cannot be disabled.
 	 * License data doesn't change frequently and hitting license server on every request is bad for performance.
+	 * This method bypasses all cache disabled settings to prevent rate limit cascades.
+	 *
+	 * IMPORTANT: License data is stored in BOTH memory cache AND filesystem.
+	 * Memory cache provides fast access, filesystem provides persistent backup
+	 * that survives memory cache eviction or server restarts.
 	 */
 	public function storeLicenseData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
 	{
-		// Always cache license data regardless of dev mode - performance is critical
+		// License caching is MANDATORY - bypasses all cache disabled settings
 		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey = $this->createDomainKey($key);
+		$domainKey    = $this->createDomainKey($key);
+		$memoryStored = false;
 
-		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
-		if ($this->apcuService->isAvailable()) {
-			return $this->apcuService->set($domainKey, $data, $ttl);
+		// Store in memory cache (fastest) - use isInstalled() to bypass config disabled checks
+		// Try each memory cache in priority order until one succeeds
+		if ($this->apcuService->isInstalled()) {
+			$memoryStored = $this->apcuService->set($domainKey, $data, $ttl);
 		}
 
-		if ($this->redisService->isAvailable()) {
-			return $this->redisService->set($domainKey, $data, $ttl);
+		if (!$memoryStored && $this->redisService->isInstalled()) {
+			$memoryStored = $this->redisService->set($domainKey, $data, $ttl);
 		}
 
-		if ($this->memcachedService->isAvailable()) {
-			return $this->memcachedService->set($domainKey, $data, $ttl);
+		if (!$memoryStored && $this->memcachedService->isInstalled()) {
+			$memoryStored = $this->memcachedService->set($domainKey, $data, $ttl);
 		}
 
-		// Fallback to filesystem cache only if no memory caches available
-		if ($this->filesystemService->isAvailable()) {
-			return $this->filesystemService->set($domainKey, $data, $ttl);
-		}
+		// ALWAYS store in filesystem as persistent backup
+		// This ensures license data survives memory cache eviction or server restarts
+		$filesystemStored = $this->filesystemService->set($domainKey, $data, $ttl);
 
-		return false;
+		// Success if stored in at least one location
+		return $memoryStored || $filesystemStored;
 	}
 
 	/**
-	 * Get license data - bypasses dev mode since license validation should always be cached.
+	 * Get license data - MANDATORY caching that cannot be disabled.
+	 * This method bypasses all cache disabled settings to prevent rate limit cascades.
 	 */
 	public function getLicenseData(string $key): mixed
 	{
+		// License caching is MANDATORY - bypasses all cache disabled settings
 		// Use domain-specific key to prevent license data sharing between sites
 		$domainKey = $this->createDomainKey($key);
 
 		// Check memory caches first (fastest)
-		if ($this->apcuService->isAvailable()) {
+		// Use isInstalled() instead of isAvailable() to bypass config disabled checks
+		if ($this->apcuService->isInstalled()) {
 			$result = $this->apcuService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
-		if ($this->redisService->isAvailable()) {
+		if ($this->redisService->isInstalled()) {
 			$result = $this->redisService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
-		if ($this->memcachedService->isAvailable()) {
+		if ($this->memcachedService->isInstalled()) {
 			$result = $this->memcachedService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
-		// Check filesystem cache
-		if ($this->filesystemService->isAvailable()) {
-			$result = $this->filesystemService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
+		// Filesystem is ALWAYS checked as absolute fallback for license data
+		$result = $this->filesystemService->get($domainKey);
+		if ($result !== null) {
+			return $result;
 		}
 
 		return null;
 	}
 
 	/**
-	 * Clear license data - bypasses dev mode.
+	 * Clear license data - clears from all installed backends regardless of config.
 	 */
 	public function clearLicenseData(string $key): bool
 	{
@@ -512,22 +520,21 @@ class CacheManager
 		$domainKey = $this->createDomainKey($key);
 		$success   = true;
 
-		// Delete from all available cache backends
-		if ($this->apcuService->isAvailable()) {
+		// Delete from all installed cache backends (bypasses config disabled checks)
+		if ($this->apcuService->isInstalled()) {
 			$success &= $this->apcuService->delete($domainKey);
 		}
 
-		if ($this->redisService->isAvailable()) {
+		if ($this->redisService->isInstalled()) {
 			$success &= $this->redisService->delete($domainKey);
 		}
 
-		if ($this->memcachedService->isAvailable()) {
+		if ($this->memcachedService->isInstalled()) {
 			$success &= $this->memcachedService->delete($domainKey);
 		}
 
-		if ($this->filesystemService->isAvailable()) {
-			$success &= $this->filesystemService->delete($domainKey);
-		}
+		// Always clear from filesystem
+		$success &= $this->filesystemService->delete($domainKey);
 
 		return (bool)$success;
 	}

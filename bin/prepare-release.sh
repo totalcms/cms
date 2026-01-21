@@ -177,8 +177,10 @@ fi
 
 print_success "All prerequisites are installed"
 
-# Get current version from version.txt file
-if [ -f "version.txt" ]; then
+# Get current version from version.json or version.txt
+if [ -f "version.json" ]; then
+    CURRENT_VERSION=$(php -r "echo json_decode(file_get_contents('version.json'))->version ?? 'unknown';")
+elif [ -f "version.txt" ]; then
     CURRENT_VERSION=$(head -n 1 version.txt | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')
 else
     CURRENT_VERSION="unknown"
@@ -288,11 +290,15 @@ GIT_HASH=$(git rev-parse --short HEAD)
 print_info "Comparing versions: '$NEW_VERSION' vs '$CURRENT_VERSION'"
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     print_info "Updating version to $NEW_VERSION..."
-    # Update version in version.txt file
-    echo "$NEW_VERSION-$GIT_HASH" > version.txt
-	cp version.txt dist/version.txt
+    # Generate version.json with HMAC signature
+    php bin/generate-version.php "$NEW_VERSION" "$GIT_HASH"
+    cp version.json dist/version.json
     print_success "Version updated to $NEW_VERSION ($GIT_HASH)"
 else
+    # Regenerate version.json with today's date for same version
+    print_info "Regenerating version.json with current date..."
+    php bin/generate-version.php "$NEW_VERSION" "$GIT_HASH"
+    cp version.json dist/version.json
     print_info "Version unchanged ($CURRENT_VERSION)"
 fi
 

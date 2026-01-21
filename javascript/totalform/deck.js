@@ -220,7 +220,7 @@ export default class DeckField extends TotalField {
         if (this.input.required) {
             const deckItems = this.container.getElementsByClassName(this.fieldClass);
             if (deckItems.length === 0) {
-                const errorMessage = "Please add at least one item to the deck.";
+                const errorMessage = "Please add at least one.";
                 this.input.setCustomValidity(errorMessage);
                 this.input.reportValidity();
                 this.error(errorMessage);
