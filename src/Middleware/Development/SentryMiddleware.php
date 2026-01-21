@@ -21,6 +21,11 @@ class SentryMiddleware implements MiddlewareInterface
 {
 	public const SALT = 's3ntryR0cks';
 
+	/** Domains to completely ignore (corrupted/problematic installations) */
+	private const IGNORED_DOMAINS = [
+		'komiksdiner',
+	];
+
 	/** @var array<string,mixed> */
 	private const DEFAULT_OPTIONS = [
 		'dsn'                  => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
@@ -149,9 +154,19 @@ class SentryMiddleware implements MiddlewareInterface
 	/**
 	 * Filter events before sending to Sentry.
 	 * Returns null to drop the event, or the event to send it.
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
 	 */
 	private static function filterEvent(Event $event, ?EventHint $hint): ?Event
 	{
+		// Check if this domain should be completely ignored
+		$host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+		foreach (self::IGNORED_DOMAINS as $domain) {
+			if (stripos($host, $domain) !== false) {
+				return null;
+			}
+		}
+
 		if (!$hint instanceof EventHint || $hint->exception === null) {
 			return $event;
 		}
