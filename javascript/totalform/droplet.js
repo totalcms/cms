@@ -193,6 +193,11 @@ export default class Droplet {
             return;
         }
 
+        // Guard against removed preview element (user navigated away during thumbnail generation)
+        if (!file.previewElement) {
+            return;
+        }
+
         file.previewElement.classList.remove("dz-file-preview");
 
         // Only process test set if not already processed (e.g., non-image files and HEIC already processed)
@@ -216,6 +221,8 @@ export default class Droplet {
 
     // Show placeholder for HEIC files since browser can't generate thumbnail
     showHeicPlaceholder(file) {
+        if (!file.previewElement) return;
+
         // Find the thumbnail image element
         const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
         for (const thumb of thumbs) {
@@ -276,8 +283,10 @@ export default class Droplet {
     // When an error has occurred
     event_error(file, message) {
         if (typeof(message) === "object") message = message.message;
-        file.previewElement.classList.remove("saving");
-        file.previewElement.classList.add("error","dz-error");
+        if (file.previewElement) {
+            file.previewElement.classList.remove("saving");
+            file.previewElement.classList.add("error","dz-error");
+        }
 		if (this.testSet && this.testSet.errors) {
 			console.warn("Pre-Upload Validation Errors:",this.testSet.errors);
 			return;
