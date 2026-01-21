@@ -21,20 +21,16 @@ readonly class VersionData implements \Stringable
 		$data = Version::load();
 
 		$this->number = $data['version'] ?? 'unknown';
-		$this->build = $data['build'] ?? 'unknown';
-		$this->date = Version::date();
-		$this->valid = Version::isValid();
+		$this->build  = $data['build'] ?? 'unknown';
+		$this->date   = Version::date();
+		$this->valid  = Version::isValid();
 
-		if ($this->number === 'unknown') {
-			$this->full = 'unknown';
-		} else {
-			$this->full = $this->number . '-' . $this->build;
-		}
+		$this->full = $this->number === 'unknown' ? 'unknown' : $this->number . '-' . $this->build;
 	}
 
 	/**
 	 * Returns the full version string for backwards compatibility.
-	 * e.g., "3.0.47-baee5e0e"
+	 * e.g., "3.0.47-baee5e0e".
 	 */
 	public function __toString(): string
 	{

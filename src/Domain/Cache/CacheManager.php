@@ -504,11 +504,8 @@ class CacheManager
 
 		// Filesystem is ALWAYS checked as absolute fallback for license data
 		$result = $this->filesystemService->get($domainKey);
-		if ($result !== null) {
-			return $result;
-		}
 
-		return null;
+		return $result;
 	}
 
 	/**

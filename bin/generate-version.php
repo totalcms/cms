@@ -1,5 +1,6 @@
 #!/usr/bin/env php
 <?php
+
 /**
  * Generate version.json with HMAC signature.
  *
@@ -19,10 +20,10 @@ if ($argc < 3) {
 	exit(1);
 }
 
-$version = $argv[1];
-$build = $argv[2];
+$version    = $argv[1];
+$build      = $argv[2];
 $outputFile = $argv[3] ?? __DIR__ . '/../version.json';
-$date = date('Y-m-d');
+$date       = date('Y-m-d');
 
 // Validate version format
 if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -40,9 +41,9 @@ if (!preg_match('/^[a-f0-9]+$/', $build)) {
 $signature = Version::generateSignature($version, $date);
 
 $data = [
-	'version' => $version,
-	'build' => $build,
-	'date' => $date,
+	'version'   => $version,
+	'build'     => $build,
+	'date'      => $date,
 	'signature' => $signature,
 ];
 

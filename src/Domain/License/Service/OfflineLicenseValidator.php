@@ -41,11 +41,11 @@ EOD;
 
 	private readonly LoggerInterface $logger;
 
-	/** @var LicenseData|null|false In-memory cache: null=not checked, false=no license, LicenseData=valid */
-	private LicenseData|null|false $cachedLicense = null;
+	/** @var LicenseData|false|null In-memory cache: null=not checked, false=no license, LicenseData=valid */
+	private LicenseData|false|null $cachedLicense = null;
 
-	/** @var array<string,mixed>|null|false In-memory cache for details */
-	private array|null|false $cachedDetails = null;
+	/** @var array<string,mixed>|false|null In-memory cache for details */
+	private array|false|null $cachedDetails = null;
 
 	public function __construct(
 		private readonly OfflineLicenseRepository $repository,
@@ -63,7 +63,7 @@ EOD;
 	{
 		$exists = $this->repository->exists();
 		$this->logger->debug('Checking for offline license file', [
-			'exists' => $exists,
+			'exists'       => $exists,
 			'expectedFile' => $this->repository->getExpectedFilename(),
 		]);
 
@@ -99,8 +99,8 @@ EOD;
 		try {
 			$licenseData = $this->validateToken($token);
 			$this->logger->debug('Offline license validated successfully', [
-				'domain' => $licenseData->domain,
-				'edition' => $licenseData->edition,
+				'domain'       => $licenseData->domain,
+				'edition'      => $licenseData->edition,
 				'updatesValid' => $licenseData->updatesValid,
 			]);
 
@@ -150,7 +150,7 @@ EOD;
 
 		// Check updates validity against version release date
 		$updatesValidUntil = $decoded->updatesValidUntil ?? null;
-		$updatesValid = $this->checkUpdatesValid($updatesValidUntil);
+		$updatesValid      = $this->checkUpdatesValid($updatesValidUntil);
 
 		return new LicenseData(
 			valid              : true,
@@ -185,7 +185,7 @@ EOD;
 
 		try {
 			$updatesExpiry = new \DateTime($updatesValidUntil);
-			$releaseDate = new \DateTime($versionDate);
+			$releaseDate   = new \DateTime($versionDate);
 
 			return $releaseDate <= $updatesExpiry;
 		} catch (\Exception) {
@@ -256,16 +256,16 @@ EOD;
 			$decoded = JWT::decode($token, new Key(self::RSA_PUBLIC_KEY, 'RS256'));
 
 			$currentDomain = $this->config->domain;
-			$domainMatch = isset($decoded->domain) && $decoded->domain === $currentDomain;
+			$domainMatch   = isset($decoded->domain) && $decoded->domain === $currentDomain;
 
 			$this->logger->debug('Offline license details retrieved', [
 				'licenseDomain' => $decoded->domain ?? 'unknown',
 				'currentDomain' => $currentDomain,
-				'domainMatch' => $domainMatch,
+				'domainMatch'   => $domainMatch,
 			]);
 
 			$updatesValidUntil = $decoded->updatesValidUntil ?? null;
-			$updatesValid = $this->checkUpdatesValid($updatesValidUntil);
+			$updatesValid      = $this->checkUpdatesValid($updatesValidUntil);
 
 			$this->cachedDetails = [
 				'valid'             => $domainMatch,

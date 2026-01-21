@@ -41,9 +41,9 @@ class Version
 		}
 
 		self::$data = [
-			'version' => 'unknown',
-			'build' => 'unknown',
-			'date' => null,
+			'version'   => 'unknown',
+			'build'     => 'unknown',
+			'date'      => null,
 			'signature' => null,
 		];
 
@@ -69,7 +69,7 @@ class Version
 		}
 
 		// Verify HMAC: signature = HMAC-SHA256(version|date, secret)
-		$payload = $data['version'] . '|' . $data['date'];
+		$payload           = $data['version'] . '|' . $data['date'];
 		$expectedSignature = hash_hmac('sha256', $payload, self::HMAC_SECRET);
 
 		self::$valid = hash_equals($expectedSignature, $data['signature']);
@@ -82,9 +82,9 @@ class Version
 	 */
 	public static function get(): string
 	{
-		$data = self::load();
+		$data    = self::load();
 		$version = $data['version'] ?? 'unknown';
-		$build = $data['build'] ?? 'unknown';
+		$build   = $data['build'] ?? 'unknown';
 
 		if ($version === 'unknown') {
 			return 'unknown';
@@ -119,7 +119,7 @@ class Version
 	 */
 	public static function date(): ?string
 	{
-		if (! self::isValid()) {
+		if (!self::isValid()) {
 			return null;
 		}
 
@@ -152,7 +152,7 @@ class Version
 	 */
 	public static function reset(): void
 	{
-		self::$data = null;
+		self::$data  = null;
 		self::$valid = null;
 	}
 }

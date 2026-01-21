@@ -35,7 +35,7 @@ class LicenseValidator
 	public function validateLicense(bool $forceRefresh = false): LicenseData
 	{
 		// Return in-memory cached result (unless force refresh)
-		if (!$forceRefresh && $this->cachedResult !== null) {
+		if (!$forceRefresh && $this->cachedResult instanceof LicenseData) {
 			return $this->cachedResult;
 		}
 
@@ -49,7 +49,7 @@ class LicenseValidator
 
 		// Check for offline license first (takes precedence over online)
 		$offlineLicense = $this->validateOfflineLicense();
-		if ($offlineLicense !== null) {
+		if ($offlineLicense instanceof LicenseData) {
 			$this->cachedResult = $offlineLicense;
 
 			return $this->cachedResult;
@@ -94,7 +94,7 @@ class LicenseValidator
 	 */
 	private function validateOfflineLicense(): ?LicenseData
 	{
-		if ($this->offlineValidator === null) {
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
 			return null;
 		}
 
@@ -106,7 +106,7 @@ class LicenseValidator
 	 */
 	public function hasOfflineLicense(): bool
 	{
-		return $this->offlineValidator !== null && $this->offlineValidator->hasOfflineLicense();
+		return $this->offlineValidator instanceof OfflineLicenseValidator && $this->offlineValidator->hasOfflineLicense();
 	}
 
 	/**
@@ -116,7 +116,7 @@ class LicenseValidator
 	 */
 	public function getOfflineLicenseDetails(): ?array
 	{
-		if ($this->offlineValidator === null) {
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
 			return null;
 		}
 
@@ -128,7 +128,7 @@ class LicenseValidator
 	 */
 	public function getOfflineLicenseFilename(): ?string
 	{
-		if ($this->offlineValidator === null) {
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
 			return null;
 		}
 
@@ -140,7 +140,7 @@ class LicenseValidator
 	 */
 	public function getOfflineLicenseDirectory(): ?string
 	{
-		if ($this->offlineValidator === null) {
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
 			return null;
 		}
 

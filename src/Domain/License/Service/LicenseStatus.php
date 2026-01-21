@@ -233,7 +233,7 @@ readonly class LicenseStatus
 
 	/**
 	 * Get the expected filename for the offline license.
-	 * e.g., "example.com-offline-license.key"
+	 * e.g., "example.com-offline-license.key".
 	 */
 	public function getOfflineLicenseFilename(): ?string
 	{
@@ -242,7 +242,7 @@ readonly class LicenseStatus
 
 	/**
 	 * Get the expected directory for the offline license.
-	 * e.g., "tcms-data/.system"
+	 * e.g., "tcms-data/.system".
 	 */
 	public function getOfflineLicenseDirectory(): ?string
 	{

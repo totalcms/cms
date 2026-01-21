@@ -162,7 +162,7 @@ class SentryMiddleware implements MiddlewareInterface
 		// Check if this domain should be completely ignored
 		$host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 		foreach (self::IGNORED_DOMAINS as $domain) {
-			if (stripos($host, $domain) !== false) {
+			if (stripos((string)$host, $domain) !== false) {
 				return null;
 			}
 		}

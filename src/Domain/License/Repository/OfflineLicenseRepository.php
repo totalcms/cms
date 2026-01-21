@@ -14,7 +14,7 @@ use TotalCMS\Support\Config;
  */
 readonly class OfflineLicenseRepository
 {
-	private const SYSTEM_DIR = '.system';
+	private const SYSTEM_DIR     = '.system';
 	private const LICENSE_SUFFIX = '-offline-license.key';
 
 	public function __construct(
@@ -74,7 +74,7 @@ readonly class OfflineLicenseRepository
 
 	/**
 	 * Get the expected filename for the offline license.
-	 * e.g., "example.com-offline-license.key"
+	 * e.g., "example.com-offline-license.key".
 	 */
 	public function getExpectedFilename(): string
 	{
@@ -114,7 +114,7 @@ readonly class OfflineLicenseRepository
 
 	/**
 	 * Get the upload location path (where users drop the file).
-	 * Location: {domain}-offline-license.key (root of tcms-data)
+	 * Location: {domain}-offline-license.key (root of tcms-data).
 	 */
 	private function getUploadPath(): string
 	{
@@ -123,7 +123,7 @@ readonly class OfflineLicenseRepository
 
 	/**
 	 * Get the system location path (secure storage).
-	 * Location: .system/{domain}-offline-license.key
+	 * Location: .system/{domain}-offline-license.key.
 	 */
 	private function getSystemPath(): string
 	{
