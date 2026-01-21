@@ -68,14 +68,10 @@
 	</div>
 
 	<div class="offline-license-actions">
-		<form action="/admin/utils/upload-offline-license" method="post" enctype="multipart/form-data" class="offline-license-upload-form">
-			{{ cms.csrf.field | raw }}
-			<label class="file-upload-label">
-				<span class="icon-upload"></span>
-				Replace License File
-				<input type="file" name="license_file" accept=".key" onchange="this.form.submit()">
-			</label>
-		</form>
+		<p class="offline-license-note">
+			To update this license, place a new file at:<br>
+			<code>tcms-data/{{ cms.license.getOfflineLicenseFilename() }}</code>
+		</p>
 	</div>
 </div>
 
@@ -145,22 +141,17 @@
 	padding-top: 1rem;
 	border-top: 1px solid oklch(var(--totalform-border-color));
 }
-.file-upload-label {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 1rem;
-	background: oklch(var(--totalform-accent));
-	color: white;
-	border-radius: var(--totalform-radius);
-	cursor: pointer;
-	font-weight: 500;
+.offline-license-note {
+	font-size: 0.85rem;
+	color: oklch(var(--totalform-darkgray));
+	margin: 0;
 }
-.file-upload-label:hover {
-	opacity: 0.9;
-}
-.file-upload-label input[type="file"] {
-	display: none;
+.offline-license-note code {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.8rem;
+	word-break: break-all;
 }
 .dash-main-content {
 	position: relative !important;
@@ -168,21 +159,20 @@
 </style>
 
 {% else %}
-{# No offline license - show upload option #}
+{# No offline license - show instructions for manual placement #}
 <div class="offline-license-panel offline-license-empty">
 	<div class="offline-license-header">
 		<span class="icon-lock"></span>
 		<h3>Offline License</h3>
 	</div>
-	<p>Upload an offline license file for air-gapped installations that cannot contact the license server.</p>
-	<form action="/admin/utils/upload-offline-license" method="post" enctype="multipart/form-data" class="offline-license-upload-form">
-		{{ cms.csrf.field | raw }}
-		<label class="file-upload-label">
-			<span class="icon-upload"></span>
-			Upload License File
-			<input type="file" name="license_file" accept=".key" onchange="this.form.submit()">
-		</label>
-	</form>
+	<p>For air-gapped installations that cannot contact the license server, place an offline license file at:</p>
+	<div class="offline-license-path">
+		<code>tcms-data/{{ cms.license.getOfflineLicenseFilename() }}</code>
+	</div>
+	<p class="offline-license-note">
+		The file will be automatically moved to a secure location. Offline licenses are available for Pro and Enterprise editions.
+		<a href="https://totalcms.co/docs/offline-licenses" target="_blank">Learn more</a>
+	</p>
 </div>
 
 <style>
@@ -209,22 +199,22 @@
 	font-size: 1.25rem;
 	color: oklch(var(--totalform-accent));
 }
-.file-upload-label {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 1rem;
-	background: oklch(var(--totalform-accent));
-	color: white;
+.offline-license-path {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.75rem 1rem;
 	border-radius: var(--totalform-radius);
-	cursor: pointer;
-	font-weight: 500;
+	margin: 1rem 0;
 }
-.file-upload-label:hover {
-	opacity: 0.9;
+.offline-license-path code {
+	font-size: 0.9rem;
+	word-break: break-all;
 }
-.file-upload-label input[type="file"] {
-	display: none;
+.offline-license-note {
+	font-size: 0.85rem;
+	margin-top: 1rem;
+}
+.offline-license-note a {
+	color: oklch(var(--totalform-accent));
 }
 .dash-main-content {
 	position: relative !important;

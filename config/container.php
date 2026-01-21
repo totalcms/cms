@@ -68,6 +68,7 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Domain\License\Repository\OfflineLicenseRepository;
 use TotalCMS\Domain\License\Service\OfflineLicenseValidator;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
@@ -628,7 +629,13 @@ return [
 	),
 
 	// License Services
+	OfflineLicenseRepository::class => fn (ContainerInterface $container): OfflineLicenseRepository => new OfflineLicenseRepository(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(Config::class),
+	),
+
 	OfflineLicenseValidator::class => fn (ContainerInterface $container): OfflineLicenseValidator => new OfflineLicenseValidator(
+		$container->get(OfflineLicenseRepository::class),
 		$container->get(Config::class),
 	),
 

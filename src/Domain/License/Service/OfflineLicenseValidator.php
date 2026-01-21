@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\License\Service;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use TotalCMS\Domain\License\Data\LicenseData;
+use TotalCMS\Domain\License\Repository\OfflineLicenseRepository;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -14,6 +15,9 @@ use TotalCMS\Support\Version;
  * Validates offline license files (JWT) for air-gapped installations.
  * Offline licenses are signed with RS256 (asymmetric) - the public key
  * is embedded here for verification.
+ *
+ * License files are stored in: tcms-data/.system/{domain}-offline-license.key
+ * The domain-specific filename prevents accidental use of wrong license.
  */
 readonly class OfflineLicenseValidator
 {
@@ -33,19 +37,19 @@ MMvhypRRgR3Iibqr/WoGLbaGUgXwDpwJqsZ98WysaLDV+6Wko1VhgDoF+eadOduE
 -----END PUBLIC KEY-----
 EOD;
 
-	private const LICENSE_FILE = 'tcms-data/offline-license.key';
-
 	public function __construct(
+		private OfflineLicenseRepository $repository,
 		private Config $config,
 	) {
 	}
 
 	/**
 	 * Check if an offline license file exists.
+	 * Also checks the upload location and moves file if found.
 	 */
 	public function hasOfflineLicense(): bool
 	{
-		return file_exists($this->getLicenseFilePath());
+		return $this->repository->exists();
 	}
 
 	/**
@@ -54,19 +58,14 @@ EOD;
 	 */
 	public function validate(): ?LicenseData
 	{
-		$filePath = $this->getLicenseFilePath();
+		$token = $this->repository->read();
 
-		if (!file_exists($filePath)) {
-			return null;
-		}
-
-		$token = file_get_contents($filePath);
-		if ($token === false || trim($token) === '') {
+		if ($token === null) {
 			return null;
 		}
 
 		try {
-			return $this->validateToken(trim($token));
+			return $this->validateToken($token);
 		} catch (\Exception) {
 			// Invalid token - return null to fall through to online validation
 			return null;
@@ -166,13 +165,20 @@ EOD;
 	}
 
 	/**
-	 * Get the full path to the offline license file.
+	 * Get the expected filename for the offline license.
+	 * Useful for displaying to users where to place the file.
 	 */
-	private function getLicenseFilePath(): string
+	public function getExpectedFilename(): string
 	{
-		$basePath = $this->config->basePath ?? '';
+		return $this->repository->getExpectedFilename();
+	}
 
-		return rtrim($basePath, '/') . '/' . self::LICENSE_FILE;
+	/**
+	 * Get the expected upload directory for the offline license.
+	 */
+	public function getExpectedDirectory(): string
+	{
+		return $this->repository->getUploadDirectory();
 	}
 
 	/**
@@ -183,19 +189,14 @@ EOD;
 	 */
 	public function getDetails(): ?array
 	{
-		$filePath = $this->getLicenseFilePath();
+		$token = $this->repository->read();
 
-		if (!file_exists($filePath)) {
-			return null;
-		}
-
-		$token = file_get_contents($filePath);
-		if ($token === false || trim($token) === '') {
+		if ($token === null) {
 			return null;
 		}
 
 		try {
-			$decoded = JWT::decode(trim($token), new Key(self::RSA_PUBLIC_KEY, 'RS256'));
+			$decoded = JWT::decode($token, new Key(self::RSA_PUBLIC_KEY, 'RS256'));
 
 			$currentDomain = $this->config->domain;
 			$domainMatch = isset($decoded->domain) && $decoded->domain === $currentDomain;
@@ -204,16 +205,16 @@ EOD;
 			$updatesValid = $this->checkUpdatesValid($updatesValidUntil);
 
 			return [
-				'valid' => $domainMatch,
-				'domain' => $decoded->domain ?? 'unknown',
-				'domainMatch' => $domainMatch,
-				'currentDomain' => $currentDomain,
-				'edition' => $decoded->edition ?? 'unknown',
-				'licenseKey' => $decoded->licenseKey ?? 'unknown',
+				'valid'             => $domainMatch,
+				'domain'            => $decoded->domain ?? 'unknown',
+				'domainMatch'       => $domainMatch,
+				'currentDomain'     => $currentDomain,
+				'edition'           => $decoded->edition ?? 'unknown',
+				'licenseKey'        => $decoded->licenseKey ?? 'unknown',
 				'updatesValidUntil' => $updatesValidUntil,
-				'updatesValid' => $updatesValid,
-				'issuedAt' => $decoded->issuedAt ?? null,
-				'type' => $decoded->type ?? 'unknown',
+				'updatesValid'      => $updatesValid,
+				'issuedAt'          => $decoded->issuedAt ?? null,
+				'type'              => $decoded->type ?? 'unknown',
 			];
 		} catch (\Exception $e) {
 			return [

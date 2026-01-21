@@ -107,6 +107,30 @@ readonly class LicenseValidator
 	}
 
 	/**
+	 * Get the expected filename for the offline license.
+	 */
+	public function getOfflineLicenseFilename(): ?string
+	{
+		if ($this->offlineValidator === null) {
+			return null;
+		}
+
+		return $this->offlineValidator->getExpectedFilename();
+	}
+
+	/**
+	 * Get the expected directory for the offline license.
+	 */
+	public function getOfflineLicenseDirectory(): ?string
+	{
+		if ($this->offlineValidator === null) {
+			return null;
+		}
+
+		return $this->offlineValidator->getExpectedDirectory();
+	}
+
+	/**
 	 * Get cached license data.
 	 */
 	private function getCachedLicense(): ?LicenseData

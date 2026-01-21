@@ -230,4 +230,22 @@ readonly class LicenseStatus
 
 		return $details !== null && ($details['valid'] ?? false);
 	}
+
+	/**
+	 * Get the expected filename for the offline license.
+	 * e.g., "example.com-offline-license.key"
+	 */
+	public function getOfflineLicenseFilename(): ?string
+	{
+		return $this->licenseValidator->getOfflineLicenseFilename();
+	}
+
+	/**
+	 * Get the expected directory for the offline license.
+	 * e.g., "tcms-data/.system"
+	 */
+	public function getOfflineLicenseDirectory(): ?string
+	{
+		return $this->licenseValidator->getOfflineLicenseDirectory();
+	}
 }
