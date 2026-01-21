@@ -10,8 +10,7 @@
 
 // Form field wrapper - constrain to form width
 .form-field[data-type="code"] {
-	max-width: 100%;
-	overflow: hidden; // Prevent expanding beyond form
+	max-width : 100%;
 }
 
 // TotalForm code editor wrapper
