@@ -77,7 +77,8 @@ readonly class TwigEngine
 		$this->twig->addExtension(new MarkdownExtension());
 
 		// Configure locale for internationalization (requires intl extension)
-		if (extension_loaded('intl')) {
+		// Check both extension_loaded AND class existence to handle edge cases
+		if (extension_loaded('intl') && class_exists('IntlDateFormatter')) {
 			// Set PHP's default locale for IntlExtension and other intl functions
 			\Locale::setDefault($config->locale);
 			// Set CakePHP I18n locale for RelativeTimeFormatter translations
