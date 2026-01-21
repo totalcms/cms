@@ -9,6 +9,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
@@ -24,6 +25,7 @@ readonly class AuthLoginSubmitAction
 		private LoginService $loginService,
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
+		private LicenseValidator $licenseValidator,
 	) {
 	}
 
@@ -99,6 +101,17 @@ readonly class AuthLoginSubmitAction
 		$queryParams = $request->getQueryParams();
 		$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
 		$url         = $redirectUrl;
+
+		// If license is invalid, redirect to license manager instead
+		try {
+			$licenseData = $this->licenseValidator->validateLicense();
+			if (!$licenseData->valid) {
+				$url = $router->urlFor('admin-utils', ['page' => 'license-manager']);
+			}
+		} catch (\Exception) {
+			// If license validation fails, redirect to license manager
+			$url = $router->urlFor('admin-utils', ['page' => 'license-manager']);
+		}
 
 		$this->session->destroy();
 		$this->session->start();

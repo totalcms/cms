@@ -12,6 +12,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
 
 /**
@@ -25,6 +26,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		private LicenseValidator $licenseValidator,
 		private Config $config,
 		private ResponseFactoryInterface $responseFactory,
+		private RedirectRenderer $redirectRenderer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('license.log')->createLogger('license');
@@ -44,6 +46,14 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
+		// Skip license manager page - always allow access so users can fix their license
+		if ($this->isLicenseManagerRoute($request)) {
+			return $handler->handle($request);
+		}
+
+		// Check if this is an admin route (for redirect behavior)
+		$isAdmin = $this->isAdminRoute($request);
+
 		try {
 			// Get license data (uses cache if valid, otherwise validates)
 			$licenseData = $this->licenseValidator->validateLicense();
@@ -62,6 +72,12 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 
 				$this->logger->error($message);
 
+				// Admin routes: redirect to license manager
+				if ($isAdmin) {
+					return $this->createLicenseRedirect();
+				}
+
+				// Non-admin routes (API): return JSON error
 				return $this->createUnauthorizedResponse($message);
 			}
 
@@ -72,6 +88,11 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 					$this->logger->debug('JWT token validation passed');
 				} catch (LicenseException $e) {
 					$this->logger->error('JWT token validation failed', ['error' => $e->getMessage()]);
+
+					// Admin routes: redirect to license manager
+					if ($isAdmin) {
+						return $this->createLicenseRedirect();
+					}
 
 					return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 				}
@@ -89,6 +110,11 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 				'error'  => $e->getMessage(),
 				'trace'  => $e->getTraceAsString(),
 			]);
+
+			// Admin routes: redirect to license manager
+			if ($isAdmin) {
+				return $this->createLicenseRedirect();
+			}
 
 			return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 		} catch (\Exception $e) {
@@ -149,5 +175,42 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		$response->getBody()->write($jsonResponse);
 
 		return $response->withHeader('Content-Type', 'application/json');
+	}
+
+	/** Check if this is an admin route by checking if route name starts with 'admin-'. */
+	private function isAdminRoute(ServerRequestInterface $request): bool
+	{
+		$routeContext = RouteContext::fromRequest($request);
+		$route        = $routeContext->getRoute();
+
+		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+			return false;
+		}
+
+		$routeName = $route->getName();
+
+		return $routeName !== null && str_starts_with($routeName, 'admin-');
+	}
+
+	/** Check if this is the license manager route. */
+	private function isLicenseManagerRoute(ServerRequestInterface $request): bool
+	{
+		$routeContext = RouteContext::fromRequest($request);
+		$route        = $routeContext->getRoute();
+
+		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+			return false;
+		}
+
+		return $route->getName() === 'admin-utils'
+			&& $route->getArgument('page') === 'license-manager';
+	}
+
+	/** Create redirect response to license manager. */
+	private function createLicenseRedirect(): ResponseInterface
+	{
+		$response = $this->responseFactory->createResponse();
+
+		return $this->redirectRenderer->redirectFor($response, 'admin-utils', ['page' => 'license-manager']);
 	}
 }

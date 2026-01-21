@@ -153,85 +153,40 @@
 	font-size: 0.8rem;
 	word-break: break-all;
 }
-.dash-main-content {
-	position: relative !important;
-}
 </style>
 
-{% else %}
-{# No offline license - show instructions for manual placement #}
-<div class="offline-license-panel offline-license-empty">
-	<div class="offline-license-header">
-		<span class="icon-lock"></span>
-		<h3>Offline License</h3>
-	</div>
-	<p>For air-gapped installations that cannot contact the license server, place an offline license file at:</p>
-	<div class="offline-license-path">
-		<code>tcms-data/{{ cms.license.getOfflineLicenseFilename() }}</code>
-	</div>
-	<p class="offline-license-note">
-		The file will be automatically moved to a secure location. Offline licenses are available for Pro and Enterprise editions.
-		<a href="https://totalcms.co/docs/offline-licenses" target="_blank">Learn more</a>
-	</p>
-</div>
-
-<style>
-.offline-license-panel {
-	background: oklch(var(--totalform-nearwhite));
-	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-	padding: 1.5rem;
-	margin-bottom: 1rem;
-}
-.offline-license-empty p {
-	color: oklch(var(--totalform-darkgray));
-	margin: 0.5rem 0 1rem;
-}
-.offline-license-header {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-}
-.offline-license-header h3 {
-	margin: 0;
-}
-.offline-license-header .icon-lock {
-	font-size: 1.25rem;
-	color: oklch(var(--totalform-accent));
-}
-.offline-license-path {
-	background: oklch(var(--totalform-icon-bg));
-	padding: 0.75rem 1rem;
-	border-radius: var(--totalform-radius);
-	margin: 1rem 0;
-}
-.offline-license-path code {
-	font-size: 0.9rem;
-	word-break: break-all;
-}
-.offline-license-note {
-	font-size: 0.85rem;
-	margin-top: 1rem;
-}
-.offline-license-note a {
-	color: oklch(var(--totalform-accent));
-}
-.dash-main-content {
-	position: relative !important;
-}
-</style>
 {% endif %}
 
 {# Online license iframe - only show if not using offline license #}
 {% if not isOffline %}
-<iframe src="{{ licenseUrl }}"
-		width="100%"
-		height="100%"
-		frameborder="0"
-		allowtransparency="true"
-		style="border: none; background: transparent !important; background-color: transparent !important; display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
-	<p>Your browser does not support iframes. Please visit <a href="{{ licenseUrl }}" target="_blank">{{ licenseUrl }}</a> directly.</p>
-</iframe>
+<div class="license-iframe-container">
+	<iframe src="{{ licenseUrl }}"
+			width="100%"
+			height="100%"
+			frameborder="0"
+			allowtransparency="true">
+		<p>Your browser does not support iframes. Please visit <a href="{{ licenseUrl }}" target="_blank">{{ licenseUrl }}</a> directly.</p>
+	</iframe>
+</div>
+<style>
+.license-iframe-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+.license-iframe-container iframe {
+	border: none;
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.dash-main-content {
+	position: relative;
+}
+</style>
 {% endif %}
 
 {% if cms.edition.isSimulating %}
