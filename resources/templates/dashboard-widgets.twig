@@ -216,7 +216,7 @@
 		<div class="status-grid">
 			<div class="status-item">
 				<span class="status-label">Total CMS Version:</span>
-				<span class="status-value">{{ cms.version }}</span>
+				<span class="status-value">{{ cms.version }}{% if cms.version.date %} <span class="version-date">({{ cms.version.date }})</span>{% endif %}</span>
 			</div>
 
 			<div class="status-item">

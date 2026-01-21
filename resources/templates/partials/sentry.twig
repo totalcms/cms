@@ -3,7 +3,7 @@
 <script>
 	Sentry.onLoad(function() {
 		Sentry.init({
-			release: "totalcms@{{ cms.version | split('-') | first }}",
+			release: "totalcms@{{ cms.version.number }}",
 			tracesSampleRate: 0,
 			profilesSampleRate: 0,
 			beforeSend(event, hint) {
@@ -46,7 +46,7 @@
 			}
 		});
 		if (typeof Sentry.setTag === 'function') {
-			Sentry.setTag('build', '{{ cms.version | split('-') | last }}');
+			Sentry.setTag('build', '{{ cms.version.build }}');
 		}
 	});
 </script>

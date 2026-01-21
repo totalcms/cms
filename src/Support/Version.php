@@ -20,41 +20,20 @@ class Version
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function load(): array
+	public static function load(): array
 	{
 		if (self::$data !== null) {
 			return self::$data;
 		}
 
 		$jsonFile = __DIR__ . '/../../version.json';
-		$txtFile = __DIR__ . '/../../version.txt';
 
-		// Try version.json first
 		if (file_exists($jsonFile)) {
 			$content = file_get_contents($jsonFile);
 			if ($content !== false) {
 				$decoded = json_decode($content, true);
 				if (is_array($decoded)) {
 					self::$data = $decoded;
-
-					return self::$data;
-				}
-			}
-		}
-
-		// Fall back to version.txt for backwards compatibility
-		if (file_exists($txtFile)) {
-			$content = file_get_contents($txtFile);
-			if ($content !== false) {
-				$versionString = trim($content);
-				// Parse "3.1.3-5e3c5139" format
-				if (preg_match('/^(\d+\.\d+\.\d+)(?:-([a-f0-9]+))?$/', $versionString, $matches)) {
-					self::$data = [
-						'version' => $matches[1],
-						'build' => $matches[2] ?? 'unknown',
-						'date' => null,
-						'signature' => null,
-					];
 
 					return self::$data;
 				}
@@ -82,7 +61,7 @@ class Version
 
 		$data = self::load();
 
-		// If no signature present (legacy version.txt), consider invalid for date purposes
+		// If no signature present, consider invalid for date purposes
 		if (empty($data['signature']) || empty($data['version']) || empty($data['date'])) {
 			self::$valid = false;
 

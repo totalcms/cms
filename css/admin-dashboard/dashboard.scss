@@ -470,6 +470,12 @@
 		.status-value {
 			font-weight: 500;
 			color: oklch(var(--totalform-darkgray));
+
+			.version-date {
+				font-size: 0.75em;
+				font-style: italic;
+				color: oklch(var(--totalform-text-color) / 0.5);
+			}
 		}
 	}
 

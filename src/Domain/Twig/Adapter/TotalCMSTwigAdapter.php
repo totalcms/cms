@@ -38,7 +38,7 @@ use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\Version;
+use TotalCMS\Support\VersionData;
 
 /**
  * Twig Adapter with Total CMS.
@@ -60,7 +60,7 @@ class TotalCMSTwigAdapter
 	public string $logout;
 	public string $domain;
 	public string $clearcache;
-	public string $version;
+	public VersionData $version;
 	public string $currentUrl;
 
 	public function __construct(
@@ -326,9 +326,9 @@ NGINX;
 		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 	}
 
-	private function getVersion(): string
+	private function getVersion(): VersionData
 	{
-		return Version::get();
+		return new VersionData();
 	}
 
 	/** @return array<string,string> */
