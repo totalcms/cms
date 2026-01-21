@@ -4,8 +4,10 @@ namespace TotalCMS\Domain\License\Service;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Repository\OfflineLicenseRepository;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -19,7 +21,7 @@ use TotalCMS\Support\Version;
  * License files are stored in: tcms-data/.system/{domain}-offline-license.key
  * The domain-specific filename prevents accidental use of wrong license.
  */
-readonly class OfflineLicenseValidator
+class OfflineLicenseValidator
 {
 	/**
 	 * RSA public key for verifying offline license signatures.
@@ -37,10 +39,20 @@ MMvhypRRgR3Iibqr/WoGLbaGUgXwDpwJqsZ98WysaLDV+6Wko1VhgDoF+eadOduE
 -----END PUBLIC KEY-----
 EOD;
 
+	private readonly LoggerInterface $logger;
+
+	/** @var LicenseData|null|false In-memory cache: null=not checked, false=no license, LicenseData=valid */
+	private LicenseData|null|false $cachedLicense = null;
+
+	/** @var array<string,mixed>|null|false In-memory cache for details */
+	private array|null|false $cachedDetails = null;
+
 	public function __construct(
-		private OfflineLicenseRepository $repository,
-		private Config $config,
+		private readonly OfflineLicenseRepository $repository,
+		private readonly Config $config,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory->addFileHandler('license.log')->createLogger('license');
 	}
 
 	/**
@@ -49,7 +61,13 @@ EOD;
 	 */
 	public function hasOfflineLicense(): bool
 	{
-		return $this->repository->exists();
+		$exists = $this->repository->exists();
+		$this->logger->debug('Checking for offline license file', [
+			'exists' => $exists,
+			'expectedFile' => $this->repository->getExpectedFilename(),
+		]);
+
+		return $exists;
 	}
 
 	/**
@@ -58,15 +76,44 @@ EOD;
 	 */
 	public function validate(): ?LicenseData
 	{
+		// Return cached result if already validated this request
+		if ($this->cachedLicense !== null) {
+			return $this->cachedLicense === false ? null : $this->cachedLicense;
+		}
+
+		$this->logger->debug('Attempting offline license validation');
+
 		$token = $this->repository->read();
 
 		if ($token === null) {
+			$this->logger->debug('No offline license file found');
+			$this->cachedLicense = false;
+
 			return null;
 		}
 
+		$this->logger->debug('Offline license file read successfully', [
+			'tokenLength' => strlen($token),
+		]);
+
 		try {
-			return $this->validateToken($token);
-		} catch (\Exception) {
+			$licenseData = $this->validateToken($token);
+			$this->logger->debug('Offline license validated successfully', [
+				'domain' => $licenseData->domain,
+				'edition' => $licenseData->edition,
+				'updatesValid' => $licenseData->updatesValid,
+			]);
+
+			$this->cachedLicense = $licenseData;
+
+			return $licenseData;
+		} catch (\Exception $e) {
+			$this->logger->warning('Offline license validation failed', [
+				'error' => $e->getMessage(),
+			]);
+
+			$this->cachedLicense = false;
+
 			// Invalid token - return null to fall through to online validation
 			return null;
 		}
@@ -189,9 +236,19 @@ EOD;
 	 */
 	public function getDetails(): ?array
 	{
+		// Return cached result if already retrieved this request
+		if ($this->cachedDetails !== null) {
+			return $this->cachedDetails === false ? null : $this->cachedDetails;
+		}
+
+		$this->logger->debug('Getting offline license details');
+
 		$token = $this->repository->read();
 
 		if ($token === null) {
+			$this->logger->debug('No offline license file found for details');
+			$this->cachedDetails = false;
+
 			return null;
 		}
 
@@ -201,10 +258,16 @@ EOD;
 			$currentDomain = $this->config->domain;
 			$domainMatch = isset($decoded->domain) && $decoded->domain === $currentDomain;
 
+			$this->logger->debug('Offline license details retrieved', [
+				'licenseDomain' => $decoded->domain ?? 'unknown',
+				'currentDomain' => $currentDomain,
+				'domainMatch' => $domainMatch,
+			]);
+
 			$updatesValidUntil = $decoded->updatesValidUntil ?? null;
 			$updatesValid = $this->checkUpdatesValid($updatesValidUntil);
 
-			return [
+			$this->cachedDetails = [
 				'valid'             => $domainMatch,
 				'domain'            => $decoded->domain ?? 'unknown',
 				'domainMatch'       => $domainMatch,
@@ -216,11 +279,19 @@ EOD;
 				'issuedAt'          => $decoded->issuedAt ?? null,
 				'type'              => $decoded->type ?? 'unknown',
 			];
+
+			return $this->cachedDetails;
 		} catch (\Exception $e) {
-			return [
+			$this->logger->warning('Failed to get offline license details', [
+				'error' => $e->getMessage(),
+			]);
+
+			$this->cachedDetails = [
 				'valid' => false,
 				'error' => $e->getMessage(),
 			];
+
+			return $this->cachedDetails;
 		}
 	}
 }

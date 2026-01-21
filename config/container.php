@@ -637,6 +637,7 @@ return [
 	OfflineLicenseValidator::class => fn (ContainerInterface $container): OfflineLicenseValidator => new OfflineLicenseValidator(
 		$container->get(OfflineLicenseRepository::class),
 		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
