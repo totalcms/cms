@@ -120,11 +120,18 @@ export default class StyledTextField extends TotalField {
     deleteFileFromServer(url) {
         if (this.options.confirmDelete !== true || !url) return;
 
+        // Skip data URLs and blob URLs - they weren't uploaded to the server
+        if (url.startsWith('data:') || url.startsWith('blob:')) return;
+
         if (confirm("Are you sure you want to delete this image?")) {
             const collection = this.form.collection;
             const id         = this.form.getId();
             const property   = this.property;
             const name       = url.split("?")[0].split("/").pop();
+
+            // Skip if name is empty or invalid
+            if (!name || name.includes(':')) return;
+
             const api        = `/upload/${collection}/${id}/${property}/${name}`;
             console.log("Deleting file from server", api);
             this.api.postAPI(api, {}, "DELETE");
