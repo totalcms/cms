@@ -303,7 +303,19 @@ readonly class CollectionTable
 		]);
 		$clone = HTMLUtils::element('li', $clone, ['class' => 'clone']);
 
-		$actions = HTMLUtils::element('ul', $edit . $link . $clone . $delete);
+		$download = HTMLUtils::element('a', 'Download Zip', [
+			'href' => implode('/', [
+				$this->config->api,
+				'export',
+				'collections',
+				$this->collectionData->id,
+				$id,
+				'zip',
+			]),
+		]);
+		$download = HTMLUtils::element('li', $download, ['class' => 'download']);
+
+		$actions = HTMLUtils::element('ul', $edit . $link . $clone . $download . $delete);
 		$popover = HTMLUtils::element('nav', $actions, [
 			'popover' => '',
 			'class'   => 'object-action-popover',
