@@ -668,7 +668,7 @@ NGINX;
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 
-		if ($collectionData === null) {
+		if (!$collectionData instanceof CollectionData) {
 			return 0;
 		}
 

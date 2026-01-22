@@ -31,22 +31,26 @@ class SettingsSchemaFetcher
 
 		if (!file_exists($schemaPath)) {
 			$this->requestCache[$section] = null;
+
 			return null;
 		}
 
 		$content = file_get_contents($schemaPath);
 		if ($content === false) {
 			$this->requestCache[$section] = null;
+
 			return null;
 		}
 
 		$schema = json_decode($content, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$this->requestCache[$section] = null;
+
 			return null;
 		}
 
 		$this->requestCache[$section] = is_array($schema) ? $schema : null;
+
 		return $this->requestCache[$section];
 	}
 

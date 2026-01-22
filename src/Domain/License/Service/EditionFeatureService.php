@@ -100,7 +100,7 @@ class EditionFeatureService
 	public function getEdition(): Edition
 	{
 		// Return cached result if available
-		if ($this->cachedEdition !== null) {
+		if ($this->cachedEdition instanceof Edition) {
 			return $this->cachedEdition;
 		}
 
@@ -112,11 +112,13 @@ class EditionFeatureService
 			$simulatedEdition = $this->getSimulatedEdition();
 			if ($simulatedEdition instanceof Edition) {
 				$this->cachedEdition = $simulatedEdition;
+
 				return $this->cachedEdition;
 			}
 		}
 
 		$this->cachedEdition = $actualEdition;
+
 		return $this->cachedEdition;
 	}
 

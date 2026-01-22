@@ -340,6 +340,7 @@ class AccessGroupRepository extends StorageRepository
 
 		if (!$this->filesystem->fileExists(self::FILE_PATH)) {
 			$this->requestCache = ['groups' => []];
+
 			return $this->requestCache;
 		}
 
@@ -347,12 +348,14 @@ class AccessGroupRepository extends StorageRepository
 
 		if ($content === '') {
 			$this->requestCache = ['groups' => []];
+
 			return $this->requestCache;
 		}
 
 		$data = json_decode($content, true);
 
 		$this->requestCache = is_array($data) ? $data : ['groups' => []];
+
 		return $this->requestCache;
 	}
 

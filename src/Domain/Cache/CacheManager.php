@@ -47,7 +47,7 @@ class CacheManager
 	public const TTL_RESERVED_SCHEMAS    = 86400;     // 24 hours - reserved schemas NEVER change
 	public const TTL_RESERVED_SCHEMA_IDS = 86400;  // 24 hours - reserved schema IDs NEVER change
 	public const TTL_CUSTOM_SCHEMA       = 14400;        // 4 hours - custom schemas change infrequently
-	public const TTL_FLATTENED_SCHEMA   = 14400;       // 4 hours - flattened schemas (inheritance resolved)
+	public const TTL_FLATTENED_SCHEMA    = 14400;       // 4 hours - flattened schemas (inheritance resolved)
 	public const TTL_API_RESPONSE        = 1800;          // 30 minutes - API responses can be cached longer
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
 	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)

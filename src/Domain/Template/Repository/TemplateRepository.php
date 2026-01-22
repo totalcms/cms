@@ -132,6 +132,7 @@ class TemplateRepository extends StorageRepository
 
 		if (!file_exists($templateFile)) {
 			$this->requestCache[$cacheKey] = null;
+
 			return null;
 		}
 
@@ -139,11 +140,13 @@ class TemplateRepository extends StorageRepository
 
 		if ($contents === false) {
 			$this->requestCache[$cacheKey] = null;
+
 			return null;
 		}
 
 		// Empty content is valid for templates
 		$this->requestCache[$cacheKey] = TemplateFactory::generateTemplate($template, $contents);
+
 		return $this->requestCache[$cacheKey];
 	}
 
@@ -162,6 +165,7 @@ class TemplateRepository extends StorageRepository
 
 		if (!$this->filesystem->fileExists($templateFile)) {
 			$this->requestCache[$cacheKey] = null;
+
 			return null;
 		}
 
@@ -169,6 +173,7 @@ class TemplateRepository extends StorageRepository
 
 		// Empty content is valid for templates - allows editing blank templates
 		$this->requestCache[$cacheKey] = TemplateFactory::generateTemplate($template, $contents);
+
 		return $this->requestCache[$cacheKey];
 	}
 

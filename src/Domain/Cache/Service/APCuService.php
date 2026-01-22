@@ -11,7 +11,7 @@ use TotalCMS\Support\Config;
  */
 class APCuService implements CacheInterface
 {
-	private bool $enabled;
+	private readonly bool $enabled;
 
 	/**
 	 * Cached availability result to avoid repeated functional tests.
@@ -33,6 +33,7 @@ class APCuService implements CacheInterface
 
 		if (!$this->enabled || !$this->isInstalled()) {
 			$this->availabilityCache = false;
+
 			return false;
 		}
 
@@ -44,6 +45,7 @@ class APCuService implements CacheInterface
 			// Test store and retrieve
 			if (!apcu_store($testKey, $testValue, 1)) {
 				$this->availabilityCache = false;
+
 				return false;
 			}
 
@@ -51,9 +53,11 @@ class APCuService implements CacheInterface
 			apcu_delete($testKey);
 
 			$this->availabilityCache = ($retrieved === $testValue);
+
 			return $this->availabilityCache;
 		} catch (\Exception) {
 			$this->availabilityCache = false;
+
 			return false;
 		}
 	}

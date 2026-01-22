@@ -31,22 +31,26 @@ class SettingsRepository extends StorageRepository
 
 		if (!$this->filesystem->fileExists(self::SETTINGS_FILE)) {
 			$this->requestCache = [];
+
 			return $this->requestCache;
 		}
 
 		$content = $this->filesystem->read(self::SETTINGS_FILE);
 		if ($content === '') {
 			$this->requestCache = [];
+
 			return $this->requestCache;
 		}
 
 		$settings = json_decode($content, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$this->requestCache = [];
+
 			return $this->requestCache;
 		}
 
 		$this->requestCache = is_array($settings) ? $settings : [];
+
 		return $this->requestCache;
 	}
 
