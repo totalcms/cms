@@ -1,6 +1,6 @@
 {% extends "admin-layout.twig" %}
 
-{% block title %}Access Denied{% endblock %}
+{% block title %}{{ cms.config('dashboard', 'title') ?? 'Access Denied' }}{% endblock %}
 
 {% block content %}
 <main class="login-layout admin-layout">

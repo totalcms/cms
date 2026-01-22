@@ -1,6 +1,6 @@
 {% extends "admin-layout.twig" %}
 
-{% block title %}Login to Total CMS{% endblock %}
+{% block title %}{{ cms.config('dashboard', 'title') ?? 'Login to Total CMS' }}{% endblock %}
 
 {% block content %}
 <main class="login-layout admin-layout">
