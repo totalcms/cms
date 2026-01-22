@@ -661,6 +661,21 @@ NGINX;
 	}
 
 	/**
+	 * Get the number of objects in a collection.
+	 * Uses cached collection metadata for fast access.
+	 */
+	public function objectCount(string $collection): int
+	{
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+
+		if ($collectionData === null) {
+			return 0;
+		}
+
+		return $collectionData->totalObjects;
+	}
+
+	/**
 	 * Get collections that are inaccessible due to edition restrictions.
 	 * Used for dashboard alerts.
 	 *
