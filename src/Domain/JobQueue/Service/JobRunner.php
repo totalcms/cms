@@ -449,4 +449,22 @@ readonly class JobRunner
 			'skipped'      => $skippedCount,
 		];
 	}
+
+	/**
+	 * Perform database maintenance: prune old failed jobs and vacuum.
+	 *
+	 * @return array{pruned: int, vacuumed: bool}
+	 */
+	public function maintenance(int $daysOld = 30): array
+	{
+		$result = $this->jobRepository->maintenance($daysOld);
+
+		$this->logger->info('Job queue maintenance completed', [
+			'pruned_jobs' => $result['pruned'],
+			'days_old'    => $daysOld,
+			'vacuumed'    => $result['vacuumed'],
+		]);
+
+		return $result;
+	}
 }
