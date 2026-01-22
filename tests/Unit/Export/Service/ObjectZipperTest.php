@@ -144,7 +144,7 @@ final class ObjectZipperTest extends TestCase
 		$this->assertContains($id . '.json', $zipFiles);
 
 		// Check that asset files exist (normalize path separators)
-		$normalizedFiles = array_map(fn($f) => str_replace('\\', '/', $f), $zipFiles);
+		$normalizedFiles = array_map(fn (string|false $f): string => str_replace('\\', '/', $f), $zipFiles);
 		$this->assertContains($id . '/image.jpg', $normalizedFiles);
 		$this->assertContains($id . '/document.pdf', $normalizedFiles);
 		$this->assertContains($id . '/gallery/photo1.jpg', $normalizedFiles);
