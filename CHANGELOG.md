@@ -2,6 +2,32 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.5] - 2026-01-22
+
+### Added
+
+- **Export Object to ZIP**: New functionality to export individual objects to ZIP archives
+- **Twig `cms.objectCount()` Function**: New function to get the count of objects in a collection without loading all data
+- **Offline License Support**: License validation now works offline with cached license data
+- **Nginx No-Cache Header**: Special `X-No-Cache` header support for nginx reverse proxy configurations
+
+### Enhanced
+
+- **Admin Browser Titles**: Standardized browser title format across admin pages
+- **Performance Improvements**: Significant caching and performance optimizations for license validation and index building
+- **Job Queue Maintenance**: Improved job queue handling and maintenance routines
+- **Mailer Collection**: Automatically creates mailer collection if it does not exist
+- **INTL Extension Checks**: Better handling and validation of PHP INTL extension availability
+- **Deck Requirements**: Made deck require statements more generic for broader compatibility
+- **Defensive Error Handling**: Added additional error checks throughout the codebase
+
+### Fixed
+
+- **Styled Text Editor**: Fixed JavaScript error when deleting images with data URLs (e.g., dragged-in SVG images)
+- **Code Field Mobile**: Fixed code field hiding incorrectly on mobile devices
+- **Trial Expiration Workflow**: Fixed issues with trial expiration handling
+- **Index Builder**: Index builder now consistently reads from disk to ensure data accuracy
+
 ## [3.1.4] - 2026-01-16
 
 ### Added
