@@ -14,11 +14,16 @@ use TotalCMS\Domain\Settings\Services\SettingsFetcher;
  * Development and Trial editions have full Pro-level access by default,
  * but can simulate lower editions via the simulateEdition setting.
  */
-readonly class EditionFeatureService
+class EditionFeatureService
 {
+	/**
+	 * Request-level cache for edition to avoid repeated computation.
+	 */
+	private ?Edition $cachedEdition = null;
+
 	public function __construct(
-		private LicenseValidator $licenseValidator,
-		private SettingsFetcher $settingsFetcher,
+		private readonly LicenseValidator $licenseValidator,
+		private readonly SettingsFetcher $settingsFetcher,
 	) {
 	}
 
@@ -94,6 +99,11 @@ readonly class EditionFeatureService
 	 */
 	public function getEdition(): Edition
 	{
+		// Return cached result if available
+		if ($this->cachedEdition instanceof Edition) {
+			return $this->cachedEdition;
+		}
+
 		$licenseData   = $this->licenseValidator->validateLicense();
 		$actualEdition = Edition::fromString($licenseData->edition);
 
@@ -101,11 +111,15 @@ readonly class EditionFeatureService
 		if ($this->canSimulate($actualEdition)) {
 			$simulatedEdition = $this->getSimulatedEdition();
 			if ($simulatedEdition instanceof Edition) {
-				return $simulatedEdition;
+				$this->cachedEdition = $simulatedEdition;
+
+				return $this->cachedEdition;
 			}
 		}
 
-		return $actualEdition;
+		$this->cachedEdition = $actualEdition;
+
+		return $this->cachedEdition;
 	}
 
 	/**

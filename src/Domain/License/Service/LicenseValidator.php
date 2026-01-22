@@ -13,13 +13,17 @@ use TotalCMS\Support\Version;
 /**
  * License validation service.
  */
-readonly class LicenseValidator
+class LicenseValidator
 {
 	private const JWT_SECRET = 'VwRmMdlSNBD1soVXlNklfzKTkXpU5Bnc4cAiQrCi3tvsHfVpz3L2XDrCxv3UImAj';
 
+	/** @var LicenseData|null In-memory cache for current request */
+	private ?LicenseData $cachedResult = null;
+
 	public function __construct(
-		private Config $config,
-		private CacheManager $cacheManager,
+		private readonly Config $config,
+		private readonly CacheManager $cacheManager,
+		private readonly ?OfflineLicenseValidator $offlineValidator = null,
 	) {
 	}
 
@@ -30,17 +34,34 @@ readonly class LicenseValidator
 	 */
 	public function validateLicense(bool $forceRefresh = false): LicenseData
 	{
+		// Return in-memory cached result (unless force refresh)
+		if (!$forceRefresh && $this->cachedResult instanceof LicenseData) {
+			return $this->cachedResult;
+		}
+
 		// Skip license validation for preview environment
 		// This prevents rate limiting when many users preview simultaneously
 		if ($this->isPreviewEnvironment()) {
-			return LicenseData::preview($this->config->domain);
+			$this->cachedResult = LicenseData::preview($this->config->domain);
+
+			return $this->cachedResult;
+		}
+
+		// Check for offline license first (takes precedence over online)
+		$offlineLicense = $this->validateOfflineLicense();
+		if ($offlineLicense instanceof LicenseData) {
+			$this->cachedResult = $offlineLicense;
+
+			return $this->cachedResult;
 		}
 
 		// Check cache first (unless force refresh)
 		if (!$forceRefresh) {
 			$cached = $this->getCachedLicense();
 			if ($cached && $cached->isCacheValid()) {
-				return $cached;
+				$this->cachedResult = $cached;
+
+				return $this->cachedResult;
 			}
 		}
 
@@ -50,12 +71,15 @@ readonly class LicenseValidator
 
 			// Cache the result
 			$this->cacheLicense($licenseData);
+			$this->cachedResult = $licenseData;
 
 			return $licenseData;
 		} catch (\Exception $e) {
 			// Try cached data as fallback, even if expired
 			$cached = $this->getCachedLicense();
 			if ($cached instanceof LicenseData) {
+				$this->cachedResult = $cached;
+
 				return $cached;
 			}
 
@@ -63,6 +87,64 @@ readonly class LicenseValidator
 			// The middleware will handle this gracefully with read-only mode
 			throw new LicenseException('License validation failed and no cached data available: ' . $e->getMessage(), 0, $e);
 		}
+	}
+
+	/**
+	 * Check for valid offline license.
+	 */
+	private function validateOfflineLicense(): ?LicenseData
+	{
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
+			return null;
+		}
+
+		return $this->offlineValidator->validate();
+	}
+
+	/**
+	 * Check if an offline license file exists.
+	 */
+	public function hasOfflineLicense(): bool
+	{
+		return $this->offlineValidator instanceof OfflineLicenseValidator && $this->offlineValidator->hasOfflineLicense();
+	}
+
+	/**
+	 * Get offline license details for display.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function getOfflineLicenseDetails(): ?array
+	{
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
+			return null;
+		}
+
+		return $this->offlineValidator->getDetails();
+	}
+
+	/**
+	 * Get the expected filename for the offline license.
+	 */
+	public function getOfflineLicenseFilename(): ?string
+	{
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
+			return null;
+		}
+
+		return $this->offlineValidator->getExpectedFilename();
+	}
+
+	/**
+	 * Get the expected directory for the offline license.
+	 */
+	public function getOfflineLicenseDirectory(): ?string
+	{
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
+			return null;
+		}
+
+		return $this->offlineValidator->getExpectedDirectory();
 	}
 
 	/**
@@ -103,6 +185,7 @@ readonly class LicenseValidator
 	 */
 	public function clearCache(): void
 	{
+		$this->cachedResult = null;
 		$this->cacheManager->clearLicenseData(LicenseData::CACHE_KEY);
 	}
 

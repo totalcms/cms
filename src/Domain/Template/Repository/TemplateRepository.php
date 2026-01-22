@@ -18,6 +18,13 @@ class TemplateRepository extends StorageRepository
 	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
 
 	/**
+	 * Request-level cache for templates.
+	 *
+	 * @var array<string,TemplateData|null>
+	 */
+	private array $requestCache = [];
+
+	/**
 	 * Parse path into folder and template name.
 	 *
 	 * @return array{0: string|null, 1: string}
@@ -115,20 +122,32 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function fetchReservedTemplate(string $template): ?TemplateData
 	{
+		$cacheKey = 'reserved:' . $template;
+
+		if (array_key_exists($cacheKey, $this->requestCache)) {
+			return $this->requestCache[$cacheKey];
+		}
+
 		$templateFile = $this->reservedPath($template);
 
 		if (!file_exists($templateFile)) {
+			$this->requestCache[$cacheKey] = null;
+
 			return null;
 		}
 
 		$contents = file_get_contents($templateFile);
 
 		if ($contents === false) {
+			$this->requestCache[$cacheKey] = null;
+
 			return null;
 		}
 
 		// Empty content is valid for templates
-		return TemplateFactory::generateTemplate($template, $contents);
+		$this->requestCache[$cacheKey] = TemplateFactory::generateTemplate($template, $contents);
+
+		return $this->requestCache[$cacheKey];
 	}
 
 	/**
@@ -136,16 +155,26 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function fetchCustomTemplate(string $template, ?string $folder = null): ?TemplateData
 	{
+		$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template;
+
+		if (array_key_exists($cacheKey, $this->requestCache)) {
+			return $this->requestCache[$cacheKey];
+		}
+
 		$templateFile = $this->customPath($template, $folder);
 
 		if (!$this->filesystem->fileExists($templateFile)) {
+			$this->requestCache[$cacheKey] = null;
+
 			return null;
 		}
 
 		$contents = $this->filesystem->read($templateFile);
 
 		// Empty content is valid for templates - allows editing blank templates
-		return TemplateFactory::generateTemplate($template, $contents);
+		$this->requestCache[$cacheKey] = TemplateFactory::generateTemplate($template, $contents);
+
+		return $this->requestCache[$cacheKey];
 	}
 
 	/**
@@ -156,6 +185,10 @@ class TemplateRepository extends StorageRepository
 		$templateFile = $this->customPath($template->id, $folder);
 
 		$this->filesystem->write($templateFile, $template->contents);
+
+		// Invalidate cache for this template
+		$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template->id;
+		unset($this->requestCache[$cacheKey]);
 	}
 
 	/**
@@ -165,7 +198,15 @@ class TemplateRepository extends StorageRepository
 	{
 		$templateFile = $this->customPath($template, $folder);
 
-		return $this->filesystem->delete($templateFile);
+		$deleted = $this->filesystem->delete($templateFile);
+
+		// Invalidate cache for this template
+		if ($deleted) {
+			$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template;
+			unset($this->requestCache[$cacheKey]);
+		}
+
+		return $deleted;
 	}
 
 	/**

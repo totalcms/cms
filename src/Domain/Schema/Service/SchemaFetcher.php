@@ -177,7 +177,7 @@ readonly class SchemaFetcher
 			'index'       => $flattened->index,
 			'inheritFrom' => $flattened->inheritFrom,
 		];
-		$this->cacheManager->storeComputedData($cacheKey, $cacheData, 1800);
+		$this->cacheManager->storeComputedData($cacheKey, $cacheData, CacheManager::TTL_FLATTENED_SCHEMA);
 
 		return $flattened;
 	}

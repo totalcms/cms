@@ -3,7 +3,7 @@
 <script>
 	Sentry.onLoad(function() {
 		Sentry.init({
-			release: "totalcms@{{ cms.version | split('-') | first }}",
+			release: "totalcms@{{ cms.version.number }}",
 			tracesSampleRate: 0,
 			profilesSampleRate: 0,
 			beforeSend(event, hint) {
@@ -39,6 +39,10 @@
 				// Ignore Froala editor internal errors (third-party library)
 				if (error.name === 'IndexSizeError') return null;
 
+				// Ignore race condition errors when elements are removed during async operations
+				// (e.g., image onload firing after element was removed from DOM)
+				if (error.name === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;
+
 				// Ignore SyntaxError (corrupted files or unsupported browsers)
 				if (error.name === 'SyntaxError') return null;
 
@@ -46,7 +50,7 @@
 			}
 		});
 		if (typeof Sentry.setTag === 'function') {
-			Sentry.setTag('build', '{{ cms.version | split('-') | last }}');
+			Sentry.setTag('build', '{{ cms.version.build }}');
 		}
 	});
 </script>

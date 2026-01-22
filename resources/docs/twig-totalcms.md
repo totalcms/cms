@@ -50,6 +50,7 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.collections() }}                          {# Get all collections #}
 {{ cms.collectionsByCategory() }}                {# Get collections grouped by category #}
 {{ cms.collection('collectionName') }}           {# Get collection metadata #}
+{{ cms.objectCount('collectionName') }}          {# Get number of objects in collection #}
 {{ cms.objects('collectionName') }}              {# Get all objects from collection #}
 {{ cms.property('collection', 'property') }}     {# Get unique values from property #}
 {{ cms.objectUrl('collection', 'id') }}          {# Get URL for an object #}
@@ -519,6 +520,16 @@ Common parameters for image transformations:
 {% else %}
     <p>Invalid password</p>
 {% endif %}
+```
+
+### Display object counts efficiently
+```twig
+{# Efficient: Uses cached collection metadata (no index loading) #}
+<p>{{ cms.objectCount('blog') }} blog posts</p>
+<p>{{ cms.objectCount('products') }} products available</p>
+
+{# Avoid: Loads entire index just to count objects #}
+<p>{{ cms.objects('blog')|length }} blog posts</p>
 ```
 
 ### Search with pagination

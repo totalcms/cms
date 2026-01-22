@@ -39,6 +39,10 @@
 					{% if cms.canAccessCollection(collection, 'create') %}
 					<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
 					{% endif %}
+					{# Show download zip only when editing an object (css in object.twig) #}
+					<li class="object-download" style="display:none">
+						<a href="{{ cms.api }}/export/collections/{{ collection }}/{{ page }}/zip">Download Zip</a>
+					</li>
 					<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
 					{% if cms.canAccessCollection(collection, 'create') %}
 					<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>

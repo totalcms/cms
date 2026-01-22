@@ -7,22 +7,25 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminMailerAction;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminMailerActionTest extends TestCase
 {
 	private AdminMailerAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->renderer = $this->createMock(TwigRenderer::class);
-		$this->request  = $this->createMock(ServerRequestInterface::class);
-		$this->response = $this->createMock(ResponseInterface::class);
+		$this->renderer          = $this->createMock(TwigRenderer::class);
+		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->request           = $this->createMock(ServerRequestInterface::class);
+		$this->response          = $this->createMock(ResponseInterface::class);
 
-		$this->action = new AdminMailerAction($this->renderer);
+		$this->action = new AdminMailerAction($this->renderer, $this->collectionFetcher);
 	}
 
 	public function testRendersMailerTemplate(): void

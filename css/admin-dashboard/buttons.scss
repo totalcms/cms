@@ -75,6 +75,8 @@ nav[popover]  {
 		&.link { --action-icon : var(--icon-link) }
 		&.delete { --action-icon : var(--icon-trash-o) }
 		&.clone { --action-icon : var(--icon-duplicate) }
+		&.download { --action-icon : var(--icon-download) }
+		&.object-download { --action-icon : var(--icon-download) }
 	}
 	a {
 		display         : flex;

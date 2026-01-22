@@ -420,4 +420,58 @@ class JobRepository
 
 		return $count;
 	}
+
+	/**
+	 * Remove failed jobs older than specified days.
+	 *
+	 * @return int Number of jobs pruned
+	 */
+	public function pruneFailedJobs(int $daysOld = 30): int
+	{
+		if (!$this->dbExists()) {
+			return 0;
+		}
+
+		$sql = <<<SQL
+			DELETE FROM jobqueue
+			WHERE status = :status
+			AND updatedAt < datetime('now', :interval)
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':status', JobData::STATUS_FAILED);
+		$stmt->bindValue(':interval', "-{$daysOld} days");
+		$stmt->execute();
+
+		return $stmt->rowCount();
+	}
+
+	/**
+	 * Run VACUUM to reclaim disk space from deleted rows.
+	 * Should be called periodically after bulk deletions.
+	 */
+	public function vacuum(): void
+	{
+		if (!$this->dbExists()) {
+			return;
+		}
+
+		$this->getDb()->exec('VACUUM');
+	}
+
+	/**
+	 * Perform database maintenance: prune old failed jobs and vacuum.
+	 *
+	 * @return array{pruned: int, vacuumed: bool}
+	 */
+	public function maintenance(int $daysOld = 30): array
+	{
+		$pruned = $this->pruneFailedJobs($daysOld);
+		$this->vacuum();
+
+		return [
+			'pruned'   => $pruned,
+			'vacuumed' => true,
+		];
+	}
 }

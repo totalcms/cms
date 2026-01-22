@@ -216,7 +216,18 @@ readonly class JobRunner
 
 	private function processRebuildJob(JobData $job): void
 	{
-		$this->indexBuilder->buildIndex($job->collection);
+		$this->logger->info('Starting rebuild job', [
+			'collection' => $job->collection,
+			'job_id'     => $job->id,
+		]);
+
+		$index = $this->indexBuilder->buildIndex($job->collection);
+
+		$this->logger->info('Rebuild job completed', [
+			'collection'    => $job->collection,
+			'job_id'        => $job->id,
+			'indexed_count' => $index->objects->count(),
+		]);
 	}
 
 	private function processUpdateJob(JobData $job): void
@@ -448,5 +459,23 @@ readonly class JobRunner
 			'retried'      => $retriedCount,
 			'skipped'      => $skippedCount,
 		];
+	}
+
+	/**
+	 * Perform database maintenance: prune old failed jobs and vacuum.
+	 *
+	 * @return array{pruned: int, vacuumed: bool}
+	 */
+	public function maintenance(int $daysOld = 30): array
+	{
+		$result = $this->jobRepository->maintenance($daysOld);
+
+		$this->logger->info('Job queue maintenance completed', [
+			'pruned_jobs' => $result['pruned'],
+			'days_old'    => $daysOld,
+			'vacuumed'    => $result['vacuumed'],
+		]);
+
+		return $result;
 	}
 }

@@ -12,27 +12,46 @@ class SettingsRepository extends StorageRepository
 	private const SETTINGS_FILE = '.system/settings.json';
 
 	/**
+	 * Request-level cache for settings.
+	 *
+	 * @var array<string,mixed>|null
+	 */
+	private ?array $requestCache = null;
+
+	/**
 	 * Load all settings from settings.json.
 	 *
 	 * @return array<string,mixed>
 	 */
 	public function load(): array
 	{
+		if ($this->requestCache !== null) {
+			return $this->requestCache;
+		}
+
 		if (!$this->filesystem->fileExists(self::SETTINGS_FILE)) {
-			return [];
+			$this->requestCache = [];
+
+			return $this->requestCache;
 		}
 
 		$content = $this->filesystem->read(self::SETTINGS_FILE);
 		if ($content === '') {
-			return [];
+			$this->requestCache = [];
+
+			return $this->requestCache;
 		}
 
 		$settings = json_decode($content, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
-			return [];
+			$this->requestCache = [];
+
+			return $this->requestCache;
 		}
 
-		return is_array($settings) ? $settings : [];
+		$this->requestCache = is_array($settings) ? $settings : [];
+
+		return $this->requestCache;
 	}
 
 	/**
@@ -49,6 +68,9 @@ class SettingsRepository extends StorageRepository
 		}
 
 		$this->filesystem->write(self::SETTINGS_FILE, $json);
+
+		// Invalidate cache after write
+		$this->requestCache = null;
 	}
 
 	/**

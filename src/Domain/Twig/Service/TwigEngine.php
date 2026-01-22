@@ -51,11 +51,13 @@ readonly class TwigEngine
 			$paths[] = $customTemplates;
 		}
 
-		$cacheDir = $config->cache['filesystem'] ? $config->cachedir : false;
+		// Twig requires filesystem caching for compiled templates (can't use APCu/Redis)
+		// Always use the cache directory for Twig, regardless of application cache backend settings
+		$cacheDir = $config->cachedir;
 
 		// Check if development mode is active (overrides cache settings)
 		$devModeActive  = $devModeManager->isDevModeActive();
-		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== false;
+		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
 		$loader     = new TwigFilesystemLoader($paths);
 		$this->twig = new TwigEnvironment($loader, [
@@ -77,7 +79,8 @@ readonly class TwigEngine
 		$this->twig->addExtension(new MarkdownExtension());
 
 		// Configure locale for internationalization (requires intl extension)
-		if (extension_loaded('intl')) {
+		// Check both extension_loaded AND class existence to handle edge cases
+		if (extension_loaded('intl') && class_exists('IntlDateFormatter')) {
 			// Set PHP's default locale for IntlExtension and other intl functions
 			\Locale::setDefault($config->locale);
 			// Set CakePHP I18n locale for RelativeTimeFormatter translations

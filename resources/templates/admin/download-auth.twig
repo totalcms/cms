@@ -1,6 +1,6 @@
 {% extends "admin-layout.twig" %}
 
-{% block title %}Download Authentication{% endblock %}
+{% block title %}{{ cms.config('dashboard', 'title') ?? 'Download Authentication' }}{% endblock %}
 
 {% block content %}
 <main class="login-layout admin-layout">

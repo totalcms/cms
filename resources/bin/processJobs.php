@@ -262,6 +262,16 @@ try {
 	$finalStatus = $jobRunner->getQueueStatus();
 	output("\nFinal Queue Status:\n");
 	printTableRow($finalStatus);
+
+	// Run database maintenance (prune old failed jobs and vacuum)
+	output("\n");
+	printSeparator();
+	output("Running jobqueue maintenance...\n");
+	$maintenance = $jobRunner->maintenance(30);
+	if ($maintenance['pruned'] > 0) {
+		output("  Pruned {$maintenance['pruned']} failed job(s) older than 30 days\n");
+	}
+	output("  Jobqueue vacuumed to reclaim disk space\n");
 } catch (Throwable $e) {
 	output("\nError: " . $e->getMessage() . "\n");
 	output('File: ' . $e->getFile() . ':' . $e->getLine() . "\n");
