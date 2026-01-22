@@ -9,9 +9,14 @@ use TotalCMS\Support\Config;
  * APCu (APCu User Cache) is a fast, in-memory cache for single-server applications.
  * It provides excellent performance without requiring external services like Redis or Memcached.
  */
-readonly class APCuService implements CacheInterface
+class APCuService implements CacheInterface
 {
 	private bool $enabled;
+
+	/**
+	 * Cached availability result to avoid repeated functional tests.
+	 */
+	private ?bool $availabilityCache = null;
 
 	public function __construct(
 		Config $config,
@@ -21,25 +26,34 @@ readonly class APCuService implements CacheInterface
 
 	public function isAvailable(): bool
 	{
+		// Return cached result if already tested
+		if ($this->availabilityCache !== null) {
+			return $this->availabilityCache;
+		}
+
 		if (!$this->enabled || !$this->isInstalled()) {
+			$this->availabilityCache = false;
 			return false;
 		}
 
-		// Test APCu functionality
+		// Test APCu functionality (only once per request)
 		try {
-			$testKey   = 'tcms_test_' . uniqid();
+			$testKey   = 'tcms_apcu_test';
 			$testValue = 'test_value';
 
 			// Test store and retrieve
 			if (!apcu_store($testKey, $testValue, 1)) {
+				$this->availabilityCache = false;
 				return false;
 			}
 
 			$retrieved = apcu_fetch($testKey);
 			apcu_delete($testKey);
 
-			return $retrieved === $testValue;
+			$this->availabilityCache = ($retrieved === $testValue);
+			return $this->availabilityCache;
 		} catch (\Exception) {
+			$this->availabilityCache = false;
 			return false;
 		}
 	}

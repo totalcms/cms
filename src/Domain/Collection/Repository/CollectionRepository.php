@@ -106,18 +106,16 @@ class CollectionRepository extends StorageRepository
 	}
 
 	/**
-	 * Calculate the number of objects in a collection from the index.
+	 * Calculate the number of objects in a collection.
+	 * Uses fetchObjectIds() which is much lighter than loading the full index.
 	 */
 	private function calculateObjectCount(string $collection): int
 	{
 		try {
-			$index = $this->indexRepository->fetchIndex($collection);
+			// Use fetchObjectIds() instead of fetchIndex() - avoids loading potentially large index files
+			$objectIds = $this->indexRepository->fetchObjectIds($collection);
 
-			if (!$index instanceof IndexData) {
-				return 0;
-			}
-
-			return $index->objects->count();
+			return count($objectIds);
 		} catch (\Exception) {
 			// No index or error reading - return 0
 			return 0;

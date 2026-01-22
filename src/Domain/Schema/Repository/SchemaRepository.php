@@ -177,9 +177,9 @@ class SchemaRepository extends StorageRepository
 		$schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
 		$schema     = $this->fetchAndDeserialize($schemaFile, SchemaData::class);
 
-		// Cache custom schema for 30 minutes (changes rarely but can be modified by users)
+		// Cache custom schema (changes rarely but can be modified by users)
 		if ($schema !== null) {
-			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 1800);
+			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
 		}
 
 		return $schema;

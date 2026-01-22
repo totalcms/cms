@@ -51,11 +51,13 @@ readonly class TwigEngine
 			$paths[] = $customTemplates;
 		}
 
-		$cacheDir = $config->cache['filesystem'] ? $config->cachedir : false;
+		// Twig requires filesystem caching for compiled templates (can't use APCu/Redis)
+		// Always use the cache directory for Twig, regardless of application cache backend settings
+		$cacheDir = $config->cachedir;
 
 		// Check if development mode is active (overrides cache settings)
 		$devModeActive  = $devModeManager->isDevModeActive();
-		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== false;
+		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
 		$loader     = new TwigFilesystemLoader($paths);
 		$this->twig = new TwigEnvironment($loader, [
