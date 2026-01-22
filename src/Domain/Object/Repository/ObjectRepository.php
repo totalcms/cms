@@ -115,6 +115,26 @@ class ObjectRepository extends StorageRepository
 		return null;
 	}
 
+	/**
+	 * Fetch object directly from disk, bypassing all caches.
+	 * Use for bulk operations like index building where fresh data is required.
+	 */
+	public function fetchObjectFromDisk(string $collection, string $id): ?ObjectData
+	{
+		$objectFile = $this->buildObjectPath($collection, $id);
+
+		if (!$this->filesystem->fileExists($objectFile)) {
+			return null;
+		}
+
+		$contents = json_decode($this->filesystem->read($objectFile), true);
+		if (!is_array($contents)) {
+			return null;
+		}
+
+		return $this->factory->generateObject($collection, $contents);
+	}
+
 	public function deleteObject(string $collection, string $id): bool
 	{
 		$filesPath  = $this->buildObjectFilesPath($collection, $id);

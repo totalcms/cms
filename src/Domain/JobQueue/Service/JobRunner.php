@@ -216,7 +216,18 @@ readonly class JobRunner
 
 	private function processRebuildJob(JobData $job): void
 	{
-		$this->indexBuilder->buildIndex($job->collection);
+		$this->logger->info('Starting rebuild job', [
+			'collection' => $job->collection,
+			'job_id'     => $job->id,
+		]);
+
+		$index = $this->indexBuilder->buildIndex($job->collection);
+
+		$this->logger->info('Rebuild job completed', [
+			'collection'    => $job->collection,
+			'job_id'        => $job->id,
+			'indexed_count' => $index->objects->count(),
+		]);
 	}
 
 	private function processUpdateJob(JobData $job): void

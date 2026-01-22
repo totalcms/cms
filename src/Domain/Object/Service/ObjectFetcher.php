@@ -29,6 +29,21 @@ readonly class ObjectFetcher
 	}
 
 	/**
+	 * Get a collection object directly from disk, bypassing all caches.
+	 * Use for bulk operations like index building where fresh data is required.
+	 */
+	public function fetchObjectFromDisk(string $collection, string $id): ObjectData
+	{
+		$object = $this->storage->fetchObjectFromDisk($collection, $id);
+
+		if (!$object instanceof ObjectData) {
+			throw new \UnexpectedValueException("Unable to fetch object $collection/$id");
+		}
+
+		return $object;
+	}
+
+	/**
 	 * get a collection object.
 	 */
 	public function existsObject(string $collection, string $id): bool

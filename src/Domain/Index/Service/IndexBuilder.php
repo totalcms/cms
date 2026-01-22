@@ -35,7 +35,18 @@ readonly class IndexBuilder
 
 	public function buildIndex(string $collection): IndexData
 	{
+		$this->logger->info('Starting index build', [
+			'collection' => $collection,
+		]);
+
 		$objectIds = $this->storage->fetchObjectIds($collection);
+
+		$this->logger->info('Index build object count', [
+			'collection'    => $collection,
+			'object_count'  => count($objectIds),
+			'threshold'     => self::STREAMING_THRESHOLD,
+			'use_streaming' => count($objectIds) > self::STREAMING_THRESHOLD,
+		]);
 
 		// Use streaming for large collections to minimize memory usage
 		if (count($objectIds) > self::STREAMING_THRESHOLD) {
@@ -60,7 +71,8 @@ readonly class IndexBuilder
 
 			foreach ($objectIds as $id) {
 				try {
-					$object  = $this->objectFetcher->fetchObject($collection, $id);
+					// Bypass cache to ensure fresh data from filesystem
+					$object  = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
 					// The reject method is used to filter out properties that are not in the index
 					// The map method is used to transform the properties into an array
 					$summary = $object->properties
@@ -109,7 +121,8 @@ readonly class IndexBuilder
 
 		foreach ($objectIds as $id) {
 			try {
-				$object = $this->objectFetcher->fetchObject($collection, $id);
+				// Bypass cache to ensure fresh data from filesystem
+				$object = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
 
 				// Extract only indexed properties
 				$summary = $object->properties
