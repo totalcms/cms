@@ -5,9 +5,16 @@ namespace TotalCMS\Domain\Settings\Services;
 /**
  * Fetches settings schemas for form building.
  */
-readonly class SettingsSchemaFetcher
+class SettingsSchemaFetcher
 {
 	private const SCHEMAS_PATH = __DIR__ . '/../../../../resources/schemas';
+
+	/**
+	 * Request-level cache for schemas.
+	 *
+	 * @var array<string,array<string,mixed>|null>
+	 */
+	private array $requestCache = [];
 
 	/**
 	 * Get schema for a settings section.
@@ -16,23 +23,31 @@ readonly class SettingsSchemaFetcher
 	 */
 	public function getSchema(string $section): ?array
 	{
+		if (array_key_exists($section, $this->requestCache)) {
+			return $this->requestCache[$section];
+		}
+
 		$schemaPath = self::SCHEMAS_PATH . '/settings/' . $section . '.json';
 
 		if (!file_exists($schemaPath)) {
+			$this->requestCache[$section] = null;
 			return null;
 		}
 
 		$content = file_get_contents($schemaPath);
 		if ($content === false) {
+			$this->requestCache[$section] = null;
 			return null;
 		}
 
 		$schema = json_decode($content, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
+			$this->requestCache[$section] = null;
 			return null;
 		}
 
-		return is_array($schema) ? $schema : null;
+		$this->requestCache[$section] = is_array($schema) ? $schema : null;
+		return $this->requestCache[$section];
 	}
 
 	/**

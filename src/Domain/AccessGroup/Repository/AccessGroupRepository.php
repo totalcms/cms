@@ -15,6 +15,13 @@ class AccessGroupRepository extends StorageRepository
 {
 	private const FILE_PATH = '.system/access-groups.json';
 
+	/**
+	 * Request-level cache for file contents.
+	 *
+	 * @var array<string,mixed>|null
+	 */
+	private ?array $requestCache = null;
+
 	/** @var array<string,mixed> */
 	private const ADMIN_GROUP_TEMPLATE = [
 		'id'          => 'admin',
@@ -327,19 +334,26 @@ class AccessGroupRepository extends StorageRepository
 	 */
 	private function readFile(): array
 	{
+		if ($this->requestCache !== null) {
+			return $this->requestCache;
+		}
+
 		if (!$this->filesystem->fileExists(self::FILE_PATH)) {
-			return ['groups' => []];
+			$this->requestCache = ['groups' => []];
+			return $this->requestCache;
 		}
 
 		$content = $this->filesystem->read(self::FILE_PATH);
 
 		if ($content === '') {
-			return ['groups' => []];
+			$this->requestCache = ['groups' => []];
+			return $this->requestCache;
 		}
 
 		$data = json_decode($content, true);
 
-		return is_array($data) ? $data : ['groups' => []];
+		$this->requestCache = is_array($data) ? $data : ['groups' => []];
+		return $this->requestCache;
 	}
 
 	/**
@@ -356,5 +370,8 @@ class AccessGroupRepository extends StorageRepository
 		}
 
 		$this->filesystem->write(self::FILE_PATH, $json);
+
+		// Invalidate cache after write
+		$this->requestCache = null;
 	}
 }
