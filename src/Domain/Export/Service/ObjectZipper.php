@@ -91,14 +91,20 @@ readonly class ObjectZipper
 	 */
 	private function addDirectoryToZip(\ZipArchive $zip, string $realPath, string $zipPath): void
 	{
+		// Resolve to canonical path to match getRealPath() results
+		$canonicalPath = realpath($realPath);
+		if ($canonicalPath === false) {
+			return;
+		}
+
 		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($realPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+			new \RecursiveDirectoryIterator($canonicalPath, \RecursiveDirectoryIterator::SKIP_DOTS),
 			\RecursiveIteratorIterator::SELF_FIRST
 		);
 
 		foreach ($iterator as $file) {
 			$filePath     = $file->getRealPath();
-			$relativePath = substr((string)$filePath, strlen($realPath) + 1);
+			$relativePath = substr((string)$filePath, strlen($canonicalPath) + 1);
 
 			// Skip .cache directories and their contents
 			if (str_contains($relativePath, '.cache')) {
