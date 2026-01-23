@@ -23,6 +23,13 @@ readonly class JobQueueStatsAction
 	): ResponseInterface {
 		$stats = $this->manager->queueStats();
 
+		// Include debug info when ?debug=1 is passed
+		$query = $request->getQueryParams();
+		if (isset($query['debug']) && $query['debug'] === '1') {
+			$stats['_debug']    = $this->manager->getDatabaseInfo();
+			$stats['_rawCount'] = $this->manager->getRawJobCount();
+		}
+
 		return $this->renderer->json($response, $stats);
 	}
 }

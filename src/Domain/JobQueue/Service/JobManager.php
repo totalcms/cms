@@ -79,4 +79,24 @@ readonly class JobManager
 	{
 		return $this->jobRepository->fetchFailedJobs($limit);
 	}
+
+	/**
+	 * Get diagnostic info about the database for debugging.
+	 *
+	 * @return array{path: string, exists: bool, datadir: string}
+	 */
+	public function getDatabaseInfo(): array
+	{
+		return $this->jobRepository->getDatabaseInfo();
+	}
+
+	/**
+	 * Get raw job count directly from database for debugging.
+	 *
+	 * @return array{total: int, pendingJobs: int, allStatuses: array<string,int>}
+	 */
+	public function getRawJobCount(): array
+	{
+		return $this->jobRepository->getRawJobCount();
+	}
 }
