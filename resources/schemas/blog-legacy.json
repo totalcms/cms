@@ -137,6 +137,7 @@
 		"archived",
 		"author",
 		"genre",
+		"media",
 		"categories",
 		"labels",
 		"tags",
