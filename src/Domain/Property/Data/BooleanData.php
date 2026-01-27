@@ -13,7 +13,7 @@ class BooleanData extends PropertyData implements \Stringable
 	public function __construct(int|string|bool $status = false, public array $settings = [])
 	{
 		if (is_string($status)) {
-			$status = strtolower($status) === 'true' || $status === '1';
+			$status = in_array(strtolower($status), ['true', '1', 'yes'], true);
 		}
 		if (is_int($status)) {
 			$status = $status === 1;
