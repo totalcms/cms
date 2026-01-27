@@ -55,7 +55,7 @@ readonly class LicenseStatus
 				return new LicenseStatusData(
 					showIcon : true,
 					severity : 'warning',
-					tooltip  : 'DNS verification required. Please verify domain ownership in your license portal.'
+					tooltip  : 'DNS verification required. Please verify domain ownership in License Manager.'
 				);
 			}
 
