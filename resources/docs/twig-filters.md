@@ -734,6 +734,344 @@ Removes duplicate values from an array.
 <p>Authors: {{ authors | join(', ') }}</p>
 ```
 
+### Collection Aggregation Filters
+
+These filters provide powerful ways to aggregate, transform, and analyze collections without writing verbose loops. They're especially useful for calculating statistics, creating lookup tables, and organizing data.
+
+#### `sum(array $collection, string $property): float`
+Calculates the sum of a numeric property across all items in a collection.
+
+```twig
+{# Basic usage #}
+{% set total = cms.objects('orders') | sum('amount') %}
+<p>Total sales: ${{ total | number_format(2) }}</p>
+
+{# Calculate revenue #}
+{% set revenue = cms.objects('transactions') | sum('price') %}
+
+{# Sum with filtering #}
+{% set completedTotal = cms.objects('orders')
+    | filterCollection([{property: 'status', operator: 'eq', value: 'completed'}])
+    | sum('amount') %}
+
+{# Real-world example: Business totals #}
+{% set bustot = cms.objects('busamount') | sum('amt') %}
+<p>Total business generated: ${{ bustot | number_format(0, '.', ',') }}</p>
+```
+
+#### `avg(array $collection, string $property): float`
+Calculates the average of a numeric property across all items.
+
+```twig
+{# Basic usage #}
+{% set avgPrice = cms.objects('products') | avg('price') %}
+<p>Average price: ${{ avgPrice | number_format(2) }}</p>
+
+{# Calculate average rating #}
+{% set avgRating = cms.objects('reviews') | avg('rating') %}
+<div class="rating">{{ avgRating | round(1) }} / 5 stars</div>
+
+{# Average order value #}
+{% set aov = cms.objects('orders') | avg('total') %}
+<p>Average order value: ${{ aov | number_format(2) }}</p>
+
+{# Combine with sum for more stats #}
+{% set orders = cms.objects('orders') %}
+<div class="stats">
+    <p>Total: ${{ orders | sum('amount') | number_format(2) }}</p>
+    <p>Average: ${{ orders | avg('amount') | number_format(2) }}</p>
+    <p>Count: {{ orders | length }}</p>
+</div>
+```
+
+#### `min(array $collection, string $property): float|null`
+Finds the minimum value of a numeric property.
+
+```twig
+{# Basic usage #}
+{% set lowestPrice = cms.objects('products') | min('price') %}
+<p>Starting at ${{ lowestPrice | number_format(2) }}</p>
+
+{# Find earliest date (works with sortable date strings) #}
+{% set firstPost = cms.objects('blog') | min('date') %}
+
+{# Price range display #}
+{% set products = cms.objects('products') %}
+{% set minPrice = products | min('price') %}
+{% set maxPrice = products | max('price') %}
+<p>Prices range from ${{ minPrice }} to ${{ maxPrice }}</p>
+
+{# Handle null (no valid values) #}
+{% set lowest = products | min('sale_price') %}
+{% if lowest is not null %}
+    <p>Sale prices from ${{ lowest }}</p>
+{% endif %}
+```
+
+#### `max(array $collection, string $property): float|null`
+Finds the maximum value of a numeric property.
+
+```twig
+{# Basic usage #}
+{% set highestPrice = cms.objects('products') | max('price') %}
+<p>Up to ${{ highestPrice | number_format(2) }}</p>
+
+{# Find highest rated #}
+{% set topRating = cms.objects('reviews') | max('rating') %}
+
+{# Display price range #}
+{% set products = cms.objects('products') %}
+<p>
+    ${{ products | min('price') | number_format(2) }} -
+    ${{ products | max('price') | number_format(2) }}
+</p>
+
+{# Find largest file #}
+{% set gallery = cms.gallery('portfolio') %}
+{% set largestFile = gallery | max('size') %}
+<p>Largest image: {{ largestFile | filesize }}</p>
+```
+
+#### `pluck(array $collection, string $property): array`
+Extracts a single property from all items, returning a flat array of values.
+
+```twig
+{# Basic usage - get all email addresses #}
+{% set emails = cms.objects('members') | pluck('email') %}
+{# Result: ['john@example.com', 'jane@example.com', ...] #}
+
+{# Get all IDs #}
+{% set ids = cms.objects('products') | pluck('id') %}
+
+{# Create comma-separated list #}
+{% set names = cms.objects('team') | pluck('name') %}
+<p>Team: {{ names | join(', ') }}</p>
+
+{# Get all tags from posts (then flatten and unique) #}
+{% set allTags = cms.objects('blog') | pluck('tags') | flatten | unique %}
+<div class="tag-cloud">
+    {% for tag in allTags %}
+        <a href="/blog?tag={{ tag | urlencode }}">{{ tag }}</a>
+    {% endfor %}
+</div>
+
+{# Get SKUs for inventory check #}
+{% set skus = cms.objects('products') | pluck('sku') %}
+{# Use for API call or validation #}
+
+{# Build select options #}
+<select name="author">
+    {% for author in cms.objects('authors') | pluck('name') %}
+        <option>{{ author }}</option>
+    {% endfor %}
+</select>
+```
+
+#### `keyBy(array $collection, string $property = 'id'): array`
+Converts a collection into an associative array keyed by a specific property. This is extremely useful for creating lookup tables and avoiding N+1 query patterns.
+
+```twig
+{# Basic usage - create lookup table by ID #}
+{% set memberLookup = cms.objects('members') | keyBy %}
+{# Same as: | keyBy('id') #}
+
+{# Access by ID (O(1) lookup instead of loop) #}
+{% set member = memberLookup['000042'] %}
+<p>{{ member.fname }} {{ member.lname }}</p>
+
+{# Key by different property #}
+{% set productsBySku = cms.objects('products') | keyBy('sku') %}
+{% set product = productsBySku['ABC-123'] %}
+
+{# Key by slug #}
+{% set pagesBySlug = cms.objects('pages') | keyBy('slug') %}
+{% set aboutPage = pagesBySlug['about-us'] %}
+
+{# IMPORTANT: Avoid N+1 pattern #}
+{# BAD - calls cms.object() 50 times: #}
+{% for order in orders %}
+    {% set customer = cms.object('customers', order.customer_id) %}
+{% endfor %}
+
+{# GOOD - calls cms.objects() once, then O(1) lookups: #}
+{% set customerLookup = cms.objects('customers') | keyBy %}
+{% for order in orders %}
+    {% set customer = customerLookup[order.customer_id] | default({}) %}
+    <p>{{ customer.name }} ordered {{ order.total | price }}</p>
+{% endfor %}
+
+{# Real-world example: Display referrals with member names #}
+{% set memberLookup = cms.objects('members') | keyBy %}
+{% for referral in cms.objects('referrals') | paginate(50, page) %}
+    {% set fromMember = memberLookup[referral.from_id] | default({}) %}
+    {% set toMember = memberLookup[referral.to_id] | default({}) %}
+    <tr>
+        <td>{{ fromMember.fname }} {{ fromMember.lname }}</td>
+        <td>{{ toMember.fname }} {{ toMember.lname }}</td>
+        <td>{{ referral.amount | price }}</td>
+    </tr>
+{% endfor %}
+```
+
+**Performance Note:** `keyBy` is essential for avoiding the N+1 query problem. Instead of fetching related objects inside a loop (which causes many individual lookups), load all related objects once and use `keyBy` to create a lookup table.
+
+#### `groupBy(array $collection, string $property): array`
+Groups items by a property value, returning an associative array where keys are property values and values are arrays of items.
+
+```twig
+{# Basic usage - group posts by category #}
+{% set postsByCategory = cms.objects('blog') | groupBy('category') %}
+{# Result: {news: [...], tutorials: [...], reviews: [...]} #}
+
+{# Display grouped content #}
+{% for category, posts in postsByCategory %}
+    <h2>{{ category | titleize }}</h2>
+    <ul>
+        {% for post in posts %}
+            <li>{{ post.title }}</li>
+        {% endfor %}
+    </ul>
+{% endfor %}
+
+{# Group products by brand #}
+{% set productsByBrand = cms.objects('products') | groupBy('brand') %}
+{% for brand, products in productsByBrand %}
+    <section class="brand-section">
+        <h3>{{ brand }}</h3>
+        <p>{{ products | length }} products</p>
+        {% for product in products %}
+            <div class="product">{{ product.name }}</div>
+        {% endfor %}
+    </section>
+{% endfor %}
+
+{# Group events by month #}
+{% set events = cms.objects('events') %}
+{% set eventsByMonth = events | groupBy('month') %}
+
+{# Group orders by status #}
+{% set ordersByStatus = cms.objects('orders') | groupBy('status') %}
+<div class="order-stats">
+    <p>Pending: {{ ordersByStatus.pending | length | default(0) }}</p>
+    <p>Completed: {{ ordersByStatus.completed | length | default(0) }}</p>
+    <p>Cancelled: {{ ordersByStatus.cancelled | length | default(0) }}</p>
+</div>
+
+{# Group team members by department #}
+{% set teamByDept = cms.objects('team') | groupBy('department') %}
+{% for dept, members in teamByDept %}
+    <div class="department">
+        <h3>{{ dept }}</h3>
+        {% for member in members %}
+            <div class="member">{{ member.name }} - {{ member.title }}</div>
+        {% endfor %}
+    </div>
+{% endfor %}
+```
+
+**Note:** Items with empty or missing property values are grouped under the key `_ungrouped`.
+
+#### `countBy(array $collection, string $property): array`
+Counts items grouped by a property value. Like `groupBy`, but returns counts instead of the items themselves.
+
+```twig
+{# Basic usage - count posts per category #}
+{% set postCounts = cms.objects('blog') | countBy('category') %}
+{# Result: {news: 5, tutorials: 12, reviews: 3} #}
+
+{# Display category counts #}
+<ul class="category-list">
+    {% for category, count in postCounts %}
+        <li>{{ category | titleize }}: {{ count }} posts</li>
+    {% endfor %}
+</ul>
+
+{# Count orders by status #}
+{% set statusCounts = cms.objects('orders') | countBy('status') %}
+<div class="dashboard">
+    <div class="stat">
+        <span class="number">{{ statusCounts.pending | default(0) }}</span>
+        <span class="label">Pending</span>
+    </div>
+    <div class="stat">
+        <span class="number">{{ statusCounts.completed | default(0) }}</span>
+        <span class="label">Completed</span>
+    </div>
+</div>
+
+{# Count products by brand #}
+{% set brandCounts = cms.objects('products') | countBy('brand') %}
+{% for brand, count in brandCounts | ksort %}
+    <option value="{{ brand }}">{{ brand }} ({{ count }})</option>
+{% endfor %}
+
+{# Count members by membership type #}
+{% set membershipCounts = cms.objects('members') | countBy('membership_type') %}
+<table>
+    <tr><th>Membership</th><th>Count</th></tr>
+    {% for type, count in membershipCounts %}
+        <tr>
+            <td>{{ type | titleize }}</td>
+            <td>{{ count }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+{# Combine with other filters for insights #}
+{% set activeMembers = cms.objects('members')
+    | filterCollection([{property: 'active', operator: 'eq', value: true}]) %}
+{% set byCity = activeMembers | countBy('city') %}
+<h3>Active Members by City</h3>
+{% for city, count in byCity | ksort %}
+    <p>{{ city }}: {{ count }}</p>
+{% endfor %}
+```
+
+### Collection Filter Chaining Examples
+
+These filters can be chained together for powerful data analysis:
+
+```twig
+{# Get statistics for active products #}
+{% set activeProducts = cms.objects('products')
+    | filterCollection([{property: 'status', operator: 'eq', value: 'active'}]) %}
+
+<div class="product-stats">
+    <p>Total products: {{ activeProducts | length }}</p>
+    <p>Total inventory value: ${{ activeProducts | sum('price') | number_format(2) }}</p>
+    <p>Average price: ${{ activeProducts | avg('price') | number_format(2) }}</p>
+    <p>Price range: ${{ activeProducts | min('price') }} - ${{ activeProducts | max('price') }}</p>
+</div>
+
+{# Dashboard with grouped statistics #}
+{% set orders = cms.objects('orders') %}
+{% set byStatus = orders | groupBy('status') %}
+
+<div class="order-dashboard">
+    {% for status, statusOrders in byStatus %}
+        <div class="status-card">
+            <h4>{{ status | titleize }}</h4>
+            <p>Count: {{ statusOrders | length }}</p>
+            <p>Total: ${{ statusOrders | sum('total') | number_format(2) }}</p>
+            <p>Average: ${{ statusOrders | avg('total') | number_format(2) }}</p>
+        </div>
+    {% endfor %}
+</div>
+
+{# Create a leaderboard #}
+{% set members = cms.objects('members') %}
+{% set memberLookup = members | keyBy %}
+{% set referrals = cms.objects('referrals') | countBy('from_id') %}
+
+<h2>Top Referrers</h2>
+<ol>
+    {% for memberId, count in referrals | sort | reverse | slice(0, 10) %}
+        {% set member = memberLookup[memberId] | default({}) %}
+        <li>{{ member.fname }} {{ member.lname }}: {{ count }} referrals</li>
+    {% endfor %}
+</ol>
+```
+
 ## Developer Filters
 
 ### Type Conversion

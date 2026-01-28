@@ -107,6 +107,12 @@ class TotalCMSTwigFilters
 		'filesize',
 		'keyBy',
 		'sum',
+		'avg',
+		'min',
+		'max',
+		'pluck',
+		'groupBy',
+		'countBy',
 	];
 
 	/** @return array<TwigFilter> */
@@ -660,6 +666,213 @@ class TotalCMSTwigFilters
 		}
 
 		return $total;
+	}
+
+	/**
+	 * Calculate the average value of a specific property across all items in a collection.
+	 *
+	 * Example: `cms.objects("busamount") | avg('amt')` returns the average of all amt values.
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to average
+	 *
+	 * @return float The average value (0 if collection is empty)
+	 */
+	public static function avg(?array $collection, string $property): float
+	{
+		if ($collection === null || $collection === []) {
+			return 0.0;
+		}
+
+		$total = 0.0;
+		$count = 0;
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$value = $item[$property] ?? null;
+			if (is_numeric($value)) {
+				$total += (float)$value;
+				$count++;
+			}
+		}
+
+		return $count > 0 ? $total / $count : 0.0;
+	}
+
+	/**
+	 * Get the minimum value of a specific property across all items in a collection.
+	 *
+	 * Example: `cms.objects("products") | min('price')` returns the lowest price.
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to find minimum of
+	 *
+	 * @return float|null The minimum value (null if no valid values found)
+	 */
+	public static function min(?array $collection, string $property): ?float
+	{
+		if ($collection === null || $collection === []) {
+			return null;
+		}
+
+		$min = null;
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$value = $item[$property] ?? null;
+			if (is_numeric($value)) {
+				$floatValue = (float)$value;
+				if ($min === null || $floatValue < $min) {
+					$min = $floatValue;
+				}
+			}
+		}
+
+		return $min;
+	}
+
+	/**
+	 * Get the maximum value of a specific property across all items in a collection.
+	 *
+	 * Example: `cms.objects("products") | max('price')` returns the highest price.
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to find maximum of
+	 *
+	 * @return float|null The maximum value (null if no valid values found)
+	 */
+	public static function max(?array $collection, string $property): ?float
+	{
+		if ($collection === null || $collection === []) {
+			return null;
+		}
+
+		$max = null;
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$value = $item[$property] ?? null;
+			if (is_numeric($value)) {
+				$floatValue = (float)$value;
+				if ($max === null || $floatValue > $max) {
+					$max = $floatValue;
+				}
+			}
+		}
+
+		return $max;
+	}
+
+	/**
+	 * Extract a single property from all items in a collection.
+	 *
+	 * Example: `cms.objects("members") | pluck('email')` returns ['a@b.com', 'c@d.com', ...]
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to extract
+	 *
+	 * @return array<mixed> Array of extracted values
+	 */
+	public static function pluck(?array $collection, string $property): array
+	{
+		if ($collection === null || $collection === []) {
+			return [];
+		}
+
+		$result = [];
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			if (array_key_exists($property, $item)) {
+				$result[] = $item[$property];
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Group items by a specific property value.
+	 *
+	 * Example: `cms.objects("posts") | groupBy('category')` returns {news: [...], blog: [...]}
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to group by
+	 *
+	 * @return array<string,array<array<string,mixed>>> Grouped items keyed by property value
+	 */
+	public static function groupBy(?array $collection, string $property): array
+	{
+		if ($collection === null || $collection === []) {
+			return [];
+		}
+
+		$result = [];
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$key = $item[$property] ?? '';
+			$keyString = is_scalar($key) ? (string)$key : '';
+
+			if ($keyString === '') {
+				$keyString = '_ungrouped';
+			}
+
+			if (!isset($result[$keyString])) {
+				$result[$keyString] = [];
+			}
+			$result[$keyString][] = $item;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Count items grouped by a specific property value.
+	 *
+	 * Example: `cms.objects("posts") | countBy('category')` returns {news: 5, blog: 12}
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to count by
+	 *
+	 * @return array<string,int> Counts keyed by property value
+	 */
+	public static function countBy(?array $collection, string $property): array
+	{
+		if ($collection === null || $collection === []) {
+			return [];
+		}
+
+		$result = [];
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$key = $item[$property] ?? '';
+			$keyString = is_scalar($key) ? (string)$key : '';
+
+			if ($keyString === '') {
+				$keyString = '_ungrouped';
+			}
+
+			if (!isset($result[$keyString])) {
+				$result[$keyString] = 0;
+			}
+			$result[$keyString]++;
+		}
+
+		return $result;
 	}
 
 	/**
