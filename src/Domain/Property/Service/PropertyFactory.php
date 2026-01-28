@@ -55,10 +55,13 @@ readonly class PropertyFactory
 
 		// Handle JSON string passed to array types (form sends JSON strings for complex fields)
 		$arrayTypes = ['image', 'gallery', 'file', 'depot', 'deck'];
-		if (is_string($value) && in_array($type, $arrayTypes, true) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
-			$decoded = json_decode($value, true);
-			if (is_array($decoded)) {
-				$value = $decoded;
+		if (is_string($value) && in_array($type, $arrayTypes, true)) {
+			if (str_starts_with($value, '{') || str_starts_with($value, '[')) {
+				$decoded = json_decode($value, true);
+				$value   = is_array($decoded) ? $decoded : null;
+			} else {
+				// Non-JSON string for an array type (e.g. PHP's "Array" cast) — treat as null
+				$value = null;
 			}
 		}
 
