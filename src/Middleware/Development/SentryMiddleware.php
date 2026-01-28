@@ -93,6 +93,8 @@ class SentryMiddleware implements MiddlewareInterface
 			'Rate limit exceeded',
 			// Bot/scanner probing for non-existent collections
 			'Collection not found',
+			// User schema misconfiguration
+			'is marked as unique but is not included in the schema index',
 		],
 	];
 
