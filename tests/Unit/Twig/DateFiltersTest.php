@@ -181,3 +181,60 @@ test('filters work with smart date strings', function (): void {
 	$result3 = TotalCMSTwigFilters::dateFormat('+1 week', 'Y-m-d');
 	expect($result3)->toMatch('/^\d{4}-\d{2}-\d{2}$/');
 });
+
+// ===== recurringMonthDate =====
+
+test('recurringMonthDate returns correct recurring date', function (): void {
+	$result = TotalCMSTwigFilters::recurringMonthDate('2024-01-15', '2024-03-01');
+	expect($result)->toBeString();
+	expect($result)->toContain('2024-03-15');
+});
+
+test('recurringMonthDate clamps to end of short month', function (): void {
+	// Jan 31 → Feb should clamp to Feb 29 (2024 is a leap year)
+	$result = TotalCMSTwigFilters::recurringMonthDate('2024-01-31', '2024-02-01');
+	expect($result)->toContain('2024-02-29');
+});
+
+test('recurringMonthDate clamps Jan 31 to Feb 28 in non-leap year', function (): void {
+	$result = TotalCMSTwigFilters::recurringMonthDate('2025-01-31', '2025-02-01');
+	expect($result)->toContain('2025-02-28');
+});
+
+test('recurringMonthDate no clamping needed', function (): void {
+	$result = TotalCMSTwigFilters::recurringMonthDate('2024-01-15', '2024-03-01');
+	expect($result)->toContain('2024-03-15');
+});
+
+test('recurringMonthDate returns string for invalid date', function (): void {
+	$result = TotalCMSTwigFilters::recurringMonthDate('not-a-date');
+	expect($result)->toBe('not-a-date');
+});
+
+// ===== dateIsRecurringDate =====
+
+test('dateIsRecurringDate returns true when days match', function (): void {
+	$result = TotalCMSTwigFilters::dateIsRecurringDate('2024-01-15', '2024-03-15');
+	expect($result)->toBeTrue();
+});
+
+test('dateIsRecurringDate returns false when days do not match', function (): void {
+	$result = TotalCMSTwigFilters::dateIsRecurringDate('2024-01-15', '2024-03-20');
+	expect($result)->toBeFalse();
+});
+
+test('dateIsRecurringDate clamps to end of short month', function (): void {
+	// Jan 31 recurring, compare to Feb 29 (leap year) → true (clamped)
+	$result = TotalCMSTwigFilters::dateIsRecurringDate('2024-01-31', '2024-02-29');
+	expect($result)->toBeTrue();
+});
+
+test('dateIsRecurringDate returns false for clamped mismatch', function (): void {
+	$result = TotalCMSTwigFilters::dateIsRecurringDate('2024-01-31', '2024-02-15');
+	expect($result)->toBeFalse();
+});
+
+test('dateIsRecurringDate returns false for invalid date', function (): void {
+	$result = TotalCMSTwigFilters::dateIsRecurringDate('not-a-date', '2024-03-15');
+	expect($result)->toBeFalse();
+});
