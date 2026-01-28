@@ -105,6 +105,8 @@ class TotalCMSTwigFilters
 		'prefixSlug',
 		'unique',
 		'filesize',
+		'keyBy',
+		'sum',
 	];
 
 	/** @return array<TwigFilter> */
@@ -592,6 +594,72 @@ class TotalCMSTwigFilters
 		shuffle($array);
 
 		return $array;
+	}
+
+	/**
+	 * Convert an array of objects/arrays into an associative array keyed by a specific property.
+	 *
+	 * This is useful for creating lookup tables from collections, avoiding N+1 query patterns.
+	 * Example: `cms.objects("members") | keyBy('id')` creates a lookup table by member ID.
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $key The property name to use as the key (defaults to 'id')
+	 *
+	 * @return array<string,array<string,mixed>> Associative array keyed by the specified property
+	 */
+	public static function keyBy(?array $collection, string $key = 'id'): array
+	{
+		if ($collection === null || $collection === []) {
+			return [];
+		}
+
+		$result = [];
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$keyValue = $item[$key] ?? null;
+			if ($keyValue === null || $keyValue === '') {
+				continue;
+			}
+
+			$result[(string)$keyValue] = $item;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Sum the values of a specific property across all items in a collection.
+	 *
+	 * This is useful for calculating totals without verbose Twig loops.
+	 * Example: `cms.objects("busamount") | sum('amt')` returns the total of all amt values.
+	 *
+	 * @param array<mixed>|null $collection Array of objects/arrays
+	 * @param string $property The property name to sum
+	 *
+	 * @return float The sum of all values for the specified property
+	 */
+	public static function sum(?array $collection, string $property): float
+	{
+		if ($collection === null || $collection === []) {
+			return 0.0;
+		}
+
+		$total = 0.0;
+		foreach ($collection as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			$value = $item[$property] ?? 0;
+			if (is_numeric($value)) {
+				$total += (float)$value;
+			}
+		}
+
+		return $total;
 	}
 
 	/**
