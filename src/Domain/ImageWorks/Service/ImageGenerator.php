@@ -176,9 +176,13 @@ class ImageGenerator
 	 */
 	private function cleanupParams(array $params, ImageData $imageData): array
 	{
+		// Remove metadata params that don't affect image processing
+		unset($params['id'], $params['collection'], $params['property'], $params['name'], $params['cache']);
+
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with((string)$params['fm'], $imageData->name))) {
+		// If the only param is 'fm' and it matches the original image's format, return original
+		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm']))) {
 			return [];
 		}
 
@@ -214,10 +218,6 @@ class ImageGenerator
 
 		if (isset($params['border'])) {
 			$params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
-		}
-
-		if (isset($params['cache'])) {
-			unset($params['cache']);
 		}
 
 		if (isset($params['mark']) && !isset($params['markw'])) {
@@ -343,12 +343,21 @@ class ImageGenerator
 				->withHeader('ETag', $cacheHeaders['etag']);
 		}
 
-		return (new Response())
+		// Get content length from ImageData or filesystem
+		$contentLength = $imageData->size > 0 ? (string)$imageData->size : null;
+
+		$httpResponse = (new Response())
 			->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
 			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
 			->withHeader('ETag', $cacheHeaders['etag'])
 			->withHeader('Last-Modified', $cacheHeaders['last_modified'])
 			->withBody($response['stream']);
+
+		if ($contentLength !== null) {
+			$httpResponse = $httpResponse->withHeader('Content-Length', $contentLength);
+		}
+
+		return $httpResponse;
 	}
 
 	/**
