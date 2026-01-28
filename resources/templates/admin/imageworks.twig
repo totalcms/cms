@@ -146,7 +146,7 @@
 						<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
 						{% endif %}
 
-						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Macro</button>
+						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Path Macro</button>
 						<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
 					</div>
 					<h4 class="new-size">New Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
@@ -397,5 +397,8 @@
 {% endblock %}
 
 {% block bodyBelow %}
+	<script>
+		window.imageworksPresets = {{ cms.config("imageworks", "presets") | json_encode | raw }};
+	</script>
 	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js"></script>
 {% endblock %}

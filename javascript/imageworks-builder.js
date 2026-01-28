@@ -103,7 +103,13 @@ document.addEventListener("DOMContentLoaded", event => {
 		// get the form data and append it to the URL as search params
 		const data = getFormData();
 
-		const extension = data.fm ?? originalExtension;
+		// Determine extension: explicit fm > preset fm > original extension
+		let extension = originalExtension;
+		if (data.fm) {
+			extension = data.fm;
+		} else if (data.p && window.imageworksPresets?.[data.p]?.fm) {
+			extension = window.imageworksPresets[data.p].fm;
+		}
 
 		// Replace the extension in imageUrl.pathname
 		imageUrl.pathname = imageUrl.pathname.replace(/\.[^/.]+$/, "." + extension);

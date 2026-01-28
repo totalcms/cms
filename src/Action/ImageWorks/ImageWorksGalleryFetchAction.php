@@ -31,7 +31,10 @@ readonly class ImageWorksGalleryFetchAction
 		$name        = $args['name'];
 		$queryParams = $request->getQueryParams();
 
-		$queryParams['fm'] = $args['format'];
+		// Only set fm from URL format if no preset is used (presets may define their own format)
+		if (!isset($queryParams['p'])) {
+			$queryParams['fm'] = $args['format'];
+		}
 
 		try {
 			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $name, $queryParams, $request);

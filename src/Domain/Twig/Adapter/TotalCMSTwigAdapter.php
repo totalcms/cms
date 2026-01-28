@@ -1287,6 +1287,9 @@ NGINX;
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
+		// Resolve preset format for URL extension
+		$imageworks = $this->resolvePresetFormat($imageworks);
+
 		// Performance optimization: Accept full object to avoid re-fetching
 		if (is_array($idOrObject)) {
 			// Object passed directly - extract ID and image data
@@ -1311,6 +1314,43 @@ NGINX;
 		}
 
 		return self::buildImageworksAPI($this->api, $idOrObject, $image, $imageworks, $options);
+	}
+
+	/**
+	 * Resolve preset format for URL extension.
+	 * If a preset is specified and has an 'fm' value, add it to imageworks so the URL uses the correct extension.
+	 *
+	 * @param array<string,mixed> $imageworks
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolvePresetFormat(array $imageworks): array
+	{
+		// If fm is already explicitly set, use it
+		if (isset($imageworks['fm'])) {
+			return $imageworks;
+		}
+
+		// If no preset, nothing to resolve
+		if (!isset($imageworks['p'])) {
+			return $imageworks;
+		}
+
+		$presetName = (string)$imageworks['p'];
+		$presets    = $this->config->imageworks['presets'] ?? [];
+
+		if (!isset($presets[$presetName])) {
+			return $imageworks;
+		}
+
+		$preset = $presets[$presetName];
+
+		// If preset has fm, add it to imageworks for URL building
+		if (isset($preset['fm'])) {
+			$imageworks['fm'] = $preset['fm'];
+		}
+
+		return $imageworks;
 	}
 
 	/**
@@ -1745,6 +1785,9 @@ NGINX;
 		if (in_array($idOrObject, [null, '', []], true) || $name === null || $name === '') {
 			return '';
 		}
+
+		// Resolve preset format for URL extension
+		$imageworks = $this->resolvePresetFormat($imageworks);
 
 		// Extract ID for URL building
 		if (is_array($idOrObject)) {
