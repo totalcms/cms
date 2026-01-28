@@ -112,7 +112,8 @@ class RssBuilder
 		$entry = $this->feed->createEntry();
 		$entry->setLink($url);
 		$entry->setId($id);
-		$entry->setDateModified(strtotime($date));
+		$timestamp = is_string($date) ? (strtotime($date) ?: time()) : (int)$date;
+		$entry->setDateModified($timestamp);
 
 		if ($title) {
 			$entry->setTitle($title);
