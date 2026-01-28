@@ -156,6 +156,7 @@ function setupRenderSync() {
 	renderButton.addEventListener('pointerdown', () => {
 		const snippetTextarea = document.querySelector('textarea[name="snippet"]');
 		const twigTextarea = document.getElementById('twig');
+		if (!snippetTextarea || !twigTextarea) return;
 
 		// Check if CodeMirror is active
 		const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
