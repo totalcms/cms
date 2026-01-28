@@ -1499,37 +1499,38 @@ Returns items that match **ALL** of the values in the array:
 ## File Size Formatting
 
 ### `filesize(mixed $bytes, int $decimals = 1): string`
-Formats byte values into human-readable file sizes.
+Formats byte values into human-readable file sizes using decimal units (1000 bytes = 1 KB), matching Mac Finder and browser conventions.
 
 ```twig
 {# Basic usage #}
 {{ 500 | filesize }}
 {# Output: 500 B #}
 
-{{ 1024 | filesize }}
+{{ 1000 | filesize }}
 {# Output: 1 KB #}
 
-{{ 1536 | filesize }}
+{{ 1500 | filesize }}
 {# Output: 2 KB #}
 
-{{ 1048576 | filesize }}
+{{ 1000000 | filesize }}
 {# Output: 1.0 MB #}
 
-{{ 1572864 | filesize }}
+{{ 1500000 | filesize }}
 {# Output: 1.5 MB #}
 
-{{ 1073741824 | filesize }}
+{{ 1000000000 | filesize }}
 {# Output: 1.0 GB #}
 
 {# Custom decimal places (only applies to MB and larger) #}
-{{ 1572864 | filesize(2) }}
+{{ 1500000 | filesize(2) }}
 {# Output: 1.50 MB #}
 
-{{ 1572864 | filesize(0) }}
+{{ 1500000 | filesize(0) }}
 {# Output: 2 MB #}
 ```
 
 #### Behavior:
+- Uses decimal units (1000) to match Mac Finder and browser display
 - **Bytes (B)** and **Kilobytes (KB)**: Always shown as whole numbers (no decimals)
 - **Megabytes (MB)** and larger: Shown with decimals (default: 1 decimal place)
 - Supports units: B, KB, MB, GB, TB, PB
