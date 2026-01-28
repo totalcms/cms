@@ -124,6 +124,7 @@ class TotalForm implements \Stringable
 		'default',
 		'field',
 		'help',
+		'hide',
 		'label',
 		'placeholder',
 		'settings',

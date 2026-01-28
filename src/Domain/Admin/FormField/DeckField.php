@@ -38,6 +38,11 @@ class DeckField extends FormField
 				}
 			}
 		}
+
+		// Add cms-hide class if hide setting is true (check both property-level and settings)
+		if ($this->hide || (isset($this->settings['hide']) && $this->settings['hide'] === true)) {
+			$this->class = trim($this->class . ' cms-hide');
+		}
 	}
 
 	public function buildFormField(): string
