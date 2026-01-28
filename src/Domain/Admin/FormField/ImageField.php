@@ -91,7 +91,6 @@ class ImageField extends FormField
 			'collection' => $this->form->collection,
 			'property'   => $this->name,
 			'name'       => $name,
-			'w'          => self::PREVIEW_WIDTH,
 		]);
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = str_contains($this->form->api, '?') ? '&' : '?';
