@@ -1018,11 +1018,11 @@ class TotalCMSTwigFilters
 		}
 
 		// Use 1000 (decimal) to match Mac/browser display, not 1024 (binary)
-		$units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+		$units  = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 		$factor = (int)floor(log($bytes, 1000));
 		$factor = max(0, min($factor, count($units) - 1)); // Clamp to valid range
 
-		$value = $bytes / pow(1000, $factor);
+		$value = $bytes / 1000 ** $factor;
 
 		// Don't show decimals for B or KB
 		if ($factor <= 1) {

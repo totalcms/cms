@@ -62,7 +62,7 @@ class JobRepository
 		$pending = count($this->fetchPendingJobs());
 
 		// Get all distinct status values and their counts
-		$stmt       = $this->getDb()->query('SELECT status, COUNT(*) as cnt FROM jobqueue GROUP BY status');
+		$stmt        = $this->getDb()->query('SELECT status, COUNT(*) as cnt FROM jobqueue GROUP BY status');
 		$allStatuses = [];
 		if ($stmt) {
 			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
