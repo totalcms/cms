@@ -392,4 +392,122 @@ describe('TotalCMSTwigFunctions', function (): void {
 		expect($boolean)->toBe('true');
 		expect($null)->toContain('<pre>');
 	});
+
+	// -------------------------
+	// String Search Functions
+	// -------------------------
+
+	test('TotalCMSTwigFunctions → contains finds substring', function (): void {
+		expect(TotalCMSTwigFunctions::contains('Hello World', 'World'))->toBeTrue();
+		expect(TotalCMSTwigFunctions::contains('Hello World', 'world'))->toBeFalse();
+		expect(TotalCMSTwigFunctions::contains('Hello World', 'Hello'))->toBeTrue();
+		expect(TotalCMSTwigFunctions::contains('Hello World', 'xyz'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → contains handles empty strings', function (): void {
+		expect(TotalCMSTwigFunctions::contains('Hello', ''))->toBeTrue();
+		expect(TotalCMSTwigFunctions::contains('', ''))->toBeTrue();
+		expect(TotalCMSTwigFunctions::contains('', 'Hello'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → startsWith checks string prefix', function (): void {
+		expect(TotalCMSTwigFunctions::startsWith('Hello World', 'Hello'))->toBeTrue();
+		expect(TotalCMSTwigFunctions::startsWith('Hello World', 'World'))->toBeFalse();
+		expect(TotalCMSTwigFunctions::startsWith('Hello World', 'hello'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → startsWith handles empty strings', function (): void {
+		expect(TotalCMSTwigFunctions::startsWith('Hello', ''))->toBeTrue();
+		expect(TotalCMSTwigFunctions::startsWith('', ''))->toBeTrue();
+		expect(TotalCMSTwigFunctions::startsWith('', 'Hello'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → endsWith checks string suffix', function (): void {
+		expect(TotalCMSTwigFunctions::endsWith('Hello World', 'World'))->toBeTrue();
+		expect(TotalCMSTwigFunctions::endsWith('Hello World', 'Hello'))->toBeFalse();
+		expect(TotalCMSTwigFunctions::endsWith('Hello World', 'world'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → endsWith handles empty strings', function (): void {
+		expect(TotalCMSTwigFunctions::endsWith('Hello', ''))->toBeTrue();
+		expect(TotalCMSTwigFunctions::endsWith('', ''))->toBeTrue();
+		expect(TotalCMSTwigFunctions::endsWith('', 'Hello'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → indexOf finds first occurrence', function (): void {
+		expect(TotalCMSTwigFunctions::indexOf('Hello World', 'World'))->toBe(6);
+		expect(TotalCMSTwigFunctions::indexOf('Hello World', 'o'))->toBe(4);
+		expect(TotalCMSTwigFunctions::indexOf('Hello World', 'xyz'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → indexOf supports offset', function (): void {
+		expect(TotalCMSTwigFunctions::indexOf('Hello World', 'o', 5))->toBe(7);
+	});
+
+	test('TotalCMSTwigFunctions → lastIndexOf finds last occurrence', function (): void {
+		expect(TotalCMSTwigFunctions::lastIndexOf('Hello World', 'o'))->toBe(7);
+		expect(TotalCMSTwigFunctions::lastIndexOf('Hello World', 'l'))->toBe(9);
+		expect(TotalCMSTwigFunctions::lastIndexOf('Hello World', 'xyz'))->toBeFalse();
+	});
+
+	test('TotalCMSTwigFunctions → lastIndexOf supports offset', function (): void {
+		expect(TotalCMSTwigFunctions::lastIndexOf('Hello World', 'o', 0))->toBe(7);
+	});
+
+	// -------------------------
+	// Utility Functions
+	// -------------------------
+
+	test('TotalCMSTwigFunctions → buildQuery creates query string from array', function (): void {
+		$result = TotalCMSTwigFunctions::buildQuery(['foo' => 'bar', 'baz' => 'qux']);
+		expect($result)->toBe('foo=bar&baz=qux');
+	});
+
+	test('TotalCMSTwigFunctions → buildQuery encodes special characters', function (): void {
+		$result = TotalCMSTwigFunctions::buildQuery(['q' => 'hello world', 'tag' => 'a&b']);
+		expect($result)->toContain('q=hello+world');
+		expect($result)->toContain('tag=a%26b');
+	});
+
+	test('TotalCMSTwigFunctions → buildQuery handles empty array', function (): void {
+		expect(TotalCMSTwigFunctions::buildQuery([]))->toBe('');
+	});
+
+	test('TotalCMSTwigFunctions → buildQuery handles nested arrays', function (): void {
+		$result = TotalCMSTwigFunctions::buildQuery(['filters' => ['status' => 'active']]);
+		expect($result)->toContain('filters');
+		expect($result)->toContain('active');
+	});
+
+	test('TotalCMSTwigFunctions → parseJson decodes valid JSON', function (): void {
+		$result = TotalCMSTwigFunctions::parseJson('{"name":"Alice","age":30}');
+		expect($result)->toBe(['name' => 'Alice', 'age' => 30]);
+	});
+
+	test('TotalCMSTwigFunctions → parseJson returns null for invalid JSON', function (): void {
+		expect(TotalCMSTwigFunctions::parseJson('not valid json'))->toBeNull();
+		expect(TotalCMSTwigFunctions::parseJson(''))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → parseJson returns null for non-array JSON', function (): void {
+		expect(TotalCMSTwigFunctions::parseJson('"just a string"'))->toBeNull();
+		expect(TotalCMSTwigFunctions::parseJson('42'))->toBeNull();
+		expect(TotalCMSTwigFunctions::parseJson('true'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → parseJson handles nested structures', function (): void {
+		$json   = '{"users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]}';
+		$result = TotalCMSTwigFunctions::parseJson($json);
+		expect($result)->toHaveKey('users');
+		expect($result['users'])->toHaveCount(2);
+	});
+
+	test('TotalCMSTwigFunctions → typeof returns correct type strings', function (): void {
+		expect(TotalCMSTwigFunctions::typeof('hello'))->toBe('string');
+		expect(TotalCMSTwigFunctions::typeof(42))->toBe('integer');
+		expect(TotalCMSTwigFunctions::typeof(3.14))->toBe('double');
+		expect(TotalCMSTwigFunctions::typeof(true))->toBe('boolean');
+		expect(TotalCMSTwigFunctions::typeof([]))->toBe('array');
+		expect(TotalCMSTwigFunctions::typeof(null))->toBe('NULL');
+	});
 });
