@@ -104,6 +104,7 @@ class TotalCMSTwigFilters
 		'mailto',
 		'prefixSlug',
 		'unique',
+		'filesize',
 	];
 
 	/** @return array<TwigFilter> */
@@ -994,6 +995,40 @@ class TotalCMSTwigFilters
 	// -------------------------
 	// Price Formatting
 	// -------------------------
+
+	/**
+	 * Format bytes to human-readable file size.
+	 *
+	 * @param mixed $bytes Number of bytes
+	 * @param int $decimals Number of decimal places (default: 1)
+	 *
+	 * @return string Formatted file size (e.g., "1.5 MB")
+	 */
+	public static function filesize(mixed $bytes, int $decimals = 1): string
+	{
+		if (!is_numeric($bytes) || $bytes < 0) {
+			return '0 B';
+		}
+
+		$bytes = (float)$bytes;
+
+		if ($bytes === 0.0) {
+			return '0 B';
+		}
+
+		$units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+		$factor = (int)floor(log($bytes, 1024));
+		$factor = max(0, min($factor, count($units) - 1)); // Clamp to valid range
+
+		$value = $bytes / pow(1024, $factor);
+
+		// Don't show decimals for B or KB
+		if ($factor <= 1) {
+			return sprintf('%d %s', (int)round($value), $units[$factor]);
+		}
+
+		return sprintf('%.' . $decimals . 'f %s', $value, $units[$factor]);
+	}
 
 	/**
 	 * Format price value with currency.

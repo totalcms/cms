@@ -1496,6 +1496,78 @@ Returns items that match **ALL** of the values in the array:
 </style>
 ```
 
+## File Size Formatting
+
+### `filesize(mixed $bytes, int $decimals = 1): string`
+Formats byte values into human-readable file sizes.
+
+```twig
+{# Basic usage #}
+{{ 500 | filesize }}
+{# Output: 500 B #}
+
+{{ 1024 | filesize }}
+{# Output: 1 KB #}
+
+{{ 1536 | filesize }}
+{# Output: 2 KB #}
+
+{{ 1048576 | filesize }}
+{# Output: 1.0 MB #}
+
+{{ 1572864 | filesize }}
+{# Output: 1.5 MB #}
+
+{{ 1073741824 | filesize }}
+{# Output: 1.0 GB #}
+
+{# Custom decimal places (only applies to MB and larger) #}
+{{ 1572864 | filesize(2) }}
+{# Output: 1.50 MB #}
+
+{{ 1572864 | filesize(0) }}
+{# Output: 2 MB #}
+```
+
+#### Behavior:
+- **Bytes (B)** and **Kilobytes (KB)**: Always shown as whole numbers (no decimals)
+- **Megabytes (MB)** and larger: Shown with decimals (default: 1 decimal place)
+- Supports units: B, KB, MB, GB, TB, PB
+- Returns "0 B" for invalid or negative input
+
+#### Real-World Examples:
+
+```twig
+{# Display image file size #}
+{% set image = cms.data('image', 'hero-image', 'image') %}
+<p>File size: {{ image.size | filesize }}</p>
+
+{# File upload listing #}
+{% for file in cms.objects('depot', 'downloads').files %}
+    <div class="file">
+        <span class="name">{{ file.name }}</span>
+        <span class="size">{{ file.size | filesize }}</span>
+    </div>
+{% endfor %}
+
+{# Gallery with file info #}
+{% set gallery = cms.gallery('portfolio') %}
+{% for item in gallery %}
+    <figure>
+        <img src="{{ cms.galleryPath(gallery, item.name) }}" alt="{{ item.alt }}">
+        <figcaption>
+            {{ item.name }} ({{ item.size | filesize }}, {{ item.width }}x{{ item.height }})
+        </figcaption>
+    </figure>
+{% endfor %}
+
+{# Storage usage display #}
+{% set totalSize = files | map(f => f.size) | sum %}
+<div class="storage-info">
+    <p>Total storage used: {{ totalSize | filesize }}</p>
+</div>
+```
+
 ## Price Formatting
 
 ### `price(mixed $price, string $currency = '$', string $format = 'prepend'): string`
