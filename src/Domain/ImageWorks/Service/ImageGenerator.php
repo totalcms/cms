@@ -15,6 +15,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
+use TotalCMS\Support\Config;
 
 class ImageGenerator
 {
@@ -31,6 +32,7 @@ class ImageGenerator
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
+		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -180,6 +182,11 @@ class ImageGenerator
 			return [];
 		}
 
+		// Resolve preset first so dimension constraints apply to preset values too
+		if (isset($params['p'])) {
+			$params = $this->resolvePreset($params);
+		}
+
 		// Make sure that the requested width and height are not larger than the original image
 		if (isset($params['w']) && $params['w'] > $imageData->width && $imageData->width > 0) {
 			$params['w'] = $imageData->width;
@@ -234,6 +241,34 @@ class ImageGenerator
 
 		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide
 		return array_filter($params, fn ($value): bool => $value !== null && $value !== '');
+	}
+
+	/**
+	 * Resolve preset values into params.
+	 * Preset values are merged first, then explicit params override them.
+	 * This ensures dimension constraints are applied to preset w/h values.
+	 *
+	 * @param array<string,mixed> $params
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolvePreset(array $params): array
+	{
+		$presetName = (string)$params['p'];
+		$presets    = $this->config->imageworks['presets'] ?? [];
+
+		if (!isset($presets[$presetName])) {
+			return $params;
+		}
+
+		$presetValues = $presets[$presetName];
+
+		// Remove preset key since we're resolving it manually
+		unset($params['p']);
+
+		// Merge preset values first, then overlay explicit params
+		// This means explicit params take precedence over preset values
+		return array_merge($presetValues, $params);
 	}
 
 	/**
