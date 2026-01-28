@@ -821,7 +821,7 @@ class TotalCMSTwigFilters
 				continue;
 			}
 
-			$key = $item[$property] ?? '';
+			$key       = $item[$property] ?? '';
 			$keyString = is_scalar($key) ? (string)$key : '';
 
 			if ($keyString === '') {
@@ -859,7 +859,7 @@ class TotalCMSTwigFilters
 				continue;
 			}
 
-			$key = $item[$property] ?? '';
+			$key       = $item[$property] ?? '';
 			$keyString = is_scalar($key) ? (string)$key : '';
 
 			if ($keyString === '') {

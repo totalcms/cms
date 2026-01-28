@@ -157,7 +157,7 @@ test('sum skips non-numeric values', function (): void {
 test('sum skips items missing the property', function (): void {
 	$items = [
 		['price' => 10],
-		['name' => 'no price'],
+		['name'  => 'no price'],
 		['price' => 20],
 	];
 	expect(TotalCMSTwigFilters::sum($items, 'price'))->toBe(30.0);
@@ -212,7 +212,7 @@ test('avg skips non-numeric values and averages correctly', function (): void {
 test('avg skips items missing the property', function (): void {
 	$items = [
 		['score' => 80],
-		['name' => 'no score'],
+		['name'  => 'no score'],
 		['score' => 100],
 	];
 	expect(TotalCMSTwigFilters::avg($items, 'score'))->toBe(90.0);
@@ -240,7 +240,7 @@ test('min returns null for empty collection', function (): void {
 test('min returns null when no valid numeric values exist', function (): void {
 	$items = [
 		['val' => 'not a number'],
-		['val' => null],
+		['val'  => null],
 		['name' => 'no val'],
 	];
 	expect(TotalCMSTwigFilters::min($items, 'val'))->toBeNull();
@@ -387,10 +387,10 @@ test('keyBy returns empty array for empty collection', function (): void {
 test('keyBy skips items with null or empty key values', function (): void {
 	$items = [
 		['id' => '001', 'name' => 'First'],
-		['id' => '', 'name' => 'Empty ID'],
-		['id' => null, 'name' => 'Null ID'],
+		['id'   => '', 'name' => 'Empty ID'],
+		['id'   => null, 'name' => 'Null ID'],
 		['name' => 'No ID'],
-		['id' => '002', 'name' => 'Second'],
+		['id'   => '002', 'name' => 'Second'],
 	];
 	$result = TotalCMSTwigFilters::keyBy($items);
 	expect($result)->toHaveCount(2);
@@ -463,7 +463,7 @@ test('groupBy puts items with missing property under _ungrouped', function (): v
 });
 
 test('groupBy preserves item data in groups', function (): void {
-	$result = TotalCMSTwigFilters::groupBy(sampleProducts(), 'category');
+	$result    = TotalCMSTwigFilters::groupBy(sampleProducts(), 'category');
 	$toolNames = array_column($result['tools'], 'name');
 	expect($toolNames)->toBe(['Widget', 'Doohickey']);
 });
@@ -483,7 +483,7 @@ test('groupBy skips non-array items', function (): void {
 test('countBy counts items by property', function (): void {
 	$result = TotalCMSTwigFilters::countBy(sampleProducts(), 'category');
 	expect($result)->toBe([
-		'tools' => 2,
+		'tools'       => 2,
 		'electronics' => 2,
 		'accessories' => 1,
 	]);
@@ -492,7 +492,7 @@ test('countBy counts items by property', function (): void {
 test('countBy counts items by brand', function (): void {
 	$result = TotalCMSTwigFilters::countBy(sampleProducts(), 'brand');
 	expect($result)->toBe([
-		'Acme' => 3,
+		'Acme'   => 3,
 		'BetaCo' => 2,
 	]);
 });
@@ -509,15 +509,15 @@ test('countBy puts items with missing property under _ungrouped', function (): v
 	$items = [
 		['status' => 'active'],
 		['status' => 'active'],
-		['name' => 'no status'],
+		['name'   => 'no status'],
 		['status' => 'inactive'],
 		['status' => ''],
 	];
 	$result = TotalCMSTwigFilters::countBy($items, 'status');
 	expect($result)->toBe([
-		'active' => 2,
+		'active'     => 2,
 		'_ungrouped' => 2,
-		'inactive' => 1,
+		'inactive'   => 1,
 	]);
 });
 

@@ -76,7 +76,7 @@ test('prefixSlug returns empty for empty array', function (): void {
 
 test('prefixSlug filters out empty items in array', function (): void {
 	$result = TotalCMSTwigFilters::prefixSlug(['foo', '', 'bar'], 'x-');
-	$parts = explode(' ', $result);
+	$parts  = explode(' ', $result);
 	expect($parts)->toHaveCount(2);
 });
 
