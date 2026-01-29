@@ -47,6 +47,7 @@ class SentryMiddleware implements MiddlewareInterface
 			\RuntimeException::class,
 			\UnexpectedValueException::class,
 			\League\Flysystem\UnableToWriteFile::class,
+			\TypeError::class,
 			\Error::class,
 			LicenseException::class,
 		],
@@ -95,6 +96,8 @@ class SentryMiddleware implements MiddlewareInterface
 			'Collection not found',
 			// User schema misconfiguration
 			'is marked as unique but is not included in the schema index',
+			// User Twig template passing null to adapter methods
+			'TotalCMSTwigAdapter',
 		],
 	];
 
