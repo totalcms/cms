@@ -495,6 +495,16 @@ NGINX;
 	}
 
 	/**
+	 * Log a message from a Twig template to the twig.log file.
+	 *
+	 * @param array<string,mixed> $context
+	 */
+	public function log(string $message, string $level = 'warning', array $context = []): void
+	{
+		$this->logger->log($level, $message, $context);
+	}
+
+	/**
 	 * Get all accessible schemas (filtered by edition).
 	 *
 	 * @return array<array<string,mixed>>

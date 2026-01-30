@@ -511,6 +511,24 @@ The grid renderer provides helper methods for content grids:
 {{ cms.jobQueueFailedInfo() }}                   {# HTML table of failed jobs #}
 ```
 
+## Logging
+
+Log messages from your templates to help with debugging. Messages are written to `twig.log` and viewable in the admin log analyzer.
+
+```twig
+{{ cms.log('Something unexpected happened') }}
+{{ cms.log('Missing image for product', 'error') }}
+{{ cms.log('Debug info', 'debug', { id: object.id }) }}
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `message` | string | required | The message to log |
+| `level` | string | `'warning'` | Log level: `debug`, `info`, `warning`, `error` |
+| `context` | object | `{}` | Additional context data to include in the log entry |
+
 ## Utility Functions
 
 ```twig
