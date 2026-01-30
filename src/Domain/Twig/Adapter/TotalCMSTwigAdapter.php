@@ -1448,8 +1448,9 @@ NGINX;
 			$images = $this->data($options['collection'], $id, $options['property']);
 		}
 
-		// Check if captions should be shown
-		$showCaptions = isset($options['captions']) && $options['captions'];
+		// Check if captions should be shown on grid thumbnails and in lightbox
+		$showGridCaptions = isset($options['gridCaptions']) && $options['gridCaptions'];
+		$showCaptions     = isset($options['captions']) && $options['captions'];
 
 		// Check if only featured images should be shown in grid (but all in lightbox)
 		$featuredOnly = isset($options['featuredOnly']) && $options['featuredOnly'];
@@ -1478,9 +1479,12 @@ NGINX;
 
 			// Always wrap in figure for semantic HTML5
 			$figureContent = $link;
-			if ($showCaptions && !empty($image['alt'])) {
-				$caption = HTMLUtils::element('figcaption', htmlspecialchars((string)$image['alt']), ['class' => 'cms-gallery-caption']);
-				$figureContent .= $caption;
+			if ($showGridCaptions) {
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options);
+				if ($captionText !== '') {
+					$caption = HTMLUtils::element('figcaption', htmlspecialchars($captionText), ['class' => 'cms-gallery-caption']);
+					$figureContent .= $caption;
+				}
 			}
 
 			// Calculate the actual dimensions after ImageWorks processing
@@ -1491,6 +1495,14 @@ NGINX;
 				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 				'data-lg-size' => "{$processedDimensions['width']}-{$processedDimensions['height']}",
 			];
+
+			// Add lightbox caption via data-sub-html attribute
+			if ($showCaptions) {
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options);
+				if ($captionText !== '') {
+					$figureAttrs['data-sub-html'] = htmlspecialchars($captionText);
+				}
+			}
 
 			// Add image name for mapping when using featuredOnly mode
 			if ($featuredOnly) {
@@ -1512,8 +1524,11 @@ NGINX;
 					'lgSize' => "{$img['width']}-{$img['height']}",
 					'name'   => $img['name'],
 				];
-				if ($showCaptions && !empty($img['alt'])) {
-					$item['subHtml'] = htmlspecialchars((string)$img['alt']);
+				if ($showCaptions) {
+					$captionText = $this->galleryCaption($idOrObject, $img['name'], $options);
+					if ($captionText !== '') {
+						$item['subHtml'] = htmlspecialchars($captionText);
+					}
 				}
 				$dynamicEl[] = $item;
 			}
@@ -1527,7 +1542,11 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 		unset($options['captions']); // Remove captions option from JS settings
+		unset($options['gridCaptions']); // Remove gridCaptions option from JS settings
 		unset($options['featuredOnly']); // Remove featuredOnly from JS settings
+
+		// Prevent lightGallery from using alt/title as caption fallback
+		$options['getCaptionFromTitleOrAlt'] = false;
 
 		// Extract custom class before encoding settings
 		$customClass = '';
@@ -1622,9 +1641,12 @@ NGINX;
 				'name'   => $image['name'], // Include name for image-based index lookup
 			];
 
-			// Add subHtml if captions are enabled and alt text exists
-			if ($showCaptions && !empty($image['alt'])) {
-				$item['subHtml'] = htmlspecialchars((string)$image['alt']);
+			// Add subHtml if captions are enabled and meaningful alt text exists
+			if ($showCaptions) {
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options);
+				if ($captionText !== '') {
+					$item['subHtml'] = htmlspecialchars($captionText);
+				}
 			}
 
 			$dynamicEl[] = $item;
@@ -1637,7 +1659,11 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 		unset($options['captions']);
+		unset($options['gridCaptions']);
 		unset($options['galleryId']);
+
+		// Prevent lightGallery from using alt/title as caption fallback
+		$options['getCaptionFromTitleOrAlt'] = false;
 
 		// Build template attributes
 		$attributes = [
@@ -1944,6 +1970,40 @@ NGINX;
 		}
 
 		return $image['name'] ?? '';
+	}
+
+	/**
+	 * Get caption text for a gallery image.
+	 * Same fallback chain as galleryAlt() but WITHOUT the filename fallback,
+	 * since filenames make poor visible captions.
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
+	 * @param array<string,mixed> $options
+	 */
+	public function galleryCaption(string|array $idOrObject, string|int $name, array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		$image = $this->galleryImageData($idOrObject, $name, $options);
+
+		if (!is_array($image)) {
+			return '';
+		}
+
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return '';
 	}
 
 	/**
