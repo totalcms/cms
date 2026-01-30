@@ -1115,13 +1115,13 @@ Use the `code.json` property reference and set `htmlclean: false`:
 
 ⚠️ **Security Note:** Only use `htmlclean: false` for code fields where you control the content or trust the source. Never allow untrusted users to submit content to fields with HTML sanitization disabled.
 
-## Radio Field
+## Radio and Multicheckbox Fields
 
-Radio fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
+Radio and Multicheckbox fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
 
 ### Grid Layout Settings
 
-Use the `fieldGrid` setting to specify the minimum width for each radio option in the grid. By default, radio options display in a single column (full width). When you specify a `fieldGrid` value, the options will automatically flow into a responsive grid layout.
+Use the `fieldGrid` setting to specify the minimum width for each option in the grid. This setting is supported by both `radio` and `multicheckbox` fields. By default, options display in a single column (full width). When you specify a `fieldGrid` value, the options will automatically flow into a responsive grid layout.
 
 ```json
 {
@@ -1130,7 +1130,7 @@ Use the `fieldGrid` setting to specify the minimum width for each radio option i
 ```
 
 This creates a responsive grid where:
-- Each radio option has a minimum width of `250px`
+- Each option has a minimum width of `250px`
 - Options automatically wrap to new rows when needed
 - Grid adjusts based on container width
 

@@ -186,11 +186,11 @@ describe('RadioField', function (): void {
 	});
 
 	test('RadioField → includes fieldGrid setting in style when provided', function (): void {
-		$field = new RadioField($this->form, 'choice', settings: ['fieldGrid' => 3], options: ['A']);
+		$field = new RadioField($this->form, 'choice', settings: ['fieldGrid' => '250px'], options: ['A']);
 
 		$html = $field->build();
 
-		expect($html)->toContain('--fieldset-grid-size:3');
+		expect($html)->toContain('--fieldset-grid-size:250px');
 	});
 
 	test('RadioField → processes propertyOptions setting', function (): void {
