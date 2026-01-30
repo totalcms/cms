@@ -328,30 +328,28 @@ When set to `true`, captions use this fallback chain: alt text → EXIF title �
 
 #### Caption Templates
 
-Pass a Twig template string to customize caption content. Image data fields are available directly as template variables. Templates are rendered with a standalone Twig environment, so standard Twig syntax works (variables, conditionals, filters).
-
-**Important:** Since Twig evaluates `{{ }}` expressions immediately, use `{% verbatim %}` blocks when defining caption templates inline.
+Pass a template string to customize caption content. Use single curly braces `{variable}` for template variables — they are automatically converted to Twig syntax before rendering. Standard Twig features (conditionals, filters) work inside the braces.
 
 ```twig
 {# Simple alt text caption #}
-{% set caption %}{% verbatim %}{{ alt }}{% endverbatim %}{% endset %}
+{% set caption = "{alt}" %}
 {{ cms.gallery('id', {}, {}, {captions: caption}) }}
 
 {# Photography captions with EXIF data #}
-{% set caption %}{% verbatim %}
-<h4>{{ alt }}</h4>
-<p>{{ exif.camera }} · {{ exif.lens }}</p>
-<p>f/{{ exif.aperture }} · {{ exif.shutterSpeed }} · ISO {{ exif.iso }}</p>
-{% endverbatim %}{% endset %}
+{% set caption %}
+<h4>{alt}</h4>
+<p>{exif.camera} · {exif.lens}</p>
+<p>f/{exif.aperture} · {exif.shutterSpeed} · ISO {exif.iso}</p>
+{% endset %}
 {{ cms.gallery('id', {}, {}, {captions: caption}) }}
 
 {# Different templates for grid and lightbox #}
-{% set gridCaption %}{% verbatim %}{{ alt }}{% endverbatim %}{% endset %}
-{% set lightboxCaption %}{% verbatim %}
-<h4>{{ alt }}</h4>
-<p>{{ exif.description }}</p>
-<p>{{ exif.camera }} — f/{{ exif.aperture }}</p>
-{% endverbatim %}{% endset %}
+{% set gridCaption = "{alt}" %}
+{% set lightboxCaption %}
+<h4>{alt}</h4>
+<p>{exif.description}</p>
+<p>{exif.camera} — f/{exif.aperture}</p>
+{% endset %}
 
 {{ cms.gallery('id', {w: 300}, {w: 1500}, {
     gridCaptions: gridCaption,

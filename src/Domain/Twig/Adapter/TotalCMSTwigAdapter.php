@@ -3,8 +3,7 @@
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
-use Twig\Environment as TwigEnvironment;
-use Twig\Loader\ArrayLoader;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\CollectionTable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
@@ -37,10 +36,13 @@ use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\VersionData;
+use Twig\Environment as TwigEnvironment;
+use Twig\Loader\ArrayLoader;
 
 /**
  * Twig Adapter with Total CMS.
@@ -56,6 +58,7 @@ use TotalCMS\Support\VersionData;
 class TotalCMSTwigAdapter
 {
 	private ?TwigEnvironment $captionTwig = null;
+	private LoggerInterface $log;
 
 	public string $env;
 	public string $api;
@@ -95,7 +98,9 @@ class TotalCMSTwigAdapter
 		public EditionTwigAdapter $edition,
 		private readonly JobManager $jobManager,
 		private readonly CacheManager $cacheManager,
+		private readonly LoggerFactory $loggerFactory,
 	) {
+		$this->log = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
 		$this->clearcache = $this->api . '/emergency/cache/clear';
@@ -1490,7 +1495,7 @@ NGINX;
 				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $gridCaptionTpl);
 				if ($captionText !== '') {
 					$captionHtml = $gridCaptionTpl !== '' ? $captionText : htmlspecialchars($captionText);
-					$caption = HTMLUtils::element('figcaption', $captionHtml, ['class' => 'cms-gallery-caption']);
+					$caption     = HTMLUtils::element('figcaption', $captionHtml, ['class' => 'cms-gallery-caption']);
 					$figureContent .= $caption;
 				}
 			}
@@ -2027,7 +2032,7 @@ NGINX;
 	 */
 	private function getCaptionTwig(): TwigEnvironment
 	{
-		if ($this->captionTwig === null) {
+		if (!$this->captionTwig instanceof TwigEnvironment) {
 			$this->captionTwig = new TwigEnvironment(new ArrayLoader(), [
 				'autoescape'       => false,
 				'strict_variables' => false,
@@ -2047,9 +2052,10 @@ NGINX;
 	private function renderCaptionTemplate(string $template, array $image): string
 	{
 		try {
-			$twig   = $this->getCaptionTwig();
-			$tmpl   = $twig->createTemplate($template);
-			$result = trim($tmpl->render($image));
+			$template = str_replace(['{', '}'], ['{{', '}}'], $template);
+			$twig     = $this->getCaptionTwig();
+			$tmpl     = $twig->createTemplate($template);
+			$result   = trim($tmpl->render($image));
 
 			// If the result has no meaningful text content, treat as empty
 			if (trim(strip_tags($result)) === '') {
@@ -2057,8 +2063,9 @@ NGINX;
 			}
 
 			return $result;
-		} catch (\Exception) {
-			// $this->logger->warning('Error rendering gallery caption template: ' . $template);
+		} catch (\Exception $e) {
+			$this->log->warning('Gallery caption template error: ' . $e->getMessage(), ['template' => $template]);
+
 			return '';
 		}
 	}
