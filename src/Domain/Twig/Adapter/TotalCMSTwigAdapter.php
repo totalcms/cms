@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
+use Twig\Environment as TwigEnvironment;
+use Twig\Loader\ArrayLoader;
 use TotalCMS\Domain\Admin\CollectionTable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
@@ -53,6 +55,8 @@ use TotalCMS\Support\VersionData;
  */
 class TotalCMSTwigAdapter
 {
+	private ?TwigEnvironment $captionTwig = null;
+
 	public string $env;
 	public string $api;
 	public string $dashboard;
@@ -1998,9 +2002,9 @@ NGINX;
 			return '';
 		}
 
-		// Template mode: replace {field} placeholders with image data
+		// Template mode: render using lightweight Twig engine
 		if ($template !== '') {
-			return $this->applyCaptionTemplate($template, $image);
+			return $this->renderCaptionTemplate($template, $image);
 		}
 
 		// Default fallback chain (no filename)
@@ -2018,39 +2022,45 @@ NGINX;
 	}
 
 	/**
-	 * Apply a caption template by replacing {field} placeholders with image data.
-	 * Supports dot notation for nested fields (e.g., {exif.camera}).
-	 * Placeholders referencing empty or missing fields are replaced with empty string.
-	 * If the final result is only whitespace/separators, returns empty string.
+	 * Get a lightweight Twig environment for rendering caption templates.
+	 * This is separate from the main TwigEngine to avoid circular dependencies.
+	 */
+	private function getCaptionTwig(): TwigEnvironment
+	{
+		if ($this->captionTwig === null) {
+			$this->captionTwig = new TwigEnvironment(new ArrayLoader(), [
+				'autoescape'       => false,
+				'strict_variables' => false,
+			]);
+		}
+
+		return $this->captionTwig;
+	}
+
+	/**
+	 * Render a caption template using a lightweight Twig environment.
+	 * Image data fields are available directly (e.g., {{ alt }}, {{ exif.camera }}).
+	 * Returns empty string if all output is whitespace/separators.
 	 *
 	 * @param array<string,mixed> $image
 	 */
-	private function applyCaptionTemplate(string $template, array $image): string
+	private function renderCaptionTemplate(string $template, array $image): string
 	{
-		$result = (string)preg_replace_callback('/\{(\s*[\w.]+\s*)\}/', function (array $matches) use ($image): string {
-			$key = trim($matches[1]);
-			$value = $image;
+		try {
+			$twig   = $this->getCaptionTwig();
+			$tmpl   = $twig->createTemplate($template);
+			$result = trim($tmpl->render($image));
 
-			foreach (explode('.', $key) as $part) {
-				if (!is_array($value) || !isset($value[$part])) {
-					return '';
-				}
-				$value = $value[$part];
+			// If the result has no meaningful text content, treat as empty
+			if (trim(strip_tags($result)) === '') {
+				return '';
 			}
 
-			if (is_array($value)) {
-				return implode(', ', $value);
-			}
-
-			return (string)$value;
-		}, $template);
-
-		// If the result is only whitespace and separators, treat as empty
-		if (trim($result, " \t\n\r\0\x0B|·—–-/,") === '') {
+			return $result;
+		} catch (\Exception) {
+			// $this->logger->warning('Error rendering gallery caption template: ' . $template);
 			return '';
 		}
-
-		return trim($result);
 	}
 
 	/**
