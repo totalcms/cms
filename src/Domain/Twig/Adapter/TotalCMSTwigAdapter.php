@@ -58,7 +58,7 @@ use Twig\Loader\ArrayLoader;
 class TotalCMSTwigAdapter
 {
 	private ?TwigEnvironment $captionTwig = null;
-	private LoggerInterface $log;
+	private readonly LoggerInterface $log;
 
 	public string $env;
 	public string $api;
@@ -100,7 +100,7 @@ class TotalCMSTwigAdapter
 		private readonly CacheManager $cacheManager,
 		private readonly LoggerFactory $loggerFactory,
 	) {
-		$this->log = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->log        = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
 		$this->clearcache = $this->api . '/emergency/cache/clear';
