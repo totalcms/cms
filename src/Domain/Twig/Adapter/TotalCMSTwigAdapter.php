@@ -58,7 +58,7 @@ use Twig\Loader\ArrayLoader;
 class TotalCMSTwigAdapter
 {
 	private ?TwigEnvironment $captionTwig = null;
-	private readonly LoggerInterface $log;
+	private readonly LoggerInterface $logger;
 
 	public string $env;
 	public string $api;
@@ -86,7 +86,7 @@ class TotalCMSTwigAdapter
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
-		public LogAnalyzer $logger,
+		public LogAnalyzer $logAnalyzer,
 		private readonly PhpSession $session,
 		private readonly AccessManager $accessManager,
 		private readonly FileAccessManager $fileAccessManager,
@@ -100,7 +100,7 @@ class TotalCMSTwigAdapter
 		private readonly CacheManager $cacheManager,
 		private readonly LoggerFactory $loggerFactory,
 	) {
-		$this->log        = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
 		$this->clearcache = $this->api . '/emergency/cache/clear';
@@ -642,8 +642,8 @@ NGINX;
 							];
 						}
 					}
-				} catch (\Exception) {
-					// Skip if parent schema doesn't exist
+				} catch (\Exception $e) {
+					$this->logger->warning("Parent schema '{$parentId}' not found during inheritance resolution for '{$schemaId}'", ['error' => $e->getMessage()]);
 					continue;
 				}
 			}
@@ -779,8 +779,8 @@ NGINX;
 				$object = $this->objectFetcher->fetchObject($collectionId, $idOrObject);
 
 				return $this->objectUrlBuilder->buildUrl($collectionData, $object->toArray());
-			} catch (\Exception) {
-				// Fall back to legacy behavior if object fetch fails
+			} catch (\Exception $e) {
+				$this->logger->warning("Could not fetch object '{$idOrObject}' for template URL in '{$collectionId}'", ['error' => $e->getMessage()]);
 			}
 		}
 
@@ -839,7 +839,8 @@ NGINX;
 	{
 		try {
 			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Search failed for collection '{$collection}' with query '{$query}'", ['error' => $e->getMessage()]);
 			return [];
 		}
 
@@ -857,7 +858,8 @@ NGINX;
 		// if there is an exception, return an empty array
 		try {
 			$collection = $this->indexReader->fetchIndex($collection);
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Failed to fetch collection '{$collection}'", ['error' => $e->getMessage()]);
 			return [];
 		}
 
@@ -880,7 +882,8 @@ NGINX;
 		// if there is an exception, return an empty array for the template
 		try {
 			$object = $this->objectFetcher->fetchObject($collection, $id);
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Object '{$id}' not found in collection '{$collection}'", ['error' => $e->getMessage()]);
 			return [];
 		}
 
@@ -1042,6 +1045,7 @@ NGINX;
 			return $object[$property];
 		}
 
+		$this->logger->debug("Property '{$property}' not found on object '{$id}' in collection '{$collection}'");
 		return '';
 	}
 
@@ -1767,6 +1771,7 @@ NGINX;
 		}
 
 		if (!is_array($gallery) || $gallery === []) {
+			$this->logger->debug("No gallery data found for property '{$options['property']}'", ['idOrObject' => is_string($idOrObject) ? $idOrObject : 'object']);
 			return null;
 		}
 
@@ -2064,7 +2069,7 @@ NGINX;
 
 			return $result;
 		} catch (\Exception $e) {
-			$this->log->warning('Gallery caption template error: ' . $e->getMessage(), ['template' => $template]);
+			$this->logger->warning('Gallery caption template error: ' . $e->getMessage(), ['template' => $template]);
 
 			return '';
 		}
@@ -2094,7 +2099,8 @@ NGINX;
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Schema '{$schemaId}' not found for deck compatibility check", ['error' => $e->getMessage()]);
 			return false;
 		}
 	}
@@ -2110,7 +2116,8 @@ NGINX;
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Schema '{$schemaId}' not found for deck incompatible types check", ['error' => $e->getMessage()]);
 			return [];
 		}
 	}

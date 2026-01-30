@@ -500,7 +500,7 @@ The grid renderer provides helper methods for content grids:
 {{ cms.checker.getVersion() }}                   {# Total CMS version #}
 
 {{ cms.cacheReporter.getStatus() }}              {# Cache status #}
-{{ cms.logger.getRecentErrors(10) }}             {# Recent error logs #}
+{{ cms.logAnalyzer.getRecentErrors(10) }}             {# Recent error logs #}
 ```
 
 ## Job Queue
