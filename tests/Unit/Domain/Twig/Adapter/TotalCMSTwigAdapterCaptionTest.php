@@ -17,9 +17,9 @@ final class TotalCMSTwigAdapterCaptionTest extends TestCase
 	{
 		$this->adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 
-		// Inject a NullLogger into the private $log property (needed by catch block)
+		// Inject a NullLogger into the private $logger property (needed by catch block)
 		$reflection  = new \ReflectionClass(TotalCMSTwigAdapter::class);
-		$logProperty = $reflection->getProperty('log');
+		$logProperty = $reflection->getProperty('logger');
 		$logProperty->setValue($this->adapter, new NullLogger());
 
 		$this->method = $reflection->getMethod('renderCaptionTemplate');

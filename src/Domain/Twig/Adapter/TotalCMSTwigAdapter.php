@@ -851,6 +851,7 @@ NGINX;
 			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
 		} catch (\Exception $e) {
 			$this->logger->warning("Search failed for collection '{$collection}' with query '{$query}'", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 
@@ -870,6 +871,7 @@ NGINX;
 			$collection = $this->indexReader->fetchIndex($collection);
 		} catch (\Exception $e) {
 			$this->logger->warning("Failed to fetch collection '{$collection}'", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 
@@ -894,6 +896,7 @@ NGINX;
 			$object = $this->objectFetcher->fetchObject($collection, $id);
 		} catch (\Exception $e) {
 			$this->logger->warning("Object '{$id}' not found in collection '{$collection}'", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 
@@ -1056,6 +1059,7 @@ NGINX;
 		}
 
 		$this->logger->debug("Property '{$property}' not found on object '{$id}' in collection '{$collection}'");
+
 		return '';
 	}
 
@@ -1782,6 +1786,7 @@ NGINX;
 
 		if (!is_array($gallery) || $gallery === []) {
 			$this->logger->debug("No gallery data found for property '{$options['property']}'", ['idOrObject' => is_string($idOrObject) ? $idOrObject : 'object']);
+
 			return null;
 		}
 
@@ -2111,6 +2116,7 @@ NGINX;
 			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
 		} catch (\Exception $e) {
 			$this->logger->warning("Schema '{$schemaId}' not found for deck compatibility check", ['error' => $e->getMessage()]);
+
 			return false;
 		}
 	}
@@ -2128,6 +2134,7 @@ NGINX;
 			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
 		} catch (\Exception $e) {
 			$this->logger->warning("Schema '{$schemaId}' not found for deck incompatible types check", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 	}

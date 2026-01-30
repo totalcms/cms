@@ -238,6 +238,10 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
 
+		$reflection  = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$logProperty = $reflection->getProperty('logger');
+		$logProperty->setValue($adapter, new \Psr\Log\NullLogger());
+
 		$adapter->method('data')
 			->with('gallery', 'gallery-id', 'gallery')
 			->willReturn('not an array');
