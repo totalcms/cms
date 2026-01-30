@@ -84,7 +84,9 @@ $zindex-backdrop: 1040;
 // @use "lg-share";
 // @use "lg-video";
 
-
+.lg-container * {
+	color : #fff;
+}
 .cms-gallery {
 	display               : grid;
 	gap                   : 0.8rem;

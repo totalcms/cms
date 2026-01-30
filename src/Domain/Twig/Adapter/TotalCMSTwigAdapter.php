@@ -1449,8 +1449,11 @@ NGINX;
 		}
 
 		// Check if captions should be shown on grid thumbnails and in lightbox
-		$showGridCaptions = isset($options['gridCaptions']) && $options['gridCaptions'];
-		$showCaptions     = isset($options['captions']) && $options['captions'];
+		// When set to a string, it's used as a template (e.g., "{{alt}} | {{exif.camera}}")
+		$showGridCaptions  = !empty($options['gridCaptions']);
+		$gridCaptionTpl    = isset($options['gridCaptions']) && $options['gridCaptions'] !== true ? trim((string)$options['gridCaptions']) : '';
+		$showCaptions      = !empty($options['captions']);
+		$captionTpl        = isset($options['captions']) && $options['captions'] !== true ? trim((string)$options['captions']) : '';
 
 		// Check if only featured images should be shown in grid (but all in lightbox)
 		$featuredOnly = isset($options['featuredOnly']) && $options['featuredOnly'];
@@ -1480,9 +1483,10 @@ NGINX;
 			// Always wrap in figure for semantic HTML5
 			$figureContent = $link;
 			if ($showGridCaptions) {
-				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options);
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $gridCaptionTpl);
 				if ($captionText !== '') {
-					$caption = HTMLUtils::element('figcaption', htmlspecialchars($captionText), ['class' => 'cms-gallery-caption']);
+					$captionHtml = $gridCaptionTpl !== '' ? $captionText : htmlspecialchars($captionText);
+					$caption = HTMLUtils::element('figcaption', $captionHtml, ['class' => 'cms-gallery-caption']);
 					$figureContent .= $caption;
 				}
 			}
@@ -1498,9 +1502,9 @@ NGINX;
 
 			// Add lightbox caption via data-sub-html attribute
 			if ($showCaptions) {
-				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options);
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $captionTpl);
 				if ($captionText !== '') {
-					$figureAttrs['data-sub-html'] = htmlspecialchars($captionText);
+					$figureAttrs['data-sub-html'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 				}
 			}
 
@@ -1525,9 +1529,9 @@ NGINX;
 					'name'   => $img['name'],
 				];
 				if ($showCaptions) {
-					$captionText = $this->galleryCaption($idOrObject, $img['name'], $options);
+					$captionText = $this->galleryCaption($idOrObject, $img['name'], $options, $captionTpl);
 					if ($captionText !== '') {
-						$item['subHtml'] = htmlspecialchars($captionText);
+						$item['subHtml'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 					}
 				}
 				$dynamicEl[] = $item;
@@ -1629,7 +1633,8 @@ NGINX;
 		}
 
 		// Check if captions should be shown in subHtml
-		$showCaptions = isset($options['captions']) && $options['captions'];
+		$showCaptions = !empty($options['captions']);
+		$captionTpl   = isset($options['captions']) && $options['captions'] !== true ? trim((string)$options['captions']) : '';
 
 		// Build dynamicEl array for lightGallery
 		$dynamicEl = [];
@@ -1643,9 +1648,9 @@ NGINX;
 
 			// Add subHtml if captions are enabled and meaningful alt text exists
 			if ($showCaptions) {
-				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options);
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $captionTpl);
 				if ($captionText !== '') {
-					$item['subHtml'] = htmlspecialchars($captionText);
+					$item['subHtml'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 				}
 			}
 
@@ -1980,7 +1985,7 @@ NGINX;
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 */
-	public function galleryCaption(string|array $idOrObject, string|int $name, array $options = []): string
+	public function galleryCaption(string|array $idOrObject, string|int $name, array $options = [], string $template = ''): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
@@ -1993,6 +1998,12 @@ NGINX;
 			return '';
 		}
 
+		// Template mode: replace {field} placeholders with image data
+		if ($template !== '') {
+			return $this->applyCaptionTemplate($template, $image);
+		}
+
+		// Default fallback chain (no filename)
 		if (!empty($image['alt'])) {
 			return $image['alt'];
 		}
@@ -2004,6 +2015,42 @@ NGINX;
 		}
 
 		return '';
+	}
+
+	/**
+	 * Apply a caption template by replacing {field} placeholders with image data.
+	 * Supports dot notation for nested fields (e.g., {exif.camera}).
+	 * Placeholders referencing empty or missing fields are replaced with empty string.
+	 * If the final result is only whitespace/separators, returns empty string.
+	 *
+	 * @param array<string,mixed> $image
+	 */
+	private function applyCaptionTemplate(string $template, array $image): string
+	{
+		$result = (string)preg_replace_callback('/\{(\s*[\w.]+\s*)\}/', function (array $matches) use ($image): string {
+			$key = trim($matches[1]);
+			$value = $image;
+
+			foreach (explode('.', $key) as $part) {
+				if (!is_array($value) || !isset($value[$part])) {
+					return '';
+				}
+				$value = $value[$part];
+			}
+
+			if (is_array($value)) {
+				return implode(', ', $value);
+			}
+
+			return (string)$value;
+		}, $template);
+
+		// If the result is only whitespace and separators, treat as empty
+		if (trim($result, " \t\n\r\0\x0B|·—–-/,") === '') {
+			return '';
+		}
+
+		return trim($result);
 	}
 
 	/**
