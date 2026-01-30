@@ -163,7 +163,9 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
     maxVisible: 8,
     viewAllText: 'Show all photos',
     loop: true,
-    download: false
+    download: false,
+    captions: true,
+    gridCaptions: true
 }) }}
 
 {# Individual gallery images #}
@@ -195,7 +197,7 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 {{ cms.galleryLauncher('id', {w: 300}, {w: 1920}, {
     collection: 'gallery',
     property: 'gallery',
-    captions: true,                              {# Show alt text as captions #}
+    captions: true,                              {# Show captions in lightbox #}
     speed: 600,
     loop: true,
     download: false,
@@ -292,7 +294,7 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 
 **Gallery Launcher Options:**
 - `trigger` - CSS selector for trigger elements (in addition to data-gallery)
-- `captions` - Show image alt text as captions (true/false)
+- `captions` - Lightbox captions: `true` for default, or a Twig template string (see [Gallery Captions](#gallery-captions))
 - `galleryId` - Custom gallery ID (default: `{collection}-{id}`)
 - All standard LightGallery options: `speed`, `loop`, `download`, `counter`, `plugins`, etc.
 - Note: Grid-specific options (`maxVisible`, `viewAllText`) don't apply to gallery launchers
@@ -303,6 +305,103 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 - Multiple different triggers for the same gallery
 - Launching galleries from specific images in your custom layout
 - Image-based navigation where clicking a product photo opens full gallery
+
+### Gallery Captions
+
+Galleries support two independent caption options:
+
+- **`captions`** - Captions inside the lightbox overlay
+- **`gridCaptions`** - Captions below thumbnails in the grid
+
+Both accept either `true` for default behavior or a **Twig template string** for custom formatting.
+
+#### Default Captions
+
+When set to `true`, captions use this fallback chain: alt text → EXIF title → EXIF description. If none are available, no caption is shown. Filenames are never used as captions.
+
+```twig
+{{ cms.gallery('id', {w: 300}, {w: 1500}, {
+    captions: true,
+    gridCaptions: true
+}) }}
+```
+
+#### Caption Templates
+
+Pass a Twig template string to customize caption content. Image data fields are available directly as template variables. Templates are rendered with a standalone Twig environment, so standard Twig syntax works (variables, conditionals, filters).
+
+**Important:** Since Twig evaluates `{{ }}` expressions immediately, use `{% verbatim %}` blocks when defining caption templates inline.
+
+```twig
+{# Simple alt text caption #}
+{% set caption %}{% verbatim %}{{ alt }}{% endverbatim %}{% endset %}
+{{ cms.gallery('id', {}, {}, {captions: caption}) }}
+
+{# Photography captions with EXIF data #}
+{% set caption %}{% verbatim %}
+<h4>{{ alt }}</h4>
+<p>{{ exif.camera }} · {{ exif.lens }}</p>
+<p>f/{{ exif.aperture }} · {{ exif.shutterSpeed }} · ISO {{ exif.iso }}</p>
+{% endverbatim %}{% endset %}
+{{ cms.gallery('id', {}, {}, {captions: caption}) }}
+
+{# Different templates for grid and lightbox #}
+{% set gridCaption %}{% verbatim %}{{ alt }}{% endverbatim %}{% endset %}
+{% set lightboxCaption %}{% verbatim %}
+<h4>{{ alt }}</h4>
+<p>{{ exif.description }}</p>
+<p>{{ exif.camera }} — f/{{ exif.aperture }}</p>
+{% endverbatim %}{% endset %}
+
+{{ cms.gallery('id', {w: 300}, {w: 1500}, {
+    gridCaptions: gridCaption,
+    captions: lightboxCaption
+}) }}
+```
+
+When a template string is used, HTML is preserved (not escaped), so you can include markup like `<h4>`, `<p>`, `<span>`, etc. When set to `true`, plain text captions are HTML-escaped.
+
+If all template variables resolve to empty, the caption is suppressed entirely (empty HTML tags are not shown).
+
+#### Available Template Variables
+
+**Image fields:**
+
+| Variable | Description |
+|----------|-------------|
+| `alt` | Alt text |
+| `name` | Filename |
+| `width` | Image width in pixels |
+| `height` | Image height in pixels |
+| `mime` | MIME type |
+| `size` | File size in bytes |
+| `link` | Optional link URL |
+| `tags` | Array of tags |
+| `uploadDate` | Upload date (ISO 8601) |
+
+**EXIF metadata** (available when the image contains EXIF data):
+
+| Variable | Description |
+|----------|-------------|
+| `exif.title` | Image title |
+| `exif.description` | Image description |
+| `exif.camera` | Camera model |
+| `exif.make` | Camera manufacturer |
+| `exif.lens` | Lens model |
+| `exif.aperture` | f-number (e.g., 1.8) |
+| `exif.shutterSpeed` | Shutter speed (e.g., 1/125) |
+| `exif.iso` | ISO sensitivity |
+| `exif.focalLength` | Focal length in mm |
+| `exif.date` | Photo capture date |
+| `exif.author` | Photographer name |
+| `exif.copyright` | Copyright notice |
+| `exif.city` | City |
+| `exif.state` | State/Province |
+| `exif.country` | Country |
+| `exif.sublocation` | Specific location |
+| `exif.latitude` | GPS latitude |
+| `exif.longitude` | GPS longitude |
+| `exif.altitude` | GPS altitude |
 
 ## File Downloads & Streaming
 
