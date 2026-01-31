@@ -46,9 +46,15 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const bytesToSize = bytes => {
 		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-		if (bytes === 0) return '0 Byte';
-		const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-		return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+		if (bytes === 0) return '0 Bytes';
+		// Use 1000 (decimal) to match Mac/browser display, not 1024 (binary)
+		const i = Math.floor(Math.log(bytes) / Math.log(1000));
+		const value = bytes / Math.pow(1000, i);
+		// No decimals for Bytes or KB, 1 decimal for MB+
+		if (i <= 1) {
+			return Math.round(value) + ' ' + sizes[i];
+		}
+		return value.toFixed(1) + ' ' + sizes[i];
 	}
 
 	const getImageSize = () => {
@@ -103,7 +109,13 @@ document.addEventListener("DOMContentLoaded", event => {
 		// get the form data and append it to the URL as search params
 		const data = getFormData();
 
-		const extension = data.fm ?? originalExtension;
+		// Determine extension: explicit fm > preset fm > original extension
+		let extension = originalExtension;
+		if (data.fm) {
+			extension = data.fm;
+		} else if (data.p && window.imageworksPresets?.[data.p]?.fm) {
+			extension = window.imageworksPresets[data.p].fm;
+		}
 
 		// Replace the extension in imageUrl.pathname
 		imageUrl.pathname = imageUrl.pathname.replace(/\.[^/.]+$/, "." + extension);

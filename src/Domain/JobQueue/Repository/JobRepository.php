@@ -25,6 +25,59 @@ class JobRepository
 	}
 
 	/**
+	 * Get diagnostic info about the database for debugging.
+	 *
+	 * @return array{path: string, exists: bool, datadir: string}
+	 */
+	public function getDatabaseInfo(): array
+	{
+		return [
+			'path'    => $this->getDbPath(),
+			'exists'  => $this->dbExists(),
+			'datadir' => $this->config->datadir,
+		];
+	}
+
+	/**
+	 * Get raw job count directly from database for debugging.
+	 * Uses simple queries to verify database contents.
+	 *
+	 * @return array{total: int, pendingJobs: int, allStatuses: array<string,int>}
+	 */
+	public function getRawJobCount(): array
+	{
+		if (!$this->dbExists()) {
+			return [
+				'total'       => 0,
+				'pendingJobs' => 0,
+				'allStatuses' => [],
+			];
+		}
+
+		// Simple count of all rows
+		$stmt  = $this->getDb()->query('SELECT COUNT(*) FROM jobqueue');
+		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
+
+		// Count pending using fetchPendingJobs approach (SELECT *)
+		$pending = count($this->fetchPendingJobs());
+
+		// Get all distinct status values and their counts
+		$stmt        = $this->getDb()->query('SELECT status, COUNT(*) as cnt FROM jobqueue GROUP BY status');
+		$allStatuses = [];
+		if ($stmt) {
+			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+				$allStatuses[(string)$row['status']] = intval($row['cnt']);
+			}
+		}
+
+		return [
+			'total'       => $total,
+			'pendingJobs' => $pending,
+			'allStatuses' => $allStatuses,
+		];
+	}
+
+	/**
 	 * Lazy-load database connection - only creates the database when first needed.
 	 * This prevents unnecessary file creation during setup or when job queue is not used.
 	 */
@@ -197,13 +250,46 @@ class JobRepository
 	/** @return array<string,int>  */
 	public function queueByType(): array
 	{
-		$results = [];
+		// Return zeros if database doesn't exist - don't create empty database
+		if (!$this->dbExists()) {
+			$results = [];
+			foreach (JobData::TYPE_LIST as $type) {
+				$results[ucfirst($type)] = 0;
+			}
+			ksort($results);
 
+			return $results;
+		}
+
+		// Use a single query with GROUP BY for efficiency
+		$sql = <<<SQL
+			SELECT type, COUNT(*) as count
+			FROM jobqueue
+			GROUP BY type
+		SQL;
+
+		$stmt = $this->getDb()->query($sql);
+
+		// Initialize all type counts to 0
+		$counts = [];
 		foreach (JobData::TYPE_LIST as $type) {
-			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type');
-			$stmt->bindValue(':type', $type);
-			$stmt->execute();
-			$results[ucfirst($type)] = $stmt ? intval($stmt->fetchColumn()) : 0;
+			$counts[$type] = 0;
+		}
+
+		if ($stmt) {
+			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+				$type  = $row['type'] ?? '';
+				$count = intval($row['count'] ?? 0);
+				if (isset($counts[$type])) {
+					$counts[$type] = $count;
+				}
+			}
+		}
+
+		// Convert to display-friendly keys
+		$results = [];
+		foreach ($counts as $type => $count) {
+			$results[ucfirst($type)] = $count;
 		}
 		ksort($results);
 
@@ -217,23 +303,49 @@ class JobRepository
 	/** @return array<string,int>  */
 	public function queueByStatus(): array
 	{
-		$stmt  = $this->getDb()->query('SELECT COUNT(*) as total FROM jobqueue');
-		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
-
-		$results = [];
-
-		foreach (JobData::STATUS_LIST as $status) {
-			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status');
-			$stmt->bindValue(':status', $status);
-			$stmt->execute();
-			$results[$status] = $stmt ? intval($stmt->fetchColumn()) : 0;
+		// Return zeros if database doesn't exist - don't create empty database
+		if (!$this->dbExists()) {
+			return [
+				'Pending'     => 0,
+				'In-Progress' => 0,
+				'Failed'      => 0,
+				'Total'       => 0,
+			];
 		}
 
-		// I want these to be in a specific order
+		// Use a single query with GROUP BY for efficiency
+		$sql = <<<SQL
+			SELECT status, COUNT(*) as count
+			FROM jobqueue
+			GROUP BY status
+		SQL;
+
+		$stmt = $this->getDb()->query($sql);
+
+		// Initialize all status counts to 0
+		$counts = [
+			JobData::STATUS_PENDING     => 0,
+			JobData::STATUS_IN_PROGRESS => 0,
+			JobData::STATUS_FAILED      => 0,
+		];
+
+		$total = 0;
+		if ($stmt) {
+			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+				$status = $row['status'] ?? '';
+				$count  = intval($row['count'] ?? 0);
+				if (isset($counts[$status])) {
+					$counts[$status] = $count;
+				}
+				$total += $count;
+			}
+		}
+
+		// Return in specific order with display-friendly keys
 		return [
-			'Pending'     => $results[JobData::STATUS_PENDING] ?? 0,
-			'In-Progress' => $results[JobData::STATUS_IN_PROGRESS] ?? 0,
-			'Failed'      => $results[JobData::STATUS_FAILED] ?? 0,
+			'Pending'     => $counts[JobData::STATUS_PENDING],
+			'In-Progress' => $counts[JobData::STATUS_IN_PROGRESS],
+			'Failed'      => $counts[JobData::STATUS_FAILED],
 			'Total'       => $total,
 		];
 	}
@@ -241,14 +353,47 @@ class JobRepository
 	/** @return array<string,int>  */
 	public function queueByTypeForCollection(string $collection): array
 	{
-		$results = [];
+		// Return zeros if database doesn't exist - don't create empty database
+		if (!$this->dbExists()) {
+			$results = [];
+			foreach (JobData::TYPE_LIST as $type) {
+				$results[ucfirst($type)] = 0;
+			}
+			ksort($results);
 
+			return $results;
+		}
+
+		// Use a single query with GROUP BY for efficiency
+		$sql = <<<SQL
+			SELECT type, COUNT(*) as count
+			FROM jobqueue
+			WHERE collection = :collection
+			GROUP BY type
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+
+		// Initialize all type counts to 0
+		$counts = [];
 		foreach (JobData::TYPE_LIST as $type) {
-			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type AND collection = :collection');
-			$stmt->bindValue(':type', $type);
-			$stmt->bindValue(':collection', $collection);
-			$stmt->execute();
-			$results[ucfirst($type)] = $stmt ? intval($stmt->fetchColumn()) : 0;
+			$counts[$type] = 0;
+		}
+
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$type  = $row['type'] ?? '';
+			$count = intval($row['count'] ?? 0);
+			if (isset($counts[$type])) {
+				$counts[$type] = $count;
+			}
+		}
+
+		// Convert to display-friendly keys
+		$results = [];
+		foreach ($counts as $type => $count) {
+			$results[ucfirst($type)] = $count;
 		}
 		ksort($results);
 
@@ -263,26 +408,50 @@ class JobRepository
 	/** @return array<string,int>  */
 	public function queueByStatusForCollection(string $collection): array
 	{
-		$stmt = $this->getDb()->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
-		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
-
-		$results = [];
-
-		foreach (JobData::STATUS_LIST as $status) {
-			$stmt = $this->getDb()->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status AND collection = :collection');
-			$stmt->bindValue(':status', $status);
-			$stmt->bindValue(':collection', $collection);
-			$stmt->execute();
-			$results[$status] = $stmt ? intval($stmt->fetchColumn()) : 0;
+		// Return zeros if database doesn't exist - don't create empty database
+		if (!$this->dbExists()) {
+			return [
+				'Pending'     => 0,
+				'In-Progress' => 0,
+				'Failed'      => 0,
+				'Total'       => 0,
+			];
 		}
 
-		// I want these to be in a specific order
+		// Use a single query with GROUP BY for efficiency
+		$sql = <<<SQL
+			SELECT status, COUNT(*) as count
+			FROM jobqueue
+			WHERE collection = :collection
+			GROUP BY status
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+
+		// Initialize all status counts to 0
+		$counts = [
+			JobData::STATUS_PENDING     => 0,
+			JobData::STATUS_IN_PROGRESS => 0,
+			JobData::STATUS_FAILED      => 0,
+		];
+
+		$total = 0;
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$status = $row['status'] ?? '';
+			$count  = intval($row['count'] ?? 0);
+			if (isset($counts[$status])) {
+				$counts[$status] = $count;
+			}
+			$total += $count;
+		}
+
+		// Return in specific order with display-friendly keys
 		return [
-			'Pending'     => $results[JobData::STATUS_PENDING] ?? 0,
-			'In-Progress' => $results[JobData::STATUS_IN_PROGRESS] ?? 0,
-			'Failed'      => $results[JobData::STATUS_FAILED] ?? 0,
+			'Pending'     => $counts[JobData::STATUS_PENDING],
+			'In-Progress' => $counts[JobData::STATUS_IN_PROGRESS],
+			'Failed'      => $counts[JobData::STATUS_FAILED],
 			'Total'       => $total,
 		];
 	}

@@ -37,10 +37,11 @@ export default class MacroBuilder {
 		const property   = data.property;
 
 		const options = this.buildOptions(data);
+		const optionsOrEmpty = options || ', {}';
 
-		let macro = `{{ cms.${method}('${id}'${options}, {collection:'${collection}',property:'${property}'}) }}`;
+		let macro = `{{ cms.${method}('${id}'${optionsOrEmpty}, {collection:'${collection}',property:'${property}'}) }}`;
 		if (property === defaultProperty) {
-			macro = `{{ cms.${method}('${id}'${options}, {collection:'${collection}'}) }}`;
+			macro = `{{ cms.${method}('${id}'${optionsOrEmpty}, {collection:'${collection}'}) }}`;
 
 			if (collection === defaultCollection) {
 				macro = `{{ cms.${method}('${id}'${options}) }}`;
@@ -64,10 +65,11 @@ export default class MacroBuilder {
 		const name       = data.name;
 
 		const options = this.buildOptions(data);
+		const optionsOrEmpty = options || ', {}';
 
-		let macro = `{{ cms.${method}('${id}', '${name}'${options}, {collection:'${collection}',property:'${property}'}) }}`;
+		let macro = `{{ cms.${method}('${id}', '${name}'${optionsOrEmpty}, {collection:'${collection}',property:'${property}'}) }}`;
 		if (property === defaultProperty) {
-			macro = `{{ cms.${method}('${id}', '${name}'${options}, {collection:'${collection}'}) }}`;
+			macro = `{{ cms.${method}('${id}', '${name}'${optionsOrEmpty}, {collection:'${collection}'}) }}`;
 
 			if (collection === defaultCollection) {
 				macro = `{{ cms.${method}('${id}', '${name}'${options}) }}`;

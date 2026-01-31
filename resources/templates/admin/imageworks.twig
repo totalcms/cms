@@ -101,17 +101,17 @@
 			marktextcolor : "Sets the color of the text. Accepts hex values (without hashtag) like 'ffffff' for white.",
 			marktextbg    : "Sets the background color behind the text. Accepts hex values (without hashtag) or leave empty for transparent.",
 			marktextpad   : "Sets the padding around the text in pixels. Use values between 0 and 100. " ~
-						"WARNING: Cannot be used with marktextx/marktexty as it overrides those values.",
+							"WARNING: Cannot be used with marktextx/marktexty as it overrides those values.",
 			marktextpos   : "Sets the position of the text watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
 						  	"top, bottom, left, right, center.",
 			marktextx     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
-						"Cannot be used with marktextpad (padding overrides this).",
-		marktexty     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
-						"Cannot be used with marktextpad (padding overrides this).",
-		marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees.",
+							"Cannot be used with marktextpad (padding overrides this).",
+			marktexty     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
+							"Cannot be used with marktextpad (padding overrides this).",
+			marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees.",
 			marktextw     : "Sets the maximum width of the text area in pixels or using relative dimensions. " ~
 						    "For relative dimensions, 50w represents 50% of the width of the image. " ~
-					    "Leave empty to automatically scale only when text is wider than the image (ensures consistent text height while preventing overflow).",
+						    "Leave empty to automatically scale only when text is wider than the image (ensures consistent text height while preventing overflow).",
 			marktextalpha : "Sets the transparency of the text watermark. Use values between 0 (transparent) and 100 (opaque).",
 		}
 	%}
@@ -122,10 +122,13 @@
 			<h1>Total CMS Image Builder</h1>
 			<div class="split-view">
 
-				{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
-
 				{% if name %}
-					{% set imagePath = cms.galleryPath(id, name, values, {collection: collection, property: property}) %}
+					{% set gallery = cms.object(collection, id) %}
+					{% set imagePath = cms.galleryPath(gallery, name, values, {collection: collection, property: property}) %}
+					{% set imageData = cms.galleryImageData(gallery, name, {collection: collection, property: property}) %}
+				{% else %}
+					{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
+					{% set imageData = cms.data(collection, id, property) %}
 				{% endif %}
 
 				<img src="{{ imagePath }}"
@@ -143,10 +146,11 @@
 						<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
 						{% endif %}
 
-						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Macro</button>
+						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Path Macro</button>
 						<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
 					</div>
-					<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
+					<h4 class="new-size">New Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
+					<h5 class="original-size">Original: {{ imageData.size | filesize }} ({{ imageData.width }}x{{ imageData.height }} {{ imageData.mime | split('/')[1] }})</h5>
 				</div>
 			</div>
 			<button type="button" id="refresh-image">Preview Image</button>
@@ -393,5 +397,8 @@
 {% endblock %}
 
 {% block bodyBelow %}
+	<script>
+		window.imageworksPresets = {{ cms.config("imageworks", "presets") | json_encode | raw }};
+	</script>
 	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js"></script>
 {% endblock %}

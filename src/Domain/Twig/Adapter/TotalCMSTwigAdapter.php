@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\CollectionTable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
@@ -35,10 +36,13 @@ use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\VersionData;
+use Twig\Environment as TwigEnvironment;
+use Twig\Loader\ArrayLoader;
 
 /**
  * Twig Adapter with Total CMS.
@@ -53,6 +57,9 @@ use TotalCMS\Support\VersionData;
  */
 class TotalCMSTwigAdapter
 {
+	private ?TwigEnvironment $captionTwig = null;
+	private readonly LoggerInterface $logger;
+
 	public string $env;
 	public string $api;
 	public string $dashboard;
@@ -79,7 +86,7 @@ class TotalCMSTwigAdapter
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
-		public LogAnalyzer $logger,
+		public LogAnalyzer $logAnalyzer,
 		private readonly PhpSession $session,
 		private readonly AccessManager $accessManager,
 		private readonly FileAccessManager $fileAccessManager,
@@ -91,7 +98,9 @@ class TotalCMSTwigAdapter
 		public EditionTwigAdapter $edition,
 		private readonly JobManager $jobManager,
 		private readonly CacheManager $cacheManager,
+		private readonly LoggerFactory $loggerFactory,
 	) {
+		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
 		$this->clearcache = $this->api . '/emergency/cache/clear';
@@ -486,6 +495,16 @@ NGINX;
 	}
 
 	/**
+	 * Log a message from a Twig template to the twig.log file.
+	 *
+	 * @param array<string,mixed> $context
+	 */
+	public function log(string $message, string $level = 'warning', array $context = []): void
+	{
+		$this->logger->log($level, $message, $context);
+	}
+
+	/**
 	 * Get all accessible schemas (filtered by edition).
 	 *
 	 * @return array<array<string,mixed>>
@@ -633,8 +652,8 @@ NGINX;
 							];
 						}
 					}
-				} catch (\Exception) {
-					// Skip if parent schema doesn't exist
+				} catch (\Exception $e) {
+					$this->logger->warning("Parent schema '{$parentId}' not found during inheritance resolution for '{$schemaId}'", ['error' => $e->getMessage()]);
 					continue;
 				}
 			}
@@ -770,8 +789,8 @@ NGINX;
 				$object = $this->objectFetcher->fetchObject($collectionId, $idOrObject);
 
 				return $this->objectUrlBuilder->buildUrl($collectionData, $object->toArray());
-			} catch (\Exception) {
-				// Fall back to legacy behavior if object fetch fails
+			} catch (\Exception $e) {
+				$this->logger->warning("Could not fetch object '{$idOrObject}' for template URL in '{$collectionId}'", ['error' => $e->getMessage()]);
 			}
 		}
 
@@ -830,7 +849,9 @@ NGINX;
 	{
 		try {
 			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Search failed for collection '{$collection}' with query '{$query}'", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 
@@ -848,7 +869,9 @@ NGINX;
 		// if there is an exception, return an empty array
 		try {
 			$collection = $this->indexReader->fetchIndex($collection);
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Failed to fetch collection '{$collection}'", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 
@@ -871,7 +894,9 @@ NGINX;
 		// if there is an exception, return an empty array for the template
 		try {
 			$object = $this->objectFetcher->fetchObject($collection, $id);
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Object '{$id}' not found in collection '{$collection}'", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 
@@ -1032,6 +1057,8 @@ NGINX;
 		if (array_key_exists($property, $object)) {
 			return $object[$property];
 		}
+
+		$this->logger->debug("Property '{$property}' not found on object '{$id}' in collection '{$collection}'");
 
 		return '';
 	}
@@ -1287,6 +1314,9 @@ NGINX;
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
+		// Resolve preset format for URL extension
+		$imageworks = $this->resolvePresetFormat($imageworks);
+
 		// Performance optimization: Accept full object to avoid re-fetching
 		if (is_array($idOrObject)) {
 			// Object passed directly - extract ID and image data
@@ -1311,6 +1341,43 @@ NGINX;
 		}
 
 		return self::buildImageworksAPI($this->api, $idOrObject, $image, $imageworks, $options);
+	}
+
+	/**
+	 * Resolve preset format for URL extension.
+	 * If a preset is specified and has an 'fm' value, add it to imageworks so the URL uses the correct extension.
+	 *
+	 * @param array<string,mixed> $imageworks
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolvePresetFormat(array $imageworks): array
+	{
+		// If fm is already explicitly set, use it
+		if (isset($imageworks['fm'])) {
+			return $imageworks;
+		}
+
+		// If no preset, nothing to resolve
+		if (!isset($imageworks['p'])) {
+			return $imageworks;
+		}
+
+		$presetName = (string)$imageworks['p'];
+		$presets    = $this->config->imageworks['presets'] ?? [];
+
+		if (!isset($presets[$presetName])) {
+			return $imageworks;
+		}
+
+		$preset = $presets[$presetName];
+
+		// If preset has fm, add it to imageworks for URL building
+		if (isset($preset['fm'])) {
+			$imageworks['fm'] = $preset['fm'];
+		}
+
+		return $imageworks;
 	}
 
 	/**
@@ -1408,8 +1475,12 @@ NGINX;
 			$images = $this->data($options['collection'], $id, $options['property']);
 		}
 
-		// Check if captions should be shown
-		$showCaptions = isset($options['captions']) && $options['captions'];
+		// Check if captions should be shown on grid thumbnails and in lightbox
+		// When set to a string, it's used as a template (e.g., "{{alt}} | {{exif.camera}}")
+		$showGridCaptions  = !empty($options['gridCaptions']);
+		$gridCaptionTpl    = isset($options['gridCaptions']) && $options['gridCaptions'] !== true ? trim((string)$options['gridCaptions']) : '';
+		$showCaptions      = !empty($options['captions']);
+		$captionTpl        = isset($options['captions']) && $options['captions'] !== true ? trim((string)$options['captions']) : '';
 
 		// Check if only featured images should be shown in grid (but all in lightbox)
 		$featuredOnly = isset($options['featuredOnly']) && $options['featuredOnly'];
@@ -1438,9 +1509,13 @@ NGINX;
 
 			// Always wrap in figure for semantic HTML5
 			$figureContent = $link;
-			if ($showCaptions && !empty($image['alt'])) {
-				$caption = HTMLUtils::element('figcaption', htmlspecialchars((string)$image['alt']), ['class' => 'cms-gallery-caption']);
-				$figureContent .= $caption;
+			if ($showGridCaptions) {
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $gridCaptionTpl);
+				if ($captionText !== '') {
+					$captionHtml = $gridCaptionTpl !== '' ? $captionText : htmlspecialchars($captionText);
+					$caption     = HTMLUtils::element('figcaption', $captionHtml, ['class' => 'cms-gallery-caption']);
+					$figureContent .= $caption;
+				}
 			}
 
 			// Calculate the actual dimensions after ImageWorks processing
@@ -1451,6 +1526,14 @@ NGINX;
 				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 				'data-lg-size' => "{$processedDimensions['width']}-{$processedDimensions['height']}",
 			];
+
+			// Add lightbox caption via data-sub-html attribute
+			if ($showCaptions) {
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $captionTpl);
+				if ($captionText !== '') {
+					$figureAttrs['data-sub-html'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
+				}
+			}
 
 			// Add image name for mapping when using featuredOnly mode
 			if ($featuredOnly) {
@@ -1472,8 +1555,11 @@ NGINX;
 					'lgSize' => "{$img['width']}-{$img['height']}",
 					'name'   => $img['name'],
 				];
-				if ($showCaptions && !empty($img['alt'])) {
-					$item['subHtml'] = htmlspecialchars((string)$img['alt']);
+				if ($showCaptions) {
+					$captionText = $this->galleryCaption($idOrObject, $img['name'], $options, $captionTpl);
+					if ($captionText !== '') {
+						$item['subHtml'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
+					}
 				}
 				$dynamicEl[] = $item;
 			}
@@ -1487,7 +1573,11 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 		unset($options['captions']); // Remove captions option from JS settings
+		unset($options['gridCaptions']); // Remove gridCaptions option from JS settings
 		unset($options['featuredOnly']); // Remove featuredOnly from JS settings
+
+		// Prevent lightGallery from using alt/title as caption fallback
+		$options['getCaptionFromTitleOrAlt'] = false;
 
 		// Extract custom class before encoding settings
 		$customClass = '';
@@ -1570,7 +1660,8 @@ NGINX;
 		}
 
 		// Check if captions should be shown in subHtml
-		$showCaptions = isset($options['captions']) && $options['captions'];
+		$showCaptions = !empty($options['captions']);
+		$captionTpl   = isset($options['captions']) && $options['captions'] !== true ? trim((string)$options['captions']) : '';
 
 		// Build dynamicEl array for lightGallery
 		$dynamicEl = [];
@@ -1582,9 +1673,12 @@ NGINX;
 				'name'   => $image['name'], // Include name for image-based index lookup
 			];
 
-			// Add subHtml if captions are enabled and alt text exists
-			if ($showCaptions && !empty($image['alt'])) {
-				$item['subHtml'] = htmlspecialchars((string)$image['alt']);
+			// Add subHtml if captions are enabled and meaningful alt text exists
+			if ($showCaptions) {
+				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $captionTpl);
+				if ($captionText !== '') {
+					$item['subHtml'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
+				}
 			}
 
 			$dynamicEl[] = $item;
@@ -1597,7 +1691,11 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 		unset($options['captions']);
+		unset($options['gridCaptions']);
 		unset($options['galleryId']);
+
+		// Prevent lightGallery from using alt/title as caption fallback
+		$options['getCaptionFromTitleOrAlt'] = false;
 
 		// Build template attributes
 		$attributes = [
@@ -1687,6 +1785,8 @@ NGINX;
 		}
 
 		if (!is_array($gallery) || $gallery === []) {
+			$this->logger->debug("No gallery data found for property '{$options['property']}'", ['idOrObject' => is_string($idOrObject) ? $idOrObject : 'object']);
+
 			return null;
 		}
 
@@ -1745,6 +1845,9 @@ NGINX;
 		if (in_array($idOrObject, [null, '', []], true) || $name === null || $name === '') {
 			return '';
 		}
+
+		// Resolve preset format for URL extension
+		$imageworks = $this->resolvePresetFormat($imageworks);
 
 		// Extract ID for URL building
 		if (is_array($idOrObject)) {
@@ -1904,6 +2007,90 @@ NGINX;
 	}
 
 	/**
+	 * Get caption text for a gallery image.
+	 * Same fallback chain as galleryAlt() but WITHOUT the filename fallback,
+	 * since filenames make poor visible captions.
+	 *
+	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
+	 * @param array<string,mixed> $options
+	 */
+	public function galleryCaption(string|array $idOrObject, string|int $name, array $options = [], string $template = ''): string
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		$image = $this->galleryImageData($idOrObject, $name, $options);
+
+		if (!is_array($image)) {
+			return '';
+		}
+
+		// Template mode: render using lightweight Twig engine
+		if ($template !== '') {
+			return $this->renderCaptionTemplate($template, $image);
+		}
+
+		// Default fallback chain (no filename)
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return '';
+	}
+
+	/**
+	 * Get a lightweight Twig environment for rendering caption templates.
+	 * This is separate from the main TwigEngine to avoid circular dependencies.
+	 */
+	private function getCaptionTwig(): TwigEnvironment
+	{
+		if (!$this->captionTwig instanceof TwigEnvironment) {
+			$this->captionTwig = new TwigEnvironment(new ArrayLoader(), [
+				'autoescape'       => false,
+				'strict_variables' => false,
+			]);
+		}
+
+		return $this->captionTwig;
+	}
+
+	/**
+	 * Render a caption template using a lightweight Twig environment.
+	 * Image data fields are available directly (e.g., {{ alt }}, {{ exif.camera }}).
+	 * Returns empty string if all output is whitespace/separators.
+	 *
+	 * @param array<string,mixed> $image
+	 */
+	private function renderCaptionTemplate(string $template, array $image): string
+	{
+		try {
+			$template = str_replace(['{', '}'], ['{{', '}}'], $template);
+			$twig     = $this->getCaptionTwig();
+			$tmpl     = $twig->createTemplate($template);
+			$result   = trim($tmpl->render($image));
+
+			// If the result has no meaningful text content, treat as empty
+			if (trim(strip_tags($result)) === '') {
+				return '';
+			}
+
+			return $result;
+		} catch (\Exception $e) {
+			$this->logger->warning('Gallery caption template error: ' . $e->getMessage(), ['template' => $template]);
+
+			return '';
+		}
+	}
+
+	/**
 	 * Check if a password is already encrypted (base64 encoded).
 	 * Encrypted passwords from Cipher::encrypt() are base64 encoded strings.
 	 */
@@ -1927,7 +2114,9 @@ NGINX;
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Schema '{$schemaId}' not found for deck compatibility check", ['error' => $e->getMessage()]);
+
 			return false;
 		}
 	}
@@ -1943,7 +2132,9 @@ NGINX;
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$this->logger->warning("Schema '{$schemaId}' not found for deck incompatible types check", ['error' => $e->getMessage()]);
+
 			return [];
 		}
 	}

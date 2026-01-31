@@ -8,9 +8,11 @@
 			profilesSampleRate: 0,
 			beforeSend(event, hint) {
 				const error = hint.originalException;
-				if (!error) return event;
 
-				const message = error.message || '';
+				// Get message from originalException or from the event's exception values
+				const message = (error && error.message)
+					|| (event.exception && event.exception.values && event.exception.values[0] && event.exception.values[0].value)
+					|| '';
 
 				// Ignore errors from known corrupted installations
 				const ignoredDomains = ['komiksdiner'];
@@ -38,6 +40,8 @@
 
 				// Ignore Froala editor internal errors (third-party library)
 				if (error.name === 'IndexSizeError') return null;
+				if (error.name === 'InvalidCharacterError' && message.includes('invalid characters')) return null;
+				if (error.name === 'TypeError' && message.includes('querySelectorAll') && message.includes('is not a function')) return null;
 
 				// Ignore race condition errors when elements are removed during async operations
 				// (e.g., image onload firing after element was removed from DOM)

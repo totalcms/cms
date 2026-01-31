@@ -78,7 +78,14 @@ body, h1,h2,h3,h4,h5,h6 {
 
 .image-info {
 	display : grid;
-	grid-template-rows: auto min-content;
+	grid-template-rows: auto min-content min-content;
+
+	.original-size {
+		font-weight : 400;
+		opacity     : 0.5;
+		margin-top  : 0.5rem;
+		font-style  : italic;
+	}
 }
 
 pre#twig-macro {

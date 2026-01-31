@@ -942,7 +942,7 @@ The password field JavaScript automatically:
 }
 ```
 
-## Numbers Fields
+## Number and Range Fields
 
 ```json
 {
@@ -1115,13 +1115,13 @@ Use the `code.json` property reference and set `htmlclean: false`:
 
 ⚠️ **Security Note:** Only use `htmlclean: false` for code fields where you control the content or trust the source. Never allow untrusted users to submit content to fields with HTML sanitization disabled.
 
-## Radio Field
+## Radio and Multicheckbox Fields
 
-Radio fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
+Radio and Multicheckbox fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
 
 ### Grid Layout Settings
 
-Use the `fieldGrid` setting to specify the minimum width for each radio option in the grid. By default, radio options display in a single column (full width). When you specify a `fieldGrid` value, the options will automatically flow into a responsive grid layout.
+Use the `fieldGrid` setting to specify the minimum width for each option in the grid. This setting is supported by both `radio` and `multicheckbox` fields. By default, options display in a single column (full width). When you specify a `fieldGrid` value, the options will automatically flow into a responsive grid layout.
 
 ```json
 {
@@ -1130,7 +1130,7 @@ Use the `fieldGrid` setting to specify the minimum width for each radio option i
 ```
 
 This creates a responsive grid where:
-- Each radio option has a minimum width of `250px`
+- Each option has a minimum width of `250px`
 - Options automatically wrap to new rows when needed
 - Grid adjusts based on container width
 
@@ -1165,6 +1165,92 @@ Price fields display with a dollar sign icon by default. You can change the curr
 	"class": "icon-yen"
 }
 ```
+
+## Hide Field
+
+The `hide` setting allows you to completely hide a field from the admin form while still storing its data. This is useful for fields that should be managed programmatically or set via defaults rather than through the admin interface.
+
+### Basic Usage
+
+```json
+{
+	"hide": true
+}
+```
+
+When `hide` is set to `true`, the field will have the `cms-hide` CSS class added, which hides it from view.
+
+### Example Schema
+
+```json
+{
+	"internalStatus": {
+		"type": "string",
+		"field": "text",
+		"label": "Internal Status",
+		"default": "pending",
+		"settings": {
+			"hide": true
+		}
+	}
+}
+```
+
+### Common Use Cases
+
+**System-managed fields:**
+```json
+{
+	"processedAt": {
+		"type": "string",
+		"field": "datetime",
+		"label": "Processed At",
+		"settings": {
+			"hide": true
+		}
+	}
+}
+```
+
+**Fields with autogen values that shouldn't be edited:**
+```json
+{
+	"slug": {
+		"type": "string",
+		"field": "text",
+		"label": "URL Slug",
+		"settings": {
+			"autogen": "${title}",
+			"hide": true
+		}
+	}
+}
+```
+
+**Metadata fields:**
+```json
+{
+	"version": {
+		"type": "number",
+		"field": "number",
+		"label": "Version",
+		"default": 1,
+		"settings": {
+			"hide": true
+		}
+	}
+}
+```
+
+### Important Notes
+
+⚠️ **Data Storage:** Hidden fields still store data in the object. They are just not visible in the admin form.
+
+⚠️ **Default Values:** Hidden fields typically should have a `default` value or be populated programmatically.
+
+⚠️ **CSS Class:** The field receives the `cms-hide` class. You can customize visibility with CSS if needed.
+
+✅ **All Field Types:** The `hide` setting works with all field types.
 
 ## Field Visibility
 

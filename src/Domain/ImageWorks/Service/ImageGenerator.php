@@ -15,6 +15,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
+use TotalCMS\Support\Config;
 
 class ImageGenerator
 {
@@ -31,6 +32,7 @@ class ImageGenerator
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
+		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -174,10 +176,19 @@ class ImageGenerator
 	 */
 	private function cleanupParams(array $params, ImageData $imageData): array
 	{
+		// Remove metadata params that don't affect image processing
+		unset($params['id'], $params['collection'], $params['property'], $params['name'], $params['cache']);
+
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with((string)$params['fm'], $imageData->name))) {
+		// If the only param is 'fm' and it matches the original image's format, return original
+		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm']))) {
 			return [];
+		}
+
+		// Resolve preset first so dimension constraints apply to preset values too
+		if (isset($params['p'])) {
+			$params = $this->resolvePreset($params);
 		}
 
 		// Make sure that the requested width and height are not larger than the original image
@@ -209,10 +220,6 @@ class ImageGenerator
 			$params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
 		}
 
-		if (isset($params['cache'])) {
-			unset($params['cache']);
-		}
-
 		if (isset($params['mark']) && !isset($params['markw'])) {
 			$params['markw'] = '100w';
 		}
@@ -234,6 +241,34 @@ class ImageGenerator
 
 		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide
 		return array_filter($params, fn ($value): bool => $value !== null && $value !== '');
+	}
+
+	/**
+	 * Resolve preset values into params.
+	 * Preset values are merged first, then explicit params override them.
+	 * This ensures dimension constraints are applied to preset w/h values.
+	 *
+	 * @param array<string,mixed> $params
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolvePreset(array $params): array
+	{
+		$presetName = (string)$params['p'];
+		$presets    = $this->config->imageworks['presets'] ?? [];
+
+		if (!isset($presets[$presetName])) {
+			return $params;
+		}
+
+		$presetValues = $presets[$presetName];
+
+		// Remove preset key since we're resolving it manually
+		unset($params['p']);
+
+		// Merge preset values first, then overlay explicit params
+		// This means explicit params take precedence over preset values
+		return array_merge($presetValues, $params);
 	}
 
 	/**
@@ -308,12 +343,21 @@ class ImageGenerator
 				->withHeader('ETag', $cacheHeaders['etag']);
 		}
 
-		return (new Response())
+		// Get content length from ImageData or filesystem
+		$contentLength = $imageData->size > 0 ? (string)$imageData->size : null;
+
+		$httpResponse = (new Response())
 			->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
 			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
 			->withHeader('ETag', $cacheHeaders['etag'])
 			->withHeader('Last-Modified', $cacheHeaders['last_modified'])
 			->withBody($response['stream']);
+
+		if ($contentLength !== null) {
+			$httpResponse = $httpResponse->withHeader('Content-Length', $contentLength);
+		}
+
+		return $httpResponse;
 	}
 
 	/**

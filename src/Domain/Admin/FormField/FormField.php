@@ -49,6 +49,7 @@ class FormField
 		protected ?int $min           = null,
 		protected ?int $max           = null,
 		protected ?float $step        = null,
+		protected bool $hide          = false,
 	) {
 		$this->init();
 	}
@@ -70,6 +71,11 @@ class FormField
 		// Only use default if value is empty string (not explicitly set)
 		if (!$this->form->id && $this->value === '' && $this->default !== '') {
 			$this->value = $this->default;
+		}
+
+		// Add cms-hide class if hide setting is true (check both property-level and settings)
+		if ($this->hide || (isset($this->settings['hide']) && $this->settings['hide'] === true)) {
+			$this->class = trim($this->class . ' cms-hide');
 		}
 	}
 

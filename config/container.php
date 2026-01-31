@@ -371,6 +371,7 @@ return [
 		$container->get(EditionTwigAdapter::class),
 		$container->get(JobManager::class),
 		$container->get(CacheManager::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
