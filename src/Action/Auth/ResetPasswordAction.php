@@ -57,10 +57,13 @@ readonly class ResetPasswordAction
 		}
 
 		// Token is valid, show reset form
+		$queryParams = $request->getQueryParams();
+
 		return $this->twigRenderer->template($response, 'admin/reset-password.twig', [
 			'token'      => $token,
 			'email'      => $validation['email'] ?? '',
 			'collection' => $validation['collection'] ?? '',
+			'redirect'   => $queryParams['redirect'] ?? '',
 		]);
 	}
 }
