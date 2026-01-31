@@ -8,7 +8,7 @@ use TotalCMS\Support\Config;
 
 class LoginService
 {
-	public const ACCESS_LOG = 'totalcms-access.log';
+	public const ACCESS_LOG = 'access.log';
 
 	private readonly LoggerInterface $logger;
 	private string $account = '';

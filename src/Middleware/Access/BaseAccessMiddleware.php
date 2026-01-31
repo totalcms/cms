@@ -82,7 +82,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		if (!$operation) {
 			// Unable to detect operation, deny access and log in dev/debug mode
 			if ($this->config->env === 'dev' || $this->config->debug) {
-				$logger       = $this->loggerFactory->addFileHandler('totalcms-access.log')->createLogger('access');
+				$logger       = $this->loggerFactory->addFileHandler('access.log')->createLogger('access');
 				$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
 				$route        = $routeContext->getRoute();
 				$routeName    = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : 'unknown';
