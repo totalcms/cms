@@ -69,7 +69,10 @@ class AccessManager
 		}
 
 		try {
-			if ($this->userValidator->validateUserInGroups($this->userID, $groups, $collection)) {
+			// When no collection is specified, use the user's session collection
+			// so users from any auth collection can be validated by groups alone
+			$groupCollection = $collection !== '' ? $collection : $this->userCollection;
+			if ($this->userValidator->validateUserInGroups($this->userID, $groups, $groupCollection)) {
 				return true;
 			}
 		} catch (\Throwable $th) {
