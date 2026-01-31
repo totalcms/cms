@@ -59,6 +59,9 @@
 		<button class="dash-action-dots" title="Mailer Actions" popovertarget="mailer-actions"></button>
 		<nav popover id="mailer-actions">
 			<ul>
+				{% if url.id and url.id != 'new' and url.id[:1] != '-' %}
+				<li class="duplicate"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
+				{% endif %}
 				<li class="export"><a href="mailer/-export">Export</a></li>
 				<li class="import"><a href="mailer/-import">Import</a></li>
 			</ul>
@@ -76,7 +79,7 @@
 {% else %}
 	<section class="dash-content-section">
 
-		{{ cms.form.mailer(url.id == 'new' ? '' : url.id, {
+		{% set mailerOptions = {
 			deleteActions : [{
 				"action" : "redirect",
 				"link"   : "mailer"
@@ -85,7 +88,11 @@
 				"action" : "redirect-object",
 				"link"   : "mailer/{id}"
 			}],
-		}) }}
+		} %}
+		{% if duplicateData is defined %}
+			{% set mailerOptions = mailerOptions|merge({ data: duplicateData }) %}
+		{% endif %}
+		{{ cms.form.mailer(url.id == 'new' ? '' : url.id, mailerOptions) }}
 
 		{% if url.id and url.id != '' %}
 		<section class="mail-test-section">
@@ -112,6 +119,27 @@
 		{% endif %}
 
 	</section>
+
+<script>
+function duplicateObject(event) {
+	event.preventDefault();
+
+	const tempForm               = document.createElement('form');
+	      tempForm.method        = 'POST';
+	      tempForm.action        = 'mailer/new';
+	      tempForm.style.display = 'none';
+
+	const input = document.createElement('input');
+	input.type = 'hidden';
+	input.name = 'duplicate';
+	input.value = '{{ url.id }}';
+	tempForm.appendChild(input);
+
+	document.body.appendChild(tempForm);
+	tempForm.submit();
+}
+</script>
+
 {% endif %}
 
 {% endif %}
