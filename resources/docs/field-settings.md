@@ -942,7 +942,7 @@ The password field JavaScript automatically:
 }
 ```
 
-## Numbers Fields
+## Number and Range Fields
 
 ```json
 {
