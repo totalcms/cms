@@ -9,7 +9,7 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
-use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -31,7 +31,7 @@ class ObjectRepository extends StorageRepository
 		private readonly SchemaValidator $validator,
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CacheManager $cacheManager,
-		private readonly SchemaRepository $schemaRepository,
+		private readonly SchemaFetcher $schemaFetcher,
 		private readonly IndexRepository $indexRepository,
 	) {
 		parent::__construct($filesystem);
@@ -190,8 +190,8 @@ class ObjectRepository extends StorageRepository
 	 */
 	private function validateUniqueProperties(ObjectData $object, CollectionData $collectionInfo, string $collection): void
 	{
-		// Use SchemaRepository to leverage caching
-		$schema     = $this->schemaRepository->getSchema($collectionInfo->schema);
+		// Use SchemaFetcher to get flattened schema (with inheritance resolved)
+		$schema     = $this->schemaFetcher->fetchSchema($collectionInfo->schema);
 		$objectData = $object->toArray();
 
 		// Check each property for unique constraint
