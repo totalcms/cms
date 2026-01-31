@@ -2,6 +2,38 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.6] - 2026-01-31
+
+### Added
+
+- **Gallery Caption Templates**: Gallery captions now support Twig templating for fully customizable caption rendering
+- **Lightbox Captions**: New option to display captions within the lightbox viewer
+- **`cms.log()` Twig Function**: Custom logging directly from within Twig templates
+- **`keyBy` and `sum` Collection Filters**: New Twig filters for grouping collections by key and summing numeric values
+- **Field `hide` Setting**: New option to hide fields in the admin form while preserving their data
+- **PHP API Documentation**: Comprehensive reference for the `TotalCMS` class covering CLI automation scripts, all public methods, and a complete example script
+
+### Enhanced
+
+- **Collection Self-Healing**: Better automatic recovery for corrupted or incomplete collection data
+- **JSON Array Properties**: Improved handling of array property types during object creation
+- **Sentry JS Filtering**: Better filtering of Froala editor errors and suppression of bad Twig function call errors
+- **Filesize Display**: Now uses base-1000 bytes for more intuitive file size reporting
+- **Boolean Import**: Now accepts "YES" as a truthy value during data import
+- **Blog Legacy Support**: Media field moved to index for blog legacy compatibility
+- **Twig Logging**: Enhanced logging throughout the Twig adapter for better debugging
+
+### Fixed
+
+- **Original Image Serving**: Fixed instances where the original image was not served correctly
+- **ImageWorks Format**: Fixed image format option not working in ImageWorks presets
+- **ImageWorks Upscaling**: Presets no longer scale images up beyond their original dimensions
+- **ImageWorks Default Width**: Removed incorrect 600px default width that could affect image output
+- **Image Macro Builder**: Fixed empty image options in the macro builder
+- **RSS Builder**: Fixed bad date being passed to the RSS feed builder
+- **Job Queue Stats**: Fixed job queue statistics display
+- **Empty Image Options**: Fixed empty image options causing errors in macro builder
+
 ## [3.1.5] - 2026-01-22
 
 ### Added
