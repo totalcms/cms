@@ -52,12 +52,34 @@
 .depot-filter-wrapper {
 	display       : flex;
 	align-items   : center;
-	border-bottom : 1px solid oklch(var(--totalform-lightgray));
-	padding       : 0.25rem 0.5rem;
+	// border-bottom : 1px solid oklch(var(--totalform-lightgray));
+	padding       : 0;
 	position      : sticky;
 	top           : 0;
 	z-index       : 1;
 	background    : oklch(var(--totalform-purewhite));
+
+	&::before {
+		content          : '';
+		position         : absolute;
+		left             : 0.5rem;
+		top              : 50%;
+		transform        : translateY(-50%);
+		width            : 14px;
+		height           : 14px;
+		background-color : oklch(var(--totalform-mediumgray));
+		mask-image       : var(--icon-filter);
+		mask-repeat      : no-repeat;
+		mask-size        : 14px;
+		mask-position    : center;
+		pointer-events   : none;
+		transition       : background-color 200ms ease-in-out;
+	}
+
+	&:has(input:hover)::before,
+	&:has(input:focus)::before {
+		background-color : oklch(var(--totalform-darkgray));
+	}
 }
 
 .depot-filter {
@@ -65,7 +87,7 @@
 	border      : none !important;
 	outline     : none !important;
 	box-shadow  : none !important;
-	padding     : 0.25rem 0;
+	padding     : 0.25rem 0.25rem 0.25rem 2.25rem !important;
 	font-size   : 0.85rem;
 	background  : transparent;
 	color       : oklch(var(--totalform-text-color));
@@ -82,7 +104,7 @@
 	cursor      : pointer;
 	font-size   : 1.1rem;
 	line-height : 1;
-	padding     : 0 0.25rem;
+	padding     : 0 0.5rem;
 	color       : oklch(var(--totalform-gray));
 
 	&:hover {
@@ -105,10 +127,10 @@
 	overflow-x          : hidden;
 	margin              : 0 !important;
 	background          : repeating-linear-gradient(to bottom,
-		transparent 0,
-		transparent var(--depot-line-height),
+		oklch(var(--totalform-nearwhite)) 0,
 		oklch(var(--totalform-nearwhite)) var(--depot-line-height),
-		oklch(var(--totalform-nearwhite)) calc(var(--depot-line-height) * 2)
+		transparent var(--depot-line-height),
+		transparent calc(var(--depot-line-height) * 2)
 	);
 
 	.selected {
