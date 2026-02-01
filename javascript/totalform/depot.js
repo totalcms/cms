@@ -209,14 +209,14 @@ export default class DepotField extends TotalField {
             open  : null,
             close : ".close",
             onOpen : () => {
-                if (this.dialogOpened) return;
-                this.dialogOpened = true;
-                // Setup Accordion
-                const details = Array.from(node.querySelectorAll("details"));
-                if (details.length > 0) new Details(details);
+                // Setup Accordion (once per dialog node)
+                if (!node.accordionInitialized) {
+                    const details = Array.from(node.querySelectorAll("details"));
+                    if (details.length > 0) new Details(details);
+                    node.accordionInitialized = true;
+                }
             },
             onClose : () => {
-                this.dialogOpened = false;
                 if (file) this.autosaveFile(file);
             }
         });
@@ -345,9 +345,30 @@ export default class DepotField extends TotalField {
 	}
 
     actionTrash() {
+        const allSelected = Array.from(this.browser.querySelectorAll("li.selected"));
+        if (allSelected.length > 1) {
+            return this.trashFiles(allSelected);
+        }
         const selected = this.getSelected();
         const type     = selected.classList.contains("folder") ? "folder" : "file";
         return type === "file" ? this.trashFile(selected) : this.trashFolder(selected);
+    }
+
+    trashFiles(files) {
+        const count = files.length;
+        if (!confirm(`Are you sure that you want to delete ${count} files? This cannot be undone.`)) return;
+
+        files.forEach(file => {
+            const name = this.getFileAttribute(file, "name");
+            const path = file.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+
+            let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+            if (path.length > 0) deleteApi += `?path=${path}`;
+
+            this.form.api.postAPI(deleteApi, "", "DELETE").then(() => file.remove());
+        });
+
+        this.resetPreview();
     }
 
     trashFile(file) {
@@ -390,7 +411,7 @@ export default class DepotField extends TotalField {
     }
 
     handleKeyNavigation(event) {
-        const validKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+        const validKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Delete", "Backspace"];
         if (!validKeys.includes(event.key)) return;
 
         event.preventDefault();
@@ -407,6 +428,9 @@ export default class DepotField extends TotalField {
             case "ArrowDown": this.navigateDown(selected);  break;
             case "ArrowLeft": this.navigateLeft(selected);  break;
             case "ArrowRight":this.navigateRight(selected); break;
+            case "Enter":     this.actionEdit();             break;
+            case "Delete":
+            case "Backspace": this.actionTrash();            break;
         }
     }
 
