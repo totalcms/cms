@@ -22,6 +22,7 @@ export default class DepotField extends TotalField {
         this.initActionBar();
         this.initFilter();
         this.setupProtectDialog();
+        this.setupPreviewDialog();
         this.setupDroplet();
         this.initKeyboardNavigation();
     }
@@ -39,6 +40,81 @@ export default class DepotField extends TotalField {
                 // this.totalfield.autosave();
             }
         });
+    }
+
+    setupPreviewDialog() {
+        this.previewTypes = {
+            image : new Set(['jpg','jpeg','png','gif','webp','svg']),
+            video : new Set(['mp4','webm','ogg']),
+            audio : new Set(['mp3','wav']),
+            pdf   : new Set(['pdf']),
+        };
+        this.previewButton  = this.container.querySelector(".preview-file");
+        this.previewDialog  = this.container.querySelector(".preview-dialog");
+        this.previewContent = this.previewDialog.querySelector(".preview-content");
+
+        this.previewButton.addEventListener("click", () => {
+            const selected = this.getSelected();
+            if (!selected) return;
+
+            const name = this.getFileAttribute(selected, "name");
+            const ext  = name.split(".").pop().toLowerCase();
+            const path = this.getPath();
+            const url  = this.api.buildApiQuery(
+                `/stream/${this.form.collection}/${this.form.id}/${this.property}/${name}`,
+                path.length > 0 ? { path } : {}
+            );
+
+            this.previewContent.innerHTML = "";
+            const el = this.createPreviewElement(ext, url, name);
+            if (!el) return;
+
+            this.previewContent.appendChild(el);
+            this.previewDialog.showModal();
+        });
+
+        this.previewDialog.addEventListener("close", () => {
+            this.previewContent.innerHTML = "";
+        });
+
+        this.previewDialog.addEventListener("click", (e) => {
+            if (e.target === this.previewDialog) this.previewDialog.close();
+        });
+    }
+
+    createPreviewElement(ext, url, name) {
+        if (this.previewTypes.image.has(ext)) {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = name;
+            return img;
+        }
+        if (this.previewTypes.video.has(ext)) {
+            const video = document.createElement("video");
+            video.src = url;
+            video.controls = true;
+            video.autoplay = true;
+            return video;
+        }
+        if (this.previewTypes.audio.has(ext)) {
+            const audio = document.createElement("audio");
+            audio.src = url;
+            audio.controls = true;
+            audio.autoplay = true;
+            return audio;
+        }
+        if (this.previewTypes.pdf.has(ext)) {
+            const obj = document.createElement("object");
+            obj.data = url;
+            obj.type = "application/pdf";
+            obj.className = "preview-pdf";
+            return obj;
+        }
+        return null;
+    }
+
+    isPreviewable(ext) {
+        return Object.values(this.previewTypes).some(s => s.has(ext));
     }
 
     setupDroplet() {
@@ -802,6 +878,8 @@ export default class DepotField extends TotalField {
         });
 
         this.filePreview.querySelector(".file-icon").className = `file file-icon icon-${ext}`;
+
+        this.previewButton.disabled = !this.isPreviewable(ext);
 
         this.folderPreview.classList.add("cms-hide");
         this.filePreview.classList.remove("cms-hide");

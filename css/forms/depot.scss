@@ -317,6 +317,80 @@
 		}
 	}
 }
+.preview-file {
+	appearance       : none;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-nearwhite));
+	color            : oklch(var(--totalform-text-color));
+	padding          : 0.4rem 1rem;
+	cursor           : pointer;
+	font-size        : 0.85rem;
+	margin           : 0.5rem auto;
+
+	&:hover:not(:disabled) {
+		background-color : oklch(var(--totalform-accent) / 0.1);
+		border-color     : oklch(var(--totalform-accent));
+	}
+	&:disabled {
+		opacity : 0.4;
+		cursor  : not-allowed;
+	}
+}
+
+.cms-modal.preview-dialog {
+	width            : fit-content;
+	height           : fit-content;
+	max-width        : 90vw;
+	max-height       : 85vh;
+	padding          : 1rem;
+	background-color : oklch(var(--totalform-nearwhite));
+	border           : none;
+
+	&::before {
+		content          : "";
+		position         : absolute;
+		top              : 50%;
+		left             : 50%;
+		width            : 2rem;
+		height           : 2rem;
+		translate        : -50% -50%;
+		background-color : oklch(var(--totalform-gray));
+		mask-image       : var(--icon-refresh);
+		mask-repeat      : no-repeat;
+		mask-size        : 2rem;
+		mask-position    : center;
+		animation        : spin 1s linear infinite;
+		z-index          : 0;
+	}
+
+	.preview-content {
+		position : relative;
+		z-index  : 1;
+		display         : flex;
+		align-items     : center;
+		justify-content : center;
+
+		img {
+			max-width  : 88vw;
+			max-height : 83vh;
+			object-fit : contain;
+		}
+		video {
+			max-width  : 88vw;
+			max-height : 83vh;
+		}
+		audio {
+			min-width : 20rem;
+		}
+		.preview-pdf {
+			width  : 88vw;
+			height : 83vh;
+			border : none;
+		}
+	}
+}
+
 .cms-modal {
 	&.folder-add-dialog,
 	&.file-edit-dialog,
@@ -347,4 +421,9 @@
 	.depot-browser-wrapper {
 		max-height : 640px;
 	}
+}
+
+@keyframes spin {
+	from { rotate : 0deg; }
+	to   { rotate : 360deg; }
 }

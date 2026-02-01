@@ -180,7 +180,11 @@ class DepotField extends FormField
 					<div class="file-tags"></div>
 				</div>
 			</div>
+			<button type="button" class="preview-file" disabled>Preview</button>
 		</div>
+		<dialog class="cms-modal preview-dialog">
+			<div class="preview-content"></div>
+		</dialog>
 		HTML;
 	}
 
