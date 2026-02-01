@@ -20,6 +20,7 @@ export default class DepotField extends TotalField {
 
         this.initBrowser();
         this.initActionBar();
+        this.initFilter();
         this.setupProtectDialog();
         this.setupDroplet();
         this.initKeyboardNavigation();
@@ -515,6 +516,57 @@ export default class DepotField extends TotalField {
                 parentFolder.scrollIntoView({block: "nearest"});
             }
         }
+    }
+
+    initFilter() {
+        this.filterInput = this.container.querySelector(".depot-filter");
+        this.filterReset = this.container.querySelector(".depot-filter-reset");
+        if (!this.filterInput) return;
+
+        this.filterInput.addEventListener("input", () => this.filterBrowser());
+        this.filterReset.addEventListener("click", () => {
+            this.filterInput.value = "";
+            this.filterBrowser();
+        });
+    }
+
+    filterBrowser() {
+        const query = this.filterInput.value.toLowerCase();
+        this.filterReset.classList.toggle("cms-hide", query.length === 0);
+
+        const allLi = this.browser.querySelectorAll("li");
+
+        if (query.length === 0) {
+            allLi.forEach(li => li.classList.remove("filtered-out"));
+            return;
+        }
+
+        // First pass: filter file items
+        allLi.forEach(li => {
+            if (this.is_folder(li)) return;
+            const fileEl = li.querySelector(".file");
+            if (!fileEl) return;
+            const match = fileEl.textContent.toLowerCase().includes(query);
+            li.classList.toggle("filtered-out", !match);
+        });
+
+        // Second pass: filter folder items based on whether they have visible children
+        const filterFolders = (container) => {
+            for (const li of container.children) {
+                if (li.tagName !== "LI" || !this.is_folder(li)) continue;
+                const contents = li.querySelector(".folder-contents");
+                if (contents) filterFolders(contents);
+
+                const hasVisible = contents && Array.from(contents.children).some(
+                    child => child.tagName === "LI" && !child.classList.contains("filtered-out")
+                );
+                li.classList.toggle("filtered-out", !hasVisible);
+                if (hasVisible) {
+                    li.querySelector("details")?.setAttribute("open", "");
+                }
+            }
+        };
+        filterFolders(this.browser);
     }
 
     initBrowser() {

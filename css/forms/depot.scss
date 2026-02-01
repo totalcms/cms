@@ -49,6 +49,51 @@
 	flex-grow  : 1;
 }
 
+.depot-filter-wrapper {
+	display       : flex;
+	align-items   : center;
+	border-bottom : 1px solid oklch(var(--totalform-lightgray));
+	padding       : 0.25rem 0.5rem;
+	position      : sticky;
+	top           : 0;
+	z-index       : 1;
+	background    : oklch(var(--totalform-purewhite));
+}
+
+.depot-filter {
+	flex        : 1;
+	border      : none !important;
+	outline     : none !important;
+	box-shadow  : none !important;
+	padding     : 0.25rem 0;
+	font-size   : 0.85rem;
+	background  : transparent;
+	color       : oklch(var(--totalform-text-color));
+
+	&::placeholder {
+		color : oklch(var(--totalform-gray));
+	}
+}
+
+.depot-filter-reset {
+	appearance  : none;
+	border      : none;
+	background  : none;
+	cursor      : pointer;
+	font-size   : 1.1rem;
+	line-height : 1;
+	padding     : 0 0.25rem;
+	color       : oklch(var(--totalform-gray));
+
+	&:hover {
+		color : oklch(var(--totalform-darkgray));
+	}
+}
+
+.filtered-out {
+	display : none !important;
+}
+
 .depot-browser {
 	--depot-line-height : 2rem;
 	user-select         : none;

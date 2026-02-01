@@ -70,9 +70,13 @@ class DepotField extends FormField
 	/** @param array<array<string,mixed>> $files */
 	private function buildBrowser(array $files): string
 	{
+		$filter  = '<div class="depot-filter-wrapper">'
+			. '<input type="text" class="depot-filter" placeholder="Filter files...">'
+			. '<button type="button" class="depot-filter-reset cms-hide">&times;</button>'
+			. '</div>';
 		$browser = HTMLUtils::element('ul', $this->buildFolder($files), ['class' => 'depot-browser']);
 
-		return HTMLUtils::element('div', $browser, ['class' => 'depot-browser-wrapper']);
+		return HTMLUtils::element('div', $filter . $browser, ['class' => 'depot-browser-wrapper']);
 	}
 
 	/** @param array<array<string,mixed>> $files */
