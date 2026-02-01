@@ -16,6 +16,8 @@ export default class DepotField extends TotalField {
         this.filePreview   = this.container.querySelector(".file-preview");
         this.actionbar     = this.container.querySelector(".actionbar");
 
+        this.draggedItems = [];
+
         this.initBrowser();
         this.initActionBar();
         this.setupProtectDialog();
@@ -457,6 +459,128 @@ export default class DepotField extends TotalField {
             folder.addEventListener("click", this.selectFolder.bind(this))
             folder.clickListener = true;
         });
+
+        this.initDragAndDrop();
+    }
+
+    initDragAndDrop() {
+        // Make file <li> elements draggable
+        this.browser.querySelectorAll("li").forEach(li => {
+            if (li.dragInitialized) return;
+            // Only files (li without a details child) are draggable
+            if (this.is_folder(li)) return;
+            li.draggable = true;
+            li.addEventListener("dragstart", this.handleDragStart.bind(this));
+            li.addEventListener("dragend", this.handleDragEnd.bind(this));
+            li.dragInitialized = true;
+        });
+
+        // Drop targets: folder summaries
+        this.folders.forEach(folder => {
+            if (folder.dropInitialized) return;
+            folder.addEventListener("dragover", this.handleFolderDragOver.bind(this));
+            folder.addEventListener("dragleave", this.handleFolderDragLeave.bind(this));
+            folder.addEventListener("drop", (e) => this.handleFolderDrop(e, folder));
+            folder.dropInitialized = true;
+        });
+
+        // Drop target: root browser (drop outside any folder)
+        if (!this.browser.dropInitialized) {
+            this.browser.addEventListener("dragover", (e) => {
+                if (this.draggedItems.length === 0) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+            });
+            this.browser.addEventListener("drop", this.handleRootDrop.bind(this));
+            this.browser.dropInitialized = true;
+        }
+    }
+
+    handleDragStart(event) {
+        const target = event.currentTarget;
+
+        // If the dragged item is already selected, drag all selected files
+        // Otherwise treat it as a single-item drag
+        if (target.classList.contains("selected")) {
+            this.draggedItems = Array.from(this.browser.querySelectorAll("li.selected")).filter(li => !this.is_folder(li));
+        } else {
+            this.draggedItems = [target];
+        }
+
+        this.draggedItems.forEach(item => item.classList.add("dragging"));
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", "");
+    }
+
+    handleDragEnd() {
+        this.draggedItems.forEach(item => item.classList.remove("dragging"));
+        this.draggedItems = [];
+        this.browser.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+    }
+
+    handleFolderDragOver(event) {
+        if (this.draggedItems.length === 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = "move";
+        event.currentTarget.classList.add("drag-over");
+    }
+
+    handleFolderDragLeave(event) {
+        event.currentTarget.classList.remove("drag-over");
+    }
+
+    handleFolderDrop(event, folder) {
+        event.preventDefault();
+        event.stopPropagation();
+        folder.classList.remove("drag-over");
+        if (this.draggedItems.length === 0) return;
+
+        const destPath = folder.dataset.path;
+        const details  = folder.closest("details");
+        const contents = details.querySelector(".folder-contents");
+
+        this.draggedItems.forEach(item => {
+            const sourcePath = item.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+            if (sourcePath === destPath) return;
+
+            const name = this.getFileAttribute(item, "name");
+            contents.appendChild(item);
+
+            if (this.form.isEditMode()) {
+                this.moveFileAPI(name, sourcePath, destPath);
+            }
+        });
+
+        details.setAttribute("open", "");
+        this.clearSelection();
+        this.resetPreview();
+    }
+
+    handleRootDrop(event) {
+        event.preventDefault();
+        if (this.draggedItems.length === 0) return;
+
+        this.draggedItems.forEach(item => {
+            const sourcePath = item.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+            if (sourcePath === "") return;
+
+            const name = this.getFileAttribute(item, "name");
+            this.browser.appendChild(item);
+
+            if (this.form.isEditMode()) {
+                this.moveFileAPI(name, sourcePath, "");
+            }
+        });
+
+        this.clearSelection();
+        this.resetPreview();
+    }
+
+    moveFileAPI(name, sourcePath, destPath) {
+        let api = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}/move`;
+        if (sourcePath.length > 0) api += `?path=${sourcePath}`;
+        this.form.api.postAPI(api, { destination: destPath }, "PUT");
     }
 
     selectAndEditFile(event) {
@@ -469,6 +593,16 @@ export default class DepotField extends TotalField {
     selectFile(event) {
         const file = event.currentTarget;
         const fileParent = file.parentNode;
+        const multiSelect = event.metaKey || event.ctrlKey;
+
+        if (multiSelect) {
+            fileParent.classList.toggle("selected");
+            const selected = this.browser.querySelectorAll("li.selected");
+            if (selected.length === 0) return this.resetPreview();
+            if (selected.length === 1) return this.updatePreview(selected[0]);
+            return;
+        }
+
         // Give the ability to de-select a file by clicking it again
         if (fileParent.classList.contains("selected")) {
             this.clearSelection();

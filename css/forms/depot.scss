@@ -136,6 +136,15 @@
 			gap: 1.5rem;
 		}
 	}
+	li.dragging {
+		opacity : 0.4;
+	}
+	summary.folder.drag-over {
+		background-color : oklch(var(--totalform-accent) / 0.15);
+		outline          : 2px dashed oklch(var(--totalform-accent));
+		outline-offset   : -2px;
+		border-radius    : var(--totalform-radius);
+	}
 	li:has(>details) {
 		padding-left : 0;
 	}
