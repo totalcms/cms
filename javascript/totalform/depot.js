@@ -168,12 +168,40 @@ export default class DepotField extends TotalField {
 
     actionEditFolder(folder) {
         const dialogNode = this.container.querySelector(".folder-edit-dialog");
-        dialogNode.querySelector("[name=name]").value = folder.textContent;
+        const nameInput  = dialogNode.querySelector("[name=name]");
+        const oldName    = folder.textContent;
+        nameInput.value  = oldName;
 
-        const dialog = new Dialog(dialogNode);
+        const dialog = new Dialog(dialogNode, {
+            close : ".close",
+            onClose : () => {
+                const newName = nameInput.value.trim();
+                if (!newName || newName === oldName) return;
+                this.renameFolder(folder, newName);
+            }
+        });
         dialog.open();
+    }
 
-		// TODO: Handle folder rename - make sure folder name is not blank
+    renameFolder(folder, newName) {
+        const oldPath = folder.dataset.path;
+        const parts   = oldPath.split("/");
+        parts[parts.length - 1] = newName;
+        const newPath = parts.join("/");
+
+        // Update DOM: folder name text and data-path
+        folder.textContent  = newName;
+        folder.dataset.path = newPath;
+
+        // Update data-path on all nested folders
+        this.browser.querySelectorAll(`[data-path^="${oldPath}/"]`).forEach(el => {
+            el.dataset.path = newPath + el.dataset.path.slice(oldPath.length);
+        });
+
+        if (this.form.isEditMode()) {
+            const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}/folder/rename?path=${oldPath}`;
+            this.form.api.postAPI(api, { name: newName }, "PUT").then(() => this.saved());
+        }
     }
 
     initEditDialog(node, file = null) {

@@ -66,6 +66,23 @@ class DepotPropertyManager
 		return $this->depot;
 	}
 
+	public function &renameFolder(string $oldPath, string $newName): DepotData
+	{
+		// Split path to find the parent path and the current folder name
+		$parts      = explode('/', trim($oldPath, '/'));
+		$parentPath = count($parts) > 1 ? implode('/', array_slice($parts, 0, -1)) : null;
+
+		$parent = &self::findOrCreateFolderByPath($this->depot->files, $parentPath);
+		foreach ($parent as &$item) {
+			if ($item instanceof FolderData && $item->name === end($parts)) {
+				$item->name = $newName;
+				break;
+			}
+		}
+
+		return $this->depot;
+	}
+
 	/** @param array<string,mixed> $newMeta */
 	public function &patchMeta(string $name, array $newMeta, ?string $subpath = null): DepotData
 	{
