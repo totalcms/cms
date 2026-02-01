@@ -56,6 +56,12 @@ export default class DepotField extends TotalField {
     fileAdded(file) {
         this.form.processFields();
         file.path = this.getPath();
+
+        // Open the target folder so the user can see the upload progress
+        if (file.path.length > 0) {
+            const folder = this.browser.querySelector(`[data-path="${file.path}"]`);
+            if (folder) folder.closest("details")?.setAttribute("open", "");
+        }
 	}
 
     fileUploaded(file, response) {

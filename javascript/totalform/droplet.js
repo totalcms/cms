@@ -282,10 +282,12 @@ export default class Droplet {
 
     // When an error has occurred
     event_error(file, message) {
-        if (typeof(message) === "object") message = message.message;
+        if (typeof(message) === "object") message = message?.error?.message || message?.message || JSON.stringify(message);
         if (file.previewElement) {
             file.previewElement.classList.remove("saving");
             file.previewElement.classList.add("error","dz-error");
+            const status = file.previewElement.querySelector(".dz-status");
+            if (status) status.title = message;
         }
 		if (this.testSet && this.testSet.errors) {
 			console.warn("Pre-Upload Validation Errors:",this.testSet.errors);
