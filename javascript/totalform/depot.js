@@ -20,6 +20,7 @@ export default class DepotField extends TotalField {
         this.initActionBar();
         this.setupProtectDialog();
         this.setupDroplet();
+        this.initKeyboardNavigation();
     }
 
     setupProtectDialog() {
@@ -333,6 +334,109 @@ export default class DepotField extends TotalField {
             });
         } else {
             alert("Folder name entered does not match. Deletion cancelled.");
+        }
+    }
+
+    initKeyboardNavigation() {
+        this.browser.setAttribute("tabindex", "0");
+        this.browser.addEventListener("keydown", this.handleKeyNavigation.bind(this));
+    }
+
+    handleKeyNavigation(event) {
+        const validKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+        if (!validKeys.includes(event.key)) return;
+
+        event.preventDefault();
+
+        const selected = this.getSelected();
+        if (!selected) {
+            const items = this.getNavigableItems();
+            if (items.length > 0) this.selectItem(items[0]);
+            return;
+        }
+
+        switch (event.key) {
+            case "ArrowUp":   this.navigateUp(selected);    break;
+            case "ArrowDown": this.navigateDown(selected);  break;
+            case "ArrowLeft": this.navigateLeft(selected);  break;
+            case "ArrowRight":this.navigateRight(selected); break;
+        }
+    }
+
+    getNavigableItems() {
+        const items = [];
+        const walk = (container) => {
+            for (const li of container.children) {
+                if (li.tagName !== "LI") continue;
+                const folder = li.querySelector(":scope > details > summary.folder");
+                if (folder) {
+                    items.push(folder);
+                    const details = li.querySelector(":scope > details");
+                    if (details && details.hasAttribute("open")) {
+                        const contents = details.querySelector(".folder-contents");
+                        if (contents) walk(contents);
+                    }
+                } else {
+                    items.push(li);
+                }
+            }
+        };
+        walk(this.browser);
+        return items;
+    }
+
+    navigateUp(selected) {
+        const items = this.getNavigableItems();
+        const index = items.indexOf(selected);
+        if (index > 0) {
+            this.selectItem(items[index - 1]);
+            items[index - 1].scrollIntoView({block: "nearest"});
+        }
+    }
+
+    navigateDown(selected) {
+        const items = this.getNavigableItems();
+        const index = items.indexOf(selected);
+        if (index < items.length - 1) {
+            this.selectItem(items[index + 1]);
+            items[index + 1].scrollIntoView({block: "nearest"});
+        }
+    }
+
+    navigateRight(selected) {
+        if (!selected.classList.contains("folder")) return;
+        const details = selected.closest("details");
+        if (!details) return;
+
+        if (!details.hasAttribute("open")) {
+            details.setAttribute("open", "");
+        } else {
+            const contents = details.querySelector(".folder-contents");
+            if (!contents) return;
+            const items = this.getNavigableItems();
+            const index = items.indexOf(selected);
+            if (index < items.length - 1) {
+                this.selectItem(items[index + 1]);
+                items[index + 1].scrollIntoView({block: "nearest"});
+            }
+        }
+    }
+
+    navigateLeft(selected) {
+        if (selected.classList.contains("folder")) {
+            const details = selected.closest("details");
+            if (details && details.hasAttribute("open")) {
+                details.removeAttribute("open");
+                return;
+            }
+        }
+        const parentDetails = selected.closest("details")?.parentElement?.closest("details");
+        if (parentDetails) {
+            const parentFolder = parentDetails.querySelector(":scope > summary.folder");
+            if (parentFolder) {
+                this.selectItem(parentFolder);
+                parentFolder.scrollIntoView({block: "nearest"});
+            }
         }
     }
 
