@@ -162,7 +162,7 @@ export default class DepotField extends TotalField {
 
     actionEditFile(file) {
         const dialogNode = file.querySelector(".file-edit-dialog");
-        const dialog = this.initEditDialog(dialogNode);
+        const dialog = this.initEditDialog(dialogNode, file);
         dialog.open();
     }
 
@@ -176,7 +176,7 @@ export default class DepotField extends TotalField {
 		// TODO: Handle folder rename - make sure folder name is not blank
     }
 
-    initEditDialog(node) {
+    initEditDialog(node, file = null) {
         return new Dialog(node, {
             open  : null,
             close : ".close",
@@ -189,9 +189,26 @@ export default class DepotField extends TotalField {
             },
             onClose : () => {
                 this.dialogOpened = false;
-                // this.updateLabel();
-                // this.totalfield.autosave();
+                if (file) this.autosaveFile(file);
             }
+        });
+    }
+
+    autosaveFile(file) {
+        if (!this.form.isEditMode()) return;
+
+        const name = this.getFileAttribute(file, "name");
+        if (!name) return;
+
+        const path    = file.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+        const data    = this.getFileData(file);
+        let   api     = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+        if (path.length > 0) api += `?path=${path}`;
+
+        this.form.api.postAPI(api, data, "PATCH").then(() => {
+            this.saved();
+        }).catch(error => {
+            console.error("Depot file autosave failed", error);
         });
     }
 

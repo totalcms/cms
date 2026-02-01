@@ -71,13 +71,10 @@ class DepotPropertyManager
 	{
 		// Directly find or create the folder in the specified path and add the file
 		$folder = &self::findOrCreateFolderByPath($this->depot->files, $subpath);
-		foreach ($folder as &$item) {
+		foreach ($folder as $index => &$item) {
 			if ($item->name === $name) {
-				foreach ($newMeta as $key => $value) {
-					if (property_exists($item, $key)) {
-						$item->$key = $value;
-					}
-				}
+				$merged = array_merge($item->transform(), $newMeta);
+				$folder[$index] = new FileData($merged, $item->settings);
 				break;
 			}
 		}
