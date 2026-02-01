@@ -121,6 +121,7 @@ use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
+use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
@@ -346,6 +347,8 @@ return [
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
 
+	DepotBrowserRenderer::class => fn (ContainerInterface $container): DepotBrowserRenderer => new DepotBrowserRenderer(),
+
 	EditionTwigAdapter::class => fn (ContainerInterface $container): EditionTwigAdapter => new EditionTwigAdapter(
 		$container->get(EditionFeatureService::class),
 	),
@@ -373,6 +376,7 @@ return [
 		$container->get(AccessControlService::class),
 		$container->get(ImageCacheService::class),
 		$container->get(GridRenderer::class),
+		$container->get(DepotBrowserRenderer::class),
 		$container->get(DevModeManager::class),
 		$container->get(LicenseStatus::class),
 		$container->get(EditionTwigAdapter::class),
