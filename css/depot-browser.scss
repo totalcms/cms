@@ -48,6 +48,17 @@
 		padding-left: 1.5rem;
 		margin: 0;
 	}
+
+	// Stripe on file items
+	> li.stripe.depot-browser-item {
+		background: oklch(var(--totalform-nearwhite));
+		border-radius: var(--totalform-radius);
+	}
+	// Stripe on folder summary only (not nested contents)
+	> li.stripe > details > summary {
+		background: oklch(var(--totalform-nearwhite));
+		border-radius: var(--totalform-radius);
+	}
 }
 .depot-browser-item {
 	display: grid;
@@ -55,11 +66,6 @@
 	gap: 0 1rem;
 	align-items: baseline;
 	padding: 0.375rem 0.5rem;
-	border-radius: var(--totalform-radius);
-
-	&:nth-child(even) {
-		background: oklch(var(--totalform-nearwhite));
-	}
 	.file {
 		grid-column: 1;
 		text-decoration: none;
@@ -93,24 +99,24 @@
 		white-space: nowrap;
 	}
 	.file-comments {
-		grid-column: 1 / -1;
-		margin: 0.25rem 0 0;
-		font-size: 0.8125rem;
-		color: oklch(var(--totalform-darkgray));
+		grid-column : 1 / -1;
+		margin      : 0.25rem 0 0 1.375rem;
+		font-size   : 0.8125rem;
+		color       : oklch(var(--totalform-darkgray));
 	}
 	.file-tags {
-		grid-column: 1 / -1;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.25rem;
-		margin-top: 0.25rem;
+		grid-column : 1 / -1;
+		display     : flex;
+		flex-wrap   : wrap;
+		gap         : 0.25rem;
+		margin      : 0.25rem 0 0 1.375rem;
 
 		span {
 			font-size: 0.6875rem;
 			padding: 0.125rem 0.5rem;
 			border-radius: 1rem;
-			background: oklch(var(--totalform-icon-bg));
-			color: oklch(var(--totalform-darkgray));
+			background: oklch(var(--totalform-lightgray));
+			color: oklch(var(--totalform-nearblack));
 		}
 	}
 	&.previewable {
@@ -134,18 +140,26 @@
 		list-style: none;
 
 		&::before {
-			content: "\25B6";
+			content: "";
 			display: inline-block;
-			margin-right: 0.5rem;
-			font-size: 0.625rem;
-			transition: transform 0.15s ease;
-		}
-		&:hover {
-			background: oklch(var(--totalform-nearwhite));
+			width: 1rem;
+			height: 1rem;
+			margin-right: 0.375rem;
+			vertical-align: text-bottom;
+			background-color: oklch(var(--totalform-darkgray));
+			mask-image: var(--icon-folder);
+			mask-repeat: no-repeat;
+			mask-position: center;
+			mask-size: contain;
+			-webkit-mask-image: var(--icon-folder);
+			-webkit-mask-repeat: no-repeat;
+			-webkit-mask-position: center;
+			-webkit-mask-size: contain;
 		}
 	}
 	&[open] > summary.folder::before {
-		transform: rotate(90deg);
+		mask-image: var(--icon-folder-open);
+		-webkit-mask-image: var(--icon-folder-open);
 	}
 }
 .depot-browser-preview {

@@ -1234,6 +1234,7 @@ NGINX;
 			'download'   => true,
 			'tags'       => false,
 			'folders'    => true,
+			'humanize'   => true,
 			'class'      => '',
 		], $options);
 

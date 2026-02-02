@@ -44,6 +44,32 @@ function createPreviewElement(ext, url, name) {
 	return null;
 }
 
+function applyStripes(container) {
+	const tree = container.querySelector(".depot-browser-tree");
+	if (!tree) return;
+
+	let index = 0;
+	const walk = (ul) => {
+		for (const li of ul.children) {
+			if (li.tagName !== "LI") continue;
+			if (li.classList.contains("filtered-out")) {
+				li.classList.remove("stripe");
+				continue;
+			}
+			li.classList.toggle("stripe", index % 2 === 1);
+			index++;
+
+			// Only walk into open folder contents
+			const details = li.querySelector(":scope > details");
+			if (details?.open) {
+				const nested = details.querySelector(":scope > .depot-browser-tree");
+				if (nested) walk(nested);
+			}
+		}
+	};
+	walk(tree);
+}
+
 function filterBrowser(container, input, resetBtn) {
 	const query = input.value.toLowerCase();
 	resetBtn?.classList.toggle("cms-hide", query.length === 0);
@@ -53,6 +79,7 @@ function filterBrowser(container, input, resetBtn) {
 
 	if (query.length === 0) {
 		allLi.forEach(li => li.classList.remove("filtered-out"));
+		applyStripes(container);
 		return;
 	}
 
@@ -82,6 +109,7 @@ function filterBrowser(container, input, resetBtn) {
 		}
 	};
 	filterFolders(tree);
+	applyStripes(container);
 }
 
 function initBrowser(container) {
@@ -90,6 +118,14 @@ function initBrowser(container) {
 	const filterReset = container.querySelector(".depot-browser-filter-reset");
 	const dialog      = container.querySelector(".depot-browser-preview");
 	const preview     = dialog?.querySelector(".preview-content");
+
+	// Alternating row stripes
+	applyStripes(container);
+
+	// Re-stripe when folders are toggled
+	container.querySelectorAll("details").forEach(details => {
+		details.addEventListener("toggle", () => applyStripes(container));
+	});
 
 	// Filter
 	if (filterInput) {

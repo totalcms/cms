@@ -75,17 +75,28 @@ class DepotBrowserRenderer
 	): string {
 		$html = '<ul class="depot-browser-tree">';
 
+		// Folders first, then files
+		$folders = [];
+		$items   = [];
 		foreach ($files as $file) {
 			/** @phpstan-ignore function.alreadyNarrowedType */
 			if (!is_array($file)) {
 				continue;
 			}
-			$mime = $file['mime'] ?? '';
-			if ($mime === 'folder') {
-				$html .= $this->buildFolder($file, $path, $id, $options, $downloadUrl, $streamUrl);
+			if (($file['mime'] ?? '') === 'folder') {
+				$folders[] = $file;
 			} else {
-				$html .= $this->buildFile($file, $path, $id, $options, $downloadUrl, $streamUrl);
+				$items[] = $file;
 			}
+		}
+
+		usort($folders, fn (array $a, array $b): int => strcasecmp((string)($a['name'] ?? ''), (string)($b['name'] ?? '')));
+
+		foreach ($folders as $folder) {
+			$html .= $this->buildFolder($folder, $path, $id, $options, $downloadUrl, $streamUrl);
+		}
+		foreach ($items as $file) {
+			$html .= $this->buildFile($file, $path, $id, $options, $downloadUrl, $streamUrl);
 		}
 
 		$html .= '</ul>';
@@ -121,12 +132,14 @@ class DepotBrowserRenderer
 		$dlUrl     = $downloadUrl($id, $fullName, []);
 		$streamSrc = $streamUrl($id, $fullName, []);
 
+		$displayName = $options['humanize'] ? $this->humanizeFilename($name) : $name;
+
 		$html = "<li class=\"depot-browser-item\" data-ext=\"{$ext}\" data-stream-url=\"" . htmlspecialchars($streamSrc, ENT_QUOTES, 'UTF-8') . '">';
 
 		if ($options['download']) {
-			$html .= "<a href=\"" . htmlspecialchars($dlUrl, ENT_QUOTES, 'UTF-8') . "\" class=\"file file-icon icon-{$ext}\" download>{$this->escape($name)}</a>";
+			$html .= "<a href=\"" . htmlspecialchars($dlUrl, ENT_QUOTES, 'UTF-8') . "\" class=\"file file-icon icon-{$ext}\" download=\"{$this->escape($name)}\">{$this->escape($displayName)}</a>";
 		} else {
-			$html .= "<span class=\"file file-icon icon-{$ext}\">{$this->escape($name)}</span>";
+			$html .= "<span class=\"file file-icon icon-{$ext}\">{$this->escape($displayName)}</span>";
 		}
 
 		if ($size > 0) {
@@ -242,6 +255,18 @@ class DepotBrowserRenderer
 		$i     = (int)floor(log($bytes) / log(1024));
 
 		return round($bytes / (1024 ** $i), 1) . ' ' . $sizes[$i];
+	}
+
+	private function humanizeFilename(string $filename): string
+	{
+		// Remove extension
+		$name = pathinfo($filename, PATHINFO_FILENAME);
+		// Replace dashes, underscores, dots with spaces
+		$name = str_replace(['-', '_', '.'], ' ', $name);
+		// Collapse multiple spaces
+		$name = (string)preg_replace('/\s+/', ' ', $name);
+
+		return mb_convert_case(trim($name), MB_CASE_TITLE);
 	}
 
 	private function escape(string $value): string
