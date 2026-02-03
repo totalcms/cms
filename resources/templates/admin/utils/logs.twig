@@ -23,16 +23,21 @@
 	<form id="log-analyzer" class="totalform" data-disabled>
 		<div class="form-field select-field">
 			<label for="logfile">Select Logfile</label>
-			<select name="logfile" id="logfile">
-				{% for log,path in logfiles %}
-					<option value="{{ log }}" {% if activelog == log %}selected{% endif %}>{{ log }}</option>
-				{% endfor %}
-			</select>
+			<div style="display: flex; gap: 0.5rem; align-items: center;">
+				<select name="logfile" id="logfile">
+					{% for log,path in logfiles %}
+						<option value="{{ log }}" {% if activelog == log %}selected{% endif %}>{{ log }}</option>
+					{% endfor %}
+				</select>
+				<a id="log-download" href="/admin/utils/logs/download?logfile={{ activelog }}" class="btn btn-small" title="Download log file">Download</a>
+			</div>
 		</div>
 	</form>
 	<script>
-	document.getElementById('logfile').addEventListener('change',
-		e => document.getElementById('log-analyzer').submit());
+	document.getElementById('logfile').addEventListener('change', function(e) {
+		document.getElementById('log-download').href = '/admin/utils/logs/download?logfile=' + encodeURIComponent(this.value);
+		document.getElementById('log-analyzer').submit();
+	});
 	</script>
 
 

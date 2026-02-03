@@ -16,10 +16,15 @@ export default class DepotField extends TotalField {
         this.filePreview   = this.container.querySelector(".file-preview");
         this.actionbar     = this.container.querySelector(".actionbar");
 
+        this.draggedItems = [];
+
         this.initBrowser();
         this.initActionBar();
+        this.initFilter();
         this.setupProtectDialog();
+        this.setupPreviewDialog();
         this.setupDroplet();
+        this.initKeyboardNavigation();
     }
 
     setupProtectDialog() {
@@ -35,6 +40,81 @@ export default class DepotField extends TotalField {
                 // this.totalfield.autosave();
             }
         });
+    }
+
+    setupPreviewDialog() {
+        this.previewTypes = {
+            image : new Set(['jpg','jpeg','png','gif','webp','svg']),
+            video : new Set(['mp4','webm','ogg']),
+            audio : new Set(['mp3','wav']),
+            pdf   : new Set(['pdf']),
+        };
+        this.previewButton  = this.container.querySelector(".preview-file");
+        this.previewDialog  = this.container.querySelector(".preview-dialog");
+        this.previewContent = this.previewDialog.querySelector(".preview-content");
+
+        this.previewButton.addEventListener("click", () => {
+            const selected = this.getSelected();
+            if (!selected) return;
+
+            const name = this.getFileAttribute(selected, "name");
+            const ext  = name.split(".").pop().toLowerCase();
+            const path = this.getPath();
+            const url  = this.api.buildApiQuery(
+                `/stream/${this.form.collection}/${this.form.id}/${this.property}/${name}`,
+                path.length > 0 ? { path } : {}
+            );
+
+            this.previewContent.innerHTML = "";
+            const el = this.createPreviewElement(ext, url, name);
+            if (!el) return;
+
+            this.previewContent.appendChild(el);
+            this.previewDialog.showModal();
+        });
+
+        this.previewDialog.addEventListener("close", () => {
+            this.previewContent.innerHTML = "";
+        });
+
+        this.previewDialog.addEventListener("click", (e) => {
+            if (e.target === this.previewDialog) this.previewDialog.close();
+        });
+    }
+
+    createPreviewElement(ext, url, name) {
+        if (this.previewTypes.image.has(ext)) {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = name;
+            return img;
+        }
+        if (this.previewTypes.video.has(ext)) {
+            const video = document.createElement("video");
+            video.src = url;
+            video.controls = true;
+            video.autoplay = true;
+            return video;
+        }
+        if (this.previewTypes.audio.has(ext)) {
+            const audio = document.createElement("audio");
+            audio.src = url;
+            audio.controls = true;
+            audio.autoplay = true;
+            return audio;
+        }
+        if (this.previewTypes.pdf.has(ext)) {
+            const obj = document.createElement("object");
+            obj.data = url;
+            obj.type = "application/pdf";
+            obj.className = "preview-pdf";
+            return obj;
+        }
+        return null;
+    }
+
+    isPreviewable(ext) {
+        return Object.values(this.previewTypes).some(s => s.has(ext));
     }
 
     setupDroplet() {
@@ -53,6 +133,12 @@ export default class DepotField extends TotalField {
     fileAdded(file) {
         this.form.processFields();
         file.path = this.getPath();
+
+        // Open the target folder so the user can see the upload progress
+        if (file.path.length > 0) {
+            const folder = this.browser.querySelector(`[data-path="${file.path}"]`);
+            if (folder) folder.closest("details")?.setAttribute("open", "");
+        }
 	}
 
     fileUploaded(file, response) {
@@ -159,36 +245,81 @@ export default class DepotField extends TotalField {
 
     actionEditFile(file) {
         const dialogNode = file.querySelector(".file-edit-dialog");
-        const dialog = this.initEditDialog(dialogNode);
+        const dialog = this.initEditDialog(dialogNode, file);
         dialog.open();
     }
 
     actionEditFolder(folder) {
         const dialogNode = this.container.querySelector(".folder-edit-dialog");
-        dialogNode.querySelector("[name=name]").value = folder.textContent;
+        const nameInput  = dialogNode.querySelector("[name=name]");
+        const oldName    = folder.textContent;
+        nameInput.value  = oldName;
 
-        const dialog = new Dialog(dialogNode);
+        const dialog = new Dialog(dialogNode, {
+            close : ".close",
+            onClose : () => {
+                const newName = nameInput.value.trim();
+                if (!newName || newName === oldName) return;
+                this.renameFolder(folder, newName);
+            }
+        });
         dialog.open();
-
-		// TODO: Handle folder rename - make sure folder name is not blank
     }
 
-    initEditDialog(node) {
+    renameFolder(folder, newName) {
+        const oldPath = folder.dataset.path;
+        const parts   = oldPath.split("/");
+        parts[parts.length - 1] = newName;
+        const newPath = parts.join("/");
+
+        // Update DOM: folder name text and data-path
+        folder.textContent  = newName;
+        folder.dataset.path = newPath;
+
+        // Update data-path on all nested folders
+        this.browser.querySelectorAll(`[data-path^="${oldPath}/"]`).forEach(el => {
+            el.dataset.path = newPath + el.dataset.path.slice(oldPath.length);
+        });
+
+        if (this.form.isEditMode()) {
+            const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}/folder/rename?path=${oldPath}`;
+            this.form.api.postAPI(api, { name: newName }, "PUT").then(() => this.saved());
+        }
+    }
+
+    initEditDialog(node, file = null) {
         return new Dialog(node, {
             open  : null,
             close : ".close",
             onOpen : () => {
-                if (this.dialogOpened) return;
-                this.dialogOpened = true;
-                // Setup Accordion
-                const details = Array.from(node.querySelectorAll("details"));
-                if (details.length > 0) new Details(details);
+                // Setup Accordion (once per dialog node)
+                if (!node.accordionInitialized) {
+                    const details = Array.from(node.querySelectorAll("details"));
+                    if (details.length > 0) new Details(details);
+                    node.accordionInitialized = true;
+                }
             },
             onClose : () => {
-                this.dialogOpened = false;
-                // this.updateLabel();
-                // this.totalfield.autosave();
+                if (file) this.autosaveFile(file);
             }
+        });
+    }
+
+    autosaveFile(file) {
+        if (!this.form.isEditMode()) return;
+
+        const name = this.getFileAttribute(file, "name");
+        if (!name) return;
+
+        const path    = file.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+        const data    = this.getFileData(file);
+        let   api     = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+        if (path.length > 0) api += `?path=${path}`;
+
+        this.form.api.postAPI(api, data, "PATCH").then(() => {
+            this.saved();
+        }).catch(error => {
+            console.error("Depot file autosave failed", error);
         });
     }
 
@@ -297,9 +428,30 @@ export default class DepotField extends TotalField {
 	}
 
     actionTrash() {
+        const allSelected = Array.from(this.browser.querySelectorAll("li.selected"));
+        if (allSelected.length > 1) {
+            return this.trashFiles(allSelected);
+        }
         const selected = this.getSelected();
         const type     = selected.classList.contains("folder") ? "folder" : "file";
         return type === "file" ? this.trashFile(selected) : this.trashFolder(selected);
+    }
+
+    trashFiles(files) {
+        const count = files.length;
+        if (!confirm(`Are you sure that you want to delete ${count} files? This cannot be undone.`)) return;
+
+        files.forEach(file => {
+            const name = this.getFileAttribute(file, "name");
+            const path = file.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+
+            let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+            if (path.length > 0) deleteApi += `?path=${path}`;
+
+            this.form.api.postAPI(deleteApi, "", "DELETE").then(() => file.remove());
+        });
+
+        this.resetPreview();
     }
 
     trashFile(file) {
@@ -336,6 +488,157 @@ export default class DepotField extends TotalField {
         }
     }
 
+    initKeyboardNavigation() {
+        this.browser.setAttribute("tabindex", "0");
+        this.browser.addEventListener("keydown", this.handleKeyNavigation.bind(this));
+    }
+
+    handleKeyNavigation(event) {
+        const validKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Delete", "Backspace"];
+        if (!validKeys.includes(event.key)) return;
+
+        event.preventDefault();
+
+        const selected = this.getSelected();
+        if (!selected) {
+            const items = this.getNavigableItems();
+            if (items.length > 0) this.selectItem(items[0]);
+            return;
+        }
+
+        switch (event.key) {
+            case "ArrowUp":   this.navigateUp(selected);    break;
+            case "ArrowDown": this.navigateDown(selected);  break;
+            case "ArrowLeft": this.navigateLeft(selected);  break;
+            case "ArrowRight":this.navigateRight(selected); break;
+            case "Enter":     this.actionEdit();             break;
+            case "Delete":
+            case "Backspace": this.actionTrash();            break;
+        }
+    }
+
+    getNavigableItems() {
+        const items = [];
+        const walk = (container) => {
+            for (const li of container.children) {
+                if (li.tagName !== "LI") continue;
+                const folder = li.querySelector(":scope > details > summary.folder");
+                if (folder) {
+                    items.push(folder);
+                    const details = li.querySelector(":scope > details");
+                    if (details && details.hasAttribute("open")) {
+                        const contents = details.querySelector(".folder-contents");
+                        if (contents) walk(contents);
+                    }
+                } else {
+                    items.push(li);
+                }
+            }
+        };
+        walk(this.browser);
+        return items;
+    }
+
+    navigateUp(selected) {
+        const items = this.getNavigableItems();
+        const index = items.indexOf(selected);
+        if (index > 0) {
+            this.selectItem(items[index - 1]);
+            items[index - 1].scrollIntoView({block: "nearest"});
+        }
+    }
+
+    navigateDown(selected) {
+        const items = this.getNavigableItems();
+        const index = items.indexOf(selected);
+        if (index < items.length - 1) {
+            this.selectItem(items[index + 1]);
+            items[index + 1].scrollIntoView({block: "nearest"});
+        }
+    }
+
+    navigateRight(selected) {
+        if (!selected.classList.contains("folder")) return;
+        const details = selected.closest("details");
+        if (!details) return;
+
+        if (!details.hasAttribute("open")) {
+            details.setAttribute("open", "");
+        } else {
+            const contents = details.querySelector(".folder-contents");
+            if (!contents) return;
+            const items = this.getNavigableItems();
+            const index = items.indexOf(selected);
+            if (index < items.length - 1) {
+                this.selectItem(items[index + 1]);
+                items[index + 1].scrollIntoView({block: "nearest"});
+            }
+        }
+    }
+
+    navigateLeft(selected) {
+        if (selected.classList.contains("folder")) {
+            const details = selected.closest("details");
+            if (details && details.hasAttribute("open")) {
+                details.removeAttribute("open");
+                return;
+            }
+        }
+        const parentDetails = selected.closest("details")?.parentElement?.closest("details");
+        if (parentDetails) {
+            const parentFolder = parentDetails.querySelector(":scope > summary.folder");
+            if (parentFolder) {
+                this.selectItem(parentFolder);
+                parentFolder.scrollIntoView({block: "nearest"});
+            }
+        }
+    }
+
+    initFilter() {
+        this.filterInput = this.container.querySelector(".depot-filter");
+        if (!this.filterInput) return;
+
+        this.filterInput.addEventListener("input", () => this.filterBrowser());
+        this.filterInput.addEventListener("search", () => this.filterBrowser());
+    }
+
+    filterBrowser() {
+        const query = this.filterInput.value.toLowerCase();
+        const allLi = this.browser.querySelectorAll("li");
+
+        if (query.length === 0) {
+            allLi.forEach(li => li.classList.remove("filtered-out"));
+            return;
+        }
+
+        // First pass: filter file items
+        allLi.forEach(li => {
+            if (this.is_folder(li)) return;
+            const fileEl = li.querySelector(".file");
+            if (!fileEl) return;
+            const match = fileEl.textContent.toLowerCase().includes(query);
+            li.classList.toggle("filtered-out", !match);
+        });
+
+        // Second pass: filter folder items based on whether they have visible children
+        const filterFolders = (container) => {
+            for (const li of container.children) {
+                if (li.tagName !== "LI" || !this.is_folder(li)) continue;
+                const contents = li.querySelector(".folder-contents");
+                if (contents) filterFolders(contents);
+
+                const hasVisible = contents && Array.from(contents.children).some(
+                    child => child.tagName === "LI" && !child.classList.contains("filtered-out")
+                );
+                li.classList.toggle("filtered-out", !hasVisible);
+                if (hasVisible) {
+                    li.querySelector("details")?.setAttribute("open", "");
+                }
+            }
+        };
+        filterFolders(this.browser);
+    }
+
     initBrowser() {
         this.files   = this.browser.querySelectorAll(".file");
         this.folders = this.browser.querySelectorAll(".folder");
@@ -353,6 +656,128 @@ export default class DepotField extends TotalField {
             folder.addEventListener("click", this.selectFolder.bind(this))
             folder.clickListener = true;
         });
+
+        this.initDragAndDrop();
+    }
+
+    initDragAndDrop() {
+        // Make file <li> elements draggable
+        this.browser.querySelectorAll("li").forEach(li => {
+            if (li.dragInitialized) return;
+            // Only files (li without a details child) are draggable
+            if (this.is_folder(li)) return;
+            li.draggable = true;
+            li.addEventListener("dragstart", this.handleDragStart.bind(this));
+            li.addEventListener("dragend", this.handleDragEnd.bind(this));
+            li.dragInitialized = true;
+        });
+
+        // Drop targets: folder summaries
+        this.folders.forEach(folder => {
+            if (folder.dropInitialized) return;
+            folder.addEventListener("dragover", this.handleFolderDragOver.bind(this));
+            folder.addEventListener("dragleave", this.handleFolderDragLeave.bind(this));
+            folder.addEventListener("drop", (e) => this.handleFolderDrop(e, folder));
+            folder.dropInitialized = true;
+        });
+
+        // Drop target: root browser (drop outside any folder)
+        if (!this.browser.dropInitialized) {
+            this.browser.addEventListener("dragover", (e) => {
+                if (this.draggedItems.length === 0) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+            });
+            this.browser.addEventListener("drop", this.handleRootDrop.bind(this));
+            this.browser.dropInitialized = true;
+        }
+    }
+
+    handleDragStart(event) {
+        const target = event.currentTarget;
+
+        // If the dragged item is already selected, drag all selected files
+        // Otherwise treat it as a single-item drag
+        if (target.classList.contains("selected")) {
+            this.draggedItems = Array.from(this.browser.querySelectorAll("li.selected")).filter(li => !this.is_folder(li));
+        } else {
+            this.draggedItems = [target];
+        }
+
+        this.draggedItems.forEach(item => item.classList.add("dragging"));
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", "");
+    }
+
+    handleDragEnd() {
+        this.draggedItems.forEach(item => item.classList.remove("dragging"));
+        this.draggedItems = [];
+        this.browser.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+    }
+
+    handleFolderDragOver(event) {
+        if (this.draggedItems.length === 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = "move";
+        event.currentTarget.classList.add("drag-over");
+    }
+
+    handleFolderDragLeave(event) {
+        event.currentTarget.classList.remove("drag-over");
+    }
+
+    handleFolderDrop(event, folder) {
+        event.preventDefault();
+        event.stopPropagation();
+        folder.classList.remove("drag-over");
+        if (this.draggedItems.length === 0) return;
+
+        const destPath = folder.dataset.path;
+        const details  = folder.closest("details");
+        const contents = details.querySelector(".folder-contents");
+
+        this.draggedItems.forEach(item => {
+            const sourcePath = item.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+            if (sourcePath === destPath) return;
+
+            const name = this.getFileAttribute(item, "name");
+            contents.appendChild(item);
+
+            if (this.form.isEditMode()) {
+                this.moveFileAPI(name, sourcePath, destPath);
+            }
+        });
+
+        details.setAttribute("open", "");
+        this.clearSelection();
+        this.resetPreview();
+    }
+
+    handleRootDrop(event) {
+        event.preventDefault();
+        if (this.draggedItems.length === 0) return;
+
+        this.draggedItems.forEach(item => {
+            const sourcePath = item.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
+            if (sourcePath === "") return;
+
+            const name = this.getFileAttribute(item, "name");
+            this.browser.appendChild(item);
+
+            if (this.form.isEditMode()) {
+                this.moveFileAPI(name, sourcePath, "");
+            }
+        });
+
+        this.clearSelection();
+        this.resetPreview();
+    }
+
+    moveFileAPI(name, sourcePath, destPath) {
+        let api = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}/move`;
+        if (sourcePath.length > 0) api += `?path=${sourcePath}`;
+        this.form.api.postAPI(api, { destination: destPath }, "PUT");
     }
 
     selectAndEditFile(event) {
@@ -365,6 +790,16 @@ export default class DepotField extends TotalField {
     selectFile(event) {
         const file = event.currentTarget;
         const fileParent = file.parentNode;
+        const multiSelect = event.metaKey || event.ctrlKey;
+
+        if (multiSelect) {
+            fileParent.classList.toggle("selected");
+            const selected = this.browser.querySelectorAll("li.selected");
+            if (selected.length === 0) return this.resetPreview();
+            if (selected.length === 1) return this.updatePreview(selected[0]);
+            return;
+        }
+
         // Give the ability to de-select a file by clicking it again
         if (fileParent.classList.contains("selected")) {
             this.clearSelection();
@@ -437,6 +872,8 @@ export default class DepotField extends TotalField {
         });
 
         this.filePreview.querySelector(".file-icon").className = `file file-icon icon-${ext}`;
+
+        this.previewButton.disabled = !this.isPreviewable(ext);
 
         this.folderPreview.classList.add("cms-hide");
         this.filePreview.classList.remove("cms-hide");

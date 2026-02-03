@@ -17,6 +17,7 @@ use TotalCMS\Support\Config;
 class PersistentLoginService
 {
 	public const PERSISTENT_COOKIE_NAME = 'tcms_persistent_token';
+	private const GRACE_PERIOD_SECONDS  = 60;
 
 	private readonly string $tokenDir;
 	private readonly LoggerInterface $logger;
@@ -31,7 +32,7 @@ class PersistentLoginService
 		if (!is_dir($this->tokenDir)) {
 			@mkdir($this->tokenDir, 0755, true);
 		}
-		$this->logger = $loggerFactory->addFileHandler('totalcms-access.log')->createLogger('persistent-login');
+		$this->logger = $loggerFactory->addFileHandler('access.log')->createLogger('persistent-login');
 	}
 
 	/**
@@ -149,23 +150,41 @@ class PersistentLoginService
 		[$selector, $token] = $parts;
 		$tokenFile          = $this->tokenDir . '/' . $selector . '.json';
 
-		// Check if token file exists
-		if (!file_exists($tokenFile)) {
-			$this->logger->debug('Persistent token file not found', ['selector' => $selector]);
-			$this->clearPersistentCookie();
+		// Check if token file exists (also check grace file from concurrent rotation)
+		$graceFile = $this->tokenDir . '/' . $selector . '.grace.json';
+		$useGrace  = false;
 
-			return false;
+		if (!file_exists($tokenFile)) {
+			if (file_exists($graceFile)) {
+				$useGrace = true;
+			} else {
+				// Don't clear the cookie - the file may have been rotated by a
+				// concurrent request that already set a new cookie via Set-Cookie header.
+				$this->logger->debug('Persistent token file not found (possible concurrent rotation)', ['selector' => $selector]);
+
+				return false;
+			}
 		}
 
 		// Load and validate token data
-		$tokenFileContents = file_get_contents($tokenFile);
+		$readFile          = $useGrace ? $graceFile : $tokenFile;
+		$tokenFileContents = file_get_contents($readFile);
 		if ($tokenFileContents === false) {
 			$this->logger->warning('Failed to read persistent token file', ['selector' => $selector]);
-			$this->clearPersistentToken($selector);
 
 			return false;
 		}
 		$tokenData = json_decode($tokenFileContents, true);
+
+		// If using grace file, check grace period hasn't expired
+		if ($useGrace) {
+			$graceUntil = $tokenData['grace_until'] ?? 0;
+			if (time() > $graceUntil) {
+				$this->logger->debug('Grace period expired for rotated token', ['selector' => $selector]);
+
+				return false;
+			}
+		}
 
 		if (!$tokenData || !$this->isValidTokenData($tokenData)) {
 			$this->logger->warning('Invalid persistent token data structure', ['selector' => $selector]);
@@ -228,19 +247,18 @@ class PersistentLoginService
 			'selector' => $selector,
 		]);
 
-		// Token rotation: Create new token FIRST, only delete old if successful
+		// Token rotation: Create new token FIRST, move old to grace period
 		$newSelector = $this->createPersistentToken();
 
 		if ($newSelector !== null) {
-			// New token created successfully, safe to delete old one
-			$this->clearPersistentTokenFile($selector);
+			// Move old token to grace file so concurrent requests can still use it
+			$this->moveToGrace($selector);
 			$this->logger->debug('Token rotation complete', [
 				'old_selector' => $selector,
 				'new_selector' => $newSelector,
 			]);
 		} else {
 			// New token failed - keep old token active (don't delete it)
-			// User remains logged in, but next restoration will use same token
 			$this->logger->warning('Token rotation failed, keeping old token', ['selector' => $selector]);
 		}
 
@@ -315,8 +333,22 @@ class PersistentLoginService
 				continue;
 			}
 			$tokenData = json_decode($fileContents, true);
-			if ($tokenData && isset($tokenData['expires_at']) && $now > $tokenData['expires_at']) {
-				unlink($file);
+			if (!$tokenData) {
+				continue;
+			}
+
+			// Clean up expired grace files
+			if (str_contains($file, '.grace.json')) {
+				$graceUntil = $tokenData['grace_until'] ?? 0;
+				if ($now > $graceUntil) {
+					@unlink($file);
+				}
+				continue;
+			}
+
+			// Clean up expired token files
+			if (isset($tokenData['expires_at']) && $now > $tokenData['expires_at']) {
+				@unlink($file);
 			}
 		}
 	}
@@ -337,6 +369,43 @@ class PersistentLoginService
 		}
 
 		return true;
+	}
+
+	/**
+	 * Move a token file to grace status for concurrent request handling.
+	 */
+	private function moveToGrace(string $selector): void
+	{
+		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
+		$graceFile = $this->tokenDir . '/' . $selector . '.grace.json';
+
+		if (!file_exists($tokenFile)) {
+			return;
+		}
+
+		$fileContents = file_get_contents($tokenFile);
+		if ($fileContents === false) {
+			@unlink($tokenFile);
+
+			return;
+		}
+
+		$tokenData = json_decode($fileContents, true);
+		if (!is_array($tokenData)) {
+			@unlink($tokenFile);
+
+			return;
+		}
+
+		$tokenData['grace_until'] = time() + self::GRACE_PERIOD_SECONDS;
+
+		try {
+			file_put_contents($graceFile, json_encode($tokenData, JSON_THROW_ON_ERROR));
+		} catch (\JsonException) {
+			// Grace file failed, just delete the old token
+		}
+
+		@unlink($tokenFile);
 	}
 
 	/**

@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
@@ -18,6 +19,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -29,6 +31,8 @@ use TotalCMS\Support\Config;
  */
 readonly class DualAuthMiddleware implements MiddlewareInterface
 {
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private ApiKeyAuthenticator $authenticator,
 		private JsonRenderer $jsonRenderer,
@@ -40,7 +44,9 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private CollectionFetcher $collectionFetcher,
 		private OperationDetector $operationDetector,
 		private EditionFeatureService $editionFeatures,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory->addFileHandler('access.log')->createLogger('dual-auth-middleware');
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -97,6 +103,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		}
 
 		// No API key provided, fall back to session authentication
+		$this->logger->debug('No API key, falling back to session auth', ['path' => $request->getUri()->getPath()]);
+
 		return $this->sessionAuth($request, $handler);
 	}
 
@@ -110,10 +118,19 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// Try to restore from persistent login if not authenticated
 		if (!$this->accessManager->sessionHasUser()) {
+			$hasCookie = $this->persistentLoginService->hasPersistentCookie();
+			$this->logger->debug('No session user in dual auth', [
+				'has_persistent_cookie' => $hasCookie,
+				'path'                  => $request->getUri()->getPath(),
+			]);
+
 			$restored = $this->persistentLoginService->restoreFromPersistentToken();
 			if (!$restored) {
+				$this->logger->debug('Persistent restore failed in dual auth');
+
 				return $this->redirectToLogin($request);
 			}
+			$this->logger->debug('Session restored from persistent token in dual auth');
 		}
 
 		// Check if user is logged in (any auth collection)

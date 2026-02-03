@@ -83,6 +83,17 @@ class PropertyRepository extends StorageRepository
 		];
 	}
 
+	public function renameFolder(string $collection, string $objectID, string $property, string $oldPath, string $newName): bool
+	{
+		$parts      = explode('/', trim($oldPath, '/'));
+		$parentPath = count($parts) > 1 ? implode('/', array_slice($parts, 0, -1)) : null;
+
+		$oldDir = PathUtils::buildPath($collection, $objectID, $property, end($parts), $parentPath);
+		$newDir = PathUtils::buildPath($collection, $objectID, $property, $newName, $parentPath);
+
+		return $this->filesystem->move($oldDir, $newDir);
+	}
+
 	public function moveFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null, ?string $newpath = null): bool
 	{
 		$path    = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);

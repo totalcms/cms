@@ -49,6 +49,58 @@
 	flex-grow  : 1;
 }
 
+.depot-filter-wrapper {
+	display       : flex;
+	align-items   : center;
+	// border-bottom : 1px solid oklch(var(--totalform-lightgray));
+	padding       : 0;
+	position      : sticky;
+	top           : 0;
+	z-index       : 1;
+	background    : oklch(var(--totalform-purewhite));
+
+	&::before {
+		content          : '';
+		position         : absolute;
+		left             : 0.5rem;
+		top              : 50%;
+		transform        : translateY(-50%);
+		width            : 14px;
+		height           : 14px;
+		background-color : oklch(var(--totalform-mediumgray));
+		mask-image       : var(--icon-filter);
+		mask-repeat      : no-repeat;
+		mask-size        : 14px;
+		mask-position    : center;
+		pointer-events   : none;
+		transition       : background-color 200ms ease-in-out;
+	}
+
+	&:has(input:hover)::before,
+	&:has(input:focus)::before {
+		background-color : oklch(var(--totalform-darkgray));
+	}
+}
+
+.depot-filter {
+	flex        : 1;
+	border      : none !important;
+	outline     : none !important;
+	box-shadow  : none !important;
+	padding     : 0.25rem 0.25rem 0.25rem 2.25rem !important;
+	font-size   : 0.85rem;
+	background  : transparent;
+	color       : oklch(var(--totalform-text-color));
+
+	&::placeholder {
+		color : oklch(var(--totalform-gray));
+	}
+}
+
+.filtered-out {
+	display : none !important;
+}
+
 .depot-browser {
 	--depot-line-height : 2rem;
 	user-select         : none;
@@ -60,10 +112,10 @@
 	overflow-x          : hidden;
 	margin              : 0 !important;
 	background          : repeating-linear-gradient(to bottom,
-		transparent 0,
-		transparent var(--depot-line-height),
+		oklch(var(--totalform-nearwhite)) 0,
 		oklch(var(--totalform-nearwhite)) var(--depot-line-height),
-		oklch(var(--totalform-nearwhite)) calc(var(--depot-line-height) * 2)
+		transparent var(--depot-line-height),
+		transparent calc(var(--depot-line-height) * 2)
 	);
 
 	.selected {
@@ -135,6 +187,15 @@
 			grid-template-columns : 1fr auto;
 			gap: 1.5rem;
 		}
+	}
+	li.dragging {
+		opacity : 0.4;
+	}
+	summary.folder.drag-over {
+		background-color : oklch(var(--totalform-accent) / 0.15);
+		outline          : 2px dashed oklch(var(--totalform-accent));
+		outline-offset   : -2px;
+		border-radius    : var(--totalform-radius);
 	}
 	li:has(>details) {
 		padding-left : 0;
@@ -241,6 +302,82 @@
 		}
 	}
 }
+.preview-file {
+	appearance       : none;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-nearwhite));
+	color            : oklch(var(--totalform-text-color));
+	padding          : 0.4rem 1rem;
+	cursor           : pointer;
+	font-size        : 0.85rem;
+	margin           : 0.5rem auto;
+
+	&:hover:not(:disabled) {
+		background-color : oklch(var(--totalform-accent) / 0.1);
+		border-color     : oklch(var(--totalform-accent));
+	}
+	&:disabled {
+		opacity : 0.4;
+		cursor  : not-allowed;
+	}
+}
+
+.cms-modal.preview-dialog {
+	width            : fit-content;
+	height           : fit-content;
+	max-width        : 90vw;
+	max-height       : 85vh;
+	padding          : 1rem;
+	background-color : oklch(var(--totalform-nearwhite));
+	border           : none;
+
+	&::before {
+		content          : "";
+		position         : absolute;
+		top              : 50%;
+		left             : 50%;
+		width            : 2rem;
+		height           : 2rem;
+		translate        : -50% -50%;
+		background-color : oklch(var(--totalform-gray));
+		mask-image       : var(--icon-refresh);
+		mask-repeat      : no-repeat;
+		mask-size        : 2rem;
+		mask-position    : center;
+		z-index          : 0;
+	}
+	&[open]::before {
+		animation        : spin 1s linear infinite;
+	}
+
+	.preview-content {
+		position : relative;
+		z-index  : 1;
+		display         : flex;
+		align-items     : center;
+		justify-content : center;
+
+		img {
+			max-width  : 88vw;
+			max-height : 83vh;
+			object-fit : contain;
+		}
+		video {
+			max-width  : 88vw;
+			max-height : 83vh;
+		}
+		audio {
+			min-width : 20rem;
+		}
+		.preview-pdf {
+			width  : 88vw;
+			height : 83vh;
+			border : none;
+		}
+	}
+}
+
 .cms-modal {
 	&.folder-add-dialog,
 	&.file-edit-dialog,
@@ -271,4 +408,9 @@
 	.depot-browser-wrapper {
 		max-height : 640px;
 	}
+}
+
+@keyframes spin {
+	from { rotate : 0deg; }
+	to   { rotate : 360deg; }
 }

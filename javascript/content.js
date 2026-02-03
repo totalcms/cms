@@ -1,5 +1,6 @@
 import Pagination from './pagination.js';
 import initExternalLinks from './external-links.js';
+import initDepotBrowsers from './depot-browser.js';
 import './mailto-decoder.js';
 
 document.addEventListener("DOMContentLoaded", e => {
@@ -7,6 +8,7 @@ document.addEventListener("DOMContentLoaded", e => {
 	paginations.forEach(pagination => new Pagination(pagination));
 
 	initExternalLinks();
+	initDepotBrowsers();
 
 	// This should be moved to a content.js file
 	const embeds = Array.from(document.getElementsByClassName("cms-video-embed"));

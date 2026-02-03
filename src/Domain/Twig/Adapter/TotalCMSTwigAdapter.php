@@ -35,6 +35,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
@@ -93,6 +94,7 @@ class TotalCMSTwigAdapter
 		private readonly AccessControlService $accessControl,
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
+		private readonly DepotBrowserRenderer $depotBrowserRenderer,
 		private readonly DevModeManager $devModeManager,
 		public LicenseStatus $license,
 		public EditionTwigAdapter $edition,
@@ -1214,6 +1216,49 @@ NGINX;
 		$files = $this->data($options['collection'], $id, $options['property']);
 
 		return is_array($files) ? $files : [];
+	}
+
+	/**
+	 * Render a public depot file browser component.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function depotBrowser(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'depot',
+			'property'   => 'depot',
+			'filter'     => false,
+			'preview'    => false,
+			'comments'   => false,
+			'download'   => true,
+			'tags'       => false,
+			'folders'    => true,
+			'humanize'   => true,
+			'class'      => '',
+		], $options);
+
+		$collection = $options['collection'];
+		$property   = $options['property'];
+
+		$depot = $this->data($collection, $id, $property);
+		if (!is_array($depot)) {
+			return '';
+		}
+
+		$downloadUrl = fn (string $objId, string $name, array $opts): string => $this->depotDownload(
+			$objId,
+			$name,
+			array_merge(['collection' => $collection, 'property' => $property], $opts),
+		);
+
+		$streamUrl = fn (string $objId, string $name, array $opts): string => $this->depotStream(
+			$objId,
+			$name,
+			array_merge(['collection' => $collection, 'property' => $property], $opts),
+		);
+
+		return $this->depotBrowserRenderer->render($id, $depot, $options, $downloadUrl, $streamUrl);
 	}
 
 	/** @param array<string,string> $getData */

@@ -779,6 +779,15 @@ readonly class TotalFormFactory
 	 * @param array<string,mixed> $formOptions
 	 * @param array<string,mixed> $fieldOptions
 	 */
+	public function depotDrop(string $id, array $formOptions = [], array $fieldOptions = []): string
+	{
+		return $this->singleFieldFormBuilder($id, 'depot', 'depot', 'depotDrop', $formOptions, $fieldOptions);
+	}
+
+	/**
+	 * @param array<string,mixed> $formOptions
+	 * @param array<string,mixed> $fieldOptions
+	 */
 	public function number(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		return $this->singleFieldFormBuilder($id, 'number', 'number', 'number', $formOptions, $fieldOptions);

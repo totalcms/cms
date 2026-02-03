@@ -86,6 +86,13 @@ readonly class ResetPasswordSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
+		// Check for custom redirect URL
+		$redirect = trim((string)($data['redirect'] ?? ''));
+
+		if ($redirect !== '') {
+			return $response->withStatus(302)->withHeader('Location', $redirect);
+		}
+
 		// Build login URL
 		$loginUrl = $router->urlFor('login');
 		if ($collection !== ($this->config->auth['collection'] ?? 'auth')) {

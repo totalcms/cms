@@ -236,7 +236,7 @@ export default class DepotDroplet
     }
     // When an error has occurred
     event_error(file, message) {
-        if (typeof(message) === "object") message = message.message;
+        if (typeof(message) === "object") message = message?.error?.message || message?.message || JSON.stringify(message);
         file.previewElement.classList.remove("saving");
         file.previewElement.classList.add("error","dz-error");
 		if (this.testSet && this.testSet.errors) {
@@ -246,6 +246,8 @@ export default class DepotDroplet
 		if (!message) {
 			console.error("Undefined Droplet Error");
 		}
+		const status = file.previewElement.querySelector(".dz-status");
+		if (status) status.title = message;
 		this.field.error(message);
     }
 

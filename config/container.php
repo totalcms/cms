@@ -121,6 +121,7 @@ use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
+use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
@@ -196,6 +197,13 @@ return [
 		}
 		if (isset($sessionConfig['gc_maxlifetime'])) {
 			ini_set('session.gc_maxlifetime', (string)$sessionConfig['gc_maxlifetime']);
+		}
+
+		// Set the odan/session 'lifetime' option to match cookie_lifetime.
+		// Without this, odan/session defaults to 7200s (2 hours) for the session
+		// cookie, causing premature session expiry regardless of gc_maxlifetime.
+		if (isset($sessionConfig['cookie_lifetime']) && !isset($sessionConfig['lifetime'])) {
+			$sessionConfig['lifetime'] = (int)$sessionConfig['cookie_lifetime'];
 		}
 
 		return new PhpSession($sessionConfig);
@@ -339,6 +347,8 @@ return [
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
 
+	DepotBrowserRenderer::class => fn (ContainerInterface $container): DepotBrowserRenderer => new DepotBrowserRenderer(),
+
 	EditionTwigAdapter::class => fn (ContainerInterface $container): EditionTwigAdapter => new EditionTwigAdapter(
 		$container->get(EditionFeatureService::class),
 	),
@@ -366,6 +376,7 @@ return [
 		$container->get(AccessControlService::class),
 		$container->get(ImageCacheService::class),
 		$container->get(GridRenderer::class),
+		$container->get(DepotBrowserRenderer::class),
 		$container->get(DevModeManager::class),
 		$container->get(LicenseStatus::class),
 		$container->get(EditionTwigAdapter::class),
@@ -416,6 +427,7 @@ return [
 		$container->get(Config::class),
 		$container->get(AccessManager::class),
 		$container->get(PersistentLoginService::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	CollectionAccessMiddleware::class => fn (ContainerInterface $container): CollectionAccessMiddleware => new CollectionAccessMiddleware(

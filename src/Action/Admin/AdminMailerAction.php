@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 readonly class AdminMailerAction
@@ -12,6 +13,7 @@ readonly class AdminMailerAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private CollectionFetcher $collectionFetcher,
+		private ObjectFetcher $objectFetcher,
 	) {
 	}
 
@@ -21,15 +23,28 @@ readonly class AdminMailerAction
 		// Ensure mailer collection exists
 		$this->collectionFetcher->fetchOrCreateReserved('mailer');
 
-		// Handle GET requests for the mailer page
-		return $this->twigRenderer->template($response, 'admin/mailer.twig', [
+		$id           = $args['id'] ?? '';
+		$templateData = [
 			'url' => [
 				'path'       => $request->getUri()->getPath(),
 				'query'      => $request->getUri()->getQuery(),
 				'page'       => 'mailer',
-				'id'         => $args['id'] ?? '',
+				'id'         => $id,
 				'collection' => 'mailer',
 			],
-		]);
+		];
+
+		// Handle POST request for object duplication
+		if ($request->getMethod() === 'POST' && $id === 'new') {
+			$postData = (array)$request->getParsedBody();
+
+			if (isset($postData['duplicate']) && is_string($postData['duplicate'])) {
+				$duplicateId                   = $postData['duplicate'];
+				$objectToDuplicate             = $this->objectFetcher->fetchObject('mailer', $duplicateId);
+				$templateData['duplicateData'] = $objectToDuplicate->toArray();
+			}
+		}
+
+		return $this->twigRenderer->template($response, 'admin/mailer.twig', $templateData);
 	}
 }
