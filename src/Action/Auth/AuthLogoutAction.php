@@ -19,6 +19,9 @@ readonly class AuthLogoutAction
 	): ResponseInterface {
 		$this->logoutService->logout();
 
-		return $response->withStatus(302)->withHeader('Location', '/');
+		$queryParams = $request->getQueryParams();
+		$redirect = $queryParams['redirect'] ?? '/';
+
+		return $response->withStatus(302)->withHeader('Location', $redirect);
 	}
 }
