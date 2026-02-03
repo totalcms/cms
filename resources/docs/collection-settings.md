@@ -393,10 +393,10 @@ Defines custom sort orders for the `manualSort` Twig filter. Keys are property n
 
 **Usage in Twig:**
 ```twig
-{% set meta = cms.collection('team') %}
-{% set team = cms.team() | manualSort({
+{# Automatic lookup using collection option #}
+{% set team = cms.objects("team") | manualSort({
     property: 'position',
-    order: meta.manualSort.position | default([]),
+    collection: 'team',
     remainder: {property: 'lastName'}
 }) %}
 ```

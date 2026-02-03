@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig\Extension;
 use Faker\Generator;
 use Odan\Session\FlashInterface;
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Collection\Utilities\ManualSorter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
@@ -12,6 +13,7 @@ use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
@@ -63,9 +65,55 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		return $functions;
 	}
 
-	public function getFilters()
+	public function getFilters(): array
 	{
-		return TotalCMSTwigFilters::getFilters();
+		$filters = TotalCMSTwigFilters::getFilters();
+
+		// manualSort is defined here rather than in TotalCMSTwigFilters because it needs
+		// access to the adapter for the 'collection' option (auto-lookup from metadata).
+		// TotalCMSTwigFilters uses static methods for performance, which can't access
+		// injected dependencies. This is the only filter that requires service access.
+		$filters[] = new TwigFilter('manualSort', $this->manualSort(...), ['is_safe' => ['html']]);
+
+		return $filters;
+	}
+
+	/**
+	 * Sort collection by explicit value order with remainder handling.
+	 *
+	 * This filter is defined here (not in TotalCMSTwigFilters) because the 'collection'
+	 * option requires access to the TotalCMSTwigAdapter to look up collection metadata.
+	 * Static filter methods can't access injected dependencies.
+	 *
+	 * @param array<array<string,mixed>>|null $collection
+	 * @param array<string,mixed> $options Options: property, order, collection, remainder, excludeRemainder
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	private function manualSort(?array $collection, array $options): array
+	{
+		if ($collection === null || $collection === []) {
+			return $collection ?? [];
+		}
+
+		// If 'collection' option is provided, look up the order from collection metadata
+		if (isset($options['collection']) && is_string($options['collection'])) {
+			$collectionId = $options['collection'];
+			$property     = $options['property'] ?? '';
+
+			if ($property !== '') {
+				$meta       = $this->adapter->collection($collectionId);
+				$manualSort = $meta['manualSort'] ?? [];
+
+				if (is_array($manualSort) && isset($manualSort[$property])) {
+					$options['order'] = $manualSort[$property];
+				}
+			}
+		}
+
+		$sorter = new ManualSorter($collection);
+
+		return $sorter->sort($options);
 	}
 
 	public function getTokenParsers()

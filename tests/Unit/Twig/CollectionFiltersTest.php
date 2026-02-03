@@ -1,5 +1,6 @@
 <?php
 
+use TotalCMS\Domain\Collection\Utilities\ManualSorter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
 // ===== Sample Data =====
@@ -532,7 +533,7 @@ test('countBy skips non-array items', function (): void {
 	expect($result)->toBe(['a' => 2, 'b' => 1]);
 });
 
-// ===== manualSort =====
+// ===== manualSort (ManualSorter) =====
 
 test('manualSort orders items by explicit value order', function (): void {
 	$items = [
@@ -542,7 +543,8 @@ test('manualSort orders items by explicit value order', function (): void {
 		['name' => 'Diana', 'role' => 'developer'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property' => 'role',
 		'order'    => ['ceo', 'cfo', 'cmo'],
 	]);
@@ -561,7 +563,8 @@ test('manualSort applies remainder sort to non-matching items', function (): voi
 		['name' => 'Alice', 'role' => 'developer'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property'  => 'role',
 		'order'     => ['ceo'],
 		'remainder' => ['property' => 'name'],
@@ -578,7 +581,8 @@ test('manualSort sub-sorts items with same value by remainder', function (): voi
 		['name' => 'Alice', 'role' => 'vp'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property'  => 'role',
 		'order'     => ['ceo', 'vp'],
 		'remainder' => ['property' => 'name'],
@@ -595,7 +599,8 @@ test('manualSort excludes remainder when excludeRemainder is true', function ():
 		['name' => 'Charlie', 'role' => 'cfo'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property'         => 'role',
 		'order'            => ['ceo', 'cfo'],
 		'excludeRemainder' => true,
@@ -606,16 +611,9 @@ test('manualSort excludes remainder when excludeRemainder is true', function ():
 	expect($names)->toBe(['Bob', 'Charlie']);
 });
 
-test('manualSort handles null collection', function (): void {
-	$result = TotalCMSTwigFilters::manualSort(null, [
-		'property' => 'role',
-		'order'    => ['ceo'],
-	]);
-	expect($result)->toBe([]);
-});
-
 test('manualSort handles empty collection', function (): void {
-	$result = TotalCMSTwigFilters::manualSort([], [
+	$sorter = new ManualSorter([]);
+	$result = $sorter->sort([
 		'property' => 'role',
 		'order'    => ['ceo'],
 	]);
@@ -629,7 +627,8 @@ test('manualSort with no order applies only remainder sort', function (): void {
 		['name' => 'Bob'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property'  => 'role',
 		'remainder' => ['property' => 'name'],
 	]);
@@ -644,7 +643,8 @@ test('manualSort with empty order returns original collection', function (): voi
 		['name' => 'Alice'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property' => 'role',
 		'order'    => [],
 	]);
@@ -660,7 +660,8 @@ test('manualSort orders by id property', function (): void {
 		['id' => 'diana', 'name' => 'Diana'],
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property'         => 'id',
 		'order'            => ['bob', 'alice'],
 		'excludeRemainder' => true,
@@ -678,7 +679,8 @@ test('manualSort handles items with missing property value', function (): void {
 		['name' => 'Charlie'], // no role
 	];
 
-	$result = TotalCMSTwigFilters::manualSort($items, [
+	$sorter = new ManualSorter($items);
+	$result = $sorter->sort([
 		'property'  => 'role',
 		'order'     => ['ceo'],
 		'remainder' => ['property' => 'name'],

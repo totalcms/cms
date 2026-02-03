@@ -581,14 +581,17 @@ The `manualSort` filter allows you to sort collections by an explicit order of v
 |--------|------|-------------|
 | `property` | string | The property to match against the order array |
 | `order` | array | Explicit list of values defining the sort order |
+| `collection` | string | Collection ID to auto-lookup order from collection metadata |
 | `remainder` | object | Sort rule for items not in the order array (same format as sortCollection) |
 | `excludeRemainder` | boolean | If true, items not in the order array are excluded from results |
+
+**Note:** When using `collection`, the filter looks up `manualSort.{property}` from the collection's metadata. You can use either `order` or `collection`, but `order` takes precedence if both are provided.
 
 ### Basic Manual Sort
 
 ```twig
 {# Sort team members by role in specific order #}
-{% set team = cms.team() | manualSort({
+{% set team = cms.objects("team") | manualSort({
     property: 'role',
     order: ['ceo', 'cfo', 'cmo', 'vp', 'director']
 }) %}
@@ -602,7 +605,7 @@ Items not matching the explicit order can be sorted by a secondary property:
 
 ```twig
 {# Executives in order, then remaining staff sorted by lastName #}
-{% set team = cms.team() | manualSort({
+{% set team = cms.objects("team") | manualSort({
     property: 'position',
     order: ['ceo', 'cfo', 'cmo', 'vp'],
     remainder: {property: 'lastName'}
@@ -615,7 +618,7 @@ Use `excludeRemainder` to only return items that match the order array:
 
 ```twig
 {# Only show featured team members in specific order #}
-{% set featured = cms.team() | manualSort({
+{% set featured = cms.objects("team") | manualSort({
     property: 'id',
     order: ['john-smith', 'jane-doe', 'bob-wilson'],
     excludeRemainder: true
@@ -625,14 +628,23 @@ Use `excludeRemainder` to only return items that match the order array:
 
 ### Using Collection Metadata
 
-Store sort orders in the collection's metadata for easy admin editing:
+Store sort orders in the collection's metadata for easy admin editing. Use the `collection` option to automatically look up the order:
 
 ```twig
-{# Get the collection metadata #}
-{% set meta = cms.collection('team') %}
+{# Automatic lookup from collection metadata #}
+{% set team = cms.objects("team") | manualSort({
+    property: 'position',
+    collection: 'team',
+    remainder: {property: 'lastName'}
+}) %}
+```
 
-{# Use the stored order #}
-{% set team = cms.team() | manualSort({
+This is equivalent to manually fetching the metadata:
+
+```twig
+{# Manual lookup (same result) #}
+{% set meta = cms.collection('team') %}
+{% set team = cms.objects("team") | manualSort({
     property: 'position',
     order: meta.manualSort.position | default([]),
     remainder: {property: 'lastName'}
@@ -654,7 +666,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# If there are multiple VPs, sort them by name #}
-{% set team = cms.team() | manualSort({
+{% set team = cms.objects("team") | manualSort({
     property: 'role',
     order: ['ceo', 'vp', 'manager'],
     remainder: {property: 'name'}
@@ -666,7 +678,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 **Portfolio with curated order:**
 ```twig
-{% set projects = cms.projects() | manualSort({
+{% set projects = cms.objects("projects") | manualSort({
     property: 'id',
     order: ['flagship-project', 'award-winner', 'client-favorite'],
     remainder: {property: 'date', reverse: true}
@@ -676,7 +688,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 **Navigation menu order:**
 ```twig
-{% set pages = cms.pages() | manualSort({
+{% set pages = cms.objects("pages") | manualSort({
     property: 'slug',
     order: ['home', 'about', 'services', 'portfolio', 'contact'],
     excludeRemainder: true
@@ -687,7 +699,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 **Product categories with priority:**
 ```twig
 {% set meta = cms.collection('products') %}
-{% set products = cms.products() | manualSort({
+{% set products = cms.objects("products") | manualSort({
     property: 'category',
     order: meta.manualSort.category | default(['featured', 'new', 'sale']),
     remainder: {property: 'name', natural: true}
