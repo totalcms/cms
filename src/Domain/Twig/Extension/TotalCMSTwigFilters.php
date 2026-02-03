@@ -6,6 +6,7 @@ use Cake\Chronos\Chronos;
 use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
+use TotalCMS\Domain\Collection\Utilities\ManualSorter;
 use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -82,6 +83,7 @@ class TotalCMSTwigFilters
 		'decrypt',
 		'filterCollection',
 		'sortCollection',
+		'manualSort',
 		'paginate',
 		'svgToSymbol',
 		'markdown',
@@ -907,6 +909,25 @@ class TotalCMSTwigFilters
 		$sorter = new CollectionSorter($collection);
 
 		return $sorter->sortByRules($rules);
+	}
+
+	/**
+	 * Sort collection by explicit value order with remainder handling.
+	 *
+	 * @param array<array<string,mixed>>|null $collection
+	 * @param array<string,mixed> $options Options: property, order, remainder, excludeRemainder
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public static function manualSort(?array $collection, array $options): array
+	{
+		if ($collection === null || $collection === []) {
+			return $collection ?? [];
+		}
+
+		$sorter = new ManualSorter($collection);
+
+		return $sorter->sort($options);
 	}
 
 	/**

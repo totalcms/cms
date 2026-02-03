@@ -531,3 +531,162 @@ test('countBy skips non-array items', function (): void {
 	$result = TotalCMSTwigFilters::countBy($items, 'type');
 	expect($result)->toBe(['a' => 2, 'b' => 1]);
 });
+
+// ===== manualSort =====
+
+test('manualSort orders items by explicit value order', function (): void {
+	$items = [
+		['name' => 'Alice', 'role' => 'developer'],
+		['name' => 'Bob', 'role' => 'ceo'],
+		['name' => 'Charlie', 'role' => 'cfo'],
+		['name' => 'Diana', 'role' => 'developer'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property' => 'role',
+		'order'    => ['ceo', 'cfo', 'cmo'],
+	]);
+
+	$names = array_column($result, 'name');
+	expect($names[0])->toBe('Bob');      // ceo first
+	expect($names[1])->toBe('Charlie');  // cfo second
+	// developers at end (remainder)
+	expect(count($result))->toBe(4);
+});
+
+test('manualSort applies remainder sort to non-matching items', function (): void {
+	$items = [
+		['name' => 'Zoe', 'role' => 'developer'],
+		['name' => 'Bob', 'role' => 'ceo'],
+		['name' => 'Alice', 'role' => 'developer'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property'  => 'role',
+		'order'     => ['ceo'],
+		'remainder' => ['property' => 'name'],
+	]);
+
+	$names = array_column($result, 'name');
+	expect($names)->toBe(['Bob', 'Alice', 'Zoe']);
+});
+
+test('manualSort sub-sorts items with same value by remainder', function (): void {
+	$items = [
+		['name' => 'Zoe', 'role' => 'vp'],
+		['name' => 'Bob', 'role' => 'ceo'],
+		['name' => 'Alice', 'role' => 'vp'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property'  => 'role',
+		'order'     => ['ceo', 'vp'],
+		'remainder' => ['property' => 'name'],
+	]);
+
+	$names = array_column($result, 'name');
+	expect($names)->toBe(['Bob', 'Alice', 'Zoe']);
+});
+
+test('manualSort excludes remainder when excludeRemainder is true', function (): void {
+	$items = [
+		['name' => 'Alice', 'role' => 'developer'],
+		['name' => 'Bob', 'role' => 'ceo'],
+		['name' => 'Charlie', 'role' => 'cfo'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property'         => 'role',
+		'order'            => ['ceo', 'cfo'],
+		'excludeRemainder' => true,
+	]);
+
+	expect($result)->toHaveCount(2);
+	$names = array_column($result, 'name');
+	expect($names)->toBe(['Bob', 'Charlie']);
+});
+
+test('manualSort handles null collection', function (): void {
+	$result = TotalCMSTwigFilters::manualSort(null, [
+		'property' => 'role',
+		'order'    => ['ceo'],
+	]);
+	expect($result)->toBe([]);
+});
+
+test('manualSort handles empty collection', function (): void {
+	$result = TotalCMSTwigFilters::manualSort([], [
+		'property' => 'role',
+		'order'    => ['ceo'],
+	]);
+	expect($result)->toBe([]);
+});
+
+test('manualSort with no order applies only remainder sort', function (): void {
+	$items = [
+		['name' => 'Charlie'],
+		['name' => 'Alice'],
+		['name' => 'Bob'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property'  => 'role',
+		'remainder' => ['property' => 'name'],
+	]);
+
+	$names = array_column($result, 'name');
+	expect($names)->toBe(['Alice', 'Bob', 'Charlie']);
+});
+
+test('manualSort with empty order returns original collection', function (): void {
+	$items = [
+		['name' => 'Charlie'],
+		['name' => 'Alice'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property' => 'role',
+		'order'    => [],
+	]);
+
+	expect($result)->toHaveCount(2);
+});
+
+test('manualSort orders by id property', function (): void {
+	$items = [
+		['id' => 'charlie', 'name' => 'Charlie'],
+		['id' => 'alice', 'name' => 'Alice'],
+		['id' => 'bob', 'name' => 'Bob'],
+		['id' => 'diana', 'name' => 'Diana'],
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property'         => 'id',
+		'order'            => ['bob', 'alice'],
+		'excludeRemainder' => true,
+	]);
+
+	expect($result)->toHaveCount(2);
+	$names = array_column($result, 'name');
+	expect($names)->toBe(['Bob', 'Alice']);
+});
+
+test('manualSort handles items with missing property value', function (): void {
+	$items = [
+		['name' => 'Alice', 'role' => 'developer'],
+		['name' => 'Bob', 'role' => 'ceo'],
+		['name' => 'Charlie'], // no role
+	];
+
+	$result = TotalCMSTwigFilters::manualSort($items, [
+		'property'  => 'role',
+		'order'     => ['ceo'],
+		'remainder' => ['property' => 'name'],
+	]);
+
+	$names = array_column($result, 'name');
+	expect($names[0])->toBe('Bob'); // ceo first
+	// remainder sorted by name (Alice, Charlie)
+	expect(in_array('Alice', $names))->toBeTrue();
+	expect(in_array('Charlie', $names))->toBeTrue();
+});

@@ -17,6 +17,7 @@ Total CMS provides powerful `filterCollection` and `sortCollection` Twig filters
   - [Day-of-Week Operators](#day-of-week-operators)
   - [Array Logic (OR vs AND)](#array-logic-or-vs-and)
 - [sortCollection Filter](#sortcollection-filter)
+- [manualSort Filter](#manualsort-filter)
 - [Real-World Examples](#real-world-examples)
 
 ## filterCollection Filter
@@ -555,6 +556,142 @@ Natural sorting treats numbers within strings intelligently:
 {% set randomProducts = cms.objects('products') | sortCollection([
     {property: "name", shuffle: true}
 ]) %}
+```
+
+---
+
+## manualSort Filter
+
+The `manualSort` filter allows you to sort collections by an explicit order of values, with control over how remaining items are handled. This is useful when you need a specific custom order that can't be achieved with standard property sorting.
+
+### Basic Syntax
+
+```twig
+{% set sorted = collection | manualSort({
+    property: "field_name",
+    order: ["value1", "value2", "value3"],
+    remainder: {property: "name"},
+    excludeRemainder: false
+}) %}
+```
+
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `property` | string | The property to match against the order array |
+| `order` | array | Explicit list of values defining the sort order |
+| `remainder` | object | Sort rule for items not in the order array (same format as sortCollection) |
+| `excludeRemainder` | boolean | If true, items not in the order array are excluded from results |
+
+### Basic Manual Sort
+
+```twig
+{# Sort team members by role in specific order #}
+{% set team = cms.team() | manualSort({
+    property: 'role',
+    order: ['ceo', 'cfo', 'cmo', 'vp', 'director']
+}) %}
+{# CEO first, CFO second, CMO third, etc. #}
+{# Any roles not listed appear at the end in original order #}
+```
+
+### With Remainder Sorting
+
+Items not matching the explicit order can be sorted by a secondary property:
+
+```twig
+{# Executives in order, then remaining staff sorted by lastName #}
+{% set team = cms.team() | manualSort({
+    property: 'position',
+    order: ['ceo', 'cfo', 'cmo', 'vp'],
+    remainder: {property: 'lastName'}
+}) %}
+```
+
+### Exclude Non-Matching Items
+
+Use `excludeRemainder` to only return items that match the order array:
+
+```twig
+{# Only show featured team members in specific order #}
+{% set featured = cms.team() | manualSort({
+    property: 'id',
+    order: ['john-smith', 'jane-doe', 'bob-wilson'],
+    excludeRemainder: true
+}) %}
+{# Returns exactly 3 items (if they exist) in that order #}
+```
+
+### Using Collection Metadata
+
+Store sort orders in the collection's metadata for easy admin editing:
+
+```twig
+{# Get the collection metadata #}
+{% set meta = cms.collection('team') %}
+
+{# Use the stored order #}
+{% set team = cms.team() | manualSort({
+    property: 'position',
+    order: meta.manualSort.position | default([]),
+    remainder: {property: 'lastName'}
+}) %}
+```
+
+To configure the order, edit the collection settings in the admin and add JSON to the "Manual Sort Orders" field:
+
+```json
+{
+    "position": ["ceo", "cfo", "cmo", "vp", "director", "manager"],
+    "department": ["executive", "engineering", "sales", "marketing"]
+}
+```
+
+### Sub-Sorting Within Groups
+
+When multiple items have the same ordered value, the remainder rule sorts them:
+
+```twig
+{# If there are multiple VPs, sort them by name #}
+{% set team = cms.team() | manualSort({
+    property: 'role',
+    order: ['ceo', 'vp', 'manager'],
+    remainder: {property: 'name'}
+}) %}
+{# Result: CEO, then all VPs sorted by name, then managers sorted by name, then everyone else by name #}
+```
+
+### Practical Examples
+
+**Portfolio with curated order:**
+```twig
+{% set projects = cms.projects() | manualSort({
+    property: 'id',
+    order: ['flagship-project', 'award-winner', 'client-favorite'],
+    remainder: {property: 'date', reverse: true}
+}) %}
+{# Featured projects first, then remaining by date descending #}
+```
+
+**Navigation menu order:**
+```twig
+{% set pages = cms.pages() | manualSort({
+    property: 'slug',
+    order: ['home', 'about', 'services', 'portfolio', 'contact'],
+    excludeRemainder: true
+}) %}
+{# Only these pages, in this exact order #}
+```
+
+**Product categories with priority:**
+```twig
+{% set meta = cms.collection('products') %}
+{% set products = cms.products() | manualSort({
+    property: 'category',
+    order: meta.manualSort.category | default(['featured', 'new', 'sale']),
+    remainder: {property: 'name', natural: true}
+}) %}
 ```
 
 ---

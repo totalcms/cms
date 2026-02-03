@@ -52,6 +52,9 @@ class CollectionData
 	/** @var array<string,mixed> */
 	public array $formSettings = [];  // Custom settings for the object creation/edit forms
 
+	/** @var array<string,array<string>> */
+	public array $manualSort = [];  // Manual sort orders keyed by property name
+
 	public function __construct()
 	{
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -102,6 +105,10 @@ class CollectionData
 
 		if ($this->formSettings !== []) {
 			$collection['formSettings'] = $this->formSettings;
+		}
+
+		if ($this->manualSort !== []) {
+			$collection['manualSort'] = $this->manualSort;
 		}
 
 		return $collection;
