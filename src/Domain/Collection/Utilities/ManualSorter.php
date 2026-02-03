@@ -27,9 +27,9 @@ class ManualSorter
 	 */
 	public function sort(array $options): array
 	{
-		$property = $options['property'] ?? '';
-		$order = $options['order'] ?? [];
-		$remainder = $options['remainder'] ?? null;
+		$property         = $options['property'] ?? '';
+		$order            = $options['order'] ?? [];
+		$remainder        = $options['remainder'] ?? null;
 		$excludeRemainder = $options['excludeRemainder'] ?? false;
 
 		// Ensure order is an array
@@ -49,11 +49,11 @@ class ManualSorter
 		}
 
 		// Create order lookup map for O(1) access
-		$orderMap = array_flip($order);
+		$orderMap   = array_flip($order);
 		$orderCount = count($order);
 
 		// Separate items into ordered and remainder groups
-		$ordered = [];
+		$ordered   = [];
 		$remaining = [];
 
 		foreach ($this->collection as $item) {
@@ -74,14 +74,14 @@ class ManualSorter
 		if ($remainder !== null && is_array($remainder)) {
 			foreach ($ordered as $position => $items) {
 				if (count($items) > 1) {
-					$sorter = new CollectionSorter($items);
+					$sorter             = new CollectionSorter($items);
 					$ordered[$position] = $sorter->sortByRules([$remainder]);
 				}
 			}
 
 			// Sort remaining items
 			if ($remaining !== []) {
-				$sorter = new CollectionSorter($remaining);
+				$sorter    = new CollectionSorter($remaining);
 				$remaining = $sorter->sortByRules([$remainder]);
 			}
 		}
