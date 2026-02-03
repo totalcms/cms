@@ -36,7 +36,7 @@ readonly class AdminMailerAction
 
 		// Handle POST request for object duplication
 		if ($request->getMethod() === 'POST' && $id === 'new') {
-			$postData = (array) $request->getParsedBody();
+			$postData = (array)$request->getParsedBody();
 
 			if (isset($postData['duplicate']) && is_string($postData['duplicate'])) {
 				$duplicateId                   = $postData['duplicate'];

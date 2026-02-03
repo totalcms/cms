@@ -26,7 +26,7 @@ class DepotBrowserRenderer
 		callable $streamUrl,
 	): string {
 		$files = is_array($depot['files'] ?? null) ? $depot['files'] : [];
-		if (empty($files)) {
+		if ($files === []) {
 			return '';
 		}
 
@@ -52,9 +52,7 @@ class DepotBrowserRenderer
 			$html .= $this->buildPreviewDialog();
 		}
 
-		$html .= '</div>';
-
-		return $html;
+		return $html . '</div>';
 	}
 
 	/**
@@ -99,9 +97,7 @@ class DepotBrowserRenderer
 			$html .= $this->buildFile($file, $path, $id, $options, $downloadUrl, $streamUrl);
 		}
 
-		$html .= '</ul>';
-
-		return $html;
+		return $html . '</ul>';
 	}
 
 	/**
@@ -137,7 +133,7 @@ class DepotBrowserRenderer
 		$html = "<li class=\"depot-browser-item\" data-ext=\"{$ext}\" data-stream-url=\"" . htmlspecialchars($streamSrc, ENT_QUOTES, 'UTF-8') . '">';
 
 		if ($options['download']) {
-			$html .= "<a href=\"" . htmlspecialchars($dlUrl, ENT_QUOTES, 'UTF-8') . "\" class=\"file file-icon icon-{$ext}\" download=\"{$this->escape($name)}\">{$this->escape($displayName)}</a>";
+			$html .= '<a href="' . htmlspecialchars($dlUrl, ENT_QUOTES, 'UTF-8') . "\" class=\"file file-icon icon-{$ext}\" download=\"{$this->escape($name)}\">{$this->escape($displayName)}</a>";
 		} else {
 			$html .= "<span class=\"file file-icon icon-{$ext}\">{$this->escape($displayName)}</span>";
 		}
@@ -160,7 +156,7 @@ class DepotBrowserRenderer
 
 		if ($options['tags']) {
 			$tags = $file['tags'] ?? [];
-			if (is_array($tags) && !empty($tags)) {
+			if (is_array($tags) && $tags !== []) {
 				$html .= '<div class="file-tags">';
 				foreach ($tags as $tag) {
 					$html .= '<span>' . $this->escape((string)$tag) . '</span>';
@@ -169,9 +165,7 @@ class DepotBrowserRenderer
 			}
 		}
 
-		$html .= '</li>';
-
-		return $html;
+		return $html . '</li>';
 	}
 
 	/**
@@ -199,9 +193,8 @@ class DepotBrowserRenderer
 		$html .= '<summary class="folder">' . $this->escape($name) . '</summary>';
 		$html .= $this->buildFileTree($children, $subPath, $id, $options, $downloadUrl, $streamUrl);
 		$html .= '</details>';
-		$html .= '</li>';
 
-		return $html;
+		return $html . '</li>';
 	}
 
 	/**

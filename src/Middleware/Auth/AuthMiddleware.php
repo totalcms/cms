@@ -35,7 +35,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		LoggerFactory $loggerFactory,
 	) {
 		$this->defaultAuthCollection = $this->config->auth['collection'];
-		$this->logger = $loggerFactory->addFileHandler('access.log')->createLogger('auth-middleware');
+		$this->logger                = $loggerFactory->addFileHandler('access.log')->createLogger('auth-middleware');
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

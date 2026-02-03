@@ -18,7 +18,7 @@ readonly class LogDownloadAction
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 	): ResponseInterface {
-		$params = $request->getQueryParams();
+		$params  = $request->getQueryParams();
 		$logfile = $params['logfile'] ?? '';
 
 		$logfiles = $this->logAnalyzer->logfiles();
@@ -28,7 +28,7 @@ readonly class LogDownloadAction
 		}
 
 		$filePath = $logfiles[$logfile];
-		$handle = fopen($filePath, 'r');
+		$handle   = fopen($filePath, 'r');
 
 		if ($handle === false) {
 			return $response->withStatus(500);

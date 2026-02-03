@@ -17,7 +17,7 @@ use TotalCMS\Support\Config;
 class PersistentLoginService
 {
 	public const PERSISTENT_COOKIE_NAME = 'tcms_persistent_token';
-	private const GRACE_PERIOD_SECONDS = 60;
+	private const GRACE_PERIOD_SECONDS  = 60;
 
 	private readonly string $tokenDir;
 	private readonly LoggerInterface $logger;

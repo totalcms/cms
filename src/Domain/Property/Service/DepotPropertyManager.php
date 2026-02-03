@@ -90,7 +90,7 @@ class DepotPropertyManager
 		$folder = &self::findOrCreateFolderByPath($this->depot->files, $subpath);
 		foreach ($folder as $index => &$item) {
 			if ($item->name === $name) {
-				$merged = array_merge($item->transform(), $newMeta);
+				$merged         = array_merge($item->transform(), $newMeta);
 				$folder[$index] = new FileData($merged, $item->settings);
 				break;
 			}

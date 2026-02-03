@@ -85,7 +85,7 @@ class PropertyRepository extends StorageRepository
 
 	public function renameFolder(string $collection, string $objectID, string $property, string $oldPath, string $newName): bool
 	{
-		$parts     = explode('/', trim($oldPath, '/'));
+		$parts      = explode('/', trim($oldPath, '/'));
 		$parentPath = count($parts) > 1 ? implode('/', array_slice($parts, 0, -1)) : null;
 
 		$oldDir = PathUtils::buildPath($collection, $objectID, $property, end($parts), $parentPath);
