@@ -97,21 +97,6 @@
 	}
 }
 
-.depot-filter-reset {
-	appearance  : none;
-	border      : none;
-	background  : none;
-	cursor      : pointer;
-	font-size   : 1.1rem;
-	line-height : 1;
-	padding     : 0 0.5rem;
-	color       : oklch(var(--totalform-gray));
-
-	&:hover {
-		color : oklch(var(--totalform-darkgray));
-	}
-}
-
 .filtered-out {
 	display : none !important;
 }
@@ -360,8 +345,10 @@
 		mask-repeat      : no-repeat;
 		mask-size        : 2rem;
 		mask-position    : center;
-		animation        : spin 1s linear infinite;
 		z-index          : 0;
+	}
+	&[open]::before {
+		animation        : spin 1s linear infinite;
 	}
 
 	.preview-content {

@@ -142,9 +142,14 @@ class DepotBrowserRenderer
 			$html .= "<span class=\"file file-icon icon-{$ext}\">{$this->escape($displayName)}</span>";
 		}
 
+		$html .= '<span class="file-actions">';
+		if ($options['preview']) {
+			$html .= '<button type="button" class="action-preview" title="Preview"></button>';
+		}
 		if ($size > 0) {
 			$html .= '<span class="file-size">' . $this->formatSize($size) . '</span>';
 		}
+		$html .= '</span>';
 
 		if ($options['comments']) {
 			$comments = trim((string)($file['comments'] ?? ''));
@@ -233,8 +238,7 @@ class DepotBrowserRenderer
 	private function buildFilter(): string
 	{
 		return '<div class="depot-browser-filter">'
-			. '<input type="text" placeholder="Filter files...">'
-			. '<button type="button" class="depot-browser-filter-reset cms-hide">&times;</button>'
+			. '<input type="search" placeholder="Filter files...">'
 			. '</div>';
 	}
 

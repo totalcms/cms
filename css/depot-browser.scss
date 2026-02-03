@@ -7,34 +7,21 @@
 .depot-browser-filter {
 	position: sticky;
 	top: 0;
-	display: flex;
-	gap: 0.5rem;
 	padding: 0.5rem 0;
 	background: inherit;
 	z-index: 1;
 
-	input {
-		flex: 1;
+	input[type="search"] {
+		width: 100%;
 		padding: 0.5rem 0.75rem;
 		border: 1px solid oklch(var(--totalform-border-color));
 		border-radius: var(--totalform-radius);
 		font-size: 0.875rem;
+		box-sizing: border-box;
 
 		&:focus {
 			outline: 2px solid oklch(var(--totalform-accent));
 			outline-offset: -1px;
-		}
-	}
-	.depot-browser-filter-reset {
-		border: none;
-		background: none;
-		font-size: 1.25rem;
-		cursor: pointer;
-		padding: 0 0.5rem;
-		color: oklch(var(--totalform-darkgray));
-
-		&:hover {
-			color: oklch(var(--totalform-text-color));
 		}
 	}
 }
@@ -64,12 +51,13 @@
 	display: grid;
 	grid-template-columns: 1fr auto;
 	gap: 0 1rem;
-	align-items: baseline;
+	align-items: center;
 	padding: 0.375rem 0.5rem;
 	.file {
 		grid-column: 1;
 		text-decoration: none;
 		color: oklch(var(--totalform-text-color));
+		cursor: pointer;
 
 		&.file-icon::before {
 			content: "";
@@ -83,20 +71,56 @@
 			mask-repeat: no-repeat;
 			mask-position: center;
 			mask-size: contain;
-			-webkit-mask-image: var(--icon-file);
-			-webkit-mask-repeat: no-repeat;
-			-webkit-mask-position: center;
-			-webkit-mask-size: contain;
 		}
 		&:hover {
 			color: oklch(var(--totalform-accent));
+
+			&.file-icon::before {
+				background-color: oklch(var(--totalform-accent));
+				mask-image: var(--icon-download);
+			}
 		}
 	}
-	.file-size {
+	.file-actions {
 		grid-column: 2;
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		white-space: nowrap;
+	}
+	.action-preview {
+		display: inline-block;
+		width: 1.5rem;
+		height: 1.5rem;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 150ms ease;
+		background-color: oklch(var(--totalform-darkgray));
+		mask-image: var(--icon-eye);
+		mask-repeat: no-repeat;
+		mask-position: center;
+		mask-size: contain;
+		-webkit-mask-image: var(--icon-eye);
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		-webkit-mask-size: contain;
+
+		&:hover {
+			background-color: oklch(var(--totalform-accent));
+		}
+	}
+	&:hover .action-preview {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	.file-size {
+		width: 4rem;
+		text-align: right;
 		font-size: 0.75rem;
 		color: oklch(var(--totalform-darkgray));
-		white-space: nowrap;
 	}
 	.file-comments {
 		grid-column : 1 / -1;
@@ -118,9 +142,6 @@
 			background: oklch(var(--totalform-lightgray));
 			color: oklch(var(--totalform-nearblack));
 		}
-	}
-	&.previewable {
-		cursor: pointer;
 	}
 	&.filtered-out {
 		display: none;
@@ -151,15 +172,10 @@
 			mask-repeat: no-repeat;
 			mask-position: center;
 			mask-size: contain;
-			-webkit-mask-image: var(--icon-folder);
-			-webkit-mask-repeat: no-repeat;
-			-webkit-mask-position: center;
-			-webkit-mask-size: contain;
 		}
 	}
 	&[open] > summary.folder::before {
 		mask-image: var(--icon-folder-open);
-		-webkit-mask-image: var(--icon-folder-open);
 	}
 }
 .depot-browser-preview {
@@ -174,22 +190,35 @@
 	&::backdrop {
 		background: rgba(0, 0, 0, 0.6);
 	}
+	&::before {
+		content: "";
+		position: absolute;
+		width: 2rem;
+		height: 2rem;
+		top: 50%;
+		left: 50%;
+		translate: -50% -50%;
+		background-color: oklch(var(--totalform-gray));
+		mask-image: var(--icon-refresh);
+		mask-repeat: no-repeat;
+		mask-size: 2rem;
+		mask-position: center;
+		-webkit-mask-image: var(--icon-refresh);
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-size: 2rem;
+		-webkit-mask-position: center;
+		z-index: 0;
+	}
+	&[open]::before {
+		animation: depot-browser-spin 1s linear infinite;
+	}
 	.preview-content {
+		position: relative;
+		z-index: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-width: 200px;
-		min-height: 150px;
 
-		&:empty::after {
-			content: "";
-			width: 2rem;
-			height: 2rem;
-			border: 3px solid oklch(var(--totalform-border-color));
-			border-top-color: oklch(var(--totalform-accent));
-			border-radius: 50%;
-			animation: depot-browser-spin 0.6s linear infinite;
-		}
 		img {
 			max-width: 80vw;
 			max-height: 80vh;

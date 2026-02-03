@@ -70,10 +70,8 @@ function applyStripes(container) {
 	walk(tree);
 }
 
-function filterBrowser(container, input, resetBtn) {
+function filterBrowser(container, input) {
 	const query = input.value.toLowerCase();
-	resetBtn?.classList.toggle("cms-hide", query.length === 0);
-
 	const tree  = container.querySelector(".depot-browser-tree");
 	const allLi = tree.querySelectorAll("li");
 
@@ -83,12 +81,19 @@ function filterBrowser(container, input, resetBtn) {
 		return;
 	}
 
-	// First pass: filter file items
+	// First pass: filter file items by name, comments, and tags
 	allLi.forEach(li => {
 		if (li.querySelector("details")) return; // folder
 		const fileEl = li.querySelector(".file");
 		if (!fileEl) return;
-		const match = fileEl.textContent.toLowerCase().includes(query);
+
+		let text = fileEl.textContent;
+		const comments = li.querySelector(".file-comments");
+		if (comments) text += ' ' + comments.textContent;
+		const tags = li.querySelector(".file-tags");
+		if (tags) text += ' ' + tags.textContent;
+
+		const match = text.toLowerCase().includes(query);
 		li.classList.toggle("filtered-out", !match);
 	});
 
@@ -115,7 +120,6 @@ function filterBrowser(container, input, resetBtn) {
 function initBrowser(container) {
 	const options     = JSON.parse(container.dataset.options || "{}");
 	const filterInput = container.querySelector(".depot-browser-filter input");
-	const filterReset = container.querySelector(".depot-browser-filter-reset");
 	const dialog      = container.querySelector(".depot-browser-preview");
 	const preview     = dialog?.querySelector(".preview-content");
 
@@ -127,25 +131,24 @@ function initBrowser(container) {
 		details.addEventListener("toggle", () => applyStripes(container));
 	});
 
-	// Filter
+	// Filter — "input" for typing, "search" for native clear button
 	if (filterInput) {
-		filterInput.addEventListener("input", () => filterBrowser(container, filterInput, filterReset));
-		filterReset?.addEventListener("click", () => {
-			filterInput.value = "";
-			filterBrowser(container, filterInput, filterReset);
-		});
+		const onFilter = () => filterBrowser(container, filterInput);
+		filterInput.addEventListener("input", onFilter);
+		filterInput.addEventListener("search", onFilter);
 	}
 
 	// Preview
 	if (options.preview && dialog) {
-		container.querySelectorAll(".depot-browser-item").forEach(item => {
-			const ext = item.dataset.ext;
-			if (!isPreviewable(ext)) return;
+		container.querySelectorAll(".action-preview").forEach(btn => {
+			const item = btn.closest(".depot-browser-item");
+			const ext  = item?.dataset.ext;
+			if (!ext || !isPreviewable(ext)) {
+				btn.remove();
+				return;
+			}
 
-			item.classList.add("previewable");
-			item.addEventListener("click", (e) => {
-				if (e.target.closest("a[download]")) return;
-				e.preventDefault();
+			btn.addEventListener("click", () => {
 				const url  = item.dataset.streamUrl;
 				const name = item.querySelector(".file")?.textContent || "";
 				preview.innerHTML = "";

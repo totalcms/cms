@@ -51,6 +51,7 @@ esbuild.build({
 esbuild.build({
     entryPoints : [
         "css/*.scss",
+		"css/icons.css",
     ],
     bundle        : true,
     minify        : true,

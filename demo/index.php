@@ -15,6 +15,7 @@ $totalcms = new TotalCMS\TotalCMS();
 		<link rel="stylesheet" href="demo.css" />
 
 		<!-- Total CMS Content -->
+		<link rel="stylesheet" href="{{ cms.api }}/assets/icons.css?v={{ cms.version }}"/>
 		<link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>
 		<link rel="stylesheet" href="{{ cms.api }}/assets/cms-grid.css?v={{ cms.version }}"/>
 		<link rel="stylesheet" href="{{ cms.api }}/assets/gallery.css?v={{ cms.version }}"/>

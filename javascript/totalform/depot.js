@@ -596,20 +596,14 @@ export default class DepotField extends TotalField {
 
     initFilter() {
         this.filterInput = this.container.querySelector(".depot-filter");
-        this.filterReset = this.container.querySelector(".depot-filter-reset");
         if (!this.filterInput) return;
 
         this.filterInput.addEventListener("input", () => this.filterBrowser());
-        this.filterReset.addEventListener("click", () => {
-            this.filterInput.value = "";
-            this.filterBrowser();
-        });
+        this.filterInput.addEventListener("search", () => this.filterBrowser());
     }
 
     filterBrowser() {
         const query = this.filterInput.value.toLowerCase();
-        this.filterReset.classList.toggle("cms-hide", query.length === 0);
-
         const allLi = this.browser.querySelectorAll("li");
 
         if (query.length === 0) {
