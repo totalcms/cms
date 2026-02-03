@@ -34,14 +34,19 @@ export default class DocSearch {
 		this.searchInput.className = 'doc-search-input';
 		this.searchInput.autofocus = true;
 
+		// Create input wrapper (for icon positioning)
+		const inputWrapper = document.createElement('div');
+		inputWrapper.className = 'doc-search-input-wrapper';
+		inputWrapper.appendChild(this.searchInput);
+
 		// Create results container
 		this.resultsContainer = document.createElement('div');
 		this.resultsContainer.className = 'doc-search-results';
 
-		// Create wrapper
+		// Create outer wrapper
 		const wrapper = document.createElement('div');
 		wrapper.className = 'doc-search-wrapper';
-		wrapper.appendChild(this.searchInput);
+		wrapper.appendChild(inputWrapper);
 		wrapper.appendChild(this.resultsContainer);
 
 		this.container.appendChild(wrapper);

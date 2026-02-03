@@ -2,24 +2,6 @@
 
 Total CMS provides powerful `filterCollection` and `sortCollection` Twig filters for advanced data manipulation. These filters allow you to perform complex filtering operations on collections using a variety of operators, making it easy to create dynamic, filtered content displays.
 
-## Table of Contents
-
-- [filterCollection Filter](#filtercollection-filter)
-  - [Basic Syntax](#basic-syntax)
-  - [String Operators](#string-operators)
-  - [Comparison Operators](#comparison-operators)
-  - [Boolean Operators](#boolean-operators)
-  - [Date Operators](#date-operators)
-  - [Calendar Period Operators](#calendar-period-operators)
-  - [Numeric Range Operators](#numeric-range-operators)
-  - [Text Length Operators](#text-length-operators)
-  - [Array Counting Operators](#array-counting-operators)
-  - [Day-of-Week Operators](#day-of-week-operators)
-  - [Array Logic (OR vs AND)](#array-logic-or-vs-and)
-- [sortCollection Filter](#sortcollection-filter)
-- [manualSort Filter](#manualsort-filter)
-- [Real-World Examples](#real-world-examples)
-
 ## filterCollection Filter
 
 The `filterCollection` filter allows you to filter arrays of objects based on complex criteria. It uses the CollectionRefiner service under the hood.

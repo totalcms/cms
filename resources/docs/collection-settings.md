@@ -2,21 +2,6 @@
 
 This document provides a comprehensive reference for all settings available in a Total CMS collection's metadata (`.meta.json` file). These settings control how collections behave, how they appear in the admin interface, and how their data can be accessed.
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Basic Settings](#basic-settings)
-- [URL Settings](#url-settings)
-- [Dashboard Settings](#dashboard-settings)
-- [Access Control](#access-control)
-- [Sorting Settings](#sorting-settings)
-- [Form Customization](#form-customization)
-- [Schema Overrides](#schema-overrides)
-- [Statistics (Read-Only)](#statistics-read-only)
-- [Complete Example](#complete-example)
-
----
-
 ## Overview
 
 Collection settings are stored in the `.meta.json` file within each collection's directory:

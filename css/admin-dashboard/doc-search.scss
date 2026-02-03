@@ -10,9 +10,30 @@
 	margin    : 0;
 }
 
+.doc-search-input-wrapper {
+	position : relative;
+
+	&::before {
+		content          : '';
+		position         : absolute;
+		left             : 1rem;
+		top              : 50%;
+		transform        : translateY(-50%);
+		width            : 20px;
+		height           : 20px;
+		background-color : oklch(var(--totalform-mediumgray));
+		mask-image       : var(--icon-search);
+		mask-repeat      : no-repeat;
+		mask-size        : 20px;
+		mask-position    : center;
+		pointer-events   : none;
+		z-index          : 1;
+	}
+}
+
 .doc-search-input {
 	width            : 100%;
-	padding          : 1rem 1.25rem;
+	padding          : 1rem 1.25rem 1rem 3rem;
 	font-size        : 1.125rem;
 	border           : 2px solid oklch(var(--totalform-border-color));
 	border-radius    : var(--totalform-radius);
@@ -150,6 +171,64 @@
 		min-width   : 4rem;
 		text-align  : center;
 		font-weight : 600;
+	}
+}
+
+// On-page search input (matches sidebar filter style)
+.doc-page-search {
+	position      : relative;
+	margin-bottom : 1rem;
+	max-width     : 250px;
+
+	&::before {
+		content          : '';
+		position         : absolute;
+		left             : 0.5rem;
+		top              : 50%;
+		transform        : translateY(-50%);
+		width            : 16px;
+		height           : 16px;
+		background-color : oklch(var(--totalform-mediumgray));
+		mask-image       : var(--icon-search);
+		mask-repeat      : no-repeat;
+		mask-size        : 16px;
+		mask-position    : center;
+		pointer-events   : none;
+		z-index          : 1;
+		transition       : background-color 200ms ease-in-out;
+	}
+
+	&:has(input:hover)::before,
+	&:has(input:focus)::before {
+		background-color : oklch(var(--totalform-darkgray));
+	}
+
+	.doc-page-search-input {
+		appearance       : none;
+		width            : 100%;
+		height           : 2.4375rem;
+		background-color : transparent;
+		box-shadow       : none;
+		border           : none;
+		padding          : .5rem;
+		margin           : 0;
+		border-radius    : var(--totalform-radius);
+		font-family      : inherit;
+		font-size        : var(--totalform-font-size);
+		font-weight      : 400;
+		line-height      : 1.5;
+		color            : oklch(var(--totalform-text-color));
+		transition       : background-color 200ms ease-in-out;
+		text-indent      : 1.5rem;
+
+		&:hover, &:focus {
+			background-color : oklch(var(--totalform-nearwhite));
+			outline          : none;
+		}
+
+		&::placeholder {
+			color : oklch(var(--totalform-mediumgray));
+		}
 	}
 }
 
