@@ -145,7 +145,8 @@
             border-color : oklch(var(--totalform-nearblack)) transparent transparent transparent;
         }
     }
-	.form-field:has(.help:empty) > label::after {
+	.form-field:has(.help:empty) > label::after,
+	.form-field:not(:has(.help)) > label::after {
 		display: none;
 	}
 }
