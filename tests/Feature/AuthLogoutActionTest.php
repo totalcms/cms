@@ -129,9 +129,9 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	it('handles logout with query parameters', function (): void {
 		$response = post('/logout?redirect=admin');
 
-		// Should always redirect to home regardless of query params
+		// Should redirect to the specified redirect param
 		expect($response->getStatusCode())->toBe(302);
-		expect($response->getHeaderLine('Location'))->toBe('/');
+		expect($response->getHeaderLine('Location'))->toBe('admin');
 	});
 
 	it('works with different request headers', function (): void {
