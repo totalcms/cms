@@ -24,3 +24,21 @@ You can customize the login screen through adding the following templates into t
 already exists.
 * `whitelabel/login-below.twig` : Contents that will be added below the login form.
 
+## Redirecting to a Custom Login Page
+
+If you want to redirect users from the built-in login page to your own custom login page, you can use an Apache `.htaccess` redirect rule. This is useful when you want complete control over the login experience rather than just customizing the built-in login screen.
+
+Add the following to your `.htaccess` file:
+
+```apache
+<If "%{REQUEST_METHOD} == 'GET'">
+    Redirect 301 /rw_common/plugins/stacks/tcms/login /login
+</If>
+```
+
+**Notes:**
+- Replace `/rw_common/plugins/stacks/tcms` with your actual Total CMS installation path
+- Replace `/login` with the path to your custom login page
+- The `<If>` condition ensures only GET requests are redirected, allowing POST requests (form submissions) to still reach the original endpoint
+- Your custom login page should still submit the login form to the Total CMS authentication endpoint
+
