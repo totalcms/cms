@@ -52,16 +52,19 @@ export default class TotalFormManager {
 
 	formListeners() {
 		this.forms.forEach(form => {
+			const useStatusBanner = !form.form.classList.contains("no-status-banner");
 			form.form.addEventListener("error", event => {
 				if (form.validated) {
-					this.error(event.detail.error);
+					if (useStatusBanner) this.error(event.detail.error);
 					return;
 				}
 				// Validation error - clear processing state
 				this.unsavedCounter = 0;
-				this.bannerStatus();
+				if (useStatusBanner) this.bannerStatus();
 			});
-			form.form.addEventListener("success", () => this.success());
+			form.form.addEventListener("success", () => {
+				if (useStatusBanner) this.success();
+			});
 		});
 		// Save on CMD/Ctrl+S
 		document.addEventListener("keydown", (event) => {
@@ -118,7 +121,9 @@ export default class TotalFormManager {
 
  				// Only one form to save
  				this.unsavedCounter = 1;
-				this.startProcessing();
+				if (!form.classList.contains("no-status-banner")) {
+					this.startProcessing();
+				}
 				totalform.save();
 			});
 		};
@@ -162,7 +167,11 @@ export default class TotalFormManager {
 		for (const form of this.unsaved) {
 			if (!form.validate()) return;
 		}
-		this.startProcessing();
+
+		// Only show status banner if at least one form wants it
+		const showBanner = this.unsaved.some(form => !form.form.classList.contains("no-status-banner"));
+		if (showBanner) this.startProcessing();
+
 		this.unsaved.forEach(form => form.save());
 	}
 

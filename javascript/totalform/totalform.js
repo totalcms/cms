@@ -603,6 +603,7 @@ export default class TotalForm {
 	 */
 	async runActions(actions) {
 		if (!Array.isArray(actions) || actions.length === 0) {
+			this.form.classList.add("actions-completed");
 			return;
 		}
 
@@ -623,6 +624,9 @@ export default class TotalForm {
 				throw error; // Re-throw to prevent further execution
 			}
 		}
+
+		// All actions completed successfully
+		this.form.classList.add("actions-completed");
 	}
 
     runNewActions() {
@@ -696,9 +700,15 @@ export default class TotalForm {
 			this.form.classList.add(newState);
 			this.form.dispatchEvent(new CustomEvent(newState, {detail: details}));
 		}
-		// filer the newState and remove all others
+		// Filter the newState and remove all others
 		const remove = this.states.filter(e => e !== newState);
 		this.form.classList.remove(...remove);
+
+		// Clear actions-completed when starting a new save cycle or on error
+		// (but not when transitioning to success, since actions-completed comes after success)
+		if (newState !== "success") {
+			this.form.classList.remove("actions-completed");
+		}
 	}
 
 	clear() {
