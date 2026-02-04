@@ -72,7 +72,7 @@ readonly class AuthLoginSubmitAction
 
 		$email           = $data['email'];
 		$password        = $data['password'];
-		$persistentLogin = isset($data['persistent_login']) && $data['persistent_login'] === '1';
+		$persistentLogin = !empty($data['persistent_login']);
 		$collection      = $args['collection'] ?? '';
 
 		$user = null;
