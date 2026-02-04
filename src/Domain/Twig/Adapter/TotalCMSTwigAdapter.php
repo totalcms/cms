@@ -1789,14 +1789,22 @@ NGINX;
 		// Calculate dimensions for layout stability (prevents CLS)
 		$dimensions = ImageDimensionCalculator::calculateFromImageData($image ?? [], $imageworks);
 
-		$html = HTMLUtils::inlineElement('img', [
-			'src'           => $imagePath,
-			'alt'           => $this->galleryAlt($idOrObject, $name, $options),
-			'width'         => $dimensions['width'],
-			'height'        => $dimensions['height'],
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
+		// Determine gallery ID and image name for launcher integration
+		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		$imageName = $image['name'] ?? (is_string($name) ? $name : '');
+
+		$imgAttrs = [
+			'src'                => $imagePath,
+			'alt'                => $this->galleryAlt($idOrObject, $name, $options),
+			'width'              => $dimensions['width'],
+			'height'             => $dimensions['height'],
+			'draggable'          => 'false',
+			'oncontextmenu'      => 'return false;',
+			'data-gallery'       => "{$options['collection']}-{$id}",
+			'data-gallery-image' => $imageName,
+		];
+
+		$html = HTMLUtils::inlineElement('img', $imgAttrs);
 
 		if (!empty($link)) {
 			$html = HTMLUtils::element('a', $html, ['href' => $link]);
