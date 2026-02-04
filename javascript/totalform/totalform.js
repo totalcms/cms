@@ -353,11 +353,120 @@ export default class TotalForm {
 		this.fields.forEach(field => field.validate());
 
 		if (this.form.checkValidity()) {
+			this.clearErrorSummary();
 			return true;
 		}
-		// If the form is invalid, display the custom validation error messages
-		this.form.reportValidity();
+
+		// Collect all invalid fields and show error summary
+		const invalidFields = this.getInvalidFields();
+		this.showErrorSummary(invalidFields);
+
 		return false;
+	}
+
+	getInvalidFields() {
+		return this.fields.filter(field => {
+			if (!field.isVisible()) return false;
+			if (field.isSubField()) return false;
+			return !field.input.checkValidity();
+		});
+	}
+
+	getErrorSummaryContainer() {
+		// Check for custom selector via data attribute
+		const customSelector = this.form.dataset.errorSummary;
+		if (customSelector) {
+			const custom = document.querySelector(customSelector);
+			if (custom) return custom;
+		}
+
+		// Check for default selector on page
+		const defaultContainer = document.querySelector('.tcms-error-summary');
+		if (defaultContainer) return defaultContainer;
+
+		// Create one at the bottom of the form
+		let container = this.form.querySelector('.tcms-error-summary-auto');
+		if (!container) {
+			container = document.createElement('div');
+			container.className = 'tcms-error-summary tcms-error-summary-auto';
+			this.form.appendChild(container);
+		}
+		return container;
+	}
+
+	showErrorSummary(invalidFields) {
+		const container = this.getErrorSummaryContainer();
+		container.innerHTML = '';
+		container.style.display = '';
+
+		if (invalidFields.length === 0) {
+			container.style.display = 'none';
+			return;
+		}
+
+		const list = document.createElement('ul');
+		list.className = 'tcms-error-summary-list';
+
+		invalidFields.forEach(field => {
+			const item = document.createElement('li');
+			const link = document.createElement('a');
+			link.href = '#';
+			link.className = 'tcms-error-summary-link';
+			link.textContent = field.label || field.property;
+
+			// Add validation message if available
+			if (field.input.validationMessage) {
+				const message = document.createElement('span');
+				message.className = 'tcms-error-summary-message';
+				message.textContent = ` - ${field.input.validationMessage}`;
+				link.appendChild(message);
+			}
+
+			link.addEventListener('click', (e) => {
+				e.preventDefault();
+				this.scrollToField(field);
+			});
+
+			item.appendChild(link);
+			list.appendChild(item);
+		});
+
+		container.appendChild(list);
+	}
+
+	clearErrorSummary() {
+		const container = this.form.querySelector('.tcms-error-summary-auto');
+		if (container) {
+			container.innerHTML = '';
+			container.style.display = 'none';
+		}
+
+		// Also clear custom containers
+		const customSelector = this.form.dataset.errorSummary;
+		if (customSelector) {
+			const custom = document.querySelector(customSelector);
+			if (custom) {
+				custom.innerHTML = '';
+				custom.style.display = 'none';
+			}
+		}
+	}
+
+	scrollToField(field) {
+		// Dispatch event so step-based forms can navigate to the correct step
+		this.form.dispatchEvent(new CustomEvent('tcms:error-navigate', {
+			bubbles: true,
+			detail: { field: field, property: field.property }
+		}));
+
+		// Scroll field into view
+		field.container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+		// Focus the input after scroll completes
+		setTimeout(() => {
+			field.input.focus();
+			field.input.reportValidity();
+		}, 300);
 	}
 
 	closeDialog() {

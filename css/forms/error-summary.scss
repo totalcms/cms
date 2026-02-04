@@ -1,0 +1,61 @@
+.tcms-error-summary {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	margin: 1rem 0;
+	padding: 1rem;
+	background: oklch(from oklch(var(--totalform-error)) l c h / 0.1);
+	border: 1px solid oklch(var(--totalform-error));
+	border-radius: var(--totalform-radius);
+
+	&:empty {
+		display: none;
+	}
+
+	// Error icon
+	&::before {
+		content: "";
+		flex-shrink: 0;
+		width: 2rem;
+		height: 2rem;
+		background-color: oklch(var(--totalform-error));
+		mask-image: var(--icon-error);
+		mask-size: contain;
+		mask-repeat: no-repeat;
+	}
+}
+
+.tcms-error-summary-list {
+	margin     : 0 !important;
+	padding    : 0;
+	list-style : none;
+	flex-grow  : 1;
+
+	li {
+		margin: 0.25rem 0;
+
+		&:first-child {
+			margin-top: 0;
+		}
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+.tcms-error-summary-link {
+	color: oklch(var(--totalform-error));
+	text-decoration: underline;
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: none;
+	}
+}
+
+.tcms-error-summary-message {
+	color: oklch(var(--totalform-text-color));
+	text-decoration: none;
+	font-size: 0.875em;
+}
