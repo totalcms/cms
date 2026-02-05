@@ -181,6 +181,8 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
 ```
 
+Note: `cms.galleryImage` automatically includes `data-gallery` and `data-gallery-image` attributes, making it easy to use with `cms.galleryLauncher`.
+
 ### Gallery Launcher (Trigger-Based Lightbox)
 
 The gallery launcher allows you to open a lightbox from custom trigger elements like buttons, links, or thumbnails. Perfect for launching galleries without showing a visible grid.
@@ -248,11 +250,24 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
      src="beach-thumb.jpg">
 ```
 
-**By index (zero-based):**
+**By index (1-based):**
 ```twig
 {{ cms.galleryLauncher('vacation') }}
-<button data-gallery="gallery-vacation" data-gallery-index="0">First Image</button>
-<button data-gallery="gallery-vacation" data-gallery-index="5">Image #6</button>
+<button data-gallery="gallery-vacation" data-gallery-index="1">First Image</button>
+<button data-gallery="gallery-vacation" data-gallery-index="6">Image #6</button>
+```
+
+**Using galleryImage (recommended):**
+```twig
+{{ cms.galleryLauncher('vacation') }}
+
+{# galleryImage automatically includes data-gallery and data-gallery-image attributes #}
+{{ cms.galleryImage('vacation', 'sunset.jpg', {w: 300, h: 200}) }}
+{{ cms.galleryImage('vacation', 'beach.jpg', {w: 300, h: 200}) }}
+
+{# Works with dynamic selectors too #}
+{{ cms.galleryImage('vacation', 'first', {w: 400}) }}
+{{ cms.galleryImage('vacation', 'featured', {w: 400}) }}
 ```
 
 #### Complete Gallery Launcher Example

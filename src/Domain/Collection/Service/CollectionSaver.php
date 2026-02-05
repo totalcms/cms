@@ -62,6 +62,11 @@ readonly class CollectionSaver
 			$data['formSettings'] = [];
 		}
 
+		// Ensure manualSort is an array (handle empty strings from form)
+		if (isset($data['manualSort']) && $data['manualSort'] === '') {
+			$data['manualSort'] = [];
+		}
+
 		$collection = $this->factory->generateCollection($data);
 
 		if ($this->storage->collectionExists($collection->id)) {
@@ -117,6 +122,11 @@ readonly class CollectionSaver
 		// Ensure formSettings is an array (handle empty strings from form)
 		if (isset($data['formSettings']) && $data['formSettings'] === '') {
 			$data['formSettings'] = [];
+		}
+
+		// Ensure manualSort is an array (handle empty strings from form)
+		if (isset($data['manualSort']) && $data['manualSort'] === '') {
+			$data['manualSort'] = [];
 		}
 
 		$collection = $this->factory->generateCollection($data);

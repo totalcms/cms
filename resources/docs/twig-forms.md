@@ -629,6 +629,104 @@ The form system automatically applies CSS classes based on options:
 - `.edit-mode` - when method is not 'POST'
 - `.formgrid` - when schema has formgrid configuration
 
+#### Form State Classes
+
+Forms automatically receive state classes during the save lifecycle that you can use for custom styling:
+
+| Class | Description |
+|-------|-------------|
+| `.unsaved` | Form has unsaved changes |
+| `.processing` | Form is being saved |
+| `.success` | Form was saved successfully |
+| `.error` | An error occurred during save |
+| `.actions-completed` | All post-save actions (webhooks, mailers, redirects) completed successfully |
+
+**Note:** The `.actions-completed` class is added *in addition to* `.success`, not as a replacement. This allows you to show different feedback for "saved" vs "all done":
+
+```css
+form.success {
+    /* Data saved to server */
+    border-color: green;
+}
+
+form.success.actions-completed {
+    /* All actions completed (emails sent, webhooks fired, etc.) */
+    background-color: #e8f5e9;
+}
+```
+
+#### Disabling the Status Banner
+
+By default, Total CMS displays a full-screen status banner overlay when forms are processing, saved, or encounter errors. You can disable this banner for individual forms by adding the `no-status-banner` class:
+
+```twig
+{# Disable the global status banner for this form #}
+{{ cms.form.builder('products', {
+    class: 'no-status-banner'
+}).addField('title').addField('price').build() }}
+```
+
+When `no-status-banner` is set:
+- The global overlay banner won't appear for this form
+- The form element still receives all state classes (`.processing`, `.success`, `.error`, `.unsaved`, `.actions-completed`)
+- You have full control over styling the form's feedback
+
+**Custom Styling Example:**
+
+```css
+/* Custom feedback for forms without the status banner */
+form.no-status-banner {
+    position: relative;
+    transition: border-color 0.3s ease;
+}
+
+form.no-status-banner.unsaved {
+    border-color: orange;
+}
+
+form.no-status-banner.processing {
+    border-color: blue;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+form.no-status-banner.processing::after {
+    content: "Saving...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 4px;
+}
+
+form.no-status-banner.success {
+    border-color: green;
+}
+
+form.no-status-banner.success::after {
+    content: "Saved!";
+    /* ... styling ... */
+}
+
+form.no-status-banner.success.actions-completed::after {
+    content: "All done!";
+    /* ... styling ... */
+}
+
+form.no-status-banner.error {
+    border-color: red;
+}
+```
+
+**Use Cases:**
+- Embedded forms where a full-screen overlay is disruptive
+- Multiple forms on a page where you want individual feedback
+- Custom-designed forms that need specific visual feedback
+- Modal/dialog forms where the overlay conflicts with the modal
+
 #### Simple Form Options
 
 For `cms.form.simple()` method:

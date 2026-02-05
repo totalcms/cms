@@ -1,60 +1,140 @@
 //-----------------------------------------------
 // Documentation Text Fragment Highlighter
-// Parses #:~:text= fragments and highlights all matches
+// Supports both URL ?highlight= param and on-page search input
 //-----------------------------------------------
 
 let currentHighlightIndex = -1;
 let allHighlights = [];
+let searchInput = null;
+let content = null;
 
 export default function initDocHighlight() {
 	try {
-		const params = new URLSearchParams(window.location.search);
-		const highlightText = params.get('highlight');
-
-		if (!highlightText) {
-			return;
-		}
-
 		// Find the content area
-		const content = document.querySelector('.doc-content');
+		content = document.querySelector('.doc-content');
 		if (!content) {
 			return;
 		}
 
-		// Highlight all matches for each term
-		const terms = highlightText.split(' ').filter(t => t.length > 0);
-		let firstMatch = null;
-
-		for (const term of terms) {
-			const match = highlightTextNodes(content, term);
-			if (!firstMatch && match) {
-				firstMatch = match;
-			}
+		// Don't show on docs homepage
+		if (document.querySelector('.doc-homepage')) {
+			return;
 		}
 
-		// Collect all highlights for navigation
-		allHighlights = Array.from(content.querySelectorAll('.doc-text-highlight'));
+		// Create simple search input
+		createSearchInput();
 
-		// Only show navigation if there are multiple highlights
-		if (allHighlights.length > 1) {
-			createNavigationUI();
-		}
+		// Check for URL highlight param
+		const params = new URLSearchParams(window.location.search);
+		const highlightText = params.get('highlight');
 
-		// Scroll to first match
-		if (firstMatch) {
-			firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			setCurrentHighlight(firstMatch);
+		if (highlightText) {
+			searchInput.value = highlightText;
+			performSearch(highlightText);
 		}
 	} catch (e) {
 		console.error('DocHighlight error:', e);
 	}
 }
 
+function createSearchInput() {
+	const wrapper = document.createElement('div');
+	wrapper.className = 'doc-page-search';
+
+	searchInput = document.createElement('input');
+	searchInput.type = 'search';
+	searchInput.className = 'doc-page-search-input';
+	searchInput.placeholder = 'Search this page';
+
+	wrapper.appendChild(searchInput);
+	content.insertBefore(wrapper, content.firstChild);
+
+	// Search on Enter
+	searchInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			performSearch(searchInput.value);
+		} else if (e.key === 'Escape') {
+			clearSearch();
+			searchInput.blur();
+		}
+	});
+
+	// Global Ctrl+F override
+	document.addEventListener('keydown', (e) => {
+		if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+			e.preventDefault();
+			searchInput.focus();
+			searchInput.select();
+		}
+	});
+}
+
+function performSearch(query) {
+	// Clear previous highlights
+	clearHighlights();
+
+	const trimmedQuery = query.trim();
+	if (trimmedQuery.length < 2) {
+		return;
+	}
+
+	// Highlight all matches for each term
+	const terms = trimmedQuery.split(' ').filter(t => t.length > 0);
+	let firstMatch = null;
+
+	for (const term of terms) {
+		const match = highlightTextNodes(content, term);
+		if (!firstMatch && match) {
+			firstMatch = match;
+		}
+	}
+
+	// Collect all highlights for navigation
+	allHighlights = Array.from(content.querySelectorAll('.doc-text-highlight'));
+
+	// Show navigation UI if there are multiple matches
+	if (allHighlights.length > 1) {
+		createNavigationUI();
+	}
+
+	// Scroll to first match
+	if (firstMatch) {
+		firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		setCurrentHighlight(firstMatch);
+	}
+}
+
+function clearSearch() {
+	if (searchInput) {
+		searchInput.value = '';
+	}
+	clearHighlights();
+}
+
+function clearHighlights() {
+	// Remove floating nav
+	const nav = document.querySelector('.doc-highlight-nav');
+	if (nav) {
+		nav.remove();
+	}
+
+	// Remove all highlight marks and restore original text
+	const highlights = content.querySelectorAll('.doc-text-highlight');
+	highlights.forEach(mark => {
+		const parent = mark.parentNode;
+		const text = document.createTextNode(mark.textContent);
+		parent.replaceChild(text, mark);
+		parent.normalize();
+	});
+
+	allHighlights = [];
+	currentHighlightIndex = -1;
+}
+
 function setCurrentHighlight(element) {
-	// Remove current class from all
 	allHighlights.forEach(h => h.classList.remove('doc-text-highlight-current'));
 
-	// Find index of this element
 	currentHighlightIndex = allHighlights.indexOf(element);
 	if (currentHighlightIndex >= 0) {
 		element.classList.add('doc-text-highlight-current');
@@ -68,7 +148,6 @@ function navigateHighlight(direction) {
 
 	currentHighlightIndex += direction;
 
-	// Wrap around
 	if (currentHighlightIndex >= allHighlights.length) {
 		currentHighlightIndex = 0;
 	} else if (currentHighlightIndex < 0) {
@@ -88,6 +167,12 @@ function updateNavigationCounter() {
 }
 
 function createNavigationUI() {
+	// Remove existing nav if present
+	const existingNav = document.querySelector('.doc-highlight-nav');
+	if (existingNav) {
+		existingNav.remove();
+	}
+
 	const nav = document.createElement('div');
 	nav.className = 'doc-highlight-nav';
 	nav.innerHTML = `
@@ -106,8 +191,14 @@ function highlightTextNodes(container, searchText) {
 	const walker = document.createTreeWalker(
 		container,
 		NodeFilter.SHOW_TEXT,
-		null,
-		false
+		{
+			acceptNode: (node) => {
+				if (node.parentNode.closest('.doc-page-search')) {
+					return NodeFilter.FILTER_REJECT;
+				}
+				return NodeFilter.FILTER_ACCEPT;
+			}
+		}
 	);
 
 	const textNodes = [];

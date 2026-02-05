@@ -198,6 +198,7 @@ readonly class LoginForm implements \Stringable
 			'id'               => "field-{$uuid}",
 			'name'             => 'persistent_login',
 			'type'             => 'checkbox',
+			'value'            => '1',
 			'aria-describedby' => "help-{$uuid}",
 		]);
 

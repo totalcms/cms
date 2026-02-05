@@ -29,13 +29,13 @@
 						<option value="{{ log }}" {% if activelog == log %}selected{% endif %}>{{ log }}</option>
 					{% endfor %}
 				</select>
-				<a id="log-download" href="/admin/utils/logs/download?logfile={{ activelog }}" class="btn btn-small" title="Download log file">Download</a>
+				<a id="log-download" href="utils/logs/download?logfile={{ activelog }}" class="btn btn-small" title="Download log file">Download</a>
 			</div>
 		</div>
 	</form>
 	<script>
 	document.getElementById('logfile').addEventListener('change', function(e) {
-		document.getElementById('log-download').href = '/admin/utils/logs/download?logfile=' + encodeURIComponent(this.value);
+		document.getElementById('log-download').href = 'utils/logs/download?logfile=' + encodeURIComponent(this.value);
 		document.getElementById('log-analyzer').submit();
 	});
 	</script>

@@ -39,7 +39,10 @@ class SentryMiddleware implements MiddlewareInterface
 			HttpBadRequestException::class,
 			\League\Csv\SyntaxError::class,
 			\League\Flysystem\UnableToCreateDirectory::class,
+			\League\Flysystem\CorruptedPathDetected::class,
 			\ParseError::class, // Corrupted PHP files - user installation issue
+			\DI\DependencyException::class, // Corrupted installation - missing classes or version mismatch
+			\DI\NotFoundException::class,
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
@@ -68,6 +71,8 @@ class SentryMiddleware implements MiddlewareInterface
 			'File name too long',
 			'Uploaded file already moved',
 			'Invalid Collection data provided',
+			'Invalid URL',
+			'Deck must be a dictionary of named objects',
 			'Unable to fetch object',
 			'installation has been corrupted',
 			'Invalid SVG content',
@@ -92,6 +97,8 @@ class SentryMiddleware implements MiddlewareInterface
 			'Callable TotalCMS\\',
 			// License API rate limiting (not a bug, user/bot issue)
 			'Rate limit exceeded',
+			// License API unreachable (server network issue, not a bug)
+			'License validation failed and no cached data available',
 			// Bot/scanner probing for non-existent collections
 			'Collection not found',
 			// User schema misconfiguration

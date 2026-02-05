@@ -781,7 +781,15 @@ readonly class TotalFormFactory
 	 */
 	public function depotDrop(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'depot', 'depot', 'depotDrop', $formOptions, $fieldOptions);
+		$formOptions = array_merge([
+			'collection' => 'depot',
+			'property'   => 'depot',
+		], $formOptions);
+
+		$property = $formOptions['property'];
+		unset($formOptions['property']);
+
+		return $this->singleFieldFormBuilder($id, $formOptions['collection'], $property, 'depotDrop', $formOptions, $fieldOptions);
 	}
 
 	/**

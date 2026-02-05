@@ -144,6 +144,44 @@ The following action types are supported by Total CMS (as defined in `/javascrip
 - **webhook** / **ajax** - Send POST request to external URL
 - **mailer** - Send email via configured mailer
 
+## Common Action Properties
+
+These properties can be used with multiple action types:
+
+### showSuccess
+
+Controls whether the success banner is displayed before navigation actions execute. Available on `redirect`, `redirect-object`, `refresh`, and `back` actions.
+
+**Values:**
+- `true` - Show success banner for 2 seconds before navigating (default)
+- `false` - Navigate immediately without showing success banner
+
+```json
+{
+	"action": "redirect",
+	"link": "/admin/dashboard",
+	"showSuccess": false
+}
+```
+
+**Note:** The success banner only appears after all actions complete successfully. Navigation actions (redirect, refresh, back) wait for the banner to display before navigating, unless `showSuccess: false` is set.
+
+### continue
+
+Controls whether subsequent actions execute if this action fails. Available on all action types.
+
+**Values:**
+- `true` - Continue to next action even if this action fails
+- `false` - Stop execution if this action fails (default)
+
+```json
+{
+	"action": "webhook",
+	"link": "https://api.example.com/notify",
+	"continue": true
+}
+```
+
 ### Redirect
 
 Redirect to a specific URL after the operation completes.
@@ -158,11 +196,21 @@ Redirect to a specific URL after the operation completes.
 **Properties:**
 - `action` - Must be `"redirect"`
 - `link` - The URL to redirect to
+- `showSuccess` - (optional) Show success banner before redirecting (default: `true`)
 
 **Example use cases:**
 - Redirect to collection list after delete
 - Send users to a custom admin page after save
 - Navigate to a dashboard or summary view
+
+**Example with immediate redirect (no success banner):**
+```json
+{
+	"action": "redirect",
+	"link": "/admin/dashboard",
+	"showSuccess": false
+}
+```
 
 ### Redirect Object
 
@@ -178,6 +226,7 @@ Redirect to a URL that includes the object's ID. The `{id}` placeholder is autom
 **Properties:**
 - `action` - Must be `"redirect-object"`
 - `link` - URL template with optional `{id}` placeholder
+- `showSuccess` - (optional) Show success banner before redirecting (default: `true`)
 
 **Example use cases:**
 - Stay on the object edit page after creating new object
@@ -201,6 +250,15 @@ Redirect to a URL that includes the object's ID. The `{id}` placeholder is autom
 ```
 This would redirect to `/admin/collections/products/123` (where 123 is the object ID).
 
+**Example with immediate redirect (no success banner):**
+```json
+{
+	"action": "redirect-object",
+	"link": "/admin/collections/products/{id}",
+	"showSuccess": false
+}
+```
+
 ### Refresh
 
 Refresh the current page to show updated content.
@@ -213,11 +271,20 @@ Refresh the current page to show updated content.
 
 **Properties:**
 - `action` - Must be `"refresh"`
+- `showSuccess` - (optional) Show success banner before refreshing (default: `true`)
 
 **Example use cases:**
 - Show updated data after edit
 - Reload form after successful save
 - Update calculated fields or dynamic content
+
+**Example with immediate refresh (no success banner):**
+```json
+{
+	"action": "refresh",
+	"showSuccess": false
+}
+```
 
 ### Back
 
@@ -231,11 +298,20 @@ Navigate back to the previous page (referrer). Only works if the referrer is on 
 
 **Properties:**
 - `action` - Must be `"back"`
+- `showSuccess` - (optional) Show success banner before navigating back (default: `true`)
 
 **Example use cases:**
 - Return to the page user came from after save
 - Go back after creating a new object
 - Navigate back after deletion
+
+**Example with immediate navigation (no success banner):**
+```json
+{
+	"action": "back",
+	"showSuccess": false
+}
+```
 
 **Note:** This action only works if there is a valid referrer from the same hostname. Otherwise, it does nothing.
 

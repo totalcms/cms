@@ -2,6 +2,41 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.7] - 2026-02-04
+
+### Added
+
+- **Depot Browser**: Full-featured file management UI with file preview, filtering, drag-and-drop uploads, keyboard navigation, folder renaming, and auto-saving file info
+- **Depot Drop Field**: New form field for selecting files from depot with support for custom collection and property targeting
+- **Manual Sort**: Define custom sort orders for collections via the `manualSort` collection setting with Twig filter support
+- **Form Error Summaries**: Form validation errors now display a summary for easier identification of issues
+- **Custom Form Status Banners**: Configurable status banner messages for form success and error states
+- **Form Actions Completed Event**: New `actions-completed` custom event dispatched on form element after all form actions finish
+- **Log Download**: Download log files directly from the log analyzer in admin utilities
+- **Mailer Duplicate**: Duplicate existing mailer configurations from the admin interface
+
+### Enhanced
+
+- **Form Actions**: Success banner now displays and waits before executing navigation actions
+- **Gallery Images**: `data-gallery` attributes are now always included on gallery images
+- **Documentation Search**: Improved search functionality in admin documentation
+- **Help Tooltips**: Fixed positioning and display issues with help tooltips
+- **Sentry Error Filtering**: Improved filtering of non-actionable errors including corrupted installations, unhandled promise rejections, and license timeout errors
+
+### Fixed
+
+- **Keep Me Logged In**: Fixed persistent login (Remember Me) not working correctly
+- **Login Redirect**: Fixed redirect behavior after login
+- **Logout Redirect**: Fixed redirect on logout
+- **Log Downloads**: Fixed log file download functionality
+- **Formgrid Headers**: Fixed layout breaking when header text contained more words than grid columns
+- **Manual Sort Save**: Fixed saving empty manual sort configurations
+- **Page Access Groups**: Fixed `restrictPageAccess` when using only access groups
+- **Password Reset Redirect**: Fixed redirect query parameter for password reset flow
+- **Inherited Schema Unique**: Fixed unique field feature for inherited schemas
+- **Sentry beforeSend**: Fixed crash when `error.name` is undefined in the Sentry JS error filter
+- **Import Error Messages**: Fixed collection-not-found error messages not being filtered by Sentry
+
 ## [3.1.6] - 2026-01-31
 
 ### Added
