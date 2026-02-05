@@ -1790,7 +1790,7 @@ NGINX;
 		$dimensions = ImageDimensionCalculator::calculateFromImageData($image ?? [], $imageworks);
 
 		// Determine gallery ID and image name for launcher integration
-		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		$id        = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
 		$imageName = $image['name'] ?? (is_string($name) ? $name : '');
 
 		$imgAttrs = [
