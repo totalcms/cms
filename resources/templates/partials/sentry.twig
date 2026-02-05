@@ -19,13 +19,16 @@
 				if (ignoredDomains.some(domain => window.location.hostname.includes(domain))) return null;
 
 				// Ignore cross-origin "Script error." (no details available due to browser security)
-				if (message === 'Script error.' || message === 'Script error') return null;
+				if (message === 'Script error.' || message === 'Script error' || message.includes("message `Script error.`")) return null;
+
+				// Ignore generic unhandled promise rejections with no details (not actionable)
+				if (message.includes('CustomEvent') && message.includes('unhandledrejection')) return null;
 
 				// Ignore browser extension errors
 				if (message.includes('runtime.sendMessage')) return null;
 
 				// Ignore JSON parse errors (user input issues)
-				if (error.name === 'SyntaxError' && (
+				if (error && error.name === 'SyntaxError' && (
 					message.includes('JSON') ||
 					message.includes('Unexpected token') ||
 					message.includes('Expected') ||
@@ -39,16 +42,16 @@
 				if (message.includes('400 Bad Request')) return null;
 
 				// Ignore Froala editor internal errors (third-party library)
-				if (error.name === 'IndexSizeError') return null;
-				if (error.name === 'InvalidCharacterError' && message.includes('invalid characters')) return null;
-				if (error.name === 'TypeError' && message.includes('querySelectorAll') && message.includes('is not a function')) return null;
+				if (error && error.name === 'IndexSizeError') return null;
+				if (error && error.name === 'InvalidCharacterError' && message.includes('invalid characters')) return null;
+				if (error && error.name === 'TypeError' && message.includes('querySelectorAll') && message.includes('is not a function')) return null;
 
 				// Ignore race condition errors when elements are removed during async operations
 				// (e.g., image onload firing after element was removed from DOM)
-				if (error.name === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;
+				if (error && error.name === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;
 
 				// Ignore SyntaxError (corrupted files or unsupported browsers)
-				if (error.name === 'SyntaxError') return null;
+				if (error && error.name === 'SyntaxError') return null;
 
 				return event;
 			}

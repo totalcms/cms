@@ -37,7 +37,7 @@ class JsonImporter
 	public function import(string $collection, UploadedFileInterface $file, bool $updateObject = false): int
 	{
 		if (!$this->collectionFetcher->collectionExists($collection)) {
-			$error = sprintf('Collection %s does not exist', $collection);
+			$error = sprintf('Collection does not exist: %s', $collection);
 			$this->logger->error($error);
 			throw new \InvalidArgumentException($error);
 		}

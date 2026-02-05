@@ -69,7 +69,7 @@ final class CsvImporterTest extends TestCase
 		$file = $this->createMockUploadedFile('id,name\n1,test');
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Collection test does not exist');
+		$this->expectExceptionMessage('Collection does not exist: test');
 
 		$this->csvImporter->import('test', $file);
 	}

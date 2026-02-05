@@ -81,7 +81,7 @@ final class JsonImporterTest extends TestCase
 			->willReturn(false);
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Collection nonexistent does not exist');
+		$this->expectExceptionMessage('Collection does not exist: nonexistent');
 
 		$this->importer->import('nonexistent', $file);
 	}
