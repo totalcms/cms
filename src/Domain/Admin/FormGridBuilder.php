@@ -319,6 +319,11 @@ HTML;
 		$maxColumns = 0;
 
 		foreach ($this->lines as $line) {
+			// Skip dividers and headers - they always span full width
+			if (self::DIVIDER === $line || preg_match(self::HEADER_REGEX, $line)) {
+				continue;
+			}
+
 			// Count columns in the current line
 			$columns    = preg_split('/\s+/', $line) ?: [];
 			$maxColumns = max($maxColumns, count($columns));
