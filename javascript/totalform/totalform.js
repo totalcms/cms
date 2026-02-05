@@ -72,7 +72,7 @@ export default class TotalForm {
 		if (this.form.dataset.deleteActions) {
 			this.options.actions.delete = JSON.parse(this.form.dataset.deleteActions);
 		}
-		this.delayActions = 2500;
+		this.delayActions = 2000;
 
 		this.api = new TotalCMS({
 			url: this.form.dataset.api,
@@ -556,8 +556,17 @@ export default class TotalForm {
     }
 
     async runAction(action) {
+		// Helper to show success banner and wait before navigation (default: true)
+		const showSuccessAndWait = async () => {
+			if (action.showSuccess !== false) {
+				this.success();
+				await new Promise(resolve => setTimeout(resolve, this.delayActions));
+			}
+		};
+
         switch (action.action) {
 			case "back":
+				await showSuccessAndWait();
 				const referrerUrl = new URL(document.referrer);
 				if (window.history.length > 1 && document.referrer && referrerUrl.hostname === window.location.hostname) {
 					document.location = document.referrer;
@@ -570,9 +579,11 @@ export default class TotalForm {
 				});
 				break;
             case "redirect":
+				await showSuccessAndWait();
                 document.location = action.link;
                 break;
             case "redirect-object":
+				await showSuccessAndWait();
 				const link = decodeURI(action.link);
 				if (link.match("{id}"))  {
 					document.location = link.replace("{id}", this.id);
@@ -581,6 +592,7 @@ export default class TotalForm {
 				}
                 break;
             case "refresh":
+				await showSuccessAndWait();
                 location.reload(true);
                 break;
 			case "ajax":

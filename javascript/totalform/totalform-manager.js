@@ -9,7 +9,7 @@ export default class TotalFormManager {
     constructor() {
 		this.processingStart = Date.now();
 		this.processingLimit = 1000;
-		this.successLimit    = 2500;
+		this.successLimit    = 2000;
 		this.unsavedCounter  = 0;
 
 		this.forms = this.findForms();
