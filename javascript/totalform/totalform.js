@@ -535,19 +535,24 @@ export default class TotalForm {
 
     afterSaveAction(response) {
 		const runEditActions = this.isEditMode();
-        this.success(response);
-        const waitUntilSaved = () => {
-            // wait until all saving states have completed
-            if (this.isSuccess()) {
-				// Mark all fields as saved
-				this.fields.forEach(field => field.saved());
-                // run actions
-                return runEditActions ? this.runEditActions() : this.runNewActions();
-            }
-            // Check again
-            window.setTimeout(waitUntilSaved,250);
-        };
-        waitUntilSaved();
+
+		// Extract ID from response for new objects (needed for actions like redirect-object)
+		if (response && response.id && (!this.id || this.id.length === 0)) {
+			this.id = response.id;
+			this.form.dataset.id = response.id;
+		}
+		this.setupEditMode();
+
+		// Mark all fields as saved
+		this.fields.forEach(field => field.saved());
+
+		// Run actions first, then show success banner
+		const actions = runEditActions ? this.options.actions.edit : this.options.actions.new;
+		this.runActions(actions)
+			.then(() => this.success(response))
+			.catch(() => {
+				// Error already handled in runActions
+			});
     }
 
     async runAction(action) {

@@ -9,6 +9,7 @@ export default class TotalFormManager {
     constructor() {
 		this.processingStart = Date.now();
 		this.processingLimit = 1000;
+		this.successLimit    = 2500;
 		this.unsavedCounter  = 0;
 
 		this.forms = this.findForms();
@@ -204,8 +205,7 @@ export default class TotalFormManager {
 		this.delayProcessing(() => {
 			this.bannerStatus("success");
 			console.log("All forms saved successfully.");
-			this.processingStart = Date.now();
-			this.delayProcessing(() => this.bannerStatus());
+			window.setTimeout(() => this.bannerStatus(), this.successLimit);
 		});
     }
 }
