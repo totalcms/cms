@@ -644,6 +644,7 @@ export default class TotalForm {
 
 		// All actions completed successfully
 		this.form.classList.add("actions-completed");
+		this.form.dispatchEvent(new CustomEvent("actions-completed"));
 	}
 
     runNewActions() {
