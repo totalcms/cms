@@ -71,6 +71,13 @@ const HEADING_OPTIONS = [
 	{ level: 4,  label: 'Heading 4' },
 ];
 
+const ALIGN_OPTIONS = [
+	{ value: 'left',    icon: 'align-left',    label: 'Align Left' },
+	{ value: 'center',  icon: 'align-center',  label: 'Align Center' },
+	{ value: 'right',   icon: 'align-right',   label: 'Align Right' },
+	{ value: 'justify', icon: 'align-justify',  label: 'Align Justify' },
+];
+
 export default class TiptapToolbar {
 
 	constructor(editor, config) {
@@ -84,9 +91,9 @@ export default class TiptapToolbar {
 	defaultConfig() {
 		return [
 			{ name: 'text', buttons: ['bold', 'italic', 'underline'] },
-			{ name: 'paragraph', buttons: ['bulletList', 'orderedList', 'heading', 'alignLeft', 'alignCenter', 'alignRight', 'alignJustify'] },
+			{ name: 'paragraph', buttons: ['bulletList', 'orderedList', 'heading', 'align'] },
 			{ name: 'insert', buttons: ['link', 'image'] },
-			{ name: 'misc', buttons: ['undo', 'redo', 'clearFormatting', 'codeView'], align: 'right' },
+			{ name: 'misc', buttons: ['clearFormatting', 'codeView'], align: 'right' },
 		];
 	}
 
@@ -104,6 +111,10 @@ export default class TiptapToolbar {
 			for (const buttonName of group.buttons) {
 				if (buttonName === 'heading') {
 					groupEl.appendChild(this.buildHeadingDropdown());
+					continue;
+				}
+				if (buttonName === 'align') {
+					groupEl.appendChild(this.buildAlignDropdown());
 					continue;
 				}
 
@@ -193,6 +204,56 @@ export default class TiptapToolbar {
 		return wrapper;
 	}
 
+	buildAlignDropdown() {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'ste-toolbar-dropdown';
+
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'ste-toolbar-btn ste-toolbar-dropdown-toggle ste-toolbar-dropdown-toggle--icon';
+		toggle.title = 'Text Alignment';
+		toggle.setAttribute('aria-label', 'Text Alignment');
+		toggle.style.setProperty('--btn-icon', 'var(--icon-ste-align-left)');
+		toggle.innerHTML = `<span class="ste-caret"></span>`;
+
+		const menu = document.createElement('div');
+		menu.className = 'ste-toolbar-dropdown-menu ste-toolbar-dropdown-menu--row';
+
+		for (const opt of ALIGN_OPTIONS) {
+			const item = document.createElement('button');
+			item.type = 'button';
+			item.className = 'ste-toolbar-btn ste-toolbar-dropdown-item';
+			item.title = opt.label;
+			item.setAttribute('aria-label', opt.label);
+			item.dataset.align = opt.value;
+			item.style.setProperty('--btn-icon', `var(--icon-ste-${opt.icon})`);
+
+			item.addEventListener('click', (e) => {
+				e.preventDefault();
+				this.editor.chain().focus().setTextAlign(opt.value).run();
+				this.closeDropdowns();
+			});
+
+			menu.appendChild(item);
+		}
+
+		toggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const isOpen = wrapper.classList.contains('is-open');
+			this.closeDropdowns();
+			if (!isOpen) wrapper.classList.add('is-open');
+		});
+
+		document.addEventListener('click', () => this.closeDropdowns());
+
+		wrapper.appendChild(toggle);
+		wrapper.appendChild(menu);
+
+		this.buttons.set('align', { element: wrapper, type: 'dropdown' });
+		return wrapper;
+	}
+
 	closeDropdowns() {
 		this.element.querySelectorAll('.ste-toolbar-dropdown.is-open')
 			.forEach(el => el.classList.remove('is-open'));
@@ -231,7 +292,8 @@ export default class TiptapToolbar {
 	updateActiveStates() {
 		for (const [name, entry] of this.buttons) {
 			if (entry.type === 'dropdown') {
-				this.updateHeadingDropdown(entry.element);
+				if (name === 'heading') this.updateHeadingDropdown(entry.element);
+				if (name === 'align') this.updateAlignDropdown(entry.element);
 				continue;
 			}
 
@@ -268,6 +330,23 @@ export default class TiptapToolbar {
 				? !this.editor.isActive('heading')
 				: this.editor.isActive('heading', { level });
 			item.classList.toggle('is-active', isActive);
+		}
+	}
+
+	updateAlignDropdown(wrapper) {
+		const toggle = wrapper.querySelector('.ste-toolbar-dropdown-toggle');
+		const items = wrapper.querySelectorAll('.ste-toolbar-dropdown-item');
+		let activeIcon = 'align-left';
+
+		for (const item of items) {
+			const value = item.dataset.align;
+			const isActive = this.editor.isActive({ textAlign: value });
+			item.classList.toggle('is-active', isActive);
+			if (isActive) activeIcon = `align-${value}`;
+		}
+
+		if (toggle) {
+			toggle.style.setProperty('--btn-icon', `var(--icon-ste-${activeIcon})`);
 		}
 	}
 

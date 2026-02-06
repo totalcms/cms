@@ -121,13 +121,24 @@
 		min-width        : 140px;
 		padding          : 4px 0;
 		background-color : oklch(var(--totalform-white));
-		border           : 1px solid oklch(var(--totalform-border-color));
-		border-radius    : 4px;
-		box-shadow       : 0 2px 8px oklch(0 0 0 / 0.12);
+		border-radius    : var(--totalform-radius);
+		box-shadow       : 0 3px 1px -2px #0003,0 2px 2px #00000024,0 1px 5px #0000001f;
 	}
 
 	&.is-open .ste-toolbar-dropdown-menu {
 		display : block;
+	}
+
+	.ste-toolbar-dropdown-menu--row {
+		display: none;
+		flex-direction: row;
+		min-width: auto;
+		padding: 4px;
+		gap: 2px;
+	}
+
+	&.is-open .ste-toolbar-dropdown-menu--row {
+		display: flex;
 	}
 }
 
@@ -138,7 +149,7 @@
 	border      : none;
 	background  : transparent;
 	color       : oklch(var(--totalform-text-color));
-	font-size   : 13px;
+	font-size   : 1rem;
 	text-align  : left;
 	cursor      : pointer;
 	white-space : nowrap;
