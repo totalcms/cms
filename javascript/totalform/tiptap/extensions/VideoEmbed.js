@@ -4,6 +4,7 @@
  */
 
 import Youtube from '@tiptap/extension-youtube';
+import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
 
 /**
  * Creates a video embed dialog
@@ -64,6 +65,9 @@ function createVideoDialog(editor, uploadConfig) {
 	let uploadedUrl = null;
 	const fileInput = dialog.querySelector('.ste-upload-input');
 	const uploadZone = dialog.querySelector('.ste-upload-zone');
+	const progress = dialog.querySelector('.ste-upload-progress');
+	const progressBar = dialog.querySelector('.ste-upload-progress-bar');
+	const progressText = dialog.querySelector('.ste-upload-progress-text');
 
 	uploadZone.addEventListener('dragover', (e) => {
 		e.preventDefault();
@@ -77,58 +81,33 @@ function createVideoDialog(editor, uploadConfig) {
 		uploadZone.classList.remove('is-dragover');
 		const file = e.dataTransfer.files[0];
 		if (file && file.type.startsWith('video/')) {
-			uploadFile(file);
+			handleUpload(file);
 		}
 	});
 
 	fileInput.addEventListener('change', () => {
-		if (fileInput.files[0]) uploadFile(fileInput.files[0]);
+		if (fileInput.files[0]) handleUpload(fileInput.files[0]);
 	});
 
-	function uploadFile(file) {
-		const url = typeof uploadConfig.url === 'function' ? uploadConfig.url() : uploadConfig.url;
-		if (!url) return;
-
-		const formData = new FormData();
-		formData.append(uploadConfig.videoParam || 'video', file);
-
-		const progress = dialog.querySelector('.ste-upload-progress');
-		const progressBar = dialog.querySelector('.ste-upload-progress-bar');
-		const progressText = dialog.querySelector('.ste-upload-progress-text');
+	function handleUpload(file) {
+		const url = getUploadUrl(uploadConfig);
 		progress.style.display = '';
 
-		const xhr = new XMLHttpRequest();
-		xhr.open('POST', url);
-
-		xhr.upload.addEventListener('progress', (e) => {
-			if (e.lengthComputable) {
-				const percent = Math.round((e.loaded / e.total) * 100);
+		uploadFileWithProgress(file, url, uploadConfig, {
+			onProgress(percent) {
 				progressBar.style.width = `${percent}%`;
 				progressText.textContent = `Uploading... ${percent}%`;
-			}
+			},
+			onSuccess(data) {
+				progress.style.display = 'none';
+				uploadedUrl = data.link;
+				uploadZone.innerHTML = `<p>Uploaded: ${file.name}</p>`;
+			},
+			onError(msg) {
+				progress.style.display = 'none';
+				progressText.textContent = msg;
+			},
 		});
-
-		xhr.addEventListener('load', () => {
-			progress.style.display = 'none';
-			if (xhr.status >= 200 && xhr.status < 300) {
-				try {
-					const data = JSON.parse(xhr.responseText);
-					uploadedUrl = data.link;
-					uploadZone.innerHTML = `<p>Uploaded: ${file.name}</p>`;
-				} catch {
-					console.error('Failed to parse upload response');
-				}
-			} else {
-				progressText.textContent = 'Upload failed';
-			}
-		});
-
-		xhr.addEventListener('error', () => {
-			progress.style.display = 'none';
-			progressText.textContent = 'Upload failed';
-		});
-
-		xhr.send(formData);
 	}
 
 	// Close handlers

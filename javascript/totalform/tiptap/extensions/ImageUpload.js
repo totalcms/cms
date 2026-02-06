@@ -1,11 +1,12 @@
 /**
  * ImageUpload Extension
  * Custom image node with upload dialog, drag-drop, paste support.
- * Uses existing /upload/ API routes.
+ * Uses DropletTestSet for client-side rule validation.
  */
 
 import Image from '@tiptap/extension-image';
 import { Plugin } from '@tiptap/pm/state';
+import { getUploadUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
 
 /**
  * Creates an image upload dialog element
@@ -22,24 +23,16 @@ function createImageDialog(editor, uploadConfig) {
 			<h3>Insert Image</h3>
 			<button type="button" class="ste-dialog-close" aria-label="Close">&times;</button>
 		</div>
-		<div class="ste-dialog-tabs">
-			<button type="button" class="ste-dialog-tab is-active" data-tab="upload">Upload</button>
-			<button type="button" class="ste-dialog-tab" data-tab="url">URL</button>
-		</div>
 		<div class="ste-dialog-body">
-			<div class="ste-dialog-panel is-active" data-panel="upload">
-				<div class="ste-upload-zone">
-					<input type="file" accept="image/*" class="ste-upload-input" />
-					<p>Click or drag an image here to upload</p>
-				</div>
-				<div class="ste-upload-progress" style="display:none;">
-					<div class="ste-upload-progress-bar"></div>
-					<span class="ste-upload-progress-text">Uploading...</span>
-				</div>
+			<div class="ste-upload-zone">
+				<input type="file" accept="image/*" class="ste-upload-input" />
+				<p>Click or drag an image here to upload</p>
 			</div>
-			<div class="ste-dialog-panel" data-panel="url">
-				<input type="url" class="ste-url-input" placeholder="https://example.com/image.jpg" />
+			<div class="ste-upload-progress" style="display:none;">
+				<div class="ste-upload-progress-bar"></div>
+				<span class="ste-upload-progress-text">Uploading...</span>
 			</div>
+			<div class="ste-upload-error" style="display:none;"></div>
 		</div>
 		<div class="ste-dialog-footer">
 			<input type="text" class="ste-alt-input" placeholder="Alt text (optional)" />
@@ -52,20 +45,25 @@ function createImageDialog(editor, uploadConfig) {
 
 	overlay.appendChild(dialog);
 
-	// Tab switching
-	dialog.querySelectorAll('.ste-dialog-tab').forEach(tab => {
-		tab.addEventListener('click', () => {
-			dialog.querySelectorAll('.ste-dialog-tab').forEach(t => t.classList.remove('is-active'));
-			dialog.querySelectorAll('.ste-dialog-panel').forEach(p => p.classList.remove('is-active'));
-			tab.classList.add('is-active');
-			dialog.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('is-active');
-		});
-	});
-
-	// File input
 	const fileInput = dialog.querySelector('.ste-upload-input');
 	const uploadZone = dialog.querySelector('.ste-upload-zone');
+	const progress = dialog.querySelector('.ste-upload-progress');
+	const progressBar = dialog.querySelector('.ste-upload-progress-bar');
+	const progressText = dialog.querySelector('.ste-upload-progress-text');
+	const errorEl = dialog.querySelector('.ste-upload-error');
+	const rules = uploadConfig.rules || {};
 	let uploadedUrl = null;
+
+	function showError(messages) {
+		const list = Array.isArray(messages) ? messages : [messages];
+		errorEl.textContent = list.join('. ');
+		errorEl.style.display = '';
+	}
+
+	function clearError() {
+		errorEl.textContent = '';
+		errorEl.style.display = 'none';
+	}
 
 	// Drag and drop on the zone
 	uploadZone.addEventListener('dragover', (e) => {
@@ -80,63 +78,42 @@ function createImageDialog(editor, uploadConfig) {
 		uploadZone.classList.remove('is-dragover');
 		const file = e.dataTransfer.files[0];
 		if (file && file.type.startsWith('image/')) {
-			uploadFile(file);
+			handleUpload(file);
 		}
 	});
 
 	fileInput.addEventListener('change', () => {
-		if (fileInput.files[0]) {
-			uploadFile(fileInput.files[0]);
-		}
+		if (fileInput.files[0]) handleUpload(fileInput.files[0]);
 	});
 
-	function uploadFile(file) {
-		const url = typeof uploadConfig.url === 'function' ? uploadConfig.url() : uploadConfig.url;
-		if (!url) {
-			console.warn('No upload URL configured');
+	async function handleUpload(file) {
+		clearError();
+
+		// Validate against rules before uploading
+		const result = await validateFile(file, rules);
+		if (!result.valid) {
+			showError(result.errors);
 			return;
 		}
 
-		const formData = new FormData();
-		formData.append(uploadConfig.imageParam || 'image', file);
-
-		const progress = dialog.querySelector('.ste-upload-progress');
-		const progressBar = dialog.querySelector('.ste-upload-progress-bar');
-		const progressText = dialog.querySelector('.ste-upload-progress-text');
+		const url = getUploadUrl(uploadConfig);
 		progress.style.display = '';
 
-		const xhr = new XMLHttpRequest();
-		xhr.open('POST', url);
-
-		xhr.upload.addEventListener('progress', (e) => {
-			if (e.lengthComputable) {
-				const percent = Math.round((e.loaded / e.total) * 100);
+		uploadFileWithProgress(file, url, uploadConfig, {
+			onProgress(percent) {
 				progressBar.style.width = `${percent}%`;
 				progressText.textContent = `Uploading... ${percent}%`;
-			}
+			},
+			onSuccess(data) {
+				progress.style.display = 'none';
+				uploadedUrl = data.link;
+				uploadZone.innerHTML = `<p>Uploaded: ${file.name}</p>`;
+			},
+			onError(msg) {
+				progress.style.display = 'none';
+				showError(msg);
+			},
 		});
-
-		xhr.addEventListener('load', () => {
-			progress.style.display = 'none';
-			if (xhr.status >= 200 && xhr.status < 300) {
-				try {
-					const data = JSON.parse(xhr.responseText);
-					uploadedUrl = data.link;
-					uploadZone.innerHTML = `<p>Uploaded: ${file.name}</p>`;
-				} catch {
-					console.error('Failed to parse upload response');
-				}
-			} else {
-				progressText.textContent = 'Upload failed';
-			}
-		});
-
-		xhr.addEventListener('error', () => {
-			progress.style.display = 'none';
-			progressText.textContent = 'Upload failed';
-		});
-
-		xhr.send(formData);
 	}
 
 	// Close handlers
@@ -150,57 +127,14 @@ function createImageDialog(editor, uploadConfig) {
 	// Insert handler
 	dialog.querySelector('.ste-dialog-btn--insert').addEventListener('click', () => {
 		const alt = dialog.querySelector('.ste-alt-input').value;
-		const activePanel = dialog.querySelector('.ste-dialog-panel.is-active').dataset.panel;
 
-		let src;
-		if (activePanel === 'upload') {
-			src = uploadedUrl;
-		} else {
-			src = dialog.querySelector('.ste-url-input').value;
-		}
-
-		if (src) {
-			editor.chain().focus().setImage({ src, alt: alt || undefined }).run();
+		if (uploadedUrl) {
+			editor.chain().focus().setImage({ src: uploadedUrl, alt: alt || undefined }).run();
 		}
 		close();
 	});
 
 	return overlay;
-}
-
-/**
- * Upload a file directly (for paste/drop into editor)
- */
-function uploadImageDirect(file, uploadConfig) {
-	return new Promise((resolve, reject) => {
-		const url = typeof uploadConfig.url === 'function' ? uploadConfig.url() : uploadConfig.url;
-		if (!url) {
-			reject(new Error('No upload URL'));
-			return;
-		}
-
-		const formData = new FormData();
-		formData.append(uploadConfig.imageParam || 'image', file);
-
-		const xhr = new XMLHttpRequest();
-		xhr.open('POST', url);
-
-		xhr.addEventListener('load', () => {
-			if (xhr.status >= 200 && xhr.status < 300) {
-				try {
-					const data = JSON.parse(xhr.responseText);
-					resolve(data.link);
-				} catch {
-					reject(new Error('Failed to parse response'));
-				}
-			} else {
-				reject(new Error(`Upload failed: ${xhr.status}`));
-			}
-		});
-
-		xhr.addEventListener('error', () => reject(new Error('Upload error')));
-		xhr.send(formData);
-	});
 }
 
 /**
@@ -232,6 +166,7 @@ const ImageUpload = Image.extend({
 
 	addProseMirrorPlugins() {
 		const uploadConfig = this.editor.options.uploadConfig || {};
+		const rules = uploadConfig.rules || {};
 
 		return [
 			...(this.parent?.() || []),
@@ -244,10 +179,18 @@ const ImageUpload = Image.extend({
 						if (!file.type.startsWith('image/')) return false;
 
 						event.preventDefault();
+						const url = getUploadUrl(uploadConfig);
 
-						uploadImageDirect(file, uploadConfig).then(src => {
+						validateFile(file, rules).then(result => {
+							if (!result.valid) {
+								console.warn('Image drop rejected:', result.errors);
+								return;
+							}
+							return uploadFile(file, url, uploadConfig);
+						}).then(data => {
+							if (!data) return;
 							const { schema } = view.state;
-							const node = schema.nodes.image.create({ src });
+							const node = schema.nodes.image.create({ src: data.link });
 							const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
 							if (pos) {
 								const tr = view.state.tr.insert(pos.pos, node);
@@ -267,9 +210,18 @@ const ImageUpload = Image.extend({
 								const file = item.getAsFile();
 								if (!file) continue;
 
-								uploadImageDirect(file, uploadConfig).then(src => {
+								const url = getUploadUrl(uploadConfig);
+
+								validateFile(file, rules).then(result => {
+									if (!result.valid) {
+										console.warn('Image paste rejected:', result.errors);
+										return;
+									}
+									return uploadFile(file, url, uploadConfig);
+								}).then(data => {
+									if (!data) return;
 									const { schema } = view.state;
-									const node = schema.nodes.image.create({ src });
+									const node = schema.nodes.image.create({ src: data.link });
 									const tr = view.state.tr.replaceSelectionWith(node);
 									view.dispatch(tr);
 								}).catch(err => console.error('Image paste upload failed:', err));
@@ -286,4 +238,4 @@ const ImageUpload = Image.extend({
 });
 
 export default ImageUpload;
-export { createImageDialog, uploadImageDirect };
+export { createImageDialog };

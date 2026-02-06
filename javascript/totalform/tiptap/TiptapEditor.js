@@ -65,6 +65,7 @@ export default class TiptapEditor {
 			element: null, // we'll attach manually
 			extensions: extensions,
 			content: this.textarea.value || '',
+			uploadConfig: this.options.upload || {},
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -130,6 +131,7 @@ export default class TiptapEditor {
 			element: el,
 			extensions: this.buildExtensions(),
 			content: content,
+			uploadConfig: this.options.upload || {},
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -304,8 +306,6 @@ export default class TiptapEditor {
 	}
 
 	openImageDialog() {
-		const uploadConfig = this.options.upload || {};
-		this.editor.options.uploadConfig = uploadConfig;
 		this.editor.commands.openImageDialog();
 	}
 

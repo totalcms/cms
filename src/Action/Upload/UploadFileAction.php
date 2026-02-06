@@ -23,21 +23,20 @@ readonly class UploadFileAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$files = $request->getUploadedFiles();
+		$file  = $files['file'] ?? null;
 
-		$type = null;
-		// possible file types: image, video, file
-		if (array_key_exists('image', $files)) {
-			$type = 'image';
-		} elseif (array_key_exists('video', $files)) {
-			$type = 'video';
-		} elseif (array_key_exists('file', $files)) {
-			$type = 'file';
-		}
-
-		if ($type === null) {
+		if ($file === null) {
 			return $this->renderer->json($response, ['error' => 'No file found for upload'])->withStatus(400);
 		}
-		$file = $files[$type];
+
+		// Detect type from MIME
+		$mime = $file->getClientMediaType() ?? '';
+		$type = 'file';
+		if (str_starts_with($mime, 'image/')) {
+			$type = 'image';
+		} elseif (str_starts_with($mime, 'video/')) {
+			$type = 'video';
+		}
 
 		// Validate uploaded file security
 		$validation = $this->validator->validateFile($file, $type);
@@ -83,10 +82,12 @@ readonly class UploadFileAction
 			$filepath
 		);
 
-		$link = $this->config->api . '/upload/' . $path;
+		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+
+		$link = $apiPath . '/upload/' . $path;
 
 		if ($type === 'image') {
-			$link = $this->config->api . '/imageworks/upload/' . $path;
+			$link = $apiPath . '/imageworks/upload/' . $path;
 		}
 
 		$params = $request->getParsedBody();

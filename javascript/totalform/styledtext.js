@@ -95,15 +95,10 @@ export default class StyledTextField extends TotalField {
 			placeholder   : this.input.getAttribute("placeholder"),
 			confirmDelete : true,
 			onContentChanged: () => this.changed(),
-			// Upload config for Phase 2
 			upload: {
 				url: () => this.uploadAPI(),
-				imageParam: 'image',
-				fileParam: 'file',
-				videoParam: 'video',
-				maxImageSize: megabyte * 5,
-				maxFileSize: megabyte * 1024,
-				maxVideoSize: megabyte * 1024,
+				imagePreset: this.options.imagePreset || null,
+				rules: this.options.rules || {},
 			},
 		};
 	}
