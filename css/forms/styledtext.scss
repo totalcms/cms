@@ -864,17 +864,15 @@
 }
 
 .ste-image-popover__field {
-	display     : flex;
-	align-items : center;
-	gap         : 8px;
+	display        : flex;
+	flex-direction : column;
+	gap            : 4px;
 }
 
 .ste-image-popover__field-label {
 	font-size   : 12px;
 	font-weight : 500;
 	color       : oklch(var(--totalform-darkgray));
-	white-space : nowrap;
-	min-width   : 50px;
 }
 
 .ste-image-popover__checkbox-label {
@@ -889,23 +887,21 @@
 	cursor      : pointer;
 }
 
-.ste-image-popover__input {
-	flex             : 1;
+.ste-image-popover__input,
+.ste-image-popover__textarea {
+	width            : 100%;
 	padding          : 4px 8px;
 	border           : 1px solid oklch(var(--totalform-border-color));
 	border-radius    : 4px;
 	font-size        : 12px;
+	font-family      : inherit;
 	color            : oklch(var(--totalform-text-color));
 	background-color : oklch(var(--totalform-white));
+	resize           : none;
 
 	&:focus {
 		outline      : none;
 		border-color : oklch(var(--totalform-accent));
-	}
-
-	&:disabled {
-		opacity          : 0.5;
-		background-color : oklch(var(--totalform-nearwhite));
 	}
 }
 

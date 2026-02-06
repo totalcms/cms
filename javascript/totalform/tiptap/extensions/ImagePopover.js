@@ -32,14 +32,13 @@ function createPopoverElement() {
 		<div class="ste-image-popover__fields">
 			<div class="ste-image-popover__field">
 				<label class="ste-image-popover__field-label">Alt text</label>
-				<input type="text" class="ste-image-popover__input" data-field="alt" placeholder="Describe this image" />
+				<textarea class="ste-image-popover__textarea" data-field="alt" placeholder="Describe this image" rows="3"></textarea>
 			</div>
-			<div class="ste-image-popover__field ste-image-popover__field--caption">
+			<div class="ste-image-popover__field">
 				<label class="ste-image-popover__checkbox-label">
 					<input type="checkbox" data-field="caption-toggle" />
-					Caption
+					Use as caption
 				</label>
-				<input type="text" class="ste-image-popover__input" data-field="caption" placeholder="Image caption" disabled />
 			</div>
 		</div>
 	`;
@@ -82,27 +81,23 @@ class ImagePopoverManager {
 		const altInput = this.popover.querySelector('[data-field="alt"]');
 		altInput.addEventListener('input', () => {
 			this._skipNextUpdate = true;
-			this.applyAttrs({ alt: altInput.value || null });
+			const alt = altInput.value || null;
+			const attrs = { alt };
+			// If caption is active, keep it in sync with alt text
+			if (this.currentNodeType === 'figure') {
+				attrs.caption = alt;
+			}
+			this.applyAttrs(attrs);
 		});
 
-		// Caption toggle
+		// Caption toggle — wraps/unwraps figure, using alt text as caption
 		const captionToggle = this.popover.querySelector('[data-field="caption-toggle"]');
-		const captionInput = this.popover.querySelector('[data-field="caption"]');
-
 		captionToggle.addEventListener('change', () => {
 			if (captionToggle.checked) {
-				captionInput.disabled = false;
-				this.convertToFigure(captionInput.value || '');
+				this.convertToFigure(altInput.value || '');
 			} else {
-				captionInput.disabled = true;
-				captionInput.value = '';
 				this.convertToImage();
 			}
-		});
-
-		captionInput.addEventListener('input', () => {
-			this._skipNextUpdate = true;
-			this.applyAttrs({ caption: captionInput.value || null });
 		});
 
 		// Prevent all mousedown inside popover from deselecting the image.
@@ -251,7 +246,6 @@ class ImagePopoverManager {
 		const floatVal = attrs['data-float'] || attrs.float || null;
 		const sizeVal = attrs['data-size'] || attrs.size || null;
 		const alt = attrs.alt || '';
-		const caption = attrs.caption || '';
 		const hasCaption = node.type.name === 'figure';
 
 		// Alt input
@@ -260,14 +254,9 @@ class ImagePopoverManager {
 			altInput.value = alt;
 		}
 
-		// Caption
+		// Caption toggle
 		const captionToggle = this.popover.querySelector('[data-field="caption-toggle"]');
-		const captionInput = this.popover.querySelector('[data-field="caption"]');
 		captionToggle.checked = hasCaption;
-		captionInput.disabled = !hasCaption;
-		if (!this._skipNextUpdate) {
-			captionInput.value = caption;
-		}
 
 		this._skipNextUpdate = false;
 
