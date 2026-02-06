@@ -26,6 +26,7 @@ import Typography from '@tiptap/extension-typography';
 import ImageUpload from './extensions/ImageUpload.js';
 import { Youtube, createVideoDialog } from './extensions/VideoEmbed.js';
 import { createFileDialog } from './extensions/FileLink.js';
+import { createLinkDialog } from './extensions/LinkDialog.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
@@ -299,19 +300,7 @@ export default class TiptapEditor {
 	}
 
 	openLinkDialog() {
-		const previousUrl = this.editor.getAttributes('link').href || '';
-		const url = prompt('Enter URL:', previousUrl);
-
-		if (url === null) return; // cancelled
-
-		if (url === '') {
-			this.editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			return;
-		}
-
-		// Auto-prefix https://
-		const finalUrl = url.match(/^https?:\/\//) ? url : `https://${url}`;
-		this.editor.chain().focus().extendMarkRange('link').setLink({ href: finalUrl }).run();
+		createLinkDialog(this.editor);
 	}
 
 	openImageDialog() {

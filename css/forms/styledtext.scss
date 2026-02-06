@@ -279,7 +279,7 @@
 	border           : none;
 	resize           : vertical;
 	font-family      : monospace;
-	font-size        : 13px;
+	font-size        : 1rem;
 	line-height      : 1.5;
 	color            : oklch(var(--totalform-text-color));
 	background-color : oklch(var(--totalform-white));
@@ -293,7 +293,7 @@
 // CodeMirror inside code view
 .ste-editor-container .CodeMirror {
 	border    : none;
-	font-size : 13px;
+	font-size : 1rem;
 }
 .ste-editor-container .CodeMirror-scroll {
 	height : auto;
@@ -405,7 +405,7 @@
 	border-bottom : 2px solid transparent;
 	background    : transparent;
 	color         : oklch(var(--totalform-darkgray));
-	font-size     : 13px;
+	font-size     : 1rem;
 	font-weight   : 500;
 	cursor        : pointer;
 
@@ -461,7 +461,7 @@
 	padding          : 6px 10px;
 	border           : 1px solid oklch(var(--totalform-border-color));
 	border-radius    : 4px;
-	font-size        : 13px;
+	font-size        : 1rem;
 	color            : oklch(var(--totalform-text-color));
 	background-color : oklch(var(--totalform-white));
 
@@ -479,7 +479,7 @@
 	padding       : 6px 16px;
 	border        : 1px solid oklch(var(--totalform-border-color));
 	border-radius : 4px;
-	font-size     : 13px;
+	font-size     : 1rem;
 	font-weight   : 500;
 	cursor        : pointer;
 
@@ -501,6 +501,42 @@
 			opacity : 0.9;
 		}
 	}
+
+	&--remove {
+		background-color: oklch(var(--totalform-error) / 0.1);
+		color: oklch(var(--totalform-error));
+		border-color: oklch(var(--totalform-error) / 0.3);
+
+		&:hover {
+			background-color: oklch(var(--totalform-error) / 0.2);
+		}
+	}
+}
+
+// Link dialog fields
+.ste-link-field {
+	margin-bottom: 12px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.ste-link-label {
+	display: block;
+	margin-bottom: 4px;
+	font-size: 1rem;
+	font-weight: 500;
+	color: oklch(var(--totalform-text-color));
+}
+
+.ste-link-checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 1rem;
+	color: oklch(var(--totalform-text-color));
+	cursor: pointer;
 }
 
 // Upload zone
@@ -525,7 +561,7 @@
 
 	p {
 		margin    : 0;
-		font-size : 13px;
+		font-size : 1rem;
 		color     : oklch(var(--totalform-darkgray));
 	}
 
