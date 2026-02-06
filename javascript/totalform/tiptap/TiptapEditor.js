@@ -22,6 +22,7 @@ import CharacterCount from '@tiptap/extension-character-count';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
 import Typography from '@tiptap/extension-typography';
+import { Markdown } from '@tiptap/markdown';
 
 import ImageUpload from './extensions/ImageUpload.js';
 import FigureImage from './extensions/FigureImage.js';
@@ -199,6 +200,7 @@ export default class TiptapEditor {
 			RawHTML,
 			InlineClass,
 			Typography,
+			Markdown,
 			CharacterCount.configure({
 				limit: this.options.charCounterMax || null,
 			}),
