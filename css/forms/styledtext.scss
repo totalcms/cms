@@ -258,6 +258,63 @@
 			&.ProseMirror-selectednode {
 				outline : 2px solid oklch(var(--totalform-accent));
 			}
+
+			// Image float & size (standalone images via classes)
+			&.ste-img--float-left {
+				float        : left;
+				margin-right : 1rem;
+			}
+
+			&.ste-img--float-right {
+				float         : right;
+				margin-left   : 1rem;
+			}
+
+			&.ste-img--small  { width : 25%; }
+			&.ste-img--medium { width : 50%; }
+		}
+
+		// Figure with image
+		figure.ste-figure {
+			margin        : 0 0 1rem;
+			border-radius : 4px;
+			max-width     : 100%;
+
+			img {
+				display       : block;
+				max-width     : 100%;
+				height        : auto;
+				border-radius : 4px 4px 0 0;
+				margin-bottom : 0;
+			}
+
+			figcaption {
+				padding          : 6px 10px;
+				font-size        : 0.85rem;
+				color            : oklch(var(--totalform-darkgray));
+				background-color : oklch(var(--totalform-nearwhite));
+				border-radius    : 0 0 4px 4px;
+				text-align       : center;
+			}
+
+			&.ProseMirror-selectednode {
+				outline : 2px solid oklch(var(--totalform-accent));
+			}
+
+			// Float
+			&--left {
+				float        : left;
+				margin-right : 1rem;
+			}
+
+			&--right {
+				float         : right;
+				margin-left   : 1rem;
+			}
+
+			// Size
+			&--small  { width : 25%; }
+			&--medium { width : 50%; }
 		}
 
 		// Placeholder
@@ -709,6 +766,147 @@
 	padding    : 24px;
 	font-size  : 1rem;
 	color      : oklch(var(--totalform-mediumgray));
+}
+
+//------------------------------
+// Image Popover
+//------------------------------
+.ste-editor-wrapper {
+	position : relative;
+}
+
+.ste-image-popover {
+	position         : absolute;
+	z-index          : 100;
+	width            : 300px;
+	background-color : oklch(var(--totalform-white));
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 8px;
+	box-shadow       : 0 4px 16px oklch(0 0 0 / 0.15);
+	padding          : 8px;
+}
+
+.ste-image-popover__row {
+	display     : flex;
+	align-items : center;
+	gap         : 6px;
+}
+
+.ste-image-popover__group {
+	display     : flex;
+	align-items : center;
+	gap         : 2px;
+}
+
+.ste-image-popover__label {
+	font-size    : 11px;
+	font-weight  : 600;
+	color        : oklch(var(--totalform-darkgray));
+	margin-right : 4px;
+}
+
+.ste-image-popover__btn {
+	display         : inline-flex;
+	align-items     : center;
+	justify-content : center;
+	width           : 28px;
+	height          : 28px;
+	padding         : 0;
+	border          : 1px solid transparent;
+	border-radius   : 4px;
+	background      : transparent;
+	color           : oklch(var(--totalform-text-color));
+	cursor          : pointer;
+	transition      : background-color 0.15s, border-color 0.15s;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+
+	&.is-active {
+		background-color : oklch(var(--totalform-accent) / 0.15);
+		border-color     : oklch(var(--totalform-accent) / 0.3);
+		color            : oklch(var(--totalform-accent));
+	}
+
+	&--text {
+		font-size   : 12px;
+		font-weight : 600;
+	}
+
+	&--icon::before {
+		content          : '';
+		display          : block;
+		width            : 16px;
+		height           : 16px;
+		background-color : currentColor;
+		mask-image       : var(--btn-icon);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+}
+
+.ste-image-popover__sep {
+	width            : 1px;
+	height           : 20px;
+	background-color : oklch(var(--totalform-border-color));
+	margin           : 0 4px;
+}
+
+.ste-image-popover__fields {
+	margin-top    : 8px;
+	padding-top   : 8px;
+	border-top    : 1px solid oklch(var(--totalform-border-color));
+	display       : flex;
+	flex-direction: column;
+	gap           : 6px;
+}
+
+.ste-image-popover__field {
+	display     : flex;
+	align-items : center;
+	gap         : 8px;
+}
+
+.ste-image-popover__field-label {
+	font-size   : 12px;
+	font-weight : 500;
+	color       : oklch(var(--totalform-darkgray));
+	white-space : nowrap;
+	min-width   : 50px;
+}
+
+.ste-image-popover__checkbox-label {
+	display     : inline-flex;
+	align-items : center;
+	gap         : 4px;
+	font-size   : 12px;
+	font-weight : 500;
+	color       : oklch(var(--totalform-darkgray));
+	white-space : nowrap;
+	min-width   : 50px;
+	cursor      : pointer;
+}
+
+.ste-image-popover__input {
+	flex             : 1;
+	padding          : 4px 8px;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 4px;
+	font-size        : 12px;
+	color            : oklch(var(--totalform-text-color));
+	background-color : oklch(var(--totalform-white));
+
+	&:focus {
+		outline      : none;
+		border-color : oklch(var(--totalform-accent));
+	}
+
+	&:disabled {
+		opacity          : 0.5;
+		background-color : oklch(var(--totalform-nearwhite));
+	}
 }
 
 //------------------------------

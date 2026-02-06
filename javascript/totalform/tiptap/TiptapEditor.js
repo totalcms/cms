@@ -24,6 +24,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Typography from '@tiptap/extension-typography';
 
 import ImageUpload from './extensions/ImageUpload.js';
+import FigureImage from './extensions/FigureImage.js';
 import { Youtube, createVideoDialog } from './extensions/VideoEmbed.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
@@ -175,6 +176,7 @@ export default class TiptapEditor {
 				inline: false,
 				allowBase64: false,
 			}),
+			FigureImage,
 			Youtube.configure({
 				inline: false,
 				ccLanguage: 'en',

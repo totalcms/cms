@@ -6,8 +6,10 @@
  */
 
 import Image from '@tiptap/extension-image';
+import { mergeAttributes } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { getUploadUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
+import { createImagePopoverPlugin } from './ImagePopover.js';
 
 /**
  * Creates an image upload dialog element with Upload and Images tabs
@@ -310,8 +312,28 @@ const ImageUpload = Image.extend({
 			...this.parent?.(),
 			'data-preset': { default: null },
 			width: { default: null },
-			class: { default: null },
+			'data-float': {
+				default: null,
+				parseHTML: el => el.getAttribute('data-float'),
+				renderHTML: attrs => attrs['data-float'] ? { 'data-float': attrs['data-float'] } : {},
+			},
+			'data-size': {
+				default: null,
+				parseHTML: el => el.getAttribute('data-size'),
+				renderHTML: attrs => attrs['data-size'] ? { 'data-size': attrs['data-size'] } : {},
+			},
 		};
+	},
+
+	renderHTML({ HTMLAttributes }) {
+		const classes = [];
+		if (HTMLAttributes['data-float']) classes.push(`ste-img--float-${HTMLAttributes['data-float']}`);
+		if (HTMLAttributes['data-size']) classes.push(`ste-img--${HTMLAttributes['data-size']}`);
+
+		const attrs = { ...HTMLAttributes };
+		attrs.class = classes.length ? classes.join(' ') : null;
+
+		return ['img', mergeAttributes(this.options.HTMLAttributes, attrs)];
 	},
 
 	addCommands() {
@@ -395,6 +417,7 @@ const ImageUpload = Image.extend({
 					},
 				},
 			}),
+			createImagePopoverPlugin(this.editor),
 		];
 	},
 });
