@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Action\Froala;
+namespace TotalCMS\Action\Upload;
 
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 
-readonly class FroalaGetFileAction
+readonly class GetFileAction
 {
 	public function __construct(
 		private UploadFetcher $uploadFetcher,

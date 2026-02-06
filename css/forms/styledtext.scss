@@ -1,10 +1,685 @@
-@use "styledtext-froala";
+//------------------------------
+// Styled Text Editor
+//------------------------------
+
+.styledtext-wrapper {
+	width      : 100%;
+	min-height : 128px;
+}
+
+.ste-editor-container {
+	width: 100%;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius) 0 0 var(--totalform-radius);
+	background-color: oklch(var(--totalform-white));
+	overflow: hidden;
+}
+
+// Toolbar
+.ste-toolbar {
+	display                : flex;
+	flex-wrap              : wrap;
+	align-items            : center;
+	gap                    : 2px;
+	padding                : 4px 6px;
+	margin                 : 0 1rem;
+	border-bottom          : 1px solid oklch(var(--totalform-text-color) / 0.7);
+	background-color       : oklch(var(--totalform-white));
+	border-top-left-radius : var(--totalform-radius);
+}
+
+.ste-toolbar-group {
+	display     : flex;
+	align-items : center;
+	gap         : 1px;
+
+	&:not(:last-child)::after {
+		content          : '';
+		display          : block;
+		width            : 1px;
+		height           : 20px;
+		background-color : oklch(var(--totalform-text-color) / 0.2);
+		margin           : 0 0.75rem;
+	}
+
+	&--right {
+		margin-left : auto;
+
+		&::after {
+			display : none !important;
+		}
+	}
+}
+
+.ste-toolbar-btn {
+	display         : inline-flex;
+	align-items     : center;
+	justify-content : center;
+	width           : 36px;
+	height          : 36px;
+	padding         : 0;
+	border          : none;
+	border-radius   : 4px;
+	background      : transparent;
+	color           : oklch(var(--totalform-text-color));
+	cursor          : pointer;
+	transition      : background-color 0.15s, color 0.15s;
+
+	&:hover,
+	&:focus {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+
+	&.is-active {
+		background-color : oklch(var(--totalform-accent) / 0.15);
+		color            : oklch(var(--totalform-accent));
+	}
+
+	&::before {
+		content          : '';
+		display          : block;
+		width            : 18px;
+		height           : 18px;
+		background-color : currentColor;
+		mask-image       : var(--btn-icon);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+}
+
+// Heading dropdown
+.ste-toolbar-dropdown {
+	position: relative;
+
+	.ste-toolbar-dropdown-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		width: auto;
+		padding: 0 4px;
+
+		.ste-caret::before {
+			content          : '';
+			display          : block;
+			width            : 10px;
+			height           : 10px;
+			background-color : currentColor;
+			mask-image       : var(--icon-ste-caret-down);
+			mask-size        : contain;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+		}
+	}
+
+	.ste-toolbar-dropdown-menu {
+		display          : none;
+		position         : absolute;
+		top              : 100%;
+		left             : 0;
+		z-index          : 100;
+		min-width        : 140px;
+		padding          : 4px 0;
+		background-color : oklch(var(--totalform-white));
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : 4px;
+		box-shadow       : 0 2px 8px oklch(0 0 0 / 0.12);
+	}
+
+	&.is-open .ste-toolbar-dropdown-menu {
+		display : block;
+	}
+}
+
+.ste-toolbar-dropdown-item {
+	display     : block;
+	width       : 100%;
+	padding     : 6px 12px;
+	border      : none;
+	background  : transparent;
+	color       : oklch(var(--totalform-text-color));
+	font-size   : 13px;
+	text-align  : left;
+	cursor      : pointer;
+	white-space : nowrap;
+
+	&:hover {
+		background-color: oklch(var(--totalform-nearwhite));
+	}
+
+	&.is-active {
+		color: oklch(var(--totalform-accent));
+		font-weight: 600;
+	}
+}
+
+// Editor content area
+.ste-editor-wrapper {
+	overflow-y : auto;
+
+	.ProseMirror {
+		padding     : 1rem;
+		outline     : none;
+		font-size   : 1rem;
+		font-family : inherit;
+		color       : oklch(var(--totalform-text-color));
+		min-height  : 100%;
+
+		> :first-child {
+			margin-top : 0;
+		}
+
+		> :last-child {
+			margin-bottom: 0;
+		}
+
+		p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6, pre, table {
+			margin-top    : 0;
+			margin-bottom : 1rem;
+		}
+
+		h2 {
+			font-size   : 1.5rem;
+			font-weight : 700;
+		}
+
+		h3 {
+			font-size   : 1.25rem;
+			font-weight : 700;
+		}
+
+		h4 {
+			font-size   : 1.1rem;
+			font-weight : 600;
+		}
+
+		ul, ol {
+			padding-left : 1.5rem;
+		}
+
+		blockquote {
+			border-left  : 3px solid oklch(var(--totalform-border-color));
+			padding-left : 1rem;
+			color        : oklch(var(--totalform-darkgray));
+			font-style   : italic;
+		}
+
+		pre {
+			background-color : oklch(var(--totalform-nearwhite));
+			border-radius    : 4px;
+			padding          : 0.75rem 1rem;
+			font-family      : monospace;
+			overflow-x       : auto;
+
+			code {
+				background : none;
+				padding    : 0;
+				font-size  : 0.9em;
+			}
+		}
+
+		code {
+			background-color : oklch(var(--totalform-nearwhite));
+			border-radius    : 3px;
+			padding          : 0.15rem 0.3rem;
+			font-size        : 0.9em;
+			font-family      : monospace;
+		}
+
+		hr {
+			border     : none;
+			border-top : 2px solid oklch(var(--totalform-border-color));
+			margin     : 1.5rem 0;
+		}
+
+		a {
+			color           : oklch(var(--totalform-accent));
+			text-decoration : underline;
+			cursor          : pointer;
+		}
+
+		img {
+			max-width     : 100%;
+			height        : auto;
+			border-radius : 4px;
+
+			&.ProseMirror-selectednode {
+				outline : 2px solid oklch(var(--totalform-accent));
+			}
+		}
+
+		// Placeholder
+		p.is-editor-empty:first-child::before {
+			content        : attr(data-placeholder);
+			float          : left;
+			color          : oklch(var(--totalform-mediumgray));
+			pointer-events : none;
+			height         : 0;
+		}
+	}
+}
+
+// Code view
+.ste-code-view {
+	display          : block;
+	width            : 100%;
+	min-height       : 200px;
+	padding          : 1rem;
+	border           : none;
+	resize           : vertical;
+	font-family      : monospace;
+	font-size        : 13px;
+	line-height      : 1.5;
+	color            : oklch(var(--totalform-text-color));
+	background-color : oklch(var(--totalform-white));
+	tab-size         : 2;
+
+	&:focus {
+		outline : none;
+	}
+}
+
+// CodeMirror inside code view
+.ste-editor-container .CodeMirror {
+	border    : none;
+	font-size : 13px;
+}
+.ste-editor-container .CodeMirror-scroll {
+	height : auto;
+}
+
+// YouTube embeds
+.ste-editor-wrapper .ProseMirror {
+	div[data-youtube-video] {
+		position       : relative;
+		padding-bottom : 56.25%;
+		height         : 0;
+		overflow       : hidden;
+		max-width      : 100%;
+
+		iframe {
+			position : absolute;
+			top      : 0;
+			left     : 0;
+			width    : 100%;
+			height   : 100%;
+			border   : 0;
+		}
+
+		&.ProseMirror-selectednode {
+			outline       : 2px solid oklch(var(--totalform-accent));
+			border-radius : 4px;
+		}
+	}
+
+	video {
+		max-width     : 100%;
+		height        : auto;
+		border-radius : 4px;
+
+		&.ProseMirror-selectednode {
+			outline: 2px solid oklch(var(--totalform-accent));
+		}
+	}
+}
+
+//------------------------------
+// Dialogs (Image, Video, File upload)
+//------------------------------
+.ste-dialog-overlay {
+	position         : fixed;
+	inset            : 0;
+	z-index          : 10000;
+	display          : flex;
+	align-items      : center;
+	justify-content  : center;
+	background-color : oklch(0 0 0 / 0.4);
+}
+
+.ste-dialog {
+	width            : 480px;
+	max-width        : 90vw;
+	max-height       : 80vh;
+	background-color : oklch(var(--totalform-white));
+	border-radius    : 8px;
+	box-shadow       : 0 8px 32px oklch(0 0 0 / 0.2);
+	overflow         : hidden;
+	display          : flex;
+	flex-direction   : column;
+}
+
+.ste-dialog-header {
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	padding         : 12px 16px;
+	border-bottom   : 1px solid oklch(var(--totalform-border-color));
+
+	h3 {
+		margin      : 0;
+		font-size   : 16px;
+		font-weight : 600;
+		color       : oklch(var(--totalform-text-color));
+	}
+}
+
+.ste-dialog-close {
+	display         : inline-flex;
+	align-items     : center;
+	justify-content : center;
+	width           : 28px;
+	height          : 28px;
+	padding         : 0;
+	border          : none;
+	border-radius   : 4px;
+	background      : transparent;
+	color           : oklch(var(--totalform-darkgray));
+	font-size       : 20px;
+	cursor          : pointer;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+}
+
+.ste-dialog-tabs {
+	display       : flex;
+	border-bottom : 1px solid oklch(var(--totalform-border-color));
+}
+
+.ste-dialog-tab {
+	flex          : 1;
+	padding       : 8px 16px;
+	border        : none;
+	border-bottom : 2px solid transparent;
+	background    : transparent;
+	color         : oklch(var(--totalform-darkgray));
+	font-size     : 13px;
+	font-weight   : 500;
+	cursor        : pointer;
+
+	&.is-active {
+		color               : oklch(var(--totalform-accent));
+		border-bottom-color : oklch(var(--totalform-accent));
+	}
+
+	&:hover:not(.is-active) {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+}
+
+.ste-dialog-body {
+	padding    : 16px;
+	overflow-y : auto;
+}
+
+.ste-dialog-panel {
+	display : none;
+
+	&.is-active {
+		display : block;
+	}
+}
+
+.ste-dialog-hint {
+	margin    : 8px 0 0;
+	font-size : 12px;
+	color     : oklch(var(--totalform-mediumgray));
+}
+
+.ste-dialog-footer {
+	padding     : 12px 16px;
+	border-top  : 1px solid oklch(var(--totalform-border-color));
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : 8px;
+	align-items : center;
+}
+
+.ste-dialog-actions {
+	display     : flex;
+	gap         : 8px;
+	margin-left : auto;
+}
+
+.ste-alt-input,
+.ste-link-text-input,
+.ste-url-input {
+	flex             : 1;
+	min-width        : 150px;
+	padding          : 6px 10px;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 4px;
+	font-size        : 13px;
+	color            : oklch(var(--totalform-text-color));
+	background-color : oklch(var(--totalform-white));
+
+	&:focus {
+		outline      : none;
+		border-color : oklch(var(--totalform-accent));
+	}
+}
+
+.ste-url-input {
+	width: 100%;
+}
+
+.ste-dialog-btn {
+	padding       : 6px 16px;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : 4px;
+	font-size     : 13px;
+	font-weight   : 500;
+	cursor        : pointer;
+
+	&--cancel {
+		background-color : oklch(var(--totalform-white));
+		color            : oklch(var(--totalform-text-color));
+
+		&:hover {
+			background-color : oklch(var(--totalform-nearwhite));
+		}
+	}
+
+	&--insert {
+		background-color : oklch(var(--totalform-accent));
+		color            : oklch(var(--totalform-white));
+		border-color     : oklch(var(--totalform-accent));
+
+		&:hover {
+			opacity : 0.9;
+		}
+	}
+}
+
+// Upload zone
+.ste-upload-zone {
+	position        : relative;
+	display         : flex;
+	flex-direction  : column;
+	align-items     : center;
+	justify-content : center;
+	min-height      : 120px;
+	padding         : 24px;
+	border          : 2px dashed oklch(var(--totalform-border-color));
+	border-radius   : 6px;
+	cursor          : pointer;
+	transition      : border-color 0.15s, background-color 0.15s;
+
+	&:hover,
+	&.is-dragover {
+		border-color     : oklch(var(--totalform-accent));
+		background-color : oklch(var(--totalform-accent) / 0.05);
+	}
+
+	p {
+		margin    : 0;
+		font-size : 13px;
+		color     : oklch(var(--totalform-darkgray));
+	}
+
+	input[type="file"] {
+		position : absolute;
+		inset    : 0;
+		opacity  : 0;
+		cursor   : pointer;
+	}
+}
+
+.ste-upload-progress {
+	margin-top: 12px;
+	width: 100%;
+
+	.ste-upload-progress-bar {
+		height           : 4px;
+		background-color : oklch(var(--totalform-accent));
+		border-radius    : 2px;
+		transition       : width 0.2s;
+		width            : 0%;
+	}
+}
+
+.ste-upload-progress-text {
+	display    : block;
+	margin-top : 4px;
+	font-size  : 12px;
+	color      : oklch(var(--totalform-darkgray));
+}
+
+//------------------------------
+// Tables
+//------------------------------
+.ste-editor-wrapper .ProseMirror {
+	table {
+		border-collapse : collapse;
+		width           : 100%;
+		table-layout    : fixed;
+		overflow        : hidden;
+
+		td, th {
+			border         : 1px solid oklch(var(--totalform-border-color));
+			padding        : 6px 10px;
+			vertical-align : top;
+			position       : relative;
+			min-width      : 50px;
+		}
+
+		th {
+			background-color : oklch(var(--totalform-nearwhite));
+			font-weight      : 600;
+		}
+
+		.selectedCell {
+			background-color : oklch(var(--totalform-accent) / 0.1);
+
+			&::after {
+				content        : '';
+				position       : absolute;
+				inset          : 0;
+				pointer-events : none;
+				border         : 2px solid oklch(var(--totalform-accent));
+			}
+		}
+	}
+
+	// Column resize handle
+	.column-resize-handle {
+		position         : absolute;
+		right            : -2px;
+		top              : 0;
+		bottom           : -2px;
+		width            : 4px;
+		background-color : oklch(var(--totalform-accent));
+		pointer-events   : none;
+	}
+
+	&.resize-cursor {
+		cursor: col-resize;
+	}
+}
+
+//------------------------------
+// Raw HTML blocks
+//------------------------------
+.ste-raw-html-block {
+	position         : relative;
+	border           : 1px dashed oklch(var(--totalform-border-color));
+	border-radius    : 4px;
+	padding          : 8px 10px;
+	padding-top      : 24px;
+	margin-bottom    : 1rem;
+	background-color : oklch(var(--totalform-nearwhite) / 0.5);
+}
+
+.ste-raw-html-label {
+	position       : absolute;
+	top            : 2px;
+	left           : 6px;
+	font-size      : 10px;
+	font-family    : monospace;
+	color          : oklch(var(--totalform-mediumgray));
+	pointer-events : none;
+}
+
+.ste-raw-html-content {
+	outline: none;
+}
+
+//------------------------------
+// Footer (character/word counters)
+//------------------------------
+.ste-footer {
+	display                   : flex;
+	align-items               : center;
+	gap                       : 8px;
+	padding                   : 4px 12px;
+	border-top                : 1px solid oklch(var(--totalform-border-color));
+	background-color          : oklch(var(--totalform-white));
+	font-size                 : 12px;
+	color                     : oklch(var(--totalform-darkgray));
+	border-bottom-left-radius : var(--totalform-radius);
+}
+
+.ste-counter {
+	&.exceeded {
+		color       : oklch(var(--totalform-error));
+		font-weight : 600;
+	}
+}
+
+//------------------------------
+// Fullscreen mode
+//------------------------------
+.ste-fullscreen {
+	position       : fixed !important;
+	inset          : 0 !important;
+	z-index        : 9999 !important;
+	border-radius  : 0 !important;
+	width          : 100% !important;
+	height         : 100% !important;
+	display        : flex;
+	flex-direction : column;
+
+	.ste-toolbar {
+		border-radius : 0;
+	}
+
+	.ste-editor-wrapper {
+		flex       : 1;
+		max-height : none !important;
+		min-height : 0 !important;
+	}
+
+	.ste-footer {
+		border-radius : 0;
+	}
+}
 
 .styledtext-field {
-	.fr-view {
+	.ProseMirror {
 		p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6 {
-			margin-top: 0;
-			margin-bottom: 1rem;
+			margin-top    : 0;
+			margin-bottom : 1rem;
 		}
 	}
 }

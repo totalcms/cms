@@ -14,7 +14,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('FroalaGetFileAction', function (): void {
+describe('GetFileAction', function (): void {
 	it('returns 404 for nonexistent file', function (): void {
 		$response = get('/upload/blog/test-id/content/nonexistent-file.jpg');
 		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
@@ -31,7 +31,7 @@ describe('FroalaGetFileAction', function (): void {
 	});
 });
 
-describe('FroalaDeleteFileAction', function (): void {
+describe('DeleteFileAction', function (): void {
 	it('handles delete request for nonexistent file', function (): void {
 		$response = delete('/upload/blog/test-id/content/nonexistent-file.jpg');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
@@ -43,7 +43,7 @@ describe('FroalaDeleteFileAction', function (): void {
 	});
 });
 
-describe('FroalaUploadFileAction', function (): void {
+describe('UploadFileAction', function (): void {
 	it('returns 400 when no file is provided', function (): void {
 		// POST without file should fail
 		$response = get('/upload/blog/test-id/content'); // Using GET to test route exists

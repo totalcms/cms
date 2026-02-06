@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Action\Froala;
+namespace TotalCMS\Action\Upload;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,7 +9,7 @@ use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
-readonly class FroalaUploadFileAction
+readonly class UploadFileAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

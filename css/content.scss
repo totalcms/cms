@@ -1,6 +1,6 @@
 @use "variables";
 @use "depot-browser";
-@import "froala-editor/css/froala_style.css";
+// Froala frontend styles removed - Tiptap outputs standard HTML
 
 .cms-hide {
     display : none !important;

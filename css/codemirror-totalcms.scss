@@ -1070,8 +1070,8 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
 	}
 }
 
-// StyledText (Froala) Code View Integration
-.fr-code-view {
+// StyledText Code View Integration
+.ste-editor-container {
 	.CodeMirror {
 		border: none;
 		border-radius: 0;
@@ -1176,9 +1176,9 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
 	}
 }
 
-// Froala editor integration adjustments
-.fr-element {
-	// When CodeMirror is active inside Froala
+// Styled text editor integration adjustments
+.ste-editor-wrapper {
+	// When CodeMirror is active inside the editor
 	.CodeMirror {
 		background-color: oklch(var(--totalform-purewhite));
 		color: oklch(var(--totalform-nearblack));
@@ -1205,10 +1205,10 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
 	}
 }
 
-.fr-code-view .CodeMirror, .CodeMirror {
+.ste-editor-container .CodeMirror, .CodeMirror {
 	font-family : 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
-.fr-code-view .CodeMirror .cm-tag {
+.ste-editor-container .CodeMirror .cm-tag {
 	font-weight: 600;
 }

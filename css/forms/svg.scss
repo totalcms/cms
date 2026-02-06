@@ -8,24 +8,20 @@
 		max-height : 300px;
 	}
 
-	// Froala editor wrapper
-	.fr-box {
+	// CodeMirror wrapper
+	.svg-codemirror-wrapper {
 		max-width: 100%;
 		overflow: hidden;
-	}
-
-	// Code view (CodeMirror) constraints
-	.fr-code {
-		max-width: 100%;
-		overflow: hidden;
+		border: 1px solid oklch(var(--totalform-border-color));
+		border-radius: var(--totalform-radius);
 
 		.CodeMirror {
 			max-width: 100%;
 			width: 100%;
 
 			.CodeMirror-scroll {
-				overflow-y: auto !important; // Vertical scrolling
-				overflow-x: auto !important; // Horizontal scrolling for long lines
+				overflow-y: auto !important;
+				overflow-x: auto !important;
 			}
 		}
 

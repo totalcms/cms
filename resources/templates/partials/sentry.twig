@@ -41,11 +41,6 @@
 				// Ignore server validation errors shown in UI
 				if (message.includes('400 Bad Request')) return null;
 
-				// Ignore Froala editor internal errors (third-party library)
-				if (error && error.name === 'IndexSizeError') return null;
-				if (error && error.name === 'InvalidCharacterError' && message.includes('invalid characters')) return null;
-				if (error && error.name === 'TypeError' && message.includes('querySelectorAll') && message.includes('is not a function')) return null;
-
 				// Ignore race condition errors when elements are removed during async operations
 				// (e.g., image onload firing after element was removed from DOM)
 				if (error && error.name === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;

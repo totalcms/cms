@@ -83,7 +83,6 @@ esbuild.build({
         // Sass includes
         sassPlugin({
             loadPaths: [
-                "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
                 "node_modules/codemirror/theme/",
                 "node_modules/codemirror/addon/",
