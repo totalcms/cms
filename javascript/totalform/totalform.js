@@ -199,8 +199,10 @@ export default class TotalForm {
 			}
 
 			// skip if field is already processed
-			if (field.totalfield && !field.totalfield.isSubField()) {
-				fieldObjects.push(field.totalfield);
+			if (field.totalfield) {
+				if (!field.totalfield.isSubField()) {
+					fieldObjects.push(field.totalfield);
+				}
 				return;
 			}
 
