@@ -30,6 +30,11 @@ export default class TiptapCodeView {
 		this.codeArea.value = html;
 		this.container.appendChild(this.codeArea);
 
+		// Match the editor wrapper height constraints
+		const minH = wrapper.style.minHeight || '200px';
+		const maxH = wrapper.style.maxHeight || '800px';
+		const fixedH = wrapper.style.height;
+
 		// Initialize CodeMirror if available
 		if (window.CodeMirror) {
 			this.codeMirror = window.CodeMirror.fromTextArea(this.codeArea, {
@@ -43,16 +48,28 @@ export default class TiptapCodeView {
 				...this.options,
 			});
 
-			// Set size to match editor
-			const height = wrapper.style.height || wrapper.style.minHeight || '200px';
-			this.codeMirror.setSize(null, height);
+			// Let CodeMirror auto-size with scroll constraints
+			const cmWrapper = this.codeMirror.getWrapperElement();
+			if (fixedH) {
+				cmWrapper.style.height = fixedH;
+			} else {
+				cmWrapper.style.minHeight = minH;
+				cmWrapper.style.maxHeight = maxH;
+			}
+			cmWrapper.style.overflow = 'auto';
+			this.codeMirror.setSize(null, '100%');
 
 			// Refresh after a tick to ensure proper rendering
 			setTimeout(() => this.codeMirror?.refresh(), 50);
 		} else {
 			// Plain textarea fallback
-			this.codeArea.style.minHeight = wrapper.style.minHeight || '200px';
-			this.codeArea.style.maxHeight = wrapper.style.maxHeight || '800px';
+			if (fixedH) {
+				this.codeArea.style.height = fixedH;
+			} else {
+				this.codeArea.style.minHeight = minH;
+				this.codeArea.style.maxHeight = maxH;
+			}
+			this.codeArea.style.overflowY = 'auto';
 		}
 	}
 

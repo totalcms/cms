@@ -294,9 +294,7 @@
 .ste-editor-container .CodeMirror {
 	border    : none;
 	font-size : 1rem;
-}
-.ste-editor-container .CodeMirror-scroll {
-	height : auto;
+	height    : 100%;
 }
 
 // YouTube embeds
