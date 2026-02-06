@@ -5,6 +5,7 @@
  */
 
 import { Plugin } from '@tiptap/pm/state';
+import { NodeSelection } from '@tiptap/pm/state';
 
 /**
  * Creates the popover DOM element.
@@ -104,9 +105,14 @@ class ImagePopoverManager {
 			this.applyAttrs({ caption: captionInput.value || null });
 		});
 
-		// Prevent clicks inside popover from deselecting
+		// Prevent all mousedown inside popover from deselecting the image.
+		// Manually focus text inputs on click instead.
 		this.popover.addEventListener('mousedown', (e) => {
 			e.preventDefault();
+			const el = e.target;
+			if ((el.tagName === 'INPUT' && el.type !== 'checkbox') || el.tagName === 'TEXTAREA') {
+				el.focus();
+			}
 		});
 	}
 
@@ -119,7 +125,9 @@ class ImagePopoverManager {
 		if (!node) return;
 
 		const newAttrs = { ...node.attrs, ...attrs };
-		this.editor.view.dispatch(tr.setNodeMarkup(pos, undefined, newAttrs));
+		tr.setNodeMarkup(pos, undefined, newAttrs);
+		tr.setSelection(NodeSelection.create(tr.doc, pos));
+		this.editor.view.dispatch(tr);
 		this.updateActiveStates(newAttrs);
 	}
 
@@ -154,6 +162,8 @@ class ImagePopoverManager {
 
 		const { tr } = this.editor.state;
 		tr.replaceWith(pos, pos + node.nodeSize, figureNode);
+		// Re-select the new node so the popover stays open
+		tr.setSelection(NodeSelection.create(tr.doc, pos));
 		this.editor.view.dispatch(tr);
 
 		// Update tracking
@@ -181,6 +191,8 @@ class ImagePopoverManager {
 
 		const { tr } = this.editor.state;
 		tr.replaceWith(pos, pos + node.nodeSize, imageNode);
+		// Re-select the new node so the popover stays open
+		tr.setSelection(NodeSelection.create(tr.doc, pos));
 		this.editor.view.dispatch(tr);
 
 		this.currentNodeType = 'image';
@@ -295,6 +307,17 @@ function createImagePopoverPlugin(editor) {
 	let manager = null;
 
 	return new Plugin({
+		props: {
+			handleClickOn(view, pos, node, nodePos, event) {
+				if (node.type.name === 'image' || node.type.name === 'figure') {
+					// Force a NodeSelection so the popover opens reliably
+					const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos));
+					view.dispatch(tr);
+					return true;
+				}
+				return false;
+			},
+		},
 		view(editorView) {
 			manager = new ImagePopoverManager(editor);
 
@@ -302,7 +325,6 @@ function createImagePopoverPlugin(editor) {
 				update(view, prevState) {
 					const { state } = view;
 					const { selection } = state;
-					const { $from } = selection;
 
 					// Check if we're on an image or figure node
 					let nodePos = null;
@@ -311,10 +333,9 @@ function createImagePopoverPlugin(editor) {
 
 					// NodeSelection — user clicked directly on the node
 					if (selection.node) {
-						const sel = selection;
-						if (sel.node.type.name === 'image' || sel.node.type.name === 'figure') {
-							node = sel.node;
-							nodePos = sel.from;
+						if (selection.node.type.name === 'image' || selection.node.type.name === 'figure') {
+							node = selection.node;
+							nodePos = selection.from;
 							dom = view.nodeDOM(nodePos);
 						}
 					}
