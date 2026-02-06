@@ -4,6 +4,8 @@
  * Subscribes to editor selectionUpdate to toggle .is-active class.
  */
 
+import { BULLET_STYLES, ORDERED_STYLES } from './extensions/ListStyle.js';
+
 /* Maps button names to their --icon-ste-* CSS variable suffix */
 const ICON_MAP = {
 	bold:            'bold',
@@ -115,6 +117,14 @@ export default class TiptapToolbar {
 				}
 				if (buttonName === 'align') {
 					groupEl.appendChild(this.buildAlignDropdown());
+					continue;
+				}
+				if (buttonName === 'bulletList') {
+					groupEl.appendChild(this.buildListDropdown('bulletList', BULLET_STYLES));
+					continue;
+				}
+				if (buttonName === 'orderedList') {
+					groupEl.appendChild(this.buildListDropdown('orderedList', ORDERED_STYLES));
 					continue;
 				}
 
@@ -254,6 +264,71 @@ export default class TiptapToolbar {
 		return wrapper;
 	}
 
+	buildListDropdown(name, styles) {
+		const isBullet = name === 'bulletList';
+		const toggleCommand = isBullet ? 'toggleBulletList' : 'toggleOrderedList';
+		const classCommand = isBullet ? 'setBulletListClass' : 'setOrderedListClass';
+		const iconName = isBullet ? 'unordered-list' : 'ordered-list';
+		const label = isBullet ? 'Bullet List' : 'Ordered List';
+
+		const wrapper = document.createElement('div');
+		wrapper.className = 'ste-toolbar-dropdown';
+
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'ste-toolbar-btn ste-toolbar-dropdown-toggle ste-toolbar-dropdown-toggle--icon';
+		toggle.title = label;
+		toggle.setAttribute('aria-label', label);
+		toggle.style.setProperty('--btn-icon', `var(--icon-ste-${iconName})`);
+		toggle.innerHTML = `<span class="ste-caret"></span>`;
+
+		// Clicking the icon area toggles the list
+		toggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			// If caret was clicked, open dropdown instead
+			if (e.target.closest('.ste-caret')) {
+				e.stopPropagation();
+				const isOpen = wrapper.classList.contains('is-open');
+				this.closeDropdowns();
+				if (!isOpen) wrapper.classList.add('is-open');
+				return;
+			}
+			this.editor.chain().focus()[toggleCommand]().run();
+		});
+
+		const menu = document.createElement('div');
+		menu.className = 'ste-toolbar-dropdown-menu';
+
+		for (const style of styles) {
+			const item = document.createElement('button');
+			item.type = 'button';
+			item.className = 'ste-toolbar-dropdown-item';
+			item.textContent = style.label;
+			item.dataset.listClass = style.value;
+
+			item.addEventListener('click', (e) => {
+				e.preventDefault();
+				const chain = this.editor.chain().focus();
+				// Ensure the list is active first
+				if (!this.editor.isActive(name)) {
+					chain[toggleCommand]();
+				}
+				chain[classCommand](style.value).run();
+				this.closeDropdowns();
+			});
+
+			menu.appendChild(item);
+		}
+
+		document.addEventListener('click', () => this.closeDropdowns());
+
+		wrapper.appendChild(toggle);
+		wrapper.appendChild(menu);
+
+		this.buttons.set(name, { element: wrapper, type: 'dropdown' });
+		return wrapper;
+	}
+
 	closeDropdowns() {
 		this.element.querySelectorAll('.ste-toolbar-dropdown.is-open')
 			.forEach(el => el.classList.remove('is-open'));
@@ -294,6 +369,7 @@ export default class TiptapToolbar {
 			if (entry.type === 'dropdown') {
 				if (name === 'heading') this.updateHeadingDropdown(entry.element);
 				if (name === 'align') this.updateAlignDropdown(entry.element);
+				if (name === 'bulletList' || name === 'orderedList') this.updateListDropdown(name, entry.element);
 				continue;
 			}
 
@@ -307,8 +383,6 @@ export default class TiptapToolbar {
 				case 'strike':         isActive = this.editor.isActive('strike'); break;
 				case 'superscript':    isActive = this.editor.isActive('superscript'); break;
 				case 'subscript':      isActive = this.editor.isActive('subscript'); break;
-				case 'bulletList':     isActive = this.editor.isActive('bulletList'); break;
-				case 'orderedList':    isActive = this.editor.isActive('orderedList'); break;
 				case 'blockquote':     isActive = this.editor.isActive('blockquote'); break;
 				case 'codeBlock':      isActive = this.editor.isActive('codeBlock'); break;
 				case 'alignLeft':      isActive = this.editor.isActive({ textAlign: 'left' }); break;
@@ -347,6 +421,22 @@ export default class TiptapToolbar {
 
 		if (toggle) {
 			toggle.style.setProperty('--btn-icon', `var(--icon-ste-${activeIcon})`);
+		}
+	}
+
+	updateListDropdown(name, wrapper) {
+		const toggle = wrapper.querySelector('.ste-toolbar-dropdown-toggle');
+		const isActive = this.editor.isActive(name);
+		if (toggle) toggle.classList.toggle('is-active', isActive);
+
+		const items = wrapper.querySelectorAll('.ste-toolbar-dropdown-item');
+		for (const item of items) {
+			const cls = item.dataset.listClass;
+			// Active if list is active and class matches (empty = default/no class)
+			const itemActive = isActive && (
+				cls ? this.editor.isActive(name, { class: cls }) : !this.editor.getAttributes(name).class
+			);
+			item.classList.toggle('is-active', itemActive);
 		}
 	}
 

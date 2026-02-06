@@ -28,6 +28,7 @@ import { Youtube, createVideoDialog } from './extensions/VideoEmbed.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
+import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
 import TiptapCodeView from './TiptapCodeView.js';
@@ -153,7 +154,11 @@ export default class TiptapEditor {
 				// Disable extensions we configure separately
 				link: false,
 				underline: false,
+				bulletList: false,
+				orderedList: false,
 			}),
+			StyledBulletList,
+			StyledOrderedList,
 			Underline,
 			TextAlign.configure({
 				types: ['heading', 'paragraph'],
