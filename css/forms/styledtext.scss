@@ -253,6 +253,7 @@
 			max-width     : 100%;
 			height        : auto;
 			border-radius : 4px;
+			margin-bottom : 1rem;
 
 			&.ProseMirror-selectednode {
 				outline : 2px solid oklch(var(--totalform-accent));
@@ -571,6 +572,13 @@
 	}
 }
 
+.ste-upload-preview {
+	max-width     : 100%;
+	max-height    : 200px;
+	border-radius : 4px;
+	object-fit    : contain;
+}
+
 .ste-upload-progress {
 	margin-top: 12px;
 	width: 100%;
@@ -598,6 +606,109 @@
 	color         : oklch(var(--totalform-error));
 	background    : oklch(var(--totalform-danger) / 0.08);
 	border-radius : var(--totalform-radius);
+}
+
+//------------------------------
+// Image Manager Grid
+//------------------------------
+.ste-dialog--image-manager {
+	width     : 560px;
+	max-width : 90vw;
+}
+
+.ste-image-grid {
+	display               : grid;
+	grid-template-columns : repeat(3, 1fr);
+	gap                   : 10px;
+}
+
+.ste-image-card {
+	position      : relative;
+	border        : 2px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	overflow      : hidden;
+	cursor        : pointer;
+	transition    : border-color 0.15s;
+
+	&:hover {
+		border-color : oklch(var(--totalform-darkgray));
+	}
+
+	&.is-selected {
+		border-color : oklch(var(--totalform-accent));
+		box-shadow   : 0 0 0 1px oklch(var(--totalform-accent));
+	}
+}
+
+.ste-image-card__thumb-wrap {
+	position   : relative;
+	aspect-ratio : 1;
+	overflow   : hidden;
+	background : oklch(var(--totalform-nearwhite));
+}
+
+.ste-image-card__thumb {
+	width      : 100%;
+	height     : 100%;
+	object-fit : cover;
+	display    : block;
+}
+
+.ste-image-card__delete {
+	position         : absolute;
+	top              : 4px;
+	right            : 4px;
+	width            : 22px;
+	height           : 22px;
+	padding          : 0;
+	border           : none;
+	border-radius    : 50%;
+	background-color : oklch(var(--totalform-error) / 0.85);
+	color            : oklch(var(--totalform-white));
+	font-size        : 14px;
+	line-height      : 1;
+	cursor           : pointer;
+	opacity          : 0;
+	transition       : opacity 0.15s;
+	display          : flex;
+	align-items      : center;
+	justify-content  : center;
+
+	.ste-image-card:hover & {
+		opacity : 1;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-error));
+	}
+}
+
+.ste-image-card__name {
+	position      : absolute;
+	bottom        : 0;
+	left          : 0;
+	right         : 0;
+	padding       : 4px 6px;
+	font-size     : 11px;
+	color         : oklch(var(--totalform-darkgray));
+	background    : oklch(var(--totalform-white) / 0.8);
+	white-space   : nowrap;
+	overflow      : hidden;
+	text-overflow : ellipsis;
+}
+
+.ste-image-loading {
+	text-align : center;
+	padding    : 24px;
+	font-size  : 1rem;
+	color      : oklch(var(--totalform-darkgray));
+}
+
+.ste-image-empty {
+	text-align : center;
+	padding    : 24px;
+	font-size  : 1rem;
+	color      : oklch(var(--totalform-mediumgray));
 }
 
 //------------------------------
