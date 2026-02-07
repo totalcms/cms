@@ -253,7 +253,7 @@ class DepotBrowserRenderer
 	 */
 	private function filterByTags(array $files, array $tags): array
 	{
-		$normalizedTags = array_map('mb_strtolower', $tags);
+		$normalizedTags = array_map(mb_strtolower(...), $tags);
 		$result         = [];
 
 		foreach ($files as $file) {
