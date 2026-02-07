@@ -343,21 +343,13 @@ class ImageGenerator
 				->withHeader('ETag', $cacheHeaders['etag']);
 		}
 
-		// Get content length from ImageData or filesystem
-		$contentLength = $imageData->size > 0 ? (string)$imageData->size : null;
-
-		$httpResponse = (new Response())
+		return (new Response())
 			->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
+			->withHeader('Content-Length', (string)$this->filesystem->fileSize($imagePath))
 			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
 			->withHeader('ETag', $cacheHeaders['etag'])
 			->withHeader('Last-Modified', $cacheHeaders['last_modified'])
 			->withBody($response['stream']);
-
-		if ($contentLength !== null) {
-			$httpResponse = $httpResponse->withHeader('Content-Length', $contentLength);
-		}
-
-		return $httpResponse;
 	}
 
 	/**

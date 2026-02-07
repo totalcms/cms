@@ -234,7 +234,13 @@
 
 
 		.file-name {
-			margin: 0;
+			margin     : 0;
+			overflow   : hidden;
+			display    : -webkit-box;
+			-webkit-line-clamp : 3;
+			-webkit-box-orient : vertical;
+			overflow-wrap      : break-word;
+			word-break         : break-all;
 		}
 
 		.file-icon{
@@ -281,7 +287,11 @@
 			color     : oklch(var(--totalform-gray));
 		}
 		.file-comments {
-			margin: 0;
+			margin             : 0;
+			overflow           : hidden;
+			display            : -webkit-box;
+			-webkit-line-clamp : 5;
+			-webkit-box-orient : vertical;
 		}
 		.info {
 			display               : grid;

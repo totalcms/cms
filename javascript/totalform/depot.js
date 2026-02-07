@@ -494,6 +494,8 @@ export default class DepotField extends TotalField {
     }
 
     handleKeyNavigation(event) {
+        if (this.container.querySelector("dialog[open]")) return;
+
         const validKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Delete", "Backspace"];
         if (!validKeys.includes(event.key)) return;
 
