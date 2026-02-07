@@ -1327,7 +1327,7 @@ NGINX;
 			'width'         => $dimensions['width'],
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
-			'loading'       => $options['loading'],
+			'loading'       => $options['loading'] ?? null,
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
 		]);
@@ -1802,6 +1802,8 @@ NGINX;
 			'oncontextmenu'      => 'return false;',
 			'data-gallery'       => "{$options['collection']}-{$id}",
 			'data-gallery-image' => $imageName,
+			'class'              => $options['class'] ?? null,
+			'loading'            => $options['loading'] ?? null,
 		];
 
 		$html = HTMLUtils::inlineElement('img', $imgAttrs);
