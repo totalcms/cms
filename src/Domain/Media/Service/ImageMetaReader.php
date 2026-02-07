@@ -181,7 +181,7 @@ class ImageMetaReader
 		}
 
 		// Try to read EXIF data — only JPEG and TIFF support EXIF
-		$exifData     = [];
+		$exifData      = [];
 		$exifSupported = ['jpg', 'jpeg', 'tif', 'tiff'];
 		$ext           = strtolower(pathinfo($imagepath, PATHINFO_EXTENSION));
 		if (in_array($ext, $exifSupported, true) && extension_loaded('exif') && function_exists('exif_read_data')) {
