@@ -1043,8 +1043,15 @@ class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->diffForHumans();
-		} catch (\Exception) {
-			return (string)$date;
+		} catch (\Throwable) {
+			// Fallback when intl extension is missing or date parsing fails
+			try {
+				$chronos = self::parseDate($date);
+
+				return $chronos->format('M j, Y');
+			} catch (\Throwable) {
+				return (string)$date;
+			}
 		}
 	}
 
