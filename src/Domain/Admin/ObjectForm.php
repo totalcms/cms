@@ -142,8 +142,9 @@ class ObjectForm extends TotalForm
 		// Get the schema and collection settings for a property
 		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
 		$collection = $this->collectionData->properties[$property]['settings'] ?? [];
+		$custom     = $this->collectionData->customProperties[$this->id][$property]['settings'] ?? [];
 
-		$attributes = array_merge($schema, $collection);
+		$attributes = array_merge($schema, $collection, $custom);
 
 		return self::filterFieldAttributes($attributes);
 	}

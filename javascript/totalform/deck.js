@@ -68,6 +68,44 @@ export default class DeckField extends TotalField {
         });
     }
 
+    /**
+     * Regenerate unique IDs in a cloned element to prevent duplicate id/for collisions.
+     * Replaces field-{uuid}, help-{uuid}, and datalist-{uuid} with fresh unique values.
+     */
+    regenerateIds(element) {
+        const idMap = {};
+
+        // Find all elements with an id that matches our UUID patterns
+        element.querySelectorAll('[id]').forEach(el => {
+            const oldId = el.id;
+            const match = oldId.match(/^(field|help|datalist)-(.+)$/);
+            if (!match) return;
+
+            const prefix = match[1];
+            const oldUuid = match[2];
+
+            // Reuse the same new UUID for all prefixes sharing the same old UUID
+            if (!idMap[oldUuid]) {
+                idMap[oldUuid] = Math.random().toString(36).substring(2, 15);
+            }
+
+            el.id = `${prefix}-${idMap[oldUuid]}`;
+        });
+
+        // Update corresponding for, aria-describedby, and list attributes
+        for (const [oldUuid, newUuid] of Object.entries(idMap)) {
+            element.querySelectorAll(`[for="field-${oldUuid}"]`).forEach(el => {
+                el.setAttribute('for', `field-${newUuid}`);
+            });
+            element.querySelectorAll(`[aria-describedby="help-${oldUuid}"]`).forEach(el => {
+                el.setAttribute('aria-describedby', `help-${newUuid}`);
+            });
+            element.querySelectorAll(`[list="datalist-${oldUuid}"]`).forEach(el => {
+                el.setAttribute('list', `datalist-${newUuid}`);
+            });
+        }
+    }
+
     addItem() {
         if (!this.template) {
             console.error('No deck template found');
@@ -76,6 +114,7 @@ export default class DeckField extends TotalField {
 
         // Clone the template
         const clone = this.template.content.cloneNode(true);
+        this.regenerateIds(clone);
 
         // Insert before add button
         const parent = this.addButton.parentNode;
@@ -129,6 +168,7 @@ export default class DeckField extends TotalField {
     duplicateItem(itemElement) {
         // Clone the item element
         const clone = itemElement.cloneNode(true);
+        this.regenerateIds(clone);
 
         // Clear the dialog ID field
         const dialogIdInput = clone.querySelector("dialog input[name='id']");

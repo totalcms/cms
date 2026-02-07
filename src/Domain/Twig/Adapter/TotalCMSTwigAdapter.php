@@ -1226,16 +1226,18 @@ NGINX;
 	public function depotBrowser(string $id, array $options = []): string
 	{
 		$options = array_merge([
-			'collection' => 'depot',
-			'property'   => 'depot',
-			'filter'     => false,
-			'preview'    => false,
-			'comments'   => false,
-			'download'   => true,
-			'tags'       => false,
-			'folders'    => true,
-			'humanize'   => true,
-			'class'      => '',
+			'collection'  => 'depot',
+			'property'    => 'depot',
+			'filter'      => false,
+			'preview'     => false,
+			'comments'    => false,
+			'download'    => true,
+			'tags'        => false,
+			'folders'     => true,
+			'humanize'    => true,
+			'class'       => '',
+			'reverseSort' => false,
+			'filterTags'  => [],
 		], $options);
 
 		$collection = $options['collection'];
@@ -1327,7 +1329,7 @@ NGINX;
 			'width'         => $dimensions['width'],
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
-			'loading'       => $options['loading'],
+			'loading'       => $options['loading'] ?? null,
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
 		]);
@@ -1802,6 +1804,8 @@ NGINX;
 			'oncontextmenu'      => 'return false;',
 			'data-gallery'       => "{$options['collection']}-{$id}",
 			'data-gallery-image' => $imageName,
+			'class'              => $options['class'] ?? null,
+			'loading'            => $options['loading'] ?? null,
 		];
 
 		$html = HTMLUtils::inlineElement('img', $imgAttrs);

@@ -2,6 +2,29 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.1.8] - 2026-02-07
+
+### Added
+
+- **Depot Browser `reverseSort`**: New option to reverse the sort order of files and folders in the depot browser
+- **Depot Browser `filterTags`**: New option to filter depot browser files by tags (OR logic, case-insensitive)
+
+### Enhanced
+
+- **Gallery Image Attributes**: Gallery images now support `class` and `loading` attributes
+- **Image Serving**: Content-Length header now always reflects the actual file size on disk
+
+### Fixed
+
+- **EXIF Reading**: Fixed errors when reading EXIF data from non-JPEG/TIFF files (e.g., WebP, PNG)
+- **Date Filter INTL Fallback**: Fixed `diffForHumans` Twig filter crashing when the intl extension is missing
+- **Object Setting Overrides**: Fixed custom per-object property settings not being applied in forms
+- **Deck Duplicate IDs**: Fixed duplicate element IDs when adding or duplicating deck items
+- **Form Field Processing**: Fixed sub-fields being incorrectly skipped during form initialization
+- **Depot Long Filenames**: Fixed long file names and comments overflowing in depot browser
+- **Depot Keyboard Navigation**: Fixed keyboard navigation interfering when a depot dialog is open
+- **Image `loading` Attribute**: Fixed missing `loading` attribute on single image output
+
 ## [3.1.7] - 2026-02-04
 
 ### Added

@@ -30,6 +30,15 @@ class DepotBrowserRenderer
 			return '';
 		}
 
+		/** @var array<string> $filterTags */
+		$filterTags = is_array($options['filterTags'] ?? null) ? $options['filterTags'] : [];
+		if ($filterTags !== []) {
+			$files = $this->filterByTags($files, $filterTags);
+			if ($files === []) {
+				return '';
+			}
+		}
+
 		$dataOptions = json_encode(array_filter([
 			'preview' => $options['preview'],
 		]), JSON_THROW_ON_ERROR);
@@ -89,6 +98,12 @@ class DepotBrowserRenderer
 		}
 
 		usort($folders, fn (array $a, array $b): int => strcasecmp((string)($a['name'] ?? ''), (string)($b['name'] ?? '')));
+		usort($items, fn (array $a, array $b): int => strcasecmp((string)($a['name'] ?? ''), (string)($b['name'] ?? '')));
+
+		if (!empty($options['reverseSort'])) {
+			$folders = array_reverse($folders);
+			$items   = array_reverse($items);
+		}
 
 		foreach ($folders as $folder) {
 			$html .= $this->buildFolder($folder, $path, $id, $options, $downloadUrl, $streamUrl);
@@ -222,6 +237,50 @@ class DepotBrowserRenderer
 					$file['name'] = $path . '/' . ($file['name'] ?? '');
 				}
 				$result[] = $file;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Recursively filter files by tags (OR logic, case-insensitive).
+	 *
+	 * @param array<int,array<string,mixed>> $files
+	 * @param array<string> $tags
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function filterByTags(array $files, array $tags): array
+	{
+		$normalizedTags = array_map(mb_strtolower(...), $tags);
+		$result         = [];
+
+		foreach ($files as $file) {
+			/** @phpstan-ignore function.alreadyNarrowedType */
+			if (!is_array($file)) {
+				continue;
+			}
+
+			if (($file['mime'] ?? '') === 'folder') {
+				$children = is_array($file['files'] ?? null) ? $file['files'] : [];
+				$filtered = $this->filterByTags($children, $tags);
+				if ($filtered !== []) {
+					$file['files'] = $filtered;
+					$result[]      = $file;
+				}
+				continue;
+			}
+
+			$fileTags = $file['tags'] ?? [];
+			if (!is_array($fileTags)) {
+				continue;
+			}
+			foreach ($fileTags as $fileTag) {
+				if (in_array(mb_strtolower((string)$fileTag), $normalizedTags, true)) {
+					$result[] = $file;
+					break;
+				}
 			}
 		}
 
