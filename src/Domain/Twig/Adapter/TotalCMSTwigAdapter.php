@@ -1226,16 +1226,18 @@ NGINX;
 	public function depotBrowser(string $id, array $options = []): string
 	{
 		$options = array_merge([
-			'collection' => 'depot',
-			'property'   => 'depot',
-			'filter'     => false,
-			'preview'    => false,
-			'comments'   => false,
-			'download'   => true,
-			'tags'       => false,
-			'folders'    => true,
-			'humanize'   => true,
-			'class'      => '',
+			'collection'  => 'depot',
+			'property'    => 'depot',
+			'filter'      => false,
+			'preview'     => false,
+			'comments'    => false,
+			'download'    => true,
+			'tags'        => false,
+			'folders'     => true,
+			'humanize'    => true,
+			'class'       => '',
+			'reverseSort' => false,
+			'filterTags'  => [],
 		], $options);
 
 		$collection = $options['collection'];
