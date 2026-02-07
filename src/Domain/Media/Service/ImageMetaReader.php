@@ -180,11 +180,13 @@ class ImageMetaReader
 			return [];
 		}
 
-		// Try to read EXIF data if the extension is available
-		$exifData = [];
-		if (extension_loaded('exif') && function_exists('exif_read_data')) {
+		// Try to read EXIF data — only JPEG and TIFF support EXIF
+		$exifData     = [];
+		$exifSupported = ['jpg', 'jpeg', 'tif', 'tiff'];
+		$ext           = strtolower(pathinfo($imagepath, PATHINFO_EXTENSION));
+		if (in_array($ext, $exifSupported, true) && extension_loaded('exif') && function_exists('exif_read_data')) {
 			try {
-				$exif = exif_read_data($imagepath, 'ANY_TAG', true);
+				$exif = @exif_read_data($imagepath, 'ANY_TAG', true);
 				if ($exif !== false) {
 					$exifData = $exif;
 				}
