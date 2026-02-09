@@ -90,7 +90,7 @@ $zindex-backdrop: 1040;
 .cms-gallery {
 	display               : grid;
 	gap                   : 0.8rem;
-	grid-template-columns : repeat(auto-fill, minmax(150px, 1fr));
+	grid-template-columns : repeat(auto-fill, minmax(var(--cms-gallery-min-size, 150px), 1fr));
 	align-items           : center;
 	justify-items         : center;
 
