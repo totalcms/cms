@@ -97,22 +97,36 @@ You can create templates either through the dashboard's template manager at `/ad
 The custom logo must be wrapped in a link with the class `custom-logo`:
 
 ```twig
-<a class="custom-logo" href="/admin" title="Dashboard Home">
+<a class="custom-logo" href="" title="Dashboard Home">
 	<img src="/path/to/your-logo.png" alt="Your Company" style="max-height: 32px;">
+</a>
+```
+
+```twig
+<a class="custom-logo" href="" title="Dashboard Home">
+	{{ cms.image("logo") }}
 </a>
 ```
 
 Or with an SVG:
 
 ```twig
-<a class="custom-logo" href="/admin" title="Dashboard Home">
+<a class="custom-logo" href="" title="Dashboard Home">
 	<svg width="24" height="24" viewBox="0 0 24 24">
 		<!-- Your SVG content -->
 	</svg>
 </a>
 ```
 
-**Important:** The `<a class="custom-logo">` wrapper is required for proper styling and layout.
+```twig
+<a class="custom-logo" href="" title="Home">
+	{{ cms.svg("logo") }}
+</a>
+```
+
+**Important:** The `<a class="custom-logo">` wrapper is required for proper styling and layout. Set the href to
+blank if you want it to go to the Dashboard homepage. If you want to link outside the Dashboard, you must
+provide the full URL, not just the path.
 
 ### Admin Welcome Message
 
