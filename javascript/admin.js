@@ -113,16 +113,4 @@ document.addEventListener("DOMContentLoaded", event => {
 	initDocHighlight();
 
 	initExternalLinks();
-
-	// Logout handler - redirect to logout API
-	const logoutElements = document.querySelectorAll('.cms-logout');
-	if (logoutElements.length > 0) {
-		const api = new TotalCMS();
-		logoutElements.forEach(el => {
-			el.addEventListener('click', (e) => {
-				e.preventDefault();
-				window.location.href = api.buildApiQuery('/logout');
-			});
-		});
-	}
 });

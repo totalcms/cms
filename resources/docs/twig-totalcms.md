@@ -416,6 +416,26 @@ If all template variables resolve to empty, the caption is suppressed entirely (
 | `exif.longitude` | GPS longitude |
 | `exif.altitude` | GPS altitude |
 
+### Gallery Grid Styling
+
+The gallery grid uses CSS Grid with a customizable minimum column size via the `--cms-gallery-min-size` CSS variable (default: `150px`). Smaller values produce more columns; larger values produce fewer.
+
+```css
+/* Change the minimum thumbnail size globally */
+:root {
+    --cms-gallery-min-size: 250px;
+}
+
+/* Or override per gallery using the class option */
+.large-thumbs {
+    --cms-gallery-min-size: 300px;
+}
+```
+
+```twig
+{{ cms.gallery('id', {}, {}, {class: 'large-thumbs'}) }}
+```
+
 ## File Downloads & Streaming
 
 ### Downloads (attachment; forces download)

@@ -1522,6 +1522,10 @@ NGINX;
 			$images = $this->data($options['collection'], $id, $options['property']);
 		}
 
+		if (in_array($images, [null, '', []], true)) {
+			return $gallery;
+		}
+
 		// Check if captions should be shown on grid thumbnails and in lightbox
 		// When set to a string, it's used as a template (e.g., "{{alt}} | {{exif.camera}}")
 		$showGridCaptions  = !empty($options['gridCaptions']);
