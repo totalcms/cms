@@ -4,6 +4,7 @@
  * Subscribes to editor selectionUpdate to toggle .is-active class.
  */
 
+import { DOMSerializer } from '@tiptap/pm/model';
 import { BULLET_STYLES, ORDERED_STYLES } from './extensions/ListStyle.js';
 
 /* Maps button names to their --icon-ste-* CSS variable suffix */
@@ -38,6 +39,9 @@ const ICON_MAP = {
 	caretDown:       'caret-down',
 	textColor:       'text-color',
 	textBgColor:     'text-bgcolor',
+	inlineStyles:    'inline-style',
+	inlineClasses:   'inline-class',
+	htmlSnippets:    'add-element',
 };
 
 const BUTTON_DEFS = {
@@ -83,6 +87,24 @@ const ALIGN_OPTIONS = [
 	{ value: 'justify', icon: 'align-justify',  label: 'Align Justify' },
 ];
 
+const DEFAULT_INLINE_STYLES = {
+	'Large':     'font-size: 1.25em',
+	'Small':     'font-size: 0.85em',
+	'Uppercase': 'text-transform: uppercase; letter-spacing: 0.05em',
+};
+
+const DEFAULT_INLINE_CLASSES = {
+	'Code':        'cms-inline-code',
+	'Highlighted': 'cms-highlighted',
+	'Badge':       'cms-badge',
+};
+
+const DEFAULT_HTML_SNIPPETS = {
+	'Button':  '<button class="cms-button">{content}</button>',
+	'Callout': '<div class="cms-callout">{content}</div>',
+	'Badge':   '<span class="cms-badge">{content}</span>',
+};
+
 const DEFAULT_COLORS = [
 	'#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#ffffff',
 	'#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff',
@@ -106,9 +128,9 @@ export default class TiptapToolbar {
 		return [
 			{ name: 'history', buttons: ['undo', 'redo'] },
 			{ name: 'text', buttons: ['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript'] },
-			{ name: 'format', buttons: ['textColor', 'textBgColor'] },
+			{ name: 'format', buttons: ['textColor', 'textBgColor', 'inlineStyles', 'inlineClasses'] },
 			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'align'] },
-			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak'] },
+			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak', 'htmlSnippets'] },
 			{ name: 'misc', buttons: ['clearFormatting', 'codeView', 'fullscreen'], align: 'right' },
 		];
 	}
@@ -151,6 +173,21 @@ export default class TiptapToolbar {
 				}
 				if (buttonName === 'textBgColor') {
 					groupEl.appendChild(this.buildColorPicker('textBgColor', 'Background Color', 'setHighlight'));
+					continue;
+				}
+				if (buttonName === 'inlineStyles') {
+					const styles = this.editor.options.uploadConfig?.inlineStyles || DEFAULT_INLINE_STYLES;
+					groupEl.appendChild(this.buildInlineDropdown('inlineStyles', 'Inline Styles', styles));
+					continue;
+				}
+				if (buttonName === 'inlineClasses') {
+					const classes = this.editor.options.uploadConfig?.inlineClasses || DEFAULT_INLINE_CLASSES;
+					groupEl.appendChild(this.buildInlineDropdown('inlineClasses', 'Inline Classes', classes));
+					continue;
+				}
+				if (buttonName === 'htmlSnippets') {
+					const snippets = this.editor.options.uploadConfig?.htmlSnippets || DEFAULT_HTML_SNIPPETS;
+					groupEl.appendChild(this.buildHtmlSnippetDropdown(snippets));
 					continue;
 				}
 
@@ -535,6 +572,152 @@ export default class TiptapToolbar {
 		return wrapper;
 	}
 
+	buildInlineDropdown(name, label, items) {
+		const isStyle = name === 'inlineStyles';
+		const wrapper = document.createElement('div');
+		wrapper.className = 'ste-toolbar-dropdown';
+
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'ste-toolbar-btn ste-toolbar-dropdown-toggle ste-toolbar-dropdown-toggle--icon';
+		toggle.title = label;
+		toggle.setAttribute('aria-label', label);
+		toggle.style.setProperty('--btn-icon', `var(--icon-ste-${ICON_MAP[name]})`);
+		toggle.innerHTML = `<span class="ste-caret"></span>`;
+
+		const menu = document.createElement('div');
+		menu.className = 'ste-toolbar-dropdown-menu';
+
+		// "Normal" item to remove the mark
+		const normalItem = document.createElement('button');
+		normalItem.type = 'button';
+		normalItem.className = 'ste-toolbar-dropdown-item';
+		normalItem.textContent = 'Normal';
+		normalItem.addEventListener('click', (e) => {
+			e.preventDefault();
+			if (isStyle) {
+				this.editor.chain().focus().unsetInlineStyle().run();
+			} else {
+				this.editor.chain().focus().unsetInlineClass().run();
+			}
+			this.closeDropdowns();
+		});
+		menu.appendChild(normalItem);
+
+		// User-defined items
+		for (const [itemLabel, value] of Object.entries(items)) {
+			const item = document.createElement('button');
+			item.type = 'button';
+			item.className = 'ste-toolbar-dropdown-item';
+			item.textContent = itemLabel;
+			item.dataset.value = value;
+
+			// Preview the style/class on the label
+			if (isStyle) {
+				item.setAttribute('style', value);
+			} else if (value) {
+				item.classList.add(...value.split(/\s+/));
+			}
+
+			item.addEventListener('click', (e) => {
+				e.preventDefault();
+				if (isStyle) {
+					this.editor.chain().focus().toggleInlineStyle(value).run();
+				} else {
+					this.editor.chain().focus().toggleInlineClass(value).run();
+				}
+				this.closeDropdowns();
+			});
+
+			menu.appendChild(item);
+		}
+
+		toggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const isOpen = wrapper.classList.contains('is-open');
+			this.closeDropdowns();
+			if (!isOpen) wrapper.classList.add('is-open');
+		});
+
+		document.addEventListener('click', () => this.closeDropdowns());
+
+		wrapper.appendChild(toggle);
+		wrapper.appendChild(menu);
+
+		this.buttons.set(name, { element: wrapper, type: 'dropdown', inlineType: isStyle ? 'style' : 'class', items });
+		return wrapper;
+	}
+
+	buildHtmlSnippetDropdown(snippets) {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'ste-toolbar-dropdown';
+
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'ste-toolbar-btn ste-toolbar-dropdown-toggle ste-toolbar-dropdown-toggle--icon';
+		toggle.title = 'HTML Snippets';
+		toggle.setAttribute('aria-label', 'HTML Snippets');
+		toggle.style.setProperty('--btn-icon', `var(--icon-ste-${ICON_MAP.htmlSnippets})`);
+		toggle.innerHTML = `<span class="ste-caret"></span>`;
+
+		const menu = document.createElement('div');
+		menu.className = 'ste-toolbar-dropdown-menu';
+
+		for (const [label, template] of Object.entries(snippets)) {
+			const item = document.createElement('button');
+			item.type = 'button';
+			item.className = 'ste-toolbar-dropdown-item';
+			item.textContent = label;
+
+			item.addEventListener('click', (e) => {
+				e.preventDefault();
+				this.insertHtmlSnippet(template);
+				this.closeDropdowns();
+			});
+
+			menu.appendChild(item);
+		}
+
+		toggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const isOpen = wrapper.classList.contains('is-open');
+			this.closeDropdowns();
+			if (!isOpen) wrapper.classList.add('is-open');
+		});
+
+		document.addEventListener('click', () => this.closeDropdowns());
+
+		wrapper.appendChild(toggle);
+		wrapper.appendChild(menu);
+
+		this.buttons.set('htmlSnippets', { element: wrapper, type: 'dropdown' });
+		return wrapper;
+	}
+
+	insertHtmlSnippet(template) {
+		const { from, to } = this.editor.state.selection;
+		const hasSelection = from !== to;
+
+		if (hasSelection) {
+			// Serialize the selected content to HTML, preserving formatting
+			const slice = this.editor.state.selection.content();
+			const serializer = DOMSerializer.fromSchema(this.editor.schema);
+			const fragment = serializer.serializeFragment(slice.content);
+			const div = document.createElement('div');
+			div.appendChild(fragment);
+			const selectedHtml = div.innerHTML;
+
+			const html = template.replace(/\{content\}/g, selectedHtml);
+			this.editor.chain().focus().deleteSelection().insertContent(html).run();
+		} else {
+			// No selection: insert with empty content, cursor goes inside
+			const html = template.replace(/\{content\}/g, '<p></p>');
+			this.editor.chain().focus().insertContent(html).run();
+		}
+	}
+
 	dispatchColorCommand(command, color) {
 		this.element.dispatchEvent(new CustomEvent('toolbar-command', {
 			detail: { command, args: color },
@@ -584,6 +767,7 @@ export default class TiptapToolbar {
 				if (name === 'align') this.updateAlignDropdown(entry.element);
 				if (name === 'bulletList' || name === 'orderedList') this.updateListDropdown(name, entry.element);
 				if (name === 'textColor' || name === 'textBgColor') this.updateColorPicker(name, entry);
+				if (name === 'inlineStyles' || name === 'inlineClasses') this.updateInlineDropdown(name, entry);
 				continue;
 			}
 
@@ -652,6 +836,27 @@ export default class TiptapToolbar {
 			);
 			item.classList.toggle('is-active', itemActive);
 		}
+	}
+
+	updateInlineDropdown(name, entry) {
+		const markName = name === 'inlineStyles' ? 'inlineStyle' : 'inlineClass';
+		const attrName = name === 'inlineStyles' ? 'style' : 'class';
+		const isActive = this.editor.isActive(markName);
+		const currentValue = this.editor.getAttributes(markName)[attrName] || '';
+
+		const items = entry.element.querySelectorAll('.ste-toolbar-dropdown-item');
+		items.forEach(item => {
+			const value = item.dataset.value;
+			if (value === undefined) {
+				// "Normal" item — active when mark is not set
+				item.classList.toggle('is-active', !isActive);
+			} else {
+				item.classList.toggle('is-active', currentValue === value);
+			}
+		});
+
+		const toggle = entry.element.querySelector('.ste-toolbar-dropdown-toggle');
+		if (toggle) toggle.classList.toggle('is-active', isActive);
 	}
 
 	updateColorPicker(name, entry) {

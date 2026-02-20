@@ -34,6 +34,7 @@ import { createLinkDialog } from './extensions/LinkDialog.js';
 import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
+import InlineStyle from './extensions/InlineStyle.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
@@ -205,6 +206,7 @@ export default class TiptapEditor {
 			Subscript,
 			RawHTML,
 			InlineClass,
+		InlineStyle,
 			Typography,
 			Markdown,
 			CharacterCount.configure({

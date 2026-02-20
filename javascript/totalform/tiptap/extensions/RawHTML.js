@@ -10,7 +10,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 const RawHTML = Node.create({
 	name: 'rawHtmlBlock',
 	group: 'block',
-	content: 'inline*',
+	content: 'block+',
 	defining: true,
 
 	addAttributes() {
