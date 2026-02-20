@@ -332,6 +332,7 @@
 .ste-code-view {
 	display          : block;
 	width            : 100%;
+	box-sizing       : border-box;
 	min-height       : 200px;
 	padding          : 1rem;
 	border           : none;
@@ -352,7 +353,6 @@
 .ste-editor-container .CodeMirror {
 	border    : none;
 	font-size : 1rem;
-	height    : 100%;
 }
 
 // YouTube embeds

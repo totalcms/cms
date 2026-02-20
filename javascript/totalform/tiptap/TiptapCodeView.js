@@ -21,6 +21,9 @@ export default class TiptapCodeView {
 		if (this.active) return;
 		this.active = true;
 
+		// Capture the editor wrapper's rendered height before hiding
+		const editorHeight = wrapper.offsetHeight;
+
 		// Hide the editor wrapper
 		wrapper.style.display = 'none';
 
@@ -29,11 +32,6 @@ export default class TiptapCodeView {
 		this.codeArea.className = 'ste-code-view';
 		this.codeArea.value = html;
 		this.container.appendChild(this.codeArea);
-
-		// Match the editor wrapper height constraints
-		const minH = wrapper.style.minHeight || '200px';
-		const maxH = wrapper.style.maxHeight || '800px';
-		const fixedH = wrapper.style.height;
 
 		// Initialize CodeMirror if available
 		if (window.CodeMirror) {
@@ -48,27 +46,14 @@ export default class TiptapCodeView {
 				...this.options,
 			});
 
-			// Let CodeMirror auto-size with scroll constraints
-			const cmWrapper = this.codeMirror.getWrapperElement();
-			if (fixedH) {
-				cmWrapper.style.height = fixedH;
-			} else {
-				cmWrapper.style.minHeight = minH;
-				cmWrapper.style.maxHeight = maxH;
-			}
-			cmWrapper.style.overflow = 'auto';
-			this.codeMirror.setSize(null, '100%');
+			// Use the same height as the editor wrapper so CodeMirror scrolls internally
+			this.codeMirror.setSize('100%', editorHeight);
 
 			// Refresh after a tick to ensure proper rendering
 			setTimeout(() => this.codeMirror?.refresh(), 50);
 		} else {
 			// Plain textarea fallback
-			if (fixedH) {
-				this.codeArea.style.height = fixedH;
-			} else {
-				this.codeArea.style.minHeight = minH;
-				this.codeArea.style.maxHeight = maxH;
-			}
+			this.codeArea.style.height = `${editorHeight}px`;
 			this.codeArea.style.overflowY = 'auto';
 		}
 	}
