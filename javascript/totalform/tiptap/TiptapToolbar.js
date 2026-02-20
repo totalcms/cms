@@ -7,6 +7,7 @@
 import { BULLET_STYLES, ORDERED_STYLES } from './extensions/ListStyle.js';
 
 /* Maps button names to their --icon-ste-* CSS variable suffix */
+/* Maps button names to their --icon-ste-* CSS variable suffix */
 const ICON_MAP = {
 	bold:            'bold',
 	italic:          'italic',
@@ -35,6 +36,8 @@ const ICON_MAP = {
 	fullscreen:      'fullscreen',
 	hardBreak:       'hard-break',
 	caretDown:       'caret-down',
+	textColor:       'text-color',
+	textBgColor:     'text-bgcolor',
 };
 
 const BUTTON_DEFS = {
@@ -80,6 +83,15 @@ const ALIGN_OPTIONS = [
 	{ value: 'justify', icon: 'align-justify',  label: 'Align Justify' },
 ];
 
+const DEFAULT_COLORS = [
+	'#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#ffffff',
+	'#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff',
+	'#9900ff', '#ff00ff', '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3',
+	'#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc', '#dd7e6b', '#ea9999', '#f9cb9c', '#ffe599',
+	'#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8', '#b4a7d6', '#d5a6bd', '#cc4125', '#e06666',
+	'#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0',
+];
+
 export default class TiptapToolbar {
 
 	constructor(editor, config) {
@@ -94,6 +106,7 @@ export default class TiptapToolbar {
 		return [
 			{ name: 'history', buttons: ['undo', 'redo'] },
 			{ name: 'text', buttons: ['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript'] },
+			{ name: 'format', buttons: ['textColor', 'textBgColor'] },
 			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'align'] },
 			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak'] },
 			{ name: 'misc', buttons: ['clearFormatting', 'codeView', 'fullscreen'], align: 'right' },
@@ -130,6 +143,14 @@ export default class TiptapToolbar {
 				}
 				if (buttonName === 'table') {
 					groupEl.appendChild(this.buildTableGridPicker());
+					continue;
+				}
+				if (buttonName === 'textColor') {
+					groupEl.appendChild(this.buildColorPicker('textColor', 'Text Color', 'setColor'));
+					continue;
+				}
+				if (buttonName === 'textBgColor') {
+					groupEl.appendChild(this.buildColorPicker('textBgColor', 'Background Color', 'setHighlight'));
 					continue;
 				}
 
@@ -422,6 +443,105 @@ export default class TiptapToolbar {
 		return wrapper;
 	}
 
+	buildColorPicker(name, label, command) {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'ste-toolbar-dropdown';
+
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'ste-toolbar-btn ste-toolbar-dropdown-toggle ste-toolbar-dropdown-toggle--icon';
+		toggle.title = label;
+		toggle.setAttribute('aria-label', label);
+		toggle.style.setProperty('--btn-icon', `var(--icon-ste-${ICON_MAP[name]})`);
+		toggle.innerHTML = `<span class="ste-caret"></span>`;
+
+		const menu = document.createElement('div');
+		menu.className = 'ste-toolbar-dropdown-menu ste-color-picker';
+
+		// Get colors from config or use defaults
+		const colors = this.editor.options.uploadConfig?.colors?.[name] || DEFAULT_COLORS;
+		const allowCustom = this.editor.options.uploadConfig?.colors?.allowCustom !== false;
+
+		// Color grid
+		const grid = document.createElement('div');
+		grid.className = 'ste-color-grid';
+
+		for (const color of colors) {
+			const swatch = document.createElement('button');
+			swatch.type = 'button';
+			swatch.className = 'ste-color-swatch';
+			swatch.style.backgroundColor = color;
+			swatch.title = color;
+			swatch.dataset.color = color;
+
+			swatch.addEventListener('click', (e) => {
+				e.preventDefault();
+				this.dispatchColorCommand(command, color);
+				this.closeDropdowns();
+			});
+
+			grid.appendChild(swatch);
+		}
+
+		menu.appendChild(grid);
+
+		// Custom color picker (system native)
+		if (allowCustom) {
+			const colorInput = document.createElement('input');
+			colorInput.type = 'color';
+			colorInput.className = 'ste-color-input';
+			colorInput.value = '#000000';
+			colorInput.title = 'Custom color';
+
+			colorInput.addEventListener('input', () => {
+				this.dispatchColorCommand(command, colorInput.value);
+			});
+
+			colorInput.addEventListener('change', () => {
+				this.closeDropdowns();
+			});
+
+			menu.appendChild(colorInput);
+		}
+
+		// Remove color button (eraser icon)
+		const removeBtn = document.createElement('button');
+		removeBtn.type = 'button';
+		removeBtn.className = 'ste-color-remove';
+		removeBtn.title = 'Remove';
+		removeBtn.setAttribute('aria-label', 'Remove');
+		removeBtn.style.setProperty('--btn-icon', 'var(--icon-ste-eraser)');
+		removeBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.dispatchColorCommand(command, null);
+			this.closeDropdowns();
+		});
+		menu.appendChild(removeBtn);
+
+		toggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const isOpen = wrapper.classList.contains('is-open');
+			this.closeDropdowns();
+			if (!isOpen) wrapper.classList.add('is-open');
+		});
+
+		document.addEventListener('click', () => this.closeDropdowns());
+
+		wrapper.appendChild(toggle);
+		wrapper.appendChild(menu);
+
+		this.buttons.set(name, { element: wrapper, type: 'dropdown', colorCommand: command });
+		return wrapper;
+	}
+
+	dispatchColorCommand(command, color) {
+		this.element.dispatchEvent(new CustomEvent('toolbar-command', {
+			detail: { command, args: color },
+			bubbles: true,
+		}));
+	}
+
 	closeDropdowns() {
 		this.element.querySelectorAll('.ste-toolbar-dropdown.is-open')
 			.forEach(el => el.classList.remove('is-open'));
@@ -463,6 +583,7 @@ export default class TiptapToolbar {
 				if (name === 'heading') this.updateHeadingDropdown(entry.element);
 				if (name === 'align') this.updateAlignDropdown(entry.element);
 				if (name === 'bulletList' || name === 'orderedList') this.updateListDropdown(name, entry.element);
+				if (name === 'textColor' || name === 'textBgColor') this.updateColorPicker(name, entry);
 				continue;
 			}
 
@@ -530,6 +651,17 @@ export default class TiptapToolbar {
 				cls ? this.editor.isActive(name, { class: cls }) : !this.editor.getAttributes(name).class
 			);
 			item.classList.toggle('is-active', itemActive);
+		}
+	}
+
+	updateColorPicker(name, entry) {
+		const toggle = entry.element.querySelector('.ste-toolbar-dropdown-toggle');
+		if (!toggle) return;
+
+		if (name === 'textColor') {
+			toggle.classList.toggle('is-active', !!this.editor.getAttributes('textStyle').color);
+		} else {
+			toggle.classList.toggle('is-active', this.editor.isActive('highlight'));
 		}
 	}
 

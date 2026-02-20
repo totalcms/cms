@@ -1168,6 +1168,90 @@
 }
 
 //------------------------------
+// Color Picker
+//------------------------------
+.ste-color-picker {
+	padding   : 8px !important;
+	min-width : auto !important;
+	width     : 232px;
+}
+
+.ste-color-grid {
+	display               : grid;
+	grid-template-columns : repeat(8, 1fr);
+	gap                   : 3px;
+	margin-bottom         : 6px;
+}
+
+.ste-color-swatch {
+	width         : 24px;
+	height        : 24px;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : 3px;
+	cursor        : pointer;
+	padding       : 0;
+	transition    : transform 0.1s, box-shadow 0.1s;
+
+	&:hover {
+		transform  : scale(1.15);
+		box-shadow : 0 0 0 2px oklch(var(--totalform-accent));
+		z-index    : 1;
+	}
+}
+
+.ste-toolbar-dropdown-menu .ste-color-input {
+	display       : block;
+	width         : 100%;
+	height        : 24px;
+	padding       : 0;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	cursor        : pointer;
+	border-radius : 3px !important;
+	margin-top    : 4px;
+	box-shadow    : none;
+
+	&::-webkit-color-swatch-wrapper {
+		padding : 2px;
+	}
+
+	&::-webkit-color-swatch {
+		border        : none;
+		border-radius : 2px;
+	}
+}
+
+.ste-color-remove {
+	display          : flex;
+	align-items      : center;
+	justify-content  : center;
+	width            : 100%;
+	height           : 24px;
+	padding          : 0;
+	border           : none;
+	background-color : transparent;
+	cursor           : pointer;
+	border-top       : 1px solid oklch(var(--totalform-border-color));
+	margin-top       : 4px;
+	padding-top      : 4px;
+
+	&::before {
+		content          : '';
+		display          : block;
+		width            : 16px;
+		height           : 16px;
+		background-color : oklch(var(--totalform-darkgray));
+		mask-image       : var(--btn-icon);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+
+	&:hover::before {
+		background-color : oklch(var(--totalform-accent));
+	}
+}
+
+//------------------------------
 // Table Popover (context controls)
 //------------------------------
 .ste-table-popover {
