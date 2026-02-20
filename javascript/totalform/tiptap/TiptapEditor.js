@@ -29,6 +29,7 @@ import FigureImage from './extensions/FigureImage.js';
 import { Youtube, createVideoDialog } from './extensions/VideoEmbed.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
+import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
@@ -189,6 +190,7 @@ export default class TiptapEditor {
 			TableRow,
 			TableCell,
 			TableHeader,
+			TablePopover,
 			TextStyle,
 			Color,
 			Highlight.configure({
@@ -326,11 +328,8 @@ export default class TiptapEditor {
 	}
 
 	insertTable() {
-		const rows = parseInt(prompt('Number of rows:', '3'), 10);
-		if (!rows || rows < 1) return;
-		const cols = parseInt(prompt('Number of columns:', '3'), 10);
-		if (!cols || cols < 1) return;
-		this.editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+		// Grid picker handles this from toolbar dropdown; fallback for programmatic use
+		this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
 	}
 
 	setColor(color) {

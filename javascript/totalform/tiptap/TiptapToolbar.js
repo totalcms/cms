@@ -92,10 +92,11 @@ export default class TiptapToolbar {
 
 	defaultConfig() {
 		return [
-			{ name: 'text', buttons: ['bold', 'italic', 'underline'] },
-			{ name: 'paragraph', buttons: ['bulletList', 'orderedList', 'heading', 'align'] },
-			{ name: 'insert', buttons: ['link', 'image'] },
-			{ name: 'misc', buttons: ['clearFormatting', 'codeView'], align: 'right' },
+			{ name: 'history', buttons: ['undo', 'redo'] },
+			{ name: 'text', buttons: ['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript'] },
+			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'align'] },
+			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak'] },
+			{ name: 'misc', buttons: ['clearFormatting', 'codeView', 'fullscreen'], align: 'right' },
 		];
 	}
 
@@ -125,6 +126,10 @@ export default class TiptapToolbar {
 				}
 				if (buttonName === 'orderedList') {
 					groupEl.appendChild(this.buildListDropdown('orderedList', ORDERED_STYLES));
+					continue;
+				}
+				if (buttonName === 'table') {
+					groupEl.appendChild(this.buildTableGridPicker());
 					continue;
 				}
 
@@ -326,6 +331,94 @@ export default class TiptapToolbar {
 		wrapper.appendChild(menu);
 
 		this.buttons.set(name, { element: wrapper, type: 'dropdown' });
+		return wrapper;
+	}
+
+	buildTableGridPicker() {
+		const GRID_SIZE = 8;
+		const wrapper = document.createElement('div');
+		wrapper.className = 'ste-toolbar-dropdown';
+
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'ste-toolbar-btn ste-toolbar-dropdown-toggle ste-toolbar-dropdown-toggle--icon';
+		toggle.title = 'Table';
+		toggle.setAttribute('aria-label', 'Table');
+		toggle.style.setProperty('--btn-icon', 'var(--icon-ste-table)');
+		toggle.innerHTML = `<span class="ste-caret"></span>`;
+
+		const menu = document.createElement('div');
+		menu.className = 'ste-toolbar-dropdown-menu ste-table-grid-menu';
+
+		const label = document.createElement('div');
+		label.className = 'ste-table-grid-label';
+		label.textContent = 'Insert Table';
+		menu.appendChild(label);
+
+		const grid = document.createElement('div');
+		grid.className = 'ste-table-grid';
+		grid.style.setProperty('--grid-cols', GRID_SIZE);
+
+		const cells = [];
+		for (let r = 0; r < GRID_SIZE; r++) {
+			for (let c = 0; c < GRID_SIZE; c++) {
+				const cell = document.createElement('div');
+				cell.className = 'ste-table-grid__cell';
+				cell.dataset.row = r + 1;
+				cell.dataset.col = c + 1;
+				cells.push(cell);
+				grid.appendChild(cell);
+			}
+		}
+
+		const sizeLabel = document.createElement('div');
+		sizeLabel.className = 'ste-table-grid-size';
+		sizeLabel.textContent = '';
+
+		grid.addEventListener('mouseover', (e) => {
+			const cell = e.target.closest('.ste-table-grid__cell');
+			if (!cell) return;
+			const row = Number(cell.dataset.row);
+			const col = Number(cell.dataset.col);
+			sizeLabel.textContent = `${row} × ${col}`;
+			for (const c of cells) {
+				const cr = Number(c.dataset.row);
+				const cc = Number(c.dataset.col);
+				c.classList.toggle('is-highlighted', cr <= row && cc <= col);
+			}
+		});
+
+		grid.addEventListener('mouseleave', () => {
+			sizeLabel.textContent = '';
+			for (const c of cells) c.classList.remove('is-highlighted');
+		});
+
+		grid.addEventListener('click', (e) => {
+			const cell = e.target.closest('.ste-table-grid__cell');
+			if (!cell) return;
+			const rows = Number(cell.dataset.row);
+			const cols = Number(cell.dataset.col);
+			this.editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+			this.closeDropdowns();
+		});
+
+		menu.appendChild(grid);
+		menu.appendChild(sizeLabel);
+
+		toggle.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const isOpen = wrapper.classList.contains('is-open');
+			this.closeDropdowns();
+			if (!isOpen) wrapper.classList.add('is-open');
+		});
+
+		document.addEventListener('click', () => this.closeDropdowns());
+
+		wrapper.appendChild(toggle);
+		wrapper.appendChild(menu);
+
+		this.buttons.set('table', { element: wrapper, type: 'dropdown' });
 		return wrapper;
 	}
 

@@ -1034,6 +1034,134 @@
 	}
 }
 
+//------------------------------
+// Table Grid Picker (toolbar dropdown)
+//------------------------------
+.ste-table-grid-menu {
+	padding : 8px !important;
+}
+
+.ste-table-grid-label {
+	font-size     : 12px;
+	font-weight   : 600;
+	color         : oklch(var(--totalform-text-color));
+	margin-bottom : 6px;
+	text-align    : center;
+}
+
+.ste-table-grid {
+	display               : grid;
+	grid-template-columns : repeat(var(--grid-cols, 8), 1fr);
+	gap                   : 2px;
+}
+
+.ste-table-grid__cell {
+	width            : 20px;
+	height           : 20px;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 2px;
+	background-color : oklch(var(--totalform-white));
+	cursor           : pointer;
+	transition       : background-color 0.1s, border-color 0.1s;
+
+	&.is-highlighted {
+		background-color : oklch(var(--totalform-accent) / 0.2);
+		border-color     : oklch(var(--totalform-accent) / 0.5);
+	}
+}
+
+.ste-table-grid-size {
+	font-size  : 12px;
+	color      : oklch(var(--totalform-darkgray));
+	text-align : center;
+	margin-top : 4px;
+	min-height : 18px;
+}
+
+//------------------------------
+// Table Popover (context controls)
+//------------------------------
+.ste-table-popover {
+	position         : absolute;
+	z-index          : 100;
+	background-color : oklch(var(--totalform-white));
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 8px;
+	box-shadow       : 0 4px 16px oklch(0 0 0 / 0.15);
+	padding          : 8px;
+	white-space      : nowrap;
+}
+
+.ste-table-popover__row {
+	display               : grid;
+	grid-template-columns : 36px 26px 26px 26px;
+	align-items           : center;
+	gap                   : 4px;
+
+	& + & {
+		margin-top : 4px;
+	}
+
+	&:last-child {
+		grid-template-columns : 1fr 26px 26px;
+	}
+}
+
+.ste-table-popover__label {
+	font-size   : 11px;
+	font-weight : 600;
+	color       : oklch(var(--totalform-darkgray));
+}
+
+.ste-table-popover__icon-btn {
+	display         : inline-flex;
+	align-items     : center;
+	justify-content : center;
+	width           : 26px;
+	height          : 26px;
+	padding         : 0;
+	border          : 1px solid transparent;
+	border-radius   : 4px;
+	background      : transparent;
+	color           : oklch(var(--totalform-text-color));
+	cursor          : pointer;
+	transition      : background-color 0.15s, border-color 0.15s;
+
+	&::before {
+		content          : '';
+		display          : block;
+		width            : 14px;
+		height           : 14px;
+		background-color : currentColor;
+		mask-image       : var(--btn-icon);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite));
+		border-color     : oklch(var(--totalform-border-color));
+	}
+
+	&--danger {
+		color : oklch(var(--totalform-darkgray));
+
+		&:hover {
+			color            : oklch(var(--totalform-error));
+			background-color : oklch(var(--totalform-error) / 0.1);
+			border-color     : oklch(var(--totalform-error) / 0.3);
+		}
+	}
+}
+
+.ste-table-popover__sep-h {
+	height           : 1px;
+	background-color : oklch(var(--totalform-border-color));
+	margin           : 6px 0;
+}
+
+
 .styledtext-field {
 	.ProseMirror {
 		p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6 {
