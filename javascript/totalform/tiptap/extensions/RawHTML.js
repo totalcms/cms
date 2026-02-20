@@ -80,10 +80,11 @@ const RawHTML = Node.create({
 			dom.className = 'ste-raw-html-block';
 			dom.dataset.rawTag = tagName;
 
-			// Label showing the tag name
+			// Label showing snippet label or tag name
+			const snippetLabel = attrs['data-label'];
 			const label = document.createElement('span');
 			label.className = 'ste-raw-html-label';
-			label.textContent = `<${tagName}>`;
+			label.textContent = snippetLabel || `<${tagName}>`;
 			dom.appendChild(label);
 
 			// Content area

@@ -672,7 +672,7 @@ export default class TiptapToolbar {
 
 			item.addEventListener('click', (e) => {
 				e.preventDefault();
-				this.insertHtmlSnippet(template);
+				this.insertHtmlSnippet(template, label);
 				this.closeDropdowns();
 			});
 
@@ -696,7 +696,10 @@ export default class TiptapToolbar {
 		return wrapper;
 	}
 
-	insertHtmlSnippet(template) {
+	insertHtmlSnippet(template, label) {
+		// Inject data-label attribute into the first opening tag
+		const html_template = template.replace(/^<(\w+)/, `<$1 data-label="${label}"`);
+
 		const { from, to } = this.editor.state.selection;
 		const hasSelection = from !== to;
 
@@ -709,11 +712,11 @@ export default class TiptapToolbar {
 			div.appendChild(fragment);
 			const selectedHtml = div.innerHTML;
 
-			const html = template.replace(/\{content\}/g, selectedHtml);
+			const html = html_template.replace(/\{content\}/g, selectedHtml);
 			this.editor.chain().focus().deleteSelection().insertContent(html).run();
 		} else {
 			// No selection: insert with empty content, cursor goes inside
-			const html = template.replace(/\{content\}/g, '<p></p>');
+			const html = html_template.replace(/\{content\}/g, '<p></p>');
 			this.editor.chain().focus().insertContent(html).run();
 		}
 	}
