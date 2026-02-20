@@ -49,6 +49,7 @@ readonly class ListUploadFilesAction
 			$ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 
 			$isImage = in_array($ext, self::IMAGE_EXTENSIONS, true);
+			$isVideo = in_array($ext, self::VIDEO_EXTENSIONS, true);
 
 			if ($isImage) {
 				$thumbnail = $apiPath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
@@ -57,10 +58,12 @@ readonly class ListUploadFilesAction
 				if (is_string($preset) && $preset !== '') {
 					$url .= '?p=' . urlencode($preset);
 				}
-			} else {
-				// Non-image files use the plain upload path
+			} elseif ($isVideo) {
 				$thumbnail = null;
-				$url       = $apiPath . '/upload/' . $path;
+				$url       = $apiPath . '/stream/upload/' . $path;
+			} else {
+				$thumbnail = null;
+				$url       = $apiPath . '/download/upload/' . $path;
 			}
 
 			$result[] = [

@@ -11,6 +11,9 @@ use TotalCMS\Support\Config;
 
 readonly class UploadFileAction
 {
+	private const VIDEO_MIME_PREFIXES = ['video/'];
+	private const IMAGE_MIME_PREFIXES = ['image/'];
+
 	public function __construct(
 		private JsonRenderer $renderer,
 		private UploadSaver $saver,
@@ -73,12 +76,9 @@ readonly class UploadFileAction
 		);
 
 		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+		$mime    = $file->getClientMediaType() ?? '';
 
-		// Images use ImageWorks path; everything else uses plain upload path
-		$mime = $file->getClientMediaType() ?? '';
-		$link = str_starts_with($mime, 'image/')
-			? $apiPath . '/imageworks/upload/' . $path
-			: $apiPath . '/upload/' . $path;
+		$link = $this->buildLink($apiPath, $path, $mime);
 
 		$params = $request->getParsedBody();
 		if (!empty($params)) {
@@ -87,4 +87,36 @@ readonly class UploadFileAction
 
 		return $this->renderer->json($response, ['link' => $link]);
 	}
+
+	/**
+	 * Build the response link based on MIME type.
+	 * Images use ImageWorks, videos use stream (range requests), everything else uses download.
+	 */
+	private function buildLink(string $apiPath, string $path, string $mime): string
+	{
+		if ($this->matchesMime($mime, self::IMAGE_MIME_PREFIXES)) {
+			return $apiPath . '/imageworks/upload/' . $path;
+		}
+
+		if ($this->matchesMime($mime, self::VIDEO_MIME_PREFIXES)) {
+			return $apiPath . '/stream/upload/' . $path;
+		}
+
+		return $apiPath . '/download/upload/' . $path;
+	}
+
+	/**
+	 * @param array<int,string> $prefixes
+	 */
+	private function matchesMime(string $mime, array $prefixes): bool
+	{
+		foreach ($prefixes as $prefix) {
+			if (str_starts_with($mime, $prefix)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 }
