@@ -12,6 +12,7 @@ readonly class ListUploadFilesAction
 {
 	private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif', 'bmp', 'ico', 'tiff', 'tif'];
 	private const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'ogv', 'mov', 'avi', 'mkv', 'm4v'];
+	private const AUDIO_EXTENSIONS = ['mp3', 'wav', 'aac', 'flac', 'm4a', 'wma', 'opus'];
 
 	public function __construct(
 		private JsonRenderer $renderer,
@@ -50,6 +51,7 @@ readonly class ListUploadFilesAction
 
 			$isImage = in_array($ext, self::IMAGE_EXTENSIONS, true);
 			$isVideo = in_array($ext, self::VIDEO_EXTENSIONS, true);
+			$isAudio = in_array($ext, self::AUDIO_EXTENSIONS, true);
 
 			if ($isImage) {
 				$thumbnail = $apiPath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
@@ -58,7 +60,7 @@ readonly class ListUploadFilesAction
 				if (is_string($preset) && $preset !== '') {
 					$url .= '?p=' . urlencode($preset);
 				}
-			} elseif ($isVideo) {
+			} elseif ($isVideo || $isAudio) {
 				$thumbnail = null;
 				$url       = $apiPath . '/stream/upload/' . $path;
 			} else {
@@ -83,7 +85,9 @@ readonly class ListUploadFilesAction
 		return match ($type) {
 			'image' => in_array($ext, self::IMAGE_EXTENSIONS, true),
 			'video' => in_array($ext, self::VIDEO_EXTENSIONS, true),
-			'file'  => !in_array($ext, self::IMAGE_EXTENSIONS, true) && !in_array($ext, self::VIDEO_EXTENSIONS, true),
+			'audio' => in_array($ext, self::AUDIO_EXTENSIONS, true),
+			'media' => in_array($ext, self::VIDEO_EXTENSIONS, true) || in_array($ext, self::AUDIO_EXTENSIONS, true),
+			'file'  => !in_array($ext, self::IMAGE_EXTENSIONS, true) && !in_array($ext, self::VIDEO_EXTENSIONS, true) && !in_array($ext, self::AUDIO_EXTENSIONS, true),
 			default => true,
 		};
 	}

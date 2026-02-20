@@ -11,8 +11,8 @@ use TotalCMS\Support\Config;
 
 readonly class UploadFileAction
 {
-	private const VIDEO_MIME_PREFIXES = ['video/'];
 	private const IMAGE_MIME_PREFIXES = ['image/'];
+	private const MEDIA_MIME_PREFIXES = ['video/', 'audio/'];
 
 	public function __construct(
 		private JsonRenderer $renderer,
@@ -90,7 +90,7 @@ readonly class UploadFileAction
 
 	/**
 	 * Build the response link based on MIME type.
-	 * Images use ImageWorks, videos use stream (range requests), everything else uses download.
+	 * Images use ImageWorks, audio/video use stream (range requests), everything else uses download.
 	 */
 	private function buildLink(string $apiPath, string $path, string $mime): string
 	{
@@ -98,7 +98,7 @@ readonly class UploadFileAction
 			return $apiPath . '/imageworks/upload/' . $path;
 		}
 
-		if ($this->matchesMime($mime, self::VIDEO_MIME_PREFIXES)) {
+		if ($this->matchesMime($mime, self::MEDIA_MIME_PREFIXES)) {
 			return $apiPath . '/stream/upload/' . $path;
 		}
 
