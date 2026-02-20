@@ -42,6 +42,7 @@ const ICON_MAP = {
 	inlineStyles:    'inline-style',
 	inlineClasses:   'inline-class',
 	htmlSnippets:    'add-element',
+	anchor:          'anchor',
 };
 
 const BUTTON_DEFS = {
@@ -71,6 +72,7 @@ const BUTTON_DEFS = {
 	codeView:        { command: 'toggleCodeView',     label: 'Code View' },
 	fullscreen:      { command: 'toggleFullscreen',   label: 'Fullscreen' },
 	hardBreak:       { command: 'setHardBreak',       label: 'Hard Break' },
+	anchor:          { command: 'openAnchorDialog',   label: 'Anchor ID' },
 };
 
 const HEADING_OPTIONS = [
@@ -130,7 +132,7 @@ export default class TiptapToolbar {
 			{ name: 'text', buttons: ['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript'] },
 			{ name: 'format', buttons: ['textColor', 'textBgColor', 'inlineStyles', 'inlineClasses'] },
 			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'align'] },
-			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak', 'htmlSnippets'] },
+			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak', 'htmlSnippets', 'anchor'] },
 			{ name: 'misc', buttons: ['clearFormatting', 'codeView', 'fullscreen'], align: 'right' },
 		];
 	}
@@ -190,7 +192,7 @@ export default class TiptapToolbar {
 					groupEl.appendChild(this.buildHtmlSnippetDropdown(snippets));
 					continue;
 				}
-
+	
 				const def = BUTTON_DEFS[buttonName];
 				if (!def) continue;
 
@@ -760,6 +762,7 @@ export default class TiptapToolbar {
 			'toggleCodeView', 'openLinkDialog', 'openImageDialog',
 			'openVideoDialog', 'openFileDialog', 'insertTable',
 			'setColor', 'setHighlight', 'setFontFamily', 'toggleFullscreen',
+			'openAnchorDialog',
 		];
 
 		if (delegatedCommands.includes(command)) {

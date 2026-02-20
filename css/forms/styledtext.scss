@@ -567,6 +567,22 @@
 			background-color: oklch(var(--totalform-error) / 0.2);
 		}
 	}
+
+	&--icon {
+		padding : 6px 8px;
+
+		&::before {
+			content          : '';
+			display          : block;
+			width            : 16px;
+			height           : 16px;
+			background-color : currentColor;
+			mask-image       : var(--btn-icon);
+			mask-size        : contain;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+		}
+	}
 }
 
 // Link dialog fields
@@ -1250,6 +1266,7 @@
 		background-color : oklch(var(--totalform-accent));
 	}
 }
+
 
 //------------------------------
 // Table Popover (context controls)

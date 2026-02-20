@@ -31,11 +31,13 @@ import VideoNode from './extensions/VideoNode.js';
 import AudioNode from './extensions/AudioNode.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
+import { createAnchorDialog } from './extensions/AnchorDialog.js';
 import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import InlineStyle from './extensions/InlineStyle.js';
 import InlineElement from './extensions/InlineElement.js';
+import AnchorId from './extensions/AnchorId.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
@@ -209,6 +211,7 @@ export default class TiptapEditor {
 			InlineClass,
 		InlineStyle,
 		InlineElement,
+		AnchorId,
 			Typography,
 			Markdown,
 			CharacterCount.configure({
@@ -297,6 +300,9 @@ export default class TiptapEditor {
 			case 'toggleFullscreen':
 				this.toggleFullscreen();
 				break;
+			case 'openAnchorDialog':
+				this.openAnchorDialog();
+				break;
 		}
 	}
 
@@ -317,6 +323,10 @@ export default class TiptapEditor {
 
 	openLinkDialog() {
 		createLinkDialog(this.editor);
+	}
+
+	openAnchorDialog() {
+		createAnchorDialog(this.editor);
 	}
 
 	openImageDialog() {
