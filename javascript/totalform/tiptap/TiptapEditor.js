@@ -35,6 +35,7 @@ import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import InlineStyle from './extensions/InlineStyle.js';
+import InlineElement from './extensions/InlineElement.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
@@ -207,6 +208,7 @@ export default class TiptapEditor {
 			RawHTML,
 			InlineClass,
 		InlineStyle,
+		InlineElement,
 			Typography,
 			Markdown,
 			CharacterCount.configure({

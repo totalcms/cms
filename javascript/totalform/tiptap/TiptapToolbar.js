@@ -697,14 +697,24 @@ export default class TiptapToolbar {
 	}
 
 	insertHtmlSnippet(template, label) {
-		// Inject data-label attribute into the first opening tag
-		const html_template = template.replace(/^<(\w+)/, `<$1 data-label="${label}"`);
+		const BLOCK_TAGS = [
+			'div', 'section', 'aside', 'article', 'nav', 'header', 'footer',
+			'main', 'figure', 'details', 'blockquote', 'pre', 'table',
+		];
+
+		// Detect if the snippet is block-level by checking the opening tag
+		const tagMatch = template.match(/^<(\w+)/);
+		const tagName = tagMatch ? tagMatch[1].toLowerCase() : '';
+		const isBlock = BLOCK_TAGS.includes(tagName);
+
+		// Add data-label to the first opening tag
+		const htmlTemplate = template.replace(/^<(\w+)/, `<$1 data-label="${label}"`);
 
 		const { from, to } = this.editor.state.selection;
 		const hasSelection = from !== to;
 
-		if (hasSelection) {
-			// Serialize the selected content to HTML, preserving formatting
+		if (hasSelection && isBlock) {
+			// Block with selection: serialize selected content preserving formatting
 			const slice = this.editor.state.selection.content();
 			const serializer = DOMSerializer.fromSchema(this.editor.schema);
 			const fragment = serializer.serializeFragment(slice.content);
@@ -712,11 +722,20 @@ export default class TiptapToolbar {
 			div.appendChild(fragment);
 			const selectedHtml = div.innerHTML;
 
-			const html = html_template.replace(/\{content\}/g, selectedHtml);
+			const html = htmlTemplate.replace(/\{content\}/g, selectedHtml);
 			this.editor.chain().focus().deleteSelection().insertContent(html).run();
+		} else if (hasSelection) {
+			// Inline with selection: replace in-place to stay within the paragraph
+			const selectedText = this.editor.state.doc.textBetween(from, to);
+			const html = htmlTemplate.replace(/\{content\}/g, selectedText);
+			this.editor.chain().focus().insertContentAt({ from, to }, html).run();
+		} else if (isBlock) {
+			// Block without selection: insert with empty paragraph for cursor
+			const html = htmlTemplate.replace(/\{content\}/g, '<p></p>');
+			this.editor.chain().focus().insertContent(html).run();
 		} else {
-			// No selection: insert with empty content, cursor goes inside
-			const html = html_template.replace(/\{content\}/g, '<p></p>');
+			// Inline without selection: insert with zero-width space
+			const html = htmlTemplate.replace(/\{content\}/g, '\u200B');
 			this.editor.chain().focus().insertContent(html).run();
 		}
 	}
