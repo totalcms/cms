@@ -27,6 +27,7 @@ import { Markdown } from '@tiptap/markdown';
 import ImageUpload from './extensions/ImageUpload.js';
 import FigureImage from './extensions/FigureImage.js';
 import { Youtube, createVideoDialog } from './extensions/VideoEmbed.js';
+import VideoNode from './extensions/VideoNode.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
 import TablePopover from './extensions/TablePopover.js';
@@ -183,6 +184,7 @@ export default class TiptapEditor {
 				inline: false,
 				ccLanguage: 'en',
 			}),
+			VideoNode,
 			// Phase 3 extensions
 			Table.configure({
 				resizable: true,

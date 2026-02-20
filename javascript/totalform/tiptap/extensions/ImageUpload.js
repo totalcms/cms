@@ -164,12 +164,13 @@ function createImageDialog(editor, uploadConfig) {
 		const listUrl = getUploadUrl(uploadConfig);
 		if (!listUrl) return;
 
-		// Append preset as query param if configured
+		// Append type filter and preset as query params
 		const params = new URLSearchParams();
+		params.set('type', 'image');
 		if (uploadConfig.imagePreset) {
 			params.set('preset', uploadConfig.imagePreset);
 		}
-		const fetchUrl = params.toString() ? `${listUrl}?${params}` : listUrl;
+		const fetchUrl = `${listUrl}?${params}`;
 
 		try {
 			const resp = await fetch(fetchUrl, { method: 'GET' });

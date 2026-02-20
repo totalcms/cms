@@ -754,6 +754,89 @@
 	text-overflow : ellipsis;
 }
 
+//------------------------------
+// File Manager (Video/File list)
+//------------------------------
+.ste-dialog--file-manager {
+	width     : 520px;
+	max-width : 90vw;
+}
+
+.ste-file-list {
+	display        : flex;
+	flex-direction : column;
+	gap            : 4px;
+}
+
+.ste-file-row {
+	display       : flex;
+	align-items   : center;
+	gap           : 8px;
+	padding       : 8px 10px;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	cursor        : pointer;
+	transition    : border-color 0.15s, background-color 0.15s;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+
+	&.is-selected {
+		border-color     : oklch(var(--totalform-accent));
+		background-color : oklch(var(--totalform-accent) / 0.05);
+	}
+}
+
+.ste-file-row__name {
+	flex          : 1;
+	font-size     : 13px;
+	color         : oklch(var(--totalform-text-color));
+	white-space   : nowrap;
+	overflow      : hidden;
+	text-overflow : ellipsis;
+}
+
+.ste-file-row__delete {
+	display         : flex;
+	align-items     : center;
+	justify-content : center;
+	width           : 22px;
+	height          : 22px;
+	padding         : 0;
+	border          : none;
+	border-radius   : 50%;
+	background      : transparent;
+	color           : oklch(var(--totalform-darkgray));
+	font-size       : 13px;
+	cursor          : pointer;
+	opacity         : 0;
+	transition      : opacity 0.15s, background-color 0.15s, color 0.15s;
+
+	.ste-file-row:hover & {
+		opacity : 1;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-error) / 0.1);
+		color            : oklch(var(--totalform-error));
+	}
+}
+
+.ste-file-loading {
+	text-align : center;
+	padding    : 24px;
+	font-size  : 1rem;
+	color      : oklch(var(--totalform-darkgray));
+}
+
+.ste-file-empty {
+	text-align : center;
+	padding    : 24px;
+	font-size  : 1rem;
+	color      : oklch(var(--totalform-mediumgray));
+}
+
 .ste-image-loading {
 	text-align : center;
 	padding    : 24px;
@@ -939,6 +1022,12 @@
 				border         : 2px solid oklch(var(--totalform-accent));
 			}
 		}
+	}
+
+	// Table selected state
+	table.ProseMirror-selectednode {
+		outline       : 2px solid oklch(var(--totalform-accent));
+		border-radius : 4px;
 	}
 
 	// Column resize handle

@@ -29,17 +29,8 @@ readonly class UploadFileAction
 			return $this->renderer->json($response, ['error' => 'No file found for upload'])->withStatus(400);
 		}
 
-		// Detect type from MIME
-		$mime = $file->getClientMediaType() ?? '';
-		$type = 'file';
-		if (str_starts_with($mime, 'image/')) {
-			$type = 'image';
-		} elseif (str_starts_with($mime, 'video/')) {
-			$type = 'video';
-		}
-
-		// Validate uploaded file security
-		$validation = $this->validator->validateFile($file, $type);
+		// Validate uploaded file security (permissive — only blocks dangerous extensions)
+		$validation = $this->validator->validateFile($file);
 
 		// Use sanitized filename
 		$sanitizedFilename = $validation['sanitized_filename'];
@@ -50,7 +41,7 @@ readonly class UploadFileAction
 		if ($criticalErrors !== []) {
 			return $this->renderer->json($response, [
 				'error'   => 'File upload validation failed',
-				'details' => $criticalErrors,
+				'details' => array_values($criticalErrors),
 			])->withStatus(400);
 		}
 
@@ -63,10 +54,9 @@ readonly class UploadFileAction
 		$filepath = $this->config->tmpdir . '/' . $sanitizedFilename;
 		$file->moveTo($filepath);
 
-		// Validate MIME type against actual file content
-		$mimeValidation = $this->validator->validateMimeTypeFromFile($filepath, $type);
+		// Validate MIME type against actual file content (permissive — no category restriction)
+		$mimeValidation = $this->validator->validateMimeTypeFromFile($filepath, null);
 		if (!$mimeValidation['valid']) {
-			// Clean up invalid file
 			unlink($filepath);
 
 			return $this->renderer->json($response, [
@@ -84,11 +74,11 @@ readonly class UploadFileAction
 
 		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
 
-		$link = $apiPath . '/upload/' . $path;
-
-		if ($type === 'image') {
-			$link = $apiPath . '/imageworks/upload/' . $path;
-		}
+		// Images use ImageWorks path; everything else uses plain upload path
+		$mime = $file->getClientMediaType() ?? '';
+		$link = str_starts_with($mime, 'image/')
+			? $apiPath . '/imageworks/upload/' . $path
+			: $apiPath . '/upload/' . $path;
 
 		$params = $request->getParsedBody();
 		if (!empty($params)) {
