@@ -89,12 +89,13 @@ export default class StyledTextField extends TotalField {
 		const height   = this.input.dataset.height > 0 ? this.input.dataset.height : null;
 
 		return {
-			height        : height,
-			heightMin     : 200,
-			heightMax     : 800,
-			placeholder   : this.input.getAttribute("placeholder"),
-			confirmDelete : true,
-			onContentChanged: () => this.changed(),
+			height           : height,
+			heightMin        : 200,
+			heightMax        : 800,
+			placeholder      : this.input.getAttribute("placeholder"),
+			confirmDelete    : true,
+			wordCounterCount : true,
+			onContentChanged : () => this.changed(),
 			upload: {
 				url: () => this.uploadAPI(),
 				imagePreset: this.options.imagePreset || null,

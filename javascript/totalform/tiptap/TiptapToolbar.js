@@ -118,9 +118,10 @@ const DEFAULT_COLORS = [
 
 export default class TiptapToolbar {
 
-	constructor(editor, config) {
+	constructor(editor, config, options = {}) {
 		this.editor = editor;
 		this.config = config || this.defaultConfig();
+		this.options = options;
 		this.element = null;
 		this.buttons = new Map();
 		this.build();
@@ -140,6 +141,9 @@ export default class TiptapToolbar {
 	build() {
 		this.element = document.createElement('div');
 		this.element.className = 'ste-toolbar';
+		if (this.options.scroll) {
+			this.element.classList.add('ste-toolbar--scroll');
+		}
 
 		for (const group of this.config) {
 			const groupEl = document.createElement('div');

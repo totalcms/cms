@@ -20,18 +20,32 @@
 	display                : flex;
 	flex-wrap              : wrap;
 	align-items            : center;
-	gap                    : 2px;
+	gap                    : 4px;
 	padding                : 4px 6px;
 	margin                 : 0 1rem;
 	border-bottom          : 1px solid oklch(var(--totalform-text-color) / 0.7);
 	background-color       : oklch(var(--totalform-white));
 	border-top-left-radius : var(--totalform-radius);
+
+	&--scroll {
+		flex-wrap  : nowrap;
+		overflow-x : auto;
+		overflow-y : hidden;
+
+		// Thin scrollbar
+		scrollbar-width : thin;
+		&::-webkit-scrollbar {
+			height : 4px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background    : oklch(var(--totalform-text-color) / 0.2);
+			border-radius : 2px;
+		}
+	}
 }
 
 .ste-toolbar-group {
-	display     : flex;
-	align-items : center;
-	gap         : 1px;
+	display  : contents;
 
 	&:not(:last-child)::after {
 		content          : '';
@@ -39,12 +53,10 @@
 		width            : 1px;
 		height           : 20px;
 		background-color : oklch(var(--totalform-text-color) / 0.2);
-		margin           : 0 0.75rem;
+		margin           : 0 4px;
 	}
 
 	&--right {
-		margin-left : auto;
-
 		&::after {
 			display : none !important;
 		}

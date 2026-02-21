@@ -86,7 +86,9 @@ export default class TiptapEditor {
 		});
 
 		// Create toolbar
-		this.toolbar = new TiptapToolbar(this.editor, this.options.toolbarConfig);
+		this.toolbar = new TiptapToolbar(this.editor, this.options.toolbarConfig, {
+			scroll: this.options.toolbarScroll,
+		});
 		this.container.appendChild(this.toolbar.element);
 
 		// Listen for custom toolbar commands

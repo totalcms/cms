@@ -1,17 +1,3 @@
-
-# Features
-
-* charCounterCount
-* charCounterMax
-* wordCounterCount
-* wordCounterMax
-
-# HTML View
-
-One thing that I do not like about the Froala editor is that if you add HTML into the code view, the editor strips
-that out. I would love our editor to allow advanced users to be able to add their own HTML and have it remain in place
-This may need to be an option? I could be on board with that.
-
 # Setting Presets
 
 It would be great to allow users to create presets of what they want their styled text setups to be like. This way
