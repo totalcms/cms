@@ -1,0 +1,56 @@
+<h1>Image Cache</h1>
+
+<section class="dash-content-section">
+
+	<p>Manage cached images for your collections. Clearing the image cache will remove all generated
+		image variants (.cache directories) for a specific collection, freeing disk space.
+		Images will be regenerated on demand when next requested.</p>
+
+	<h2>Clear Collection Image Cache</h2>
+
+	{% set formfields %}
+		{{ cms.form.field("select", "collection", {
+			placeholder : "Select a Collection",
+			label       : "Collection",
+			class       : "no-change-listener",
+			options     : cms.collections() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple("/cache/images", formfields, {
+		method  : "DELETE",
+		label   : "Clear Collection Image Cache",
+		refresh : true,
+	}) }}
+
+	{% set forceRefresh = getData.refreshStats is defined %}
+	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats(forceRefresh) %}
+	{% if imageCacheStats|length > 0 %}
+		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Collection</th>
+					<th>Cached Files</th>
+					<th>Total Size</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for stats in imageCacheStats %}
+				<tr>
+					<td><strong>{{ stats.collection }}</strong></td>
+					<td>{{ stats.cached_files }}</td>
+					<td>{{ stats.total_size_mb }} MB</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<div style="text-align:right;">
+			<a href="utils/image-cache?refreshStats=1">↻ Refresh Statistics</a>
+		</div>
+	{% else %}
+		<p style="margin-top:2rem"><em>No image cache data found in any collections.</em></p>
+	{% endif %}
+
+</section>

@@ -35,6 +35,7 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
@@ -382,6 +383,7 @@ return [
 		$container->get(EditionTwigAdapter::class),
 		$container->get(JobManager::class),
 		$container->get(CacheManager::class),
+		$container->get(CacheSizingAdvisor::class),
 		$container->get(LoggerFactory::class),
 	),
 
@@ -584,6 +586,15 @@ return [
 		$container->get(MemcachedService::class),
 		$container->get(APCuService::class),
 		$container->get(DevModeManager::class),
+	),
+
+	CacheSizingAdvisor::class => fn (ContainerInterface $container): CacheSizingAdvisor => new CacheSizingAdvisor(
+		$container->get(Config::class),
+		$container->get(CollectionLister::class),
+		$container->get(CacheManager::class),
+		$container->get(APCuService::class),
+		$container->get(RedisService::class),
+		$container->get(MemcachedService::class),
 	),
 
 	CacheManager::class => fn (ContainerInterface $container): CacheManager => new CacheManager(

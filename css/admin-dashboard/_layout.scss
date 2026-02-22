@@ -199,7 +199,7 @@ body {
 			&.schema-code, &.collection-code { --collection-icon : var(--icon-file-code) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
-			&.cache-manager { --collection-icon : var(--icon-clean-o) }
+			&.cache-manager, &.cache-sizing, &.image-cache { --collection-icon : var(--icon-clean-o) }
 			&.project-setup { --collection-icon : var(--icon-flag) }
 			&.macro-builder { --collection-icon : var(--icon-build) }
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }

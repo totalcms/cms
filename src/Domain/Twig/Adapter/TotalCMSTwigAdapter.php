@@ -11,6 +11,7 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
@@ -101,6 +102,7 @@ class TotalCMSTwigAdapter
 		public EditionTwigAdapter $edition,
 		private readonly JobManager $jobManager,
 		private readonly CacheManager $cacheManager,
+		public CacheSizingAdvisor $cacheSizingAdvisor,
 		private readonly LoggerFactory $loggerFactory,
 	) {
 		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');

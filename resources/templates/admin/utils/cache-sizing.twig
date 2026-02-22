@@ -1,0 +1,218 @@
+<h1>Cache Sizing Advisor</h1>
+
+<section class="dash-content-section">
+
+	<p>Analyze your CMS data to get data-driven memory allocation recommendations for cache backends.</p>
+
+	{% set sizing = cms.cacheSizingAdvisor.getSizingAnalysis() %}
+
+		{# Data Summary #}
+		<div class="sizing-stats-grid">
+			<div class="sizing-stat">
+				<div class="sizing-stat-value">{{ sizing.scan.total_objects_human }}</div>
+				<div class="sizing-stat-label">Total Objects</div>
+			</div>
+			<div class="sizing-stat">
+				<div class="sizing-stat-value">{{ sizing.scan.collection_count }}</div>
+				<div class="sizing-stat-label">Collections</div>
+			</div>
+			<div class="sizing-stat">
+				<div class="sizing-stat-value">{{ sizing.scan.total_bytes_human }}</div>
+				<div class="sizing-stat-label">Total Data Size</div>
+			</div>
+			<div class="sizing-stat">
+				<div class="sizing-stat-value">{{ sizing.recommendations.estimated_entries_human }}</div>
+				<div class="sizing-stat-label">Estimated Cache Entries</div>
+			</div>
+		</div>
+
+		{# Filesystem-only Warning #}
+		{% if sizing.recommendations.filesystem_only_warning is defined %}
+			<div class="sizing-warning">
+				<strong>⚠️ No Memory Cache Available</strong>
+				<p>{{ sizing.recommendations.filesystem_only_warning }}</p>
+			</div>
+		{% endif %}
+
+		{# Memory Recommendations #}
+		<h3>Memory Recommendations</h3>
+		<p>Total CMS supports all three memory cache backends, but you do not need to enable all of them. A single memory cache (such as APCu) is sufficient for most sites.</p>
+		<div class="sizing-stats-grid">
+			{% for key, backend in sizing.recommendations.backends %}
+				<div class="sizing-backend-card">
+					<h5>{{ backend.name }}</h5>
+					{% if backend.available %}
+						<span class="success">✅ Active</span>
+					{% elseif backend.installed %}
+						<span class="warning">⚠️ Installed</span>
+					{% else %}
+						<span class="error">❌ Not Installed</span>
+					{% endif %}
+					<div class="sizing-backend-detail">
+						<strong>Recommended:</strong> {{ backend.recommended_allocation }}
+						<small>({{ backend.recommended_human }})</small>
+					</div>
+					{% if backend.current_allocated_human is defined and backend.current_allocated_human != 'N/A' %}
+						<div class="sizing-backend-detail">
+							<strong>Current:</strong> {{ backend.current_allocated_human }}
+							{% if backend.sufficient is same as(true) %}
+								<span class="success">✅ Sufficient</span>
+							{% elseif backend.sufficient is same as(false) %}
+								<span class="error">❌ Insufficient</span>
+							{% endif %}
+						</div>
+					{% endif %}
+				</div>
+			{% endfor %}
+		</div>
+
+		{# Configuration Examples #}
+		<h3>Configuration Examples</h3>
+		{% for key, example in sizing.config_examples %}
+			<div class="sizing-config-block">
+				<h5>{{ example.name }}</h5>
+				<p class="sizing-config-note">{{ example.note }}</p>
+				<p><small><strong>File:</strong> <code>{{ example.file }}</code></small></p>
+				<pre class="sizing-config-code">{{ example.config }}</pre>
+			</div>
+		{% endfor %}
+
+		{# Per-Collection Breakdown #}
+		{% if sizing.scan.collections|length > 0 %}
+			<h3>Per-Collection Breakdown</h3>
+			<table class="admin-table">
+				<thead>
+					<tr>
+						<th>Collection</th>
+						<th>Schema</th>
+						<th>Objects</th>
+						<th>Object Data</th>
+						<th>Index Size</th>
+						<th>Avg Object</th>
+						<th>Largest Object</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for col in sizing.scan.collections %}
+					<tr>
+						<td><strong>{{ col.collection_name }}</strong></td>
+						<td>{{ col.schema }}</td>
+						<td>{{ col.object_count }}</td>
+						<td>{{ col.object_bytes_human }}</td>
+						<td>{{ col.index_bytes_human }}</td>
+						<td>{{ col.avg_object_bytes_human }}</td>
+						<td>{{ col.largest_object_bytes_human }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		{% endif %}
+
+		<div style="text-align:right; margin-top:1rem;">
+			<a href="utils/cache-sizing">↻ Refresh Analysis</a>
+		</div>
+
+</section>
+
+<style>
+.sizing-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 1rem;
+	margin: 1rem 0;
+}
+
+.sizing-stat {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+	text-align: center;
+}
+
+.sizing-stat-value {
+	font-size: 1.5rem;
+	font-weight: bold;
+	color: oklch(var(--totalform-accent));
+}
+
+.sizing-stat-label {
+	font-size: 0.85rem;
+	color: oklch(var(--totalform-darkgray));
+	margin-top: 0.25rem;
+}
+
+.sizing-warning {
+	background: #fff3cd;
+	border: 1px solid #ffeaa7;
+	border-radius: var(--totalform-radius);
+	padding: 1rem 1.5rem;
+	margin: 1rem 0;
+	color: #856404;
+}
+
+.sizing-warning p {
+	margin: 0.5rem 0 0;
+}
+
+.sizing-backend-card {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+}
+
+.sizing-backend-card h5 {
+	margin: 0 0 0.5rem;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.sizing-backend-detail {
+	margin-top: 0.5rem;
+	font-size: 0.9rem;
+}
+
+.sizing-config-block {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1rem 1.5rem;
+	margin: 1rem 0;
+}
+
+.sizing-config-block h5 {
+	margin: 0 0 0.5rem;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.sizing-config-note {
+	font-size: 0.9rem;
+	margin: 0 0 0.5rem;
+}
+
+.sizing-config-code {
+	background: oklch(var(--totalform-icon-bg));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+	font-family: monospace;
+	font-size: 0.85rem;
+	white-space: pre-wrap;
+	user-select: all;
+	overflow-x: auto;
+}
+
+.success {
+	color: #28a745;
+	font-weight: bold;
+}
+
+.warning {
+	font-weight: bold;
+}
+
+.error {
+	color: #dc3545;
+	font-weight: bold;
+}
+</style>
