@@ -20,7 +20,8 @@ readonly class AuthLogoutAction
 		$this->logoutService->logout();
 
 		$queryParams = $request->getQueryParams();
-		$redirect    = $queryParams['redirect'] ?? '/';
+		$referer     = $request->getHeaderLine('Referer');
+		$redirect    = $queryParams['redirect'] ?? ($referer !== '' ? $referer : '/');
 
 		return $response->withStatus(302)->withHeader('Location', $redirect);
 	}
