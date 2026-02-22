@@ -1,174 +1,187 @@
 import TotalField from "./totalfield.js";
+import DOMPurify from 'dompurify';
 
-import FroalaEditor from "froala-editor";
-import "froala-editor/js/plugins/code_beautifier.min.js";
-import "froala-editor/js/plugins/code_view.min.js";
+import CodeMirror from "codemirror";
+import "codemirror/mode/xml/xml";
 
 //-----------------------------------------------
 // Total CMS SVG Field
 //-----------------------------------------------
 export default class SVGField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+	constructor(container, options) {
+		super(container, options);
 
-        // Skip if Froala is already initialized on this input
-        if (this.input.dataset.froalaInitialized) {
-            return;
-        }
-        this.input.dataset.froalaInitialized = 'true';
+		// Skip if already initialized on this input
+		if (this.input.dataset.codemirrorInitialized) {
+			return;
+		}
+		this.input.dataset.codemirrorInitialized = 'true';
 
-        this.initFroala();
-    }
+		this.codeMirror = null;
+		this.debounceTimer = null;
+		this.initField();
+	}
 
-    setValue(value) {
-        this.input.value = value;
-		this.froala.html.set(value);
+	setValue(value) {
+		this.input.value = value;
+		if (this.codeMirror) {
+			this.codeMirror.setValue(value);
+		}
 		this.changed();
-    }
+	}
 
-    getValue() {
-        // Check if Froala is initialized before trying to get the value
-        if (this.froala && this.froala.html) {
-            // If in code view, toggle out and back in to sync content
-            if (this.froala.codeView && this.froala.codeView.isActive()) {
-                // Froala automatically syncs when toggling
-                this.froala.codeView.toggle();
-                this.froala.codeView.toggle();
-            }
-            return this.froala.html.get();
-        }
-        // Fall back to input value if Froala is not ready
-        return this.input.value;
-    }
+	getValue() {
+		if (this.codeMirror) {
+			return this.codeMirror.getValue();
+		}
+		return this.input.value;
+	}
 
-    validate() {
+	validate() {
 		if (!this.isVisible()) return true;
-        // Sync the value from CodeMirror/Froala to the textarea before validation
-        if (this.froala && this.froala.html) {
-            // If in code view, toggle out and back in to sync content
-            if (this.froala.codeView && this.froala.codeView.isActive()) {
-                // Froala automatically syncs content when toggling code view
-                this.froala.codeView.toggle();
-                this.froala.codeView.toggle();
-            }
-            // Update the underlying textarea with Froala's content
-            this.input.value = this.froala.html.get();
-        }
+		if (this.codeMirror) {
+			this.input.value = this.codeMirror.getValue();
+		}
+		return super.validate();
+	}
 
-        // Call parent validate method
-        return super.validate();
-    }
+	initField() {
+		this.input.style.display = 'none';
 
-    initFroala() {
-		const svgTags = [
-            'a', 'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateMotion', 'animateTransform',
-            'circle', 'clipPath', 'cursor', 'defs', 'desc', 'discard', 'ellipse', 'feBlend', 'feColorMatrix',
-            'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
-            'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
-            'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight',
-            'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence', 'filter', 'font-face-format',
-            'font-face-name', 'font-face-src', 'font-face-uri', 'font-face', 'font', 'foreignObject', 'g',
-            'glyph', 'glyphRef', 'hkern', 'image', 'line', 'linearGradient', 'marker', 'mask', 'metadata',
-            'missing-glyph', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'script',
-            'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 'textPath', 'title', 'tref', 'tspan',
-            'use', 'view', 'vkern',
-        ];
-        const svgAttrs = [
-            'accent-height', 'accumulate', 'additive', 'alignment-baseline', 'alphabetic', 'amplitude',
-            'arabic-form', 'ascent', 'attributeName', 'attributeType', 'azimuth', 'baseFrequency',
-            'baseline-shift', 'baseProfile', 'bbox', 'begin', 'bias', 'by', 'calcMode', 'cap-height', 'class',
-            'clip', 'clip-path', 'clip-rule', 'clipPathUnits', 'color', 'color-interpolation',
-            'color-interpolation-filters', 'color-profile', 'contentScriptType', 'contentStyleType', 'cursor',
-            'cx', 'cy', 'd', 'descent', 'diffuseConstant', 'direction', 'display', 'divisor', 'dominant-baseline',
-            'dur', 'dx', 'dy', 'edgeMode', 'elevation', 'enable-background', 'end', 'exponent', 'fill',
-            'fill-opacity', 'fill-rule', 'filter', 'filterRes', 'filterUnits', 'flood-color', 'flood-opacity',
-            'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant',
-            'font-weight', 'format', 'fr', 'from', 'fx', 'fy', 'g1', 'g2', 'glyph-name',
-            'glyph-orientation-horizontal', 'glyph-orientation-vertical', 'glyphRef', 'gradientTransform',
-            'gradientUnits', 'hanging', 'height', 'horiz-adv-x', 'horiz-origin-x', 'horiz-origin-y', 'href',
-            'id', 'ideographic', 'image-rendering', 'in', 'in2', 'intercept', 'k', 'k1', 'k2', 'k3', 'k4',
-            'kernelMatrix', 'kernelUnitLength', 'kerning', 'keyPoints', 'keySplines', 'keyTimes', 'lang',
-            'lengthAdjust', 'letter-spacing', 'lighting-color', 'limitingConeAngle', 'marker-end', 'marker-mid',
-            'marker-start', 'markerHeight', 'markerUnits', 'markerWidth', 'mask', 'maskContentUnits',
-            'maskUnits', 'mathematical', 'max', 'media', 'method', 'min', 'mode', 'name', 'numOctaves', 'onclick',
-            'opacity', 'operator', 'order', 'orient', 'orientation', 'origin', 'overflow', 'overline-position',
-            'overline-thickness', 'paint-order', 'panose-1', 'path', 'pathLength', 'patternContentUnits',
-            'patternTransform', 'patternUnits', 'pointer-events', 'points', 'pointsAtX', 'pointsAtY', 'pointsAtZ',
-            'preserveAlpha', 'preserveAspectRatio', 'primitiveUnits', 'r', 'radius', 'refX', 'refY', 'repeatCount',
-            'repeatDur', 'requiredFeatures', 'restart', 'result', 'rotate', 'rx', 'ry', 'scale', 'seed',
-            'shape-rendering', 'side', 'slope', 'spacing', 'specularConstant', 'specularExponent', 'spreadMethod',
-            'startOffset', 'stdDeviation', 'stemh', 'stemv', 'stitchTiles', 'stop-color', 'stop-opacity',
-            'strikethrough-position', 'strikethrough-thickness', 'string', 'stroke', 'stroke-dasharray',
-            'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity',
-            'stroke-width', 'style', 'surfaceScale', 'crossorigin', 'systemLanguage', 'tabindex', 'tableValues',
-            'target', 'targetX', 'targetY', 'text-anchor', 'text-decoration', 'text-rendering', 'textLength',
-            'to', 'transform', 'transform-origin', 'type', 'u1', 'u2', 'underline-position', 'underline-thickness',
-            'unicode', 'unicode-bidi', 'unicode-range', 'units-per-em', 'v-alphabetic', 'v-hanging',
-            'v-ideographic', 'v-mathematical', 'values', 'vector-effect', 'version', 'vert-adv-y', 'vert-origin-x',
-            'vert-origin-y', 'viewBox', 'viewTarget', 'visibility', 'width', 'widths', 'word-spacing',
-            'writing-mode', 'x', 'x-height', 'x1', 'x2', 'xChannelSelector', 'xlink:arcrole', 'xlink:href',
-            'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'y', 'y1',
-            'y2', 'yChannelSelector', 'z', 'zoomAndPan',
-        ];
-        const codeMirrorOptions = {
-            indentWithTabs : true,
-            lineNumbers    : true,
-            lineWrapping   : true,
-            readOnly       : false,
-            autofocus      : false,
-            mode           : "text/html",
-            tabMode        : "indent",
-            tabSize        : 2
-        };
-		this.froala = new FroalaEditor(this.input, {
-			key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
-			attribution          : false,
-			heightMin            : 200,
-			heightMax            : 500,
-			toolbarButtons       : ["html"],
-			htmlRemoveTags       : ["xml"],
-			htmlAllowedTags      : svgTags,
-			htmlAllowedEmptyTags : svgTags,
-			htmlAllowedAttrs     : svgAttrs,
-			charCounterCount     : false,
-			htmlUntouched        : true,
-            placeholderText      : "Enter Code View to add SVG content",
-			codeMirror           : window.CodeMirror,
-			codeMirrorOptions    : codeMirrorOptions,
-			quickInsertEnabled   : false,
-			wordCounterCount     : false,
-			events               : {
-				'initialized': function() {
-                    // Go into code editor if there is no SVG set
-					if (this.html.get().length === 0) {
-                        // TODO: Figure out how to enable CodeView without stealing focus
-                        // this.codeView.toggle();
-					}
-				},
-				'codeView.update': function() {
-					// Ensure CodeMirror is properly refreshed when entering code view
-					setTimeout(() => {
-						if (this.codeView.isActive()) {
-							const codeMirror = this.codeView.get();
-							if (codeMirror && codeMirror.refresh) {
-								codeMirror.refresh();
-								// Make sure CodeMirror is not read-only
-								codeMirror.setOption('readOnly', false);
-							}
-						}
-					}, 100);
-				},
-				'contentChanged': () => this.changed(),
+		// Create field wrapper (don't overwrite this.container — TotalField uses it)
+		this.fieldWrapper = document.createElement('div');
+		this.fieldWrapper.className = 'svg-field-container';
+		this.input.parentNode.insertBefore(this.fieldWrapper, this.input.nextSibling);
+
+		// Editor pane
+		const editorPane = document.createElement('div');
+		editorPane.className = 'svg-field-editor';
+		this.fieldWrapper.appendChild(editorPane);
+
+		// Preview pane
+		this.previewPane = document.createElement('div');
+		this.previewPane.className = 'svg-field-preview';
+		this.fieldWrapper.appendChild(this.previewPane);
+
+		// Drop zone overlay
+		this.dropZone = document.createElement('div');
+		this.dropZone.className = 'svg-field-dropzone';
+		this.dropZone.textContent = 'Drop SVG file';
+		this.fieldWrapper.appendChild(this.dropZone);
+
+		// Init CodeMirror
+		this.codeMirror = CodeMirror(editorPane, {
+			value: this.input.value || '',
+			indentWithTabs: true,
+			lineNumbers: true,
+			lineWrapping: true,
+			readOnly: false,
+			autofocus: false,
+			mode: 'xml',
+			tabMode: 'indent',
+			tabSize: 2,
+		});
+
+		this.codeMirror.setSize(null, '100%');
+
+		// Sync changes with debounced preview
+		this.codeMirror.on('change', () => {
+			this.input.value = this.codeMirror.getValue();
+			this.changed();
+			this.debouncedPreview();
+		});
+
+		// Drag & drop
+		this.initDragDrop();
+
+		// Initial preview
+		this.updatePreview();
+
+		// Refresh after a tick to ensure proper rendering
+		setTimeout(() => this.codeMirror?.refresh(), 50);
+	}
+
+	debouncedPreview() {
+		clearTimeout(this.debounceTimer);
+		this.debounceTimer = setTimeout(() => this.updatePreview(), 300);
+	}
+
+	updatePreview() {
+		const code = this.codeMirror ? this.codeMirror.getValue().trim() : '';
+
+		if (!code) {
+			this.previewPane.innerHTML = '';
+			const placeholder = document.createElement('div');
+			placeholder.className = 'svg-field-placeholder';
+			placeholder.textContent = 'Paste SVG code or drag & drop an SVG file';
+			this.previewPane.appendChild(placeholder);
+			return;
+		}
+
+		const clean = DOMPurify.sanitize(code, {
+			USE_PROFILES: { svg: true },
+			ADD_TAGS: ['use'],
+		});
+		this.previewPane.innerHTML = clean;
+	}
+
+	initDragDrop() {
+		let dragCounter = 0;
+
+		this.fieldWrapper.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+		});
+
+		this.fieldWrapper.addEventListener('dragenter', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			dragCounter++;
+			this.fieldWrapper.classList.add('svg-field-container--dragover');
+		});
+
+		this.fieldWrapper.addEventListener('dragleave', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			dragCounter--;
+			if (dragCounter <= 0) {
+				dragCounter = 0;
+				this.fieldWrapper.classList.remove('svg-field-container--dragover');
 			}
-        });
-    }
+		});
 
-    schema() {
-        return {
-            "type"  : "string",
-            "field" : "svg"
-        };
-    }
+		this.fieldWrapper.addEventListener('drop', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			dragCounter = 0;
+			this.fieldWrapper.classList.remove('svg-field-container--dragover');
+
+			const files = e.dataTransfer?.files;
+			if (!files || files.length === 0) return;
+
+			const file = files[0];
+			if (file.type !== 'image/svg+xml' && !file.name.endsWith('.svg')) {
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				let text = event.target.result;
+				// Strip XML declaration and DOCTYPE
+				text = text.replace(/<\?xml[^?]*\?>\s*/i, '');
+				text = text.replace(/<!DOCTYPE[^>]*>\s*/i, '');
+				text = text.trim();
+				this.setValue(text);
+			};
+			reader.readAsText(file);
+		});
+	}
+
+	schema() {
+		return {
+			"type"  : "string",
+			"field" : "svg"
+		};
+	}
 }
-

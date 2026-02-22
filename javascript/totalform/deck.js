@@ -184,8 +184,13 @@ export default class DeckField extends TotalField {
             }
         }
 
-		const clonedFroala = clone.querySelectorAll('.fr-box');
-		clonedFroala.forEach(froala => froala.remove());
+		// Remove cloned Tiptap editor containers so they reinitialize fresh
+		const clonedEditors = clone.querySelectorAll('.ste-editor-container');
+		clonedEditors.forEach(editor => editor.remove());
+		// Clear initialization flags so fields re-init
+		clone.querySelectorAll('[data-ste-initialized]').forEach(el => {
+			delete el.dataset.steInitialized;
+		});
 
 		// Insert after the original item
         const parent = itemElement.parentNode;

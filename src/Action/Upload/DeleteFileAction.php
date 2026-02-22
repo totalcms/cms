@@ -1,13 +1,13 @@
 <?php
 
-namespace TotalCMS\Action\Froala;
+namespace TotalCMS\Action\Upload;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
-readonly class FroalaDeleteFileAction
+readonly class DeleteFileAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

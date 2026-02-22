@@ -10,14 +10,14 @@ let content = null;
 
 export default function initDocHighlight() {
 	try {
-		// Find the content area
-		content = document.querySelector('.doc-content');
-		if (!content) {
+		// Only show on individual doc pages (/admin/docs/{page})
+		if (!/\/admin\/docs\/.+/.test(window.location.pathname)) {
 			return;
 		}
 
-		// Don't show on docs homepage
-		if (document.querySelector('.doc-homepage')) {
+		// Find the content area
+		content = document.querySelector('.doc-content');
+		if (!content) {
 			return;
 		}
 

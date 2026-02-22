@@ -1,6 +1,6 @@
 @use "variables";
 @use "depot-browser";
-@import "froala-editor/css/froala_style.css";
+@use "forms/styledtext-content";
 
 .cms-hide {
     display : none !important;

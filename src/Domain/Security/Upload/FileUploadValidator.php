@@ -10,14 +10,19 @@ use Psr\Http\Message\UploadedFileInterface;
  */
 class FileUploadValidator
 {
+	/** Default max file size when no category is specified (100MB). */
+	private const DEFAULT_MAX_FILE_SIZE = 100 * 1024 * 1024;
+
 	/**
 	 * Maximum file sizes by category (in bytes).
 	 */
 	private const MAX_FILE_SIZES = [
-		'image'    => 10 * 1024 * 1024,    // 10MB for images
-		'video'    => 100 * 1024 * 1024,   // 100MB for videos
-		'file'     => 50 * 1024 * 1024,     // 50MB for general files
-		'document' => 20 * 1024 * 1024, // 20MB for documents
+		'image'    => 10 * 1024 * 1024,   // 10MB for images
+		'video'    => 100 * 1024 * 1024,  // 100MB for videos
+		'audio'    => 50 * 1024 * 1024,   // 50MB for audio
+		'document' => 20 * 1024 * 1024,   // 20MB for documents
+		'archive'  => 50 * 1024 * 1024,   // 50MB for archives
+		'file'     => 50 * 1024 * 1024,   // 50MB for general files
 	];
 
 	/**
@@ -77,13 +82,16 @@ class FileUploadValidator
 	/**
 	 * Validate uploaded file against security criteria.
 	 *
+	 * By default only dangerous extensions are blocked — any safe file type is allowed.
+	 * Pass a specific $category to restrict to that category's allowlist.
+	 *
 	 * @param UploadedFileInterface $file Uploaded file
-	 * @param string $category File category (image, video, file, etc.)
+	 * @param string|null $category File category to restrict (image, video, etc.) or null for permissive
 	 * @param array<string,mixed> $config Optional configuration overrides
 	 *
 	 * @return array<string,mixed> Validation result with 'valid' boolean and 'errors' array
 	 */
-	public function validateFile(UploadedFileInterface $file, string $category = 'file', array $config = []): array
+	public function validateFile(UploadedFileInterface $file, ?string $category = null, array $config = []): array
 	{
 		$errors   = [];
 		$filename = $file->getClientFilename() ?? 'unknown';
@@ -94,7 +102,7 @@ class FileUploadValidator
 		}
 
 		// 2. Validate file size
-		$maxSize = $config['max_size'] ?? self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file'];
+		$maxSize = $config['max_size'] ?? ($category !== null ? (self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file']) : self::DEFAULT_MAX_FILE_SIZE);
 		if ($file->getSize() > $maxSize) {
 			$errors[] = sprintf(
 				'File size (%s) exceeds maximum allowed size (%s)',
@@ -109,20 +117,22 @@ class FileUploadValidator
 			$errors[] = 'Filename contains unsafe characters';
 		}
 
-		// 4. Check for dangerous extensions
+		// 4. Check for dangerous extensions (always enforced)
 		$extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 		if (in_array($extension, self::DANGEROUS_EXTENSIONS)) {
 			$errors[] = "File extension '.{$extension}' is not allowed for security reasons";
 		}
 
-		// 5. Validate file extension against category
-		$allowedExtensions = $config['allowed_extensions'] ?? self::ALLOWED_EXTENSIONS[$category] ?? [];
-		if (!empty($allowedExtensions) && !in_array($extension, $allowedExtensions)) {
-			$errors[] = "File extension '.{$extension}' is not allowed for {$category} files";
+		// 5. Validate file extension against category (only when a category is specified)
+		if ($category !== null) {
+			$allowedExtensions = $config['allowed_extensions'] ?? self::ALLOWED_EXTENSIONS[$category] ?? [];
+			if (!empty($allowedExtensions) && !in_array($extension, $allowedExtensions)) {
+				$errors[] = "File extension '.{$extension}' is not allowed for {$category} files";
+			}
 		}
 
-		// 6. Validate MIME type (if file is uploaded successfully)
-		if ($file->getError() === UPLOAD_ERR_OK) {
+		// 6. Validate MIME type (only when a category is specified)
+		if ($category !== null && $file->getError() === UPLOAD_ERR_OK) {
 			$clientMimeType   = $file->getClientMediaType();
 			$allowedMimeTypes = $config['allowed_mime_types'] ?? self::ALLOWED_MIME_TYPES[$category] ?? [];
 
@@ -145,11 +155,11 @@ class FileUploadValidator
 	 * Validate MIME type against file content (requires file to be saved to disk).
 	 *
 	 * @param string $filepath Path to uploaded file on disk
-	 * @param string $category Expected file category
+	 * @param string|null $category Expected file category, or null to skip MIME allowlist check
 	 *
 	 * @return array<string,mixed> Validation result
 	 */
-	public function validateMimeTypeFromFile(string $filepath, string $category): array
+	public function validateMimeTypeFromFile(string $filepath, ?string $category): array
 	{
 		if (!file_exists($filepath)) {
 			return ['valid' => false, 'errors' => ['File does not exist']];
@@ -163,8 +173,13 @@ class FileUploadValidator
 			return ['valid' => false, 'errors' => ['Could not determine file MIME type']];
 		}
 
+		// When no category is specified, allow any non-dangerous file
+		if ($category === null) {
+			return ['valid' => true, 'errors' => [], 'detected_mime' => $detectedMime];
+		}
+
 		$allowedMimeTypes = self::ALLOWED_MIME_TYPES[$category] ?? [];
-		$isValid          = in_array($detectedMime, $allowedMimeTypes);
+		$isValid          = empty($allowedMimeTypes) || in_array($detectedMime, $allowedMimeTypes);
 
 		return [
 			'valid'         => $isValid,
@@ -213,8 +228,8 @@ class FileUploadValidator
 		$categories = [];
 		foreach (self::ALLOWED_EXTENSIONS as $category => $extensions) {
 			$categories[$category] = [
-				'max_size'           => self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file'],
-				'max_size_formatted' => $this->formatBytes(self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file']),
+				'max_size'           => self::MAX_FILE_SIZES[$category],
+				'max_size_formatted' => $this->formatBytes(self::MAX_FILE_SIZES[$category]),
 				'extensions'         => $extensions,
 				'mime_types'         => self::ALLOWED_MIME_TYPES[$category],
 			];

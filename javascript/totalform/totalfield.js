@@ -112,8 +112,8 @@ export default class TotalField {
 		return (this.droplet && typeof this.droplet === "object");
 	}
 
-	isFroala() {
-		return (this.froala && typeof this.froala === "object");
+	isTiptap() {
+		return (this.tiptap && typeof this.tiptap === "object");
 	}
 
     getValue() {

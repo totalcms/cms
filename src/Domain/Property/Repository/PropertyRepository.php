@@ -170,4 +170,23 @@ class PropertyRepository extends StorageRepository
 
 		return $this->filesystem->mimeType($path);
 	}
+
+	public function fileSize(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): int
+	{
+		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
+
+		return $this->filesystem->fileSize($path);
+	}
+
+	/** @return array<int, array{name: string, path: string}> */
+	public function listPropertyFiles(string $collection, string $objectID, string $property): array
+	{
+		$path  = PathUtils::buildPath($collection, $objectID, $property);
+		$files = $this->filesystem->listFiles($path);
+
+		return array_map(fn (string $filePath): array => [
+			'name' => basename($filePath),
+			'path' => $filePath,
+		], array_values($files));
+	}
 }

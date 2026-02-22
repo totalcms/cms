@@ -26,4 +26,15 @@ readonly class UploadFetcher
 	{
 		return $this->storage->streamFile($collection, $id, $property, $name);
 	}
+
+	public function fileSize(string $collection, string $id, string $property, string $name): int
+	{
+		return $this->storage->fileSize($collection, $id, $property, $name);
+	}
+
+	/** @return array<int, array{name: string, path: string}> */
+	public function listFiles(string $collection, string $id, string $property): array
+	{
+		return $this->storage->listPropertyFiles($collection, $id, $property);
+	}
 }

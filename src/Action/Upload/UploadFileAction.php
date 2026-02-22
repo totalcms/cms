@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Action\Froala;
+namespace TotalCMS\Action\Upload;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,8 +9,11 @@ use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
-readonly class FroalaUploadFileAction
+readonly class UploadFileAction
 {
+	private const IMAGE_MIME_PREFIXES = ['image/'];
+	private const MEDIA_MIME_PREFIXES = ['video/', 'audio/'];
+
 	public function __construct(
 		private JsonRenderer $renderer,
 		private UploadSaver $saver,
@@ -23,24 +26,14 @@ readonly class FroalaUploadFileAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$files = $request->getUploadedFiles();
+		$file  = $files['file'] ?? null;
 
-		$type = null;
-		// possible file types: image, video, file
-		if (array_key_exists('image', $files)) {
-			$type = 'image';
-		} elseif (array_key_exists('video', $files)) {
-			$type = 'video';
-		} elseif (array_key_exists('file', $files)) {
-			$type = 'file';
-		}
-
-		if ($type === null) {
+		if ($file === null) {
 			return $this->renderer->json($response, ['error' => 'No file found for upload'])->withStatus(400);
 		}
-		$file = $files[$type];
 
-		// Validate uploaded file security
-		$validation = $this->validator->validateFile($file, $type);
+		// Validate uploaded file security (permissive — only blocks dangerous extensions)
+		$validation = $this->validator->validateFile($file);
 
 		// Use sanitized filename
 		$sanitizedFilename = $validation['sanitized_filename'];
@@ -51,7 +44,7 @@ readonly class FroalaUploadFileAction
 		if ($criticalErrors !== []) {
 			return $this->renderer->json($response, [
 				'error'   => 'File upload validation failed',
-				'details' => $criticalErrors,
+				'details' => array_values($criticalErrors),
 			])->withStatus(400);
 		}
 
@@ -64,10 +57,9 @@ readonly class FroalaUploadFileAction
 		$filepath = $this->config->tmpdir . '/' . $sanitizedFilename;
 		$file->moveTo($filepath);
 
-		// Validate MIME type against actual file content
-		$mimeValidation = $this->validator->validateMimeTypeFromFile($filepath, $type);
+		// Validate MIME type against actual file content (permissive — no category restriction)
+		$mimeValidation = $this->validator->validateMimeTypeFromFile($filepath, null);
 		if (!$mimeValidation['valid']) {
-			// Clean up invalid file
 			unlink($filepath);
 
 			return $this->renderer->json($response, [
@@ -83,11 +75,10 @@ readonly class FroalaUploadFileAction
 			$filepath
 		);
 
-		$link = $this->config->api . '/upload/' . $path;
+		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+		$mime    = $file->getClientMediaType() ?? '';
 
-		if ($type === 'image') {
-			$link = $this->config->api . '/imageworks/upload/' . $path;
-		}
+		$link = $this->buildLink($apiPath, $path, $mime);
 
 		$params = $request->getParsedBody();
 		if (!empty($params)) {
@@ -96,4 +87,36 @@ readonly class FroalaUploadFileAction
 
 		return $this->renderer->json($response, ['link' => $link]);
 	}
+
+	/**
+	 * Build the response link based on MIME type.
+	 * Images use ImageWorks, audio/video use stream (range requests), everything else uses download.
+	 */
+	private function buildLink(string $apiPath, string $path, string $mime): string
+	{
+		if ($this->matchesMime($mime, self::IMAGE_MIME_PREFIXES)) {
+			return $apiPath . '/imageworks/upload/' . $path;
+		}
+
+		if ($this->matchesMime($mime, self::MEDIA_MIME_PREFIXES)) {
+			return $apiPath . '/stream/upload/' . $path;
+		}
+
+		return $apiPath . '/download/upload/' . $path;
+	}
+
+	/**
+	 * @param array<int,string> $prefixes
+	 */
+	private function matchesMime(string $mime, array $prefixes): bool
+	{
+		foreach ($prefixes as $prefix) {
+			if (str_starts_with($mime, $prefix)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 }

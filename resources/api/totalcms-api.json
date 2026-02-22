@@ -2576,8 +2576,8 @@
         }
       ],
       "post": {
-        "summary": "Upload File (Froala Editor)",
-        "description": "Upload file via Froala WYSIWYG editor. Used internally by the styled text editor.",
+        "summary": "Upload File",
+        "description": "Upload file via the styled text editor. Used internally by the editor for image, video, and file uploads.",
         "tags": [
           "upload"
         ],
@@ -2656,8 +2656,8 @@
         }
       ],
       "get": {
-        "summary": "Get Uploaded File (Froala)",
-        "description": "Retrieve file uploaded via Froala editor",
+        "summary": "Get Uploaded File",
+        "description": "Retrieve file uploaded via the styled text editor",
         "tags": [
           "upload"
         ],
@@ -2679,8 +2679,8 @@
         }
       },
       "delete": {
-        "summary": "Delete Uploaded File (Froala)",
-        "description": "Delete file uploaded via Froala editor",
+        "summary": "Delete Uploaded File",
+        "description": "Delete file uploaded via the styled text editor",
         "tags": [
           "upload"
         ],
