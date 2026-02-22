@@ -24,7 +24,18 @@ readonly class ExportCsvAction
 		array $args,
 	): ResponseInterface {
 		$collection = $args['collection'];
-		$result     = $this->objectExporter->exportAllObjectsForCSv($collection);
+		$params     = $request->getQueryParams();
+
+		// Backwards compatibility: remap 'filter' to 'include'
+		if (isset($params['filter']) && !isset($params['include'])) {
+			$params['include'] = $params['filter'];
+			unset($params['filter']);
+		}
+
+		$hasFilters = isset($params['include']) || isset($params['exclude']);
+		$result     = $hasFilters
+			? $this->objectExporter->exportFilteredObjectsForCsv($collection, $params)
+			: $this->objectExporter->exportAllObjectsForCSv($collection);
 		$objects    = $result['data'];
 		$errors     = $result['errors'];
 

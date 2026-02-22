@@ -360,6 +360,7 @@ The `IndexFilter` service is used throughout Total CMS:
 - **Sitemap Builder** - Filter which objects appear in XML sitemaps ([Sitemap Documentation](docs/advanced/sitemap-builder))
 - **Collection Index API** - Filter collection objects via API endpoint
 - **RSS Feeds** - Control feed content based on object properties
+- **Data Export** - Filter which objects are included in JSON and CSV exports ([Export Documentation](docs/collections/export))
 - **Form Fields** - Filter relational dropdown options ([Field Settings](docs/property-options/relational-options#filtering-relational-options))
 - **Grid Display** - Filter objects in Twig templates
 - **Custom Services** - Build your own filtered collections
