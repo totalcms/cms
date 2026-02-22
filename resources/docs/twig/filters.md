@@ -1561,7 +1561,7 @@ The date filters support natural language strings powered by Chronos:
 
 ## Collection Filtering and Sorting
 
-> **📚 Full Documentation:** For a complete reference of all 40+ filtering operators, including detailed examples and best practices, see [Collection Filtering and Sorting Guide](collection-filtering.md).
+> **📚 Full Documentation:** For a complete reference of all 40+ filtering operators, including detailed examples and best practices, see [Collection Filtering and Sorting Guide](docs/twig/collection-filtering).
 
 ### Advanced Collection Filtering
 

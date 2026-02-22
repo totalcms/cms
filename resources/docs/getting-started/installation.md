@@ -90,5 +90,5 @@ Upload the Total CMS `tcms` folder to your web server. The directory structure s
 If you encounter issues:
 
 1. Check the [Community Forum](https://community.weavers.space/total-cms)
-2. Review the [Configuration](docs/configuration) guide
+2. Review the [Configuration](docs/advanced/configuration) guide
 3. Check PHP error logs for specific error messages

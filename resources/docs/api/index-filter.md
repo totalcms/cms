@@ -357,10 +357,10 @@ $parsed = $filter->parseFilterString('published:true,featured:true,status:active
 
 The `IndexFilter` service is used throughout Total CMS:
 
-- **Sitemap Builder** - Filter which objects appear in XML sitemaps ([Sitemap Documentation](sitemap-builder.md))
+- **Sitemap Builder** - Filter which objects appear in XML sitemaps ([Sitemap Documentation](docs/advanced/sitemap-builder))
 - **Collection Index API** - Filter collection objects via API endpoint
 - **RSS Feeds** - Control feed content based on object properties
-- **Form Fields** - Filter relational dropdown options ([Field Settings](field-settings.md#filtering-relational-options))
+- **Form Fields** - Filter relational dropdown options ([Field Settings](docs/fields/select#filtering-relational-options))
 - **Grid Display** - Filter objects in Twig templates
 - **Custom Services** - Build your own filtered collections
 
@@ -500,6 +500,6 @@ var_dump($matches); // true or false
 
 ## See Also
 
-- [Sitemap Builder Documentation](sitemap-builder.md) - Using filters in sitemaps
-- [RSS Feed Documentation](rss-feeds.md) - Using filters in RSS feeds
-- [Twig Integration](twig-functions.md) - Using filters in templates
+- [Sitemap Builder Documentation](docs/advanced/sitemap-builder) - Using filters in sitemaps
+- [RSS Feed Documentation](docs/api/rss-feeds) - Using filters in RSS feeds
+- [Twig Integration](docs/twig/functions) - Using filters in templates

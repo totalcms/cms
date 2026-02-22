@@ -391,7 +391,7 @@ Defines custom sort orders for the `manualSort` Twig filter. Keys are property n
 - Multiple sort orders can be defined for different use cases
 - Centralized configuration for consistent ordering
 
-See [Collection Filtering - manualSort Filter](collection-filtering.md#manualsort-filter) for complete usage documentation.
+See [Collection Filtering - manualSort Filter](docs/twig/collection-filtering#manualsort-filter) for complete usage documentation.
 
 ---
 
@@ -431,7 +431,7 @@ Customizes the behavior and appearance of object creation/edit forms.
 | `editActions` | array | Actions after editing object |
 | `deleteActions` | array | Actions after deleting object |
 
-See [Collection Form Settings](collection-form-settings.md) for complete documentation on form actions and help styles.
+See [Collection Form Settings](docs/admin/collection-form-settings) for complete documentation on form actions and help styles.
 
 ---
 
@@ -631,7 +631,7 @@ A fully configured collection metadata file:
 
 ## See Also
 
-- [Collection Form Settings](collection-form-settings.md) - Detailed form customization
-- [Collection Filtering](collection-filtering.md) - Filtering and sorting collections
-- [Field Settings](field-settings.md) - Schema field configuration
-- [Twig Filters Reference](twig-filters.md) - All available Twig filters
+- [Collection Form Settings](docs/admin/collection-form-settings) - Detailed form customization
+- [Collection Filtering](docs/twig/collection-filtering) - Filtering and sorting collections
+- [Field Settings](docs/fields/styled-text) - Schema field configuration
+- [Twig Filters Reference](docs/twig/filters) - All available Twig filters

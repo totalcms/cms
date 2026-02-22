@@ -227,7 +227,7 @@ You can customize the forgot password and reset password forms using whitelabel 
 - `whitelabel/reset-password-above.twig` - Content above the form
 - `whitelabel/reset-password-below.twig` - Content below the form
 
-See the [Whitelabel documentation](whitelabel) for more information.
+See the [Whitelabel documentation](docs/admin/whitelabel) for more information.
 
 ## Troubleshooting
 
@@ -297,7 +297,7 @@ Resets a user's password using a valid token.
 
 ## Related Documentation
 
-- [Authentication Configuration](configuration#authentication)
-- [Whitelabel Templates](whitelabel)
-- [Email/SMTP Configuration](configuration#email-smtp)
-- [Mailer Collection](data-model#mailer)
+- [Authentication Configuration](docs/advanced/configuration#authentication)
+- [Whitelabel Templates](docs/admin/whitelabel)
+- [Email/SMTP Configuration](docs/advanced/configuration#email-smtp)
+- [Mailer Collection](docs/advanced/data-model#mailer)

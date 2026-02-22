@@ -21,7 +21,7 @@ For example:
 
 The sitemap builder supports powerful filtering using URL parameters to control which objects appear in your sitemap.
 
-> **📖 See [Index Filter Documentation](index-filter.md) for complete filtering syntax and examples.**
+> **📖 See [Index Filter Documentation](docs/api/index-filter) for complete filtering syntax and examples.**
 
 ### Quick Examples
 
@@ -83,7 +83,7 @@ For detailed filtering documentation including:
 - Precedence rules
 - PHP usage examples
 
-**See the complete [Index Filter Documentation](index-filter.md).**
+**See the complete [Index Filter Documentation](docs/api/index-filter).**
 
 ## Backward Compatibility
 

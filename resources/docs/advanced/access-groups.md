@@ -606,6 +606,6 @@ These routes use `AdminOnlyMiddleware` which only allows super admin users.
 
 ## Related Documentation
 
-- [Authentication & Authorization](auth)
-- [REST API](rest-api)
-- [API Keys](api-keys)
+- [Authentication & Authorization](docs/advanced/auth)
+- [REST API](docs/api/rest-api)
+- [API Keys](docs/api/api-keys)

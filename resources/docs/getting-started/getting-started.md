@@ -35,29 +35,29 @@ Learn Total CMS through our comprehensive video series. These tutorials cover ev
 
 Get started with these essential guides:
 
-1. **[Installation](docs/installation)** - System requirements and installation steps
-2. **[Dashboard Overview](docs/dashboard)** - Learn your way around the admin interface
-3. **[Configuration](docs/configuration)** - Set up your system correctly
-4. **[Twig Overview](docs/twig-overview)** - Master the templating system
+1. **[Installation](docs/getting-started/installation)** - System requirements and installation steps
+2. **[Dashboard Overview](docs/admin/dashboard)** - Learn your way around the admin interface
+3. **[Configuration](docs/advanced/configuration)** - Set up your system correctly
+4. **[Twig Overview](docs/twig/overview)** - Master the templating system
 
 ## Next Steps
 
 Once you have Total CMS installed and configured, explore these areas based on your role:
 
 ### For Content Creators
-- Learn the [Dashboard](docs/dashboard) to manage your content
-- Use [JumpStart](docs/jumpstart) to quickly set up new projects
-- Understand the [Data Model](docs/data-model) to organize content effectively
+- Learn the [Dashboard](docs/admin/dashboard) to manage your content
+- Use [JumpStart](docs/advanced/jumpstart) to quickly set up new projects
+- Understand the [Data Model](docs/advanced/data-model) to organize content effectively
 
 ### For Developers
-- Master [Twig Templates](docs/twig-overview) for building dynamic pages
-- Use [Collection Filtering](docs/collection-filtering) for advanced queries
-- Integrate with the [REST API](docs/rest-api) for custom applications
+- Master [Twig Templates](docs/twig/overview) for building dynamic pages
+- Use [Collection Filtering](docs/twig/collection-filtering) for advanced queries
+- Integrate with the [REST API](docs/api/rest-api) for custom applications
 
 ### For Administrators
-- Configure [Authentication](docs/auth) and [Access Groups](docs/access-groups)
-- Set up [API Keys](docs/api-keys) for secure integrations
-- Review [Security](docs/security) best practices
+- Configure [Authentication](docs/advanced/auth) and [Access Groups](docs/advanced/access-groups)
+- Set up [API Keys](docs/api/api-keys) for secure integrations
+- Review [Security](docs/advanced/security) best practices
 
 ## Need Help?
 

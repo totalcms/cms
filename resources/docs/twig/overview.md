@@ -57,7 +57,7 @@ The most important Twig variable in Total CMS is `cms`, which fetches content fr
 {% set coolguy = cms.object('users', 'joeworkman') %}
 ```
 
-For more information, check out the [Total CMS Content with Twig](docs/twig-totalcms) docs.
+For more information, check out the [Total CMS Content with Twig](docs/twig/totalcms) docs.
 
 
 <!--
@@ -319,8 +319,8 @@ Enable debug mode to use the `dump()` function:
 ## Resources
 
 - [Official Twig Documentation](https://twig.symfony.com/doc/)
-- [Total CMS Filters Reference](docs/twig-filters)
-- [Total CMS Functions Reference](docs/twig-functions)
-- [Total CMS Form Helpers](docs/twig-forms)
+- [Total CMS Filters Reference](docs/twig/filters)
+- [Total CMS Functions Reference](docs/twig/functions)
+- [Total CMS Form Helpers](docs/twig/forms)
 
 Remember: Twig makes your templates more maintainable, secure, and easier to work with. Take advantage of its features to create clean, efficient templates!
