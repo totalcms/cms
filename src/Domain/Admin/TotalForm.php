@@ -286,6 +286,7 @@ class TotalForm implements \Stringable
 			$this->class .= ' formgrid';
 			$formId       = 'form-' . bin2hex(random_bytes(8));
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
+			$gridBuilder->ensureFieldsIncluded(array_keys($this->fields));
 			$formStyleTag = $gridBuilder->toStyleTag($formId);
 		}
 
