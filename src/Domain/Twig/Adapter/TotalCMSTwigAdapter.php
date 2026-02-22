@@ -17,6 +17,7 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
@@ -1526,6 +1527,11 @@ NGINX;
 			return $gallery;
 		}
 
+		// Sort images if sort option is provided
+		if (isset($options['sort']) && $options['sort'] !== '') {
+			$images = $this->sortGalleryImages($images, $options['sort']);
+		}
+
 		// Check if captions should be shown on grid thumbnails and in lightbox
 		// When set to a string, it's used as a template (e.g., "{{alt}} | {{exif.camera}}")
 		$showGridCaptions  = !empty($options['gridCaptions']);
@@ -1626,6 +1632,7 @@ NGINX;
 		unset($options['captions']); // Remove captions option from JS settings
 		unset($options['gridCaptions']); // Remove gridCaptions option from JS settings
 		unset($options['featuredOnly']); // Remove featuredOnly from JS settings
+		unset($options['sort']); // Remove sort option from JS settings
 
 		// Prevent lightGallery from using alt/title as caption fallback
 		$options['getCaptionFromTitleOrAlt'] = false;
@@ -1710,6 +1717,11 @@ NGINX;
 			$images = $this->data($options['collection'], $id, $options['property']);
 		}
 
+		// Sort images if sort option is provided
+		if (isset($options['sort']) && $options['sort'] !== '') {
+			$images = $this->sortGalleryImages($images, $options['sort']);
+		}
+
 		// Check if captions should be shown in subHtml
 		$showCaptions = !empty($options['captions']);
 		$captionTpl   = isset($options['captions']) && $options['captions'] !== true ? trim((string)$options['captions']) : '';
@@ -1744,6 +1756,7 @@ NGINX;
 		unset($options['captions']);
 		unset($options['gridCaptions']);
 		unset($options['galleryId']);
+		unset($options['sort']);
 
 		// Prevent lightGallery from using alt/title as caption fallback
 		$options['getCaptionFromTitleOrAlt'] = false;
@@ -2065,6 +2078,29 @@ NGINX;
 		}
 
 		return $image['name'] ?? '';
+	}
+
+	/**
+	 * Sort gallery images using CollectionSorter.
+	 *
+	 * @param array<array<string,mixed>> $images
+	 * @param string|array<array<string,mixed>> $sort Sort option: string property name (prefix with '-' for reverse) or array of rule arrays
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	private function sortGalleryImages(array $images, string|array $sort): array
+	{
+		if (is_string($sort)) {
+			$reverse  = str_starts_with($sort, '-');
+			$property = $reverse ? substr($sort, 1) : $sort;
+			$rules    = [['property' => $property, 'reverse' => $reverse]];
+		} else {
+			$rules = $sort;
+		}
+
+		$sorter = new CollectionSorter($images);
+
+		return $sorter->sortByRules($rules);
 	}
 
 	/**

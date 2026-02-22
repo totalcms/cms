@@ -165,7 +165,8 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
     loop: true,
     download: false,
     captions: true,
-    gridCaptions: true
+    gridCaptions: true,
+    sort: 'name'
 }) }}
 
 {# Individual gallery images #}
@@ -311,6 +312,7 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 - `trigger` - CSS selector for trigger elements (in addition to data-gallery)
 - `captions` - Lightbox captions: `true` for default, or a Twig template string (see [Gallery Captions](#gallery-captions))
 - `galleryId` - Custom gallery ID (default: `{collection}-{id}`)
+- `sort` - Sort images by property before rendering (see [Sorting Gallery Images](#sorting-gallery-images))
 - All standard LightGallery options: `speed`, `loop`, `download`, `counter`, `plugins`, etc.
 - Note: Grid-specific options (`maxVisible`, `viewAllText`) don't apply to gallery launchers
 
@@ -435,6 +437,82 @@ The gallery grid uses CSS Grid with a customizable minimum column size via the `
 ```twig
 {{ cms.gallery('id', {}, {}, {class: 'large-thumbs'}) }}
 ```
+
+### Sorting Gallery Images
+
+By default, gallery images display in their stored order. Use the `sort` option to sort images by any image property. This works with both `cms.gallery()` and `cms.galleryLauncher()`.
+
+#### Simple Sort (Single Property)
+
+```twig
+{# Sort alphabetically by filename #}
+{{ cms.gallery('id', {}, {}, {sort: 'name'}) }}
+
+{# Sort by upload date (oldest first) #}
+{{ cms.gallery('id', {}, {}, {sort: 'uploadDate'}) }}
+
+{# Sort by EXIF capture date (oldest first) #}
+{{ cms.gallery('id', {}, {}, {sort: 'exif.date'}) }}
+```
+
+#### Reverse Sort (Descending)
+
+Prefix the property name with `-` to sort in descending order:
+
+```twig
+{# Newest photos first (by EXIF date) #}
+{{ cms.gallery('id', {}, {}, {sort: '-exif.date'}) }}
+
+{# Most recently uploaded first #}
+{{ cms.gallery('id', {}, {}, {sort: '-uploadDate'}) }}
+
+{# Largest files first #}
+{{ cms.gallery('id', {}, {}, {sort: '-size'}) }}
+```
+
+#### Multi-Criteria Sort
+
+Pass an array of rule objects for advanced sorting with multiple criteria:
+
+```twig
+{# Featured images first, then sorted by EXIF date (newest first) #}
+{{ cms.gallery('id', {}, {}, {sort: [
+    {property: 'featured', reverse: true},
+    {property: 'exif.date', reverse: true}
+]}) }}
+
+{# Sort by camera model, then by filename within each group #}
+{{ cms.gallery('id', {}, {}, {sort: [
+    {property: 'exif.camera'},
+    {property: 'name'}
+]}) }}
+```
+
+#### With Gallery Launcher
+
+```twig
+{{ cms.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
+    sort: '-exif.date',
+    captions: true,
+    loop: true
+}) }}
+```
+
+#### Sortable Properties
+
+| Property | Description |
+|----------|-------------|
+| `name` | Filename (natural sort) |
+| `uploadDate` | When the image was uploaded (ISO 8601) |
+| `size` | File size in bytes |
+| `width` | Image width in pixels |
+| `height` | Image height in pixels |
+| `featured` | Boolean — useful for sorting featured images first |
+| `exif.date` | Date photo was taken |
+| `exif.camera` | Camera model |
+| `exif.focalLength` | Focal length |
+| `exif.aperture` | Aperture value |
+| `exif.iso` | ISO sensitivity |
 
 ## File Downloads & Streaming
 
