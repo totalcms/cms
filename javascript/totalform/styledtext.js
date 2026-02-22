@@ -64,7 +64,7 @@ export default class StyledTextField extends TotalField {
 	}
 
 	deleteFileFromServer(url) {
-		if (this.options.confirmDelete !== true || !url) return;
+		if (!url) return;
 
 		// Skip data URLs and blob URLs - they weren't uploaded to the server
 		if (url.startsWith('data:') || url.startsWith('blob:')) return;
@@ -87,20 +87,18 @@ export default class StyledTextField extends TotalField {
 	defaultConfig() {
 		const megabyte = 1024 * 1024;
 		const height   = this.input.dataset.height > 0 ? this.input.dataset.height : null;
+		const uploadUrl = () => this.uploadAPI();
 
 		return {
-			height           : height,
-			heightMin        : 200,
-			heightMax        : 800,
-			placeholder      : this.input.getAttribute("placeholder"),
-			confirmDelete    : true,
-			wordCounterCount : true,
-			onContentChanged : () => this.changed(),
-			upload: {
-				url: () => this.uploadAPI(),
-				imagePreset: this.options.imagePreset || null,
-				rules: this.options.rules || {},
-			},
+			height             : height,
+			heightMin          : 200,
+			heightMax          : 800,
+			placeholder        : this.input.getAttribute("placeholder"),
+			wordCounterCount   : true,
+			onContentChanged   : () => this.changed(),
+			uploadUrl          : uploadUrl,
+			imagePreset        : this.options.imagePreset || null,
+			imageUploadRules   : this.options.imageUploadRules || this.options.rules || {},
 		};
 	}
 

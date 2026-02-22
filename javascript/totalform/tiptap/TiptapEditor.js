@@ -74,7 +74,7 @@ export default class TiptapEditor {
 			element: null, // we'll attach manually
 			extensions: extensions,
 			content: this.textarea.value || '',
-			uploadConfig: this.options.upload || {},
+			imageUploadConfig: this.buildUploadConfig('image'),
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -86,9 +86,7 @@ export default class TiptapEditor {
 		});
 
 		// Create toolbar
-		this.toolbar = new TiptapToolbar(this.editor, this.options.toolbarConfig, {
-			scroll: this.options.toolbarScroll,
-		});
+		this.toolbar = new TiptapToolbar(this.editor, this.options.toolbarConfig, this.options);
 		this.container.appendChild(this.toolbar.element);
 
 		// Listen for custom toolbar commands
@@ -142,7 +140,7 @@ export default class TiptapEditor {
 			element: el,
 			extensions: this.buildExtensions(),
 			content: content,
-			uploadConfig: this.options.upload || {},
+			imageUploadConfig: this.buildUploadConfig('image'),
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -336,14 +334,12 @@ export default class TiptapEditor {
 	}
 
 	openVideoDialog() {
-		const uploadConfig = this.options.upload || {};
-		const dialog = createVideoDialog(this.editor, uploadConfig);
+		const dialog = createVideoDialog(this.editor, this.buildUploadConfig('media'));
 		document.body.appendChild(dialog);
 	}
 
 	openFileDialog() {
-		const uploadConfig = this.options.upload || {};
-		const dialog = createFileDialog(this.editor, uploadConfig);
+		const dialog = createFileDialog(this.editor, this.buildUploadConfig('file'));
 		document.body.appendChild(dialog);
 	}
 
@@ -421,6 +417,16 @@ export default class TiptapEditor {
 
 	focus() {
 		this.editor.commands.focus();
+	}
+
+	buildUploadConfig(type) {
+		const config = { url: this.options.uploadUrl };
+		const rules = this.options[`${type}UploadRules`];
+		if (rules) config.rules = rules;
+		if (type === 'image' && this.options.imagePreset) {
+			config.imagePreset = this.options.imagePreset;
+		}
+		return config;
 	}
 
 	destroy() {

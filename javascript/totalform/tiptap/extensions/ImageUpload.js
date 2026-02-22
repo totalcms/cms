@@ -341,7 +341,7 @@ const ImageUpload = Image.extend({
 		return {
 			...this.parent?.(),
 			openImageDialog: () => ({ editor }) => {
-				const uploadConfig = editor.options.uploadConfig || {};
+				const uploadConfig = editor.options.imageUploadConfig || {};
 				const dialog = createImageDialog(editor, uploadConfig);
 				document.body.appendChild(dialog);
 				return true;
@@ -350,7 +350,7 @@ const ImageUpload = Image.extend({
 	},
 
 	addProseMirrorPlugins() {
-		const uploadConfig = this.editor.options.uploadConfig || {};
+		const uploadConfig = this.editor.options.imageUploadConfig || {};
 		const rules = uploadConfig.rules || {};
 
 		return [

@@ -129,21 +129,16 @@ export default class TiptapToolbar {
 
 	defaultConfig() {
 		return [
-			{ name: 'history', buttons: ['undo', 'redo'] },
-			{ name: 'text', buttons: ['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript'] },
-			{ name: 'format', buttons: ['textColor', 'textBgColor', 'inlineStyles', 'inlineClasses'] },
-			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'align'] },
-			{ name: 'insert', buttons: ['link', 'image', 'video', 'file', 'table', 'horizontalRule', 'hardBreak', 'htmlSnippets', 'anchor'] },
-			{ name: 'misc', buttons: ['clearFormatting', 'codeView', 'fullscreen'], align: 'right' },
+			{ name: 'text', buttons: ['bold', 'italic', 'underline'] },
+			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote'] },
+			{ name: 'insert', buttons: ['link', 'image', 'horizontalRule'] },
+			{ name: 'misc', buttons: ['clearFormatting', 'codeView'], align: 'right' },
 		];
 	}
 
 	build() {
 		this.element = document.createElement('div');
 		this.element.className = 'ste-toolbar';
-		if (this.options.scroll) {
-			this.element.classList.add('ste-toolbar--scroll');
-		}
 
 		for (const group of this.config) {
 			const groupEl = document.createElement('div');
@@ -182,17 +177,17 @@ export default class TiptapToolbar {
 					continue;
 				}
 				if (buttonName === 'inlineStyles') {
-					const styles = this.editor.options.uploadConfig?.inlineStyles || DEFAULT_INLINE_STYLES;
+					const styles = this.options.inlineStyles || DEFAULT_INLINE_STYLES;
 					groupEl.appendChild(this.buildInlineDropdown('inlineStyles', 'Inline Styles', styles));
 					continue;
 				}
 				if (buttonName === 'inlineClasses') {
-					const classes = this.editor.options.uploadConfig?.inlineClasses || DEFAULT_INLINE_CLASSES;
+					const classes = this.options.inlineClasses || DEFAULT_INLINE_CLASSES;
 					groupEl.appendChild(this.buildInlineDropdown('inlineClasses', 'Inline Classes', classes));
 					continue;
 				}
 				if (buttonName === 'htmlSnippets') {
-					const snippets = this.editor.options.uploadConfig?.htmlSnippets || DEFAULT_HTML_SNIPPETS;
+					const snippets = this.options.htmlSnippets || DEFAULT_HTML_SNIPPETS;
 					groupEl.appendChild(this.buildHtmlSnippetDropdown(snippets));
 					continue;
 				}
@@ -202,6 +197,11 @@ export default class TiptapToolbar {
 
 				const btn = this.createButton(buttonName, def);
 				groupEl.appendChild(btn);
+			}
+
+			// Push first item to the right for right-aligned groups
+			if (group.align === 'right' && groupEl.firstChild) {
+				groupEl.firstChild.style.marginLeft = 'auto';
 			}
 
 			this.element.appendChild(groupEl);
@@ -502,8 +502,9 @@ export default class TiptapToolbar {
 		menu.className = 'ste-toolbar-dropdown-menu ste-color-picker';
 
 		// Get colors from config or use defaults
-		const colors = this.editor.options.uploadConfig?.colors?.[name] || DEFAULT_COLORS;
-		const allowCustom = this.editor.options.uploadConfig?.colors?.allowCustom !== false;
+		const colorConfig = this.options[name] || {};
+		const colors = colorConfig.colors || DEFAULT_COLORS;
+		const allowCustom = colorConfig.allowCustom !== false;
 
 		// Color grid
 		const grid = document.createElement('div');
