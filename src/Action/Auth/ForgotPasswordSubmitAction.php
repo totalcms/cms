@@ -156,14 +156,14 @@ readonly class ForgotPasswordSubmitAction
 	 */
 	private function findUserByEmail(string $email, string $collection): ?ObjectData
 	{
-		$users = $this->indexSearcher->searchByProperty($collection, 'email', $email);
-		$first = $users->first();
-
-		if ($users->isEmpty() || is_null($first)) {
-			return null;
-		}
-
 		try {
+			$users = $this->indexSearcher->searchByProperty($collection, 'email', $email);
+			$first = $users->first();
+
+			if ($users->isEmpty() || is_null($first)) {
+				return null;
+			}
+
 			return $this->objectFetcher->fetchObject($collection, $first['id']);
 		} catch (\Exception) {
 			return null;
