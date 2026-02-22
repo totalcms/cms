@@ -40,35 +40,42 @@ readonly class IndexBuilder
 		]);
 
 		$objectIds = $this->storage->fetchObjectIds($collection);
+		$schema    = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$indexProps = $schema->index;
 
 		$this->logger->info('Index build object count', [
 			'collection'    => $collection,
 			'object_count'  => count($objectIds),
 			'threshold'     => self::STREAMING_THRESHOLD,
 			'use_streaming' => count($objectIds) > self::STREAMING_THRESHOLD,
+			'id_only'       => $this->isIdOnlyIndex($indexProps),
 		]);
+
+		// If the index only contains the id property, we can skip reading
+		// every JSON file since the ID is derived from the filename.
+		if ($this->isIdOnlyIndex($indexProps)) {
+			return $this->buildIndexFromIds($collection, $objectIds);
+		}
 
 		// Use streaming for large collections to minimize memory usage
 		if (count($objectIds) > self::STREAMING_THRESHOLD) {
-			return $this->buildIndexStreaming($collection, $objectIds);
+			return $this->buildIndexStreaming($collection, $objectIds, $indexProps);
 		}
 
-		return $this->buildIndexStandard($collection, $objectIds);
+		return $this->buildIndexStandard($collection, $objectIds, $indexProps);
 	}
 
 	/**
 	 * Standard index building for small collections.
 	 *
 	 * @param array<string> $objectIds
+	 * @param array<string> $indexProps
 	 */
-	private function buildIndexStandard(string $collection, array $objectIds): IndexData
+	private function buildIndexStandard(string $collection, array $objectIds, array $indexProps): IndexData
 	{
 		$index = new IndexData();
 
 		if (count($objectIds) > 0) {
-			$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-			$indexProps = $schema->index;
-
 			foreach ($objectIds as $id) {
 				try {
 					// Bypass cache to ensure fresh data from filesystem
@@ -103,16 +110,14 @@ readonly class IndexBuilder
 	 * Writes index entries directly to file instead of accumulating in memory.
 	 *
 	 * @param array<string> $objectIds
+	 * @param array<string> $indexProps
 	 */
-	private function buildIndexStreaming(string $collection, array $objectIds): IndexData
+	private function buildIndexStreaming(string $collection, array $objectIds, array $indexProps): IndexData
 	{
 		$this->logger->info('Building index using streaming mode', [
 			'collection'   => $collection,
 			'object_count' => count($objectIds),
 		]);
-
-		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$indexProps = $schema->index;
 
 		// Open streaming writer
 		$handle  = $this->storage->openIndexStream($collection);
@@ -163,6 +168,40 @@ readonly class IndexBuilder
 		// Return empty IndexData - the index was written directly to file
 		// Callers needing the data should fetch it fresh from the repository
 		return new IndexData();
+	}
+
+	/**
+	 * Check if the index only contains the id property.
+	 *
+	 * @param array<string> $indexProps
+	 */
+	private function isIdOnlyIndex(array $indexProps): bool
+	{
+		return $indexProps === ['id'] || $indexProps === [];
+	}
+
+	/**
+	 * Build an index using only object IDs from filenames.
+	 * Skips reading/parsing JSON files since only the id property is needed.
+	 *
+	 * @param array<string> $objectIds
+	 */
+	private function buildIndexFromIds(string $collection, array $objectIds): IndexData
+	{
+		$this->logger->info('Building id-only index from filenames', [
+			'collection'   => $collection,
+			'object_count' => count($objectIds),
+		]);
+
+		$index = new IndexData();
+
+		foreach ($objectIds as $id) {
+			$index->objects->push(['id' => $id]);
+		}
+
+		$this->storage->saveIndex($collection, $index);
+
+		return $index;
 	}
 
 	/**
