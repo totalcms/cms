@@ -1547,13 +1547,17 @@ NGINX;
 			$images = array_values($images); // Re-index array
 		}
 
+		// Uses direct image data to avoid redundant galleryImageData() lookups per image
 		foreach ($images as $image) {
 			// Calculate dimensions for layout stability (prevents CLS)
 			$thumbDimensions = ImageDimensionCalculator::calculateFromImageData($image, $thumbSettings);
 
+			// Build full-size URL once and reuse for both href and data-src
+			$fullUrl = $this->buildGalleryUrl($id, $image, $fullSettings, $options);
+
 			$img = HTMLUtils::inlineElement('img', [
-				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
-				'alt'           => $this->galleryAlt($idOrObject, $image['name'], $options),
+				'src'           => $this->buildGalleryUrl($id, $image, $thumbSettings, $options),
+				'alt'           => $this->altFromImageData($image),
 				'width'         => $thumbDimensions['width'],
 				'height'        => $thumbDimensions['height'],
 				'loading'       => 'lazy',
@@ -1561,13 +1565,13 @@ NGINX;
 				'oncontextmenu' => 'return false;',
 			]);
 			$link = HTMLUtils::element('a', $img, [
-				'href' => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+				'href' => $fullUrl,
 			]);
 
 			// Always wrap in figure for semantic HTML5
 			$figureContent = $link;
 			if ($showGridCaptions) {
-				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $gridCaptionTpl);
+				$captionText = $this->captionFromImageData($image, $gridCaptionTpl);
 				if ($captionText !== '') {
 					$captionHtml = $gridCaptionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 					$caption     = HTMLUtils::element('figcaption', $captionHtml, ['class' => 'cms-gallery-caption']);
@@ -1580,13 +1584,13 @@ NGINX;
 
 			$figureAttrs = [
 				'class'        => 'cms-gallery-item',
-				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+				'data-src'     => $fullUrl,
 				'data-lg-size' => "{$processedDimensions['width']}-{$processedDimensions['height']}",
 			];
 
 			// Add lightbox caption via data-sub-html attribute
 			if ($showCaptions) {
-				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $captionTpl);
+				$captionText = $this->captionFromImageData($image, $captionTpl);
 				if ($captionText !== '') {
 					$figureAttrs['data-sub-html'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 				}
@@ -1607,13 +1611,13 @@ NGINX;
 			$dynamicEl = [];
 			foreach ($allImages as $img) {
 				$item = [
-					'src'    => $this->galleryPath($id, $img['name'], $fullSettings, $options),
-					'thumb'  => $this->galleryPath($id, $img['name'], $thumbSettings, $options),
+					'src'    => $this->buildGalleryUrl($id, $img, $fullSettings, $options),
+					'thumb'  => $this->buildGalleryUrl($id, $img, $thumbSettings, $options),
 					'lgSize' => "{$img['width']}-{$img['height']}",
 					'name'   => $img['name'],
 				];
 				if ($showCaptions) {
-					$captionText = $this->galleryCaption($idOrObject, $img['name'], $options, $captionTpl);
+					$captionText = $this->captionFromImageData($img, $captionTpl);
 					if ($captionText !== '') {
 						$item['subHtml'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 					}
@@ -1727,18 +1731,19 @@ NGINX;
 		$captionTpl   = isset($options['captions']) && $options['captions'] !== true ? trim((string)$options['captions']) : '';
 
 		// Build dynamicEl array for lightGallery
+		// Uses direct image data to avoid redundant galleryImageData() lookups per image
 		$dynamicEl = [];
 		foreach ($images as $image) {
 			$item = [
-				'src'    => $this->galleryPath($idOrObject, $image['name'], $fullSettings, $options),
-				'thumb'  => $this->galleryPath($idOrObject, $image['name'], $thumbSettings, $options),
+				'src'    => $this->buildGalleryUrl($id, $image, $fullSettings, $options),
+				'thumb'  => $this->buildGalleryUrl($id, $image, $thumbSettings, $options),
 				'lgSize' => "{$image['width']}-{$image['height']}",
 				'name'   => $image['name'], // Include name for image-based index lookup
 			];
 
 			// Add subHtml if captions are enabled and meaningful alt text exists
 			if ($showCaptions) {
-				$captionText = $this->galleryCaption($idOrObject, $image['name'], $options, $captionTpl);
+				$captionText = $this->captionFromImageData($image, $captionTpl);
 				if ($captionText !== '') {
 					$item['subHtml'] = $captionTpl !== '' ? $captionText : htmlspecialchars($captionText);
 				}
@@ -2078,6 +2083,67 @@ NGINX;
 		}
 
 		return $image['name'] ?? '';
+	}
+
+	/**
+	 * Build an ImageWorks URL for a gallery image using pre-loaded image data.
+	 * Avoids redundant galleryImageData() lookups when image data is already available.
+	 *
+	 * @param array<string,mixed> $image
+	 * @param array<string,string|int> $imageworks
+	 * @param array<string,mixed> $options
+	 */
+	private function buildGalleryUrl(string $id, array $image, array $imageworks, array $options): string
+	{
+		$imageworks = $this->resolvePresetFormat($imageworks);
+
+		return self::buildImageworksGalleryAPI($this->api, $id, $image['name'] ?? '', $image, $imageworks, $options);
+	}
+
+	/**
+	 * Get alt text for a gallery image using pre-loaded image data.
+	 * Avoids redundant galleryImageData() lookups when image data is already available.
+	 *
+	 * @param array<string,mixed> $image
+	 */
+	private function altFromImageData(array $image): string
+	{
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return $image['name'] ?? '';
+	}
+
+	/**
+	 * Get caption text for a gallery image using pre-loaded image data.
+	 * Avoids redundant galleryImageData() lookups when image data is already available.
+	 *
+	 * @param array<string,mixed> $image
+	 */
+	private function captionFromImageData(array $image, string $template = ''): string
+	{
+		if ($template !== '') {
+			return $this->renderCaptionTemplate($template, $image);
+		}
+
+		if (!empty($image['alt'])) {
+			return $image['alt'];
+		}
+		if (!empty($image['exif']['title'])) {
+			return $image['exif']['title'];
+		}
+		if (!empty($image['exif']['description'])) {
+			return $image['exif']['description'];
+		}
+
+		return '';
 	}
 
 	/**
