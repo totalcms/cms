@@ -41,4 +41,3 @@ Add the following to your `.htaccess` file:
 - Replace `/login` with the path to your custom login page
 - The `<If>` condition ensures only GET requests are redirected, allowing POST requests (form submissions) to still reach the original endpoint
 - Your custom login page should still submit the login form to the Total CMS authentication endpoint
-

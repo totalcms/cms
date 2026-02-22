@@ -1,6 +1,6 @@
-# Text Input Fields
+# Text & Textarea
 
-## All Text Input Fields (text, url, tel, phone, password, etc.)
+## Text Input Settings (text, url, tel, phone, etc.)
 
 The following can be used on text fields to limit the number of characters.
 
@@ -12,6 +12,14 @@ The following can be used on text fields to limit the number of characters.
   "readonly"  : true,
   "disabled"  : true,
   "class"     : "custom-class"
+}
+```
+
+## Textarea Settings
+
+```json
+{
+  "rows" : 10
 }
 ```
 

@@ -1,4 +1,4 @@
-# Code Editor
+# Code
 
 The code field provides a syntax-highlighted code editor powered by CodeMirror. It supports multiple programming languages and can be customized with various settings.
 

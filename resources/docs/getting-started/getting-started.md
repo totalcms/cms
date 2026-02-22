@@ -55,7 +55,7 @@ Once you have Total CMS installed and configured, explore these areas based on y
 - Integrate with the [REST API](docs/api/rest-api) for custom applications
 
 ### For Administrators
-- Configure [Authentication](docs/advanced/auth) and [Access Groups](docs/advanced/access-groups)
+- Configure [Authentication](docs/auth/auth) and [Access Groups](docs/auth/access-groups)
 - Set up [API Keys](docs/api/api-keys) for secure integrations
 - Review [Security](docs/advanced/security) best practices
 

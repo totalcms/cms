@@ -1,8 +1,90 @@
-# Field Visibility
+# All Field Settings
 
-The `visibility` setting controls when a field is displayed in forms based on the value of another field. This setting is available on **all field types** and allows you to conditionally show or hide fields.
+These settings can be applied to **any field type**. They control universal behaviors like hiding fields and conditional visibility.
 
-## Conditional Visibility Syntax
+## Hide Field
+
+The `hide` setting allows you to completely hide a field from the admin form while still storing its data. This is useful for fields that should be managed programmatically or set via defaults rather than through the admin interface.
+
+```json
+{
+	"hide": true
+}
+```
+
+When `hide` is set to `true`, the field will have the `cms-hide` CSS class added, which hides it from view.
+
+### Example Schema
+
+```json
+{
+	"internalStatus": {
+		"type": "string",
+		"field": "text",
+		"label": "Internal Status",
+		"default": "pending",
+		"settings": {
+			"hide": true
+		}
+	}
+}
+```
+
+### Common Use Cases
+
+**System-managed fields:**
+```json
+{
+	"processedAt": {
+		"type": "string",
+		"field": "datetime",
+		"label": "Processed At",
+		"settings": {
+			"hide": true
+		}
+	}
+}
+```
+
+**Fields with autogen values that shouldn't be edited:**
+```json
+{
+	"slug": {
+		"type": "string",
+		"field": "text",
+		"label": "URL Slug",
+		"settings": {
+			"autogen": "${title}",
+			"hide": true
+		}
+	}
+}
+```
+
+**Metadata fields:**
+```json
+{
+	"version": {
+		"type": "number",
+		"field": "number",
+		"label": "Version",
+		"default": 1,
+		"settings": {
+			"hide": true
+		}
+	}
+}
+```
+
+### Important Notes
+
+- **Data Storage:** Hidden fields still store data in the object. They are just not visible in the admin form.
+- **Default Values:** Hidden fields typically should have a `default` value or be populated programmatically.
+- **CSS Class:** The field receives the `cms-hide` class. You can customize visibility with CSS if needed.
+
+## Conditional Visibility
+
+The `visibility` setting controls when a field is displayed in forms based on the value of another field.
 
 ```json
 {
@@ -20,7 +102,7 @@ The `visibility` setting controls when a field is displayed in forms based on th
 - **`value`** (required) - The value(s) to compare against. Can be a single value or an array of values
 - **`operator`** (optional) - The comparison operator to use (default: `==`)
 
-## Supported Operators
+### Supported Operators
 
 **Equality Operators:**
 - `==` - Equals (default)
@@ -40,7 +122,7 @@ The `visibility` setting controls when a field is displayed in forms based on th
 - `empty` - Field array is empty
 - `not_empty` - Field array has at least one value
 
-## Examples
+### Examples
 
 **Show field when another field has a specific value:**
 ```json
@@ -120,6 +202,6 @@ The `visibility` setting controls when a field is displayed in forms based on th
 ```
 Field is visible if `deliveryMethod` matches ANY value in the array.
 
-## Default Behavior
+### Default Behavior
 
 Fields with a `visibility` setting are **hidden by default** until the condition is met. This ensures fields appear only when they should, even on initial form load.

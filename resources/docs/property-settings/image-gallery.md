@@ -1,16 +1,124 @@
-# Image and Gallery Watermarks
+# Image & Gallery
+
+## Upload Validation
+
+The following JSON is sample settings that you can use for image and file validation rules
+for uploads. You do you need to supply all rules. You can pick and choose which rules you
+want to use.
+
+```json
+{
+	"rules" : {
+		"size"        : {"min":0,"max":300},
+		"height"      : {"min":500,"max":1000},
+		"width"       : {"min":500,"max":1000},
+		"size"        : {"min":0,"max":1000},
+		"count"       : {"max":10},
+		"orientation" : "landscape",
+		"aspectratio" : "4:3",
+		"filetype"    : ["image/jpeg", "image/png"],
+		"filename"    : ["image.jpg"],
+	}
+}
+```
+
+## Protected by Collection
+
+The `protectedByCollection` setting controls the default value of the `protected` property for file and depot fields. When a file or depot is protected, it inherits the access control settings from its parent collection.
+
+**Default Behavior:** Without this setting, all files and depots default to `protected: true`, meaning they inherit collection-level access control.
+
+```json
+{
+	"protectedByCollection" : false
+}
+```
+
+### When to Use
+
+**Public file downloads (protected: false):**
+```json
+{
+	"downloads": {
+		"$ref"     : "https://www.totalcms.co/schemas/properties/file.json",
+		"label"    : "Public Downloads",
+		"settings" : {
+			"protectedByCollection" : false
+		}
+	}
+}
+```
+
+Use `false` when:
+- Files should be publicly accessible regardless of collection access control
+- Public downloads section on website
+- Open-access resources (documentation, marketing materials)
+- Files that don't contain sensitive information
+
+**Protected file downloads (protected: true, default):**
+```json
+{
+	"privateFiles": {
+		"$ref"     : "https://www.totalcms.co/schemas/properties/depot.json",
+		"label"    : "Private Documents",
+		"settings" : {
+			"protectedByCollection" : true
+		}
+	}
+}
+```
+
+Use `true` (or omit the setting) when:
+- Files should respect collection access control
+- Member-only content
+- Premium downloads
+- Sensitive documents
+- Private media libraries
+
+### How It Works
+
+The `protectedByCollection` setting determines the **default** value for new uploads:
+
+1. **New File Upload:** Uses `protectedByCollection` setting value (or `true` if not set)
+2. **Existing File:** Retains its current `protected` value regardless of the setting
+3. **Manual Override:** Users can manually change the `protected` value for individual files in the admin interface
+
+### Depot Field Example
+
+For depot (multiple file) fields, the setting works the same way:
+
+```json
+{
+	"publicGallery": {
+		"$ref"     : "https://www.totalcms.co/schemas/properties/depot.json",
+		"label"    : "Public Gallery",
+		"settings" : {
+			"protectedByCollection" : false,
+			"rules" : {
+				"filetype" : ["image/jpeg", "image/png"]
+			}
+		}
+	}
+}
+```
+
+### Important Notes
+
+- **Existing Files:** This setting only affects the default for new uploads. Existing files retain their current `protected` value.
+- **Manual Override:** Users can still manually change the `protected` flag for individual files in the file management interface, regardless of this setting.
+- **Security:** Setting to `false` makes files publicly accessible. Use with caution for sensitive content.
+
+## Watermarks
 
 Watermark settings allow you to automatically apply watermarks to images and gallery images. These settings are enforced at the image generation level and **cannot be bypassed via URL manipulation**, making them ideal for protecting photography and copyrighted content.
 
-## Security Model
+### Security Model
 
 Watermark settings are enforced during image processing:
 - **Cannot be removed** via URL parameters
 - **Cannot be overridden** via URL parameters
 - **Protects all image requests** (Twig templates, direct API access, etc.)
 - **Maximum security** for photographers and content creators
-
-## Available Watermark Options
 
 ### Image Watermarks
 ```json
@@ -76,7 +184,7 @@ You can use both image and text watermarks together:
 }
 ```
 
-## Dimension-Based Watermark Control
+### Dimension-Based Watermark Control
 
 The `limit` setting allows you to apply watermarks only to images above a certain size. This is perfect for showing clean thumbnails while protecting full-size images.
 
@@ -90,7 +198,7 @@ The `limit` setting allows you to apply watermarks only to images above a certai
 }
 ```
 
-### How the Limit Works
+#### How the Limit Works
 
 Watermarks are applied when:
 - **No limit is set** - Always apply watermark
@@ -99,7 +207,7 @@ Watermarks are applied when:
 - **Requested height > limit** - Apply watermark
 - **Both width AND height ≤ limit** - No watermark
 
-### Example Behavior (with limit: 800)
+#### Example Behavior (with limit: 800)
 
 | Image Request | Width | Height | Watermark? |
 |--------------|-------|--------|------------|
@@ -110,9 +218,9 @@ Watermarks are applied when:
 | `?w=600&h=1000` | 600 | 1000 | Yes |
 | No parameters | Original | Original | Yes |
 
-## Real-World Examples
+### Real-World Examples
 
-### Photography Portfolio
+#### Photography Portfolio
 Small thumbnails without watermarks, full images protected:
 
 ```json
@@ -142,7 +250,7 @@ Usage in templates:
 {{ cms.gallery(id, {w: 1200}, {w: 1920}) }}
 ```
 
-### Stock Photography
+#### Stock Photography
 Centered watermark with transparency for all images:
 
 ```json
@@ -161,7 +269,7 @@ Centered watermark with transparency for all images:
 }
 ```
 
-### E-commerce Product Images
+#### E-commerce Product Images
 "Sample" watermark on large product images only:
 
 ```json
@@ -182,7 +290,7 @@ Centered watermark with transparency for all images:
 }
 ```
 
-## Custom Watermark Fonts
+### Custom Watermark Fonts
 
 To use custom fonts for text watermarks:
 
@@ -210,7 +318,7 @@ Or with extension:
 
 The system will automatically load fonts from the depot. If the font is not found, it falls back to the default RobotoRegular font.
 
-## Important Notes
+### Watermark Notes
 
 - **Security**: Watermark settings are enforced server-side during image generation. Users cannot bypass watermarks by manipulating URLs.
 - **Limit Setting**: The `limit` setting cannot be overridden via URL parameters - it's schema-only for security.

@@ -1,6 +1,6 @@
-# Radio and Multicheckbox Fields
+# Radio & Multicheckbox
 
-Radio and Multicheckbox fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
+Radio and Multicheckbox fields allow users to select options from multiple choices. For how to define options, see [All Field Settings](docs/property-options/static-options).
 
 ## Grid Layout Settings
 

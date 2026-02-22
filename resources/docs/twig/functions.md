@@ -725,11 +725,11 @@ Total CMS provides comprehensive access control functions for checking user perm
 {% if cms.isAdmin() %}...{% endif %}
 ```
 
-For complete documentation including practical examples, access group configuration, and best practices, see the [Access Groups Documentation](docs/advanced/access-groups).
+For complete documentation including practical examples, access group configuration, and best practices, see the [Access Groups Documentation](docs/auth/access-groups).
 
 ## Related Documentation
 
-- [Access Groups](docs/advanced/access-groups) - Complete access control documentation
+- [Access Groups](docs/auth/access-groups) - Complete access control documentation
 - [Twig Variables](docs/twig/variables) - Available variables in templates
 - [Twig Filters](docs/twig/filters) - Available filters for data transformation
 - [CMS Grid Tag](docs/twig/cmsgrid-tag) - Grid rendering system

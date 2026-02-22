@@ -1,4 +1,4 @@
-# ID Autogen
+# ID
 
 For the ID field, you can use the following setting to autogenerate the id from one or
 multiple fields. You can use standard Javascript string interpolation to inject field

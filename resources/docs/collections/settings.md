@@ -431,7 +431,7 @@ Customizes the behavior and appearance of object creation/edit forms.
 | `editActions` | array | Actions after editing object |
 | `deleteActions` | array | Actions after deleting object |
 
-See [Collection Form Settings](docs/admin/collection-form-settings) for complete documentation on form actions and help styles.
+See [Collection Form Settings](docs/collections/form-settings) for complete documentation on form actions and help styles.
 
 ---
 
@@ -631,7 +631,7 @@ A fully configured collection metadata file:
 
 ## See Also
 
-- [Collection Form Settings](docs/admin/collection-form-settings) - Detailed form customization
+- [Collection Form Settings](docs/collections/form-settings) - Detailed form customization
 - [Collection Filtering](docs/twig/collection-filtering) - Filtering and sorting collections
-- [Field Settings](docs/fields/styled-text) - Schema field configuration
+- [Field Settings](docs/property-settings/styled-text) - Schema field configuration
 - [Twig Filters Reference](docs/twig/filters) - All available Twig filters
