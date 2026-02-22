@@ -115,6 +115,9 @@
 		opacity : 1;
 	}
 }
+.customProperties-field .property-field {
+	background-color : oklch(var(--totalform-nearwhite) / 0.5);
+}
 
 .deck-item,
 .property-field,
