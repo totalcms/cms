@@ -56,7 +56,7 @@ readonly class DownloadUploadAction
 	private function enforceAccess(ServerRequestInterface $request, string $collection, string $property): void
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null || $collectionData->groups === []) {
+		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData || $collectionData->groups === []) {
 			return;
 		}
 

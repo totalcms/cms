@@ -118,5 +118,4 @@ readonly class UploadFileAction
 
 		return false;
 	}
-
 }

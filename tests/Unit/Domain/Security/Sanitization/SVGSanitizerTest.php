@@ -300,4 +300,155 @@ describe('SVGSanitizer', function (): void {
 		expect($result1)->toBe($result2);
 		expect($result1)->toContain('<circle');
 	});
+
+	// -------------------------
+	// Remove Empty Groups
+	// -------------------------
+
+	test('SVGSanitizer → removeEmptyGroups removes empty g elements', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><g></g><circle cx="12" cy="12" r="10"/></svg>';
+		$result = SVGSanitizer::removeEmptyGroups($svg);
+
+		expect($result)->not->toContain('<g');
+		expect($result)->toContain('<circle');
+	});
+
+	test('SVGSanitizer → removeEmptyGroups removes empty g with attributes', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><g id="layer1" transform="translate(0,0)"></g><circle cx="12" cy="12" r="10"/></svg>';
+		$result = SVGSanitizer::removeEmptyGroups($svg);
+
+		expect($result)->not->toContain('<g');
+		expect($result)->not->toContain('layer1');
+		expect($result)->toContain('<circle');
+	});
+
+	test('SVGSanitizer → removeEmptyGroups handles nested empty groups', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><g><g></g></g><circle cx="12" cy="12" r="10"/></svg>';
+		$result = SVGSanitizer::removeEmptyGroups($svg);
+
+		expect($result)->not->toContain('<g');
+		expect($result)->toContain('<circle');
+	});
+
+	test('SVGSanitizer → removeEmptyGroups preserves groups with content', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><g><circle cx="12" cy="12" r="10"/></g></svg>';
+		$result = SVGSanitizer::removeEmptyGroups($svg);
+
+		expect($result)->toContain('<g>');
+		expect($result)->toContain('<circle');
+	});
+
+	test('SVGSanitizer → removeEmptyGroups removes empty groups with whitespace only', function (): void {
+		$svg    = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g>   \n\t  </g><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>";
+		$result = SVGSanitizer::removeEmptyGroups($svg);
+
+		expect($result)->not->toContain('<g');
+		expect($result)->toContain('<circle');
+	});
+
+	test('SVGSanitizer → removeEmptyGroups returns unchanged SVG with no empty groups', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><g><rect x="0" y="0" width="10" height="10"/></g></svg>';
+		$result = SVGSanitizer::removeEmptyGroups($svg);
+
+		expect($result)->toBe($svg);
+	});
+
+	// -------------------------
+	// Uniquify IDs
+	// -------------------------
+
+	test('SVGSanitizer → uniquifyIds prefixes underscore IDs', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="_clip1"><rect x="0" y="0" width="10" height="10"/></clipPath></defs></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		expect($result)->not->toContain('id="_clip1"');
+		expect($result)->toMatch('/id="tcms-[a-f0-9]+-_clip1"/');
+	});
+
+	test('SVGSanitizer → uniquifyIds leaves non-underscore IDs unchanged', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="myGradient"><stop offset="0%" stop-color="red"/></linearGradient></defs></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		expect($result)->toContain('id="myGradient"');
+	});
+
+	test('SVGSanitizer → uniquifyIds updates url() references', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="_clip1"><rect x="0" y="0" width="10" height="10"/></clipPath></defs><g clip-path="url(#_clip1)"><circle cx="5" cy="5" r="3"/></g></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		// Extract the prefix used
+		preg_match('/id="(tcms-[a-f0-9]+-_clip1)"/', $result, $matches);
+		$newId = $matches[1];
+
+		expect($result)->toContain('url(#' . $newId . ')');
+		expect($result)->not->toContain('url(#_clip1)');
+	});
+
+	test('SVGSanitizer → uniquifyIds updates href references', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="_Linear2"><stop offset="0%" stop-color="red"/></linearGradient></defs><rect fill="url(#_Linear2)" x="0" y="0" width="10" height="10"/></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		preg_match('/id="(tcms-[a-f0-9]+-_Linear2)"/', $result, $matches);
+		$newId = $matches[1];
+
+		expect($result)->toContain('url(#' . $newId . ')');
+		expect($result)->not->toContain('url(#_Linear2)');
+	});
+
+	test('SVGSanitizer → uniquifyIds handles multiple IDs', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="_clip1"><rect x="0" y="0" width="10" height="10"/></clipPath><linearGradient id="_Linear2"><stop offset="0%" stop-color="red"/></linearGradient></defs><g clip-path="url(#_clip1)"><rect fill="url(#_Linear2)" x="0" y="0" width="10" height="10"/></g></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		expect($result)->not->toContain('id="_clip1"');
+		expect($result)->not->toContain('id="_Linear2"');
+		expect($result)->not->toContain('url(#_clip1)');
+		expect($result)->not->toContain('url(#_Linear2)');
+		expect($result)->toMatch('/id="tcms-[a-f0-9]+-_clip1"/');
+		expect($result)->toMatch('/id="tcms-[a-f0-9]+-_Linear2"/');
+	});
+
+	test('SVGSanitizer → uniquifyIds returns unchanged SVG with no underscore IDs', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><circle id="myCircle" cx="12" cy="12" r="10"/></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		expect($result)->toBe($svg);
+	});
+
+	test('SVGSanitizer → uniquifyIds handles duplicate ID attributes', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><clipPath id="_clip1"><rect x="0" y="0" width="10" height="10"/></clipPath><clipPath id="_clip1"><rect x="0" y="0" width="20" height="20"/></clipPath></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		// Both instances should be renamed to the same new ID
+		expect($result)->not->toContain('id="_clip1"');
+		preg_match_all('/id="(tcms-[a-f0-9]+-_clip1)"/', $result, $matches);
+		expect($matches[1])->toHaveCount(2);
+		expect($matches[1][0])->toBe($matches[1][1]);
+	});
+
+	test('SVGSanitizer → uniquifyIds avoids partial ID replacement', function (): void {
+		// _clip1 should not partially match _clip10
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="_clip10"><rect x="0" y="0" width="10" height="10"/></clipPath><clipPath id="_clip1"><rect x="0" y="0" width="5" height="5"/></clipPath></defs><g clip-path="url(#_clip10)"><g clip-path="url(#_clip1)"><circle cx="5" cy="5" r="3"/></g></g></svg>';
+		$result = SVGSanitizer::uniquifyIds($svg);
+
+		// Both should be uniquified independently
+		expect($result)->toMatch('/id="tcms-[a-f0-9]+-_clip10"/');
+		expect($result)->toMatch('/id="tcms-[a-f0-9]+-_clip1"/');
+		expect($result)->toMatch('/url\(#tcms-[a-f0-9]+-_clip10\)/');
+		expect($result)->toMatch('/url\(#tcms-[a-f0-9]+-_clip1\)/');
+	});
+
+	// -------------------------
+	// sanitizeAndValidate Integration (with new methods)
+	// -------------------------
+
+	test('SVGSanitizer → sanitizeAndValidate removes empty groups and uniquifies IDs', function (): void {
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg"><g></g><defs><clipPath id="_clip1"><rect x="0" y="0" width="10" height="10"/></clipPath></defs><rect clip-path="url(#_clip1)" x="0" y="0" width="10" height="10"/></svg>';
+		$result = SVGSanitizer::sanitizeAndValidate($svg);
+
+		// Empty group removed
+		expect($result)->not->toMatch('/<g[^>]*>\s*<\/g>/');
+		// ID uniquified
+		expect($result)->not->toContain('id="_clip1"');
+		expect($result)->toMatch('/id="tcms-[a-f0-9]+-_clip1"/');
+	});
 });

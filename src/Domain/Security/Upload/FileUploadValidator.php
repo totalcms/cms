@@ -179,7 +179,7 @@ class FileUploadValidator
 		}
 
 		$allowedMimeTypes = self::ALLOWED_MIME_TYPES[$category] ?? [];
-		$isValid          = empty($allowedMimeTypes) || in_array($detectedMime, $allowedMimeTypes);
+		$isValid          = $allowedMimeTypes === [] || in_array($detectedMime, $allowedMimeTypes);
 
 		return [
 			'valid'         => $isValid,

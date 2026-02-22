@@ -77,9 +77,8 @@ class SVGSanitizer
 		}
 
 		$sanitized = self::removeEmptyGroups($sanitized);
-		$sanitized = self::uniquifyIds($sanitized);
 
-		return $sanitized;
+		return self::uniquifyIds($sanitized);
 	}
 
 	/**
@@ -91,7 +90,7 @@ class SVGSanitizer
 	public static function removeEmptyGroups(string $svg): string
 	{
 		do {
-			$svg = (string) preg_replace('/<g[^>]*>\s*<\/g>\s*/s', '', $svg, -1, $count);
+			$svg = (string)preg_replace('/<g[^>]*>\s*<\/g>\s*/s', '', $svg, -1, $count);
 		} while ($count > 0);
 
 		return $svg;
@@ -118,28 +117,28 @@ class SVGSanitizer
 		$ids = array_unique($matches[1]);
 
 		// Sort longest-first to avoid partial replacements
-		usort($ids, fn(string $a, string $b): int => strlen($b) - strlen($a));
+		usort($ids, fn (string $a, string $b): int => strlen($b) - strlen($a));
 
 		foreach ($ids as $id) {
-			$newId = $prefix . $id;
+			$newId     = $prefix . $id;
 			$escapedId = preg_quote($id, '/');
 
 			// Replace id="..." definitions
-			$svg = (string) preg_replace(
+			$svg = (string)preg_replace(
 				'/\bid="' . $escapedId . '"/',
 				'id="' . $newId . '"',
 				$svg
 			);
 
 			// Replace url(#...) references (in attributes and style properties)
-			$svg = (string) preg_replace(
+			$svg = (string)preg_replace(
 				'/url\(#' . $escapedId . '\)/',
 				'url(#' . $newId . ')',
 				$svg
 			);
 
 			// Replace href="#..." references
-			$svg = (string) preg_replace(
+			$svg = (string)preg_replace(
 				'/href="#' . $escapedId . '"/',
 				'href="#' . $newId . '"',
 				$svg
