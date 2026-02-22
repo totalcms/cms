@@ -5,6 +5,10 @@
 .styledtext-wrapper {
 	width      : 100%;
 	min-height : 128px;
+
+	&:has(~ .form-group-icon) {
+		width : calc(100% - 3em);
+	}
 }
 
 .ste-editor-container {
@@ -26,6 +30,10 @@
 	border-bottom          : 1px solid oklch(var(--totalform-text-color) / 0.7);
 	background-color       : oklch(var(--totalform-white));
 	border-top-left-radius : var(--totalform-radius);
+
+	.ste-editor-container:has(.ste-code-view) & {
+		border-bottom : none;
+	}
 
 	&--scroll {
 		flex-wrap  : nowrap;
@@ -1114,6 +1122,10 @@
 	font-size                 : 12px;
 	color                     : oklch(var(--totalform-darkgray));
 	border-bottom-left-radius : var(--totalform-radius);
+
+	.ste-editor-container:has(.ste-code-view) & {
+		display : none;
+	}
 }
 
 .ste-counter {
