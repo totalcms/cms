@@ -215,17 +215,28 @@ readonly class CacheSizingAdvisor
 		// Base memory: raw data * serialization overhead
 		$baseMemory = (int) round($totalBytes * self::SERIALIZATION_OVERHEAD);
 
+		// Detect tiered caching: APCu (L1) + network cache (L2) are both available
+		$hasL1        = $this->apcuService->isAvailable();
+		$hasL2        = $this->redisService->isAvailable() || $this->memcachedService->isAvailable();
+		$hasTieredCache = $hasL1 && $hasL2;
+
 		$backends = [];
 
 		// APCu recommendations
 		$apcuOverhead     = $estimatedEntries * self::APCU_ENTRY_OVERHEAD;
 		$apcuRecommended  = $baseMemory + $apcuOverhead;
-		$apcuAllocation   = $this->roundToAllocation($apcuRecommended);
+
+		// With tiered caching, APCu can be sized tighter since Redis/Memcached
+		// acts as a safety net for evicted entries. Round to nearest standard value
+		// instead of rounding up aggressively.
+		$apcuAllocation   = $hasTieredCache
+			? $this->roundToNearestAllocation($apcuRecommended)
+			: $this->roundToAllocation($apcuRecommended);
 		$apcuAllocated    = $this->getApcuAllocatedMemory();
-		$apcuSufficient   = $apcuAllocated >= $apcuRecommended;
+		$apcuSufficient   = $apcuAllocated >= $apcuAllocation;
 
 		$backends['apcu'] = [
-			'name'                     => 'APCu',
+			'name'                     => 'APCu (L1)',
 			'installed'                => $this->apcuService->isInstalled(),
 			'available'                => $this->apcuService->isAvailable(),
 			'recommended_bytes'        => $apcuRecommended,
@@ -240,10 +251,15 @@ readonly class CacheSizingAdvisor
 		// Redis recommendations
 		$redisOverhead     = $estimatedEntries * self::REDIS_ENTRY_OVERHEAD;
 		$redisRecommended  = $baseMemory + $redisOverhead;
-		$redisAllocation   = $this->roundToAllocation($redisRecommended);
+
+		// With tiered caching, the L2 backend should be sized generously to provide
+		// overflow capacity and restart resilience. Use 2x the calculated need.
+		$redisAllocation   = $hasTieredCache
+			? $this->roundToAllocation($redisRecommended * 2)
+			: $this->roundToAllocation($redisRecommended);
 
 		$backends['redis'] = [
-			'name'                   => 'Redis',
+			'name'                   => $hasTieredCache ? 'Redis (L2)' : 'Redis',
 			'installed'              => $this->redisService->isInstalled(),
 			'available'              => $this->redisService->isAvailable(),
 			'recommended_bytes'      => $redisRecommended,
@@ -255,10 +271,14 @@ readonly class CacheSizingAdvisor
 		// Memcached recommendations
 		$memcachedOverhead     = $estimatedEntries * self::MEMCACHED_ENTRY_OVERHEAD;
 		$memcachedRecommended  = $baseMemory + $memcachedOverhead;
-		$memcachedAllocation   = $this->roundToAllocation($memcachedRecommended);
+
+		// Same tiered logic as Redis
+		$memcachedAllocation   = $hasTieredCache
+			? $this->roundToAllocation($memcachedRecommended * 2)
+			: $this->roundToAllocation($memcachedRecommended);
 
 		$backends['memcached'] = [
-			'name'                   => 'Memcached',
+			'name'                   => $hasTieredCache ? 'Memcached (L2)' : 'Memcached',
 			'installed'              => $this->memcachedService->isInstalled(),
 			'available'              => $this->memcachedService->isAvailable(),
 			'recommended_bytes'      => $memcachedRecommended,
@@ -267,9 +287,7 @@ readonly class CacheSizingAdvisor
 			'entry_overhead'         => self::MEMCACHED_ENTRY_OVERHEAD,
 		];
 
-		$hasMemoryCache = $this->apcuService->isAvailable()
-			|| $this->redisService->isAvailable()
-			|| $this->memcachedService->isAvailable();
+		$hasMemoryCache = $hasL1 || $hasL2;
 
 		$result = [
 			'estimated_entries'       => $estimatedEntries,
@@ -393,6 +411,34 @@ readonly class CacheSizingAdvisor
 		$power = (int) ceil(log($mb, 2));
 
 		return (int) pow(2, $power) * 1024 * 1024;
+	}
+
+	/**
+	 * Round to the nearest power-of-2 MB allocation (minimum 32M).
+	 * Used for L1 (APCu) when tiered caching is active — sizes tighter
+	 * since L2 catches any overflow from eviction.
+	 */
+	private function roundToNearestAllocation(int $bytes): int
+	{
+		$mb = (int) ceil($bytes / (1024 * 1024));
+
+		// Minimum 32MB
+		if ($mb <= 32) {
+			return self::MIN_ALLOCATION;
+		}
+
+		// Round to nearest power of 2 (not always up)
+		$power     = log($mb, 2);
+		$lower     = (int) floor($power);
+		$upper     = (int) ceil($power);
+		$lowerVal  = (int) pow(2, $lower);
+		$upperVal  = (int) pow(2, $upper);
+
+		// Pick whichever is closer to the actual need
+		$nearest = ($mb - $lowerVal) <= ($upperVal - $mb) ? $lowerVal : $upperVal;
+
+		// Don't go below 32MB
+		return max($nearest, 32) * 1024 * 1024;
 	}
 
 	/**

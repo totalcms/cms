@@ -198,25 +198,30 @@ class CacheManager
 		// These flags only bypass reads - we still want to populate cache with fresh data
 		// so that when the flags are turned off, the cache is warm and accurate.
 
-		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
+		// L1/L2 tiered caching: write to both APCu (L1) and a network cache (L2) when available.
+		// APCu is fastest (shared memory, no network hop) but local to a single server and
+		// cleared on PHP-FPM restart. Redis/Memcached survive restarts and serve as a warm
+		// backup that prevents cold-start cache misses.
+		$stored = false;
+
+		// L1: APCu (fastest, local memory)
 		if ($this->apcuService->isAvailable()) {
-			return $this->apcuService->set($key, $data, $ttl);
+			$stored = $this->apcuService->set($key, $data, $ttl);
 		}
 
+		// L2: Network cache (survives restarts, larger capacity)
 		if ($this->redisService->isAvailable()) {
-			return $this->redisService->set($key, $data, $ttl);
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			return $this->memcachedService->set($key, $data, $ttl);
+			$stored = $this->redisService->set($key, $data, $ttl) || $stored;
+		} elseif ($this->memcachedService->isAvailable()) {
+			$stored = $this->memcachedService->set($key, $data, $ttl) || $stored;
 		}
 
 		// Fallback to filesystem cache only if no memory caches available
-		if ($this->filesystemService->isAvailable()) {
-			return $this->filesystemService->set($key, $data, $ttl);
+		if (!$stored && $this->filesystemService->isAvailable()) {
+			$stored = $this->filesystemService->set($key, $data, $ttl);
 		}
 
-		return false;
+		return $stored;
 	}
 
 	public function getData(string $key): mixed
@@ -226,17 +231,24 @@ class CacheManager
 			return null;
 		}
 
-		// Check memory caches first (fastest)
-		if ($this->apcuService->isAvailable()) {
+		$apcuAvailable = $this->apcuService->isAvailable();
+
+		// L1: Check APCu first (fastest, local memory)
+		if ($apcuAvailable) {
 			$result = $this->apcuService->get($key);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
+		// L2: Check network caches (Redis, then Memcached)
+		// On hit, promote back to L1 (APCu) so subsequent requests are fast
 		if ($this->redisService->isAvailable()) {
 			$result = $this->redisService->get($key);
 			if ($result !== null) {
+				if ($apcuAvailable) {
+					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
+				}
 				return $result;
 			}
 		}
@@ -244,6 +256,9 @@ class CacheManager
 		if ($this->memcachedService->isAvailable()) {
 			$result = $this->memcachedService->get($key);
 			if ($result !== null) {
+				if ($apcuAvailable) {
+					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
+				}
 				return $result;
 			}
 		}
