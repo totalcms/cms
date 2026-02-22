@@ -94,7 +94,7 @@ export default class StyledTextField extends TotalField {
 			heightMin          : 200,
 			heightMax          : 800,
 			placeholder        : this.input.getAttribute("placeholder"),
-			wordCounterCount   : true,
+			wordCounterCount   : false,
 			onContentChanged   : () => this.changed(),
 			uploadUrl          : uploadUrl,
 			imagePreset        : this.options.imagePreset || null,
