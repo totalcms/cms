@@ -14,6 +14,7 @@ use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -445,6 +446,35 @@ class CacheManager
 
 		// Try to write version file
 		file_put_contents($this->versionFile, $version);
+	}
+
+	/**
+	 * Check if the app version has changed and clear all caches if so.
+	 * Used to automatically clear stale caches after a Total CMS update.
+	 */
+	public function clearIfVersionChanged(): bool
+	{
+		if (!$this->filesystemService->isAvailable()) {
+			return false;
+		}
+
+		$appVersionFile = $this->filesystemService->getCachDir() . '/.app_version';
+		$currentVersion = Version::get();
+		$storedVersion  = is_file($appVersionFile) ? trim((string)file_get_contents($appVersionFile)) : '';
+
+		if ($storedVersion === $currentVersion) {
+			return false;
+		}
+
+		$this->logger->info('App version changed, clearing all caches', [
+			'previous' => $storedVersion,
+			'current'  => $currentVersion,
+		]);
+
+		$this->clearAllCaches();
+		file_put_contents($appVersionFile, $currentVersion);
+
+		return true;
 	}
 
 	/**
