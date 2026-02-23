@@ -1692,7 +1692,7 @@ NGINX;
 		if ($maxVisible > 0) {
 			$attributes['data-max-visible'] = (string)$maxVisible;
 			if ($viewAllText !== null) {
-				$attributes['data-view-all-text'] = htmlspecialchars($viewAllText);
+				$attributes['data-view-all-text'] = htmlspecialchars((string)$viewAllText);
 			}
 		}
 

@@ -217,7 +217,7 @@ class SchemaField extends PropertyField
 
 		try {
 			// Check if the form has schemaLister available
-			if (!($this->form instanceof SchemaForm)) {
+			if (!$this->form instanceof SchemaForm) {
 				return [['label' => '', 'value' => '']];
 			}
 

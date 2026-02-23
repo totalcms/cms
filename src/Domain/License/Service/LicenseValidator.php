@@ -241,7 +241,7 @@ class LicenseValidator
 
 			// JWT token validation passed
 		} catch (\Exception $e) {
-			throw new LicenseException('JWT token validation failed: ' . $e->getMessage());
+			throw new LicenseException('JWT token validation failed: ' . $e->getMessage(), $e->getCode(), $e);
 		}
 	}
 

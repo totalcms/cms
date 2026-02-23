@@ -94,7 +94,7 @@ readonly class ObjectCloner
 			// Check if this is a date field with the specified setting
 			$isDateField = (
 				(isset($fieldDefinition['type']) && $fieldDefinition['type'] === 'date')
-				|| (isset($fieldDefinition['$ref']) && str_contains($fieldDefinition['$ref'], '/date.json'))
+				|| (isset($fieldDefinition['$ref']) && str_contains((string)$fieldDefinition['$ref'], '/date.json'))
 			);
 
 			$hasSetting = (
