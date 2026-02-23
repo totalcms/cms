@@ -8,6 +8,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
@@ -15,13 +16,20 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
-readonly class FactoryImporter
+class FactoryImporter
 {
 	public LoggerInterface $logger;
 	public FakerGenerator $faker;
 	public string $cacheDir;
 
 	private const DEFAULT_FACTORY  = 'word';
+	private const RELATIONAL_MARKER = '__relational__';
+
+	/** @var array<string,array<string>> */
+	private array $relationalCache = [];
+
+	/** @var array<string,array<string,mixed>> */
+	private array $relationalSettings = [];
 
 	// ---------------------------------------------------------------------------------
 	// This class uses the Repository classes directly instead of the Service classes
@@ -32,6 +40,7 @@ readonly class FactoryImporter
 		private ObjectFactory $objectFactory,
 		private ObjectRepository $objectRepository,
 		private IndexBuilder $indexBuilder,
+		private IndexReader $indexReader,
 		private CollectionFetcher $collectionFetcher,
 		private CollectionSaver $collectionSaver,
 		private SchemaFetcher $schemaFetcher,
@@ -104,22 +113,74 @@ readonly class FactoryImporter
 		return [$method, $args];
 	}
 
+	/**
+	 * @param array<string,mixed> $settings
+	 * @return array<string>
+	 */
+	private function getRelationalIds(array $settings): array
+	{
+		$refCollection = $settings['collection'] ?? '';
+		$valueField = $settings['value'] ?? 'id';
+
+		if (!is_string($refCollection) || $refCollection === '') {
+			return [];
+		}
+
+		if (!is_string($valueField)) {
+			$valueField = 'id';
+		}
+
+		$cacheKey = "{$refCollection}:{$valueField}";
+
+		if (isset($this->relationalCache[$cacheKey])) {
+			return $this->relationalCache[$cacheKey];
+		}
+
+		$index = $this->indexReader->fetchIndex($refCollection);
+		$ids = $index->objects->pluck($valueField)->filter()->values()->all();
+
+		// Ensure all values are strings
+		$this->relationalCache[$cacheKey] = array_map('strval', $ids);
+
+		return $this->relationalCache[$cacheKey];
+	}
+
 	/** @return array<string,string> */
 	public function fetchCollectionFactories(string $collection): array
 	{
 		// Get factory definitions from collection
-		$collection = $this->collectionFetcher->fetchCollection($collection);
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 
-		if (is_null($collection)) {
+		if (is_null($collectionData)) {
 			return [];
 		}
 
-		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
+		$schema = $this->schemaFetcher->fetchSchema($collectionData->schema);
 
 		$factories = array_map(fn (array $property) => $property['factory'] ?? null, $schema->properties);
 
 		// Filter out null values to only return properties that have factory definitions
-		return array_filter($factories);
+		$factories = array_filter($factories);
+
+		// Detect relationalOptions on properties that have no explicit factory rule
+		foreach ($schema->properties as $propName => $propDef) {
+			if (isset($factories[$propName])) {
+				continue; // Explicit factory rule takes precedence
+			}
+
+			$settings = $propDef['settings'] ?? [];
+			if (!is_array($settings)) {
+				continue;
+			}
+
+			$relational = $settings['relationalOptions'] ?? null;
+			if (is_array($relational) && isset($relational['collection'])) {
+				$factories[$propName] = self::RELATIONAL_MARKER;
+				$this->relationalSettings[$propName] = $relational;
+			}
+		}
+
+		return $factories;
 	}
 
 	/**
@@ -141,6 +202,24 @@ readonly class FactoryImporter
 			if (empty($value) || $property === 'id') {
 				continue;
 			}
+
+			// Handle relational properties
+			if ($value === self::RELATIONAL_MARKER) {
+				$settings = $this->relationalSettings[$property] ?? null;
+				if (is_array($settings)) {
+					$ids = $this->getRelationalIds($settings);
+					if ($ids !== []) {
+						$objectData[$property] = $this->faker->randomElement($ids);
+					} else {
+						$this->logger->warning('Referenced collection is empty for relational property, skipping', [
+							'property'   => $property,
+							'collection' => $settings['collection'] ?? 'unknown',
+						]);
+					}
+				}
+				continue;
+			}
+
 			[$method, $args] = $this->parseFakerRule($value);
 			if (str_starts_with((string)$method, 'image')) {
 				// Save image and store path in object data
