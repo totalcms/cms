@@ -123,7 +123,7 @@
 
 	<nav class="links docs">
 		{% for item in menu %}
-		<details id="category-{{ item.title | slug }}" open>
+		<details id="category-{{ item.title | slug }}"{% if page in item.sub|column('path') %} open{% endif %}>
 			<summary>{{ item.title }}</summary>
 			<ul>
 				{% for sub in item.sub %}

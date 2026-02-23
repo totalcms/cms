@@ -4,7 +4,8 @@ sidebarDetails.forEach(details => {
 	const detailsId = details.getAttribute('id');
 	if (detailsId) {
 		const key    = `sidebar-details-${detailsId}`;
-		details.open = (localStorage.getItem(key) !== 'false');
+		const saved = localStorage.getItem(key);
+		if (saved !== null) details.open = (saved === 'true');
 		details.addEventListener('toggle', () => localStorage.setItem(key, details.open));
 	}
 });
