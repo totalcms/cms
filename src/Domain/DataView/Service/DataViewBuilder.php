@@ -35,7 +35,7 @@ readonly class DataViewBuilder
 	{
 		try {
 			$object     = $this->objectFetcher->fetchObject(DataViewData::COLLECTION_ID, $viewId);
-			$definition = (string) ($object->toArray()['definition'] ?? '');
+			$definition = (string)($object->toArray()['definition'] ?? '');
 
 			if ($definition === '') {
 				throw new \RuntimeException('View definition is empty');

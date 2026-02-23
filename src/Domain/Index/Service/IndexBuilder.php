@@ -39,8 +39,8 @@ readonly class IndexBuilder
 			'collection' => $collection,
 		]);
 
-		$objectIds = $this->storage->fetchObjectIds($collection);
-		$schema    = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$objectIds  = $this->storage->fetchObjectIds($collection);
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		$indexProps = $schema->index;
 
 		$this->logger->info('Index build object count', [
@@ -75,28 +75,26 @@ readonly class IndexBuilder
 	{
 		$index = new IndexData();
 
-		if (count($objectIds) > 0) {
-			foreach ($objectIds as $id) {
-				try {
-					// Bypass cache to ensure fresh data from filesystem
-					$object  = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
-					// The reject method is used to filter out properties that are not in the index
-					// The map method is used to transform the properties into an array
-					$summary = $object->properties
-						->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
-						->map(fn ($property): mixed => $property->transform());
-					$summary->put('id', $id);
-					$index->objects->push($summary->toArray());
-				} catch (\Throwable $e) {
-					// Skip objects that fail to load (e.g., type mismatches after schema changes)
-					// Log the error but continue building index with remaining valid objects
-					$this->logger->warning('Skipping object during index build due to error', [
-						'collection' => $collection,
-						'object_id'  => $id,
-						'error'      => $e->getMessage(),
-						'exception'  => $e::class,
-					]);
-				}
+		foreach ($objectIds as $id) {
+			try {
+				// Bypass cache to ensure fresh data from filesystem
+				$object  = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
+				// The reject method is used to filter out properties that are not in the index
+				// The map method is used to transform the properties into an array
+				$summary = $object->properties
+					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
+					->map(fn ($property): mixed => $property->transform());
+				$summary->put('id', $id);
+				$index->objects->push($summary->toArray());
+			} catch (\Throwable $e) {
+				// Skip objects that fail to load (e.g., type mismatches after schema changes)
+				// Log the error but continue building index with remaining valid objects
+				$this->logger->warning('Skipping object during index build due to error', [
+					'collection' => $collection,
+					'object_id'  => $id,
+					'error'      => $e->getMessage(),
+					'exception'  => $e::class,
+				]);
 			}
 		}
 

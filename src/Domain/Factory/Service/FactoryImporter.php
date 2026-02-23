@@ -22,7 +22,7 @@ class FactoryImporter
 	public FakerGenerator $faker;
 	public string $cacheDir;
 
-	private const DEFAULT_FACTORY  = 'word';
+	private const DEFAULT_FACTORY   = 'word';
 	private const RELATIONAL_MARKER = '__relational__';
 
 	/** @var array<string,array<string>> */
@@ -37,15 +37,15 @@ class FactoryImporter
 	// ---------------------------------------------------------------------------------
 
 	public function __construct(
-		private ObjectFactory $objectFactory,
-		private ObjectRepository $objectRepository,
-		private IndexBuilder $indexBuilder,
-		private IndexReader $indexReader,
-		private CollectionFetcher $collectionFetcher,
-		private CollectionSaver $collectionSaver,
-		private SchemaFetcher $schemaFetcher,
-		private PropertyRepository $propertyRepository,
-		private CacheManager $cacheManager,
+		private readonly ObjectFactory $objectFactory,
+		private readonly ObjectRepository $objectRepository,
+		private readonly IndexBuilder $indexBuilder,
+		private readonly IndexReader $indexReader,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionSaver $collectionSaver,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly PropertyRepository $propertyRepository,
+		private readonly CacheManager $cacheManager,
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
 	) {
@@ -115,12 +115,13 @@ class FactoryImporter
 
 	/**
 	 * @param array<string,mixed> $settings
+	 *
 	 * @return array<string>
 	 */
 	private function getRelationalIds(array $settings): array
 	{
 		$refCollection = $settings['collection'] ?? '';
-		$valueField = $settings['value'] ?? 'id';
+		$valueField    = $settings['value'] ?? 'id';
 
 		if (!is_string($refCollection) || $refCollection === '') {
 			return [];
@@ -137,10 +138,10 @@ class FactoryImporter
 		}
 
 		$index = $this->indexReader->fetchIndex($refCollection);
-		$ids = $index->objects->pluck($valueField)->filter()->values()->all();
+		$ids   = $index->objects->pluck($valueField)->filter()->values()->all();
 
 		// Ensure all values are strings
-		$this->relationalCache[$cacheKey] = array_map('strval', $ids);
+		$this->relationalCache[$cacheKey] = array_map(strval(...), $ids);
 
 		return $this->relationalCache[$cacheKey];
 	}
@@ -175,7 +176,7 @@ class FactoryImporter
 
 			$relational = $settings['relationalOptions'] ?? null;
 			if (is_array($relational) && isset($relational['collection'])) {
-				$factories[$propName] = self::RELATIONAL_MARKER;
+				$factories[$propName]                = self::RELATIONAL_MARKER;
 				$this->relationalSettings[$propName] = $relational;
 			}
 		}

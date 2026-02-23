@@ -77,7 +77,7 @@ final class IndexBuilderTest extends TestCase
 		$this->storage
 			->expects($this->once())
 			->method('saveIndex')
-			->with('blog', $this->callback(function (IndexData $index) {
+			->with('blog', $this->callback(function (IndexData $index): true {
 				$objects = $index->objects->toArray();
 				expect($objects)->toHaveCount(3);
 				expect($objects[0])->toBe(['id' => 'post-1']);

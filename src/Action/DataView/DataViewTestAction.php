@@ -19,8 +19,8 @@ readonly class DataViewTestAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$data       = (array) $request->getParsedBody();
-		$definition = (string) ($data['definition'] ?? '');
+		$data       = (array)$request->getParsedBody();
+		$definition = (string)($data['definition'] ?? '');
 
 		if ($definition === '') {
 			return $this->renderer->json($response, ['error' => 'Definition is required'])->withStatus(400);

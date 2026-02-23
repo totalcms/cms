@@ -13,8 +13,6 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\DataView\Service\DataViewFetcher;
-use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -22,6 +20,8 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
+use TotalCMS\Domain\DataView\Service\DataViewFetcher;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
@@ -126,6 +126,7 @@ class TotalCMSTwigAdapter
 		if ($redirect !== '') {
 			$url .= '?redirect=' . urlencode($redirect);
 		}
+
 		return $url;
 	}
 

@@ -6,7 +6,6 @@ namespace TotalCMS\Action\DataView;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\DataView\Data\DataViewData;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;

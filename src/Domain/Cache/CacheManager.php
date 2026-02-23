@@ -250,6 +250,7 @@ class CacheManager
 				if ($apcuAvailable) {
 					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
 				}
+
 				return $result;
 			}
 		}
@@ -260,6 +261,7 @@ class CacheManager
 				if ($apcuAvailable) {
 					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
 				}
+
 				return $result;
 			}
 		}

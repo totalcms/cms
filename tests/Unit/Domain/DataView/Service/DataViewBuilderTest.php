@@ -75,9 +75,7 @@ final class DataViewBuilderTest extends TestCase
 			->with(
 				DataViewData::COLLECTION_ID,
 				'test-view',
-				$this->callback(function (array $data): bool {
-					return isset($data['lastBuilt']) && $data['lastError'] === '';
-				})
+				$this->callback(fn (array $data): bool => isset($data['lastBuilt']) && $data['lastError'] === '')
 			);
 
 		$this->builder->buildView('test-view');
@@ -100,9 +98,7 @@ final class DataViewBuilderTest extends TestCase
 			->with(
 				DataViewData::COLLECTION_ID,
 				'empty-view',
-				$this->callback(function (array $data): bool {
-					return $data['lastError'] === 'View definition is empty';
-				})
+				$this->callback(fn (array $data): bool => $data['lastError'] === 'View definition is empty')
 			);
 
 		$this->builder->buildView('empty-view');
@@ -128,9 +124,7 @@ final class DataViewBuilderTest extends TestCase
 			->with(
 				DataViewData::COLLECTION_ID,
 				'broken-view',
-				$this->callback(function (array $data): bool {
-					return str_contains($data['lastError'], 'Twig render error');
-				})
+				$this->callback(fn (array $data): bool => str_contains((string)$data['lastError'], 'Twig render error'))
 			);
 
 		$this->builder->buildView('broken-view');

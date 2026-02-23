@@ -5,12 +5,12 @@ namespace Tests\Unit\Domain\Cache;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
-use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
@@ -36,15 +36,15 @@ final class CacheManagerVersionCheckTest extends TestCase
 		$this->appVersionFile = $this->testCacheDir . '/.app_version';
 		mkdir($this->testCacheDir, 0777, true);
 
-		$this->filesystemService     = $this->createMock(FilesystemService::class);
-		$this->opcacheService        = $this->createMock(OPcacheService::class);
-		$this->redisService          = $this->createMock(RedisService::class);
-		$this->memcachedService      = $this->createMock(MemcachedService::class);
-		$this->apcuService           = $this->createMock(APCuService::class);
+		$this->filesystemService       = $this->createMock(FilesystemService::class);
+		$this->opcacheService          = $this->createMock(OPcacheService::class);
+		$this->redisService            = $this->createMock(RedisService::class);
+		$this->memcachedService        = $this->createMock(MemcachedService::class);
+		$this->apcuService             = $this->createMock(APCuService::class);
 		$this->watermarkCleanupService = $this->createMock(WatermarkCleanupService::class);
-		$this->devModeManager        = $this->createMock(DevModeManager::class);
-		$this->config                = $this->createMock(Config::class);
-		$this->loggerFactory         = $this->createMock(LoggerFactory::class);
+		$this->devModeManager          = $this->createMock(DevModeManager::class);
+		$this->config                  = $this->createMock(Config::class);
+		$this->loggerFactory           = $this->createMock(LoggerFactory::class);
 
 		$this->config->domain = 'test.example.com';
 

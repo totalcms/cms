@@ -219,7 +219,7 @@ readonly class ObjectExporter
 		$filteredObjects = $this->indexFilter->fetchFilteredIndex($collection, $options);
 
 		return array_map(
-			fn (array $object): string => (string) ($object['id'] ?? ''),
+			fn (array $object): string => (string)($object['id'] ?? ''),
 			$filteredObjects
 		);
 	}

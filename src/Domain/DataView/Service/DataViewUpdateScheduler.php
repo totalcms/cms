@@ -35,7 +35,7 @@ readonly class DataViewUpdateScheduler
 			}
 
 			if (in_array($collection, $dependencies, true)) {
-				$viewId = (string) ($view['id'] ?? '');
+				$viewId = (string)($view['id'] ?? '');
 				if ($viewId !== '') {
 					$this->jobQueuer->queueViewUpdate($viewId);
 				}

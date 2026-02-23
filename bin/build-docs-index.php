@@ -20,7 +20,7 @@ $index = [];
 
 foreach ($files as $file) {
 	$relativePath = str_replace($docsDir . '/', '', $file);
-	$path = str_replace('.md', '', $relativePath);
+	$path         = str_replace('.md', '', $relativePath);
 
 	// Skip the index file itself
 	if ($path === 'index') {

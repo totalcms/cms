@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Object\Service;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -16,7 +17,6 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 
 final class ObjectUpdaterTest extends TestCase
 {

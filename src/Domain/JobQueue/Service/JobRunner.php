@@ -321,7 +321,7 @@ readonly class JobRunner
 			return;
 		}
 
-		$viewId = (string) ($data['viewId'] ?? '');
+		$viewId = (string)($data['viewId'] ?? '');
 		if ($viewId === '') {
 			$this->logger->info('Skipping view update: empty viewId');
 

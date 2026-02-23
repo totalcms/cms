@@ -22,8 +22,8 @@ readonly class CacheSizingAdvisor
 	private const SERIALIZATION_OVERHEAD = 1.5;
 
 	/** Per-entry overhead in bytes for each backend */
-	private const APCU_ENTRY_OVERHEAD = 400;
-	private const REDIS_ENTRY_OVERHEAD = 100;
+	private const APCU_ENTRY_OVERHEAD      = 400;
+	private const REDIS_ENTRY_OVERHEAD     = 100;
 	private const MEMCACHED_ENTRY_OVERHEAD = 100;
 
 	/** Minimum allocation recommendation */
@@ -105,8 +105,8 @@ readonly class CacheSizingAdvisor
 
 			$totalObjectCount += $info['object_count'];
 			$totalObjectBytes += $info['object_bytes'];
-			$totalIndexBytes  += $info['index_bytes'];
-			$totalMetaBytes   += $info['meta_bytes'];
+			$totalIndexBytes += $info['index_bytes'];
+			$totalMetaBytes += $info['meta_bytes'];
 
 			$perCollection[] = $info;
 		}
@@ -117,18 +117,18 @@ readonly class CacheSizingAdvisor
 		$totalBytes = $totalObjectBytes + $totalIndexBytes + $totalMetaBytes;
 
 		return [
-			'total_objects'      => $totalObjectCount,
+			'total_objects'       => $totalObjectCount,
 			'total_objects_human' => number_format($totalObjectCount),
-			'total_bytes'        => $totalBytes,
-			'total_bytes_human'  => $this->formatBytes($totalBytes),
-			'object_bytes'       => $totalObjectBytes,
-			'object_bytes_human' => $this->formatBytes($totalObjectBytes),
-			'index_bytes'        => $totalIndexBytes,
-			'index_bytes_human'  => $this->formatBytes($totalIndexBytes),
-			'meta_bytes'         => $totalMetaBytes,
-			'meta_bytes_human'   => $this->formatBytes($totalMetaBytes),
-			'collection_count'   => $collectionCount,
-			'collections'        => $perCollection,
+			'total_bytes'         => $totalBytes,
+			'total_bytes_human'   => $this->formatBytes($totalBytes),
+			'object_bytes'        => $totalObjectBytes,
+			'object_bytes_human'  => $this->formatBytes($totalObjectBytes),
+			'index_bytes'         => $totalIndexBytes,
+			'index_bytes_human'   => $this->formatBytes($totalIndexBytes),
+			'meta_bytes'          => $totalMetaBytes,
+			'meta_bytes_human'    => $this->formatBytes($totalMetaBytes),
+			'collection_count'    => $collectionCount,
+			'collections'         => $perCollection,
 		];
 	}
 
@@ -148,13 +148,13 @@ readonly class CacheSizingAdvisor
 		// Measure index file
 		$indexFile = $collectionPath . '/.index.json';
 		if (file_exists($indexFile)) {
-			$indexBytes = (int) filesize($indexFile);
+			$indexBytes = (int)filesize($indexFile);
 		}
 
 		// Measure meta file
 		$metaFile = $collectionPath . '/.meta.json';
 		if (file_exists($metaFile)) {
-			$metaBytes = (int) filesize($metaFile);
+			$metaBytes = (int)filesize($metaFile);
 		}
 
 		// Measure object files (skip dot-prefixed files)
@@ -166,7 +166,7 @@ readonly class CacheSizingAdvisor
 					continue;
 				}
 
-				$size = (int) filesize($file);
+				$size = (int)filesize($file);
 				$objectCount++;
 				$objectBytes += $size;
 
@@ -176,22 +176,22 @@ readonly class CacheSizingAdvisor
 			}
 		}
 
-		$avgObjectBytes = $objectCount > 0 ? (int) round($objectBytes / $objectCount) : 0;
+		$avgObjectBytes = $objectCount > 0 ? (int)round($objectBytes / $objectCount) : 0;
 
 		return [
-			'collection_id'         => $collection->id,
-			'collection_name'       => $collection->name,
-			'schema'                => $collection->schema,
-			'object_count'          => $objectCount,
-			'object_bytes'          => $objectBytes,
-			'object_bytes_human'    => $this->formatBytes($objectBytes),
-			'index_bytes'           => $indexBytes,
-			'index_bytes_human'     => $this->formatBytes($indexBytes),
-			'meta_bytes'            => $metaBytes,
-			'meta_bytes_human'      => $this->formatBytes($metaBytes),
-			'avg_object_bytes'      => $avgObjectBytes,
-			'avg_object_bytes_human' => $this->formatBytes($avgObjectBytes),
-			'largest_object_bytes'  => $largestBytes,
+			'collection_id'              => $collection->id,
+			'collection_name'            => $collection->name,
+			'schema'                     => $collection->schema,
+			'object_count'               => $objectCount,
+			'object_bytes'               => $objectBytes,
+			'object_bytes_human'         => $this->formatBytes($objectBytes),
+			'index_bytes'                => $indexBytes,
+			'index_bytes_human'          => $this->formatBytes($indexBytes),
+			'meta_bytes'                 => $metaBytes,
+			'meta_bytes_human'           => $this->formatBytes($metaBytes),
+			'avg_object_bytes'           => $avgObjectBytes,
+			'avg_object_bytes_human'     => $this->formatBytes($avgObjectBytes),
+			'largest_object_bytes'       => $largestBytes,
 			'largest_object_bytes_human' => $this->formatBytes($largestBytes),
 		];
 	}
@@ -205,19 +205,19 @@ readonly class CacheSizingAdvisor
 	 */
 	private function calculateRecommendations(array $scanResults): array
 	{
-		$totalBytes      = (int) $scanResults['total_bytes'];
-		$totalObjects    = (int) $scanResults['total_objects'];
-		$collectionCount = (int) $scanResults['collection_count'];
+		$totalBytes      = (int)$scanResults['total_bytes'];
+		$totalObjects    = (int)$scanResults['total_objects'];
+		$collectionCount = (int)$scanResults['collection_count'];
 
 		// Estimate total cache entries: objects + indexes (1 per collection) + schemas + ~50 misc
 		$estimatedEntries = $totalObjects + $collectionCount + $collectionCount + 50;
 
 		// Base memory: raw data * serialization overhead
-		$baseMemory = (int) round($totalBytes * self::SERIALIZATION_OVERHEAD);
+		$baseMemory = (int)round($totalBytes * self::SERIALIZATION_OVERHEAD);
 
 		// Detect tiered caching: APCu (L1) + network cache (L2) are both available
-		$hasL1        = $this->apcuService->isAvailable();
-		$hasL2        = $this->redisService->isAvailable() || $this->memcachedService->isAvailable();
+		$hasL1          = $this->apcuService->isAvailable();
+		$hasL2          = $this->redisService->isAvailable() || $this->memcachedService->isAvailable();
 		$hasTieredCache = $hasL1 && $hasL2;
 
 		$backends = [];
@@ -322,7 +322,7 @@ readonly class CacheSizingAdvisor
 		$examples = [];
 
 		// APCu config example
-		$apcuAllocation = $backends['apcu']['recommended_allocation'] ?? '64M';
+		$apcuAllocation   = $backends['apcu']['recommended_allocation'] ?? '64M';
 		$examples['apcu'] = [
 			'name'     => 'APCu (php.ini)',
 			'file'     => 'php.ini',
@@ -331,9 +331,9 @@ readonly class CacheSizingAdvisor
 		];
 
 		// Redis config example
-		$redisAllocation = $backends['redis']['recommended_allocation'] ?? '64M';
-		$redisMb         = (int) str_replace('M', '', (string) $redisAllocation);
-		$redisBytes      = $redisMb * 1024 * 1024;
+		$redisAllocation   = $backends['redis']['recommended_allocation'] ?? '64M';
+		$redisMb           = (int)str_replace('M', '', (string)$redisAllocation);
+		$redisBytes        = $redisMb * 1024 * 1024;
 		$examples['redis'] = [
 			'name'     => 'Redis (redis.conf)',
 			'file'     => '/etc/redis/redis.conf',
@@ -342,8 +342,8 @@ readonly class CacheSizingAdvisor
 		];
 
 		// Memcached config example
-		$memcachedAllocation = $backends['memcached']['recommended_allocation'] ?? '64M';
-		$memcachedMb         = (int) str_replace('M', '', (string) $memcachedAllocation);
+		$memcachedAllocation   = $backends['memcached']['recommended_allocation'] ?? '64M';
+		$memcachedMb           = (int)str_replace('M', '', (string)$memcachedAllocation);
 		$examples['memcached'] = [
 			'name'     => 'Memcached (startup command)',
 			'file'     => '/etc/memcached.conf or startup command',
@@ -375,7 +375,7 @@ readonly class CacheSizingAdvisor
 
 		$units = ['B', 'KB', 'MB', 'GB'];
 		$i     = 0;
-		$value = (float) $bytes;
+		$value = (float)$bytes;
 
 		while ($value >= 1024 && $i < count($units) - 1) {
 			$value /= 1024;
@@ -390,7 +390,7 @@ readonly class CacheSizingAdvisor
 	 */
 	private function formatAllocation(int $bytes): string
 	{
-		$mb = (int) ceil($bytes / (1024 * 1024));
+		$mb = (int)ceil($bytes / (1024 * 1024));
 
 		return $mb . 'M';
 	}
@@ -400,7 +400,7 @@ readonly class CacheSizingAdvisor
 	 */
 	private function roundToAllocation(int $bytes): int
 	{
-		$mb = (int) ceil($bytes / (1024 * 1024));
+		$mb = (int)ceil($bytes / (1024 * 1024));
 
 		// Minimum 32MB
 		if ($mb <= 32) {
@@ -408,9 +408,9 @@ readonly class CacheSizingAdvisor
 		}
 
 		// Round up to next power of 2
-		$power = (int) ceil(log($mb, 2));
+		$power = (int)ceil(log($mb, 2));
 
-		return (int) pow(2, $power) * 1024 * 1024;
+		return (int)2 ** $power * 1024 * 1024;
 	}
 
 	/**
@@ -420,7 +420,7 @@ readonly class CacheSizingAdvisor
 	 */
 	private function roundToNearestAllocation(int $bytes): int
 	{
-		$mb = (int) ceil($bytes / (1024 * 1024));
+		$mb = (int)ceil($bytes / (1024 * 1024));
 
 		// Minimum 32MB
 		if ($mb <= 32) {
@@ -429,10 +429,10 @@ readonly class CacheSizingAdvisor
 
 		// Round to nearest power of 2 (not always up)
 		$power     = log($mb, 2);
-		$lower     = (int) floor($power);
-		$upper     = (int) ceil($power);
-		$lowerVal  = (int) pow(2, $lower);
-		$upperVal  = (int) pow(2, $upper);
+		$lower     = (int)floor($power);
+		$upper     = (int)ceil($power);
+		$lowerVal  = (int)2 ** $lower;
+		$upperVal  = (int)2 ** $upper;
 
 		// Pick whichever is closer to the actual need
 		$nearest = ($mb - $lowerVal) <= ($upperVal - $mb) ? $lowerVal : $upperVal;
@@ -452,6 +452,6 @@ readonly class CacheSizingAdvisor
 
 		$stats = $this->apcuService->getStats();
 
-		return (int) ($stats['memory_total'] ?? 0);
+		return (int)($stats['memory_total'] ?? 0);
 	}
 }
