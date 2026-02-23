@@ -69,7 +69,7 @@ class TotalCMSTwigAdapter
 	public string $api;
 	public string $dashboard;
 	public string $login;
-	public string $logout;
+
 	public string $domain;
 	public string $clearcache;
 	public VersionData $version;
@@ -114,10 +114,19 @@ class TotalCMSTwigAdapter
 		$this->api        = $this->config->api;
 		$this->clearcache = $this->api . '/emergency/cache/clear';
 		$this->dashboard  = $this->api . '/admin';
-		$this->logout     = $this->api . '/logout';
+
 		$this->domain     = $this->getDomainName();
 		$this->version    = $this->getVersion();
 		$this->currentUrl = $_SERVER['REQUEST_URI'] ?? '';
+	}
+
+	public function logout(string $redirect = ''): string
+	{
+		$url = $this->api . '/logout';
+		if ($redirect !== '') {
+			$url .= '?redirect=' . urlencode($redirect);
+		}
+		return $url;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

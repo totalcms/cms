@@ -19,11 +19,17 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 ## Authentication & Access Control
 
 ```twig
+{# Login #}
 {{ cms.login() }}                                {# Default login URL with current page redirect #}
 {{ cms.login('collection') }}                    {# Collection login URL with current page redirect #}
 {{ cms.login('', '') }}                          {# Default login URL with no redirect #}
 {{ cms.login('', '/redirect/url') }}             {# Default login with custom redirect URL #}
 {{ cms.login('collection', '/redirect/url') }}   {# Collection login with custom redirect URL #}
+
+{# Logout #}
+{{ cms.logout }}                                 {# Logout URL #}
+{{ cms.logout() }}                               {# Same as above #}
+{{ cms.logout('/redirect/url') }}                {# Logout with redirect URL #}
 {{ cms.userData() }}                             {# Get current user data array #}
 {{ cms.userLoggedIn() }}                         {# Check if user is logged in (boolean) #}
 {{ cms.userLoggedIn('collection') }}             {# Check login for specific collection #}
