@@ -14,6 +14,7 @@ use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -105,6 +106,7 @@ class TotalCMSTwigAdapter
 		private readonly CacheManager $cacheManager,
 		public CacheSizingAdvisor $cacheSizingAdvisor,
 		private readonly DataViewFetcher $dataViewFetcher,
+		private readonly DataViewLister $dataViewLister,
 		private readonly LoggerFactory $loggerFactory,
 	) {
 		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
@@ -2605,6 +2607,16 @@ NGINX;
 	public function view(string $viewId): array
 	{
 		return $this->dataViewFetcher->getViewData($viewId);
+	}
+
+	/**
+	 * List all data views.
+	 *
+	 * @return array<mixed>
+	 */
+	public function dataviews(): array
+	{
+		return $this->dataViewLister->listViews();
 	}
 
 	/**

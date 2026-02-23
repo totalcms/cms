@@ -394,6 +394,7 @@ return [
 		$container->get(CacheManager::class),
 		$container->get(CacheSizingAdvisor::class),
 		$container->get(DataViewFetcher::class),
+		$container->get(DataViewLister::class),
 		$container->get(LoggerFactory::class),
 	),
 

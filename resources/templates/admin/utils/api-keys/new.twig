@@ -42,11 +42,18 @@
 			{% set collectionOptions = collectionOptions|merge([{value: "/collections/" ~ collection.id, label: collection.name}]) %}
 		{% endfor %}
 
+		{% set dataviewOptions = [] %}
+		{% for view in cms.dataviews() %}
+			{% set dataviewOptions = dataviewOptions|merge([{value: "/dataviews/" ~ view.id ~ "/data", label: view.name}]) %}
+		{% endfor %}
+
 		{% set endpointOptions = [
 			{value: "/schemas", label: "Schemas (Read-Only)"},
-			{value: "/collections", label: "All Collections"}
+			{value: "/collections", label: "All Collections"},
+			{value: "/dataviews", label: "All Data Views"}
 		] %}
 		{% set endpointOptions = endpointOptions|merge({"Choose Specific Collections": collectionOptions}) %}
+		{% set endpointOptions = endpointOptions|merge({"Choose Specific Data Views": dataviewOptions}) %}
 
 		{{ cms.form.field("multicheckbox", "paths", {
 			label    : "Select Endpoints",
