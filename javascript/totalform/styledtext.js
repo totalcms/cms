@@ -41,6 +41,14 @@ export default class StyledTextField extends TotalField {
 		if (this.tiptap) {
 			let content = this.tiptap.getHTML();
 			content = content.replace(/\%25/g, "%"); // fix for double encoding of many characters such as colon
+
+			// Return empty string if the editor has no real content (just empty tags)
+			const tmp = document.createElement('div');
+			tmp.innerHTML = content;
+			if (tmp.textContent.trim() === '' && !tmp.querySelector('img, video, audio, iframe, hr, table')) {
+				return '';
+			}
+
 			return content;
 		}
 		// Fall back to input value if editor is not ready
