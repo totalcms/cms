@@ -1,0 +1,89 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" name="filter" class="filter" placeholder="Filter Views" autofocus />
+	</header>
+
+	<nav class="links" id="dataview-links">
+		{% set views = cms.objects("dataviews") %}
+		{% if views|length == 0 %}
+			<h3>Data Views</h3>
+			<ul>
+				<li class="no-views">No views found</li>
+			</ul>
+		{% else %}
+			<details id="category-dataviews" open>
+				<summary>Data Views</summary>
+				<ul>
+					{% for v in sortByKey(views) %}
+					<li>
+						<a  {% if url.id == v.id %}class="active"{% endif %}
+							href="dataviews/{{ v.id }}"
+							title="{{ v.description | escape }}">{{ v.name }}
+							{% if v.lastError %}<span class="status-dot error" title="Build error"></span>{% endif %}
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</details>
+		{% endif %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="dataviews/new" title="Create a new data view">+ New View</a>
+	</footer>
+</aside>
+{% include "admin/sidebar-details.twig" %}
+
+<main class="dash-main-content">
+
+{% if not url.id %}
+
+	{% include "admin/dataviews/home.twig" %}
+
+{% else %}
+
+	<header>
+		<h1><a href="dataviews">data views</a> / <span>{{ url.id == 'new' ? 'new view' : url.id }}</span></h1>
+	</header>
+
+	<section class="dash-content-section">
+		{{ cms.form.dataviews(url.id == 'new' ? '' : url.id, {
+			deleteActions : [{
+				"action" : "redirect",
+				"link"   : "dataviews"
+			}],
+			newActions   : [{
+				"action" : "redirect-object",
+				"link"   : "dataviews/{id}"
+			}],
+		}) }}
+	</section>
+
+	<section class="dash-content-section">
+		<h3>Tools</h3>
+		<div class="dataview-actions">
+			<button type="button" class="dash-button transparent" id="btn-test-view">Test Run</button>
+			{% if url.id and url.id != 'new' %}
+			{{ cms.form.simple("/dataviews/" ~ url.id ~ "/rebuild", "", {
+				method : "POST",
+				label  : "Rebuild View",
+			}) }}
+			{% endif %}
+		</div>
+
+		<div id="test-results" class="test-results" style="display: none;">
+			<h3>Test Results</h3>
+			<div id="test-output"></div>
+		</div>
+	</section>
+
+	<script type="module" src="{{ cms.api }}/assets/dataviews.js"></script>
+
+{% endif %}
+
+</main>
+{% endblock %}

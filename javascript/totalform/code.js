@@ -98,14 +98,18 @@ export default class Code extends TotalField {
     setupAutoResize() {
         if (!this.editor) return;
 
+        // Calculate minimum height from textarea rows attribute
+        const rows = parseInt(this.input.getAttribute('rows')) || 10;
+        const lineHeight = this.editor.defaultTextHeight() || 20;
+        const baseMinHeight = rows * lineHeight + 20; // Add padding for gutters
+
         const resizeEditor = () => {
             // Get the actual scroll height which accounts for wrapped lines
             const scrollInfo = this.editor.getScrollInfo();
             const contentHeight = scrollInfo.height;
 
-            // Use content height but enforce minimum height
-            const minHeight = 250;
-            const targetHeight = Math.max(contentHeight + 20, minHeight); // Add padding
+            // Use content height but enforce minimum height based on rows
+            const targetHeight = Math.max(contentHeight + 20, baseMinHeight);
 
             this.editor.setSize(null, targetHeight);
         };

@@ -581,10 +581,44 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Check if user can access data views.
+	 */
+	public function canAccessDataViews(string $userId): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanAccessDataViews($group)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Check if a single group can access docs.
 	 */
 	private function groupCanAccessDocs(AccessGroupData $group): bool
 	{
 		return $group->permissions['docs'] ?? false;
+	}
+
+	/**
+	 * Check if a single group can access data views.
+	 */
+	private function groupCanAccessDataViews(AccessGroupData $group): bool
+	{
+		return $group->permissions['dataviews'] ?? false;
 	}
 }

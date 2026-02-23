@@ -16,6 +16,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 
 final class ObjectUpdaterTest extends TestCase
 {
@@ -26,15 +27,17 @@ final class ObjectUpdaterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
 
 	protected function setUp(): void
 	{
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->repository        = $this->createMock(ObjectRepository::class);
-		$this->factory           = $this->createMock(ObjectFactory::class);
-		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
-		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
-		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
+		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$this->repository            = $this->createMock(ObjectRepository::class);
+		$this->factory               = $this->createMock(ObjectFactory::class);
+		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
+		$this->propertyProcessor     = $this->createMock(PropertyDataProcessorInterface::class);
+		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
+		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
 
 		$this->updater = new ObjectUpdater(
 			$this->objectFetcher,
@@ -42,7 +45,8 @@ final class ObjectUpdaterTest extends TestCase
 			$this->factory,
 			$this->indexBuilder,
 			$this->propertyProcessor,
-			$this->collectionSaver
+			$this->collectionSaver,
+			$this->viewUpdateScheduler,
 		);
 	}
 

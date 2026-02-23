@@ -13,6 +13,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -103,6 +104,7 @@ class TotalCMSTwigAdapter
 		private readonly JobManager $jobManager,
 		private readonly CacheManager $cacheManager,
 		public CacheSizingAdvisor $cacheSizingAdvisor,
+		private readonly DataViewFetcher $dataViewFetcher,
 		private readonly LoggerFactory $loggerFactory,
 	) {
 		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
@@ -2578,6 +2580,34 @@ NGINX;
 	}
 
 	/**
+	 * Check if current user can access data views.
+	 */
+	public function canAccessDataViews(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessDataViews($userData['id']);
+	}
+
+	/**
+	 * Get pre-computed data from a data view.
+	 *
+	 * @return array<mixed>
+	 */
+	public function view(string $viewId): array
+	{
+		return $this->dataViewFetcher->getViewData($viewId);
+	}
+
+	/**
 	 * Check if current user can access docs.
 	 */
 	public function canAccessDocs(): bool
@@ -2662,8 +2692,8 @@ NGINX;
 			if (!$this->canAccessCollection($collection->id)) {
 				continue;
 			}
-			// Skip auth collections (frequently updated on login, clutters recent list)
-			if ($collection->schema === 'auth') {
+			// Skip system collections that have their own admin pages
+			if (in_array($collection->id, ['playground', 'mailer', 'dataviews'], true) || $collection->schema === 'auth') {
 				continue;
 			}
 			$result[] = [
@@ -2710,6 +2740,10 @@ NGINX;
 		$result      = [];
 
 		foreach ($collections as $collection) {
+			// Skip system collections that have their own admin pages
+			if (in_array($collection->id, ['playground', 'mailer', 'dataviews'], true) || $collection->schema === 'auth') {
+				continue;
+			}
 			// Only include empty collections using cached totalObjects field
 			if ($collection->totalObjects === 0 && $this->canAccessCollection($collection->id)) {
 				$result[] = [

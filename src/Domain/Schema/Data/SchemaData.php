@@ -29,6 +29,7 @@ class SchemaData
 		'code',
 		'color',
 		'date',
+		'dataviews',
 		'depot',
 		'email',
 		'feed',

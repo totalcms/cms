@@ -15,6 +15,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 
 final class ObjectRemoverTest extends TestCase
 {
@@ -26,16 +27,18 @@ final class ObjectRemoverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
 
 	protected function setUp(): void
 	{
-		$this->propStorage       = $this->createMock(PropertyRepository::class);
-		$this->storage           = $this->createMock(ObjectRepository::class);
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->objectUpdater     = $this->createMock(ObjectUpdater::class);
-		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
+		$this->propStorage           = $this->createMock(PropertyRepository::class);
+		$this->storage               = $this->createMock(ObjectRepository::class);
+		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$this->objectUpdater         = $this->createMock(ObjectUpdater::class);
+		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
+		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
+		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
+		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
 
 		$this->remover = new ObjectRemover(
 			$this->propStorage,
@@ -44,7 +47,8 @@ final class ObjectRemoverTest extends TestCase
 			$this->objectUpdater,
 			$this->indexBuilder,
 			$this->collectionFetcher,
-			$this->collectionSaver
+			$this->collectionSaver,
+			$this->viewUpdateScheduler,
 		);
 	}
 

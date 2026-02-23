@@ -68,7 +68,7 @@
 
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collectionsByCategory() %}
-			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer']) %}
+			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer', 'dataviews']) %}
 			{% if collections | length > 0 %}
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>

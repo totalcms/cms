@@ -176,14 +176,23 @@ class JobRepository
 		return $job;
 	}
 
-	public function hasReindexQueuedFromCollection(string $collection): bool
+	public function hasPendingJob(string $type, string $collection, string $payload = ''): bool
 	{
-		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' and collection = :collection LIMIT 1");
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
-		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
+		$sql = "SELECT 1 FROM jobqueue WHERE status = 'pending' AND type = :type AND collection = :collection";
+		if ($payload !== '') {
+			$sql .= ' AND payload = :payload';
+		}
+		$sql .= ' LIMIT 1';
 
-		return !empty($record);
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':type', $type);
+		$stmt->bindValue(':collection', $collection);
+		if ($payload !== '') {
+			$stmt->bindValue(':payload', $payload);
+		}
+		$stmt->execute();
+
+		return $stmt->fetch(\PDO::FETCH_ASSOC) !== false;
 	}
 
 	public function hasPendingJobs(): bool
@@ -254,7 +263,7 @@ class JobRepository
 		if (!$this->dbExists()) {
 			$results = [];
 			foreach (JobData::TYPE_LIST as $type) {
-				$results[ucfirst($type)] = 0;
+				$results[ucwords(str_replace('_', ' ', $type))] = 0;
 			}
 			ksort($results);
 
@@ -289,7 +298,7 @@ class JobRepository
 		// Convert to display-friendly keys
 		$results = [];
 		foreach ($counts as $type => $count) {
-			$results[ucfirst($type)] = $count;
+			$results[ucwords(str_replace('_', ' ', $type))] = $count;
 		}
 		ksort($results);
 
@@ -357,7 +366,7 @@ class JobRepository
 		if (!$this->dbExists()) {
 			$results = [];
 			foreach (JobData::TYPE_LIST as $type) {
-				$results[ucfirst($type)] = 0;
+				$results[ucwords(str_replace('_', ' ', $type))] = 0;
 			}
 			ksort($results);
 
@@ -393,7 +402,7 @@ class JobRepository
 		// Convert to display-friendly keys
 		$results = [];
 		foreach ($counts as $type => $count) {
-			$results[ucfirst($type)] = $count;
+			$results[ucwords(str_replace('_', ' ', $type))] = $count;
 		}
 		ksort($results);
 

@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -20,6 +21,7 @@ readonly class ObjectUpdater
 		private IndexBuilder $indexBuilder,
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private CollectionSaver $collectionSaver,
+		private DataViewUpdateScheduler $viewUpdateScheduler,
 	) {
 	}
 
@@ -44,6 +46,8 @@ readonly class ObjectUpdater
 
 		// Pass the updated object for immediate index update when queueRebuildOnSave is enabled
 		$this->indexBuilder->smartBuildIndex($collection, $object);
+
+		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
 
 		return $object;
 	}

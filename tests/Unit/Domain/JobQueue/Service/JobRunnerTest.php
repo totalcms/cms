@@ -16,6 +16,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
+use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Factory\LoggerFactory;
 
 final class JobRunnerTest extends TestCase
@@ -27,6 +28,7 @@ final class JobRunnerTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $factoryImporter;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $viewBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 
 	/**
@@ -57,6 +59,7 @@ final class JobRunnerTest extends TestCase
 		$this->indexBuilder         = $this->createMock(IndexBuilder::class);
 		$this->factoryImporter      = $this->createMock(FactoryImporter::class);
 		$this->collectionRepository = $this->createMock(CollectionRepository::class);
+		$this->viewBuilder          = $this->createMock(DataViewBuilder::class);
 		$this->loggerFactory        = $this->createMock(LoggerFactory::class);
 
 		// Set up logger factory to return itself for chaining and create a null logger
@@ -70,6 +73,7 @@ final class JobRunnerTest extends TestCase
 			$this->indexBuilder,
 			$this->factoryImporter,
 			$this->collectionRepository,
+			$this->viewBuilder,
 			$this->loggerFactory,
 		);
 	}

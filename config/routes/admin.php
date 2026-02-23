@@ -10,6 +10,7 @@ use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminMailerAction;
+use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
@@ -22,6 +23,7 @@ use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
+use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
@@ -30,6 +32,7 @@ use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
+use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
@@ -65,6 +68,8 @@ return function (App $app): void {
 
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);
+
+		$group->get('/dataviews[/{id}]', AdminDataViewsAction::class)->setName('admin-dataviews')->add(DataViewsEditionMiddleware::class)->add(DataViewsAccessMiddleware::class);
 
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground')->add(PlaygroundAccessMiddleware::class);
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post')->add(PlaygroundAccessMiddleware::class);

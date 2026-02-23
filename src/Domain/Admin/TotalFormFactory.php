@@ -8,6 +8,7 @@ use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -60,6 +61,7 @@ readonly class TotalFormFactory
 		private SettingsSchemaFetcher $settingsSchemaFetcher,
 		private SettingsFetcher $settingsFetcher,
 		private JobManager $jobManager,
+		private DataViewLister $dataViewLister,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -320,6 +322,23 @@ readonly class TotalFormFactory
 		$options['id'] = $id;
 
 		$form = $this->builder('playground', $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function dataviews(string $id = '', array $options = []): string
+	{
+		$this->dataViewLister->ensureCollection();
+
+		$options = array_merge([
+			'save'        => 'Save',
+			'delete'      => 'Delete',
+			'class'       => 'dataview-form no-unsaved-warning',
+		], $options);
+		$options['id'] = $id;
+
+		$form = $this->builder('dataviews', $options);
 
 		return $form->autoBuild();
 	}

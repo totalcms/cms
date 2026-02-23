@@ -34,6 +34,12 @@ use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\DataView\Repository\DataViewRepository;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\DataView\Service\DataViewBuilder;
+use TotalCMS\Domain\DataView\Service\DataViewFetcher;
+use TotalCMS\Domain\DataView\Service\DataViewRemover;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\APCuService;
@@ -134,6 +140,7 @@ use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
+use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
@@ -147,6 +154,7 @@ use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
+use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
@@ -344,6 +352,7 @@ return [
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
 		$container->get(JobManager::class),
+		$container->get(DataViewLister::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -384,6 +393,7 @@ return [
 		$container->get(JobManager::class),
 		$container->get(CacheManager::class),
 		$container->get(CacheSizingAdvisor::class),
+		$container->get(DataViewFetcher::class),
 		$container->get(LoggerFactory::class),
 	),
 
@@ -505,6 +515,51 @@ return [
 	),
 
 	PlaygroundAccessMiddleware::class => fn (ContainerInterface $container): PlaygroundAccessMiddleware => new PlaygroundAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	// Data View Services
+	DataViewRepository::class => fn (ContainerInterface $container): DataViewRepository => new DataViewRepository(
+		$container->get(StorageFilesystemAdapter::class),
+		$container->get(CacheManager::class),
+	),
+
+	DataViewLister::class => fn (ContainerInterface $container): DataViewLister => new DataViewLister(
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionRepository::class),
+		$container->get(IndexReader::class),
+	),
+
+	DataViewBuilder::class => fn (ContainerInterface $container): DataViewBuilder => new DataViewBuilder(
+		$container->get(DataViewRepository::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(TwigEngine::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	DataViewFetcher::class => fn (ContainerInterface $container): DataViewFetcher => new DataViewFetcher(
+		$container->get(DataViewRepository::class),
+	),
+
+	DataViewRemover::class => fn (ContainerInterface $container): DataViewRemover => new DataViewRemover(
+		$container->get(DataViewRepository::class),
+	),
+
+	DataViewUpdateScheduler::class => fn (ContainerInterface $container): DataViewUpdateScheduler => new DataViewUpdateScheduler(
+		$container->get(IndexReader::class),
+		$container->get(JobQueuer::class),
+	),
+
+	DataViewsAccessMiddleware::class => fn (ContainerInterface $container): DataViewsAccessMiddleware => new DataViewsAccessMiddleware(
 		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
@@ -708,6 +763,13 @@ return [
 	),
 
 	TemplatesEditionMiddleware::class => fn (ContainerInterface $container): TemplatesEditionMiddleware => new TemplatesEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	DataViewsEditionMiddleware::class => fn (ContainerInterface $container): DataViewsEditionMiddleware => new DataViewsEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),

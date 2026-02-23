@@ -393,6 +393,19 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Get a list of all collection IDs.
+	 * Used for propertyOptions: "collectionIds" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function collectionIdList(): array
+	{
+		$collections = $this->collectionLister->listAllCollections();
+
+		return array_map(fn (CollectionData $c): string => $c->id, $collections);
+	}
+
+	/**
 	 * Get properties from collection objects with optional filtering.
 	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")

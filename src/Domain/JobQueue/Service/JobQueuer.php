@@ -38,9 +38,20 @@ readonly class JobQueuer
 		return $this->queueJob(JobData::TYPE_EXPORT, $collection, $data);
 	}
 
+	public function queueViewUpdate(string $viewId): void
+	{
+		$payload = json_encode(['viewId' => $viewId], JSON_THROW_ON_ERROR);
+		if ($this->jobRepository->hasPendingJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', $payload)) {
+			return;
+		}
+		$this->queueJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', [
+			'viewId' => $viewId,
+		]);
+	}
+
 	public function queueBuildIndex(string $collection): void
 	{
-		if ($this->jobRepository->hasReindexQueuedFromCollection($collection)) {
+		if ($this->jobRepository->hasPendingJob(JobData::TYPE_REBUILD, $collection)) {
 			return;
 		}
 		$this->queueJob(JobData::TYPE_REBUILD, $collection);

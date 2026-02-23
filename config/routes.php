@@ -28,5 +28,6 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/sitemap.php')($app);
 	(require __DIR__ . '/routes/feed.php')($app);
 	(require __DIR__ . '/routes/playground.php')($app);
+	(require __DIR__ . '/routes/dataviews.php')($app);
 	(require __DIR__ . '/routes/action.php')($app);
 };

@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\JobQueue\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
@@ -29,6 +30,7 @@ readonly class JobRunner
 		private IndexBuilder $indexBuilder,
 		private FactoryImporter $factoryImporter,
 		private CollectionRepository $collectionRepository,
+		private DataViewBuilder $viewBuilder,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -196,6 +198,9 @@ readonly class JobRunner
 			case JobData::TYPE_FACTORY:
 				$this->processFactoryJob($job);
 				break;
+			case JobData::TYPE_VIEW_UPDATE:
+				$this->processViewUpdateJob($job);
+				break;
 			default:
 				$error = 'Unknown job type: ' . $job->type;
 				$this->logger->error($error, $job->toArray());
@@ -304,6 +309,30 @@ readonly class JobRunner
 				'object_count' => count($exportedData),
 			]);
 		}
+	}
+
+	private function processViewUpdateJob(JobData $job): void
+	{
+		$data = json_decode($job->payload, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			$error = 'Invalid JSON payload: ' . json_last_error_msg();
+			$this->logger->error($error, $job->toArray());
+
+			return;
+		}
+
+		$viewId = (string) ($data['viewId'] ?? '');
+		if ($viewId === '') {
+			$this->logger->info('Skipping view update: empty viewId');
+
+			return;
+		}
+
+		$this->viewBuilder->buildView($viewId);
+
+		$this->logger->info('View update job completed', [
+			'viewId' => $viewId,
+		]);
 	}
 
 	/**

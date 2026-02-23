@@ -31,6 +31,9 @@ enum EditionFeature: string
 	case TEMPLATES            = 'templates';
 	case WHITELABEL_TEMPLATES = 'whitelabel_templates';
 
+	// Data features
+	case DATA_VIEWS = 'data_views';
+
 	// Utility features
 	case ACCESS_GROUPS = 'access_groups';
 	case API_KEYS      = 'api_keys';
@@ -53,6 +56,7 @@ enum EditionFeature: string
 			self::BARCODES             => 'Barcodes',
 			self::TEMPLATES            => 'Templates',
 			self::WHITELABEL_TEMPLATES => 'Whitelabel Templates',
+			self::DATA_VIEWS           => 'Data Views',
 			self::ACCESS_GROUPS        => 'Access Groups',
 			self::API_KEYS             => 'API Keys',
 		};
@@ -80,6 +84,7 @@ enum EditionFeature: string
 			self::EXTERNAL_REST_API,
 			self::BARCODES,
 			self::WHITELABEL_TEMPLATES,
+			self::DATA_VIEWS,
 			self::API_KEYS => Edition::PRO,
 		};
 	}

@@ -174,14 +174,17 @@
 					)|merge(
 						group.permissions.playground ? ["playground"] : []
 					)|merge(
+						group.permissions.dataviews ? ["dataviews"] : []
+					)|merge(
 						group.permissions.docs ? ["docs"] : []
 					)
-				) : ["docs", "mailer", "templates", "playground"],
+				) : ["docs", "mailer", "templates", "playground", "dataviews"],
 				options  : [
 					{value: "docs", label: "Documentation"},
 					{value: "mailer", label: "Mailer"},
 					{value: "templates", label: "Templates"},
 					{value: "playground", label: "Twig Playground"},
+					{value: "dataviews", label: "Data Views"},
 				],
 				settings : {
 					fieldGrid: "150px"
@@ -318,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			.map(cb => cb.value);
 
 		// Create hidden inputs for each simple permission
-		['templates', 'mailer', 'playground', 'docs'].forEach(function(perm) {
+		['templates', 'mailer', 'playground', 'dataviews', 'docs'].forEach(function(perm) {
 			const existingInput = form.querySelector(`input[name="${perm}"]`);
 			if (existingInput) {
 				existingInput.remove();

@@ -329,6 +329,10 @@ class FormField
 			return $this->form->categoryListForSchemas();
 		}
 
+		if ($source === 'collectionIds') {
+			return $this->form->collectionIdList();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}
