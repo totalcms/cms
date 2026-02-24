@@ -8,7 +8,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 class PropertyField
 {
 	/**
-	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
+	 * @param array<string,mixed> $settings - JSON settings for the field added to data-settings attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
 	public function __construct(

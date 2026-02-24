@@ -44,7 +44,7 @@ class DepotBrowserRenderer
 		]), JSON_THROW_ON_ERROR);
 
 		$classes = HTMLUtils::mergeClasses('cms-depot-browser', $options['class']);
-		$html    = "<div class=\"{$classes}\" data-options='" . htmlspecialchars($dataOptions, ENT_QUOTES, 'UTF-8') . "'>";
+		$html    = "<div class=\"{$classes}\" data-settings='" . htmlspecialchars($dataOptions, ENT_QUOTES, 'UTF-8') . "'>";
 
 		if ($options['filter']) {
 			$html .= $this->buildFilter();

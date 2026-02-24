@@ -13,11 +13,11 @@ export default class FieldVisibility {
 	// Initialize Visibility
 	//-------------------------
 	initialize() {
-		const fieldsWithOptions = Array.from(this.form.querySelectorAll('[data-options]'));
+		const fieldsWithSettings = Array.from(this.form.querySelectorAll('[data-settings]'));
 
-		fieldsWithOptions.forEach(fieldElement => {
-			const options = JSON.parse(fieldElement.dataset.options || '{}');
-			const visibility = options.visibility;
+		fieldsWithSettings.forEach(fieldElement => {
+			const settings = JSON.parse(fieldElement.dataset.settings || '{}');
+			const visibility = settings.visibility;
 
 			// Skip fields without visibility settings
 			if (!visibility || !visibility.watch) return;

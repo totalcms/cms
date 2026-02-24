@@ -5,8 +5,8 @@ import NumberField  from "./number.js";
 //-----------------------------------------------
 export default class RangeSlider extends NumberField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
 		this.rangeValue = this.container.querySelector('.range-value');
 		this.updateRangeValue();

@@ -8,8 +8,8 @@ import DepotDroplet from "./droplet-depot";
 //-----------------------------------------------
 export default class DepotField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.browser       = this.container.querySelector(".depot-browser");
         this.folderPreview = this.container.querySelector(".folder-preview");
@@ -125,7 +125,7 @@ export default class DepotField extends TotalField {
 			acceptedFiles    : null,
 			chunking         : true,
 			singleMode       : false,
-			rules            : this.options.rules,
+			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}

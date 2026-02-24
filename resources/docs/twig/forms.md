@@ -35,12 +35,12 @@ max         = maximum value
 step        = step value
 pattern     = pattern for validation
 autogen     = template string to autogenerate a value (in ID)
-options     = options array added to form-field data-options attribute
+settings    = settings array added to form-field data-settings attribute
 minlength   = minimum length of the field
 ```
 
 ```twig
-{# Example of using field options #}
+{# Example of using field settings #}
 {{ cms.form.text('my-text-id', {}, {
 	class       : "custom-class",
 	value       : "Set Value",
@@ -66,24 +66,24 @@ Total CMS provides ready-to-use forms for standard collection types:
 {{ cms.form.blog() }}
 
 {# Single field forms #}
-{{ cms.form.checkbox(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.color(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.date(id, formOptions = {}, fieldOptions = {}) }}  {# Supports natural language defaults #}
-{{ cms.form.datetime(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.email(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.image(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.number(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.range(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.select(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.styledtext(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.svg(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.text(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.textarea(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.toggle(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.url(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.file(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.depot(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.gallery(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.checkbox(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.color(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.date(id, formSettings = {}, fieldSettings = {}) }}  {# Supports natural language defaults #}
+{{ cms.form.datetime(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.email(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.image(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.number(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.range(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.select(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.styledtext(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.svg(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.text(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.textarea(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.toggle(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.url(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.file(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.depot(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.gallery(id, formSettings = {}, fieldSettings = {}) }}
 
 {# Feed form #}
 {{ cms.form.feed() }}
@@ -413,7 +413,7 @@ This is useful for admin interfaces where IDs come from the URL.
 
 ### General Form Options
 
-All Total CMS form methods accept `formOptions` to control form behavior, appearance, and functionality:
+All Total CMS form methods accept `formSettings` to control form behavior, appearance, and functionality:
 
 #### Core Form Options
 

@@ -8,8 +8,8 @@ const slugify = require('slugify');
 //-----------------------------------------------
 export default class DeckField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.fieldClass = "deck-item";
         this.deckref = container.dataset.deckref || '';

@@ -6,8 +6,8 @@ import Dropzone from "@deltablot/dropzone";
 //-----------------------------------------------
 export default class DepotDropField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.preview = this.container.querySelector(".total-preview");
         this.previewTemplate = this.container.querySelector("template.file-template").innerHTML;
@@ -46,7 +46,7 @@ export default class DepotDropField extends TotalField {
 
     apiUploadUrl() {
         const api     = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-        const path    = this.options.path || "";
+        const path    = this.settings.path || "";
         const options = path.length > 0 ? { path } : {};
         return this.form.api.buildApiQuery(api, options);
     }

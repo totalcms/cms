@@ -3,11 +3,11 @@
 //-----------------------------------------------
 class MarkdownField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
-        // get final options... defaultConfig() -> global window.totalcms options -> options from arguments
-        this.options = Object.assign({}, this.defaultConfig(), window.totalcms.getConfig("styledtext"), this.options);
+        // get final settings... defaultConfig() -> global window.totalcms settings -> settings from arguments
+        this.settings = Object.assign({}, this.defaultConfig(), window.totalcms.getConfig("styledtext"), this.settings);
 
 		// TODO: implement markdown editor
     }

@@ -9,8 +9,8 @@ import "codemirror/mode/xml/xml";
 //-----------------------------------------------
 export default class SVGField extends TotalField {
 
-	constructor(container, options) {
-		super(container, options);
+	constructor(container, settings) {
+		super(container, settings);
 
 		// Skip if already initialized on this input
 		if (this.input.dataset.codemirrorInitialized) {

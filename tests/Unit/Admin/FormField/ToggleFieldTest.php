@@ -152,12 +152,12 @@ describe('ToggleField', function (): void {
 			->not->toContain('readonly');
 	});
 
-	test('ToggleField → includes settings in data-options when provided', function (): void {
+	test('ToggleField → includes settings in data-settings when provided', function (): void {
 		$field = new ToggleField($this->form, 'toggle', settings: ['custom' => 'value']);
 
 		$html = $field->build();
 
-		expect($html)->toContain('data-options=');
+		expect($html)->toContain('data-settings=');
 	});
 
 	test('ToggleField → creates proper label-for relationships', function (): void {

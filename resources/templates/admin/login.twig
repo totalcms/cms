@@ -26,7 +26,7 @@
 	{% for message in flash.get('error') %}
 		{% set errorMessages = errorMessages|merge([message]) %}
 	{% endfor %}
-	{% set formOptions = {
+	{% set formSettings = {
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
 		flashMessages : errorMessages
@@ -38,10 +38,10 @@
 			: ['login-options.twig']
 		, ignore_missing = true) %}
 		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
-		{% set formOptions = formOptions|merge(decoded) %}
+		{% set formSettings = formSettings|merge(decoded) %}
 	{% endif %}
 
-	{{ cms.form.loginForm(formOptions) }}
+	{{ cms.form.loginForm(formSettings) }}
 
 	<section class="login-below">
 		{% if cms.edition.can('whitelabel_templates') %}

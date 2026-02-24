@@ -46,7 +46,7 @@ describe('DepotBrowserRenderer', function (): void {
 		expect($result)->toContain('</div>');
 	});
 
-	test('DepotBrowserRenderer → render includes data-options attribute', function (): void {
+	test('DepotBrowserRenderer → render includes data-settings attribute', function (): void {
 		$renderer = new DepotBrowserRenderer();
 
 		$result = $renderer->render(
@@ -57,7 +57,7 @@ describe('DepotBrowserRenderer', function (): void {
 			fn ($id, $name, $opts): string => "/stream/$id/$name",
 		);
 
-		expect($result)->toContain('data-options=');
+		expect($result)->toContain('data-settings=');
 		// The JSON is HTML-escaped, so check for the escaped version
 		expect($result)->toContain('&quot;preview&quot;:true');
 	});

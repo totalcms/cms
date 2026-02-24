@@ -5,8 +5,8 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class Code extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.editor = null;
         this.localStorageKey = `totalcms-code-${this.property}`;

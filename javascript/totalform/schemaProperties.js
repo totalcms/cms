@@ -7,9 +7,9 @@ const slugify = require('slugify')
 //-----------------------------------------------
 export default class SchemaPropertiesField extends PropertiesField {
 
-    constructor(container, options) {
-		options.fieldClass = "schema-field";
-        super(container, options);
+    constructor(container, settings) {
+		settings.fieldClass = "schema-field";
+        super(container, settings);
 
         this.template  = this.container.querySelector(".schema-template");
         this.addButton = this.container.querySelector(".cms-add");

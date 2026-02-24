@@ -5,7 +5,7 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class MultiSelectField extends TotalField {
 
-    constructor(container, options) {
+    constructor(container, settings) {
         super(...arguments);
     }
 

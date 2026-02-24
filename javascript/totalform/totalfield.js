@@ -5,7 +5,7 @@ import TotalDispatcher from "./dispatcher";
 //-----------------------------------------------
 export default class TotalField {
 
-    constructor(container, options) {
+    constructor(container, settings) {
 		this.container = container;
 		this.input     = this.container.querySelector("input,textarea,select");
 
@@ -27,15 +27,15 @@ export default class TotalField {
 			form        : null,
 			sortOptions : false,
         };
-        this.options = Object.assign({}, defaults, options);
-        this.form = this.options.form;
+        this.settings = Object.assign({}, defaults, settings);
+        this.form = this.settings.form;
 
-		if (this.container.dataset.options) {
-			this.options = Object.assign(this.options, JSON.parse(this.container.dataset.options));
+		if (this.container.dataset.settings) {
+			this.settings = Object.assign(this.settings, JSON.parse(this.container.dataset.settings));
 		}
 
-        // Delele the form from the options in case its used in JSON
-        delete this.options.form;
+        // Delele the form from the settings in case its used in JSON
+        delete this.settings.form;
 
         if (this.form) {
             this.api = this.form.api;
@@ -44,7 +44,7 @@ export default class TotalField {
 		this.dispatcher = new TotalDispatcher(this.container);
 
 		this.changeListener();
-		if (this.options.sortOptions) {
+		if (this.settings.sortOptions) {
 			this.sortOptions();
 		} else {
 			this.cleanupDuplicateOptions();

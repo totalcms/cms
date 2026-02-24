@@ -5,8 +5,8 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class DateField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
 		// Set the value and do not mark as changed
         this.setValue(this.input.getAttribute('value'), false);

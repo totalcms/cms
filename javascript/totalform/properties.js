@@ -8,10 +8,10 @@ import TotalSortable from "./total-sortable";
 export default class PropertiesField extends TotalField {
 
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
-		this.fieldClass = (options && options.fieldClass) || "property-field";
+		this.fieldClass = (settings && settings.fieldClass) || "property-field";
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);

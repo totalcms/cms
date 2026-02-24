@@ -5,7 +5,7 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class MultiCheckboxField extends TotalField {
 
-    constructor(container, options) {
+    constructor(container, settings) {
         super(...arguments);
     }
 

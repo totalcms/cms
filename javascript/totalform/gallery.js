@@ -9,8 +9,8 @@ import Scrollable from "./scrollable";
 //-----------------------------------------------
 export default class GalleryField extends ImageField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
 		this.scrollable = new Scrollable(this.previewContainer);
 		this.sortable = null; // Store sortable instance
@@ -95,7 +95,7 @@ export default class GalleryField extends ImageField {
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : "image/*",
-			rules            : this.options.rules,
+			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}

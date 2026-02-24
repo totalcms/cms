@@ -24,7 +24,7 @@ class RadioField extends FormField
 		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
-				$formFieldAttributes['data-options'] = $json;
+				$formFieldAttributes['data-settings'] = $json;
 			}
 			if (isset($this->settings['fieldGrid'])) {
 				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';

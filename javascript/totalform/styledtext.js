@@ -16,8 +16,8 @@ export default class StyledTextField extends TotalField {
 
 	// TODO: if form ID changes, need to update upload URLs
 
-	constructor(container, options) {
-		super(container, options);
+	constructor(container, settings) {
+		super(container, settings);
 
 		// Skip if already initialized on this input
 		if (this.input.dataset.steInitialized) {
@@ -25,10 +25,10 @@ export default class StyledTextField extends TotalField {
 		}
 		this.input.dataset.steInitialized = 'true';
 
-		// get final options... defaultConfig() -> global window.totalcms options -> options from arguments
-		this.options = Object.assign({}, this.defaultConfig(), this.options);
+		// get final settings... defaultConfig() -> global window.totalcms settings -> settings from arguments
+		this.settings = Object.assign({}, this.defaultConfig(), this.settings);
 
-		this.tiptap = new TiptapEditor(this.input, this.options);
+		this.tiptap = new TiptapEditor(this.input, this.settings);
 	}
 
 	setValue(value) {
@@ -105,8 +105,8 @@ export default class StyledTextField extends TotalField {
 			wordCounterCount   : false,
 			onContentChanged   : () => this.changed(),
 			uploadUrl          : uploadUrl,
-			imagePreset        : this.options.imagePreset || null,
-			imageUploadRules   : this.options.imageUploadRules || this.options.rules || {},
+			imagePreset        : this.settings.imagePreset || null,
+			imageUploadRules   : this.settings.imageUploadRules || this.settings.rules || {},
 		};
 	}
 

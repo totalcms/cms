@@ -39,7 +39,7 @@ import CodeField from './code';
 export default class TotalForm {
 
     // Constructors
-    constructor(formRef, options = {}) {
+    constructor(formRef, settings = {}) {
         this.form = this.setForm(formRef);
 		formRef.totalform = this;
 		this.fields = []; // Initialize early to prevent undefined errors on disabled forms
@@ -61,16 +61,16 @@ export default class TotalForm {
 				delete : [],
 			}
 		};
-		this.options = Object.assign({}, defaults, options);
+		this.settings = Object.assign({}, defaults, settings);
 
 		if (this.form.dataset.newActions) {
-			this.options.actions.new = JSON.parse(this.form.dataset.newActions);
+			this.settings.actions.new = JSON.parse(this.form.dataset.newActions);
 		}
 		if (this.form.dataset.editActions) {
-			this.options.actions.edit = JSON.parse(this.form.dataset.editActions);
+			this.settings.actions.edit = JSON.parse(this.form.dataset.editActions);
 		}
 		if (this.form.dataset.deleteActions) {
-			this.options.actions.delete = JSON.parse(this.form.dataset.deleteActions);
+			this.settings.actions.delete = JSON.parse(this.form.dataset.deleteActions);
 		}
 		this.delayActions = 2000;
 
@@ -228,13 +228,13 @@ export default class TotalForm {
     }
 
     generateFieldObject(field) {
-        const options = JSON.parse(field.dataset.options||"{}");
-        options.form = this;
+        const settings = JSON.parse(field.dataset.settings||"{}");
+        settings.form = this;
 
         switch (field.dataset.type) {
 			case "id":
 			case "slug":
-                return new Identifier(field, options);
+                return new Identifier(field, settings);
 
 			case "text":
 			case "time":
@@ -242,94 +242,94 @@ export default class TotalForm {
 			case "hidden":
 			case "email":
 			case "phone":
-				return new TotalField(field, options);
+				return new TotalField(field, settings);
 
 			case "textarea":
-				return new Textarea(field, options);
+				return new Textarea(field, settings);
 
             case "checkbox":
             case "toggle":
-                return new Checkbox(field, options);
+                return new Checkbox(field, settings);
 
 			case "multicheckbox":
-                return new MultiCheckboxField(field, options);
+                return new MultiCheckboxField(field, settings);
 
             case "radio":
-                return new RadioField(field, options);
+                return new RadioField(field, settings);
 
             case "number":
-                return new NumberField(field, options);
+                return new NumberField(field, settings);
 
             case "price":
-                return new PriceField(field, options);
+                return new PriceField(field, settings);
 
             case "color":
-                return new ColorField(field, options);
+                return new ColorField(field, settings);
 
             case "date":
 			case "datetime":
-                return new DateField(field, options);
+                return new DateField(field, settings);
 
             case "select":
-                return new SelectField(field, options);
+                return new SelectField(field, settings);
 
             case "multiselect":
-                return new MultiSelectField(field, options);
+                return new MultiSelectField(field, settings);
 
             case "list":
-                return new ListField(field, options);
+                return new ListField(field, settings);
 
 			case "password":
-				return new PasswordField(field, options);
+				return new PasswordField(field, settings);
 
             case "range":
-                return new RangeSlider(field, options);
+                return new RangeSlider(field, settings);
 
 			case "styledtext":
-                return new StyledTextField(field, options);
+                return new StyledTextField(field, settings);
 
             case "svg":
-                return new SVGField(field, options);
+                return new SVGField(field, settings);
 
 			case "image":
-				return new ImageField(field,options);
+				return new ImageField(field,settings);
 
 			case "gallery":
-				return new GalleryField(field,options);
+				return new GalleryField(field,settings);
 
 			case "json":
-				return new JSONField(field,options);
+				return new JSONField(field,settings);
 
 			case "file":
-				return new FileField(field,options);
+				return new FileField(field,settings);
 
 			case "depot":
-				return new DepotField(field,options);
+				return new DepotField(field,settings);
 
 			case "depotDrop":
-				return new DepotDropField(field,options);
+				return new DepotDropField(field,settings);
 
 			case "code":
-				return new CodeField(field,options);
+				return new CodeField(field,settings);
 
 			case "deck":
-                return new DeckField(field, options);
+                return new DeckField(field, settings);
 
 			// case "markdown":
-            //     return new MarkdownField(field, options);
+            //     return new MarkdownField(field, settings);
 
 			case "properties":
-				return new PropertiesField(field,options);
+				return new PropertiesField(field,settings);
 
 			case "customProperties":
-				return new CustomPropertiesField(field,options);
+				return new CustomPropertiesField(field,settings);
 
 			case "schemaProperties":
-				return new SchemaPropertiesField(field,options);
+				return new SchemaPropertiesField(field,settings);
 
             default:
                 console.warn("Unknown field",field);
-				return new TotalField(field, options);
+				return new TotalField(field, settings);
         }
     }
 
@@ -549,7 +549,7 @@ export default class TotalForm {
 		this.fields.forEach(field => field.saved());
 
 		// Run actions first, then show success banner
-		const actions = runEditActions ? this.options.actions.edit : this.options.actions.new;
+		const actions = runEditActions ? this.settings.actions.edit : this.settings.actions.new;
 		this.runActions(actions)
 			.then(() => this.success(response))
 			.catch(() => {
@@ -650,15 +650,15 @@ export default class TotalForm {
 	}
 
     runNewActions() {
-		setTimeout(() => this.runActions(this.options.actions.new), this.delayActions);
+		setTimeout(() => this.runActions(this.settings.actions.new), this.delayActions);
     }
 
     runEditActions() {
-		setTimeout(() => this.runActions(this.options.actions.edit), this.delayActions);
+		setTimeout(() => this.runActions(this.settings.actions.edit), this.delayActions);
     }
 
 	runDeleteActions() {
-		setTimeout(() => this.runActions(this.options.actions.delete), 250);
+		setTimeout(() => this.runActions(this.settings.actions.delete), 250);
     }
 
     //-------------------------
