@@ -144,9 +144,43 @@ class ObjectForm extends TotalForm
 		$collection = $this->collectionData->properties[$property]['settings'] ?? [];
 		$custom     = $this->collectionData->customProperties[$this->id][$property]['settings'] ?? [];
 
+		// Resolve preset references at any level
+		$schema     = $this->resolvePreset($schema);
+		$collection = $this->resolvePreset($collection);
+		$custom     = $this->resolvePreset($custom);
+
 		$attributes = array_merge($schema, $collection, $custom);
 
 		return self::filterFieldAttributes($attributes);
+	}
+
+	/**
+	 * Resolve a preset reference in settings.
+	 *
+	 * If settings contain a "preset" key, load the named preset as the base
+	 * and merge any additional explicit settings on top.
+	 *
+	 * @param array<string,mixed> $settings
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolvePreset(array $settings): array
+	{
+		if (!isset($settings['preset']) || !is_string($settings['preset'])) {
+			return $settings;
+		}
+
+		$presetName = $settings['preset'];
+		unset($settings['preset']);
+
+		$presetValues = $this->config->presets[$presetName] ?? [];
+
+		if (!is_array($presetValues) || $presetValues === []) {
+			return $settings;
+		}
+
+		// Preset is the base, explicit settings override
+		return array_merge($presetValues, $settings);
 	}
 
 	private function isRequired(string $property): bool
@@ -171,6 +205,11 @@ class ObjectForm extends TotalForm
 
 		// Get the schema and collection settings for a property
 		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
+
+		// Resolve preset references in settings
+		if (isset($properties['settings']) && is_array($properties['settings'])) {
+			$properties['settings'] = $this->resolvePreset($properties['settings']);
+		}
 
 		return TotalForm::filterFieldProperties($properties);
 	}
