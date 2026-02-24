@@ -46,6 +46,7 @@ readonly class OperationDetector
 		'property-increment',
 		'property-decrement',
 		'collection-query',
+		'dataview-fetch',
 	];
 
 	/**
@@ -104,6 +105,7 @@ readonly class OperationDetector
 		'collection-exists',
 		'collection-fetch-schema',
 		'collection-query',
+		'dataview-fetch',
 		'export-json',
 		'export-csv',
 		'export-zip',
