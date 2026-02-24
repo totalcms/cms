@@ -8,14 +8,7 @@ The `deckItemLabel` setting controls how deck items are labeled in the admin int
 
 ```json
 {
-	"reviews": {
-		"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
-		"label": "Customer Reviews",
-		"settings": {
-			"deckref": "https://www.totalcms.co/schemas/custom/review.json",
-			"deckItemLabel": "${rating} - ${name}"
-		}
-	}
+	"deckItemLabel" : "${rating} - ${name}"
 }
 ```
 
@@ -60,3 +53,45 @@ Result: "Review 00001", "Review 00002", etc.
 - **Twig compatibility:** Deck item IDs are automatically sanitized to use underscores instead of hyphens for Twig dot notation access (`mydeck.item_id`).
 - **SVG support:** If a field contains SVG code, it will be displayed as a small icon in the label.
 - **Long text:** Labels automatically truncate with ellipsis (...) if content is too long.
+
+---
+
+# Min/Max Item Count
+
+The `minItems` and `maxItems` settings control how many items a deck field can contain.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `minItems` | `0` | Minimum number of items required. Validated on form submission. |
+| `maxItems` | `-1` | Maximum number of items allowed. `-1` means unlimited. When reached, the add and duplicate buttons are disabled. |
+
+### Basic Usage
+
+```json
+{
+	"minItems": 1,
+	"maxItems": 5
+}
+```
+
+### Examples
+
+**Require at least one item:**
+```json
+"minItems": 1
+```
+Validation will fail with "Please add at least 1 items" if the deck is empty on submit.
+
+**Limit to a maximum of 3 items:**
+```json
+"maxItems": 3
+```
+The add and duplicate buttons will be disabled once 3 items exist. Removing an item re-enables them.
+
+**Exact count (e.g., exactly 3 items):**
+```json
+{
+	"minItems": 3,
+	"maxItems": 3
+}
+```

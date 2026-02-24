@@ -14,22 +14,6 @@ The `hide` setting allows you to completely hide a field from the admin form whi
 
 When `hide` is set to `true`, the field will have the `cms-hide` CSS class added, which hides it from view.
 
-### Example Schema
-
-```json
-{
-	"internalStatus": {
-		"type": "string",
-		"field": "text",
-		"label": "Internal Status",
-		"default": "pending",
-		"settings": {
-			"hide": true
-		}
-	}
-}
-```
-
 ### Common Use Cases
 
 **System-managed fields:**

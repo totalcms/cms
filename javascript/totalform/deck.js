@@ -13,6 +13,8 @@ export default class DeckField extends TotalField {
 
         this.fieldClass = "deck-item";
         this.deckref = container.dataset.deckref || '';
+        this.minItems = parseInt(this.settings.minItems) || 0;
+        this.maxItems = parseInt(this.settings.maxItems) || -1;
 
 		this.items = [];
 		this.valid = true;
@@ -34,6 +36,8 @@ export default class DeckField extends TotalField {
         // Setup add button
         this.addButton = this.container.querySelector(".cms-add");
         this.addButton?.addEventListener("click", this.addItem.bind(this));
+
+        this.updateAddButton();
     }
 
     initOidCounter() {
@@ -106,11 +110,19 @@ export default class DeckField extends TotalField {
         }
     }
 
+    updateAddButton() {
+        if (!this.addButton) return;
+        const atMax = this.maxItems > -1 && this.items.length >= this.maxItems;
+        this.addButton.disabled = atMax;
+    }
+
     addItem() {
         if (!this.template) {
             console.error('No deck template found');
             return;
         }
+
+        if (this.maxItems > -1 && this.items.length >= this.maxItems) return;
 
         // Clone the template
         const clone = this.template.content.cloneNode(true);
@@ -134,6 +146,7 @@ export default class DeckField extends TotalField {
         // Initialize the new item
         this.newItem(itemElement);
 		this.changed();
+        this.updateAddButton();
     }
 
 
@@ -163,9 +176,12 @@ export default class DeckField extends TotalField {
         itemElement.remove();
 		this.items = this.items.filter(item => item.container !== itemElement);
 		this.changed();
+        this.updateAddButton();
     }
 
     duplicateItem(itemElement) {
+        if (this.maxItems > -1 && this.items.length >= this.maxItems) return;
+
         // Clone the item element
         const clone = itemElement.cloneNode(true);
         this.regenerateIds(clone);
@@ -206,6 +222,7 @@ export default class DeckField extends TotalField {
         }
 
 		this.changed();
+        this.updateAddButton();
     }
 
     getValue() {
@@ -273,6 +290,26 @@ export default class DeckField extends TotalField {
                 this.valid = isValid;
                 return this.valid;
             }
+        }
+
+        // Check minimum item count
+        if (this.minItems > 0 && this.items.length < this.minItems) {
+            const errorMessage = `Please add at least ${this.minItems} items`;
+            this.input.setCustomValidity(errorMessage);
+            this.input.reportValidity();
+            this.error(errorMessage);
+            this.valid = false;
+            return this.valid;
+        }
+
+        // Check maximum item count
+        if (this.maxItems > -1 && this.items.length > this.maxItems) {
+            const errorMessage = `Maximum ${this.maxItems} items allowed`;
+            this.input.setCustomValidity(errorMessage);
+            this.input.reportValidity();
+            this.error(errorMessage);
+            this.valid = false;
+            return this.valid;
         }
 
         const itemIds = [];
