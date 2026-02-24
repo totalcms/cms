@@ -154,6 +154,7 @@ use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
+use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
@@ -766,6 +767,7 @@ return [
 	TemplatesEditionMiddleware::class => fn (ContainerInterface $container): TemplatesEditionMiddleware => new TemplatesEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
@@ -773,6 +775,7 @@ return [
 	DataViewsEditionMiddleware::class => fn (ContainerInterface $container): DataViewsEditionMiddleware => new DataViewsEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
@@ -780,6 +783,7 @@ return [
 	MailerEditionMiddleware::class => fn (ContainerInterface $container): MailerEditionMiddleware => new MailerEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
@@ -793,6 +797,14 @@ return [
 	),
 
 	ApiKeysEditionMiddleware::class => fn (ContainerInterface $container): ApiKeysEditionMiddleware => new ApiKeysEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	RssImportEditionMiddleware::class => fn (ContainerInterface $container): RssImportEditionMiddleware => new RssImportEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
 		$container->get(JsonRenderer::class),
