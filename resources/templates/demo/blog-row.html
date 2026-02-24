@@ -1,0 +1,16 @@
+<div class="load-more-row">
+	{% if object.image %}
+		<div class="load-more-row-image">
+			{{ cms.image(object, {w: 120, h: 120, fit: 'crop-focalpoint'}, {collection: 'blog', property: 'image'}) }}
+		</div>
+	{% endif %}
+	<div class="load-more-row-body">
+		<h4 class="load-more-row-title">{{ object.title }}</h4>
+		{% if object.date %}
+			<span class="load-more-row-date">{{ object.date | date('M j, Y') }}</span>
+		{% endif %}
+		{% if object.summary %}
+			<p class="load-more-row-excerpt">{{ object.summary | striptags | truncate(80) }}</p>
+		{% endif %}
+	</div>
+</div>

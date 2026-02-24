@@ -50,6 +50,7 @@ readonly class HtmxRenderer
 	 * @param string               $trigger     Trigger type: "revealed" or "click"
 	 * @param string               $label       Button label for click triggers
 	 * @param string               $extraClass  Additional CSS classes
+	 * @param bool                 $transition  Enable View Transitions API
 	 */
 	public function buildInitialTrigger(
 		string $collection,
@@ -57,14 +58,16 @@ readonly class HtmxRenderer
 		string $trigger = 'revealed',
 		string $label = 'Load More',
 		string $extraClass = '',
+		bool $transition = false,
 	): string {
 		$url   = $this->buildUrl($collection, $queryParams);
 		$class = trim('cms-load-more ' . $extraClass);
+		$swap  = 'outerHTML' . ($transition ? ' transition:true' : '');
 
 		$attributes = [
 			'hx-get'     => $url,
 			'hx-trigger' => $trigger,
-			'hx-swap'    => 'outerHTML',
+			'hx-swap'    => $swap,
 			'class'      => $class,
 		];
 
@@ -92,22 +95,24 @@ readonly class HtmxRenderer
 		];
 
 		// Carry forward optional params
-		$optionalParams = ['sort', 'include', 'exclude', 'search', 'trigger', 'label'];
+		$optionalParams = ['sort', 'include', 'exclude', 'search', 'trigger', 'label', 'transition'];
 		foreach ($optionalParams as $key) {
 			if (isset($params[$key]) && $params[$key] !== '') {
 				$queryParams[$key] = $params[$key];
 			}
 		}
 
-		$trigger = $params['trigger'] ?? 'revealed';
-		$label   = $params['label'] ?? 'Load More';
+		$trigger    = $params['trigger'] ?? 'revealed';
+		$label      = $params['label'] ?? 'Load More';
+		$transition = !empty($params['transition']);
 
-		$url = $this->buildUrl($collection, $queryParams);
+		$url  = $this->buildUrl($collection, $queryParams);
+		$swap = 'outerHTML' . ($transition ? ' transition:true' : '');
 
 		$attributes = [
 			'hx-get'     => $url,
 			'hx-trigger' => $trigger,
-			'hx-swap'    => 'outerHTML',
+			'hx-swap'    => $swap,
 			'class'      => 'cms-load-more',
 		];
 

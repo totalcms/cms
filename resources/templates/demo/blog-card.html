@@ -1,0 +1,23 @@
+<article class="load-more-card">
+	{% if object.image %}
+		<div class="load-more-card-image">
+			{{ cms.image(object, {w: 400, h: 250, fit: 'crop-focalpoint'}, {collection: 'blog', property: 'image'}) }}
+		</div>
+	{% endif %}
+	<div class="load-more-card-body">
+		<h3 class="load-more-card-title">{{ object.title }}</h3>
+		{% if object.date %}
+			<div class="load-more-card-meta">{{ object.date | date('M j, Y') }}</div>
+		{% endif %}
+		{% if object.summary %}
+			<p class="load-more-card-excerpt">{{ object.summary | striptags | truncate(120) }}</p>
+		{% endif %}
+		{% if object.tags %}
+			<div class="load-more-card-tags">
+				{% for tag in object.tags | slice(0, 3) %}
+					<span class="load-more-tag">{{ tag }}</span>
+				{% endfor %}
+			</div>
+		{% endif %}
+	</div>
+</article>

@@ -74,8 +74,13 @@ readonly class RenderTwigAdapter
 			$queryParams['label'] = $label;
 		}
 
+		$transition = !empty($options['transition']);
+		if ($transition) {
+			$queryParams['transition'] = '1';
+		}
+
 		$extraClass = (string)($options['class'] ?? '');
 
-		return $this->htmxRenderer->buildInitialTrigger($collection, $queryParams, $trigger, $label, $extraClass);
+		return $this->htmxRenderer->buildInitialTrigger($collection, $queryParams, $trigger, $label, $extraClass, $transition);
 	}
 }
