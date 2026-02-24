@@ -12,13 +12,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
-use TotalCMS\Renderer\OffsetPaginator;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\OffsetPaginator;
 use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Transformer\QueryObjectTransformer;
@@ -55,8 +55,8 @@ readonly class IndexQueryAction
 		$format     = $params['format'] ?? 'json';
 
 		return match ($format) {
-			'html' => $this->renderHtml($request, $response, $collection, $params),
-			'csv'  => $this->renderCsv($response, $collection, $params),
+			'html'  => $this->renderHtml($request, $response, $collection, $params),
+			'csv'   => $this->renderCsv($response, $collection, $params),
 			default => $this->renderJson($response, $collection, $params),
 		};
 	}
@@ -109,7 +109,7 @@ readonly class IndexQueryAction
 		}
 
 		// Append HTMX trigger for next page
-		$html    .= $this->htmxRenderer->buildNextPageTrigger($collection, $result, $params);
+		$html .= $this->htmxRenderer->buildNextPageTrigger($collection, $result, $params);
 		$response = $result->withPaginationHeaders($response);
 		$response = $response->withHeader('Content-Type', 'text/html');
 

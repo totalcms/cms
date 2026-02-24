@@ -14,8 +14,8 @@ use League\Fractal\Pagination\PaginatorInterface;
  */
 class OffsetPaginator implements PaginatorInterface
 {
-	private int $currentPage;
-	private int $lastPage;
+	private readonly int $currentPage;
+	private readonly int $lastPage;
 
 	public function __construct(
 		private readonly int $total,
