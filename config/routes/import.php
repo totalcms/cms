@@ -6,6 +6,7 @@ use TotalCMS\Action\Import;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 
 return function (App $app): void {
 	$app->group('/import', function (RouteCollectorProxy $group): void {
@@ -19,7 +20,7 @@ return function (App $app): void {
 		$group->post('/jumpstart', Import\ImportJumpStartAction::class)->setName('import-jumpstart');
 		$group->post('/alloy-analyze', Import\ImportAlloyAnalyzeAction::class)->setName('import-alloy-analyze');
 		$group->post('/alloy', Import\ImportAlloyAction::class)->setName('import-alloy');
-		$group->post('/rss-analyze', Import\ImportRssAnalyzeAction::class)->setName('import-rss-analyze');
-		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss');
+		$group->post('/rss-analyze', Import\ImportRssAnalyzeAction::class)->setName('import-rss-analyze')->add(RssImportEditionMiddleware::class);
+		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss')->add(RssImportEditionMiddleware::class);
 	})->add(AuthMiddleware::class);
 };

@@ -34,6 +34,9 @@ enum EditionFeature: string
 	// Data features
 	case DATA_VIEWS = 'data_views';
 
+	// Import features
+	case RSS_IMPORT = 'rss_import';
+
 	// Utility features
 	case ACCESS_GROUPS = 'access_groups';
 	case API_KEYS      = 'api_keys';
@@ -57,6 +60,7 @@ enum EditionFeature: string
 			self::TEMPLATES            => 'Templates',
 			self::WHITELABEL_TEMPLATES => 'Whitelabel Templates',
 			self::DATA_VIEWS           => 'Data Views',
+			self::RSS_IMPORT           => 'RSS Import',
 			self::ACCESS_GROUPS        => 'Access Groups',
 			self::API_KEYS             => 'API Keys',
 		};
@@ -75,7 +79,8 @@ enum EditionFeature: string
 			self::MAILER_ACTIONS,
 			self::QR_CODES,
 			self::TEMPLATES,
-			self::ACCESS_GROUPS => Edition::STANDARD,
+			self::ACCESS_GROUPS,
+			self::RSS_IMPORT => Edition::STANDARD,
 
 			// Pro features
 			self::CUSTOM_SCHEMAS,

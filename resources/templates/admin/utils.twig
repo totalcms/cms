@@ -3,11 +3,15 @@
 {% set adminMenu = [] %}
 
 {% if cms.edition.can('access_groups') %}
-	{% set adminMenu = adminMenu | merge([{"title": "Access Groups", "path": "access-groups"}]) %}
+	{% set adminMenu = adminMenu | merge([{"title": "Access Groups", "path": "access-groups", "admin": true}]) %}
 {% endif %}
 
 {% if cms.edition.can('api_keys') %}
-	{% set adminMenu = adminMenu | merge([{"title": "API Keys", "path": "api-keys"}]) %}
+	{% set adminMenu = adminMenu | merge([{"title": "API Keys", "path": "api-keys", "admin": true}]) %}
+{% endif %}
+
+{% if cms.edition.can('rss_import') %}
+	{% set adminMenu = adminMenu | merge([{"title": "RSS Feed Import", "path": "import-rss", "admin": true}]) %}
 {% endif %}
 
 {% set menu = [
@@ -52,10 +56,6 @@
 		"path"  : "project-setup",
 	},
 	{
-		"title" : "RSS Feed Import",
-		"path"  : "import-rss",
-	},
-	{
 		"title" : "Server Checker",
 		"path"  : "server-checker",
 	},
@@ -70,6 +70,12 @@
 	"path"  : "macro-builder",
 }, #}
 
+{% set allMenu = menu %}
+{% if cms.isAdmin() %}
+	{% set allMenu = allMenu | merge(adminMenu) %}
+{% endif %}
+{% set allMenu = allMenu | sort((a, b) => a.title | lower <=> b.title | lower) %}
+
 {% block dashcontent %}
 
 <aside class="dash-content-sidebar">
@@ -79,17 +85,8 @@
 
 	<nav class="links">
 		<ul>
-		{% if cms.isAdmin() %}
-			{% for item in adminMenu %}
-			<li class="{{ item.path }}">
-				<a {% if page == item.path %}class="active"{% endif %}
-					href="utils/{{ item.path }}">{{ item.title }}</a>
-			</li>
-			{% endfor %}
-		{% endif %}
-
-		{% for item in menu %}
-			{% if cms.canAccessUtil(item.path, 'read') %}
+		{% for item in allMenu %}
+			{% if item.admin | default(false) or cms.canAccessUtil(item.path, 'read') %}
 			<li class="{{ item.path }}">
 				<a {% if page == item.path %}class="active"{% endif %}
 					href="utils/{{ item.path }}">{{ item.title }}</a>
