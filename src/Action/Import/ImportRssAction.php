@@ -19,7 +19,7 @@ readonly class ImportRssAction
 	{
 		$params = (array)$request->getParsedBody();
 
-		$url = isset($params['url']) ? trim((string)$params['url']) : '';
+		$url        = isset($params['url']) ? trim((string)$params['url']) : '';
 		$collection = isset($params['collection']) ? trim((string)$params['collection']) : '';
 
 		if ($url === '') {

@@ -50,7 +50,7 @@ class RssImporter
 	public function import(string $feedUrl, string $collection, array $options = []): int
 	{
 		$this->importCount = 0;
-		$isDraft = $options['draft'] ?? true;
+		$isDraft           = $options['draft'] ?? true;
 		/** @var array<string,string> $fieldMap */
 		$fieldMap = $options['fieldMap'] ?? [];
 
@@ -80,7 +80,7 @@ class RssImporter
 	 */
 	private function fetchRawFeed(string $feedUrl): string
 	{
-		$client = new Client(['timeout' => 30, 'verify' => false]);
+		$client   = new Client(['timeout' => 30, 'verify' => false]);
 		$response = $client->get($feedUrl);
 
 		if ($response->getStatusCode() !== 200) {
@@ -130,17 +130,17 @@ class RssImporter
 		$entries = [];
 		foreach ($feed as $entry) {
 			/** @var EntryInterface $entry */
-			$author = $entry->getAuthor();
+			$author     = $entry->getAuthor();
 			$authorName = is_array($author) && isset($author['name']) ? $author['name'] : '';
 
 			$categories = $entry->getCategories()->getValues();
 
-			$content = $entry->getContent();
+			$content     = $entry->getContent();
 			$description = $entry->getDescription();
 
 			$dateModified = $entry->getDateModified();
-			$dateCreated = $entry->getDateCreated();
-			$dateStr = '';
+			$dateCreated  = $entry->getDateCreated();
+			$dateStr      = '';
 			if ($dateModified !== null) {
 				$dateStr = $dateModified->format('c');
 			} elseif ($dateCreated !== null) {
@@ -196,15 +196,15 @@ class RssImporter
 
 			$rssData = $this->extractXmlEntryData($entry);
 
-			$data = $this->mapFields($rssData, $fieldMap);
-			$data['id'] = $id;
+			$data          = $this->mapFields($rssData, $fieldMap);
+			$data['id']    = $id;
 			$data['draft'] = $isDraft;
 
 			$imageUrl = $this->extractImageUrl($entry);
 			if ($imageUrl !== null) {
 				$tempPath = $this->downloadImage($imageUrl);
 				if ($tempPath !== null) {
-					$mappedImageField = $fieldMap['image'] ?? 'image';
+					$mappedImageField        = $fieldMap['image'] ?? 'image';
 					$data[$mappedImageField] = $tempPath;
 				}
 			}
@@ -222,17 +222,17 @@ class RssImporter
 	 */
 	private function extractXmlEntryData(EntryInterface $entry): array
 	{
-		$content = $entry->getContent();
+		$content     = $entry->getContent();
 		$description = $entry->getDescription();
 
-		$author = $entry->getAuthor();
+		$author     = $entry->getAuthor();
 		$authorName = is_array($author) && isset($author['name']) ? $author['name'] : '';
 
 		$categories = $entry->getCategories()->getValues();
 
 		$dateModified = $entry->getDateModified();
-		$dateCreated = $entry->getDateCreated();
-		$date = $dateModified ?? $dateCreated;
+		$dateCreated  = $entry->getDateCreated();
+		$date         = $dateModified ?? $dateCreated;
 
 		$data = [
 			'title'      => $entry->getTitle() !== '' ? $entry->getTitle() : 'Untitled',
@@ -283,13 +283,13 @@ class RssImporter
 			}
 
 			$authorName = $this->extractJsonAuthor($item, $data);
-			$content = (string)($item['content_html'] ?? $item['content_text'] ?? '');
-			$summary = (string)($item['summary'] ?? '');
-			$imageUrl = $this->extractJsonImageUrl($item);
+			$content    = (string)($item['content_html'] ?? $item['content_text'] ?? '');
+			$summary    = (string)($item['summary'] ?? '');
+			$imageUrl   = $this->extractJsonImageUrl($item);
 
 			$tags = [];
 			if (isset($item['tags']) && is_array($item['tags'])) {
-				$tags = array_map('strval', $item['tags']);
+				$tags = array_map(strval(...), $item['tags']);
 			}
 
 			$entries[] = [
@@ -349,15 +349,15 @@ class RssImporter
 
 			$rssData = $this->extractJsonEntryData($item, $feedData);
 
-			$data = $this->mapFields($rssData, $fieldMap);
-			$data['id'] = $id;
+			$data          = $this->mapFields($rssData, $fieldMap);
+			$data['id']    = $id;
 			$data['draft'] = $isDraft;
 
 			$imageUrl = $this->extractJsonImageUrl($item);
 			if ($imageUrl !== null) {
 				$tempPath = $this->downloadImage($imageUrl);
 				if ($tempPath !== null) {
-					$mappedImageField = $fieldMap['image'] ?? 'image';
+					$mappedImageField        = $fieldMap['image'] ?? 'image';
 					$data[$mappedImageField] = $tempPath;
 				}
 			}
@@ -380,11 +380,11 @@ class RssImporter
 	{
 		$contentHtml = (string)($item['content_html'] ?? '');
 		$contentText = (string)($item['content_text'] ?? '');
-		$summary = (string)($item['summary'] ?? '');
+		$summary     = (string)($item['summary'] ?? '');
 
 		$tags = [];
 		if (isset($item['tags']) && is_array($item['tags'])) {
-			$tags = array_map('strval', $item['tags']);
+			$tags = array_map(strval(...), $item['tags']);
 		}
 
 		$date = (string)($item['date_published'] ?? $item['date_modified'] ?? '');
@@ -491,7 +491,7 @@ class RssImporter
 			return null;
 		}
 
-		$entryElement = $entry->getElement();
+		$entryElement  = $entry->getElement();
 		$ownerDocument = $entryElement->ownerDocument;
 		if ($ownerDocument === null) {
 			return null;
@@ -508,7 +508,7 @@ class RssImporter
 			$node = $mediaNodes->item(0);
 			if ($node instanceof \DOMElement) {
 				$medium = $node->getAttribute('medium');
-				$type = $node->getAttribute('type');
+				$type   = $node->getAttribute('type');
 				if ($medium === 'image' || $medium === '' || str_starts_with($type, 'image/')) {
 					return $node->getAttribute('url');
 				}
@@ -550,7 +550,7 @@ class RssImporter
 		];
 
 		$mapping = array_merge($defaults, $fieldMap);
-		$mapped = [];
+		$mapped  = [];
 
 		foreach ($mapping as $rssField => $collectionField) {
 			if ($collectionField === '' || !isset($rssData[$rssField])) {
@@ -568,7 +568,7 @@ class RssImporter
 	private function downloadImage(string $url): ?string
 	{
 		try {
-			$client = new Client(['timeout' => 15, 'verify' => false]);
+			$client   = new Client(['timeout' => 15, 'verify' => false]);
 			$response = $client->get($url);
 
 			if ($response->getStatusCode() !== 200) {
@@ -578,11 +578,11 @@ class RssImporter
 			}
 
 			$contentType = $response->getHeaderLine('Content-Type');
-			$ext = $this->extensionFromContentType($contentType);
+			$ext         = $this->extensionFromContentType($contentType);
 			if ($ext === null) {
-				$urlPath = parse_url($url, PHP_URL_PATH);
+				$urlPath  = parse_url($url, PHP_URL_PATH);
 				$pathInfo = pathinfo(is_string($urlPath) ? $urlPath : '');
-				$ext = isset($pathInfo['extension']) && $pathInfo['extension'] !== '' ? $pathInfo['extension'] : 'jpg';
+				$ext      = isset($pathInfo['extension']) && $pathInfo['extension'] !== '' ? $pathInfo['extension'] : 'jpg';
 			}
 
 			$tempFile = sys_get_temp_dir() . '/rss-import-' . uniqid() . '.' . $ext;
@@ -604,12 +604,12 @@ class RssImporter
 	private function extensionFromContentType(string $contentType): ?string
 	{
 		$map = [
-			'image/jpeg' => 'jpg',
-			'image/png'  => 'png',
-			'image/gif'  => 'gif',
-			'image/webp' => 'webp',
+			'image/jpeg'    => 'jpg',
+			'image/png'     => 'png',
+			'image/gif'     => 'gif',
+			'image/webp'    => 'webp',
 			'image/svg+xml' => 'svg',
-			'image/avif' => 'avif',
+			'image/avif'    => 'avif',
 		];
 
 		foreach ($map as $mime => $ext) {

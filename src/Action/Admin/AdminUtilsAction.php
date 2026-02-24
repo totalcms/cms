@@ -93,9 +93,9 @@ readonly class AdminUtilsAction
 
 		// Analyze RSS feed for import-rss page
 		$rssAnalysis = null;
-		$rssError = null;
+		$rssError    = null;
 		if ($page === 'import-rss' && $request->getMethod() === 'POST') {
-			$post = (array)$request->getParsedBody();
+			$post    = (array)$request->getParsedBody();
 			$feedUrl = isset($post['url']) ? trim((string)$post['url']) : '';
 			if ($feedUrl !== '') {
 				try {

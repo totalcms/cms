@@ -468,7 +468,7 @@ readonly class TotalFormFactory
 			'id'         => $id,
 		], $formSettings);
 
-		$class                = $formSettings['class'] ?? ' custom-layout';
+		$class                 = $formSettings['class'] ?? ' custom-layout';
 		$formSettings['class'] = $class;
 
 		$collection = $formSettings['collection'];
