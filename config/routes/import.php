@@ -19,5 +19,7 @@ return function (App $app): void {
 		$group->post('/jumpstart', Import\ImportJumpStartAction::class)->setName('import-jumpstart');
 		$group->post('/alloy-analyze', Import\ImportAlloyAnalyzeAction::class)->setName('import-alloy-analyze');
 		$group->post('/alloy', Import\ImportAlloyAction::class)->setName('import-alloy');
+		$group->post('/rss-analyze', Import\ImportRssAnalyzeAction::class)->setName('import-rss-analyze');
+		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss');
 	})->add(AuthMiddleware::class);
 };
