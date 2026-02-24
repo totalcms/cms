@@ -193,6 +193,26 @@ const TotalCMSCodeMirror = {
 	},
 
 	/**
+	 * Create a JSON editor (no line numbers or gutters)
+	 */
+	createJsonEditor: function(element, options = {}) {
+		const config = {
+			...this.defaultConfig,
+			mode: { name: 'javascript', json: true },
+			theme: 'default',
+			lineNumbers: false,
+			foldGutter: false,
+			gutters: [],
+			styleActiveLine: false,
+			placeholder: options.placeholder || '',
+			...options
+		};
+		const editor = CodeMirror.fromTextArea(element, config);
+		editor.getWrapperElement().classList.add('totalform-json-editor');
+		return editor;
+	},
+
+	/**
 	 * Format HTML using js-beautify
 	 */
 	formatHtml: function(html) {

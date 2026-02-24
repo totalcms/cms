@@ -70,6 +70,21 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
 		width: 16px !important;
 	}
 }
+
+// JSON editor: remove gutter and pseudo-element background
+.totalform .totalform-json-editor.CodeMirror {
+	&:before {
+		display : none !important;
+	}
+
+	.CodeMirror-gutters {
+		display    : none !important;
+		width      : 0 !important;
+		min-width  : 0 !important;
+		border     : none !important;
+		background : none !important;
+	}
+}
 .totalcms-editor {
 	border        : 1px solid oklch(var(--totalform-border-color));
 	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
