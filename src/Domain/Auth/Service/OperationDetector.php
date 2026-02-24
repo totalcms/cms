@@ -70,6 +70,7 @@ readonly class OperationDetector
 		'import-schema',
 		'playground-save',
 		'admin-collection-new',
+		'dataview-test',
 	];
 
 	/**
@@ -113,6 +114,8 @@ readonly class OperationDetector
 		'playground-list',
 		'playground-fetch',
 		'admin-collection-edit',
+		'admin-dataviews',
+		'export-object-zip',
 	];
 
 	/**
@@ -147,6 +150,8 @@ readonly class OperationDetector
 		'admin-collection-edit',
 		'property-increment',
 		'property-decrement',
+		'property-folder-rename',
+		'dataview-rebuild',
 	];
 
 	/**
