@@ -26,6 +26,7 @@ readonly class SettingsValidator
 			'auth',
 			'htmlclean',
 			'mailer',
+			'presets',
 			'license',
 		];
 	}
@@ -69,6 +70,7 @@ readonly class SettingsValidator
 			'cache'        => $this->processCache($data),
 			'auth'         => $this->processAuth($data),
 			'htmlclean'    => $this->processHtmlClean($data),
+			'presets'      => $this->processPresets($data),
 			default        => $data,
 		};
 	}
@@ -227,6 +229,28 @@ readonly class SettingsValidator
 		foreach ($numericFields as $field) {
 			if (isset($data[$field])) {
 				$data[$field] = (int)$data[$field];
+			}
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Process property setting presets.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function processPresets(array $data): array
+	{
+		if (isset($data['definitions']) && is_string($data['definitions'])) {
+			if ($data['definitions'] === '') {
+				return $data;
+			}
+			$definitions = json_decode($data['definitions'], true);
+			if (json_last_error() === JSON_ERROR_NONE && is_array($definitions)) {
+				$data['definitions'] = $definitions;
 			}
 		}
 

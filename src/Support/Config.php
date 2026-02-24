@@ -37,6 +37,8 @@ class Config
 	public array $smtp = [];
 	/** @var array<string,mixed> */
 	public array $mailer = [];
+	/** @var array<string,mixed> */
+	public array $presets = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -63,6 +65,7 @@ class Config
 		$this->htmlclean  = $settings['htmlclean'] ?? [];
 		$this->smtp       = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
 		$this->mailer     = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
+		$this->presets    = is_array($settings['presets']['definitions'] ?? []) ? $settings['presets']['definitions'] : [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);

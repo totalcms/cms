@@ -233,6 +233,10 @@ $settings['htmlclean'] = [
 	// 'allowed_iframe_domains' => ['www.youtube.com']
 ];
 
+$settings['presets'] = [
+	'definitions' => '',
+];
+
 $settings['dashboard'] = [
 	'pagination'        => 50, // Default pagination for dashboard tables
 	'title'             => 'Total CMS Admin', // Browser title for admin dashboard pages
