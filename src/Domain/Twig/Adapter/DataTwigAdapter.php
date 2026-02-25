@@ -127,6 +127,90 @@ readonly class DataTwigAdapter
 		return $this->color($id, $options);
 	}
 
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function image(string $id, array $options = []): array
+	{
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
+		$image = $this->raw($options['collection'], $id, $options['property']);
+
+		if (!is_array($image)) {
+			return [];
+		}
+
+		return $image;
+	}
+
+	/**
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<mixed>
+	 */
+	public function gallery(string $id, array $options = []): array
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		$gallery = $this->raw($options['collection'], $id, $options['property']);
+
+		if (!is_array($gallery)) {
+			return [];
+		}
+
+		return $gallery;
+	}
+
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function file(string $id, array $options = []): array
+	{
+		$options = array_merge([
+			'collection' => 'file',
+			'property'   => 'file',
+		], $options);
+
+		$file = $this->raw($options['collection'], $id, $options['property']);
+
+		if (!is_array($file)) {
+			return [];
+		}
+
+		return $file;
+	}
+
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function depot(string $id, array $options = []): array
+	{
+		$options = array_merge([
+			'collection' => 'depot',
+			'property'   => 'depot',
+		], $options);
+
+		$depot = $this->raw($options['collection'], $id, $options['property']);
+
+		if (!is_array($depot)) {
+			return [];
+		}
+
+		return $depot;
+	}
+
 	/** @param array<string,string> $options */
 	public function svg(string $id, array $options = []): string
 	{
