@@ -2,7 +2,7 @@
 
 <section class="dash-content-section server-checker">
 
-	{% if not cms.checker.bundleCheck %}
+	{% if not cms.admin.checker.bundleCheck %}
 	<div class="bundle-error">
 		<h2>Total CMS Installation Integrity Failed</h2>
 		<p>Your Total CMS installation has been modified. For the safety of your website,
@@ -16,7 +16,7 @@
 		<thead>
 			<tr><th>License Item</th><th>Value</th></tr>
 		</thead>
-		{% for key, value in cms.checker.serverInfo %}
+		{% for key, value in cms.admin.checker.serverInfo %}
 		{% if key starts with 'License' or key starts with 'Trial' or key starts with 'Updates' or key starts with 'Licensed' or key starts with 'DNS' or key starts with 'Has JWT' or key starts with 'Allowed' or key starts with 'Testing' %}
 		<tr>
 			<td>{{ key }}</td>
@@ -63,7 +63,7 @@
 		<thead>
 			<tr><th>Info</th><th>Value</th></tr>
 		</thead>
-		{% for key, value in cms.checker.serverInfo %}
+		{% for key, value in cms.admin.checker.serverInfo %}
 		{% if not (key starts with 'License' or key starts with 'Trial' or key starts with 'Updates' or key starts with 'Licensed' or key starts with 'DNS' or key starts with 'Has JWT' or key starts with 'Allowed' or key starts with 'Testing') %}
 		<tr>
 			<td>{{ key }}</td>
@@ -78,7 +78,7 @@
 		<thead>
 			<tr><th>Directory</th><th>Check</th></tr>
 		</thead>
-		{% for key, value in cms.checker.checkPermissions %}
+		{% for key, value in cms.admin.checker.checkPermissions %}
 		<tr>
 			<td>{{ key }}</td>
 			<td>{{ value ? "Passed" : '<span class="error">Failed: Needs Write Permissions</span>' }}</td>
@@ -91,7 +91,7 @@
 		<thead>
 			<tr><th>Software</th><th>Check</th></tr>
 		</thead>
-		{% for key, value in cms.checker.checkRequiredSoftware %}
+		{% for key, value in cms.admin.checker.checkRequiredSoftware %}
 		<tr>
 			<td>{{ key }}</td>
 			<td>{{ value ? "Installed" : '<span class="error">Not Installed</span>' }}</td>
@@ -110,7 +110,7 @@
 				<th>Performance Impact</th>
 			</tr>
 		</thead>
-		{% for extension, details in cms.checker.getOptionalSoftwareDetails %}
+		{% for extension, details in cms.admin.checker.getOptionalSoftwareDetails %}
 		<tr>
 			<td><strong>{{ extension | upper }}</strong></td>
 			<td>
@@ -145,7 +145,7 @@
 			<tr><th>Config</th><th>Value</th></tr>
 		</thead>
 		{# Hide Sentry Config #}
-		{% for key, value in cms.checker.getConfig | filter((v, k) => k != "sentry") %}
+		{% for key, value in cms.admin.checker.getConfig | filter((v, k) => k != "sentry") %}
 		<tr>
 			<td>{{ key }}</td>
 			{% if istype(value, "string") %}

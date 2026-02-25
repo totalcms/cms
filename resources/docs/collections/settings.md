@@ -19,7 +19,7 @@ You can edit these settings:
 
 ```twig
 {# Get collection metadata #}
-{% set meta = cms.collection('team') %}
+{% set meta = cms.collection.get('team') %}
 
 {# Access specific settings #}
 {{ meta.name }}
@@ -379,7 +379,7 @@ Defines custom sort orders for the `manualSort` Twig filter. Keys are property n
 **Usage in Twig:**
 ```twig
 {# Automatic lookup using collection option #}
-{% set team = cms.objects("team") | manualSort({
+{% set team = cms.collection.objects("team") | manualSort({
     property: 'position',
     collection: 'team',
     remainder: {property: 'lastName'}

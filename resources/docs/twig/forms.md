@@ -291,7 +291,7 @@ This is useful for admin interfaces where IDs come from the URL.
 
 ```twig
 {# products/edit.twig #}
-{% set product = cms.object('products', productId) %}
+{% set product = cms.collection.object('products', productId) %}
 
 <h2>{{ product.name }} - Manage Features</h2>
 

@@ -29,11 +29,11 @@ $totalcms = new TotalCMS\TotalCMS();
 
     <!-- Display an image with resize options -->
     <div class="hero">
-        {{ cms.image('hero', {w: 1200, h: 400, fit: 'crop'}) }}
+        {{ cms.render.image('hero', {w: 1200, h: 400, fit: 'crop'}) }}
     </div>
 
     <!-- List objects from a collection -->
-    {% set posts = cms.objects('blog', {featured: true}) | slice(0, 3) %}
+    {% set posts = cms.collection.objects('blog', {featured: true}) | slice(0, 3) %}
     {% for post in posts %}
     <article>
         <h2>{{ post.title }}</h2>
@@ -42,12 +42,12 @@ $totalcms = new TotalCMS\TotalCMS();
         {% if post.tags | length > 0 %}
             <span class="badge">{{ post.tags[0] }}</span>
         {% endif %}
-        {{ cms.image(post.id, {w: 400, h: 200, fit: 'crop'}, {collection: 'blog'}) }}
+        {{ cms.render.image(post.id, {w: 400, h: 200, fit: 'crop'}, {collection: 'blog'}) }}
     </article>
     {% endfor %}
 
     <!-- Gallery with lightbox -->
-    {{ cms.gallery('photos', {
+    {{ cms.render.gallery('photos', {
         columns: 3,
         gap: 1.5,
         lightbox: true,
@@ -57,9 +57,9 @@ $totalcms = new TotalCMS\TotalCMS();
     }) }}
 
     <!-- CMS Grid for structured layouts -->
-    {% cmsgrid cms.objects('blog') | slice(0, 5) from 'blog' with 'list' %}
+    {% cmsgrid cms.collection.objects('blog') | slice(0, 5) from 'blog' with 'list' %}
         <div class="cms-image">
-            {{ cms.image(object.id, {w: 400, h: 400, fit: 'crop'}, {collection: 'blog'}) }}
+            {{ cms.render.image(object.id, {w: 400, h: 400, fit: 'crop'}, {collection: 'blog'}) }}
         </div>
         <div class="cms-content">
             <h3>{{ object.title }}</h3>
@@ -134,15 +134,15 @@ $totalcms->startBuffer();
 {{ cms.color('id') }}
 {{ cms.toggle('id') }}
 {{ cms.styledtext('id') }}
-{{ cms.image('id', {w: 600, h: 500}) }}
-{{ cms.imagePath('id', {w: 600, h: 500}) }}
-{{ cms.alt('id') }}
-{{ cms.gallery('id', {columns: 3}) }}
+{{ cms.render.image('id', {w: 600, h: 500}) }}
+{{ cms.media.imagePath('id', {w: 600, h: 500}) }}
+{{ cms.render.alt('id') }}
+{{ cms.render.gallery('id', {columns: 3}) }}
 
 <!-- Collection access -->
-{% set objects = cms.objects('collection') %}
-{% set object = cms.object('collection', 'id') %}
-{% set values = cms.property('collection', 'field') %}
+{% set objects = cms.collection.objects('collection') %}
+{% set object = cms.collection.object('collection', 'id') %}
+{% set values = cms.collection.property('collection', 'field') %}
 {{ cms.data('collection', 'id', 'field') }}
 
 <!-- Depot files -->

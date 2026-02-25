@@ -5,8 +5,8 @@
 	Sitemap Index. All of the fields below are optional. The provided date property will be unique for webpage
 	added to the sitemap. However, the frequency and priority fields will the same across all objects added.</p>
 
-	{% set collection = cms.collection(url.collection) %}
-	{% set schema = cms.schema(collection.schema) %}
+	{% set collection = cms.collection.get(url.collection) %}
+	{% set schema = cms.schema.get(collection.schema) %}
 	{% set frequencies = {
 		"always"  : "Changes with every access (e.g., dynamic homepages)",
 		"hourly"  : "Updated every hour",

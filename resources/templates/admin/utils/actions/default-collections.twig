@@ -1,12 +1,12 @@
 {# Skip blog-legacy schema #}
-{% set reservedSchemas = cms.reservedSchemas() | filterCollection([
+{% set reservedSchemas = cms.schema.reserved() | filterCollection([
 	{ property : "id", operator : "not-equal", value : "blog-legacy" },
 ]) %}
 
 <p>Creating default collections...</p>
 <ul>
 {% for schema in reservedSchemas %}
-	{% set collection = cms.collection(schema.id) %}
+	{% set collection = cms.collection.get(schema.id) %}
 	<li>Created... {{ collection.name }}</li>
 {% endfor %}
 </ul>

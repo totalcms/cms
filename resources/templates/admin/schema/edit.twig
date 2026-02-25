@@ -3,11 +3,11 @@
 	<button class="dash-action-dots" title="Schema Actions" popovertarget="schema-actions"></button>
 	<nav popover id="schema-actions">
 		<ul>
-			{% if cms.canAccessSchema(url.schema, 'create') %}
+			{% if cms.auth.canAccessSchema(url.schema, 'create') %}
 			<li class="duplicate"><a href="#" onclick="duplicateSchema(event)">Duplicate</a></li>
 			{% endif %}
 			<li class="export"><a href="{{ cms.api }}/export/schemas/{{ url.schema }}" download target="_blank">Export</a></li>
-			{% if cms.canAccessSchema(url.schema, 'create') %}
+			{% if cms.auth.canAccessSchema(url.schema, 'create') %}
 			<li class="import"><a href="schemas/-import">Import</a></li>
 			{% endif %}
 		</ul>
@@ -16,8 +16,8 @@
 
 {{ cms.form.schema({
 	id          : url.schema,
-	save        : cms.canAccessSchema(url.schema, 'update') ? "Save" : false,
-	delete      : cms.canAccessSchema(url.schema, 'delete') ? "Delete" : false,
+	save        : cms.auth.canAccessSchema(url.schema, 'update') ? "Save" : false,
+	delete      : cms.auth.canAccessSchema(url.schema, 'delete') ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [
@@ -33,7 +33,7 @@
 	],
 }) }}
 
-{% set inheritedProps = cms.getInheritedProperties(url.schema) %}
+{% set inheritedProps = cms.schema.inheritedProperties(url.schema) %}
 {% if inheritedProps|length > 0 %}
 <div class="schema-inherited-properties">
 	<h3>Inherited Properties (Read-Only)</h3>
@@ -55,8 +55,8 @@
 </div>
 {% endif %}
 
-{% set isDeckCompatible = cms.isDeckCompatible(url.schema) %}
-{% set incompatibleTypes = cms.getDeckIncompatibleTypes(url.schema) %}
+{% set isDeckCompatible = cms.schema.isDeckCompatible(url.schema) %}
+{% set incompatibleTypes = cms.schema.deckIncompatibleTypes(url.schema) %}
 
 <div class="schema-deck-compatibility">
 	{% if isDeckCompatible %}

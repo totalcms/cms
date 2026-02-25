@@ -8,26 +8,26 @@
 	Data Views let you pre-compute data structures from your collections using Twig templates.
 	Instead of querying and transforming data every time a page loads, a Data View runs your
 	Twig template once and caches the result. You can then access the pre-built data instantly
-	via <code>cms.view('view-id')</code> in any template.
+	via <code>cms.view.get('view-id')</code> in any template.
 	</p>
 
 	<h2>How They Work</h2>
 	<ol>
 		<li><strong>Write a Definition:</strong> Create a Twig template that builds up a <code>data</code> variable
-		using <code>cms.objects()</code>, <code>cms.search()</code>, or any other CMS functions.</li>
+		using <code>cms.collection.objects()</code>, <code>cms.collection.search()</code>, or any other CMS functions.</li>
 		<li><strong>Set Dependencies:</strong> Choose which collections the view depends on. When objects in those
 		collections are created, updated, or deleted, the view is automatically queued for rebuild.</li>
-		<li><strong>Use the Data:</strong> Access the pre-computed result anywhere with <code>cms.view('view-id')</code>.</li>
+		<li><strong>Use the Data:</strong> Access the pre-computed result anywhere with <code>cms.view.get('view-id')</code>.</li>
 	</ol>
 
 	<h2>Example</h2>
 	<p>A simple view that counts blog posts and collects their titles:</p>
-	<pre><code>{% verbatim %}{% set posts = cms.objects('blog') %}
+	<pre><code>{% verbatim %}{% set posts = cms.collection.objects('blog') %}
 {% set data = {
   "count": posts|length,
   "titles": posts|column('title')
 } %}{% endverbatim %}</code></pre>
-	<p>Then in any template: <code>{% verbatim %}{{ cms.view('my-view').count }}{% endverbatim %}</code></p>
+	<p>Then in any template: <code>{% verbatim %}{{ cms.view.get('my-view').count }}{% endverbatim %}</code></p>
 
 	<h2>Job Queue Required</h2>
 	<p>

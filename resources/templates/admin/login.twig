@@ -14,7 +14,7 @@
 		, ignore_missing = true) }}
 	</section>
 
-	{% set authCollection = cms.objects(cms.config('auth','collection')) %}
+	{% set authCollection = cms.collection.objects(cms.config('auth','collection')) %}
 	{% if authCollection is empty %}
 		<div class="cms-twig-info" role="alert" style="margin:0">
 			<h4>Setup First User Account</h4>

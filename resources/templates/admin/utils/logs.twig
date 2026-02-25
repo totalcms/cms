@@ -11,14 +11,14 @@
 		track the progress of a task or to provide additional information about what is
 		happening.</p>
 
-	{% set logfiles = cms.logAnalyzer.logfiles() %}
+	{% set logfiles = cms.admin.logAnalyzer.logfiles() %}
 
 	{% if logfiles | length == 0 %}
 		<p class="no-logs">There are no log files available to view.
 		The developer of this app must be a stud! 😎</p>
 	{% endif %}
 
-	{% set activelog = getData.logfile | default(cms.logAnalyzer.defaultLogfile()) %}
+	{% set activelog = getData.logfile | default(cms.admin.logAnalyzer.defaultLogfile()) %}
 
 	<form id="log-analyzer" class="totalform" data-disabled>
 		<div class="form-field select-field">
@@ -41,7 +41,7 @@
 	</script>
 
 
-	{% set analysis = cms.logAnalyzer.analyze(activelog) %}
+	{% set analysis = cms.admin.logAnalyzer.analyze(activelog) %}
 	{# {% set total = 0 %}
 	{% for error, value in analysis %}
 		{% set total = total + value.count %}
@@ -67,7 +67,7 @@
 
 	<h2>Log Contents</h2>
 	<div class="log-contents" style="max-height: 500px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius); background: oklch(var(--totalform-nearwhite));">
-<pre style="margin: 0; padding: 1rem; white-space: pre-wrap; word-wrap: break-word;">{% for line in cms.logAnalyzer.logfile(activelog) %}{{ line | trim | escape }}
+<pre style="margin: 0; padding: 1rem; white-space: pre-wrap; word-wrap: break-word;">{% for line in cms.admin.logAnalyzer.logfile(activelog) %}{{ line | trim | escape }}
 {% endfor %}</pre>
 	</div>
 

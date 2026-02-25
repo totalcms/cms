@@ -14,7 +14,7 @@
 			<label for="collection">Collection</label>
 			<select name="collection" id="collection">
 				<option value="">Select a Collection</option>
-				{% for collection in sortByKey(cms.collections(), "id") %}
+				{% for collection in sortByKey(cms.collection.list(), "id") %}
 					<option value="{{ collection.id }}"
 						{% if postData.collection == collection.id %}selected{% endif %}>
 						{{ collection.name }}
@@ -31,7 +31,7 @@
 
 		{% if str_ends_with(postData.path, 'php') %}
 			<div class="doc-content pretty-url-results">
-				{% set collectionData = cms.collection(postData.collection) %}
+				{% set collectionData = cms.collection.get(postData.collection) %}
 
 				<h2>Pretty URLs Rules for {{ collectionData.name }}</h2>
 
@@ -40,7 +40,7 @@
 				<p>Edit the collection and save the following as the Object Path and ensure the <code>Pretty URLs</code>
 				checkbox is enabled.
 				<a href="collections/{{ postData.collection }}/edit" target="_blank">Edit Now ↗</a></p>
-				<pre></code>{{ cms.prettyUrl(postData.path) }}</code></pre>
+				<pre></code>{{ cms.collection.prettyUrl(postData.path) }}</code></pre>
 				</section>
 
 				{% if collectionData.url is empty %}
@@ -52,13 +52,13 @@
 				<h3>Rule for Apache</h3>
 				<p>Place this in your .htaccess file. If you already have enabled <code>RewriteEngine</code>
 				in your file, you do not need to include that line again.</p>
-				<pre></code>{{ cms.apacheRule(postData.path, collectionData.name) }}</code></pre>
+				<pre></code>{{ cms.admin.apacheRule(postData.path, collectionData.name) }}</code></pre>
 				</section>
 
 				<section>
 				<h3>Rule for NGINX</h3>
 				<p>Place this in your server config file.</p>
-				<pre></code>{{ cms.nginxRule(postData.path, collectionData.name) }}</code></pre>
+				<pre></code>{{ cms.admin.nginxRule(postData.path, collectionData.name) }}</code></pre>
 				</section>
 
 			</div>

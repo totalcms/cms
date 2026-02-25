@@ -70,14 +70,14 @@
 	{% set opts = defaults|merge(options) %}
 
 	{# Get the blog post #}
-	{% set post = cms.object(opts.collection, id) %}
+	{% set post = cms.collection.object(opts.collection, id) %}
 
 	{# Redirect to 404 if post is draft or doesn't exist #}
-	{{ cms.redirectIfNotFound(post) }}
+	{{ cms.collection.redirectIfNotFound(post) }}
 	{% if post.draft %}
-		{{ cms.redirectIfNotFound(null) }}
+		{{ cms.collection.redirectIfNotFound(null) }}
 	{% endif %}
-	{{ cms.redirectToCanonicalUrl(opts.collection, post) }}
+	{{ cms.collection.redirectToCanonicalUrl(opts.collection, post) }}
 
 	{# Determine layout class #}
 	{% set layoutClass = 'blog-post-' ~ opts.layout %}
@@ -87,7 +87,7 @@
 		{# Hero Image #}
 		{% if post.image.size > 0 %}
 			<div class="blog-hero">
-				{{ cms.image(id, {w: 1920, h: 1080, fit: 'crop-focalpoint'}, {
+				{{ cms.render.image(id, {w: 1920, h: 1080, fit: 'crop-focalpoint'}, {
 					collection : opts.collection ,
 					property   : 'image',
 					loading    : 'eager',
@@ -187,7 +187,7 @@
 		{# Gallery #}
 		{% if opts.showGallery and post.gallery %}
 			<div class="blog-gallery">
-				{{ cms.gallery(id,
+				{{ cms.render.gallery(id,
 					{w: 300,  h: 300 },
 					{w: 1920, h: 1080 },
 					{
@@ -241,7 +241,7 @@
 		{% endif %}
 
 		{# Apply filters to get candidate posts #}
-		{% set candidatePosts = cms.objects(opts.collection)|filterCollection(filters) %}
+		{% set candidatePosts = cms.collection.objects(opts.collection)|filterCollection(filters) %}
 
 		{# Calculate match scores for sorting (categories weighted higher) #}
 		{% set relatedPosts = [] %}

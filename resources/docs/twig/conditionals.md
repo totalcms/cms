@@ -160,7 +160,7 @@ Check if an image property exists for an object before attempting to display it.
 
 ```twig
 {% if imageExists(post.image) %}
-    {{ cms.image(post.id, {collection: 'blog', property: 'image'}) }}
+    {{ cms.render.image(post.id, {collection: 'blog', property: 'image'}) }}
 {% else %}
     <img src="placeholder.jpg">
 {% endif %}
@@ -239,7 +239,7 @@ Check the number of items in an array using the `length` filter.
 Check if a collection has any objects before looping.
 
 ```twig
-{% set posts = cms.objects('blog') %}
+{% set posts = cms.collection.objects('blog') %}
 {% if posts|length > 0 %}
     {% for post in posts %}
         {{ post.title }}
@@ -358,7 +358,7 @@ Store dates in variables for cleaner comparisons.
 Check if an object exists before using it.
 
 ```twig
-{% set page = cms.object('pages', 'about') %}
+{% set page = cms.collection.object('pages', 'about') %}
 {% if page %}
     {{ page.content }}
 {% else %}
@@ -551,7 +551,7 @@ Access the total number of items being looped through.
 Always check if objects exist before accessing their properties to avoid errors:
 
 ```twig
-{% set post = cms.object('blog', 'my-post') %}
+{% set post = cms.collection.object('blog', 'my-post') %}
 {% if post %}
     {{ post.title }}
 {% endif %}
@@ -576,7 +576,7 @@ For safety, combine existence and value checks:
 
 ```twig
 {% if post.gallery is defined and post.gallery is not empty %}
-    {{ cms.gallery(post.id) }}
+    {{ cms.render.gallery(post.id) }}
 {% endif %}
 ```
 
@@ -586,12 +586,12 @@ Avoid calling CMS functions multiple times in conditions:
 
 ```twig
 {# Bad - calls function multiple times #}
-{% if cms.objects('blog')|length > 0 %}
-    {{ cms.objects('blog')|length }} posts
+{% if cms.collection.objects('blog')|length > 0 %}
+    {{ cms.collection.objects('blog')|length }} posts
 {% endif %}
 
 {# Good - calls function once #}
-{% set posts = cms.objects('blog') %}
+{% set posts = cms.collection.objects('blog') %}
 {% if posts|length > 0 %}
     {{ posts|length }} posts
 {% endif %}
@@ -604,7 +604,7 @@ Always check existence before accessing files or images:
 ```twig
 {# Check if image exists #}
 {% if imageExists(post.image) %}
-    {{ cms.image(post.id, {property: 'hero'}) }}
+    {{ cms.render.image(post.id, {property: 'hero'}) }}
 {% endif %}
 
 {# Check if file exists #}

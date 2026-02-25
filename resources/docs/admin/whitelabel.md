@@ -104,7 +104,7 @@ The custom logo must be wrapped in a link with the class `custom-logo`:
 
 ```twig
 <a class="custom-logo" href="" title="Dashboard Home">
-	{{ cms.image("logo") }}
+	{{ cms.render.image("logo") }}
 </a>
 ```
 
@@ -499,10 +499,10 @@ When customizing the admin home page, you can use the built-in dashboard widgets
 {% import 'dashboard-widgets.twig' as dashboard %}
 
 {# Get dashboard data #}
-{% set stats = cms.dashboardStats() %}
-{% set collections = cms.dashboardRecentCollections() %}
-{% set emptyCollections = cms.dashboardEmptyCollections() %}
-{% set systemStatus = cms.dashboardSystemStatus() %}
+{% set stats = cms.admin.dashboardStats() %}
+{% set collections = cms.admin.dashboardRecentCollections() %}
+{% set emptyCollections = cms.admin.dashboardEmptyCollections() %}
+{% set systemStatus = cms.admin.dashboardSystemStatus() %}
 
 {# Display welcome message #}
 {{ dashboard.welcomeMessage('Admin') }}

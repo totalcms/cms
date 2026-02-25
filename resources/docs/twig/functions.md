@@ -19,7 +19,7 @@ Converts simple arrays to proper select option format.
 </select>
 
 {# Dynamic categories from collection #}
-{% set categories = cms.objects('categories') | map(c => c.name) %}
+{% set categories = cms.collection.objects('categories') | map(c => c.name) %}
 <select name="category">
     {% for option in selectOptions(categories) %}
         <option value="{{ option.value }}" {{ option.value == selectedCategory ? 'selected' : '' }}>
@@ -29,7 +29,7 @@ Converts simple arrays to proper select option format.
 </select>
 
 {# Using with custom label and value keys #}
-{% set users = cms.objects('users') %}
+{% set users = cms.collection.objects('users') %}
 {% set userOptions = selectOptions(users, 'name', 'id') %}
 <select name="author">
     {% for option in userOptions %}
@@ -174,7 +174,7 @@ Checks if a string contains a substring.
 {% endif %}
 
 {# Filter posts by content #}
-{% for post in cms.objects('blog') %}
+{% for post in cms.collection.objects('blog') %}
     {% if contains(post.content | lower, 'tutorial') %}
         <article class="tutorial-post">
             <span class="badge">Tutorial</span>
@@ -184,7 +184,7 @@ Checks if a string contains a substring.
 {% endfor %}
 
 {# Check for external links #}
-{% for link in cms.objects('links') %}
+{% for link in cms.collection.objects('links') %}
     <a href="{{ link.url }}"
        {{ contains(link.url, 'http') ? 'target="_blank" rel="noopener"' : '' }}>
         {{ link.title }}
@@ -200,7 +200,7 @@ Checks if a string starts with a specific substring.
 
 ```twig
 {# Protocol-aware link handling #}
-{% for link in cms.objects('social-links') %}
+{% for link in cms.collection.objects('social-links') %}
     {% if startsWith(link.url, 'http') %}
         <a href="{{ link.url }}" target="_blank">{{ link.title }}</a>
     {% else %}
@@ -246,7 +246,7 @@ Checks if a string ends with a specific substring.
 {% endfor %}
 
 {# URL handling #}
-{% for link in cms.objects('resources') %}
+{% for link in cms.collection.objects('resources') %}
     <a href="{{ link.url }}"
        {{ endsWith(link.url, '.pdf') ? 'download' : '' }}>
         {{ link.title }}
@@ -287,7 +287,7 @@ Generates unique identifiers for HTML elements and temporary values.
 <input type="email" id="email-{{ fieldId }}" name="email">
 
 {# Unique modal IDs #}
-{% for product in cms.objects('products') %}
+{% for product in cms.collection.objects('products') %}
     {% set modalId = uniqid() %}
     <button data-modal="#modal-{{ modalId }}">View {{ product.name }}</button>
     <div id="modal-{{ modalId }}" class="modal">
@@ -335,7 +335,7 @@ Checks if a variable is of a specific type.
 
 ```twig
 {# Safe data handling #}
-{% set config = cms.objects('settings', 'site-config') %}
+{% set config = cms.collection.objects('settings', 'site-config') %}
 
 {% if istype(config.menu, 'array') %}
     <nav>
@@ -385,7 +385,7 @@ Sorts an array by key in descending order.
 Sorts an array of objects/arrays by a specific key.
 
 ```twig
-{% set products = cms.objects('products') %}
+{% set products = cms.collection.objects('products') %}
 {% set sortedByPrice = sortByKey(products, 'price') %}
 
 {% for product in sortedByPrice %}
@@ -396,7 +396,7 @@ Sorts an array of objects/arrays by a specific key.
 {% endfor %}
 
 {# Sort users by name #}
-{% set users = sortByKey(cms.objects('users'), 'name') %}
+{% set users = sortByKey(cms.collection.objects('users'), 'name') %}
 ```
 
 ## Debugging Functions
@@ -446,7 +446,7 @@ Decodes JSON strings to arrays. Alias for `json_decode`.
 
 ```twig
 {# Process stored JSON configuration #}
-{% set settings = cms.object('config', 'app-settings') %}
+{% set settings = cms.collection.object('config', 'app-settings') %}
 {% set config = parseJson(settings.json_config) %}
 
 <div class="app-config">
@@ -472,7 +472,7 @@ Checks if an image file exists.
 
 ```twig
 {# Safe image display with fallbacks #}
-{% set product = cms.object('product', 'smartphone') %}
+{% set product = cms.collection.object('product', 'smartphone') %}
 
 {% if imageExists(product.image) %}
     <img src="{{ product.image.url }}" alt="{{ product.image.alt }}">
@@ -481,7 +481,7 @@ Checks if an image file exists.
 {% endif %}
 
 {# Gallery with existence check #}
-{% set gallery = cms.object('gallery', 'portfolio') %}
+{% set gallery = cms.collection.object('gallery', 'portfolio') %}
 <div class="gallery">
     {% for image in gallery.images %}
         {% if imageExists(image) %}
@@ -545,7 +545,7 @@ Auto-detects and embeds various media types.
 
 ```twig
 {# Auto-embed various media types #}
-{% for media in cms.objects('media-links') %}
+{% for media in cms.collection.objects('media-links') %}
     <div class="media-embed">
         {{ embed(media.url, {
             width: 800,
@@ -557,7 +557,7 @@ Auto-detects and embeds various media types.
 {% endfor %}
 
 {# Blog post with media embeds #}
-{% set post = cms.object('blog', 'video-tutorial') %}
+{% set post = cms.collection.object('blog', 'video-tutorial') %}
 <article>
     <h1>{{ post.title }}</h1>
 
@@ -604,7 +604,7 @@ Embeds Vimeo videos with specific options.
 
 ```twig
 {# Vimeo video gallery #}
-{% set videos = cms.objects('video-gallery') %}
+{% set videos = cms.collection.objects('video-gallery') %}
 <div class="video-grid">
     {% for video in videos %}
         <div class="video-item">

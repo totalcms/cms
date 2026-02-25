@@ -34,11 +34,11 @@
 	{% set opts = defaults|merge(options) %}
 
 	{# Get the feed post #}
-	{% set post = cms.object(opts.collection, id) %}
+	{% set post = cms.collection.object(opts.collection, id) %}
 
 	{# Redirect to 404 if post doesn't exist #}
-	{{ cms.redirectIfNotFound(post) }}
-	{{ cms.redirectToCanonicalUrl(opts.collection, post) }}
+	{{ cms.collection.redirectIfNotFound(post) }}
+	{{ cms.collection.redirectToCanonicalUrl(opts.collection, post) }}
 
 	{# Determine layout class #}
 	{% set layoutClass = 'feed-post-' ~ opts.layout %}
@@ -48,7 +48,7 @@
 		{# Hero Image #}
 		{% if post.image.size > 0 %}
 			<div class="feed-hero">
-				{{ cms.image(id, {w: 1920, h: 1080, fit: 'crop-focalpoint'}, {
+				{{ cms.render.image(id, {w: 1920, h: 1080, fit: 'crop-focalpoint'}, {
 					collection : opts.collection,
 					property   : 'image',
 					loading    : 'eager',

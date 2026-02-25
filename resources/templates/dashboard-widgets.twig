@@ -68,7 +68,7 @@
 			<span class="action-text">New Template</span>
 		</a>
 
-		{% if cms.isAdmin() %}
+		{% if cms.auth.isAdmin() %}
 		<a href="utils/logs" class="action-button">
 			<span class="action-icon icon-warn"></span>
 			<span class="action-text">Log Analyzer</span>

@@ -248,7 +248,7 @@ This is a text with footnote[^1].
 ```twig
 {# products.twig #}
 <div class="products-grid">
-    {% for product in cms.collection('products').list() %}
+    {% for product in cms.collection.objects('products') %}
         <div class="product-card">
             {% if product.image %}
                 <img src="{{ product.image }}" alt="{{ product.title }}">

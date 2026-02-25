@@ -7,7 +7,7 @@ Data Views let you pre-compute data structures from your collections using Twig 
 - **Performance**: Expensive queries and aggregations are computed once, not on every request
 - **Cross-Collection Data**: Combine data from multiple collections into a single structure
 - **Automatic Updates**: Views rebuild automatically when their dependent collections change
-- **Simple Access**: Retrieve pre-computed data with a single `cms.view('view-id')` call
+- **Simple Access**: Retrieve pre-computed data with a single `cms.view.get('view-id')` call
 
 ## Creating a Data View
 
@@ -22,7 +22,7 @@ Data Views let you pre-compute data structures from your collections using Twig 
 
 ### Writing a Definition
 
-A definition is a Twig template that builds up a `data` variable. You have full access to the CMS context, so you can use `cms.objects()`, `cms.search()`, and any other CMS functions.
+A definition is a Twig template that builds up a `data` variable. You have full access to the CMS context, so you can use `cms.collection.objects()`, `cms.collection.search()`, and any other CMS functions.
 
 The template must set a `data` variable containing the structure you want to store. This variable is automatically serialized to JSON when the view is built.
 
@@ -31,7 +31,7 @@ The template must set a `data` variable containing the structure you want to sto
 A view that counts blog posts and collects their titles:
 
 ```twig
-{% set posts = cms.objects('blog') %}
+{% set posts = cms.collection.objects('blog') %}
 {% set data = {
     "count": posts|length,
     "titles": posts|column('title')
@@ -43,8 +43,8 @@ A view that counts blog posts and collects their titles:
 A view that combines team members with their department names:
 
 ```twig
-{% set members = cms.objects('team') %}
-{% set departments = cms.objects('departments') %}
+{% set members = cms.collection.objects('team') %}
+{% set departments = cms.collection.objects('departments') %}
 
 {% set deptMap = {} %}
 {% for dept in departments %}
@@ -70,8 +70,8 @@ A view that combines team members with their department names:
 A view that builds statistics for a dashboard:
 
 ```twig
-{% set posts = cms.objects('blog') %}
-{% set products = cms.objects('products') %}
+{% set posts = cms.collection.objects('blog') %}
+{% set products = cms.collection.objects('products') %}
 
 {% set data = {
     "blog": {
@@ -111,7 +111,7 @@ Views rebuild automatically through the [Job Queue](/admin/utils/jobqueue) when 
 
 ```twig
 {# Get the pre-computed data for a view #}
-{% set stats = cms.view('dashboard-stats') %}
+{% set stats = cms.view.get('dashboard-stats') %}
 
 {# Access properties from the data #}
 {{ stats.blog.total }} blog posts
@@ -122,7 +122,7 @@ Views rebuild automatically through the [Job Queue](/admin/utils/jobqueue) when 
 
 ```twig
 {# List all available data views #}
-{% for view in cms.dataviews() %}
+{% for view in cms.view.list() %}
     {{ view.name }}
 {% endfor %}
 ```
@@ -132,7 +132,7 @@ Views rebuild automatically through the [Job Queue](/admin/utils/jobqueue) when 
 ```twig
 {# Check if the current user can access data views #}
 {% if cms.canAccessDataViews() %}
-    {% set data = cms.view('my-view') %}
+    {% set data = cms.view.get('my-view') %}
 {% endif %}
 ```
 

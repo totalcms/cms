@@ -97,7 +97,7 @@ Lowercases the first character of a string.
 Truncates text to specified length.
 
 ```twig
-{% set post = cms.object('blog', 'my-post') %}
+{% set post = cms.collection.object('blog', 'my-post') %}
 
 {# Character-based truncation #}
 {{ post.content | truncate(100) }}
@@ -106,7 +106,7 @@ Truncates text to specified length.
 {{ post.content | truncate(100, true) }}
 
 {# Usage in blog listing #}
-{% for post in cms.objects('blog') %}
+{% for post in cms.collection.objects('blog') %}
     <article>
         <h2>{{ post.title }}</h2>
         <p>{{ post.excerpt | truncate(150, true) }}...</p>
@@ -256,7 +256,7 @@ Converts SVG to symbol for icon systems.
 
 {# Create icon library #}
 <svg style="display: none;">
-    {% for icon in cms.objects('svg') %}
+    {% for icon in cms.collection.objects('svg') %}
         {{ icon.content | svgToSymbol(icon.id) }}
     {% endfor %}
 </svg>
@@ -618,7 +618,7 @@ Adjusts multiple color properties at once.
 Counts array elements.
 
 ```twig
-{% set posts = cms.objects('blog') %}
+{% set posts = cms.collection.objects('blog') %}
 <p>{{ posts | count }} blog posts available</p>
 
 {# Conditional display #}
@@ -631,7 +631,7 @@ Counts array elements.
 Sorts array by keys.
 
 ```twig
-{% set categories = cms.objects('categories') | ksort %}
+{% set categories = cms.collection.objects('categories') | ksort %}
 {% for category in categories %}
     <option value="{{ category.id }}">{{ category.name }}</option>
 {% endfor %}
@@ -652,20 +652,20 @@ Sorts array by keys in reverse order.
 Sorts an array of objects/arrays by a specific key.
 
 ```twig
-{% set products = cms.objects('products') | sortBy('price') %}
+{% set products = cms.collection.objects('products') | sortBy('price') %}
 {% for product in products %}
     <div>{{ product.name }} - ${{ product.price }}</div>
 {% endfor %}
 
 {# Sort users alphabetically by name #}
-{% set users = cms.objects('users') | sortBy('name') %}
+{% set users = cms.collection.objects('users') | sortBy('name') %}
 ```
 
 #### `shuffle(array $array): array`
 Randomly shuffles array elements.
 
 ```twig
-{% set testimonials = cms.objects('testimonials') | shuffle | slice(0, 3) %}
+{% set testimonials = cms.collection.objects('testimonials') | shuffle | slice(0, 3) %}
 {% for testimonial in testimonials %}
     <blockquote>{{ testimonial.quote }}</blockquote>
 {% endfor %}
@@ -677,14 +677,14 @@ Returns a paginated slice of an array.
 ```twig
 {% set page = get.page | default(1) | int %}
 {% set perPage = 10 %}
-{% set posts = cms.objects('blog') | paginate(perPage, page) %}
+{% set posts = cms.collection.objects('blog') | paginate(perPage, page) %}
 
 {% for post in posts %}
     <article>{{ post.title }}</article>
 {% endfor %}
 
 {# Pagination with navigation #}
-{% set allPosts = cms.objects('blog') %}
+{% set allPosts = cms.collection.objects('blog') %}
 {% set totalPages = (allPosts | length / perPage) | round(0, 'ceil') %}
 <nav>
     {% for p in 1..totalPages %}
@@ -703,7 +703,7 @@ Removes duplicate values from an array.
 
 {# Get unique categories from blog posts #}
 {% set allCategories = [] %}
-{% for post in cms.objects('blog') %}
+{% for post in cms.collection.objects('blog') %}
     {% set allCategories = allCategories | merge([post.category]) %}
 {% endfor %}
 {% set uniqueCategories = allCategories | unique %}
@@ -718,7 +718,7 @@ Removes duplicate values from an array.
 
 {# Unique tags across all posts #}
 {% set allTags = [] %}
-{% for post in cms.objects('blog') %}
+{% for post in cms.collection.objects('blog') %}
     {% set allTags = allTags | merge(post.tags) %}
 {% endfor %}
 {% set uniqueTags = allTags | unique | sort %}
@@ -743,19 +743,19 @@ Calculates the sum of a numeric property across all items in a collection.
 
 ```twig
 {# Basic usage #}
-{% set total = cms.objects('orders') | sum('amount') %}
+{% set total = cms.collection.objects('orders') | sum('amount') %}
 <p>Total sales: ${{ total | number_format(2) }}</p>
 
 {# Calculate revenue #}
-{% set revenue = cms.objects('transactions') | sum('price') %}
+{% set revenue = cms.collection.objects('transactions') | sum('price') %}
 
 {# Sum with filtering #}
-{% set completedTotal = cms.objects('orders')
+{% set completedTotal = cms.collection.objects('orders')
     | filterCollection([{property: 'status', operator: 'eq', value: 'completed'}])
     | sum('amount') %}
 
 {# Real-world example: Business totals #}
-{% set bustot = cms.objects('busamount') | sum('amt') %}
+{% set bustot = cms.collection.objects('busamount') | sum('amt') %}
 <p>Total business generated: ${{ bustot | number_format(0, '.', ',') }}</p>
 ```
 
@@ -764,19 +764,19 @@ Calculates the average of a numeric property across all items.
 
 ```twig
 {# Basic usage #}
-{% set avgPrice = cms.objects('products') | avg('price') %}
+{% set avgPrice = cms.collection.objects('products') | avg('price') %}
 <p>Average price: ${{ avgPrice | number_format(2) }}</p>
 
 {# Calculate average rating #}
-{% set avgRating = cms.objects('reviews') | avg('rating') %}
+{% set avgRating = cms.collection.objects('reviews') | avg('rating') %}
 <div class="rating">{{ avgRating | round(1) }} / 5 stars</div>
 
 {# Average order value #}
-{% set aov = cms.objects('orders') | avg('total') %}
+{% set aov = cms.collection.objects('orders') | avg('total') %}
 <p>Average order value: ${{ aov | number_format(2) }}</p>
 
 {# Combine with sum for more stats #}
-{% set orders = cms.objects('orders') %}
+{% set orders = cms.collection.objects('orders') %}
 <div class="stats">
     <p>Total: ${{ orders | sum('amount') | number_format(2) }}</p>
     <p>Average: ${{ orders | avg('amount') | number_format(2) }}</p>
@@ -789,14 +789,14 @@ Finds the minimum value of a numeric property.
 
 ```twig
 {# Basic usage #}
-{% set lowestPrice = cms.objects('products') | min('price') %}
+{% set lowestPrice = cms.collection.objects('products') | min('price') %}
 <p>Starting at ${{ lowestPrice | number_format(2) }}</p>
 
 {# Find earliest date (works with sortable date strings) #}
-{% set firstPost = cms.objects('blog') | min('date') %}
+{% set firstPost = cms.collection.objects('blog') | min('date') %}
 
 {# Price range display #}
-{% set products = cms.objects('products') %}
+{% set products = cms.collection.objects('products') %}
 {% set minPrice = products | min('price') %}
 {% set maxPrice = products | max('price') %}
 <p>Prices range from ${{ minPrice }} to ${{ maxPrice }}</p>
@@ -813,21 +813,21 @@ Finds the maximum value of a numeric property.
 
 ```twig
 {# Basic usage #}
-{% set highestPrice = cms.objects('products') | max('price') %}
+{% set highestPrice = cms.collection.objects('products') | max('price') %}
 <p>Up to ${{ highestPrice | number_format(2) }}</p>
 
 {# Find highest rated #}
-{% set topRating = cms.objects('reviews') | max('rating') %}
+{% set topRating = cms.collection.objects('reviews') | max('rating') %}
 
 {# Display price range #}
-{% set products = cms.objects('products') %}
+{% set products = cms.collection.objects('products') %}
 <p>
     ${{ products | min('price') | number_format(2) }} -
     ${{ products | max('price') | number_format(2) }}
 </p>
 
 {# Find largest file #}
-{% set gallery = cms.gallery('portfolio') %}
+{% set gallery = cms.render.gallery('portfolio') %}
 {% set largestFile = gallery | max('size') %}
 <p>Largest image: {{ largestFile | filesize }}</p>
 ```
@@ -837,18 +837,18 @@ Extracts a single property from all items, returning a flat array of values.
 
 ```twig
 {# Basic usage - get all email addresses #}
-{% set emails = cms.objects('members') | pluck('email') %}
+{% set emails = cms.collection.objects('members') | pluck('email') %}
 {# Result: ['john@example.com', 'jane@example.com', ...] #}
 
 {# Get all IDs #}
-{% set ids = cms.objects('products') | pluck('id') %}
+{% set ids = cms.collection.objects('products') | pluck('id') %}
 
 {# Create comma-separated list #}
-{% set names = cms.objects('team') | pluck('name') %}
+{% set names = cms.collection.objects('team') | pluck('name') %}
 <p>Team: {{ names | join(', ') }}</p>
 
 {# Get all tags from posts (then flatten and unique) #}
-{% set allTags = cms.objects('blog') | pluck('tags') | flatten | unique %}
+{% set allTags = cms.collection.objects('blog') | pluck('tags') | flatten | unique %}
 <div class="tag-cloud">
     {% for tag in allTags %}
         <a href="/blog?tag={{ tag | urlencode }}">{{ tag }}</a>
@@ -856,12 +856,12 @@ Extracts a single property from all items, returning a flat array of values.
 </div>
 
 {# Get SKUs for inventory check #}
-{% set skus = cms.objects('products') | pluck('sku') %}
+{% set skus = cms.collection.objects('products') | pluck('sku') %}
 {# Use for API call or validation #}
 
 {# Build select options #}
 <select name="author">
-    {% for author in cms.objects('authors') | pluck('name') %}
+    {% for author in cms.collection.objects('authors') | pluck('name') %}
         <option>{{ author }}</option>
     {% endfor %}
 </select>
@@ -872,7 +872,7 @@ Converts a collection into an associative array keyed by a specific property. Th
 
 ```twig
 {# Basic usage - create lookup table by ID #}
-{% set memberLookup = cms.objects('members') | keyBy %}
+{% set memberLookup = cms.collection.objects('members') | keyBy %}
 {# Same as: | keyBy('id') #}
 
 {# Access by ID (O(1) lookup instead of loop) #}
@@ -880,29 +880,29 @@ Converts a collection into an associative array keyed by a specific property. Th
 <p>{{ member.fname }} {{ member.lname }}</p>
 
 {# Key by different property #}
-{% set productsBySku = cms.objects('products') | keyBy('sku') %}
+{% set productsBySku = cms.collection.objects('products') | keyBy('sku') %}
 {% set product = productsBySku['ABC-123'] %}
 
 {# Key by slug #}
-{% set pagesBySlug = cms.objects('pages') | keyBy('slug') %}
+{% set pagesBySlug = cms.collection.objects('pages') | keyBy('slug') %}
 {% set aboutPage = pagesBySlug['about-us'] %}
 
 {# IMPORTANT: Avoid N+1 pattern #}
-{# BAD - calls cms.object() 50 times: #}
+{# BAD - calls cms.collection.object() 50 times: #}
 {% for order in orders %}
-    {% set customer = cms.object('customers', order.customer_id) %}
+    {% set customer = cms.collection.object('customers', order.customer_id) %}
 {% endfor %}
 
-{# GOOD - calls cms.objects() once, then O(1) lookups: #}
-{% set customerLookup = cms.objects('customers') | keyBy %}
+{# GOOD - calls cms.collection.objects() once, then O(1) lookups: #}
+{% set customerLookup = cms.collection.objects('customers') | keyBy %}
 {% for order in orders %}
     {% set customer = customerLookup[order.customer_id] | default({}) %}
     <p>{{ customer.name }} ordered {{ order.total | price }}</p>
 {% endfor %}
 
 {# Real-world example: Display referrals with member names #}
-{% set memberLookup = cms.objects('members') | keyBy %}
-{% for referral in cms.objects('referrals') | paginate(50, page) %}
+{% set memberLookup = cms.collection.objects('members') | keyBy %}
+{% for referral in cms.collection.objects('referrals') | paginate(50, page) %}
     {% set fromMember = memberLookup[referral.from_id] | default({}) %}
     {% set toMember = memberLookup[referral.to_id] | default({}) %}
     <tr>
@@ -920,7 +920,7 @@ Groups items by a property value, returning an associative array where keys are 
 
 ```twig
 {# Basic usage - group posts by category #}
-{% set postsByCategory = cms.objects('blog') | groupBy('category') %}
+{% set postsByCategory = cms.collection.objects('blog') | groupBy('category') %}
 {# Result: {news: [...], tutorials: [...], reviews: [...]} #}
 
 {# Display grouped content #}
@@ -934,7 +934,7 @@ Groups items by a property value, returning an associative array where keys are 
 {% endfor %}
 
 {# Group products by brand #}
-{% set productsByBrand = cms.objects('products') | groupBy('brand') %}
+{% set productsByBrand = cms.collection.objects('products') | groupBy('brand') %}
 {% for brand, products in productsByBrand %}
     <section class="brand-section">
         <h3>{{ brand }}</h3>
@@ -946,11 +946,11 @@ Groups items by a property value, returning an associative array where keys are 
 {% endfor %}
 
 {# Group events by month #}
-{% set events = cms.objects('events') %}
+{% set events = cms.collection.objects('events') %}
 {% set eventsByMonth = events | groupBy('month') %}
 
 {# Group orders by status #}
-{% set ordersByStatus = cms.objects('orders') | groupBy('status') %}
+{% set ordersByStatus = cms.collection.objects('orders') | groupBy('status') %}
 <div class="order-stats">
     <p>Pending: {{ ordersByStatus.pending | length | default(0) }}</p>
     <p>Completed: {{ ordersByStatus.completed | length | default(0) }}</p>
@@ -958,7 +958,7 @@ Groups items by a property value, returning an associative array where keys are 
 </div>
 
 {# Group team members by department #}
-{% set teamByDept = cms.objects('team') | groupBy('department') %}
+{% set teamByDept = cms.collection.objects('team') | groupBy('department') %}
 {% for dept, members in teamByDept %}
     <div class="department">
         <h3>{{ dept }}</h3>
@@ -976,7 +976,7 @@ Counts items grouped by a property value. Like `groupBy`, but returns counts ins
 
 ```twig
 {# Basic usage - count posts per category #}
-{% set postCounts = cms.objects('blog') | countBy('category') %}
+{% set postCounts = cms.collection.objects('blog') | countBy('category') %}
 {# Result: {news: 5, tutorials: 12, reviews: 3} #}
 
 {# Display category counts #}
@@ -987,7 +987,7 @@ Counts items grouped by a property value. Like `groupBy`, but returns counts ins
 </ul>
 
 {# Count orders by status #}
-{% set statusCounts = cms.objects('orders') | countBy('status') %}
+{% set statusCounts = cms.collection.objects('orders') | countBy('status') %}
 <div class="dashboard">
     <div class="stat">
         <span class="number">{{ statusCounts.pending | default(0) }}</span>
@@ -1000,13 +1000,13 @@ Counts items grouped by a property value. Like `groupBy`, but returns counts ins
 </div>
 
 {# Count products by brand #}
-{% set brandCounts = cms.objects('products') | countBy('brand') %}
+{% set brandCounts = cms.collection.objects('products') | countBy('brand') %}
 {% for brand, count in brandCounts | ksort %}
     <option value="{{ brand }}">{{ brand }} ({{ count }})</option>
 {% endfor %}
 
 {# Count members by membership type #}
-{% set membershipCounts = cms.objects('members') | countBy('membership_type') %}
+{% set membershipCounts = cms.collection.objects('members') | countBy('membership_type') %}
 <table>
     <tr><th>Membership</th><th>Count</th></tr>
     {% for type, count in membershipCounts %}
@@ -1018,7 +1018,7 @@ Counts items grouped by a property value. Like `groupBy`, but returns counts ins
 </table>
 
 {# Combine with other filters for insights #}
-{% set activeMembers = cms.objects('members')
+{% set activeMembers = cms.collection.objects('members')
     | filterCollection([{property: 'active', operator: 'eq', value: true}]) %}
 {% set byCity = activeMembers | countBy('city') %}
 <h3>Active Members by City</h3>
@@ -1033,7 +1033,7 @@ These filters can be chained together for powerful data analysis:
 
 ```twig
 {# Get statistics for active products #}
-{% set activeProducts = cms.objects('products')
+{% set activeProducts = cms.collection.objects('products')
     | filterCollection([{property: 'status', operator: 'eq', value: 'active'}]) %}
 
 <div class="product-stats">
@@ -1044,7 +1044,7 @@ These filters can be chained together for powerful data analysis:
 </div>
 
 {# Dashboard with grouped statistics #}
-{% set orders = cms.objects('orders') %}
+{% set orders = cms.collection.objects('orders') %}
 {% set byStatus = orders | groupBy('status') %}
 
 <div class="order-dashboard">
@@ -1059,9 +1059,9 @@ These filters can be chained together for powerful data analysis:
 </div>
 
 {# Create a leaderboard #}
-{% set members = cms.objects('members') %}
+{% set members = cms.collection.objects('members') %}
 {% set memberLookup = members | keyBy %}
-{% set referrals = cms.objects('referrals') | countBy('from_id') %}
+{% set referrals = cms.collection.objects('referrals') | countBy('from_id') %}
 
 <h2>Top Referrers</h2>
 <ol>
@@ -1407,7 +1407,7 @@ Checks if a comparison date falls on the recurring day of the original date. Use
 
 **Real-World Example - Subscription Management:**
 ```twig
-{% set subscription = cms.object('subscriptions', user.id) %}
+{% set subscription = cms.collection.object('subscriptions', user.id) %}
 
 <div class="subscription-info">
     <h3>{{ subscription.plan }} Plan</h3>
@@ -1460,7 +1460,7 @@ The date filters support natural language strings powered by Chronos:
 
 #### Event Management
 ```twig
-{% set event = cms.object('events', 'summer-conference') %}
+{% set event = cms.collection.object('events', 'summer-conference') %}
 
 <div class="event-card">
     <h3>{{ event.title }}</h3>
@@ -1492,7 +1492,7 @@ The date filters support natural language strings powered by Chronos:
 
 #### Blog Post Scheduling
 ```twig
-{% for post in cms.objects('blog') %}
+{% for post in cms.collection.objects('blog') %}
     <article>
         <h2>{{ post.title }}</h2>
         
@@ -1516,7 +1516,7 @@ The date filters support natural language strings powered by Chronos:
 
 #### Task Management
 ```twig
-{% set tasks = cms.objects('tasks') %}
+{% set tasks = cms.collection.objects('tasks') %}
 
 {% for task in tasks %}
     <div class="task {% if task.due_date | dateIsPast %}overdue{% endif %}">
@@ -1567,7 +1567,7 @@ The date filters support natural language strings powered by Chronos:
 
 ```twig
 {# Filter blog posts by image size and status #}
-{% set posts = cms.objects('blog') | filterCollection([
+{% set posts = cms.collection.objects('blog') | filterCollection([
     {
         property: "image.size",
         operator: "gt",
@@ -1581,7 +1581,7 @@ The date filters support natural language strings powered by Chronos:
 ]) %}
 
 {# Filter by date range #}
-{% set recentPosts = cms.objects('blog') | filterCollection([
+{% set recentPosts = cms.collection.objects('blog') | filterCollection([
     {
         property: "date",
         operator: "gte",
@@ -1590,7 +1590,7 @@ The date filters support natural language strings powered by Chronos:
 ]) %}
 
 {# Filter with user input #}
-{% set filteredProducts = cms.objects('products') | filterCollection([
+{% set filteredProducts = cms.collection.objects('products') | filterCollection([
     {
         property: "price",
         operator: "between",
@@ -1613,7 +1613,7 @@ Returns items that match **ANY** of the values in the array:
 
 ```twig
 {# Posts tagged with 'php' OR 'javascript' OR 'web' #}
-{% set posts = cms.objects('blog') | filterCollection([
+{% set posts = cms.collection.objects('blog') | filterCollection([
     {
         property: "tags",
         operator: "contains",
@@ -1623,7 +1623,7 @@ Returns items that match **ANY** of the values in the array:
 ]) %}
 
 {# Products in category 'electronics' OR 'computers' #}
-{% set products = cms.objects('products') | filterCollection([
+{% set products = cms.collection.objects('products') | filterCollection([
     {
         property: "category",
         operator: "equal",
@@ -1638,7 +1638,7 @@ Returns items that match **ALL** of the values in the array:
 
 ```twig
 {# Posts that contain ALL tags: 'php' AND 'framework' AND 'tutorial' #}
-{% set advancedPosts = cms.objects('blog') | filterCollection([
+{% set advancedPosts = cms.collection.objects('blog') | filterCollection([
     {
         property: "tags",
         operator: "contains",
@@ -1648,7 +1648,7 @@ Returns items that match **ALL** of the values in the array:
 ]) %}
 
 {# Events on weekends AND evening time #}
-{% set weekendEvenings = cms.objects('events') | filterCollection([
+{% set weekendEvenings = cms.collection.objects('events') | filterCollection([
     {
         property: "day_of_week",
         operator: "equal",
@@ -1658,7 +1658,7 @@ Returns items that match **ALL** of the values in the array:
 ]) %}
 
 {# Products with ALL specified features #}
-{% set premiumProducts = cms.objects('products') | filterCollection([
+{% set premiumProducts = cms.collection.objects('products') | filterCollection([
     {
         property: "features",
         operator: "contains",
@@ -1673,7 +1673,7 @@ Returns items that match **ALL** of the values in the array:
 **Multi-tag content filtering:**
 ```twig
 {# Find blog posts that cover ALL specified topics #}
-{% set comprehensivePosts = cms.objects('blog') | filterCollection([
+{% set comprehensivePosts = cms.collection.objects('blog') | filterCollection([
     {
         property: "tags",
         operator: "contains", 
@@ -1693,7 +1693,7 @@ Returns items that match **ALL** of the values in the array:
 ```twig
 {# Products that have ALL required features #}
 {% set requiredFeatures = ["bluetooth", "waterproof", "long-battery"] %}
-{% set suitableProducts = cms.objects('products') | filterCollection([
+{% set suitableProducts = cms.collection.objects('products') | filterCollection([
     {
         property: "features",
         operator: "contains",
@@ -1716,7 +1716,7 @@ Returns items that match **ALL** of the values in the array:
 ```twig
 {# Events available on ALL specified days #}
 {% set availableDays = ["monday", "wednesday", "friday"] %}
-{% set consistentEvents = cms.objects('events') | filterCollection([
+{% set consistentEvents = cms.collection.objects('events') | filterCollection([
     {
         property: "available_days",
         operator: "contains",
@@ -1739,7 +1739,7 @@ Returns items that match **ALL** of the values in the array:
 
 ```twig
 {# Sort by multiple criteria #}
-{% set sortedPosts = cms.objects('blog') | sortCollection([
+{% set sortedPosts = cms.collection.objects('blog') | sortCollection([
     {
         property: "featured",
         reverse: true  {# Featured first #}
@@ -1755,7 +1755,7 @@ Returns items that match **ALL** of the values in the array:
 ]) %}
 
 {# Random shuffle #}
-{% set randomProducts = cms.objects('products') | sortCollection([
+{% set randomProducts = cms.collection.objects('products') | sortCollection([
     {
         property: "title",
         shuffle: true
@@ -1763,7 +1763,7 @@ Returns items that match **ALL** of the values in the array:
 ]) %}
 
 {# Sort by custom property #}
-{% set sortedGallery = cms.objects('gallery') | sortCollection([
+{% set sortedGallery = cms.collection.objects('gallery') | sortCollection([
     {
         property: "order",
         reverse: false
@@ -1776,7 +1776,7 @@ Returns items that match **ALL** of the values in the array:
 ### Blog Post Listing with Filters
 
 ```twig
-{% set posts = cms.objects('blog')
+{% set posts = cms.collection.objects('blog')
     | filterCollection([
         {property: "status", operator: "eq", value: "published"},
         {property: "date", operator: "lte", value: "now" | date('Y-m-d')}
@@ -1812,7 +1812,7 @@ Returns items that match **ALL** of the values in the array:
 ### Dynamic Color Theme
 
 ```twig
-{% set theme = cms.objects('theme', 'colors') %}
+{% set theme = cms.collection.objects('theme', 'colors') %}
 {% set primary = theme.primary | hexToColor %}
 
 <style>
@@ -1882,7 +1882,7 @@ Formats byte values into human-readable file sizes using decimal units (1000 byt
 <p>File size: {{ image.size | filesize }}</p>
 
 {# File upload listing #}
-{% for file in cms.objects('depot', 'downloads').files %}
+{% for file in cms.collection.objects('depot', 'downloads').files %}
     <div class="file">
         <span class="name">{{ file.name }}</span>
         <span class="size">{{ file.size | filesize }}</span>
@@ -1890,10 +1890,10 @@ Formats byte values into human-readable file sizes using decimal units (1000 byt
 {% endfor %}
 
 {# Gallery with file info #}
-{% set gallery = cms.gallery('portfolio') %}
+{% set gallery = cms.render.gallery('portfolio') %}
 {% for item in gallery %}
     <figure>
-        <img src="{{ cms.galleryPath(gallery, item.name) }}" alt="{{ item.alt }}">
+        <img src="{{ cms.media.galleryPath(gallery, item.name) }}" alt="{{ item.alt }}">
         <figcaption>
             {{ item.name }} ({{ item.size | filesize }}, {{ item.width }}x{{ item.height }})
         </figcaption>
@@ -1940,7 +1940,7 @@ Formats price values with currency symbols.
 
 ```twig
 {# Product listing #}
-{% for product in cms.objects('products') %}
+{% for product in cms.collection.objects('products') %}
     <div class="product">
         <h3>{{ product.name }}</h3>
         <span class="price">{{ product.price | price }}</span>

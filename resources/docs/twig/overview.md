@@ -51,10 +51,10 @@ The most important Twig variable in Total CMS is `cms`, which fetches content fr
 
 ```twig
 {# Get all items from a collection #}
-{% set posts = cms.objects('blog') %}
+{% set posts = cms.collection.objects('blog') %}
 
 {# Get a specific item by ID #}
-{% set coolguy = cms.object('users', 'joeworkman') %}
+{% set coolguy = cms.collection.object('users', 'joeworkman') %}
 ```
 
 For more information, check out the [Total CMS Content with Twig](docs/twig/totalcms) docs.
@@ -127,7 +127,7 @@ Extend the base layout:
 ### Displaying Blog Posts
 
 ```twig
-{% set posts = cms.objects('blog') %}
+{% set posts = cms.collection.objects('blog') %}
 
 <div class="blog-posts">
     {% for post in posts %}
@@ -152,7 +152,7 @@ Extend the base layout:
 ### Image Galleries
 
 ```twig
-{% set gallery = cms.gallery('portfolio') %}
+{% set gallery = cms.render.gallery('portfolio') %}
 
 <div class="gallery">
     <h2>{{ gallery.title }}</h2>

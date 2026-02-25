@@ -6,8 +6,8 @@
 #}
 <div class="dashboard-welcome">
 	<h1>
-		{% if cms.userData.name and cms.userData.name != 'Admin' %}
-			Welcome back, {{ cms.userData.name }}! 👋
+		{% if cms.auth.userData.name and cms.auth.userData.name != 'Admin' %}
+			Welcome back, {{ cms.auth.userData.name }}! 👋
 		{% else %}
 			Welcome to Total CMS 3! 👋
 		{% endif %}

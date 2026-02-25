@@ -250,7 +250,7 @@ The QR code integration allows you to:
 
 ```twig
 {# product-qr.twig #}
-{% for product in cms.collection('products').list() %}
+{% for product in cms.collection.objects('products') %}
     <div class="product-info">
         <h2>{{ product.title }}</h2>
 
@@ -333,7 +333,7 @@ The QR code integration allows you to:
 <div class="staff-directory">
     <h1>{{ company.name }} - Staff Directory</h1>
 
-    {% for staff in cms.collection('staff').list() %}
+    {% for staff in cms.collection.objects('staff') %}
         <div class="staff-card">
             <div class="staff-info">
                 <h3>{{ staff.first }} {{ staff.last }}</h3>
@@ -371,7 +371,7 @@ The QR code integration allows you to:
 
 ```twig
 {# Dynamic contact cards from collection #}
-{% for contact in cms.collection('contacts').list() %}
+{% for contact in cms.collection.objects('contacts') %}
     <div class="contact-card">
         <h3>{{ contact.name }}</h3>
         {{ qr.vcf({
@@ -385,7 +385,7 @@ The QR code integration allows you to:
 {% endfor %}
 
 {# Event QR codes from events collection #}
-{% for event in cms.collection('events').list() %}
+{% for event in cms.collection.objects('events') %}
     <div class="event-qr">
         <h3>{{ event.title }}</h3>
         {{ qr.event({

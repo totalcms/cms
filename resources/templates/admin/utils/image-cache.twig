@@ -13,7 +13,7 @@
 			placeholder : "Select a Collection",
 			label       : "Collection",
 			class       : "no-change-listener",
-			options     : cms.collections() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
+			options     : cms.collection.list() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
 		}) }}
 	{% endset %}
 
@@ -24,7 +24,7 @@
 	}) }}
 
 	{% set forceRefresh = getData.refreshStats is defined %}
-	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats(forceRefresh) %}
+	{% set imageCacheStats = cms.admin.imageCacheService.getAllCollectionImageCacheStats(forceRefresh) %}
 	{% if imageCacheStats|length > 0 %}
 		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
 		<table class="admin-table">

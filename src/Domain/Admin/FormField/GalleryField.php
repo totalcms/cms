@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
 class GalleryField extends ImageField
 {
@@ -20,7 +20,7 @@ class GalleryField extends ImageField
 
 		$previews = '';
 		foreach ($imageData as $image) {
-			$imagePath = TotalCMSTwigAdapter::buildImageworksGalleryAPI($api, $id, $image['name'], $image, $imageworks, $options);
+			$imagePath = MediaTwigAdapter::buildImageworksGalleryAPI($api, $id, $image['name'], $image, $imageworks, $options);
 
 			$imagePreview = $this->imagePreview($imagePath, $image['name'] ?? '');
 			$linkDialog   = $this->linkDialog($image['name']);

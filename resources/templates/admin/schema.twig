@@ -8,8 +8,8 @@
 	</header>
 
 	<nav class="links" id="schema-links">
-		{% for category, schemas in cms.schemasByCategory() %}
-			{% set schemas = schemas | filter(s => cms.canAccessSchema(s.id, 'read')) %}
+		{% for category, schemas in cms.schema.byCategory() %}
+			{% set schemas = schemas | filter(s => cms.auth.canAccessSchema(s.id, 'read')) %}
 			{% if schemas | length > 0 %}
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
@@ -27,7 +27,7 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.canAccessSchemasOperation('create') and cms.edition.can('custom_schemas') %}
+	{% if cms.auth.canAccessSchemasOperation('create') and cms.edition.can('custom_schemas') %}
 	<footer>
 		<a class="dash-button full transparent" href="schemas/new" title="Create a new schema">+ New Schema</a>
 	</footer>

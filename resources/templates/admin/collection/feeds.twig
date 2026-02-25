@@ -11,8 +11,8 @@
 	All of the fields below are optional. If no field mappings are provided, then the mapping for a blog schema
 	will be used.</p>
 
-	{% set collection = cms.collection(url.collection) %}
-	{% set schema = cms.schema(collection.schema) %}
+	{% set collection = cms.collection.get(url.collection) %}
+	{% set schema = cms.schema.get(collection.schema) %}
 
 	<form id="rss-builder"
 		class="totalform"
@@ -29,7 +29,7 @@
 			<label for="language">Language</label>
 			<select name="language">
 				<option value="">Select a Language</option>
-				{% for lang, code in cms.languages %}
+				{% for lang, code in cms.locale.languages() %}
 					<option value="{{ code }}"
 						{% if postData.language == code %}selected{% endif %}>
 						{{ lang }}

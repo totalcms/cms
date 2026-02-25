@@ -94,7 +94,7 @@ Create a Twig template that renders a single item. The template receives the cur
 ```twig
 {# templates/blog/card.twig #}
 <article class="blog-card">
-    <h2><a href="{{ cms.objectUrl('blog', object.id) }}">{{ object.title }}</a></h2>
+    <h2><a href="{{ cms.collection.objectUrl('blog', object.id) }}">{{ object.title }}</a></h2>
     <time>{{ object.date }}</time>
     <p>{{ object.excerpt }}</p>
 </article>

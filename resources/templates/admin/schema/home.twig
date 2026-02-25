@@ -23,7 +23,7 @@
 
 	<a style="margin-top:3rem" class="dash-button transparent" href="schemas/-import">Import New Schema</a>
 
-	{% set inaccessibleSchemas = cms.getInaccessibleSchemas() %}
+	{% set inaccessibleSchemas = cms.admin.inaccessibleSchemas() %}
 	{% if inaccessibleSchemas|length > 0 %}
 	<div class="edition-alert">
 		<span class="icon-warn"></span>

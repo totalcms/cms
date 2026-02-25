@@ -1,5 +1,5 @@
 {# New Object Form #}
-{% set canSave = cms.canAccessCollection(url.collection, 'create') %}
+{% set canSave = cms.auth.canAccessCollection(url.collection, 'create') %}
 
 {# Default hardcoded options #}
 {% set defaultOptions = {

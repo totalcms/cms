@@ -53,27 +53,27 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 ## Collections
 
 ```twig
-{{ cms.collections() }}                          {# Get all collections #}
-{{ cms.collectionsByCategory() }}                {# Get collections grouped by category #}
-{{ cms.collection('collectionName') }}           {# Get collection metadata #}
-{{ cms.objectCount('collectionName') }}          {# Get number of objects in collection #}
-{{ cms.objects('collectionName') }}              {# Get all objects from collection #}
-{{ cms.property('collection', 'property') }}     {# Get unique values from property #}
-{{ cms.objectUrl('collection', 'id') }}          {# Get URL for an object #}
+{{ cms.collection.list() }}                      {# Get all collections #}
+{{ cms.collection.byCategory() }}               {# Get collections grouped by category #}
+{{ cms.collection.get('collectionName') }}        {# Get collection metadata #}
+{{ cms.collection.objectCount('collectionName') }}  {# Get number of objects in collection #}
+{{ cms.collection.objects('collectionName') }}   {# Get all objects from collection #}
+{{ cms.collection.property('collection', 'property') }}  {# Get unique values from property #}
+{{ cms.collection.objectUrl('collection', 'id') }}  {# Get URL for an object #}
 ```
 
 ## Object Data
 
 ```twig
-{{ cms.object('collection', 'id') }}             {# Get complete object data #}
+{{ cms.collection.object('collection', 'id') }}  {# Get complete object data #}
 {{ cms.data('collection', 'id', 'property') }}   {# Get specific property value #}
 ```
 
 ## Search
 
 ```twig
-{{ cms.search('collection', 'query', 'property') }}          {# Search with single property #}
-{{ cms.search('collection', 'query', ['prop1', 'prop2']) }}  {# Search multiple properties #}
+{{ cms.collection.search('collection', 'query', 'property') }}          {# Search with single property #}
+{{ cms.collection.search('collection', 'query', ['prop1', 'prop2']) }}  {# Search multiple properties #}
 ```
 
 ## Text Content
@@ -136,22 +136,22 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 
 ```twig
 {# Basic image output #}
-{{ cms.image('id') }}                            {# Returns complete <img> HTML #}
-{{ cms.imagePath('id') }}                        {# Returns image URL only #}
-{{ cms.alt('id') }}                              {# Get alt text #}
+{{ cms.render.image('id') }}                            {# Returns complete <img> HTML #}
+{{ cms.media.imagePath('id') }}                        {# Returns image URL only #}
+{{ cms.render.alt('id') }}                              {# Get alt text #}
 
 {# With ImageWorks transformations #}
-{{ cms.image('id', {w: 800, h: 600, fit: 'crop'}) }}
-{{ cms.imagePath('id', {w: 400, blur: 20, fm: 'webp'}) }}
+{{ cms.render.image('id', {w: 800, h: 600, fit: 'crop'}) }}
+{{ cms.media.imagePath('id', {w: 400, blur: 20, fm: 'webp'}) }}
 
 {# Custom collections and properties #}
-{{ cms.image('id', {}, {collection: 'products', property: 'photo'}) }}
+{{ cms.render.image('id', {}, {collection: 'products', property: 'photo'}) }}
 
 {# Pass object directly (recommended) #}
-{{ cms.image(object, {w: 600}, {collection: 'products', property: 'image'}) }}
+{{ cms.render.image(object, {w: 600}, {collection: 'products', property: 'image'}) }}
 
 {# Loading options #}
-{{ cms.image('id', {}, {loading: 'eager'}) }}    {# Default is 'lazy' #}
+{{ cms.render.image('id', {}, {loading: 'eager'}) }}    {# Default is 'lazy' #}
 ```
 
 ## Galleries
@@ -160,12 +160,12 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 
 ```twig
 {# Complete gallery with lightbox #}
-{{ cms.gallery('id') }}                          {# Default 300x200 thumbs #}
-{{ cms.gallery('id', {w: 150, h: 150}) }}        {# Custom thumb size #}
-{{ cms.gallery('id', {w: 150}, {w: 1200}) }}     {# Thumb and full size settings #}
+{{ cms.render.gallery('id') }}                          {# Default 300x200 thumbs #}
+{{ cms.render.gallery('id', {w: 150, h: 150}) }}        {# Custom thumb size #}
+{{ cms.render.gallery('id', {w: 150}, {w: 1200}) }}     {# Thumb and full size settings #}
 
 {# Gallery with options #}
-{{ cms.gallery('id', {w: 200}, {}, {
+{{ cms.render.gallery('id', {w: 200}, {}, {
     maxVisible: 8,
     viewAllText: 'Show all photos',
     loop: true,
@@ -176,16 +176,16 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 }) }}
 
 {# Individual gallery images #}
-{{ cms.galleryImage('id', 'filename.jpg') }}     {# Get specific image HTML #}
-{{ cms.galleryPath('id', 'filename.jpg', {w: 800}) }}  {# Get image URL #}
-{{ cms.galleryAlt('id', 'filename.jpg') }}       {# Get alt text #}
-{{ cms.galleryImageData('id', 'filename.jpg') }} {# Get complete image data #}
+{{ cms.render.galleryImage('id', 'filename.jpg') }}     {# Get specific image HTML #}
+{{ cms.media.galleryPath('id', 'filename.jpg', {w: 800}) }}  {# Get image URL #}
+{{ cms.render.galleryAlt('id', 'filename.jpg') }}       {# Get alt text #}
+{{ cms.media.galleryImageData('id', 'filename.jpg') }} {# Get complete image data #}
 
 {# Dynamic gallery images #}
-{{ cms.galleryImage('id', 'first') }}            {# First image #}
-{{ cms.galleryImage('id', 'last') }}             {# Last image #}
-{{ cms.galleryImage('id', 'random') }}           {# Random image #}
-{{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
+{{ cms.render.galleryImage('id', 'first') }}            {# First image #}
+{{ cms.render.galleryImage('id', 'last') }}             {# Last image #}
+{{ cms.render.galleryImage('id', 'random') }}           {# Random image #}
+{{ cms.render.galleryImage('id', 'featured') }}         {# Featured image #}
 ```
 
 Note: `cms.galleryImage` automatically includes `data-gallery` and `data-gallery-image` attributes, making it easy to use with `cms.galleryLauncher`.
@@ -196,14 +196,14 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 
 ```twig
 {# Basic gallery launcher #}
-{{ cms.galleryLauncher('id') }}                   {# Outputs hidden template with gallery data #}
+{{ cms.render.galleryLauncher('id') }}                   {# Outputs hidden template with gallery data #}
 <button data-gallery="gallery-id">View Photos</button>
 
 {# Custom thumbnail and full-size settings #}
-{{ cms.galleryLauncher('id', {w: 300, h: 200}, {w: 1920, fit: 'contain'}) }}
+{{ cms.render.galleryLauncher('id', {w: 300, h: 200}, {w: 1920, fit: 'contain'}) }}
 
 {# With options #}
-{{ cms.galleryLauncher('id', {w: 300}, {w: 1920}, {
+{{ cms.render.galleryLauncher('id', {w: 300}, {w: 1920}, {
     collection: 'gallery',
     property: 'gallery',
     captions: true,                              {# Show captions in lightbox #}
@@ -218,13 +218,13 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 
 **Method 1: Using data-gallery attribute (recommended)**
 ```twig
-{{ cms.galleryLauncher('vacation') }}
+{{ cms.render.galleryLauncher('vacation') }}
 <button data-gallery="gallery-vacation">View All Photos</button>
 ```
 
 **Method 2: Using CSS selector**
 ```twig
-{{ cms.galleryLauncher('vacation', {}, {}, {
+{{ cms.render.galleryLauncher('vacation', {}, {}, {
     trigger: '.open-gallery-btn'                 {# Any element with this class triggers gallery #}
 }) }}
 <button class="open-gallery-btn">View Gallery</button>
@@ -233,7 +233,7 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 
 **Method 3: Combined (both data-gallery and CSS selector)**
 ```twig
-{{ cms.galleryLauncher('vacation', {}, {}, {
+{{ cms.render.galleryLauncher('vacation', {}, {}, {
     trigger: '.gallery-thumb'
 }) }}
 <button data-gallery="gallery-vacation">View All</button>
@@ -245,7 +245,7 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 
 **By image filename (recommended):**
 ```twig
-{{ cms.galleryLauncher('vacation') }}
+{{ cms.render.galleryLauncher('vacation') }}
 
 {# These thumbnails open gallery at their specific image #}
 <img data-gallery="gallery-vacation"
@@ -259,29 +259,29 @@ The gallery launcher allows you to open a lightbox from custom trigger elements 
 
 **By index (1-based):**
 ```twig
-{{ cms.galleryLauncher('vacation') }}
+{{ cms.render.galleryLauncher('vacation') }}
 <button data-gallery="gallery-vacation" data-gallery-index="1">First Image</button>
 <button data-gallery="gallery-vacation" data-gallery-index="6">Image #6</button>
 ```
 
 **Using galleryImage (recommended):**
 ```twig
-{{ cms.galleryLauncher('vacation') }}
+{{ cms.render.galleryLauncher('vacation') }}
 
 {# galleryImage automatically includes data-gallery and data-gallery-image attributes #}
-{{ cms.galleryImage('vacation', 'sunset.jpg', {w: 300, h: 200}) }}
-{{ cms.galleryImage('vacation', 'beach.jpg', {w: 300, h: 200}) }}
+{{ cms.render.galleryImage('vacation', 'sunset.jpg', {w: 300, h: 200}) }}
+{{ cms.render.galleryImage('vacation', 'beach.jpg', {w: 300, h: 200}) }}
 
 {# Works with dynamic selectors too #}
-{{ cms.galleryImage('vacation', 'first', {w: 400}) }}
-{{ cms.galleryImage('vacation', 'featured', {w: 400}) }}
+{{ cms.render.galleryImage('vacation', 'first', {w: 400}) }}
+{{ cms.render.galleryImage('vacation', 'featured', {w: 400}) }}
 ```
 
 #### Complete Gallery Launcher Example
 
 ```twig
 {# Create the gallery launcher #}
-{{ cms.galleryLauncher('products',
+{{ cms.render.galleryLauncher('products',
     {w: 400, h: 300},           {# Thumbnail settings #}
     {w: 1920, fit: 'contain'},  {# Full-size settings #}
     {
@@ -343,7 +343,7 @@ Both accept either `true` for default behavior or a **Twig template string** for
 When set to `true`, captions use this fallback chain: alt text → EXIF title → EXIF description. If none are available, no caption is shown. Filenames are never used as captions.
 
 ```twig
-{{ cms.gallery('id', {w: 300}, {w: 1500}, {
+{{ cms.render.gallery('id', {w: 300}, {w: 1500}, {
     captions: true,
     gridCaptions: true
 }) }}
@@ -356,7 +356,7 @@ Pass a template string to customize caption content. Use single curly braces `{v
 ```twig
 {# Simple alt text caption #}
 {% set caption = "{alt}" %}
-{{ cms.gallery('id', {}, {}, {captions: caption}) }}
+{{ cms.render.gallery('id', {}, {}, {captions: caption}) }}
 
 {# Photography captions with EXIF data #}
 {% set caption %}
@@ -364,7 +364,7 @@ Pass a template string to customize caption content. Use single curly braces `{v
 <p>{exif.camera} · {exif.lens}</p>
 <p>f/{exif.aperture} · {exif.shutterSpeed} · ISO {exif.iso}</p>
 {% endset %}
-{{ cms.gallery('id', {}, {}, {captions: caption}) }}
+{{ cms.render.gallery('id', {}, {}, {captions: caption}) }}
 
 {# Different templates for grid and lightbox #}
 {% set gridCaption = "{alt}" %}
@@ -374,7 +374,7 @@ Pass a template string to customize caption content. Use single curly braces `{v
 <p>{exif.camera} — f/{exif.aperture}</p>
 {% endset %}
 
-{{ cms.gallery('id', {w: 300}, {w: 1500}, {
+{{ cms.render.gallery('id', {w: 300}, {w: 1500}, {
     gridCaptions: gridCaption,
     captions: lightboxCaption
 }) }}
@@ -441,24 +441,24 @@ The gallery grid uses CSS Grid with a customizable minimum column size via the `
 ```
 
 ```twig
-{{ cms.gallery('id', {}, {}, {class: 'large-thumbs'}) }}
+{{ cms.render.gallery('id', {}, {}, {class: 'large-thumbs'}) }}
 ```
 
 ### Sorting Gallery Images
 
-By default, gallery images display in their stored order. Use the `sort` option to sort images by any image property. This works with both `cms.gallery()` and `cms.galleryLauncher()`.
+By default, gallery images display in their stored order. Use the `sort` option to sort images by any image property. This works with both `cms.render.gallery()` and `cms.render.galleryLauncher()`.
 
 #### Simple Sort (Single Property)
 
 ```twig
 {# Sort alphabetically by filename #}
-{{ cms.gallery('id', {}, {}, {sort: 'name'}) }}
+{{ cms.render.gallery('id', {}, {}, {sort: 'name'}) }}
 
 {# Sort by upload date (oldest first) #}
-{{ cms.gallery('id', {}, {}, {sort: 'uploadDate'}) }}
+{{ cms.render.gallery('id', {}, {}, {sort: 'uploadDate'}) }}
 
 {# Sort by EXIF capture date (oldest first) #}
-{{ cms.gallery('id', {}, {}, {sort: 'exif.date'}) }}
+{{ cms.render.gallery('id', {}, {}, {sort: 'exif.date'}) }}
 ```
 
 #### Reverse Sort (Descending)
@@ -467,13 +467,13 @@ Prefix the property name with `-` to sort in descending order:
 
 ```twig
 {# Newest photos first (by EXIF date) #}
-{{ cms.gallery('id', {}, {}, {sort: '-exif.date'}) }}
+{{ cms.render.gallery('id', {}, {}, {sort: '-exif.date'}) }}
 
 {# Most recently uploaded first #}
-{{ cms.gallery('id', {}, {}, {sort: '-uploadDate'}) }}
+{{ cms.render.gallery('id', {}, {}, {sort: '-uploadDate'}) }}
 
 {# Largest files first #}
-{{ cms.gallery('id', {}, {}, {sort: '-size'}) }}
+{{ cms.render.gallery('id', {}, {}, {sort: '-size'}) }}
 ```
 
 #### Multi-Criteria Sort
@@ -482,13 +482,13 @@ Pass an array of rule objects for advanced sorting with multiple criteria:
 
 ```twig
 {# Featured images first, then sorted by EXIF date (newest first) #}
-{{ cms.gallery('id', {}, {}, {sort: [
+{{ cms.render.gallery('id', {}, {}, {sort: [
     {property: 'featured', reverse: true},
     {property: 'exif.date', reverse: true}
 ]}) }}
 
 {# Sort by camera model, then by filename within each group #}
-{{ cms.gallery('id', {}, {}, {sort: [
+{{ cms.render.gallery('id', {}, {}, {sort: [
     {property: 'exif.camera'},
     {property: 'name'}
 ]}) }}
@@ -497,7 +497,7 @@ Pass an array of rule objects for advanced sorting with multiple criteria:
 #### With Gallery Launcher
 
 ```twig
-{{ cms.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
+{{ cms.render.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
     sort: '-exif.date',
     captions: true,
     loop: true
@@ -575,20 +575,20 @@ Pass an array of rule objects for advanced sorting with multiple criteria:
 
 ```twig
 {# Simple pagination (Previous/Next only) #}
-{{ cms.paginationSimple(totalObjects, currentPage, pageLimit) }}
-{{ cms.paginationSimple(items|length, page, 10, 'page', 'Prev', 'Next') }}
+{{ cms.render.paginationSimple(totalObjects, currentPage, pageLimit) }}
+{{ cms.render.paginationSimple(items|length, page, 10, 'page', 'Prev', 'Next') }}
 
 {# Full pagination with page numbers #}
-{{ cms.paginationFull(totalObjects, currentPage, pageLimit) }}
-{{ cms.paginationFull(items|length, page, 10, 'p', '← Previous', 'Next →', {sort: 'date'}) }}
+{{ cms.render.paginationFull(totalObjects, currentPage, pageLimit) }}
+{{ cms.render.paginationFull(items|length, page, 10, 'p', '← Previous', 'Next →', {sort: 'date'}) }}
 ```
 
 ## URL Helpers
 
 ```twig
-{{ cms.prettyUrl('/blog/post.php') }}            {# Convert to pretty URL #}
-{{ cms.apacheRule(currentUrl, 'Blog Posts') }}   {# Generate .htaccess rules #}
-{{ cms.nginxRule(currentUrl, 'Products') }}      {# Generate nginx rules #}
+{{ cms.collection.prettyUrl('/blog/post.php') }}            {# Convert to pretty URL #}
+{{ cms.admin.apacheRule(currentUrl, 'Blog Posts') }}   {# Generate .htaccess rules #}
+{{ cms.admin.nginxRule(currentUrl, 'Products') }}      {# Generate nginx rules #}
 ```
 
 ## Form Builder Integration
@@ -603,11 +603,11 @@ Pass an array of rule objects for advanced sorting with multiple criteria:
 The grid renderer provides helper methods for content grids:
 
 ```twig
-{{ cms.grid.date(item, 'M j, Y') }}              {# Format date with fallback #}
-{{ cms.grid.tags(item, '/blog/tag') }}           {# Render tag list with links #}
-{{ cms.grid.excerpt(item, 160) }}                {# Generate excerpt #}
-{{ cms.grid.price(item) }}                       {# Format price #}
-{{ cms.grid.meta(item) }}                        {# Render metadata (author, date, etc) #}
+{{ cms.render.grid.date(item, 'M j, Y') }}              {# Format date with fallback #}
+{{ cms.render.grid.tags(item, '/blog/tag') }}           {# Render tag list with links #}
+{{ cms.render.grid.excerpt(item, 160) }}                {# Generate excerpt #}
+{{ cms.render.grid.price(item) }}                       {# Format price #}
+{{ cms.render.grid.meta(item) }}                        {# Render metadata (author, date, etc) #}
 ```
 
 ## Render Helpers
@@ -625,21 +625,21 @@ See [Load More Documentation](docs/collections/load-more) for full options and e
 ## Server & Diagnostics
 
 ```twig
-{{ cms.checker.serverInfo() }}                   {# Server information array #}
-{{ cms.checker.checkRequiredSoftware() }}        {# Required software check #}
-{{ cms.checker.checkOptionalSoftware() }}        {# Optional software check #}
-{{ cms.checker.getVersion() }}                   {# Total CMS version #}
+{{ cms.admin.checker.serverInfo() }}                   {# Server information array #}
+{{ cms.admin.checker.checkRequiredSoftware() }}        {# Required software check #}
+{{ cms.admin.checker.checkOptionalSoftware() }}        {# Optional software check #}
+{{ cms.admin.checker.getVersion() }}                   {# Total CMS version #}
 
-{{ cms.cacheReporter.getStatus() }}              {# Cache status #}
-{{ cms.logAnalyzer.getRecentErrors(10) }}             {# Recent error logs #}
+{{ cms.admin.cacheReporter.getStatus() }}              {# Cache status #}
+{{ cms.admin.logAnalyzer.getRecentErrors(10) }}             {# Recent error logs #}
 ```
 
 ## Job Queue
 
 ```twig
-{{ cms.processJobQueueCommand() }}               {# Get CLI command for processing jobs #}
-{{ cms.jobQueuePendingInfo() }}                  {# HTML table of pending jobs #}
-{{ cms.jobQueueFailedInfo() }}                   {# HTML table of failed jobs #}
+{{ cms.admin.processJobQueueCommand() }}               {# Get CLI command for processing jobs #}
+{{ cms.admin.jobQueuePendingInfo() }}                  {# HTML table of pending jobs #}
+{{ cms.admin.jobQueueFailedInfo() }}                   {# HTML table of failed jobs #}
 ```
 
 ## Logging
@@ -663,8 +663,8 @@ Log messages from your templates to help with debugging. Messages are written to
 ## Utility Functions
 
 ```twig
-{{ cms.redirectIfNotFound(object) }}             {# Redirect if object is empty #}
-{{ cms.languages() }}                            {# Get supported languages array #}
+{{ cms.collection.redirectIfNotFound(object) }}  {# Redirect if object is empty #}
+{{ cms.locale.languages() }}                            {# Get supported languages array #}
 ```
 
 ## ImageWorks Parameters
@@ -709,20 +709,20 @@ Common parameters for image transformations:
 
 ### Display a blog post
 ```twig
-{% set post = cms.object('blog', 'my-post-id') %}
+{% set post = cms.collection.object('blog', 'my-post-id') %}
 <article>
     <h1>{{ post.title }}</h1>
     <time>{{ post.date|dateRelative }}</time>
     {{ post.content|markdown }}
-    {{ cms.image(post.id, {w: 800, h: 400, fit: 'crop'}) }}
+    {{ cms.render.image(post.id, {w: 800, h: 400, fit: 'crop'}) }}
 </article>
 ```
 
 ### Create an image gallery
 ```twig
-{% set product = cms.object('products', 'widget-pro') %}
+{% set product = cms.collection.object('products', 'widget-pro') %}
 <div class="product-gallery">
-    {{ cms.gallery(product.id, {w: 100, h: 100}, {w: 1200}, {
+    {{ cms.render.gallery(product.id, {w: 100, h: 100}, {w: 1200}, {
         maxVisible: 4,
         viewAllText: 'View all images'
     }) }}
@@ -731,10 +731,10 @@ Common parameters for image transformations:
 
 ### Create a gallery launcher with custom triggers
 ```twig
-{% set product = cms.object('products', 'widget-pro') %}
+{% set product = cms.collection.object('products', 'widget-pro') %}
 
 {# Output the gallery launcher (hidden template) #}
-{{ cms.galleryLauncher(product.id, {w: 300, h: 300}, {w: 1920}, {
+{{ cms.render.galleryLauncher(product.id, {w: 300, h: 300}, {w: 1920}, {
     captions: true,
     trigger: '.product-thumb',
     plugins: ['zoom', 'fullscreen']
@@ -744,15 +744,15 @@ Common parameters for image transformations:
 <div class="product-images">
     <img class="product-thumb main-image"
          data-gallery-image="front.jpg"
-         src="{{ cms.galleryPath(product.id, 'front.jpg', {w: 600, h: 400}) }}">
+         src="{{ cms.media.galleryPath(product.id, 'front.jpg', {w: 600, h: 400}) }}">
 
     <div class="thumbnail-strip">
         <img class="product-thumb"
              data-gallery-image="side.jpg"
-             src="{{ cms.galleryPath(product.id, 'side.jpg', {w: 100, h: 100}) }}">
+             src="{{ cms.media.galleryPath(product.id, 'side.jpg', {w: 100, h: 100}) }}">
         <img class="product-thumb"
              data-gallery-image="detail.jpg"
-             src="{{ cms.galleryPath(product.id, 'detail.jpg', {w: 100, h: 100}) }}">
+             src="{{ cms.media.galleryPath(product.id, 'detail.jpg', {w: 100, h: 100}) }}">
     </div>
 
     <button data-gallery="gallery-{{ product.id }}">View All Photos</button>
@@ -771,16 +771,16 @@ Common parameters for image transformations:
 ### Display object counts efficiently
 ```twig
 {# Efficient: Uses cached collection metadata (no index loading) #}
-<p>{{ cms.objectCount('blog') }} blog posts</p>
-<p>{{ cms.objectCount('products') }} products available</p>
+<p>{{ cms.collection.objectCount('blog') }} blog posts</p>
+<p>{{ cms.collection.objectCount('products') }} products available</p>
 
 {# Avoid: Loads entire index just to count objects #}
-<p>{{ cms.objects('blog')|length }} blog posts</p>
+<p>{{ cms.collection.objects('blog')|length }} blog posts</p>
 ```
 
 ### Search with pagination
 ```twig
-{% set results = cms.search('blog', query, ['title', 'content', 'tags']) %}
+{% set results = cms.collection.search('blog', query, ['title', 'content', 'tags']) %}
 {% set page = app.request.get('page', 1) %}
 {% set perPage = 10 %}
 {% set paged = results|paginate(perPage, page) %}
@@ -789,20 +789,20 @@ Common parameters for image transformations:
     <article>{{ item.title }}</article>
 {% endfor %}
 
-{{ cms.paginationFull(results|length, page, perPage) }}
+{{ cms.render.paginationFull(results|length, page, perPage) }}
 ```
 
 ### Text watermark examples
 ```twig
 {# Simple text watermark #}
-{{ cms.imagePath('hero-image', {
+{{ cms.media.imagePath('hero-image', {
     w: 1200, 
     h: 600, 
     marktext: 'Copyright 2024'
 }) }}
 
 {# Styled text watermark with custom font #}
-{{ cms.imagePath('product-photo', {
+{{ cms.media.imagePath('product-photo', {
     w: 800,
     marktext: 'Premium Quality',
     marktextfont: 'Dorsa-Regular',
@@ -815,7 +815,7 @@ Common parameters for image transformations:
 }) }}
 
 {# Rotated watermark #}
-{{ cms.imagePath('landscape', {
+{{ cms.media.imagePath('landscape', {
     marktext: 'DRAFT',
     marktextsize: 200,
     marktextangle: -45,
@@ -825,7 +825,7 @@ Common parameters for image transformations:
 }) }}
 
 {# Responsive text width #}
-{{ cms.imagePath('banner', {
+{{ cms.media.imagePath('banner', {
     w: 1200,
     marktext: 'This is a very long watermark text that will wrap',
     marktextw: '80w',  {# 80% of image width #}

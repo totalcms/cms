@@ -102,7 +102,7 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 			$property     = $options['property'] ?? '';
 
 			if ($property !== '') {
-				$meta       = $this->adapter->collection($collectionId);
+				$meta       = $this->adapter->collection->get($collectionId);
 				$manualSort = $meta['manualSort'] ?? [];
 
 				if (is_array($manualSort) && isset($manualSort[$property])) {

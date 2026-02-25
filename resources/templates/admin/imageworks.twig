@@ -123,12 +123,12 @@
 			<div class="split-view">
 
 				{% if name %}
-					{% set gallery = cms.object(collection, id) %}
-					{% set imagePath = cms.galleryPath(gallery, name, values, {collection: collection, property: property}) %}
-					{% set imageData = cms.galleryImageData(gallery, name, {collection: collection, property: property}) %}
+					{% set gallery = cms.collection.object(collection, id) %}
+					{% set imagePath = cms.media.galleryPath(gallery, name, values, {collection: collection, property: property}) %}
+					{% set imageData = cms.media.galleryImageData(gallery, name, {collection: collection, property: property}) %}
 				{% else %}
-					{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
-					{% set imageData = cms.data(collection, id, property) %}
+					{% set imagePath = cms.media.imagePath(id, values, {collection: collection, property: property}) %}
+					{% set imageData = cms.data.raw(collection, id, property) %}
 				{% endif %}
 
 				<img src="{{ imagePath }}"
@@ -141,9 +141,9 @@
 						<h4>Macro:</h4>
 
 						{% if name %}
-						<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
+						<pre id="twig-macro">&#123;&#123; cms.media.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
 						{% else %}
-						<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
+						<pre id="twig-macro">&#123;&#123; cms.media.imagePath("{{id}}") &#125;&#125;</pre>
 						{% endif %}
 
 						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Path Macro</button>
@@ -243,7 +243,7 @@
 					<section>
 
 						{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
-						{% set watermarkData = cms.data("gallery", watermarkID, "gallery") | default([]) %}
+						{% set watermarkData = cms.data.raw("gallery", watermarkID, "gallery") | default([]) %}
 						{% set watermarks = selectOptions(watermarkData, "name", "name") %}
 
 						{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
@@ -275,7 +275,7 @@
 				<div class="content">
 					<section>
 						{% set watermarkDepotId = cms.config("imageworks", "watermarkFontsDepot") %}
-						{% set watermarkDepot = cms.data("depot", watermarkDepotId, "depot") | default([]) %}
+						{% set watermarkDepot = cms.data.raw("depot", watermarkDepotId, "depot") | default([]) %}
 						{% set watermarkFonts = selectOptions(watermarkDepot.files, "name", "name") %}
 
 						{{ _self.input("marktext", "text", "Watermark Text", "icon-text", help.marktext, values.marktext) }}

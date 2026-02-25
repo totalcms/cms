@@ -48,11 +48,11 @@ For sites with multiple languages, you can change the locale dynamically within 
 
 ### Setting the Locale
 
-Use `cms.setLocale()` at the top of your template to change the locale for all subsequent formatting:
+Use `cms.locale.set()` at the top of your template to change the locale for all subsequent formatting:
 
 ```twig
 {# Set locale based on page language #}
-{{ cms.setLocale('de_DE') }}
+{{ cms.locale.set('de_DE') }}
 
 {# All formatting now uses German #}
 {{ post.date|dateRelative }}
@@ -62,7 +62,7 @@ Use `cms.setLocale()` at the top of your template to change the locale for all s
 ### Getting the Current Locale
 
 ```twig
-{{ cms.getLocale() }}
+{{ cms.locale.get() }}
 {# Output: "de_DE" #}
 ```
 
@@ -72,7 +72,7 @@ If your content has a language field, you can set the locale dynamically:
 
 ```twig
 {# Assuming page.locale contains the locale code #}
-{{ cms.setLocale(page.locale) }}
+{{ cms.locale.set(page.locale) }}
 
 <article>
     <h1>{{ page.title }}</h1>
@@ -239,7 +239,7 @@ Here's a complete example of a multilingual blog post template:
 
 ```twig
 {# Set locale from page content #}
-{{ cms.setLocale(post.locale|default('en_US')) }}
+{{ cms.locale.set(post.locale|default('en_US')) }}
 
 <article class="blog-post" lang="{{ post.locale|default('en_US')|slice(0,2) }}">
     <header>

@@ -153,7 +153,7 @@
 					label       : "Collection",
 					help        : "Select the collection that contains the images you want to process.",
 					class       : "no-change-listener",
-					options     : cms.collections() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
+					options     : cms.collection.list() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
 				}) }}
 			{% endset %}
 
@@ -170,7 +170,7 @@
 			<h2>Step 2: Select Property</h2>
 			<p>Choose which property contains the images in the <strong>{{ selectedCollection }}</strong> collection.</p>
 
-			{% set schema = cms.schemaForCollection(selectedCollection) %}
+			{% set schema = cms.schema.forCollection(selectedCollection) %}
 			{% set propertyOptions = [] %}
 			{% set imageFields = ['image', 'gallery'] %}
 
@@ -222,7 +222,7 @@
 				{{ cms.form.field("textarea", "imageworks_macro", {
 					label : "ImageWorks Macro",
 					help  : "Paste your ImageWorks macro here.",
-					value : postData.imageworks_macro ?? "{{ cms.imagePath('example', {w:400, h:400, fit:'crop'}) }}",
+					value : postData.imageworks_macro ?? "{{ cms.media.imagePath('example', {w:400, h:400, fit:'crop'}) }}",
 					rows  : 4,
 					class : "no-change-listener",
 				}) }}

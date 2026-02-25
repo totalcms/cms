@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
 final class TotalCMSTwigAdapterStaticTest extends TestCase
 {
@@ -21,7 +21,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$imageworks = ['w' => 300, 'h' => 200];
 		$options    = ['collection' => 'photos', 'property' => 'gallery'];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI($api, $id, $image, $imageworks, $options);
+		$result = MediaTwigAdapter::buildImageworksAPI($api, $id, $image, $imageworks, $options);
 
 		expect($result)->toContain('/api/imageworks/photos/test-id/gallery.jpg');
 		expect($result)->toContain('w=300');
@@ -31,7 +31,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testBuildImageworksAPIWithEmptyImage(): void
 	{
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', []);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', []);
 
 		expect($result)->toBe('');
 	}
@@ -40,7 +40,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	{
 		$image = ['size' => 12345, 'uploadDate' => '2024-01-15T12:30:45Z'];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
 		expect($result)->toBe('');
 	}
@@ -53,7 +53,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		];
 		$imageworks = ['w' => 300, 'fm' => 'webp'];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
 
 		// Should convert to webp extension and remove fm parameter
 		expect($result)->toContain('/api/imageworks/image/test-id/image.webp');
@@ -68,7 +68,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
 		expect($result)->toContain('/api/imageworks/image/test-id/image.jpg');
 	}
@@ -83,7 +83,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 				'uploadDate' => '2024-01-15T12:30:45Z',
 			];
 
-			$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
+			$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
 			expect($result)->toContain("/api/imageworks/image/test-id/image.$ext");
 		}
@@ -101,7 +101,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			'route'   => '/some/route',    // Should be removed
 		];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
 
 		expect($result)->toContain('w=300');
 		expect($result)->not->toContain('datadir');
@@ -115,7 +115,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
 		// Cache should be reversed uploadDate with non-word characters removed
 		$expectedCache = strrev((string)preg_replace('/\W+/', '', '2024-01-15T12:30:45Z'));
@@ -131,7 +131,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		];
 		$imageworks = ['w' => 300];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI($api, 'test-id', $image, $imageworks);
+		$result = MediaTwigAdapter::buildImageworksAPI($api, 'test-id', $image, $imageworks);
 
 		// Should preserve existing params and add new ones
 		expect($result)->toContain('existing=param');
@@ -149,7 +149,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			'property'   => 'featured',
 		];
 
-		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'gallery-123', $image, [], $options);
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'gallery-123', $image, [], $options);
 
 		expect($result)->toContain('/api/imageworks/portfolio/gallery-123/featured.jpg');
 	}
@@ -164,7 +164,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$imageworks = ['w' => 300, 'h' => 200];
 		$options    = ['collection' => 'photos', 'property' => 'images'];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
 			$name,
@@ -184,7 +184,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$dynamicRoutes = ['first', 'last', 'random'];
 
 		foreach ($dynamicRoutes as $route) {
-			$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+			$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 				'/api',
 				'gallery-123',
 				$route,
@@ -200,7 +200,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testBuildImageworksGalleryAPIHandlesMissingUploadDate(): void
 	{
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			'/api',
 			'gallery-123',
 			'photo.jpg',
@@ -218,7 +218,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$image      = ['name' => 'photo.png', 'uploadDate' => '2024-01-15T12:30:45Z'];
 		$imageworks = ['w' => 300, 'fm' => 'webp'];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			'/api',
 			'gallery-123',
 			'photo.png',

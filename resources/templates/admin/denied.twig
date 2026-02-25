@@ -5,7 +5,7 @@
 {% block content %}
 <main class="login-layout admin-layout">
 
-	{% set referer = cms.sessionData('requestRefererUrl') ?? cms.config('auth', 'deniedDefaultRedirect') %}
+	{% set referer = cms.auth.sessionData('requestRefererUrl') ?? cms.config('auth', 'deniedDefaultRedirect') %}
 
 	<section >
 		<h1>Access Denied</h1>

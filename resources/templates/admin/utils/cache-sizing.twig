@@ -4,7 +4,7 @@
 
 	<p>Analyze your CMS data to get data-driven memory allocation recommendations for cache backends.</p>
 
-	{% set sizing = cms.cacheSizingAdvisor.getSizingAnalysis() %}
+	{% set sizing = cms.admin.cacheSizingAdvisor.getSizingAnalysis() %}
 
 		{# Data Summary #}
 		<div class="sizing-stats-grid">

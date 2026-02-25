@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 
 final class TotalCMSTwigAdapterAdvancedTest extends TestCase
@@ -48,7 +49,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$imageworks = ['w' => 300, 'h' => 200];
 		$options    = ['collection' => 'photos', 'property' => 'images'];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
 			$name,
@@ -72,7 +73,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$imageworks = ['w' => 300];
 		$options    = [];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
 			$name,
@@ -95,7 +96,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$imageworks = ['w' => 300];
 		$options    = [];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
 			$name,
@@ -117,7 +118,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$imageworks = ['w' => 300, 'fm' => 'webp']; // Format conversion
 		$options    = [];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
 			$name,
@@ -144,7 +145,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		];
 		$options = [];
 
-		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
 			$name,

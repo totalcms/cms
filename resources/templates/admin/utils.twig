@@ -71,7 +71,7 @@
 }, #}
 
 {% set allMenu = menu %}
-{% if cms.isAdmin() %}
+{% if cms.auth.isAdmin() %}
 	{% set allMenu = allMenu | merge(adminMenu) %}
 {% endif %}
 {% set allMenu = allMenu | sort((a, b) => a.title | lower <=> b.title | lower) %}
@@ -86,7 +86,7 @@
 	<nav class="links">
 		<ul>
 		{% for item in allMenu %}
-			{% if item.admin | default(false) or cms.canAccessUtil(item.path, 'read') %}
+			{% if item.admin | default(false) or cms.auth.canAccessUtil(item.path, 'read') %}
 			<li class="{{ item.path }}">
 				<a {% if page == item.path %}class="active"{% endif %}
 					href="utils/{{ item.path }}">{{ item.title }}</a>

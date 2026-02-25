@@ -47,13 +47,13 @@ Download images with specific dimensions or processing:
 
 ```twig
 {# Download resized image #}
-<a href="{{ cms.imagePath('myimage', {w:1920}) }}"
+<a href="{{ cms.media.imagePath('myimage', {w:1920}) }}"
    download="wallpaper.jpg">
   Download Wallpaper (1920x1080)
 </a>
 
 {# Download watermarked image #}
-<a href="{{ cms.imagePath('myimage', {w:600,mark:'logo.png'}) }}"
+<a href="{{ cms.media.imagePath('myimage', {w:600,mark:'logo.png'}) }}"
    download>
   Download with Watermark
 </a>

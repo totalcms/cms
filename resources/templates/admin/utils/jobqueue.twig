@@ -20,12 +20,12 @@
 		<p><em>If there is no path to the PHP command, you may need to find out what that is
 		from your hosting company. Depending on your server, it may or may not need it.</em></p>
 
-		<pre class="jobqueue-command"><code id="jobqueue-command-text">{{ cms.processJobQueueCommand() }}</code></pre>
+		<pre class="jobqueue-command"><code id="jobqueue-command-text">{{ cms.admin.processJobQueueCommand() }}</code></pre>
 		<button type="button" class="cms-clip-button dash-button transparent" data-clip="#jobqueue-command-text">Copy Command</button>
 	</section>
 
-	{{ cms.jobQueuePendingInfo() }}
-	{{ cms.jobQueueFailedInfo() }}
+	{{ cms.admin.jobQueuePendingInfo() }}
+	{{ cms.admin.jobQueueFailedInfo() }}
 
 </section>
 

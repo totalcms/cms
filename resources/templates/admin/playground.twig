@@ -8,7 +8,7 @@
 	</header>
 
 	<nav class="links" id="playground-links">
-		{% set snippets = cms.objects("playground") %}
+		{% set snippets = cms.collection.objects("playground") %}
 		{% if snippets|length == 0 %}
 			<h3>Snippets</h3>
 			<ul>

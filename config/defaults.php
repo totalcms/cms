@@ -32,7 +32,7 @@ $settings['sentry'] = true;
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain']   = $_SERVER['HTTP_HOST'] ?? 'unknown';
+$settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
 					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);

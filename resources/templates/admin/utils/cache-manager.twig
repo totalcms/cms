@@ -22,8 +22,8 @@
 		label  : "Clear Content Caches",
 	}) }}
 
-	{% set cacheStats = cms.cacheReporter.getCacheStats() %}
-	{% set cacheConfig = cms.cacheReporter.getOptimalCacheConfig() %}
+	{% set cacheStats = cms.admin.cacheReporter.getCacheStats() %}
+	{% set cacheConfig = cms.admin.cacheReporter.getOptimalCacheConfig() %}
 
 	{% if not cacheStats.cache_enabled %}
 		<div class="cache-disabled-notice">
@@ -119,9 +119,9 @@
 		<h3>System Information</h3>
 		<ul>
 			<li><strong>Cache Version</strong>: {{ cacheStats.cache_version }}</li>
-			<li><strong>Cache Dir Size</strong>: {{ cms.checker.cacheDirSize }}</li>
-			<li><strong>Total Space</strong>: {{ cms.checker.totalspace }}</li>
-			<li><strong>Free Space</strong>: {{ cms.checker.freespace }}</li>
+			<li><strong>Cache Dir Size</strong>: {{ cms.admin.checker.cacheDirSize }}</li>
+			<li><strong>Total Space</strong>: {{ cms.admin.checker.totalspace }}</li>
+			<li><strong>Free Space</strong>: {{ cms.admin.checker.freespace }}</li>
 		</ul>
 	{% endif %}
 

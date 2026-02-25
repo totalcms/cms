@@ -69,47 +69,47 @@
 							: ['admin-logo-default.twig']
 						, ignore_missing = true) }}
                     </li>
-                    {% if cms.canAccessCollectionsOperation('read') %}
+                    {% if cms.auth.canAccessCollectionsOperation('read') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
                         <a class="collections" href="collections" title="Collections">Collections</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessSchemasOperation('read') %}
+                    {% if cms.auth.canAccessSchemasOperation('read') %}
                     <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
                         <a class="schemas" href="schemas" title="Schemas">Schemas</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessPlayground() %}
+                    {% if cms.auth.canAccessPlayground() %}
                     <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
                         <a class="playground" href="playground" title="Playground">Playground</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessMailer() and cms.edition.can('mailer_actions') %}
+                    {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
                     <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
                         <a class="mailer" href="mailer" title="Mailer">Mailer</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessTemplates() and cms.edition.can('templates') %}
+                    {% if cms.auth.canAccessTemplates() and cms.edition.can('templates') %}
                     <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
                         <a class="templates" href="templates" title="Templates">Templates</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessDataViews() and cms.edition.can('data_views') %}
+                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
                     <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
                         <a class="dataviews" href="dataviews" title="Data Views">Data Views</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessUtils() %}
+                    {% if cms.auth.canAccessUtils() %}
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
                         <a class="utils" href="utils" title="Utils">Utils</a>
                     </li>
                     {% endif %}
-                    {% if cms.isAdmin() %}
+                    {% if cms.auth.isAdmin() %}
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="Settings">Settings</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessDocs() %}
+                    {% if cms.auth.canAccessDocs() %}
                     <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
                         <a class="docs" href="docs" title="Docs">Docs</a>
                     </li>
@@ -118,17 +118,17 @@
             </nav>
 
             {% set licenseStatus = cms.license.getSidebarStatus() %}
-            {% if licenseStatus.showIcon and cms.isAdmin() %}
+            {% if licenseStatus.showIcon and cms.auth.isAdmin() %}
             <a href="utils/license-manager"
 				class="license-status license-{{ licenseStatus.severity }}"
 				title="{{ licenseStatus.tooltip }}">License Status</a>
             {% endif %}
 
             <div class="user-profile" >
-                {% if cms.userLoggedIn %}
+                {% if cms.auth.userLoggedIn %}
                 <button popovertarget="user-actions">
-                    {% set user = cms.userData %}
-                    <img src="{{ cms.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
+                    {% set user = cms.auth.userData %}
+                    <img src="{{ cms.media.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
                         alt="Profile Image for {{ user.name }}" onerror="this.remove();"/>
                 </button>
                 <nav popover id="user-actions">

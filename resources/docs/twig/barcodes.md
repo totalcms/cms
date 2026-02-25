@@ -240,7 +240,7 @@ Total CMS provides smart methods that automatically choose the best barcode form
 ```twig
 {# inventory-list.twig #}
 <div class="inventory-grid">
-    {% for item in cms.collection('inventory').list() %}
+    {% for item in cms.collection.objects('inventory') %}
         <div class="inventory-card">
             <h3>{{ item.name }}</h3>
             
@@ -269,7 +269,7 @@ Total CMS provides smart methods that automatically choose the best barcode form
 
 ```twig
 {# book-catalog.twig #}
-{% for book in cms.collection('books').list() %}
+{% for book in cms.collection.objects('books') %}
     <div class="book-entry">
         <div class="book-info">
             <h2>{{ book.title }}</h2>
@@ -333,7 +333,7 @@ Total CMS provides smart methods that automatically choose the best barcode form
 
 ```twig
 {# sample-labels.twig #}
-{% for sample in cms.collection('lab_samples').list() %}
+{% for sample in cms.collection.objects('lab_samples') %}
     <div class="sample-label">
         <h3>Sample ID: {{ sample.id }}</h3>
         

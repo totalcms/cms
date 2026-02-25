@@ -15,7 +15,7 @@
 	</p>
 	<a class="dash-button transparent" href="utils/project-setup">Project Setup Tool</a>
 
-	{% set inaccessibleCollections = cms.getInaccessibleCollections() %}
+	{% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}
 	{% if inaccessibleCollections|length > 0 %}
 	<div class="edition-alert">
 		<span class="icon-warn"></span>

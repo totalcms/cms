@@ -288,10 +288,10 @@ Small thumbnails without watermarks, full images protected:
 Usage in templates:
 ```twig
 {# Thumbnail - no watermark #}
-{{ cms.gallery(id, {w: 300, h: 200}) }}
+{{ cms.render.gallery(id, {w: 300, h: 200}) }}
 
 {# Full size - watermarked #}
-{{ cms.gallery(id, {w: 1200}, {w: 1920}) }}
+{{ cms.render.gallery(id, {w: 1200}, {w: 1920}) }}
 ```
 
 #### Stock Photography

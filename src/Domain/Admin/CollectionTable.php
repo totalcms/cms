@@ -10,7 +10,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
@@ -127,7 +127,7 @@ readonly class CollectionTable
 
 		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
-		$imageSrc   = TotalCMSTwigAdapter::buildImageworksAPI(
+		$imageSrc   = MediaTwigAdapter::buildImageworksAPI(
 			api: $this->api,
 			id: $id,
 			image: $image,
@@ -148,7 +148,7 @@ readonly class CollectionTable
 	{
 		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
-		$imageSrc   = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$imageSrc   = MediaTwigAdapter::buildImageworksGalleryAPI(
 			baseapi: $this->api,
 			id: $id,
 			name: 'first',

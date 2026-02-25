@@ -123,11 +123,19 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
+use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\SchemaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\ViewTwigAdapter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
@@ -373,42 +381,96 @@ return [
 	RenderTwigAdapter::class => fn (ContainerInterface $container): RenderTwigAdapter => new RenderTwigAdapter(
 		$container->get(HtmxRenderer::class),
 		$container->get(Config::class),
+		$container->get(DataTwigAdapter::class),
+		$container->get(MediaTwigAdapter::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionLister::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(IndexReader::class),
+		$container->get(ObjectUrlBuilder::class),
+		$container->get(CacheManager::class),
+		$container->get(GridRenderer::class),
+		$container->get(LoggerFactory::class),
 	),
 
-	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
-		$container->get(Config::class),
-		$container->get(IndexReader::class),
-		$container->get(IndexSearcher::class),
+	ViewTwigAdapter::class => fn (ContainerInterface $container): ViewTwigAdapter => new ViewTwigAdapter(
+		$container->get(DataViewFetcher::class),
+		$container->get(DataViewLister::class),
+	),
+
+	MediaTwigAdapter::class => fn (ContainerInterface $container): MediaTwigAdapter => new MediaTwigAdapter(
 		$container->get(ObjectFetcher::class),
-		$container->get(CollectionLister::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionEditionService::class),
-		$container->get(SchemaLister::class),
-		$container->get(SchemaFetcher::class),
-		$container->get(DeckCompatibilityChecker::class),
-		$container->get(TemplateLister::class),
-		$container->get(ObjectUrlBuilder::class),
-		$container->get(TotalFormFactory::class),
-		$container->get(ServerChecker::class),
-		$container->get(CacheReporter::class),
-		$container->get(LogAnalyzer::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	DataTwigAdapter::class => fn (ContainerInterface $container): DataTwigAdapter => new DataTwigAdapter(
+		$container->get(ObjectFetcher::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	AuthTwigAdapter::class => fn (ContainerInterface $container): AuthTwigAdapter => new AuthTwigAdapter(
+		$container->get(Config::class),
 		$container->get(PhpSession::class),
 		$container->get(AccessManager::class),
 		$container->get(FileAccessManager::class),
 		$container->get(AccessControlService::class),
-		$container->get(ImageCacheService::class),
-		$container->get(GridRenderer::class),
-		$container->get(DepotBrowserRenderer::class),
+		$container->get(CollectionLister::class),
+	),
+
+	CollectionTwigAdapter::class => fn (ContainerInterface $container): CollectionTwigAdapter => new CollectionTwigAdapter(
+		$container->get(Config::class),
+		$container->get(CollectionLister::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionEditionService::class),
+		$container->get(IndexReader::class),
+		$container->get(IndexSearcher::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUrlBuilder::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	SchemaTwigAdapter::class => fn (ContainerInterface $container): SchemaTwigAdapter => new SchemaTwigAdapter(
+		$container->get(SchemaLister::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(DeckCompatibilityChecker::class),
+		$container->get(CollectionEditionService::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	AdminTwigAdapter::class => fn (ContainerInterface $container): AdminTwigAdapter => new AdminTwigAdapter(
+		$container->get(Config::class),
+		$container->get(AuthTwigAdapter::class),
+		$container->get(CollectionLister::class),
+		$container->get(SchemaLister::class),
+		$container->get(TemplateLister::class),
+		$container->get(JobManager::class),
 		$container->get(DevModeManager::class),
+		$container->get(CollectionEditionService::class),
+		$container->get(CacheReporter::class),
+		$container->get(LicenseStatus::class),
+		$container->get(IndexReader::class),
+		$container->get(ServerChecker::class),
+		$container->get(LogAnalyzer::class),
+		$container->get(ImageCacheService::class),
+		$container->get(CacheSizingAdvisor::class),
+	),
+
+	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
+		$container->get(Config::class),
+		$container->get(TotalFormFactory::class),
 		$container->get(LicenseStatus::class),
 		$container->get(EditionTwigAdapter::class),
-		$container->get(JobManager::class),
-		$container->get(CacheManager::class),
-		$container->get(CacheSizingAdvisor::class),
-		$container->get(DataViewFetcher::class),
-		$container->get(DataViewLister::class),
 		$container->get(LoggerFactory::class),
 		$container->get(RenderTwigAdapter::class),
+		$container->get(ViewTwigAdapter::class),
+		$container->get(SchemaTwigAdapter::class),
+		$container->get(AuthTwigAdapter::class),
+		$container->get(DataTwigAdapter::class),
+		$container->get(MediaTwigAdapter::class),
+		$container->get(CollectionTwigAdapter::class),
+		$container->get(AdminTwigAdapter::class),
+		new LocaleTwigAdapter(),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),

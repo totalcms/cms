@@ -1,5 +1,5 @@
 {# Collection Object Table #}
-{% set collection = cms.collection(url.collection) %}
+{% set collection = cms.collection.get(url.collection) %}
 {% set labelPlural = collection.labelPlural|default('objects') %}
 {# Use totalObjects from collection metadata - avoids loading full index #}
 {% set actualObjectCount = collection.totalObjects|default(0) %}
@@ -20,7 +20,7 @@
 
 {% if actualObjectCount > 0 %}
 
-	{{ cms.collectionTable(url.collection) }}
+	{{ cms.render.collectionTable(url.collection) }}
 
 {% else %}
 

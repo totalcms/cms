@@ -53,7 +53,7 @@
 				{{ cms.form.field("select", "collection", {
 					label       : "Target Collection",
 					help        : "Select the collection to import entries into",
-					options     : cms.collections() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
+					options     : cms.collection.list() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
 					value       : "blog"
 				}) }}
 

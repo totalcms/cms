@@ -35,7 +35,7 @@ Multiple filters can be combined - all filters must match (AND logic):
 Exact match (case-sensitive for strings, loose comparison).
 
 ```twig
-{% set published = cms.objects('blog') | filterCollection([
+{% set published = cms.collection.objects('blog') | filterCollection([
     {property: "status", operator: "equal", value: "published"}
 ]) %}
 ```
@@ -44,7 +44,7 @@ Exact match (case-sensitive for strings, loose comparison).
 Check if string contains substring (case-sensitive).
 
 ```twig
-{% set guides = cms.objects('blog') | filterCollection([
+{% set guides = cms.collection.objects('blog') | filterCollection([
     {property: "title", operator: "contains", value: "Guide"}
 ]) %}
 ```
@@ -53,7 +53,7 @@ Check if string contains substring (case-sensitive).
 Check if string starts with prefix.
 
 ```twig
-{% set tutorials = cms.objects('blog') | filterCollection([
+{% set tutorials = cms.collection.objects('blog') | filterCollection([
     {property: "title", operator: "starts", value: "How to"}
 ]) %}
 ```
@@ -62,7 +62,7 @@ Check if string starts with prefix.
 Check if string ends with suffix.
 
 ```twig
-{% set questions = cms.objects('blog') | filterCollection([
+{% set questions = cms.collection.objects('blog') | filterCollection([
     {property: "title", operator: "ends", value: "?"}
 ]) %}
 ```
@@ -71,7 +71,7 @@ Check if string ends with suffix.
 Regular expression pattern matching.
 
 ```twig
-{% set posts = cms.objects('blog') | filterCollection([
+{% set posts = cms.collection.objects('blog') | filterCollection([
     {property: "title", operator: "like", value: "PHP.*Tutorial"}
 ]) %}
 ```
@@ -85,7 +85,7 @@ All string operators have case-insensitive versions:
 - `endsCaseInsensitive`
 
 ```twig
-{% set posts = cms.objects('blog') | filterCollection([
+{% set posts = cms.collection.objects('blog') | filterCollection([
     {property: "title", operator: "containsCaseInsensitive", value: "guide"}
 ]) %}
 {# Matches "Guide", "GUIDE", "guide", etc. #}
@@ -99,7 +99,7 @@ All string operators have case-insensitive versions:
 Less than comparison.
 
 ```twig
-{% set cheapProducts = cms.objects('products') | filterCollection([
+{% set cheapProducts = cms.collection.objects('products') | filterCollection([
     {property: "price", operator: "less", value: "50"}
 ]) %}
 ```
@@ -108,7 +108,7 @@ Less than comparison.
 Less than or equal to.
 
 ```twig
-{% set affordableProducts = cms.objects('products') | filterCollection([
+{% set affordableProducts = cms.collection.objects('products') | filterCollection([
     {property: "price", operator: "lesseq", value: "100"}
 ]) %}
 ```
@@ -117,7 +117,7 @@ Less than or equal to.
 Greater than comparison.
 
 ```twig
-{% set premiumProducts = cms.objects('products') | filterCollection([
+{% set premiumProducts = cms.collection.objects('products') | filterCollection([
     {property: "price", operator: "greater", value: "100"}
 ]) %}
 ```
@@ -126,7 +126,7 @@ Greater than comparison.
 Greater than or equal to.
 
 ```twig
-{% set expensiveProducts = cms.objects('products') | filterCollection([
+{% set expensiveProducts = cms.collection.objects('products') | filterCollection([
     {property: "price", operator: "greatereq", value: "500"}
 ]) %}
 ```
@@ -139,7 +139,7 @@ Greater than or equal to.
 Check if value is true (true, 'true', '1', or 1).
 
 ```twig
-{% set featured = cms.objects('products') | filterCollection([
+{% set featured = cms.collection.objects('products') | filterCollection([
     {property: "featured", operator: "istrue"}
 ]) %}
 ```
@@ -148,7 +148,7 @@ Check if value is true (true, 'true', '1', or 1).
 Check if value is false (false, 'false', '0', or 0).
 
 ```twig
-{% set notFeatured = cms.objects('products') | filterCollection([
+{% set notFeatured = cms.collection.objects('products') | filterCollection([
     {property: "featured", operator: "isfalse"}
 ]) %}
 ```
@@ -157,7 +157,7 @@ Check if value is false (false, 'false', '0', or 0).
 Check if value is empty.
 
 ```twig
-{% set noDescription = cms.objects('products') | filterCollection([
+{% set noDescription = cms.collection.objects('products') | filterCollection([
     {property: "description", operator: "isempty"}
 ]) %}
 ```
@@ -166,7 +166,7 @@ Check if value is empty.
 Check if value is not empty.
 
 ```twig
-{% set hasDescription = cms.objects('products') | filterCollection([
+{% set hasDescription = cms.collection.objects('products') | filterCollection([
     {property: "description", operator: "isnotempty"}
 ]) %}
 ```
@@ -179,35 +179,35 @@ Check if value is not empty.
 
 **`past`** - Date is in the past
 ```twig
-{% set pastEvents = cms.objects('events') | filterCollection([
+{% set pastEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "past"}
 ]) %}
 ```
 
 **`future`** - Date is in the future
 ```twig
-{% set upcomingEvents = cms.objects('events') | filterCollection([
+{% set upcomingEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "future"}
 ]) %}
 ```
 
 **`today`** - Date is today
 ```twig
-{% set todaysEvents = cms.objects('events') | filterCollection([
+{% set todaysEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "today"}
 ]) %}
 ```
 
 **`pastToday`** - Date is today or in the past
 ```twig
-{% set currentAndPast = cms.objects('events') | filterCollection([
+{% set currentAndPast = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "pastToday"}
 ]) %}
 ```
 
 **`futureToday`** - Date is today or in the future
 ```twig
-{% set currentAndFuture = cms.objects('events') | filterCollection([
+{% set currentAndFuture = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "futureToday"}
 ]) %}
 ```
@@ -217,7 +217,7 @@ Check if value is not empty.
 **`todayPlusDays`** - Today through N days in future
 ```twig
 {# Events from today through next 7 days #}
-{% set nextWeekEvents = cms.objects('events') | filterCollection([
+{% set nextWeekEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "todayPlusDays", value: 7}
 ]) %}
 ```
@@ -225,7 +225,7 @@ Check if value is not empty.
 **`todayMinusDays`** - Today and N days back
 ```twig
 {# Blog posts from last 30 days including today #}
-{% set recentPosts = cms.objects('blog') | filterCollection([
+{% set recentPosts = cms.collection.objects('blog') | filterCollection([
     {property: "date", operator: "todayMinusDays", value: 30}
 ]) %}
 ```
@@ -234,14 +234,14 @@ Check if value is not empty.
 
 **`after`** - Date is after another date
 ```twig
-{% set recent = cms.objects('blog') | filterCollection([
+{% set recent = cms.collection.objects('blog') | filterCollection([
     {property: "date", operator: "after", value: "2024-01-01"}
 ]) %}
 ```
 
 **`before`** - Date is before another date
 ```twig
-{% set archived = cms.objects('blog') | filterCollection([
+{% set archived = cms.collection.objects('blog') | filterCollection([
     {property: "date", operator: "before", value: "2023-01-01"}
 ]) %}
 ```
@@ -252,21 +252,21 @@ Check if value is not empty.
 
 **`thisWeek`** - Date is in current week (Monday-Sunday)
 ```twig
-{% set thisWeeksPosts = cms.objects('blog') | filterCollection([
+{% set thisWeeksPosts = cms.collection.objects('blog') | filterCollection([
     {property: "date", operator: "thisWeek"}
 ]) %}
 ```
 
 **`thisMonth`** - Date is in current month
 ```twig
-{% set thisMonthsPosts = cms.objects('blog') | filterCollection([
+{% set thisMonthsPosts = cms.collection.objects('blog') | filterCollection([
     {property: "date", operator: "thisMonth"}
 ]) %}
 ```
 
 **`thisYear`** - Date is in current year
 ```twig
-{% set thisYearsPosts = cms.objects('blog') | filterCollection([
+{% set thisYearsPosts = cms.collection.objects('blog') | filterCollection([
     {property: "date", operator: "thisYear"}
 ]) %}
 ```
@@ -281,17 +281,17 @@ Usage: `value: "min,max"`
 
 ```twig
 {# Products priced between $10 and $100 #}
-{% set affordableProducts = cms.objects('products') | filterCollection([
+{% set affordableProducts = cms.collection.objects('products') | filterCollection([
     {property: "price", operator: "between", value: "10,100"}
 ]) %}
 
 {# Cars with mileage between 10k-50k miles #}
-{% set usedCars = cms.objects('cars') | filterCollection([
+{% set usedCars = cms.collection.objects('cars') | filterCollection([
     {property: "mileage", operator: "between", value: "10000,50000"}
 ]) %}
 
 {# Ratings between 3-5 stars #}
-{% set topRated = cms.objects('reviews') | filterCollection([
+{% set topRated = cms.collection.objects('reviews') | filterCollection([
     {property: "rating", operator: "between", value: "3,5"}
 ]) %}
 ```
@@ -303,7 +303,7 @@ Usage: `value: "min,max"`
 **`longerThan`** - Text exceeds N characters
 ```twig
 {# Blog posts with detailed content (over 500 chars) #}
-{% set detailedPosts = cms.objects('blog') | filterCollection([
+{% set detailedPosts = cms.collection.objects('blog') | filterCollection([
     {property: "content", operator: "longerThan", value: 500}
 ]) %}
 ```
@@ -311,7 +311,7 @@ Usage: `value: "min,max"`
 **`shorterThan`** - Text is under N characters
 ```twig
 {# Products with short descriptions for grid view #}
-{% set compactProducts = cms.objects('products') | filterCollection([
+{% set compactProducts = cms.collection.objects('products') | filterCollection([
     {property: "description", operator: "shorterThan", value: 200}
 ]) %}
 ```
@@ -323,12 +323,12 @@ Usage: `value: "min,max"`
 **`hasMin`** - Array has at least N items
 ```twig
 {# Posts with at least 3 tags #}
-{% set wellTaggedPosts = cms.objects('blog') | filterCollection([
+{% set wellTaggedPosts = cms.collection.objects('blog') | filterCollection([
     {property: "tags", operator: "hasMin", value: 3}
 ]) %}
 
 {# Products with multiple images #}
-{% set multiImageProducts = cms.objects('products') | filterCollection([
+{% set multiImageProducts = cms.collection.objects('products') | filterCollection([
     {property: "gallery", operator: "hasMin", value: 2}
 ]) %}
 ```
@@ -336,7 +336,7 @@ Usage: `value: "min,max"`
 **`hasMax`** - Array has at most N items
 ```twig
 {# Products with 5 or fewer images #}
-{% set simpleProducts = cms.objects('products') | filterCollection([
+{% set simpleProducts = cms.collection.objects('products') | filterCollection([
     {property: "gallery", operator: "hasMax", value: 5}
 ]) %}
 ```
@@ -344,7 +344,7 @@ Usage: `value: "min,max"`
 **`hasCount`** - Array has exactly N items
 ```twig
 {# Events with exactly 2 speakers #}
-{% set dualSpeakerEvents = cms.objects('events') | filterCollection([
+{% set dualSpeakerEvents = cms.collection.objects('events') | filterCollection([
     {property: "speakers", operator: "hasCount", value: 2}
 ]) %}
 ```
@@ -356,7 +356,7 @@ Usage: `value: "min,max"`
 **`isWeekday`** - Date is Monday through Friday
 ```twig
 {# Business hours events only #}
-{% set businessEvents = cms.objects('events') | filterCollection([
+{% set businessEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "isWeekday"}
 ]) %}
 ```
@@ -364,7 +364,7 @@ Usage: `value: "min,max"`
 **`isWeekend`** - Date is Saturday or Sunday
 ```twig
 {# Weekend activities #}
-{% set weekendEvents = cms.objects('events') | filterCollection([
+{% set weekendEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "isWeekend"}
 ]) %}
 ```
@@ -375,12 +375,12 @@ Value can be day name (Monday-Sunday) or number (1=Monday, 7=Sunday):
 
 ```twig
 {# Tuesday specials #}
-{% set tuesdaySpecials = cms.objects('specials') | filterCollection([
+{% set tuesdaySpecials = cms.collection.objects('specials') | filterCollection([
     {property: "date", operator: "dayOfWeek", value: "Tuesday"}
 ]) %}
 
 {# Using day number (1=Mon, 7=Sun) #}
-{% set mondayEvents = cms.objects('events') | filterCollection([
+{% set mondayEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "dayOfWeek", value: "1"}
 ]) %}
 ```
@@ -397,7 +397,7 @@ Returns items that match **ANY** of the values in the array:
 
 ```twig
 {# Posts tagged with 'php' OR 'javascript' OR 'web' #}
-{% set posts = cms.objects('blog') | filterCollection([
+{% set posts = cms.collection.objects('blog') | filterCollection([
     {
         property: "tags",
         operator: "contains",
@@ -407,7 +407,7 @@ Returns items that match **ANY** of the values in the array:
 ]) %}
 
 {# Products in category 'electronics' OR 'computers' #}
-{% set products = cms.objects('products') | filterCollection([
+{% set products = cms.collection.objects('products') | filterCollection([
     {
         property: "category",
         operator: "equal",
@@ -423,7 +423,7 @@ Returns items that match **ALL** of the values in the array:
 
 ```twig
 {# Posts that contain ALL tags: 'php' AND 'framework' AND 'tutorial' #}
-{% set advancedPosts = cms.objects('blog') | filterCollection([
+{% set advancedPosts = cms.collection.objects('blog') | filterCollection([
     {
         property: "tags",
         operator: "contains",
@@ -433,7 +433,7 @@ Returns items that match **ALL** of the values in the array:
 ]) %}
 
 {# Products with ALL specified features #}
-{% set premiumProducts = cms.objects('products') | filterCollection([
+{% set premiumProducts = cms.collection.objects('products') | filterCollection([
     {
         property: "features",
         operator: "contains",
@@ -458,17 +458,17 @@ Any operator can be negated by prefixing with `not-` or prepending the value wit
 
 ```twig
 {# Using not- prefix #}
-{% set notPublished = cms.objects('blog') | filterCollection([
+{% set notPublished = cms.collection.objects('blog') | filterCollection([
     {property: "status", operator: "not-equal", value: "published"}
 ]) %}
 
 {# Using ! prefix on value #}
-{% set notPublished = cms.objects('blog') | filterCollection([
+{% set notPublished = cms.collection.objects('blog') | filterCollection([
     {property: "status", operator: "equal", value: "!published"}
 ]) %}
 
 {# Not in the past (future or today) #}
-{% set notPastEvents = cms.objects('events') | filterCollection([
+{% set notPastEvents = cms.collection.objects('events') | filterCollection([
     {property: "date", operator: "not-past"}
 ]) %}
 ```
@@ -496,12 +496,12 @@ The `sortCollection` filter sorts arrays based on one or more properties.
 
 ```twig
 {# Sort by date ascending #}
-{% set sorted = cms.objects('blog') | sortCollection([
+{% set sorted = cms.collection.objects('blog') | sortCollection([
     {property: "date"}
 ]) %}
 
 {# Sort by price descending #}
-{% set sorted = cms.objects('products') | sortCollection([
+{% set sorted = cms.collection.objects('products') | sortCollection([
     {property: "price", reverse: true}
 ]) %}
 ```
@@ -512,7 +512,7 @@ Sorts are applied in order - first sort is primary, subsequent sorts break ties:
 
 ```twig
 {# Sort by featured (desc), then date (desc), then title (natural) #}
-{% set posts = cms.objects('blog') | sortCollection([
+{% set posts = cms.collection.objects('blog') | sortCollection([
     {property: "featured", reverse: true},
     {property: "date", reverse: true},
     {property: "title", natural: true}
@@ -526,7 +526,7 @@ Natural sorting treats numbers within strings intelligently:
 ```twig
 {# Without natural: "Item 1", "Item 10", "Item 2" #}
 {# With natural:    "Item 1", "Item 2", "Item 10" #}
-{% set sorted = cms.objects('products') | sortCollection([
+{% set sorted = cms.collection.objects('products') | sortCollection([
     {property: "name", natural: true}
 ]) %}
 ```
@@ -535,7 +535,7 @@ Natural sorting treats numbers within strings intelligently:
 
 ```twig
 {# Randomize order #}
-{% set randomProducts = cms.objects('products') | sortCollection([
+{% set randomProducts = cms.collection.objects('products') | sortCollection([
     {property: "name", shuffle: true}
 ]) %}
 ```
@@ -573,7 +573,7 @@ The `manualSort` filter allows you to sort collections by an explicit order of v
 
 ```twig
 {# Sort team members by role in specific order #}
-{% set team = cms.objects("team") | manualSort({
+{% set team = cms.collection.objects("team") | manualSort({
     property: 'role',
     order: ['ceo', 'cfo', 'cmo', 'vp', 'director']
 }) %}
@@ -587,7 +587,7 @@ Items not matching the explicit order can be sorted by a secondary property:
 
 ```twig
 {# Executives in order, then remaining staff sorted by lastName #}
-{% set team = cms.objects("team") | manualSort({
+{% set team = cms.collection.objects("team") | manualSort({
     property: 'position',
     order: ['ceo', 'cfo', 'cmo', 'vp'],
     remainder: {property: 'lastName'}
@@ -600,7 +600,7 @@ Use `excludeRemainder` to only return items that match the order array:
 
 ```twig
 {# Only show featured team members in specific order #}
-{% set featured = cms.objects("team") | manualSort({
+{% set featured = cms.collection.objects("team") | manualSort({
     property: 'id',
     order: ['john-smith', 'jane-doe', 'bob-wilson'],
     excludeRemainder: true
@@ -614,7 +614,7 @@ Store sort orders in the collection's metadata for easy admin editing. Use the `
 
 ```twig
 {# Automatic lookup from collection metadata #}
-{% set team = cms.objects("team") | manualSort({
+{% set team = cms.collection.objects("team") | manualSort({
     property: 'position',
     collection: 'team',
     remainder: {property: 'lastName'}
@@ -625,8 +625,8 @@ This is equivalent to manually fetching the metadata:
 
 ```twig
 {# Manual lookup (same result) #}
-{% set meta = cms.collection('team') %}
-{% set team = cms.objects("team") | manualSort({
+{% set meta = cms.collection.get('team') %}
+{% set team = cms.collection.objects("team") | manualSort({
     property: 'position',
     order: meta.manualSort.position | default([]),
     remainder: {property: 'lastName'}
@@ -648,7 +648,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# If there are multiple VPs, sort them by name #}
-{% set team = cms.objects("team") | manualSort({
+{% set team = cms.collection.objects("team") | manualSort({
     property: 'role',
     order: ['ceo', 'vp', 'manager'],
     remainder: {property: 'name'}
@@ -660,7 +660,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 **Portfolio with curated order:**
 ```twig
-{% set projects = cms.objects("projects") | manualSort({
+{% set projects = cms.collection.objects("projects") | manualSort({
     property: 'id',
     order: ['flagship-project', 'award-winner', 'client-favorite'],
     remainder: {property: 'date', reverse: true}
@@ -670,7 +670,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 **Navigation menu order:**
 ```twig
-{% set pages = cms.objects("pages") | manualSort({
+{% set pages = cms.collection.objects("pages") | manualSort({
     property: 'slug',
     order: ['home', 'about', 'services', 'portfolio', 'contact'],
     excludeRemainder: true
@@ -680,8 +680,8 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 **Product categories with priority:**
 ```twig
-{% set meta = cms.collection('products') %}
-{% set products = cms.objects("products") | manualSort({
+{% set meta = cms.collection.get('products') %}
+{% set products = cms.collection.objects("products") | manualSort({
     property: 'category',
     order: meta.manualSort.category | default(['featured', 'new', 'sale']),
     remainder: {property: 'name', natural: true}
@@ -696,7 +696,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# Published posts from this year, sorted by date #}
-{% set posts = cms.objects('blog')
+{% set posts = cms.collection.objects('blog')
     | filterCollection([
         {property: "status", operator: "equal", value: "published"},
         {property: "date", operator: "thisYear"}
@@ -711,7 +711,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# In-stock products, price $20-$100, with good ratings #}
-{% set products = cms.objects('products')
+{% set products = cms.collection.objects('products')
     | filterCollection([
         {property: "instock", operator: "istrue"},
         {property: "price", operator: "between", value: "20,100"},
@@ -728,7 +728,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# This week's events on weekdays, sorted by date #}
-{% set events = cms.objects('events')
+{% set events = cms.collection.objects('events')
     | filterCollection([
         {property: "date", operator: "thisWeek"},
         {property: "date", operator: "isWeekday"},
@@ -744,7 +744,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# Well-tagged posts from last 30 days with detailed content #}
-{% set qualityPosts = cms.objects('blog')
+{% set qualityPosts = cms.collection.objects('blog')
     | filterCollection([
         {property: "date", operator: "todayMinusDays", value: 30},
         {property: "tags", operator: "hasMin", value: 3},
@@ -761,7 +761,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# Special offers valid this weekend #}
-{% set weekendDeals = cms.objects('specials')
+{% set weekendDeals = cms.collection.objects('specials')
     | filterCollection([
         {property: "active", operator: "istrue"},
         {property: "start_date", operator: "isWeekend"},
@@ -780,7 +780,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 {% set maxPrice = get.max | default(1000) %}
 {% set category = get.category | default('') %}
 
-{% set products = cms.objects('products')
+{% set products = cms.collection.objects('products')
     | filterCollection([
         {property: "price", operator: "between", value: minPrice ~ "," ~ maxPrice},
         {property: "category", operator: "equal", value: category}
@@ -801,7 +801,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# Good: Filter first, then sort, then limit #}
-{% set results = cms.objects('blog')
+{% set results = cms.collection.objects('blog')
     | filterCollection([...])
     | sortCollection([...])
     | slice(0, 10) %}

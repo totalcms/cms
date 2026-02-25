@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
 class ImageField extends FormField
 {
@@ -29,7 +29,7 @@ class ImageField extends FormField
 		$options    = ['collection' => $this->form->collection, 'property' => $this->name];
 		$id         = $this->form->id;
 
-		$imagePath = TotalCMSTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
+		$imagePath = MediaTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
 
 		$previewAttrs = ['class' => 'image-preview'];
 		if ($imageData['featured'] ?? false) {
