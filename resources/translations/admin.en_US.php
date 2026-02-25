@@ -877,4 +877,80 @@ return [
 	'docs.authentication'           => 'Authentication',
 	'docs.api_title'                => 'API',
 	'docs.behind_scenes'            => 'Behind the Scenes',
+
+	// ── Dashboard ───────────────────────────────────────────────────────────
+	'dashboard.welcome_back'           => 'Welcome back, {name}!',
+	'dashboard.welcome'                => 'Welcome to Total CMS 3!',
+	'dashboard.subtitle'               => 'Manage your content, schemas, and templates all in one place.',
+	'dashboard.simulation_warning'     => 'You are simulating <strong>{edition}</strong> edition.',
+	'dashboard.disable_simulation'     => 'Disable simulation',
+
+	// ── Dashboard Stats ─────────────────────────────────────────────────────
+	'dashboard.stat_collections'       => 'Collections',
+	'dashboard.stat_objects'           => 'Objects',
+	'dashboard.stat_schemas'           => 'Schemas',
+	'dashboard.stat_templates'         => 'Templates',
+	'dashboard.stat_queued_jobs'       => 'Queued Jobs',
+
+	// ── Dashboard Quick Actions ─────────────────────────────────────────────
+	'dashboard.quick_actions'          => 'Quick Actions',
+	'dashboard.new_collection'         => 'New Collection',
+	'dashboard.new_schema'             => 'New Schema',
+	'dashboard.new_template'           => 'New Template',
+	'dashboard.log_analyzer'           => 'Log Analyzer',
+	'dashboard.job_queue_manager'      => 'Job Queue Manager',
+	'dashboard.cache_manager'          => 'Cache Manager',
+
+	// ── Dashboard Collections Table ─────────────────────────────────────────
+	'dashboard.recent_collections'     => 'Recent Collections',
+	'dashboard.col_collection'         => 'Collection',
+	'dashboard.col_schema'             => 'Schema',
+	'dashboard.col_objects'            => 'Objects',
+	'dashboard.col_actions'            => 'Actions',
+	'dashboard.add'                    => 'Add',
+	'dashboard.view'                   => 'View',
+	'dashboard.add_new_title'          => 'Add new {name}',
+	'dashboard.view_all_title'         => 'View all {name}',
+	'dashboard.no_collections'         => 'No collections yet. <a href="collections/new">Create your first collection</a> to get started!',
+
+	// ── Dashboard Dev Mode ──────────────────────────────────────────────────
+	'dashboard.dev_mode'               => 'Development Mode',
+
+	// ── Dashboard Recent Activity ───────────────────────────────────────────
+	'dashboard.recent_activity'        => 'Recent Activity',
+	'dashboard.no_activity'            => 'No recent activity yet.',
+
+	// ── Dashboard Empty Collections ─────────────────────────────────────────
+	'dashboard.empty_collections'      => 'Empty Collections',
+	'dashboard.empty_collections_desc' => 'The following collections have no objects yet:',
+
+	// ── Dashboard System Info ───────────────────────────────────────────────
+	'dashboard.system_info'            => 'System Information',
+	'dashboard.version'                => 'Total CMS Version:',
+	'dashboard.php_version'            => 'PHP Version:',
+	'dashboard.environment'            => 'Environment:',
+	'dashboard.memory_limit'           => 'Memory Limit:',
+	'dashboard.cache_backends'         => 'Cache Backends:',
+	'dashboard.license'                => 'License:',
+	'dashboard.days'                   => '{count} days',
+	'dashboard.none'                   => 'None',
+	'dashboard.server_checker'         => 'Server Checker',
+
+	// ── Dashboard Inaccessible Collections ──────────────────────────────────
+	'dashboard.collections_unavailable'      => 'Collections Unavailable',
+	'dashboard.collections_unavailable_desc' => '{count} collection(s) use custom schemas which require Pro edition. Your data is safe, but you cannot access these collections until you upgrade.',
+	'dashboard.upgrade_access'               => 'Upgrade to Regain Access',
+
+	// ── Dashboard New User Welcome ──────────────────────────────────────────
+	'dashboard.welcome_new'            => 'Welcome to Total CMS 3!',
+	'dashboard.welcome_new_desc'       => 'Get started by importing sample data or creating your first collection from scratch.',
+	'dashboard.project_setup'          => 'Project Setup',
+	'dashboard.project_setup_desc'     => 'Import sample data, use JumpStart templates, or migrate from other CMS platforms to quickly get started.',
+	'dashboard.get_started'            => 'Get Started',
+	'dashboard.create_first'           => 'Create First Collection',
+	'dashboard.create_first_desc'      => 'Build your first collection from scratch by choosing a schema and adding your content.',
+	'dashboard.create_collection'      => 'Create Collection',
+	'dashboard.read_docs'              => 'Read Documentation',
+	'dashboard.read_docs_desc'         => 'Learn about Total CMS features, Twig templating, and how to build powerful content-driven sites.',
+	'dashboard.view_docs'              => 'View Docs',
 ];

@@ -877,4 +877,80 @@ return [
 	'docs.authentication'           => 'Authenticatie',
 	'docs.api_title'                => 'API',
 	'docs.behind_scenes'            => 'Achter de schermen',
+
+	// ── Dashboard ───────────────────────────────────────────────────────────
+	'dashboard.welcome_back'           => 'Welkom terug, {name}!',
+	'dashboard.welcome'                => 'Welkom bij Total CMS 3!',
+	'dashboard.subtitle'               => 'Beheer uw content, schema\'s en sjablonen op één plek.',
+	'dashboard.simulation_warning'     => 'U simuleert de <strong>{edition}</strong>-editie.',
+	'dashboard.disable_simulation'     => 'Simulatie uitschakelen',
+
+	// ── Dashboard Stats ─────────────────────────────────────────────────────
+	'dashboard.stat_collections'       => 'Collecties',
+	'dashboard.stat_objects'           => 'Objecten',
+	'dashboard.stat_schemas'           => 'Schema\'s',
+	'dashboard.stat_templates'         => 'Sjablonen',
+	'dashboard.stat_queued_jobs'       => 'Wachtende taken',
+
+	// ── Dashboard Quick Actions ─────────────────────────────────────────────
+	'dashboard.quick_actions'          => 'Snelle acties',
+	'dashboard.new_collection'         => 'Nieuwe collectie',
+	'dashboard.new_schema'             => 'Nieuw schema',
+	'dashboard.new_template'           => 'Nieuw sjabloon',
+	'dashboard.log_analyzer'           => 'Log Analyzer',
+	'dashboard.job_queue_manager'      => 'Job Queue Manager',
+	'dashboard.cache_manager'          => 'Cache Manager',
+
+	// ── Dashboard Collections Table ─────────────────────────────────────────
+	'dashboard.recent_collections'     => 'Recente collecties',
+	'dashboard.col_collection'         => 'Collectie',
+	'dashboard.col_schema'             => 'Schema',
+	'dashboard.col_objects'            => 'Objecten',
+	'dashboard.col_actions'            => 'Acties',
+	'dashboard.add'                    => 'Toevoegen',
+	'dashboard.view'                   => 'Bekijken',
+	'dashboard.add_new_title'          => 'Nieuw {name} toevoegen',
+	'dashboard.view_all_title'         => 'Alle {name} bekijken',
+	'dashboard.no_collections'         => 'Nog geen collecties. <a href="collections/new">Maak uw eerste collectie aan</a> om te beginnen!',
+
+	// ── Dashboard Dev Mode ──────────────────────────────────────────────────
+	'dashboard.dev_mode'               => 'Ontwikkelmodus',
+
+	// ── Dashboard Recent Activity ───────────────────────────────────────────
+	'dashboard.recent_activity'        => 'Recente activiteit',
+	'dashboard.no_activity'            => 'Nog geen recente activiteit.',
+
+	// ── Dashboard Empty Collections ─────────────────────────────────────────
+	'dashboard.empty_collections'      => 'Lege collecties',
+	'dashboard.empty_collections_desc' => 'De volgende collecties bevatten nog geen objecten:',
+
+	// ── Dashboard System Info ───────────────────────────────────────────────
+	'dashboard.system_info'            => 'Systeeminformatie',
+	'dashboard.version'                => 'Total CMS-versie:',
+	'dashboard.php_version'            => 'PHP-versie:',
+	'dashboard.environment'            => 'Omgeving:',
+	'dashboard.memory_limit'           => 'Geheugenlimiet:',
+	'dashboard.cache_backends'         => 'Cache Backends:',
+	'dashboard.license'                => 'Licentie:',
+	'dashboard.days'                   => '{count} dagen',
+	'dashboard.none'                   => 'Geen',
+	'dashboard.server_checker'         => 'Server Checker',
+
+	// ── Dashboard Inaccessible Collections ──────────────────────────────────
+	'dashboard.collections_unavailable'      => 'Collecties niet beschikbaar',
+	'dashboard.collections_unavailable_desc' => '{count} collectie(s) gebruiken aangepaste schema\'s waarvoor de Pro-editie vereist is. Uw gegevens zijn veilig, maar u hebt geen toegang tot deze collecties totdat u een upgrade uitvoert.',
+	'dashboard.upgrade_access'               => 'Upgrade om toegang te herstellen',
+
+	// ── Dashboard New User Welcome ──────────────────────────────────────────
+	'dashboard.welcome_new'            => 'Welkom bij Total CMS 3!',
+	'dashboard.welcome_new_desc'       => 'Begin met het importeren van voorbeeldgegevens of maak uw eerste collectie helemaal zelf aan.',
+	'dashboard.project_setup'          => 'Projectconfiguratie',
+	'dashboard.project_setup_desc'     => 'Importeer voorbeeldgegevens, gebruik JumpStart-sjablonen of migreer van andere CMS-platformen om snel aan de slag te gaan.',
+	'dashboard.get_started'            => 'Aan de slag',
+	'dashboard.create_first'           => 'Eerste collectie aanmaken',
+	'dashboard.create_first_desc'      => 'Maak uw eerste collectie helemaal zelf aan door een schema te kiezen en uw content toe te voegen.',
+	'dashboard.create_collection'      => 'Collectie aanmaken',
+	'dashboard.read_docs'              => 'Documentatie lezen',
+	'dashboard.read_docs_desc'         => 'Leer meer over de functies van Total CMS, Twig-sjablonen en hoe u krachtige contentgestuurde websites kunt bouwen.',
+	'dashboard.view_docs'              => 'Documentatie bekijken',
 ];

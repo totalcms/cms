@@ -877,4 +877,80 @@ return [
 	'docs.authentication'           => 'Autenticación',
 	'docs.api_title'                => 'API',
 	'docs.behind_scenes'            => 'Entre bastidores',
+
+	// ── Dashboard ───────────────────────────────────────────────────────────
+	'dashboard.welcome_back'           => '¡Bienvenido de nuevo, {name}!',
+	'dashboard.welcome'                => '¡Bienvenido a Total CMS 3!',
+	'dashboard.subtitle'               => 'Administre su contenido, schemas y plantillas en un solo lugar.',
+	'dashboard.simulation_warning'     => 'Está simulando la edición <strong>{edition}</strong>.',
+	'dashboard.disable_simulation'     => 'Desactivar simulación',
+
+	// ── Dashboard Stats ─────────────────────────────────────────────────────
+	'dashboard.stat_collections'       => 'Colecciones',
+	'dashboard.stat_objects'           => 'Objetos',
+	'dashboard.stat_schemas'           => 'Schemas',
+	'dashboard.stat_templates'         => 'Plantillas',
+	'dashboard.stat_queued_jobs'       => 'Trabajos en cola',
+
+	// ── Dashboard Quick Actions ─────────────────────────────────────────────
+	'dashboard.quick_actions'          => 'Acciones rápidas',
+	'dashboard.new_collection'         => 'Nueva colección',
+	'dashboard.new_schema'             => 'Nuevo schema',
+	'dashboard.new_template'           => 'Nueva plantilla',
+	'dashboard.log_analyzer'           => 'Analizador de registros',
+	'dashboard.job_queue_manager'      => 'Gestor de cola de trabajos',
+	'dashboard.cache_manager'          => 'Gestor de caché',
+
+	// ── Dashboard Collections Table ─────────────────────────────────────────
+	'dashboard.recent_collections'     => 'Colecciones recientes',
+	'dashboard.col_collection'         => 'Colección',
+	'dashboard.col_schema'             => 'Schema',
+	'dashboard.col_objects'            => 'Objetos',
+	'dashboard.col_actions'            => 'Acciones',
+	'dashboard.add'                    => 'Agregar',
+	'dashboard.view'                   => 'Ver',
+	'dashboard.add_new_title'          => 'Agregar nuevo {name}',
+	'dashboard.view_all_title'         => 'Ver todos los {name}',
+	'dashboard.no_collections'         => 'Aún no hay colecciones. <a href="collections/new">Cree su primera colección</a> para comenzar.',
+
+	// ── Dashboard Dev Mode ──────────────────────────────────────────────────
+	'dashboard.dev_mode'               => 'Modo de desarrollo',
+
+	// ── Dashboard Recent Activity ───────────────────────────────────────────
+	'dashboard.recent_activity'        => 'Actividad reciente',
+	'dashboard.no_activity'            => 'Aún no hay actividad reciente.',
+
+	// ── Dashboard Empty Collections ─────────────────────────────────────────
+	'dashboard.empty_collections'      => 'Colecciones vacías',
+	'dashboard.empty_collections_desc' => 'Las siguientes colecciones aún no tienen objetos:',
+
+	// ── Dashboard System Info ───────────────────────────────────────────────
+	'dashboard.system_info'            => 'Información del sistema',
+	'dashboard.version'                => 'Versión de Total CMS:',
+	'dashboard.php_version'            => 'Versión de PHP:',
+	'dashboard.environment'            => 'Entorno:',
+	'dashboard.memory_limit'           => 'Límite de memoria:',
+	'dashboard.cache_backends'         => 'Backends de caché:',
+	'dashboard.license'                => 'Licencia:',
+	'dashboard.days'                   => '{count} días',
+	'dashboard.none'                   => 'Ninguno',
+	'dashboard.server_checker'         => 'Verificador de servidor',
+
+	// ── Dashboard Inaccessible Collections ──────────────────────────────────
+	'dashboard.collections_unavailable'      => 'Colecciones no disponibles',
+	'dashboard.collections_unavailable_desc' => '{count} colección(es) utilizan schemas personalizados que requieren la edición Pro. Sus datos están seguros, pero no puede acceder a estas colecciones hasta que actualice su licencia.',
+	'dashboard.upgrade_access'               => 'Actualizar para recuperar el acceso',
+
+	// ── Dashboard New User Welcome ──────────────────────────────────────────
+	'dashboard.welcome_new'            => '¡Bienvenido a Total CMS 3!',
+	'dashboard.welcome_new_desc'       => 'Comience importando datos de ejemplo o creando su primera colección desde cero.',
+	'dashboard.project_setup'          => 'Configuración del proyecto',
+	'dashboard.project_setup_desc'     => 'Importe datos de ejemplo, utilice plantillas JumpStart o migre desde otras plataformas CMS para comenzar rápidamente.',
+	'dashboard.get_started'            => 'Comenzar',
+	'dashboard.create_first'           => 'Crear primera colección',
+	'dashboard.create_first_desc'      => 'Construya su primera colección desde cero eligiendo un schema y agregando su contenido.',
+	'dashboard.create_collection'      => 'Crear colección',
+	'dashboard.read_docs'              => 'Leer documentación',
+	'dashboard.read_docs_desc'         => 'Aprenda sobre las características de Total CMS, las plantillas Twig y cómo construir sitios potentes impulsados por contenido.',
+	'dashboard.view_docs'              => 'Ver documentación',
 ];

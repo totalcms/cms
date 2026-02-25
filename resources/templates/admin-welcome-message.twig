@@ -7,12 +7,12 @@
 <div class="dashboard-welcome">
 	<h1>
 		{% if cms.auth.userData.name and cms.auth.userData.name != 'Admin' %}
-			Welcome back, {{ cms.auth.userData.name }}! 👋
+			{{ t('dashboard.welcome_back', {'{name}': cms.auth.userData.name}) }} 👋
 		{% else %}
-			Welcome to Total CMS 3! 👋
+			{{ t('dashboard.welcome') }} 👋
 		{% endif %}
 	</h1>
 	<p class="dashboard-subtitle">
-		Manage your content, schemas, and templates all in one place.
+		{{ t('dashboard.subtitle') }}
 	</p>
 </div>

@@ -4,8 +4,8 @@
 {% if cms.edition.isSimulating %}
 <div class="simulation-warning">
 	<span class="icon-warn"></span>
-	You are simulating <strong>{{ cms.edition.current | capitalize }}</strong> edition.
-	<a href="settings/license">Disable simulation</a>
+	{{ t('dashboard.simulation_warning', {'{edition}': cms.edition.current | capitalize}) | raw }}
+	<a href="settings/license">{{ t('dashboard.disable_simulation') }}</a>
 </div>
 {% endif %}
 
