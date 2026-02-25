@@ -60,7 +60,6 @@ readonly class DataViewQueryService
 			return [];
 		}
 
-		/** @var array<int,array<string,mixed>> */
 		return $items;
 	}
 }

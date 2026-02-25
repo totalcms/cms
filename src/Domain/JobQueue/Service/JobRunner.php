@@ -271,7 +271,6 @@ readonly class JobRunner
 
 	/**
 	 * Process export job by exporting collection data.
-	 *
 	 */
 	private function processExportJob(JobData $job): void
 	{

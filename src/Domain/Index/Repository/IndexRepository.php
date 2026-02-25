@@ -32,7 +32,6 @@ class IndexRepository extends StorageRepository
 
 	/**
 	 * get the index.
-	 *
 	 */
 	public function fetchIndex(string $collection): ?IndexData
 	{
