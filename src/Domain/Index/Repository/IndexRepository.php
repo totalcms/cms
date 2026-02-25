@@ -33,7 +33,6 @@ class IndexRepository extends StorageRepository
 	/**
 	 * get the index.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	public function fetchIndex(string $collection): ?IndexData
 	{
@@ -86,8 +85,6 @@ class IndexRepository extends StorageRepository
 
 	/**
 	 * Get an array of object IDs in.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @return array<string>
 	 */

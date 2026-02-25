@@ -488,7 +488,6 @@ NGINX;
 		return null;
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function verifyFilePassword(string $password, string $collection, string $id, string $property, ?string $name = null): bool
 	{
 		if ($name !== null) {
@@ -1308,8 +1307,6 @@ NGINX;
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
 	 * @param array<string,mixed> $options
@@ -1505,8 +1502,6 @@ NGINX;
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $thumbSettings
 	 * @param array<string,string|int> $fullSettings
@@ -1711,8 +1706,6 @@ NGINX;
 	 * Generate a dynamic gallery that can be triggered programmatically.
 	 * Returns a template tag with JSON data for JavaScript initialization.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $thumbSettings
 	 * @param array<string,string|int> $fullSettings
@@ -1859,8 +1852,6 @@ NGINX;
 	/**
 	 * Get an image object from inside a gallery by it's name.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 *
@@ -1925,8 +1916,6 @@ NGINX;
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
@@ -2033,8 +2022,6 @@ NGINX;
 
 	/**
 	 * Get an alt tag for an image.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param string|array<string,mixed> $idOrObject Object array or object ID string
 	 * @param array<string,mixed> $options

@@ -236,7 +236,6 @@ readonly class IndexBuilder
 		$this->storage->saveIndex($collection, $index);
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function smartBuildIndex(string $collection, ?ObjectData $newObject = null): void
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);

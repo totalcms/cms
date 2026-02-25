@@ -338,8 +338,6 @@ class FormField
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @return array<array<string,string>>
 	 */
 	protected function buildRelationalOptions(): array

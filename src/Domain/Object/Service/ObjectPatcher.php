@@ -37,8 +37,6 @@ readonly class ObjectPatcher
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $newData
 	 */
 	public function patchObjectPropertyMeta(

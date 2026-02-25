@@ -30,7 +30,6 @@ class FakerImageGD extends Base
 	/**
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 * @SuppressWarnings("PHPMD.NPathComplexity")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	public static function imageText(?string $dir = null, int $width = 640, int $height = 480, ?string $text = null, int $textSize = 200, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
 	{

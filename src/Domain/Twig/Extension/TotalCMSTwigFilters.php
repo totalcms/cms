@@ -480,7 +480,6 @@ class TotalCMSTwigFilters
 
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	public static function truncate(?string $string, int $length, bool $keepWords = false): string
 	{

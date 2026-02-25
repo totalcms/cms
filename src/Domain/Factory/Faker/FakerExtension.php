@@ -167,7 +167,6 @@ class FakerExtension extends Base
 
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 */
 	public static function styledtext(int $minParagraphs = 3, int $maxParagraphs = 6, bool $includeLists = true, bool $includeHeadings = false): string

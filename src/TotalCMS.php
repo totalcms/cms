@@ -471,7 +471,6 @@ class TotalCMS
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *

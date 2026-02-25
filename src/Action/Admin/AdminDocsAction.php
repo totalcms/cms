@@ -18,8 +18,6 @@ readonly class AdminDocsAction
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,string> $args The routing arguments
 	 */
 	public function __invoke(
