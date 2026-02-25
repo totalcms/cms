@@ -39,7 +39,9 @@ readonly class IndexBuilder
 			'collection' => $collection,
 		]);
 
-		$objectIds  = $this->storage->fetchObjectIds($collection);
+		// Bypass cache to ensure we get the current filesystem state.
+		// Cached IDs may include deleted objects or miss newly added ones.
+		$objectIds  = $this->storage->fetchObjectIdsFromDisk($collection);
 		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		$indexProps = $schema->index;
 

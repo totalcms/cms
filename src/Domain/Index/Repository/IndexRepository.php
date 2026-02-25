@@ -117,6 +117,31 @@ class IndexRepository extends StorageRepository
 	}
 
 	/**
+	 * Get an array of object IDs directly from disk, bypassing all caches.
+	 * Used by index rebuilding to ensure accurate filesystem state.
+	 *
+	 * @return array<string>
+	 */
+	public function fetchObjectIdsFromDisk(string $collection): array
+	{
+		$files = $this->filesystem->listFiles($collection);
+
+		$files = array_filter($files, fn (string $path): bool => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
+
+		$objectIds = array_map(fn (string $path): string => basename($path, StorageRepository::FILE_EXT), $files);
+
+		// Update cache with fresh filesystem data
+		$cacheKey = "object_ids:{$collection}";
+		if ($objectIds === []) {
+			$this->cacheManager->clearComputedData($cacheKey);
+		} else {
+			$this->cacheManager->storeComputedData($cacheKey, $objectIds, CacheManager::TTL_OBJECT_IDS);
+		}
+
+		return $objectIds;
+	}
+
+	/**
 	 * save the index.
 	 */
 	public function saveIndex(string $collection, IndexData $index): void
