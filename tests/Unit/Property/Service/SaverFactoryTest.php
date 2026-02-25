@@ -15,6 +15,7 @@ use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * Tests for SaverFactory - critical factory for creating property saver services.
@@ -47,7 +48,8 @@ class SaverFactoryTest extends TestCase
 			$this->mockSchemaFetcher,
 			$this->mockObjectPatcher,
 			$this->mockObjectFetcher,
-			$this->mockLoggerFactory
+			$this->mockLoggerFactory,
+			$this->createMock(Config::class),
 		);
 	}
 

@@ -4,8 +4,18 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 final class RenderTwigAdapterTest extends TestCase
@@ -20,7 +30,24 @@ final class RenderTwigAdapterTest extends TestCase
 		$config = $this->createMock(Config::class);
 		$config->api = '/api';
 
-		$this->adapter = new RenderTwigAdapter($this->htmxRenderer, $config);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$this->adapter = new RenderTwigAdapter(
+			$this->htmxRenderer,
+			$config,
+			$this->createMock(DataTwigAdapter::class),
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(CollectionLister::class),
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(IndexReader::class),
+			$this->createMock(ObjectUrlBuilder::class),
+			$this->createMock(CacheManager::class),
+			$this->createMock(GridRenderer::class),
+			$loggerFactory,
+		);
 	}
 
 	// --- loadMore ---

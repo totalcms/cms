@@ -15,6 +15,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 class DepotSaverTest extends TestCase
 {
@@ -151,7 +152,8 @@ class DepotSaverTest extends TestCase
 			$this->mockObjectSaver,
 			$this->mockObjectPatcher,
 			$this->mockObjectFetcher,
-			$this->mockLoggerFactory
+			$this->mockLoggerFactory,
+			$this->createMock(Config::class),
 		);
 	}
 }

@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 
 final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 {
 	public function testIsEncryptedPasswordDetectsEncryptedPasswords(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		// Use reflection to access private method
-		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$reflection = new \ReflectionClass(MediaTwigAdapter::class);
 		$method     = $reflection->getMethod('isEncryptedPassword');
 
 		// Test plain password (should not be detected as encrypted)
@@ -161,11 +162,29 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testAltMethodWithValidImageData(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$adapter->method('data')
+		$data = $this->createPartialMock(DataTwigAdapter::class, ['raw']);
+		$data->method('raw')
 			->with('image', 'test-id', 'image')
 			->willReturn(['alt' => 'Test alt text', 'filename' => 'test.jpg']);
+
+		$adapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$data,
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
 
 		$result = $adapter->alt('test-id');
 
@@ -174,11 +193,29 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testAltMethodWithMissingAlt(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$adapter->method('data')
+		$data = $this->createPartialMock(DataTwigAdapter::class, ['raw']);
+		$data->method('raw')
 			->with('image', 'test-id', 'image')
 			->willReturn(['filename' => 'test.jpg']); // No alt field
+
+		$adapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$data,
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
 
 		$result = $adapter->alt('test-id');
 
@@ -187,11 +224,29 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testAltMethodWithNonArrayData(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$adapter->method('data')
+		$data = $this->createPartialMock(DataTwigAdapter::class, ['raw']);
+		$data->method('raw')
 			->with('image', 'test-id', 'image')
 			->willReturn('not an array');
+
+		$adapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$data,
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
 
 		$result = $adapter->alt('test-id');
 
@@ -200,7 +255,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testGalleryImageDataFindsCorrectImage(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
@@ -208,53 +263,46 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			['name' => 'image3.jpg', 'alt' => 'Image 3'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
-
-		$result = $adapter->galleryImageData('gallery-id', 'image2.jpg');
+		// Use array input to bypass fetchData
+		$object = ['gallery' => $galleryData];
+		$result = $adapter->galleryImageData($object, 'image2.jpg');
 
 		expect($result)->toBe(['name' => 'image2.jpg', 'alt' => 'Image 2']);
 	}
 
 	public function testGalleryImageDataReturnsNullForNotFound(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
 			['name' => 'image2.jpg', 'alt' => 'Image 2'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
-
-		$result = $adapter->galleryImageData('gallery-id', 'nonexistent.jpg');
+		$object = ['gallery' => $galleryData];
+		$result = $adapter->galleryImageData($object, 'nonexistent.jpg');
 
 		expect($result)->toBeNull();
 	}
 
 	public function testGalleryImageDataReturnsNullForNonArrayData(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
-		$reflection  = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$logProperty = $reflection->getProperty('logger');
 		$logProperty->setValue($adapter, new \Psr\Log\NullLogger());
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn('not an array');
-
-		$result = $adapter->galleryImageData('gallery-id', 'image.jpg');
+		// Pass object with non-array gallery property
+		$object = ['gallery' => 'not an array'];
+		$result = $adapter->galleryImageData($object, 'image.jpg');
 
 		expect($result)->toBeNull();
 	}
 
 	public function testGalleryImageDataWithNumericIndexReturnsCorrectImage(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
@@ -262,18 +310,16 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			['name' => 'image3.jpg', 'alt' => 'Image 3'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
+		$object = ['gallery' => $galleryData];
 
 		// Test 1-based indexing: index 1 returns first image
-		$result = $adapter->galleryImageData('gallery-id', 1);
+		$result = $adapter->galleryImageData($object, 1);
 		expect($result)->toBe(['name' => 'image1.jpg', 'alt' => 'Image 1']);
 	}
 
 	public function testGalleryImageDataWithNumericIndexReturnsThirdImage(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
@@ -281,67 +327,80 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			['name' => 'image3.jpg', 'alt' => 'Image 3'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
+		$object = ['gallery' => $galleryData];
 
 		// Test 1-based indexing: index 3 returns third image
-		$result = $adapter->galleryImageData('gallery-id', 3);
+		$result = $adapter->galleryImageData($object, 3);
 		expect($result)->toBe(['name' => 'image3.jpg', 'alt' => 'Image 3']);
 	}
 
 	public function testGalleryImageDataWithNumericIndexOutOfBoundsReturnsNull(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
 			['name' => 'image2.jpg', 'alt' => 'Image 2'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
+		$object = ['gallery' => $galleryData];
 
 		// Index 5 is out of bounds for a 2-item gallery
-		$result = $adapter->galleryImageData('gallery-id', 5);
+		$result = $adapter->galleryImageData($object, 5);
 		expect($result)->toBeNull();
 	}
 
 	public function testGalleryImageDataWithZeroIndexReturnsNull(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
 			['name' => 'image2.jpg', 'alt' => 'Image 2'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
+		$object = ['gallery' => $galleryData];
 
 		// Index 0 is invalid for 1-based indexing
-		$result = $adapter->galleryImageData('gallery-id', 0);
+		$result = $adapter->galleryImageData($object, 0);
 		expect($result)->toBeNull();
 	}
 
 	public function testGalleryAltWithNumericIndex(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['galleryImageData']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, ['galleryImageData']);
 
 		$adapter->method('galleryImageData')
 			->with('gallery-id', 2, ['collection' => 'gallery', 'property' => 'gallery'])
 			->willReturn(['name' => 'image2.jpg', 'alt' => 'Second image alt']);
 
-		$result = $adapter->galleryAlt('gallery-id', 2);
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$renderAdapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$this->createMock(DataTwigAdapter::class),
+			$adapter,
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
+
+		$result = $renderAdapter->galleryAlt('gallery-id', 2);
 
 		expect($result)->toBe('Second image alt');
 	}
 
 	public function testGalleryImageDataWithStringNumericIndex(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		$galleryData = [
 			['name' => 'image1.jpg', 'alt' => 'Image 1'],
@@ -349,37 +408,73 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			['name' => 'image3.jpg', 'alt' => 'Image 3'],
 		];
 
-		$adapter->method('data')
-			->with('gallery', 'gallery-id', 'gallery')
-			->willReturn($galleryData);
+		$object = ['gallery' => $galleryData];
 
 		// String numeric "2" should work the same as integer 2
-		$result = $adapter->galleryImageData('gallery-id', '2');
+		$result = $adapter->galleryImageData($object, '2');
 		expect($result)->toBe(['name' => 'image2.jpg', 'alt' => 'Image 2']);
 	}
 
 	public function testGalleryAltReturnsCorrectAlt(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['galleryImageData']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, ['galleryImageData']);
 
 		$adapter->method('galleryImageData')
 			->with('gallery-id', 'image.jpg', ['collection' => 'gallery', 'property' => 'gallery'])
 			->willReturn(['name' => 'image.jpg', 'alt' => 'Gallery image alt']);
 
-		$result = $adapter->galleryAlt('gallery-id', 'image.jpg');
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$renderAdapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$this->createMock(DataTwigAdapter::class),
+			$adapter,
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
+
+		$result = $renderAdapter->galleryAlt('gallery-id', 'image.jpg');
 
 		expect($result)->toBe('Gallery image alt');
 	}
 
 	public function testGalleryAltReturnsEmptyForMissingAlt(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['galleryImageData']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, ['galleryImageData']);
 
 		$adapter->method('galleryImageData')
 			->with('gallery-id', 'image.jpg', ['collection' => 'gallery', 'property' => 'gallery'])
 			->willReturn(['name' => 'image.jpg']); // No alt
 
-		$result = $adapter->galleryAlt('gallery-id', 'image.jpg');
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$renderAdapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$this->createMock(DataTwigAdapter::class),
+			$adapter,
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
+
+		$result = $renderAdapter->galleryAlt('gallery-id', 'image.jpg');
 
 		// When alt is missing, the function falls back to returning the image name
 		expect($result)->toBe('image.jpg');
@@ -387,20 +482,39 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testGalleryAltReturnsEmptyForNullImageData(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['galleryImageData']);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, ['galleryImageData']);
 
 		$adapter->method('galleryImageData')
 			->with('gallery-id', 'image.jpg', ['collection' => 'gallery', 'property' => 'gallery'])
 			->willReturn(null);
 
-		$result = $adapter->galleryAlt('gallery-id', 'image.jpg');
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$renderAdapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$this->createMock(DataTwigAdapter::class),
+			$adapter,
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
+
+		$result = $renderAdapter->galleryAlt('gallery-id', 'image.jpg');
 
 		expect($result)->toBe('');
 	}
 
 	public function testGalleryPathReturnsEmptyForNullOrEmptyId(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		expect($adapter->galleryPath(null, 'image.jpg'))->toBe('');
 		expect($adapter->galleryPath('', 'image.jpg'))->toBe('');
@@ -408,7 +522,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testGalleryPathReturnsEmptyForNullOrEmptyName(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		expect($adapter->galleryPath('gallery-id', null))->toBe('');
 		expect($adapter->galleryPath('gallery-id', ''))->toBe('');
@@ -416,9 +530,9 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testEmailMethodWithObfuscation(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(DataTwigAdapter::class, ['raw']);
 
-		$adapter->method('data')
+		$adapter->method('raw')
 			->with('email', 'test-id', 'email')
 			->willReturn('test@example.com');
 
@@ -434,9 +548,9 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 
 	public function testSvgMethodWithValidData(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(DataTwigAdapter::class, ['raw']);
 
-		$adapter->method('data')
+		$adapter->method('raw')
 			->with('svg', 'test-id', 'svg')
 			->willReturn('<svg>test</svg>');
 
