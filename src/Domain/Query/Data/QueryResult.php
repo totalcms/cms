@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Index\Data;
+namespace TotalCMS\Domain\Query\Data;
 
 use Psr\Http\Message\ResponseInterface;
 

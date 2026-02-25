@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Service;
 
-use TotalCMS\Domain\Index\Data\QueryResult;
+use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-use TotalCMS\Support\Config;
 
 /**
  * Builds HTMX trigger elements for paginated content loading.
@@ -16,27 +15,22 @@ use TotalCMS\Support\Config;
  */
 readonly class HtmxRenderer
 {
-	public function __construct(
-		private Config $config,
-	) {
-	}
-
 	/**
 	 * Build the HTMX trigger suffix for a rendered page.
 	 *
 	 * Returns an empty string if there are no more items.
 	 *
-	 * @param string               $collection Collection identifier
-	 * @param QueryResult          $result     Paginated query result
-	 * @param array<string,string> $params     Original query params (carried forward for next page)
+	 * @param string               $baseUrl Full base URL (e.g. "/api/collections/blog/query")
+	 * @param QueryResult          $result  Paginated query result
+	 * @param array<string,string> $params  Original query params (carried forward for next page)
 	 */
-	public function buildNextPageTrigger(string $collection, QueryResult $result, array $params): string
+	public function buildNextPageTrigger(string $baseUrl, QueryResult $result, array $params): string
 	{
 		if (!$result->hasMore()) {
 			return '';
 		}
 
-		return $this->buildTrigger($collection, $params, $result->nextOffset());
+		return $this->buildTrigger($baseUrl, $params, $result->nextOffset());
 	}
 
 	/**
@@ -45,7 +39,9 @@ readonly class HtmxRenderer
 	 * Used by the Twig adapter to output the first trigger that starts
 	 * the load-more chain (page 2+, since page 1 is server-rendered).
 	 *
-	 * @param string               $collection  Collection identifier
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @param string               $baseUrl     Full base URL (e.g. "/api/collections/blog/query")
 	 * @param array<string,string> $queryParams Built query parameters
 	 * @param string               $trigger     Trigger type: "revealed" or "click"
 	 * @param string               $label       Button label for click triggers
@@ -53,14 +49,14 @@ readonly class HtmxRenderer
 	 * @param bool                 $transition  Enable View Transitions API
 	 */
 	public function buildInitialTrigger(
-		string $collection,
+		string $baseUrl,
 		array $queryParams,
-		string $trigger = 'revealed',
-		string $label = 'Load More',
+		string $trigger    = 'revealed',
+		string $label      = 'Load More',
 		string $extraClass = '',
 		bool $transition = false,
 	): string {
-		$url   = $this->buildUrl($collection, $queryParams);
+		$url   = $baseUrl . '?' . http_build_query($queryParams);
 		$class = trim('cms-load-more ' . $extraClass);
 		$swap  = 'outerHTML' . ($transition ? ' transition:true' : '');
 
@@ -81,11 +77,11 @@ readonly class HtmxRenderer
 	/**
 	 * Build an HTMX trigger element for loading the next page.
 	 *
-	 * @param string               $collection Collection identifier
+	 * @param string               $baseUrl    Full base URL
 	 * @param array<string,string> $params     Current query parameters
 	 * @param int                  $nextOffset Offset for the next page
 	 */
-	private function buildTrigger(string $collection, array $params, int $nextOffset): string
+	private function buildTrigger(string $baseUrl, array $params, int $nextOffset): string
 	{
 		$queryParams = [
 			'format'   => 'html',
@@ -106,7 +102,7 @@ readonly class HtmxRenderer
 		$label      = $params['label'] ?? 'Load More';
 		$transition = !empty($params['transition']);
 
-		$url  = $this->buildUrl($collection, $queryParams);
+		$url  = $baseUrl . '?' . http_build_query($queryParams);
 		$swap = 'outerHTML' . ($transition ? ' transition:true' : '');
 
 		$attributes = [
@@ -121,15 +117,5 @@ readonly class HtmxRenderer
 		}
 
 		return HTMLUtils::element('div', '', $attributes);
-	}
-
-	/**
-	 * Build the full query URL for the HTMX request.
-	 *
-	 * @param array<string,string> $queryParams
-	 */
-	private function buildUrl(string $collection, array $queryParams): string
-	{
-		return $this->config->api . '/collections/' . $collection . '/query?' . http_build_query($queryParams);
 	}
 }

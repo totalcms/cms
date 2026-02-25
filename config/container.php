@@ -67,6 +67,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
@@ -326,6 +327,7 @@ return [
 
 	IndexFilter::class => fn (ContainerInterface $container): IndexFilter => new IndexFilter(
 		$container->get(IndexReader::class),
+		$container->get(ObjectFilter::class),
 	),
 
 	ObjectFetcher::class => fn (ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
@@ -366,12 +368,11 @@ return [
 		$container->get(EditionFeatureService::class),
 	),
 
-	HtmxRenderer::class => fn (ContainerInterface $container): HtmxRenderer => new HtmxRenderer(
-		$container->get(Config::class),
-	),
+	HtmxRenderer::class => fn (): HtmxRenderer => new HtmxRenderer(),
 
 	RenderTwigAdapter::class => fn (ContainerInterface $container): RenderTwigAdapter => new RenderTwigAdapter(
 		$container->get(HtmxRenderer::class),
+		$container->get(Config::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(

@@ -1939,6 +1939,192 @@
         }
       }
     },
+    "/dataviews/{id}/query": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "DataView identifier"
+        }
+      ],
+      "get": {
+        "summary": "Query DataView (Paginated)",
+        "description": "Paginated DataView query endpoint supporting JSON, HTML, and CSV output formats. The DataView output must be a root-level array of objects. The HTML format is designed for HTMX-powered progressive loading — each response includes rendered items plus an HTMX trigger element that chains to the next page automatically. Requires Pro edition or higher.",
+        "tags": [
+          "collections"
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "html",
+                "csv"
+              ],
+              "default": "json"
+            },
+            "description": "Response format. `json` returns Fractal-formatted JSON with pagination metadata. `html` returns server-rendered Twig templates with HTMX triggers for load-more. `csv` returns a downloadable CSV file."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Number of items per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "description": "Number of items to skip"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Sort rule. Format: `property:direction[:natural]`, comma-separated for multi-sort. Use `shuffle` for random order.",
+            "example": "date:desc,title:asc"
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Include filter — comma-separated field:value pairs with AND logic. Objects must match ALL conditions.",
+            "example": "published:true,featured:true"
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exclude filter — comma-separated field:value pairs with OR logic. Objects matching ANY condition are excluded.",
+            "example": "draft:true"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Full-text search query across object properties"
+          },
+          {
+            "name": "template",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Twig template path for rendering each item. Required when format is `html`.",
+            "example": "grid/blog-card"
+          },
+          {
+            "name": "trigger",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "revealed",
+                "click"
+              ],
+              "default": "revealed"
+            },
+            "description": "HTMX trigger type for the load-more element. `revealed` triggers when the element scrolls into view. `click` renders a button the user must click. Only used with `html` format."
+          },
+          {
+            "name": "label",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "Load More"
+            },
+            "description": "Button label for click triggers. Only used when trigger is `click`."
+          },
+          {
+            "name": "transition",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            },
+            "description": "Enable the View Transitions API on HTMX swaps. When set, adds `transition:true` to the `hx-swap` attribute."
+          },
+          {
+            "name": "class",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Extra CSS classes to add to the HTMX trigger element"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated query results. Response format depends on the `format` parameter.",
+            "headers": {
+              "X-Total": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Total number of items matching the query"
+              },
+              "X-Offset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Current offset position"
+              },
+              "X-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Items per page"
+              },
+              "X-Has-More": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                },
+                "description": "Whether more results exist beyond this page"
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required template parameter for HTML format"
+          },
+          "403": {
+            "description": "DataViews or Templates feature requires appropriate edition"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/imageworks/{collection}/{id}/{property}.{format}": {
       "parameters": [
         {

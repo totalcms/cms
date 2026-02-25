@@ -18,6 +18,7 @@ return function (App $app): void {
 
 	$app->group('/dataviews', function (RouteCollectorProxy $group): void {
 		$group->get('/{id}/data', DataView\DataViewFetchAction::class)->setName('dataview-fetch');
+		$group->get('/{id}/query', DataView\DataViewQueryAction::class)->setName('dataview-query');
 	})->add(DataViewsEditionMiddleware::class)
 		->add(DataViewsAccessMiddleware::class)
 		->add(DualAuthMiddleware::class);

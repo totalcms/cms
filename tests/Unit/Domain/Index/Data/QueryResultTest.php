@@ -4,7 +4,7 @@ namespace Tests\Unit\Domain\Index\Data;
 
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Index\Data\QueryResult;
+use TotalCMS\Domain\Query\Data\QueryResult;
 
 final class QueryResultTest extends TestCase
 {

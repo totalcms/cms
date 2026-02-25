@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Action\Collection\Index;
+namespace TotalCMS\Action\DataView;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\QueryActionRenderer;
-use TotalCMS\Domain\Index\Service\IndexQueryService;
+use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Support\Config;
 
 /**
- * Paginated collection query endpoint.
+ * Paginated DataView query endpoint.
  *
  * Supports three output formats:
  * - json (default): Fractal-formatted JSON with pagination metadata
  * - html: Server-rendered Twig templates with HTMX trigger for next page
- * - csv: CSV export of paginated index data
+ * - csv: CSV export of paginated DataView data
  */
-readonly class IndexQueryAction
+readonly class DataViewQueryAction
 {
 	public function __construct(
-		private IndexQueryService $queryService,
+		private DataViewQueryService $queryService,
 		private QueryActionRenderer $renderer,
 		private Config $config,
 	) {
@@ -33,12 +33,12 @@ readonly class IndexQueryAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$collection = $args['collection'];
-		$params     = $request->getQueryParams();
-		$format     = $params['format'] ?? 'json';
-		$result     = $this->queryService->query($collection, $params);
-		$baseUrl    = $this->config->api . '/collections/' . $collection . '/query';
+		$viewId  = $args['id'];
+		$params  = $request->getQueryParams();
+		$format  = $params['format'] ?? 'json';
+		$result  = $this->queryService->query($viewId, $params);
+		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
 
-		return $this->renderer->render($request, $response, $result, $params, $format, $baseUrl, 'collection-' . $collection);
+		return $this->renderer->render($request, $response, $result, $params, $format, $baseUrl, 'dataview-' . $viewId);
 	}
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Support\Config;
 
 /**
  * Twig sub-adapter for frontend rendering helpers.
@@ -16,6 +17,7 @@ readonly class RenderTwigAdapter
 {
 	public function __construct(
 		private HtmxRenderer $htmxRenderer,
+		private Config $config,
 	) {
 	}
 
@@ -46,9 +48,51 @@ readonly class RenderTwigAdapter
 			return '<!-- cms.render.loadMore: "template" option is required -->';
 		}
 
-		$limit   = max(1, (int)($options['limit'] ?? 20));
-		$trigger = (string)($options['trigger'] ?? 'revealed');
-		$label   = (string)($options['label'] ?? 'Load More');
+		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+
+		return $this->buildTrigger($baseUrl, $options);
+	}
+
+	/**
+	 * Generate an HTMX trigger element for paginated DataView loading.
+	 *
+	 * Usage in Twig:
+	 * ```twig
+	 * {{ cms.render.loadMoreDataView('my-view', {
+	 *     template: 'cards/item',
+	 *     limit: 6,
+	 *     sort: 'date:desc',
+	 *     trigger: 'revealed'
+	 * }) }}
+	 * ```
+	 *
+	 * @param string              $viewId  DataView identifier
+	 * @param array<string,mixed> $options Options: template (required), limit, sort, include, exclude, search, trigger, label, class
+	 */
+	public function loadMoreDataView(string $viewId, array $options = []): string
+	{
+		$template = (string)($options['template'] ?? '');
+		if ($template === '') {
+			return '<!-- cms.render.loadMoreDataView: "template" option is required -->';
+		}
+
+		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+
+		return $this->buildTrigger($baseUrl, $options);
+	}
+
+	/**
+	 * Build the HTMX trigger from options and delegate to HtmxRenderer.
+	 *
+	 * @param string              $baseUrl Full base URL for the query endpoint
+	 * @param array<string,mixed> $options User-provided options
+	 */
+	private function buildTrigger(string $baseUrl, array $options): string
+	{
+		$template = (string)($options['template'] ?? '');
+		$limit    = max(1, (int)($options['limit'] ?? 20));
+		$trigger  = (string)($options['trigger'] ?? 'revealed');
+		$label    = (string)($options['label'] ?? 'Load More');
 
 		// Build query params — offset starts at limit because page 1 is server-rendered
 		$queryParams = [
@@ -81,6 +125,6 @@ readonly class RenderTwigAdapter
 
 		$extraClass = (string)($options['class'] ?? '');
 
-		return $this->htmxRenderer->buildInitialTrigger($collection, $queryParams, $trigger, $label, $extraClass, $transition);
+		return $this->htmxRenderer->buildInitialTrigger($baseUrl, $queryParams, $trigger, $label, $extraClass, $transition);
 	}
 }

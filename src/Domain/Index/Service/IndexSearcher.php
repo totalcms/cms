@@ -74,8 +74,6 @@ readonly class IndexSearcher
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
 	 */
@@ -96,8 +94,6 @@ readonly class IndexSearcher
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
 	 */
@@ -143,8 +139,6 @@ readonly class IndexSearcher
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<mixed> $object
 	 */
 	private static function searchArray(array $object, string $query): bool
@@ -194,8 +188,6 @@ readonly class IndexSearcher
 
 	/**
 	 * Function to get the priority score of an item based on the properties array.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $properties
