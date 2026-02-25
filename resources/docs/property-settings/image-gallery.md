@@ -108,6 +108,50 @@ For depot (multiple file) fields, the setting works the same way:
 - **Manual Override:** Users can still manually change the `protected` flag for individual files in the file management interface, regardless of this setting.
 - **Security:** Setting to `false` makes files publicly accessible. Use with caution for sensitive content.
 
+## Privacy: Strip Location Data
+
+The `stripLocation` setting removes all GPS and location metadata from uploaded images. When enabled, location fields are stripped from EXIF data after extraction, while preserving all other metadata (camera, lens, exposure, author, copyright, date).
+
+This is a **global configuration setting** in `tcms.php` (not a per-field setting). It applies to all image and gallery uploads site-wide.
+
+### Configuration
+
+Add to your `tcms.php` file:
+
+```php
+return [
+	'imageworks' => [
+		'stripLocation' => true,
+	],
+];
+```
+
+### Fields Removed
+
+When `stripLocation` is `true`, the following EXIF fields are removed before saving:
+
+| Field | Source |
+|-------|--------|
+| `latitude` | EXIF GPS IFD |
+| `longitude` | EXIF GPS IFD |
+| `altitude` | EXIF GPS IFD |
+| `country` | XMP / IPTC |
+| `state` | XMP / IPTC |
+| `city` | XMP / IPTC |
+| `sublocation` | XMP / IPTC |
+
+### When to Use
+
+- **GDPR compliance** — Avoid storing GPS coordinates from user-uploaded images
+- **Privacy protection** — Prevent accidental exposure of location data on public sites
+- **Photography sites** — When location data should not be embedded in published images
+
+### Important Notes
+
+- **Default is `false`** — Location data is preserved by default for backward compatibility
+- **Non-destructive** — The original uploaded file is not modified; only the extracted metadata stored in JSON is affected
+- **Applies to new uploads only** — Existing images already saved retain their metadata
+
 ## Watermarks
 
 Watermark settings allow you to automatically apply watermarks to images and gallery images. These settings are enforced at the image generation level and **cannot be bypassed via URL manipulation**, making them ideal for protecting photography and copyrighted content.

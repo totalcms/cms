@@ -10,6 +10,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 use TotalCMS\Traits\LoggerAwareTrait;
 
 class FileSaver
@@ -25,6 +26,7 @@ class FileSaver
 		protected ObjectPatcher $objectPatcher,
 		protected ObjectFetcher $objectFetcher,
 		protected LoggerFactory $loggerFactory,
+		protected Config $config,
 	) {
 	}
 

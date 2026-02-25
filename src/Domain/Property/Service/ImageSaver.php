@@ -64,6 +64,9 @@ class ImageSaver extends FileSaver
 
 		// Extract EXIF metadata (includes alt text and tags from IPTC/XMP)
 		$metaData  = ImageMetaReader::getMetaData($filePath);
+		if ($this->config->imageworks['stripLocation'] ?? false) {
+			ImageMetaReader::stripLocationData($metaData);
+		}
 
 		// Merge data with EXIF taking precedence for alt and tags if they're empty in existing data
 		$newImage = array_merge($fileData, $metaData, $colorData, $existingData);

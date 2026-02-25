@@ -48,6 +48,9 @@ class GallerySaver extends FileSaver
 		}
 
 		$metaData  = ImageMetaReader::getMetaData($filePath);
+		if ($this->config->imageworks['stripLocation'] ?? false) {
+			ImageMetaReader::stripLocationData($metaData);
+		}
 
 		$newImage          = array_merge($fileData, $metaData, $colorData);
 		$gallery->images[] = new ImageData($newImage);
