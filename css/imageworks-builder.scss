@@ -38,12 +38,13 @@ body, h1,h2,h3,h4,h5,h6 {
 			filter: brightness(0.90);
 		}
 	}
-	#copy-macro {
-		border     : 1px solid oklch(var(--totalform-accent));
-		background : transparent;
-		color      : oklch(var(--totalform-accent));
-		padding    : 0.5rem 1rem;
-		font-size  : 0.8rem;
+	button.copy-macro {
+		border        : 1px solid oklch(var(--totalform-accent));
+		background    : transparent;
+		color         : oklch(var(--totalform-accent));
+		padding       : 0.5rem 1rem;
+		font-size     : 0.8rem;
+		margin-bottom : 1.5rem;
 
 		&.copied {
 			content: "Copied!";
@@ -86,16 +87,19 @@ body, h1,h2,h3,h4,h5,h6 {
 		margin-top  : 0.5rem;
 		font-style  : italic;
 	}
+	h4 {
+		margin-bottom : 0.5rem;
+	}
 }
 
-pre#twig-macro {
+pre#twig-macro, pre#twig-render-macro {
 	background-color : oklch(var(--totalform-nearwhite));
-	padding          : 1rem 0.5rem;
+	padding          : 0.5rem;
 	border           : 1px solid oklch(var(--totalform-border-color));
 	border-radius    : 5px;
 	max-width        : 300px;
 	overflow-x       : scroll;
-	margin-bottom    : 1rem;
+	margin-bottom    : 0.5rem;
 }
 .totalform {
 	margin-top : 1rem;

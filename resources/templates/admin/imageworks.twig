@@ -138,15 +138,22 @@
 					draggable="false" />
 				<div class="image-info">
 					<div>
-						<h4>Macro:</h4>
+						<h4>Macros:</h4>
 
 						{% if name %}
 						<pre id="twig-macro">&#123;&#123; cms.media.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
 						{% else %}
 						<pre id="twig-macro">&#123;&#123; cms.media.imagePath("{{id}}") &#125;&#125;</pre>
 						{% endif %}
+						<button type="button" class="copy-macro cms-clip-button" data-clip="#twig-macro">Copy Path Macro</button>
 
-						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Path Macro</button>
+						{% if name %}
+						<pre id="twig-render-macro">&#123;&#123; cms.render.galleryImage("{{id}}", "{{name}}") &#125;&#125;</pre>
+						{% else %}
+						<pre id="twig-render-macro">&#123;&#123; cms.render.image("{{id}}") &#125;&#125;</pre>
+						{% endif %}
+						<button type="button" class="copy-macro cms-clip-button" data-clip="#twig-render-macro">Copy Render Macro</button>
+
 						<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
 					</div>
 					<h4 class="new-size">New Size: <span id="filesize"></span> <span id="dimensions"></span></h4>

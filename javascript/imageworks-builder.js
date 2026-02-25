@@ -32,13 +32,17 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const generateTwigMacro = (data) => {
-		const macroContent = document.getElementById("twig-macro");
+	const generateTwigMacros = (data) => {
+		const pathMacro   = document.getElementById("twig-macro");
+		const renderMacro = document.getElementById("twig-render-macro");
+
 		if (data.name?.length > 0) {
-			macroContent.textContent = MacroBuilder.galleryPath(data);
+			pathMacro.textContent   = MacroBuilder.galleryPath({...data});
+			renderMacro.textContent = MacroBuilder.renderGalleryImage({...data});
 			return;
 		}
-		macroContent.textContent = MacroBuilder.imagePath(data);
+		pathMacro.textContent   = MacroBuilder.imagePath({...data});
+		renderMacro.textContent = MacroBuilder.renderImage({...data});
 	}
 
 	const filesize = document.getElementById('filesize');
@@ -150,7 +154,7 @@ document.addEventListener("DOMContentLoaded", event => {
 		downloadButton.href = imageUrl.href;
 
 		getImageSize();
-		generateTwigMacro(data);
+		generateTwigMacros(data);
 	});
-	generateTwigMacro(getFormData());
+	generateTwigMacros(getFormData());
 });
