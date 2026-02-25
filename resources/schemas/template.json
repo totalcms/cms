@@ -24,6 +24,7 @@
 			"settings" : {
 				"mode"         : "twig",
 				"theme"        : "elegant",
+				"maxHeight"    : 600,
 				"lineNumbers"  : true,
 				"lineWrapping" : true,
 				"indentUnit"   : 2,

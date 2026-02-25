@@ -125,9 +125,10 @@
 			"placeholder" : "<p>Hello {{ data.name }},</p>\n<p>Thank you for contacting us.</p>",
 			"help"        : "HTML email body (supports twig variables)",
 			"settings"    : {
-				"rows"     : 15,
-				"mode"     : "twig",
-				"required" : true
+				"rows"      : 15,
+				"maxHeight" : 600,
+				"mode"      : "twig",
+				"required"  : true
 			}
 		},
 		"bodyText": {

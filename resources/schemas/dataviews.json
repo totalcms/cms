@@ -46,6 +46,7 @@
 				"mode"         : "twig",
 				"theme"        : "elegant",
 				"rows"         : 20,
+				"maxHeight"    : 600,
 				"lineNumbers"  : true,
 				"lineWrapping" : true,
 				"indentUnit"   : 2,

@@ -6,6 +6,9 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
 {
   "mode"          : "twig",
   "theme"         : "elegant",
+  "rows"          : 10,
+  "minHeight"     : 200,
+  "maxHeight"     : 600,
   "lineNumbers"   : true,
   "lineWrapping"  : true,
   "indentUnit"    : 2,
@@ -43,6 +46,18 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
 
 - **autoCloseTags** - Auto-close HTML/XML tags. Default: `true`
 
+### Editor Size
+
+The code editor automatically grows to fit its content. You can control the sizing with these settings:
+
+- **rows** - Number of text rows for the initial/minimum height calculation. Default: `10`
+
+- **minHeight** - Minimum height in pixels. If set, overrides the height calculated from `rows`. The editor will never be shorter than this value.
+
+- **maxHeight** - Maximum height in pixels for auto-grow. The editor will stop growing automatically beyond this height and scroll instead. Users can still drag the resize handle past this limit for temporary extra space. Default: no limit
+
+The editor also has a drag handle on the bottom edge that allows users to manually resize the editor to any height they need.
+
 ## Example Usage
 
 ```json
@@ -54,6 +69,7 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
     "settings" : {
       "mode"         : "javascript",
       "theme"        : "elegant",
+      "maxHeight"    : 500,
       "lineNumbers"  : true,
       "indentUnit"   : 4
     }

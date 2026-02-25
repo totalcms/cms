@@ -32,6 +32,14 @@ class CodeField extends TextareaField
 			$attributes['data-theme'] = 'elegant'; // Default theme
 		}
 
+		// Pass minHeight and maxHeight as data attributes
+		if (isset($this->settings['minHeight'])) {
+			$attributes['data-min-height'] = (string) $this->settings['minHeight'];
+		}
+		if (isset($this->settings['maxHeight'])) {
+			$attributes['data-max-height'] = (string) $this->settings['maxHeight'];
+		}
+
 		// Code editor specific options
 		$editorOptions = [
 			'autofocus'     => $this->settings['autofocus'] ?? false,
