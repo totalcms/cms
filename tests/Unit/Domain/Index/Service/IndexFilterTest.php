@@ -5,6 +5,7 @@ namespace Tests\Unit\Domain\Index\Service;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
 
 final class IndexFilterTest extends TestCase
 {
@@ -13,7 +14,7 @@ final class IndexFilterTest extends TestCase
 	protected function setUp(): void
 	{
 		$indexReader  = $this->createMock(IndexReader::class);
-		$this->filter = new IndexFilter($indexReader);
+		$this->filter = new IndexFilter($indexReader, new ObjectFilter());
 	}
 
 	public function testExtractsFilterOptions(): void
