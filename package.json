@@ -45,6 +45,7 @@
     "dompurify": "^3.0.2",
     "gridjs": "^6.2.0",
     "highlight.js": "^11.11.1",
+    "htmx.org": "4.0.0-alpha7",
     "js-beautify": "^1.15.4",
     "lightgallery": "^2.8.2",
     "slugify": "^1.6.6",

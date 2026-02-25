@@ -937,8 +937,6 @@ readonly class TotalFormFactory
 	 * Generate a single field HTML for a given collection, object, and property.
 	 * This allows you to create individual form fields without building a full form.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $options Field options to override defaults
 	 *
 	 * @return string The rendered field HTML

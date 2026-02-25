@@ -5,15 +5,76 @@ namespace Tests\Unit\Domain\Index\Service;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
 
 final class IndexFilterTest extends TestCase
 {
+	private \PHPUnit\Framework\MockObject\MockObject&IndexReader $indexReader;
 	private IndexFilter $filter;
 
 	protected function setUp(): void
 	{
-		$indexReader  = $this->createMock(IndexReader::class);
-		$this->filter = new IndexFilter($indexReader);
+		$this->indexReader = $this->createMock(IndexReader::class);
+		$this->filter      = new IndexFilter($this->indexReader, new ObjectFilter());
+	}
+
+	// --- fetchFilteredIndex (index-loading + filtering) ---
+
+	public function testFetchFilteredIndexLoadsAndFilters(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '1', 'published' => true, 'draft' => false],
+			['id' => '2', 'published' => true, 'draft' => true],
+			['id' => '3', 'published' => false, 'draft' => false],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndex('blog', [
+			'include' => 'published:true',
+			'exclude' => 'draft:true',
+		]);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	public function testFetchFilteredIndexWithNoFiltersReturnsAll(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '1', 'title' => 'Post 1'],
+			['id' => '2', 'title' => 'Post 2'],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndex('blog');
+
+		$this->assertCount(2, $result);
+	}
+
+	public function testFetchFilteredIndexDataReturnsIndexData(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '1', 'published' => true],
+			['id' => '2', 'published' => false],
+			['id' => '3', 'published' => true],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndexData('blog', ['include' => 'published:true']);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Index\Data\IndexData::class, $result);
+		$this->assertCount(2, $result->objects);
+		$this->assertSame('1', $result->objects[0]['id']);
+		$this->assertSame('3', $result->objects[1]['id']);
 	}
 
 	public function testExtractsFilterOptions(): void

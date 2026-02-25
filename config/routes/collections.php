@@ -36,6 +36,9 @@ return function (App $app): void {
 		->add(DualAuthMiddleware::class);
 
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
+		// Collection Query (paginated)
+		$group->get('/{collection}/query', Collection\Index\IndexQueryAction::class)->setName('collection-query');
+
 		// Collection Index
 		$group->get('/{collection}/index', Collection\Index\IndexGetAction::class)->setName('collection-fetch-index');
 		$group->put('/{collection}/index', Collection\Index\IndexBuildAction::class)->setName('collection-reindex');

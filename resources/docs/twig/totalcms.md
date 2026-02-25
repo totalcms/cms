@@ -610,6 +610,18 @@ The grid renderer provides helper methods for content grids:
 {{ cms.grid.meta(item) }}                        {# Render metadata (author, date, etc) #}
 ```
 
+## Render Helpers
+
+```twig
+{# Load more items from a collection (HTMX-powered pagination) #}
+{{ cms.render.loadMore('blog', {template: 'blog/card.twig', limit: 10}) }}
+
+{# Load more items from a DataView #}
+{{ cms.render.loadMoreDataView('recent-posts', {template: 'blog/card.twig', limit: 10}) }}
+```
+
+See [Load More Documentation](docs/collections/load-more) for full options and examples.
+
 ## Server & Diagnostics
 
 ```twig

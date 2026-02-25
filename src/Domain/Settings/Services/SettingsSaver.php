@@ -21,8 +21,6 @@ readonly class SettingsSaver
 	/**
 	 * Save settings for a specific section.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $sectionData
 	 */
 	public function saveSection(string $section, array $sectionData): void
@@ -80,8 +78,6 @@ readonly class SettingsSaver
 
 	/**
 	 * Deep merge two arrays recursively.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $array1
 	 * @param array<string,mixed> $array2

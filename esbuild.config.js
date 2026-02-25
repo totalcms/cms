@@ -81,6 +81,10 @@ esbuild.build({
             from : "node_modules/lightgallery/images/*",
             to   : "gallery"
         }}),
+		copy.default({assets: {
+            from : "node_modules/htmx.org/dist/htmx.min.js",
+            to   : "."
+        }}),
         // Sass includes
         sassPlugin({
             loadPaths: [

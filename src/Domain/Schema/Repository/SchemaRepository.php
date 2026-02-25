@@ -64,8 +64,6 @@ class SchemaRepository extends StorageRepository
 	/**
 	 * List reserved Schemas.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @return array<SchemaData>
 	 */
 	public function listReservedSchemas(): array
@@ -107,8 +105,6 @@ class SchemaRepository extends StorageRepository
 
 	/**
 	 * List reserved Schema IDs.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @return array<string>
 	 */

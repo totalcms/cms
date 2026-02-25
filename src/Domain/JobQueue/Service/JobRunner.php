@@ -153,7 +153,6 @@ readonly class JobRunner
 		}
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function processNextJob(): void
 	{
 		$job = $this->jobRepository->fetchNextJob();
@@ -272,8 +271,6 @@ readonly class JobRunner
 
 	/**
 	 * Process export job by exporting collection data.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	private function processExportJob(JobData $job): void
 	{

@@ -6,6 +6,7 @@ use Cake\Chronos\Chronos;
 use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
+use TotalCMS\Domain\Collection\Utilities\SortRuleParser;
 use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -82,6 +83,7 @@ class TotalCMSTwigFilters
 		'decrypt',
 		'filterCollection',
 		'sortCollection',
+		'sortCollectionByString',
 		'paginate',
 		'svgToSymbol',
 		'markdown',
@@ -478,7 +480,6 @@ class TotalCMSTwigFilters
 
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	public static function truncate(?string $string, int $length, bool $keepWords = false): string
 	{
@@ -902,6 +903,29 @@ class TotalCMSTwigFilters
 	{
 		if ($collection === null || $collection === [] || $rules === []) {
 			return $collection ?? [];
+		}
+
+		$sorter = new CollectionSorter($collection);
+
+		return $sorter->sortByRules($rules);
+	}
+
+	/**
+	 * Sort a collection using string format: "date:desc,title:asc:natural".
+	 *
+	 * @param array<array<string,mixed>>|null $collection
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public static function sortCollectionByString(?array $collection, string $sortString): array
+	{
+		if ($collection === null || $collection === [] || $sortString === '') {
+			return $collection ?? [];
+		}
+
+		$rules = SortRuleParser::parse($sortString);
+		if ($rules === []) {
+			return $collection;
 		}
 
 		$sorter = new CollectionSorter($collection);

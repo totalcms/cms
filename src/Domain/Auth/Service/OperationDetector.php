@@ -45,6 +45,9 @@ readonly class OperationDetector
 		'property-file-move',
 		'property-increment',
 		'property-decrement',
+		'collection-query',
+		'dataview-fetch',
+		'dataview-query',
 	];
 
 	/**
@@ -68,6 +71,7 @@ readonly class OperationDetector
 		'import-schema',
 		'playground-save',
 		'admin-collection-new',
+		'dataview-test',
 	];
 
 	/**
@@ -102,6 +106,9 @@ readonly class OperationDetector
 		'collection-fetch',
 		'collection-exists',
 		'collection-fetch-schema',
+		'collection-query',
+		'dataview-fetch',
+		'dataview-query',
 		'export-json',
 		'export-csv',
 		'export-zip',
@@ -109,6 +116,8 @@ readonly class OperationDetector
 		'playground-list',
 		'playground-fetch',
 		'admin-collection-edit',
+		'admin-dataviews',
+		'export-object-zip',
 	];
 
 	/**
@@ -143,6 +152,8 @@ readonly class OperationDetector
 		'admin-collection-edit',
 		'property-increment',
 		'property-decrement',
+		'property-folder-rename',
+		'dataview-rebuild',
 	];
 
 	/**
