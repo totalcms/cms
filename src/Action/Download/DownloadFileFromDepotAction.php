@@ -10,6 +10,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
@@ -23,6 +24,7 @@ class DownloadFileFromDepotAction extends DownloadAction
 		protected PhpSession $session,
 		protected Config $config,
 		private readonly PropertyFetcher $propFetcher,
+		protected TranslationService $translator,
 	) {
 	}
 

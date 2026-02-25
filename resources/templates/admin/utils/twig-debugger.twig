@@ -1,13 +1,13 @@
-<h1>Twig Debugger</h1>
+<h1>{{ t('debugger.title') }}</h1>
 
 <section class="dash-content-section twig-lint">
-	<p>Check a webpage for Twig syntax errors. Enter the path to a file relative to the document root.</p>
+	<p>{{ t('debugger.desc') }}</p>
 
 	{% set formFields %}
 		{{ cms.form.field("text", "filepath", {
-			label       : "File Path",
-			placeholder : "/page/index.php",
-			help        : "Path relative to document root (e.g., /page/index.php)",
+			label       : t('debugger.file_path'),
+			placeholder : t('debugger.file_path_ph'),
+			help        : t('debugger.file_path_help'),
 			value       : postData.filepath | default(getData.filepath) | default(''),
 			required    : true
 		}) }}
@@ -15,7 +15,7 @@
 
 	{{ cms.form.simple(url.path, formFields, {
 		method : "POST",
-		label  : "Check File",
+		label  : t('debugger.check_btn'),
 		ajax   : false
 	}) }}
 
@@ -23,23 +23,23 @@
 	<div class="lint-results">
 		{% if lintResults.success %}
 			<div class="lint-success">
-				<h3>No Syntax Errors Found</h3>
-				<p>The file <code>{{ lintResults.file }}</code> passed Twig syntax validation.</p>
+				<h3>{{ t('debugger.no_errors') }}</h3>
+				<p>{{ t('debugger.no_errors_desc') }}</p>
 			</div>
 		{% else %}
 			<div class="lint-error">
-				<h3>Syntax Error Found</h3>
+				<h3>{{ t('debugger.error_found') }}</h3>
 				<p class="error-message">{{ lintResults.error.message }}</p>
 
 				{% if lintResults.error.line > 0 %}
 				<p class="error-location">
-					<strong>File:</strong> <code>{{ lintResults.file }}</code><br>
-					<strong>Line:</strong> {{ lintResults.error.line }} of {{ lintResults.totalLines }} total
+					<strong>{{ t('debugger.file') }}</strong> <code>{{ lintResults.file }}</code><br>
+					<strong>{{ t('debugger.line') }}</strong> {{ lintResults.error.line }} of {{ lintResults.totalLines }} {{ t('debugger.total_lines') }}
 				</p>
 				{% endif %}
 
 				{% if lintResults.error.context %}
-				<h4>Context</h4>
+				<h4>{{ t('debugger.context') }}</h4>
 				<pre class="error-context"><code>{{ lintResults.error.context | e }}</code></pre>
 				{% endif %}
 			</div>

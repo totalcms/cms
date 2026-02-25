@@ -1,8 +1,8 @@
-<h1>Cache Sizing Advisor</h1>
+<h1>{{ t('cache_sizing.title') }}</h1>
 
 <section class="dash-content-section">
 
-	<p>Analyze your CMS data to get data-driven memory allocation recommendations for cache backends.</p>
+	<p>{{ t('cache_sizing.desc') }}</p>
 
 	{% set sizing = cms.admin.cacheSizingAdvisor.getSizingAnalysis() %}
 
@@ -10,55 +10,55 @@
 		<div class="sizing-stats-grid">
 			<div class="sizing-stat">
 				<div class="sizing-stat-value">{{ sizing.scan.total_objects_human }}</div>
-				<div class="sizing-stat-label">Total Objects</div>
+				<div class="sizing-stat-label">{{ t('cache_sizing.total_objects') }}</div>
 			</div>
 			<div class="sizing-stat">
 				<div class="sizing-stat-value">{{ sizing.scan.collection_count }}</div>
-				<div class="sizing-stat-label">Collections</div>
+				<div class="sizing-stat-label">{{ t('cache_sizing.collections') }}</div>
 			</div>
 			<div class="sizing-stat">
 				<div class="sizing-stat-value">{{ sizing.scan.total_bytes_human }}</div>
-				<div class="sizing-stat-label">Total Data Size</div>
+				<div class="sizing-stat-label">{{ t('cache_sizing.total_data_size') }}</div>
 			</div>
 			<div class="sizing-stat">
 				<div class="sizing-stat-value">{{ sizing.recommendations.estimated_entries_human }}</div>
-				<div class="sizing-stat-label">Estimated Cache Entries</div>
+				<div class="sizing-stat-label">{{ t('cache_sizing.estimated_entries') }}</div>
 			</div>
 		</div>
 
 		{# Filesystem-only Warning #}
 		{% if sizing.recommendations.filesystem_only_warning is defined %}
 			<div class="sizing-warning">
-				<strong>⚠️ No Memory Cache Available</strong>
+				<strong>⚠️ {{ t('cache_sizing.no_memory_cache') }}</strong>
 				<p>{{ sizing.recommendations.filesystem_only_warning }}</p>
 			</div>
 		{% endif %}
 
 		{# Memory Recommendations #}
-		<h3>Memory Recommendations</h3>
-		<p>Total CMS supports all three memory cache backends, but you do not need to enable all of them. A single memory cache (such as APCu) is sufficient for most sites.</p>
+		<h3>{{ t('cache_sizing.memory_recs') }}</h3>
+		<p>{{ t('cache_sizing.memory_desc') }}</p>
 		<div class="sizing-stats-grid">
 			{% for key, backend in sizing.recommendations.backends %}
 				<div class="sizing-backend-card">
 					<h5>{{ backend.name }}</h5>
 					{% if backend.available %}
-						<span class="success">✅ Active</span>
+						<span class="success">✅ {{ t('label.active') }}</span>
 					{% elseif backend.installed %}
-						<span class="warning">⚠️ Installed</span>
+						<span class="warning">⚠️ {{ t('label.installed') }}</span>
 					{% else %}
-						<span class="error">❌ Not Installed</span>
+						<span class="error">❌ {{ t('label.not_installed') }}</span>
 					{% endif %}
 					<div class="sizing-backend-detail">
-						<strong>Recommended:</strong> {{ backend.recommended_allocation }}
+						<strong>{{ t('label.recommended') }}:</strong> {{ backend.recommended_allocation }}
 						<small>({{ backend.recommended_human }})</small>
 					</div>
 					{% if backend.current_allocated_human is defined and backend.current_allocated_human != 'N/A' %}
 						<div class="sizing-backend-detail">
-							<strong>Current:</strong> {{ backend.current_allocated_human }}
+							<strong>{{ t('label.current') }}:</strong> {{ backend.current_allocated_human }}
 							{% if backend.sufficient is same as(true) %}
-								<span class="success">✅ Sufficient</span>
+								<span class="success">✅ {{ t('label.sufficient') }}</span>
 							{% elseif backend.sufficient is same as(false) %}
-								<span class="error">❌ Insufficient</span>
+								<span class="error">❌ {{ t('label.insufficient') }}</span>
 							{% endif %}
 						</div>
 					{% endif %}
@@ -67,7 +67,7 @@
 		</div>
 
 		{# Configuration Examples #}
-		<h3>Configuration Examples</h3>
+		<h3>{{ t('cache_sizing.config_examples') }}</h3>
 		{% for key, example in sizing.config_examples %}
 			<div class="sizing-config-block">
 				<h5>{{ example.name }}</h5>
@@ -79,17 +79,17 @@
 
 		{# Per-Collection Breakdown #}
 		{% if sizing.scan.collections|length > 0 %}
-			<h3>Per-Collection Breakdown</h3>
+			<h3>{{ t('cache_sizing.per_collection') }}</h3>
 			<table class="admin-table">
 				<thead>
 					<tr>
-						<th>Collection</th>
-						<th>Schema</th>
-						<th>Objects</th>
-						<th>Object Data</th>
-						<th>Index Size</th>
-						<th>Avg Object</th>
-						<th>Largest Object</th>
+						<th>{{ t('label.collection') }}</th>
+						<th>{{ t('label.schema') }}</th>
+						<th>{{ t('label.objects') }}</th>
+						<th>{{ t('cache_sizing.object_data') }}</th>
+						<th>{{ t('cache_sizing.index_size') }}</th>
+						<th>{{ t('cache_sizing.avg_object') }}</th>
+						<th>{{ t('cache_sizing.largest_object') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -109,7 +109,7 @@
 		{% endif %}
 
 		<div style="text-align:right; margin-top:1rem;">
-			<a href="utils/cache-sizing">↻ Refresh Analysis</a>
+			<a href="utils/cache-sizing">↻ {{ t('cache_sizing.refresh') }}</a>
 		</div>
 
 </section>

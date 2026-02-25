@@ -4,15 +4,15 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Snippets" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('playground.filter') }}" autofocus />
 	</header>
 
 	<nav class="links" id="playground-links">
 		{% set snippets = cms.collection.objects("playground") %}
 		{% if snippets|length == 0 %}
-			<h3>Snippets</h3>
+			<h3>{{ t('playground.title') }}</h3>
 			<ul>
-				<li class="no-snippets">No snippets found</li>
+				<li class="no-snippets">{{ t('playground.empty') }}</li>
 			</ul>
 		{% else %}
 			{% set snippetsByCategory = {} %}
@@ -41,7 +41,7 @@
 	</nav>
 
 	<footer>
-		<a class="dash-button full transparent" href="playground" title="Create a new playground snippet">+ New Snippet</a>
+		<a class="dash-button full transparent" href="playground" title="{{ t('playground.new_desc') }}">{{ t('playground.new') }}</a>
 	</footer>
 </aside>
 {% include "admin/sidebar-details.twig" %}
@@ -50,11 +50,11 @@
 
 	<header>
 		<h1><a href="playground">playground</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) | default('new snippet') }}</span></h1>
-		<button class="dash-action-dots" title="Playground Actions" popovertarget="playground-actions"></button>
+		<button class="dash-action-dots" title="{{ t('playground.actions') }}" popovertarget="playground-actions"></button>
 		<nav popover id="playground-actions">
 			<ul>
-				<li class="export"><a href="playground/-export">Export</a></li>
-				<li class="import"><a href="playground/-import">Import</a></li>
+				<li class="export"><a href="playground/-export">{{ t('btn.export') }}</a></li>
+				<li class="import"><a href="playground/-import">{{ t('btn.import') }}</a></li>
 			</ul>
 		</nav>
 	</header>
@@ -91,7 +91,7 @@
 			hx-on:htmx:after:swap="setupHtmlOutput()">
 			<textarea name="twig" id="twig" class="cms-hide"></textarea>
 			<div class="form-inline-fields">
-				<button type="submit" class="dash-button">Render Twig</button>
+				<button type="submit" class="dash-button">{{ t('playground.render') }}</button>
 			</div>
 		</form>
 

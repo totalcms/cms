@@ -6,10 +6,8 @@
 		TODO: open the accordion section for the type of feed that is being generated.
 	#}
 
-	<h2>RSS Builder for {{ url.collection }}</h2>
-	<p>The following will produce a URL that you can use for visitor to subscribe to an RSS feed of your collection.
-	All of the fields below are optional. If no field mappings are provided, then the mapping for a blog schema
-	will be used.</p>
+	<h2>{{ t('collection.feeds_title', {collection: url.collection}) }}</h2>
+	<p>{{ t('collection.feeds_desc') }}</p>
 
 	{% set collection = cms.collection.get(url.collection) %}
 	{% set schema = cms.schema.get(collection.schema) %}
@@ -19,14 +17,14 @@
 		method="POST"
 		data-disabled>
 		<div>
-			<h4 style="margin-bottom:1rem">RSS Feed Settings</h4>
+			<h4 style="margin-bottom:1rem">{{ t('collection.feeds_settings') }}</h4>
 
 			<input type="hidden" name="type" value="rss"/>
 
-			<label for="name">Feed Name</label>
-			<input type="text" name="name" value="{{ postData.name }}" placeholder="My {{ url.collection | humanize }} Feed"/>
+			<label for="name">{{ t('collection.feeds_name') }}</label>
+			<input type="text" name="name" value="{{ postData.name }}" placeholder="{{ t('collection.feeds_name_ph', {collection: url.collection | humanize}) }}"/>
 
-			<label for="language">Language</label>
+			<label for="language">{{ t('collection.feeds_language') }}</label>
 			<select name="language">
 				<option value="">Select a Language</option>
 				{% for lang, code in cms.locale.languages() %}
@@ -37,20 +35,20 @@
 				{% endfor %}
 			</select>
 
-			<label for="link">Link to Website</label>
+			<label for="link">{{ t('collection.feeds_link') }}</label>
 			<input type="url" name="link" value="{{ postData.link }}" placeholder="https://{{ cms.domain }}"/>
 
-			<label for="image">Main Feed Image</label>
+			<label for="image">{{ t('collection.feeds_image') }}</label>
 			<input type="url" name="image" value="{{ postData.image }}" placeholder="https://{{ cms.domain }}/feed.jpg"/>
 
-			<label for="description">Feed Description</label>
-			<textarea name="description" rows="5" placeholder="A description of the feed">{{ postData.description }}</textarea>
+			<label for="description">{{ t('collection.feeds_description') }}</label>
+			<textarea name="description" rows="5" placeholder="{{ t('collection.feeds_description_ph') }}">{{ postData.description }}</textarea>
 
-			<h4 style="margin:1rem 0">Feed Filtering Options</h4>
+			<h4 style="margin:1rem 0">{{ t('collection.feeds_filter_title') }}</h4>
 
-			<label for="include">Include Property for Feed (must be indexed)</label>
+			<label for="include">{{ t('collection.feeds_include') }}</label>
 			<select name="include">
-				<option value="">Select a Property</option>
+				<option value="">{{ t('collection.sitemap_select_prop') }}</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
 						{% if postData.include == property %}selected{% endif %}>
@@ -59,9 +57,9 @@
 				{% endfor %}
 			</select>
 
-			<label for="exclude">Exclude Property for Feed (must be indexed)</label>
+			<label for="exclude">{{ t('collection.feeds_exclude') }}</label>
 			<select name="exclude">
-				<option value="">Select a Property</option>
+				<option value="">{{ t('collection.sitemap_select_prop') }}</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
 						{% if postData.exclude == property %}selected{% endif %}>
@@ -70,41 +68,41 @@
 				{% endfor %}
 			</select>
 
-			<label for="limit">Feed Item Limit</label>
+			<label for="limit">{{ t('collection.feeds_limit') }}</label>
 			<input type="number" min="-1" max="1000" name="limit" value="{{ postData.limit|default(25) }}" placeholder="25"/>
-			<p style="font-size: 0.875rem; margin-top: 0.25rem; color: oklch(var(--totalform-darkgray));">Enter -1 for unlimited items</p>
+			<p style="font-size: 0.875rem; margin-top: 0.25rem; color: oklch(var(--totalform-darkgray));">{{ t('collection.feeds_limit_help') }}</p>
 
-			<h4 style="margin:1rem 0">RSS Field to Property Mapping</h4>
+			<h4 style="margin:1rem 0">{{ t('collection.feeds_mapping_title') }}</h4>
 
 			<div class="cms-field-mapping">
 				<div>
-					<label for="title">Title</label>
+					<label for="title">{{ t('collection.feeds_field_title') }}</label>
 					<input type="text" name="title" value="{{ postData.title }}" placeholder="title"/>
 				</div>
 				<div>
-					<label for="date">Date</label>
+					<label for="date">{{ t('collection.feeds_field_date') }}</label>
 					<input type="text" name="date" value="{{ postData.date }}" placeholder="updated"/>
 				</div>
 				<div>
-					<label for="content">Content</label>
+					<label for="content">{{ t('collection.feeds_field_content') }}</label>
 					<input type="text" name="content" value="{{ postData.content }}" placeholder="summary"/>
 				</div>
 				<div>
-					<label for="author">Author</label>
+					<label for="author">{{ t('collection.feeds_field_author') }}</label>
 					<input type="text" name="author" value="{{ postData.author }}" placeholder="author"/>
 				</div>
 				<div>
-					<label for="media">Media</label>
+					<label for="media">{{ t('collection.feeds_field_media') }}</label>
 					<input type="text" name="media" value="{{ postData.media }}" placeholder="media"/>
 				</div>
 				<div>
-					<label for="draft">Draft</label>
+					<label for="draft">{{ t('collection.feeds_field_draft') }}</label>
 					<input type="text" name="draft" value="{{ postData.draft }}" placeholder="draft"/>
 				</div>
 			</div>
 
 		</div>
-		<button class="cms-button" type="submit">Generate RSS URL</button>
+		<button class="cms-button" type="submit">{{ t('collection.feeds_generate') }}</button>
 	</form>
 
 	{% set query = http_build_query(postData | filter((v, k) => k != "type")) %}
@@ -119,10 +117,10 @@
 		{% set rssurl = rssurl ~ "?" ~ query %}
 	{% endif %}
 
-	<h3>RSS URL:</h3>
+	<h3>{{ t('collection.feeds_url') }}</h3>
 	<div>
 		<pre><code>{{ rssurl }}</code></pre>
-		<p style="margin-top:0;font-size:0.9em"><a href="{{ rssurl }}" target="_blank">Link to RSS ↗</a></p>
+		<p style="margin-top:0;font-size:0.9em"><a href="{{ rssurl }}" target="_blank">{{ t('collection.feeds_link_rss') }} ↗</a></p>
 	</div>
 
 </section>

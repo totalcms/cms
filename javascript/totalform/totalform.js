@@ -3,6 +3,7 @@ import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
 import FieldVisibility from './field-visibility';
 import Identifier from './identifier';
+import { t } from '../i18n';
 import Checkbox from './checkbox';
 import RadioField from './radio';
 import Textarea from './textarea';
@@ -500,7 +501,7 @@ export default class TotalForm {
         // Only delete if editing object
         if (!this.isEditMode()) return;
 
-        if (window.confirm("Are you sure that you want to delete this? This cannot be undone.")) {
+        if (window.confirm(t("confirm.delete_item"))) {
             this.validated = true;
             this.processing();
 

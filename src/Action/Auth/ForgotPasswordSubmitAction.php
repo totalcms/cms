@@ -14,6 +14,7 @@ use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
 
@@ -31,6 +32,7 @@ readonly class ForgotPasswordSubmitAction
 		private TwigEngine $twigEngine,
 		private Config $config,
 		private PhpSession $session,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -58,7 +60,7 @@ readonly class ForgotPasswordSubmitAction
 		// Validate email
 		$email = trim((string)($data['email'] ?? ''));
 		if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$flash->add('error', 'Please enter a valid email address.');
+			$flash->add('error', $this->translator->trans('flash.invalid_email'));
 
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
@@ -68,7 +70,7 @@ readonly class ForgotPasswordSubmitAction
 
 		if (!$result['success'] || !isset($result['token'])) {
 			// Still show success message to prevent user enumeration
-			$flash->add('success', 'If an account exists with that email, you will receive a password reset link.');
+			$flash->add('success', $this->translator->trans('flash.forgot_password_sent'));
 
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
@@ -80,7 +82,7 @@ readonly class ForgotPasswordSubmitAction
 
 		// Always show success message to prevent user enumeration
 		// Even if email fails, we don't want to reveal that to the user
-		$flash->add('success', 'If an account exists with that email, you will receive a password reset link.');
+		$flash->add('success', $this->translator->trans('flash.forgot_password_sent'));
 
 		return $response->withStatus(302)->withHeader('Location', $url);
 	}

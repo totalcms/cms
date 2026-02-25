@@ -5,6 +5,7 @@
  */
 
 import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
+import { t } from '../../../i18n';
 
 /**
  * Creates a file upload dialog
@@ -214,8 +215,8 @@ function createFileDialog(editor, uploadConfig) {
 		const inUse = editorHtml.includes(filename);
 
 		const message = inUse
-			? `This file is currently referenced in the content. Deleting it will break the link. Continue?`
-			: `Delete this file?`;
+			? t("confirm.file_in_use")
+			: t("confirm.delete_label", {label: "file"});
 
 		if (!confirm(message)) return;
 
@@ -238,7 +239,7 @@ function createFileDialog(editor, uploadConfig) {
 			})
 			.catch(err => {
 				console.error('Delete file error:', err);
-				alert('Failed to delete file');
+				alert(t("error.delete_file"));
 			});
 	}
 

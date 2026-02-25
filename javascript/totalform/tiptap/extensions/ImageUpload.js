@@ -10,6 +10,7 @@ import { mergeAttributes } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { getUploadUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
 import { createImagePopoverPlugin } from './ImagePopover.js';
+import { t } from '../../../i18n';
 
 /**
  * Creates an image upload dialog element with Upload and Images tabs
@@ -247,8 +248,8 @@ function createImageDialog(editor, uploadConfig) {
 		const inUse = editorHtml.includes(filename);
 
 		const message = inUse
-			? `This image is currently used in the content. Deleting it will break the reference. Continue?`
-			: `Delete this image?`;
+			? t("confirm.image_in_use")
+			: t("confirm.delete_label", {label: "image"});
 
 		if (!confirm(message)) return;
 
@@ -271,7 +272,7 @@ function createImageDialog(editor, uploadConfig) {
 			})
 			.catch(err => {
 				console.error('Delete image error:', err);
-				alert('Failed to delete image');
+				alert(t("error.delete_image"));
 			});
 	}
 

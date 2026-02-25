@@ -4,7 +4,7 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Schemas" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('schema.filter') }}" autofocus />
 	</header>
 
 	<nav class="links" id="schema-links">
@@ -29,7 +29,7 @@
 
 	{% if cms.auth.canAccessSchemasOperation('create') and cms.edition.can('custom_schemas') %}
 	<footer>
-		<a class="dash-button full transparent" href="schemas/new" title="Create a new schema">+ New Schema</a>
+		<a class="dash-button full transparent" href="schemas/new" title="Create a new schema">{{ t('schema.new') }}</a>
 	</footer>
 	{% endif %}
 </aside>

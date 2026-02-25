@@ -1,38 +1,36 @@
-<h1>Project Setup Actions</h1>
+<h1>{{ t('setup.actions_title') }}</h1>
 
 {% set action = getData.action %}
 
 <section class="dash-content-section">
-	<h2>Default Collections</h2>
+	<h2>{{ t('setup.default_collections') }}</h2>
 
 	{% if action == "default-collections" %}
 		{% include "admin/utils/actions/default-collections.twig" %}
 	{% else %}
-		<p>This action will generate all of the default collections for you. This is useful when starting
-		a new project. If a collection already exists, it will not be touched.</p>
-		<a class="dash-button" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
+		<p>{{ t('setup.default_collections_desc') }}</p>
+		<a class="dash-button" href="utils/project-setup?action=default-collections">{{ t('setup.default_collections_btn') }}</a>
 	{% endif %}
 </section>
 
 
 <section class="dash-content-section">
 	{% if cms.env == "preview" or cms.env == "dev" %}
-		<h2>Jumpstart Demo Content</h2>
+		<h2>{{ t('setup.jumpstart_demo') }}</h2>
 		{% if action == "jumpstart-demo" %}
 			{% include "admin/utils/actions/jumpstart-demo.twig" %}
 		{% else %}
-			<p>JumpStart your project with demo content! Click on the button below to import all of the data used
-			for the demo project. This action may take up to 1-2 mins to complete.</p>
+			<p>{{ t('setup.jumpstart_demo_desc') }}</p>
 			{{ cms.form.simple("/import/jumpstart?demo=true", '', {
 				method : "POST",
-				label  : "JumpStart Demo Data",
+				label  : t('setup.jumpstart_demo_btn'),
 				class  : "jumpstart-demo",
 			}) }}
 		{% endif %}
 	{% else %}
-		<h2>Jumpstart Data</h2>
-		<p>You can use the JumpStart utility to import data from another project to get you up and running quickly.</p>
-		<a class="dash-button transparent" href="utils/jumpstart">Open Jumpstart Utility</a>
+		<h2>{{ t('setup.jumpstart_data') }}</h2>
+		<p>{{ t('setup.jumpstart_data_desc') }}</p>
+		<a class="dash-button transparent" href="utils/jumpstart">{{ t('setup.jumpstart_open') }}</a>
 	{% endif %}
 </section>
 
@@ -44,13 +42,13 @@
 
 {% if cmsDataPath %}
 <section class="dash-content-section">
-	<h2>Total CMS v1 Data Import</h2>
+	<h2>{{ t('setup.v1_import_title') }}</h2>
 
 	{% if action == "totalcms-one-import" %}
 		<div id="import-status">
-			<p>Starting Total CMS 1 import...</p>
+			<p>{{ t('setup.v1_import_starting') }}</p>
 		</div>
-		<p>All items will be queued for import via the job queue system. You can monitor progress in the
+		<p>{{ t('setup.v1_import_queued') }}
 			<a href="utils/jobqueue">Job Queue Manager</a>.</p>
 		<script>
 			(async function() {
@@ -81,29 +79,24 @@
 		</script>
 	{% else %}
 		<div>
-		<p>We have detected a Total CMS 1 installation at: <code>{{ cmsDataPath }}</code></p>
-		<p>This action will import all of your Total CMS 1 data including:</p>
-		<ul>
-			<li>Blog posts with images and galleries</li>
-			<li>Dates, Depots, Feeds, Files</li>
-			<li>Galleries, Images, Texts, and Videos</li>
-		</ul>
-		<p><strong>Note:</strong> All items will be queued for import via the job queue system. You can monitor progress in the Job Queue section.</p>
+		<p>{{ t('setup.v1_import_detected') }} <code>{{ cmsDataPath }}</code></p>
+		<p>{{ t('setup.v1_import_categories') }}</p>
+		<p><strong>{{ t('label.note') }}:</strong> {{ t('setup.v1_import_note') }}</p>
 		</div>
-		<a class="dash-button" href="utils/project-setup?action=totalcms-one-import">Import Total CMS 1 Data</a>
+		<a class="dash-button" href="utils/project-setup?action=totalcms-one-import">{{ t('setup.v1_import_btn') }}</a>
 	{% endif %}
 </section>
 {% endif %}
 
 <section class="dash-content-section">
-	<h2>Other Supported Import Tools</h2>
-	<p>Total CMS can import data from various other content management systems to help you migrate your existing content.</p>
+	<h2>{{ t('setup.other_imports_title') }}</h2>
+	<p>{{ t('setup.other_imports_desc') }}</p>
 
 	<div class="supported-tools">
 		<div class="tool-item">
-			<h3>Alloy</h3>
-			<p>Import content from Alloy CMS including blog posts, embeds, and droplets.</p>
-			<a class="dash-button transparent" href="utils/import-alloy">Import from Alloy</a>
+			<h3>{{ t('setup.alloy_title') }}</h3>
+			<p>{{ t('setup.alloy_desc') }}</p>
+			<a class="dash-button transparent" href="utils/import-alloy">{{ t('setup.alloy_btn') }}</a>
 		</div>
 	</div>
 </section>

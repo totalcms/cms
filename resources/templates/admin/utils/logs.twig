@@ -1,35 +1,31 @@
-<h1>Log Analyzer</h1>
+<h1>{{ t('logs.title') }}</h1>
 
 <section class="dash-content-section log-analyzer">
 
-	<p>Total CMS has several different log files that it writes to depending on the task
-		being performed. This page allows you to view the contents of these log files and
-		analyze the errors that have been logged. You can select the log file you want to
-		view from the dropdown below.</p>
+	<p>{{ t('logs.desc') }}
+		{{ t('logs.view_desc') }}</p>
 
-	<p>Please note that not all errors are critical. Some errors are logged as a way to
-		track the progress of a task or to provide additional information about what is
-		happening.</p>
+	<p>{{ t('logs.disclaimer') }}</p>
 
 	{% set logfiles = cms.admin.logAnalyzer.logfiles() %}
 
 	{% if logfiles | length == 0 %}
-		<p class="no-logs">There are no log files available to view.
-		The developer of this app must be a stud! 😎</p>
+		<p class="no-logs">{{ t('logs.no_files') }}
+		{{ t('logs.no_files_joke') }} 😎</p>
 	{% endif %}
 
 	{% set activelog = getData.logfile | default(cms.admin.logAnalyzer.defaultLogfile()) %}
 
 	<form id="log-analyzer" class="totalform" data-disabled>
 		<div class="form-field select-field">
-			<label for="logfile">Select Logfile</label>
+			<label for="logfile">{{ t('logs.select_logfile') }}</label>
 			<div style="display: flex; gap: 0.5rem; align-items: center;">
 				<select name="logfile" id="logfile">
 					{% for log,path in logfiles %}
 						<option value="{{ log }}" {% if activelog == log %}selected{% endif %}>{{ log }}</option>
 					{% endfor %}
 				</select>
-				<a id="log-download" href="utils/logs/download?logfile={{ activelog }}" class="btn btn-small" title="Download log file">Download</a>
+				<a id="log-download" href="utils/logs/download?logfile={{ activelog }}" class="btn btn-small" title="{{ t('btn.download') }}">{{ t('btn.download') }}</a>
 			</div>
 		</div>
 	</form>
@@ -42,17 +38,13 @@
 
 
 	{% set analysis = cms.admin.logAnalyzer.analyze(activelog) %}
-	{# {% set total = 0 %}
-	{% for error, value in analysis %}
-		{% set total = total + value.count %}
-	{% endfor %} #}
 
-	<h2>Log Analysis <small>Found {{ analysis | length }} Issues</small></h2>
+	<h2>{{ t('logs.analysis') }} <small>{{ t('logs.found_issues', {count: analysis | length}) }}</small></h2>
 
 	<div class="log-analysis-container" style="max-height: 600px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius);">
 		<table class="admin-table" data-sort>
 			<thead style="position: sticky; top: 0; background: oklch(var(--totalform-nearwhite)); z-index: 10;">
-				<tr><th data-sort="number">Count</th><th>Logged Error</th></tr>
+				<tr><th data-sort="number">{{ t('logs.count') }}</th><th>{{ t('logs.logged_error') }}</th></tr>
 			</thead>
 			<tbody>
 				{% for error, value in analysis %}
@@ -65,7 +57,7 @@
 		</table>
 	</div>
 
-	<h2>Log Contents</h2>
+	<h2>{{ t('logs.contents') }}</h2>
 	<div class="log-contents" style="max-height: 500px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius); background: oklch(var(--totalform-nearwhite));">
 <pre style="margin: 0; padding: 1rem; white-space: pre-wrap; word-wrap: break-word;">{% for line in cms.admin.logAnalyzer.logfile(activelog) %}{{ line | trim | escape }}
 {% endfor %}</pre>
@@ -73,4 +65,3 @@
 
 
 </section>
-

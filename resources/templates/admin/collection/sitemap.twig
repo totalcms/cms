@@ -1,20 +1,18 @@
 <section class="dash-content-section">
 
-	<h2>Sitemap Builder for {{ url.collection }}</h2>
-	<p>The following will produce a URL that you can use to submit to search engines or add to an existing
-	Sitemap Index. All of the fields below are optional. The provided date property will be unique for webpage
-	added to the sitemap. However, the frequency and priority fields will the same across all objects added.</p>
+	<h2>{{ t('collection.sitemap_title', {collection: url.collection}) }}</h2>
+	<p>{{ t('collection.sitemap_desc') }}</p>
 
 	{% set collection = cms.collection.get(url.collection) %}
 	{% set schema = cms.schema.get(collection.schema) %}
 	{% set frequencies = {
-		"always"  : "Changes with every access (e.g., dynamic homepages)",
-		"hourly"  : "Updated every hour",
-		"daily"   : "Updated once a day",
-		"weekly"  : "Updated once a week",
-		"monthly" : "Updated once a month",
-		"yearly"  : "Updated once a year",
-		"never"   : "Archived or never-changing pages (e.g., legal notices)",
+		"always"  : t('sitemap.freq_always'),
+		"hourly"  : t('sitemap.freq_hourly'),
+		"daily"   : t('sitemap.freq_daily'),
+		"weekly"  : t('sitemap.freq_weekly'),
+		"monthly" : t('sitemap.freq_monthly'),
+		"yearly"  : t('sitemap.freq_yearly'),
+		"never"   : t('sitemap.freq_never'),
 	 } %}
 
 	<form id="sitemap-builder"
@@ -22,9 +20,9 @@
 		method="POST"
 		data-disabled>
 		<div>
-			<label for="date">Date Property for Sitemap (must be indexed)</label>
+			<label for="date">{{ t('collection.sitemap_date_prop') }}</label>
 			<select name="date">
-				<option value="">Select a Property</option>
+				<option value="">{{ t('collection.sitemap_select_prop') }}</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
 						{% if postData.date == property %}selected{% endif %}>
@@ -32,9 +30,9 @@
 					</option>
 				{% endfor %}
 			</select>
-			<label for="include">Include Property for Sitemap (must be indexed)</label>
+			<label for="include">{{ t('collection.sitemap_include') }}</label>
 			<select name="include">
-				<option value="">Select a Property</option>
+				<option value="">{{ t('collection.sitemap_select_prop') }}</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
 						{% if postData.include == property %}selected{% endif %}>
@@ -42,9 +40,9 @@
 					</option>
 				{% endfor %}
 			</select>
-			<label for="exclude">Exclude Property for Sitemap (must be indexed)</label>
+			<label for="exclude">{{ t('collection.sitemap_exclude') }}</label>
 			<select name="exclude">
-				<option value="">Select a Property</option>
+				<option value="">{{ t('collection.sitemap_select_prop') }}</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
 						{% if postData.exclude == property %}selected{% endif %}>
@@ -52,9 +50,9 @@
 					</option>
 				{% endfor %}
 			</select>
-			<label for="frequency">Change Frequency</label>
+			<label for="frequency">{{ t('collection.sitemap_frequency') }}</label>
 			<select name="frequency">
-				<option value="">Select a Frequency</option>
+				<option value="">{{ t('collection.sitemap_select_freq') }}</option>
 				{% for value, label in frequencies %}
 					<option value="{{ value }}"
 						{% if postData.frequency == value %}selected{% endif %}>
@@ -62,19 +60,19 @@
 					</option>
 				{% endfor %}
 			</select>
-			<label for="priority">Priority</label>
+			<label for="priority">{{ t('collection.sitemap_priority') }}</label>
 			<input type="number" step="0.1" min="0" max="1" name="priority" value="{{ postData.priority }}" placeholder="1.0"/>
 
-			<h4>Common examples of Sitemap Priority:</h4>
+			<h4>{{ t('collection.sitemap_priority_examples') }}</h4>
 			<ul>
-				<li>1.0 — Homepage or highly important pages</li>
-				<li>0.8 — Major category or product pages</li>
-				<li>0.5 — Standard content pages or blog posts</li>
-				<li>0.3 — Lower-priority pages like contact forms or TOS</li>
-				<li>0.1 — Obscure, rarely updated pages</li>
+				<li>{{ t('collection.sitemap_priority_10') }}</li>
+				<li>{{ t('collection.sitemap_priority_08') }}</li>
+				<li>{{ t('collection.sitemap_priority_05') }}</li>
+				<li>{{ t('collection.sitemap_priority_03') }}</li>
+				<li>{{ t('collection.sitemap_priority_01') }}</li>
 			</ul>
 		</div>
-		<button class="cms-button" type="submit">Generate Sitemap URL</button>
+		<button class="cms-button" type="submit">{{ t('collection.sitemap_generate') }}</button>
 	</form>
 
 	{% set query = http_build_query(postData) %}
@@ -89,15 +87,14 @@
 		{% set sitemapurl = sitemapurl ~ "?" ~ query %}
 	{% endif %}
 
-	<h3>Sitemap URL:</h3>
+	<h3>{{ t('collection.sitemap_url') }}</h3>
 	<div>
 		<pre><code>{{ sitemapurl }}</code></pre>
-		<p style="margin-top:0;font-size:0.9em"><a href="{{ sitemapurl }}" target="_blank">Link to Sitemap ↗</a></p>
+		<p style="margin-top:0;font-size:0.9em"><a href="{{ sitemapurl }}" target="_blank">{{ t('collection.sitemap_link') }} ↗</a></p>
 	</div>
 
 	{% if collection.url is empty %}
-	<p class="cms-error">The collection does not have a URL saved. Please add a URL to the collection
-	before submitting your sitemap to search engines.</p>
+	<p class="cms-error">{{ t('collection.sitemap_no_url') }}</p>
 	{% endif %}
 
 </section>

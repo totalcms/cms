@@ -13,6 +13,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
@@ -23,6 +24,7 @@ abstract class DownloadAction
 	protected ObjectUpdater $objectUpdater;
 	protected PhpSession $session;
 	protected Config $config;
+	protected TranslationService $translator;
 
 	protected string $collection;
 	protected string $id;
@@ -78,7 +80,7 @@ abstract class DownloadAction
 		$maxAttempts = $this->config->auth['downloadMaxAttempts'] ?? self::MAX_ATTEMPTS;
 
 		if ($attempts > $maxAttempts) {
-			$flash->add('error', 'Too many download attempts');
+			$flash->add('error', $this->translator->trans('flash.download_too_many'));
 
 			return $this->accessDenied($response);
 		}
@@ -102,7 +104,7 @@ abstract class DownloadAction
 				return $this->loadPasswordForm($response);
 			}
 			if ($this->accessManager->verfiyPassword($password) === false) {
-				$flash->add('error', 'Invalid password');
+				$flash->add('error', $this->translator->trans('flash.download_invalid_password'));
 
 				return $this->loadPasswordForm($response);
 			}

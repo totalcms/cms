@@ -5,7 +5,7 @@
 {% set user = cms.auth.userData() %}
 
 <main class="dash-main-content">
-	<h1>Edit Profile</h1>
+	<h1>{{ t('profile.title') }}</h1>
 	<section>
 		{% set form = cms.form.builder(user.collection, {
 			id          : user.id,

@@ -4,15 +4,15 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Emails" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('mailer.filter') }}" autofocus />
 	</header>
 
 	<nav class="links" id="mailer-links">
 		{% set mailers = cms.collection.objects("mailer") %}
 		{% if mailers|length == 0 %}
-			<h3>Email Templates</h3>
+			<h3>{{ t('mailer.title') }}</h3>
 			<ul>
-				<li class="no-mailers">No email templates found</li>
+				<li class="no-mailers">{{ t('mailer.empty') }}</li>
 			</ul>
 		{% else %}
 			{% set mailersByCategory = {} %}
@@ -41,7 +41,7 @@
 	</nav>
 
 	<footer>
-		<a class="dash-button full transparent" href="mailer/new" title="Create a new email template">+ New Email</a>
+		<a class="dash-button full transparent" href="mailer/new" title="{{ t('mailer.new_desc') }}">{{ t('mailer.new') }}</a>
 	</footer>
 </aside>
 {% include "admin/sidebar-details.twig" %}
@@ -56,14 +56,14 @@
 
 	<header>
 		<h1><a href="mailer">mailer</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) }}</span></h1>
-		<button class="dash-action-dots" title="Mailer Actions" popovertarget="mailer-actions"></button>
+		<button class="dash-action-dots" title="{{ t('mailer.actions') }}" popovertarget="mailer-actions"></button>
 		<nav popover id="mailer-actions">
 			<ul>
 				{% if url.id and url.id != 'new' and url.id[:1] != '-' %}
-				<li class="duplicate"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
+				<li class="duplicate"><a href="#" onclick="duplicateObject(event)">{{ t('btn.duplicate') }}</a></li>
 				{% endif %}
-				<li class="export"><a href="mailer/-export">Export</a></li>
-				<li class="import"><a href="mailer/-import">Import</a></li>
+				<li class="export"><a href="mailer/-export">{{ t('btn.export') }}</a></li>
+				<li class="import"><a href="mailer/-import">{{ t('btn.import') }}</a></li>
 			</ul>
 		</nav>
 	</header>
@@ -96,14 +96,14 @@
 
 		{% if url.id and url.id != '' %}
 		<section class="mail-test-section">
-			<h2>Test Email</h2>
+			<h2>{{ t('mailer.test_email') }}</h2>
 			<p>Send a test email using this template. Enter test data in JSON format to test Twig variable substitution.</p>
 
 			{% set testDataField %}
 				<input type="hidden" name="mailerId" value="{{ url.id }}" />
 				{{ cms.form.field("json", "data", {
-					label       : "Test Data (JSON)",
-					help        : "Enter JSON data to use for Twig variable substitution.",
+					label       : t('mailer.test_data'),
+					help        : t('mailer.test_data_help'),
 					placeholder : '{"email": "test@example.com", "name": "John Doe"}',
 					rows        : 6,
 				}) }}
@@ -112,7 +112,7 @@
 			{{ cms.form.simple('/action/mailer', testDataField, {
 				class  : "test-email-form",
 				method : "POST",
-				label  : "Send Test Email",
+				label  : t('mailer.test_send'),
 				ajax   : true,
 			}) }}
 		</section>

@@ -1,28 +1,24 @@
-<h1>Import from Alloy</h1>
+<h1>{{ t('import_alloy.title') }}</h1>
 
 {% set action = getData.action %}
 
 <section class="dash-content-section">
 	<div class="alloy-import-description">
-		<p>This tool will help you import content from Alloy CMS into Total CMS. Please specify the folder names that
-		contain different types of data in your Alloy installation.</p>
+		<p>{{ t('import_alloy.desc') }}</p>
 
 		<div class="cms-twig-info" style="margin-top: 1rem;">
-			<h4>What gets imported:</h4>
+			<h4>{{ t('import_alloy.what_gets_imported') }}</h4>
 			<ul>
-				<li><strong>Blog Posts:</strong> All post content converted to <u>Blog</u> collection entries</li>
-				<li><strong>Embeds:</strong> Markdown content converted to <u>Styled Text</u> collection entries</li>
-				<li><strong>Droplets:</strong> Converted to appropriate <u>Text</u> and <u>Images</u> collection entries</li>
+				<li>{{ t('import_alloy.blog_posts') }}</li>
+				<li>{{ t('import_alloy.embeds') }}</li>
+				<li>{{ t('import_alloy.droplets') }}</li>
 			</ul>
-			<p>The original Alloy data will not be deleted or modified. This tool only imports the content into Total CMS.</p>
+			<p>{{ t('import_alloy.no_delete') }}</p>
 		</div>
 
 		<div class="cms-twig-info" style="margin-top: 1rem;">
-			<h4>Markdown to Styled Text Conversion</h4>
-			<p>All links and formatting will be maintained. If your content references images,
-			the image URLs will not be updated. Please ensure these image URLs are maintained in order for the
-			image to work correctly going forward. If you wish, you can manually reupload those images into their
-			respective Styled Text entries after import. At that point, the image will be fully managed by Total CMS.</p>
+			<h4>{{ t('import_alloy.markdown_title') }}</h4>
+			<p>{{ t('import_alloy.markdown_desc') }}</p>
 		</div>
 	</div>
 
@@ -30,42 +26,42 @@
 		{{ csrf_field() }}
 
 		<div class="form-field text-field" data-type="text">
-			<label for="field-blog">Blog Posts Folder</label>
+			<label for="field-blog">{{ t('import_alloy.blog_folder') }}</label>
 			<div class="form-group">
 				<input type="text" id="field-blog" name="blog" value="{{ postData.blog ?? 'posts' }}" required>
 				<div class="form-group-icon"></div>
 			</div>
-			<p class="help">Folder containing blog post markdown files</p>
+			<p class="help">{{ t('import_alloy.blog_folder_help') }}</p>
 		</div>
 
 		<div class="form-field text-field" data-type="text">
-			<label for="field-image-uploads">Image Uploads Folder</label>
+			<label for="field-image-uploads">{{ t('import_alloy.image_folder') }}</label>
 			<div class="form-group">
 				<input type="text" id="field-image-uploads" name="image_uploads" value="{{ postData.image_uploads ?? 'image-uploads' }}" required>
 				<div class="form-group-icon"></div>
 			</div>
-			<p class="help">Folder containing uploaded images referenced by content</p>
+			<p class="help">{{ t('import_alloy.image_folder_help') }}</p>
 		</div>
 
 		<div class="form-field text-field" data-type="text">
-			<label for="field-embeds">Embeds Folder</label>
+			<label for="field-embeds">{{ t('import_alloy.embeds_folder') }}</label>
 			<div class="form-group">
 				<input type="text" id="field-embeds" name="embeds" value="{{ postData.embeds ?? 'embeds' }}" required>
 				<div class="form-group-icon"></div>
 			</div>
-			<p class="help">Folder containing embed content markdown files</p>
+			<p class="help">{{ t('import_alloy.embeds_folder_help') }}</p>
 		</div>
 
 		<div class="form-field text-field" data-type="text">
-			<label for="field-droplets">Droplets Folder</label>
+			<label for="field-droplets">{{ t('import_alloy.droplets_folder') }}</label>
 			<div class="form-group">
 				<input type="text" id="field-droplets" name="droplets" value="{{ postData.droplets ?? 'droplets' }}" required>
 				<div class="form-group-icon"></div>
 			</div>
-			<p class="help">Folder containing droplet content markdown files</p>
+			<p class="help">{{ t('import_alloy.droplets_folder_help') }}</p>
 		</div>
 
-		<button class="dash-button" type="submit">Analyze Alloy Data</button>
+		<button class="dash-button" type="submit">{{ t('import_alloy.analyze_btn') }}</button>
 	</form>
 
 	<script>
@@ -97,31 +93,31 @@
 
 					if (totalItems === 0) {
 						// No data found - show message and link back to form
-						let html = '<div class="message error">No Data Found</div>';
-						html += '<p>No Alloy content was found in the specified folders. Please check your folder paths and try again.</p>';
-						html += '<p style="margin-top: 1rem;"><a class="dash-button transparent" href="utils/import-alloy">Try Again</a></p>';
+						let html = '<div class="message error">{{ t('import_alloy.no_data') }}</div>';
+						html += '<p>{{ t('import_alloy.no_data_desc') }}</p>';
+						html += '<p style="margin-top: 1rem;"><a class="dash-button transparent" href="utils/import-alloy">{{ t('btn.try_again') }}</a></p>';
 
 						// Replace form with no data message
-						document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
+						document.querySelector('.dash-content-section').innerHTML = '<h2>{{ t('import_alloy.title') }}</h2>' + html;
 					} else {
 						// Build results HTML
-						let html = '<div class="message success">Analysis completed successfully!</div>';
-						html += '<h3>Found Data:</h3>';
+						let html = '<div class="message success">{{ t('import_alloy.analysis_success') }}</div>';
+						html += '<h3>{{ t('import_alloy.found_data') }}</h3>';
 						html += '<ul>';
 						if (data.data.blogs && data.data.blogs.length > 0) {
-							html += `<li><strong>Blog Posts:</strong> ${data.data.blogs.length} posts found</li>`;
+							html += `<li><strong>Blog Posts:</strong> ${data.data.blogs.length} {{ t('import_alloy.posts_found') }}</li>`;
 						}
 						if (data.data.embeds && data.data.embeds.length > 0) {
-							html += `<li><strong>Embeds:</strong> ${data.data.embeds.length} embeds found</li>`;
+							html += `<li><strong>Embeds:</strong> ${data.data.embeds.length} {{ t('import_alloy.embeds_found') }}</li>`;
 						}
 						if (data.data.droplets && data.data.droplets.length > 0) {
-							html += `<li><strong>Droplets:</strong> ${data.data.droplets.length} droplets found</li>`;
+							html += `<li><strong>Droplets:</strong> ${data.data.droplets.length} {{ t('import_alloy.droplets_found') }}</li>`;
 						}
 						html += '</ul>';
-						html += '<p style="margin-top: 1rem;"><button class="dash-button" onclick="startImport()">Import All Data</button></p>';
+						html += '<p style="margin-top: 1rem;"><button class="dash-button" onclick="startImport()">{{ t('import_alloy.import_all_btn') }}</button></p>';
 
 						// Replace form with results
-						document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
+						document.querySelector('.dash-content-section').innerHTML = '<h2>{{ t('import_alloy.title') }}</h2>' + html;
 
 						// Store form data for import
 						window.alloyFormData = formData;
@@ -147,7 +143,7 @@
 				return;
 			}
 
-			document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2><p>Starting Alloy import...</p>';
+			document.querySelector('.dash-content-section').innerHTML = '<h2>{{ t('import_alloy.title') }}</h2><p>{{ t('import_alloy.import_starting') }}</p>';
 
 			fetch('{{ cms.api }}/import/alloy', {
 				method: 'POST',
@@ -160,19 +156,19 @@
 			.then(data => {
 				if (data.success) {
 					document.querySelector('.dash-content-section').innerHTML =
-						'<h2>Alloy Data Import</h2>' +
+						'<h2>{{ t('import_alloy.title') }}</h2>' +
 						`<div class="message success">${data.message}</div>` +
-						'<p>All items have been queued for import via the job queue system. You can monitor progress in the <a href="utils/jobqueue">Job Queue Manager</a>.</p>';
+						'<p>{{ t('import_alloy.import_queued') }}</p>';
 				} else {
 					document.querySelector('.dash-content-section').innerHTML =
-						'<h2>Alloy Data Import</h2>' +
+						'<h2>{{ t('import_alloy.title') }}</h2>' +
 						`<div class="message error">${data.message}</div>`;
 				}
 			})
 			.catch(error => {
 				document.querySelector('.dash-content-section').innerHTML =
-					'<h2>Alloy Data Import</h2>' +
-					`<div class="message error">Import failed: ${error.message}</div>`;
+					'<h2>{{ t('import_alloy.title') }}</h2>' +
+					`<div class="message error">{{ t('import_alloy.import_failed') }} ${error.message}</div>`;
 			});
 		}
 	</script>

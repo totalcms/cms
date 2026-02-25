@@ -1,13 +1,12 @@
 {# List API Keys Page #}
-<h1>API Keys</h1>
+<h1>{{ t('api_keys.title') }}</h1>
 
 <section class="dash-content-section">
 
-	<p>API keys allow external services to access your Total CMS data. Each key can be limited to specific
-	HTTP methods and API endpoints for security.</p>
+	<p>{{ t('api_keys.desc') }} {{ t('api_keys.limit_desc') }}</p>
 
 	<div style="margin-block: 2rem; text-align: right;">
-		<a href="utils/api-keys/new" class="dash-button">＋ Create API Key</a>
+		<a href="utils/api-keys/new" class="dash-button">＋ {{ t('api_keys.create_btn') }}</a>
 	</div>
 
 	{% if apiKeys|length > 0 %}
@@ -18,7 +17,7 @@
 					<h3>{{ apiKey.name }}</h3>
 					{{ cms.admin.quickActionButton('', 'apikeys/' ~ apiKey.id, {
 						method: 'delete',
-						confirm: 'Are you sure you want to delete this API key?',
+						confirm: t('api_keys.confirm_delete'),
 						reload: true,
 						class: 'delete-btn',
 					}) }}
@@ -26,12 +25,12 @@
 
 				<div class="api-key-details">
 					<div class="detail-row">
-						<strong>API Key:</strong>
+						<strong>{{ t('api_keys.key_label') }}</strong>
 						<code>{{ apiKey.getMaskedKey() }}</code>
 					</div>
 
 					<div class="detail-row">
-						<strong>HTTP Methods:</strong>
+						<strong>{{ t('api_keys.http_methods') }}</strong>
 						<span class="methods">
 							{% for method in apiKey.scopes.methods %}
 								<span class="method-badge">{{ method }}</span>
@@ -40,10 +39,10 @@
 					</div>
 
 					<div class="detail-row">
-						<strong>Endpoints:</strong>
+						<strong>{{ t('api_keys.endpoints') }}</strong>
 						<span>
 							{% if '*' in apiKey.scopes.paths %}
-								<em>All endpoints (*)</em>
+								<em>{{ t('api_keys.all_endpoints') }}</em>
 							{% else %}
 								<div class="endpoint-list">
 									{% for path in apiKey.scopes.paths %}
@@ -55,17 +54,17 @@
 					</div>
 
 					<div class="detail-row">
-						<strong>Created:</strong>
+						<strong>{{ t('api_keys.created') }}</strong>
 						<span>{{ apiKey.created|date('Y-m-d H:i') }}</span>
 					</div>
 
 					<div class="detail-row">
-						<strong>Last Used:</strong>
+						<strong>{{ t('api_keys.last_used') }}</strong>
 						<span>
 							{% if apiKey.lastUsed %}
 								{{ apiKey.lastUsed|date('Y-m-d H:i') }}
 							{% else %}
-								<em>Never</em>
+								<em>{{ t('label.never') }}</em>
 							{% endif %}
 						</span>
 					</div>
@@ -75,7 +74,7 @@
 		</div>
 	{% else %}
 		<div class="empty-state">
-			<em>No API keys created yet. Click "Create API Key" to get started.</em>
+			<em>{{ t('api_keys.empty') }}</em>
 		</div>
 	{% endif %}
 </section>

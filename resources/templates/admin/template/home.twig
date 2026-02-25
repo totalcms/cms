@@ -1,30 +1,19 @@
-<h1>Template Help</h1>
+<h1>{{ t('template.help_title') }}</h1>
 
 <section class="dash-content-section">
-	<h2>What is a Template?</h2>
+	<h2>{{ t('template.what_is') }}</h2>
+	<p>{{ t('template.what_is_desc') }}</p>
+
+	<h2>{{ t('template.whitelabel_title') }}</h2>
 	<p>
-	Templates are Twig files that define how content is displayed on your website. They control the layout,
-	structure, and presentation of your objects and collections.
+	{{ t('template.whitelabel_desc') }}
+	<a href="docs/whitelabel">{{ t('template.whitelabel_link') }}</a>
+	{{ t('template.whitelabel_desc_end') }}
 	</p>
 
-	<h2>Whitelabel Templates</h2>
-	<p>
-	Total CMS looks for several special built-in templates for common use cases. These templates must have
-	a specific naming convention and be placed in the correct directory structure. For example: `whitelabel/login-above`.
-	See the <a href="docs/whitelabel">whitelabel documentation</a> for a full list of built-in templates and their purposes.
-	</p>
+	<h2>{{ t('template.custom_title') }}</h2>
+	<p>{{ t('template.custom_desc') }}</p>
 
-	<h2>Custom Templates</h2>
-	<p>
-	These are templates you have created. You can modify or delete them. Templates can be organized into
-	folders for better management. You can add new templates by clicking the
-	"<a href="templates/new">+ New Template</a>" button at the bottom of the page.
-	</p>
-
-	<h2>Template Organization</h2>
-	<p>
-	Use folders to organize your templates by purpose or section. For example, you might have folders like
-	"grids", "pages", or "components". Folders are created automatically when you specify a folder path
-	when saving a template.
-	</p>
+	<h2>{{ t('template.organization_title') }}</h2>
+	<p>{{ t('template.organization_desc') }}</p>
 </section>

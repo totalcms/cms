@@ -4,19 +4,19 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Views" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('dataview.filter') }}" autofocus />
 	</header>
 
 	<nav class="links" id="dataview-links">
 		{% set views = cms.collection.objects("dataviews") %}
 		{% if views|length == 0 %}
-			<h3>Data Views</h3>
+			<h3>{{ t('dataview.title') }}</h3>
 			<ul>
-				<li class="no-views">No views found</li>
+				<li class="no-views">{{ t('dataview.empty') }}</li>
 			</ul>
 		{% else %}
 			<details id="category-dataviews" open>
-				<summary>Data Views</summary>
+				<summary>{{ t('dataview.title') }}</summary>
 				<ul>
 					{% for v in sortByKey(views) %}
 					<li>
@@ -33,7 +33,7 @@
 	</nav>
 
 	<footer>
-		<a class="dash-button full transparent" href="dataviews/new" title="Create a new data view">+ New View</a>
+		<a class="dash-button full transparent" href="dataviews/new" title="{{ t('dataview.new_desc') }}">{{ t('dataview.new') }}</a>
 	</footer>
 </aside>
 {% include "admin/sidebar-details.twig" %}
@@ -64,19 +64,19 @@
 	</section>
 
 	<section class="dash-content-section">
-		<h3>Tools</h3>
+		<h3>{{ t('dataview.tools') }}</h3>
 		<div class="dataview-actions">
-			<button type="button" class="dash-button transparent" id="btn-test-view">Test Run</button>
+			<button type="button" class="dash-button transparent" id="btn-test-view">{{ t('dataview.test_run') }}</button>
 			{% if url.id and url.id != 'new' %}
 			{{ cms.form.simple("/dataviews/" ~ url.id ~ "/rebuild", "", {
 				method : "POST",
-				label  : "Rebuild View",
+				label  : t('dataview.rebuild'),
 			}) }}
 			{% endif %}
 		</div>
 
 		<div id="test-results" class="test-results" style="display: none;">
-			<h3>Test Results</h3>
+			<h3>{{ t('dataview.test_results') }}</h3>
 			<div id="test-output"></div>
 		</div>
 	</section>

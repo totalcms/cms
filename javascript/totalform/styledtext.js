@@ -1,5 +1,6 @@
 import TotalField from "./totalfield.js";
 import TiptapEditor from "./tiptap/TiptapEditor.js";
+import { t } from "../i18n";
 
 import CodeMirror from "codemirror";
 import "codemirror/mode/xml/xml";
@@ -77,7 +78,7 @@ export default class StyledTextField extends TotalField {
 		// Skip data URLs and blob URLs - they weren't uploaded to the server
 		if (url.startsWith('data:') || url.startsWith('blob:')) return;
 
-		if (confirm("Are you sure you want to delete this image?")) {
+		if (confirm(t("confirm.delete_image"))) {
 			const collection = this.form.collection;
 			const id         = this.form.getId();
 			const property   = this.property;

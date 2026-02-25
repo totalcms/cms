@@ -1,25 +1,19 @@
 <section style="display:grid;align-content:start;gap:3rem">
 
 	<section class="import-queue">
-		<h3 style="margin-bottom:1rem">Import Queue for {{ url.collection | title }}</h3>
+		<h3 style="margin-bottom:1rem">{{ t('collection.import_queue_title', {collection: url.collection | title}) }}</h3>
 		{{ cms.form.jobqueueStats({
 			collection : url.collection,
 		}) }}
 	</section>
 
-	<p><strong>Note:</strong> If you are importing a lot of new objects, you may want to enable the
-	<code>Queue Rebuild Index on Save</code> option in your
-	<a href="collections/{{ url.collection }}/edit">collection settings</a>. This process may take some time.
-	You will also want to make sure that you have configured the cron job from the
-	<a href="utils/jobqueue">Job Queue Manager</a>.</p>
+	<p>{{ t('collection.import_note', {collection: url.collection}) }}</p>
 
 	<section class="import-forms">
 		<details class="cms-accordion">
-			<summary>CSV Import into {{ url.collection | title }}</summary>
+			<summary>{{ t('collection.import_csv_title', {collection: url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
-				<p>Choose a CSV file where the first row contains the names of the object properties
-				that you will be adding to each object imported.
-				<a href="docs/import">See Import Docs</a>.</p>
+				<p>{{ t('collection.import_csv_desc') }}</p>
 
 				{{ cms.form.importCollection(url.collection, {
 					input : 'csv'
@@ -28,10 +22,9 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>JSON Import into {{ url.collection | title }}</summary>
+			<summary>{{ t('collection.import_json_title', {collection: url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
-				<p>Choose a JSON file. The main stucture of the JSON document should be an array of objects.
-				<a href="docs/import">See Import Docs</a>.</p>
+				<p>{{ t('collection.import_json_desc') }}</p>
 				{{ cms.form.importCollection(url.collection, {
 					input : 'json'
 				}) }}
@@ -39,14 +32,13 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>Manage Import Queue for {{ url.collection | title }}</summary>
+			<summary>{{ t('collection.import_manage_title', {collection: url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
-				<p>This will clear the all the pending import jobs for <em><u>just this collection</u></em>.
-				This will not delete any items that have already been imported.</p>
+				<p>{{ t('collection.import_manage_desc') }}</p>
 
 				{{ cms.form.clearqueue({
 					collection : url.collection,
-					label      : 'Clear Import Queue',
+					label      : t('collection.clear_import_queue'),
 				}) }}
 			</div>
 		</details>

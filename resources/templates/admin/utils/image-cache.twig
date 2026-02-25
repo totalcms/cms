@@ -1,17 +1,15 @@
-<h1>Image Cache</h1>
+<h1>{{ t('image_cache.title') }}</h1>
 
 <section class="dash-content-section">
 
-	<p>Manage cached images for your collections. Clearing the image cache will remove all generated
-		image variants (.cache directories) for a specific collection, freeing disk space.
-		Images will be regenerated on demand when next requested.</p>
+	<p>{{ t('image_cache.desc') }} {{ t('image_cache.clear_warning') }}</p>
 
-	<h2>Clear Collection Image Cache</h2>
+	<h2>{{ t('image_cache.clear_collection') }}</h2>
 
 	{% set formfields %}
 		{{ cms.form.field("select", "collection", {
-			placeholder : "Select a Collection",
-			label       : "Collection",
+			placeholder : t('image_cache.select_collection'),
+			label       : t('label.collection'),
 			class       : "no-change-listener",
 			options     : cms.collection.list() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
 		}) }}
@@ -19,20 +17,20 @@
 
 	{{ cms.form.simple("/cache/images", formfields, {
 		method  : "DELETE",
-		label   : "Clear Collection Image Cache",
+		label   : t('image_cache.clear_collection'),
 		refresh : true,
 	}) }}
 
 	{% set forceRefresh = getData.refreshStats is defined %}
 	{% set imageCacheStats = cms.admin.imageCacheService.getAllCollectionImageCacheStats(forceRefresh) %}
 	{% if imageCacheStats|length > 0 %}
-		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
+		<h3 style="margin-top:2rem">{{ t('image_cache.stats_title') }}</h3>
 		<table class="admin-table">
 			<thead>
 				<tr>
-					<th>Collection</th>
-					<th>Cached Files</th>
-					<th>Total Size</th>
+					<th>{{ t('label.collection') }}</th>
+					<th>{{ t('image_cache.cached_files') }}</th>
+					<th>{{ t('image_cache.total_size') }}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -47,10 +45,10 @@
 		</table>
 
 		<div style="text-align:right;">
-			<a href="utils/image-cache?refreshStats=1">↻ Refresh Statistics</a>
+			<a href="utils/image-cache?refreshStats=1">↻ {{ t('image_cache.refresh') }}</a>
 		</div>
 	{% else %}
-		<p style="margin-top:2rem"><em>No image cache data found in any collections.</em></p>
+		<p style="margin-top:2rem"><em>{{ t('image_cache.empty') }}</em></p>
 	{% endif %}
 
 </section>

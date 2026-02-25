@@ -1,20 +1,18 @@
-<h1>Server Checker</h1>
+<h1>{{ t('server.title') }}</h1>
 
 <section class="dash-content-section server-checker">
 
 	{% if not cms.admin.checker.bundleCheck %}
 	<div class="bundle-error">
-		<h2>Total CMS Installation Integrity Failed</h2>
-		<p>Your Total CMS installation has been modified. For the safety of your website,
-		the CMS has been disabled. Please reinstall Total CMS. All disabled functionality will
-		be restored once the situation has been remedied.</p>
+		<h2>{{ t('server.integrity_failed') }}</h2>
+		<p>{{ t('server.integrity_desc') }}</p>
 	</div>
 	{% endif %}
 
-	<h2>License Information</h2>
+	<h2>{{ t('server.license_info') }}</h2>
 	<table class="admin-table">
 		<thead>
-			<tr><th>License Item</th><th>Value</th></tr>
+			<tr><th>{{ t('server.license_item') }}</th><th>{{ t('label.value') }}</th></tr>
 		</thead>
 		{% for key, value in cms.admin.checker.serverInfo %}
 		{% if key starts with 'License' or key starts with 'Trial' or key starts with 'Updates' or key starts with 'Licensed' or key starts with 'DNS' or key starts with 'Has JWT' or key starts with 'Allowed' or key starts with 'Testing' %}
@@ -25,29 +23,29 @@
 					{% if value == 'Valid' %}
 						<span class="success">{{ value }}</span>
 					{% elseif value == 'Invalid' %}
-						<span class="error">❌ {{ value }}</span>
+						<span class="error">{{ value }}</span>
 					{% else %}
-						<span class="warning">⚠️ {{ value }}</span>
+						<span class="warning">{{ value }}</span>
 					{% endif %}
 				{% elseif key == 'Trial Active' and value == 'Yes' %}
-					<span class="warning">⚠️ {{ value }}</span>
+					<span class="warning">{{ value }}</span>
 				{% elseif key == 'Updates Valid' %}
 					{% if value == 'Yes' %}
 						<span class="success">{{ value }}</span>
 					{% else %}
-						<span class="warning">⚠️ {{ value }}</span>
+						<span class="warning">{{ value }}</span>
 					{% endif %}
 				{% elseif key == 'DNS Verified' %}
 					{% if value == 'Yes' %}
 						<span class="success">{{ value }}</span>
 					{% else %}
-						<span class="warning">⚠️ {{ value }}</span>
+						<span class="warning">{{ value }}</span>
 					{% endif %}
 				{% elseif key == 'License Cache Valid' %}
 					{% if value == 'Yes' %}
 						<span class="success">{{ value }}</span>
 					{% else %}
-						<span class="warning">⚠️ {{ value }}</span>
+						<span class="warning">{{ value }}</span>
 					{% endif %}
 				{% else %}
 					{{ value }}
@@ -58,10 +56,10 @@
 		{% endfor %}
 	</table>
 
-	<h2>Server Info</h2>
+	<h2>{{ t('server.server_info') }}</h2>
 	<table class="admin-table">
 		<thead>
-			<tr><th>Info</th><th>Value</th></tr>
+			<tr><th>{{ t('label.info') }}</th><th>{{ t('label.value') }}</th></tr>
 		</thead>
 		{% for key, value in cms.admin.checker.serverInfo %}
 		{% if not (key starts with 'License' or key starts with 'Trial' or key starts with 'Updates' or key starts with 'Licensed' or key starts with 'DNS' or key starts with 'Has JWT' or key starts with 'Allowed' or key starts with 'Testing') %}
@@ -73,41 +71,41 @@
 		{% endfor %}
 	</table>
 
-	<h2>Permissions Check</h2>
+	<h2>{{ t('server.permissions_check') }}</h2>
 	<table class="admin-table">
 		<thead>
-			<tr><th>Directory</th><th>Check</th></tr>
+			<tr><th>{{ t('server.directory') }}</th><th>{{ t('server.check') }}</th></tr>
 		</thead>
 		{% for key, value in cms.admin.checker.checkPermissions %}
 		<tr>
 			<td>{{ key }}</td>
-			<td>{{ value ? "Passed" : '<span class="error">Failed: Needs Write Permissions</span>' }}</td>
+			<td>{{ value ? t('label.passed') : '<span class="error">' ~ t('server.failed_permissions') ~ '</span>' }}</td>
 		</tr>
 		{% endfor %}
 	</table>
 
-	<h2>Required Software Check</h2>
+	<h2>{{ t('server.required_software') }}</h2>
 	<table class="admin-table">
 		<thead>
-			<tr><th>Software</th><th>Check</th></tr>
+			<tr><th>{{ t('server.software') }}</th><th>{{ t('server.check') }}</th></tr>
 		</thead>
 		{% for key, value in cms.admin.checker.checkRequiredSoftware %}
 		<tr>
 			<td>{{ key }}</td>
-			<td>{{ value ? "Installed" : '<span class="error">Not Installed</span>' }}</td>
+			<td>{{ value ? t('label.installed') : '<span class="error">' ~ t('label.not_installed') ~ '</span>' }}</td>
 		</tr>
 		{% endfor %}
 	</table>
 
-	<h2>Optional Software Check</h2>
+	<h2>{{ t('server.optional_software') }}</h2>
 	<table class="admin-table">
 		<thead>
 			<tr>
-				<th>Extension</th>
-				<th>Status</th>
-				<th>Description</th>
-				<th>Recommended For</th>
-				<th>Performance Impact</th>
+				<th>{{ t('server.extension') }}</th>
+				<th>{{ t('label.status') }}</th>
+				<th>{{ t('label.description') }}</th>
+				<th>{{ t('server.recommended_for') }}</th>
+				<th>{{ t('server.performance_impact') }}</th>
 			</tr>
 		</thead>
 		{% for extension, details in cms.admin.checker.getOptionalSoftwareDetails %}
@@ -115,9 +113,9 @@
 			<td><strong>{{ extension | upper }}</strong></td>
 			<td>
 				{% if details.available %}
-					<span class="success">✅ Installed</span>
+					<span class="success">{{ t('label.installed') }}</span>
 				{% else %}
-					<span class="warning">⚠️ Not Installed</span>
+					<span class="warning">{{ t('label.not_installed') }}</span>
 				{% endif %}
 			</td>
 			<td>{{ details.description }}</td>
@@ -139,10 +137,10 @@
 		{% endfor %}
 	</table>
 
-	<h2>Total CMS Configuration</h2>
+	<h2>{{ t('server.config_title') }}</h2>
 	<table class="admin-table">
 		<thead>
-			<tr><th>Config</th><th>Value</th></tr>
+			<tr><th>{{ t('server.config') }}</th><th>{{ t('label.value') }}</th></tr>
 		</thead>
 		{# Hide Sentry Config #}
 		{% for key, value in cms.admin.checker.getConfig | filter((v, k) => k != "sentry") %}

@@ -1,35 +1,26 @@
 <h1>Schema Help</h1>
 
 <section class="dash-content-section">
-	<h2>What is a Schema?</h2>
+	<h2>{{ t('schema.what_is') }}</h2>
+	<p>{{ t('schema.what_is_desc') }}</p>
+
+	<h2>{{ t('schema.builtin_title') }}</h2>
+	<p>{{ t('schema.builtin_desc') }}</p>
+
+	<h2>{{ t('schema.custom_title') }}</h2>
 	<p>
-	A schema defines all of the properties that are apart of an object. It is a blueprint for the object.
-	For example, a schema for a blog post might include properties like title, body, and author.
-	A schema for a product might include properties like name, price, and description.
+	{{ t('schema.custom_desc') }} "<a href="schemas/new">{{ t('schema.new') }}</a>" {{ t('schema.custom_desc_end') }}
 	</p>
 
-	<h2>Built-in Schemas</h2>
-	<p>
-	These are the schemas that are built into the CMS. You can view them, but you cannot modify or
-	delete them. You can create new collections and objects based on these schemas.
-	</p>
-
-	<h2>Custom Schemas</h2>
-	<p>
-	These are the schemas that you have created. You can modify or delete them.
-	You can add new schemas by clicking the "<a href="schemas/new">+ New Schema</a>" button
-	at the bottom of the page.
-	</p>
-
-	<a style="margin-top:3rem" class="dash-button transparent" href="schemas/-import">Import New Schema</a>
+	<a style="margin-top:3rem" class="dash-button transparent" href="schemas/-import">{{ t('schema.import_new') }}</a>
 
 	{% set inaccessibleSchemas = cms.admin.inaccessibleSchemas() %}
 	{% if inaccessibleSchemas|length > 0 %}
 	<div class="edition-alert">
 		<span class="icon-warn"></span>
 		<div class="edition-alert-content">
-			<strong>{{ inaccessibleSchemas|length }} schema(s) unavailable</strong>
-			<p>The following schemas require a higher edition: {{ inaccessibleSchemas|join(', ') }}</p>
+			<strong>{{ t('schema.unavailable', {count: inaccessibleSchemas|length}) }}</strong>
+			<p>{{ t('schema.unavailable_desc', {schemas: inaccessibleSchemas|join(', ')}) }}</p>
 			<a href="utils/license-manager" class="dash-button">Upgrade to Regain Access</a>
 		</div>
 	</div>

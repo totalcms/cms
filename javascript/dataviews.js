@@ -5,6 +5,8 @@
  * This file only handles the test button.
  */
 
+import { t } from "./i18n";
+
 document.addEventListener('DOMContentLoaded', () => {
 	initTestButton();
 });
@@ -30,7 +32,7 @@ function initTestButton() {
 		}
 
 		if (!definition) {
-			alert('Please enter a Twig definition first');
+			alert(t("error.enter_definition"));
 			return;
 		}
 
@@ -58,7 +60,7 @@ function initTestButton() {
 				}
 			}
 		} catch (err) {
-			alert('Error testing view: ' + err.message);
+			alert(t("error.testing_view", {message: err.message}));
 		} finally {
 			btn.disabled = false;
 			btn.textContent = 'Test Run';

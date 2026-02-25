@@ -8,6 +8,7 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Collection\Utilities\ManualSorter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
@@ -29,6 +30,7 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		private readonly BarcodeTwigAdapter $barcode,
 		private readonly PhpSession $session,
 		private readonly CSRFTokenManager $csrfManager,
+		private readonly TranslationService $translator,
 	) {
 	}
 
@@ -61,6 +63,14 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		$functions[] = new TwigFunction('csrf_token', fn (): string => $this->csrfManager->getToken());
 
 		$functions[] = new TwigFunction('csrf_field', fn (): string => $this->csrfManager->getTokenField(), ['is_safe' => ['html']]);
+
+		// Translation function: {{ t('key') }} or {{ t('key', {param: 'value'}) }}
+		$functions[] = new TwigFunction(
+			't',
+			/** @param array<string,string> $params */
+			fn (string $key, array $params = []): string => $this->translator->trans($key, $params, 'admin'),
+			['is_safe' => ['html']],
+		);
 
 		return $functions;
 	}

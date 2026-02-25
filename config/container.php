@@ -130,6 +130,7 @@ use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
@@ -456,6 +457,11 @@ return [
 		$container->get(CacheSizingAdvisor::class),
 	),
 
+	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
+		$container->get(Config::class),
+		dirname(__DIR__) . '/resources/translations',
+	),
+
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
 		$container->get(Config::class),
 		$container->get(TotalFormFactory::class),
@@ -470,7 +476,7 @@ return [
 		$container->get(MediaTwigAdapter::class),
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
-		new LocaleTwigAdapter(),
+		new LocaleTwigAdapter($container->get(TranslationService::class)),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
@@ -483,6 +489,7 @@ return [
 		$container->get(BarcodeTwigAdapter::class),
 		$container->get(PhpSession::class),
 		$container->get(CSRFTokenManager::class),
+		$container->get(TranslationService::class),
 	),
 
 	QRCodeTwigAdapter::class => fn (ContainerInterface $container): QRCodeTwigAdapter => new QRCodeTwigAdapter($container->get(QRGenerator::class)),

@@ -3,10 +3,9 @@
 	{% set jsonapi = cms.api ~ "/export/schemas/" ~ url.schema %}
 
 	<div>
-		<h3>Export Schema - {{ url.schema }}</h3>
-		<p>Export the schema definition. This is a great way to share your custom shemas with other
-		users.</p>
-		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">Export Schema</a></p>
+		<h3>{{ t('schema.export_title', {schema: url.schema}) }}</h3>
+		<p>{{ t('schema.export_desc') }}</p>
+		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">{{ t('schema.export_btn') }}</a></p>
 	</div>
 
 </section>

@@ -3,23 +3,22 @@
 <section class="dash-content-section">
 
 	<div class="devmode-section">
-		<h2>Development Mode</h2>
-		<p>Enable temporary development mode to disable all caching for 3 hours. This is useful for debugging and development work.</p>
+		<h2>{{ t('cache.dev_mode') }}</h2>
+		<p>{{ t('cache.dev_mode_desc') }}</p>
 
 		<div class="devmode-controls" style="margin-top:2rem">
 			{{ cms.form.devmode() }}
 		</div>
 	</div>
 
-	<p>This tool manages all cache systems in Total CMS. Clearing cache will remove cached templates,
-	compiled code, and other temporary data to ensure you see the latest changes.</p>
+	<p>{{ t('cache.clear_content_desc') }}</p>
 
-	<h2>Clear Content Cache</h2>
+	<h2>{{ t('cache.clear_content') }}</h2>
 
-	<p><strong>Clear Content Caches</strong> will clear filesystem cache, OPcache, APCu, Redis, and Memcached (if available).</p>
+	<p><strong>{{ t('cache.clear_content_btn') }}</strong> will clear filesystem cache, OPcache, APCu, Redis, and Memcached (if available).</p>
 	{{ cms.form.simple("/cache", "", {
 		method : "DELETE",
-		label  : "Clear Content Caches",
+		label  : t('cache.clear_content_btn'),
 	}) }}
 
 	{% set cacheStats = cms.admin.cacheReporter.getCacheStats() %}
@@ -27,19 +26,19 @@
 
 	{% if not cacheStats.cache_enabled %}
 		<div class="cache-disabled-notice">
-			<h2>⚠️ Cache Status: Disabled (Development Mode)</h2>
-			<p>Twig template caching is currently disabled. This is normal for development but should be enabled in production for better performance.</p>
-			<p><strong>Note:</strong> OPcache may still be active for PHP bytecode acceleration.</p>
+			<h2>⚠️ {{ t('cache.status_disabled') }}</h2>
+			<p>{{ t('cache.status_disabled_desc') }}</p>
+			<p><strong>{{ t('label.note') }}:</strong> {{ t('cache.opcache_note') }}</p>
 		</div>
 	{% else %}
-		<h3 style="margin-top:2rem">Available Cache Systems</h3>
+		<h3 style="margin-top:2rem">{{ t('cache.available_systems') }}</h3>
 		<table class="admin-table">
 			<thead>
 				<tr>
-					<th>Cache Type</th>
-					<th>Status</th>
-					<th>Performance Data</th>
-					<th>Details</th>
+					<th>{{ t('cache.type') }}</th>
+					<th>{{ t('label.status') }}</th>
+					<th>{{ t('cache.performance_data') }}</th>
+					<th>{{ t('label.details') }}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -49,11 +48,11 @@
 					<td>
 						{% set status = cacheStats.backend_status[backend] %}
 						{% if status == 'active' %}
-							<span class="success">✅ Active</span>
+							<span class="success">✅ {{ t('label.active') }}</span>
 						{% elseif status == 'available' %}
-							<span class="warning">⚠️ Available (Installed but not enabled)</span>
+							<span class="warning">⚠️ {{ t('cache.available_not_enabled') }}</span>
 						{% else %}
-							<span class="error">❌ Not Installed</span>
+							<span class="error">❌ {{ t('label.not_installed') }}</span>
 						{% endif %}
 					</td>
 					<td>
@@ -61,27 +60,27 @@
 							{{ cacheStats.services.filesystem.size_mb }} MB ({{ cacheStats.services.filesystem.files }} files)
 						{% elseif backend == 'opcache' and cacheStats.services.opcache.available %}
 							{% if cacheStats.services.opcache.hit_rate > 0 %}
-								{{ cacheStats.services.opcache.hit_rate }}% hit rate
+								{{ cacheStats.services.opcache.hit_rate }}% {{ t('cache.hit_rate') }}
 							{% else %}
-								Enabled, warming up
+								{{ t('cache.warming_up') }}
 							{% endif %}
 						{% elseif backend == 'apcu' and cacheStats.services.apcu.available %}
 							{% if cacheStats.services.apcu.hit_rate > 0 %}
-								{{ cacheStats.services.apcu.hit_rate }}% hit rate, {{ cacheStats.services.apcu.entries_ours }} entries
+								{{ cacheStats.services.apcu.hit_rate }}% {{ t('cache.hit_rate') }}, {{ cacheStats.services.apcu.entries_ours }} {{ t('cache.entries') }}
 							{% else %}
-								Active, no metrics yet
+								{{ t('cache.active_no_metrics') }}
 							{% endif %}
 						{% elseif backend == 'redis' and cacheStats.services.redis.available %}
 							{% if cacheStats.services.redis.hit_rate > 0 %}
-								{{ cacheStats.services.redis.hit_rate }}% hit rate, {{ cacheStats.services.redis.memory_usage }}
+								{{ cacheStats.services.redis.hit_rate }}% {{ t('cache.hit_rate') }}, {{ cacheStats.services.redis.memory_usage }}
 							{% else %}
-								Connected, no metrics yet
+								{{ t('cache.connected_no_metrics') }}
 							{% endif %}
 						{% elseif backend == 'memcached' and cacheStats.services.memcached.available %}
 							{% if cacheStats.services.memcached.hit_rate > 0 %}
-								{{ cacheStats.services.memcached.hit_rate }}% hit rate, {{ cacheStats.services.memcached.memory_usage }}
+								{{ cacheStats.services.memcached.hit_rate }}% {{ t('cache.hit_rate') }}, {{ cacheStats.services.memcached.memory_usage }}
 							{% else %}
-								Connected, no metrics yet
+								{{ t('cache.connected_no_metrics') }}
 							{% endif %}
 						{% else %}
 							-
@@ -89,15 +88,15 @@
 					</td>
 					<td>
 						{% if backend == 'filesystem' %}
-							Twig compiled templates and metadata
+							{{ t('cache.filesystem_desc') }}
 						{% elseif backend == 'opcache' %}
-							PHP bytecode cache (2-5x performance boost)
+							{{ t('cache.opcache_desc') }}
 						{% elseif backend == 'apcu' %}
-							Fast single-server memory cache (zero-config)
+							{{ t('cache.apcu_desc') }}
 						{% elseif backend == 'redis' %}
-							High-speed in-memory cache for template metadata
+							{{ t('cache.redis_desc') }}
 						{% elseif backend == 'memcached' %}
-							Distributed memory cache for template data
+							{{ t('cache.memcached_desc') }}
 						{% endif %}
 					</td>
 				</tr>
@@ -106,7 +105,7 @@
 		</table>
 
 		{% if cacheConfig.recommendations|length > 0 %}
-		<h3>Performance Recommendations</h3>
+		<h3>{{ t('cache.perf_recommendations') }}</h3>
 		<div class="recommendations">
 			{% for recommendation in cacheConfig.recommendations %}
 				<div class="recommendation-item">
@@ -116,12 +115,12 @@
 		</div>
 		{% endif %}
 
-		<h3>System Information</h3>
+		<h3>{{ t('cache.system_info') }}</h3>
 		<ul>
-			<li><strong>Cache Version</strong>: {{ cacheStats.cache_version }}</li>
-			<li><strong>Cache Dir Size</strong>: {{ cms.admin.checker.cacheDirSize }}</li>
-			<li><strong>Total Space</strong>: {{ cms.admin.checker.totalspace }}</li>
-			<li><strong>Free Space</strong>: {{ cms.admin.checker.freespace }}</li>
+			<li><strong>{{ t('cache.version') }}</strong>: {{ cacheStats.cache_version }}</li>
+			<li><strong>{{ t('cache.dir_size') }}</strong>: {{ cms.admin.checker.cacheDirSize }}</li>
+			<li><strong>{{ t('cache.total_space') }}</strong>: {{ cms.admin.checker.totalspace }}</li>
+			<li><strong>{{ t('cache.free_space') }}</strong>: {{ cms.admin.checker.freespace }}</li>
 		</ul>
 	{% endif %}
 

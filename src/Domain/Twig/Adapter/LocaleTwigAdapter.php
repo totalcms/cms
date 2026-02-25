@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Translation\TranslationService;
+
 /**
  * Twig sub-adapter for locale and internationalization.
  *
@@ -11,6 +13,11 @@ namespace TotalCMS\Domain\Twig\Adapter;
  */
 readonly class LocaleTwigAdapter
 {
+	public function __construct(
+		private TranslationService $translator,
+	) {
+	}
+
 	/** @return array<string,string> */
 	public function languages(): array
 	{
@@ -85,5 +92,40 @@ readonly class LocaleTwigAdapter
 		}
 
 		return \Cake\I18n\I18n::getLocale();
+	}
+
+	/**
+	 * Translate a key from the admin domain.
+	 *
+	 * Usage in Twig: {{ cms.locale.t('nav.collections') }}
+	 *
+	 * @param array<string,string> $params
+	 */
+	public function t(string $key, array $params = []): string
+	{
+		return $this->translator->trans($key, $params, 'admin');
+	}
+
+	/**
+	 * Translate a key (alias for t()).
+	 *
+	 * @param array<string,string> $params
+	 */
+	public function translate(string $key, array $params = []): string
+	{
+		return $this->t($key, $params);
+	}
+
+	/**
+	 * Get JavaScript translations as an array.
+	 * Used to inject translations into the page for JS consumption.
+	 *
+	 * Usage in Twig: {{ cms.locale.jsTranslations()|json_encode|raw }}
+	 *
+	 * @return array<string,string>
+	 */
+	public function jsTranslations(): array
+	{
+		return $this->translator->getCatalog('js');
 	}
 }

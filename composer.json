@@ -63,6 +63,7 @@
     "symfony/polyfill-uuid": "^1.23",
     "symfony/property-access": "^7.1",
     "symfony/serializer": "^7.1",
+    "symfony/translation": "^7.4",
     "tecnickcom/tc-lib-barcode": "^2.4",
     "thepixeldeveloper/sitemap": "dev-master#ee4cbd1406f1250534860b8c9b74020fee0c3650",
     "twig/cssinliner-extra": "^3.21",

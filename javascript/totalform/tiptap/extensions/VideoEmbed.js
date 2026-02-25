@@ -6,6 +6,7 @@
 
 import Youtube from '@tiptap/extension-youtube';
 import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
+import { t } from '../../../i18n';
 
 const AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma', 'opus'];
 
@@ -232,8 +233,8 @@ function createVideoDialog(editor, uploadConfig) {
 		const inUse = editorHtml.includes(filename);
 
 		const message = inUse
-			? `This ${label} is currently used in the content. Deleting it will break the reference. Continue?`
-			: `Delete this ${label}?`;
+			? t("confirm.video_in_use", {label})
+			: t("confirm.delete_label", {label});
 
 		if (!confirm(message)) return;
 
@@ -255,7 +256,7 @@ function createVideoDialog(editor, uploadConfig) {
 			})
 			.catch(err => {
 				console.error('Delete error:', err);
-				alert(`Failed to delete ${label}`);
+				alert(t("error.delete_label", {label}));
 			});
 	}
 

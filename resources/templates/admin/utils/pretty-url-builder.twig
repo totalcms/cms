@@ -1,9 +1,8 @@
-<h1>Pretty URL Builder</h1>
+<h1>{{ t('pretty_url.title') }}</h1>
 
 <section class="dash-content-section">
 
-	<p>Configure pretty URLs for your collection objects. Choose your collection and the full path
-	to the object webpage below.</p>
+	<p>{{ t('pretty_url.desc') }}</p>
 
 	<form id="pretty-url-builder"
 		class="totalform"
@@ -11,9 +10,9 @@
 		method="POST"
 		data-disabled>
 		<div>
-			<label for="collection">Collection</label>
+			<label for="collection">{{ t('label.collection') }}</label>
 			<select name="collection" id="collection">
-				<option value="">Select a Collection</option>
+				<option value="">{{ t('pretty_url.select_collection') }}</option>
 				{% for collection in sortByKey(cms.collection.list(), "id") %}
 					<option value="{{ collection.id }}"
 						{% if postData.collection == collection.id %}selected{% endif %}>
@@ -21,10 +20,10 @@
 					</option>
 				{% endfor %}
 			</select>
-			<label for="path" style="margin-top:1rem">Path to Object Webpage</label>
-			<input type="text" name="path" value="{{ postData.path }}" placeholder="/path-to-object/page.php"/>
+			<label for="path" style="margin-top:1rem">{{ t('pretty_url.path_label') }}</label>
+			<input type="text" name="path" value="{{ postData.path }}" placeholder="{{ t('pretty_url.path_ph') }}"/>
 		</div>
-		<button class="cms-button" type="submit">Generate Server Rules</button>
+		<button class="cms-button" type="submit">{{ t('pretty_url.generate_btn') }}</button>
 	</form>
 
 	{% if postData.path and postData.collection %}
@@ -33,38 +32,34 @@
 			<div class="doc-content pretty-url-results">
 				{% set collectionData = cms.collection.get(postData.collection) %}
 
-				<h2>Pretty URLs Rules for {{ collectionData.name }}</h2>
+				<h2>{{ t('pretty_url.rules_title', {collection: collectionData.name}) }}</h2>
 
 				<section>
-				<h3>Save this Path to the {{ collectionData.name }} Collection</h3>
-				<p>Edit the collection and save the following as the Object Path and ensure the <code>Pretty URLs</code>
-				checkbox is enabled.
-				<a href="collections/{{ postData.collection }}/edit" target="_blank">Edit Now ↗</a></p>
+				<h3>{{ t('pretty_url.save_path', {collection: collectionData.name}) }}</h3>
+				<p>{{ t('pretty_url.edit_desc') }}
+				<a href="collections/{{ postData.collection }}/edit" target="_blank">{{ t('pretty_url.edit_now') }} ↗</a></p>
 				<pre></code>{{ cms.collection.prettyUrl(postData.path) }}</code></pre>
 				</section>
 
 				{% if collectionData.url is empty %}
-				<p class="cms-error">The collection does not have a URL saved. Please save a URL to the collection
-				or else your links will not function throughout your website.</p>
+				<p class="cms-error">{{ t('pretty_url.no_url_saved') }}</p>
 				{% endif %}
 
 				<section>
-				<h3>Rule for Apache</h3>
-				<p>Place this in your .htaccess file. If you already have enabled <code>RewriteEngine</code>
-				in your file, you do not need to include that line again.</p>
+				<h3>{{ t('pretty_url.apache_title') }}</h3>
+				<p>{{ t('pretty_url.apache_desc') }}</p>
 				<pre></code>{{ cms.admin.apacheRule(postData.path, collectionData.name) }}</code></pre>
 				</section>
 
 				<section>
-				<h3>Rule for NGINX</h3>
-				<p>Place this in your server config file.</p>
+				<h3>{{ t('pretty_url.nginx_title') }}</h3>
+				<p>{{ t('pretty_url.nginx_desc') }}</p>
 				<pre></code>{{ cms.admin.nginxRule(postData.path, collectionData.name) }}</code></pre>
 				</section>
 
 			</div>
 		{% else %}
-			<p class="error">Invalid path provided. <strong>{{ postData.path }}</strong> must be
-			the full path or url to the php webpage.</p>
+			<p class="error">{{ t('pretty_url.invalid_path') }} <strong>{{ postData.path }}</strong></p>
 		{% endif %}
 
 	{% endif %}

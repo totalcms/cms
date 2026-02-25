@@ -1,18 +1,17 @@
-<h1>Import from RSS Feed</h1>
+<h1>{{ t('import_rss.title') }}</h1>
 
 {% set action = getData.action %}
 
 <section class="dash-content-section">
 	<div class="rss-import-description">
-		<p>Import content from any RSS, Atom or JSON feed into a Total CMS collection. This is useful for migrating
-		blog content from WordPress, Ghost, or any platform that provides an RSS feed.</p>
+		<p>{{ t('import_rss.desc') }}</p>
 	</div>
 
 	{% set analyzeFields %}
 		{{ cms.form.field("text", "url", {
-			label       : "RSS Feed URL",
-			placeholder : "https://example.com/feed.xml",
-			help        : "Enter the full URL of the RSS or Atom feed",
+			label       : t('import_rss.feed_url'),
+			placeholder : t('import_rss.feed_url_ph'),
+			help        : t('import_rss.feed_url_help'),
 			value       : postData.url | default(''),
 			required    : true
 		}) }}
@@ -20,13 +19,13 @@
 
 	{{ cms.form.simple(url.path, analyzeFields, {
 		method : "POST",
-		label  : "Analyze Feed",
+		label  : t('import_rss.analyze_btn'),
 		ajax   : false
 	}) }}
 
 	{% if rssError %}
-		<div class="message error">Analysis failed: {{ rssError }}</div>
-		<p><a class="dash-button transparent" href="utils/import-rss">Try Again</a></p>
+		<div class="message error">{{ t('import_rss.analysis_failed') }} {{ rssError }}</div>
+		<p><a class="dash-button transparent" href="utils/import-rss">{{ t('btn.try_again') }}</a></p>
 	{% endif %}
 
 	{% if rssAnalysis %}
@@ -34,15 +33,14 @@
 		{% set entries = rssAnalysis.entries %}
 
 		{% if entries is empty %}
-			<div class="message error">No entries found in this feed.</div>
-			<p><a class="dash-button transparent" href="utils/import-rss">Try Again</a></p>
+			<div class="message error">{{ t('import_rss.no_entries') }}</div>
+			<p><a class="dash-button transparent" href="utils/import-rss">{{ t('btn.try_again') }}</a></p>
 		{% else %}
-			{# <div class="message success">Feed analyzed successfully!</div> #}
 
 			<div class="rss-feed-info">
 				{% if feed.title %}<h3>{{ feed.title }}</h3>{% endif %}
 				{% if feed.description %}<p>{{ feed.description }}</p>{% endif %}
-				<p><strong>{{ feed.count }} entries</strong> found in this feed.</p>
+				<p><strong>{{ feed.count }} {{ t('import_rss.entries') }}</strong> found in this feed.</p>
 			</div>
 
 			{% set importFields %}
@@ -51,29 +49,29 @@
 				}) }}
 
 				{{ cms.form.field("select", "collection", {
-					label       : "Target Collection",
-					help        : "Select the collection to import entries into",
+					label       : t('import_rss.target_collection'),
+					help        : t('import_rss.select_collection'),
 					options     : cms.collection.list() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
 					value       : "blog"
 				}) }}
 
 				{{ cms.form.field("checkbox", "draft", {
-					label : "Import as drafts",
-					help  : "Imported entries will be marked as drafts so you can review before publishing",
+					label : t('import_rss.import_as_drafts'),
+					help  : t('import_rss.drafts_desc'),
 					value : true
 				}) }}
 
 				<details class="rss-field-mapping">
-					<summary><strong>Field Mapping</strong> (optional)</summary>
+					<summary><strong>{{ t('import_rss.field_mapping') }}</strong></summary>
 					<div style="margin-top: 0.5rem;">
-						<p class="help" style="margin-bottom: 0.5rem;">Customize how RSS fields map to collection fields. Leave empty to skip a field.</p>
+						<p class="help" style="margin-bottom: 0.5rem;">{{ t('import_rss.field_mapping_desc') }} {{ t('import_rss.leave_empty') }}</p>
 
 						{% set fieldDefaults = { title: 'title', content: 'content', summary: 'summary', date: 'date', author: 'author', categories: 'categories', link: 'media', image: 'image' } %}
 						{% for rssField, defaultValue in fieldDefaults %}
 							{{ cms.form.field("text", "fieldMap[" ~ rssField ~ "]", {
 								label       : rssField,
 								value       : defaultValue,
-								placeholder : "collection field name"
+								placeholder : t('import_rss.collection_field')
 							}) }}
 						{% endfor %}
 					</div>
@@ -89,7 +87,7 @@
 			<div id="rss-import-result"></div>
 
 			<div class="rss-entry-preview">
-				<h3>Entry Preview</h3>
+				<h3>{{ t('import_rss.entry_preview') }}</h3>
 				<div class="rss-entry-list">
 					{% for entry in entries %}
 						<div class="rss-entry-item">
@@ -97,7 +95,7 @@
 							{% set meta = [] %}
 							{% if entry.date %}{% set meta = meta|merge([entry.date|date('M j, Y')]) %}{% endif %}
 							{% if entry.author %}{% set meta = meta|merge([entry.author]) %}{% endif %}
-							{% if entry.hasImage %}{% set meta = meta|merge(['Has image']) %}{% endif %}
+							{% if entry.hasImage %}{% set meta = meta|merge([t('import_rss.has_image')]) %}{% endif %}
 							{% if meta is not empty %}
 								<div class="rss-entry-meta">{{ meta|join(' &middot; ') }}</div>
 							{% endif %}
@@ -116,11 +114,11 @@
 		if (importForm) {
 			importForm.addEventListener('simpleform:success', function(e) {
 				const data = e.detail.data;
-				const msg = data?.message || 'Import queued successfully.';
+				const msg = data?.message || '{{ t('import_rss.queued') }}';
 
 				document.getElementById('rss-import-result').innerHTML =
 					`<div class="message success">${msg}</div>` +
-					'<p>All items have been queued for import. You can monitor progress in the <a href="utils/jobqueue">Job Queue Manager</a>.</p>';
+					'<p>{{ t('import_rss.queued') }}</p>';
 
 				const preview = document.querySelector('.rss-entry-preview');
 				if (preview) preview.style.display = 'none';

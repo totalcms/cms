@@ -24,20 +24,20 @@
 
 	<main class="admin-layout container">
 
-		<h1>File Download Links</h1>
+		<h1>{{ t('filelinks.title') }}</h1>
 
 		<section>
-			<h4>Download Link:</h4>
+			<h4>{{ t('filelinks.download_link') }}</h4>
 			{% if password %}
 				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
 				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
 			{% endif %}
-			<button type="button" class="cms-clip-button" data-clip="#link-url">Copy Link</button>
+			<button type="button" class="cms-clip-button" data-clip="#link-url">{{ t('btn.copy_link') }}</button>
 		</section>
 
 		<section>
-			<h4>Download Macro:</h4>
+			<h4>{{ t('filelinks.download_macro') }}</h4>
 			{% if filename %}
 				{% if collection == "depot" and property == "depot" %}
 					{% if password %}
@@ -67,21 +67,21 @@
 					{% endif %}
 				{% endif %}
 			{% endif %}
-			<button type="button" class="cms-clip-button" data-clip="#download-macro">Copy Macro</button>
+			<button type="button" class="cms-clip-button" data-clip="#download-macro">{{ t('btn.copy_macro') }}</button>
 		</section>
 
 		<section>
-			<h4>Stream URL:</h4>
+			<h4>{{ t('filelinks.stream_url') }}</h4>
 			{% if password %}
 				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
 				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
 			{% endif %}
-			<button type="button" class="cms-clip-button" data-clip="#stream-url">Copy Link</button>
+			<button type="button" class="cms-clip-button" data-clip="#stream-url">{{ t('btn.copy_link') }}</button>
 		</section>
 
 		<section>
-			<h4>Stream Macro:</h4>
+			<h4>{{ t('filelinks.stream_macro') }}</h4>
 			{% if filename %}
 				{% if collection == "depot" and property == "depot" %}
 					{% if password %}
@@ -111,20 +111,20 @@
 					{% endif %}
 				{% endif %}
 			{% endif %}
-			<button type="button" class="cms-clip-button" data-clip="#stream-macro">Copy Macro</button>
+			<button type="button" class="cms-clip-button" data-clip="#stream-macro">{{ t('btn.copy_macro') }}</button>
 		</section>
 
 		<form class="totalform" method="post" data-disabled="true">
 			<div class="form-field password-field" data-type="password">
-				<label for="field-66e386299dfa7">Password</label>
+				<label for="field-66e386299dfa7">{{ t('label.password') }}</label>
 				<div class="form-group">
 					<input autofocus type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
 					<div class="form-group-icon"></div>
 				</div>
-				<p class="help" id="help-66e386299dfa7">This password must match the password saved for this file</p>
+				<p class="help" id="help-66e386299dfa7">{{ t('filelinks.password_help') }}</p>
 			</div>
 
-			<button class="dash-button" type="submit">Set Password on Links</button>
+			<button class="dash-button" type="submit">{{ t('filelinks.set_password') }}</button>
 			{% for message in flash.get('error') %}
 				<p class="cms-twig-error" role="alert">
 					{{ message }}

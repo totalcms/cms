@@ -7,6 +7,7 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
@@ -19,6 +20,7 @@ class DownloadFileAction extends DownloadAction
 		protected ObjectUpdater $objectUpdater,
 		protected PhpSession $session,
 		protected Config $config,
+		protected TranslationService $translator,
 	) {
 	}
 

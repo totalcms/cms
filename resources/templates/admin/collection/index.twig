@@ -10,10 +10,8 @@
 {% if actualObjectCount >= performanceThreshold and not collection.queueRebuildOnSave %}
 	<div class="performance-warning">
 		<div>
-			<h4>Performance Recommendation</h4>
-			<p>This collection has <strong>{{ actualObjectCount | number_format }}</strong> {{ labelPlural | lower }}. Consider enabling
-			<strong>"Queue Rebuild on Save"</strong> in the
-			<a href="collections/{{ url.collection }}/edit">collection settings</a> to prevent slow saves.</p>
+			<h4>{{ t('collection.perf_recommendation') }}</h4>
+			<p>{{ t('collection.perf_message', {count: actualObjectCount | number_format, label: labelPlural | lower, collection: url.collection}) }}</p>
 		</div>
 	</div>
 {% endif %}
@@ -24,6 +22,6 @@
 
 {% else %}
 
-	<p>No {{ labelPlural }} in this collection yet.</p>
+	<p>{{ t('collection.empty', {label: labelPlural}) }}</p>
 
 {% endif %}

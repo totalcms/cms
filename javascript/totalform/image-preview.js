@@ -1,6 +1,7 @@
 import Dialog from "./dialog";
 import Details from "./details";
 import TotalSortable from "./total-sortable";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -123,7 +124,7 @@ export default class ImagePreview {
 					this.toggleFeaturedField();
 				}).catch(error => {
 					console.error("Failed to update featured status", error);
-					alert("Failed to update featured status. A network or timeout error occurred. Please try again.");
+					alert(t("error.featured_update"));
 				});
 			});
 		}
@@ -143,7 +144,7 @@ export default class ImagePreview {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
 					console.error("Failed to clear image cache", error);
-					alert("Failed to clear cache. A network or timeout error occurred. Please try again.");
+					alert(t("error.cache_clear"));
 				});
 			});
 		}
@@ -154,7 +155,7 @@ export default class ImagePreview {
 		if (deleteButton) {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
-				if (confirm("Are you sure that you want to delete this image?")) {
+				if (confirm(t("confirm.delete_image"))) {
 					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					if (this.isGallery()) {
 						const name = this.getValue().name;
@@ -166,7 +167,7 @@ export default class ImagePreview {
 						this.container.remove();
 					}).catch(error => {
 						console.error("Failed to delete image", error);
-						alert("Failed to delete image. A network or timeout error occurred. Please try again.");
+						alert(t("error.delete_image"));
 					});
 				}
 			});
