@@ -39,7 +39,7 @@
 
 	{% set analysis = cms.admin.logAnalyzer.analyze(activelog) %}
 
-	<h2>{{ t('logs.analysis') }} <small>{{ t('logs.found_issues', {count: analysis | length}) }}</small></h2>
+	<h2>{{ t('logs.analysis') }} <small>{{ t('logs.found_issues', {'{count}': analysis | length}) }}</small></h2>
 
 	<div class="log-analysis-container" style="max-height: 600px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius);">
 		<table class="admin-table" data-sort>

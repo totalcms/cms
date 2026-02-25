@@ -6,7 +6,7 @@
 		TODO: open the accordion section for the type of feed that is being generated.
 	#}
 
-	<h2>{{ t('collection.feeds_title', {collection: url.collection}) }}</h2>
+	<h2>{{ t('collection.feeds_title', {'{collection}': url.collection}) }}</h2>
 	<p>{{ t('collection.feeds_desc') }}</p>
 
 	{% set collection = cms.collection.get(url.collection) %}
@@ -22,7 +22,7 @@
 			<input type="hidden" name="type" value="rss"/>
 
 			<label for="name">{{ t('collection.feeds_name') }}</label>
-			<input type="text" name="name" value="{{ postData.name }}" placeholder="{{ t('collection.feeds_name_ph', {collection: url.collection | humanize}) }}"/>
+			<input type="text" name="name" value="{{ postData.name }}" placeholder="{{ t('collection.feeds_name_ph', {'{collection}': url.collection | humanize}) }}"/>
 
 			<label for="language">{{ t('collection.feeds_language') }}</label>
 			<select name="language">

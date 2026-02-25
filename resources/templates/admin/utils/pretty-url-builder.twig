@@ -32,10 +32,10 @@
 			<div class="doc-content pretty-url-results">
 				{% set collectionData = cms.collection.get(postData.collection) %}
 
-				<h2>{{ t('pretty_url.rules_title', {collection: collectionData.name}) }}</h2>
+				<h2>{{ t('pretty_url.rules_title', {'{collection}': collectionData.name}) }}</h2>
 
 				<section>
-				<h3>{{ t('pretty_url.save_path', {collection: collectionData.name}) }}</h3>
+				<h3>{{ t('pretty_url.save_path', {'{collection}': collectionData.name}) }}</h3>
 				<p>{{ t('pretty_url.edit_desc') }}
 				<a href="collections/{{ postData.collection }}/edit" target="_blank">{{ t('pretty_url.edit_now') }} ↗</a></p>
 				<pre></code>{{ cms.collection.prettyUrl(postData.path) }}</code></pre>

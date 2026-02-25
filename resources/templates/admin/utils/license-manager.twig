@@ -34,7 +34,7 @@
 					<td>
 						{{ offlineDetails.domain }}
 						{% if not offlineDetails.domainMatch %}
-							<span class="badge badge-error">{{ t('license.domain_mismatch', {domain: offlineDetails.currentDomain}) }}</span>
+							<span class="badge badge-error">{{ t('license.domain_mismatch', {'{domain}': offlineDetails.currentDomain}) }}</span>
 						{% endif %}
 					</td>
 				</tr>

@@ -19,8 +19,8 @@
 	<div class="edition-alert">
 		<span class="icon-warn"></span>
 		<div class="edition-alert-content">
-			<strong>{{ t('schema.unavailable', {count: inaccessibleSchemas|length}) }}</strong>
-			<p>{{ t('schema.unavailable_desc', {schemas: inaccessibleSchemas|join(', ')}) }}</p>
+			<strong>{{ t('schema.unavailable', {'{count}': inaccessibleSchemas|length}) }}</strong>
+			<p>{{ t('schema.unavailable_desc', {'{schemas}': inaccessibleSchemas|join(', ')}) }}</p>
 			<a href="utils/license-manager" class="dash-button">Upgrade to Regain Access</a>
 		</div>
 	</div>

@@ -1,6 +1,6 @@
 <section class="dash-content-section">
 
-	<h2>{{ t('collection.sitemap_title', {collection: url.collection}) }}</h2>
+	<h2>{{ t('collection.sitemap_title', {'{collection}': url.collection}) }}</h2>
 	<p>{{ t('collection.sitemap_desc') }}</p>
 
 	{% set collection = cms.collection.get(url.collection) %}

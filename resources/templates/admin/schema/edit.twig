@@ -68,7 +68,7 @@
 			<span class="status-icon incompatible">⚠</span>
 			<strong>{{ t('schema.deck_incompatible') }}</strong> {{ t('schema.deck_incompatible_desc') }}
 			{% if incompatibleTypes|length > 0 %}
-				<br><small>{{ t('schema.deck_incompatible_types', {types: incompatibleTypes|join(', ')}) }}</small>
+				<br><small>{{ t('schema.deck_incompatible_types', {'{types}': incompatibleTypes|join(', ')}) }}</small>
 			{% endif %}
 		</div>
 	{% endif %}

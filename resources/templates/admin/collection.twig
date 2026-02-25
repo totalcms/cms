@@ -20,7 +20,7 @@
 			{% endif %}
 			{% set labelSingular = cms.collection.get(collection).labelSingular|default('object') %}
 			{% if cms.auth.canAccessCollection(collection, 'create') %}
-			<a class="dash-button" href="collections/{{ collection }}/add" title="{{ t('collection.add_new', {label: labelSingular | lower}) }}">{{ t('collection.new_item', {label: labelSingular|title}) }}</a>
+			<a class="dash-button" href="collections/{{ collection }}/add" title="{{ t('collection.add_new', {'{label}': labelSingular | lower}) }}">{{ t('collection.new_item', {'{label}': labelSingular|title}) }}</a>
 			{% endif %}
 			<button class="dash-action-dots" title="{{ t('collection.actions') }}" popovertarget="collection-actions"></button>
 			<nav popover id="collection-actions">

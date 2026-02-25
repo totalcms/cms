@@ -13,7 +13,7 @@
 	<div class="edition-alert">
 		<span class="icon-warn"></span>
 		<div class="edition-alert-content">
-			<strong>{{ t('collection.unavailable', {count: inaccessibleCollections|length}) }}</strong>
+			<strong>{{ t('collection.unavailable', {'{count}': inaccessibleCollections|length}) }}</strong>
 			<p>{{ t('collection.unavailable_desc') }}</p>
 			<ul>
 			{% for collection in inaccessibleCollections %}

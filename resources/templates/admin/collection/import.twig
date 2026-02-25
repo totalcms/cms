@@ -1,17 +1,17 @@
 <section style="display:grid;align-content:start;gap:3rem">
 
 	<section class="import-queue">
-		<h3 style="margin-bottom:1rem">{{ t('collection.import_queue_title', {collection: url.collection | title}) }}</h3>
+		<h3 style="margin-bottom:1rem">{{ t('collection.import_queue_title', {'{collection}': url.collection | title}) }}</h3>
 		{{ cms.form.jobqueueStats({
 			collection : url.collection,
 		}) }}
 	</section>
 
-	<p>{{ t('collection.import_note', {collection: url.collection}) }}</p>
+	<p>{{ t('collection.import_note', {'{collection}': url.collection}) }}</p>
 
 	<section class="import-forms">
 		<details class="cms-accordion">
-			<summary>{{ t('collection.import_csv_title', {collection: url.collection | title}) }}</summary>
+			<summary>{{ t('collection.import_csv_title', {'{collection}': url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>{{ t('collection.import_csv_desc') }}</p>
 
@@ -22,7 +22,7 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>{{ t('collection.import_json_title', {collection: url.collection | title}) }}</summary>
+			<summary>{{ t('collection.import_json_title', {'{collection}': url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>{{ t('collection.import_json_desc') }}</p>
 				{{ cms.form.importCollection(url.collection, {
@@ -32,7 +32,7 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>{{ t('collection.import_manage_title', {collection: url.collection | title}) }}</summary>
+			<summary>{{ t('collection.import_manage_title', {'{collection}': url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>{{ t('collection.import_manage_desc') }}</p>
 

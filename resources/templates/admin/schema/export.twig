@@ -3,7 +3,7 @@
 	{% set jsonapi = cms.api ~ "/export/schemas/" ~ url.schema %}
 
 	<div>
-		<h3>{{ t('schema.export_title', {schema: url.schema}) }}</h3>
+		<h3>{{ t('schema.export_title', {'{schema}': url.schema}) }}</h3>
 		<p>{{ t('schema.export_desc') }}</p>
 		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">{{ t('schema.export_btn') }}</a></p>
 	</div>

@@ -11,7 +11,7 @@
 	<div class="performance-warning">
 		<div>
 			<h4>{{ t('collection.perf_recommendation') }}</h4>
-			<p>{{ t('collection.perf_message', {count: actualObjectCount | number_format, label: labelPlural | lower, collection: url.collection}) }}</p>
+			<p>{{ t('collection.perf_message', {'{count}': actualObjectCount | number_format, '{label}': labelPlural | lower, '{collection}': url.collection}) }}</p>
 		</div>
 	</div>
 {% endif %}
@@ -22,6 +22,6 @@
 
 {% else %}
 
-	<p>{{ t('collection.empty', {label: labelPlural}) }}</p>
+	<p>{{ t('collection.empty', {'{label}': labelPlural}) }}</p>
 
 {% endif %}
