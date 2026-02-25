@@ -29,12 +29,12 @@
 							<a href="utils/access-groups/{{ group.id }}"
 							   class="edit-button"
 							   title="Edit Access Group">Edit</a>
-							<a class="cms-quick-action delete-button"
-							   data-method="DELETE"
-							   data-confirm="Are you sure you want to delete this access group?"
-							   href="{{ cms.api }}/access-groups/{{ group.id }}"
-							   data-reload
-							   title="Delete Access Group">Delete</a>
+							{{ cms.admin.quickActionButton('', 'access-groups/' ~ group.id, {
+								method: 'delete',
+								confirm: 'Are you sure you want to delete this access group?',
+								reload: true,
+								class: 'delete-button',
+							}) }}
 						</div>
 					{% endif %}
 				</header>

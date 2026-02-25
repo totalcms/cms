@@ -222,6 +222,41 @@ class HTMLUtils
 		return $attributes;
 	}
 
+	/**
+	 * Build HTMX attribute array for an action request.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,string>
+	 */
+	public static function htmxAttributes(string $url, string $method = 'get', array $options = []): array
+	{
+		$attrs = [
+			'hx-' . strtolower($method) => $url,
+			'hx-swap' => (string)($options['swap'] ?? 'none'),
+		];
+
+		if (!empty($options['confirm'])) {
+			$attrs['hx-confirm'] = (string)$options['confirm'];
+		}
+		if (!empty($options['trigger'])) {
+			$attrs['hx-trigger'] = (string)$options['trigger'];
+		}
+		if (!empty($options['target'])) {
+			$attrs['hx-target'] = (string)$options['target'];
+		}
+		if (!empty($options['select'])) {
+			$attrs['hx-select'] = (string)$options['select'];
+		}
+		if (isset($options['on']) && is_array($options['on'])) {
+			foreach ($options['on'] as $event => $handler) {
+				$attrs['hx-on:htmx:' . $event] = (string)$handler;
+			}
+		}
+
+		return $attrs;
+	}
+
 	// -------------------------
 	// Semantic HTML5 Elements
 	// -------------------------

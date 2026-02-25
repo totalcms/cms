@@ -1,10 +1,10 @@
 import TotalFormManager from './totalform/totalform-manager';
 import TotalCMS from './totalcms';
+import QuickAction from './quickaction';
 import SimpleForm from './totalform/simpleform';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
 import AdminTable from './totalform/admin-table';
-import QuickAction from './quickaction';
 import ClipButton from './clipboard-button';
 import JobQueueStatsTable from './jobqueue-stats';
 import JSONField from './totalform/json';
@@ -19,6 +19,13 @@ import initDocHighlight from './doc-highlight';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
+globalThis.QuickAction = QuickAction;
+
+// Inject CSRF token into all HTMX requests
+document.addEventListener('htmx:configRequest', (e) => {
+	const token = document.querySelector('meta[name="csrf-token"]');
+	if (token) e.detail.headers['X-CSRF-Token'] = token.content;
+});
 
 document.addEventListener("DOMContentLoaded", event => {
 	const manager = new TotalFormManager();
@@ -50,9 +57,6 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const tables = Array.from(document.getElementsByClassName("admin-table"));
 	tables.forEach(table => new AdminTable(table));
-
-	const reindex = Array.from(document.getElementsByClassName("cms-quick-action"));
-	reindex.forEach(link => new QuickAction(link));
 
 	const copyButtons = Array.from(document.getElementsByClassName("cms-clip-button"));
 	copyButtons.forEach(button => new ClipButton(button));

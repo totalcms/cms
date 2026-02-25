@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -48,6 +49,43 @@ readonly class AdminTwigAdapter
 		public ImageCacheService $imageCacheService,
 		public CacheSizingAdvisor $cacheSizingAdvisor,
 	) {
+	}
+
+	/**
+	 * Build an HTMX-powered quick action button.
+	 *
+	 * Options: method (default POST), confirm, reload (bool), redirect (string), class
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function quickActionButton(string $label, string $route, array $options = []): string
+	{
+		$method   = strtolower((string)($options['method'] ?? 'POST'));
+		$confirm  = (string)($options['confirm'] ?? '');
+		$reload   = (bool)($options['reload'] ?? false);
+		$redirect = (string)($options['redirect'] ?? '');
+		$class    = (string)($options['class'] ?? '');
+
+		$url = rtrim($this->config->api, '/') . '/' . ltrim($route, '/');
+		$on  = ['error' => 'QuickAction.error(this, event)'];
+
+		if ($redirect !== '') {
+			$redirectUrl = htmlspecialchars($redirect, ENT_QUOTES);
+			$on['after:request'] = "QuickAction.redirect('$redirectUrl')";
+		} elseif ($reload) {
+			$on['after:request'] = 'QuickAction.reload()';
+		}
+
+		$attrs = HTMLUtils::htmxAttributes($url, $method, [
+			'confirm' => $confirm,
+			'on'      => $on,
+		]);
+
+		if ($class !== '') {
+			$attrs['class'] = $class;
+		}
+
+		return HTMLUtils::element('a', $label, $attrs);
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

@@ -51,7 +51,7 @@
 					<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">Sitemap</a></li>
 					<li class="feeds"><a href="collections/{{ collection }}/-feeds">Feeds</a></li>
 					{% if cms.auth.canAccessCollection(collection, 'update') %}
-					<li class="reindex"><a class="cms-quick-action" data-reload data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
+					<li class="reindex">{{ cms.admin.quickActionButton('Rebuild Index', 'collections/' ~ url.collection ~ '/index', {method: 'put', reload: true}) }}</li>
 					{% endif %}
 				</ul>
 			</nav>
