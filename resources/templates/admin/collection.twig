@@ -51,7 +51,7 @@
 					<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">{{ t('collection.sitemap') }}</a></li>
 					<li class="feeds"><a href="collections/{{ collection }}/-feeds">{{ t('collection.feeds') }}</a></li>
 					{% if cms.auth.canAccessCollection(collection, 'update') %}
-					<li class="reindex">{{ cms.admin.quickActionButton(t('collection.rebuild_index'), 'collections/' ~ url.collection ~ '/index', {method: 'put', reload: true}) }}</li>
+					<li class="reindex">{{ cms.admin.quickActionButton(t('collection.rebuild_index'), 'collections/' ~ collection ~ '/index', {method: 'put', reload: true}) }}</li>
 					{% endif %}
 				</ul>
 			</nav>
