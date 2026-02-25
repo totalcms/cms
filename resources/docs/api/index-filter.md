@@ -114,13 +114,16 @@ When no value is provided, the property defaults to `:true`:
 
 ### Basic Filtering
 
+`IndexFilter` is available via dependency injection — it requires both an `IndexReader` and `ObjectFilter`, so let the DI container handle construction:
+
 ```php
 use TotalCMS\Domain\Index\Service\IndexFilter;
 
-$filter = new IndexFilter($indexReader);
+// Inject via constructor
+public function __construct(private IndexFilter $filter) {}
 
 // Fetch and filter in one call
-$objects = $filter->fetchFilteredIndex('blog', [
+$objects = $this->filter->fetchFilteredIndex('blog', [
     'include' => 'published:true',
     'exclude' => 'draft:true'
 ]);
