@@ -22,7 +22,7 @@ globalThis.TotalCMS = TotalCMS;
 globalThis.QuickAction = QuickAction;
 
 // Inject CSRF token into all HTMX requests
-document.addEventListener('htmx:configRequest', (e) => {
+document.addEventListener('htmx:config:request', (e) => {
 	const token = document.querySelector('meta[name="csrf-token"]');
 	if (token) e.detail.headers['X-CSRF-Token'] = token.content;
 });

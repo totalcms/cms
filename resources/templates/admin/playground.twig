@@ -84,44 +84,22 @@
 			}],
 		}) }}
 
-		{% set twigfield %}
+		<form class="render-playground"
+			hx-post="{{ url.path }}"
+			hx-target="#playground-results"
+			hx-swap="innerHTML"
+			hx-on:htmx:after:swap="setupHtmlOutput()">
 			<textarea name="twig" id="twig" class="cms-hide"></textarea>
-		{% endset %}
-
-		{{ cms.form.simple(url.path, twigfield, {
-			class  : "render-playground",
-			method : "POST",
-			label  : "Render Twig",
-			ajax   : false,
-		}) }}
-
-		{% if results %}
-		<section class="playground-results">
-			<h2>Results</h2>
-
-			<div class="result-section">
-				<h3>Rendered HTML</h3>
-				<div class="rendered-output">
-					{{ results|raw }}
-				</div>
+			<div class="form-inline-fields">
+				<button type="submit" class="dash-button">Render Twig</button>
 			</div>
+		</form>
 
-			<div class="result-section">
-				<h3>HTML</h3>
-				<textarea id="html-output">{{ results }}</textarea>
-			</div>
-
-		</section>
-		{% endif %}
+		<section id="playground-results" class="playground-results"></section>
 	</section>
 {% endif %}
 
 <script>
-// Replace POST in history to prevent resubmission warning on refresh
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.pathname);
-}
-
 // Function to manage save button visibility
 function manageSaveButton() {
 	const form         = document.querySelector('.totalform');
@@ -149,10 +127,10 @@ function manageSaveButton() {
 }
 manageSaveButton();
 
-// Function to sync code field content to twig textarea when render button is clicked
-function setupRenderSync() {
-	const renderButton = document.querySelector('.render-playground button');
-
+// Sync code field content to twig textarea when render button is clicked
+// Must use pointerdown so the value is set before HTMX serializes the form on submit
+const renderButton = document.querySelector('.render-playground button');
+if (renderButton) {
 	renderButton.addEventListener('pointerdown', () => {
 		const snippetTextarea = document.querySelector('textarea[name="snippet"]');
 		const twigTextarea = document.getElementById('twig');
@@ -169,7 +147,6 @@ function setupRenderSync() {
 		}
 	});
 }
-setupRenderSync();
 
 // Function to setup CodeMirror for HTML output
 function setupHtmlOutput() {
@@ -229,9 +206,6 @@ function setupHtmlOutput() {
 		outputEditor.refresh();
 	}, 100);
 }
-
-// Initialize HTML output styling
-setupHtmlOutput();
 
 // Function to focus the CodeMirror editor on new snippet forms
 function focusSnippetEditor() {
