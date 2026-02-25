@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
@@ -16,7 +17,8 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 {
 	public function testLanguagesReturnsCorrectArray(): void
 	{
-		$adapter   = new LocaleTwigAdapter();
+		$translator = $this->createMock(TranslationService::class);
+		$adapter   = new LocaleTwigAdapter($translator);
 		$languages = $adapter->languages();
 
 		expect($languages)->toBeArray();

@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 
 use Cake\I18n\I18n;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 
 final class TotalCMSTwigAdapterLocaleTest extends TestCase
@@ -15,7 +16,8 @@ final class TotalCMSTwigAdapterLocaleTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		$this->adapter = new LocaleTwigAdapter();
+		$translator = $this->createMock(TranslationService::class);
+		$this->adapter = new LocaleTwigAdapter($translator);
 		// Reset locale before each test
 		\Locale::setDefault('en_US');
 		I18n::setLocale('en_US');
