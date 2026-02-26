@@ -471,6 +471,9 @@ return [
 	'image_cache.total_size'        => 'Totale grootte',
 	'image_cache.refresh'           => 'Statistieken vernieuwen',
 	'image_cache.empty'             => 'Geen afbeeldingscachegegevens gevonden.',
+	'image_cache.clear_all'         => 'Alle afbeeldingscaches wissen',
+	'image_cache.clear_all_desc'    => 'Dit verwijdert alle gecachte afbeeldingsvarianten van elke collectie.',
+	'image_cache.clear_all_confirm' => 'Weet u zeker dat u alle afbeeldingscaches voor elke collectie wilt wissen? Dit kan niet ongedaan worden gemaakt.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'           => 'Batchafbeeldingsverwerker',

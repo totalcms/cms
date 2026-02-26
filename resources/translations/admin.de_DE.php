@@ -471,6 +471,9 @@ return [
 	'image_cache.total_size'        => 'Gesamtgröße',
 	'image_cache.refresh'           => 'Statistiken aktualisieren',
 	'image_cache.empty'             => 'Keine Bild-Cache-Daten gefunden.',
+	'image_cache.clear_all'         => 'Alle Bild-Caches leeren',
+	'image_cache.clear_all_desc'    => 'Dies entfernt alle zwischengespeicherten Bildvarianten aus allen Sammlungen.',
+	'image_cache.clear_all_confirm' => 'Sind Sie sicher, dass Sie alle Bild-Caches für alle Sammlungen leeren möchten? Dies kann nicht rückgängig gemacht werden.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'           => 'Bild-Stapelverarbeitung',

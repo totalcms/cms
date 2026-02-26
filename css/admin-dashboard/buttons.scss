@@ -21,6 +21,11 @@
 		color            : oklab(var(--totalform-nearblack));
 		border           : 2px solid oklch(var(--totalform-nearblack));
 	}
+	&.dash-button-danger {
+		color        : oklch(var(--totalform-error));
+		border-color : oklch(var(--totalform-error));
+		font-weight  : 400;
+	}
 }
 .dash-action-dots {
 	appearance       : none;

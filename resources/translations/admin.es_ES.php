@@ -471,6 +471,9 @@ return [
 	'image_cache.total_size'        => 'Tamaño total',
 	'image_cache.refresh'           => 'Actualizar estadísticas',
 	'image_cache.empty'             => 'No se encontraron datos de caché de imágenes.',
+	'image_cache.clear_all'         => 'Limpiar todas las cachés de imágenes',
+	'image_cache.clear_all_desc'    => 'Esto eliminará todas las variantes de imagen en caché de todas las colecciones.',
+	'image_cache.clear_all_confirm' => '¿Está seguro de que desea limpiar todas las cachés de imágenes de todas las colecciones? Esta acción no se puede deshacer.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'           => 'Procesador de imágenes por lotes',

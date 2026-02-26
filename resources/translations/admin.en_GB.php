@@ -471,6 +471,9 @@ return [
 	'image_cache.total_size'        => 'Total Size',
 	'image_cache.refresh'           => 'Refresh Statistics',
 	'image_cache.empty'             => 'No image cache data found.',
+	'image_cache.clear_all'         => 'Clear All Image Caches',
+	'image_cache.clear_all_desc'    => 'This will remove all cached image variants across every collection.',
+	'image_cache.clear_all_confirm' => 'Are you sure you want to clear all image caches for every collection? This cannot be undone.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'           => 'Batch Image Processor',

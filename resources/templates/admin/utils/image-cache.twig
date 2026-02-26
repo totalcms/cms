@@ -51,4 +51,17 @@
 		<p style="margin-top:2rem"><em>{{ t('image_cache.empty') }}</em></p>
 	{% endif %}
 
+	<div style="display:grid;gap:0.5rem;margin-top:3rem">
+		<h2>{{ t('image_cache.clear_all') }}</h2>
+		<p>{{ t('image_cache.clear_all_desc') }}</p>
+
+		{{ cms.form.simple("/cache/images/all", "", {
+			method      : "DELETE",
+			label       : t('image_cache.clear_all'),
+			refresh     : true,
+			buttonClass : "transparent dash-button-danger",
+			confirm     : t('image_cache.clear_all_confirm'),
+		}) }}
+	</div>
+
 </section>
