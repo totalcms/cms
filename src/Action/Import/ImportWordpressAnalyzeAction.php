@@ -8,7 +8,7 @@ use Psr\Http\Message\UploadedFileInterface;
 use TotalCMS\Domain\Import\WordpressImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-readonly class ImportWordpressAction
+readonly class ImportWordpressAnalyzeAction
 {
 	public function __construct(
 		private WordpressImporter $importer,
@@ -37,34 +37,18 @@ readonly class ImportWordpressAction
 			], 400);
 		}
 
-		$params     = (array)$request->getParsedBody();
-		$collection = isset($params['collection']) ? trim((string)$params['collection']) : '';
-
-		if ($collection === '') {
-			return $this->renderer->json($response, [
-				'success' => false,
-				'message' => 'Missing required field: collection',
-			], 400);
-		}
-
-		$options = [];
-
-		if (isset($params['draft'])) {
-			$options['draft'] = filter_var($params['draft'], FILTER_VALIDATE_BOOLEAN);
-		}
-
 		try {
-			$importCount = $this->importer->import($xmlContent, $collection, $options);
+			$analysisResult = $this->importer->analyze($xmlContent);
 
 			return $this->renderer->json($response, [
-				'success'      => true,
-				'message'      => sprintf('Successfully queued %d posts for import from WordPress export.', $importCount),
-				'import_count' => $importCount,
+				'success' => true,
+				'message' => 'Analysis completed successfully',
+				'data'    => $analysisResult,
 			]);
 		} catch (\Exception $e) {
 			return $this->renderer->json($response, [
 				'success' => false,
-				'message' => 'Import failed: ' . $e->getMessage(),
+				'message' => 'Analysis failed: ' . $e->getMessage(),
 			], 500);
 		}
 	}

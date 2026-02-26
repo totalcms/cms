@@ -215,6 +215,7 @@ body {
 			&.jobqueue { --collection-icon : var(--icon-terminal) }
 			&.access-groups { --collection-icon : var(--icon-group) }
 			&.import-rss { --collection-icon : var(--icon-rss) }
+			&.import-wordpress { --collection-icon : var(--icon-wordpress) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);

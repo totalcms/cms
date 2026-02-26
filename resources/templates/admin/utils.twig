@@ -12,6 +12,7 @@
 
 {% if cms.edition.can('rss_import') %}
 	{% set adminMenu = adminMenu | merge([{"title": "RSS Feed Import", "path": "import-rss", "admin": true}]) %}
+	{% set adminMenu = adminMenu | merge([{"title": "WordPress Import", "path": "import-wordpress", "admin": true}]) %}
 {% endif %}
 
 {% set menu = [
