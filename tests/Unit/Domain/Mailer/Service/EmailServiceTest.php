@@ -367,7 +367,10 @@ final class EmailServiceTest extends TestCase
 			bcc: $bcc,
 			subject: $subject,
 			bodyHtml: $bodyHtml,
-			bodyText: $bodyText
+			bodyText: $bodyText,
+			bulkCollection: '',
+			bulkInclude: '',
+			bulkExclude: '',
 		);
 	}
 }

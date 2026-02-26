@@ -60,7 +60,7 @@ final class IndexBuilderTest extends TestCase
 		$objectIds = ['post-1', 'post-2', 'post-3'];
 
 		$this->storage
-			->method('fetchObjectIds')
+			->method('fetchObjectIdsFromDisk')
 			->with('blog')
 			->willReturn($objectIds);
 
@@ -97,7 +97,7 @@ final class IndexBuilderTest extends TestCase
 		$objectIds = ['item-1', 'item-2'];
 
 		$this->storage
-			->method('fetchObjectIds')
+			->method('fetchObjectIdsFromDisk')
 			->with('text')
 			->willReturn($objectIds);
 
@@ -125,7 +125,7 @@ final class IndexBuilderTest extends TestCase
 	public function testIdOnlyIndexWithNoObjects(): void
 	{
 		$this->storage
-			->method('fetchObjectIds')
+			->method('fetchObjectIdsFromDisk')
 			->with('empty')
 			->willReturn([]);
 
@@ -152,7 +152,7 @@ final class IndexBuilderTest extends TestCase
 		$objectIds = ['post-1'];
 
 		$this->storage
-			->method('fetchObjectIds')
+			->method('fetchObjectIdsFromDisk')
 			->with('blog')
 			->willReturn($objectIds);
 

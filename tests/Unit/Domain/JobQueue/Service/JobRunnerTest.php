@@ -15,9 +15,13 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
+use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
+use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class JobRunnerTest extends TestCase
 {
@@ -66,6 +70,11 @@ final class JobRunnerTest extends TestCase
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
 		$this->loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
+		$emailService          = $this->createMock(EmailService::class);
+		$bulkMailerRepository  = $this->createMock(BulkMailerRepository::class);
+		$objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$config                = $this->createMock(Config::class);
+
 		$this->jobRunner = new JobRunner(
 			$this->jobRepository,
 			$this->objectImporter,
@@ -74,6 +83,10 @@ final class JobRunnerTest extends TestCase
 			$this->factoryImporter,
 			$this->collectionRepository,
 			$this->viewBuilder,
+			$emailService,
+			$bulkMailerRepository,
+			$objectFetcher,
+			$config,
 			$this->loggerFactory,
 		);
 	}
