@@ -414,6 +414,10 @@ class FormField
 			$this->options = array_unique($this->options);
 		}
 
+		if (($this->settings['sortOptions'] ?? false) === true) {
+			sort($this->options);
+		}
+
 		foreach ($this->options as $key => $option) {
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);

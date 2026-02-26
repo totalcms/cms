@@ -17,6 +17,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -347,15 +348,105 @@ readonly class TotalFormFactory
 	public function mailer(string $id = '', array $options = []): string
 	{
 		$options = array_merge([
-			'save'   => 'Save',
-			'delete' => 'Delete',
-			'class'  => 'help-on-hover help-box',
+			'save'        => 'Save',
+			'delete'      => 'Delete',
+			'class'       => 'help-on-hover help-box mailer-form formgrid',
+			'useFormGrid' => false,
 		], $options);
 		$options['id'] = $id;
 
 		$form = $this->builder('mailer', $options);
 
-		return $form->autoBuild();
+		// Row: Active toggle + ID
+		$content  = $form->field('active');
+		$content .= $form->field('id');
+		$content .= $form->field('name');
+		$content .= $form->field('category');
+		$content .= $form->field('description');
+
+		$content .= HTMLUtils::inlineElement('hr', ['class' => 'form-grid-section-divider']);
+
+		$content .= $form->field('to');
+		$content .= $form->field('from');
+		$content .= $form->field('toName');
+		$content .= $form->field('fromName');
+		$content .= $form->field('replyTo');
+		$content .= $form->field('cc');
+		$content .= $form->field('bcc');
+
+		$content .= HTMLUtils::inlineElement('hr', ['class' => 'form-grid-section-divider']);
+
+		// Subject, Body HTML, Body Text (full width)
+		$content .= $form->field('subject');
+		$content .= $form->field('bodyHtml');
+		$content .= $form->field('bodyText');
+
+		$bulkSection = '';
+
+		if ($id !== '') {
+			$hiddenMailerId = HTMLUtils::inlineElement('input', [
+				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id
+			]);
+
+			$bulkConfigFields = $form->field('bulkCollection').
+				$form->field('bulkInclude').
+				$form->field('bulkExclude');
+			$bulkConfigDetails = HTMLUtils::details('Audience', $bulkConfigFields);
+
+			$previewAttrs = array_merge(
+				HTMLUtils::htmxAttributes('/action/mailer/bulk/preview', 'post', [
+					'target' => '#bulk-preview-output',
+					'swap'   => 'innerHTML',
+				]),
+				['class' => 'dash-button', 'id' => 'bulk-preview-btn']
+			);
+			$previewAttrs['hx-include'] = '[name="mailerId"],[name="bulkPreviewObjectId"],[name="bulkCollection"]';
+
+			$bulkPreviewForm = $form->field('bulkPreviewObjectId', [
+				'field'       => 'text',
+				'label'       => 'Preview Object ID',
+				'placeholder' => 'Enter an object ID to preview'
+			]) . HTMLUtils::element('button', 'Preview', $previewAttrs);
+			$bulkPreviewForm    = HTMLUtils::element('div', $bulkPreviewForm, ['class' => 'bulk-preview-form']);
+			$bulkPreviewOutput  = HTMLUtils::element('div', '', [
+				'id'    => 'bulk-preview-output',
+				'class' => 'bulk-preview-output'
+			]);
+			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
+
+			$sendAttrs = array_merge(
+				HTMLUtils::htmxAttributes('/action/mailer/bulk', 'post', [
+					'target'  => '#bulk-send-output',
+					'swap'    => 'innerHTML',
+					'confirm' => 'Are you sure you want to queue a bulk email send? This will send one email per matching object.',
+				]),
+				['class' => 'dash-button accent', 'id' => 'bulk-send-btn']
+			);
+			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkOverrideTo"],[name="bulkscheduledAt"]';
+
+			$bulkSendForm = $form->field('bulkOverrideTo', [
+				'field'       => 'email',
+				'label'       => 'Override To Email (for testing)',
+				'placeholder' => 'test@example.com',
+				'help'        => 'Override recipient email for testing. All emails will be sent to this address instead.',
+			]) .
+				$form->field('bulkscheduledAt', [
+				'field'       => 'datetime',
+				'label'       => 'Schedule',
+				'placeholder' => 'Enter a date and time to schedule this email'
+			]) . HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs);
+			$bulkSendForm    = HTMLUtils::element('div', $bulkSendForm, ['class' => 'bulk-send-form']);
+			$bulkSendOutput  = '<div id="bulk-send-output" class="bulk-send-output"></div>';
+			$bulkSendDetails = HTMLUtils::details('Send', $bulkSendForm . $bulkSendOutput);
+
+			$bulkSection  = $hiddenMailerId;
+			$bulkSection .= HTMLUtils::element('h2', 'Bulk Send <span class="bulk-pro-badge">Pro</span>');
+			$bulkSection .= HTMLUtils::element('p', 'Send this email to every matching object in a collection.');
+			$bulkSection  = $bulkSection . $bulkConfigDetails . $bulkPreviewDetails . $bulkSendDetails;
+			$bulkSection  = HTMLUtils::element('section', $bulkSection, ['class' => 'bulk-send-section']);
+		}
+
+		return $form->build($content, $bulkSection);
 	}
 
 	/** @param array<string,mixed> $options */

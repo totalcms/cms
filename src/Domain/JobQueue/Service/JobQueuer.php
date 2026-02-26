@@ -13,11 +13,17 @@ readonly class JobQueuer
 	}
 
 	/** @param array<mixed> $data */
-	public function queueJob(string $type, string $collection, array $data = []): JobData
+	public function queueJob(string $type, string $collection, array $data = [], ?string $scheduledAt = null): JobData
 	{
 		$payload = json_encode($data, JSON_THROW_ON_ERROR);
 
-		return $this->jobRepository->queueJob($type, $collection, $payload);
+		return $this->jobRepository->queueJob($type, $collection, $payload, $scheduledAt);
+	}
+
+	/** @param array<mixed> $data */
+	public function queueEmail(array $data, ?string $scheduledAt = null): JobData
+	{
+		return $this->queueJob(JobData::TYPE_EMAIL, $data['collection'] ?? 'mailer', $data, $scheduledAt);
 	}
 
 	/** @param array<mixed> $data */

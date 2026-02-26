@@ -37,6 +37,9 @@ enum EditionFeature: string
 	// Import features
 	case RSS_IMPORT = 'rss_import';
 
+	// Bulk mailer features
+	case BULK_MAILER = 'bulk_mailer';
+
 	// Utility features
 	case ACCESS_GROUPS = 'access_groups';
 	case API_KEYS      = 'api_keys';
@@ -61,6 +64,7 @@ enum EditionFeature: string
 			self::WHITELABEL_TEMPLATES => 'Whitelabel Templates',
 			self::DATA_VIEWS           => 'Data Views',
 			self::RSS_IMPORT           => 'RSS Import',
+			self::BULK_MAILER          => 'Bulk Mailer',
 			self::ACCESS_GROUPS        => 'Access Groups',
 			self::API_KEYS             => 'API Keys',
 		};
@@ -90,7 +94,8 @@ enum EditionFeature: string
 			self::BARCODES,
 			self::WHITELABEL_TEMPLATES,
 			self::DATA_VIEWS,
-			self::API_KEYS => Edition::PRO,
+			self::API_KEYS,
+			self::BULK_MAILER => Edition::PRO,
 		};
 	}
 }

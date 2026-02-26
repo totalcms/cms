@@ -77,6 +77,8 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\License\Service\OfflineLicenseValidator;
+use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
+use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
@@ -165,6 +167,7 @@ use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
+use TotalCMS\Middleware\License\BulkMailerEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
@@ -869,6 +872,14 @@ return [
 		$container->get(Config::class),
 	),
 
+	BulkMailerEditionMiddleware::class => fn (ContainerInterface $container): BulkMailerEditionMiddleware => new BulkMailerEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
 	AccessGroupsEditionMiddleware::class => fn (ContainerInterface $container): AccessGroupsEditionMiddleware => new AccessGroupsEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
@@ -1053,6 +1064,20 @@ return [
 	DataDirectoryManager::class => fn (): DataDirectoryManager => new DataDirectoryManager(),
 
 	// Mailer Services
+	BulkMailerRepository::class => fn (ContainerInterface $container): BulkMailerRepository => new BulkMailerRepository(
+		$container->get(Config::class),
+	),
+
+	BulkMailerService::class => fn (ContainerInterface $container): BulkMailerService => new BulkMailerService(
+		$container->get(MailerFetcher::class),
+		$container->get(IndexFilter::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(JobQueuer::class),
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigEngine::class),
+		$container->get(LoggerFactory::class),
+	),
+
 	EmailSender::class => fn (ContainerInterface $container): EmailSender => new EmailSender(
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class),

@@ -68,6 +68,7 @@
     "thepixeldeveloper/sitemap": "dev-master#ee4cbd1406f1250534860b8c9b74020fee0c3650",
     "twig/cssinliner-extra": "^3.21",
     "twig/html-extra": "^3.21",
+    "twig/inky-extra": "^3.0",
     "twig/intl-extra": "^3.22",
     "twig/markdown-extra": "^3.21",
     "twig/string-extra": "^3.21",

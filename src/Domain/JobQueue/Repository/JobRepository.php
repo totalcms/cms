@@ -96,10 +96,11 @@ class JobRepository
 			mkdir($dir, 0755, true);
 		}
 
-		$this->db = new \PDO('sqlite:' . $dbPath);
+		$db = new \PDO('sqlite:' . $dbPath);
+		$this->db = $db;
 
 		if (!$exists) {
-			$this->getDb()->exec(<<<SQL
+			$db->exec(<<<SQL
 				CREATE TABLE jobqueue (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					type TEXT NOT NULL,
@@ -108,13 +109,40 @@ class JobRepository
 					status TEXT DEFAULT 'pending',
 					attempts INTEGER DEFAULT 0,
 					lastError TEXT DEFAULT NULL,
+					scheduledAt DATETIME DEFAULT NULL,
 					createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 					updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 				);
 			SQL);
+		} else {
+			$this->migrateScheduledAt();
 		}
 
-		return $this->db;
+		return $db;
+	}
+
+	/**
+	 * Lazy migration: add scheduledAt column if missing.
+	 */
+	private function migrateScheduledAt(): void
+	{
+		if (!$this->db instanceof \PDO) {
+			return;
+		}
+
+		$stmt = $this->db->query('PRAGMA table_info(jobqueue)');
+		if (!$stmt) {
+			return;
+		}
+
+		$columns = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$columns[] = $row['name'] ?? '';
+		}
+
+		if (!in_array('scheduledAt', $columns, true)) {
+			$this->db->exec('ALTER TABLE jobqueue ADD COLUMN scheduledAt DATETIME DEFAULT NULL');
+		}
 	}
 
 	private function markInProgress(JobData $job): JobData
@@ -154,6 +182,7 @@ class JobRepository
 		$sql = <<<SQL
 			SELECT * FROM jobqueue
 			WHERE status = 'pending'
+			AND (scheduledAt IS NULL OR scheduledAt <= CURRENT_TIMESTAMP)
 			ORDER BY id ASC
 			LIMIT 1
 		SQL;
@@ -197,7 +226,7 @@ class JobRepository
 
 	public function hasPendingJobs(): bool
 	{
-		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' LIMIT 1");
+		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' AND (scheduledAt IS NULL OR scheduledAt <= CURRENT_TIMESTAMP) LIMIT 1");
 		$stmt->execute();
 		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -233,19 +262,20 @@ class JobRepository
 		return JobData::fromArray($record);
 	}
 
-	public function queueJob(string $type, string $collection, string $payload = ''): JobData
+	public function queueJob(string $type, string $collection, string $payload = '', ?string $scheduledAt = null): JobData
 	{
 		if (!in_array($type, JobData::TYPE_LIST)) {
 			throw new \DomainException(sprintf('Invalid job type %s', $type));
 		}
 		$sql = <<<SQL
-			INSERT INTO jobqueue (type, payload, collection)
-			VALUES (:type, :payload, :collection)
+			INSERT INTO jobqueue (type, payload, collection, scheduledAt)
+			VALUES (:type, :payload, :collection, :scheduledAt)
 		SQL;
 		$stmt = $this->getDb()->prepare($sql);
 		$stmt->bindValue(':type', $type);
 		$stmt->bindValue(':payload', $payload);
 		$stmt->bindValue(':collection', $collection);
+		$stmt->bindValue(':scheduledAt', $scheduledAt);
 		$stmt->execute();
 
 		$id = $this->getDb()->lastInsertId();

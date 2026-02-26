@@ -277,7 +277,7 @@ class TotalForm implements \Stringable
 		return HTMLUtils::element('p', $this->buildError, ['class' => 'cms-twig-error']);
 	}
 
-	public function build(string $content = ''): string
+	public function build(string $content = '', string $contentAfter = ''): string
 	{
 		$formId       = null;
 		$formStyleTag = '';
@@ -332,6 +332,8 @@ class TotalForm implements \Stringable
 		$content .= HTMLUtils::element('div', $save . $delete, [
 			'class' => 'form-inline-fields',
 		]);
+
+		$content .= $contentAfter;
 
 		$form = HTMLUtils::element('form', $content, $attributes);
 

@@ -61,6 +61,13 @@
 			"label"       : "Default To Address",
 			"help"        : "Default recipient email address for test emails.",
 			"placeholder" : "to@example.com"
+		},
+		"sendDelay": {
+			"type"        : "number",
+			"label"       : "Send Delay (ms)",
+			"help"        : "Delay in milliseconds between emails during bulk sending. Use to avoid SMTP rate limits. 0 = no delay.",
+			"placeholder" : "0",
+			"default"     : 0
 		}
 	}
 }

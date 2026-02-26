@@ -138,12 +138,13 @@ $settings['session'] = [
 
 // SMTP settings
 $settings['smtp'] = [
-	'host'     => '127.0.0.1',
-	'port'     => '25',
-	'secure'   => 'TLS',
-	'from'     => '',
-	'fromName' => '',
-	'to'       => '',
+	'host'      => '127.0.0.1',
+	'port'      => '25',
+	'secure'    => 'TLS',
+	'from'      => '',
+	'fromName'  => '',
+	'to'        => '',
+	'sendDelay' => 0,
 ];
 
 // Mailer settings (email sending system)

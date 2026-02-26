@@ -13,6 +13,7 @@ class JobData
 	public string $createdAt;
 	public string $updatedAt;
 	public string $lastError;
+	public string $scheduledAt;
 
 	public const STATUS_PENDING     = 'pending';
 	public const STATUS_IN_PROGRESS = 'in_progress';
@@ -29,6 +30,7 @@ class JobData
 	public const TYPE_REBUILD     = 'rebuild';
 	public const TYPE_FACTORY     = 'factory';
 	public const TYPE_VIEW_UPDATE = 'view_update';
+	public const TYPE_EMAIL       = 'email';
 	public const TYPE_LIST        = [
 		self::TYPE_IMPORT,
 		self::TYPE_EXPORT,
@@ -36,6 +38,7 @@ class JobData
 		self::TYPE_UPDATE,
 		self::TYPE_FACTORY,
 		self::TYPE_VIEW_UPDATE,
+		self::TYPE_EMAIL,
 	];
 
 	/** @return array<string,string|int> */
@@ -49,8 +52,9 @@ class JobData
 			'collection' => $this->collection,
 			'attempts'   => $this->attempts,
 			'createdAt'  => $this->createdAt,
-			'updatedAt'  => $this->updatedAt,
-			'lastError'  => $this->lastError,
+			'updatedAt'   => $this->updatedAt,
+			'lastError'   => $this->lastError,
+			'scheduledAt' => $this->scheduledAt,
 		];
 	}
 
@@ -65,8 +69,9 @@ class JobData
 		$instance->collection = $data['collection'] ?? '';
 		$instance->attempts   = intval($data['attempts'] ?? 0);
 		$instance->createdAt  = $data['createdAt'] ?? '';
-		$instance->updatedAt  = $data['updatedAt'] ?? '';
-		$instance->lastError  = $data['lastError'] ?? '';
+		$instance->updatedAt   = $data['updatedAt'] ?? '';
+		$instance->lastError   = $data['lastError'] ?? '';
+		$instance->scheduledAt = $data['scheduledAt'] ?? '';
 
 		return $instance;
 	}

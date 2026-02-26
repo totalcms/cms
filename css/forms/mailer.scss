@@ -1,0 +1,123 @@
+.mailer-form {
+	display: grid;
+	gap: 1rem;
+	grid-template-areas:
+        'active .'
+        'id id'
+        'name category'
+        'description description'
+        'section-divider-1 .'
+        'to from'
+        'toName fromName'
+        'replyTo .'
+        'cc bcc'
+        'section-divider-2 .'
+        'subject subject'
+        'bodyHtml bodyHtml'
+        'bodyText bodyText'
+        'buttons buttons'
+		'bulk bulk';
+	grid-template-columns: repeat(2, 1fr);
+
+	.form-grid-section-divider {
+		&:nth-of-type(1) {
+			grid-area : section-divider-1;
+		}
+		&:nth-of-type(2) {
+			grid-area : section-divider-2;
+		}
+	}
+	.bulk-send-section {
+		grid-area : bulk;
+	}
+	.form-inline-fields {
+		grid-area : buttons;
+	}
+	.cms-accordion .form-field {
+		grid-area: unset !important;
+	}
+}
+.mail-test-section,
+.bulk-send-section {
+	margin-top: 3rem;
+	padding-top: 2rem;
+	border-top: 2px solid oklch(var(--totalform-border-color));
+}
+.mail-test-section h2,
+.bulk-send-section h2 {
+	margin-bottom: 0.5rem;
+	color: oklch(var(--totalform-nearblack));
+}
+.mail-test-section p,
+.bulk-send-section p {
+	margin-bottom: 1.5rem;
+	color: oklch(var(--totalform-darkgray));
+}
+.bulk-pro-badge {
+	display: inline-block;
+	font-size: 0.65em;
+	font-weight: 600;
+	padding: 0.15em 0.5em;
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-accent));
+	color: white;
+	vertical-align: middle;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.bulk-preview-form,
+.bulk-send-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+.bulk-send-field label {
+	display: block;
+	font-weight: 500;
+	margin-bottom: 0.25rem;
+	color: oklch(var(--totalform-darkgray));
+}
+.bulk-send-field small {
+	color: oklch(var(--totalform-medgray));
+}
+.bulk-send-field input {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+.bulk-preview-form input {
+	padding: 0.5rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+.bulk-preview-output {
+	margin-top : 1rem;
+}
+.bulk-preview-meta {
+	padding: 0.75rem;
+	background: oklch(var(--totalform-nearwhite));
+	border-radius: var(--totalform-radius);
+	margin-bottom: 0.5rem;
+}
+.bulk-preview-frame {
+	width: 100%;
+	min-height: 300px;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+.bulk-send-output {
+	margin-top : 1rem;
+}
+.bulk-success {
+	padding: 1rem;
+	background: oklch(var(--totalform-nearwhite));
+	border-left: 3px solid oklch(var(--totalform-success));
+	border-radius: var(--totalform-radius);
+}
+.bulk-error {
+	padding: 1rem;
+	background: oklch(var(--totalform-nearwhite));
+	border-left: 3px solid oklch(var(--totalform-error));
+	border-radius: var(--totalform-radius);
+}
