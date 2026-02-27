@@ -425,6 +425,7 @@ return [
 		$container->get(FileAccessManager::class),
 		$container->get(AccessControlService::class),
 		$container->get(CollectionLister::class),
+		$container->get(TranslationService::class),
 	),
 
 	CollectionTwigAdapter::class => fn (ContainerInterface $container): CollectionTwigAdapter => new CollectionTwigAdapter(

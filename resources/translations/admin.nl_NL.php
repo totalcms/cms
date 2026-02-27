@@ -136,6 +136,11 @@ return [
 	// ── Profile ─────────────────────────────────────────────────────────────
 	'profile.title'       => 'Profiel bewerken',
 
+	// ── Passkeys ────────────────────────────────────────────────────────────
+	'passkey.title'       => 'Passkeys',
+	'passkey.description' => 'Registreer passkeys om in te loggen zonder wachtwoord met Touch ID, Face ID, 1Password of een beveiligingssleutel.',
+	'passkey.register'    => 'Nieuwe Passkey registreren',
+
 	// ── Collections ─────────────────────────────────────────────────────────
 	'collection.filter'             => 'Collecties filteren',
 	'collection.new'                => '+ Nieuwe collectie',

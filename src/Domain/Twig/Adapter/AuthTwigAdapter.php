@@ -10,6 +10,7 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
 /**
@@ -26,6 +27,7 @@ readonly class AuthTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		private AccessControlService $accessControl,
 		private CollectionLister $collectionLister,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -342,10 +344,10 @@ readonly class AuthTwigAdapter
 			return '';
 		}
 
-		$heading     = HTMLUtils::element('h2', 'Passkeys');
-		$description = HTMLUtils::element('p', 'Register passkeys to sign in without a password using Touch ID, Face ID, 1Password, or a security key.');
+		$heading     = HTMLUtils::element('h2', $this->translator->trans('passkey.title'));
+		$description = HTMLUtils::element('p', $this->translator->trans('passkey.description'));
 		$list        = HTMLUtils::element('div', '', ['id' => 'passkeys-list']);
-		$button      = HTMLUtils::button('Register New Passkey', [
+		$button      = HTMLUtils::button($this->translator->trans('passkey.register'), [
 			'type'  => 'button',
 			'class' => 'dash-button',
 			'id'    => 'passkey-register-btn',

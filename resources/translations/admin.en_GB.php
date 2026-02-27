@@ -136,6 +136,11 @@ return [
 	// ── Profile ─────────────────────────────────────────────────────────────
 	'profile.title'       => 'Edit Profile',
 
+	// ── Passkeys ────────────────────────────────────────────────────────────
+	'passkey.title'       => 'Passkeys',
+	'passkey.description' => 'Register passkeys to sign in without a password using Touch ID, Face ID, 1Password, or a security key.',
+	'passkey.register'    => 'Register New Passkey',
+
 	// ── Collections ─────────────────────────────────────────────────────────
 	'collection.filter'             => 'Filter Collections',
 	'collection.new'                => '+ New Collection',

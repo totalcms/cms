@@ -136,6 +136,11 @@ return [
 	// ── Profile ─────────────────────────────────────────────────────────────
 	'profile.title'       => 'Editar perfil',
 
+	// ── Passkeys ────────────────────────────────────────────────────────────
+	'passkey.title'       => 'Passkeys',
+	'passkey.description' => 'Registre passkeys para iniciar sesión sin contraseña usando Touch ID, Face ID, 1Password o una llave de seguridad.',
+	'passkey.register'    => 'Registrar nuevo Passkey',
+
 	// ── Collections ─────────────────────────────────────────────────────────
 	'collection.filter'             => 'Filtrar colecciones',
 	'collection.new'                => '+ Nueva colección',

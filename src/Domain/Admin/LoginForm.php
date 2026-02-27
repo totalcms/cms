@@ -31,6 +31,7 @@ readonly class LoginForm implements \Stringable
 		private string $passwordLabel          = 'Password',
 		private string $rememberLabel          = 'Keep me signed in',
 		private string $forgotPasswordLabel    = 'Forgot Password?',
+		private string $passkeyLabel           = 'Sign in with Passkey',
 	) {
 	}
 
@@ -222,11 +223,15 @@ readonly class LoginForm implements \Stringable
 
 	private function buildPasskeyButton(): string
 	{
+		if ($this->passkeyLabel === '') {
+			return '';
+		}
+
 		$divider = HTMLUtils::element('div', HTMLUtils::element('span', 'or'), [
 			'class' => 'login-divider',
 		]);
 
-		$button = HTMLUtils::button('Sign in with Passkey', [
+		$button = HTMLUtils::button($this->passkeyLabel, [
 			'type'     => 'button',
 			'class'    => 'dash-button cms-passkey-login no-icon',
 			'data-api' => $this->api,
