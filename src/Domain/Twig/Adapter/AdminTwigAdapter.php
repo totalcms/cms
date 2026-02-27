@@ -101,8 +101,11 @@ readonly class AdminTwigAdapter
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
 		$quotedDocroot = str_contains($docroot, ' ') ? '"' . $docroot . '"' : $docroot;
 
+		$envPrefix = $this->config->env === 'dev' ? 'APP_ENV=dev ' : '';
+
 		return sprintf(
-			'%s %s --docroot=%s',
+			'%s%s %s --docroot=%s',
+			$envPrefix,
 			$phpPath,
 			$quotedCommand,
 			$quotedDocroot,
