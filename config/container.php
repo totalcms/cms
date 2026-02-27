@@ -196,6 +196,11 @@ return [
 	PhpSession::class => function (ContainerInterface $container): PhpSession {
 		$sessionConfig = $container->get(Config::class)->session;
 
+		// Skip session configuration in CLI mode (no HTTP context)
+		if (PHP_SAPI === 'cli') {
+			return new PhpSession();
+		}
+
 		// Ensure session directory exists
 		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
 			@mkdir($sessionConfig['save_path'], 0755, true);
