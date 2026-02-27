@@ -11,8 +11,8 @@
 {% endif %}
 
 {% if cms.edition.can('rss_import') %}
-	{% set adminMenu = adminMenu | merge([{"title": "RSS Feed Import", "path": "import-rss", "admin": true}]) %}
-	{% set adminMenu = adminMenu | merge([{"title": "WordPress Import", "path": "import-wordpress", "admin": true}]) %}
+	{% set adminMenu = adminMenu | merge([{"title": "Import RSS Feed", "path": "import-rss", "admin": true}]) %}
+	{% set adminMenu = adminMenu | merge([{"title": "Import WordPress", "path": "import-wordpress", "admin": true}]) %}
 {% endif %}
 
 {% set menu = [
@@ -31,6 +31,10 @@
 	{
 		"title" : "Image Cache",
 		"path"  : "image-cache",
+	},
+	{
+		"title" : "Import Alloy",
+		"path"  : "import-alloy",
 	},
 	{
 		"title" : "Job Queue Manager",
