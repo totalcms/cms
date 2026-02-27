@@ -10,8 +10,6 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.config('key', 'setting') }}               {# Get nested config setting #}
 {{ cms.api }}                                    {# API base URL #}
 {{ cms.dashboard }}                              {# Admin dashboard URL #}
-{{ cms.login }}                                  {# Login URL #}
-{{ cms.logout }}                                 {# Logout URL #}
 {{ cms.domain }}                                 {# Current domain name #}
 {{ cms.clearcache }}                             {# Emergency cache clear URL #}
 ```
@@ -20,34 +18,33 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 
 ```twig
 {# Login #}
-{{ cms.login() }}                                {# Default login URL with current page redirect #}
-{{ cms.login('collection') }}                    {# Collection login URL with current page redirect #}
-{{ cms.login('', '') }}                          {# Default login URL with no redirect #}
-{{ cms.login('', '/redirect/url') }}             {# Default login with custom redirect URL #}
-{{ cms.login('collection', '/redirect/url') }}   {# Collection login with custom redirect URL #}
+{{ cms.auth.login() }}                                {# Default login URL with current page redirect #}
+{{ cms.auth.login('collection') }}                    {# Collection login URL with current page redirect #}
+{{ cms.auth.login('', '') }}                          {# Default login URL with no redirect #}
+{{ cms.auth.login('', '/redirect/url') }}             {# Default login with custom redirect URL #}
+{{ cms.auth.login('collection', '/redirect/url') }}   {# Collection login with custom redirect URL #}
 
 {# Logout #}
-{{ cms.logout }}                                 {# Logout URL #}
-{{ cms.logout() }}                               {# Same as above #}
-{{ cms.logout('/redirect/url') }}                {# Logout with redirect URL #}
-{{ cms.userData() }}                             {# Get current user data array #}
-{{ cms.userLoggedIn() }}                         {# Check if user is logged in (boolean) #}
-{{ cms.userLoggedIn('collection') }}             {# Check login for specific collection #}
-{{ cms.userHasAccess('group') }}                 {# Check if user has access to group #}
-{{ cms.userHasAccess(['group1', 'group2']) }}    {# Check multiple groups #}
-{{ cms.sessionData('key') }}                     {# Get session data by key #}
-{{ cms.verifyFilePassword(password, collection, id, property) }}  {# Verify file password #}
+{{ cms.auth.logout() }}                               {# Logout URL #}
+{{ cms.auth.logout('/redirect/url') }}                {# Logout with redirect URL #}
+{{ cms.auth.userData() }}                             {# Get current user data array #}
+{{ cms.auth.userLoggedIn() }}                         {# Check if user is logged in (boolean) #}
+{{ cms.auth.userLoggedIn('collection') }}             {# Check login for specific collection #}
+{{ cms.auth.userHasAccess('group') }}                 {# Check if user has access to group #}
+{{ cms.auth.userHasAccess(['group1', 'group2']) }}    {# Check multiple groups #}
+{{ cms.auth.sessionData('key') }}                     {# Get session data by key #}
+{{ cms.auth.verifyFilePassword(password, collection, id, property) }}  {# Verify file password #}
 ```
 
 ## Schemas
 
 ```twig
-{{ cms.schemas() }}                              {# Get all schemas #}
-{{ cms.reservedSchemas() }}                      {# Get built-in schemas #}
-{{ cms.customSchemas() }}                        {# Get custom schemas #}
-{{ cms.schemasByCategory() }}                    {# Get schemas grouped by category #}
-{{ cms.schema('schemaName') }}                   {# Get specific schema definition #}
-{{ cms.schemaForCollection('collection') }}      {# Get schema for a collection #}
+{{ cms.schema.list() }}                          {# Get all schemas #}
+{{ cms.schema.reserved() }}                      {# Get built-in schemas #}
+{{ cms.schema.custom() }}                        {# Get custom schemas #}
+{{ cms.schema.byCategory() }}                    {# Get schemas grouped by category #}
+{{ cms.schema.get('schemaName') }}               {# Get specific schema definition #}
+{{ cms.schema.forCollection('collection') }}     {# Get schema for a collection #}
 ```
 
 ## Collections
@@ -65,8 +62,8 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 ## Object Data
 
 ```twig
-{{ cms.collection.object('collection', 'id') }}  {# Get complete object data #}
-{{ cms.data('collection', 'id', 'property') }}   {# Get specific property value #}
+{{ cms.collection.object('collection', 'id') }}      {# Get complete object data #}
+{{ cms.data.raw('collection', 'id', 'property') }}   {# Get specific property value #}
 ```
 
 ## Search
@@ -79,45 +76,45 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 ## Text Content
 
 ```twig
-{{ cms.text('id') }}                             {# Get text (default collection: text) #}
-{{ cms.text('id', {collection: 'custom'}) }}     {# Custom collection #}
-{{ cms.text('id', {property: 'content'}) }}      {# Custom property #}
+{{ cms.data.text('id') }}                             {# Get text (default collection: text) #}
+{{ cms.data.text('id', {collection: 'custom'}) }}     {# Custom collection #}
+{{ cms.data.text('id', {property: 'content'}) }}      {# Custom property #}
 
-{{ cms.code('id') }}                             {# Get code snippet (default collection: code) #}
-{{ cms.code('id', {collection: 'custom'}) }}     {# Custom collection #}
-{{ cms.code('id', {property: 'snippet'}) }}      {# Custom property #}
+{{ cms.data.code('id') }}                             {# Get code snippet (default collection: code) #}
+{{ cms.data.code('id', {collection: 'custom'}) }}     {# Custom collection #}
+{{ cms.data.code('id', {property: 'snippet'}) }}      {# Custom property #}
 
-{{ cms.styledtext('id') }}                       {# Get styled text (HTML) #}
-{{ cms.styledtext('id', {collection: 'custom', property: 'html'}) }}
+{{ cms.data.styledtext('id') }}                       {# Get styled text (HTML) #}
+{{ cms.data.styledtext('id', {collection: 'custom', property: 'html'}) }}
 ```
 
 ## Simple Data Types
 
 ```twig
-{{ cms.toggle('id') }}                           {# Get boolean toggle value #}
-{{ cms.toggle('id', {collection: 'settings', property: 'enabled'}) }}
+{{ cms.data.toggle('id') }}                           {# Get boolean toggle value #}
+{{ cms.data.toggle('id', {collection: 'settings', property: 'enabled'}) }}
 
-{{ cms.date('id') }}                             {# Get date string #}
-{{ cms.date('id', {collection: 'events', property: 'eventDate'}) }}
+{{ cms.data.date('id') }}                             {# Get date string #}
+{{ cms.data.date('id', {collection: 'events', property: 'eventDate'}) }}
 
-{{ cms.number('id') }}                           {# Get number value #}
-{{ cms.number('id', {collection: 'stats', property: 'count'}) }}
+{{ cms.data.number('id') }}                           {# Get number value #}
+{{ cms.data.number('id', {collection: 'stats', property: 'count'}) }}
 
-{{ cms.url('id') }}                              {# Get URL #}
-{{ cms.url('id', {collection: 'links', property: 'href'}) }}
+{{ cms.data.url('id') }}                              {# Get URL #}
+{{ cms.data.url('id', {collection: 'links', property: 'href'}) }}
 
-{{ cms.email('id') }}                            {# Get email address #}
-{{ cms.email('id', {}, true) }}                  {# Get email with HTML encoding (anti-spam) #}
+{{ cms.data.email('id') }}                            {# Get email address #}
+{{ cms.data.email('id', {}, true) }}                  {# Get email with HTML encoding (anti-spam) #}
 
-{{ cms.svg('id') }}                              {# Get SVG content #}
-{{ cms.svg('id', {collection: 'icons', property: 'svgData'}) }}
+{{ cms.data.svg('id') }}                              {# Get SVG content #}
+{{ cms.data.svg('id', {collection: 'icons', property: 'svgData'}) }}
 ```
 
 ## Colors
 
 ```twig
-{% set myColor = cms.color('id') %}              {# Get color data array #}
-{% set myColor = cms.colour('id') %}             {# British spelling alias #}
+{% set myColor = cms.data.color('id') %}              {# Get color data array #}
+{% set myColor = cms.data.colour('id') %}             {# British spelling alias #}
 
 {# Color has 'hex' and 'oklch' properties #}
 {{ myColor.hex }}                                {# Hex value: #ff0000 #}
@@ -526,43 +523,43 @@ Pass an array of rule objects for advanced sorting with multiple criteria:
 
 ```twig
 {# Single file download #}
-{{ cms.download('id') }}                         {# Default from 'file' collection #}
-{{ cms.download('id', {collection: 'documents', property: 'pdf'}) }}
-{{ cms.download('id', {pwd: 'secret123'}) }}     {# Password-protected file #}
+{{ cms.media.download('id') }}                         {# Default from 'file' collection #}
+{{ cms.media.download('id', {collection: 'documents', property: 'pdf'}) }}
+{{ cms.media.download('id', {pwd: 'secret123'}) }}     {# Password-protected file #}
 
 {# Depot (multiple files) #}
-{% set files = cms.depot('id') %}                {# Get files array #}
+{% set files = cms.media.depot('id') %}                {# Get files array #}
 {% for file in files %}
-    <a href="{{ cms.depotDownload('id', file.name) }}">{{ file.name }}</a>
+    <a href="{{ cms.media.depotDownload('id', file.name) }}">{{ file.name }}</a>
 {% endfor %}
 
 {# Depot with folders #}
-{{ cms.depotDownload('id', 'document.pdf', {path: 'folder/subfolder'}) }}
-{{ cms.depotDownload('id', 'folder/document.pdf') }}  {# Path in filename #}
-{{ cms.depotDownload('id', 'file.zip', {pwd: 'pass123'}) }}
+{{ cms.media.depotDownload('id', 'document.pdf', {path: 'folder/subfolder'}) }}
+{{ cms.media.depotDownload('id', 'folder/document.pdf') }}  {# Path in filename #}
+{{ cms.media.depotDownload('id', 'file.zip', {pwd: 'pass123'}) }}
 ```
 
 ### Streaming (inline; plays in browser)
 
 ```twig
 {# Single file streaming (ideal for video/audio) #}
-{{ cms.stream('id') }}                           {# Default from 'file' collection #}
-{{ cms.stream('id', {collection: 'videos', property: 'video'}) }}
-{{ cms.stream('id', {pwd: 'secret123'}) }}       {# Password-protected file #}
+{{ cms.media.stream('id') }}                           {# Default from 'file' collection #}
+{{ cms.media.stream('id', {collection: 'videos', property: 'video'}) }}
+{{ cms.media.stream('id', {pwd: 'secret123'}) }}       {# Password-protected file #}
 
 {# Depot file streaming #}
-{{ cms.depotStream('id', 'video.mp4') }}         {# Stream specific file #}
-{{ cms.depotStream('id', 'movie.mp4', {path: 'folder/subfolder'}) }}
-{{ cms.depotStream('id', 'folder/video.mp4') }}  {# Path in filename #}
-{{ cms.depotStream('id', 'audio.mp3', {pwd: 'pass123'}) }}
+{{ cms.media.depotStream('id', 'video.mp4') }}         {# Stream specific file #}
+{{ cms.media.depotStream('id', 'movie.mp4', {path: 'folder/subfolder'}) }}
+{{ cms.media.depotStream('id', 'folder/video.mp4') }}  {# Path in filename #}
+{{ cms.media.depotStream('id', 'audio.mp3', {pwd: 'pass123'}) }}
 
 {# HTML5 video/audio examples #}
 <video controls>
-    <source src="{{ cms.stream('video-id') }}" type="video/mp4">
+    <source src="{{ cms.media.stream('video-id') }}" type="video/mp4">
 </video>
 
 <audio controls>
-    <source src="{{ cms.depotStream('audio-id', 'song.mp3') }}" type="audio/mpeg">
+    <source src="{{ cms.media.depotStream('audio-id', 'song.mp3') }}" type="audio/mpeg">
 </audio>
 ```
 
@@ -761,8 +758,8 @@ Common parameters for image transformations:
 
 ### Protected downloads
 ```twig
-{% if cms.verifyFilePassword(password, 'documents', docId, 'file') %}
-    <a href="{{ cms.download(docId, {pwd: password}) }}">Download Document</a>
+{% if cms.auth.verifyFilePassword(password, 'documents', docId, 'file') %}
+    <a href="{{ cms.media.download(docId, {pwd: password}) }}">Download Document</a>
 {% else %}
     <p>Invalid password</p>
 {% endif %}
