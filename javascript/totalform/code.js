@@ -48,6 +48,16 @@ export default class Code extends TotalField {
             ...editorOptions
         };
 
+        // Prevent CodeMirror from stealing page scroll during initialization.
+        // Override both focus() and scrollIntoView() so that nothing during
+        // editor creation can scroll the page.
+        const origFocus = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function(opts) {
+            origFocus.call(this, { preventScroll: true, ...opts });
+        };
+        const origScrollIntoView = Element.prototype.scrollIntoView;
+        Element.prototype.scrollIntoView = function() {};
+
         // Create the appropriate editor based on mode
         if (mode === 'twig') {
             this.editor = window.TotalCMSCodeMirror.createTwigEditor(this.input, config);
@@ -86,6 +96,10 @@ export default class Code extends TotalField {
 
         // Set up form submission handling
         this.setupFormSubmission();
+
+        // Restore original prototypes after all synchronous setup is complete
+        HTMLElement.prototype.focus = origFocus;
+        Element.prototype.scrollIntoView = origScrollIntoView;
 
         // Force a refresh after initialization to ensure proper gutter calculations
         setTimeout(() => {
