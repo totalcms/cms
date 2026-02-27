@@ -1,3 +1,8 @@
+---
+title: "White Label Dashboard"
+description: "Customize the Total CMS admin with white label branding including custom logos, login pages, CSS variables, and localized form labels. Pro edition only."
+---
+
 # White Label Dashboard
 
 **Available in:** Total CMS Pro only

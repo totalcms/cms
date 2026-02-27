@@ -1,3 +1,8 @@
+---
+title: "REST API Documentation"
+description: "Complete Total CMS REST API reference for CRUD operations on collections, objects, images, files, and schemas with authentication and error handling."
+---
+
 # REST API Documentation
 
 Total CMS provides a RESTful API for accessing content and schemas. This documentation covers all available endpoints with examples and response formats.

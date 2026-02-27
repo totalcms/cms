@@ -1,3 +1,8 @@
+---
+title: "Importing Data"
+description: "Import data into Total CMS collections from CSV and JSON files, update existing objects, and process images and files via the job queue."
+---
+
 # Importing Data
 
 ## Update Existing Objects

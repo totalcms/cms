@@ -1,3 +1,8 @@
+---
+title: "Search Scope"
+description: "Search Total CMS collections with case-insensitive queries, AND/OR logic, quoted phrases, property-specific targeting, and result prioritization."
+---
+
 ## Search Scope
 
 This search function will be to search through a single collection. The results can be displayed with one of the Loop stacks. This is similar to how search works with blog in T1.

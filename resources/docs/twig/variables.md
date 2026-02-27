@@ -1,3 +1,8 @@
+---
+title: "GET Parameter Data"
+description: "Access URL query parameters, POST request data, and session variables in Total CMS Twig templates using getData, postData, and sessionData."
+---
+
 
 ## GET Parameter Data
 

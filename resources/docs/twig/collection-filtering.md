@@ -1,3 +1,8 @@
+---
+title: "Collection Filtering and Sorting"
+description: "Filter and sort Total CMS collections in Twig using filterCollection and sortCollection with comparison operators, date ranges, and manual ordering."
+---
+
 # Collection Filtering and Sorting
 
 Total CMS provides powerful `filterCollection` and `sortCollection` Twig filters for advanced data manipulation. These filters allow you to perform complex filtering operations on collections using a variety of operators, making it easy to create dynamic, filtered content displays.

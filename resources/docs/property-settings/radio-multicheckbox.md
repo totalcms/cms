@@ -1,3 +1,8 @@
+---
+title: "Radio & Multicheckbox"
+description: "Configure radio button and multicheckbox fields in Total CMS with responsive fieldGrid layout settings for multi-column option displays."
+---
+
 # Radio & Multicheckbox
 
 Radio and Multicheckbox fields allow users to select options from multiple choices. For how to define options, see [All Field Settings](docs/property-options/static-options).

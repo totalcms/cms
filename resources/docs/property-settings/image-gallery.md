@@ -1,3 +1,8 @@
+---
+title: "Image & Gallery"
+description: "Configure image and gallery upload fields in Total CMS with validation rules, location stripping, and image or text watermark settings."
+---
+
 # Image & Gallery
 
 ## Upload Validation

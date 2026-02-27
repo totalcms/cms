@@ -1,3 +1,8 @@
+---
+title: "Filesystem"
+description: "Explore the Total CMS filesystem structure including tcms-data directory, collection JSON files, object assets, indexes, and custom schema storage."
+---
+
 # Filesystem
 
 By default all data for Total CMS is stored in

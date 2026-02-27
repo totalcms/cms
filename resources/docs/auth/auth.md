@@ -1,3 +1,8 @@
+---
+title: "Page Lock"
+description: "Protect pages and content sections with Total CMS authentication using page locks, section locks, and user data access in Twig templates."
+---
+
 ## Page Lock
 
 This stack will lock a page. You can allow anyone who authenticates or also require that they be in a group. Another interesting feature is that you can also create a custom authentication collection. The default is the auth collection. That collection is required to be used to log into the admin dashboard. However, you can create your own for clients that can then be used to authenticate on your webpages. Users in these custom auth collections will not be allowed to log into the dashboard.

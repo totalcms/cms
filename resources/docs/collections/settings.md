@@ -1,3 +1,8 @@
+---
+title: "Collection Settings Reference"
+description: "Complete reference for Total CMS collection .meta.json settings including URL configuration, dashboard display, access control, sorting, and schema overrides."
+---
+
 # Collection Settings Reference
 
 This document provides a comprehensive reference for all settings available in a Total CMS collection's metadata (`.meta.json` file). These settings control how collections behave, how they appear in the admin interface, and how their data can be accessed.

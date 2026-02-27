@@ -1,3 +1,8 @@
+---
+title: "Sitemap Builder"
+description: "Generate XML sitemaps for Total CMS collections with include and exclude filtering, custom date fields, and backward-compatible URL parameters."
+---
+
 # Sitemap Builder
 
 Total CMS provides automatic XML sitemap generation for all collections with built-in filtering capabilities.

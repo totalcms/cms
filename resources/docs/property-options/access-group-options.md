@@ -1,3 +1,8 @@
+---
+title: "Access Group Options"
+description: "Populate form field options with available Total CMS access groups for assigning group-based permissions to objects and collections."
+---
+
 # Access Group Options
 
 Automatically populate form field options with all available access groups from the system. This is useful for assigning access control to objects, collections, or any entity that needs group-based permissions.

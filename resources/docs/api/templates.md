@@ -1,3 +1,8 @@
+---
+title: "Templates"
+description: "Customize Total CMS login and download authentication pages using special Twig templates with built-in form variables and styling."
+---
+
 # Templates
 
 The following are special template that you can use to customize different parts of the CMS.

@@ -1,3 +1,8 @@
+---
+title: "Text & Textarea"
+description: "Configure text and textarea fields in Total CMS with maxlength, minlength, pattern validation, readonly, disabled, rows, and HTML sanitization settings."
+---
+
 # Text & Textarea
 
 ## Text Input Settings (text, url, tel, phone, etc.)

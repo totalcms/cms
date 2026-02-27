@@ -1,3 +1,8 @@
+---
+title: "File & Depot"
+description: "Configure file and depot upload fields in Total CMS with size limits, file type restrictions, filename validation, and collection-based access control."
+---
+
 # File & Depot
 
 File fields handle single file uploads. Depot fields handle multiple file uploads. Both support validation rules and access control settings.

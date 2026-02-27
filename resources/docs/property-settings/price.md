@@ -1,3 +1,8 @@
+---
+title: "Price Field"
+description: "Configure price fields in Total CMS with currency icon options for dollar, euro, pound, and yen with automatic decimal step handling."
+---
+
 # Price Field
 
 Price fields are specialized number fields for monetary values. They automatically have a step of `0.01` (hardcoded) for proper decimal handling and display with a currency icon.

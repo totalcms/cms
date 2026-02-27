@@ -1,3 +1,8 @@
+---
+title: "Password Fields"
+description: "Set up password fields in Total CMS with automatic confirmation input, match validation, and customizable placeholder text."
+---
+
 # Password Fields
 
 Password fields automatically include a confirmation field and built-in validation to ensure both passwords match.

@@ -1,3 +1,8 @@
+---
+title: "Collection Form Settings"
+description: "Configure Total CMS collection form behavior including help text display, form actions like redirects, webhooks, mailer integration, and validation."
+---
+
 # Collection Form Settings
 
 Collection Form Settings allow you to customize the behavior and appearance of object creation and editing forms in your collections. These settings are stored in the `.meta.json` file of each collection and provide control over help text display, form validation, and post-save actions.

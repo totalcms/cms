@@ -1,3 +1,8 @@
+---
+title: "Static Options"
+description: "Define static options for select, radio, multicheckbox, and list fields in Total CMS using simple lists, label/value pairs, or grouped options."
+---
+
 # Static Options
 
 Options can be used on the following field types: **text** (as datalist), **select**, **multiselect**, **radio**, **multicheckbox**, **list**, and **color**.

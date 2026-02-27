@@ -1,3 +1,8 @@
+---
+title: "Styled Text"
+description: "Configure the Tiptap rich text editor in Total CMS with toolbar options, inline styles, HTML snippets, color palettes, and image upload rules."
+---
+
 # Styled Text
 
 The styled text field provides a rich text editor powered by Tiptap. It supports a wide range of settings for customizing the editor's appearance, toolbar, and behavior.

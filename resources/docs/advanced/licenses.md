@@ -1,3 +1,8 @@
+---
+title: "Licenses"
+description: "Compare Total CMS Lite, Standard, and Pro license editions with per-domain pricing, feature breakdowns, free trial access, and edition simulation."
+---
+
 # Licenses
 
 Total CMS is licensed on a per domain basis.

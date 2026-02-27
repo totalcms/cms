@@ -1,3 +1,8 @@
+---
+title: "PHP API"
+description: "Use the TotalCMS PHP class for server-side page rendering with Twig templates and CLI automation scripts with full method reference."
+---
+
 # PHP API
 
 The `TotalCMS` class is the main entry point for using Total CMS from PHP. It can be used both for rendering pages with Twig templates and for writing standalone CLI automation scripts.

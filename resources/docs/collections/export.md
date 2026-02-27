@@ -1,3 +1,8 @@
+---
+title: "Exporting Data"
+description: "Export Total CMS collection data as JSON, CSV, or ZIP archives with include and exclude filtering for backups and migrations."
+---
+
 # Exporting Data
 
 Total CMS provides comprehensive data export functionality to help you backup, migrate, or integrate your content with external systems.

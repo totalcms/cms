@@ -1,3 +1,8 @@
+---
+title: "Twig Overview"
+description: "Learn Twig templating basics in Total CMS including variables, filters, functions, template inheritance, and working with collections and images."
+---
+
 # Twig Overview
 
 Total CMS uses Twig as its templating engine, providing a powerful, secure, and designer-friendly way to create dynamic templates. This guide covers how Twig is integrated into Total CMS and how to use it effectively.

@@ -1,3 +1,8 @@
+---
+title: "Password Reset"
+description: "Implement secure password reset workflows in Total CMS with token-based email verification, customizable templates, and configurable expiration."
+---
+
 # Password Reset
 
 Total CMS includes a complete password reset workflow that allows users to securely reset their passwords via email.

@@ -1,3 +1,8 @@
+---
+title: "Data Model"
+description: "Understand the Total CMS flat-file data model with 13 collection types, 16 property types, and JSON-based object storage without a database."
+---
+
 # Data Model
 
 Total CMS uses a flat file system in order to store its data, instead of a database. All data is saved in json files.

@@ -1,3 +1,8 @@
+---
+title: "Server Sizing Guide"
+description: "Choose the right CPU, RAM, and storage for Total CMS with guidance on APCu cache tuning, PHP-FPM workers, Redis setup, and multi-site hosting."
+---
+
 # Server Sizing Guide
 
 This guide helps you choose the right server resources for running Total CMS 3. Whether you're hosting a single site or managing multiple sites on one server, understanding what drives CPU, memory, and disk usage will help you make informed decisions.

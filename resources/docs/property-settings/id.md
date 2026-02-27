@@ -1,3 +1,8 @@
+---
+title: "ID"
+description: "Auto-generate object IDs in Total CMS from field values using autogen templates with variables like uuid, date components, and custom formats."
+---
+
 # ID
 
 For the ID field, you can use the following setting to autogenerate the id from one or

@@ -1,3 +1,8 @@
+---
+title: "Load More"
+description: "Add HTMX-powered infinite scroll and load more buttons to Total CMS collection pages with server-side first page rendering and API pagination."
+---
+
 # Load More
 
 Total CMS provides "load more" helpers that render the first page of results server-side, then fetch subsequent pages via API as the user scrolls or clicks a button.

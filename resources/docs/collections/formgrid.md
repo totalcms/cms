@@ -1,3 +1,8 @@
+---
+title: "Form Grid Layout"
+description: "Arrange admin form fields in multi-column layouts using CSS Grid syntax with column spanning, dividers, and section headers in Total CMS schemas."
+---
+
 # Form Grid Layout
 
 The `formgrid` setting in a schema controls how form fields are arranged in the admin dashboard. It uses CSS Grid to create multi-column layouts, allowing you to organize fields in rows and columns.

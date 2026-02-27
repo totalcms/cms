@@ -1,3 +1,8 @@
+---
+title: "Index Filtering"
+description: "Filter Total CMS collection indexes with include and exclude criteria for sitemaps, RSS feeds, and API endpoints using boolean, string, and array values."
+---
+
 # Index Filtering
 
 Total CMS provides a powerful `IndexFilter` service for filtering index objects based on include/exclude criteria. This filtering system is used throughout the CMS for sitemaps, RSS feeds, API endpoints, and custom implementations.
