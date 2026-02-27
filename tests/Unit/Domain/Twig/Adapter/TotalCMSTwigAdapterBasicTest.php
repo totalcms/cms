@@ -319,7 +319,26 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testProcessJobQueueCommandGeneratesCorrectCommand(): void
 	{
-		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->env = 'prod';
+
+		$adapter = new AdminTwigAdapter(
+			$config,
+			$this->createMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaLister::class),
+			$this->createMock(\TotalCMS\Domain\Template\Service\TemplateLister::class),
+			$this->createMock(\TotalCMS\Domain\JobQueue\Service\JobManager::class),
+			$this->createMock(\TotalCMS\Domain\Cache\Service\DevModeManager::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionEditionService::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheReporter::class),
+			$this->createMock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Infrastructure\Diagnostics\ServerChecker::class),
+			$this->createMock(\TotalCMS\Infrastructure\Diagnostics\LogAnalyzer::class),
+			$this->createMock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheSizingAdvisor::class),
+		);
 
 		// Mock $_SERVER for test
 		$_SERVER['DOCUMENT_ROOT'] = '/var/www/html';
