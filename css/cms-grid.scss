@@ -170,6 +170,17 @@
 			overflow              : visible;
 			padding               : 0; /* Remove padding from grid item */
 
+			/* When auto-linking wraps content in an <a>, inherit grid layout */
+			> a.link-container {
+				display               : grid;
+				grid-template-columns : 200px 1fr;
+				gap                   : 0;
+				align-items           : stretch;
+				grid-column           : 1 / -1;
+				text-decoration       : none;
+				color                 : inherit;
+			}
+
 			.cms-image {
 				margin        : 0;
 				width         : 200px;
@@ -202,6 +213,10 @@
 			.cms-grid-item {
 				grid-template-columns : 120px 1fr;
 
+				> a.link-container {
+					grid-template-columns : 120px 1fr;
+				}
+
 				.cms-image {
 					width : 120px;
 				}
@@ -213,6 +228,11 @@
 				grid-template-columns : 1fr;
 				grid-template-rows    : 200px auto;
 				padding               : var(--cms-card-padding);
+
+				> a.link-container {
+					grid-template-columns : 1fr;
+					grid-template-rows    : 200px auto;
+				}
 
 				.cms-image {
 					margin        : calc(var(--cms-card-padding) * -1) calc(var(--cms-card-padding) * -1) var(--cms-item-spacing);
