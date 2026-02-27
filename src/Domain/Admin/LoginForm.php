@@ -35,6 +35,7 @@ readonly class LoginForm implements \Stringable
 	) {
 	}
 
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function build(): string
 	{
 		// Store current URL in session for redirect on login error
