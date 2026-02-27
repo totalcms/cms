@@ -32,3 +32,81 @@
 		}
 	}
 }
+
+.login-divider {
+	display     : flex;
+	align-items : center;
+	gap         : 1rem;
+	color       : oklch(var(--totalform-darkgray));
+	font-size   : 0.875rem;
+
+	&::before,
+	&::after {
+		content    : '';
+		flex       : 1;
+		height     : 1px;
+		background : oklch(var(--totalform-border-color));
+	}
+}
+
+.passkey-field {
+	.cms-passkey-login {
+		width : 100%;
+	}
+}
+
+.passkeys-manager {
+	margin-top : 2rem;
+	padding    : 1.5rem;
+	border     : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+
+	h2 {
+		margin-top : 0;
+	}
+
+	p {
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.875rem;
+	}
+}
+
+.passkeys-table {
+	width           : 100%;
+	border-collapse : collapse;
+	margin-bottom   : 1rem;
+
+	th, td {
+		padding    : 0.5rem 0.75rem;
+		text-align : left;
+		border-bottom : 1px solid oklch(var(--totalform-border-color));
+	}
+
+	th {
+		font-weight : 600;
+		font-size   : 0.8rem;
+		color       : oklch(var(--totalform-darkgray));
+	}
+}
+
+.passkeys-empty {
+	color      : oklch(var(--totalform-darkgray));
+	font-style : italic;
+}
+
+.passkey-status {
+	margin-top : 0.75rem;
+	padding    : 0.5rem 0.75rem;
+	border-radius : var(--totalform-radius);
+	font-size  : 0.875rem;
+}
+
+.passkey-status-success {
+	background : oklch(var(--totalform-success) / 0.1);
+	color      : oklch(var(--totalform-success));
+}
+
+.passkey-status-error {
+	background : oklch(var(--totalform-danger) / 0.1);
+	color      : oklch(var(--totalform-danger));
+}

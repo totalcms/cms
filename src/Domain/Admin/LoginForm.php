@@ -115,8 +115,11 @@ readonly class LoginForm implements \Stringable
 			$flashHtml = implode('', $messages);
 		}
 
+		// Passkey login button
+		$passkeyHtml = $this->buildPasskeyButton();
+
 		// Wrap in section
-		$sectionContent = $form . $flashHtml;
+		$sectionContent = $form . $passkeyHtml . $flashHtml;
 
 		return HTMLUtils::element('section', $sectionContent, [
 			'class' => 'login-form',
@@ -144,6 +147,7 @@ readonly class LoginForm implements \Stringable
 			'aria-describedby' => "help-{$uuid}",
 			'required'         => '',
 			'autofocus'        => '',
+			'autocomplete'     => 'username webauthn',
 		]);
 
 		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
@@ -214,6 +218,25 @@ readonly class LoginForm implements \Stringable
 			'class'     => 'form-field checkbox-field',
 			'data-type' => 'checkbox',
 		]);
+	}
+
+	private function buildPasskeyButton(): string
+	{
+		$divider = HTMLUtils::element('div', HTMLUtils::element('span', 'or'), [
+			'class' => 'login-divider',
+		]);
+
+		$button = HTMLUtils::button('Sign in with Passkey', [
+			'type'     => 'button',
+			'class'    => 'dash-button cms-passkey-login no-icon',
+			'data-api' => $this->api,
+		]);
+
+		$field = HTMLUtils::element('div', $button, [
+			'class' => 'form-field passkey-field',
+		]);
+
+		return $divider . $field;
 	}
 
 	public function __toString(): string

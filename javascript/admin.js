@@ -16,6 +16,8 @@ import ThemeSwitcher from './theme-switcher';
 import initExternalLinks from './external-links';
 import DocSearch from './totalform/doc-search';
 import initDocHighlight from './doc-highlight';
+import PasskeyLogin from './passkey-login';
+import PasskeyManager from './passkeys';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
@@ -115,6 +117,14 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	// Highlight search terms in docs
 	initDocHighlight();
+
+	// Passkey login button (on login page)
+	const passkeyLoginBtn = document.querySelector('.cms-passkey-login');
+	if (passkeyLoginBtn) new PasskeyLogin(passkeyLoginBtn);
+
+	// Passkey manager (on profile page)
+	const passkeyMgr = document.getElementById('passkeys-manager');
+	if (passkeyMgr) new PasskeyManager(passkeyMgr);
 
 	initExternalLinks();
 });

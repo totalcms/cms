@@ -12,6 +12,7 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/apikey.php')($app);
 	(require __DIR__ . '/routes/assets.php')($app);
 	(require __DIR__ . '/routes/auth.php')($app);
+	(require __DIR__ . '/routes/passkeys.php')($app);
 	(require __DIR__ . '/routes/cache.php')($app);
 	(require __DIR__ . '/routes/emergency.php')($app);
 	(require __DIR__ . '/routes/collections.php')($app);

@@ -74,9 +74,14 @@ class SessionKeyIntegrationTest extends TestCase
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $activityKeys);
 		$this->assertCount(4, $activityKeys);
 
+		$webauthnKeys = SessionKeys::getWebAuthnKeys();
+		$this->assertContains(SessionKeys::WEBAUTHN_REGISTER_OPTIONS, $webauthnKeys);
+		$this->assertContains(SessionKeys::WEBAUTHN_AUTH_OPTIONS, $webauthnKeys);
+		$this->assertCount(2, $webauthnKeys);
+
 		// Ensure all grouped keys are in the main list
 		$allKeys     = SessionKeys::getAllKeys();
-		$groupedKeys = array_merge($authKeys, $requestKeys, $activityKeys);
+		$groupedKeys = array_merge($authKeys, $requestKeys, $activityKeys, $webauthnKeys);
 
 		foreach ($groupedKeys as $key) {
 			$this->assertContains($key, $allKeys, "Grouped key '$key' should be in getAllKeys()");

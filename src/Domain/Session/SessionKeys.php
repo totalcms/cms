@@ -30,6 +30,10 @@ final class SessionKeys
 	public const LOGIN_ORIGIN      = 'totalcms.loginOrigin';
 	public const DOWNLOAD_ATTEMPTS = 'totalcms.downloadAttempts';
 
+	// WebAuthn Keys
+	public const WEBAUTHN_REGISTER_OPTIONS = 'totalcms.webauthn.register_options';
+	public const WEBAUTHN_AUTH_OPTIONS     = 'totalcms.webauthn.auth_options';
+
 	// Security Keys (Note: CSRF uses its own SESSION_KEY constant)
 	// public const CSRF_TOKENS = '_csrf'; // Managed by CSRFTokenManager
 
@@ -50,6 +54,8 @@ final class SessionKeys
 			self::LOGIN_ATTEMPTS,
 			self::LOGIN_ORIGIN,
 			self::DOWNLOAD_ATTEMPTS,
+			self::WEBAUTHN_REGISTER_OPTIONS,
+			self::WEBAUTHN_AUTH_OPTIONS,
 		];
 	}
 
@@ -104,6 +110,19 @@ final class SessionKeys
 			self::LOGIN_ATTEMPTS,
 			self::LOGIN_ORIGIN,
 			self::DOWNLOAD_ATTEMPTS,
+		];
+	}
+
+	/**
+	 * Get all WebAuthn/passkey-related keys.
+	 *
+	 * @return array<string> WebAuthn session keys
+	 */
+	public static function getWebAuthnKeys(): array
+	{
+		return [
+			self::WEBAUTHN_REGISTER_OPTIONS,
+			self::WEBAUTHN_AUTH_OPTIONS,
 		];
 	}
 }

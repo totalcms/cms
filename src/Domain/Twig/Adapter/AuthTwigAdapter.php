@@ -9,6 +9,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -328,5 +329,37 @@ readonly class AuthTwigAdapter
 		}
 
 		return $this->accessControl->canAccessDocs($userData['id']);
+	}
+
+	/**
+	 * Render the passkey manager UI for registering and managing passkeys.
+	 *
+	 * Usage in Twig: {{ cms.auth.passkeyManager()|raw }}
+	 */
+	public function passkeyManager(): string
+	{
+		if (!$this->accessManager->userLoggedIn()) {
+			return '';
+		}
+
+		$heading     = HTMLUtils::element('h2', 'Passkeys');
+		$description = HTMLUtils::element('p', 'Register passkeys to sign in without a password using Touch ID, Face ID, 1Password, or a security key.');
+		$list        = HTMLUtils::element('div', '', ['id' => 'passkeys-list']);
+		$button      = HTMLUtils::button('Register New Passkey', [
+			'type'  => 'button',
+			'class' => 'dash-button',
+			'id'    => 'passkey-register-btn',
+		]);
+		$status = HTMLUtils::element('div', '', [
+			'id'    => 'passkey-status',
+			'class' => 'cms-hide',
+			'role'  => 'status',
+		]);
+
+		return HTMLUtils::element('section', $heading . $description . $list . $button . $status, [
+			'class'    => 'passkeys-manager',
+			'id'       => 'passkeys-manager',
+			'data-api' => $this->config->api,
+		]);
 	}
 }
