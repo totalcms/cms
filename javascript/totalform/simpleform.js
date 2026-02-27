@@ -59,18 +59,11 @@ export default class SimpleForm {
 	createFieldWrapper(container) {
 		const input = container.querySelector('input,textarea,select');
 		const property = input ? input.name : '';
-		let editor = null;
-
-		// Initialize CodeMirror for JSON fields
-		if (container.dataset.type === 'json' && input && input.tagName === 'TEXTAREA') {
-			editor = this.initJsonEditor(input);
-		}
 
 		return {
 			container: container,
 			property: property,
 			input: input,
-			editor: editor,
 
 			getValue() {
 				if (!input) return '';
@@ -82,7 +75,7 @@ export default class SimpleForm {
 						const checked = container.querySelector('input[type="radio"]:checked');
 						return checked ? checked.value : '';
 					default:
-						return editor ? editor.getValue() : input.value;
+						return input.value;
 				}
 			},
 
@@ -109,40 +102,6 @@ export default class SimpleForm {
 				container.classList.remove("error");
 			}
 		};
-	}
-
-	initJsonEditor(textarea) {
-		if (!window.TotalCMSCodeMirror) return null;
-
-		const rows = parseInt(textarea.getAttribute('rows')) || 5;
-		const lineHeight = 20;
-		const height = rows * lineHeight + 20;
-
-		const editor = window.TotalCMSCodeMirror.createJsonEditor(textarea, {
-			matchBrackets: true,
-			autoCloseBrackets: true,
-			lineWrapping: true,
-		});
-
-		editor.setSize(null, height);
-
-		// Sync editor content back to textarea for form submission
-		editor.on('change', () => {
-			textarea.value = editor.getValue();
-		});
-
-		// Refresh when the editor becomes visible (e.g. inside a dialog)
-		const wrapper = editor.getWrapperElement();
-		const observer = new IntersectionObserver((entries) => {
-			if (entries[0].isIntersecting) {
-				editor.refresh();
-			}
-		});
-		observer.observe(wrapper);
-
-		setTimeout(() => editor.refresh(), 150);
-
-		return editor;
 	}
 
     isDomNode(node){

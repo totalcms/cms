@@ -244,15 +244,31 @@ readonly class SettingsValidator
 	 */
 	private function processPresets(array $data): array
 	{
-		if (isset($data['definitions']) && is_string($data['definitions'])) {
-			if ($data['definitions'] === '') {
-				return $data;
-			}
-			$definitions = json_decode($data['definitions'], true);
-			if (json_last_error() === JSON_ERROR_NONE && is_array($definitions)) {
-				$data['definitions'] = $definitions;
+		if (!isset($data['presetsettings']) || !is_string($data['presetsettings'])) {
+			return $data;
+		}
+
+		if ($data['presetsettings'] === '') {
+			return $data;
+		}
+
+		$definitions = json_decode($data['presetsettings'], true);
+		if (json_last_error() !== JSON_ERROR_NONE || !is_array($definitions)) {
+			return $data;
+		}
+
+		// Deck submits items as {key: {id, settings}, ...}
+		// Decode each item's settings JSON string into an array
+		foreach ($definitions as $key => $item) {
+			if (is_array($item) && isset($item['settings']) && is_string($item['settings'])) {
+				$settings = json_decode($item['settings'], true);
+				if (json_last_error() === JSON_ERROR_NONE && is_array($settings)) {
+					$definitions[$key]['settings'] = $settings;
+				}
 			}
 		}
+
+		$data['presetsettings'] = $definitions;
 
 		return $data;
 	}

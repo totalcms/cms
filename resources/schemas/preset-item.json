@@ -1,0 +1,30 @@
+{
+	"$schema"     : "http://json-schema.org/draft-07/schema#",
+	"$id"         : "https://www.totalcms.co/schemas/preset-item.json",
+	"id"          : "preset-item",
+	"title"       : "Preset Item",
+	"description" : "A named preset of property settings",
+	"type"        : "object",
+	"properties"  : {
+		"id": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "Preset ID",
+			"field"       : "id",
+			"factory"     : "uid",
+			"placeholder" : "styledtext-simple"
+		},
+		"settings": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
+			"field"       : "json",
+			"label"       : "Settings",
+			"placeholder" : "{\"height\": 400, \"wordCounterCount\": true}",
+			"settings"    : {
+				"rows" : 20
+			}
+		}
+	},
+	"required": [
+		"id",
+		"settings"
+	]
+}

@@ -173,7 +173,10 @@ class ObjectForm extends TotalForm
 		$presetName = $settings['preset'];
 		unset($settings['preset']);
 
-		$presetValues = $this->config->presets[$presetName] ?? [];
+		$preset = $this->config->presets[$presetName] ?? [];
+
+		// Deck format stores presets as {id, settings}, extract the settings
+		$presetValues = is_array($preset['settings'] ?? null) ? $preset['settings'] : $preset;
 
 		if (!is_array($presetValues) || $presetValues === []) {
 			return $settings;

@@ -4,15 +4,17 @@
 	"description" : "Named presets of property settings for reuse across schemas and collections",
 	"type"        : "object",
 	"properties"  : {
-		"definitions": {
-			"type"        : "json",
-			"default"     : "",
-			"label"       : "Property Setting Presets",
-			"help"        : "Named presets of property settings. Each key is a preset name, and the value is an object of settings that will be applied. Reference in any property with <code>{\"preset\": \"name\"}</code>.",
-			"placeholder" : "{\"blog-editor\": {\"height\": 400, \"wordCounterCount\": true}, \"simple-text\": {\"height\": 200}}",
-			"settings"    : {
-				"rows" : 30
-			}
-		}
+        "presetsettings": {
+            "field": "deck",
+            "label": "Property Setting Presets",
+            "help": "Named presets of property settings. Each preset has a name and a settings object. Reference in any property with {\"preset\": \"name\"}",
+            "deckref": "https:\/\/www.totalcms.co\/schemas\/preset-item.json",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/deck.json",
+            "patternProperties": {
+                "^[a-zA-Z]\\w*$": {
+                    "$ref": "https:\/\/www.totalcms.co\/schemas\/preset-item.json"
+                }
+            }
+        }
 	}
 }

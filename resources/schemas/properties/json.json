@@ -1,0 +1,17 @@
+{
+	"$id": "https://www.totalcms.co/schemas/properties/json.json",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"anyOf": [
+		{
+			"type"        : "object",
+			"description" : "JSON field for structured data. Stores arbitrary key-value objects."
+		},
+		{
+			"type"        : "string",
+			"description" : "JSON field as a raw JSON string."
+		},
+		{
+			"$ref": "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
+}

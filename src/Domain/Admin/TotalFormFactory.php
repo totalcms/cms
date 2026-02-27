@@ -609,6 +609,9 @@ readonly class TotalFormFactory
 		$formfields = '';
 
 		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
+			// Resolve field type: "field" takes precedence over "type"
+			$fieldType = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
+
 			// Get current value with priority: sectionData > defaults > schema default > empty string
 			$currentValue = '';
 			if (isset($fieldSchema['default'])) {
@@ -625,13 +628,13 @@ readonly class TotalFormFactory
 			}
 
 			// Special handling for JSON fields - convert arrays to JSON strings for display
-			if ($fieldSchema['type'] === 'json' && is_array($currentValue)) {
+			if ($fieldType === 'json' && is_array($currentValue)) {
 				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
 			}
 
 			// Build field options
 			$fieldSettings = [
-				'field'       => $fieldSchema['type'],
+				'field'       => $fieldType,
 				'label'       => $fieldSchema['label'] ?? '',
 				'help'        => $fieldSchema['help'] ?? '',
 				'placeholder' => $fieldSchema['placeholder'] ?? '',
@@ -641,6 +644,16 @@ readonly class TotalFormFactory
 				'max'         => $fieldSchema['max'] ?? null,
 				'settings'    => $fieldSchema['settings'] ?? [],
 			];
+
+			// Merge deck-specific schema keys into settings
+			if ($fieldType === 'deck') {
+				if (isset($fieldSchema['deckref'])) {
+					$fieldSettings['settings']['deckref'] = $fieldSchema['deckref'];
+				}
+				if (isset($fieldSchema['deckItemLabel'])) {
+					$fieldSettings['settings']['deckItemLabel'] = $fieldSchema['deckItemLabel'];
+				}
+			}
 
 			// Special handling for select fields with options
 			if (isset($fieldSchema['options'])) {
@@ -656,15 +669,13 @@ readonly class TotalFormFactory
 				$fieldSettings['options'] = $timezoneOptions;
 			}
 
-			$formfields .= $this->field($fieldSchema['type'], $fieldName, $fieldSettings);
+			$formfields .= $this->field($fieldType, $fieldName, $fieldSettings);
 		}
 
-		return $this->simple('/admin/settings/' . $section, $formfields, [
+		return $this->totalform('/admin/settings/' . $section, $formfields, [
 			'method'      => 'POST',
-			'label'       => 'Save Settings',
-			'refresh'     => true,
+			'save'        => 'Save Settings',
 			'class'       => 'help-on-hover help-box',
-			'buttonClass' => 'cms-save',
 		]);
 	}
 
