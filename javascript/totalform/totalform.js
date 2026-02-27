@@ -353,9 +353,15 @@ export default class TotalForm {
     }
 
 	validate() {
-		this.fields.forEach(field => field.validate());
+		let isValid = true;
 
-		if (this.form.checkValidity()) {
+		this.fields.forEach(field => {
+			if (!field.validate()) {
+				isValid = false;
+			}
+		});
+
+		if (isValid && this.form.checkValidity()) {
 			this.clearErrorSummary();
 			return true;
 		}

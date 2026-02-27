@@ -38,6 +38,9 @@ export default class DeckField extends TotalField {
         this.addButton?.addEventListener("click", this.addItem.bind(this));
 
         this.updateAddButton();
+
+        // Propagate subfield changes to the deck's own changed handler
+        this.container.addEventListener("subfield-change", () => this.changed());
     }
 
     initOidCounter() {

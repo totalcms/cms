@@ -70,6 +70,18 @@ export default class JSONField extends TotalField {
         return value.length > 0 ? JSON.parse(value) : "";
     }
 
+    changed() {
+        this.container.classList.remove("error");
+        this.input.setCustomValidity("");
+        this.container.classList.add("unsaved");
+
+        if (this.isSubField()) {
+            this.dispatcher.dispatchEvent("subfield-change", { field: this });
+            return;
+        }
+        this.dispatcher.dispatchEvent("field-change", { field: this });
+    }
+
     validate() {
 		if (!this.isVisible()) return true;
 
