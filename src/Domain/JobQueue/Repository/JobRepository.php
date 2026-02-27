@@ -96,7 +96,7 @@ class JobRepository
 			mkdir($dir, 0755, true);
 		}
 
-		$db = new \PDO('sqlite:' . $dbPath);
+		$db       = new \PDO('sqlite:' . $dbPath);
 		$this->db = $db;
 
 		if (!$exists) {

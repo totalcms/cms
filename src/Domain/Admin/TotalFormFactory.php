@@ -385,11 +385,11 @@ readonly class TotalFormFactory
 
 		if ($id !== '') {
 			$hiddenMailerId = HTMLUtils::inlineElement('input', [
-				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id
+				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id,
 			]);
 
-			$bulkConfigFields = $form->field('bulkCollection').
-				$form->field('bulkInclude').
+			$bulkConfigFields = $form->field('bulkCollection') .
+				$form->field('bulkInclude') .
 				$form->field('bulkExclude');
 			$bulkConfigDetails = HTMLUtils::details('Audience', $bulkConfigFields);
 
@@ -405,12 +405,12 @@ readonly class TotalFormFactory
 			$bulkPreviewForm = $form->field('bulkPreviewObjectId', [
 				'field'       => 'text',
 				'label'       => 'Preview Object ID',
-				'placeholder' => 'Enter an object ID to preview'
+				'placeholder' => 'Enter an object ID to preview',
 			]) . HTMLUtils::element('button', 'Preview', $previewAttrs);
 			$bulkPreviewForm    = HTMLUtils::element('div', $bulkPreviewForm, ['class' => 'bulk-preview-form']);
 			$bulkPreviewOutput  = HTMLUtils::element('div', '', [
 				'id'    => 'bulk-preview-output',
-				'class' => 'bulk-preview-output'
+				'class' => 'bulk-preview-output',
 			]);
 			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
 
@@ -431,10 +431,10 @@ readonly class TotalFormFactory
 				'help'        => 'Override recipient email for testing. All emails will be sent to this address instead.',
 			]) .
 				$form->field('bulkscheduledAt', [
-				'field'       => 'datetime',
-				'label'       => 'Schedule',
-				'placeholder' => 'Enter a date and time to schedule this email'
-			]) . HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs);
+					'field'       => 'datetime',
+					'label'       => 'Schedule',
+					'placeholder' => 'Enter a date and time to schedule this email',
+				]) . HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs);
 			$bulkSendForm    = HTMLUtils::element('div', $bulkSendForm, ['class' => 'bulk-send-form']);
 			$bulkSendOutput  = '<div id="bulk-send-output" class="bulk-send-output"></div>';
 			$bulkSendDetails = HTMLUtils::details('Send', $bulkSendForm . $bulkSendOutput);

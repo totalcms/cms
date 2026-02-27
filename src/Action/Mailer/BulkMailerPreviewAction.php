@@ -44,6 +44,7 @@ readonly class BulkMailerPreviewAction
 
 		if (!$result['success']) {
 			$message = htmlspecialchars((string)($result['message'] ?? 'Preview failed'));
+
 			return $this->htmlResponse($response, '<span class="cms-error">' . $message . '</span>');
 		}
 

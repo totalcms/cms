@@ -27,7 +27,7 @@ final class RenderTwigAdapterTest extends TestCase
 	{
 		$this->htmxRenderer = $this->createMock(HtmxRenderer::class);
 
-		$config = $this->createMock(Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '/api';
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
@@ -90,12 +90,10 @@ final class RenderTwigAdapterTest extends TestCase
 			->method('buildInitialTrigger')
 			->with(
 				$this->anything(),
-				$this->callback(function (array $params): bool {
-					return $params['format'] === 'html'
+				$this->callback(fn (array $params): bool => $params['format'] === 'html'
 						&& $params['template'] === 'blog/card'
 						&& $params['limit'] === '10'
-						&& $params['offset'] === '10';
-				}),
+						&& $params['offset'] === '10'),
 				'revealed',
 				'Load More',
 				'',
@@ -115,12 +113,10 @@ final class RenderTwigAdapterTest extends TestCase
 			->method('buildInitialTrigger')
 			->with(
 				$this->anything(),
-				$this->callback(function (array $params): bool {
-					return $params['sort'] === 'date:desc'
+				$this->callback(fn (array $params): bool => $params['sort'] === 'date:desc'
 						&& $params['include'] === 'published:true'
 						&& $params['exclude'] === 'draft:true'
-						&& $params['search'] === 'hello';
-				}),
+						&& $params['search'] === 'hello'),
 				$this->anything(),
 				$this->anything(),
 				$this->anything(),
@@ -143,10 +139,8 @@ final class RenderTwigAdapterTest extends TestCase
 			->method('buildInitialTrigger')
 			->with(
 				$this->anything(),
-				$this->callback(function (array $params): bool {
-					return ($params['trigger'] ?? '') === 'click'
-						&& ($params['label'] ?? '') === 'Show More';
-				}),
+				$this->callback(fn (array $params): bool => ($params['trigger'] ?? '') === 'click'
+						&& ($params['label'] ?? '') === 'Show More'),
 				'click',
 				'Show More',
 				$this->anything(),
@@ -167,9 +161,7 @@ final class RenderTwigAdapterTest extends TestCase
 			->method('buildInitialTrigger')
 			->with(
 				$this->anything(),
-				$this->callback(function (array $params): bool {
-					return ($params['transition'] ?? '') === '1';
-				}),
+				$this->callback(fn (array $params): bool => ($params['transition'] ?? '') === '1'),
 				$this->anything(),
 				$this->anything(),
 				$this->anything(),
@@ -236,11 +228,9 @@ final class RenderTwigAdapterTest extends TestCase
 			->method('buildInitialTrigger')
 			->with(
 				$this->anything(),
-				$this->callback(function (array $params): bool {
-					return $params['template'] === 'cards/item'
+				$this->callback(fn (array $params): bool => $params['template'] === 'cards/item'
 						&& $params['limit'] === '6'
-						&& $params['offset'] === '6';
-				}),
+						&& $params['offset'] === '6'),
 				$this->anything(),
 				$this->anything(),
 				$this->anything(),

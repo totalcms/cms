@@ -65,7 +65,7 @@ final class BulkMailerActionTest extends TestCase
 
 	public function testReturnsSuccessHtmlWithBatchId(): void
 	{
-		$request = $this->createRequest(['mailerId' => 'test-mailer']);
+		$request  = $this->createRequest(['mailerId' => 'test-mailer']);
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('queueBulkSend')
@@ -86,7 +86,7 @@ final class BulkMailerActionTest extends TestCase
 
 	public function testReturnsErrorHtmlOnServiceFailure(): void
 	{
-		$request = $this->createRequest(['mailerId' => 'test-mailer']);
+		$request  = $this->createRequest(['mailerId' => 'test-mailer']);
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('queueBulkSend')
@@ -104,7 +104,7 @@ final class BulkMailerActionTest extends TestCase
 
 	public function testResponseHasHtmlContentType(): void
 	{
-		$request = $this->createRequest(['mailerId' => 'test-mailer']);
+		$request  = $this->createRequest(['mailerId' => 'test-mailer']);
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('queueBulkSend')
@@ -144,7 +144,7 @@ final class BulkMailerActionTest extends TestCase
 		$response = $this->createMock(ResponseInterface::class);
 		$response->method('getBody')->willReturn($stream);
 		$response->method('withHeader')->willReturnCallback(
-			function (string $name, string $value) use ($response, &$buffer): ResponseInterface {
+			function (string $name, string $value) use (&$buffer): ResponseInterface {
 				// Return a new mock that remembers the header
 				$newResponse = $this->createMock(ResponseInterface::class);
 				$stream      = $this->createMock(StreamInterface::class);
@@ -160,9 +160,7 @@ final class BulkMailerActionTest extends TestCase
 
 				$newResponse->method('getBody')->willReturn($stream);
 				$newResponse->method('getHeaderLine')->willReturnCallback(
-					function (string $headerName) use ($name, $value): string {
-						return strtolower($headerName) === strtolower($name) ? $value : '';
-					}
+					fn (string $headerName): string => strtolower($headerName) === strtolower($name) ? $value : ''
 				);
 
 				return $newResponse;

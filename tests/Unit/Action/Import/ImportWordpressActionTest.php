@@ -27,7 +27,7 @@ final class ImportWordpressActionTest extends TestCase
 			->method('json')
 			->with(
 				$response,
-				$this->callback(fn (array $data) => $data['success'] === false && str_contains($data['message'], 'Missing')),
+				$this->callback(fn (array $data): bool => $data['success'] === false && str_contains((string)$data['message'], 'Missing')),
 				400,
 			)
 			->willReturn($response);
@@ -60,7 +60,7 @@ final class ImportWordpressActionTest extends TestCase
 			->method('json')
 			->with(
 				$response,
-				$this->callback(fn (array $data) => $data['success'] === false && str_contains($data['message'], 'collection')),
+				$this->callback(fn (array $data): bool => $data['success'] === false && str_contains((string)$data['message'], 'collection')),
 				400,
 			)
 			->willReturn($response);

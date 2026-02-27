@@ -87,7 +87,7 @@ class DeckTableField extends FormField
 					'data-field-type' => $fieldType,
 				]);
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			$headerCells .= HTMLUtils::element('span', 'Error loading schema', ['class' => 'deck-table-header-cell']);
 		}
 
@@ -151,12 +151,12 @@ class DeckTableField extends FormField
 					'data-field-type' => $fieldType,
 				]);
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			$cells .= HTMLUtils::element('div', 'Error loading schema fields', ['class' => 'deck-table-cell']);
 		}
 
 		// Action buttons
-		$actions = HTMLUtils::button('', ['class' => 'trash', 'title' => 'Delete row', 'type' => 'button']);
+		$actions    = HTMLUtils::button('', ['class' => 'trash', 'title' => 'Delete row', 'type' => 'button']);
 		$actionsDiv = HTMLUtils::element('div', $actions, ['class' => 'deck-table-actions']);
 
 		return HTMLUtils::element('div', $handle . $cells . $actionsDiv, ['class' => 'deck-table-row']);

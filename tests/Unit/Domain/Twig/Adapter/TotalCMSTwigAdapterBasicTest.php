@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
-use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
@@ -18,8 +18,8 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	public function testLanguagesReturnsCorrectArray(): void
 	{
 		$translator = $this->createMock(TranslationService::class);
-		$adapter   = new LocaleTwigAdapter($translator);
-		$languages = $adapter->languages();
+		$adapter    = new LocaleTwigAdapter($translator);
+		$languages  = $adapter->languages();
 
 		expect($languages)->toBeArray();
 		expect($languages)->toHaveKey('English');
@@ -39,9 +39,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
 
 		// Inject domain via config
-		$reflection = new \ReflectionClass(CollectionTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -54,9 +54,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
 
-		$reflection = new \ReflectionClass(CollectionTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -69,9 +69,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
 
-		$reflection = new \ReflectionClass(CollectionTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -84,9 +84,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
 
-		$reflection = new \ReflectionClass(CollectionTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -125,9 +125,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class, []);
 
 		// Inject config with api
-		$reflection = new \ReflectionClass(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection  = new \ReflectionClass(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->api = '/api';
 		$configProp->setValue($adapter, $config);
 
@@ -221,9 +221,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
 		// Inject config with api
-		$reflection = new \ReflectionClass(MediaTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->api = '/api';
 		$configProp->setValue($adapter, $config);
 
@@ -248,9 +248,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
-		$reflection = new \ReflectionClass(MediaTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->api = '/api';
 		$configProp->setValue($adapter, $config);
 
@@ -270,9 +270,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
-		$reflection = new \ReflectionClass(MediaTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->api = '/api';
 		$configProp->setValue($adapter, $config);
 
@@ -290,9 +290,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 	{
 		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
 
-		$reflection = new \ReflectionClass(MediaTwigAdapter::class);
-		$configProp = $reflection->getProperty('config');
-		$config     = $this->createMock(\TotalCMS\Support\Config::class);
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->api = '/api';
 		$configProp->setValue($adapter, $config);
 
@@ -417,7 +417,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$config = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->api = '/api';
 
 		$adapter = new MediaTwigAdapter($objectFetcher, $config, $loggerFactory);

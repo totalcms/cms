@@ -16,7 +16,7 @@ final class TotalCMSTwigAdapterLocaleTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		$translator = $this->createMock(TranslationService::class);
+		$translator    = $this->createMock(TranslationService::class);
 		$this->adapter = new LocaleTwigAdapter($translator);
 		// Reset locale before each test
 		\Locale::setDefault('en_US');

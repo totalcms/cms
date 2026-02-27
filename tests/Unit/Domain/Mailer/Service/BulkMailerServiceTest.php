@@ -217,7 +217,7 @@ final class BulkMailerServiceTest extends TestCase
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
 		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
 			['id' => 'obj-1'],
-			['id' => ''],
+			['id'   => ''],
 			['name' => 'no-id'],
 		]);
 
@@ -284,9 +284,9 @@ final class BulkMailerServiceTest extends TestCase
 	public function testPreviewReturnsRenderedHtml(): void
 	{
 		$mailer = $this->createMailerData(
+			to: '{{ data.email }}',
 			subject: 'Hello {{ data.name }}',
 			bodyHtml: '<p>Welcome {{ data.name }}</p>',
-			to: '{{ data.email }}',
 		);
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
 
@@ -299,12 +299,10 @@ final class BulkMailerServiceTest extends TestCase
 			->willReturn($objectData);
 
 		$this->twigEngine->method('renderString')
-			->willReturnCallback(function (string $template): string {
-				return match (true) {
-					str_contains($template, '{{ data.email }}') => 'john@example.com',
-					str_contains($template, '{{ data.name }}')  => str_replace('{{ data.name }}', 'John', $template),
-					default => $template,
-				};
+			->willReturnCallback(fn (string $template): string => match (true) {
+				str_contains($template, '{{ data.email }}') => 'john@example.com',
+				str_contains($template, '{{ data.name }}')  => str_replace('{{ data.name }}', 'John', $template),
+				default                                     => $template,
 			});
 
 		$result = $this->service->previewEmail('test-mailer', 'obj-1', 'subscribers');

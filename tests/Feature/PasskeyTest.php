@@ -30,9 +30,9 @@ describe('Passkey Login Endpoints (no auth required)', function (): void {
 
 	it('rejects login without valid assertion', function (): void {
 		$response = postJson('/passkeys/login', [
-			'id'    => 'fake-credential',
-			'rawId' => 'ZmFrZS1jcmVkZW50aWFs',
-			'type'  => 'public-key',
+			'id'       => 'fake-credential',
+			'rawId'    => 'ZmFrZS1jcmVkZW50aWFs',
+			'type'     => 'public-key',
 			'response' => [
 				'authenticatorData' => 'ZmFrZQ',
 				'clientDataJSON'    => 'ZmFrZQ',

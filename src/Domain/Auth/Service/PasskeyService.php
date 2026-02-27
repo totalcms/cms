@@ -8,14 +8,21 @@ use Odan\Session\SessionInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Uid\Uuid;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
+use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
+use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
+use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
-use Webauthn\AuthenticatorAssertionResponse;
-use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialDescriptor;
@@ -25,13 +32,6 @@ use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 use Webauthn\TrustPath\EmptyTrustPath;
-use Symfony\Component\Uid\Uuid;
-use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectPatcher;
-use TotalCMS\Domain\Session\SessionKeys;
-use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
 
 class PasskeyService
 {
@@ -326,9 +326,7 @@ class PasskeyService
 			return;
 		}
 
-		$filtered = array_values(array_filter($passkeys, function (mixed $passkey) use ($credentialId): bool {
-			return is_array($passkey) && ($passkey['credentialId'] ?? '') !== $credentialId;
-		}));
+		$filtered = array_values(array_filter($passkeys, fn (mixed $passkey): bool => is_array($passkey) && ($passkey['credentialId'] ?? '') !== $credentialId));
 
 		$this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $filtered]);
 

@@ -39,7 +39,7 @@ readonly class AdminPlaygroundAction
 
 	private function renderResultsFragment(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$post = (array)$request->getParsedBody();
+		$post   = (array)$request->getParsedBody();
 		$render = '';
 
 		if (isset($post['twig'])) {
@@ -52,7 +52,7 @@ readonly class AdminPlaygroundAction
 			}
 		}
 
-		$html = $this->buildResultsFragment($render);
+		$html     = $this->buildResultsFragment($render);
 		$response = $response->withHeader('Content-Type', 'text/html');
 
 		return $this->rawRenderer->render($response, $html);

@@ -15,7 +15,7 @@ use TotalCMS\Support\Config;
  */
 class TranslationService
 {
-	private Translator $translator;
+	private readonly Translator $translator;
 
 	public function __construct(
 		private readonly Config $config,
@@ -48,17 +48,16 @@ class TranslationService
 	 */
 	public function getCatalog(string $domain = 'js', ?string $locale = null): array
 	{
-		$locale = $locale ?? $this->translator->getLocale();
+		$locale ??= $this->translator->getLocale();
 		$catalogue = $this->translator->getCatalogue($locale);
-		$messages = $catalogue->all($domain);
+		$messages  = $catalogue->all($domain);
 
 		// Fall back to default locale if empty
 		if ($messages === [] && $locale !== 'en_US') {
 			$catalogue = $this->translator->getCatalogue('en_US');
-			$messages = $catalogue->all($domain);
+			$messages  = $catalogue->all($domain);
 		}
 
-		/** @var array<string,string> */
 		return $messages;
 	}
 

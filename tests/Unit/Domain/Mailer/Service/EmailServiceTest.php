@@ -344,7 +344,7 @@ final class EmailServiceTest extends TestCase
 
 	public function testInkyTransformsRowAndColumnsToTable(): void
 	{
-		$inkyHtml = '<row><columns small="12"><p>Hello World</p></columns></row>';
+		$inkyHtml   = '<row><columns small="12"><p>Hello World</p></columns></row>';
 		$mailerData = $this->createMailerData(bodyHtml: $inkyHtml);
 
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
@@ -372,7 +372,7 @@ final class EmailServiceTest extends TestCase
 
 	public function testInkyTransformsButtonToTable(): void
 	{
-		$inkyHtml = '<button href="https://example.com">Click Me</button>';
+		$inkyHtml   = '<button href="https://example.com">Click Me</button>';
 		$mailerData = $this->createMailerData(bodyHtml: $inkyHtml);
 
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
@@ -397,7 +397,7 @@ final class EmailServiceTest extends TestCase
 
 	public function testInkyTransformsCallout(): void
 	{
-		$inkyHtml = '<callout><p>Important notice</p></callout>';
+		$inkyHtml   = '<callout><p>Important notice</p></callout>';
 		$mailerData = $this->createMailerData(bodyHtml: $inkyHtml);
 
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
@@ -422,7 +422,7 @@ final class EmailServiceTest extends TestCase
 
 	public function testPlainHtmlPassesThroughInkyUnchanged(): void
 	{
-		$plainHtml = '<p>Simple paragraph</p>';
+		$plainHtml  = '<p>Simple paragraph</p>';
 		$mailerData = $this->createMailerData(bodyHtml: $plainHtml);
 
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
@@ -466,13 +466,11 @@ final class EmailServiceTest extends TestCase
 	{
 		// Twig renders data into Inky markup, then Inky transforms it
 		$twigInkyHtml = '<row><columns small="12"><p>{{ data.name }}</p></columns></row>';
-		$mailerData = $this->createMailerData(bodyHtml: $twigInkyHtml);
+		$mailerData   = $this->createMailerData(bodyHtml: $twigInkyHtml);
 
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
 		$this->twigEngine->method('renderString')
-			->willReturnCallback(function (string $template): string {
-				return str_replace('{{ data.name }}', 'Alice', $template);
-			});
+			->willReturnCallback(fn (string $template): string => str_replace('{{ data.name }}', 'Alice', $template));
 		$this->config->mailer = ['whitelist' => []];
 
 		$this->emailSender->expects($this->once())

@@ -31,7 +31,7 @@ class WordpressImporterTest extends TestCase
 
 		$this->collectionFetcher->method('collectionExists')->willReturn(true);
 
-		$jobDataStub = new JobData();
+		$jobDataStub     = new JobData();
 		$jobDataStub->id = 'test-job-id';
 		$this->jobQueuer->method('queueImport')->willReturn($jobDataStub);
 
@@ -107,7 +107,7 @@ class WordpressImporterTest extends TestCase
 	{
 		$result = $this->importer->analyze($this->sampleXml);
 
-		$drafts = array_filter($result['sample'], fn ($p) => $p['status'] === 'draft');
+		$drafts = array_filter($result['sample'], fn (array $p): bool => $p['status'] === 'draft');
 		$this->assertCount(1, $drafts);
 	}
 
@@ -123,8 +123,9 @@ class WordpressImporterTest extends TestCase
 		$this->jobQueuer->method('queueImport')
 			->willReturnCallback(function (string $collection, array $data) use (&$queuedData): JobData {
 				$queuedData[] = $data;
-				$stub = new JobData();
-				$stub->id = 'job-' . count($queuedData);
+				$stub         = new JobData();
+				$stub->id     = 'job-' . count($queuedData);
+
 				return $stub;
 			});
 
@@ -143,8 +144,9 @@ class WordpressImporterTest extends TestCase
 		$this->jobQueuer->method('queueImport')
 			->willReturnCallback(function (string $collection, array $data) use (&$queuedData): JobData {
 				$queuedData[] = $data;
-				$stub = new JobData();
-				$stub->id = 'job-' . count($queuedData);
+				$stub         = new JobData();
+				$stub->id     = 'job-' . count($queuedData);
+
 				return $stub;
 			});
 
@@ -169,8 +171,9 @@ class WordpressImporterTest extends TestCase
 		$this->jobQueuer->method('queueImport')
 			->willReturnCallback(function (string $collection, array $data) use (&$queuedData): JobData {
 				$queuedData[] = $data;
-				$stub = new JobData();
-				$stub->id = 'job-' . count($queuedData);
+				$stub         = new JobData();
+				$stub->id     = 'job-' . count($queuedData);
+
 				return $stub;
 			});
 
@@ -196,8 +199,9 @@ class WordpressImporterTest extends TestCase
 		$this->jobQueuer->method('queueImport')
 			->willReturnCallback(function (string $collection, array $data) use (&$queuedData): JobData {
 				$queuedData[] = $data;
-				$stub = new JobData();
-				$stub->id = 'job-' . count($queuedData);
+				$stub         = new JobData();
+				$stub->id     = 'job-' . count($queuedData);
+
 				return $stub;
 			});
 
@@ -222,8 +226,9 @@ class WordpressImporterTest extends TestCase
 		$this->jobQueuer->method('queueImport')
 			->willReturnCallback(function (string $collection, array $data) use (&$queuedData): JobData {
 				$queuedData[] = $data;
-				$stub = new JobData();
-				$stub->id = 'job-' . count($queuedData);
+				$stub         = new JobData();
+				$stub->id     = 'job-' . count($queuedData);
+
 				return $stub;
 			});
 

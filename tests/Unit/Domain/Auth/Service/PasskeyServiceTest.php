@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth\Service;
 
-use Illuminate\Support\Collection;
 use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +32,7 @@ final class PasskeyServiceTest extends TestCase
 		$this->config        = $this->createMock(Config::class);
 		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
 		$this->objectPatcher = $this->createMock(ObjectPatcher::class);
-		$this->indexReader = $this->createMock(IndexReader::class);
+		$this->indexReader   = $this->createMock(IndexReader::class);
 		$this->loggerFactory = $this->createMock(LoggerFactory::class);
 
 		// Mock logger factory chain
@@ -339,10 +338,8 @@ final class PasskeyServiceTest extends TestCase
 			->with(
 				'auth',
 				'admin',
-				$this->callback(function (array $data): bool {
-					return count($data['passkeys']) === 1
-						&& $data['passkeys'][0]['credentialId'] === 'existing-cred';
-				})
+				$this->callback(fn (array $data): bool => count($data['passkeys']) === 1
+						&& $data['passkeys'][0]['credentialId'] === 'existing-cred')
 			);
 
 		$this->service->deletePasskey('admin', 'auth', 'nonexistent-cred');

@@ -128,12 +128,12 @@ final class DataViewQueryServiceTest extends TestCase
 		$this->pipeline->expects($this->once())
 			->method('execute')
 			->with(
-				$this->callback(function (array $items): bool {
+				$this->callback(
 					// Should be re-indexed to sequential 0, 1
-					return array_keys($items) === [0, 1]
+					fn (array $items): bool => array_keys($items) === [0, 1]
 						&& $items[0]['id'] === '1'
-						&& $items[1]['id'] === '2';
-				}),
+						&& $items[1]['id'] === '2'
+				),
 				$this->anything(),
 				$this->anything(),
 			)

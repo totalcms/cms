@@ -45,13 +45,13 @@ class JobData
 	public function toArray(): array
 	{
 		return [
-			'id'         => $this->id,
-			'type'       => $this->type,
-			'payload'    => $this->payload,
-			'status'     => $this->status,
-			'collection' => $this->collection,
-			'attempts'   => $this->attempts,
-			'createdAt'  => $this->createdAt,
+			'id'          => $this->id,
+			'type'        => $this->type,
+			'payload'     => $this->payload,
+			'status'      => $this->status,
+			'collection'  => $this->collection,
+			'attempts'    => $this->attempts,
+			'createdAt'   => $this->createdAt,
 			'updatedAt'   => $this->updatedAt,
 			'lastError'   => $this->lastError,
 			'scheduledAt' => $this->scheduledAt,
@@ -61,14 +61,14 @@ class JobData
 	/** @param array<string,string> $data */
 	public static function fromArray(array $data): self
 	{
-		$instance             = new self();
-		$instance->id         = $data['id'] ?? '';
-		$instance->type       = $data['type'] ?? '';
-		$instance->payload    = $data['payload'] ?? '';
-		$instance->status     = $data['status'] ?? '';
-		$instance->collection = $data['collection'] ?? '';
-		$instance->attempts   = intval($data['attempts'] ?? 0);
-		$instance->createdAt  = $data['createdAt'] ?? '';
+		$instance              = new self();
+		$instance->id          = $data['id'] ?? '';
+		$instance->type        = $data['type'] ?? '';
+		$instance->payload     = $data['payload'] ?? '';
+		$instance->status      = $data['status'] ?? '';
+		$instance->collection  = $data['collection'] ?? '';
+		$instance->attempts    = intval($data['attempts'] ?? 0);
+		$instance->createdAt   = $data['createdAt'] ?? '';
 		$instance->updatedAt   = $data['updatedAt'] ?? '';
 		$instance->lastError   = $data['lastError'] ?? '';
 		$instance->scheduledAt = $data['scheduledAt'] ?? '';

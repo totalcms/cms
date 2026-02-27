@@ -233,7 +233,7 @@ class HTMLUtils
 	{
 		$attrs = [
 			'hx-' . strtolower($method) => $url,
-			'hx-swap' => (string)($options['swap'] ?? 'none'),
+			'hx-swap'                   => (string)($options['swap'] ?? 'none'),
 		];
 
 		if (!empty($options['confirm'])) {

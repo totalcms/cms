@@ -51,7 +51,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 	 */
 	function createConfigWithPresets(array $presets): Config
 	{
-		$config = Config::init();
+		$config          = Config::init();
 		$config->presets = $presets;
 
 		return $config;
@@ -61,6 +61,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 	 * Helper to create an ObjectForm and call resolvePreset via reflection.
 	 *
 	 * @param array<string,mixed> $settings
+	 *
 	 * @return array<string,mixed>
 	 */
 	function callResolvePreset(object $testContext, array $settings, Config $config): array
@@ -82,7 +83,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		);
 
 		$reflection = new ReflectionClass($form);
-		$method = $reflection->getMethod('resolvePreset');
+		$method     = $reflection->getMethod('resolvePreset');
 
 		return $method->invoke($form, $settings);
 	}
@@ -111,7 +112,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		);
 
 		$reflection = new ReflectionClass($form);
-		$method = $reflection->getMethod('resolveTypePreset');
+		$method     = $reflection->getMethod('resolveTypePreset');
 
 		return $method->invoke($form, $fieldType);
 	}
@@ -140,7 +141,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		);
 
 		$reflection = new ReflectionClass($form);
-		$method = $reflection->getMethod('resolveFieldSettings');
+		$method     = $reflection->getMethod('resolveFieldSettings');
 
 		return $method->invoke($form, $property, $fieldType);
 	}
@@ -156,7 +157,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		]);
 
 		$settings = ['preset' => 'blog-editor'];
-		$result = callResolvePreset($this, $settings, $config);
+		$result   = callResolvePreset($this, $settings, $config);
 
 		expect($result)->toHaveKey('height');
 		expect($result['height'])->toBe(400);
@@ -173,7 +174,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		]);
 
 		$settings = ['preset' => 'blog-editor', 'height' => 600];
-		$result = callResolvePreset($this, $settings, $config);
+		$result   = callResolvePreset($this, $settings, $config);
 
 		// Explicit height should override preset
 		expect($result['height'])->toBe(600);
@@ -185,7 +186,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		$config = createConfigWithPresets([]);
 
 		$settings = ['preset' => 'nonexistent', 'height' => 300];
-		$result = callResolvePreset($this, $settings, $config);
+		$result   = callResolvePreset($this, $settings, $config);
 
 		expect($result['height'])->toBe(300);
 		expect($result)->not->toHaveKey('preset');
@@ -200,7 +201,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		]);
 
 		$settings = ['height' => 300];
-		$result = callResolvePreset($this, $settings, $config);
+		$result   = callResolvePreset($this, $settings, $config);
 
 		expect($result['height'])->toBe(300);
 	});
@@ -211,7 +212,7 @@ describe('ObjectForm Preset Resolution', function (): void {
 		]);
 
 		$settings = ['preset' => 'simple-preset'];
-		$result = callResolvePreset($this, $settings, $config);
+		$result   = callResolvePreset($this, $settings, $config);
 
 		expect($result['height'])->toBe(500);
 		expect($result['toolbar'])->toBe('full');

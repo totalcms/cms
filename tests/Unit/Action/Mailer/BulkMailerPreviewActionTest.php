@@ -195,7 +195,7 @@ final class BulkMailerPreviewActionTest extends TestCase
 		$response = $this->createMock(ResponseInterface::class);
 		$response->method('getBody')->willReturn($stream);
 		$response->method('withHeader')->willReturnCallback(
-			function (string $name, string $value) use ($response, &$buffer): ResponseInterface {
+			function (string $name, string $value) use (&$buffer): ResponseInterface {
 				$newResponse = $this->createMock(ResponseInterface::class);
 				$stream      = $this->createMock(StreamInterface::class);
 
@@ -210,9 +210,7 @@ final class BulkMailerPreviewActionTest extends TestCase
 
 				$newResponse->method('getBody')->willReturn($stream);
 				$newResponse->method('getHeaderLine')->willReturnCallback(
-					function (string $headerName) use ($name, $value): string {
-						return strtolower($headerName) === strtolower($name) ? $value : '';
-					}
+					fn (string $headerName): string => strtolower($headerName) === strtolower($name) ? $value : ''
 				);
 
 				return $newResponse;

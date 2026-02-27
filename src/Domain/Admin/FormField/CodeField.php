@@ -34,10 +34,10 @@ class CodeField extends TextareaField
 
 		// Pass minHeight and maxHeight as data attributes
 		if (isset($this->settings['minHeight'])) {
-			$attributes['data-min-height'] = (string) $this->settings['minHeight'];
+			$attributes['data-min-height'] = (string)$this->settings['minHeight'];
 		}
 		if (isset($this->settings['maxHeight'])) {
-			$attributes['data-max-height'] = (string) $this->settings['maxHeight'];
+			$attributes['data-max-height'] = (string)$this->settings['maxHeight'];
 		}
 
 		// Code editor specific options

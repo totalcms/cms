@@ -419,9 +419,7 @@ readonly class MediaTwigAdapter
 
 		$imageworks = array_merge($existingParams, $imageworks);
 
-		$api = $parsedUrl['path'] . '?' . http_build_query($imageworks);
-
-		return $api;
+		return $parsedUrl['path'] . '?' . http_build_query($imageworks);
 	}
 
 	/**
@@ -479,9 +477,7 @@ readonly class MediaTwigAdapter
 
 		$imageworks = array_merge($existingParams, $imageworks);
 
-		$api = $parsedUrl['path'] . '?' . http_build_query($imageworks);
-
-		return $api;
+		return $parsedUrl['path'] . '?' . http_build_query($imageworks);
 	}
 
 	/**

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\LicenseStatus;
@@ -15,8 +17,6 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Domain\Cache\CacheSizingAdvisor;
-use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
@@ -70,7 +70,7 @@ readonly class AdminTwigAdapter
 		$on  = ['error' => 'QuickAction.error(this, event)'];
 
 		if ($redirect !== '') {
-			$redirectUrl = htmlspecialchars($redirect, ENT_QUOTES);
+			$redirectUrl         = htmlspecialchars($redirect, ENT_QUOTES);
 			$on['after:request'] = "QuickAction.redirect('$redirectUrl')";
 		} elseif ($reload) {
 			$on['after:request'] = 'QuickAction.reload()';

@@ -18,7 +18,7 @@ final class TranslationServiceTest extends TestCase
 
 	private function createService(string $locale = ''): TranslationService
 	{
-		$config = $this->createMock(Config::class);
+		$config         = $this->createMock(Config::class);
 		$config->locale = $locale;
 
 		return new TranslationService($config, $this->translationsPath);
@@ -53,7 +53,7 @@ final class TranslationServiceTest extends TestCase
 	public function testParameterSubstitution(): void
 	{
 		$service = $this->createService('en_US');
-		$result = $service->trans('dashboard.welcome_back', ['{name}' => 'Joe']);
+		$result  = $service->trans('dashboard.welcome_back', ['{name}' => 'Joe']);
 		$this->assertSame('Welcome back, Joe!', $result);
 	}
 
@@ -136,11 +136,11 @@ final class TranslationServiceTest extends TestCase
 	public function testAllLocaleFilesHaveSameKeyCount(): void
 	{
 		$locales = ['en_US', 'en_GB', 'de_DE', 'es_ES', 'nl_NL'];
-		$counts = [];
+		$counts  = [];
 
 		foreach ($locales as $locale) {
-			$file = $this->translationsPath . "/admin.{$locale}.php";
-			$translations = require $file;
+			$file            = $this->translationsPath . "/admin.{$locale}.php";
+			$translations    = require $file;
 			$counts[$locale] = count($translations);
 		}
 

@@ -19,7 +19,7 @@ final class BulkMailerRepositoryTest extends TestCase
 		$this->tmpDir = sys_get_temp_dir() . '/tcms-test-' . uniqid('', true);
 		mkdir($this->tmpDir, 0755, true);
 
-		$config = $this->createMock(Config::class);
+		$config          = $this->createMock(Config::class);
 		$config->datadir = $this->tmpDir;
 
 		$this->repository = new BulkMailerRepository($config);
