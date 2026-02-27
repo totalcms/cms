@@ -79,6 +79,7 @@ export default class SVGField extends TotalField {
 			readOnly: false,
 			autofocus: false,
 			mode: 'xml',
+			theme: 'elegant',
 			tabMode: 'indent',
 			tabSize: 2,
 		});

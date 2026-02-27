@@ -44,11 +44,44 @@
 			height: 100%;
 			max-width: 100%;
 			width: 100%;
+			background-color: oklch(var(--totalform-nearwhite));
+			color: oklch(var(--totalform-nearblack));
 
 			.CodeMirror-scroll {
 				overflow-y: auto !important;
 				overflow-x: auto !important;
 			}
+
+			.CodeMirror-gutters {
+				background-color: oklch(var(--totalform-nearwhite));
+				border-right: 1px solid oklch(var(--totalform-lightgray));
+			}
+
+			.CodeMirror-linenumber {
+				color: oklch(var(--totalform-mediumgray));
+			}
+
+			.CodeMirror-cursor {
+				border-left: 2px solid oklch(var(--totalform-nearblack));
+			}
+
+			.CodeMirror-selected {
+				background-color: oklch(var(--totalform-accent) / 0.2);
+			}
+
+			.CodeMirror-activeline-background {
+				background-color: oklch(var(--totalform-nearwhite) / 0.5);
+			}
+
+			// XML syntax colors using design system variables
+			.cm-tag         { color: oklch(var(--totalform-red)); }
+			.cm-attribute   { color: oklch(var(--totalform-orange)); }
+			.cm-string      { color: oklch(var(--totalform-green)); }
+			.cm-atom        { color: oklch(var(--totalform-yellow)); }
+			.cm-number      { color: oklch(var(--totalform-blue)); }
+			.cm-comment     { color: oklch(var(--totalform-mediumgray)); font-style: italic; }
+			.cm-meta        { color: oklch(var(--totalform-mediumgray)); }
+			.cm-error       { color: oklch(var(--totalform-error)); }
 		}
 
 		// Style the horizontal scrollbar
