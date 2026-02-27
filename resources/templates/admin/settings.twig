@@ -82,6 +82,13 @@
 		<p>{{ sections[currentSection].description }}</p>
 		{% endif %}
 
+		{% if currentSection == 'presets' %}
+		<div class="cms-info">
+			<p><strong>Named presets</strong> &mdash; Reference a preset by name in a schema property's settings with <code>"preset": "my-preset-name"</code>. The preset's settings become the base, and any additional field settings override them.</p>
+			<p><strong>Type defaults</strong> &mdash; Name a preset after a field type (e.g., <code>styledtext</code>, <code>image</code>) and it will automatically apply to every field of that type that has no settings defined at the schema, collection, or object level.</p>
+		</div>
+		{% endif %}
+
 		{{ cms.form.settings(currentSection) }}
 
 		{% if currentSection == 'smtp' %}

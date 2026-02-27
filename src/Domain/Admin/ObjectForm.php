@@ -65,7 +65,8 @@ class ObjectForm extends TotalForm
 		}
 
 		$defaults = $this->fieldDefaults($name);
-		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
+		$fieldType = $defaults['field'] ?? '';
+		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name, $fieldType));
 
 		// Only set required from schema if not explicitly provided in options
 		if (!isset($options['required'])) {
@@ -137,7 +138,7 @@ class ObjectForm extends TotalForm
 	}
 
 	/** @return array<string,mixed> */
-	protected function fieldAttributeSettings(string $property): array
+	protected function fieldAttributeSettings(string $property, string $fieldType = ''): array
 	{
 		// Get the schema and collection settings for a property
 		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
@@ -150,6 +151,12 @@ class ObjectForm extends TotalForm
 		$custom     = $this->resolvePreset($custom);
 
 		$attributes = array_merge($schema, $collection, $custom);
+
+		// If no settings exist at any level, check for a type-default preset
+		// A preset named after the field type (e.g., "styledtext") auto-applies
+		if ($attributes === [] && $fieldType !== '') {
+			$attributes = $this->resolveTypePreset($fieldType);
+		}
 
 		return self::filterFieldAttributes($attributes);
 	}
@@ -184,6 +191,29 @@ class ObjectForm extends TotalForm
 
 		// Preset is the base, explicit settings override
 		return array_merge($presetValues, $settings);
+	}
+
+	/**
+	 * Look up a type-default preset matching the field type name.
+	 *
+	 * If a preset exists with a name matching the field type (e.g., "styledtext"),
+	 * it automatically applies as the default settings for all fields of that type
+	 * that have no explicit settings.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolveTypePreset(string $fieldType): array
+	{
+		$preset = $this->config->presets[$fieldType] ?? [];
+
+		// Deck format stores presets as {id, settings}, extract the settings
+		$presetValues = is_array($preset['settings'] ?? null) ? $preset['settings'] : $preset;
+
+		if (!is_array($presetValues) || $presetValues === []) {
+			return [];
+		}
+
+		return $presetValues;
 	}
 
 	private function isRequired(string $property): bool
