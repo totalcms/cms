@@ -39,6 +39,7 @@ class SchemaData
 		'mailer',
 		'number',
 		'playground',
+		'preset-item',
 		'styledtext',
 		'svg',
 		'text',
