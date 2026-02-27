@@ -134,11 +134,13 @@
 		.svg-field-editor {
 			.CodeMirror {
 				height: 200px;
+				max-height: 200px;
 			}
 		}
 
 		.svg-field-preview {
 			min-height: 150px;
+			max-height: 200px;
 			border-left: none;
 			border-top: 1px solid oklch(var(--totalform-border-color));
 		}
