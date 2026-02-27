@@ -134,11 +134,11 @@ class EditionFeatureService
 
 	/**
 	 * Check if the current edition can be simulated.
-	 * Only development and trial editions support simulation.
+	 * Pro and above editions (Pro, Enterprise, Development, Trial) support simulation.
 	 */
 	private function canSimulate(Edition $edition): bool
 	{
-		return $edition === Edition::DEVELOPMENT || $edition === Edition::TRIAL;
+		return $edition->level() >= Edition::PRO->level();
 	}
 
 	/**

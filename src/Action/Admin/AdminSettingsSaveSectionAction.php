@@ -50,7 +50,7 @@ readonly class AdminSettingsSaveSectionAction
 		if ($section === 'license' && !$this->editionFeatureService->canSimulateEdition()) {
 			return $this->renderer->json($response, [
 				'success' => false,
-				'message' => 'Edition simulation is only available during trial or development',
+				'message' => 'Edition simulation is only available for Pro edition and above',
 			], 403);
 		}
 
