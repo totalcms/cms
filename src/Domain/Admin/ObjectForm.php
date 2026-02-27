@@ -125,16 +125,19 @@ class ObjectForm extends TotalForm
 
 		$defaults = array_merge($schema, $collection);
 
-		// Handle deckref for deck fields - move it to settings
-		if (isset($defaults['deckref'])) {
-			$settings             = $defaults['settings'] ?? [];
-			$settings['deckref']  = $defaults['deckref'];
-			$defaults['settings'] = $settings;
-			unset($defaults['deckref']);
-		}
-
 		// Resolve presets within the settings key
 		$defaults['settings'] = $this->resolveFieldSettings($property, $defaults['field'] ?? '');
+
+		// Handle deckref for deck fields - move it to settings after resolve
+		// This must happen after resolveFieldSettings() to avoid being overwritten
+		if (isset($defaults['deckref'])) {
+			$defaults['settings']['deckref'] = $defaults['deckref'];
+			unset($defaults['deckref']);
+		}
+		if (isset($defaults['deckItemLabel'])) {
+			$defaults['settings']['deckItemLabel'] = $defaults['deckItemLabel'];
+			unset($defaults['deckItemLabel']);
+		}
 
 		return TotalForm::filterFieldProperties($defaults);
 	}

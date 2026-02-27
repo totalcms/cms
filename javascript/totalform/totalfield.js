@@ -9,8 +9,8 @@ export default class TotalField {
 		this.container = container;
 		this.input     = this.container.querySelector("input,textarea,select");
 
-		// Check if we're inside a deck-item
-		this.deckItem = container.closest('.deck-item');
+		// Check if we're inside a deck-item or deck-table-row
+		this.deckItem = container.closest('.deck-item') || container.closest('.deck-table-row');
 		this.isInDeck = !!this.deckItem;
 
 		container.totalfield = this;

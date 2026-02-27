@@ -77,6 +77,7 @@ class TotalForm implements \Stringable
 		'Special Fields' => [
 			'color',
 			'deck',
+			'deckTable',
 			'depot',
 			'file',
 			'gallery',
@@ -93,6 +94,7 @@ class TotalForm implements \Stringable
 		'date',
 		'datetime',
 		'deck',
+		'deckTable',
 		'depot',
 		'email',
 		'file',

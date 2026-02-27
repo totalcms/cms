@@ -646,7 +646,7 @@ readonly class TotalFormFactory
 			];
 
 			// Merge deck-specific schema keys into settings
-			if ($fieldType === 'deck') {
+			if ($fieldType === 'deck' || $fieldType === 'deckTable') {
 				if (isset($fieldSchema['deckref'])) {
 					$fieldSettings['settings']['deckref'] = $fieldSchema['deckref'];
 				}

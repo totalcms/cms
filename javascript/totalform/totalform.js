@@ -12,6 +12,7 @@ import PriceField from './price';
 import ColorField from './color';
 import DateField from './date';
 import DeckField from './deck';
+import DeckTableField from './deckTable';
 import PasswordField from './password';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
@@ -315,6 +316,9 @@ export default class TotalForm {
 
 			case "deck":
                 return new DeckField(field, settings);
+
+			case "deckTable":
+				return new DeckTableField(field, settings);
 
 			// case "markdown":
             //     return new MarkdownField(field, settings);

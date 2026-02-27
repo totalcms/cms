@@ -551,6 +551,13 @@
 		display : none;
 	}
 }
+.deckTable-field {
+	--schema-icon : var(--icon-deck);
+
+	&.deck-type:after {
+		display : none;
+	}
+}
 .json-field {
 	--schema-icon : var(--icon-json);
 }

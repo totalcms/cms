@@ -1,0 +1,257 @@
+.deckTable-field.form-field {
+	margin-top : 2rem;
+
+	> .form-group {
+		box-shadow : none !important;
+	}
+}
+
+// Hide the validation input
+.deckTable-field > .form-group > input {
+	width   : 0;
+	height  : 0;
+	padding : 0;
+	margin  : 0;
+	opacity : 0;
+}
+
+.deck-table {
+	border-radius : var(--totalform-radius);
+	overflow      : hidden;
+	width         : 100%;
+
+	// Compact columns for small field types (applies to both header and row cells)
+	[data-field-type="checkbox"],
+	[data-field-type="toggle"] {
+		flex  : 0 0 auto !important;
+		width : 4rem;
+	}
+}
+
+// Header row
+.deck-table-header {
+	display          : flex;
+	align-items      : center;
+	background-color : oklch(var(--totalform-nearwhite));
+	// border-bottom    : 2px solid oklch(var(--totalform-border-color));
+	padding          : 0.5rem 0;
+
+	.deck-table-header-cell {
+		flex        : 1;
+		font-size   : 0.8rem;
+		font-weight : 600;
+		padding     : 0.25rem 0.5rem;
+		color       : oklch(var(--totalform-darkgray));
+	}
+
+	.deck-table-handle-spacer {
+		width     : 2rem;
+		min-width : 2rem;
+	}
+
+	.deck-table-actions-spacer {
+		width     : 2.5rem;
+		min-width : 2.5rem;
+	}
+}
+
+// Table body
+.deck-table-body {
+	min-height : 1rem;
+}
+
+// Individual rows
+.deck-table-row {
+	display       : flex;
+	align-items   : center;
+	// border-bottom : 1px solid oklch(var(--totalform-border-color));
+	transition    : background-color 200ms ease-in-out;
+
+	&:last-child {
+		border-bottom : none;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite) / 0.5);
+	}
+
+	&:has(.form-field.unsaved) {
+		border-left : 3px solid oklch(var(--totalform-changed));
+	}
+
+	&:has(.form-field.error) {
+		border-left : 3px solid oklch(var(--totalform-error));
+	}
+
+	input,select {
+		border     : none !important;
+		box-shadow : none !important;
+	}
+
+	// Drag handle
+	.sort-handle {
+		width            : 2rem;
+		min-width        : 2rem;
+		height           : 100%;
+		min-height       : 2.5rem;
+		cursor           : grab;
+		display          : flex;
+		align-items      : center;
+		justify-content  : center;
+
+		&::before {
+			content          : '';
+			display          : block;
+			width            : 1rem;
+			height           : 1rem;
+			background-color : oklch(var(--totalform-text-color));
+			mask-image       : var(--icon-bars);
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+			mask-size        : contain;
+			opacity          : 0.4;
+			transition       : opacity 200ms ease;
+		}
+
+		&:hover::before {
+			opacity : 0.8;
+		}
+
+		&:active {
+			cursor : grabbing;
+		}
+	}
+
+	// Field cells
+	.deck-table-cell {
+		flex    : 1;
+		padding : 0.25rem;
+
+		// Override form-field styles for inline display
+		.form-field {
+			margin     : 0;
+			padding    : 0;
+			border     : none;
+			box-shadow : none;
+			background : transparent;
+
+			// Hide labels and help text in table mode
+			> label {
+				display : none;
+			}
+			> .help {
+				display : none;
+			}
+
+			// Remove the form-group icon
+			.form-group-icon {
+				display : none;
+			}
+
+			// Reset grid-area
+			&[style*="grid-area"] {
+				grid-area : unset !important;
+			}
+		}
+
+		// Simplify input appearance
+		.form-group {
+			box-shadow : none;
+
+			input, select, textarea {
+				border-radius : var(--totalform-radius);
+				font-size     : 0.85rem;
+			}
+		}
+	}
+
+	// Actions column
+	.deck-table-actions {
+		width       : 2.5rem;
+		min-width   : 2.5rem;
+		display     : flex;
+		align-items : center;
+		justify-content : center;
+		gap         : 0.25rem;
+
+		button {
+			appearance       : none;
+			border           : none;
+			cursor           : pointer;
+			padding          : 0.25rem;
+			background-color : oklch(var(--totalform-error));
+			width            : 1rem;
+			height           : 1rem;
+			opacity          : 0;
+			transition       : scale 200ms ease-in-out, opacity 200ms ease;
+
+			&:hover {
+				scale : 1.1;
+			}
+			&:active {
+				scale : 1;
+			}
+
+			&.trash {
+				mask-image    : var(--icon-trash);
+				mask-repeat   : no-repeat;
+				mask-position : center;
+				mask-size     : contain;
+			}
+		}
+	}
+
+	&:hover .deck-table-actions button {
+		opacity : 1;
+	}
+}
+
+// Sortable drag ghost
+.deck-table-row.drag-ghost {
+	background-color : oklch(var(--totalform-nearwhite));
+	cursor           : grabbing;
+}
+
+// Mobile responsive layout
+@media (max-width: 768px) {
+	.deck-table-header {
+		display : none;
+	}
+
+	.deck-table-row {
+		flex-direction : column;
+		padding        : 0.5rem;
+		gap            : 0.25rem;
+
+		.sort-handle {
+			width       : 100%;
+			min-height  : 1.5rem;
+			height      : auto;
+			justify-content : flex-start;
+		}
+
+		.deck-table-cell {
+			width   : 100%;
+			padding : 0.125rem 0;
+
+			&::before {
+				content     : attr(data-label);
+				display     : block;
+				font-size   : 0.75rem;
+				font-weight : 600;
+				color       : oklch(var(--totalform-darkgray));
+				padding     : 0.125rem 0;
+			}
+		}
+
+		.deck-table-actions {
+			width           : 100%;
+			justify-content : flex-end;
+			padding-top     : 0.25rem;
+
+			button {
+				opacity : 1;
+			}
+		}
+	}
+}
