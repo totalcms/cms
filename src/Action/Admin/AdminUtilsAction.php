@@ -94,8 +94,8 @@ readonly class AdminUtilsAction
 			$accessGroupsData = $this->createAccessGroupData($action);
 		}
 
-		// Check edition for import-rss page
-		if ($page === 'import-rss' && !$this->editionFeatures->can(EditionFeature::RSS_IMPORT)) {
+		// Check edition for import pages (RSS, WordPress)
+		if (in_array($page, ['import-rss', 'import-wordpress'], true) && !$this->editionFeatures->can(EditionFeature::RSS_IMPORT)) {
 			$feature         = EditionFeature::RSS_IMPORT;
 			$requiredEdition = $feature->requiredEdition();
 
