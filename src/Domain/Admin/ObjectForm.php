@@ -65,8 +65,7 @@ class ObjectForm extends TotalForm
 		}
 
 		$defaults = $this->fieldDefaults($name);
-		$fieldType = $defaults['field'] ?? '';
-		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name, $fieldType));
+		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
 		// Only set required from schema if not explicitly provided in options
 		if (!isset($options['required'])) {
@@ -134,13 +133,22 @@ class ObjectForm extends TotalForm
 			unset($defaults['deckref']);
 		}
 
+		// Resolve presets within the settings key
+		$defaults['settings'] = $this->resolveFieldSettings($property, $defaults['field'] ?? '');
+
 		return TotalForm::filterFieldProperties($defaults);
 	}
 
-	/** @return array<string,mixed> */
-	protected function fieldAttributeSettings(string $property, string $fieldType = ''): array
+	/**
+	 * Resolve the full settings for a field property, including presets.
+	 *
+	 * Merges settings from schema, collection, and custom levels.
+	 * Resolves named presets at each level and falls back to type-default presets.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolveFieldSettings(string $property, string $fieldType): array
 	{
-		// Get the schema and collection settings for a property
 		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
 		$collection = $this->collectionData->properties[$property]['settings'] ?? [];
 		$custom     = $this->collectionData->customProperties[$this->id][$property]['settings'] ?? [];
@@ -150,15 +158,24 @@ class ObjectForm extends TotalForm
 		$collection = $this->resolvePreset($collection);
 		$custom     = $this->resolvePreset($custom);
 
-		$attributes = array_merge($schema, $collection, $custom);
+		$settings = array_merge($schema, $collection, $custom);
 
 		// If no settings exist at any level, check for a type-default preset
 		// A preset named after the field type (e.g., "styledtext") auto-applies
-		if ($attributes === [] && $fieldType !== '') {
-			$attributes = $this->resolveTypePreset($fieldType);
+		if ($settings === [] && $fieldType !== '') {
+			$settings = $this->resolveTypePreset($fieldType);
 		}
 
-		return self::filterFieldAttributes($attributes);
+		return $settings;
+	}
+
+	/** @return array<string,mixed> */
+	protected function fieldAttributeSettings(string $property): array
+	{
+		// Get the schema settings for a property
+		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
+
+		return self::filterFieldAttributes($schema);
 	}
 
 	/**
