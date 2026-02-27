@@ -188,7 +188,7 @@ readonly class EmailService
 			$doc = \Pinky\transformString($html);
 
 			return (string)$doc->saveHTML();
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->logger->warning('Inky processing failed, returning original HTML', [
 				'error' => $e->getMessage(),
 			]);

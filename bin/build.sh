@@ -40,7 +40,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # remove imagine libs that are not required and take up too much space
-find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -type f -delete
+find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -not -name '*.xsl' -type f -delete
 find vendor -name "*phpstorm*" -delete
 find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
