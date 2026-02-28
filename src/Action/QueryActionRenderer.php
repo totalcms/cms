@@ -159,7 +159,7 @@ readonly class QueryActionRenderer
 				$objectUrl = $this->objectUrlBuilder->buildUrl($collectionData, $item);
 			}
 
-			$html .= $this->twigEngine->render('admin/collection/table-row.html', [
+			$html .= $this->twigEngine->render('admin/collection/table-row.twig', [
 				'object'         => $item,
 				'_collection'    => $collection,
 				'_columns'       => $columns,
@@ -178,9 +178,9 @@ readonly class QueryActionRenderer
 			$nextParams['limit']    = (string)$result->limit;
 			$sentinelUrl            = $baseUrl . '?' . http_build_query($nextParams);
 			$colspan                = (string)(count($columns) + 1);
-			$html                  .= '<tr class="htmx-sentinel" hx-get="' . htmlspecialchars($sentinelUrl) . '" hx-trigger="revealed" hx-swap="outerHTML">';
-			$html                  .= '<td colspan="' . $colspan . '"><span class="loading-dots"></span></td>';
-			$html                  .= '</tr>';
+			$html .= '<tr class="htmx-sentinel" hx-get="' . htmlspecialchars($sentinelUrl) . '" hx-trigger="revealed" hx-swap="outerHTML">';
+			$html .= '<td colspan="' . $colspan . '"><span class="loading-dots"></span></td>';
+			$html .= '</tr>';
 		}
 
 		$response = $result->withPaginationHeaders($response);
