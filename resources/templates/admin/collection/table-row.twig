@@ -8,8 +8,8 @@
 					<li class="link"><a href="{{ _objectUrl }}" target="_blank">Link to Webpage</a></li>
 				{% endif %}
 				<li class="clone"><a href="/collections/{{ _collection }}/{{ object.id }}/clone">Clone {{ _labelSingular }}</a></li>
-				<li class="download"><a href="{{ _api }}/export/collections/{{ _collection }}/{{ object.id }}/zip">Download Zip</a></li>
-				<li class="delete"><a class="delete-action" data-method="DELETE" data-confirm="Are you sure you want to delete this {{ _labelSingular|lower }}?" href="{{ _api }}/collections/{{ _collection }}/{{ object.id }}">Delete {{ _labelSingular }}</a></li>
+				<li class="download"><a href="{{ cms.api }}/export/collections/{{ _collection }}/{{ object.id }}/zip">Download Zip</a></li>
+				<li class="delete"><a class="delete-action" data-method="DELETE" data-confirm="Are you sure you want to delete this {{ _labelSingular|lower }}?" href="{{ cms.api }}/collections/{{ _collection }}/{{ object.id }}">Delete {{ _labelSingular }}</a></li>
 			</ul>
 		</nav>
 	</td>

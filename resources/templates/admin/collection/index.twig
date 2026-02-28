@@ -30,7 +30,7 @@
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#table-body-{{ url.collection }}"
 				hx-swap="innerHTML"
-				hx-vals='{"format":"table","limit":"{{ limit }}","_collection":"{{ url.collection }}","_api":"{{ cms.api }}","sort":"{{ sortField }}:{{ sortDir }}"}'
+				hx-vals='{"format":"table","limit":"{{ limit }}","_collection":"{{ url.collection }}","sort":"{{ sortField }}:{{ sortDir }}"}'
 				autocomplete="off" />
 		</header>
 		<div class="admin-table-scroll">
@@ -59,7 +59,7 @@
 					</tr>
 				</thead>
 				<tbody id="table-body-{{ url.collection }}"
-					hx-get="{{ cms.api }}/collections/{{ url.collection }}/query?format=table&limit={{ limit }}&sort={{ sortField }}:{{ sortDir }}&_collection={{ url.collection }}&_api={{ cms.api }}"
+					hx-get="{{ cms.api }}/collections/{{ url.collection }}/query?format=table&limit={{ limit }}&sort={{ sortField }}:{{ sortDir }}&_collection={{ url.collection }}"
 					hx-trigger="load"
 					hx-swap="innerHTML">
 					<tr class="htmx-sentinel">
