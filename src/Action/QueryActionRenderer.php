@@ -12,9 +12,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Query\Data\QueryResult;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\JsonRenderer;
@@ -36,6 +40,9 @@ readonly class QueryActionRenderer
 		private HtmxRenderer $htmxRenderer,
 		private TwigEngine $twigEngine,
 		private EditionFeatureService $editionFeatures,
+		private CollectionFetcher $collectionFetcher,
+		private SchemaFetcher $schemaFetcher,
+		private ObjectUrlBuilder $objectUrlBuilder,
 	) {
 	}
 
@@ -57,6 +64,7 @@ readonly class QueryActionRenderer
 	): ResponseInterface {
 		return match ($format) {
 			'html'  => $this->renderHtml($request, $response, $result, $params, $baseUrl),
+			'table' => $this->renderTable($request, $response, $result, $params, $baseUrl),
 			'csv'   => $this->renderCsv($response, $result, $csvFilename),
 			default => $this->renderJson($response, $result, $baseUrl),
 		};
@@ -106,6 +114,99 @@ readonly class QueryActionRenderer
 		$response = $response->withHeader('Content-Type', 'text/html');
 
 		return $this->rawRenderer->render($response, $html);
+	}
+
+	/**
+	 * Render query results as admin table rows (internal template, no edition check).
+	 *
+	 * @param array<string,string> $params
+	 */
+	private function renderTable(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		QueryResult $result,
+		array $params,
+		string $baseUrl,
+	): ResponseInterface {
+		$collection = $params['_collection'] ?? '';
+		if ($collection === '') {
+			throw new HttpBadRequestException($request, 'The "_collection" parameter is required for table format.');
+		}
+
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if ($collectionData === null) {
+			throw new HttpBadRequestException($request, "Collection '{$collection}' not found.");
+		}
+
+		$schemaData    = $this->schemaFetcher->fetchSchema($collectionData->schema);
+		$labelSingular = $collectionData->labelSingular !== '' ? $collectionData->labelSingular : 'Object';
+		$collectionUrl = $collectionData->url;
+
+		// Build columns array from schema index
+		$columns = [];
+		foreach ($schemaData->index as $property) {
+			$columns[] = [
+				'name' => $property,
+				'type' => $this->getPropertyType($schemaData, $property),
+			];
+		}
+
+		$api  = $params['_api'] ?? '';
+		$html = '';
+		foreach ($result->items as $item) {
+			$objectUrl = '';
+			if ($collectionUrl !== '') {
+				$objectUrl = $this->objectUrlBuilder->buildUrl($collectionData, $item);
+			}
+
+			$html .= $this->twigEngine->render('admin/collection/table-row.html', [
+				'object'         => $item,
+				'_collection'    => $collection,
+				'_columns'       => $columns,
+				'_api'           => $api,
+				'_labelSingular' => $labelSingular,
+				'_collectionUrl' => $collectionUrl,
+				'_objectUrl'     => $objectUrl,
+			]);
+		}
+
+		// Build sentinel <tr> for next page if there are more results
+		if ($result->hasMore()) {
+			$nextParams             = $params;
+			$nextParams['format']   = 'table';
+			$nextParams['offset']   = (string)$result->nextOffset();
+			$nextParams['limit']    = (string)$result->limit;
+			$sentinelUrl            = $baseUrl . '?' . http_build_query($nextParams);
+			$colspan                = (string)(count($columns) + 1);
+			$html                  .= '<tr class="htmx-sentinel" hx-get="' . htmlspecialchars($sentinelUrl) . '" hx-trigger="revealed" hx-swap="outerHTML">';
+			$html                  .= '<td colspan="' . $colspan . '"><span class="loading-dots"></span></td>';
+			$html                  .= '</tr>';
+		}
+
+		$response = $result->withPaginationHeaders($response);
+		$response = $response->withHeader('Content-Type', 'text/html');
+
+		return $this->rawRenderer->render($response, $html);
+	}
+
+	/**
+	 * Determine the property type from schema definition.
+	 */
+	private function getPropertyType(
+		SchemaData $schemaData,
+		string $property,
+	): string {
+		if (isset($schemaData->properties[$property])) {
+			$propertyData = $schemaData->properties[$property];
+			if (isset($propertyData['type'])) {
+				return $propertyData['type'];
+			}
+			if (isset($propertyData['$ref'])) {
+				return basename((string)$propertyData['$ref'], '.json');
+			}
+		}
+
+		return 'string';
 	}
 
 	private function renderCsv(

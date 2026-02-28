@@ -1,8 +1,13 @@
 {# Collection Object Table #}
 {% set collection = cms.collection.get(url.collection) %}
+{% set schema = cms.schema.get(collection.schema) %}
 {% set labelPlural = collection.labelPlural|default('objects') %}
+{% set labelSingular = collection.labelSingular|default('Object') %}
 {# Use totalObjects from collection metadata - avoids loading full index #}
 {% set actualObjectCount = collection.totalObjects|default(0) %}
+{% set limit = cms.config('dashboard', 'pagination')|default(50) %}
+{% set sortField = collection.sortBy|default('id') %}
+{% set sortDir = collection.reverseSort ? 'desc' : 'asc' %}
 
 {# Performance warning for large collections without queue rebuild enabled #}
 {% set performanceThreshold = 2500 %}
@@ -18,7 +23,55 @@
 
 {% if actualObjectCount > 0 %}
 
-	{{ cms.render.collectionTable(url.collection) }}
+	<div class="admin-table-wrapper" data-collection="{{ url.collection }}">
+		<header class="admin-table-header">
+			<input type="search" name="search" placeholder="Filter {{ actualObjectCount|number_format }} {{ labelPlural }}"
+				hx-get="{{ cms.api }}/collections/{{ url.collection }}/query"
+				hx-trigger="input changed delay:300ms, search"
+				hx-target="#table-body-{{ url.collection }}"
+				hx-swap="innerHTML"
+				hx-vals='{"format":"table","limit":"{{ limit }}","_collection":"{{ url.collection }}","_api":"{{ cms.api }}","sort":"{{ sortField }}:{{ sortDir }}"}'
+				autocomplete="off" />
+		</header>
+		<div class="admin-table-scroll">
+			<table class="admin-table" data-collection="{{ url.collection }}"
+				data-default-sort="{{ sortField }}" data-default-sort-dir="{{ sortDir }}"
+				data-api="{{ cms.api }}" data-limit="{{ limit }}">
+				<thead>
+					<tr>
+						<th class="action"></th>
+						{% for prop in schema.index %}
+							{% set propData = schema.properties[prop]|default({}) %}
+							{% set propType = propData.type|default('') %}
+							{% if propType == '' and propData['$ref'] is defined %}
+								{% set propType = propData['$ref']|split('/')|last|replace({'.json': ''}) %}
+							{% endif %}
+							{% if propType == '' %}
+								{% set propType = 'string' %}
+							{% endif %}
+							<th class="schema-{{ propType }} sortable"
+								data-sort-field="{{ prop }}"
+								data-sort-dir="{{ prop == sortField ? sortDir : 'none' }}">
+								<span class="th-content">{{ prop }}</span>
+								<span class="sort-indicator"></span>
+							</th>
+						{% endfor %}
+					</tr>
+				</thead>
+				<tbody id="table-body-{{ url.collection }}"
+					hx-get="{{ cms.api }}/collections/{{ url.collection }}/query?format=table&limit={{ limit }}&sort={{ sortField }}:{{ sortDir }}&_collection={{ url.collection }}&_api={{ cms.api }}"
+					hx-trigger="load"
+					hx-swap="innerHTML">
+					<tr class="htmx-sentinel">
+						<td colspan="{{ schema.index|length + 1 }}"><span class="loading-dots"></span></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		{# Clone dialog #}
+		{{ cms.render.cloneDialog(url.collection) }}
+	</div>
 
 {% else %}
 

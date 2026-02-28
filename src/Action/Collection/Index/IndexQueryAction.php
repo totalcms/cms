@@ -39,6 +39,10 @@ readonly class IndexQueryAction
 		$result     = $this->queryService->query($collection, $params);
 		$baseUrl    = $this->config->api . '/collections/' . $collection . '/query';
 
+		// Pass collection name and API base for table format rendering
+		$params['_collection'] = $collection;
+		$params['_api']        = $this->config->api;
+
 		return $this->renderer->render($request, $response, $result, $params, $format, $baseUrl, 'collection-' . $collection);
 	}
 }

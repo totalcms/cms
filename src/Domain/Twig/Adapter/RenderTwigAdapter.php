@@ -5,16 +5,11 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Admin\CollectionTable;
-use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
-use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
@@ -46,9 +41,6 @@ class RenderTwigAdapter
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CollectionLister $collectionLister,
 		private readonly SchemaFetcher $schemaFetcher,
-		private readonly IndexReader $indexReader,
-		private readonly ObjectUrlBuilder $objectUrlBuilder,
-		private readonly CacheManager $cacheManager,
 		public readonly GridRenderer $grid,
 		LoggerFactory $loggerFactory,
 	) {
@@ -696,45 +688,56 @@ class RenderTwigAdapter
 	}
 
 	/**
-	 * Render a collection table for the admin interface.
+	 * Render the clone dialog for a collection.
 	 */
-	public function collectionTable(string $collection): string
+	public function cloneDialog(string $collection): string
 	{
-		// Try to get cached table HTML for large collections
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		$cacheKey       = null;
+		if ($collectionData === null) {
+			return '';
+		}
 
-		if ($collectionData instanceof CollectionData && $collectionData->totalObjects > 1000) {
-			// Use lastUpdated as cache buster - changes whenever objects are modified
-			$lastUpdated = $collectionData->lastUpdated ?? '';
-			$cacheKey    = "table:{$collection}:" . md5($lastUpdated);
+		$schemaData    = $this->schemaFetcher->fetchSchema($collectionData->schema);
+		$labelSingular = $collectionData->labelSingular !== '' ? $collectionData->labelSingular : 'Object';
 
-			$cached = $this->cacheManager->getComputedData($cacheKey);
-			if ($cached !== null && is_string($cached)) {
-				return $cached;
+		$header = HTMLUtils::element('h3', 'Clone ' . $labelSingular);
+
+		$collections = $this->collectionLister->listCollectionsWithSchema($schemaData->id);
+
+		$options = '';
+		foreach ($collections as $coll) {
+			$attrs = ['value' => $coll->id];
+			if ($coll->id === $collectionData->id) {
+				$attrs['selected'] = '';
 			}
+			$options .= HTMLUtils::element('option', $coll->name, $attrs);
 		}
 
-		$options = [
-			'config'            => $this->config,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionLister'  => $this->collectionLister,
-			'schemaFetcher'     => $this->schemaFetcher,
-			'collectionReader'  => $this->indexReader,
-			'objectUrlBuilder'  => $this->objectUrlBuilder,
-			'api'               => $this->config->api,
-			'collection'        => $collection,
-		];
+		$label           = HTMLUtils::element('label', 'Clone into Collection', ['for' => 'clone-collection']);
+		$input           = HTMLUtils::element('select', $options, ['id' => 'clone-collection', 'type' => 'text', 'name' => 'collection']);
+		$collectionField = HTMLUtils::element('div', $label . $input);
 
-		$table  = new CollectionTable(...$options);
-		$result = $table->build();
+		$label   = HTMLUtils::element('label', 'New ' . $labelSingular . ' ID', ['for' => 'clone-id']);
+		$input   = HTMLUtils::inlineElement('input', [
+			'id'             => 'clone-id',
+			'type'           => 'text',
+			'name'           => 'id',
+			'autocapitalize' => 'off',
+			'class'          => 'slugify-input',
+		]);
+		$idField = HTMLUtils::element('div', $label . $input);
 
-		// Cache the rendered HTML for large collections (1 hour TTL)
-		if ($cacheKey !== null) {
-			$this->cacheManager->storeComputedData($cacheKey, $result, CacheManager::TTL_INDEX_DATA);
-		}
+		$form = new \TotalCMS\Domain\Admin\SimpleForm(
+			api     : $this->config->api,
+			route   : '',
+			method  : 'POST',
+			label   : 'Clone ' . $labelSingular,
+			class   : 'clone-object-form',
+			refresh : true,
+		);
+		$content = $form->build($header . $collectionField . $idField);
 
-		return $result;
+		return HTMLUtils::dialog($content, 'dialog-clone-object small');
 	}
 
 	/**

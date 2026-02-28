@@ -130,7 +130,7 @@ class TotalCMSTwigAdapter
 			'paginationSimple' => ['render', 'paginationSimple'],
 			'paginationFull'   => ['render', 'paginationFull'],
 			'depotBrowser'     => ['render', 'depotBrowser'],
-			'collectionTable'  => ['render', 'collectionTable'],
+			'cloneDialog'      => ['render', 'cloneDialog'],
 
 			// CollectionTwigAdapter (cms.collection.*)
 			'collections'                 => ['collection', 'list'],

@@ -1,0 +1,194 @@
+// Native admin table styles for HTMX-powered collection tables
+
+.admin-table-wrapper .admin-table-header {
+	margin-bottom: 1rem;
+
+	&::before {
+		left : 0.5rem;
+	}
+
+	input[type="search"] {
+		width: 100%;
+	}
+}
+
+.admin-table-scroll {
+	position: relative;
+	overflow: auto;
+	width: 100%;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+table.admin-table {
+	min-width: 100%;
+	border-collapse: collapse;
+	text-align: left;
+	display: table;
+	margin: 0;
+	padding: 0;
+	table-layout: auto;
+	color: oklch(var(--totalform-text-color));
+
+	*, *:after, *:before {
+		box-sizing: border-box;
+	}
+}
+
+.admin-table-scroll, table.admin-table {
+	max-height: calc(100vh - 200px);
+}
+
+// Table header
+table.admin-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background-color: oklch(var(--totalform-white));
+	color: oklch(var(--totalform-nearblack));
+	border-top: none;
+	padding: 14px 24px;
+	user-select: none;
+	box-sizing: border-box;
+	white-space: nowrap;
+	outline: none;
+	vertical-align: middle;
+	border-radius: var(--totalform-radius) var(--totalform-radius) 0 0;
+
+	@media (max-width: 768px) {
+		position: static;
+	}
+}
+
+// Sortable headers
+table.admin-table thead th.sortable {
+	cursor: pointer;
+
+	.th-content {
+		text-overflow: ellipsis;
+		overflow: hidden;
+	}
+
+	.sort-indicator {
+		display: inline-block;
+		vertical-align: middle;
+		margin-left: 4px;
+		height: 12px;
+		width: 12px;
+		mask-image: var(--icon-sort);
+		mask-size: contain;
+		mask-repeat: no-repeat;
+		mask-position: center;
+		background-color: currentColor;
+		opacity: 0;
+		transition: opacity 200ms ease-in-out;
+	}
+
+	&:hover .sort-indicator {
+		opacity: 0.3;
+	}
+
+	&[data-sort-dir="asc"] .sort-indicator {
+		opacity: 0.5;
+		clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+	}
+
+	&[data-sort-dir="desc"] .sort-indicator {
+		opacity: 0.5;
+		clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+	}
+
+	&:hover {
+		background-color: oklch(var(--totalform-nearwhite)) !important;
+	}
+}
+
+// Action column header
+table.admin-table thead th.action {
+	min-width: 2rem !important;
+	padding: 14px 0 14px 14px;
+	cursor: default;
+	pointer-events: none;
+	z-index: 1;
+
+	&:hover {
+		background-color: oklch(var(--totalform-white)) !important;
+	}
+	* {
+		display: none;
+	}
+}
+
+// Table cells
+table.admin-table td {
+	white-space: nowrap;
+	max-width: 300px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: 0.5rem 1rem;
+	height: 3rem;
+	box-sizing: content-box;
+	vertical-align: middle;
+}
+
+// Action column cells
+table.admin-table td.action {
+	min-width: 2rem !important;
+	padding: 14px 0 14px 14px;
+	cursor: default;
+}
+
+// Table rows
+table.admin-table tbody tr {
+	border: none;
+	border-bottom: 1px solid oklch(var(--totalform-lightgray) / 50%);
+	cursor: pointer;
+
+	&:nth-child(odd) {
+		background-color: oklch(var(--totalform-purewhite));
+	}
+
+	&:hover {
+		background-color: oklch(var(--totalform-accent) / 20%);
+	}
+
+	&:last-child td {
+		border-bottom: 0;
+	}
+}
+
+// Sentinel row (HTMX load-more trigger)
+table.admin-table tr.htmx-sentinel {
+	cursor: default;
+	text-align: center;
+
+	&:hover {
+		background-color: transparent;
+	}
+
+	td {
+		padding: 1rem;
+	}
+}
+
+// HTMX loading state
+.admin-table-wrapper.htmx-request tbody {
+	opacity: 0.6;
+	transition: opacity 200ms ease-in-out;
+}
+
+// Loading dots animation
+.loading-dots {
+	display: inline-block;
+
+	&::after {
+		content: "...";
+		animation: loading-dots 1.5s infinite;
+	}
+}
+
+@keyframes loading-dots {
+	0% { content: "."; }
+	33% { content: ".."; }
+	66% { content: "..."; }
+}

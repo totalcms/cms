@@ -179,9 +179,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);
@@ -210,9 +207,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);
@@ -241,9 +235,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);
@@ -386,9 +377,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);
@@ -435,9 +423,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);
@@ -467,9 +452,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);
@@ -500,9 +482,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
 			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheManager::class),
 			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$loggerFactory,
 		);

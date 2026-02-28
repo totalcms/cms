@@ -42,9 +42,6 @@ final class RenderTwigAdapterTest extends TestCase
 			$this->createMock(CollectionFetcher::class),
 			$this->createMock(CollectionLister::class),
 			$this->createMock(SchemaFetcher::class),
-			$this->createMock(IndexReader::class),
-			$this->createMock(ObjectUrlBuilder::class),
-			$this->createMock(CacheManager::class),
 			$this->createMock(GridRenderer::class),
 			$loggerFactory,
 		);

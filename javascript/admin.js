@@ -5,6 +5,7 @@ import SimpleForm from './totalform/simpleform';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
 import AdminTable from './totalform/admin-table';
+import { Grid } from "gridjs";
 import ClipButton from './clipboard-button';
 import JobQueueStatsTable from './jobqueue-stats';
 import JSONField from './totalform/json';
@@ -57,8 +58,23 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const tables = Array.from(document.getElementsByClassName("admin-table"));
-	tables.forEach(table => new AdminTable(table));
+	// HTMX-powered collection tables
+	const tableWrappers = Array.from(document.getElementsByClassName("admin-table-wrapper"));
+	tableWrappers.forEach(wrapper => new AdminTable(wrapper));
+
+	// Legacy GridJS tables (logs, server-checker, etc.)
+	const legacyTables = Array.from(document.querySelectorAll("table.admin-table:not(.admin-table-wrapper table)"));
+	legacyTables.forEach(table => {
+		const wrapper = document.createElement("div");
+		wrapper.classList.add("legacy-table-wrapper");
+		table.parentNode.insertBefore(wrapper, table);
+		const gridConfig = {
+			from       : table,
+			sort       : table.dataset.sort !== undefined,
+			fixedHeader: true,
+		};
+		new Grid(gridConfig).render(wrapper);
+	});
 
 	const copyButtons = Array.from(document.getElementsByClassName("cms-clip-button"));
 	copyButtons.forEach(button => new ClipButton(button));
