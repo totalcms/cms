@@ -1,5 +1,3 @@
-import QuickAction from '../quickaction';
-
 //-----------------------------------------------
 // Total CMS Collection Table Component (HTMX)
 //-----------------------------------------------
@@ -56,13 +54,6 @@ export default class AdminTable {
 			}
 		});
 
-		// Handle delete success
-		this.wrapper.addEventListener('quickaction-success', (e) => {
-			if (e.target.matches('.delete-action')) {
-				const row = e.target.closest('tr');
-				if (row) row.remove();
-			}
-		});
 	}
 
 	handleSortClick(th) {
@@ -166,12 +157,7 @@ export default class AdminTable {
 			const offset = 10;
 			popover.style.top = `${rect.top + window.scrollY - offset}px`;
 			popover.style.left = `${rect.left + window.scrollX + offset}px`;
-			this.initDeleteActions(popover);
 		}
-	}
-
-	initDeleteActions(target) {
-		new QuickAction(target.querySelector('.delete-action'));
 	}
 
 	focusSearchInput() {

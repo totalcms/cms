@@ -9,7 +9,7 @@
 				{% endif %}
 				<li class="clone"><a href="/collections/{{ _collection }}/{{ object.id }}/clone">Clone {{ _labelSingular }}</a></li>
 				<li class="download"><a href="{{ cms.api }}/export/collections/{{ _collection }}/{{ object.id }}/zip">Download Zip</a></li>
-				<li class="delete"><a class="delete-action" data-method="DELETE" data-confirm="Are you sure you want to delete this {{ _labelSingular|lower }}?" href="{{ cms.api }}/collections/{{ _collection }}/{{ object.id }}">Delete {{ _labelSingular }}</a></li>
+				<li class="delete">{{ cms.admin.quickActionButton('Delete ' ~ _labelSingular, 'collections/' ~ _collection ~ '/' ~ object.id, {method: 'delete', confirm: 'Are you sure you want to delete this ' ~ _labelSingular|lower ~ '?', reload: true, class: 'delete-action'}) }}</li>
 			</ul>
 		</nav>
 	</td>

@@ -280,17 +280,17 @@ readonly class CollectionTable
 			$link = HTMLUtils::element('li', $link, ['class' => 'link']);
 		}
 
-		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
-			'class'        => 'delete-action',
-			'data-method'  => 'DELETE',
-			'data-confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
-			'href'         => implode('/', [
-				$this->config->api,
-				'collections',
-				$this->collectionData->id,
-				$id,
-			]),
+		$deleteRoute = implode('/', ['collections', $this->collectionData->id, $id]);
+		$deleteUrl   = rtrim($this->config->api, '/') . '/' . ltrim($deleteRoute, '/');
+		$deleteAttrs = HTMLUtils::htmxAttributes($deleteUrl, 'delete', [
+			'confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
+			'on'      => [
+				'error'         => 'QuickAction.error(this, event)',
+				'after:request' => 'QuickAction.reload()',
+			],
 		]);
+		$deleteAttrs['class'] = 'delete-action';
+		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, $deleteAttrs);
 		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
 
 		$clone = HTMLUtils::element('a', 'Clone ' . $labelSingular, [
