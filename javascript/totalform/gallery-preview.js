@@ -68,14 +68,26 @@ export default class GalleryPreview {
 		}
 	}
 
-	toggleFeaturedField() {
+	setFeatured(featured) {
 		const name = this.getImageName();
 		const data = this.gallery.imageDataStore.get(name);
 		if (data) {
-			data.featured = !this.isFeatured();
+			data.featured = featured;
 			this.gallery.imageDataStore.set(name, data);
 		}
-		setTimeout(() => this.toggleFeaturedActionButton(), 0);
+
+		// If the shared dialog is currently showing this image, update the checkbox
+		if (this.gallery.activePreview === this && this.gallery.sharedDialogFields) {
+			for (const field of this.gallery.sharedDialogFields) {
+				if (field.totalfield.property === 'featured') {
+					field.totalfield.setValue(featured);
+					field.totalfield.saved();
+					break;
+				}
+			}
+		}
+
+		this.toggleFeaturedActionButton();
 	}
 
 	setupDownload() {
@@ -105,13 +117,14 @@ export default class GalleryPreview {
 		if (featureButton) {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
+				const newFeatured = !this.isFeatured();
 				this.tempToggleFeaturedActionButton();
 				const name = this.getImageName();
 				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-				const newData = { featured: !this.isFeatured() };
-				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
-					this.toggleFeaturedField();
+				this.form.api.postAPI(featureApi, { featured: newFeatured }, "patch").then(response => {
+					this.setFeatured(newFeatured);
 				}).catch(error => {
+					this.tempToggleFeaturedActionButton();
 					console.error("Failed to update featured status", error);
 					alert(t("error.featured_update"));
 				});

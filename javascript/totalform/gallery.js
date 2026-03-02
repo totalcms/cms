@@ -206,19 +206,22 @@ export default class GalleryField extends ImageField {
 	}
 
 	populateSharedDialog(imageData) {
-		for (const field of this.sharedDialogFields) {
+		// Snapshot to a static array — a live HTMLCollection can shift
+		// mid-iteration when setValue triggers Choices.js DOM updates.
+		const fields = Array.from(this.sharedDialogFields);
+		for (const field of fields) {
 			const key = field.totalfield.property;
 			if (key.startsWith("exif-")) {
 				const exifKey = key.replace("exif-","");
-				field.totalfield.setValue((imageData.exif && imageData.exif[exifKey]) || "");
+				field.totalfield.setValue(imageData.exif?.[exifKey] ?? "");
 			} else if (key.startsWith("focalpoint-")) {
 				const fpKey = key.replace("focalpoint-","");
-				field.totalfield.setValue((imageData.focalpoint && imageData.focalpoint[fpKey]) || 0);
+				field.totalfield.setValue(imageData.focalpoint?.[fpKey] ?? 0);
 			} else if (key.startsWith("palette-")) {
 				const paletteIndex = parseInt(key.replace("palette-",""));
 				field.totalfield.setValue(imageData.palette ? imageData.palette[paletteIndex] : "");
 			} else {
-				field.totalfield.setValue(imageData[key] || "");
+				field.totalfield.setValue(imageData[key] ?? "");
 			}
 			field.totalfield.saved();
 		}
@@ -233,8 +236,8 @@ export default class GalleryField extends ImageField {
 		// Update focal point position
 		const focalPoint = this.sharedDialog.dialog.querySelector('.focal-point');
 		if (focalPoint && imageData.focalpoint) {
-			focalPoint.style.left = `${imageData.focalpoint.x || 50}%`;
-			focalPoint.style.top = `${imageData.focalpoint.y || 50}%`;
+			focalPoint.style.left = `${imageData.focalpoint.x ?? 50}%`;
+			focalPoint.style.top = `${imageData.focalpoint.y ?? 50}%`;
 		}
 	}
 
