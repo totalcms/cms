@@ -332,10 +332,17 @@ class CacheManager
 
 	/**
 	 * Clear collection index cache from all backends.
+	 * Clears the index data, object IDs, and API response caches for the collection.
 	 */
 	public function clearCollectionIndex(string $collectionName): bool
 	{
-		return $this->clearData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
+		$indexCleared     = $this->clearComputedData("index:{$collectionName}");
+		$objectIdsCleared = $this->clearComputedData("object_ids:{$collectionName}");
+
+		// Clear cached API/query responses that depend on this collection's data
+		$this->clearByType(self::PREFIX_API_RESPONSE);
+
+		return $indexCleared && $objectIdsCleared;
 	}
 
 	/**
