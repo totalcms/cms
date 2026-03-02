@@ -222,6 +222,9 @@ body {
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);
 		}
+		&#dataview-links li {
+			--collection-icon : var(--icon-data-views);
+		}
 		a {
 			display         : flex;
 			align-items     : center;
