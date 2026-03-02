@@ -65,6 +65,11 @@
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 }
+.bulk-divider {
+	border: none;
+	border-top: 1px solid oklch(var(--totalform-border-color));
+	margin: 1.5rem 0;
+}
 .bulk-preview-form,
 .bulk-send-form {
 	display: flex;
@@ -102,7 +107,7 @@
 }
 .bulk-preview-frame {
 	width: 100%;
-	min-height: 300px;
+	min-height: 500px;
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius: var(--totalform-radius);
 }

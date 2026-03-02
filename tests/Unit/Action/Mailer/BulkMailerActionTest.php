@@ -52,12 +52,92 @@ final class BulkMailerActionTest extends TestCase
 
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
-			->with('test-mailer', '2026-03-01 12:00:00', 'override@example.com')
+			->with('test-mailer', '2026-03-01 12:00:00', 'override@example.com', null)
 			->willReturn([
 				'success' => true,
 				'batchId' => 'bulk_123',
 				'count'   => 5,
 				'message' => 'Queued 5 emails for sending',
+			]);
+
+		($this->action)($request, $response);
+	}
+
+	public function testPassesObjectIdsToService(): void
+	{
+		$request = $this->createRequest([
+			'mailerId'      => 'test-mailer',
+			'bulkObjectIds' => ['obj-1', 'obj-2'],
+		]);
+		$response = $this->createResponse();
+
+		$this->bulkMailerService->expects($this->once())
+			->method('queueBulkSend')
+			->with('test-mailer', null, null, ['obj-1', 'obj-2'])
+			->willReturn([
+				'success' => true,
+				'batchId' => 'bulk_123',
+				'count'   => 2,
+				'message' => 'Queued 2 emails for sending',
+			]);
+
+		($this->action)($request, $response);
+	}
+
+	public function testFiltersEmptyObjectIds(): void
+	{
+		$request = $this->createRequest([
+			'mailerId'      => 'test-mailer',
+			'bulkObjectIds' => ['obj-1', '', 'obj-2', ''],
+		]);
+		$response = $this->createResponse();
+
+		$this->bulkMailerService->expects($this->once())
+			->method('queueBulkSend')
+			->with('test-mailer', null, null, ['obj-1', 'obj-2'])
+			->willReturn([
+				'success' => true,
+				'batchId' => 'bulk_123',
+				'count'   => 2,
+				'message' => 'Queued 2 emails for sending',
+			]);
+
+		($this->action)($request, $response);
+	}
+
+	public function testPassesNullWhenObjectIdsAllEmpty(): void
+	{
+		$request = $this->createRequest([
+			'mailerId'      => 'test-mailer',
+			'bulkObjectIds' => ['', ''],
+		]);
+		$response = $this->createResponse();
+
+		$this->bulkMailerService->expects($this->once())
+			->method('queueBulkSend')
+			->with('test-mailer', null, null, null)
+			->willReturn([
+				'success' => false,
+				'message' => 'Error',
+			]);
+
+		($this->action)($request, $response);
+	}
+
+	public function testPassesNullWhenObjectIdsNotArray(): void
+	{
+		$request = $this->createRequest([
+			'mailerId'      => 'test-mailer',
+			'bulkObjectIds' => 'not-an-array',
+		]);
+		$response = $this->createResponse();
+
+		$this->bulkMailerService->expects($this->once())
+			->method('queueBulkSend')
+			->with('test-mailer', null, null, null)
+			->willReturn([
+				'success' => false,
+				'message' => 'Error',
 			]);
 
 		($this->action)($request, $response);

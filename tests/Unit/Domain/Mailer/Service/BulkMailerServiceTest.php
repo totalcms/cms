@@ -250,6 +250,79 @@ final class BulkMailerServiceTest extends TestCase
 		$this->assertStringContainsString('1 emails', $result['message']);
 	}
 
+	public function testUsesObjectIdsInsteadOfFiltersWhenProvided(): void
+	{
+		$mailer = $this->createMailerData(bulkInclude: 'status:active');
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
+
+		// IndexFilter should NOT be called when objectIds are provided
+		$this->indexFilter->expects($this->never())->method('fetchFilteredIndex');
+
+		$jobData = $this->createMock(JobData::class);
+		$this->jobQueuer->expects($this->exactly(2))
+			->method('queueEmail')
+			->willReturn($jobData);
+
+		$result = $this->service->queueBulkSend('test-mailer', null, null, ['obj-1', 'obj-2']);
+
+		$this->assertTrue($result['success']);
+		$this->assertSame(2, $result['count']);
+	}
+
+	public function testObjectIdsPassedAsJobData(): void
+	{
+		$mailer = $this->createMailerData();
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
+
+		$capturedIds = [];
+		$jobData     = $this->createMock(JobData::class);
+		$this->jobQueuer->method('queueEmail')
+			->willReturnCallback(function (array $data) use (&$capturedIds, $jobData): JobData {
+				$capturedIds[] = $data['objectId'];
+
+				return $jobData;
+			});
+
+		$this->service->queueBulkSend('test-mailer', null, null, ['abc', 'def']);
+
+		$this->assertSame(['abc', 'def'], $capturedIds);
+	}
+
+	public function testEmptyObjectIdsArrayFallsBackToFilters(): void
+	{
+		$mailer = $this->createMailerData();
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
+
+		$this->indexFilter->expects($this->once())
+			->method('fetchFilteredIndex')
+			->willReturn([['id' => 'obj-1']]);
+
+		$jobData = $this->createMock(JobData::class);
+		$this->jobQueuer->method('queueEmail')->willReturn($jobData);
+
+		$result = $this->service->queueBulkSend('test-mailer', null, null, []);
+
+		$this->assertTrue($result['success']);
+		$this->assertSame(1, $result['count']);
+	}
+
+	public function testNullObjectIdsFallsBackToFilters(): void
+	{
+		$mailer = $this->createMailerData();
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
+
+		$this->indexFilter->expects($this->once())
+			->method('fetchFilteredIndex')
+			->willReturn([['id' => 'obj-1']]);
+
+		$jobData = $this->createMock(JobData::class);
+		$this->jobQueuer->method('queueEmail')->willReturn($jobData);
+
+		$result = $this->service->queueBulkSend('test-mailer', null, null, null);
+
+		$this->assertTrue($result['success']);
+	}
+
 	public function testEmptyOverrideToIsNormalisedToNull(): void
 	{
 		$mailer = $this->createMailerData();

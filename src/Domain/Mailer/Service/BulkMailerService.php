@@ -35,9 +35,11 @@ readonly class BulkMailerService
 	/**
 	 * Queue a bulk send for all matching objects in a collection.
 	 *
+	 * @param list<string>|null $objectIds Specific object IDs to send to (overrides filters)
+	 *
 	 * @return array{success:bool,batchId?:string,count?:int,message:string}
 	 */
-	public function queueBulkSend(string $mailerId, ?string $scheduledAt = null, ?string $overrideTo = null): array
+	public function queueBulkSend(string $mailerId, ?string $scheduledAt = null, ?string $overrideTo = null, ?array $objectIds = null): array
 	{
 		if (!$this->editionFeatures->can(EditionFeature::BULK_MAILER)) {
 			return [
@@ -69,17 +71,20 @@ readonly class BulkMailerService
 			];
 		}
 
-		// Build filter options
-		$filterOptions = [];
-		if ($mailer->bulkInclude !== '') {
-			$filterOptions['include'] = $mailer->bulkInclude;
-		}
-		if ($mailer->bulkExclude !== '') {
-			$filterOptions['exclude'] = $mailer->bulkExclude;
-		}
+		// Use specific object IDs if provided, otherwise apply filters
+		if ($objectIds !== null && $objectIds !== []) {
+			$objects = array_map(static fn(string $oid): array => ['id' => $oid], $objectIds);
+		} else {
+			$filterOptions = [];
+			if ($mailer->bulkInclude !== '') {
+				$filterOptions['include'] = $mailer->bulkInclude;
+			}
+			if ($mailer->bulkExclude !== '') {
+				$filterOptions['exclude'] = $mailer->bulkExclude;
+			}
 
-		// Fetch filtered index
-		$objects = $this->indexFilter->fetchFilteredIndex($mailer->bulkCollection, $filterOptions);
+			$objects = $this->indexFilter->fetchFilteredIndex($mailer->bulkCollection, $filterOptions);
+		}
 
 		if ($objects === []) {
 			return [

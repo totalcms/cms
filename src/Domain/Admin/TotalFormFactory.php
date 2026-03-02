@@ -390,11 +390,117 @@ readonly class TotalFormFactory
 				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id,
 			]);
 
-			$bulkConfigFields = $form->field('bulkCollection') .
-				$form->field('bulkInclude') .
-				$form->field('bulkExclude');
-			$bulkConfigDetails = HTMLUtils::details('Audience', $bulkConfigFields);
+			$objectPickerScript = <<<'SCRIPT'
+			<script>
+			(function() {
+				let debounceTimer = null;
+				let cachedData = [];
+				const pickerInput = document.querySelector('select[name="bulkObjectIds[]"]');
+				const picker = pickerInput ? pickerInput.closest('.form-field') : null;
+				const previewInput = document.querySelector('select[name="bulkPreviewObjectId"]');
+				const previewField = previewInput ? previewInput.closest('.form-field') : null;
+				if (!picker) return;
 
+				function updateChoices(field, data) {
+					if (!field || !field.totalfield || !field.totalfield.choices) return;
+					const choices = field.totalfield.choices;
+					choices.clearStore();
+					if (data.length > 0) {
+						choices.setChoices(data, 'value', 'label', true);
+					}
+				}
+
+				function fetchObjects() {
+					const collection = document.querySelector('[name="bulkCollection"]');
+					const include = document.querySelector('[name="bulkInclude"]');
+					const exclude = document.querySelector('[name="bulkExclude"]');
+					if (!collection || !collection.value) return;
+
+					const params = new URLSearchParams({ bulkCollection: collection.value });
+					if (include && include.value) params.set('bulkInclude', include.value);
+					if (exclude && exclude.value) params.set('bulkExclude', exclude.value);
+
+					fetch('/action/mailer/bulk/objects?' + params.toString())
+						.then(r => r.json())
+						.then(data => {
+							cachedData = data;
+							updateChoices(picker, data);
+							updateChoices(previewField, data);
+						})
+						.catch(() => {});
+				}
+
+				function debouncedFetch() {
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(fetchObjects, 500);
+				}
+
+				const collectionEl = document.querySelector('[name="bulkCollection"]');
+				const includeEl = document.querySelector('[name="bulkInclude"]');
+				const excludeEl = document.querySelector('[name="bulkExclude"]');
+
+				if (collectionEl) collectionEl.addEventListener('change', fetchObjects);
+				if (includeEl) includeEl.addEventListener('input', debouncedFetch);
+				if (excludeEl) excludeEl.addEventListener('input', debouncedFetch);
+
+				// When the preview accordion opens, apply cached data
+				if (previewField) {
+					const details = previewField.closest('details');
+					if (details) {
+						details.addEventListener('toggle', () => {
+							if (details.open && cachedData.length > 0) {
+								updateChoices(previewField, cachedData);
+							}
+						});
+					}
+				}
+
+				if (collectionEl && collectionEl.value) fetchObjects();
+			})();
+			</script>
+			SCRIPT;
+
+			// Audience + Send combined accordion
+			$sendAttrs = array_merge(
+				HTMLUtils::htmxAttributes('/action/mailer/bulk', 'post', [
+					'target'  => '#bulk-send-output',
+					'swap'    => 'innerHTML',
+					'confirm' => 'Are you sure you want to queue a bulk email send? This will send one email per matching object.',
+				]),
+				['class' => 'dash-button accent', 'id' => 'bulk-send-btn']
+			);
+			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkOverrideTo"],[name="bulkscheduledAt"],[name="bulkObjectIds[]"]';
+
+			$bulkSendFields = $form->field('bulkCollection') .
+				$form->field('bulkInclude') .
+				$form->field('bulkExclude') .
+				$form->field('bulkObjectIds[]', [
+					'field'       => 'list',
+					'label'       => 'Specific Objects',
+					'help'        => 'Select specific objects to override filters. Leave empty to use filters above.',
+					'placeholder' => 'Select objects...',
+					'settings'    => [
+						'addChoices'       => false,
+						'removeItemButton' => true,
+					],
+				]) .
+				HTMLUtils::inlineElement('hr', ['class' => 'bulk-divider']) .
+				$form->field('bulkOverrideTo', [
+					'field'       => 'email',
+					'label'       => 'Override To Email (for testing)',
+					'placeholder' => 'test@example.com',
+					'help'        => 'Override recipient email for testing. All emails will be sent to this address instead.',
+				]) .
+				$form->field('bulkscheduledAt', [
+					'field'       => 'datetime',
+					'label'       => 'Schedule',
+					'placeholder' => 'Enter a date and time to schedule this email',
+				]) .
+				HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs) .
+				'<div id="bulk-send-output" class="bulk-send-output"></div>';
+			$bulkSendDetails = HTMLUtils::details('Audience & Send', $bulkSendFields);
+
+			// Preview accordion
 			$previewAttrs = array_merge(
 				HTMLUtils::htmxAttributes('/action/mailer/bulk/preview', 'post', [
 					'target' => '#bulk-preview-output',
@@ -405,9 +511,14 @@ readonly class TotalFormFactory
 			$previewAttrs['hx-include'] = '[name="mailerId"],[name="bulkPreviewObjectId"],[name="bulkCollection"]';
 
 			$bulkPreviewForm = $form->field('bulkPreviewObjectId', [
-				'field'       => 'text',
-				'label'       => 'Preview Object ID',
-				'placeholder' => 'Enter an object ID to preview',
+				'field'       => 'list',
+				'label'       => 'Preview Object',
+				'placeholder' => 'Select an object to preview...',
+				'settings'    => [
+					'addChoices'       => false,
+					'removeItemButton' => true,
+					'maxItemCount'     => 1,
+				],
 			]) . HTMLUtils::element('button', 'Preview', $previewAttrs);
 			$bulkPreviewForm    = HTMLUtils::element('div', $bulkPreviewForm, ['class' => 'bulk-preview-form']);
 			$bulkPreviewOutput  = HTMLUtils::element('div', '', [
@@ -416,35 +527,10 @@ readonly class TotalFormFactory
 			]);
 			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
 
-			$sendAttrs = array_merge(
-				HTMLUtils::htmxAttributes('/action/mailer/bulk', 'post', [
-					'target'  => '#bulk-send-output',
-					'swap'    => 'innerHTML',
-					'confirm' => 'Are you sure you want to queue a bulk email send? This will send one email per matching object.',
-				]),
-				['class' => 'dash-button accent', 'id' => 'bulk-send-btn']
-			);
-			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkOverrideTo"],[name="bulkscheduledAt"]';
-
-			$bulkSendForm = $form->field('bulkOverrideTo', [
-				'field'       => 'email',
-				'label'       => 'Override To Email (for testing)',
-				'placeholder' => 'test@example.com',
-				'help'        => 'Override recipient email for testing. All emails will be sent to this address instead.',
-			]) .
-				$form->field('bulkscheduledAt', [
-					'field'       => 'datetime',
-					'label'       => 'Schedule',
-					'placeholder' => 'Enter a date and time to schedule this email',
-				]) . HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs);
-			$bulkSendForm    = HTMLUtils::element('div', $bulkSendForm, ['class' => 'bulk-send-form']);
-			$bulkSendOutput  = '<div id="bulk-send-output" class="bulk-send-output"></div>';
-			$bulkSendDetails = HTMLUtils::details('Send', $bulkSendForm . $bulkSendOutput);
-
 			$bulkSection  = $hiddenMailerId;
 			$bulkSection .= HTMLUtils::element('h2', 'Bulk Send <span class="bulk-pro-badge">Pro</span>');
 			$bulkSection .= HTMLUtils::element('p', 'Send this email to every matching object in a collection.');
-			$bulkSection  = $bulkSection . $bulkConfigDetails . $bulkPreviewDetails . $bulkSendDetails;
+			$bulkSection .= $bulkSendDetails . $bulkPreviewDetails . $objectPickerScript;
 			$bulkSection  = HTMLUtils::element('section', $bulkSection, ['class' => 'bulk-send-section']);
 		}
 

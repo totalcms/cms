@@ -33,7 +33,18 @@ readonly class BulkMailerAction
 		$scheduledAt = isset($data['bulkscheduledAt']) && $data['bulkscheduledAt'] !== '' ? (string)$data['bulkscheduledAt'] : null;
 		$overrideTo  = isset($data['bulkOverrideTo']) && $data['bulkOverrideTo'] !== '' ? (string)$data['bulkOverrideTo'] : null;
 
-		$result = $this->bulkMailerService->queueBulkSend($mailerId, $scheduledAt, $overrideTo);
+		$objectIds = null;
+		if (isset($data['bulkObjectIds']) && is_array($data['bulkObjectIds'])) {
+			$filtered = array_filter(
+				array_map('strval', $data['bulkObjectIds']),
+				static fn(string $v): bool => $v !== ''
+			);
+			if ($filtered !== []) {
+				$objectIds = array_values($filtered);
+			}
+		}
+
+		$result = $this->bulkMailerService->queueBulkSend($mailerId, $scheduledAt, $overrideTo, $objectIds);
 
 		if ($result['success']) {
 			$message = htmlspecialchars($result['message']);
