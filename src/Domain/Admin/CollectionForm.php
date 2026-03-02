@@ -14,8 +14,10 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
@@ -41,6 +43,9 @@ class CollectionForm extends TotalForm
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
 		protected EditionFeatureService $editionFeatures,
+		protected CSRFTokenManager $csrfManager,
+		protected Config $config,
+		protected PropertyMetaResolver $metaResolver,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -67,13 +72,7 @@ class CollectionForm extends TotalForm
 		protected bool $hideID      = false,
 		protected bool $useFormGrid = true,
 		protected bool $addOnly     = false,
-		protected ?CSRFTokenManager $csrfManager = null,
 	) {
-		// CRITICAL: Must call parent constructor to initialize typed properties
-		// TotalForm::__construct() calls init() which properly sets:
-		// - $this->collectionData, $this->objectData, $this->schemaData
-		// Without this, template access to these properties fails with
-		// "Typed property must not be accessed before initialization" errors
 		parent::__construct(
 			$objectFetcher,
 			$collectionFetcher,
@@ -85,6 +84,9 @@ class CollectionForm extends TotalForm
 			$accessGroupLister,
 			$collectionEditionService,
 			$editionFeatures,
+			$csrfManager,
+			$config,
+			$metaResolver,
 			$api,
 			$collection,
 			$id,
@@ -107,7 +109,6 @@ class CollectionForm extends TotalForm
 			$hideID,
 			$useFormGrid,
 			$addOnly,
-			$csrfManager
 		);
 	}
 

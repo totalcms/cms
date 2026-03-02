@@ -19,6 +19,7 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -64,6 +65,7 @@ readonly class TotalFormFactory
 		private SettingsFetcher $settingsFetcher,
 		private JobManager $jobManager,
 		private DataViewLister $dataViewLister,
+		private PropertyMetaResolver $metaResolver,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -99,6 +101,8 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new TotalForm(...$options);
@@ -278,6 +282,8 @@ readonly class TotalFormFactory
 			'editionFeatures'          => $this->editionFeatures,
 			'schemaFactory'            => $this->schemaFactory,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -307,6 +313,8 @@ readonly class TotalFormFactory
 			'editionFeatures'          => $this->editionFeatures,
 			'templateRepository'       => $this->templateRepository,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new TemplateForm(...$options);
@@ -557,6 +565,8 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new CollectionForm(...$options);
@@ -583,6 +593,7 @@ readonly class TotalFormFactory
 			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		return new ObjectForm(...$options);
@@ -612,6 +623,8 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		return new DeckItemForm(...$options);
@@ -1118,6 +1131,9 @@ readonly class TotalFormFactory
 			accessGroupLister        : $this->accessGroupLister,
 			collectionEditionService : $this->collectionEditionService,
 			editionFeatures          : $this->editionFeatures,
+			csrfManager              : $this->csrfManager,
+			config                   : $this->config,
+			metaResolver             : $this->metaResolver,
 			api                      : $this->api,
 			collection               : '',
 		);

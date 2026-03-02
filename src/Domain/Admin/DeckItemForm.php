@@ -14,7 +14,9 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Deck Item Form Builder.
@@ -46,6 +48,9 @@ class DeckItemForm extends TotalForm
 		AccessGroupLister $accessGroupLister,
 		CollectionEditionService $collectionEditionService,
 		EditionFeatureService $editionFeatures,
+		CSRFTokenManager $csrfManager,
+		Config $config,
+		PropertyMetaResolver $metaResolver,
 		string $api,
 		string $collection             = '',
 		string $id                     = '',
@@ -69,7 +74,6 @@ class DeckItemForm extends TotalForm
 		bool $hideID                   = false,
 		bool $useFormGrid              = true,
 		bool $addOnly                  = false,
-		?CSRFTokenManager $csrfManager = null,
 	) {
 		parent::__construct(
 			objectFetcher            : $objectFetcher,
@@ -104,6 +108,8 @@ class DeckItemForm extends TotalForm
 			useFormGrid       : $useFormGrid,
 			addOnly           : $addOnly,
 			csrfManager       : $csrfManager,
+			config            : $config,
+			metaResolver      : $metaResolver,
 		);
 	}
 

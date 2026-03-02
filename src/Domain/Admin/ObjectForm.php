@@ -38,7 +38,7 @@ class ObjectForm extends TotalForm
 			$this->duplicateData = $this->filterFileProperties($this->data);
 			$this->isDuplicate   = true;
 			// Blank out ID to allow autogen rules to work (unless keepIdOnDuplicate setting is enabled)
-			$keepId = $this->config?->dashboard['keepIdOnDuplicate'] ?? false;
+			$keepId = $this->config->dashboard['keepIdOnDuplicate'] ?? false;
 			if (!$keepId) {
 				$this->duplicateData['id'] = '';
 			}
@@ -87,8 +87,6 @@ class ObjectForm extends TotalForm
 
 		// Get the value from the object data if it exists (for editing)
 		if ($this->id !== '' && $this->objectData instanceof ObjectData) {
-			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
-
 			// Set value from object data
 			if (!isset($options['value'])) {
 				$value = $this->objectData->toArray()[$name] ?? null;
@@ -119,17 +117,10 @@ class ObjectForm extends TotalForm
 	/** @return array<string,mixed> */
 	private function fieldDefaults(string $property): array
 	{
-		// Get the schema and collection settings for a property
-		$schema     = $this->schemaData->properties[$property] ?? [];
-		$collection = $this->collectionData->properties[$property] ?? [];
-
-		$defaults = array_merge($schema, $collection);
-
-		// Resolve presets within the settings key
-		$defaults['settings'] = $this->resolveFieldSettings($property, $defaults['field'] ?? '');
+		$defaults = $this->metaResolver->resolve($this->collection, $property, $this->id);
 
 		// Handle deckref for deck fields - move it to settings after resolve
-		// This must happen after resolveFieldSettings() to avoid being overwritten
+		// This is a form-specific concern, not part of general resolution
 		if (isset($defaults['deckref'])) {
 			$defaults['settings']['deckref'] = $defaults['deckref'];
 			unset($defaults['deckref']);
@@ -139,37 +130,7 @@ class ObjectForm extends TotalForm
 			unset($defaults['deckItemLabel']);
 		}
 
-		return TotalForm::filterFieldProperties($defaults);
-	}
-
-	/**
-	 * Resolve the full settings for a field property, including presets.
-	 *
-	 * Merges settings from schema, collection, and custom levels.
-	 * Resolves named presets at each level and falls back to type-default presets.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function resolveFieldSettings(string $property, string $fieldType): array
-	{
-		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
-		$collection = $this->collectionData->properties[$property]['settings'] ?? [];
-		$custom     = $this->collectionData->customProperties[$this->id][$property]['settings'] ?? [];
-
-		// Resolve preset references at any level
-		$schema     = $this->resolvePreset($schema);
-		$collection = $this->resolvePreset($collection);
-		$custom     = $this->resolvePreset($custom);
-
-		$settings = array_merge($schema, $collection, $custom);
-
-		// If no settings exist at any level, check for a type-default preset
-		// A preset named after the field type (e.g., "styledtext") auto-applies
-		if ($settings === [] && $fieldType !== '') {
-			$settings = $this->resolveTypePreset($fieldType);
-		}
-
-		return $settings;
+		return $defaults;
 	}
 
 	/** @return array<string,mixed> */
@@ -181,61 +142,6 @@ class ObjectForm extends TotalForm
 		return self::filterFieldAttributes($schema);
 	}
 
-	/**
-	 * Resolve a preset reference in settings.
-	 *
-	 * If settings contain a "preset" key, load the named preset as the base
-	 * and merge any additional explicit settings on top.
-	 *
-	 * @param array<string,mixed> $settings
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function resolvePreset(array $settings): array
-	{
-		if (!isset($settings['preset']) || !is_string($settings['preset'])) {
-			return $settings;
-		}
-
-		$presetName = $settings['preset'];
-		unset($settings['preset']);
-
-		$preset = $this->config->presets[$presetName] ?? [];
-
-		// Deck format stores presets as {id, settings}, extract the settings
-		$presetValues = is_array($preset['settings'] ?? null) ? $preset['settings'] : $preset;
-
-		if (!is_array($presetValues) || $presetValues === []) {
-			return $settings;
-		}
-
-		// Preset is the base, explicit settings override
-		return array_merge($presetValues, $settings);
-	}
-
-	/**
-	 * Look up a type-default preset matching the field type name.
-	 *
-	 * If a preset exists with a name matching the field type (e.g., "styledtext"),
-	 * it automatically applies as the default settings for all fields of that type
-	 * that have no explicit settings.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function resolveTypePreset(string $fieldType): array
-	{
-		$preset = $this->config->presets[$fieldType] ?? [];
-
-		// Deck format stores presets as {id, settings}, extract the settings
-		$presetValues = is_array($preset['settings'] ?? null) ? $preset['settings'] : $preset;
-
-		if (!is_array($presetValues) || $presetValues === []) {
-			return [];
-		}
-
-		return $presetValues;
-	}
-
 	private function isRequired(string $property): bool
 	{
 		if (!$this->schemaData instanceof SchemaData) {
@@ -243,28 +149,6 @@ class ObjectForm extends TotalForm
 		}
 
 		return in_array($property, $this->schemaData->required);
-	}
-
-	/**
-	 * Get the properties for a object from customProperties in the collection meta data.
-	 *
-	 * @return array<string,mixed>
-	 * */
-	private function objectFieldProperties(string $property): array
-	{
-		if ($this->id === '') {
-			return [];
-		}
-
-		// Get the schema and collection settings for a property
-		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
-
-		// Resolve preset references in settings
-		if (isset($properties['settings']) && is_array($properties['settings'])) {
-			$properties['settings'] = $this->resolvePreset($properties['settings']);
-		}
-
-		return TotalForm::filterFieldProperties($properties);
 	}
 
 	private function initCollectionData(): void

@@ -103,6 +103,7 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -375,6 +376,7 @@ return [
 		$container->get(SettingsFetcher::class),
 		$container->get(JobManager::class),
 		$container->get(DataViewLister::class),
+		$container->get(PropertyMetaResolver::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),

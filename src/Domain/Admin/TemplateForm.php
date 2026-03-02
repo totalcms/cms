@@ -11,8 +11,10 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
@@ -47,6 +49,9 @@ class TemplateForm extends TotalForm
 		protected CollectionEditionService $collectionEditionService,
 		protected EditionFeatureService $editionFeatures,
 		protected TemplateRepository $templateRepository,
+		protected CSRFTokenManager $csrfManager,
+		protected Config $config,
+		protected PropertyMetaResolver $metaResolver,
 		public string $api,
 		public string $path         = '',
 		public string $collection   = '',
@@ -75,7 +80,6 @@ class TemplateForm extends TotalForm
 		protected bool $hideID        = false,
 		protected bool $useFormGrid   = true,
 		protected bool $addOnly       = false,
-		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		parent::__construct(
 			$objectFetcher,
@@ -88,6 +92,9 @@ class TemplateForm extends TotalForm
 			$accessGroupLister,
 			$collectionEditionService,
 			$editionFeatures,
+			$csrfManager,
+			$config,
+			$metaResolver,
 			$api,
 			$collection,
 			$id,
@@ -110,7 +117,6 @@ class TemplateForm extends TotalForm
 			$hideID,
 			$useFormGrid,
 			$addOnly,
-			$csrfManager
 		);
 	}
 

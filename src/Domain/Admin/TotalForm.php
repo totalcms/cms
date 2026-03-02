@@ -19,6 +19,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -168,6 +169,9 @@ class TotalForm implements \Stringable
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
 		protected EditionFeatureService $editionFeatures,
+		protected CSRFTokenManager $csrfManager,
+		protected Config $config,
+		protected PropertyMetaResolver $metaResolver,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',
@@ -190,8 +194,6 @@ class TotalForm implements \Stringable
 		protected bool $hideID                   = false,
 		protected bool $useFormGrid              = true,
 		protected bool $addOnly                  = false,
-		protected ?CSRFTokenManager $csrfManager = null,
-		protected ?Config $config                = null,
 	) {
 		$this->init();
 		$this->initClass();
@@ -322,7 +324,7 @@ class TotalForm implements \Stringable
 
 		// Add CSRF token if manager is available and method requires protection
 		$csrfField = '';
-		if ($this->csrfManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+		if (in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
 			$csrfField = $this->csrfManager->getTokenField();
 		}
 
