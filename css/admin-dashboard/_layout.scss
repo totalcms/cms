@@ -217,6 +217,7 @@ body {
 			&.import-alloy { --collection-icon : var(--icon-flask) }
 			&.import-rss { --collection-icon : var(--icon-rss) }
 			&.import-wordpress { --collection-icon : var(--icon-wordpress) }
+			&.import-totalcms-one { --collection-icon : var(--icon-logo-fill) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);

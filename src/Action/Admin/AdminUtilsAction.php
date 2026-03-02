@@ -73,7 +73,7 @@ readonly class AdminUtilsAction
 
 		// Detect Total CMS 1 data for project-setup page
 		$totalcms1DetectionData = null;
-		if ($page === 'project-setup') {
+		if ($page === 'project-setup' || $page === 'import-totalcms-one') {
 			$totalcms1DetectionData = $this->detectTotalCms1Data();
 
 			// Create default collections when requested
