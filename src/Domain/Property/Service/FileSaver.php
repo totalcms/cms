@@ -19,6 +19,9 @@ class FileSaver
 
 	public string $type = 'file';
 
+	/** @var array<string,mixed> */
+	protected array $settings = [];
+
 	public function __construct(
 		protected PropertyRepository $storage,
 		protected PropertyFetcher $propFetcher,
@@ -28,6 +31,12 @@ class FileSaver
 		protected LoggerFactory $loggerFactory,
 		protected Config $config,
 	) {
+	}
+
+	/** @param array<string,mixed> $settings */
+	public function setSettings(array $settings): void
+	{
+		$this->settings = $settings;
 	}
 
 	public function save(

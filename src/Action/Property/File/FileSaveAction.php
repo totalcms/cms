@@ -72,7 +72,7 @@ readonly class FileSaveAction
 		}
 
 		// Save the file (whether uploaded or downloaded)
-		$saver  = $this->factory->generateSaverService($args['collection'], $args['property']);
+		$saver  = $this->factory->generateSaverService($args['collection'], $args['property'], $args['id']);
 		$object = $saver->save(
 			$args['collection'],
 			$args['id'],

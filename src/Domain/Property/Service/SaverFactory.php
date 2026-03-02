@@ -22,12 +22,14 @@ readonly class SaverFactory
 		private ObjectFetcher $objectFetcher,
 		private LoggerFactory $loggerFactory,
 		private Config $config,
+		private PropertyMetaResolver $metaResolver,
 	) {
 	}
 
-	public function generateSaverService(string $collection, string $property): FileSaver
+	public function generateSaverService(string $collection, string $property, string $objectId = ''): FileSaver
 	{
-		$type = $this->getPropertyType($collection, $property);
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$type   = basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 
 		$className = 'TotalCMS\\Domain\\Property\\Service\\' . ucfirst($type) . 'Saver';
 		if (!class_exists($className)) {
@@ -48,13 +50,9 @@ readonly class SaverFactory
 			throw new \DomainException('Error creating file saver service.');
 		}
 
+		$settings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
+		$saver->setSettings($settings);
+
 		return $saver;
-	}
-
-	private function getPropertyType(string $collection, string $property): string
-	{
-		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-
-		return basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 	}
 }

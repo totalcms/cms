@@ -27,91 +27,25 @@ want to use.
 }
 ```
 
-## Protected by Collection
+## Skip EXIF and Palette Extraction
 
-The `protectedByCollection` setting controls the default value of the `protected` property for file and depot fields. When a file or depot is protected, it inherits the access control settings from its parent collection.
+By default, every image upload extracts EXIF metadata and generates a color palette. For large gallery uploads (50+ images), this can significantly slow down the upload process. This works on both image and gallery fields. You can disable either or both per-field using these settings:
 
-**Default Behavior:** Without this setting, all files and depots default to `protected: true`, meaning they inherit collection-level access control.
-
-```json
-{
-	"protectedByCollection" : false
-}
-```
-
-### When to Use
-
-**Public file downloads (protected: false):**
-```json
-{
-	"downloads": {
-		"$ref"     : "https://www.totalcms.co/schemas/properties/file.json",
-		"label"    : "Public Downloads",
-		"settings" : {
-			"protectedByCollection" : false
-		}
-	}
-}
-```
-
-Use `false` when:
-- Files should be publicly accessible regardless of collection access control
-- Public downloads section on website
-- Open-access resources (documentation, marketing materials)
-- Files that don't contain sensitive information
-
-**Protected file downloads (protected: true, default):**
-```json
-{
-	"privateFiles": {
-		"$ref"     : "https://www.totalcms.co/schemas/properties/depot.json",
-		"label"    : "Private Documents",
-		"settings" : {
-			"protectedByCollection" : true
-		}
-	}
-}
-```
-
-Use `true` (or omit the setting) when:
-- Files should respect collection access control
-- Member-only content
-- Premium downloads
-- Sensitive documents
-- Private media libraries
-
-### How It Works
-
-The `protectedByCollection` setting determines the **default** value for new uploads:
-
-1. **New File Upload:** Uses `protectedByCollection` setting value (or `true` if not set)
-2. **Existing File:** Retains its current `protected` value regardless of the setting
-3. **Manual Override:** Users can manually change the `protected` value for individual files in the admin interface
-
-### Depot Field Example
-
-For depot (multiple file) fields, the setting works the same way:
+- **extractExif** — When `false`, skips EXIF/IPTC/XMP metadata extraction. Default: `true`.
+- **extractPalette** — When `false`, skips color palette generation. Default: `true`.
 
 ```json
 {
-	"publicGallery": {
-		"$ref"     : "https://www.totalcms.co/schemas/properties/depot.json",
-		"label"    : "Public Gallery",
-		"settings" : {
-			"protectedByCollection" : false,
-			"rules" : {
-				"filetype" : ["image/jpeg", "image/png"]
-			}
-		}
-	}
+    "extractExif": false,
+    "extractPalette": false
 }
 ```
 
 ### Important Notes
 
-- **Existing Files:** This setting only affects the default for new uploads. Existing files retain their current `protected` value.
-- **Manual Override:** Users can still manually change the `protected` flag for individual files in the file management interface, regardless of this setting.
-- **Security:** Setting to `false` makes files publicly accessible. Use with caution for sensitive content.
+- **Defaults to enabled** — Omitting these settings preserves current behavior (both extraction types run).
+- **Applies to new uploads only** — Existing images retain their saved metadata.
+- **EXIF alt/tags** — When `extractExif` is `false`, EXIF-based auto-population of alt text and tags is also skipped.
 
 ## Privacy: Strip Location Data
 
