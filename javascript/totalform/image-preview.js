@@ -30,11 +30,7 @@ export default class ImagePreview {
 		this.setupActionBar();
     }
 
-	isGallery() {
-		return this.type === "gallery";
-	}
-
-	setupActionBar() {
+setupActionBar() {
 		const edit  = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");
 		const image = this.container.querySelector(".dz-preview img");
@@ -91,19 +87,15 @@ export default class ImagePreview {
 				event.preventDefault();
 				const mimeType = this.container.querySelector('.form-field:has([name=mime])').totalfield.getValue();
 				const format = mimeType.split("/")[1];
-				let downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
-				if (this.isGallery()) {
-					const name = this.getValue().name;
-					downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-				}
+				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;
-				link.download = `${this.form.id}-${this.property}-original.${format}`; // Suggest a filename for the downloaded file
-				document.body.appendChild(link); // Append the anchor element to the body
-				link.click(); // Programmatically click the anchor element
-				document.body.removeChild(link); // Remove the anchor element from the body
+				link.download = `${this.form.id}-${this.property}-original.${format}`;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
 			});
 		}
 	}
@@ -114,11 +106,7 @@ export default class ImagePreview {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
 				this.tempToggleFeaturedActionButton();
-				let featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-				if (this.isGallery()) {
-					const name = this.getValue().name;
-					featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-				}
+				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeaturedField();
@@ -135,11 +123,7 @@ export default class ImagePreview {
 		if (clearButton) {
 			clearButton.addEventListener("click", event => {
 				event.preventDefault();
-				let clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
-				if (this.isGallery()) {
-					const name = this.getValue().name;
-					clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}/cache`;
-				}
+				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
 				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
@@ -156,13 +140,8 @@ export default class ImagePreview {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
 				if (confirm(t("confirm.delete_image"))) {
-					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-					if (this.isGallery()) {
-						const name = this.getValue().name;
-						deleteApi  = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-					}
+					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-						// Clear values before removing the container
 						this.clearValue();
 						this.container.remove();
 					}).catch(error => {
