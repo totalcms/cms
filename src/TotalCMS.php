@@ -400,9 +400,9 @@ class TotalCMS
 	 *
 	 * @param string|array<string> $groups
 	 */
-	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
+	public function restrictPageAccess(array|string $groups = [], string $collection = '', ?string $customLoginUrl = null): void
 	{
-		$restricted = $this->access->restrictPageAccess($groups, $collection);
+		$restricted = $this->access->restrictPageAccess($groups, $collection, $customLoginUrl);
 		if ($restricted) {
 			$this->endBuffer();
 			exit(0);
