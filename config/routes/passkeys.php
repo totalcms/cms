@@ -4,6 +4,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\License\PasskeyEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
@@ -18,6 +19,6 @@ return function (App $app): void {
 			$auth->post('/register', Auth\PasskeyRegisterAction::class);
 			$auth->get('/list', Auth\PasskeyListAction::class);
 			$auth->delete('/{credentialId}', Auth\PasskeyDeleteAction::class);
-		})->add(AuthMiddleware::class);
+		})->add(AuthMiddleware::class)->add(PasskeyEditionMiddleware::class);
 	})->add(NoCacheMiddleware::class);
 };

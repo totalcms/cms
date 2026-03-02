@@ -15,6 +15,7 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -124,9 +125,10 @@ readonly class TotalFormFactory
 	 */
 	public function loginForm(array $options = []): string
 	{
-		$options['api']         = $this->api;
-		$options['session']     = $this->session;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['api']          = $this->api;
+		$options['session']      = $this->session;
+		$options['csrfManager']  = $this->csrfManager;
+		$options['showPasskeys'] = $options['showPasskeys'] ?? $this->editionFeatures->can(EditionFeature::PASSKEYS);
 
 		$form = new LoginForm(...$options);
 

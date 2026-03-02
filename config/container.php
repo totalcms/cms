@@ -423,6 +423,7 @@ return [
 		$container->get(AccessControlService::class),
 		$container->get(CollectionLister::class),
 		$container->get(TranslationService::class),
+		$container->get(EditionFeatureService::class),
 	),
 
 	CollectionTwigAdapter::class => fn (ContainerInterface $container): CollectionTwigAdapter => new CollectionTwigAdapter(

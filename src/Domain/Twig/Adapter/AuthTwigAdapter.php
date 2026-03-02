@@ -9,6 +9,8 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -28,6 +30,7 @@ readonly class AuthTwigAdapter
 		private AccessControlService $accessControl,
 		private CollectionLister $collectionLister,
 		private TranslationService $translator,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -341,6 +344,10 @@ readonly class AuthTwigAdapter
 	public function passkeyManager(): string
 	{
 		if (!$this->accessManager->userLoggedIn()) {
+			return '';
+		}
+
+		if (!$this->editionFeatures->can(EditionFeature::PASSKEYS)) {
 			return '';
 		}
 

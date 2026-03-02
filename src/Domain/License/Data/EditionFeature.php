@@ -40,6 +40,9 @@ enum EditionFeature: string
 	// Bulk mailer features
 	case BULK_MAILER = 'bulk_mailer';
 
+	// Auth features
+	case PASSKEYS = 'passkeys';
+
 	// Utility features
 	case ACCESS_GROUPS = 'access_groups';
 	case API_KEYS      = 'api_keys';
@@ -65,6 +68,7 @@ enum EditionFeature: string
 			self::DATA_VIEWS           => 'Data Views',
 			self::RSS_IMPORT           => 'RSS Import',
 			self::BULK_MAILER          => 'Bulk Mailer',
+			self::PASSKEYS             => 'Passkeys',
 			self::ACCESS_GROUPS        => 'Access Groups',
 			self::API_KEYS             => 'API Keys',
 		};
@@ -83,6 +87,7 @@ enum EditionFeature: string
 			self::MAILER_ACTIONS,
 			self::QR_CODES,
 			self::TEMPLATES,
+			self::PASSKEYS,
 			self::ACCESS_GROUPS,
 			self::RSS_IMPORT => Edition::STANDARD,
 

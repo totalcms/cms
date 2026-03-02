@@ -31,6 +31,7 @@ readonly class LoginForm implements \Stringable
 		private string $passwordLabel          = 'Password',
 		private string $rememberLabel          = 'Keep me signed in',
 		private string $forgotPasswordLabel    = 'Forgot Password?',
+		private bool $showPasskeys             = true,
 		private string $passkeyLabel           = 'Sign in with Passkey',
 	) {
 	}
@@ -224,7 +225,7 @@ readonly class LoginForm implements \Stringable
 
 	private function buildPasskeyButton(): string
 	{
-		if ($this->passkeyLabel === '') {
+		if (!$this->showPasskeys || $this->passkeyLabel === '') {
 			return '';
 		}
 
