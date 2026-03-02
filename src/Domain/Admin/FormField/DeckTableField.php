@@ -80,6 +80,11 @@ class DeckTableField extends FormField
 			$schema        = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
 
 			foreach ($schema->properties as $propertyName => $propertySchema) {
+				$settings = $propertySchema['settings'] ?? [];
+				if (isset($settings['hide']) && $settings['hide'] === true) {
+					continue;
+				}
+
 				$label     = $propertySchema['label'] ?? ucfirst($propertyName);
 				$fieldType = $propertySchema['field'] ?? 'text';
 				$headerCells .= HTMLUtils::element('span', $label, [
@@ -112,6 +117,11 @@ class DeckTableField extends FormField
 			$requiredFields = $schema->required ?? [];
 
 			foreach ($schema->properties as $propertyName => $propertySchema) {
+				$propSettings = $propertySchema['settings'] ?? [];
+				if (isset($propSettings['hide']) && $propSettings['hide'] === true) {
+					continue;
+				}
+
 				$fieldValue   = $itemData[$propertyName] ?? '';
 				$defaultValue = $propertySchema['default'] ?? '';
 
