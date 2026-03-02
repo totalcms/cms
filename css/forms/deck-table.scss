@@ -162,6 +162,10 @@
 				border-radius : var(--totalform-radius);
 				font-size     : 0.85rem;
 			}
+
+			.select-clear-button {
+				right : 0;
+			}
 		}
 	}
 
@@ -212,46 +216,12 @@
 	cursor           : grabbing;
 }
 
-// Mobile responsive layout
-@media (max-width: 768px) {
-	.deck-table-header {
-		display : none;
-	}
+// Mobile responsive layout - horizontal scroll to preserve row structure
+.deck-table {
+	overflow-x : auto;
+}
 
-	.deck-table-row {
-		flex-direction : column;
-		padding        : 0.5rem;
-		gap            : 0.25rem;
-
-		.sort-handle {
-			width       : 100%;
-			min-height  : 1.5rem;
-			height      : auto;
-			justify-content : flex-start;
-		}
-
-		.deck-table-cell {
-			width   : 100%;
-			padding : 0.125rem 0;
-
-			&::before {
-				content     : attr(data-label);
-				display     : block;
-				font-size   : 0.75rem;
-				font-weight : 600;
-				color       : oklch(var(--totalform-darkgray));
-				padding     : 0.125rem 0;
-			}
-		}
-
-		.deck-table-actions {
-			width           : 100%;
-			justify-content : flex-end;
-			padding-top     : 0.25rem;
-
-			button {
-				opacity : 1;
-			}
-		}
-	}
+.deck-table-header-cell,
+.deck-table-cell {
+	min-width : 8rem;
 }

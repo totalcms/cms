@@ -122,6 +122,10 @@
 		}
 	}
 
+	.form-group:not(:has(.form-group-icon)) .select-clear-button {
+		right : 0;
+	}
+
 	// remove select background arrow when clear button is visible
 	.form-group:has(.select-clear-button.visible) select:not([multiple]) {
 		background-image : none;
