@@ -21,6 +21,10 @@
 		color            : oklab(var(--totalform-nearblack));
 		border           : 2px solid oklch(var(--totalform-nearblack));
 	}
+	&.small {
+		padding   : 0.35rem 0.65rem;
+		font-size : 0.85em;
+	}
 	&.dash-button-danger {
 		color        : oklch(var(--totalform-error));
 		border-color : oklch(var(--totalform-error));

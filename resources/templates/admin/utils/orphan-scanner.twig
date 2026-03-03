@@ -1,0 +1,495 @@
+<h1>Orphan Scanner</h1>
+
+<section class="dash-content-section">
+
+	<p>Scan your collections for orphaned relational references &mdash; IDs that point to objects that no longer exist.</p>
+
+	<div class="orphan-controls">
+		<button class="dash-button" id="orphan-scan-btn" type="button">Scan Now</button>
+	</div>
+
+	<div id="orphan-loading" class="orphan-loading" style="display:none">
+		<p>Scanning collections&hellip;</p>
+	</div>
+
+	<div id="orphan-summary" class="orphan-summary" style="display:none">
+		<h2>Scan Results</h2>
+		<ul class="orphan-stats">
+			<li>Collections scanned: <strong id="stat-collections">0</strong></li>
+			<li>Objects scanned: <strong id="stat-objects">0</strong></li>
+			<li>Relational properties: <strong id="stat-properties">0</strong></li>
+			<li>Orphaned references: <strong id="stat-orphans">0</strong></li>
+		</ul>
+	</div>
+
+	<div id="orphan-empty" class="orphan-empty" style="display:none">
+		<p>No orphaned references found. All relational data is valid.</p>
+	</div>
+
+	<div id="orphan-results" style="display:none">
+		<div class="orphan-actions">
+			<button class="dash-button" id="orphan-clean-all-btn" type="button">Clean All</button>
+		</div>
+
+		<div id="orphan-groups"></div>
+	</div>
+
+	<div id="orphan-cleanup-result" class="orphan-cleanup-result" style="display:none">
+		<h3>Cleanup Results</h3>
+		<p>Cleaned: <strong id="cleanup-cleaned">0</strong> | Failed: <strong id="cleanup-failed">0</strong></p>
+		<ul id="cleanup-errors"></ul>
+	</div>
+
+</section>
+
+<style>
+.orphan-controls {
+	margin: 1.5rem 0;
+}
+
+.orphan-loading {
+	padding: 1rem;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.orphan-summary {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin: 1.5rem 0;
+}
+
+.orphan-summary h2 {
+	margin-top: 0;
+}
+
+.orphan-stats {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	max-width: none !important;
+}
+
+.orphan-stats li {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.35rem 0.75rem;
+	border-radius: var(--totalform-radius);
+	font-size: 0.9em;
+}
+
+.orphan-empty {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin: 1.5rem 0;
+	color: oklch(var(--totalform-success));
+	font-weight: bold;
+}
+
+.orphan-actions {
+	margin: 1rem 0;
+	display: flex;
+	gap: 0.5rem;
+}
+
+.orphan-cleanup-result {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin: 1.5rem 0;
+}
+
+.orphan-group {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	margin-bottom: 1rem;
+	overflow: hidden;
+}
+
+.orphan-group-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1rem;
+	background: oklch(var(--totalform-nearwhite));
+	/* border-bottom: 1px solid oklch(var(--totalform-border-color)); */
+	cursor: pointer;
+	user-select: none;
+}
+
+.orphan-group-header:hover {
+	background: oklch(var(--totalform-icon-bg));
+}
+
+.orphan-group-title {
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.orphan-group-title .arrow {
+	transition: transform 0.2s;
+	display: inline-block;
+}
+
+.orphan-group.open .orphan-group-title .arrow {
+	transform: rotate(90deg);
+}
+
+.orphan-group-meta {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	font-size: 0.9em;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.orphan-group-body {
+	display: none;
+	padding: 0;
+}
+
+.orphan-group.open .orphan-group-body {
+	display: block;
+}
+
+.orphan-group-body table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.orphan-group-body th,
+.orphan-group-body td {
+	padding: 0.5rem 1rem;
+	text-align: left;
+	/* border-bottom: 1px solid oklch(var(--totalform-border-color)); */
+	vertical-align: middle;
+}
+
+.orphan-group-body th {
+	background: oklch(var(--totalform-nearwhite));
+	font-size: 0.85em;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.orphan-group-body tbody tr:nth-child(even) {
+	background: oklch(var(--totalform-nearwhite));
+}
+
+.orphan-group-body tr:last-child td {
+	border-bottom: none;
+}
+
+.orphan-id-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+
+.orphan-id-list span {
+	background: oklch(var(--totalform-icon-bg));
+	padding: 0.15rem 0.5rem;
+	border-radius: var(--totalform-radius);
+	font-size: 0.85em;
+	font-family: monospace;
+}
+
+.orphan-actions-cell {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.orphan-edit-btn {
+	border: none !important;
+}
+
+.orphan-page-controls {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem 1rem;
+	background: oklch(var(--totalform-nearwhite));
+	border-top: 1px solid oklch(var(--totalform-border-color));
+	font-size: 0.85em;
+}
+
+.orphan-page-controls button {
+	padding: 0.25rem 0.75rem;
+	font-size: 0.85em;
+}
+</style>
+
+<script>
+(function() {
+	const api = '{{ cms.api }}';
+	const scanBtn = document.getElementById('orphan-scan-btn');
+	const cleanAllBtn = document.getElementById('orphan-clean-all-btn');
+	const PAGE_SIZE = 50;
+
+	let lastScanData = null;
+
+	scanBtn.addEventListener('click', async function() {
+		hideAll();
+		show('orphan-loading');
+		scanBtn.disabled = true;
+
+		try {
+			const resp = await fetch(api + '/orphan/scan', {
+				credentials: 'same-origin',
+			});
+			const data = await resp.json();
+			lastScanData = data;
+			displayResults(data);
+		} catch (err) {
+			alert('Scan failed: ' + err.message);
+		} finally {
+			scanBtn.disabled = false;
+			hide('orphan-loading');
+		}
+	});
+
+	cleanAllBtn.addEventListener('click', async function() {
+		if (!confirm('Clean ALL orphaned references? This cannot be undone.')) return;
+		await performCleanup({ mode: 'all' });
+	});
+
+	async function performCleanup(payload, onSuccess) {
+		cleanAllBtn.disabled = true;
+
+		try {
+			const resp = await fetch(api + '/orphan/cleanup', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+			});
+			const data = await resp.json();
+			displayCleanupResult(data);
+
+			if (onSuccess) {
+				onSuccess(data);
+			} else {
+				// Full re-scan for bulk operations
+				scanBtn.click();
+			}
+		} catch (err) {
+			alert('Cleanup failed: ' + err.message);
+		} finally {
+			cleanAllBtn.disabled = false;
+		}
+	}
+
+	function displayResults(data) {
+		const summary = data.summary;
+		document.getElementById('stat-collections').textContent = summary.collectionsScanned;
+		document.getElementById('stat-objects').textContent = summary.objectsScanned;
+		document.getElementById('stat-properties').textContent = summary.relationalPropertiesFound;
+		document.getElementById('stat-orphans').textContent = summary.orphanedReferencesFound;
+		show('orphan-summary');
+
+		if (summary.isEmpty) {
+			show('orphan-empty');
+			hide('orphan-results');
+			return;
+		}
+
+		hide('orphan-empty');
+		show('orphan-results');
+
+		// Group entries by collection + property
+		const groups = {};
+		data.entries.forEach(function(entry) {
+			const key = entry.collection + '::' + entry.property;
+			if (!groups[key]) {
+				groups[key] = {
+					collection: entry.collection,
+					property: entry.property,
+					targetCollection: entry.targetCollection,
+					isArray: entry.isArray,
+					entries: [],
+					page: 0,
+				};
+			}
+			groups[key].entries.push(entry);
+		});
+
+		const container = document.getElementById('orphan-groups');
+		container.innerHTML = '';
+
+		Object.keys(groups).forEach(function(key) {
+			const group = groups[key];
+			const totalOrphans = group.entries.reduce(function(sum, e) { return sum + e.orphanedIds.length; }, 0);
+
+			const div = document.createElement('div');
+			div.className = 'orphan-group';
+
+			// Header
+			const header = document.createElement('div');
+			header.className = 'orphan-group-header';
+			header.innerHTML =
+				'<div class="orphan-group-title">' +
+					'<span class="arrow">&#9654;</span> ' +
+					escapeHtml(group.collection) +
+					' &rarr; <code>' + escapeHtml(group.property) + '</code>' +
+					' &rarr; ' + escapeHtml(group.targetCollection) +
+				'</div>' +
+				'<div class="orphan-group-meta">' +
+					'<span>' + group.entries.length + ' objects, ' + totalOrphans + ' orphans</span>' +
+					'<span>(' + (group.isArray ? 'array' : 'scalar') + ')</span>' +
+					'<button class="dash-button orphan-clean-group" type="button">Clean Group</button>' +
+				'</div>';
+
+			header.addEventListener('click', function(e) {
+				if (e.target.closest('.orphan-clean-group')) return;
+				div.classList.toggle('open');
+			});
+
+			header.querySelector('.orphan-clean-group').addEventListener('click', async function(e) {
+				e.stopPropagation();
+				if (!confirm('Clean all orphaned references in ' + group.collection + '.' + group.property + '? This cannot be undone.')) return;
+				await performCleanup({ mode: 'property', collection: group.collection, property: group.property });
+			});
+
+			div.appendChild(header);
+
+			// Body with paginated table
+			const body = document.createElement('div');
+			body.className = 'orphan-group-body';
+			div.appendChild(body);
+
+			renderGroupPage(body, group);
+			container.appendChild(div);
+		});
+	}
+
+	function renderGroupPage(body, group) {
+		const start = group.page * PAGE_SIZE;
+		const end = Math.min(start + PAGE_SIZE, group.entries.length);
+		const pageEntries = group.entries.slice(start, end);
+		const totalPages = Math.ceil(group.entries.length / PAGE_SIZE);
+
+		let html = '<table><thead><tr>' +
+			'<th>Object ID</th>' +
+			'<th>Orphaned IDs</th>' +
+			'<th>Actions</th>' +
+			'</tr></thead><tbody>';
+
+		pageEntries.forEach(function(entry, i) {
+			const ids = entry.orphanedIds.map(function(id) { return '<span>' + escapeHtml(id) + '</span>'; }).join('');
+			const editUrl = 'collections/' + encodeURIComponent(entry.collection) + '/' + encodeURIComponent(entry.objectId);
+			html += '<tr>' +
+				'<td><code>' + escapeHtml(entry.objectId) + '</code></td>' +
+				'<td><div class="orphan-id-list">' + ids + '</div></td>' +
+				'<td class="orphan-actions-cell">' +
+					'<button class="dash-button small orphan-clean-row" type="button" data-group-idx="' + (start + i) + '">Clean</button>' +
+					'<a href="' + editUrl + '" target="_blank" class="dash-button small transparent orphan-edit-btn">Edit &#8599;</a>' +
+				'</td>' +
+				'</tr>';
+		});
+
+		html += '</tbody></table>';
+
+		if (totalPages > 1) {
+			html += '<div class="orphan-page-controls">' +
+				'<span>Page ' + (group.page + 1) + ' of ' + totalPages + ' (' + group.entries.length + ' entries)</span>' +
+				'<div>' +
+					'<button class="dash-button orphan-page-prev"' + (group.page === 0 ? ' disabled' : '') + ' type="button">Prev</button> ' +
+					'<button class="dash-button orphan-page-next"' + (group.page >= totalPages - 1 ? ' disabled' : '') + ' type="button">Next</button>' +
+				'</div>' +
+				'</div>';
+		}
+
+		body.innerHTML = html;
+
+		// Row-level clean buttons
+		body.querySelectorAll('.orphan-clean-row').forEach(function(btn) {
+			btn.addEventListener('click', async function() {
+				const idx = parseInt(this.dataset.groupIdx);
+				const entry = group.entries[idx];
+				if (!confirm('Clean orphaned references from ' + entry.collection + '/' + entry.objectId + '.' + entry.property + '?')) return;
+				const rowBtn = this;
+				rowBtn.disabled = true;
+				rowBtn.textContent = '...';
+				await performCleanup({ entries: [entry] }, function() {
+					// Remove the cleaned entry and re-render in place
+					group.entries.splice(idx, 1);
+					updateOrphanCount(entry.orphanedIds.length);
+
+					if (group.entries.length === 0) {
+						// Remove the entire group
+						body.closest('.orphan-group').remove();
+					} else {
+						// Adjust page if we're past the end
+						const totalPages = Math.ceil(group.entries.length / PAGE_SIZE);
+						if (group.page >= totalPages) group.page = totalPages - 1;
+						renderGroupPage(body, group);
+						// Update the group header count
+						const header = body.closest('.orphan-group').querySelector('.orphan-group-meta span');
+						const totalOrphans = group.entries.reduce(function(sum, e) { return sum + e.orphanedIds.length; }, 0);
+						if (header) header.textContent = group.entries.length + ' objects, ' + totalOrphans + ' orphans';
+					}
+				});
+			});
+		});
+
+		// Pagination buttons
+		const prevBtn = body.querySelector('.orphan-page-prev');
+		const nextBtn = body.querySelector('.orphan-page-next');
+		if (prevBtn) {
+			prevBtn.addEventListener('click', function() {
+				group.page--;
+				renderGroupPage(body, group);
+			});
+		}
+		if (nextBtn) {
+			nextBtn.addEventListener('click', function() {
+				group.page++;
+				renderGroupPage(body, group);
+			});
+		}
+	}
+
+	function displayCleanupResult(data) {
+		document.getElementById('cleanup-cleaned').textContent = data.cleaned;
+		document.getElementById('cleanup-failed').textContent = data.failed;
+
+		const errorList = document.getElementById('cleanup-errors');
+		errorList.innerHTML = '';
+		if (data.errors && data.errors.length > 0) {
+			data.errors.forEach(function(err) {
+				const li = document.createElement('li');
+				li.textContent = err;
+				errorList.appendChild(li);
+			});
+		}
+
+		show('orphan-cleanup-result');
+	}
+
+	function updateOrphanCount(removedCount) {
+		const el = document.getElementById('stat-orphans');
+		const current = parseInt(el.textContent) || 0;
+		el.textContent = Math.max(0, current - removedCount);
+	}
+
+	function show(id) { document.getElementById(id).style.display = ''; }
+	function hide(id) { document.getElementById(id).style.display = 'none'; }
+	function hideAll() {
+		['orphan-summary', 'orphan-empty', 'orphan-results', 'orphan-cleanup-result', 'orphan-loading'].forEach(hide);
+	}
+
+	function escapeHtml(str) {
+		const div = document.createElement('div');
+		div.textContent = str;
+		return div.innerHTML;
+	}
+})();
+</script>
