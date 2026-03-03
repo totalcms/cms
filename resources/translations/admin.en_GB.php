@@ -455,6 +455,7 @@ return [
 	'cache_sizing.total_data_size'   => 'Total Data Size',
 	'cache_sizing.estimated_entries' => 'Estimated Cache Entries',
 	'cache_sizing.no_memory_cache'   => 'No Memory Cache Available',
+	'cache_sizing.no_memory_cache_desc' => 'Your site is using filesystem-only caching, which is significantly slower than memory-based caching. For sites with many objects (especially galleries), installing APCu can reduce page load times from 15-20 seconds to under 1 second. APCu is the easiest to install and requires no external services.',
 	'cache_sizing.memory_recs'       => 'Memory Recommendations',
 	'cache_sizing.memory_desc'       => 'Total CMS supports all three memory cache backends. Here are recommendations for each.',
 	'cache_sizing.config_examples'   => 'Configuration Examples',
