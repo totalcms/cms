@@ -1,9 +1,10 @@
 <script>
 const sidebarDetails = Array.from(document.querySelectorAll(".dash-content-sidebar details"));
+const sidebarPage = location.pathname.replace(/\/+$/, '').split('/').filter(Boolean).slice(0, 3).join('-');
 sidebarDetails.forEach(details => {
 	const detailsId = details.getAttribute('id');
 	if (detailsId) {
-		const key    = `sidebar-details-${detailsId}`;
+		const key    = `sidebar-details-${sidebarPage}-${detailsId}`;
 		const saved = localStorage.getItem(key);
 		if (saved !== null) details.open = (saved === 'true');
 		details.addEventListener('toggle', () => localStorage.setItem(key, details.open));
