@@ -43,15 +43,20 @@
 
 	<div class="log-analysis-container" style="max-height: 600px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius);">
 		<table class="admin-table" data-sort>
-			<thead style="position: sticky; top: 0; background: oklch(var(--totalform-nearwhite)); z-index: 10;">
-				<tr><th data-sort="number">{{ t('logs.count') }}</th><th>{{ t('logs.logged_error') }}</th></tr>
+			<thead>
+				<tr>
+					<th class="sortable" data-sort-type="number">{{ t('logs.count') }} <span class="sort-indicator"></span></th>
+					<th>{{ t('logs.logged_error') }}</th>
+				</tr>
 			</thead>
 			<tbody>
 				{% for error, value in analysis %}
+				{% if error is not empty %}
 				<tr>
 					<td data-sort="{{ value.count }}">{{ value.count }}</td>
 					<td>{{ error }}</td>
 				</tr>
+				{% endif %}
 				{% endfor %}
 			</tbody>
 		</table>

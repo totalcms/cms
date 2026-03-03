@@ -94,7 +94,7 @@ esbuild.build({
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
 				"css/lightgallery/",
-                "node_modules/gridjs/dist/theme/",
+
                 "node_modules/highlight.js/styles/"
             ],
             importer: createImporter(),

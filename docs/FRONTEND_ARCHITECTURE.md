@@ -31,9 +31,9 @@ Total CMS uses a modern frontend architecture built around:
 - **Module System**: ES6 Modules with ESM format
 - **Styling**: SCSS with Sass Extended Importer
 - **Code Editor**: CodeMirror 5.65
-- **Rich Text**: Froala Editor 4.0.18
+- **Rich Text**: Tiptap 3.x
 - **File Upload**: Dropzone 7.1.1
-- **Data Tables**: GridJS 6.2.0
+- **Data Tables**: Native HTML tables with CSS sticky headers and vanilla JS sorting
 - **Image Gallery**: LightGallery 2.8.2
 - **Select Enhancement**: Choices.js 11.0.4
 
@@ -80,7 +80,7 @@ plugins: [
             "node_modules/codemirror/lib/",
             "node_modules/dropzone/src/",
             "css/lightgallery/",
-            "node_modules/gridjs/dist/theme/"
+
         ],
         importer: createImporter(), // Extended import resolution
     })

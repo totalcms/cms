@@ -7,17 +7,21 @@
 		font-size    : 55%;
 		padding-left : 0.5rem;
 	}
-	td.gridjs-td {
-		white-space : wrap;
+	table.admin-table td {
+		white-space    : normal;
+		overflow       : visible;
+		text-overflow  : clip;
+		max-width      : none;
+		height         : auto;
+		word-break     : break-word;
 	}
-	th.gridjs-th:first-child {
-		max-width : 100px !important;
+	th:first-child,
+	td:first-child {
+		width      : 6rem;
+		text-align : right;
 	}
-	.gridjs-wrapper, table {
+	table {
 		max-height : none;
-	}
-	.gridjs-tbody .gridjs-tr {
-		cursor : inherit;
 	}
 	.log-contents {
 		background-color : oklch(var(--totalform-nearwhite));

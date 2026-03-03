@@ -142,7 +142,6 @@ table.admin-table td.action {
 table.admin-table tbody tr {
 	border: none;
 	border-bottom: 1px solid oklch(var(--totalform-lightgray) / 50%);
-	cursor: pointer;
 
 	&:nth-child(odd) {
 		background-color: oklch(var(--totalform-purewhite));
@@ -155,6 +154,11 @@ table.admin-table tbody tr {
 	&:last-child td {
 		border-bottom: 0;
 	}
+}
+
+// Clickable rows in collection tables only
+.admin-table-wrapper table.admin-table tbody tr {
+	cursor: pointer;
 }
 
 // Sentinel row (HTMX load-more trigger)
