@@ -298,7 +298,7 @@ $choices-z-index: 1 !default;
   }
   .#{$choices-selector}__item--selectable {
     @media (min-width: 640px) {
-      padding-right: 100px;
+    //   padding-right: 100px;
 
     //   &::after {
     //     content: attr(data-select-text);

@@ -17,8 +17,17 @@
 
 .deck-table {
 	border-radius : var(--totalform-radius);
-	overflow      : hidden;
+	overflow-x    : auto;
 	width         : 100%;
+
+	// Allow Choices.js dropdowns to overflow when open
+	&:has(.choices.is-open) {
+		overflow : visible;
+	}
+
+	.choices__list--dropdown.is-active {
+		border-radius : var(--totalform-radius);
+	}
 
 	// Compact columns for small field types (applies to both header and row cells)
 	[data-field-type="checkbox"],
@@ -83,7 +92,7 @@
 		border-left : 3px solid oklch(var(--totalform-error));
 	}
 
-	input,select {
+	input,select,.choices__inner {
 		border     : none !important;
 		box-shadow : none !important;
 	}
@@ -214,11 +223,6 @@
 .deck-table-row.drag-ghost {
 	background-color : oklch(var(--totalform-nearwhite));
 	cursor           : grabbing;
-}
-
-// Mobile responsive layout - horizontal scroll to preserve row structure
-.deck-table {
-	overflow-x : auto;
 }
 
 .deck-table-header-cell,
