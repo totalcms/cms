@@ -13,8 +13,23 @@ export default class DeckItem {
 
         this.dialog = this.setupDialog();
         this.deck.form.processFields();
+		this.initVisibility();
 		setTimeout(() => this.setupLabelUpdate(), 0);
     }
+
+    initVisibility() {
+		const dialogEl = this.dialog.dialog;
+		const fieldContainers = dialogEl.querySelectorAll('.form-field');
+		const fields = [];
+		for (const container of fieldContainers) {
+			if (container.totalfield) {
+				fields.push(container.totalfield);
+			}
+		}
+		if (fields.length > 0) {
+			this.deck.form.visibility.initializeScope(dialogEl, fields);
+		}
+	}
 
     setupDialog() {
 		// Get both the label button and edit button as dialog triggers
