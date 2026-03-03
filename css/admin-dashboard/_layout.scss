@@ -165,6 +165,12 @@ body {
 			padding    : 0;
 			margin     : 0;
 		}
+		&.docs li {
+			--collection-icon : var(--icon-bookmark);
+		}
+		&#dataview-links li {
+			--collection-icon : var(--icon-data-views);
+		}
 		li {
 			--collection-icon : var(--icon-collections);
 
@@ -213,17 +219,12 @@ body {
 			&.api-keys { --collection-icon : var(--icon-apikey) }
 			&.license-manager { --collection-icon : var(--icon-license) }
 			&.jobqueue { --collection-icon : var(--icon-terminal) }
+			&.orphan-scanner { --collection-icon : var(--icon-search) }
 			&.access-groups { --collection-icon : var(--icon-group) }
 			&.import-alloy { --collection-icon : var(--icon-flask) }
 			&.import-rss { --collection-icon : var(--icon-rss) }
 			&.import-wordpress { --collection-icon : var(--icon-wordpress) }
 			&.import-totalcms-one { --collection-icon : var(--icon-logo-fill) }
-		}
-		&.docs li {
-			--collection-icon : var(--icon-bookmark);
-		}
-		&#dataview-links li {
-			--collection-icon : var(--icon-data-views);
 		}
 		a {
 			display         : flex;
