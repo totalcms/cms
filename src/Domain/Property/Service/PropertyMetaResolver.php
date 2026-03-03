@@ -14,9 +14,6 @@ use TotalCMS\Support\Config;
  */
 readonly class PropertyMetaResolver
 {
-	/** @var array<string> Keys kept in the resolved output */
-	private const META_KEYS = ['label', 'help', 'placeholder', 'field', 'options', 'settings'];
-
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
 		private CollectionFetcher $collectionFetcher,
@@ -55,12 +52,7 @@ readonly class PropertyMetaResolver
 			$merged['field'] ?? '',
 		);
 
-		// Filter to only the recognised meta keys
-		return array_filter(
-			$merged,
-			fn ($key): bool => in_array($key, self::META_KEYS, true),
-			ARRAY_FILTER_USE_KEY,
-		);
+		return $merged;
 	}
 
 	/**

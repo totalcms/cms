@@ -617,11 +617,42 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
-		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
-			return new $typeClass(...$options);
+		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {
+			$typeClass = FormField::class;
 		}
 
-		return new FormField(...$options);
+		// Strip keys that aren't valid constructor parameters to avoid errors
+		// from schema-only keys (e.g. $ref, factory, type) leaking through
+		$options = self::filterConstructorParams($typeClass, $options);
+
+		return new $typeClass(...$options);
+	}
+
+	/**
+	 * Filter an options array to only keys that match constructor parameter names.
+	 *
+	 * @param class-string $class
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function filterConstructorParams(string $class, array $options): array
+	{
+		/** @var array<string, array<string, true>> */
+		static $cache = [];
+
+		if (!isset($cache[$class])) {
+			$ref = new \ReflectionClass($class);
+			$constructor = $ref->getConstructor();
+			$cache[$class] = [];
+			if ($constructor !== null) {
+				foreach ($constructor->getParameters() as $param) {
+					$cache[$class][$param->getName()] = true;
+				}
+			}
+		}
+
+		return array_intersect_key($options, $cache[$class]);
 	}
 
 	private function addFieldsFromSchema(): void
