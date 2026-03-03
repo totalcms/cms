@@ -803,7 +803,7 @@ readonly class TotalFormFactory
 			'fields'     => [],
 		], $options);
 
-		$class            = $options['class'] ?? ' custom-layout';
+		$class            = trim('custom-layout ' . ($options['class'] ?? ''));
 		$options['class'] = $class;
 
 		$fields = array_merge([
@@ -949,7 +949,7 @@ readonly class TotalFormFactory
 			'delete'     => 'Delete',
 		], $options);
 
-		$class            = $options['class'] ?? ' custom-layout';
+		$class            = trim('custom-layout ' . ($options['class'] ?? ''));
 		$options['class'] = $class;
 
 		$form = $this->builder($options['collection'], $options);
