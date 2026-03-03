@@ -480,6 +480,8 @@ return [
 	'image_cache.clear_all'         => 'Alle afbeeldingscaches wissen',
 	'image_cache.clear_all_desc'    => 'Dit verwijdert alle gecachte afbeeldingsvarianten van elke Collection.',
 	'image_cache.clear_all_confirm' => 'Weet u zeker dat u alle afbeeldingscaches voor elke Collection wilt wissen? Dit kan niet ongedaan worden gemaakt.',
+	'image_cache.clear_watermarks'      => 'Watermerk-cache wissen',
+	'image_cache.clear_watermarks_desc' => 'Dit verwijdert alle gecachte watermerkafbeeldingen. Watermerken worden opnieuw gegenereerd wanneer ze worden aangevraagd.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Batchafbeeldingsverwerker',

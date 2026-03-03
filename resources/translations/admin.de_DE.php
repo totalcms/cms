@@ -480,6 +480,8 @@ return [
 	'image_cache.clear_all'         => 'Alle Bild-Caches leeren',
 	'image_cache.clear_all_desc'    => 'Dies entfernt alle zwischengespeicherten Bildvarianten aus allen Collections.',
 	'image_cache.clear_all_confirm' => 'Sind Sie sicher, dass Sie alle Bild-Caches für alle Collections leeren möchten? Dies kann nicht rückgängig gemacht werden.',
+	'image_cache.clear_watermarks'      => 'Wasserzeichen-Cache leeren',
+	'image_cache.clear_watermarks_desc' => 'Dies entfernt alle zwischengespeicherten Wasserzeichenbilder. Wasserzeichen werden bei der nächsten Anfrage neu generiert.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Bild-Stapelverarbeitung',

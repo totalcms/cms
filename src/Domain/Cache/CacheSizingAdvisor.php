@@ -299,10 +299,7 @@ readonly class CacheSizingAdvisor
 		];
 
 		if (!$hasMemoryCache) {
-			$result['filesystem_only_warning'] = 'No in-memory cache backend is available. '
-				. 'Your site is using filesystem-only caching, which is significantly slower than memory-based caching. '
-				. 'For sites with many objects (especially galleries), installing APCu can reduce page load times from 15-20 seconds to under 1 second. '
-				. 'APCu is the easiest to install and requires no external services.';
+			$result['filesystem_only_warning'] = true;
 		}
 
 		return $result;

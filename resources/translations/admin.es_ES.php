@@ -480,6 +480,8 @@ return [
 	'image_cache.clear_all'         => 'Limpiar todas las cachés de imágenes',
 	'image_cache.clear_all_desc'    => 'Esto eliminará todas las variantes de imagen en caché de todas las Collections.',
 	'image_cache.clear_all_confirm' => '¿Está seguro de que desea limpiar todas las cachés de imágenes de todas las Collections? Esta acción no se puede deshacer.',
+	'image_cache.clear_watermarks'      => 'Limpiar caché de marcas de agua',
+	'image_cache.clear_watermarks_desc' => 'Esto eliminará todas las imágenes de marcas de agua en caché. Las marcas de agua se regenerarán a demanda cuando se soliciten.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Procesador de imágenes por lotes',
