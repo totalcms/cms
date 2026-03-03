@@ -47,27 +47,27 @@ By default, every image upload extracts EXIF metadata and generates a color pale
 - **Applies to new uploads only** — Existing images retain their saved metadata.
 - **EXIF alt/tags** — When `extractExif` is `false`, EXIF-based auto-population of alt text and tags is also skipped.
 
-## Privacy: Strip Location Data
+## Privacy: Gather Image Location Data
 
-The `stripLocation` setting removes all GPS and location metadata from uploaded images. When enabled, location fields are stripped from EXIF data after extraction, while preserving all other metadata (camera, lens, exposure, author, copyright, date).
+The `gatherLocation` setting controls whether GPS and location metadata is extracted from uploaded images. When enabled (default), location fields are included in the extracted EXIF data. When disabled, location fields are stripped after extraction, while preserving all other metadata (camera, lens, exposure, author, copyright, date).
 
 This is a **global configuration setting** in `tcms.php` (not a per-field setting). It applies to all image and gallery uploads site-wide.
 
 ### Configuration
 
-Add to your `tcms.php` file:
+To disable location data gathering, add to your `tcms.php` file:
 
 ```php
 return [
 	'imageworks' => [
-		'stripLocation' => true,
+		'gatherLocation' => false,
 	],
 ];
 ```
 
-### Fields Removed
+### Location Fields
 
-When `stripLocation` is `true`, the following EXIF fields are removed before saving:
+The following EXIF fields are controlled by this setting:
 
 | Field | Source |
 |-------|--------|
@@ -79,7 +79,7 @@ When `stripLocation` is `true`, the following EXIF fields are removed before sav
 | `city` | XMP / IPTC |
 | `sublocation` | XMP / IPTC |
 
-### When to Use
+### When to Disable
 
 - **GDPR compliance** — Avoid storing GPS coordinates from user-uploaded images
 - **Privacy protection** — Prevent accidental exposure of location data on public sites
@@ -87,7 +87,7 @@ When `stripLocation` is `true`, the following EXIF fields are removed before sav
 
 ### Important Notes
 
-- **Default is `false`** — Location data is preserved by default for backward compatibility
+- **Default is `true`** — Location data is gathered by default
 - **Non-destructive** — The original uploaded file is not modified; only the extracted metadata stored in JSON is affected
 - **Applies to new uploads only** — Existing images already saved retain their metadata
 

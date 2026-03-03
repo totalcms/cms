@@ -69,7 +69,7 @@ class ImageSaver extends FileSaver
 		// Extract full EXIF metadata (includes alt text and tags from IPTC/XMP)
 		if ($this->settings['extractExif'] ?? true) {
 			$metaData = ImageMetaReader::getMetaData($filePath);
-			if ($this->config->imageworks['stripLocation'] ?? false) {
+			if (!($this->config->imageworks['gatherLocation'] ?? true)) {
 				ImageMetaReader::stripLocationData($metaData);
 			}
 		} else {

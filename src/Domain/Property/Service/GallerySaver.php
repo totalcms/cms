@@ -53,7 +53,7 @@ class GallerySaver extends FileSaver
 
 		if ($this->settings['extractExif'] ?? true) {
 			$metaData = ImageMetaReader::getMetaData($filePath);
-			if ($this->config->imageworks['stripLocation'] ?? false) {
+			if (!($this->config->imageworks['gatherLocation'] ?? true)) {
 				ImageMetaReader::stripLocationData($metaData);
 			}
 		} else {

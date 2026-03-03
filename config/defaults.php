@@ -160,7 +160,7 @@ $settings['mailer'] = [
 ];
 
 $settings['imageworks'] = [
-	'stripLocation'       => false,
+	'gatherLocation'      => true,
 	'watermarksGallery'   => 'watermarks',
 	'watermarkFontsDepot' => 'watermark-fonts',
 	'defaults'            => [
