@@ -21,7 +21,7 @@ class GalleryField extends ImageField
 		// Render lightweight thumbnail-only previews (no dialogs per image)
 		$previews = '';
 		foreach ($imageData as $image) {
-			$imagePath = MediaTwigAdapter::buildImageworksGalleryAPI($api, $id, $image['name'], $image, $imageworks, $options);
+			$imagePath    = MediaTwigAdapter::buildImageworksGalleryAPI($api, $id, $image['name'], $image, $imageworks, $options);
 			$imagePreview = $this->imagePreview($imagePath, $image['name'] ?? '');
 
 			$previewAttrs = ['class' => 'image-preview', 'data-image-name' => $image['name'] ?? ''];
@@ -56,7 +56,7 @@ class GalleryField extends ImageField
 		]);
 
 		// Embed all image data as JSON for client-side data store
-		$galleryJson = HTMLUtils::element('script', (string) json_encode($imageData, JSON_THROW_ON_ERROR), [
+		$galleryJson = HTMLUtils::element('script', json_encode($imageData, JSON_THROW_ON_ERROR), [
 			'type' => 'application/json',
 			'id'   => 'gallery-data-' . $this->uuid,
 		]);

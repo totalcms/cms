@@ -73,7 +73,7 @@ readonly class BulkMailerService
 
 		// Use specific object IDs if provided, otherwise apply filters
 		if ($objectIds !== null && $objectIds !== []) {
-			$objects = array_map(static fn(string $oid): array => ['id' => $oid], $objectIds);
+			$objects = array_map(static fn (string $oid): array => ['id' => $oid], $objectIds);
 		} else {
 			$filterOptions = [];
 			if ($mailer->bulkInclude !== '') {

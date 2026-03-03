@@ -18,9 +18,9 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -642,7 +642,7 @@ class TotalForm implements \Stringable
 
 		// Strip keys that aren't valid constructor parameters to avoid errors
 		// from schema-only keys (e.g. $ref, factory, type) leaking through
-		$options = self::filterConstructorParams($typeClass, $options);
+		$options = $this->filterConstructorParams($typeClass, $options);
 
 		return new $typeClass(...$options);
 	}
@@ -655,14 +655,14 @@ class TotalForm implements \Stringable
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function filterConstructorParams(string $class, array $options): array
+	private function filterConstructorParams(string $class, array $options): array
 	{
 		/** @var array<string, array<string, true>> */
 		static $cache = [];
 
 		if (!isset($cache[$class])) {
-			$ref = new \ReflectionClass($class);
-			$constructor = $ref->getConstructor();
+			$ref           = new \ReflectionClass($class);
+			$constructor   = $ref->getConstructor();
 			$cache[$class] = [];
 			if ($constructor !== null) {
 				foreach ($constructor->getParameters() as $param) {

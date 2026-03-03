@@ -4,8 +4,6 @@ namespace TotalCMS\Action\Orphan;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Orphan\Data\OrphanEntry;
-use TotalCMS\Domain\Orphan\Data\OrphanReport;
 use TotalCMS\Domain\Orphan\Service\OrphanCleaner;
 use TotalCMS\Domain\Orphan\Service\OrphanScanner;
 use TotalCMS\Renderer\JsonRenderer;

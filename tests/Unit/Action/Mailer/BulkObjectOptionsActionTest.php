@@ -177,7 +177,7 @@ final class BulkObjectOptionsActionTest extends TestCase
 	{
 		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
 			['id' => 'obj-1', 'name' => 'Alice'],
-			['id' => '', 'name' => 'NoId'],
+			['id'   => '', 'name' => 'NoId'],
 			['name' => 'MissingId'],
 		]);
 

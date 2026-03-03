@@ -318,7 +318,7 @@ final class BulkMailerServiceTest extends TestCase
 		$jobData = $this->createMock(JobData::class);
 		$this->jobQueuer->method('queueEmail')->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer', null, null, null);
+		$result = $this->service->queueBulkSend('test-mailer');
 
 		$this->assertTrue($result['success']);
 	}

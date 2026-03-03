@@ -36,8 +36,8 @@ readonly class PropertyMetaResolver
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 
 		$schemaProp     = $schemaData->properties[$property] ?? [];
-		$collectionProp = $collectionData !== null ? ($collectionData->properties[$property] ?? []) : [];
-		$customProp     = ($objectId !== '' && $collectionData !== null)
+		$collectionProp = $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData ? ($collectionData->properties[$property] ?? []) : [];
+		$customProp     = ($objectId !== '' && $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData)
 			? ($collectionData->customProperties[$objectId][$property] ?? [])
 			: [];
 

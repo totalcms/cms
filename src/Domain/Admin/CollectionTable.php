@@ -290,8 +290,8 @@ readonly class CollectionTable
 			],
 		]);
 		$deleteAttrs['class'] = 'delete-action';
-		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, $deleteAttrs);
-		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
+		$delete               = HTMLUtils::element('a', 'Delete ' . $labelSingular, $deleteAttrs);
+		$delete               = HTMLUtils::element('li', $delete, ['class' => 'delete']);
 
 		$clone = HTMLUtils::element('a', 'Clone ' . $labelSingular, [
 			'href' => implode('/', [

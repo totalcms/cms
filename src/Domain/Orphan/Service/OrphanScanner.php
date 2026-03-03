@@ -128,7 +128,7 @@ readonly class OrphanScanner
 
 		// Build valid-IDs cache per target collection
 		/** @var array<string,array<string,true>> $validIdsCache */
-		$validIdsCache = [];
+		$validIdsCache      = [];
 		$scannedCollections = [];
 
 		foreach ($relational as $rel) {
@@ -139,7 +139,7 @@ readonly class OrphanScanner
 					$ids   = $index->objects->pluck($rel['value'])->filter()->all();
 					// Use associative array for O(1) lookups
 					$validIdsCache[$target] = array_fill_keys(
-						array_map('strval', $ids),
+						array_map(strval(...), $ids),
 						true
 					);
 				} catch (\Exception $e) {
@@ -195,7 +195,7 @@ readonly class OrphanScanner
 
 					// Check if this property is in the index data
 					$value = $obj[$propName] ?? null;
-					if ($value === null || $value === '' || $value === []) {
+					if (in_array($value, [null, '', []], true)) {
 						continue;
 					}
 
@@ -239,8 +239,8 @@ readonly class OrphanScanner
 		}
 
 		$this->logger->info('Orphan scan complete', [
-			'collectionsScanned'     => $report->collectionsScanned,
-			'objectsScanned'         => $report->objectsScanned,
+			'collectionsScanned'      => $report->collectionsScanned,
+			'objectsScanned'          => $report->objectsScanned,
 			'orphanedReferencesFound' => $report->orphanedReferencesFound,
 		]);
 

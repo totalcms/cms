@@ -48,7 +48,7 @@ readonly class BulkObjectOptionsAction
 		}
 
 		$labelField = $this->detectLabelField($objects[0] ?? []);
-		$choices = [];
+		$choices    = [];
 
 		foreach ($objects as $object) {
 			$id = (string)($object['id'] ?? '');
@@ -58,7 +58,7 @@ readonly class BulkObjectOptionsAction
 
 			$label = $id;
 			if ($labelField !== null && isset($object[$labelField]) && (string)$object[$labelField] !== '') {
-				$label = $id . ' - ' . (string)$object[$labelField];
+				$label = $id . ' - ' . $object[$labelField];
 			}
 
 			$choices[] = ['value' => $id, 'label' => $label];

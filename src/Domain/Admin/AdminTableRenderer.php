@@ -46,7 +46,7 @@ readonly class AdminTableRenderer
 		}
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			throw new \RuntimeException("Collection '{$collection}' not found.");
 		}
 
@@ -84,10 +84,10 @@ readonly class AdminTableRenderer
 		if ($result->hasMore()) {
 			$nextParams             = $params;
 			$nextParams['format']   = 'table';
-			$nextParams['offset']   = (string) $result->nextOffset();
-			$nextParams['limit']    = (string) $result->limit;
+			$nextParams['offset']   = (string)$result->nextOffset();
+			$nextParams['limit']    = (string)$result->limit;
 			$sentinelUrl            = $baseUrl . '?' . http_build_query($nextParams);
-			$colspan                = (string) (count($columns) + 1);
+			$colspan                = (string)(count($columns) + 1);
 			$html .= '<tr class="htmx-sentinel" hx-get="' . htmlspecialchars($sentinelUrl) . '" hx-trigger="revealed" hx-swap="outerHTML">';
 			$html .= '<td colspan="' . $colspan . '"><span class="loading-dots"></span></td>';
 			$html .= '</tr>';
@@ -107,7 +107,7 @@ readonly class AdminTableRenderer
 				return $propertyData['type'];
 			}
 			if (isset($propertyData['$ref'])) {
-				return basename((string) $propertyData['$ref'], '.json');
+				return basename((string)$propertyData['$ref'], '.json');
 			}
 		}
 

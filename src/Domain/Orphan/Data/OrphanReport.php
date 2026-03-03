@@ -7,8 +7,8 @@ class OrphanReport
 	/** @var array<OrphanEntry> */
 	private array $entries = [];
 
-	public int $collectionsScanned       = 0;
-	public int $objectsScanned           = 0;
+	public int $collectionsScanned        = 0;
+	public int $objectsScanned            = 0;
 	public int $relationalPropertiesFound = 0;
 	public int $orphanedReferencesFound   = 0;
 	public string $scannedAt;
@@ -40,12 +40,12 @@ class OrphanReport
 	{
 		return [
 			'summary' => [
-				'collectionsScanned'       => $this->collectionsScanned,
-				'objectsScanned'           => $this->objectsScanned,
+				'collectionsScanned'        => $this->collectionsScanned,
+				'objectsScanned'            => $this->objectsScanned,
 				'relationalPropertiesFound' => $this->relationalPropertiesFound,
 				'orphanedReferencesFound'   => $this->orphanedReferencesFound,
-				'scannedAt'                => $this->scannedAt,
-				'isEmpty'                  => $this->isEmpty(),
+				'scannedAt'                 => $this->scannedAt,
+				'isEmpty'                   => $this->isEmpty(),
 			],
 			'entries' => array_map(
 				fn (OrphanEntry $entry): array => $entry->toArray(),

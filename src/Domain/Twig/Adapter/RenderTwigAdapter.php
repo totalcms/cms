@@ -693,7 +693,7 @@ class RenderTwigAdapter
 	public function cloneDialog(string $collection): string
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			return '';
 		}
 

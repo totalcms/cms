@@ -188,7 +188,7 @@ readonly class FilesystemService implements CacheInterface
 					continue;
 				}
 
-				if (preg_match($regex, $data['key'])) {
+				if (preg_match($regex, (string)$data['key'])) {
 					unlink($file->getPathname());
 				}
 			}

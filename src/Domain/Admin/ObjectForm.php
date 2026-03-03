@@ -86,14 +86,12 @@ class ObjectForm extends TotalForm
 		}
 
 		// Get the value from the object data if it exists (for editing)
-		if ($this->id !== '' && $this->objectData instanceof ObjectData) {
-			// Set value from object data
-			if (!isset($options['value'])) {
-				$value = $this->objectData->toArray()[$name] ?? null;
-				// Use strict checks to preserve zero values (0, 0.0, '0')
-				if ($value !== '' && $value !== null) {
-					$options['value'] = $value;
-				}
+		// Set value from object data
+		if ($this->id !== '' && $this->objectData instanceof ObjectData && !isset($options['value'])) {
+			$value = $this->objectData->toArray()[$name] ?? null;
+			// Use strict checks to preserve zero values (0, 0.0, '0')
+			if ($value !== '' && $value !== null) {
+				$options['value'] = $value;
 			}
 		}
 

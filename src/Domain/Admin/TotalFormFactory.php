@@ -19,8 +19,8 @@ use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -135,7 +135,7 @@ readonly class TotalFormFactory
 		$options['api']          = $this->api;
 		$options['session']      = $this->session;
 		$options['csrfManager']  = $this->csrfManager;
-		$options['showPasskeys'] = $options['showPasskeys'] ?? $this->editionFeatures->can(EditionFeature::PASSKEYS);
+		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS);
 
 		$form = new LoginForm(...$options);
 
@@ -1139,8 +1139,8 @@ readonly class TotalFormFactory
 			accessGroupLister        : $this->accessGroupLister,
 			collectionEditionService : $this->collectionEditionService,
 			editionFeatures          : $this->editionFeatures,
-			csrfManager              : $this->csrfManager,
 			dataViewFilter           : $this->dataViewFilter,
+			csrfManager              : $this->csrfManager,
 			config                   : $this->config,
 			metaResolver             : $this->metaResolver,
 			api                      : $this->api,

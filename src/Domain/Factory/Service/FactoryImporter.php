@@ -139,7 +139,7 @@ class FactoryImporter
 			}
 
 			$data = $this->dataViewFilter->getViewData($refView);
-			$ids  = array_map(fn ($item) => (string)($item[$valueField] ?? ''), $data);
+			$ids  = array_map(fn (array $item): string => (string)($item[$valueField] ?? ''), $data);
 			$ids  = array_values(array_filter($ids));
 
 			$this->relationalCache[$cacheKey] = $ids;

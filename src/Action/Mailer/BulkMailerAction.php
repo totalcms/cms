@@ -36,8 +36,8 @@ readonly class BulkMailerAction
 		$objectIds = null;
 		if (isset($data['bulkObjectIds']) && is_array($data['bulkObjectIds'])) {
 			$filtered = array_filter(
-				array_map('strval', $data['bulkObjectIds']),
-				static fn(string $v): bool => $v !== ''
+				array_map(strval(...), $data['bulkObjectIds']),
+				static fn (string $v): bool => $v !== ''
 			);
 			if ($filtered !== []) {
 				$objectIds = array_values($filtered);
