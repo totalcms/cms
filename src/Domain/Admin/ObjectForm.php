@@ -116,6 +116,7 @@ class ObjectForm extends TotalForm
 	private function fieldDefaults(string $property): array
 	{
 		$defaults = $this->metaResolver->resolve($this->collection, $property, $this->id);
+		$defaults = TotalForm::filterFieldProperties($defaults);
 
 		// Handle deckref for deck fields - move it to settings after resolve
 		// This is a form-specific concern, not part of general resolution
