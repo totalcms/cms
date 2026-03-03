@@ -7,6 +7,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -48,6 +49,7 @@ class DeckItemForm extends TotalForm
 		AccessGroupLister $accessGroupLister,
 		CollectionEditionService $collectionEditionService,
 		EditionFeatureService $editionFeatures,
+		DataViewFilter $dataViewFilter,
 		CSRFTokenManager $csrfManager,
 		Config $config,
 		PropertyMetaResolver $metaResolver,
@@ -107,6 +109,7 @@ class DeckItemForm extends TotalForm
 			hideID            : $hideID,
 			useFormGrid       : $useFormGrid,
 			addOnly           : $addOnly,
+			dataViewFilter    : $dataViewFilter,
 			csrfManager       : $csrfManager,
 			config            : $config,
 			metaResolver      : $metaResolver,

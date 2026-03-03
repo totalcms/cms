@@ -11,6 +11,7 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -66,6 +67,7 @@ readonly class TotalFormFactory
 		private JobManager $jobManager,
 		private DataViewLister $dataViewLister,
 		private PropertyMetaResolver $metaResolver,
+		private DataViewFilter $dataViewFilter,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -100,6 +102,7 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
@@ -281,6 +284,7 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'schemaFactory'            => $this->schemaFactory,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
@@ -312,6 +316,7 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'templateRepository'       => $this->templateRepository,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
@@ -564,6 +569,7 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
@@ -591,6 +597,7 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
@@ -622,6 +629,7 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
@@ -1132,6 +1140,7 @@ readonly class TotalFormFactory
 			collectionEditionService : $this->collectionEditionService,
 			editionFeatures          : $this->editionFeatures,
 			csrfManager              : $this->csrfManager,
+			dataViewFilter           : $this->dataViewFilter,
 			config                   : $this->config,
 			metaResolver             : $this->metaResolver,
 			api                      : $this->api,

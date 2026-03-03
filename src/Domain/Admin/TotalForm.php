@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -169,6 +170,7 @@ class TotalForm implements \Stringable
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
 		protected EditionFeatureService $editionFeatures,
+		protected DataViewFilter $dataViewFilter,
 		protected CSRFTokenManager $csrfManager,
 		protected Config $config,
 		protected PropertyMetaResolver $metaResolver,
@@ -438,6 +440,23 @@ class TotalForm implements \Stringable
 		// Extract only the requested properties from each object
 		/** @phpstan-ignore-next-line argument.templateType */
 		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
+	}
+
+	/**
+	 * Get properties from DataView data with optional filtering.
+	 *
+	 * @param array<string>        $properties Properties to fetch
+	 * @param string               $viewId     DataView ID
+	 * @param array<string,string> $filters    Optional include/exclude filters
+	 *
+	 * @return array<mixed>
+	 */
+	public function propertiesForView(array $properties, string $viewId, array $filters = []): array
+	{
+		$data = $this->dataViewFilter->fetchFilteredViewData($viewId, $filters);
+
+		/** @phpstan-ignore-next-line argument.templateType */
+		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $data);
 	}
 
 	/**

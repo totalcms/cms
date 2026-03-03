@@ -6,6 +6,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -38,6 +39,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		$this->csrfManager              = $this->createMock(CSRFTokenManager::class);
 		$this->config                   = Config::init();
 		$this->metaResolver             = $this->createMock(PropertyMetaResolver::class);
+		$this->dataViewFilter           = $this->createMock(DataViewFilter::class);
 
 		// Create mock schema with various property types
 		$this->schemaData             = new SchemaData();
@@ -89,6 +91,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -129,6 +132,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -163,6 +167,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -196,6 +201,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -230,6 +236,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -268,6 +275,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -317,6 +325,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -358,6 +367,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -386,6 +396,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,
@@ -424,6 +435,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
 			csrfManager: $this->csrfManager,
 			config: $this->config,
 			metaResolver: $this->metaResolver,

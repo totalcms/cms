@@ -6,6 +6,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -49,6 +50,7 @@ class TemplateForm extends TotalForm
 		protected CollectionEditionService $collectionEditionService,
 		protected EditionFeatureService $editionFeatures,
 		protected TemplateRepository $templateRepository,
+		protected DataViewFilter $dataViewFilter,
 		protected CSRFTokenManager $csrfManager,
 		protected Config $config,
 		protected PropertyMetaResolver $metaResolver,
@@ -92,6 +94,7 @@ class TemplateForm extends TotalForm
 			$accessGroupLister,
 			$collectionEditionService,
 			$editionFeatures,
+			$dataViewFilter,
 			$csrfManager,
 			$config,
 			$metaResolver,

@@ -351,9 +351,10 @@ class FormField
 		$labelProperty = trim($settings['label'] ?? 'id');
 		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
+		$view          = $settings['view'] ?? '';
 
-		if ($collection === '') {
-			return []; // No collection specified, return empty array
+		if ($collection === '' && $view === '') {
+			return []; // No data source specified, return empty array
 		}
 
 		// Split label property by spaces to support multiple properties
@@ -371,7 +372,11 @@ class FormField
 			$filters['exclude'] = $settings['exclude'];
 		}
 
-		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
+		if ($view !== '') {
+			$properties = $this->form->propertiesForView($propertiesToFetch, $view, $filters);
+		} else {
+			$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
+		}
 
 		// Build the label from multiple properties if specified
 		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {

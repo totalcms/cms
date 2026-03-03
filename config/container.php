@@ -52,6 +52,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\DataView\Repository\DataViewRepository;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
@@ -377,6 +378,7 @@ return [
 		$container->get(JobManager::class),
 		$container->get(DataViewLister::class),
 		$container->get(PropertyMetaResolver::class),
+		$container->get(DataViewFilter::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -640,6 +642,11 @@ return [
 
 	DataViewFetcher::class => fn (ContainerInterface $container): DataViewFetcher => new DataViewFetcher(
 		$container->get(DataViewRepository::class),
+	),
+
+	DataViewFilter::class => fn (ContainerInterface $container): DataViewFilter => new DataViewFilter(
+		$container->get(DataViewFetcher::class),
+		$container->get(ObjectFilter::class),
 	),
 
 	DataViewRemover::class => fn (ContainerInterface $container): DataViewRemover => new DataViewRemover(
@@ -955,6 +962,7 @@ return [
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyRepository::class),
 		$container->get(CacheManager::class),
+		$container->get(DataViewFilter::class),
 		$container->get(FakerFactory::class),
 		$container->get(LoggerFactory::class),
 	),

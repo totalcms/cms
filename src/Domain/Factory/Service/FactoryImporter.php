@@ -7,6 +7,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -46,6 +47,7 @@ class FactoryImporter
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly PropertyRepository $propertyRepository,
 		private readonly CacheManager $cacheManager,
+		private readonly DataViewFilter $dataViewFilter,
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
 	) {
@@ -121,14 +123,32 @@ class FactoryImporter
 	private function getRelationalIds(array $settings): array
 	{
 		$refCollection = $settings['collection'] ?? '';
+		$refView       = $settings['view'] ?? '';
 		$valueField    = $settings['value'] ?? 'id';
-
-		if (!is_string($refCollection) || $refCollection === '') {
-			return [];
-		}
 
 		if (!is_string($valueField)) {
 			$valueField = 'id';
+		}
+
+		// Handle view-sourced relational data
+		if (is_string($refView) && $refView !== '') {
+			$cacheKey = "view:{$refView}:{$valueField}";
+
+			if (isset($this->relationalCache[$cacheKey])) {
+				return $this->relationalCache[$cacheKey];
+			}
+
+			$data = $this->dataViewFilter->getViewData($refView);
+			$ids  = array_map(fn ($item) => (string)($item[$valueField] ?? ''), $data);
+			$ids  = array_values(array_filter($ids));
+
+			$this->relationalCache[$cacheKey] = $ids;
+
+			return $this->relationalCache[$cacheKey];
+		}
+
+		if (!is_string($refCollection) || $refCollection === '') {
+			return [];
 		}
 
 		$cacheKey = "{$refCollection}:{$valueField}";
@@ -175,7 +195,7 @@ class FactoryImporter
 			}
 
 			$relational = $settings['relationalOptions'] ?? null;
-			if (is_array($relational) && isset($relational['collection'])) {
+			if (is_array($relational) && (isset($relational['collection']) || isset($relational['view']))) {
 				$factories[$propName]                = self::RELATIONAL_MARKER;
 				$this->relationalSettings[$propName] = $relational;
 			}
