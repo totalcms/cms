@@ -118,9 +118,7 @@ class DeckTableField extends FormField
 
 			foreach ($schema->properties as $propertyName => $propertySchema) {
 				$propSettings = $propertySchema['settings'] ?? [];
-				if (isset($propSettings['hide']) && $propSettings['hide'] === true) {
-					continue;
-				}
+				$isHidden     = isset($propSettings['hide']) && $propSettings['hide'] === true;
 
 				$fieldValue   = $itemData[$propertyName] ?? '';
 				$defaultValue = $propertySchema['default'] ?? '';
@@ -155,8 +153,9 @@ class DeckTableField extends FormField
 				$cellLabel = $propertySchema['label'] ?? ucfirst($propertyName);
 				$fieldType = $propertySchema['field'] ?? 'text';
 				$fieldHtml = $this->form->field($propertyName, $fieldConfig);
+				$cellClass = 'deck-table-cell' . ($isHidden ? ' cms-hide' : '');
 				$cells .= HTMLUtils::element('div', $fieldHtml, [
-					'class'           => 'deck-table-cell',
+					'class'           => $cellClass,
 					'data-label'      => $cellLabel,
 					'data-field-type' => $fieldType,
 				]);
