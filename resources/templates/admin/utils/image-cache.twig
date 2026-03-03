@@ -64,4 +64,16 @@
 		}) }}
 	</div>
 
+	<div style="display:grid;gap:0.5rem;margin-top:3rem">
+		<h2>{{ t('image_cache.clear_watermarks') }}</h2>
+		<p>{{ t('image_cache.clear_watermarks_desc') }}</p>
+
+		{{ cms.form.simple("/cache/watermarks", "", {
+			method      : "DELETE",
+			label       : t('image_cache.clear_watermarks'),
+			refresh     : true,
+			buttonClass : "transparent dash-button-danger",
+		}) }}
+	</div>
+
 </section>

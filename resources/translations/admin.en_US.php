@@ -479,6 +479,8 @@ return [
 	'image_cache.clear_all'         => 'Clear All Image Caches',
 	'image_cache.clear_all_desc'    => 'This will remove all cached image variants across every collection.',
 	'image_cache.clear_all_confirm' => 'Are you sure you want to clear all image caches for every collection? This cannot be undone.',
+	'image_cache.clear_watermarks'         => 'Clear Watermark Cache',
+	'image_cache.clear_watermarks_desc'    => 'This will remove all cached watermark images. Watermarks will be regenerated on demand when next requested.',
 
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Batch Image Processor',
