@@ -208,7 +208,13 @@ export default class TotalForm {
 				return;
 			}
 
-			const object = this.generateFieldObject(field);
+			let object;
+			try {
+				object = this.generateFieldObject(field);
+			} catch (e) {
+				console.warn(e.message);
+				return;
+			}
             if (object === null || object.isSubField()) return; // if the object is not set, skip it
             fieldObjects.push(object);
 

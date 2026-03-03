@@ -41,6 +41,15 @@
 				// Ignore server validation errors shown in UI
 				if (message.includes('400 Bad Request')) return null;
 
+				// Ignore benign ResizeObserver loop errors (browser limitation, not a real bug)
+				if (message.includes('ResizeObserver loop')) return null;
+
+				// Ignore clipboard API errors (unavailable in non-secure HTTP contexts)
+				if (message.includes('navigator.clipboard')) return null;
+
+				// Ignore auth errors (session expired, user needs to re-login)
+				if (message === 'Authentication required') return null;
+
 				// Ignore race condition errors when elements are removed during async operations
 				// (e.g., image onload firing after element was removed from DOM)
 				if (error && error.name === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;

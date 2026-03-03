@@ -55,7 +55,7 @@ export default class Identifier extends TotalField {
 	changeListener() {
 		if (this.settings.autogen && !this.isLocked()) {
 			// autogen example: ${title}-${timestamp}
-			const autogenNames = this.settings.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
+			const autogenNames = (this.settings.autogen.match(/\${(.*?)}/g) || []).map(v => v.slice(2, -1));
 			const reservedNames = ["now", "timestamp", "uuid", "uid", "id", "oid", "currentyear", "currentyear2", "currentmonth", "currentday"];
 			autogenNames.forEach(name => {
 				// Skip reserved names and oid patterns (oid, oid-00000, etc.)

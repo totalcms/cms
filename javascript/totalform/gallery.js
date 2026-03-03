@@ -367,6 +367,7 @@ export default class GalleryField extends ImageField {
 
 	fileUploaded(file, response) {
 		const images = response.data[this.property];
+		if (!Array.isArray(images)) return;
 		const image = images.filter(image => image.name === file.name).shift();
 		if (image && image.name) {
 			// Add to data store
