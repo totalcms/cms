@@ -378,6 +378,15 @@ class FormField
 			$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
 		}
 
+		// Validate that properties is a list of arrays (not a wrapped structure like {"items": [...]})
+		$source = $view !== '' ? "view '{$view}'" : "collection '{$collection}'";
+		if ($properties === []) {
+			return [];
+		}
+		if (!array_is_list($properties) || !is_array($properties[0])) {
+			return [['value' => '', 'label' => "Error: {$source} returned invalid data for relationalOptions"]];
+		}
+
 		// Build the label from multiple properties if specified
 		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {
 			// If multiple label properties, concatenate them with spaces
