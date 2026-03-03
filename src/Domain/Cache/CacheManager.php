@@ -336,13 +336,19 @@ class CacheManager
 	 */
 	public function clearCollectionIndex(string $collectionName): bool
 	{
+		// Clear the collection index stored by storeCollectionIndex()
+		$collectionCleared = $this->clearData(
+			$this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}")
+		);
+
+		// Clear related computed caches
 		$indexCleared     = $this->clearComputedData("index:{$collectionName}");
 		$objectIdsCleared = $this->clearComputedData("object_ids:{$collectionName}");
 
 		// Clear cached API/query responses that depend on this collection's data
 		$this->clearByType(self::PREFIX_API_RESPONSE);
 
-		return $indexCleared && $objectIdsCleared;
+		return $collectionCleared || $indexCleared || $objectIdsCleared;
 	}
 
 	/**

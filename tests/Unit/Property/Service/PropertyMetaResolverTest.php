@@ -99,7 +99,7 @@ describe('PropertyMetaResolver', function (): void {
 		expect($result['label'])->toBe('Schema Label');
 	});
 
-	test('filters output to only recognised meta keys', function (): void {
+	test('passes through all schema keys for full property meta inheritance', function (): void {
 		$this->schemaData->properties = [
 			'title' => [
 				'field'       => 'text',
@@ -108,7 +108,6 @@ describe('PropertyMetaResolver', function (): void {
 				'placeholder' => 'Enter...',
 				'options'     => ['a', 'b'],
 				'settings'    => ['maxlength' => 100],
-				// These should be filtered out:
 				'type'        => 'string',
 				'$ref'        => 'https://example.com',
 				'required'    => true,
@@ -120,10 +119,10 @@ describe('PropertyMetaResolver', function (): void {
 		$result   = $resolver->resolve('test-collection', 'title');
 
 		expect($result)->toHaveKeys(['field', 'label', 'help', 'placeholder', 'options', 'settings']);
-		expect($result)->not->toHaveKey('type');
-		expect($result)->not->toHaveKey('$ref');
-		expect($result)->not->toHaveKey('required');
-		expect($result)->not->toHaveKey('deckref');
+		expect($result)->toHaveKey('type');
+		expect($result)->toHaveKey('$ref');
+		expect($result)->toHaveKey('required');
+		expect($result)->toHaveKey('deckref');
 	});
 
 	test('returns empty array for missing property', function (): void {
