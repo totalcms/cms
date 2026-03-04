@@ -54,8 +54,8 @@ Works identically to the collection version but queries a DataView by its ID.
 | `exclude` | string | — | Exclude filter (e.g., `draft:true`) |
 | `search` | string | — | Search query string |
 | `trigger` | string | `'revealed'` | HTMX trigger mode: `revealed` or `click` |
-| `label` | string | `'Load More'` | Button label (only used when trigger is `click`) |
-| `class` | string | — | Additional CSS class for the trigger element |
+| `buttonLabel` | string | `'Load More'` | Button label (only used when trigger is `click`) |
+| `buttonClass` | string | — | Additional CSS class for the trigger element |
 | `transition` | bool | `false` | Enable HTMX view transitions |
 | `load` | bool | `false` | Render the first page of items server-side (SEO-friendly) |
 | `empty` | string | — | HTML to display when filters match zero items |
@@ -81,7 +81,7 @@ Renders a `<button>` that the user clicks to load additional items.
 {{ cms.render.loadMore('blog', {
     template: 'blog/card.twig',
     trigger: 'click',
-    label: 'Show More Posts'
+    buttonLabel: 'Show More Posts'
 }) }}
 ```
 
@@ -216,7 +216,7 @@ button.cms-load-more {
         template: 'products/tile.twig',
         limit: 24,
         trigger: 'click',
-        label: 'Load More Products',
+        buttonLabel: 'Load More Products',
         include: 'instock:true'
     }) }}
 </div>

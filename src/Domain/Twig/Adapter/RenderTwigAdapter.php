@@ -85,7 +85,7 @@ class RenderTwigAdapter
 	 * ```
 	 *
 	 * @param string              $collection Collection identifier
-	 * @param array<string,mixed> $options    Options: template (required), limit, sort, include, exclude, search, trigger, label, class
+	 * @param array<string,mixed> $options    Options: template (required), limit, sort, include, exclude, search, trigger, buttonLabel, buttonClass
 	 */
 	public function loadMore(string $collection, array $options = []): string
 	{
@@ -129,7 +129,7 @@ class RenderTwigAdapter
 	 * ```
 	 *
 	 * @param string              $viewId  DataView identifier
-	 * @param array<string,mixed> $options Options: template (required), limit, sort, include, exclude, search, trigger, label, class
+	 * @param array<string,mixed> $options Options: template (required), limit, sort, include, exclude, search, trigger, buttonLabel, buttonClass
 	 */
 	public function loadMoreDataView(string $viewId, array $options = []): string
 	{
@@ -258,10 +258,11 @@ class RenderTwigAdapter
 	 */
 	private function buildTrigger(string $baseUrl, array $options): string
 	{
-		$template = (string)($options['template'] ?? '');
-		$limit    = max(1, (int)($options['limit'] ?? 20));
-		$trigger  = (string)($options['trigger'] ?? 'revealed');
-		$label    = (string)($options['label'] ?? 'Load More');
+		$template    = (string)($options['template'] ?? '');
+		$limit       = max(1, (int)($options['limit'] ?? 20));
+		$trigger     = (string)($options['trigger'] ?? 'revealed');
+		$buttonLabel = (string)($options['buttonLabel'] ?? 'Load More');
+		$buttonClass = (string)($options['buttonClass'] ?? '');
 
 		// Build query params — offset starts at limit because page 1 is server-rendered
 		$queryParams = [
@@ -279,12 +280,15 @@ class RenderTwigAdapter
 			}
 		}
 
-		// Pass trigger and label through so the chain preserves them
+		// Pass trigger, buttonLabel, and buttonClass through so the chain preserves them
 		if ($trigger !== 'revealed') {
 			$queryParams['trigger'] = $trigger;
 		}
-		if ($label !== 'Load More') {
-			$queryParams['label'] = $label;
+		if ($buttonLabel !== 'Load More') {
+			$queryParams['buttonLabel'] = $buttonLabel;
+		}
+		if ($buttonClass !== '') {
+			$queryParams['buttonClass'] = $buttonClass;
 		}
 
 		$transition = !empty($options['transition']);
@@ -292,9 +296,7 @@ class RenderTwigAdapter
 			$queryParams['transition'] = '1';
 		}
 
-		$extraClass = (string)($options['class'] ?? '');
-
-		return $this->htmxRenderer->buildInitialTrigger($baseUrl, $queryParams, $trigger, $label, $extraClass, $transition);
+		return $this->htmxRenderer->buildInitialTrigger($baseUrl, $queryParams, $trigger, $buttonLabel, $buttonClass, $transition);
 	}
 
 	/**

@@ -144,7 +144,7 @@ final class RenderTwigAdapterTest extends TestCase
 			->with(
 				$this->anything(),
 				$this->callback(fn (array $params): bool => ($params['trigger'] ?? '') === 'click'
-						&& ($params['label'] ?? '') === 'Show More'),
+						&& ($params['buttonLabel'] ?? '') === 'Show More'),
 				'click',
 				'Show More',
 				$this->anything(),
@@ -153,9 +153,9 @@ final class RenderTwigAdapterTest extends TestCase
 			->willReturn('<button>Show More</button>');
 
 		$this->adapter->loadMore('blog', [
-			'template' => 'blog/card',
-			'trigger'  => 'click',
-			'label'    => 'Show More',
+			'template'    => 'blog/card',
+			'trigger'     => 'click',
+			'buttonLabel' => 'Show More',
 		]);
 	}
 
@@ -185,7 +185,7 @@ final class RenderTwigAdapterTest extends TestCase
 			->method('buildInitialTrigger')
 			->with(
 				$this->anything(),
-				$this->anything(),
+				$this->callback(fn (array $params): bool => ($params['buttonClass'] ?? '') === 'my-class'),
 				$this->anything(),
 				$this->anything(),
 				'my-class',
@@ -194,8 +194,8 @@ final class RenderTwigAdapterTest extends TestCase
 			->willReturn('<div>trigger</div>');
 
 		$this->adapter->loadMore('blog', [
-			'template' => 'blog/card',
-			'class'    => 'my-class',
+			'template'    => 'blog/card',
+			'buttonClass' => 'my-class',
 		]);
 	}
 

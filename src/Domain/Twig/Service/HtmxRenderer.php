@@ -44,20 +44,20 @@ readonly class HtmxRenderer
 	 * @param string               $baseUrl     Full base URL (e.g. "/api/collections/blog/query")
 	 * @param array<string,string> $queryParams Built query parameters
 	 * @param string               $trigger     Trigger type: "revealed" or "click"
-	 * @param string               $label       Button label for click triggers
-	 * @param string               $extraClass  Additional CSS classes
+	 * @param string               $buttonLabel Button label for click triggers
+	 * @param string               $buttonClass Additional CSS classes
 	 * @param bool                 $transition  Enable View Transitions API
 	 */
 	public function buildInitialTrigger(
 		string $baseUrl,
 		array $queryParams,
-		string $trigger    = 'revealed',
-		string $label      = 'Load More',
-		string $extraClass = '',
+		string $trigger     = 'revealed',
+		string $buttonLabel = 'Load More',
+		string $buttonClass = '',
 		bool $transition = false,
 	): string {
 		$url   = $baseUrl . '?' . http_build_query($queryParams);
-		$class = trim('cms-load-more ' . $extraClass);
+		$class = trim('cms-load-more ' . $buttonClass);
 		$swap  = 'outerHTML' . ($transition ? ' transition:true' : '');
 
 		$attributes = [
@@ -68,7 +68,7 @@ readonly class HtmxRenderer
 		];
 
 		if ($trigger === 'click') {
-			return HTMLUtils::element('button', htmlspecialchars($label), $attributes);
+			return HTMLUtils::element('button', htmlspecialchars($buttonLabel), $attributes);
 		}
 
 		return HTMLUtils::element('div', '', $attributes);
@@ -91,29 +91,31 @@ readonly class HtmxRenderer
 		];
 
 		// Carry forward optional params
-		$optionalParams = ['sort', 'include', 'exclude', 'search', 'trigger', 'label', 'transition'];
+		$optionalParams = ['sort', 'include', 'exclude', 'search', 'trigger', 'buttonLabel', 'buttonClass', 'transition'];
 		foreach ($optionalParams as $key) {
 			if (isset($params[$key]) && $params[$key] !== '') {
 				$queryParams[$key] = $params[$key];
 			}
 		}
 
-		$trigger    = $params['trigger'] ?? 'revealed';
-		$label      = $params['label'] ?? 'Load More';
-		$transition = !empty($params['transition']);
+		$trigger     = $params['trigger'] ?? 'revealed';
+		$buttonLabel = $params['buttonLabel'] ?? 'Load More';
+		$buttonClass = $params['buttonClass'] ?? '';
+		$transition  = !empty($params['transition']);
 
-		$url  = $baseUrl . '?' . http_build_query($queryParams);
-		$swap = 'outerHTML' . ($transition ? ' transition:true' : '');
+		$url   = $baseUrl . '?' . http_build_query($queryParams);
+		$swap  = 'outerHTML' . ($transition ? ' transition:true' : '');
+		$class = trim('cms-load-more ' . $buttonClass);
 
 		$attributes = [
 			'hx-get'     => $url,
 			'hx-trigger' => $trigger,
 			'hx-swap'    => $swap,
-			'class'      => 'cms-load-more',
+			'class'      => $class,
 		];
 
 		if ($trigger === 'click') {
-			return HTMLUtils::element('button', htmlspecialchars($label), $attributes);
+			return HTMLUtils::element('button', htmlspecialchars($buttonLabel), $attributes);
 		}
 
 		return HTMLUtils::element('div', '', $attributes);

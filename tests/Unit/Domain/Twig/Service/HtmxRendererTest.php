@@ -48,10 +48,10 @@ final class HtmxRendererTest extends TestCase
 		$result = new QueryResult([['id' => '1']], 50, 20, 0);
 
 		$html = $this->renderer->buildNextPageTrigger('/api/query', $result, [
-			'template' => 'card',
-			'limit'    => '20',
-			'trigger'  => 'click',
-			'label'    => 'Show More',
+			'template'    => 'card',
+			'limit'       => '20',
+			'trigger'     => 'click',
+			'buttonLabel' => 'Show More',
 		]);
 
 		$this->assertStringContainsString('<button', $html);
@@ -158,6 +158,36 @@ final class HtmxRendererTest extends TestCase
 
 		$this->assertStringNotContainsString('<script>', $html);
 		$this->assertStringContainsString('&lt;script&gt;', $html);
+	}
+
+	public function testBuildNextPageTriggerCarriesForwardButtonClass(): void
+	{
+		$result = new QueryResult([['id' => '1']], 50, 20, 0);
+
+		$html = $this->renderer->buildNextPageTrigger('/api/query', $result, [
+			'template'    => 'card',
+			'limit'       => '20',
+			'buttonClass' => 'my-custom-class',
+		]);
+
+		$this->assertStringContainsString('cms-load-more my-custom-class', $html);
+		$this->assertStringContainsString('buttonClass=my-custom-class', $html);
+	}
+
+	public function testBuildNextPageTriggerCarriesForwardButtonLabel(): void
+	{
+		$result = new QueryResult([['id' => '1']], 50, 20, 0);
+
+		$html = $this->renderer->buildNextPageTrigger('/api/query', $result, [
+			'template'    => 'card',
+			'limit'       => '20',
+			'trigger'     => 'click',
+			'buttonLabel' => 'More Items',
+		]);
+
+		$this->assertStringContainsString('<button', $html);
+		$this->assertStringContainsString('More Items', $html);
+		$this->assertStringContainsString('buttonLabel=More+Items', $html);
 	}
 
 	public function testBuildInitialTriggerDefaultSwapIsOuterHTML(): void
