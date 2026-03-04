@@ -12,6 +12,7 @@ use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Factory\LoggerFactory;
@@ -43,6 +44,7 @@ class RenderTwigAdapter
 		private readonly SchemaFetcher $schemaFetcher,
 		public readonly GridRenderer $grid,
 		LoggerFactory $loggerFactory,
+		private readonly DepotBrowserRenderer $depotBrowserRenderer = new DepotBrowserRenderer(),
 	) {
 		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 	}
@@ -685,6 +687,51 @@ class RenderTwigAdapter
 		}
 
 		return '';
+	}
+
+	/**
+	 * Render a depot file browser.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function depotBrowser(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'collection'  => 'depot',
+			'property'    => 'depot',
+			'filter'      => false,
+			'preview'     => false,
+			'comments'    => false,
+			'download'    => true,
+			'tags'        => false,
+			'folders'     => true,
+			'humanize'    => true,
+			'class'       => '',
+			'reverseSort' => false,
+			'filterTags'  => [],
+		], $options);
+
+		$collection = $options['collection'];
+		$property   = $options['property'];
+
+		$depot = $this->data->raw($collection, $id, $property);
+		if (!is_array($depot)) {
+			return '';
+		}
+
+		$downloadUrl = fn (string $objId, string $name, array $opts): string => $this->media->depotDownload(
+			$objId,
+			$name,
+			array_merge(['collection' => $collection, 'property' => $property], $opts),
+		);
+
+		$streamUrl = fn (string $objId, string $name, array $opts): string => $this->media->depotStream(
+			$objId,
+			$name,
+			array_merge(['collection' => $collection, 'property' => $property], $opts),
+		);
+
+		return $this->depotBrowserRenderer->render($id, $depot, $options, $downloadUrl, $streamUrl);
 	}
 
 	/**

@@ -407,6 +407,7 @@ return [
 		$container->get(SchemaFetcher::class),
 		$container->get(GridRenderer::class),
 		$container->get(LoggerFactory::class),
+		$container->get(DepotBrowserRenderer::class),
 	),
 
 	ViewTwigAdapter::class => fn (ContainerInterface $container): ViewTwigAdapter => new ViewTwigAdapter(
