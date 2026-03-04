@@ -26,6 +26,16 @@ readonly class DataTwigAdapter
 	}
 
 	/**
+	 * Backwards compatibility: cms.data('collection', 'id', 'property') → cms.data.raw().
+	 */
+	public function __invoke(string $collection, string $id, string $property): mixed
+	{
+		$this->logger->warning("Deprecated: cms.data() is deprecated. Use cms.data.raw() instead.");
+
+		return $this->raw($collection, $id, $property);
+	}
+
+	/**
 	 * Get a raw data property from an object.
 	 */
 	public function raw(string $collection, string $id, string $property): mixed
