@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Template\Repository;
 
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
 
@@ -15,6 +16,7 @@ class TemplateRepository extends StorageRepository
 {
 	public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../resources/templates/';
 	public const FILE_EXT                 = '.twig';
+	public const DESIGNER_META_EXT        = '.designer.json';
 	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
 
 	/**
@@ -60,6 +62,67 @@ class TemplateRepository extends StorageRepository
 		}
 
 		return $basePath . $template . self::FILE_EXT;
+	}
+
+	/**
+	 * Generate a designer metadata companion file path.
+	 */
+	public function designerMetaPath(string $template, ?string $folder = null): string
+	{
+		$basePath = self::CUSTOM_TEMPLATE_DIR;
+
+		if ($folder !== null && $folder !== '') {
+			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
+			$folder = trim($folder, '/');
+			$basePath .= $folder . '/';
+		}
+
+		return $basePath . $template . self::DESIGNER_META_EXT;
+	}
+
+	/**
+	 * Fetch designer metadata for a template.
+	 */
+	public function fetchDesignerMeta(string $template, ?string $folder = null): ?DesignerMetadata
+	{
+		$metaPath = $this->designerMetaPath($template, $folder);
+
+		if (!$this->filesystem->fileExists($metaPath)) {
+			return null;
+		}
+
+		$contents = $this->filesystem->read($metaPath);
+
+		/** @var array<string,mixed>|null $data */
+		$data = json_decode($contents, true);
+
+		if (!is_array($data)) {
+			return null;
+		}
+
+		return DesignerMetadata::fromArray($data);
+	}
+
+	/**
+	 * Save designer metadata companion file.
+	 */
+	public function saveDesignerMeta(string $template, ?string $folder, DesignerMetadata $meta): void
+	{
+		$metaPath = $this->designerMetaPath($template, $folder);
+		$json = json_encode($meta->toArray(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+		$this->filesystem->write($metaPath, $json);
+	}
+
+	/**
+	 * Delete designer metadata companion file.
+	 */
+	public function deleteDesignerMeta(string $template, ?string $folder = null): void
+	{
+		$metaPath = $this->designerMetaPath($template, $folder);
+
+		if ($this->filesystem->fileExists($metaPath)) {
+			$this->filesystem->delete($metaPath);
+		}
 	}
 
 	/**
@@ -172,7 +235,15 @@ class TemplateRepository extends StorageRepository
 		$contents = $this->filesystem->read($templateFile);
 
 		// Empty content is valid for templates - allows editing blank templates
-		$this->requestCache[$cacheKey] = TemplateFactory::generateTemplate($template, $contents);
+		$templateData = TemplateFactory::generateTemplate($template, $contents);
+
+		// Load designer metadata if companion file exists
+		$designerMeta = $this->fetchDesignerMeta($template, $folder);
+		if ($designerMeta instanceof DesignerMetadata) {
+			$templateData->designer = $designerMeta;
+		}
+
+		$this->requestCache[$cacheKey] = $templateData;
 
 		return $this->requestCache[$cacheKey];
 	}
@@ -204,6 +275,9 @@ class TemplateRepository extends StorageRepository
 		if ($deleted) {
 			$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template;
 			unset($this->requestCache[$cacheKey]);
+
+			// Also delete companion designer metadata file
+			$this->deleteDesignerMeta($template, $folder);
 		}
 
 		return $deleted;

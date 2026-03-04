@@ -146,6 +146,9 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerRegistry;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerSync;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -156,6 +159,7 @@ use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
+use TotalCMS\Middleware\Access\DesignerAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
@@ -712,10 +716,32 @@ return [
 		$container->get(TotalCMSTwigExtension::class),
 		$container->get(DevModeManager::class),
 		$container->get(EditionFeatureService::class),
+		$container->get(TemplateDesignerPreprocessor::class),
+		$container->get(TemplateDesignerSync::class),
 	),
 
 	TwigRenderer::class => fn (ContainerInterface $container): TwigRenderer => new TwigRenderer(
 		$container->get(TwigEngine::class)
+	),
+
+	// Template Designer Services
+	TemplateDesignerRegistry::class => fn (): TemplateDesignerRegistry => new TemplateDesignerRegistry(),
+
+	TemplateDesignerPreprocessor::class => fn (ContainerInterface $container): TemplateDesignerPreprocessor => new TemplateDesignerPreprocessor(
+		$container->get(TemplateDesignerRegistry::class),
+	),
+
+	TemplateDesignerSync::class => fn (ContainerInterface $container): TemplateDesignerSync => new TemplateDesignerSync(
+		$container->get(Config::class),
+		$container->get(TemplateSaver::class),
+		$container->get(TemplateDesignerRegistry::class),
+		$container->get(EditionFeatureService::class),
+	),
+
+	DesignerAccessMiddleware::class => fn (ContainerInterface $container): DesignerAccessMiddleware => new DesignerAccessMiddleware(
+		$container->get(TemplateRepository::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
 	),
 
 	RedirectRenderer::class => fn (ContainerInterface $container): RedirectRenderer => new RedirectRenderer(

@@ -69,6 +69,16 @@ function templatePath(string $id, ?string $folder = null): string
 	return $basePath . $id . '.twig';
 }
 
+function designerMetaPath(string $id, ?string $folder = null): string
+{
+	$basePath = cmsDataDir() . 'templates/';
+	if ($folder !== null && $folder !== '') {
+		$basePath .= $folder . '/';
+	}
+
+	return $basePath . $id . '.designer.json';
+}
+
 function collectionPath(string $collection): string
 {
 	return cmsDataDir() . "$collection/";

@@ -9,6 +9,9 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Twig\Designer\DesignerAwareLoader;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerSync;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
@@ -23,6 +26,7 @@ use Twig\Extra\Markdown\MarkdownRuntime;
 use Twig\Extra\String\StringExtension;
 use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
+use Twig\TwigFunction;
 
 /**
  * Twig template processor.
@@ -38,6 +42,8 @@ readonly class TwigEngine
 		TotalCMSTwigExtension $extension,
 		DevModeManager $devModeManager,
 		EditionFeatureService $editionFeatures,
+		TemplateDesignerPreprocessor $designerPreprocessor,
+		TemplateDesignerSync $designerSync,
 	) {
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		if (!file_exists($internalTemplates)) {
@@ -59,8 +65,9 @@ readonly class TwigEngine
 		$devModeActive  = $devModeManager->isDevModeActive();
 		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
-		$loader     = new TwigFilesystemLoader($paths);
-		$this->twig = new TwigEnvironment($loader, [
+		$filesystemLoader = new TwigFilesystemLoader($paths);
+		$loader           = new DesignerAwareLoader($filesystemLoader, $designerPreprocessor);
+		$this->twig       = new TwigEnvironment($loader, [
 			'cache'            => $cacheEnabled ? $cacheDir : false,
 			'debug'            => $config->debug || $devModeActive,
 			'auto_reload'      => $config->debug || $devModeActive,   // Auto-reload in dev or devmode
@@ -107,6 +114,13 @@ readonly class TwigEngine
 		if ($config->debug) {
 			$this->twig->addExtension(new DebugExtension());
 		}
+
+		// Register Template Designer sync function
+		$this->twig->addFunction(new TwigFunction(
+			'_tcms_designer_sync',
+			fn (string $key): string => $designerSync->sync($key),
+			['is_safe' => ['html']],
+		));
 	}
 
 	/** @param array<mixed> $data */

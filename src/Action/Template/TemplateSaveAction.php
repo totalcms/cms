@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\JsonRenderer;
@@ -36,6 +37,15 @@ readonly class TemplateSaveAction
 		[$folder, $templateId] = TemplateRepository::parsePath($id);
 
 		$templateData = $this->service->saveTemplate($templateId, $template, $folder);
+
+		// Save designer metadata if provided
+		if (isset($data['designerEnabled']) || isset($data['designerToken'])) {
+			$meta = new DesignerMetadata();
+			$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
+			$meta->designerToken   = (string)($data['designerToken'] ?? '');
+			$this->service->saveDesignerMeta($templateId, $folder, $meta);
+			$templateData->designer = $meta;
+		}
 
 		return $this->renderer->jsonItem($response, $templateData, new TemplateMetaTransformer());
 	}

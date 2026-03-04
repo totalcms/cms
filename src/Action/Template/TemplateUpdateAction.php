@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
@@ -54,6 +55,15 @@ readonly class TemplateUpdateAction
 
 		// Save the template (with new name/folder if changed)
 		$templateData = $this->saver->saveTemplate($newId, $template, $newFolder);
+
+		// Save designer metadata if provided
+		if (isset($data['designerEnabled']) || isset($data['designerToken'])) {
+			$meta = new DesignerMetadata();
+			$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
+			$meta->designerToken   = (string)($data['designerToken'] ?? '');
+			$this->saver->saveDesignerMeta($newId, $newFolder, $meta);
+			$templateData->designer = $meta;
+		}
 
 		return $this->renderer->jsonItem($response, $templateData, new TemplateMetaTransformer());
 	}

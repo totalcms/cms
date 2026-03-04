@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Template\Service;
 
+use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 
@@ -30,5 +31,13 @@ readonly class TemplateSaver
 		$this->storage->saveTemplate($template, $folder);
 
 		return $template;
+	}
+
+	/**
+	 * Save designer metadata for a template.
+	 */
+	public function saveDesignerMeta(string $id, ?string $folder, DesignerMetadata $meta): void
+	{
+		$this->storage->saveDesignerMeta($id, $folder, $meta);
 	}
 }

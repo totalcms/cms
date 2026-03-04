@@ -1,0 +1,11 @@
+{% templatedesigner for 'demo/product-card' on 'https://example.com/tcms/' token 'demo-token-12345' %}
+<article class="product-card">
+    <h3>{{ object.title | default('Product Title') }}</h3>
+    <p class="price">{{ object.price | default('$0.00') }}</p>
+    <p class="description">{{ object.summary | default('A great product description goes here.') }}</p>
+    {% if object.image is defined %}
+        <img src="{{ object.image }}" alt="{{ object.title }}">
+    {% endif %}
+    <button class="buy-btn">Add to Cart</button>
+</article>
+{% endtemplatedesigner %}
