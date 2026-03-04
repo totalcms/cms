@@ -53,6 +53,17 @@
 	}
 }
 
+/* Full-Width Grid Item */
+.cms-grid-item-full {
+	grid-column : 1 / -1;
+}
+
+/* Load More Button — full row, centered */
+.cms-load-more:last-child {
+	grid-column : 1 / -1;
+	justify-self : center;
+}
+
 /* Grid Item Base Styles */
 .cms-grid-item {
 	background    : var(--cms-card-bg);
