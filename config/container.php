@@ -37,6 +37,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -166,6 +167,7 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\CacheInvalidationMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
@@ -785,8 +787,18 @@ return [
 		$container->get(APCuService::class),
 		$container->get(WatermarkCleanupService::class),
 		$container->get(DevModeManager::class),
+		$container->get(CacheInvalidationSignal::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class)
+	),
+
+	CacheInvalidationSignal::class => fn (ContainerInterface $container): CacheInvalidationSignal => new CacheInvalidationSignal(
+		$container->get(Config::class),
+	),
+
+	CacheInvalidationMiddleware::class => fn (ContainerInterface $container): CacheInvalidationMiddleware => new CacheInvalidationMiddleware(
+		$container->get(CacheInvalidationSignal::class),
+		$container->get(CacheManager::class),
 	),
 
 	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),

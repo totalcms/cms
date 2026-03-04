@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Cache;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInterface;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -67,6 +68,15 @@ class CacheManager
 	 */
 	private bool $cacheDisabled = false;
 
+	/**
+	 * When true, suppress writing to the invalidation signal file.
+	 * Used during replay to prevent infinite recursion.
+	 */
+	private bool $suppressSignals = false;
+
+	/** Whether this process is CLI (signals only needed from CLI → web). */
+	private readonly bool $isCli;
+
 	public function __construct(
 		private readonly FilesystemService $filesystemService,
 		private readonly OPcacheService $opcacheService,
@@ -75,6 +85,7 @@ class CacheManager
 		private readonly APCuService $apcuService,
 		private readonly WatermarkCleanupService $watermarkCleanupService,
 		private readonly DevModeManager $devModeManager,
+		private readonly CacheInvalidationSignal $invalidationSignal,
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -93,6 +104,7 @@ class CacheManager
 
 		// Create domain-specific prefix to prevent cache collisions between installations
 		$this->domainPrefix = md5($this->config->domain);
+		$this->isCli        = php_sapi_name() === 'cli';
 	}
 
 	/**
@@ -122,6 +134,15 @@ class CacheManager
 	public function isCacheDisabled(): bool
 	{
 		return $this->cacheDisabled;
+	}
+
+	/**
+	 * Control whether invalidation signals are written.
+	 * Used by CacheInvalidationMiddleware during replay to prevent recursion.
+	 */
+	public function setSuppressSignals(bool $suppress): void
+	{
+		$this->suppressSignals = $suppress;
 	}
 
 	/**
@@ -303,6 +324,11 @@ class CacheManager
 			$success &= $this->opcacheService->clear();
 		}
 
+		// Signal for cross-process invalidation (CLI → web)
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signal($key);
+		}
+
 		return (bool)$success;
 	}
 
@@ -408,25 +434,36 @@ class CacheManager
 			return false;
 		}
 
-		$success = true;
 		$pattern = $this->domainPrefix . ':' . $type . ':*';
+		$success = $this->clearByPatternAllBackends($pattern);
 
-		// Clear from APCu
+		// Signal for cross-process invalidation (CLI → web)
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signalPattern($pattern);
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Clear cache entries by pattern across all available backends.
+	 */
+	public function clearByPatternAllBackends(string $pattern): bool
+	{
+		$success = true;
+
 		if ($this->apcuService->isAvailable()) {
 			$success &= $this->clearByPattern($this->apcuService, $pattern);
 		}
 
-		// Clear from Redis
 		if ($this->redisService->isAvailable()) {
 			$success &= $this->clearByPattern($this->redisService, $pattern);
 		}
 
-		// Clear from Memcached
 		if ($this->memcachedService->isAvailable()) {
 			$success &= $this->clearByPattern($this->memcachedService, $pattern);
 		}
 
-		// Clear from Filesystem
 		if ($this->filesystemService->isAvailable()) {
 			$success &= $this->clearByPattern($this->filesystemService, $pattern);
 		}
@@ -758,6 +795,11 @@ class CacheManager
 		$results['version'] = ['cleared' => true, 'reason' => 'new version generated'];
 
 		$results['success'] = $overallSuccess;
+
+		// Signal for cross-process invalidation (CLI → web)
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signalFull();
+		}
 
 		return $results;
 	}
