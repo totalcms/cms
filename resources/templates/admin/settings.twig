@@ -106,9 +106,9 @@
 
 				{{ cms.form.simple('settings/smtp?test=1', '
 					<div class="field-wrapper field-email">
-						<label for="test_email">{{ ' ~ t('settings.smtp_test_email') ~ ' }}</label>
-						<input type="email" id="test_email" name="test_email" placeholder="{{'~ t('settings.smtp_test_ph') ~'}}" required />
-						<div class="help">{{ '~ t('settings.smtp_test_help') ~'}}</div>
+						<label for="test_email">' ~ t('settings.smtp_test_email') ~ '</label>
+						<input type="email" id="test_email" name="test_email" placeholder="'~ t('settings.smtp_test_ph') ~'" required />
+						<div class="help">'~ t('settings.smtp_test_help') ~'</div>
 					</div>
 				', {
 					'method': 'POST',
