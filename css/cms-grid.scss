@@ -54,7 +54,8 @@
 }
 
 /* Full-Width Grid Item */
-.cms-grid-item-full {
+.cms-grid-item-full,
+.cms-no-results {
 	grid-column : 1 / -1;
 }
 

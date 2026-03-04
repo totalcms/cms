@@ -213,7 +213,7 @@ Generate an HTMX-powered "load more" trigger for paginated collection loading.
 }) }}
 ```
 
-See [Load More Documentation](docs/collections/load-more) for full options and examples.
+See [Load More Documentation](docs/twig/load-more) for full options and examples.
 
 ### loadMoreDataView()
 
@@ -237,7 +237,7 @@ Generate a standalone HTMX button that appends items into an external container.
 }) }}
 ```
 
-See [Load More Documentation](docs/collections/load-more) for full options and examples.
+See [Load More Documentation](docs/twig/load-more) for full options and examples.
 
 ### loadMoreDataViewButton()
 
