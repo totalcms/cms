@@ -445,6 +445,194 @@ final class RenderTwigAdapterTest extends TestCase
 		$this->assertStringContainsString('Nothing here.', $result);
 	}
 
+	// --- loadMoreButton ---
+
+	public function testLoadMoreButtonReturnsErrorWhenTemplateMissing(): void
+	{
+		$result = $this->adapter->loadMoreButton('blog', ['target' => '#feed']);
+
+		$this->assertStringContainsString('template', $result);
+		$this->assertStringContainsString('<!--', $result);
+	}
+
+	public function testLoadMoreButtonReturnsErrorWhenTargetMissing(): void
+	{
+		$result = $this->adapter->loadMoreButton('blog', ['template' => 'blog/card']);
+
+		$this->assertStringContainsString('target', $result);
+		$this->assertStringContainsString('<!--', $result);
+	}
+
+	public function testLoadMoreButtonBuildsCorrectBaseUrl(): void
+	{
+		$this->htmxRenderer->expects($this->once())
+			->method('buildButton')
+			->with(
+				'/api/collections/blog/query',
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+			)
+			->willReturn('<button>Load More</button>');
+
+		$this->adapter->loadMoreButton('blog', [
+			'template' => 'blog/card',
+			'target'   => '#blog-feed',
+		]);
+	}
+
+	public function testLoadMoreButtonPassesCorrectParams(): void
+	{
+		$this->htmxRenderer->expects($this->once())
+			->method('buildButton')
+			->with(
+				$this->anything(),
+				$this->callback(fn (array $params): bool => $params['format'] === 'html'
+						&& $params['template'] === 'blog/card'
+						&& $params['offset'] === '0'
+						&& $params['limit'] === '10'
+						&& $params['mode'] === 'append'
+						&& $params['target'] === '#blog-feed'
+						&& str_starts_with($params['buttonId'], 'cms-lmb-')),
+				'Load More',
+				'',
+				false,
+				false,
+			)
+			->willReturn('<button>Load More</button>');
+
+		$this->adapter->loadMoreButton('blog', [
+			'template' => 'blog/card',
+			'target'   => '#blog-feed',
+			'limit'    => 10,
+		]);
+	}
+
+	public function testLoadMoreButtonGeneratesDeterministicId(): void
+	{
+		$capturedParams1 = null;
+		$capturedParams2 = null;
+
+		$this->htmxRenderer->expects($this->exactly(2))
+			->method('buildButton')
+			->willReturnCallback(function (string $url, array $params) use (&$capturedParams1, &$capturedParams2): string {
+				if ($capturedParams1 === null) {
+					$capturedParams1 = $params;
+				} else {
+					$capturedParams2 = $params;
+				}
+				return '<button>Load More</button>';
+			});
+
+		$this->adapter->loadMoreButton('blog', ['template' => 'blog/card', 'target' => '#feed']);
+		$this->adapter->loadMoreButton('blog', ['template' => 'blog/card', 'target' => '#feed']);
+
+		$this->assertSame($capturedParams1['buttonId'], $capturedParams2['buttonId']);
+	}
+
+	public function testLoadMoreButtonRespectsCustomId(): void
+	{
+		$this->htmxRenderer->expects($this->once())
+			->method('buildButton')
+			->with(
+				$this->anything(),
+				$this->callback(fn (array $params): bool => $params['buttonId'] === 'my-custom-btn'),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+			)
+			->willReturn('<button>Load More</button>');
+
+		$this->adapter->loadMoreButton('blog', [
+			'template' => 'blog/card',
+			'target'   => '#feed',
+			'id'       => 'my-custom-btn',
+		]);
+	}
+
+	public function testLoadMoreButtonPassesLoadOption(): void
+	{
+		$this->htmxRenderer->expects($this->once())
+			->method('buildButton')
+			->with(
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				true,
+			)
+			->willReturn('<button>Load More</button>');
+
+		$this->adapter->loadMoreButton('blog', [
+			'template' => 'blog/card',
+			'target'   => '#feed',
+			'load'     => true,
+		]);
+	}
+
+	public function testLoadMoreButtonPassesCustomOffset(): void
+	{
+		$this->htmxRenderer->expects($this->once())
+			->method('buildButton')
+			->with(
+				$this->anything(),
+				$this->callback(fn (array $params): bool => $params['offset'] === '5'),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+			)
+			->willReturn('<button>Load More</button>');
+
+		$this->adapter->loadMoreButton('blog', [
+			'template' => 'blog/card',
+			'target'   => '#feed',
+			'offset'   => 5,
+		]);
+	}
+
+	// --- loadMoreDataViewButton ---
+
+	public function testLoadMoreDataViewButtonReturnsErrorWhenTemplateMissing(): void
+	{
+		$result = $this->adapter->loadMoreDataViewButton('my-view', ['target' => '#feed']);
+
+		$this->assertStringContainsString('template', $result);
+		$this->assertStringContainsString('<!--', $result);
+	}
+
+	public function testLoadMoreDataViewButtonReturnsErrorWhenTargetMissing(): void
+	{
+		$result = $this->adapter->loadMoreDataViewButton('my-view', ['template' => 'card']);
+
+		$this->assertStringContainsString('target', $result);
+		$this->assertStringContainsString('<!--', $result);
+	}
+
+	public function testLoadMoreDataViewButtonBuildsCorrectBaseUrl(): void
+	{
+		$this->htmxRenderer->expects($this->once())
+			->method('buildButton')
+			->with(
+				'/api/dataviews/my-view/query',
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+			)
+			->willReturn('<button>Load More</button>');
+
+		$this->adapter->loadMoreDataViewButton('my-view', [
+			'template' => 'cards/item',
+			'target'   => '#feed',
+		]);
+	}
+
 	public function testLoadOptionDataViewRendersItemsAndTrigger(): void
 	{
 		$htmx        = $this->createMock(HtmxRenderer::class);

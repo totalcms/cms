@@ -109,7 +109,12 @@ readonly class QueryActionRenderer
 			$html .= $this->twigEngine->render($template . '.twig', ['object' => $item] + $context);
 		}
 
-		$html .= $this->htmxRenderer->buildNextPageTrigger($baseUrl, $result, $params);
+		$mode = $params['mode'] ?? '';
+		if ($mode === 'append') {
+			$html .= $this->htmxRenderer->buildOobButton($baseUrl, $result, $params);
+		} else {
+			$html .= $this->htmxRenderer->buildNextPageTrigger($baseUrl, $result, $params);
+		}
 		$response = $result->withPaginationHeaders($response);
 		$response = $response->withHeader('Content-Type', 'text/html');
 

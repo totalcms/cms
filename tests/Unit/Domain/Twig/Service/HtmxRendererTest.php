@@ -199,4 +199,194 @@ final class HtmxRendererTest extends TestCase
 
 		$this->assertStringContainsString('hx-swap="outerHTML"', $html);
 	}
+
+	// --- buildButton ---
+
+	public function testBuildButtonOutputsCorrectAttributes(): void
+	{
+		$html = $this->renderer->buildButton(
+			'/api/collections/blog/query',
+			[
+				'format'   => 'html',
+				'template' => 'blog/card',
+				'offset'   => '0',
+				'limit'    => '10',
+				'mode'     => 'append',
+				'buttonId' => 'cms-lmb-abc12345',
+				'target'   => '#blog-feed',
+			],
+		);
+
+		$this->assertStringContainsString('<button', $html);
+		$this->assertStringContainsString('id="cms-lmb-abc12345"', $html);
+		$this->assertStringContainsString('hx-get=', $html);
+		$this->assertStringContainsString('hx-target="#blog-feed"', $html);
+		$this->assertStringContainsString('hx-swap="beforeend"', $html);
+		$this->assertStringContainsString('hx-trigger="click"', $html);
+		$this->assertStringContainsString('cms-load-more', $html);
+		$this->assertStringContainsString('Load More', $html);
+	}
+
+	public function testBuildButtonWithLoadTrigger(): void
+	{
+		$html = $this->renderer->buildButton(
+			'/api/collections/blog/query',
+			[
+				'format' => 'html', 'template' => 'card', 'offset' => '0',
+				'limit' => '10', 'mode' => 'append',
+				'buttonId' => 'btn1', 'target' => '#feed',
+			],
+			'Load More',
+			'',
+			false,
+			true,
+		);
+
+		$this->assertStringContainsString('hx-trigger="load, click"', $html);
+	}
+
+	public function testBuildButtonWithoutLoadTrigger(): void
+	{
+		$html = $this->renderer->buildButton(
+			'/api/collections/blog/query',
+			[
+				'format' => 'html', 'template' => 'card', 'offset' => '0',
+				'limit' => '10', 'mode' => 'append',
+				'buttonId' => 'btn1', 'target' => '#feed',
+			],
+		);
+
+		$this->assertStringContainsString('hx-trigger="click"', $html);
+		$this->assertStringNotContainsString('hx-trigger="load', $html);
+	}
+
+	public function testBuildButtonWithCustomLabelAndClass(): void
+	{
+		$html = $this->renderer->buildButton(
+			'/api/query',
+			[
+				'format' => 'html', 'template' => 'card', 'offset' => '0',
+				'limit' => '10', 'mode' => 'append',
+				'buttonId' => 'btn1', 'target' => '#feed',
+			],
+			'Show More Posts',
+			'btn-primary',
+		);
+
+		$this->assertStringContainsString('Show More Posts', $html);
+		$this->assertStringContainsString('cms-load-more btn-primary', $html);
+	}
+
+	public function testBuildButtonWithTransition(): void
+	{
+		$html = $this->renderer->buildButton(
+			'/api/query',
+			[
+				'format' => 'html', 'template' => 'card', 'offset' => '0',
+				'limit' => '10', 'mode' => 'append',
+				'buttonId' => 'btn1', 'target' => '#feed',
+			],
+			'Load More',
+			'',
+			true,
+		);
+
+		$this->assertStringContainsString('hx-swap="beforeend transition:true"', $html);
+	}
+
+	public function testBuildButtonEscapesLabel(): void
+	{
+		$html = $this->renderer->buildButton(
+			'/api/query',
+			[
+				'format' => 'html', 'template' => 'card', 'offset' => '0',
+				'limit' => '10', 'mode' => 'append',
+				'buttonId' => 'btn1', 'target' => '#feed',
+			],
+			'<script>alert("xss")</script>',
+		);
+
+		$this->assertStringNotContainsString('<script>', $html);
+		$this->assertStringContainsString('&lt;script&gt;', $html);
+	}
+
+	// --- buildOobButton ---
+
+	public function testBuildOobButtonWithMoreItemsReturnsOobButton(): void
+	{
+		$result = new QueryResult([['id' => '1']], 50, 10, 0);
+
+		$html = $this->renderer->buildOobButton('/api/collections/blog/query', $result, [
+			'template' => 'blog/card',
+			'limit'    => '10',
+			'mode'     => 'append',
+			'buttonId' => 'cms-lmb-abc12345',
+			'target'   => '#blog-feed',
+		]);
+
+		$this->assertStringContainsString('<button', $html);
+		$this->assertStringContainsString('id="cms-lmb-abc12345"', $html);
+		$this->assertStringContainsString('hx-swap-oob="true"', $html);
+		$this->assertStringContainsString('hx-target="#blog-feed"', $html);
+		$this->assertStringContainsString('hx-swap="beforeend"', $html);
+		$this->assertStringContainsString('hx-trigger="click"', $html);
+		$this->assertStringContainsString('offset=10', $html);
+	}
+
+	public function testBuildOobButtonAlwaysUsesClickTrigger(): void
+	{
+		$result = new QueryResult([['id' => '1']], 50, 10, 0);
+
+		$html = $this->renderer->buildOobButton('/api/query', $result, [
+			'template' => 'card',
+			'limit'    => '10',
+			'mode'     => 'append',
+			'buttonId' => 'btn1',
+			'target'   => '#feed',
+		]);
+
+		$this->assertStringContainsString('hx-trigger="click"', $html);
+		$this->assertStringNotContainsString('hx-trigger="load', $html);
+	}
+
+	public function testBuildOobButtonWithNoMoreItemsReturnsDeleteElement(): void
+	{
+		$result = new QueryResult([['id' => '1']], 1, 10, 0);
+
+		$html = $this->renderer->buildOobButton('/api/query', $result, [
+			'template' => 'card',
+			'limit'    => '10',
+			'mode'     => 'append',
+			'buttonId' => 'cms-lmb-abc12345',
+			'target'   => '#feed',
+		]);
+
+		$this->assertStringContainsString('id="cms-lmb-abc12345"', $html);
+		$this->assertStringContainsString('hx-swap-oob="delete"', $html);
+		$this->assertStringNotContainsString('hx-get', $html);
+	}
+
+	public function testBuildOobButtonCarriesForwardParams(): void
+	{
+		$result = new QueryResult([['id' => '1']], 50, 10, 0);
+
+		$html = $this->renderer->buildOobButton('/api/query', $result, [
+			'template'    => 'blog/card',
+			'limit'       => '10',
+			'mode'        => 'append',
+			'buttonId'    => 'btn1',
+			'target'      => '#feed',
+			'sort'        => '-date',
+			'include'     => 'published:true',
+			'buttonLabel' => 'Show More',
+			'buttonClass' => 'btn-primary',
+		]);
+
+		$this->assertStringContainsString('sort=-date', $html);
+		$this->assertStringContainsString('include=published%3Atrue', $html);
+		$this->assertStringContainsString('buttonLabel=Show+More', $html);
+		$this->assertStringContainsString('buttonClass=btn-primary', $html);
+		$this->assertStringContainsString('Show More', $html);
+		$this->assertStringContainsString('cms-load-more btn-primary', $html);
+	}
 }

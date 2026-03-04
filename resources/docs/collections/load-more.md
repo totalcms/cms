@@ -248,6 +248,112 @@ button.cms-load-more {
 </div>
 ```
 
+## External Button
+
+The standard `loadMore()` uses a self-replacing sentinel pattern — the trigger element lives inside the content container. If you want a "Load More" button placed anywhere on the page (sidebar, fixed header, etc.) separate from where items appear, use `loadMoreButton()`.
+
+### How It Works
+
+1. `loadMoreButton()` outputs a `<button>` that targets a container via CSS selector
+2. User clicks → HTMX fetches items and appends them into the target container
+3. Server responds with rendered items plus an out-of-band swap that updates the button's URL with the next offset
+4. When no more items exist, the OOB swap removes the button from the DOM
+
+### Collection External Button
+
+```twig
+<div id="blog-feed"></div>
+{{ cms.render.loadMoreButton('blog', {
+    target: '#blog-feed',
+    template: 'blog/card.twig',
+    limit: 10
+}) }}
+```
+
+### DataView External Button
+
+```twig
+<div id="activity-feed"></div>
+{{ cms.render.loadMoreDataViewButton('recent-posts', {
+    target: '#activity-feed',
+    template: 'cards/item.twig',
+    limit: 20
+}) }}
+```
+
+### Auto-Load First Batch
+
+Use `load: true` to auto-fetch the first batch on page load (the button also responds to clicks for subsequent pages):
+
+```twig
+<div id="blog-feed"></div>
+{{ cms.render.loadMoreButton('blog', {
+    target: '#blog-feed',
+    template: 'blog/card.twig',
+    limit: 10,
+    load: true
+}) }}
+```
+
+### Custom Offset
+
+If you pre-rendered items server-side, set `offset` to skip those:
+
+```twig
+{# 5 items already rendered above #}
+{{ cms.render.loadMoreButton('blog', {
+    target: '#blog-feed',
+    template: 'blog/card.twig',
+    limit: 10,
+    offset: 5
+}) }}
+```
+
+### Full Options
+
+```twig
+{{ cms.render.loadMoreButton('blog', {
+    target: '#blog-feed',
+    template: 'blog/card.twig',
+    limit: 10,
+    offset: 0,
+    sort: '-date',
+    include: 'published:true',
+    buttonLabel: 'Show More Posts',
+    buttonClass: 'btn-primary',
+    transition: true,
+    id: 'my-load-btn'
+}) }}
+```
+
+### External Button Options Reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `target` | string | **required** | CSS selector for the container to append items into |
+| `template` | string | **required** | Twig template for rendering each item |
+| `limit` | int | `20` | Items per page |
+| `offset` | int | `0` | Starting offset |
+| `load` | bool | `false` | Auto-fetch first batch on page load |
+| `sort` | string | — | Sort field |
+| `include` | string | — | Include filter |
+| `exclude` | string | — | Exclude filter |
+| `search` | string | — | Search query |
+| `buttonLabel` | string | `'Load More'` | Button text |
+| `buttonClass` | string | — | Additional CSS classes on the button |
+| `transition` | bool | `false` | Enable HTMX view transitions |
+| `id` | string | auto-generated | Custom button ID |
+
+### Sentinel vs External Button
+
+| | Sentinel (`loadMore`) | External Button (`loadMoreButton`) |
+|---|---|---|
+| Trigger placement | Inside content container | Anywhere on the page |
+| HTMX swap | `outerHTML` (self-replacing) | `beforeend` (append) + OOB button update |
+| First page | `load: true` or manual `{% for %}` | `load: true` auto-fetches on page load |
+| Pagination | Trigger chains automatically | Button URL updated via OOB swap |
+| End of data | No trigger returned | Button removed from DOM |
+
 ## See Also
 
 - [Index Filtering](docs/api/index-filter) — Include/exclude filter syntax

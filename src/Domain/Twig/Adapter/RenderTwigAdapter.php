@@ -160,6 +160,110 @@ class RenderTwigAdapter
 	}
 
 	/**
+	 * Generate a standalone HTMX button for loading items into an external container.
+	 *
+	 * Unlike loadMore() which uses a self-replacing sentinel pattern, the button
+	 * uses hx-target + hx-swap="beforeend" so it can be placed anywhere on the page.
+	 *
+	 * @param string              $collection Collection identifier
+	 * @param array<string,mixed> $options    Options: template (required), target (required), limit, offset, load, sort, include, exclude, search, buttonLabel, buttonClass, transition, id
+	 */
+	public function loadMoreButton(string $collection, array $options = []): string
+	{
+		$template = (string)($options['template'] ?? '');
+		if ($template === '') {
+			return '<!-- cms.render.loadMoreButton: "template" option is required -->';
+		}
+
+		$target = (string)($options['target'] ?? '');
+		if ($target === '') {
+			return '<!-- cms.render.loadMoreButton: "target" option is required -->';
+		}
+
+		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+
+		return $this->buildButtonTrigger($baseUrl, $options);
+	}
+
+	/**
+	 * Generate a standalone HTMX button for loading DataView items into an external container.
+	 *
+	 * @param string              $viewId  DataView identifier
+	 * @param array<string,mixed> $options Options: template (required), target (required), limit, offset, load, sort, include, exclude, search, buttonLabel, buttonClass, transition, id
+	 */
+	public function loadMoreDataViewButton(string $viewId, array $options = []): string
+	{
+		$template = (string)($options['template'] ?? '');
+		if ($template === '') {
+			return '<!-- cms.render.loadMoreDataViewButton: "template" option is required -->';
+		}
+
+		$target = (string)($options['target'] ?? '');
+		if ($target === '') {
+			return '<!-- cms.render.loadMoreDataViewButton: "target" option is required -->';
+		}
+
+		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+
+		return $this->buildButtonTrigger($baseUrl, $options);
+	}
+
+	/**
+	 * Build the external load-more button from options and delegate to HtmxRenderer.
+	 *
+	 * @param string              $baseUrl Full base URL for the query endpoint
+	 * @param array<string,mixed> $options User-provided options
+	 */
+	private function buildButtonTrigger(string $baseUrl, array $options): string
+	{
+		$template    = (string)($options['template'] ?? '');
+		$target      = (string)($options['target'] ?? '');
+		$limit       = max(1, (int)($options['limit'] ?? 20));
+		$offset      = max(0, (int)($options['offset'] ?? 0));
+		$buttonLabel = (string)($options['buttonLabel'] ?? 'Load More');
+		$buttonClass = (string)($options['buttonClass'] ?? '');
+		$load        = !empty($options['load']);
+		$transition  = !empty($options['transition']);
+
+		// Generate deterministic button ID
+		$buttonId = (string)($options['id'] ?? '');
+		if ($buttonId === '') {
+			$buttonId = 'cms-lmb-' . substr(md5($template . $target), 0, 8);
+		}
+
+		$queryParams = [
+			'format'   => 'html',
+			'template' => $template,
+			'offset'   => (string)$offset,
+			'limit'    => (string)$limit,
+			'mode'     => 'append',
+			'buttonId' => $buttonId,
+			'target'   => $target,
+		];
+
+		// Add optional params
+		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
+		foreach ($optionalKeys as $key) {
+			if (isset($options[$key]) && (string)$options[$key] !== '') {
+				$queryParams[$key] = (string)$options[$key];
+			}
+		}
+
+		// Pass buttonLabel and buttonClass through so the OOB chain preserves them
+		if ($buttonLabel !== 'Load More') {
+			$queryParams['buttonLabel'] = $buttonLabel;
+		}
+		if ($buttonClass !== '') {
+			$queryParams['buttonClass'] = $buttonClass;
+		}
+		if ($transition) {
+			$queryParams['transition'] = '1';
+		}
+
+		return $this->htmxRenderer->buildButton($baseUrl, $queryParams, $buttonLabel, $buttonClass, $transition, $load);
+	}
+
+	/**
 	 * Query collection items and render them server-side, appending the HTMX trigger if more exist.
 	 *
 	 * @param array<string,mixed> $options

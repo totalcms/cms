@@ -223,6 +223,35 @@ Generate an HTMX-powered "load more" trigger for paginated DataView loading.
 {{ cms.render.loadMoreDataView('recent-posts', {template: 'blog/card.twig', limit: 10}) }}
 ```
 
+### loadMoreButton()
+
+Generate a standalone HTMX button that appends items into an external container. Unlike `loadMore()`, the button can be placed anywhere on the page.
+
+```twig
+<div id="blog-feed"></div>
+{{ cms.render.loadMoreButton('blog', {
+    target: '#blog-feed',
+    template: 'blog/card.twig',
+    limit: 10,
+    load: true
+}) }}
+```
+
+See [Load More Documentation](docs/collections/load-more) for full options and examples.
+
+### loadMoreDataViewButton()
+
+Generate a standalone HTMX button for paginated DataView loading into an external container.
+
+```twig
+<div id="feed"></div>
+{{ cms.render.loadMoreDataViewButton('recent-posts', {
+    target: '#feed',
+    template: 'cards/item.twig',
+    limit: 20
+}) }}
+```
+
 ## Depot Browser
 
 ### depotBrowser()
