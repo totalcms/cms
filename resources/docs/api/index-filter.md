@@ -42,6 +42,48 @@ exclude=property                          # Shorthand for property:true
 
 **Logic:** If ANY condition matches, the object is excluded.
 
+### Search
+
+Full-text search across all fields of each object:
+
+```
+search=term                    # Single term search
+search=term1 term2             # Multiple terms (AND logic by default)
+search=term1 and term2         # Explicit AND (same as above)
+search=term1 or term2          # OR logic (match any term)
+search="exact phrase"          # Quoted phrase (matches exact sequence)
+```
+
+**Logic:**
+- **Default (AND):** All terms must appear somewhere in the object (can be in different fields)
+- **OR keyword:** At least one term must match
+- **Quoted phrases:** Matched as an exact sequence within a single field value
+
+**Matching behavior:**
+- **Case-insensitive** — "Table" matches "table", "TABLE", etc.
+- **Word boundary** — "table" matches "The table is here" but NOT "vegetable" or "reputable"
+- **All fields searched** — Searches across every field value in the object (strings, numbers, arrays, nested objects)
+- **Array fields** — Recursively searches within array and nested array values
+
+**URL Parameters:**
+```
+?search=travel                          # Objects containing "travel"
+?search=red table                       # Objects containing both "red" AND "table"
+?search=red or blue                     # Objects containing "red" OR "blue"
+?search="red table"                     # Objects containing the exact phrase "red table"
+?search=travel&include=published:true   # Combine search with filters
+```
+
+**PHP Code:**
+```php
+$results = $pipeline->execute($items, [
+    'search' => 'travel adventure',
+    'include' => 'published:true',
+]);
+```
+
+> **Note:** Search results are not cached. When a `search` parameter is present, the cache is bypassed to ensure accurate results.
+
 ### Precedence
 
 **Exclude takes precedence over include.** If an object matches an exclude filter, it will be removed even if it also matches an include filter.
@@ -398,6 +440,12 @@ GET /collections/blog/index?include=tags:travel
 
 # Complex filtering: published posts with travel tag, excluding drafts
 GET /collections/blog/index?include=published:true,tags:travel&exclude=draft:true
+
+# Full-text search
+GET /collections/blog/index?search=adventure
+
+# Search combined with filters
+GET /collections/blog/index?search=adventure&include=published:true&exclude=draft:true
 ```
 
 The API returns a filtered `IndexData` object with only matching objects.
