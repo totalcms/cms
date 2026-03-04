@@ -31,7 +31,7 @@ class DesignerMetadata
 	 */
 	public static function fromArray(array $data): self
 	{
-		$meta = new self();
+		$meta                  = new self();
 		$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
 		$meta->designerToken   = (string)($data['designerToken'] ?? '');
 

@@ -17,9 +17,9 @@ final class DesignerMetadataTest extends TestCase
 
 	public function testToArray(): void
 	{
-		$meta = new DesignerMetadata();
+		$meta                  = new DesignerMetadata();
 		$meta->designerEnabled = true;
-		$meta->designerToken = 'abc123';
+		$meta->designerToken   = 'abc123';
 
 		$result = $meta->toArray();
 
@@ -61,9 +61,9 @@ final class DesignerMetadataTest extends TestCase
 
 	public function testRoundTrip(): void
 	{
-		$original = new DesignerMetadata();
+		$original                  = new DesignerMetadata();
 		$original->designerEnabled = true;
-		$original->designerToken = 'round-trip-token';
+		$original->designerToken   = 'round-trip-token';
 
 		$restored = DesignerMetadata::fromArray($original->toArray());
 

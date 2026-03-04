@@ -30,7 +30,7 @@ readonly class DataTwigAdapter
 	 */
 	public function __invoke(string $collection, string $id, string $property): mixed
 	{
-		$this->logger->warning("Deprecated: cms.data() is deprecated. Use cms.data.raw() instead.");
+		$this->logger->warning('Deprecated: cms.data() is deprecated. Use cms.data.raw() instead.');
 
 		return $this->raw($collection, $id, $property);
 	}

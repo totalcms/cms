@@ -26,13 +26,12 @@ readonly class DesignerTemplateUpdateAction
 	{
 		/** @var string|null $folder */
 		$folder = $request->getAttribute('designerFolder');
-		/** @var string $name */
-		$name = (string)$request->getAttribute('designerTemplate', '');
+		$name   = (string)$request->getAttribute('designerTemplate', '');
 
 		// Read template content from raw body (production) or parsed body (form fallback)
 		$contents = (string)$request->getBody();
 		if ($contents === '') {
-			$parsed = (array)$request->getParsedBody();
+			$parsed   = (array)$request->getParsedBody();
 			$contents = (string)($parsed['template'] ?? '');
 		}
 

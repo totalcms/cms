@@ -21,7 +21,7 @@ class CacheInvalidationSignal
 		private readonly Config $config,
 	) {
 		$this->signalFile = $this->config->datadir . '/.system/.cache_invalidate';
-		$dir = dirname($this->signalFile);
+		$dir              = dirname($this->signalFile);
 		if (!is_dir($dir)) {
 			@mkdir($dir, 0755, true);
 		}
@@ -78,7 +78,7 @@ class CacheInvalidationSignal
 		}
 
 		$lines = array_unique(array_filter(
-			array_map('trim', explode("\n", $content)),
+			array_map(trim(...), explode("\n", $content)),
 			static fn (string $line): bool => $line !== ''
 		));
 

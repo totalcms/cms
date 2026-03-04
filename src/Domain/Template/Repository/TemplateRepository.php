@@ -109,7 +109,7 @@ class TemplateRepository extends StorageRepository
 	public function saveDesignerMeta(string $template, ?string $folder, DesignerMetadata $meta): void
 	{
 		$metaPath = $this->designerMetaPath($template, $folder);
-		$json = json_encode($meta->toArray(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+		$json     = json_encode($meta->toArray(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
 		$this->filesystem->write($metaPath, $json);
 	}
 

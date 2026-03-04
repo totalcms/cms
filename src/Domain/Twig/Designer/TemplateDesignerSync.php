@@ -42,11 +42,11 @@ class TemplateDesignerSync
 			return '';
 		}
 
-		$templatePath = $block['template'];
+		$templatePath  = $block['template'];
 		$productionUrl = rtrim($block['url'], '/');
-		$token = $block['token'];
-		$content = $block['content'];
-		$currentApi = rtrim($this->config->api, '/');
+		$token         = $block['token'];
+		$content       = $block['content'];
+		$currentApi    = rtrim($this->config->api, '/');
 
 		// If URLs match, this IS production — no sync needed
 		if ($currentApi === $productionUrl) {
@@ -54,7 +54,7 @@ class TemplateDesignerSync
 		}
 
 		// Dev environment: sync locally and to production
-		$localStatus = $this->syncLocal($templatePath, $content);
+		$localStatus  = $this->syncLocal($templatePath, $content);
 		$remoteStatus = $token !== '' ? $this->syncRemote($productionUrl, $templatePath, $token, $content) : 'skipped';
 
 		return $this->renderBadge($templatePath, $content, $localStatus, $remoteStatus);
@@ -99,7 +99,7 @@ class TemplateDesignerSync
 			],
 		]);
 
-		$result = curl_exec($ch);
+		$result   = curl_exec($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		curl_close($ch);
 
@@ -116,8 +116,8 @@ class TemplateDesignerSync
 	private function renderBadge(string $templatePath, string $content, string $localStatus, string $remoteStatus): string
 	{
 		$escapedContent = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
-		$localIcon = $localStatus === 'ok' ? '&#10003;' : '&#10007;';
-		$remoteIcon = match ($remoteStatus) {
+		$localIcon      = $localStatus === 'ok' ? '&#10003;' : '&#10007;';
+		$remoteIcon     = match ($remoteStatus) {
 			'ok'      => '&#10003;',
 			'skipped' => '&#8212;',
 			default   => '&#10007;',

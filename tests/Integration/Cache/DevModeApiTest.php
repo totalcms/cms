@@ -12,13 +12,13 @@ use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
-use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 

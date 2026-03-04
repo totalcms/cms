@@ -13,7 +13,7 @@ final class TemplateDesignerPreprocessorTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->registry = new TemplateDesignerRegistry();
+		$this->registry     = new TemplateDesignerRegistry();
 		$this->preprocessor = new TemplateDesignerPreprocessor($this->registry);
 	}
 
@@ -72,8 +72,8 @@ TWIG;
 
 		$result = $this->preprocessor->preprocess($source, 'layout.twig');
 
-		$this->assertStringContainsString("_designer_layout_twig_0", $result);
-		$this->assertStringContainsString("_designer_layout_twig_1", $result);
+		$this->assertStringContainsString('_designer_layout_twig_0', $result);
+		$this->assertStringContainsString('_designer_layout_twig_1', $result);
 		$this->assertStringContainsString('<main>Content</main>', $result);
 
 		$block0 = $this->registry->get('_designer_layout_twig_0');

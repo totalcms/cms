@@ -119,7 +119,7 @@ readonly class TwigEngine
 		$this->twig->addFunction(new TwigFunction(
 			'_tcms_designer_sync',
 			fn (string $key): string => $designerSync->sync($key),
-			['is_safe' => ['html']],
+			['is_safe'               => ['html']],
 		));
 	}
 

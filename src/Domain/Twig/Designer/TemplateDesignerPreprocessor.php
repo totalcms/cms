@@ -22,7 +22,7 @@ class TemplateDesignerPreprocessor
 	 */
 	public function preprocess(string $source, string $templateName): string
 	{
-		$index = 0;
+		$index    = 0;
 		$registry = $this->registry;
 
 		return (string)preg_replace_callback(

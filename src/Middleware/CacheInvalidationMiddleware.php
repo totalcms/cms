@@ -49,6 +49,7 @@ class CacheInvalidationMiddleware implements MiddlewareInterface
 			foreach ($entries as $entry) {
 				if ($entry === 'full') {
 					$this->cacheManager->clearAllCaches();
+
 					// Full clear covers everything, no need to process further
 					return;
 				}

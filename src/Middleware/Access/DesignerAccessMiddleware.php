@@ -32,8 +32,8 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		$routeContext = RouteContext::fromRequest($request);
-		$route = $routeContext->getRoute();
-		$path = $route !== null ? (string)$route->getArgument('path', '') : '';
+		$route        = $routeContext->getRoute();
+		$path         = $route instanceof \Slim\Interfaces\RouteInterface ? (string)$route->getArgument('path', '') : '';
 
 		if ($path === '') {
 			return $this->errorResponse(404, 'Template path is required');
@@ -58,7 +58,7 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 		$token = $request->getHeaderLine('X-Designer-Token');
 		if ($token === '') {
 			$queryParams = $request->getQueryParams();
-			$token = (string)($queryParams['token'] ?? '');
+			$token       = (string)($queryParams['token'] ?? '');
 		}
 
 		if ($token === '' || $token !== $designerMeta->designerToken) {

@@ -40,7 +40,7 @@ readonly class TemplateSaveAction
 
 		// Save designer metadata if provided
 		if (isset($data['designerEnabled']) || isset($data['designerToken'])) {
-			$meta = new DesignerMetadata();
+			$meta                  = new DesignerMetadata();
 			$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
 			$meta->designerToken   = (string)($data['designerToken'] ?? '');
 			$this->service->saveDesignerMeta($templateId, $folder, $meta);
