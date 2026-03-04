@@ -40,7 +40,7 @@ Learn Total CMS through our comprehensive video series. These tutorials cover ev
 
 Get started with these essential guides:
 
-1. **[Installation](docs/getting-started/installation)** - System requirements and installation steps
+1. **[Installation](docs/installation)** - System requirements and installation steps
 2. **[Dashboard Overview](docs/admin/dashboard)** - Learn your way around the admin interface
 3. **[Configuration](docs/advanced/configuration)** - Set up your system correctly
 4. **[Twig Overview](docs/twig/overview)** - Master the templating system

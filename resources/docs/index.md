@@ -9,8 +9,8 @@
 
 <div class="doc-quick-links">
 <h3>Popular Topics</h3>
-<a href="docs/getting-started/getting-started">Getting Started</a>
-<a href="docs/getting-started/installation">Installation</a>
+<a href="docs/getting-started">Getting Started</a>
+<a href="docs/installation">Installation</a>
 <a href="docs/advanced/configuration">Configuration</a>
 <a href="docs/admin/dashboard">Dashboard Overview</a>
 <a href="docs/twig/overview">Twig Templates</a>
