@@ -1,337 +1,112 @@
 ---
 title: "Total CMS Twig Adapter"
-description: "Complete reference for the cms global variable in Twig templates covering collections, objects, images, galleries, files, pagination, and configuration."
+description: "Overview of the cms global variable in Twig templates with links to per-namespace documentation."
 ---
 
 # Total CMS Twig Adapter
 
-The Total CMS Twig Adapter provides access to all CMS data and functionality through the global `cms` variable in Twig templates.
+The Total CMS Twig Adapter provides access to all CMS data and functionality through the global `cms` variable in Twig templates. Methods are organized into namespaces for clarity.
 
-## Configuration & Environment
+## Namespace Reference
 
-```twig
-{{ cms.env }}                                    {# Current environment (development, production) #}
-{{ cms.config('key') }}                          {# Get config value by key #}
-{{ cms.config('key', 'setting') }}               {# Get nested config setting #}
-{{ cms.api }}                                    {# API base URL #}
-{{ cms.dashboard }}                              {# Admin dashboard URL #}
-{{ cms.domain }}                                 {# Current domain name #}
-{{ cms.clearcache }}                             {# Emergency cache clear URL #}
-```
+| Namespace | Description | Documentation |
+|-----------|-------------|---------------|
+| `cms.admin.*` | Dashboard stats, job queue, dev mode, URL helpers | [Admin Reference](docs/twig/admin) |
+| `cms.auth.*` | Login/logout, user info, access control, passkeys | [Auth Reference](docs/twig/auth) |
+| `cms.barcode.*` | Barcode generation (Code 128, EAN-13, UPC-A, etc.) | [Barcode Reference](docs/twig/barcodes) |
+| `cms.collection.*` | Collection listing, objects, search, URLs, navigation | [Collections Reference](docs/twig/collections) |
+| `cms.data.*` | Typed data access (text, toggle, date, color, etc.) | [Data Reference](docs/twig/data) |
+| `cms.edition.*` | Edition detection and feature gating | [Edition Reference](docs/twig/edition) |
+| `cms.locale.*` | Localization and translations | [Locale Reference](docs/twig/locale) |
+| `cms.media.*` | Image paths, gallery paths, downloads, streaming | [Media Reference](docs/twig/media) |
+| `cms.qrcode.*` | QR code generation | [QR Code Reference](docs/twig/qrcodes) |
+| `cms.render.*` | HTML rendering for images, galleries, pagination | [Render Reference](docs/twig/render) |
+| `cms.schema.*` | Schema listing, fetching, inheritance, decks | [Schemas Reference](docs/twig/schemas) |
+| `cms.view.*` | Pre-computed data views | [Views Reference](docs/twig/views) |
 
-## Authentication & Access Control
+## Root-Level Properties
 
-```twig
-{# Login #}
-{{ cms.auth.login() }}                                {# Default login URL with current page redirect #}
-{{ cms.auth.login('collection') }}                    {# Collection login URL with current page redirect #}
-{{ cms.auth.login('', '') }}                          {# Default login URL with no redirect #}
-{{ cms.auth.login('', '/redirect/url') }}             {# Default login with custom redirect URL #}
-{{ cms.auth.login('collection', '/redirect/url') }}   {# Collection login with custom redirect URL #}
-
-{# Logout #}
-{{ cms.auth.logout() }}                               {# Logout URL #}
-{{ cms.auth.logout('/redirect/url') }}                {# Logout with redirect URL #}
-{{ cms.auth.userData() }}                             {# Get current user data array #}
-{{ cms.auth.userLoggedIn() }}                         {# Check if user is logged in (boolean) #}
-{{ cms.auth.userLoggedIn('collection') }}             {# Check login for specific collection #}
-{{ cms.auth.userHasAccess('group') }}                 {# Check if user has access to group #}
-{{ cms.auth.userHasAccess(['group1', 'group2']) }}    {# Check multiple groups #}
-{{ cms.auth.sessionData('key') }}                     {# Get session data by key #}
-{{ cms.auth.verifyFilePassword(password, collection, id, property) }}  {# Verify file password #}
-```
-
-## Schemas
+These properties are accessed directly on `cms` without a namespace.
 
 ```twig
-{{ cms.schema.list() }}                          {# Get all schemas #}
-{{ cms.schema.reserved() }}                      {# Get built-in schemas #}
-{{ cms.schema.custom() }}                        {# Get custom schemas #}
-{{ cms.schema.byCategory() }}                    {# Get schemas grouped by category #}
-{{ cms.schema.get('schemaName') }}               {# Get specific schema definition #}
-{{ cms.schema.forCollection('collection') }}     {# Get schema for a collection #}
+{{ cms.env }}                    {# Current environment (development, production) #}
+{{ cms.api }}                    {# API base URL #}
+{{ cms.dashboard }}              {# Admin dashboard URL #}
+{{ cms.domain }}                 {# Current domain name #}
+{{ cms.clearcache }}             {# Emergency cache clear URL #}
+{{ cms.currentUrl }}             {# Current request URI #}
+{{ cms.version }}                {# Version information object #}
 ```
 
-## Collections
+### config()
+
+Get a configuration value by key, with optional nested setting.
 
 ```twig
-{{ cms.collection.list() }}                      {# Get all collections #}
-{{ cms.collection.byCategory() }}               {# Get collections grouped by category #}
-{{ cms.collection.get('collectionName') }}        {# Get collection metadata #}
-{{ cms.collection.objectCount('collectionName') }}  {# Get number of objects in collection #}
-{{ cms.collection.objects('collectionName') }}   {# Get all objects from collection #}
-{{ cms.collection.property('collection', 'property') }}  {# Get unique values from property #}
-{{ cms.collection.objectUrl('collection', 'id') }}  {# Get URL for an object #}
+{{ cms.config('debug') }}
+{{ cms.config('key', 'setting') }}
 ```
 
-## Object Data
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `key` | string | required | Top-level config key |
+| `setting` | string\|null | `null` | Nested setting within the key |
+
+### log()
+
+Log messages from templates. Written to `twig.log` and viewable in the admin log analyzer.
 
 ```twig
-{{ cms.collection.object('collection', 'id') }}      {# Get complete object data #}
-{{ cms.data.raw('collection', 'id', 'property') }}   {# Get specific property value #}
+{{ cms.log('Something unexpected happened') }}
+{{ cms.log('Missing image for product', 'error') }}
+{{ cms.log('Debug info', 'debug', {id: object.id}) }}
 ```
 
-## Search
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `message` | string | required | The message to log |
+| `level` | string | `'warning'` | Log level: `debug`, `info`, `warning`, `error` |
+| `context` | object | `{}` | Additional context data |
 
-```twig
-{{ cms.collection.search('collection', 'query', 'property') }}          {# Search with single property #}
-{{ cms.collection.search('collection', 'query', ['prop1', 'prop2']) }}  {# Search multiple properties #}
-```
+## ImageWorks Parameters
 
-## Text Content
+These parameters are used with image transformation methods across `cms.media` and `cms.render`:
 
-```twig
-{{ cms.data.text('id') }}                             {# Get text (default collection: text) #}
-{{ cms.data.text('id', {collection: 'custom'}) }}     {# Custom collection #}
-{{ cms.data.text('id', {property: 'content'}) }}      {# Custom property #}
+### Basic Image Controls
+- `w` - Width in pixels
+- `h` - Height in pixels
+- `fit` - How to fit image: `contain`, `max`, `fill`, `stretch`, `crop`
+- `crop` - Crop position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
+- `fm` - Output format: `jpg`, `png`, `gif`, `webp`, `avif`
+- `q` - Quality (1-100)
 
-{{ cms.data.code('id') }}                             {# Get code snippet (default collection: code) #}
-{{ cms.data.code('id', {collection: 'custom'}) }}     {# Custom collection #}
-{{ cms.data.code('id', {property: 'snippet'}) }}      {# Custom property #}
+### Effects & Filters
+- `blur` - Blur amount (0-100)
+- `sharp` - Sharpen amount (0-100)
+- `pixel` - Pixelate amount (0-100)
+- `filt` - Filter: `greyscale`, `sepia`
 
-{{ cms.data.styledtext('id') }}                       {# Get styled text (HTML) #}
-{{ cms.data.styledtext('id', {collection: 'custom', property: 'html'}) }}
-```
+### Image Watermarks
+- `mark` - Watermark image path
+- `markw` - Watermark width
+- `markh` - Watermark height
+- `markpos` - Watermark position
+- `markpad` - Watermark padding
+- `markalpha` - Watermark opacity (0-100)
 
-## Simple Data Types
+### Text Watermarks
+- `marktext` - Text to display as watermark
+- `marktextfont` - Font family name (TTF/OTF fonts from watermark-fonts depot)
+- `marktextsize` - Text size in pixels (default: 500)
+- `marktextcolor` - Text color as hex (without #, e.g., 'ffffff' for white)
+- `marktextbg` - Background color as hex (optional, transparent if not set)
+- `marktextpad` - Padding around text in pixels (default: 10)
+- `marktextangle` - Text rotation angle in degrees (-360 to 360, default: 0)
+- `marktextpos` - Text position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
+- `marktextw` - Maximum text width in pixels or relative (e.g., '50w' for 50% of image width)
+- `marktextalpha` - Text transparency (0-100, where 100 is fully opaque)
 
-```twig
-{{ cms.data.toggle('id') }}                           {# Get boolean toggle value #}
-{{ cms.data.toggle('id', {collection: 'settings', property: 'enabled'}) }}
-
-{{ cms.data.date('id') }}                             {# Get date string #}
-{{ cms.data.date('id', {collection: 'events', property: 'eventDate'}) }}
-
-{{ cms.data.number('id') }}                           {# Get number value #}
-{{ cms.data.number('id', {collection: 'stats', property: 'count'}) }}
-
-{{ cms.data.url('id') }}                              {# Get URL #}
-{{ cms.data.url('id', {collection: 'links', property: 'href'}) }}
-
-{{ cms.data.email('id') }}                            {# Get email address #}
-{{ cms.data.email('id', {}, true) }}                  {# Get email with HTML encoding (anti-spam) #}
-
-{{ cms.data.svg('id') }}                              {# Get SVG content #}
-{{ cms.data.svg('id', {collection: 'icons', property: 'svgData'}) }}
-```
-
-## Colors
-
-```twig
-{% set myColor = cms.data.color('id') %}              {# Get color data array #}
-{% set myColor = cms.data.colour('id') %}             {# British spelling alias #}
-
-{# Color has 'hex' and 'oklch' properties #}
-{{ myColor.hex }}                                {# Hex value: #ff0000 #}
-{{ myColor.oklch.l }}                            {# Lightness #}
-{{ myColor.oklch.c }}                            {# Chroma #}
-{{ myColor.oklch.h }}                            {# Hue #}
-
-{# Use with color filters #}
-{{ myColor|hex }}                                {# Output: #ff0000 #}
-{{ myColor|oklch }}                              {# Output: oklch(62.8% 0.25768 29.234) #}
-{{ myColor|rgb }}                                {# Output: rgb(255 0 0) #}
-{{ myColor|hsl }}                                {# Output: hsl(0 100% 50%) #}
-```
-
-## Images
-
-```twig
-{# Basic image output #}
-{{ cms.render.image('id') }}                            {# Returns complete <img> HTML #}
-{{ cms.media.imagePath('id') }}                        {# Returns image URL only #}
-{{ cms.render.alt('id') }}                              {# Get alt text #}
-
-{# With ImageWorks transformations #}
-{{ cms.render.image('id', {w: 800, h: 600, fit: 'crop'}) }}
-{{ cms.media.imagePath('id', {w: 400, blur: 20, fm: 'webp'}) }}
-
-{# Custom collections and properties #}
-{{ cms.render.image('id', {}, {collection: 'products', property: 'photo'}) }}
-
-{# Pass object directly (recommended) #}
-{{ cms.render.image(object, {w: 600}, {collection: 'products', property: 'image'}) }}
-
-{# Loading options #}
-{{ cms.render.image('id', {}, {loading: 'eager'}) }}    {# Default is 'lazy' #}
-```
-
-## Galleries
-
-### Standard Gallery (Grid with Lightbox)
-
-```twig
-{# Complete gallery with lightbox #}
-{{ cms.render.gallery('id') }}                          {# Default 300x200 thumbs #}
-{{ cms.render.gallery('id', {w: 150, h: 150}) }}        {# Custom thumb size #}
-{{ cms.render.gallery('id', {w: 150}, {w: 1200}) }}     {# Thumb and full size settings #}
-
-{# Gallery with options #}
-{{ cms.render.gallery('id', {w: 200}, {}, {
-    maxVisible: 8,
-    viewAllText: 'Show all photos',
-    loop: true,
-    download: false,
-    captions: true,
-    gridCaptions: true,
-    sort: 'name'
-}) }}
-
-{# Individual gallery images #}
-{{ cms.render.galleryImage('id', 'filename.jpg') }}     {# Get specific image HTML #}
-{{ cms.media.galleryPath('id', 'filename.jpg', {w: 800}) }}  {# Get image URL #}
-{{ cms.render.galleryAlt('id', 'filename.jpg') }}       {# Get alt text #}
-{{ cms.media.galleryImageData('id', 'filename.jpg') }} {# Get complete image data #}
-
-{# Dynamic gallery images #}
-{{ cms.render.galleryImage('id', 'first') }}            {# First image #}
-{{ cms.render.galleryImage('id', 'last') }}             {# Last image #}
-{{ cms.render.galleryImage('id', 'random') }}           {# Random image #}
-{{ cms.render.galleryImage('id', 'featured') }}         {# Featured image #}
-```
-
-Note: `cms.galleryImage` automatically includes `data-gallery` and `data-gallery-image` attributes, making it easy to use with `cms.galleryLauncher`.
-
-### Gallery Launcher (Trigger-Based Lightbox)
-
-The gallery launcher allows you to open a lightbox from custom trigger elements like buttons, links, or thumbnails. Perfect for launching galleries without showing a visible grid.
-
-```twig
-{# Basic gallery launcher #}
-{{ cms.render.galleryLauncher('id') }}                   {# Outputs hidden template with gallery data #}
-<button data-gallery="gallery-id">View Photos</button>
-
-{# Custom thumbnail and full-size settings #}
-{{ cms.render.galleryLauncher('id', {w: 300, h: 200}, {w: 1920, fit: 'contain'}) }}
-
-{# With options #}
-{{ cms.render.galleryLauncher('id', {w: 300}, {w: 1920}, {
-    collection: 'gallery',
-    property: 'gallery',
-    captions: true,                              {# Show captions in lightbox #}
-    speed: 600,
-    loop: true,
-    download: false,
-    plugins: ['zoom', 'thumbnail', 'fullscreen']
-}) }}
-```
-
-#### Triggering Gallery Launchers
-
-**Method 1: Using data-gallery attribute (recommended)**
-```twig
-{{ cms.render.galleryLauncher('vacation') }}
-<button data-gallery="gallery-vacation">View All Photos</button>
-```
-
-**Method 2: Using CSS selector**
-```twig
-{{ cms.render.galleryLauncher('vacation', {}, {}, {
-    trigger: '.open-gallery-btn'                 {# Any element with this class triggers gallery #}
-}) }}
-<button class="open-gallery-btn">View Gallery</button>
-<a class="open-gallery-btn">See Photos</a>
-```
-
-**Method 3: Combined (both data-gallery and CSS selector)**
-```twig
-{{ cms.render.galleryLauncher('vacation', {}, {}, {
-    trigger: '.gallery-thumb'
-}) }}
-<button data-gallery="gallery-vacation">View All</button>
-<img class="gallery-thumb" src="thumb1.jpg">
-<img class="gallery-thumb" src="thumb2.jpg">
-```
-
-#### Opening at Specific Image
-
-**By image filename (recommended):**
-```twig
-{{ cms.render.galleryLauncher('vacation') }}
-
-{# These thumbnails open gallery at their specific image #}
-<img data-gallery="gallery-vacation"
-     data-gallery-image="sunset.jpg"
-     src="sunset-thumb.jpg">
-
-<img data-gallery="gallery-vacation"
-     data-gallery-image="beach.jpg"
-     src="beach-thumb.jpg">
-```
-
-**By index (1-based):**
-```twig
-{{ cms.render.galleryLauncher('vacation') }}
-<button data-gallery="gallery-vacation" data-gallery-index="1">First Image</button>
-<button data-gallery="gallery-vacation" data-gallery-index="6">Image #6</button>
-```
-
-**Using galleryImage (recommended):**
-```twig
-{{ cms.render.galleryLauncher('vacation') }}
-
-{# galleryImage automatically includes data-gallery and data-gallery-image attributes #}
-{{ cms.render.galleryImage('vacation', 'sunset.jpg', {w: 300, h: 200}) }}
-{{ cms.render.galleryImage('vacation', 'beach.jpg', {w: 300, h: 200}) }}
-
-{# Works with dynamic selectors too #}
-{{ cms.render.galleryImage('vacation', 'first', {w: 400}) }}
-{{ cms.render.galleryImage('vacation', 'featured', {w: 400}) }}
-```
-
-#### Complete Gallery Launcher Example
-
-```twig
-{# Create the gallery launcher #}
-{{ cms.render.galleryLauncher('products',
-    {w: 400, h: 300},           {# Thumbnail settings #}
-    {w: 1920, fit: 'contain'},  {# Full-size settings #}
-    {
-        captions: true,
-        speed: 400,
-        loop: true,
-        trigger: '.product-image',
-        plugins: ['zoom', 'fullscreen']
-    }
-) }}
-
-{# Display product thumbnails that trigger the gallery #}
-<div class="product-grid">
-    <img class="product-image"
-         data-gallery-image="front-view.jpg"
-         src="thumb-front.jpg"
-         alt="Front view">
-
-    <img class="product-image"
-         data-gallery-image="side-view.jpg"
-         src="thumb-side.jpg"
-         alt="Side view">
-
-    <img class="product-image"
-         data-gallery-image="detail.jpg"
-         src="thumb-detail.jpg"
-         alt="Close-up detail">
-
-    <button data-gallery="gallery-products">View All Images</button>
-</div>
-```
-
-**Gallery Launcher Options:**
-- `trigger` - CSS selector for trigger elements (in addition to data-gallery)
-- `captions` - Lightbox captions: `true` for default, or a Twig template string (see [Gallery Captions](#gallery-captions))
-- `galleryId` - Custom gallery ID (default: `{collection}-{id}`)
-- `sort` - Sort images by property before rendering (see [Sorting Gallery Images](#sorting-gallery-images))
-- All standard LightGallery options: `speed`, `loop`, `download`, `counter`, `plugins`, etc.
-- Note: Grid-specific options (`maxVisible`, `viewAllText`) don't apply to gallery launchers
-
-**When to Use Gallery Launchers:**
-- Custom thumbnail layouts that don't fit the grid pattern
-- Opening galleries from buttons or text links
-- Multiple different triggers for the same gallery
-- Launching galleries from specific images in your custom layout
-- Image-based navigation where clicking a product photo opens full gallery
-
-### Gallery Captions
+## Gallery Captions
 
 Galleries support two independent caption options:
 
@@ -340,7 +115,7 @@ Galleries support two independent caption options:
 
 Both accept either `true` for default behavior or a **Twig template string** for custom formatting.
 
-#### Default Captions
+### Default Captions
 
 When set to `true`, captions use this fallback chain: alt text → EXIF title → EXIF description. If none are available, no caption is shown. Filenames are never used as captions.
 
@@ -351,9 +126,9 @@ When set to `true`, captions use this fallback chain: alt text → EXIF title �
 }) }}
 ```
 
-#### Caption Templates
+### Caption Templates
 
-Pass a template string to customize caption content. Use single curly braces `{variable}` for template variables — they are automatically converted to Twig syntax before rendering. Standard Twig features (conditionals, filters) work inside the braces.
+Pass a template string to customize caption content. Use single curly braces `{variable}` for template variables — they are automatically converted to Twig syntax before rendering.
 
 ```twig
 {# Simple alt text caption #}
@@ -382,11 +157,9 @@ Pass a template string to customize caption content. Use single curly braces `{v
 }) }}
 ```
 
-When a template string is used, HTML is preserved (not escaped), so you can include markup like `<h4>`, `<p>`, `<span>`, etc. When set to `true`, plain text captions are HTML-escaped.
+When a template string is used, HTML is preserved (not escaped). When set to `true`, plain text captions are HTML-escaped. If all template variables resolve to empty, the caption is suppressed entirely.
 
-If all template variables resolve to empty, the caption is suppressed entirely (empty HTML tags are not shown).
-
-#### Available Template Variables
+### Available Caption Variables
 
 **Image fields:**
 
@@ -426,92 +199,31 @@ If all template variables resolve to empty, the caption is suppressed entirely (
 | `exif.longitude` | GPS longitude |
 | `exif.altitude` | GPS altitude |
 
-### Gallery Grid Styling
+## Sorting Gallery Images
 
-The gallery grid uses CSS Grid with a customizable minimum column size via the `--cms-gallery-min-size` CSS variable (default: `150px`). Smaller values produce more columns; larger values produce fewer.
-
-```css
-/* Change the minimum thumbnail size globally */
-:root {
-    --cms-gallery-min-size: 250px;
-}
-
-/* Or override per gallery using the class option */
-.large-thumbs {
-    --cms-gallery-min-size: 300px;
-}
-```
+By default, gallery images display in their stored order. Use the `sort` option with both `cms.render.gallery()` and `cms.render.galleryLauncher()`.
 
 ```twig
-{{ cms.render.gallery('id', {}, {}, {class: 'large-thumbs'}) }}
-```
-
-### Sorting Gallery Images
-
-By default, gallery images display in their stored order. Use the `sort` option to sort images by any image property. This works with both `cms.render.gallery()` and `cms.render.galleryLauncher()`.
-
-#### Simple Sort (Single Property)
-
-```twig
-{# Sort alphabetically by filename #}
+{# Simple sort #}
 {{ cms.render.gallery('id', {}, {}, {sort: 'name'}) }}
-
-{# Sort by upload date (oldest first) #}
 {{ cms.render.gallery('id', {}, {}, {sort: 'uploadDate'}) }}
 
-{# Sort by EXIF capture date (oldest first) #}
-{{ cms.render.gallery('id', {}, {}, {sort: 'exif.date'}) }}
-```
-
-#### Reverse Sort (Descending)
-
-Prefix the property name with `-` to sort in descending order:
-
-```twig
-{# Newest photos first (by EXIF date) #}
+{# Descending (prefix with -) #}
 {{ cms.render.gallery('id', {}, {}, {sort: '-exif.date'}) }}
 
-{# Most recently uploaded first #}
-{{ cms.render.gallery('id', {}, {}, {sort: '-uploadDate'}) }}
-
-{# Largest files first #}
-{{ cms.render.gallery('id', {}, {}, {sort: '-size'}) }}
-```
-
-#### Multi-Criteria Sort
-
-Pass an array of rule objects for advanced sorting with multiple criteria:
-
-```twig
-{# Featured images first, then sorted by EXIF date (newest first) #}
+{# Multi-criteria sort #}
 {{ cms.render.gallery('id', {}, {}, {sort: [
     {property: 'featured', reverse: true},
     {property: 'exif.date', reverse: true}
 ]}) }}
-
-{# Sort by camera model, then by filename within each group #}
-{{ cms.render.gallery('id', {}, {}, {sort: [
-    {property: 'exif.camera'},
-    {property: 'name'}
-]}) }}
 ```
 
-#### With Gallery Launcher
-
-```twig
-{{ cms.render.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
-    sort: '-exif.date',
-    captions: true,
-    loop: true
-}) }}
-```
-
-#### Sortable Properties
+**Sortable Properties:**
 
 | Property | Description |
 |----------|-------------|
 | `name` | Filename (natural sort) |
-| `uploadDate` | When the image was uploaded (ISO 8601) |
+| `uploadDate` | Upload date (ISO 8601) |
 | `size` | File size in bytes |
 | `width` | Image width in pixels |
 | `height` | Image height in pixels |
@@ -521,191 +233,6 @@ Pass an array of rule objects for advanced sorting with multiple criteria:
 | `exif.focalLength` | Focal length |
 | `exif.aperture` | Aperture value |
 | `exif.iso` | ISO sensitivity |
-
-## File Downloads & Streaming
-
-### Downloads (attachment; forces download)
-
-```twig
-{# Single file download #}
-{{ cms.media.download('id') }}                         {# Default from 'file' collection #}
-{{ cms.media.download('id', {collection: 'documents', property: 'pdf'}) }}
-{{ cms.media.download('id', {pwd: 'secret123'}) }}     {# Password-protected file #}
-
-{# Depot (multiple files) #}
-{% set files = cms.media.depot('id') %}                {# Get files array #}
-{% for file in files %}
-    <a href="{{ cms.media.depotDownload('id', file.name) }}">{{ file.name }}</a>
-{% endfor %}
-
-{# Depot with folders #}
-{{ cms.media.depotDownload('id', 'document.pdf', {path: 'folder/subfolder'}) }}
-{{ cms.media.depotDownload('id', 'folder/document.pdf') }}  {# Path in filename #}
-{{ cms.media.depotDownload('id', 'file.zip', {pwd: 'pass123'}) }}
-```
-
-### Streaming (inline; plays in browser)
-
-```twig
-{# Single file streaming (ideal for video/audio) #}
-{{ cms.media.stream('id') }}                           {# Default from 'file' collection #}
-{{ cms.media.stream('id', {collection: 'videos', property: 'video'}) }}
-{{ cms.media.stream('id', {pwd: 'secret123'}) }}       {# Password-protected file #}
-
-{# Depot file streaming #}
-{{ cms.media.depotStream('id', 'video.mp4') }}         {# Stream specific file #}
-{{ cms.media.depotStream('id', 'movie.mp4', {path: 'folder/subfolder'}) }}
-{{ cms.media.depotStream('id', 'folder/video.mp4') }}  {# Path in filename #}
-{{ cms.media.depotStream('id', 'audio.mp3', {pwd: 'pass123'}) }}
-
-{# HTML5 video/audio examples #}
-<video controls>
-    <source src="{{ cms.media.stream('video-id') }}" type="video/mp4">
-</video>
-
-<audio controls>
-    <source src="{{ cms.media.depotStream('audio-id', 'song.mp3') }}" type="audio/mpeg">
-</audio>
-```
-
-**Stream vs Download:**
-- **Stream**: Content-Disposition: inline, supports HTTP range requests, ideal for media files
-- **Download**: Content-Disposition: attachment, forces download dialog
-- Both support password protection and automatic encryption
-
-## Pagination
-
-```twig
-{# Simple pagination (Previous/Next only) #}
-{{ cms.render.paginationSimple(totalObjects, currentPage, pageLimit) }}
-{{ cms.render.paginationSimple(items|length, page, 10, 'page', 'Prev', 'Next') }}
-
-{# Full pagination with page numbers #}
-{{ cms.render.paginationFull(totalObjects, currentPage, pageLimit) }}
-{{ cms.render.paginationFull(items|length, page, 10, 'p', '← Previous', 'Next →', {sort: 'date'}) }}
-```
-
-## URL Helpers
-
-```twig
-{{ cms.collection.prettyUrl('/blog/post.php') }}            {# Convert to pretty URL #}
-{{ cms.admin.apacheRule(currentUrl, 'Blog Posts') }}   {# Generate .htaccess rules #}
-{{ cms.admin.nginxRule(currentUrl, 'Products') }}      {# Generate nginx rules #}
-```
-
-## Form Builder Integration
-
-```twig
-{{ cms.form.render('formId') }}                  {# Render complete form #}
-{{ cms.form.field('fieldType', 'name', 'value', {options}) }}  {# Individual field #}
-```
-
-## Grid Renderer
-
-The grid renderer provides helper methods for content grids:
-
-```twig
-{{ cms.render.grid.date(item, 'M j, Y') }}              {# Format date with fallback #}
-{{ cms.render.grid.tags(item, '/blog/tag') }}           {# Render tag list with links #}
-{{ cms.render.grid.excerpt(item, 160) }}                {# Generate excerpt #}
-{{ cms.render.grid.price(item) }}                       {# Format price #}
-{{ cms.render.grid.meta(item) }}                        {# Render metadata (author, date, etc) #}
-```
-
-## Render Helpers
-
-```twig
-{# Load more items from a collection (HTMX-powered pagination) #}
-{{ cms.render.loadMore('blog', {template: 'blog/card.twig', limit: 10}) }}
-
-{# Load more items from a DataView #}
-{{ cms.render.loadMoreDataView('recent-posts', {template: 'blog/card.twig', limit: 10}) }}
-```
-
-See [Load More Documentation](docs/collections/load-more) for full options and examples.
-
-## Server & Diagnostics
-
-```twig
-{{ cms.admin.checker.serverInfo() }}                   {# Server information array #}
-{{ cms.admin.checker.checkRequiredSoftware() }}        {# Required software check #}
-{{ cms.admin.checker.checkOptionalSoftware() }}        {# Optional software check #}
-{{ cms.admin.checker.getVersion() }}                   {# Total CMS version #}
-
-{{ cms.admin.cacheReporter.getStatus() }}              {# Cache status #}
-{{ cms.admin.logAnalyzer.getRecentErrors(10) }}             {# Recent error logs #}
-```
-
-## Job Queue
-
-```twig
-{{ cms.admin.processJobQueueCommand() }}               {# Get CLI command for processing jobs #}
-{{ cms.admin.jobQueuePendingInfo() }}                  {# HTML table of pending jobs #}
-{{ cms.admin.jobQueueFailedInfo() }}                   {# HTML table of failed jobs #}
-```
-
-## Logging
-
-Log messages from your templates to help with debugging. Messages are written to `twig.log` and viewable in the admin log analyzer.
-
-```twig
-{{ cms.log('Something unexpected happened') }}
-{{ cms.log('Missing image for product', 'error') }}
-{{ cms.log('Debug info', 'debug', { id: object.id }) }}
-```
-
-### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `message` | string | required | The message to log |
-| `level` | string | `'warning'` | Log level: `debug`, `info`, `warning`, `error` |
-| `context` | object | `{}` | Additional context data to include in the log entry |
-
-## Utility Functions
-
-```twig
-{{ cms.collection.redirectIfNotFound(object) }}  {# Redirect if object is empty #}
-{{ cms.locale.languages() }}                            {# Get supported languages array #}
-```
-
-## ImageWorks Parameters
-
-Common parameters for image transformations:
-
-### Basic Image Controls
-- `w` - Width in pixels
-- `h` - Height in pixels  
-- `fit` - How to fit image: `contain`, `max`, `fill`, `stretch`, `crop`
-- `crop` - Crop position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
-- `fm` - Output format: `jpg`, `png`, `gif`, `webp`, `avif`
-- `q` - Quality (1-100)
-
-### Effects & Filters
-- `blur` - Blur amount (0-100)
-- `sharp` - Sharpen amount (0-100)
-- `pixel` - Pixelate amount (0-100)
-- `filt` - Filter: `greyscale`, `sepia`
-
-### Image Watermarks
-- `mark` - Watermark image path
-- `markw` - Watermark width
-- `markh` - Watermark height
-- `markpos` - Watermark position
-- `markpad` - Watermark padding
-- `markalpha` - Watermark opacity (0-100)
-
-### Text Watermarks
-- `marktext` - Text to display as watermark
-- `marktextfont` - Font family name (TTF/OTF fonts from watermark-fonts depot)
-- `marktextsize` - Text size in pixels (default: 500)
-- `marktextcolor` - Text color as hex (without #, e.g., 'ffffff' for white)
-- `marktextbg` - Background color as hex (optional, transparent if not set)
-- `marktextpad` - Padding around text in pixels (default: 10)
-- `marktextangle` - Text rotation angle in degrees (-360 to 360, default: 0)
-- `marktextpos` - Text position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
-- `marktextw` - Maximum text width in pixels or relative (e.g., '50w' for 50% of image width)
-- `marktextalpha` - Text transparency (0-100, where 100 is fully opaque)
 
 ## Examples
 
@@ -731,18 +258,16 @@ Common parameters for image transformations:
 </div>
 ```
 
-### Create a gallery launcher with custom triggers
+### Gallery launcher with custom triggers
 ```twig
 {% set product = cms.collection.object('products', 'widget-pro') %}
 
-{# Output the gallery launcher (hidden template) #}
 {{ cms.render.galleryLauncher(product.id, {w: 300, h: 300}, {w: 1920}, {
     captions: true,
     trigger: '.product-thumb',
     plugins: ['zoom', 'fullscreen']
 }) }}
 
-{# Display custom layout with gallery triggers #}
 <div class="product-images">
     <img class="product-thumb main-image"
          data-gallery-image="front.jpg"
@@ -770,16 +295,6 @@ Common parameters for image transformations:
 {% endif %}
 ```
 
-### Display object counts efficiently
-```twig
-{# Efficient: Uses cached collection metadata (no index loading) #}
-<p>{{ cms.collection.objectCount('blog') }} blog posts</p>
-<p>{{ cms.collection.objectCount('products') }} products available</p>
-
-{# Avoid: Loads entire index just to count objects #}
-<p>{{ cms.collection.objects('blog')|length }} blog posts</p>
-```
-
 ### Search with pagination
 ```twig
 {% set results = cms.collection.search('blog', query, ['title', 'content', 'tags']) %}
@@ -798,8 +313,8 @@ Common parameters for image transformations:
 ```twig
 {# Simple text watermark #}
 {{ cms.media.imagePath('hero-image', {
-    w: 1200, 
-    h: 600, 
+    w: 1200,
+    h: 600,
     marktext: 'Copyright 2024'
 }) }}
 
@@ -824,13 +339,5 @@ Common parameters for image transformations:
     marktextcolor: 'ff0000',
     marktextpos: 'center',
     marktextalpha: 50
-}) }}
-
-{# Responsive text width #}
-{{ cms.media.imagePath('banner', {
-    w: 1200,
-    marktext: 'This is a very long watermark text that will wrap',
-    marktextw: '80w',  {# 80% of image width #}
-    marktextpos: 'top'
 }) }}
 ```
