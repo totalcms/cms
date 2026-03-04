@@ -141,6 +141,90 @@ The grid system includes comprehensive CSS with design system variables:
 - `no-shadow` - Remove shadows and hover effects
 - `flat` - Completely flat styling
 
+### Item Classes
+- `cms-grid-item-full` - Makes an item span the full width of the grid (all columns). Useful for featured items, section headers, or full-width content within a grid.
+
+```twig
+{% cmsgrid cms.collection.objects('blog') from 'blog' with 'blog' %}
+    {% if loop.first %}
+        {# Featured post spans full width #}
+        <div class="cms-grid-item cms-grid-item-full">
+            <h2>{{ object.title }}</h2>
+            <p>{{ object.summary }}</p>
+        </div>
+    {% else %}
+        <h3>{{ object.title }}</h3>
+        <p>{{ object.summary }}</p>
+    {% endif %}
+{% endcmsgrid %}
+```
+
+Note: A `.cms-load-more` button placed as the last child inside a `cms-grid` will automatically span the full width and center itself.
+
+## CSS Variables
+
+Override these variables on `.cms-grid` or a custom class to customize the grid appearance.
+
+### Grid Layout
+
+| Variable                               | Default | Description |
+|----------------------------------------|---------|-------------|
+| `--cms-grid-gap`                       | `1rem` | Gap between grid items |
+| `--cms-grid-min-column-width`          | `250px` | Minimum column width for auto-fill columns |
+| `--cms-grid-columns`                   | `repeat(auto-fill, minmax(..., 1fr))` | Grid column template |
+| `--cms-grid-align-items`               | `stretch` | Vertical alignment of grid items |
+| `--cms-grid-justify-items`             | `stretch` | Horizontal alignment of grid items |
+
+### Card Styling
+
+| Variable                               | Default | Description |
+|----------------------------------------|---------|-------------|
+| `--cms-card-padding`                   | `1rem` | Padding inside each card |
+| `--cms-card-bg`                        | `#ffffff` | Card background color |
+| `--cms-card-border`                    | `1px solid oklch(...)` | Card border |
+| `--cms-card-border-radius`             | `var(--totalform-radius)` | Card corner radius |
+| `--cms-card-shadow`                    | `0 1px 3px oklch(0.2 0 0 / 0.1)` | Card box shadow |
+| `--cms-card-hover-shadow`              | `0 4px 12px oklch(0.2 0 0 / 0.15)` | Card shadow on hover |
+| `--cms-card-transition`                | `all 0.2s ease` | Card hover transition |
+
+### Typography
+
+| Variable                               | Default | Description |
+|----------------------------------------|---------|-------------|
+| `--cms-text-color`                     | `oklch(var(--totalform-text-color))` | Body text color |
+| `--cms-heading-color`                  | `oklch(var(--totalform-darkgray))` | Heading color |
+| `--cms-meta-color`                     | `oklch(var(--totalform-lightgray))` | Meta/secondary text color |
+| `--cms-link-color`                     | `oklch(var(--totalform-accent))` | Link color |
+
+### Spacing & Images
+
+| Variable                               | Default | Description |
+|----------------------------------------|---------|-------------|
+| `--cms-item-spacing`                   | `0.5rem` | Spacing between elements inside a card |
+| `--cms-image-aspect-ratio`             | `16 / 9` | Aspect ratio for featured images |
+| `--cms-image-border-radius`            | `calc(var(--cms-card-border-radius) * 0.5)` | Image corner radius |
+
+### Example: Custom Grid Theme
+
+```css
+.my-blog-grid {
+    --cms-grid-min-column-width: 300px;
+    --cms-grid-gap: 2rem;
+    --cms-card-bg: #f9f9f9;
+    --cms-card-border: none;
+    --cms-card-shadow: none;
+    --cms-card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --cms-image-aspect-ratio: 3 / 2;
+    --cms-card-padding: 1.5rem;
+}
+```
+
+```twig
+{% cmsgrid cms.collection.objects('blog') from 'blog' with 'my-blog-grid' %}
+    {% include 'grid/blog.twig' %}
+{% endcmsgrid %}
+```
+
 ## Real-World Examples
 
 ### E-commerce Products

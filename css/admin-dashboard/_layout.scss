@@ -334,8 +334,17 @@ body {
 	display      : block;
 	padding-left : 4rem;
 
-	> *:not(pre):not(div) {
+	> *:not(pre):not(div):not(table) {
 		max-width : 65ch;
+	}
+
+	table {
+		border-collapse : collapse;
+
+		th, td {
+			padding    : 0.4rem 0.75rem;
+			text-align : left;
+		}
 	}
 
 	h1,h2,h3,h4,h5,h6,p,ul,ol,pre,iframe,.dash-button {
