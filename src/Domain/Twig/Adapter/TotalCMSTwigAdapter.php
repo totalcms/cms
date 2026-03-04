@@ -216,6 +216,14 @@ class TotalCMSTwigAdapter
 			return $this->$adapter->$method(...$arguments);
 		}
 
+		// Backwards compatibility: cms.data() → cms.data.raw()
+		// Twig resolves __call before property access when arguments are present.
+		if ($name === 'data') {
+			$this->logger->warning("Deprecated: cms.data() is deprecated. Use cms.data.raw() instead.");
+
+			return $this->data->raw(...$arguments);
+		}
+
 		throw new \BadMethodCallException("Method '{$name}' does not exist on TotalCMSTwigAdapter.");
 	}
 }
