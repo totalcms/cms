@@ -194,14 +194,14 @@ describe('Cache Manager Operations', function (): void {
 
 	it('uses correct TTL constants for different data types', function (): void {
 		// Updated TTL values for better cache performance (optimized for production)
-		expect(CacheManager::TTL_COLLECTIONS_LIST)->toBe(3600);      // 1 hour
-		expect(CacheManager::TTL_INDEX_DATA)->toBe(3600);            // 1 hour
-		expect(CacheManager::TTL_OBJECT_IDS)->toBe(1800);            // 30 minutes
+		expect(CacheManager::TTL_COLLECTIONS_LIST)->toBe(7200);      // 2 hours
+		expect(CacheManager::TTL_INDEX_DATA)->toBe(14400);           // 4 hours
+		expect(CacheManager::TTL_OBJECT_IDS)->toBe(14400);           // 4 hours
 		expect(CacheManager::TTL_OBJECT_DATA)->toBe(14400);          // 4 hours
 		expect(CacheManager::TTL_RESERVED_SCHEMAS)->toBe(86400);     // 24 hours
 		expect(CacheManager::TTL_RESERVED_SCHEMA_IDS)->toBe(86400);  // 24 hours
 		expect(CacheManager::TTL_CUSTOM_SCHEMA)->toBe(14400);        // 4 hours
-		expect(CacheManager::TTL_API_RESPONSE)->toBe(1800);          // 30 minutes
+		expect(CacheManager::TTL_API_RESPONSE)->toBe(7200);          // 2 hours
 		expect(CacheManager::TTL_SESSION_DATA)->toBe(1440);          // 24 minutes (unchanged)
 		expect(CacheManager::DEFAULT_TTL)->toBe(7200);               // 2 hours
 	});

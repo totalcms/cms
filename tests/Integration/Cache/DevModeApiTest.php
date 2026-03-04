@@ -18,6 +18,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -75,6 +76,7 @@ final class DevModeApiTest extends TestCase
 		$watermarkCleanupService   = $this->createMock(WatermarkCleanupService::class);
 
 		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$invalidationSignal        = new CacheInvalidationSignal($config);
 		$this->cacheManager        = new CacheManager(
 			$filesystemService,
 			$opcacheService,
@@ -83,6 +85,7 @@ final class DevModeApiTest extends TestCase
 			$apcuService,
 			$watermarkCleanupService,
 			$this->devModeManager,
+			$invalidationSignal,
 			$config,
 			$mockLoggerFactoryForCache
 		);

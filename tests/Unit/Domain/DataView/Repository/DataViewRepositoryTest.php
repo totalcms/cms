@@ -77,7 +77,7 @@ final class DataViewRepositoryTest extends TestCase
 
 		$this->cacheManager->expects($this->once())
 			->method('storeComputedData')
-			->with('dataview:my-view', $data, 1800);
+			->with('dataview:my-view', $data, 14400);
 
 		$result = $this->repository->fetchData('my-view');
 

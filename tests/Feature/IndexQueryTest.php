@@ -214,7 +214,7 @@ it('renders HTML with template and pagination headers', function (): void {
 	if (!is_dir($templateDir)) {
 		mkdir($templateDir, 0755, true);
 	}
-	file_put_contents($templateDir . 'card.html', '<article class="post">{{ object.title }}</article>');
+	file_put_contents($templateDir . 'card.twig', '<article class="post">{{ object.title }}</article>');
 
 	// Re-bootstrap to pick up the new template directory
 	$this->setUpApp(bootstrap());

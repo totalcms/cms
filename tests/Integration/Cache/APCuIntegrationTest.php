@@ -12,6 +12,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Support\Config;
 
 final class APCuIntegrationTest extends TestCase
@@ -39,6 +40,7 @@ final class APCuIntegrationTest extends TestCase
 		$watermarkCleanupService    = new WatermarkCleanupService($mockStorage, $mockLoggerFactory);
 
 		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$invalidationSignal        = new CacheInvalidationSignal($this->config);
 		$this->cacheManager        = new CacheManager(
 			$filesystemService,
 			$opcacheService,
@@ -47,6 +49,7 @@ final class APCuIntegrationTest extends TestCase
 			$this->apcuService,
 			$watermarkCleanupService,
 			$devModeManager,
+			$invalidationSignal,
 			$this->config,
 			$mockLoggerFactoryForCache
 		);
