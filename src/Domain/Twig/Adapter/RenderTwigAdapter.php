@@ -17,6 +17,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
@@ -34,6 +35,7 @@ use Twig\Loader\ArrayLoader;
 class RenderTwigAdapter
 {
 	private ?TwigEnvironment $captionTwig = null;
+	private ?DataViewQueryService $resolvedDataViewQueryService = null;
 	private readonly LoggerInterface $logger;
 
 	public function __construct(
@@ -48,9 +50,21 @@ class RenderTwigAdapter
 		LoggerFactory $loggerFactory,
 		private readonly DepotBrowserRenderer $depotBrowserRenderer = new DepotBrowserRenderer(),
 		private readonly ?IndexQueryService $indexQueryService = null,
-		private readonly ?DataViewQueryService $dataViewQueryService = null,
+		/** @var (\Closure(): DataViewQueryService)|null */
+		private readonly ?\Closure $dataViewQueryServiceFactory = null,
+		/** @var (\Closure(): TwigEngine)|null */
+		private readonly ?\Closure $twigEngineFactory = null,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+	}
+
+	private function getDataViewQueryService(): ?DataViewQueryService
+	{
+		if ($this->resolvedDataViewQueryService === null && $this->dataViewQueryServiceFactory !== null) {
+			$this->resolvedDataViewQueryService = ($this->dataViewQueryServiceFactory)();
+		}
+
+		return $this->resolvedDataViewQueryService;
 	}
 
 	/**
@@ -80,6 +94,9 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMore: "template" option is required -->';
 		}
 
+		$limit = max(1, (int)($options['limit'] ?? 20));
+		$load  = !empty($options['load']);
+
 		$empty = (string)($options['empty'] ?? '');
 		if ($empty !== '' && $this->indexQueryService !== null) {
 			$params = $this->buildCountParams($options);
@@ -87,6 +104,10 @@ class RenderTwigAdapter
 			if ($result->total === 0) {
 				return $this->buildEmptyHtml($empty);
 			}
+		}
+
+		if ($load && $this->twigEngineFactory !== null && $this->indexQueryService !== null) {
+			return $this->loadItems($collection, $template, $limit, $options);
 		}
 
 		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
@@ -117,18 +138,116 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMoreDataView: "template" option is required -->';
 		}
 
+		$limit = max(1, (int)($options['limit'] ?? 20));
+		$load  = !empty($options['load']);
+
 		$empty = (string)($options['empty'] ?? '');
-		if ($empty !== '' && $this->dataViewQueryService !== null) {
+		if ($empty !== '' && $this->getDataViewQueryService() !== null) {
 			$params = $this->buildCountParams($options);
-			$result = $this->dataViewQueryService->query($viewId, $params);
+			$result = $this->getDataViewQueryService()->query($viewId, $params);
 			if ($result->total === 0) {
 				return $this->buildEmptyHtml($empty);
 			}
 		}
 
+		if ($load && $this->twigEngineFactory !== null && $this->getDataViewQueryService() !== null) {
+			return $this->loadDataViewItems($viewId, $template, $limit, $options);
+		}
+
 		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
 
 		return $this->buildTrigger($baseUrl, $options);
+	}
+
+	/**
+	 * Query collection items and render them server-side, appending the HTMX trigger if more exist.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	private function loadItems(string $collection, string $template, int $limit, array $options): string
+	{
+		/** @var IndexQueryService $queryService */
+		$queryService = $this->indexQueryService;
+		$params       = $this->buildLoadParams($options, $limit);
+		$result       = $queryService->query($collection, $params);
+
+		$html = $this->renderItems($result->items, $template, $collection);
+
+		if ($result->hasMore()) {
+			$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+			$html .= $this->buildTrigger($baseUrl, $options);
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Query DataView items and render them server-side, appending the HTMX trigger if more exist.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	private function loadDataViewItems(string $viewId, string $template, int $limit, array $options): string
+	{
+		/** @var DataViewQueryService $queryService */
+		$queryService = $this->getDataViewQueryService();
+		$params       = $this->buildLoadParams($options, $limit);
+		$result       = $queryService->query($viewId, $params);
+
+		$html = $this->renderItems($result->items, $template);
+
+		if ($result->hasMore()) {
+			$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+			$html .= $this->buildTrigger($baseUrl, $options);
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Render items using the TwigEngine.
+	 *
+	 * @param array<int,array<string,mixed>> $items
+	 */
+	private function renderItems(array $items, string $template, string $collection = ''): string
+	{
+		/** @var \Closure(): TwigEngine $factory */
+		$factory    = $this->twigEngineFactory;
+		$twigEngine = $factory();
+		$html       = '';
+
+		// Ensure template has .twig extension
+		if (!str_ends_with($template, '.twig')) {
+			$template .= '.twig';
+		}
+
+		foreach ($items as $item) {
+			$data = ['object' => $item];
+			if ($collection !== '') {
+				$data['collection'] = $collection;
+			}
+			$html .= $twigEngine->render($template, $data);
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Build query params for a load query (page 1).
+	 *
+	 * @param array<string,mixed> $options
+	 * @return array<string,string>
+	 */
+	private function buildLoadParams(array $options, int $limit): array
+	{
+		$params = ['limit' => (string)$limit, 'offset' => '0'];
+		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
+		foreach ($optionalKeys as $key) {
+			if (isset($options[$key]) && (string)$options[$key] !== '') {
+				$params[$key] = (string)$options[$key];
+			}
+		}
+
+		return $params;
 	}
 
 	/**

@@ -57,6 +57,7 @@ Works identically to the collection version but queries a DataView by its ID.
 | `label` | string | `'Load More'` | Button label (only used when trigger is `click`) |
 | `class` | string | — | Additional CSS class for the trigger element |
 | `transition` | bool | `false` | Enable HTMX view transitions |
+| `load` | bool | `false` | Render the first page of items server-side (SEO-friendly) |
 | `empty` | string | — | HTML to display when filters match zero items |
 
 ## Trigger Modes
@@ -110,9 +111,45 @@ The empty content is wrapped in a `<div class="cms-no-results">` that you can st
 
 The `empty` value supports any HTML, so you can include links, images, or other markup.
 
+## Server-Side Loading (`load`)
+
+By default, `loadMore()` only outputs the HTMX trigger — you render the first page yourself with a `{% for %}` loop. The `load` option tells `loadMore()` to handle everything: render the initial items server-side (important for SEO) and append the HTMX trigger for subsequent pages.
+
+```twig
+{# One line does it all — first page rendered server-side, rest via HTMX #}
+<div class="blog-feed">
+    {{ cms.render.loadMore('blog', {
+        template: 'blog/card.twig',
+        limit: 12,
+        sort: '-date',
+        include: 'published:true',
+        load: true
+    }) }}
+</div>
+```
+
+Without `load`, you must render the first page manually:
+
+```twig
+{# Without load — manual first page + HTMX for the rest #}
+<div class="blog-feed">
+    {% for object in cms.collection.query('blog', {limit: 12, sort: '-date', include: 'published:true'}).items %}
+        {% include 'blog/card.twig' %}
+    {% endfor %}
+    {{ cms.render.loadMore('blog', {
+        template: 'blog/card.twig',
+        limit: 12,
+        sort: '-date',
+        include: 'published:true'
+    }) }}
+</div>
+```
+
+Both approaches produce identical output. The `load` option simply reduces boilerplate.
+
 ## How It Works
 
-1. **Initial render**: The first page of items is rendered server-side into the page HTML
+1. **Initial render**: The first page of items is rendered server-side into the page HTML (automatically when using `load: true`, or manually via a `{% for %}` loop)
 2. **HTMX trigger**: After the last item, a trigger element is injected (a `<div>` for infinite scroll or a `<button>` for click)
 3. **API request**: When triggered, HTMX sends a GET request to the query endpoint with `offset` and `limit` parameters
 4. **Response**: The server returns the next batch of rendered HTML plus a new trigger element for the following page

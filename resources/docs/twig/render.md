@@ -202,6 +202,9 @@ Generate an HTMX-powered "load more" trigger for paginated collection loading.
 ```twig
 {{ cms.render.loadMore('blog', {template: 'blog/card.twig', limit: 10}) }}
 
+{# Render first page server-side + HTMX for the rest #}
+{{ cms.render.loadMore('blog', {template: 'blog/card.twig', limit: 10, load: true}) }}
+
 {# With empty state for filtered results #}
 {{ cms.render.loadMore('blog', {
     template: 'blog/card.twig',

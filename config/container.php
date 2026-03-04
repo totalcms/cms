@@ -411,7 +411,8 @@ return [
 		$container->get(LoggerFactory::class),
 		$container->get(DepotBrowserRenderer::class),
 		$container->get(IndexQueryService::class),
-		$container->get(DataViewQueryService::class),
+		fn () => $container->get(DataViewQueryService::class),
+		fn () => $container->get(TwigEngine::class),
 	),
 
 	ViewTwigAdapter::class => fn (ContainerInterface $container): ViewTwigAdapter => new ViewTwigAdapter(

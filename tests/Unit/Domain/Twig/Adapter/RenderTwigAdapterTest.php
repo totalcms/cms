@@ -15,6 +15,7 @@ use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -49,7 +50,7 @@ final class RenderTwigAdapterTest extends TestCase
 			$this->createMock(GridRenderer::class),
 			$loggerFactory,
 			indexQueryService: $this->indexQueryService,
-			dataViewQueryService: $this->dataViewQueryService,
+			dataViewQueryServiceFactory: fn () => $this->dataViewQueryService,
 		);
 	}
 
@@ -319,5 +320,162 @@ final class RenderTwigAdapterTest extends TestCase
 
 		$this->assertStringContainsString('cms-no-results', $result);
 		$this->assertStringContainsString('<p>No items</p>', $result);
+	}
+
+	// --- load option ---
+
+	private function buildAdapterWithTwigEngine(
+		MockObject&HtmxRenderer $htmxRenderer,
+		MockObject&IndexQueryService $indexQueryService,
+		MockObject&DataViewQueryService $dataViewQueryService,
+		MockObject&TwigEngine $twigEngine,
+	): RenderTwigAdapter {
+		$config      = $this->createMock(Config::class);
+		$config->api = '/api';
+
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		return new RenderTwigAdapter(
+			$htmxRenderer,
+			$config,
+			$this->createMock(DataTwigAdapter::class),
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(CollectionLister::class),
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(GridRenderer::class),
+			$loggerFactory,
+			indexQueryService: $indexQueryService,
+			dataViewQueryServiceFactory: fn () => $dataViewQueryService,
+			twigEngineFactory: fn () => $twigEngine,
+		);
+	}
+
+	public function testLoadOptionRendersItemsAndTrigger(): void
+	{
+		$htmx        = $this->createMock(HtmxRenderer::class);
+		$index       = $this->createMock(IndexQueryService::class);
+		$dataView    = $this->createMock(DataViewQueryService::class);
+		$twigEngine  = $this->createMock(TwigEngine::class);
+
+		$items = [['id' => 'a', 'title' => 'A'], ['id' => 'b', 'title' => 'B']];
+
+		$index->expects($this->once())
+			->method('query')
+			->with('blog', $this->callback(fn (array $p): bool => $p['limit'] === '2' && $p['offset'] === '0'))
+			->willReturn(new QueryResult($items, 5, 2, 0));
+
+		$twigEngine->expects($this->exactly(2))
+			->method('render')
+			->willReturnCallback(fn (string $tpl, array $data): string => '<div>' . $data['object']['id'] . '</div>');
+
+		$htmx->expects($this->once())
+			->method('buildInitialTrigger')
+			->willReturn('<div>trigger</div>');
+
+		$adapter = $this->buildAdapterWithTwigEngine($htmx, $index, $dataView, $twigEngine);
+
+		$result = $adapter->loadMore('blog', [
+			'template' => 'blog/card',
+			'limit'    => 2,
+			'load'     => true,
+		]);
+
+		$this->assertStringContainsString('<div>a</div>', $result);
+		$this->assertStringContainsString('<div>b</div>', $result);
+		$this->assertStringContainsString('<div>trigger</div>', $result);
+	}
+
+	public function testLoadOptionRendersItemsWithoutTriggerWhenNoMore(): void
+	{
+		$htmx        = $this->createMock(HtmxRenderer::class);
+		$index       = $this->createMock(IndexQueryService::class);
+		$dataView    = $this->createMock(DataViewQueryService::class);
+		$twigEngine  = $this->createMock(TwigEngine::class);
+
+		$items = [['id' => 'only']];
+
+		$index->expects($this->once())
+			->method('query')
+			->willReturn(new QueryResult($items, 1, 10, 0));
+
+		$twigEngine->expects($this->once())
+			->method('render')
+			->willReturn('<div>only</div>');
+
+		$htmx->expects($this->never())->method('buildInitialTrigger');
+
+		$adapter = $this->buildAdapterWithTwigEngine($htmx, $index, $dataView, $twigEngine);
+
+		$result = $adapter->loadMore('blog', [
+			'template' => 'blog/card',
+			'limit'    => 10,
+			'load'     => true,
+		]);
+
+		$this->assertSame('<div>only</div>', $result);
+	}
+
+	public function testLoadOptionWithEmptyAndZeroResultsReturnsEmptyHtml(): void
+	{
+		$htmx        = $this->createMock(HtmxRenderer::class);
+		$index       = $this->createMock(IndexQueryService::class);
+		$dataView    = $this->createMock(DataViewQueryService::class);
+		$twigEngine  = $this->createMock(TwigEngine::class);
+
+		// The empty check query runs first with limit=1
+		$index->expects($this->once())
+			->method('query')
+			->willReturn(new QueryResult([], 0, 1, 0));
+
+		$twigEngine->expects($this->never())->method('render');
+		$htmx->expects($this->never())->method('buildInitialTrigger');
+
+		$adapter = $this->buildAdapterWithTwigEngine($htmx, $index, $dataView, $twigEngine);
+
+		$result = $adapter->loadMore('blog', [
+			'template' => 'blog/card',
+			'load'     => true,
+			'empty'    => 'Nothing here.',
+		]);
+
+		$this->assertStringContainsString('cms-no-results', $result);
+		$this->assertStringContainsString('Nothing here.', $result);
+	}
+
+	public function testLoadOptionDataViewRendersItemsAndTrigger(): void
+	{
+		$htmx        = $this->createMock(HtmxRenderer::class);
+		$index       = $this->createMock(IndexQueryService::class);
+		$dataView    = $this->createMock(DataViewQueryService::class);
+		$twigEngine  = $this->createMock(TwigEngine::class);
+
+		$items = [['id' => 'x']];
+
+		$dataView->expects($this->once())
+			->method('query')
+			->with('my-view', $this->callback(fn (array $p): bool => $p['limit'] === '5' && $p['offset'] === '0'))
+			->willReturn(new QueryResult($items, 10, 5, 0));
+
+		$twigEngine->expects($this->once())
+			->method('render')
+			->willReturn('<div>x</div>');
+
+		$htmx->expects($this->once())
+			->method('buildInitialTrigger')
+			->willReturn('<div>trigger</div>');
+
+		$adapter = $this->buildAdapterWithTwigEngine($htmx, $index, $dataView, $twigEngine);
+
+		$result = $adapter->loadMoreDataView('my-view', [
+			'template' => 'cards/item',
+			'limit'    => 5,
+			'load'     => true,
+		]);
+
+		$this->assertStringContainsString('<div>x</div>', $result);
+		$this->assertStringContainsString('<div>trigger</div>', $result);
 	}
 }
