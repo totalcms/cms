@@ -99,9 +99,14 @@ readonly class QueryActionRenderer
 			throw new HttpForbiddenException($request, 'Templates feature requires Standard edition or higher.');
 		}
 
+		$context = [];
+		if (isset($params['_collection'])) {
+			$context['collection'] = $params['_collection'];
+		}
+
 		$html = '';
 		foreach ($result->items as $item) {
-			$html .= $this->twigEngine->render($template . '.html', ['object' => $item]);
+			$html .= $this->twigEngine->render($template . '.twig', ['object' => $item] + $context);
 		}
 
 		$html .= $this->htmxRenderer->buildNextPageTrigger($baseUrl, $result, $params);
