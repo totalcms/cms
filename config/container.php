@@ -55,6 +55,7 @@ use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
@@ -68,6 +69,7 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -408,6 +410,8 @@ return [
 		$container->get(GridRenderer::class),
 		$container->get(LoggerFactory::class),
 		$container->get(DepotBrowserRenderer::class),
+		$container->get(IndexQueryService::class),
+		$container->get(DataViewQueryService::class),
 	),
 
 	ViewTwigAdapter::class => fn (ContainerInterface $container): ViewTwigAdapter => new ViewTwigAdapter(

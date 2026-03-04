@@ -6,6 +6,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewQueryService;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
+use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
@@ -18,11 +21,15 @@ use TotalCMS\Support\Config;
 final class RenderTwigAdapterTest extends TestCase
 {
 	private MockObject&HtmxRenderer $htmxRenderer;
+	private MockObject&IndexQueryService $indexQueryService;
+	private MockObject&DataViewQueryService $dataViewQueryService;
 	private RenderTwigAdapter $adapter;
 
 	protected function setUp(): void
 	{
-		$this->htmxRenderer = $this->createMock(HtmxRenderer::class);
+		$this->htmxRenderer        = $this->createMock(HtmxRenderer::class);
+		$this->indexQueryService    = $this->createMock(IndexQueryService::class);
+		$this->dataViewQueryService = $this->createMock(DataViewQueryService::class);
 
 		$config      = $this->createMock(Config::class);
 		$config->api = '/api';
@@ -41,6 +48,8 @@ final class RenderTwigAdapterTest extends TestCase
 			$this->createMock(SchemaFetcher::class),
 			$this->createMock(GridRenderer::class),
 			$loggerFactory,
+			indexQueryService: $this->indexQueryService,
+			dataViewQueryService: $this->dataViewQueryService,
 		);
 	}
 
@@ -236,5 +245,79 @@ final class RenderTwigAdapterTest extends TestCase
 			'template' => 'cards/item',
 			'limit'    => 6,
 		]);
+	}
+
+	// --- empty option ---
+
+	public function testLoadMoreEmptyOptionReturnsEmptyHtmlWhenZeroResults(): void
+	{
+		$this->indexQueryService->expects($this->once())
+			->method('query')
+			->with('blog', $this->callback(fn (array $params): bool => $params['limit'] === '1' && $params['offset'] === '0'))
+			->willReturn(new QueryResult([], 0, 1, 0));
+
+		$this->htmxRenderer->expects($this->never())->method('buildInitialTrigger');
+
+		$result = $this->adapter->loadMore('blog', [
+			'template' => 'blog/card',
+			'empty'    => 'No posts found.',
+		]);
+
+		$this->assertStringContainsString('cms-no-results', $result);
+		$this->assertStringContainsString('No posts found.', $result);
+	}
+
+	public function testLoadMoreEmptyOptionReturnsTriggerWhenResultsExist(): void
+	{
+		$this->indexQueryService->expects($this->once())
+			->method('query')
+			->willReturn(new QueryResult([['id' => 'test']], 5, 1, 0));
+
+		$this->htmxRenderer->expects($this->once())
+			->method('buildInitialTrigger')
+			->willReturn('<div>trigger</div>');
+
+		$result = $this->adapter->loadMore('blog', [
+			'template' => 'blog/card',
+			'empty'    => 'No posts found.',
+		]);
+
+		$this->assertSame('<div>trigger</div>', $result);
+	}
+
+	public function testLoadMoreEmptyOptionForwardsFilterParams(): void
+	{
+		$this->indexQueryService->expects($this->once())
+			->method('query')
+			->with('blog', $this->callback(fn (array $params): bool => $params['include'] === 'published:true'
+					&& $params['exclude'] === 'draft:true'
+					&& $params['search'] === 'hello'))
+			->willReturn(new QueryResult([], 0, 1, 0));
+
+		$this->adapter->loadMore('blog', [
+			'template' => 'blog/card',
+			'empty'    => 'Nothing here.',
+			'include'  => 'published:true',
+			'exclude'  => 'draft:true',
+			'search'   => 'hello',
+		]);
+	}
+
+	public function testLoadMoreDataViewEmptyOptionReturnsEmptyHtmlWhenZeroResults(): void
+	{
+		$this->dataViewQueryService->expects($this->once())
+			->method('query')
+			->with('my-view', $this->callback(fn (array $params): bool => $params['limit'] === '1' && $params['offset'] === '0'))
+			->willReturn(new QueryResult([], 0, 1, 0));
+
+		$this->htmxRenderer->expects($this->never())->method('buildInitialTrigger');
+
+		$result = $this->adapter->loadMoreDataView('my-view', [
+			'template' => 'cards/item',
+			'empty'    => '<p>No items</p>',
+		]);
+
+		$this->assertStringContainsString('cms-no-results', $result);
+		$this->assertStringContainsString('<p>No items</p>', $result);
 	}
 }

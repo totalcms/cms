@@ -9,7 +9,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Collection\Utilities\PaginationGenerator;
+use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
@@ -45,6 +47,8 @@ class RenderTwigAdapter
 		public readonly GridRenderer $grid,
 		LoggerFactory $loggerFactory,
 		private readonly DepotBrowserRenderer $depotBrowserRenderer = new DepotBrowserRenderer(),
+		private readonly ?IndexQueryService $indexQueryService = null,
+		private readonly ?DataViewQueryService $dataViewQueryService = null,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 	}
@@ -76,6 +80,15 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMore: "template" option is required -->';
 		}
 
+		$empty = (string)($options['empty'] ?? '');
+		if ($empty !== '' && $this->indexQueryService !== null) {
+			$params = $this->buildCountParams($options);
+			$result = $this->indexQueryService->query($collection, $params);
+			if ($result->total === 0) {
+				return $this->buildEmptyHtml($empty);
+			}
+		}
+
 		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
 
 		return $this->buildTrigger($baseUrl, $options);
@@ -102,6 +115,15 @@ class RenderTwigAdapter
 		$template = (string)($options['template'] ?? '');
 		if ($template === '') {
 			return '<!-- cms.render.loadMoreDataView: "template" option is required -->';
+		}
+
+		$empty = (string)($options['empty'] ?? '');
+		if ($empty !== '' && $this->dataViewQueryService !== null) {
+			$params = $this->buildCountParams($options);
+			$result = $this->dataViewQueryService->query($viewId, $params);
+			if ($result->total === 0) {
+				return $this->buildEmptyHtml($empty);
+			}
 		}
 
 		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
@@ -154,6 +176,30 @@ class RenderTwigAdapter
 		$extraClass = (string)($options['class'] ?? '');
 
 		return $this->htmxRenderer->buildInitialTrigger($baseUrl, $queryParams, $trigger, $label, $extraClass, $transition);
+	}
+
+	/**
+	 * Build minimal query params for an empty-check count query.
+	 *
+	 * @param array<string,mixed> $options
+	 * @return array<string,string>
+	 */
+	private function buildCountParams(array $options): array
+	{
+		$params = ['limit' => '1', 'offset' => '0'];
+		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
+		foreach ($optionalKeys as $key) {
+			if (isset($options[$key]) && (string)$options[$key] !== '') {
+				$params[$key] = (string)$options[$key];
+			}
+		}
+
+		return $params;
+	}
+
+	private function buildEmptyHtml(string $message): string
+	{
+		return '<div class="cms-no-results">' . $message . '</div>';
 	}
 
 	/** @param array<string,string> $getData */

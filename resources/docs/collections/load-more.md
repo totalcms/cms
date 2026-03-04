@@ -57,6 +57,7 @@ Works identically to the collection version but queries a DataView by its ID.
 | `label` | string | `'Load More'` | Button label (only used when trigger is `click`) |
 | `class` | string | — | Additional CSS class for the trigger element |
 | `transition` | bool | `false` | Enable HTMX view transitions |
+| `empty` | string | — | HTML to display when filters match zero items |
 
 ## Trigger Modes
 
@@ -82,6 +83,32 @@ Renders a `<button>` that the user clicks to load additional items.
     label: 'Show More Posts'
 }) }}
 ```
+
+## Empty State
+
+When using filters like `include`, `exclude`, or `search`, it's possible that zero items match. By default, loadMore renders a hidden HTMX trigger that fetches nothing — the user sees blank space. The `empty` option lets you display a message instead:
+
+```twig
+{{ cms.render.loadMore('blog', {
+    template: 'blog/card.twig',
+    include: 'published:true',
+    empty: '<p>No published posts found.</p>'
+}) }}
+```
+
+When `empty` is set, Total CMS runs a lightweight count query with the same filters. If zero items match, the empty HTML is rendered instead of the HTMX trigger. If items exist, the normal load more behavior kicks in.
+
+The empty content is wrapped in a `<div class="cms-no-results">` that you can style:
+
+```css
+.cms-no-results {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+```
+
+The `empty` value supports any HTML, so you can include links, images, or other markup.
 
 ## How It Works
 
@@ -167,6 +194,19 @@ button.cms-load-more {
         template: 'dashboard/activity-row.twig',
         limit: 20,
         trigger: 'revealed'
+    }) }}
+</div>
+```
+
+### Filtered Collection with Empty State
+
+```twig
+<div class="blog-feed">
+    {{ cms.render.loadMore('blog', {
+        template: 'blog/card.twig',
+        limit: 12,
+        include: 'category:news',
+        empty: '<p>No news articles have been published yet.</p>'
     }) }}
 </div>
 ```

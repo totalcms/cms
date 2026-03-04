@@ -201,6 +201,13 @@ Generate an HTMX-powered "load more" trigger for paginated collection loading.
 
 ```twig
 {{ cms.render.loadMore('blog', {template: 'blog/card.twig', limit: 10}) }}
+
+{# With empty state for filtered results #}
+{{ cms.render.loadMore('blog', {
+    template: 'blog/card.twig',
+    include: 'published:true',
+    empty: '<p>No posts found.</p>'
+}) }}
 ```
 
 See [Load More Documentation](docs/collections/load-more) for full options and examples.
