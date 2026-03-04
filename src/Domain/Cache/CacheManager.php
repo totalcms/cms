@@ -40,21 +40,20 @@ class CacheManager
 	];
 
 	// Cache TTL constants for different data types
-	// Increased TTLs for production performance - cache invalidation via .cache_version handles updates
+	// Cross-process cache invalidation (CacheInvalidationSignal) handles freshness;
+	// TTLs are a safety net, not the primary invalidation mechanism.
 	public const DEFAULT_TTL             = 7200;              // 2 hours - default TTL for most data
-	public const TTL_COLLECTIONS_LIST    = 3600;      // 1 hour - collections rarely change in production
-	public const TTL_INDEX_DATA          = 3600;           // 1 hour - indexes change when objects are added/removed
-	public const TTL_OBJECT_IDS          = 1800;            // 30 minutes - changes when objects are added/removed
+	public const TTL_COLLECTIONS_LIST    = 7200;      // 2 hours - invalidated explicitly on collection changes
+	public const TTL_INDEX_DATA          = 14400;          // 4 hours - invalidated explicitly on index rebuild
+	public const TTL_OBJECT_IDS          = 14400;           // 4 hours - invalidated explicitly on object add/remove
 	public const TTL_OBJECT_DATA         = 14400;          // 4 hours - individual objects change infrequently
 	public const TTL_RESERVED_SCHEMAS    = 86400;     // 24 hours - reserved schemas NEVER change
 	public const TTL_RESERVED_SCHEMA_IDS = 86400;  // 24 hours - reserved schema IDs NEVER change
 	public const TTL_CUSTOM_SCHEMA       = 14400;        // 4 hours - custom schemas change infrequently
 	public const TTL_FLATTENED_SCHEMA    = 14400;       // 4 hours - flattened schemas (inheritance resolved)
-	public const TTL_API_RESPONSE        = 1800;          // 30 minutes - API responses can be cached longer
+	public const TTL_API_RESPONSE        = 7200;          // 2 hours - invalidated explicitly on collection changes
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
 	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)
-
-	private string $versionFile = '.cache_version';
 	private readonly string $domainPrefix;
 	private readonly LoggerInterface $logger;
 
@@ -100,7 +99,6 @@ class CacheManager
 			'memcached'  => $this->memcachedService,
 			'apcu'       => $this->apcuService,
 		];
-		$this->versionFile  = $this->filesystemService->getCachDir() . '/' . $this->versionFile;
 
 		// Create domain-specific prefix to prevent cache collisions between installations
 		$this->domainPrefix = md5($this->config->domain);
@@ -487,20 +485,6 @@ class CacheManager
 	}
 
 	/**
-	 * Set a new cache version (invalidates all caches).
-	 */
-	private function setCacheVersion(string $version): void
-	{
-		// Don't create version files when filesystem cache is not available
-		if (!$this->filesystemService->isAvailable()) {
-			return;
-		}
-
-		// Try to write version file
-		file_put_contents($this->versionFile, $version);
-	}
-
-	/**
 	 * Check if the app version has changed and clear all caches if so.
 	 * Used to automatically clear stale caches after a Total CMS update.
 	 */
@@ -789,10 +773,6 @@ class CacheManager
 			$results['watermarks'] = ['cleared' => false, 'reason' => $e->getMessage()];
 			$overallSuccess        = false;
 		}
-
-		// Generate new cache version
-		$this->setCacheVersion(date('Y-m-d-H-i-s') . '-' . uniqid());
-		$results['version'] = ['cleared' => true, 'reason' => 'new version generated'];
 
 		$results['success'] = $overallSuccess;
 

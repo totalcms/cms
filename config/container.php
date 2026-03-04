@@ -999,7 +999,6 @@ return [
 		$container->get(CollectionSaver::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyRepository::class),
-		$container->get(CacheManager::class),
 		$container->get(DataViewFilter::class),
 		$container->get(FakerFactory::class),
 		$container->get(LoggerFactory::class),

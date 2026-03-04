@@ -12,7 +12,7 @@ class DataViewRepository extends StorageRepository
 {
 	private const BASE_PATH     = '.system/dataviews';
 	private const CACHE_PREFIX  = 'dataview:';
-	private const CACHE_TTL     = 1800;
+	private const CACHE_TTL     = 14400;
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,

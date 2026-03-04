@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Factory\Service;
 
 use Faker\Generator as FakerGenerator;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
@@ -46,7 +45,6 @@ class FactoryImporter
 		private readonly CollectionSaver $collectionSaver,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly PropertyRepository $propertyRepository,
-		private readonly CacheManager $cacheManager,
 		private readonly DataViewFilter $dataViewFilter,
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
@@ -67,7 +65,6 @@ class FactoryImporter
 				unlink($file);
 			}
 		}
-		$this->cacheManager->clearAllCaches();
 	}
 
 	public function isFakerRule(string $rule): bool
