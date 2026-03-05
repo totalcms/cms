@@ -20,6 +20,7 @@ class FactoryImporter
 {
 	public LoggerInterface $logger;
 	public FakerGenerator $faker;
+	public FakerGenerator $fallbackFaker;
 	public string $cacheDir;
 
 	private const DEFAULT_FACTORY   = 'word';
@@ -49,9 +50,10 @@ class FactoryImporter
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger   = $loggerFactory->addFileHandler('factory.log')->createLogger('factory');
-		$this->faker    = $fakerFactory->createFaker();
-		$this->cacheDir = $fakerFactory->cacheDir;
+		$this->logger        = $loggerFactory->addFileHandler('factory.log')->createLogger('factory');
+		$this->faker         = $fakerFactory->createFaker();
+		$this->fallbackFaker = $fakerFactory->createFallbackFaker();
+		$this->cacheDir      = $fakerFactory->cacheDir;
 	}
 
 	private function cleanCache(): void
@@ -212,8 +214,12 @@ class FactoryImporter
 
 		if (empty($objectData['id'])) {
 			// Generate object id first since other methods may require it
-			[$method, $args]  = $this->parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
-			$objectData['id'] = $this->faker->unique()->$method(...$args);
+			[$method, $args] = $this->parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
+			try {
+				$objectData['id'] = $this->faker->unique()->$method(...$args);
+			} catch (\InvalidArgumentException) {
+				$objectData['id'] = $this->fallbackFaker->unique()->$method(...$args);
+			}
 		}
 
 		foreach ($defs as $property => $value) {
@@ -280,6 +286,19 @@ class FactoryImporter
 			}
 			try {
 				$objectData[$property] = $this->faker->$method(...$args);
+			} catch (\InvalidArgumentException) {
+				// Locale doesn't support this formatter, fall back to en_US
+				try {
+					$objectData[$property] = $this->fallbackFaker->$method(...$args);
+				} catch (\Exception $e) {
+					$this->logger->warning('Failed to generate fake data for property, skipping', [
+						'property'  => $property,
+						'method'    => $method,
+						'args'      => $args,
+						'error'     => $e->getMessage(),
+						'object_id' => $objectData['id'],
+					]);
+				}
 			} catch (\Exception $e) {
 				$this->logger->warning('Failed to generate fake data for property, skipping', [
 					'property'  => $property,
@@ -288,7 +307,6 @@ class FactoryImporter
 					'error'     => $e->getMessage(),
 					'object_id' => $objectData['id'],
 				]);
-				// Skip this property but continue with the rest of the object
 			}
 		}
 

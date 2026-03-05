@@ -34,4 +34,13 @@ class FakerFactory
 
 		return $faker;
 	}
+
+	public function createFallbackFaker(): Generator
+	{
+		$faker = Factory::create('en_US');
+		$faker->addProvider(new FakerExtension($faker));
+		FakerExtension::$dir = $this->cacheDir;
+
+		return $faker;
+	}
 }
