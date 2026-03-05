@@ -46,10 +46,14 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 				return $handler->handle($request);
 			}
 
-			// Allow login page if data directory exists (for first user creation)
+			// Allow login routes if data directory exists (for first user creation)
 			// even if auth collection doesn't exist yet
-			if ($routeName === 'login' && $this->dataDirBasicExists()) {
-				return $handler->handle($request);
+			// Check route path pattern since POST login route may not have a name
+			if ($this->dataDirBasicExists()) {
+				$routePattern = $route->getPattern();
+				if ($routeName === 'login' || $routePattern === '/login[/{collection}]') {
+					return $handler->handle($request);
+				}
 			}
 		}
 

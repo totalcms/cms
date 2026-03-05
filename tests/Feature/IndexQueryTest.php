@@ -249,7 +249,7 @@ it('does not render HTMX trigger on last page', function (): void {
 });
 
 it('renders click trigger when requested', function (): void {
-	$response = get('/collections/blog/query?format=html&template=test/card&limit=2&trigger=click&label=Show+More');
+	$response = get('/collections/blog/query?format=html&template=test/card&limit=2&trigger=click&buttonLabel=Show+More');
 
 	$response->assertOk()
 		->assertSee('<button')
