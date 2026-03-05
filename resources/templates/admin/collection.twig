@@ -46,6 +46,7 @@
 					<li class="export"><a href="collections/{{ collection }}/-export">{{ t('btn.export') }}</a></li>
 					{% if cms.auth.canAccessCollection(collection, 'create') %}
 					<li class="import"><a href="collections/{{ collection }}/-import">{{ t('btn.import') }}</a></li>
+					<li class="collection-report"><a href="utils/collection-report?collection={{ collection }}">{{ t('btn.report') }}</a></li>
 					<li class="factory"><a href="collections/{{ collection }}/-factory">{{ t('collection.factory') }}</a></li>
 					{% endif %}
 					<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">{{ t('collection.sitemap') }}</a></li>

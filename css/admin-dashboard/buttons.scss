@@ -74,6 +74,7 @@ nav[popover]  {
 		&.logout { --action-icon : var(--icon-logout) }
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
+		&.collection-report { --action-icon : var(--icon-file-doc) }
 		&.export { --action-icon : var(--icon-export) }
 		&.object-link { --action-icon : var(--icon-external) }
 		&.duplicate { --action-icon : var(--icon-duplicate) }
