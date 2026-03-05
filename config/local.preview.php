@@ -22,7 +22,7 @@ if (!is_dir($settings['datadir'])) {
 }
 
 $settings['docroot']   = $settings['root'];
-$settings['api']       = '/site-assets/stacks/ws.tcms3.core/tcms/public/index.php';
+$settings['api']       = '/site-assets/stacks/tcms3/tcms/public/index.php';
 
 if (str_contains(__DIR__, 'rw_common')) {
 	$settings['api'] = '/rw_common/plugins/stacks/tcms/public/index.php';
