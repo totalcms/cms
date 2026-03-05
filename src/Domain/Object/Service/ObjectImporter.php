@@ -137,13 +137,14 @@ class ObjectImporter
 				continue;
 			}
 
-			// Check if the property is a reference to an image, gallery, file or depot
-			// and if the data is a valid JSON string and decode the JSON string and continue
+			// Check if the property is a reference to an image, gallery, file, depot, or deck
+			// and if the data is a valid JSON string, decode it and continue
 			if (in_array($property['$ref'], [
 				SchemaData::PROPERTY_TYPE_TO_REF['image'],
 				SchemaData::PROPERTY_TYPE_TO_REF['gallery'],
 				SchemaData::PROPERTY_TYPE_TO_REF['file'],
 				SchemaData::PROPERTY_TYPE_TO_REF['depot'],
+				SchemaData::PROPERTY_TYPE_TO_REF['deck'],
 			], true) && $this->isJson($objectData[$name])) {
 				$objectData[$name] = json_decode($objectData[$name], true);
 				continue;

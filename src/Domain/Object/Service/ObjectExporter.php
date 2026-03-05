@@ -117,16 +117,9 @@ readonly class ObjectExporter
 	 */
 	public function exportAllObjectsForCSv(string $collection): array
 	{
-		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-
-		// Filter out deck properties from CSV export - they're too complex for CSV format
-		$properties = array_filter(
-			array_keys($schema->properties),
-			fn (string $propertyName): bool => !isset($schema->properties[$propertyName]['$ref'])
-				|| $schema->properties[$propertyName]['$ref'] !== SchemaData::PROPERTY_TYPE_TO_REF['deck']
-		);
-
-		$objects   = [array_values($properties)];
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$properties = array_keys($schema->properties);
+		$objects    = [$properties];
 		$objectIds = $this->storage->fetchObjectIds($collection);
 		$errors    = [];
 
@@ -168,16 +161,9 @@ readonly class ObjectExporter
 	 */
 	public function exportFilteredObjectsForCsv(string $collection, array $options): array
 	{
-		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-
-		// Filter out deck properties from CSV export - they're too complex for CSV format
-		$properties = array_filter(
-			array_keys($schema->properties),
-			fn (string $propertyName): bool => !isset($schema->properties[$propertyName]['$ref'])
-				|| $schema->properties[$propertyName]['$ref'] !== SchemaData::PROPERTY_TYPE_TO_REF['deck']
-		);
-
-		$objects   = [array_values($properties)];
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$properties = array_keys($schema->properties);
+		$objects    = [$properties];
 		$objectIds = $this->fetchFilteredObjectIds($collection, $options);
 		$errors    = [];
 
