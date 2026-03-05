@@ -75,16 +75,21 @@ readonly class TotalFormFactory
 	/**
 	 * Create a report export form.
 	 *
-	 * @param array<string,mixed> $options Options: include, exclude
+	 * @param array<string,mixed> $options Options: include, exclude, includeOptions, excludeOptions
 	 */
 	public function report(string $collection = '', array $options = []): string
 	{
+		$includeOptions = $options['includeOptions'] ?? [];
+		$excludeOptions = $options['excludeOptions'] ?? [];
+
 		$form = new ReportForm(
 			api              : $this->api,
 			collectionLister : $this->collectionLister,
 			collection       : $collection,
 			include          : (string)($options['include'] ?? ''),
 			exclude          : (string)($options['exclude'] ?? ''),
+			includeOptions   : is_array($includeOptions) ? $includeOptions : [],
+			excludeOptions   : is_array($excludeOptions) ? $excludeOptions : [],
 		);
 
 		return $form->build();

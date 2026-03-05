@@ -184,6 +184,27 @@ class HTMLUtils
 		return self::element('option', $label, $attributes);
 	}
 
+	/**
+	 * Build a datalist element from an array of options.
+	 *
+	 * @param array<string|array{value: string, label: string}> $options
+	 */
+	public static function datalist(string $id, array $options): string
+	{
+		$optionHtml = '';
+		foreach ($options as $option) {
+			if (is_array($option)) {
+				$optionHtml .= self::element('option', htmlspecialchars($option['label'], ENT_QUOTES, 'UTF-8'), [
+					'value' => $option['value'],
+				]);
+			} else {
+				$optionHtml .= self::inlineElement('option', ['value' => $option]);
+			}
+		}
+
+		return self::element('datalist', $optionHtml, ['id' => $id]);
+	}
+
 	// -------------------------
 	// CSS and Attribute Utilities
 	// -------------------------

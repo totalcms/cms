@@ -16,12 +16,17 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  */
 readonly class ReportForm implements \Stringable
 {
+	/** @param array<string|array{value: string, label: string}> $includeOptions
+	 *  @param array<string|array{value: string, label: string}> $excludeOptions
+	 */
 	public function __construct(
 		private string $api,
 		private CollectionLister $collectionLister,
 		private string $collection = '',
 		private string $include = '',
 		private string $exclude = '',
+		private array $includeOptions = [],
+		private array $excludeOptions = [],
 	) {
 	}
 
@@ -74,30 +79,47 @@ readonly class ReportForm implements \Stringable
 
 	private function buildFilterFields(): string
 	{
-		$includeField = HTMLUtils::inlineElement('input', [
+		$includeAttrs = [
 			'type'        => 'text',
 			'name'        => 'include',
 			'value'       => $this->include,
 			'placeholder' => 'e.g. published:true,category:news',
 			'class'       => 'report-filter-input',
-		]);
-		$includeDiv = HTMLUtils::element(
+		];
+
+		$includeDatalist = '';
+		if ($this->includeOptions !== []) {
+			$includeAttrs['list'] = 'report-include-datalist';
+			$includeDatalist = HTMLUtils::datalist('report-include-datalist', $this->includeOptions);
+		}
+
+		$includeField = HTMLUtils::inlineElement('input', $includeAttrs);
+		$includeLabel = HTMLUtils::element('label', 'Include Filter');
+		$includeDiv   = HTMLUtils::element(
 			'div',
-			HTMLUtils::element('label', 'Include Filter') . $includeField,
-			['class' => 'report-filter-field']
+			$includeLabel . $includeField . $includeDatalist,
+			['class' => 'report-filter-field include-filter-field']
 		);
 
-		$excludeField = HTMLUtils::inlineElement('input', [
+		$excludeAttrs = [
 			'type'        => 'text',
 			'name'        => 'exclude',
 			'value'       => $this->exclude,
 			'placeholder' => 'e.g. draft:true',
 			'class'       => 'report-filter-input',
-		]);
-		$excludeDiv = HTMLUtils::element(
+		];
+		$excludeDatalist = '';
+		if ($this->excludeOptions !== []) {
+			$excludeAttrs['list'] = 'report-exclude-datalist';
+			$excludeDatalist = HTMLUtils::datalist('report-exclude-datalist', $this->excludeOptions);
+		}
+
+		$excludeField = HTMLUtils::inlineElement('input', $excludeAttrs);
+		$excludeLabel = HTMLUtils::element('label', 'Exclude Filter');
+		$excludeDiv   = HTMLUtils::element(
 			'div',
-			HTMLUtils::element('label', 'Exclude Filter') . $excludeField,
-			['class' => 'report-filter-field']
+			$excludeLabel . $excludeField . $excludeDatalist,
+			['class' => 'report-filter-field exclude-filter-field']
 		);
 
 		return HTMLUtils::element('div', $includeDiv . $excludeDiv, [
@@ -132,13 +154,13 @@ readonly class ReportForm implements \Stringable
 	{
 		$csvBtn = HTMLUtils::element('button', 'Download CSV', [
 			'type'        => 'button',
-			'class'       => 'dash-button accent report-download-btn',
+			'class'       => 'dash-button button btn accent report-download-btn report-download-csv',
 			'data-format' => 'csv',
 		]);
 
 		$jsonBtn = HTMLUtils::element('button', 'Download JSON', [
 			'type'        => 'button',
-			'class'       => 'dash-button report-download-btn',
+			'class'       => 'dash-button button btn report-download-btn report-download-json',
 			'data-format' => 'json',
 		]);
 

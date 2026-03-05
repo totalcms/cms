@@ -55,7 +55,7 @@
 
 .report-field-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	grid-template-columns : repeat(auto-fill, minmax(var(--cms-report-checkbox-min-size, 150px), 1fr));
 	gap: 0.25rem 1rem;
 
 	label {
@@ -64,6 +64,10 @@
 		gap: 0.375rem;
 		cursor: pointer;
 		padding: 0.25rem 0;
+	}
+
+	input[type=checkbox] {
+		margin-bottom : 0;
 	}
 }
 
