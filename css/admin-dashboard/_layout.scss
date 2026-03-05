@@ -218,6 +218,7 @@ body {
 			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
 			&.api-keys { --collection-icon : var(--icon-apikey) }
 			&.license-manager { --collection-icon : var(--icon-license) }
+			&.collection-report { --collection-icon : var(--icon-table) }
 			&.jobqueue { --collection-icon : var(--icon-terminal) }
 			&.orphan-scanner { --collection-icon : var(--icon-search) }
 			&.access-groups { --collection-icon : var(--icon-group) }

@@ -72,6 +72,24 @@ readonly class TotalFormFactory
 		$this->api = $this->config->api;
 	}
 
+	/**
+	 * Create a report export form.
+	 *
+	 * @param array<string,mixed> $options Options: include, exclude
+	 */
+	public function report(string $collection = '', array $options = []): string
+	{
+		$form = new ReportForm(
+			api              : $this->api,
+			collectionLister : $this->collectionLister,
+			collection       : $collection,
+			include          : (string) ($options['include'] ?? ''),
+			exclude          : (string) ($options['exclude'] ?? ''),
+		);
+
+		return $form->build();
+	}
+
 	/** @param array<string,mixed> $options */
 	public function simple(string $route, string $content = '', array $options = []): string
 	{
