@@ -13,8 +13,14 @@
 $docsDir    = __DIR__ . '/../resources/docs';
 $outputFile = $docsDir . '/search-index.json';
 
-// Get all markdown files (including subdirectories)
-$files = glob($docsDir . '/{,*/}*.md', GLOB_BRACE);
+// Get all markdown files (including nested subdirectories)
+$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docsDir));
+$files    = [];
+foreach ($iterator as $file) {
+	if ($file->isFile() && $file->getExtension() === 'md') {
+		$files[] = $file->getPathname();
+	}
+}
 
 $index = [];
 
