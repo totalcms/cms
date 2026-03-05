@@ -32,6 +32,8 @@ readonly class ReportForm implements \Stringable
 		private string $exclude = '',
 		private array $includeOptions = [],
 		private array $excludeOptions = [],
+		private bool $includeSelect = false,
+		private bool $excludeSelect = false,
 	) {
 		$this->translator = $translator;
 	}
@@ -93,52 +95,94 @@ readonly class ReportForm implements \Stringable
 
 	private function buildFilterFields(): string
 	{
-		$includeAttrs = [
-			'type'        => 'text',
-			'name'        => 'include',
-			'value'       => $this->include,
-			'placeholder' => $this->t('report.include_placeholder'),
-			'class'       => 'report-filter-input',
-		];
-
-		$includeDatalist = '';
-		if ($this->includeOptions !== []) {
-			$includeAttrs['list'] = 'report-include-datalist';
-			$includeDatalist = HTMLUtils::datalist('report-include-datalist', $this->includeOptions);
-		}
-
-		$includeField = HTMLUtils::inlineElement('input', $includeAttrs);
-		$includeLabel = HTMLUtils::element('label', $this->t('report.include_label'));
-		$includeDiv   = HTMLUtils::element(
-			'div',
-			$includeLabel . $includeField . $includeDatalist,
-			['class' => 'report-filter-field include-filter-field']
+		$includeDiv = $this->buildFilterField(
+			'include',
+			$this->t('report.include_label'),
+			$this->include,
+			$this->t('report.include_placeholder'),
+			$this->includeOptions,
+			$this->includeSelect,
 		);
 
-		$excludeAttrs = [
-			'type'        => 'text',
-			'name'        => 'exclude',
-			'value'       => $this->exclude,
-			'placeholder' => $this->t('report.exclude_placeholder'),
-			'class'       => 'report-filter-input',
-		];
-		$excludeDatalist = '';
-		if ($this->excludeOptions !== []) {
-			$excludeAttrs['list'] = 'report-exclude-datalist';
-			$excludeDatalist = HTMLUtils::datalist('report-exclude-datalist', $this->excludeOptions);
-		}
-
-		$excludeField = HTMLUtils::inlineElement('input', $excludeAttrs);
-		$excludeLabel = HTMLUtils::element('label', $this->t('report.exclude_label'));
-		$excludeDiv   = HTMLUtils::element(
-			'div',
-			$excludeLabel . $excludeField . $excludeDatalist,
-			['class' => 'report-filter-field exclude-filter-field']
+		$excludeDiv = $this->buildFilterField(
+			'exclude',
+			$this->t('report.exclude_label'),
+			$this->exclude,
+			$this->t('report.exclude_placeholder'),
+			$this->excludeOptions,
+			$this->excludeSelect,
 		);
 
 		return HTMLUtils::element('div', $includeDiv . $excludeDiv, [
 			'class' => 'report-filters',
 		]);
+	}
+
+	/**
+	 * Build a single filter field as either a select or text input with optional datalist.
+	 *
+	 * @param array<string|array{value: string, label: string}> $options
+	 */
+	private function buildFilterField(
+		string $name,
+		string $label,
+		string $value,
+		string $placeholder,
+		array $options,
+		bool $useSelect,
+	): string {
+		if ($useSelect && $options !== []) {
+			$field = $this->buildSelectFilter($name, $value, $placeholder, $options);
+		} else {
+			$field = $this->buildInputFilter($name, $value, $placeholder, $options);
+		}
+
+		$labelHtml = HTMLUtils::element('label', $label);
+
+		return HTMLUtils::element('div', $labelHtml . $field, [
+			'class' => "report-filter-field {$name}-filter-field",
+		]);
+	}
+
+	/**
+	 * Build a select element for a filter field.
+	 *
+	 * @param array<string|array{value: string, label: string}> $options
+	 */
+	private function buildSelectFilter(string $name, string $value, string $placeholder, array $options): string
+	{
+		$optionHtml = HTMLUtils::element('option', $placeholder, ['value' => '']);
+		$optionHtml .= HTMLUtils::options($options, $value);
+
+		return HTMLUtils::element('select', $optionHtml, [
+			'name'  => $name,
+			'class' => 'report-filter-input',
+		]);
+	}
+
+	/**
+	 * Build a text input with optional datalist for a filter field.
+	 *
+	 * @param array<string|array{value: string, label: string}> $options
+	 */
+	private function buildInputFilter(string $name, string $value, string $placeholder, array $options): string
+	{
+		$attrs = [
+			'type'        => 'text',
+			'name'        => $name,
+			'value'       => $value,
+			'placeholder' => $placeholder,
+			'class'       => 'report-filter-input',
+		];
+
+		$datalist = '';
+		if ($options !== []) {
+			$datalistId     = "report-{$name}-datalist";
+			$attrs['list']  = $datalistId;
+			$datalist       = HTMLUtils::datalist($datalistId, $options);
+		}
+
+		return HTMLUtils::inlineElement('input', $attrs) . $datalist;
 	}
 
 	private function buildFieldsContainer(): string
@@ -236,8 +280,8 @@ readonly class ReportForm implements \Stringable
 					const params = new URLSearchParams();
 					params.set('fields', fields.join(','));
 
-					const includeInput = container.querySelector('input[name="include"]');
-					const excludeInput = container.querySelector('input[name="exclude"]');
+					const includeInput = container.querySelector('[name="include"]');
+					const excludeInput = container.querySelector('[name="exclude"]');
 					if (includeInput && includeInput.value) params.set('include', includeInput.value);
 					if (excludeInput && excludeInput.value) params.set('exclude', excludeInput.value);
 

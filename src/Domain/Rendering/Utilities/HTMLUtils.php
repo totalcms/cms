@@ -185,24 +185,44 @@ class HTMLUtils
 	}
 
 	/**
+	 * Build option elements from an array.
+	 *
+	 * Each item can be a plain string (used as both value and label)
+	 * or an associative array with 'value' and 'label' keys.
+	 *
+	 * @param array<string|array{value: string, label: string}> $options
+	 */
+	public static function options(array $options, string $selected = ''): string
+	{
+		$html = '';
+		foreach ($options as $option) {
+			if (is_array($option)) {
+				$value = $option['value'];
+				$label = $option['label'];
+			} else {
+				$value = $option;
+				$label = $option;
+			}
+
+			$attrs = ['value' => $value];
+			if ($selected !== '' && $value === $selected) {
+				$attrs['selected'] = 'selected';
+			}
+
+			$html .= self::element('option', htmlspecialchars($label, ENT_QUOTES, 'UTF-8'), $attrs);
+		}
+
+		return $html;
+	}
+
+	/**
 	 * Build a datalist element from an array of options.
 	 *
 	 * @param array<string|array{value: string, label: string}> $options
 	 */
 	public static function datalist(string $id, array $options): string
 	{
-		$optionHtml = '';
-		foreach ($options as $option) {
-			if (is_array($option)) {
-				$optionHtml .= self::element('option', htmlspecialchars($option['label'], ENT_QUOTES, 'UTF-8'), [
-					'value' => $option['value'],
-				]);
-			} else {
-				$optionHtml .= self::inlineElement('option', ['value' => $option]);
-			}
-		}
-
-		return self::element('datalist', $optionHtml, ['id' => $id]);
+		return self::element('datalist', self::options($options), ['id' => $id]);
 	}
 
 	// -------------------------

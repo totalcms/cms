@@ -77,7 +77,7 @@ readonly class TotalFormFactory
 	/**
 	 * Create a report export form.
 	 *
-	 * @param array<string,mixed> $options Options: include, exclude, includeOptions, excludeOptions
+	 * @param array<string,mixed> $options Options: include, exclude, includeOptions, excludeOptions, includeSelect, excludeSelect
 	 */
 	public function report(string $collection = '', array $options = []): string
 	{
@@ -93,6 +93,8 @@ readonly class TotalFormFactory
 			exclude          : (string)($options['exclude'] ?? ''),
 			includeOptions   : is_array($includeOptions) ? $includeOptions : [],
 			excludeOptions   : is_array($excludeOptions) ? $excludeOptions : [],
+			includeSelect    : (bool)($options['includeSelect'] ?? false),
+			excludeSelect    : (bool)($options['excludeSelect'] ?? false),
 		);
 
 		return $form->build();
