@@ -388,6 +388,7 @@ return [
 		$container->get(DataViewLister::class),
 		$container->get(PropertyMetaResolver::class),
 		$container->get(DataViewFilter::class),
+		$container->get(TranslationService::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),

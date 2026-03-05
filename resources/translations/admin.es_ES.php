@@ -45,6 +45,7 @@ return [
 	'btn.copy_clipboard'  => 'Copiar al portapapeles',
 	'btn.refresh'         => 'Actualizar',
 	'btn.try_again'       => 'Intentar de nuevo',
+	'btn.report'          => 'Informe',
 
 	// ── Common Labels ───────────────────────────────────────────────────────
 	'label.filter'        => 'Filtrar',
@@ -1016,4 +1017,23 @@ return [
 	'dashboard.read_docs'              => 'Leer documentación',
 	'dashboard.read_docs_desc'         => 'Aprenda sobre las características de Total CMS, las plantillas Twig y cómo construir sitios potentes impulsados por contenido.',
 	'dashboard.view_docs'              => 'Ver documentación',
+
+	// ── Informe ─────────────────────────────────────────────────────────────
+	'report.title'                     => 'Informe de colección',
+	'report.title_for'                 => 'para {name}',
+	'report.description'               => 'Seleccione una colección para ver su informe. Elija los campos a incluir y descargue como CSV o JSON.',
+	'report.description_with_collection' => 'Elija los campos a incluir en su informe. Descargue como CSV o JSON. O',
+	'report.choose_another'            => 'Elegir otra colección',
+	'report.collection_label'          => 'Colección',
+	'report.collection_placeholder'    => 'Seleccionar una colección...',
+	'report.include_label'             => 'Filtro de inclusión',
+	'report.include_placeholder'       => 'ej. published:true,category:news',
+	'report.exclude_label'             => 'Filtro de exclusión',
+	'report.exclude_placeholder'       => 'ej. draft:true',
+	'report.fields_placeholder'        => 'Seleccione una colección para ver los campos disponibles.',
+	'report.fields_error'              => 'Error al cargar los campos.',
+	'report.download_csv'              => 'Descargar CSV',
+	'report.download_json'             => 'Descargar JSON',
+	'report.alert_select_collection'   => 'Por favor seleccione una colección.',
+	'report.alert_select_field'        => 'Por favor seleccione al menos un campo.',
 ];

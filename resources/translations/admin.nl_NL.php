@@ -45,6 +45,7 @@ return [
 	'btn.copy_clipboard'  => 'Naar klembord kopiëren',
 	'btn.refresh'         => 'Vernieuwen',
 	'btn.try_again'       => 'Opnieuw proberen',
+	'btn.report'          => 'Rapport',
 
 	// ── Common Labels ───────────────────────────────────────────────────────
 	'label.filter'        => 'Filter',
@@ -1016,4 +1017,23 @@ return [
 	'dashboard.read_docs'              => 'Documentatie lezen',
 	'dashboard.read_docs_desc'         => 'Leer meer over de functies van Total CMS, Twig-sjablonen en hoe u krachtige contentgestuurde websites kunt bouwen.',
 	'dashboard.view_docs'              => 'Documentatie bekijken',
+
+	// ── Rapport ─────────────────────────────────────────────────────────────
+	'report.title'                     => 'Collectierapport',
+	'report.title_for'                 => 'voor {name}',
+	'report.description'               => 'Selecteer een collectie om het rapport te bekijken. Kies de gewenste velden en download als CSV of JSON.',
+	'report.description_with_collection' => 'Kies de velden voor uw rapport. Download als CSV of JSON. Of',
+	'report.choose_another'            => 'Andere collectie kiezen',
+	'report.collection_label'          => 'Collectie',
+	'report.collection_placeholder'    => 'Selecteer een collectie...',
+	'report.include_label'             => 'Inclusiefilter',
+	'report.include_placeholder'       => 'bijv. published:true,category:news',
+	'report.exclude_label'             => 'Uitsluitingsfilter',
+	'report.exclude_placeholder'       => 'bijv. draft:true',
+	'report.fields_placeholder'        => 'Selecteer een collectie om beschikbare velden te zien.',
+	'report.fields_error'              => 'Velden konden niet worden geladen.',
+	'report.download_csv'              => 'CSV downloaden',
+	'report.download_json'             => 'JSON downloaden',
+	'report.alert_select_collection'   => 'Selecteer een collectie.',
+	'report.alert_select_field'        => 'Selecteer ten minste één veld.',
 ];

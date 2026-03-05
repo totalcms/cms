@@ -28,6 +28,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
 /**
@@ -68,6 +69,7 @@ readonly class TotalFormFactory
 		private DataViewLister $dataViewLister,
 		private PropertyMetaResolver $metaResolver,
 		private DataViewFilter $dataViewFilter,
+		private TranslationService $translationService,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -85,6 +87,7 @@ readonly class TotalFormFactory
 		$form = new ReportForm(
 			api              : $this->api,
 			collectionLister : $this->collectionLister,
+			translator       : $this->translationService->trans(...),
 			collection       : $collection,
 			include          : (string)($options['include'] ?? ''),
 			exclude          : (string)($options['exclude'] ?? ''),

@@ -45,6 +45,7 @@ return [
 	'btn.copy_clipboard'  => 'Copy to Clipboard',
 	'btn.refresh'         => 'Refresh',
 	'btn.try_again'       => 'Try Again',
+	'btn.report'          => 'Report',
 
 	// ── Common Labels ───────────────────────────────────────────────────────
 	'label.filter'        => 'Filter',
@@ -1016,4 +1017,23 @@ return [
 	'dashboard.read_docs'              => 'Read Documentation',
 	'dashboard.read_docs_desc'         => 'Learn about Total CMS features, Twig templating, and how to build powerful content-driven sites.',
 	'dashboard.view_docs'              => 'View Docs',
+
+	// ── Report ──────────────────────────────────────────────────────────────
+	'report.title'                     => 'Collection Report',
+	'report.title_for'                 => 'for {name}',
+	'report.description'               => 'Please select a collection to view its report. Choose which fields to include in your report. Download as CSV or JSON.',
+	'report.description_with_collection' => 'Choose which fields to include in your report. Download as CSV or JSON. Or',
+	'report.choose_another'            => 'Choose another collection',
+	'report.collection_label'          => 'Collection',
+	'report.collection_placeholder'    => 'Select a collection...',
+	'report.include_label'             => 'Include Filter',
+	'report.include_placeholder'       => 'e.g. published:true,category:news',
+	'report.exclude_label'             => 'Exclude Filter',
+	'report.exclude_placeholder'       => 'e.g. draft:true',
+	'report.fields_placeholder'        => 'Select a collection to see available fields.',
+	'report.fields_error'              => 'Failed to load fields.',
+	'report.download_csv'              => 'Download CSV',
+	'report.download_json'             => 'Download JSON',
+	'report.alert_select_collection'   => 'Please select a collection.',
+	'report.alert_select_field'        => 'Please select at least one field.',
 ];

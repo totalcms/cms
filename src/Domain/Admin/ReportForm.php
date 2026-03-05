@@ -16,18 +16,32 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  */
 readonly class ReportForm implements \Stringable
 {
-	/** @param array<string|array{value: string, label: string}> $includeOptions
+	/** @var \Closure(string, array<string,string>, string): string */
+	private \Closure $translator;
+
+	/** @param \Closure(string, array<string,string>, string): string $translator
+	 *  @param array<string|array{value: string, label: string}> $includeOptions
 	 *  @param array<string|array{value: string, label: string}> $excludeOptions
 	 */
 	public function __construct(
 		private string $api,
 		private CollectionLister $collectionLister,
+		\Closure $translator,
 		private string $collection = '',
 		private string $include = '',
 		private string $exclude = '',
 		private array $includeOptions = [],
 		private array $excludeOptions = [],
 	) {
+		$this->translator = $translator;
+	}
+
+	/**
+	 * Translate a key from the admin domain.
+	 */
+	private function t(string $key): string
+	{
+		return ($this->translator)($key, [], 'admin');
 	}
 
 	public function build(): string
@@ -59,7 +73,7 @@ readonly class ReportForm implements \Stringable
 			$b->name !== '' ? $b->name : $b->id,
 		));
 
-		$options = HTMLUtils::element('option', 'Select a collection...', ['value' => '']);
+		$options = HTMLUtils::element('option', $this->t('report.collection_placeholder'), ['value' => '']);
 		foreach ($collections as $collection) {
 			$label    = $collection->name !== '' ? $collection->name : $collection->id;
 			$options .= HTMLUtils::element('option', htmlspecialchars($label, ENT_QUOTES, 'UTF-8'), [
@@ -72,7 +86,7 @@ readonly class ReportForm implements \Stringable
 			'class' => 'report-collection-input',
 		]);
 
-		return HTMLUtils::element('div', HTMLUtils::element('label', 'Collection') . $select, [
+		return HTMLUtils::element('div', HTMLUtils::element('label', $this->t('report.collection_label')) . $select, [
 			'class' => 'report-collection-selector',
 		]);
 	}
@@ -83,7 +97,7 @@ readonly class ReportForm implements \Stringable
 			'type'        => 'text',
 			'name'        => 'include',
 			'value'       => $this->include,
-			'placeholder' => 'e.g. published:true,category:news',
+			'placeholder' => $this->t('report.include_placeholder'),
 			'class'       => 'report-filter-input',
 		];
 
@@ -94,7 +108,7 @@ readonly class ReportForm implements \Stringable
 		}
 
 		$includeField = HTMLUtils::inlineElement('input', $includeAttrs);
-		$includeLabel = HTMLUtils::element('label', 'Include Filter');
+		$includeLabel = HTMLUtils::element('label', $this->t('report.include_label'));
 		$includeDiv   = HTMLUtils::element(
 			'div',
 			$includeLabel . $includeField . $includeDatalist,
@@ -105,7 +119,7 @@ readonly class ReportForm implements \Stringable
 			'type'        => 'text',
 			'name'        => 'exclude',
 			'value'       => $this->exclude,
-			'placeholder' => 'e.g. draft:true',
+			'placeholder' => $this->t('report.exclude_placeholder'),
 			'class'       => 'report-filter-input',
 		];
 		$excludeDatalist = '';
@@ -115,7 +129,7 @@ readonly class ReportForm implements \Stringable
 		}
 
 		$excludeField = HTMLUtils::inlineElement('input', $excludeAttrs);
-		$excludeLabel = HTMLUtils::element('label', 'Exclude Filter');
+		$excludeLabel = HTMLUtils::element('label', $this->t('report.exclude_label'));
 		$excludeDiv   = HTMLUtils::element(
 			'div',
 			$excludeLabel . $excludeField . $excludeDatalist,
@@ -141,7 +155,7 @@ readonly class ReportForm implements \Stringable
 				'hx-swap'     => 'innerHTML',
 			]);
 		} else {
-			$content = HTMLUtils::element('div', '<p class="report-fields-placeholder">Select a collection to see available fields.</p>', [
+			$content = HTMLUtils::element('div', '<p class="report-fields-placeholder">' . $this->t('report.fields_placeholder') . '</p>', [
 				'id'    => 'report-fields',
 				'class' => 'report-fields',
 			]);
@@ -152,13 +166,13 @@ readonly class ReportForm implements \Stringable
 
 	private function buildActions(): string
 	{
-		$csvBtn = HTMLUtils::element('button', 'Download CSV', [
+		$csvBtn = HTMLUtils::element('button', $this->t('report.download_csv'), [
 			'type'        => 'button',
 			'class'       => 'dash-button button btn accent report-download-btn report-download-csv',
 			'data-format' => 'csv',
 		]);
 
-		$jsonBtn = HTMLUtils::element('button', 'Download JSON', [
+		$jsonBtn = HTMLUtils::element('button', $this->t('report.download_json'), [
 			'type'        => 'button',
 			'class'       => 'dash-button button btn report-download-btn report-download-json',
 			'data-format' => 'json',
@@ -171,7 +185,11 @@ readonly class ReportForm implements \Stringable
 
 	private function buildScript(): string
 	{
-		$api = htmlspecialchars($this->api, ENT_QUOTES, 'UTF-8');
+		$api                  = htmlspecialchars($this->api, ENT_QUOTES, 'UTF-8');
+		$alertSelectCollection = htmlspecialchars($this->t('report.alert_select_collection'), ENT_QUOTES, 'UTF-8');
+		$alertSelectField      = htmlspecialchars($this->t('report.alert_select_field'), ENT_QUOTES, 'UTF-8');
+		$fieldsPlaceholder     = htmlspecialchars($this->t('report.fields_placeholder'), ENT_QUOTES, 'UTF-8');
+		$fieldsError           = htmlspecialchars($this->t('report.fields_error'), ENT_QUOTES, 'UTF-8');
 
 		return <<<SCRIPT
 		<script>
@@ -188,13 +206,13 @@ readonly class ReportForm implements \Stringable
 				collectionInput.addEventListener('change', function() {
 					const collection = this.value;
 					if (!collection) {
-						fieldsContainer.innerHTML = '<p class="report-fields-placeholder">Select a collection to see available fields.</p>';
+						fieldsContainer.innerHTML = '<p class="report-fields-placeholder">{$fieldsPlaceholder}</p>';
 						return;
 					}
 					fetch(api + '/report/collections/' + encodeURIComponent(collection) + '/fields')
 						.then(r => r.text())
 						.then(html => { fieldsContainer.innerHTML = html; })
-						.catch(() => { fieldsContainer.innerHTML = '<p class="error">Failed to load fields.</p>'; });
+						.catch(() => { fieldsContainer.innerHTML = '<p class="error">{$fieldsError}</p>'; });
 				});
 			}
 
@@ -204,13 +222,13 @@ readonly class ReportForm implements \Stringable
 					const format = this.dataset.format;
 					const collection = collectionInput ? collectionInput.value : '';
 					if (!collection) {
-						alert('Please select a collection.');
+						alert('{$alertSelectCollection}');
 						return;
 					}
 
 					const checked = fieldsContainer.querySelectorAll('input[name="fields[]"]:checked');
 					if (checked.length === 0) {
-						alert('Please select at least one field.');
+						alert('{$alertSelectField}');
 						return;
 					}
 

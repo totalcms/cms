@@ -1,13 +1,13 @@
 {% set collection = getData.collection ? cms.collection.get(getData.collection) : null %}
 
-<h1>Collection Report{% if collection %} for {{ collection.name }}{% endif %}</h1>
+<h1>{{ t('report.title') }}{% if collection %} {{ t('report.title_for', {'{name}': collection.name}) }}{% endif %}</h1>
 
 <section class="dash-content-section">
 	{% if collection %}
-	<p>Choose which fields to include in your report. Download as CSV or JSON. Or
-	<a href="utils/collection-report">Choose another collection</a></p>
+	<p>{{ t('report.description_with_collection') }}
+	<a href="utils/collection-report">{{ t('report.choose_another') }}</a></p>
 	{% else %}
-	<p>Please select a collection to view its report. Choose which fields to include in your report. Download as CSV or JSON.</p>
+	<p>{{ t('report.description') }}</p>
 	{% endif %}
 
 	<section style="max-width:800px; margin-top:2rem;">
