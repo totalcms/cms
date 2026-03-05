@@ -90,6 +90,7 @@ use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
+use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -1044,14 +1045,19 @@ return [
 		$container->get(DeckCompatibilityChecker::class),
 	),
 
-	AutogenIdService::class => fn (ContainerInterface $container): AutogenIdService => new AutogenIdService(
+	AutogenService::class => fn (ContainerInterface $container): AutogenService => new AutogenService(
 		$container->get(CollectionFetcher::class),
+	),
+
+	AutogenIdService::class => fn (ContainerInterface $container): AutogenIdService => new AutogenIdService(
+		$container->get(AutogenService::class),
 	),
 
 	ObjectFactory::class => fn (ContainerInterface $container): ObjectFactory => new ObjectFactory(
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyFactory::class),
 		$container->get(AutogenIdService::class),
+		$container->get(AutogenService::class),
 	),
 
 	// Deck Services

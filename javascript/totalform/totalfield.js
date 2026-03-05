@@ -1,4 +1,5 @@
 import TotalDispatcher from "./dispatcher";
+import Autogen from "./autogen";
 
 //-----------------------------------------------
 // Total CMS Generic Field
@@ -48,6 +49,7 @@ export default class TotalField {
 		this.dispatcher = new TotalDispatcher(this.container);
 
 		this.changeListener();
+		this.initAutogen();
 		if (this.settings.sortOptions) {
 			this.sortOptions();
 		} else {
@@ -65,6 +67,28 @@ export default class TotalField {
 		this.container.addEventListener("change", () => this.changed());
 		// the input event happens once since the point is to mark the form as unsaved ASAP
 		this.input.addEventListener("input", () => this.changed());
+	}
+
+	/**
+	 * Initialize generic autogen support for non-ID fields.
+	 * ID fields handle their own autogen via Identifier class.
+	 */
+	initAutogen() {
+		if (!this.settings.autogen) return;
+		if (this.type === 'id' || this.type === 'slug') return; // Handled by Identifier
+
+		this.autogen = new Autogen(this);
+
+		// Set initial value if field is empty
+		if (this.getValue() === "") {
+			this.input.value = this.autogen.generate();
+		}
+
+		// Listen for changes to referenced fields
+		this.autogen.attachListeners(() => {
+			this.input.value = this.autogen.generate();
+			this.changed();
+		});
 	}
 
 	cleanupDuplicateOptions() {

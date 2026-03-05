@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Object\Service;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
+use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
@@ -19,17 +20,20 @@ final class ObjectFactoryTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyFactory;
 	private \PHPUnit\Framework\MockObject\MockObject $autogenIdService;
+	private \PHPUnit\Framework\MockObject\MockObject $autogenService;
 
 	protected function setUp(): void
 	{
 		$this->schemaFetcher    = $this->createMock(SchemaFetcher::class);
 		$this->propertyFactory  = $this->createMock(PropertyFactory::class);
 		$this->autogenIdService = $this->createMock(AutogenIdService::class);
+		$this->autogenService   = $this->createMock(AutogenService::class);
 
 		$this->factory = new ObjectFactory(
 			$this->schemaFetcher,
 			$this->propertyFactory,
-			$this->autogenIdService
+			$this->autogenIdService,
+			$this->autogenService
 		);
 	}
 

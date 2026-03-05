@@ -5,11 +5,12 @@ description: "Auto-generate object IDs in Total CMS from field values using auto
 
 # ID
 
-For the ID field, you can use the following setting to autogenerate the id from one or
-multiple fields. You can use standard Javascript string interpolation to inject field
-values. You simply need to use the property name in the autogen value. There are also
-a few special variables that you can use below.
+The autogen setting can be used on the ID field to automatically generate IDs from
+other field values. When used on the ID field, the generated value is automatically
+slugified (lowercased, spaces replaced with hyphens, special characters removed).
 
+For using autogen on non-ID fields (text, textarea, etc.), see the
+[All Field Settings](all-fields.md) documentation.
 
 ```json
 {

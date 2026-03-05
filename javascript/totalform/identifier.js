@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+import Autogen from './autogen';
 const slugify = require('slugify')
 
 //-----------------------------------------------
@@ -16,6 +17,10 @@ export default class Identifier extends TotalField {
 		super(container, settings);
 
 		this.valid = false;
+
+		if (this.settings.autogen) {
+			this.autogen = new Autogen(this);
+		}
 
 		// Check if we're editing an existing item (form has an ID)
 		// For deck items, only lock if the item was loaded with existing data
@@ -54,25 +59,11 @@ export default class Identifier extends TotalField {
 	// Override TotalField.changeListener
 	changeListener() {
 		if (this.settings.autogen && !this.isLocked()) {
-			// autogen example: ${title}-${timestamp}
-			const autogenNames = (this.settings.autogen.match(/\${(.*?)}/g) || []).map(v => v.slice(2, -1));
-			const reservedNames = ["now", "timestamp", "uuid", "uid", "id", "oid", "currentyear", "currentyear2", "currentmonth", "currentday"];
-			autogenNames.forEach(name => {
-				// Skip reserved names and oid patterns (oid, oid-00000, etc.)
-				if (reservedNames.includes(name) || name.startsWith('oid-')) return;
-
-				// Determine the scope to search for fields
-				const searchScope = this.isInDeck ? this.deckItem : this.form.form;
-
-				// Only listen to the fields that are used in the autogen string
-				const field = searchScope.querySelector(`[name="${name}"]`);
-				if (!field) return; // Skip if the field does not exist
-
-				field.addEventListener("change", e => {
-					if (this.isLocked()) return;
-					this.setValue(this.autogenId());
-					this.validateIdExists();
-				});
+			this.autogen = this.autogen || new Autogen(this);
+			this.autogen.attachListeners(() => {
+				if (this.isLocked()) return;
+				this.setValue(this.autogenId());
+				this.validateIdExists();
 			});
 		}
         // Check ID changes directly
@@ -81,58 +72,8 @@ export default class Identifier extends TotalField {
 	}
 
 	autogenId() {
-		let data = {};
-
-		if (this.isInDeck) {
-			// Get field data from within the deck-item scope
-			const fields = this.deckItem.querySelectorAll('input, textarea, select');
-			fields.forEach(field => data[field.name] = field.value);
-		} else {
-			// Get the field data from the form (original behavior)
-			data = this.form.generateData();
-			// Filter to only string and number values (convert numbers to strings)
-			data = Object.entries(data).reduce((acc, [key, value]) => {
-				if (typeof value === 'string') {
-					acc[key] = value;
-				} else if (typeof value === 'number') {
-					acc[key] = String(value);
-				}
-				return acc;
-			}, {});
-		}
-
-		// Add some default data
-		const now = new Date();
-		data.now       = Date.now();
-		data.timestamp = now.toISOString().slice(0, -5).replace(/-|:/g, '');
-		data.uuid      = this.generateUuid();
-		data.uid       = Math.random().toString(36).substring(2,9);
-		data.oid       = this.getCollectionCount();
-
-		// Date components for autogen
-		data.currentyear  = now.getFullYear().toString();
-		data.currentyear2 = now.getFullYear().toString().slice(-2);
-		data.currentmonth = String(now.getMonth() + 1).padStart(2, '0'); // 01-12
-		data.currentday   = String(now.getDate()).padStart(2, '0');       // 01-31
-
-		// Examples: ${title}-${timestamp}, ${title}-${now}, ${title}-${uuid}, ${title}-${oid}, ${title}-${oid-00000}
-		// Date examples: ${currentyear}-${oid-00000}, ${currentyear2}-${currentmonth}-${currentday}
-
-		// Magic happens here - enhanced to handle oid zero-padding
-		const autogen = this.settings.autogen.replace(/\${(.*?)}/g, (match, key) => {
-			// Check if this is an oid with zero-padding format: oid-00000
-			if (key.startsWith('oid-') && /^oid-0+$/.test(key)) {
-				const zeros = key.substring(4); // Get the zero pattern (e.g., "00000")
-				const paddingLength = zeros.length;
-				const oidValue = this.getCollectionCount();
-				return oidValue.toString().padStart(paddingLength, '0');
-			}
-
-			// Standard replacement for all other placeholders
-			return data[key] || "";
-		});
-
-		const slugified = this.slugify(autogen);
+		const raw = this.autogen.generate();
+		const slugified = this.slugify(raw);
 
 		// For deck context, replace hyphens with underscores for Twig dot notation compatibility
 		return this.isInDeck ? slugified.replace(/-/g, '_') : slugified;
@@ -275,4 +216,3 @@ export default class Identifier extends TotalField {
 		});
     }
 }
-

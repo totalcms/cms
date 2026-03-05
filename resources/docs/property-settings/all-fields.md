@@ -7,6 +7,84 @@ description: "Universal settings for all Total CMS field types including hidden 
 
 These settings can be applied to **any field type**. They control universal behaviors like hiding fields and conditional visibility.
 
+## Autogen
+
+The `autogen` setting automatically generates a field's value from other fields using template variables. This works on any text-based field type (text, textarea, hidden, email, url, etc.).
+
+When used on an **ID field**, the result is automatically slugified (lowercased, hyphens for spaces). When used on any other field, the result is kept as-is with no transformation.
+
+```json
+{
+	"autogen": "${firstname} ${lastname}"
+}
+```
+
+The value updates automatically whenever a referenced field changes.
+
+### Template Variables
+
+Use `${fieldname}` to reference any other property in the same form. There are also special built-in variables:
+
+* **now** - Current timestamp in milliseconds
+* **timestamp** - Current date/time in compact ISO format (e.g., 20230815T143056)
+* **uuid** - UUID v4 (e.g., 550e8400-e29b-41d4-a716-446655440000)
+* **uid** - Short random 7-character alphanumeric string
+* **oid** - Object ID counter (increments per object in collection)
+* **oid-00000** - Zero-padded Object ID
+* **currentyear** - Full 4-digit year
+* **currentyear2** - 2-digit year
+* **currentmonth** - Zero-padded month (01-12)
+* **currentday** - Zero-padded day (01-31)
+
+### Examples
+
+**Full name from first and last:**
+```json
+{
+	"fullname": {
+		"type": "string",
+		"field": "text",
+		"label": "Full Name",
+		"settings": {
+			"autogen": "${firstname} ${lastname}"
+		}
+	}
+}
+```
+Generates: `John Smith` (not slugified since it's a text field)
+
+**Display title with date:**
+```json
+{
+	"displayTitle": {
+		"type": "string",
+		"field": "text",
+		"label": "Display Title",
+		"settings": {
+			"autogen": "${title} (${currentyear})"
+		}
+	}
+}
+```
+Generates: `My Article (2025)`
+
+**Hidden computed field:**
+```json
+{
+	"slug": {
+		"type": "string",
+		"field": "text",
+		"label": "URL Slug",
+		"settings": {
+			"autogen": "${title}",
+			"hide": true
+		}
+	}
+}
+```
+
+**For ID-specific autogen features** (slugification, uniqueness checking, OID padding), see the [ID Settings](id.md) documentation.
+
 ## Hide Field
 
 The `hide` setting allows you to completely hide a field from the admin form while still storing its data. This is useful for fields that should be managed programmatically or set via defaults rather than through the admin interface.
