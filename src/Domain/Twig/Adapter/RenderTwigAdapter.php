@@ -735,6 +735,20 @@ class RenderTwigAdapter
 			$images = $this->data->raw($options['collection'], $id, $options['property']);
 		}
 
+		// Filter images using include/exclude
+		if (isset($options['include']) || isset($options['exclude'])) {
+			$objectFilter = new \TotalCMS\Domain\Query\Service\ObjectFilter();
+			$images = $objectFilter->filterObjects($images, $options);
+			unset($options['include'], $options['exclude']);
+		}
+
+		// Search images using full-text search
+		if (isset($options['search']) && is_string($options['search']) && $options['search'] !== '') {
+			$objectSearcher = new \TotalCMS\Domain\Query\Service\ObjectSearcher();
+			$images = $objectSearcher->search($images, $options['search']);
+			unset($options['search']);
+		}
+
 		// Sort images if sort option is provided
 		if (isset($options['sort']) && $options['sort'] !== '') {
 			$images = $this->sortGalleryImages($images, $options['sort']);

@@ -116,6 +116,30 @@ Generate a hidden template element with gallery data for programmatic lightbox i
 |--------|------|---------|-------------|
 | `trigger` | string | `''` | CSS selector for trigger elements |
 | `galleryId` | string | auto | Custom gallery ID (default: `{collection}-{id}`) |
+| `sort` | string | `''` | Sort images by field (e.g., `name`, `-name` for descending) |
+| `include` | string | `''` | Include filter — only images matching ALL criteria (e.g., `tags:landscape,featured:true`) |
+| `exclude` | string | `''` | Exclude filter — remove images matching ANY criteria (e.g., `tags:archived`) |
+| `search` | string | `''` | Full-text search across all image fields |
+
+```twig
+{# Filter to only landscape-tagged images #}
+{{ cms.render.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
+    include: 'tags:landscape'
+}) }}
+
+{# Exclude archived images, sorted by name #}
+{{ cms.render.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
+    exclude: 'tags:archived',
+    sort: 'name'
+}) }}
+
+{# Search for images matching "sunset" #}
+{{ cms.render.galleryLauncher('vacation', {w: 300}, {w: 1920}, {
+    search: 'sunset'
+}) }}
+```
+
+Filtering uses the same syntax as [Index Filtering](docs/api/index-filter), including [wildcard patterns](#wildcard-patterns) for flexible string matching.
 
 For complete launcher usage with trigger methods and opening at specific images, see [totalcms.md](docs/twig/totalcms).
 
