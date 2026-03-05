@@ -28,7 +28,7 @@ final class RenderTwigAdapterTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->htmxRenderer        = $this->createMock(HtmxRenderer::class);
+		$this->htmxRenderer         = $this->createMock(HtmxRenderer::class);
 		$this->indexQueryService    = $this->createMock(IndexQueryService::class);
 		$this->dataViewQueryService = $this->createMock(DataViewQueryService::class);
 
@@ -50,7 +50,7 @@ final class RenderTwigAdapterTest extends TestCase
 			$this->createMock(GridRenderer::class),
 			$loggerFactory,
 			indexQueryService: $this->indexQueryService,
-			dataViewQueryServiceFactory: fn () => $this->dataViewQueryService,
+			dataViewQueryServiceFactory: fn (): MockObject => $this->dataViewQueryService,
 		);
 	}
 
@@ -348,8 +348,8 @@ final class RenderTwigAdapterTest extends TestCase
 			$this->createMock(GridRenderer::class),
 			$loggerFactory,
 			indexQueryService: $indexQueryService,
-			dataViewQueryServiceFactory: fn () => $dataViewQueryService,
-			twigEngineFactory: fn () => $twigEngine,
+			dataViewQueryServiceFactory: fn (): MockObject&\TotalCMS\Domain\DataView\Service\DataViewQueryService => $dataViewQueryService,
+			twigEngineFactory: fn (): MockObject&\TotalCMS\Domain\Twig\Service\TwigEngine => $twigEngine,
 		);
 	}
 
@@ -495,7 +495,7 @@ final class RenderTwigAdapterTest extends TestCase
 						&& $params['limit'] === '10'
 						&& $params['mode'] === 'append'
 						&& $params['target'] === '#blog-feed'
-						&& str_starts_with($params['buttonId'], 'cms-lmb-')),
+						&& str_starts_with((string)$params['buttonId'], 'cms-lmb-')),
 				'Load More',
 				'',
 				false,
@@ -523,6 +523,7 @@ final class RenderTwigAdapterTest extends TestCase
 				} else {
 					$capturedParams2 = $params;
 				}
+
 				return '<button>Load More</button>';
 			});
 

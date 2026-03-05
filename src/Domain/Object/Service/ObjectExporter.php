@@ -5,7 +5,6 @@ namespace TotalCMS\Domain\Object\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -120,8 +119,8 @@ readonly class ObjectExporter
 		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		$properties = array_keys($schema->properties);
 		$objects    = [$properties];
-		$objectIds = $this->storage->fetchObjectIds($collection);
-		$errors    = [];
+		$objectIds  = $this->storage->fetchObjectIds($collection);
+		$errors     = [];
 
 		foreach ($objectIds as $id) {
 			try {
@@ -164,8 +163,8 @@ readonly class ObjectExporter
 		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		$properties = array_keys($schema->properties);
 		$objects    = [$properties];
-		$objectIds = $this->fetchFilteredObjectIds($collection, $options);
-		$errors    = [];
+		$objectIds  = $this->fetchFilteredObjectIds($collection, $options);
+		$errors     = [];
 
 		foreach ($objectIds as $id) {
 			try {

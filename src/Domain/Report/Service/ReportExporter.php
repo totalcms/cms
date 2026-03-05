@@ -38,9 +38,9 @@ readonly class ReportExporter
 	 *
 	 * @param array<string,mixed> $params
 	 *
-	 * @return array{fields: array<string>, options: array<string,string>}
-	 *
 	 * @throws \InvalidArgumentException if fields param is missing or empty
+	 *
+	 * @return array{fields: array<string>, options: array<string,string>}
 	 */
 	public function parseParams(array $params): array
 	{
@@ -51,9 +51,9 @@ readonly class ReportExporter
 
 		$fieldsParam = $params['fields'] ?? '';
 		if (is_array($fieldsParam)) {
-			$fields = array_filter(array_map('trim', $fieldsParam));
+			$fields = array_filter(array_map(trim(...), $fieldsParam));
 		} elseif (is_string($fieldsParam) && $fieldsParam !== '') {
-			$fields = array_filter(array_map('trim', explode(',', $fieldsParam)));
+			$fields = array_filter(array_map(trim(...), explode(',', $fieldsParam)));
 		} else {
 			throw new \InvalidArgumentException('The "fields" parameter is required. Provide a comma-separated list of field names.');
 		}
@@ -140,8 +140,8 @@ readonly class ReportExporter
 
 		foreach ($objectIds as $id) {
 			try {
-				$object = $this->objectFetcher->fetchObject($collection, $id)->toArray();
-				$filtered = $this->filterObjectFields($object, $parsed);
+				$object    = $this->objectFetcher->fetchObject($collection, $id)->toArray();
+				$filtered  = $this->filterObjectFields($object, $parsed);
 				$objects[] = $filtered;
 			} catch (\Throwable $e) {
 				$this->logError('JSON', $collection, $id, $e);
@@ -209,7 +209,7 @@ readonly class ReportExporter
 		foreach ($fields as $field) {
 			if (str_contains($field, '.')) {
 				[$deckName, $subField] = explode('.', $field, 2);
-				$decks[$deckName][] = $subField;
+				$decks[$deckName][]    = $subField;
 			} else {
 				$scalars[] = $field;
 			}
@@ -370,14 +370,14 @@ readonly class ReportExporter
 	private function formatCsvValue(mixed $value): string
 	{
 		if (is_array($value)) {
-			return (string) json_encode($value, JSON_UNESCAPED_SLASHES);
+			return (string)json_encode($value, JSON_UNESCAPED_SLASHES);
 		}
 
 		if (is_bool($value)) {
 			return $value ? 'true' : 'false';
 		}
 
-		$str = (string) $value;
+		$str = (string)$value;
 
 		return str_replace(["\r\n", "\r", "\n"], ['\\n', '\\n', '\\n'], $str);
 	}
@@ -400,7 +400,7 @@ readonly class ReportExporter
 		$filteredObjects = $this->indexFilter->fetchFilteredIndex($collection, $options);
 
 		return array_map(
-			fn (array $object): string => (string) ($object['id'] ?? ''),
+			fn (array $object): string => (string)($object['id'] ?? ''),
 			$filteredObjects
 		);
 	}

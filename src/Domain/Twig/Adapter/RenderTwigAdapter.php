@@ -34,7 +34,7 @@ use Twig\Loader\ArrayLoader;
  */
 class RenderTwigAdapter
 {
-	private ?TwigEnvironment $captionTwig = null;
+	private ?TwigEnvironment $captionTwig                       = null;
 	private ?DataViewQueryService $resolvedDataViewQueryService = null;
 	private readonly LoggerInterface $logger;
 
@@ -60,7 +60,7 @@ class RenderTwigAdapter
 
 	private function getDataViewQueryService(): ?DataViewQueryService
 	{
-		if ($this->resolvedDataViewQueryService === null && $this->dataViewQueryServiceFactory !== null) {
+		if (!$this->resolvedDataViewQueryService instanceof DataViewQueryService && $this->dataViewQueryServiceFactory instanceof \Closure) {
 			$this->resolvedDataViewQueryService = ($this->dataViewQueryServiceFactory)();
 		}
 
@@ -98,7 +98,7 @@ class RenderTwigAdapter
 		$load  = !empty($options['load']);
 
 		$empty = (string)($options['empty'] ?? '');
-		if ($empty !== '' && $this->indexQueryService !== null) {
+		if ($empty !== '' && $this->indexQueryService instanceof IndexQueryService) {
 			$params = $this->buildCountParams($options);
 			$result = $this->indexQueryService->query($collection, $params);
 			if ($result->total === 0) {
@@ -106,7 +106,7 @@ class RenderTwigAdapter
 			}
 		}
 
-		if ($load && $this->twigEngineFactory !== null && $this->indexQueryService !== null) {
+		if ($load && $this->twigEngineFactory instanceof \Closure && $this->indexQueryService instanceof IndexQueryService) {
 			return $this->loadItems($collection, $template, $limit, $options);
 		}
 
@@ -142,7 +142,7 @@ class RenderTwigAdapter
 		$load  = !empty($options['load']);
 
 		$empty = (string)($options['empty'] ?? '');
-		if ($empty !== '' && $this->getDataViewQueryService() !== null) {
+		if ($empty !== '' && $this->getDataViewQueryService() instanceof DataViewQueryService) {
 			$params = $this->buildCountParams($options);
 			$result = $this->getDataViewQueryService()->query($viewId, $params);
 			if ($result->total === 0) {
@@ -150,7 +150,7 @@ class RenderTwigAdapter
 			}
 		}
 
-		if ($load && $this->twigEngineFactory !== null && $this->getDataViewQueryService() !== null) {
+		if ($load && $this->twigEngineFactory instanceof \Closure && $this->getDataViewQueryService() instanceof DataViewQueryService) {
 			return $this->loadDataViewItems($viewId, $template, $limit, $options);
 		}
 
@@ -339,11 +339,12 @@ class RenderTwigAdapter
 	 * Build query params for a load query (page 1).
 	 *
 	 * @param array<string,mixed> $options
+	 *
 	 * @return array<string,string>
 	 */
 	private function buildLoadParams(array $options, int $limit): array
 	{
-		$params = ['limit' => (string)$limit, 'offset' => '0'];
+		$params       = ['limit' => (string)$limit, 'offset' => '0'];
 		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
 		foreach ($optionalKeys as $key) {
 			if (isset($options[$key]) && (string)$options[$key] !== '') {
@@ -407,11 +408,12 @@ class RenderTwigAdapter
 	 * Build minimal query params for an empty-check count query.
 	 *
 	 * @param array<string,mixed> $options
+	 *
 	 * @return array<string,string>
 	 */
 	private function buildCountParams(array $options): array
 	{
-		$params = ['limit' => '1', 'offset' => '0'];
+		$params       = ['limit' => '1', 'offset' => '0'];
 		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
 		foreach ($optionalKeys as $key) {
 			if (isset($options[$key]) && (string)$options[$key] !== '') {

@@ -156,18 +156,18 @@ readonly class ReportFieldResolver
 	private function resolveFieldType(array $definition): string
 	{
 		if (isset($definition['field'])) {
-			return (string) $definition['field'];
+			return (string)$definition['field'];
 		}
 
 		if (isset($definition['type'])) {
-			return (string) $definition['type'];
+			return (string)$definition['type'];
 		}
 
 		if (isset($definition['$ref'])) {
-			$ref = (string) $definition['$ref'];
+			$ref  = (string)$definition['$ref'];
 			$type = array_search($ref, SchemaData::PROPERTY_TYPE_TO_REF, true);
 			if ($type !== false) {
-				return (string) $type;
+				return (string)$type;
 			}
 		}
 

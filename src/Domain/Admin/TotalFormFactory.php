@@ -83,8 +83,8 @@ readonly class TotalFormFactory
 			api              : $this->api,
 			collectionLister : $this->collectionLister,
 			collection       : $collection,
-			include          : (string) ($options['include'] ?? ''),
-			exclude          : (string) ($options['exclude'] ?? ''),
+			include          : (string)($options['include'] ?? ''),
+			exclude          : (string)($options['exclude'] ?? ''),
 		);
 
 		return $form->build();

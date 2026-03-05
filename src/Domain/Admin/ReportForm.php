@@ -33,9 +33,8 @@ readonly class ReportForm implements \Stringable
 		$html .= $this->buildFieldsContainer();
 		$html .= $this->buildActions();
 		$html .= '</div>';
-		$html .= $this->buildScript();
 
-		return $html;
+		return $html . $this->buildScript();
 	}
 
 	private function buildCollectionSelector(): string
@@ -82,7 +81,8 @@ readonly class ReportForm implements \Stringable
 			'placeholder' => 'e.g. published:true,category:news',
 			'class'       => 'report-filter-input',
 		]);
-		$includeDiv = HTMLUtils::element('div',
+		$includeDiv = HTMLUtils::element(
+			'div',
 			HTMLUtils::element('label', 'Include Filter') . $includeField,
 			['class' => 'report-filter-field']
 		);
@@ -94,7 +94,8 @@ readonly class ReportForm implements \Stringable
 			'placeholder' => 'e.g. draft:true',
 			'class'       => 'report-filter-input',
 		]);
-		$excludeDiv = HTMLUtils::element('div',
+		$excludeDiv = HTMLUtils::element(
+			'div',
 			HTMLUtils::element('label', 'Exclude Filter') . $excludeField,
 			['class' => 'report-filter-field']
 		);
@@ -130,14 +131,14 @@ readonly class ReportForm implements \Stringable
 	private function buildActions(): string
 	{
 		$csvBtn = HTMLUtils::element('button', 'Download CSV', [
-			'type'  => 'button',
-			'class' => 'dash-button accent report-download-btn',
+			'type'        => 'button',
+			'class'       => 'dash-button accent report-download-btn',
 			'data-format' => 'csv',
 		]);
 
 		$jsonBtn = HTMLUtils::element('button', 'Download JSON', [
-			'type'  => 'button',
-			'class' => 'dash-button report-download-btn',
+			'type'        => 'button',
+			'class'       => 'dash-button report-download-btn',
 			'data-format' => 'json',
 		]);
 

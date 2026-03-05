@@ -232,8 +232,8 @@ final class HtmxRendererTest extends TestCase
 		$html = $this->renderer->buildButton(
 			'/api/collections/blog/query',
 			[
-				'format' => 'html', 'template' => 'card', 'offset' => '0',
-				'limit' => '10', 'mode' => 'append',
+				'format'   => 'html', 'template' => 'card', 'offset' => '0',
+				'limit'    => '10', 'mode' => 'append',
 				'buttonId' => 'btn1', 'target' => '#feed',
 			],
 			'Load More',
@@ -250,8 +250,8 @@ final class HtmxRendererTest extends TestCase
 		$html = $this->renderer->buildButton(
 			'/api/collections/blog/query',
 			[
-				'format' => 'html', 'template' => 'card', 'offset' => '0',
-				'limit' => '10', 'mode' => 'append',
+				'format'   => 'html', 'template' => 'card', 'offset' => '0',
+				'limit'    => '10', 'mode' => 'append',
 				'buttonId' => 'btn1', 'target' => '#feed',
 			],
 		);
@@ -265,8 +265,8 @@ final class HtmxRendererTest extends TestCase
 		$html = $this->renderer->buildButton(
 			'/api/query',
 			[
-				'format' => 'html', 'template' => 'card', 'offset' => '0',
-				'limit' => '10', 'mode' => 'append',
+				'format'   => 'html', 'template' => 'card', 'offset' => '0',
+				'limit'    => '10', 'mode' => 'append',
 				'buttonId' => 'btn1', 'target' => '#feed',
 			],
 			'Show More Posts',
@@ -282,8 +282,8 @@ final class HtmxRendererTest extends TestCase
 		$html = $this->renderer->buildButton(
 			'/api/query',
 			[
-				'format' => 'html', 'template' => 'card', 'offset' => '0',
-				'limit' => '10', 'mode' => 'append',
+				'format'   => 'html', 'template' => 'card', 'offset' => '0',
+				'limit'    => '10', 'mode' => 'append',
 				'buttonId' => 'btn1', 'target' => '#feed',
 			],
 			'Load More',
@@ -299,8 +299,8 @@ final class HtmxRendererTest extends TestCase
 		$html = $this->renderer->buildButton(
 			'/api/query',
 			[
-				'format' => 'html', 'template' => 'card', 'offset' => '0',
-				'limit' => '10', 'mode' => 'append',
+				'format'   => 'html', 'template' => 'card', 'offset' => '0',
+				'limit'    => '10', 'mode' => 'append',
 				'buttonId' => 'btn1', 'target' => '#feed',
 			],
 			'<script>alert("xss")</script>',
