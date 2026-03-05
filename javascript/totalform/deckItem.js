@@ -13,8 +13,10 @@ export default class DeckItem {
 
         this.dialog = this.setupDialog();
         this.deck.form.processFields();
-		this.initVisibility();
-		setTimeout(() => this.setupLabelUpdate(), 0);
+		setTimeout(() => {
+			this.initVisibility();
+			this.setupLabelUpdate();
+		}, 0);
     }
 
     initVisibility() {
