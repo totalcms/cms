@@ -116,6 +116,35 @@ The system automatically converts common values:
 ?exclude=category:news      # String "news" (matches "News", "NEWS", etc.)
 ```
 
+## Wildcard Patterns
+
+String values support wildcard patterns using `*` for flexible matching. All wildcard comparisons are **case-insensitive**.
+
+| Pattern | Matches | Example |
+|---------|---------|---------|
+| `*value*` | Contains "value" | `title:*hello*` matches "Say Hello World" |
+| `value*` | Starts with "value" | `title:hello*` matches "Hello World" |
+| `*value` | Ends with "value" | `title:*world` matches "Hello World" |
+| `value` | Exact match | `title:hello` matches only "hello" |
+
+**URL Parameters:**
+```
+?include=title:*adventure*              # Title contains "adventure"
+?include=name:photo*                    # Name starts with "photo"
+?exclude=category:*archived             # Category ends with "archived"
+?include=tags:*land*                    # Tag contains "land" (e.g., "landscape", "iceland")
+```
+
+**PHP Code:**
+```php
+$objects = $filter->fetchFilteredIndex('blog', [
+    'include' => 'title:*travel*',
+    'exclude' => 'status:*draft',
+]);
+```
+
+Wildcards work with both scalar string fields and array fields (like tags). When used with arrays, each item in the array is tested against the pattern.
+
 ## Array Field Support
 
 When a field contains an array, the filter checks if the value exists **within** the array. String comparisons are **case-insensitive** for better usability. This is particularly useful for fields like tags, categories, or any multi-value properties.
@@ -413,6 +442,7 @@ The `IndexFilter` service is used throughout Total CMS:
 - **Data Export** - Filter which objects are included in JSON and CSV exports ([Export Documentation](docs/collections/export))
 - **Form Fields** - Filter relational dropdown options ([Field Settings](docs/property-options/relational-options#filtering-relational-options))
 - **Grid Display** - Filter objects in Twig templates
+- **Gallery Launcher** - Filter gallery images via include/exclude/search ([Render Documentation](docs/twig/render#gallerylauncher))
 - **Custom Services** - Build your own filtered collections
 
 ### Collection Index API

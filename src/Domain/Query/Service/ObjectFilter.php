@@ -21,6 +21,7 @@ namespace TotalCMS\Domain\Query\Service;
  * - Boolean values: Fast strict comparison (===)
  * - String values: Case-insensitive comparison
  * - Array fields: Case-insensitive search for strings within array
+ * - Wildcard patterns: *value* (contains), value* (starts with), *value (ends with)
  */
 readonly class ObjectFilter
 {
@@ -139,10 +140,9 @@ readonly class ObjectFilter
 					return true;
 				}
 			} elseif (is_array($fieldValue)) {
-				$lowerFilterValue = is_string($filterValue) ? strtolower($filterValue) : $filterValue;
 				foreach ($fieldValue as $item) {
 					if (is_string($item) && is_string($filterValue)) {
-						if (strtolower($item) === $lowerFilterValue) {
+						if ($this->matchesString($item, $filterValue)) {
 							return true;
 						}
 					} elseif ($item === $filterValue) {
@@ -150,7 +150,7 @@ readonly class ObjectFilter
 					}
 				}
 			} elseif (is_string($fieldValue) && is_string($filterValue)) {
-				if (strtolower($fieldValue) === strtolower($filterValue)) {
+				if ($this->matchesString($fieldValue, $filterValue)) {
 					return true;
 				}
 			} elseif ($fieldValue === $filterValue) {
@@ -184,11 +184,10 @@ readonly class ObjectFilter
 					return false;
 				}
 			} elseif (is_array($fieldValue)) {
-				$found            = false;
-				$lowerFilterValue = is_string($filterValue) ? strtolower($filterValue) : $filterValue;
+				$found = false;
 				foreach ($fieldValue as $item) {
 					if (is_string($item) && is_string($filterValue)) {
-						if (strtolower($item) === $lowerFilterValue) {
+						if ($this->matchesString($item, $filterValue)) {
 							$found = true;
 							break;
 						}
@@ -201,7 +200,7 @@ readonly class ObjectFilter
 					return false;
 				}
 			} elseif (is_string($fieldValue) && is_string($filterValue)) {
-				if (strtolower($fieldValue) !== strtolower($filterValue)) {
+				if (!$this->matchesString($fieldValue, $filterValue)) {
 					return false;
 				}
 			} elseif ($fieldValue !== $filterValue) {
@@ -210,5 +209,44 @@ readonly class ObjectFilter
 		}
 
 		return true;
+	}
+
+	/**
+	 * Match a string value against a filter pattern.
+	 *
+	 * Supports wildcard patterns:
+	 * - *value* — contains "value"
+	 * - value* — starts with "value"
+	 * - *value — ends with "value"
+	 * - value  — exact match (case-insensitive)
+	 */
+	private function matchesString(string $fieldValue, string $filterValue): bool
+	{
+		$startWild = str_starts_with($filterValue, '*');
+		$endWild   = str_ends_with($filterValue, '*');
+
+		if ($startWild && $endWild && strlen($filterValue) > 2) {
+			// *value* — contains
+			$needle = strtolower(substr($filterValue, 1, -1));
+
+			return str_contains(strtolower($fieldValue), $needle);
+		}
+
+		if ($startWild) {
+			// *value — ends with
+			$needle = strtolower(substr($filterValue, 1));
+
+			return str_ends_with(strtolower($fieldValue), $needle);
+		}
+
+		if ($endWild) {
+			// value* — starts with
+			$needle = strtolower(substr($filterValue, 0, -1));
+
+			return str_starts_with(strtolower($fieldValue), $needle);
+		}
+
+		// Exact match (case-insensitive)
+		return strtolower($fieldValue) === strtolower($filterValue);
 	}
 }
