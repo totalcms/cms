@@ -5,7 +5,9 @@ namespace TotalCMS\Action\Property\Deck;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
+use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
@@ -20,6 +22,7 @@ readonly class DeckItemCreateAction
 		private DeckItemSaver $deckItemSaver,
 		private SchemaFetcher $schemaFetcher,
 		private AutogenIdService $autogenIdService,
+		private AutogenService $autogenService,
 	) {
 	}
 
@@ -40,6 +43,9 @@ readonly class DeckItemCreateAction
 
 		// Update data with the generated ID
 		$data['id'] = $itemId;
+
+		// Apply autogen for non-ID fields in the deck item
+		$data = $this->applyAutogenFields($args['collection'], $args['property'], $data);
 
 		try {
 			$object = $this->deckItemSaver->saveDeckItem(
@@ -64,26 +70,11 @@ readonly class DeckItemCreateAction
 	private function generateItemIdIfNeeded(string $collection, string $propertyName, array $itemData): string
 	{
 		try {
-			// Get the collection schema
-			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-
-			// Get the property config for this deck
-			$propertyConfig = $schema->properties[$propertyName] ?? null;
-			if (!$propertyConfig) {
+			$deckSchema = $this->fetchDeckSchema($collection, $propertyName);
+			if (!$deckSchema) {
 				return '';
 			}
 
-			// Get deckref from property config
-			$deckref = $propertyConfig['deckref'] ?? $propertyConfig['settings']['deckref'] ?? null;
-			if (empty($deckref)) {
-				return '';
-			}
-
-			// Get the deck schema
-			$deckSchemaId = SchemaFetcher::extractSchemaId($deckref);
-			$deckSchema   = $this->schemaFetcher->fetchSchema($deckSchemaId);
-
-			// Check if ID field has autogen settings
 			$idProperty     = $deckSchema->properties['id'] ?? [];
 			$autogenPattern = $idProperty['settings']['autogen'] ?? null;
 
@@ -95,5 +86,64 @@ readonly class DeckItemCreateAction
 		}
 
 		return '';
+	}
+
+	/**
+	 * Apply autogen patterns to non-ID fields in the deck item.
+	 *
+	 * @param array<string,mixed> $itemData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function applyAutogenFields(string $collection, string $propertyName, array $itemData): array
+	{
+		try {
+			$deckSchema = $this->fetchDeckSchema($collection, $propertyName);
+			if (!$deckSchema) {
+				return $itemData;
+			}
+
+			foreach ($deckSchema->properties as $property => $propertySchema) {
+				if ($property === 'id') {
+					continue;
+				}
+
+				$autogenPattern = $propertySchema['settings']['autogen'] ?? null;
+				if (empty($autogenPattern)) {
+					continue;
+				}
+
+				if (!empty($itemData[$property])) {
+					continue;
+				}
+
+				$itemData[$property] = $this->autogenService->generate($autogenPattern, $collection, $itemData);
+			}
+		} catch (\Exception) {
+			// Non-critical: return data as-is if schema lookup fails
+		}
+
+		return $itemData;
+	}
+
+	/**
+	 * Fetch the deck schema for a given collection property.
+	 */
+	private function fetchDeckSchema(string $collection, string $propertyName): ?SchemaData
+	{
+		$schema         = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$propertyConfig = $schema->properties[$propertyName] ?? null;
+		if (!$propertyConfig) {
+			return null;
+		}
+
+		$deckref = $propertyConfig['deckref'] ?? $propertyConfig['settings']['deckref'] ?? null;
+		if (empty($deckref)) {
+			return null;
+		}
+
+		$deckSchemaId = SchemaFetcher::extractSchemaId($deckref);
+
+		return $this->schemaFetcher->fetchSchema($deckSchemaId);
 	}
 }
