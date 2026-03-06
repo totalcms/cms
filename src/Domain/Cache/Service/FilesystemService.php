@@ -86,7 +86,7 @@ readonly class FilesystemService implements CacheInterface
 			return null;
 		}
 
-		$data = unserialize($content);
+		$data = unserialize($content, ['allowed_classes' => false]);
 		if (!is_array($data) || !isset($data['expires'], $data['value'])) {
 			return null;
 		}
@@ -183,7 +183,7 @@ readonly class FilesystemService implements CacheInterface
 					continue;
 				}
 
-				$data = unserialize($content);
+				$data = unserialize($content, ['allowed_classes' => false]);
 				if (!is_array($data) || !isset($data['key'])) {
 					continue;
 				}

@@ -66,7 +66,7 @@ class RedisService implements CacheInterface
 			$redis = $this->getConnection();
 			$value = $redis->get($key);
 
-			return $value !== false ? unserialize($value) : null;
+			return $value !== false ? unserialize($value, ['allowed_classes' => false]) : null;
 		} catch (\Exception) {
 			return null;
 		}
