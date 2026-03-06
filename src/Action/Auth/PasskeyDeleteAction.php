@@ -32,6 +32,11 @@ readonly class PasskeyDeleteAction
 
 		$this->passkeyService->deletePasskey($userId, $collection, $credentialId);
 
+		// HTMX requests get a retarget header to refresh the passkey list
+		if ($request->getHeaderLine('HX-Request') === 'true') {
+			$response = $response->withHeader('HX-Trigger', 'passkey-changed');
+		}
+
 		return $this->jsonRenderer->json($response, ['success' => true]);
 	}
 }

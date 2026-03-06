@@ -15,60 +15,10 @@ export default class PasskeyManager {
 		}
 
 		this.registerBtn?.addEventListener('click', () => this.registerPasskey());
-		this.loadPasskeys();
 	}
 
-	async loadPasskeys() {
-		try {
-			const res = await fetch(`${this.api}/passkeys/list`, {
-				credentials: 'same-origin',
-			});
-			if (!res.ok) throw new Error('Failed to load passkeys');
-
-			const passkeys = await res.json();
-			this.renderPasskeyList(passkeys);
-		} catch {
-			this.showStatus('Failed to load passkeys', 'error');
-		}
-	}
-
-	renderPasskeyList(passkeys) {
-		if (!this.listEl) return;
-
-		if (!passkeys.length) {
-			this.listEl.innerHTML = '<p class="passkeys-empty">No passkeys registered yet.</p>';
-			return;
-		}
-
-		const rows = passkeys.map(pk => {
-			const created  = pk.createdAt ? new Date(pk.createdAt).toLocaleDateString() : '';
-			const lastUsed = pk.lastUsed ? new Date(pk.lastUsed).toLocaleDateString() : '';
-
-			return `<tr>
-				<td>${this.escapeHtml(pk.name)}</td>
-				<td>${created}</td>
-				<td>${lastUsed}</td>
-				<td><button type="button" class="cms-button cms-button-small cms-button-danger passkey-delete"
-					data-id="${this.escapeAttr(pk.credentialId)}">Delete</button></td>
-			</tr>`;
-		}).join('');
-
-		this.listEl.innerHTML = `
-			<table class="passkeys-table">
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Created</th>
-						<th>Last Used</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>${rows}</tbody>
-			</table>`;
-
-		this.listEl.querySelectorAll('.passkey-delete').forEach(btn => {
-			btn.addEventListener('click', () => this.deletePasskey(btn.dataset.id));
-		});
+	refreshList() {
+		document.body.dispatchEvent(new CustomEvent('passkey-changed'));
 	}
 
 	async registerPasskey() {
@@ -119,7 +69,7 @@ export default class PasskeyManager {
 
 			if (data.success) {
 				this.showStatus('Passkey registered successfully!', 'success');
-				this.loadPasskeys();
+				this.refreshList();
 			} else {
 				throw new Error(data.error || 'Registration failed');
 			}
@@ -130,24 +80,6 @@ export default class PasskeyManager {
 		} finally {
 			this.registerBtn.disabled    = false;
 			this.registerBtn.textContent = 'Register New Passkey';
-		}
-	}
-
-	async deletePasskey(credentialId) {
-		if (!confirm('Delete this passkey? You will no longer be able to sign in with it.')) return;
-
-		try {
-			const res = await fetch(`${this.api}/passkeys/${encodeURIComponent(credentialId)}`, {
-				method:      'DELETE',
-				credentials: 'same-origin',
-			});
-
-			if (!res.ok) throw new Error('Failed to delete passkey');
-
-			this.showStatus('Passkey deleted', 'success');
-			this.loadPasskeys();
-		} catch (err) {
-			this.showStatus(err.message || 'Failed to delete passkey', 'error');
 		}
 	}
 
@@ -192,15 +124,6 @@ export default class PasskeyManager {
 		}, 5000);
 	}
 
-	escapeHtml(str) {
-		const div = document.createElement('div');
-		div.textContent = str;
-		return div.innerHTML;
-	}
-
-	escapeAttr(str) {
-		return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-	}
 }
 
 function bufferToBase64url(buffer) {

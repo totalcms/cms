@@ -357,7 +357,13 @@ readonly class AuthTwigAdapter
 
 		$heading     = HTMLUtils::element('h2', $this->translator->trans('passkey.title'));
 		$description = HTMLUtils::element('p', $this->translator->trans('passkey.description'));
-		$list        = HTMLUtils::element('div', '', ['id' => 'passkeys-list']);
+		$listUrl = $this->config->api . '/passkeys/list/html';
+		$list    = HTMLUtils::element('div', '', [
+			'id'         => 'passkeys-list',
+			'hx-get'     => $listUrl,
+			'hx-trigger' => 'load, passkey-changed from:body',
+			'hx-swap'    => 'innerHTML',
+		]);
 		$button      = HTMLUtils::button($this->translator->trans('passkey.register'), [
 			'type'  => 'button',
 			'class' => 'dash-button',

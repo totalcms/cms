@@ -6,6 +6,13 @@
 
 <main class="dash-main-content">
 	<h1>{{ t('profile.title') }}</h1>
+
+	{% if not cms.config('auth', 'enable') or user is empty %}
+		<div class="cms-twig-info" role="alert" style="margin:0;align-self:start">
+			<h4>Authentication Disabled</h4>
+			<p>User profiles are not available when authentication is disabled.</p>
+		</div>
+	{% else %}
 	<section>
 		{% set form = cms.form.builder(user.collection, {
 			id          : user.id,
@@ -35,6 +42,7 @@
 	</section>
 
 	{{ cms.auth.passkeyManager()|raw }}
+	{% endif %}
 </main>
 
 {% endblock %}
