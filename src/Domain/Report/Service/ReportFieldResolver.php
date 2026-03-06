@@ -77,7 +77,7 @@ readonly class ReportFieldResolver
 
 		// Scalar properties
 		if ($fields['properties'] !== []) {
-			$html .= HTMLUtils::element('h3', 'Properties');
+			$html .= $this->sectionHeader('Properties');
 			$html .= '<div class="report-field-grid">';
 			foreach ($fields['properties'] as $name => $type) {
 				$html .= $this->checkbox($name, $name, $type);
@@ -87,7 +87,7 @@ readonly class ReportFieldResolver
 
 		// Deck properties
 		foreach ($fields['decks'] as $deckName => $deckFields) {
-			$html .= HTMLUtils::element('h3', htmlspecialchars($deckName, ENT_QUOTES, 'UTF-8'));
+			$html .= $this->sectionHeader(htmlspecialchars($deckName, ENT_QUOTES, 'UTF-8'));
 			$html .= '<div class="report-field-grid">';
 			foreach ($deckFields as $fieldName => $type) {
 				$dotName = $deckName . '.' . $fieldName;
@@ -97,6 +97,17 @@ readonly class ReportFieldResolver
 		}
 
 		return $html;
+	}
+
+	private function sectionHeader(string $title): string
+	{
+		$toggle = HTMLUtils::element('button', '+', [
+			'type'  => 'button',
+			'class' => 'report-toggle-all',
+			'title' => 'Select All',
+		]);
+
+		return HTMLUtils::element('h3', $title . ' ' . $toggle);
 	}
 
 	private function checkbox(string $value, string $label, string $type): string

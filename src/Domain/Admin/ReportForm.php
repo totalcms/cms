@@ -242,6 +242,19 @@ readonly class ReportForm implements \Stringable
 				});
 			}
 
+			// Toggle all checkboxes in a section
+			container.addEventListener('click', function(e) {
+				const toggle = e.target.closest('.report-toggle-all');
+				if (!toggle) return;
+				const grid = toggle.closest('h3').nextElementSibling;
+				if (!grid) return;
+				const boxes = Array.from(grid.querySelectorAll('input[name="fields[]"]')).filter(cb => cb.closest('label').offsetParent !== null);
+				const allChecked = boxes.every(cb => cb.checked);
+				boxes.forEach(cb => cb.checked = !allChecked);
+				toggle.textContent = allChecked ? '+' : '\u2212';
+				toggle.title = allChecked ? 'Select All' : 'Deselect All';
+			});
+
 			// Download buttons
 			container.querySelectorAll('.report-download-btn').forEach(btn => {
 				btn.addEventListener('click', function() {
