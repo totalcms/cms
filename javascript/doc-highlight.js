@@ -7,6 +7,7 @@ let currentHighlightIndex = -1;
 let allHighlights = [];
 let searchInput = null;
 let content = null;
+let lastSearchQuery = '';
 
 export default function initDocHighlight() {
 	try {
@@ -49,11 +50,15 @@ function createSearchInput() {
 	wrapper.appendChild(searchInput);
 	content.insertBefore(wrapper, content.firstChild);
 
-	// Search on Enter
+	// Search on Enter, navigate with Enter/Shift+Enter when results exist
 	searchInput.addEventListener('keydown', (e) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
-			performSearch(searchInput.value);
+			if (searchInput.value.trim() === lastSearchQuery && allHighlights.length > 0) {
+				navigateHighlight(e.shiftKey ? -1 : 1);
+			} else {
+				performSearch(searchInput.value);
+			}
 		} else if (e.key === 'Escape') {
 			clearSearch();
 			searchInput.blur();
@@ -67,12 +72,15 @@ function createSearchInput() {
 		}
 	});
 
-	// Global Ctrl+F override
+	// Global keyboard shortcuts
 	document.addEventListener('keydown', (e) => {
 		if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
 			e.preventDefault();
 			searchInput.focus();
 			searchInput.select();
+		} else if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+			e.preventDefault();
+			navigateHighlight(e.shiftKey ? -1 : 1);
 		} else if (e.key === 'Escape') {
 			clearSearch();
 			searchInput.blur();
@@ -88,6 +96,8 @@ function performSearch(query) {
 	if (trimmedQuery.length < 2) {
 		return;
 	}
+
+	lastSearchQuery = trimmedQuery;
 
 	// Highlight all matches for each term
 	const terms = trimmedQuery.split(' ').filter(t => t.length > 0);
@@ -119,6 +129,7 @@ function clearSearch() {
 	if (searchInput) {
 		searchInput.value = '';
 	}
+	lastSearchQuery = '';
 	clearHighlights();
 }
 
