@@ -155,7 +155,7 @@ class WordpressImporter
 	private function parseXml(string $xmlContent): \SimpleXMLElement
 	{
 		libxml_use_internal_errors(true);
-		$xml = simplexml_load_string($xmlContent);
+		$xml = simplexml_load_string($xmlContent, \SimpleXMLElement::class, LIBXML_NOENT | LIBXML_NONET);
 
 		if ($xml === false) {
 			$errors = libxml_get_errors();
