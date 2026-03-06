@@ -34,6 +34,10 @@ class PathUtils
 		}
 		if ($filename !== null && $filename !== '') {
 			if ($subpath !== null && $subpath !== '') {
+				// Sanitize subpath to prevent directory traversal attacks
+				$subpath = str_replace('\\', '/', $subpath);
+				$subpath = str_replace('..', '', $subpath);
+				$subpath = trim($subpath, '/');
 				$path = sprintf('%s/%s', $path, $subpath);
 			}
 			$path = sprintf('%s/%s', $path, $filename);

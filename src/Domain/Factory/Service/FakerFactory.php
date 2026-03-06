@@ -27,7 +27,7 @@ class FakerFactory
 		$faker->addProvider(new FakerExtension($faker));
 
 		if (!is_dir($this->cacheDir)) {
-			mkdir($this->cacheDir, 0777, true);
+			mkdir($this->cacheDir, 0700, true);
 		}
 
 		FakerExtension::$dir = $this->cacheDir;

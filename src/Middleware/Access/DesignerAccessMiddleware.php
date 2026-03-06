@@ -61,7 +61,7 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 			$token       = (string)($queryParams['token'] ?? '');
 		}
 
-		if ($token === '' || $token !== $designerMeta->designerToken) {
+		if ($token === '' || !hash_equals($designerMeta->designerToken, $token)) {
 			return $this->errorResponse(401, 'Invalid or missing designer token');
 		}
 

@@ -152,7 +152,7 @@ readonly class FileSaveAction
 
 		// Ensure the temporary directory exists
 		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0777, true);
+			mkdir($this->config->tmpdir, 0700, true);
 		}
 
 		// Move the uploaded chunk to the temporary directory
@@ -179,7 +179,7 @@ readonly class FileSaveAction
 	{
 		// Ensure the temporary directory exists
 		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0777, true);
+			mkdir($this->config->tmpdir, 0700, true);
 		}
 
 		// Extract filename from URL or generate one
