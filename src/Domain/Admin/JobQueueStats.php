@@ -29,9 +29,7 @@ readonly class JobQueueStats implements \Stringable
 		}
 
 		$table = HTMLUtils::element('table', $rows, [
-			'class'           => 'jobqueue-stats jobqueue-by-type cms-colors',
-			'data-collection' => $this->collection,
-			'data-api'        => $this->api,
+			'class' => 'jobqueue-stats jobqueue-by-type cms-colors',
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);
@@ -55,9 +53,7 @@ readonly class JobQueueStats implements \Stringable
 		}
 
 		$table = HTMLUtils::element('table', $rows, [
-			'class'           => 'jobqueue-stats jobqueue-by-status cms-colors',
-			'data-collection' => $this->collection,
-			'data-api'        => $this->api,
+			'class' => 'jobqueue-stats jobqueue-by-status cms-colors',
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);
@@ -67,12 +63,22 @@ readonly class JobQueueStats implements \Stringable
 		]);
 	}
 
+	public function allStatsTables(): string
+	{
+		return $this->tableByType() . $this->tableByStatus();
+	}
+
 	public function allStats(): string
 	{
-		$tables  = $this->tableByType() . $this->tableByStatus();
+		$route = $this->collection === ''
+			? $this->api . '/jobqueue/stats/html'
+			: $this->api . '/jobqueue/stats/' . $this->collection . '/html';
 
-		return HTMLUtils::element('div', $tables, [
-			'class' => 'jobqueue-all-stats',
+		return HTMLUtils::element('div', $this->allStatsTables(), [
+			'class'      => 'jobqueue-all-stats',
+			'hx-get'     => $route,
+			'hx-trigger' => 'every 5s',
+			'hx-swap'    => 'innerHTML',
 		]);
 	}
 

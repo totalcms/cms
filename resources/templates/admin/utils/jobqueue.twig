@@ -11,7 +11,7 @@
 		label      : t('jobqueue.clear_btn'),
 	}) }}
 
-	<section style="margin-top:3rem;padding-left:0" class="doc-content">
+	<section style="margin-top:3rem;padding-left:0;overflow:hidden" class="doc-content">
 		<h4 style="">{{ t('jobqueue.scheduled_title') }}</h4>
 
 		<p>{{ t('jobqueue.command_desc') }}</p>
@@ -21,8 +21,10 @@
 		<button type="button" class="cms-clip-button dash-button transparent" data-clip="#jobqueue-command-text">{{ t('btn.copy_command') }}</button>
 	</section>
 
-	{{ cms.admin.jobQueuePendingInfo() }}
-	{{ cms.admin.jobQueueFailedInfo() }}
+	<div hx-get="{{ cms.api }}/jobqueue/jobs/html" hx-trigger="every 5s" hx-swap="innerHTML">
+		{{ cms.admin.jobQueuePendingInfo() }}
+		{{ cms.admin.jobQueueFailedInfo() }}
+	</div>
 
 </section>
 
