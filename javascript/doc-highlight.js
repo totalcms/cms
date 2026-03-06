@@ -60,12 +60,22 @@ function createSearchInput() {
 		}
 	});
 
+	// Handle browser-native clear (ESC or clear button on type="search")
+	searchInput.addEventListener('search', () => {
+		if (searchInput.value === '') {
+			clearSearch();
+		}
+	});
+
 	// Global Ctrl+F override
 	document.addEventListener('keydown', (e) => {
 		if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
 			e.preventDefault();
 			searchInput.focus();
 			searchInput.select();
+		} else if (e.key === 'Escape') {
+			clearSearch();
+			searchInput.blur();
 		}
 	});
 }
