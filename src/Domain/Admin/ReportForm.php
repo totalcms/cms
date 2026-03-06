@@ -51,14 +51,13 @@ readonly class ReportForm implements \Stringable
 
 	public function build(): string
 	{
-		$html  = '<div class="report-form">';
-		$html .= $this->buildCollectionSelector();
-		$html .= $this->buildFilterFields();
-		$html .= $this->buildFieldsContainer();
-		$html .= $this->buildActions();
-		$html .= '</div>';
+		$content = $this->buildCollectionSelector()
+			. $this->buildFilterFields()
+			. $this->buildFieldsContainer()
+			. $this->buildActions();
 
-		return $html . $this->buildScript();
+		return HTMLUtils::element('div', $content, ['class' => 'report-form'])
+			. $this->buildScript();
 	}
 
 	private function buildCollectionSelector(): string

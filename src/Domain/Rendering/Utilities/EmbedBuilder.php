@@ -140,6 +140,6 @@ class EmbedBuilder
 
 	public static function link(string $url): string
 	{
-		return HTMLUtils::element('a', $url, ['href' => $url]);
+		return HTMLUtils::link($url, $url);
 	}
 }

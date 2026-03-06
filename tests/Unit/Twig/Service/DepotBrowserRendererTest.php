@@ -116,8 +116,7 @@ describe('DepotBrowserRenderer', function (): void {
 			fn ($id, $name, $opts): string => "/stream/$id/$name",
 		);
 
-		expect($result)->toContain('<a href=');
-		expect($result)->toContain('/download/obj-1/file.txt');
+		expect($result)->toContain('href="/download/obj-1/file.txt"');
 		expect($result)->toContain('download="file.txt"');
 	});
 
