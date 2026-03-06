@@ -212,20 +212,21 @@
 		justify-content: center;
 
 		img {
-			max-width: 80vw;
-			max-height: 80vh;
-			object-fit: contain;
+			max-width  : 80vw;
+			max-height : 80vh;
+			object-fit : contain;
 		}
 		video {
-			max-width: 80vw;
-			max-height: 80vh;
+			max-width  : 80vw;
+			max-height : 80vh;
 		}
 		audio {
-			min-width: 300px;
+			min-width : 300px;
 		}
 		.preview-pdf {
-			width: 80vw;
-			height: 80vh;
+			width     : 80vw;
+			height    : 80vh;
+			max-width : 100%;
 		}
 	}
 }
