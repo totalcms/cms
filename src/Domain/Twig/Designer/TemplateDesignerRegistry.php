@@ -8,13 +8,13 @@ namespace TotalCMS\Domain\Twig\Designer;
  */
 class TemplateDesignerRegistry
 {
-	/** @var array<string,array{template: string, url: string, token: string, content: string}> */
+	/** @var array<string,array{template: string, domain: string, token: string, content: string}> */
 	private array $blocks = [];
 
 	/**
 	 * Register a designer block.
 	 *
-	 * @param array{template: string, url: string, token: string, content: string} $data
+	 * @param array{template: string, domain: string, token: string, content: string} $data
 	 */
 	public function register(string $key, array $data): void
 	{
@@ -24,7 +24,7 @@ class TemplateDesignerRegistry
 	/**
 	 * Get a designer block by key.
 	 *
-	 * @return array{template: string, url: string, token: string, content: string}|null
+	 * @return array{template: string, domain: string, token: string, content: string}|null
 	 */
 	public function get(string $key): ?array
 	{
@@ -34,7 +34,7 @@ class TemplateDesignerRegistry
 	/**
 	 * Get all registered blocks.
 	 *
-	 * @return array<string,array{template: string, url: string, token: string, content: string}>
+	 * @return array<string,array{template: string, domain: string, token: string, content: string}>
 	 */
 	public function all(): array
 	{

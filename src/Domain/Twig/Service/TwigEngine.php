@@ -36,6 +36,7 @@ use Twig\TwigFunction;
 readonly class TwigEngine
 {
 	private TwigEnvironment $twig;
+	private TemplateDesignerPreprocessor $designerPreprocessor;
 
 	public function __construct(
 		Config $config,
@@ -45,6 +46,7 @@ readonly class TwigEngine
 		TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 	) {
+		$this->designerPreprocessor = $designerPreprocessor;
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
@@ -141,6 +143,9 @@ readonly class TwigEngine
 	/** @param array<mixed> $data */
 	public function renderString(string $template, array $data = []): string
 	{
+		// Run the designer preprocessor on string templates since createTemplate() bypasses the loader
+		$template = $this->designerPreprocessor->preprocess($template, '__string_template__');
+
 		$twig = $this->twig->createTemplate($template);
 
 		try {

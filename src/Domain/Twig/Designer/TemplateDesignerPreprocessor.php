@@ -19,6 +19,9 @@ class TemplateDesignerPreprocessor
 	/**
 	 * Process template source, extracting designer blocks and replacing them
 	 * with sync function calls.
+	 *
+	 * The `on` parameter accepts a domain (e.g., 'https://example.com').
+	 * The API path is appended automatically by the sync service.
 	 */
 	public function preprocess(string $source, string $templateName): string
 	{
@@ -29,7 +32,7 @@ class TemplateDesignerPreprocessor
 			self::PATTERN,
 			static function (array $matches) use ($registry, $templateName, &$index): string {
 				$templatePath = $matches[1];
-				$url          = $matches[2];
+				$domain       = $matches[2];
 				$token        = $matches[3];
 				$content      = $matches[4];
 
@@ -38,7 +41,7 @@ class TemplateDesignerPreprocessor
 
 				$registry->register($key, [
 					'template' => $templatePath,
-					'url'      => $url,
+					'domain'   => $domain,
 					'token'    => $token,
 					'content'  => $content,
 				]);

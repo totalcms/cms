@@ -27,6 +27,9 @@ class TemplateDesignerSync
 
 	/**
 	 * Sync a designer block and return badge HTML.
+	 *
+	 * The `on` parameter in {% templatedesigner %} provides just the domain
+	 * (e.g., 'https://example.com'). The API path is appended automatically.
 	 */
 	public function sync(string $registryKey): string
 	{
@@ -42,35 +45,42 @@ class TemplateDesignerSync
 			return '';
 		}
 
-		$templatePath  = $block['template'];
-		$productionUrl = rtrim($block['url'], '/');
-		$token         = $block['token'];
-		$content       = $block['content'];
-		$currentApi    = rtrim($this->config->api, '/');
+		$templatePath      = $block['template'];
+		$productionDomain  = rtrim($block['domain'], '/');
+		$token             = $block['token'];
+		$content           = $block['content'];
+		$currentDomain     = rtrim($this->config->domain, '/');
+		// Production uses clean API paths; strip /public/index.php which only appears on local PHP CLI dev servers
+		$cleanApi          = (string)preg_replace('#/public/index\.php$#', '', $this->config->api);
+		$productionApi     = $productionDomain . '/' . ltrim($cleanApi, '/');
 
-		// If URLs match, this IS production — no sync needed
-		if ($currentApi === $productionUrl) {
+		// If domains match, this IS production — no sync needed
+		if ($currentDomain === $productionDomain) {
 			return '';
 		}
 
 		// Dev environment: sync locally and to production
-		$localStatus  = $this->syncLocal($templatePath, $content);
-		$remoteStatus = $token !== '' ? $this->syncRemote($productionUrl, $templatePath, $token, $content) : 'skipped';
+		$localError  = '';
+		$remoteError = '';
+		$localStatus  = $this->syncLocal($templatePath, $content, $localError);
+		$remoteStatus = $token !== '' ? $this->syncRemote($productionApi, $templatePath, $token, $content, $remoteError) : 'skipped';
 
-		return $this->renderBadge($templatePath, $content, $localStatus, $remoteStatus);
+		return $this->renderBadge($templatePath, $content, $localStatus, $localError, $remoteStatus, $remoteError);
 	}
 
 	/**
 	 * Save template content locally.
 	 */
-	private function syncLocal(string $templatePath, string $content): string
+	private function syncLocal(string $templatePath, string $content, string &$error): string
 	{
 		try {
 			[$folder, $name] = TemplateRepository::parsePath($templatePath);
 			$this->templateSaver->saveTemplate($name, $content, $folder);
 
 			return 'ok';
-		} catch (\Exception) {
+		} catch (\Exception $e) {
+			$error = $e->getMessage();
+
 			return 'error';
 		}
 	}
@@ -78,12 +88,14 @@ class TemplateDesignerSync
 	/**
 	 * PUT template content to production server.
 	 */
-	private function syncRemote(string $productionUrl, string $templatePath, string $token, string $content): string
+	private function syncRemote(string $productionUrl, string $templatePath, string $token, string $content, string &$error): string
 	{
 		$url = $productionUrl . '/designer/templates/' . $templatePath;
 
 		$ch = curl_init($url);
 		if ($ch === false) {
+			$error = 'Failed to initialize cURL';
+
 			return 'error';
 		}
 
@@ -101,9 +113,22 @@ class TemplateDesignerSync
 
 		$result   = curl_exec($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$curlError = curl_error($ch);
 		curl_close($ch);
 
-		if ($result === false || $httpCode !== 200) {
+		if ($result === false) {
+			$error = $curlError !== '' ? $curlError : 'Connection failed';
+
+			return 'error';
+		}
+
+		if ($httpCode !== 200) {
+			$body  = is_string($result) ? trim($result) : '';
+			$error = "HTTP {$httpCode}";
+			if ($body !== '') {
+				$error .= ': ' . mb_substr($body, 0, 200);
+			}
+
 			return 'error';
 		}
 
@@ -113,7 +138,7 @@ class TemplateDesignerSync
 	/**
 	 * Render the designer badge HTML with sync status.
 	 */
-	private function renderBadge(string $templatePath, string $content, string $localStatus, string $remoteStatus): string
+	private function renderBadge(string $templatePath, string $content, string $localStatus, string $localError, string $remoteStatus, string $remoteError): string
 	{
 		$escapedContent = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
 		$localIcon      = $localStatus === 'ok' ? '&#10003;' : '&#10007;';
@@ -128,6 +153,9 @@ class TemplateDesignerSync
 			default   => 'failed',
 		};
 
+		$localTooltip  = $localError !== '' ? ' title="' . htmlspecialchars($localError, ENT_QUOTES, 'UTF-8') . '"' : '';
+		$remoteTooltip = $remoteError !== '' ? ' title="' . htmlspecialchars($remoteError, ENT_QUOTES, 'UTF-8') . '"' : '';
+
 		return <<<HTML
 <style>
 .tcms-designer-badge{position:fixed;bottom:1rem;right:1rem;z-index:999999;background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:12px 16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:320px;line-height:1.4}
@@ -136,7 +164,7 @@ class TemplateDesignerSync
 .tcms-designer-status{display:flex;gap:12px;font-size:12px;margin-bottom:8px}
 .tcms-designer-status span{display:flex;align-items:center;gap:4px}
 .tcms-designer-ok{color:#86efac}
-.tcms-designer-err{color:#fca5a5}
+.tcms-designer-err{color:#fca5a5;cursor:help}
 .tcms-designer-skip{color:#94a3b8}
 .tcms-designer-copy{background:#374151;color:#e0e0e0;border:1px solid #4b5563;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer;width:100%}
 .tcms-designer-copy:hover{background:#4b5563}
@@ -145,8 +173,8 @@ class TemplateDesignerSync
 <div class="tcms-designer-header"><span>&#9881;</span><span>Template Designer</span></div>
 <div class="tcms-designer-template">{$templatePath}</div>
 <div class="tcms-designer-status">
-<span class="tcms-designer-{$localStatus}">Local: {$localIcon}</span>
-<span class="tcms-designer-{$this->statusClass($remoteStatus)}">Remote: {$remoteIcon} {$remoteLabel}</span>
+<span class="tcms-designer-{$localStatus}"{$localTooltip}>Local: {$localIcon}</span>
+<span class="tcms-designer-{$this->statusClass($remoteStatus)}"{$remoteTooltip}>Remote: {$remoteIcon} {$remoteLabel}</span>
 </div>
 <button class="tcms-designer-copy" onclick="navigator.clipboard.writeText(this.closest('.tcms-designer-badge').dataset.template).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy Template'},2000)})">Copy Template</button>
 </div>
