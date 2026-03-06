@@ -189,8 +189,8 @@ class DepotBrowserRenderer
 		}
 
 		return HTMLUtils::element('li', $content, [
-			'class'          => 'depot-browser-item',
-			'data-ext'       => $ext,
+			'class'           => 'depot-browser-item',
+			'data-ext'        => $ext,
 			'data-stream-url' => $streamSrc,
 		]);
 	}

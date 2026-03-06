@@ -738,14 +738,14 @@ class RenderTwigAdapter
 		// Filter images using include/exclude
 		if (isset($options['include']) || isset($options['exclude'])) {
 			$objectFilter = new \TotalCMS\Domain\Query\Service\ObjectFilter();
-			$images = $objectFilter->filterObjects($images, $options);
+			$images       = $objectFilter->filterObjects($images, $options);
 			unset($options['include'], $options['exclude']);
 		}
 
 		// Search images using full-text search
 		if (isset($options['search']) && is_string($options['search']) && $options['search'] !== '') {
 			$objectSearcher = new \TotalCMS\Domain\Query\Service\ObjectSearcher();
-			$images = $objectSearcher->search($images, $options['search']);
+			$images         = $objectSearcher->search($images, $options['search']);
 			unset($options['search']);
 		}
 

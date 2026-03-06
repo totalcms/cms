@@ -71,7 +71,7 @@ readonly class DeckItemCreateAction
 	{
 		try {
 			$deckSchema = $this->fetchDeckSchema($collection, $propertyName);
-			if (!$deckSchema) {
+			if (!$deckSchema instanceof SchemaData) {
 				return '';
 			}
 
@@ -99,7 +99,7 @@ readonly class DeckItemCreateAction
 	{
 		try {
 			$deckSchema = $this->fetchDeckSchema($collection, $propertyName);
-			if (!$deckSchema) {
+			if (!$deckSchema instanceof SchemaData) {
 				return $itemData;
 			}
 

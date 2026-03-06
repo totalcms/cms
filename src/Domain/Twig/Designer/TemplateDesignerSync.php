@@ -60,8 +60,8 @@ class TemplateDesignerSync
 		}
 
 		// Dev environment: sync locally and to production
-		$localError  = '';
-		$remoteError = '';
+		$localError   = '';
+		$remoteError  = '';
 		$localStatus  = $this->syncLocal($templatePath, $content, $localError);
 		$remoteStatus = $token !== '' ? $this->syncRemote($productionApi, $templatePath, $token, $content, $remoteError) : 'skipped';
 
@@ -111,8 +111,8 @@ class TemplateDesignerSync
 			],
 		]);
 
-		$result   = curl_exec($ch);
-		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$result    = curl_exec($ch);
+		$httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$curlError = curl_error($ch);
 		curl_close($ch);
 

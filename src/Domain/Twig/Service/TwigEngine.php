@@ -36,17 +36,15 @@ use Twig\TwigFunction;
 readonly class TwigEngine
 {
 	private TwigEnvironment $twig;
-	private TemplateDesignerPreprocessor $designerPreprocessor;
 
 	public function __construct(
 		Config $config,
 		TotalCMSTwigExtension $extension,
 		DevModeManager $devModeManager,
 		EditionFeatureService $editionFeatures,
-		TemplateDesignerPreprocessor $designerPreprocessor,
+		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 	) {
-		$this->designerPreprocessor = $designerPreprocessor;
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
@@ -68,7 +66,7 @@ readonly class TwigEngine
 		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
 		$filesystemLoader = new TwigFilesystemLoader($paths);
-		$loader           = new DesignerAwareLoader($filesystemLoader, $designerPreprocessor);
+		$loader           = new DesignerAwareLoader($filesystemLoader, $this->designerPreprocessor);
 		$this->twig       = new TwigEnvironment($loader, [
 			'cache'            => $cacheEnabled ? $cacheDir : false,
 			'debug'            => $config->debug || $devModeActive,

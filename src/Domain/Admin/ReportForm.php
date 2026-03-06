@@ -16,9 +16,6 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  */
 readonly class ReportForm implements \Stringable
 {
-	/** @var \Closure(string, array<string,string>, string): string */
-	private \Closure $translator;
-
 	/**
 	 *  @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
@@ -26,19 +23,8 @@ readonly class ReportForm implements \Stringable
 	 *  @param array<string|array{value: string, label: string}> $includeOptions
 	 *  @param array<string|array{value: string, label: string}> $excludeOptions
 	 */
-	public function __construct(
-		private string $api,
-		private CollectionLister $collectionLister,
-		\Closure $translator,
-		private string $collection = '',
-		private string $include = '',
-		private string $exclude = '',
-		private array $includeOptions = [],
-		private array $excludeOptions = [],
-		private bool $includeSelect = false,
-		private bool $excludeSelect = false,
-	) {
-		$this->translator = $translator;
+	public function __construct(private string $api, private CollectionLister $collectionLister, private \Closure $translator, private string $collection = '', private string $include = '', private string $exclude = '', private array $includeOptions = [], private array $excludeOptions = [], private bool $includeSelect = false, private bool $excludeSelect = false)
+	{
 	}
 
 	/**
@@ -225,7 +211,7 @@ readonly class ReportForm implements \Stringable
 
 	private function buildScript(): string
 	{
-		$api                  = htmlspecialchars($this->api, ENT_QUOTES, 'UTF-8');
+		$api                   = htmlspecialchars($this->api, ENT_QUOTES, 'UTF-8');
 		$alertSelectCollection = htmlspecialchars($this->t('report.alert_select_collection'), ENT_QUOTES, 'UTF-8');
 		$alertSelectField      = htmlspecialchars($this->t('report.alert_select_field'), ENT_QUOTES, 'UTF-8');
 		$fieldsPlaceholder     = htmlspecialchars($this->t('report.fields_placeholder'), ENT_QUOTES, 'UTF-8');
