@@ -39,7 +39,7 @@ export default class JobQueueStatsTable {
             // Only update fields for this table's data type
             const stats = data[this.dataKey];
             for (const field in stats) {
-                this.updateCount(field.toLowerCase(), stats[field]);
+                this.updateCount(field.toLowerCase().replace(/ /g, '-'), stats[field]);
             }
         }).catch(error => {
             // Silently ignore network errors for background polling
