@@ -14,30 +14,6 @@ export default class PasskeyLogin {
 		}
 
 		button.addEventListener('click', () => this.loginWithPasskey());
-		this.tryConditionalMediation();
-	}
-
-	async tryConditionalMediation() {
-		try {
-			if (!PublicKeyCredential.isConditionalMediationAvailable ||
-				!await PublicKeyCredential.isConditionalMediationAvailable()) {
-				return;
-			}
-
-			const options = await this.fetchOptions();
-			if (!options) return;
-
-			const credential = await navigator.credentials.get({
-				publicKey: this.buildRequestOptions(options),
-				mediation: 'conditional',
-			});
-
-			if (credential) {
-				await this.submitAssertion(credential);
-			}
-		} catch {
-			// Conditional mediation silently fails if user interacts with form instead
-		}
 	}
 
 	async loginWithPasskey() {
