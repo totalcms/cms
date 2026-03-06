@@ -233,7 +233,10 @@ readonly class CacheSizingAdvisor
 			? $this->roundToNearestAllocation($apcuRecommended)
 			: $this->roundToAllocation($apcuRecommended);
 		$apcuAllocated    = $this->getApcuAllocatedMemory();
-		$apcuSufficient   = $apcuAllocated >= $apcuAllocation;
+		// Compare at MB level to avoid false negatives from APCu internal overhead
+		$allocatedMb      = (int)round($apcuAllocated / (1024 * 1024));
+		$allocationMb     = (int)round($apcuAllocation / (1024 * 1024));
+		$apcuSufficient   = $allocatedMb >= $allocationMb;
 
 		$backends['apcu'] = [
 			'name'                     => 'APCu (L1)',
