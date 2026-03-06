@@ -351,6 +351,10 @@ readonly class AuthTwigAdapter
 			return '';
 		}
 
+		if (!($this->config->auth['usePasskeys'] ?? true)) {
+			return '';
+		}
+
 		$heading     = HTMLUtils::element('h2', $this->translator->trans('passkey.title'));
 		$description = HTMLUtils::element('p', $this->translator->trans('passkey.description'));
 		$list        = HTMLUtils::element('div', '', ['id' => 'passkeys-list']);

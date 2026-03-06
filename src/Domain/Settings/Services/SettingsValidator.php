@@ -216,9 +216,11 @@ readonly class SettingsValidator
 	 */
 	private function processAuth(array $data): array
 	{
-		// Handle toggle field
-		if (isset($data['enable'])) {
-			$data['enable'] = in_array($data['enable'], ['on', '1', true], true);
+		// Handle toggle fields
+		foreach (['enable', 'usePasskeys'] as $toggle) {
+			if (isset($data[$toggle])) {
+				$data[$toggle] = in_array($data[$toggle], ['on', '1', true], true);
+			}
 		}
 
 		// Convert numeric fields to integers

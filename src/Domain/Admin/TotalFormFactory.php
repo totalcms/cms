@@ -163,7 +163,8 @@ readonly class TotalFormFactory
 		$options['api']          = $this->api;
 		$options['session']      = $this->session;
 		$options['csrfManager']  = $this->csrfManager;
-		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS);
+		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)
+			&& ($this->config->auth['usePasskeys'] ?? true);
 
 		$form = new LoginForm(...$options);
 

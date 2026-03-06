@@ -192,6 +192,7 @@ $settings['imageworks'] = [
 
 $settings['auth'] = [
 	'enable'                  => true,
+	'usePasskeys'             => true,
 	'collection'              => 'auth',
 	'maxAttempts'             => 10,
 	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads
