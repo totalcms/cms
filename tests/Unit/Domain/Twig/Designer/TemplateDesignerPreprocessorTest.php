@@ -35,7 +35,7 @@ TWIG;
 		$block = $this->registry->get('_designer_test_twig_0');
 		$this->assertNotNull($block);
 		$this->assertSame('products/tile', $block['template']);
-		$this->assertSame('https://example.com/tcms/', $block['url']);
+		$this->assertSame('https://example.com/tcms/', $block['domain']);
 		$this->assertSame('abc123', $block['token']);
 		$this->assertStringContainsString('<article>{{ object.title }}</article>', $block['content']);
 	}
@@ -132,7 +132,7 @@ TWIG;
 		$block = $this->registry->get('_designer_dq_twig_0');
 		$this->assertNotNull($block);
 		$this->assertSame('products/tile', $block['template']);
-		$this->assertSame('https://example.com/tcms/', $block['url']);
+		$this->assertSame('https://example.com/tcms/', $block['domain']);
 		$this->assertSame('abc123', $block['token']);
 	}
 
