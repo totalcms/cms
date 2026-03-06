@@ -7,6 +7,7 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
+use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
 return function (App $app): void {
 	// Read-only schema routes (allow API keys)
@@ -16,7 +17,8 @@ return function (App $app): void {
 		$group->map(['HEAD'], '/{id}', Schema\SchemaExistsAction::class)->setName('schema-exists');
 	})->add(SchemaEditionMiddleware::class)
 		->add(SchemaAccessMiddleware::class)
-		->add(DualAuthMiddleware::class);
+		->add(DualAuthMiddleware::class)
+		->add(ExternalCorsMiddleware::class);
 
 	// Mutation schema routes (session-only, no API keys, Pro edition for custom schemas)
 	$app->group('/schemas', function (RouteCollectorProxy $group): void {

@@ -7,6 +7,7 @@ use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
+use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
 return function (App $app): void {
 	$app->group('/dataviews', function (RouteCollectorProxy $group): void {
@@ -21,5 +22,6 @@ return function (App $app): void {
 		$group->get('/{id}/query', DataView\DataViewQueryAction::class)->setName('dataview-query');
 	})->add(DataViewsEditionMiddleware::class)
 		->add(DataViewsAccessMiddleware::class)
-		->add(DualAuthMiddleware::class);
+		->add(DualAuthMiddleware::class)
+		->add(ExternalCorsMiddleware::class);
 };
