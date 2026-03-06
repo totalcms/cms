@@ -111,6 +111,10 @@ readonly class SettingsValidator
 	 */
 	private function processGeneral(array $data): array
 	{
+		if (isset($data['maxDownloadSize'])) {
+			$data['maxDownloadSize'] = max(0, (int)$data['maxDownloadSize']);
+		}
+
 		return $data;
 	}
 

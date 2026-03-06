@@ -191,6 +191,11 @@ readonly class FileSaveAction
 		if ($ch === false) {
 			throw new \RuntimeException('Failed to initialize cURL');
 		}
+		// Max download size in bytes (0 = unlimited)
+		$maxBytes = $this->config->maxDownloadSize > 0
+			? $this->config->maxDownloadSize * 1024 * 1024
+			: 0;
+
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -200,12 +205,29 @@ readonly class FileSaveAction
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
+		// Abort download if it exceeds the configured max size
+		if ($maxBytes > 0) {
+			curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function (
+				\CurlHandle $resource,
+				int $downloadSize,
+				int $downloaded,
+				int $uploadSize,
+				int $uploaded,
+			) use ($maxBytes): int {
+				return ($downloadSize > $maxBytes || $downloaded > $maxBytes) ? 1 : 0;
+			});
+		}
+
 		$fileContent = curl_exec($ch);
 		$httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$error       = curl_error($ch);
 		curl_close($ch);
 
 		if ($fileContent === false || $error !== '') {
+			if ($maxBytes > 0 && str_contains($error, 'aborted by callback')) {
+				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB');
+			}
 			throw new \RuntimeException('Failed to download file from URL: ' . $error);
 		}
 

@@ -14,8 +14,9 @@ class Config
 	public string $api      = '';
 	public string $locale   = '';
 	public string $timezone = '';
-	public string $notfound = '';
-	public bool $debug      = false;
+	public string $notfound    = '';
+	public int $maxDownloadSize = 2048;
+	public bool $debug         = false;
 	public bool $sentry     = true;
 	/** @var array<string,mixed> */
 	public array $cache = [];
@@ -61,7 +62,8 @@ class Config
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
 		$this->debug      = $settings['debug'];
-		$this->notfound   = $settings['notfound'];
+		$this->notfound        = $settings['notfound'];
+		$this->maxDownloadSize = (int)($settings['maxDownloadSize'] ?? 2048);
 		$this->htmlclean  = $settings['htmlclean'] ?? [];
 		$this->smtp       = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
 		$this->mailer     = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
