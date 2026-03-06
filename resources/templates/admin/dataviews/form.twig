@@ -67,6 +67,28 @@
 		<h3>{{ t('dataview.tools') }}</h3>
 		<div class="dataview-actions">
 			<button type="button" class="dash-button transparent" id="btn-test-view">{{ t('dataview.test_run') }}</button>
+			<script>
+			document.getElementById('btn-test-view')?.addEventListener('click', function() {
+				const btn = this;
+				const ta = document.querySelector('textarea[name="definition"]');
+				const cm = ta?.parentElement?.querySelector('.CodeMirror');
+				const definition = cm?.CodeMirror ? cm.CodeMirror.getValue() : ta?.value || '';
+				if (!definition) return;
+
+				btn.disabled = true;
+				btn.textContent = 'Testing...';
+				document.getElementById('test-results').style.display = 'block';
+
+				htmx.ajax('POST', '{{ cms.api }}/dataviews/test/html', {
+					target: '#test-output',
+					swap: 'innerHTML',
+					values: { definition },
+				}).then(() => {
+					btn.disabled = false;
+					btn.textContent = '{{ t('dataview.test_run') }}';
+				});
+			});
+			</script>
 			{% if url.id and url.id != 'new' %}
 			{{ cms.form.simple("/dataviews/" ~ url.id ~ "/rebuild", "", {
 				method : "POST",
@@ -81,7 +103,6 @@
 		</div>
 	</section>
 
-	<script type="module" src="{{ cms.api }}/assets/dataviews.js"></script>
 
 {% endif %}
 

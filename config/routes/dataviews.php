@@ -12,6 +12,7 @@ use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 return function (App $app): void {
 	$app->group('/dataviews', function (RouteCollectorProxy $group): void {
 		$group->post('/test', DataView\DataViewTestAction::class)->setName('dataview-test');
+		$group->post('/test/html', DataView\DataViewTestHtmlAction::class)->setName('dataview-test-html');
 		$group->post('/{id}/rebuild', DataView\DataViewRebuildAction::class)->setName('dataview-rebuild');
 	})->add(DataViewsEditionMiddleware::class)
 		->add(DataViewsAccessMiddleware::class)
