@@ -19,7 +19,10 @@ readonly class ReportForm implements \Stringable
 	/** @var \Closure(string, array<string,string>, string): string */
 	private \Closure $translator;
 
-	/** @param \Closure(string, array<string,string>, string): string $translator
+	/**
+	 *  @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 *  @param \Closure(string, array<string,string>, string): string $translator
 	 *  @param array<string|array{value: string, label: string}> $includeOptions
 	 *  @param array<string|array{value: string, label: string}> $excludeOptions
 	 */
@@ -75,15 +78,12 @@ readonly class ReportForm implements \Stringable
 			$b->name !== '' ? $b->name : $b->id,
 		));
 
-		$options = HTMLUtils::element('option', $this->t('report.collection_placeholder'), ['value' => '']);
-		foreach ($collections as $collection) {
-			$label    = $collection->name !== '' ? $collection->name : $collection->id;
-			$options .= HTMLUtils::element('option', htmlspecialchars($label, ENT_QUOTES, 'UTF-8'), [
-				'value' => $collection->id,
-			]);
-		}
+		$options = array_map(fn (CollectionData $c): array => [
+			'value' => $c->id,
+			'label' => $c->name !== '' ? $c->name : $c->id,
+		], $collections);
 
-		$select = HTMLUtils::element('select', $options, [
+		$select = HTMLUtils::select($options, '', $this->t('report.collection_placeholder'), [
 			'name'  => 'collection',
 			'class' => 'report-collection-input',
 		]);
@@ -151,10 +151,7 @@ readonly class ReportForm implements \Stringable
 	 */
 	private function buildSelectFilter(string $name, string $value, string $placeholder, array $options): string
 	{
-		$optionHtml = HTMLUtils::element('option', $placeholder, ['value' => '']);
-		$optionHtml .= HTMLUtils::options($options, $value);
-
-		return HTMLUtils::element('select', $optionHtml, [
+		return HTMLUtils::select($options, $value, $placeholder, [
 			'name'  => $name,
 			'class' => 'report-filter-input',
 		]);

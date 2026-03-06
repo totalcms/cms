@@ -22,17 +22,6 @@ class MultiselectField extends SelectField
 		}
 	}
 
-	/** @param array<string,string> $option */
-	protected function buildOption(array $option): string
-	{
-		$attributes = ['value' => $option['value']];
-		if (in_array($option['value'], $this->value)) {
-			$attributes['selected'] = '';
-		}
-
-		return HTMLUtils::element('option', $option['label'], $attributes);
-	}
-
 	protected function placeholderOption(): string
 	{
 		if ($this->placeholder === '') {

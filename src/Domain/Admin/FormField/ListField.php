@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+
 class ListField extends MultiselectField
 {
 	protected string $defaultInputType = 'select';
@@ -55,15 +57,8 @@ class ListField extends MultiselectField
 			$this->options = array_merge($valueOptions, $remainingOptions);
 		}
 
-		foreach ($this->options as $key => $option) {
-			if (is_string($option)) {
-				$option = $this->optionFromString($option);
-			}
-			if (is_array($option)) {
-				$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
-			}
-		}
+		$selected = is_array($this->value) ? $this->value : (string)($this->value ?? '');
 
-		return $options;
+		return $options . HTMLUtils::options($this->options, $selected);
 	}
 }
