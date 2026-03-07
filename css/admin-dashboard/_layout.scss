@@ -238,7 +238,7 @@ body {
 
 			&.active,
 			&:hover {
-				background-color : oklch(var(--totalform-nearwhite));
+				background-color : oklch(var(--totalform-lightgray) / 0.4);
 			}
 
 			&:before {
