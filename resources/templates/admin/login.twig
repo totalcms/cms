@@ -29,7 +29,8 @@
 	{% set formSettings = {
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
-		flashMessages : errorMessages
+		flashMessages : errorMessages,
+		showPasskeys  : authCollection is not empty
 	} %}
 
 	{% if cms.edition.can('templates') %}
