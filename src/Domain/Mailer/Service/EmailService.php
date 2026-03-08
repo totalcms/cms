@@ -35,10 +35,11 @@ readonly class EmailService
 	 * @param string $mailerId Mailer object ID
 	 * @param array<string,mixed> $data Data for Twig processing
 	 * @param string|null $overrideTo Override recipient email address (for bulk testing)
+	 * @param array<string,mixed> $user Current user data for Twig processing ({{ user.field }})
 	 *
 	 * @return array{success:bool,message:string,error?:string}
 	 */
-	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null): array
+	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = []): array
 	{
 		// Mailer actions require Standard edition or higher
 		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
@@ -70,7 +71,7 @@ readonly class EmailService
 			}
 
 			// Process all Twig fields
-			$twigData = ['data' => $data];
+			$twigData = ['data' => $data, 'user' => $user];
 
 			$processedTo = $overrideTo !== null && $overrideTo !== ''
 				? $overrideTo

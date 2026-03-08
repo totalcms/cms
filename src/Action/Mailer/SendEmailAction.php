@@ -6,6 +6,7 @@ namespace TotalCMS\Action\Mailer;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -17,6 +18,7 @@ readonly class SendEmailAction
 	public function __construct(
 		private EmailService $emailService,
 		private JsonRenderer $renderer,
+		private AccessManager $accessManager,
 	) {
 	}
 
@@ -50,7 +52,8 @@ readonly class SendEmailAction
 		}
 
 		// Send email
-		$result = $this->emailService->sendEmail($mailerId, $emailData);
+		$userData = $this->accessManager->userData();
+		$result = $this->emailService->sendEmail($mailerId, $emailData, user: $userData);
 
 		// Set appropriate HTTP status code
 		if (!$result['success']) {
