@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Import;
 
-use GuzzleHttp\Client;
 use Laminas\Feed\Reader\Entry\AbstractEntry;
 use Laminas\Feed\Reader\Entry\EntryInterface;
 use Laminas\Feed\Reader\Reader;
@@ -10,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\HttpClientInterface;
 
 class RssImporter
 {
@@ -19,6 +19,7 @@ class RssImporter
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly JobQueuer $jobQueuer,
+		private readonly HttpClientInterface $httpClient,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('rss-importer');
@@ -80,19 +81,21 @@ class RssImporter
 	 */
 	private function fetchRawFeed(string $feedUrl): string
 	{
-		$client   = new Client(['timeout' => 30, 'verify' => false]);
-		$response = $client->get($feedUrl);
+		$response = $this->httpClient->request('GET', $feedUrl, [
+			'timeout'          => 30,
+			'verify_ssl'       => false,
+			'follow_redirects' => true,
+		]);
 
-		if ($response->getStatusCode() !== 200) {
-			throw new \RuntimeException(sprintf('Failed to fetch feed: HTTP %d', $response->getStatusCode()));
+		if ($response->statusCode !== 200) {
+			throw new \RuntimeException(sprintf('Failed to fetch feed: HTTP %d', $response->statusCode));
 		}
 
-		$body = $response->getBody()->getContents();
-		if (trim($body) === '') {
+		if (trim($response->body) === '') {
 			throw new \RuntimeException('Feed returned empty response');
 		}
 
-		return $body;
+		return $response->body;
 	}
 
 	/**
@@ -568,25 +571,24 @@ class RssImporter
 	private function downloadImage(string $url): ?string
 	{
 		try {
-			$client   = new Client(['timeout' => 15, 'verify' => false]);
-			$response = $client->get($url);
+			$response = $this->httpClient->request('GET', $url, [
+				'timeout'          => 15,
+				'verify_ssl'       => false,
+				'follow_redirects' => true,
+			]);
 
-			if ($response->getStatusCode() !== 200) {
-				$this->logger->warning(sprintf('Failed to download image: %s (status %d)', $url, $response->getStatusCode()));
+			if ($response->statusCode !== 200) {
+				$this->logger->warning(sprintf('Failed to download image: %s (status %d)', $url, $response->statusCode));
 
 				return null;
 			}
 
-			$contentType = $response->getHeaderLine('Content-Type');
-			$ext         = $this->extensionFromContentType($contentType);
-			if ($ext === null) {
-				$urlPath  = parse_url($url, PHP_URL_PATH);
-				$pathInfo = pathinfo(is_string($urlPath) ? $urlPath : '');
-				$ext      = isset($pathInfo['extension']) && $pathInfo['extension'] !== '' ? $pathInfo['extension'] : 'jpg';
-			}
+			$urlPath  = parse_url($url, PHP_URL_PATH);
+			$pathInfo = pathinfo(is_string($urlPath) ? $urlPath : '');
+			$ext      = isset($pathInfo['extension']) && $pathInfo['extension'] !== '' ? $pathInfo['extension'] : 'jpg';
 
 			$tempFile = sys_get_temp_dir() . '/rss-import-' . uniqid() . '.' . $ext;
-			file_put_contents($tempFile, $response->getBody()->getContents());
+			file_put_contents($tempFile, $response->body);
 
 			$this->logger->info(sprintf('Downloaded image: %s → %s', $url, $tempFile));
 
@@ -596,29 +598,6 @@ class RssImporter
 
 			return null;
 		}
-	}
-
-	/**
-	 * Map content type to file extension.
-	 */
-	private function extensionFromContentType(string $contentType): ?string
-	{
-		$map = [
-			'image/jpeg'    => 'jpg',
-			'image/png'     => 'png',
-			'image/gif'     => 'gif',
-			'image/webp'    => 'webp',
-			'image/svg+xml' => 'svg',
-			'image/avif'    => 'avif',
-		];
-
-		foreach ($map as $mime => $ext) {
-			if (str_contains($contentType, $mime)) {
-				return $ext;
-			}
-		}
-
-		return null;
 	}
 
 	/**

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Import\WordpressImporter;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\HttpClientInterface;
 
 class WordpressImporterTest extends TestCase
 {
@@ -35,9 +36,13 @@ class WordpressImporterTest extends TestCase
 		$jobDataStub->id = 'test-job-id';
 		$this->jobQueuer->method('queueImport')->willReturn($jobDataStub);
 
+		$httpClient = $this->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new \TotalCMS\Support\HttpResponse(200, 'fake-image-data'));
+
 		$this->importer = new WordpressImporter(
 			$this->collectionFetcher,
 			$this->jobQueuer,
+			$httpClient,
 			$loggerFactory,
 		);
 
@@ -257,7 +262,8 @@ class WordpressImporterTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($logger);
 
-		$importer = new WordpressImporter($collectionFetcher, $this->jobQueuer, $loggerFactory);
+		$httpClient = $this->createMock(HttpClientInterface::class);
+		$importer = new WordpressImporter($collectionFetcher, $this->jobQueuer, $httpClient, $loggerFactory);
 
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('does not exist');

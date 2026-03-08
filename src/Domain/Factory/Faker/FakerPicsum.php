@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Factory\Faker;
 
 use Faker\Provider\Base;
-use TotalCMS\Support\CurlHttpClient;
+use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
 
 class FakerPicsum extends Base
@@ -20,7 +20,7 @@ class FakerPicsum extends Base
 
 	private static function getHttpClient(): HttpClientInterface
 	{
-		return self::$httpClient ?? new CurlHttpClient();
+		return self::$httpClient ?? new GuzzleHttpClient();
 	}
 
 	public const JPG_IMAGE  = 'jpg';

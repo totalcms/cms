@@ -191,7 +191,7 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\CurlHttpClient;
+use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
 
 return [
@@ -868,7 +868,7 @@ return [
 		$container->get(LoggerFactory::class),
 	),
 
-	HttpClientInterface::class => fn (): HttpClientInterface => new CurlHttpClient(),
+	HttpClientInterface::class => fn (): HttpClientInterface => new GuzzleHttpClient(),
 
 	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
 		$container->get(Config::class),
