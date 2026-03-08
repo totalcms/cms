@@ -8,6 +8,7 @@ use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 readonly class FileSaveAction
@@ -17,6 +18,7 @@ readonly class FileSaveAction
 		private SaverFactory $factory,
 		private Config $config,
 		private HeicConverter $heicConverter,
+		private HttpClientInterface $httpClient,
 	) {
 	}
 
@@ -186,49 +188,32 @@ readonly class FileSaveAction
 		$filename     = $this->extractFilenameFromUrl($url);
 		$tempFilePath = $this->config->tmpdir . '/' . $filename;
 
-		// Download the file using cURL for better control
-		$ch = curl_init();
-		if ($ch === false) {
-			throw new \RuntimeException('Failed to initialize cURL');
-		}
 		// Max download size in bytes (0 = unlimited)
 		$maxBytes = $this->config->maxDownloadSize > 0
 			? $this->config->maxDownloadSize * 1024 * 1024
 			: 0;
 
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'TotalCMS File Downloader');
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-
-		// Abort download if it exceeds the configured max size
-		if ($maxBytes > 0) {
-			curl_setopt($ch, CURLOPT_NOPROGRESS, false);
-			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, fn (\CurlHandle $resource, int $downloadSize, int $downloaded, int $uploadSize, int $uploaded): int => ($downloadSize > $maxBytes || $downloaded > $maxBytes) ? 1 : 0);
-		}
-
-		$fileContent = curl_exec($ch);
-		$httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$error       = curl_error($ch);
-		curl_close($ch);
-
-		if ($fileContent === false || $error !== '') {
-			if ($maxBytes > 0 && str_contains($error, 'aborted by callback')) {
+		try {
+			$response = $this->httpClient->request('GET', $url, [
+				'timeout'          => 30,
+				'follow_redirects' => 5,
+				'user_agent'       => 'TotalCMS File Downloader',
+				'verify_ssl'       => true,
+				'max_bytes'        => $maxBytes,
+			]);
+		} catch (\RuntimeException $e) {
+			if ($maxBytes > 0 && str_contains($e->getMessage(), 'maximum size')) {
 				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB');
 			}
-			throw new \RuntimeException('Failed to download file from URL: ' . $error);
+			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage());
 		}
 
-		if ($httpCode !== 200) {
-			throw new \RuntimeException('HTTP error when downloading file: ' . $httpCode);
+		if ($response->statusCode !== 200) {
+			throw new \RuntimeException('HTTP error when downloading file: ' . $response->statusCode);
 		}
 
 		// Save the downloaded content to a temporary file
-		$bytesWritten = file_put_contents($tempFilePath, $fileContent);
+		$bytesWritten = file_put_contents($tempFilePath, $response->body);
 		if ($bytesWritten === false) {
 			throw new \RuntimeException('Failed to save downloaded file to: ' . $tempFilePath);
 		}

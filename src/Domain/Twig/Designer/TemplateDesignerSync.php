@@ -7,6 +7,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
 
 /**
  * Handles template syncing for the Template Designer system.
@@ -22,6 +23,7 @@ class TemplateDesignerSync
 		private readonly TemplateSaver $templateSaver,
 		private readonly TemplateDesignerRegistry $registry,
 		private readonly EditionFeatureService $editionFeatures,
+		private readonly HttpClientInterface $httpClient,
 	) {
 	}
 
@@ -92,39 +94,25 @@ class TemplateDesignerSync
 	{
 		$url = $productionUrl . '/designer/templates/' . $templatePath;
 
-		$ch = curl_init($url);
-		if ($ch === false) {
-			$error = 'Failed to initialize cURL';
+		try {
+			$response = $this->httpClient->request('PUT', $url, [
+				'body'            => $content,
+				'timeout'         => 3,
+				'connect_timeout' => 2,
+				'headers'         => [
+					'X-Designer-Token: ' . $token,
+					'Content-Type: text/plain',
+				],
+			]);
+		} catch (\RuntimeException $e) {
+			$error = $e->getMessage() !== '' ? $e->getMessage() : 'Connection failed';
 
 			return 'error';
 		}
 
-		curl_setopt_array($ch, [
-			CURLOPT_CUSTOMREQUEST  => 'PUT',
-			CURLOPT_POSTFIELDS     => $content,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_TIMEOUT        => 3,
-			CURLOPT_CONNECTTIMEOUT => 2,
-			CURLOPT_HTTPHEADER     => [
-				'X-Designer-Token: ' . $token,
-				'Content-Type: text/plain',
-			],
-		]);
-
-		$result    = curl_exec($ch);
-		$httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$curlError = curl_error($ch);
-		curl_close($ch);
-
-		if ($result === false) {
-			$error = $curlError !== '' ? $curlError : 'Connection failed';
-
-			return 'error';
-		}
-
-		if ($httpCode !== 200) {
-			$body  = is_string($result) ? trim($result) : '';
-			$error = "HTTP {$httpCode}";
+		if ($response->statusCode !== 200) {
+			$body  = trim($response->body);
+			$error = "HTTP {$response->statusCode}";
 			if ($body !== '') {
 				$error .= ': ' . mb_substr($body, 0, 200);
 			}

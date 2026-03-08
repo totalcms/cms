@@ -8,6 +8,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\Version;
 
 /**
@@ -23,6 +24,7 @@ class LicenseValidator
 	public function __construct(
 		private readonly Config $config,
 		private readonly CacheManager $cacheManager,
+		private readonly HttpClientInterface $httpClient,
 		private readonly ?OfflineLicenseValidator $offlineValidator = null,
 	) {
 	}
@@ -264,7 +266,7 @@ class LicenseValidator
 	}
 
 	/**
-	 * Make HTTP request to license API using cURL.
+	 * Make HTTP request to license API.
 	 *
 	 * @param array<string,mixed> $payload
 	 *
@@ -285,74 +287,51 @@ class LicenseValidator
 			throw new LicenseException('Failed to encode request payload');
 		}
 
-		$curl = curl_init();
-		if ($curl === false) {
-			throw new LicenseException('Failed to initialize cURL');
+		try {
+			$response = $this->httpClient->request('POST', $url, [
+				'body'              => $jsonPayload,
+				'headers'           => [
+					'Content-Type: application/json',
+					'User-Agent: Total CMS/' . $this->getCurrentVersion(),
+				],
+				'timeout'           => 30,
+				'connect_timeout'   => 10,
+				'follow_redirects'  => 3,
+				'verify_ssl'        => true,
+				'user_agent'        => 'Total CMS/' . $this->getCurrentVersion(),
+			]);
+		} catch (\RuntimeException $e) {
+			throw new LicenseException('HTTP request failed: ' . $e->getMessage(), 0, $e);
 		}
 
-		curl_setopt_array($curl, [
-			CURLOPT_URL            => $url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_POST           => true,
-			CURLOPT_POSTFIELDS     => $jsonPayload,
-			CURLOPT_HTTPHEADER     => [
-				'Content-Type: application/json',
-				'User-Agent: Total CMS/' . $this->getCurrentVersion(),
-			],
-			CURLOPT_TIMEOUT        => 30,
-			CURLOPT_CONNECTTIMEOUT => 10,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_MAXREDIRS      => 3,
-			CURLOPT_SSL_VERIFYPEER => true,
-			CURLOPT_SSL_VERIFYHOST => 2,
-			CURLOPT_USERAGENT      => 'Total CMS/' . $this->getCurrentVersion(),
-		]);
-
-		$response  = curl_exec($curl);
-		$httpCode  = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		$curlError = curl_error($curl);
-
-		// Note: curl_close() not needed - deprecated in PHP 8.5, no effect since PHP 8.0
-		// Curl handles are automatically cleaned up when they go out of scope
-
-		if ($response === false || $curlError !== '') {
-			throw new LicenseException(
-				'HTTP request failed: ' . ($curlError ?: 'Unknown cURL error')
-			);
-		}
-
-		if (!is_string($response)) {
-			throw new LicenseException('Invalid response type from cURL');
-		}
-
-		$decodedResponse = json_decode($response, true);
+		$decodedResponse = $response->json();
 
 		if ($decodedResponse === null) {
 			throw new LicenseException(
-				'Invalid JSON response from license server. HTTP Code: ' . $httpCode
+				'Invalid JSON response from license server. HTTP Code: ' . $response->statusCode
 			);
 		}
 
 		// Check for API error responses
 		if (isset($decodedResponse['error'])) {
 			$errorMessage = is_array($decodedResponse['error'])
-				? json_encode($decodedResponse['error'])
+				? (string)json_encode($decodedResponse['error'])
 				: $decodedResponse['error'];
 			throw new LicenseException(
 				$errorMessage,
-				$decodedResponse['code'] ?? $httpCode
+				$decodedResponse['code'] ?? $response->statusCode
 			);
 		}
 
 		// Check for HTTP error codes
-		if ($httpCode >= 400) {
+		if ($response->statusCode >= 400) {
 			$errorMessage = 'HTTP Error';
 			if (isset($decodedResponse['error'])) {
 				$errorMessage = is_array($decodedResponse['error'])
-					? json_encode($decodedResponse['error'])
+					? (string)json_encode($decodedResponse['error'])
 					: $decodedResponse['error'];
 			}
-			throw new LicenseException($errorMessage, $httpCode);
+			throw new LicenseException($errorMessage, $response->statusCode);
 		}
 
 		return $decodedResponse;

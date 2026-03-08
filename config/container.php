@@ -191,6 +191,8 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\CurlHttpClient;
+use TotalCMS\Support\HttpClientInterface;
 
 return [
 	// Application settings
@@ -746,6 +748,7 @@ return [
 		$container->get(TemplateSaver::class),
 		$container->get(TemplateDesignerRegistry::class),
 		$container->get(EditionFeatureService::class),
+		$container->get(HttpClientInterface::class),
 	),
 
 	DesignerAccessMiddleware::class => fn (ContainerInterface $container): DesignerAccessMiddleware => new DesignerAccessMiddleware(
@@ -865,9 +868,12 @@ return [
 		$container->get(LoggerFactory::class),
 	),
 
+	HttpClientInterface::class => fn (): HttpClientInterface => new CurlHttpClient(),
+
 	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
 		$container->get(Config::class),
 		$container->get(CacheManager::class),
+		$container->get(HttpClientInterface::class),
 		$container->get(OfflineLicenseValidator::class),
 	),
 

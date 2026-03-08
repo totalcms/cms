@@ -3,9 +3,26 @@
 namespace TotalCMS\Domain\Factory\Faker;
 
 use Faker\Provider\Base;
+use TotalCMS\Support\CurlHttpClient;
+use TotalCMS\Support\HttpClientInterface;
 
 class FakerPicsum extends Base
 {
+	private static ?HttpClientInterface $httpClient = null;
+
+	/**
+	 * Set the HTTP client (for testing).
+	 */
+	public static function setHttpClient(?HttpClientInterface $client): void
+	{
+		self::$httpClient = $client;
+	}
+
+	private static function getHttpClient(): HttpClientInterface
+	{
+		return self::$httpClient ?? new CurlHttpClient();
+	}
+
 	public const JPG_IMAGE  = 'jpg';
 	public const WEBP_IMAGE = 'webp';
 
@@ -106,32 +123,25 @@ class FakerPicsum extends Base
 		$filename = uniqid('picsum-', true) . '.jpg';
 		$filepath = $dir . DIRECTORY_SEPARATOR . $filename;
 
-		// save file
-		if (!function_exists('curl_exec')) {
-			throw new \RuntimeException('The image formatter downloads an image from a remote HTTP server. Therefore, it requires that PHP can request remote hosts, either via cURL or fopen()');
+		// Download using HTTP client
+		try {
+			$response = self::getHttpClient()->request('GET', $url, [
+				'timeout'          => 10,
+				'connect_timeout'  => 5,
+				'follow_redirects' => true,
+				'user_agent'       => 'TotalCMS/3.0',
+			]);
+		} catch (\RuntimeException) {
+			throw new \RuntimeException('The image formatter was unable to download the remote image ' . $url);
 		}
 
-		// use cURL
-		$fp = fopen($filepath, 'w');
-		if ($fp === false) {
+		if ($response->statusCode !== 200) {
+			throw new \RuntimeException('The image formatter was unable to download the remote image ' . $url);
+		}
+
+		$bytesWritten = file_put_contents($filepath, $response->body);
+		if ($bytesWritten === false) {
 			throw new \RuntimeException('The image formatter was unable to write to the file ' . $filepath);
-		}
-		$ch = curl_init($url);
-		if ($ch === false) {
-			throw new \RuntimeException('The image formatter was unable to download the remote image ' . $url);
-		}
-		curl_setopt($ch, CURLOPT_FILE, $fp);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'TotalCMS/3.0');
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10); // 10 second timeout
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); // 5 second connection timeout
-		$success = curl_exec($ch) && curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200;
-		fclose($fp);
-		curl_close($ch);
-
-		if (!$success) {
-			unlink($filepath);
-			throw new \RuntimeException('The image formatter was unable to download the remote image ' . $url);
 		}
 
 		return $filepath;
