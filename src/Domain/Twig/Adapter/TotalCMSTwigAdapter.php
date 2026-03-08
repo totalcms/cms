@@ -60,6 +60,10 @@ class TotalCMSTwigAdapter
 
 	public function config(string $key, ?string $setting = null): mixed
 	{
+		if (!property_exists($this->config, $key)) {
+			return '';
+		}
+
 		if ($setting === null) {
 			return $this->config->$key;
 		}
