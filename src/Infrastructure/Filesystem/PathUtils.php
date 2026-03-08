@@ -38,7 +38,7 @@ class PathUtils
 				$subpath = str_replace('\\', '/', $subpath);
 				$subpath = str_replace('..', '', $subpath);
 				$subpath = trim($subpath, '/');
-				$path = sprintf('%s/%s', $path, $subpath);
+				$path    = sprintf('%s/%s', $path, $subpath);
 			}
 			$path = sprintf('%s/%s', $path, $filename);
 		}

@@ -22,8 +22,8 @@ readonly class JobQueueStats implements \Stringable
 
 		$rows = '';
 		foreach ($stats as $key => $value) {
-			$col1 = HTMLUtils::element('td', $key);
-			$col2 = HTMLUtils::element('td', strval($value));
+			$col1     = HTMLUtils::element('td', $key);
+			$col2     = HTMLUtils::element('td', strval($value));
 			$cssClass = str_replace(' ', '-', strtolower($key));
 			$rows .= HTMLUtils::element('tr', $col1 . $col2, ['class' => $cssClass]);
 		}

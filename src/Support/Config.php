@@ -4,20 +4,20 @@ namespace TotalCMS\Support;
 
 class Config
 {
-	public string $env      = 'prod';
-	public string $template = '';
-	public string $datadir  = '';
-	public string $tmpdir   = '';
-	public string $cachedir = '';
-	public string $domain   = '';
-	public string $url      = '';
-	public string $api      = '';
-	public string $locale   = '';
-	public string $timezone = '';
-	public string $notfound    = '';
+	public string $env          = 'prod';
+	public string $template     = '';
+	public string $datadir      = '';
+	public string $tmpdir       = '';
+	public string $cachedir     = '';
+	public string $domain       = '';
+	public string $url          = '';
+	public string $api          = '';
+	public string $locale       = '';
+	public string $timezone     = '';
+	public string $notfound     = '';
 	public int $maxDownloadSize = 2048;
-	public bool $debug         = false;
-	public bool $sentry     = true;
+	public bool $debug          = false;
+	public bool $sentry         = true;
 	/** @var array<string,mixed> */
 	public array $cache = [];
 	/** @var array<string,mixed> */
@@ -46,33 +46,33 @@ class Config
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
 	{
-		$this->env        = $settings['env'] ?? 'prod';
-		$this->template   = $settings['template'];
-		$this->dashboard  = $settings['dashboard'];
-		$this->datadir    = $settings['datadir'];
-		$this->tmpdir     = $settings['tmpdir'];
-		$this->cachedir   = $settings['cachedir'];
-		$this->cache      = $settings['cache'];
-		$this->logger     = $settings['logger'];
-		$this->sentry     = (bool)($settings['sentry'] ?? true);
-		$this->error      = $settings['error'];
-		$this->imageworks = $settings['imageworks'];
-		$this->domain     = $settings['domain'];
-		$this->url        = $settings['url'];
-		$this->api        = $settings['api'];
-		$this->locale     = $settings['locale'];
-		$this->session    = $settings['session'];
-		$this->auth       = $settings['auth'];
-		$this->debug      = $settings['debug'];
+		$this->env             = $settings['env'] ?? 'prod';
+		$this->template        = $settings['template'];
+		$this->dashboard       = $settings['dashboard'];
+		$this->datadir         = $settings['datadir'];
+		$this->tmpdir          = $settings['tmpdir'];
+		$this->cachedir        = $settings['cachedir'];
+		$this->cache           = $settings['cache'];
+		$this->logger          = $settings['logger'];
+		$this->sentry          = (bool)($settings['sentry'] ?? true);
+		$this->error           = $settings['error'];
+		$this->imageworks      = $settings['imageworks'];
+		$this->domain          = $settings['domain'];
+		$this->url             = $settings['url'];
+		$this->api             = $settings['api'];
+		$this->locale          = $settings['locale'];
+		$this->session         = $settings['session'];
+		$this->auth            = $settings['auth'];
+		$this->debug           = $settings['debug'];
 		$this->notfound        = $settings['notfound'];
 		$this->maxDownloadSize = (int)($settings['maxDownloadSize'] ?? 2048);
-		$this->htmlclean  = $settings['htmlclean'] ?? [];
-		$this->smtp       = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
-		$this->mailer     = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
-		$pushnotif = $settings['pushnotif'] ?? [];
-		$this->pushnotif   = is_array($pushnotif) ? $pushnotif : [];
-		$this->presets    = is_array($settings['presets']['presetsettings'] ?? null) ? $settings['presets']['presetsettings'] : [];
-		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
+		$this->htmlclean       = $settings['htmlclean'] ?? [];
+		$this->smtp            = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
+		$this->mailer          = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
+		$pushnotif             = $settings['pushnotif'] ?? [];
+		$this->pushnotif       = is_array($pushnotif) ? $pushnotif : [];
+		$this->presets         = is_array($settings['presets']['presetsettings'] ?? null) ? $settings['presets']['presetsettings'] : [];
+		$this->timezone        = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);
 	}

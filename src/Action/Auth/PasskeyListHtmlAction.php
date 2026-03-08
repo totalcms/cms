@@ -68,7 +68,8 @@ readonly class PasskeyListHtmlAction
 			$rows .= HTMLUtils::element('tr', $cols);
 		}
 
-		$headerRow = HTMLUtils::element('tr',
+		$headerRow = HTMLUtils::element(
+			'tr',
 			HTMLUtils::element('th', 'Name')
 			. HTMLUtils::element('th', 'Created')
 			. HTMLUtils::element('th', 'Last Used')

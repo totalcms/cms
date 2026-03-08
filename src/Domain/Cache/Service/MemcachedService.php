@@ -203,11 +203,9 @@ class MemcachedService implements CacheInterface
 
 	private function getConnection(): \Memcached
 	{
-		if ($this->memcached instanceof \Memcached) {
-			// Verify existing connection is still alive
-			if ($this->memcached->getStats() === []) {
-				$this->memcached = null;
-			}
+		// Verify existing connection is still alive
+		if ($this->memcached instanceof \Memcached && $this->memcached->getStats() === []) {
+			$this->memcached = null;
 		}
 
 		if (!$this->memcached instanceof \Memcached) {

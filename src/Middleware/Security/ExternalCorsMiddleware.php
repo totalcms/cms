@@ -38,8 +38,6 @@ class ExternalCorsMiddleware implements MiddlewareInterface
 	 *
 	 * @param ResponseInterface $response The response
 	 * @param array<string>|null $methods Allowed methods (for preflight only)
-	 *
-	 * @return ResponseInterface
 	 */
 	private function addCorsHeaders(ResponseInterface $response, ?array $methods = null): ResponseInterface
 	{

@@ -53,7 +53,7 @@ readonly class SendEmailAction
 
 		// Send email
 		$userData = $this->accessManager->userData();
-		$result = $this->emailService->sendEmail($mailerId, $emailData, user: $userData);
+		$result   = $this->emailService->sendEmail($mailerId, $emailData, user: $userData);
 
 		// Set appropriate HTTP status code
 		if (!$result['success']) {

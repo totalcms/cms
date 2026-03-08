@@ -208,15 +208,7 @@ readonly class FileSaveAction
 		// Abort download if it exceeds the configured max size
 		if ($maxBytes > 0) {
 			curl_setopt($ch, CURLOPT_NOPROGRESS, false);
-			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function (
-				\CurlHandle $resource,
-				int $downloadSize,
-				int $downloaded,
-				int $uploadSize,
-				int $uploaded,
-			) use ($maxBytes): int {
-				return ($downloadSize > $maxBytes || $downloaded > $maxBytes) ? 1 : 0;
-			});
+			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, fn (\CurlHandle $resource, int $downloadSize, int $downloaded, int $uploadSize, int $uploaded): int => ($downloadSize > $maxBytes || $downloaded > $maxBytes) ? 1 : 0);
 		}
 
 		$fileContent = curl_exec($ch);
