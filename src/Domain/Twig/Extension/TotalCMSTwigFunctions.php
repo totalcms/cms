@@ -38,6 +38,9 @@ class TotalCMSTwigFunctions
 		'ksort',
 		'krsort',
 		'sortByKey',
+		'next',
+		'prev',
+		'setSessionData',
 		'istype',
 		'var_dump',
 		'print_r',
@@ -77,6 +80,70 @@ class TotalCMSTwigFunctions
 		}
 
 		return $twigFunctions;
+	}
+
+	// -------------------------
+	// Navigation Functions
+	// -------------------------
+
+	/**
+	 * Find the next item in a list relative to the current item ID.
+	 * Accepts an array of objects (with 'id' field) or a flat array of IDs.
+	 *
+	 * @param array<mixed> $items
+	 */
+	public static function next(array $items, string $currentId, bool $wrap = false): mixed
+	{
+		return self::findAdjacentItem($items, $currentId, 1, $wrap);
+	}
+
+	/**
+	 * Find the previous item in a list relative to the current item ID.
+	 * Accepts an array of objects (with 'id' field) or a flat array of IDs.
+	 *
+	 * @param array<mixed> $items
+	 */
+	public static function prev(array $items, string $currentId, bool $wrap = false): mixed
+	{
+		return self::findAdjacentItem($items, $currentId, -1, $wrap);
+	}
+
+	/** @param array<mixed> $items */
+	private static function findAdjacentItem(array $items, string $currentId, int $direction, bool $wrap): mixed
+	{
+		$items = array_values($items);
+		$count = count($items);
+
+		foreach ($items as $index => $item) {
+			$id = is_array($item) ? (string) ($item['id'] ?? '') : (string) $item;
+			if ($id !== $currentId) {
+				continue;
+			}
+
+			$targetIndex = $index + $direction;
+			if ($targetIndex >= 0 && $targetIndex < $count) {
+				return $items[$targetIndex];
+			}
+			if ($wrap && $count > 0) {
+				return $items[($targetIndex + $count) % $count];
+			}
+
+			return null;
+		}
+
+		return null;
+	}
+
+	// -------------------------
+	// Session Functions
+	// -------------------------
+
+	/** @SuppressWarnings("PHPMD.Superglobals") */
+	public static function setSessionData(string $key, mixed $value): string
+	{
+		$_SESSION[$key] = $value;
+
+		return '';
 	}
 
 	// -------------------------

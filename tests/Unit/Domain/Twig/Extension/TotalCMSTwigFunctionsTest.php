@@ -91,6 +91,158 @@ describe('TotalCMSTwigFunctions', function (): void {
 	});
 
 	// -------------------------
+	// Navigation Functions
+	// -------------------------
+
+	test('TotalCMSTwigFunctions → next returns next item in array of objects', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+			['id' => 'c', 'title' => 'Third'],
+		];
+
+		$result = TotalCMSTwigFunctions::next($items, 'a');
+		expect($result)->toBe(['id' => 'b', 'title' => 'Second']);
+
+		$result = TotalCMSTwigFunctions::next($items, 'b');
+		expect($result)->toBe(['id' => 'c', 'title' => 'Third']);
+	});
+
+	test('TotalCMSTwigFunctions → prev returns previous item in array of objects', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+			['id' => 'c', 'title' => 'Third'],
+		];
+
+		$result = TotalCMSTwigFunctions::prev($items, 'c');
+		expect($result)->toBe(['id' => 'b', 'title' => 'Second']);
+
+		$result = TotalCMSTwigFunctions::prev($items, 'b');
+		expect($result)->toBe(['id' => 'a', 'title' => 'First']);
+	});
+
+	test('TotalCMSTwigFunctions → next returns null at end of list without wrap', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+		];
+
+		expect(TotalCMSTwigFunctions::next($items, 'b'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → prev returns null at start of list without wrap', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+		];
+
+		expect(TotalCMSTwigFunctions::prev($items, 'a'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → next wraps to first item when wrap is true', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+			['id' => 'c', 'title' => 'Third'],
+		];
+
+		$result = TotalCMSTwigFunctions::next($items, 'c', true);
+		expect($result)->toBe(['id' => 'a', 'title' => 'First']);
+	});
+
+	test('TotalCMSTwigFunctions → prev wraps to last item when wrap is true', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+			['id' => 'c', 'title' => 'Third'],
+		];
+
+		$result = TotalCMSTwigFunctions::prev($items, 'a', true);
+		expect($result)->toBe(['id' => 'c', 'title' => 'Third']);
+	});
+
+	test('TotalCMSTwigFunctions → next works with flat array of IDs', function (): void {
+		$ids = ['abc', 'def', 'ghi'];
+
+		expect(TotalCMSTwigFunctions::next($ids, 'abc'))->toBe('def');
+		expect(TotalCMSTwigFunctions::next($ids, 'def'))->toBe('ghi');
+		expect(TotalCMSTwigFunctions::next($ids, 'ghi'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → prev works with flat array of IDs', function (): void {
+		$ids = ['abc', 'def', 'ghi'];
+
+		expect(TotalCMSTwigFunctions::prev($ids, 'ghi'))->toBe('def');
+		expect(TotalCMSTwigFunctions::prev($ids, 'def'))->toBe('abc');
+		expect(TotalCMSTwigFunctions::prev($ids, 'abc'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → next/prev wrap works with flat array of IDs', function (): void {
+		$ids = ['abc', 'def', 'ghi'];
+
+		expect(TotalCMSTwigFunctions::next($ids, 'ghi', true))->toBe('abc');
+		expect(TotalCMSTwigFunctions::prev($ids, 'abc', true))->toBe('ghi');
+	});
+
+	test('TotalCMSTwigFunctions → next/prev return null for unknown ID', function (): void {
+		$items = [
+			['id' => 'a', 'title' => 'First'],
+			['id' => 'b', 'title' => 'Second'],
+		];
+
+		expect(TotalCMSTwigFunctions::next($items, 'unknown'))->toBeNull();
+		expect(TotalCMSTwigFunctions::prev($items, 'unknown'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → next/prev return null for empty array', function (): void {
+		expect(TotalCMSTwigFunctions::next([], 'a'))->toBeNull();
+		expect(TotalCMSTwigFunctions::prev([], 'a'))->toBeNull();
+	});
+
+	test('TotalCMSTwigFunctions → next/prev handle single item list', function (): void {
+		$items = [['id' => 'a', 'title' => 'Only']];
+
+		expect(TotalCMSTwigFunctions::next($items, 'a'))->toBeNull();
+		expect(TotalCMSTwigFunctions::prev($items, 'a'))->toBeNull();
+		expect(TotalCMSTwigFunctions::next($items, 'a', true))->toBe(['id' => 'a', 'title' => 'Only']);
+		expect(TotalCMSTwigFunctions::prev($items, 'a', true))->toBe(['id' => 'a', 'title' => 'Only']);
+	});
+
+	test('TotalCMSTwigFunctions → next/prev match numeric IDs as strings', function (): void {
+		$items = [
+			['id' => 1, 'title' => 'First'],
+			['id' => 2, 'title' => 'Second'],
+			['id' => 3, 'title' => 'Third'],
+		];
+
+		expect(TotalCMSTwigFunctions::next($items, '1'))->toBe(['id' => 2, 'title' => 'Second']);
+		expect(TotalCMSTwigFunctions::prev($items, '3'))->toBe(['id' => 2, 'title' => 'Second']);
+	});
+
+	// -------------------------
+	// Session Functions
+	// -------------------------
+
+	test('TotalCMSTwigFunctions → setSessionData stores value in session', function (): void {
+		$result = TotalCMSTwigFunctions::setSessionData('test-key', 'test-value');
+
+		expect($result)->toBe('');
+		expect($_SESSION['test-key'])->toBe('test-value');
+
+		unset($_SESSION['test-key']);
+	});
+
+	test('TotalCMSTwigFunctions → setSessionData stores arrays in session', function (): void {
+		$ids = ['abc', 'def', 'ghi'];
+		TotalCMSTwigFunctions::setSessionData('nav-ids', $ids);
+
+		expect($_SESSION['nav-ids'])->toBe(['abc', 'def', 'ghi']);
+
+		unset($_SESSION['nav-ids']);
+	});
+
+	// -------------------------
 	// Type Checking
 	// -------------------------
 

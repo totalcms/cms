@@ -366,6 +366,89 @@ Checks if a variable is of a specific type.
 {% endfor %}
 ```
 
+## Navigation Functions
+
+### `next(items, currentId, wrap): mixed`
+Find the next item in a list relative to the current item ID. Works with both arrays of objects (with `id` field) and flat arrays of IDs.
+
+```twig
+{# With collection objects — returns the full object #}
+{% set articles = cms.collection.objects('blog') %}
+{% set nextArticle = next(articles, current_id) %}
+{% if nextArticle %}
+    <a href="/blog/{{ nextArticle.id }}">{{ nextArticle.title }} →</a>
+{% endif %}
+
+{# With a filtered/sorted list #}
+{% set featured = cms.collection.objects('blog') | filter(a => a.featured) %}
+{% set prevArticle = prev(featured, current_id) %}
+{% set nextArticle = next(featured, current_id) %}
+
+<nav class="post-navigation">
+    {% if prevArticle %}
+        <a href="/blog/{{ prevArticle.id }}">← {{ prevArticle.title }}</a>
+    {% endif %}
+    {% if nextArticle %}
+        <a href="/blog/{{ nextArticle.id }}">{{ nextArticle.title }} →</a>
+    {% endif %}
+</nav>
+
+{# With wrapping enabled — loops from last to first #}
+{% set articles = cms.collection.objects('blog') %}
+{% set nextArticle = next(articles, current_id, true) %}
+{% set prevArticle = prev(articles, current_id, true) %}
+
+{# With a flat array of IDs — returns the ID string #}
+{% set ids = ['abc', 'def', 'ghi'] %}
+{% set nextId = next(ids, 'abc') %}
+{# nextId = 'def' #}
+```
+
+### `prev(items, currentId, wrap): mixed`
+Find the previous item in a list relative to the current item ID. Same signature and behavior as `next()`, but in the opposite direction.
+
+```twig
+{% set articles = cms.collection.objects('blog') %}
+{% set prevArticle = prev(articles, current_id) %}
+{% if prevArticle %}
+    <a href="/blog/{{ prevArticle.id }}">← {{ prevArticle.title }}</a>
+{% endif %}
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `items` | array | required | Array of objects (with `id` field) or flat array of IDs |
+| `currentId` | string | required | The ID of the current item |
+| `wrap` | bool | `false` | When `true`, wraps around (last→first for next, first→last for prev) |
+
+## Session Functions
+
+### `setSessionData(key, value): string`
+Stores a value in the session. Returns an empty string so it can be used inline with `{{ }}`. Useful for persisting navigation context, user preferences, or filter state across pages.
+
+```twig
+{# Store filtered article IDs for next/prev navigation on detail pages #}
+{% set articles = cms.collection.objects('blog') | filter(a => a.category == 'tech') %}
+{{ setSessionData('blog-nav', articles | pluck('id')) }}
+
+{# On the detail page, retrieve the stored IDs #}
+{% set navIds = sessionData['blog-nav'] %}
+{% if navIds %}
+    {% set nextId = next(navIds, current_id) %}
+    {% set prevId = prev(navIds, current_id) %}
+    <nav class="post-navigation">
+        {% if prevId %}<a href="/blog/{{ prevId }}">← Previous</a>{% endif %}
+        {% if nextId %}<a href="/blog/{{ nextId }}">Next →</a>{% endif %}
+    </nav>
+{% endif %}
+
+{# Store any value — strings, arrays, objects #}
+{{ setSessionData('last-category', 'tech') }}
+{{ setSessionData('user-prefs', {theme: 'dark', perPage: 20}) }}
+```
+
 ## Array Sorting Functions
 
 ### `ksort(array): array`
