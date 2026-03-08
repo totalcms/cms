@@ -1,0 +1,20 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Push Notification Settings",
+	"description" : "Push notification service configuration",
+	"type"        : "object",
+	"properties"  : {
+		"pushoverAppToken": {
+			"type"        : "text",
+			"label"       : "Pushover Application Token",
+			"help"        : "Your Pushover application API token. Create one at pushover.net/apps/build",
+			"placeholder" : "azGDORePK8gMaC0QOYAMyEEuzJnyUi"
+		},
+		"pushoverUserKey": {
+			"type"        : "text",
+			"label"       : "Pushover User Key",
+			"help"        : "Your Pushover user key. Found on your dashboard at pushover.net/dashboard",
+			"placeholder" : "uQiRzpo4DXghDmr9QzzfQu27cmVRsG"
+		}
+	}
+}

@@ -1,6 +1,6 @@
 ---
 title: "Collection Form Settings"
-description: "Configure Total CMS collection form behavior including help text display, form actions like redirects, webhooks, mailer integration, and validation."
+description: "Configure Total CMS collection form behavior including help text display, form actions like redirects, webhooks, mailer, Pushover notifications, and validation."
 ---
 
 # Collection Form Settings
@@ -372,11 +372,58 @@ Send an email notification using a configured mailer.
 - `mailerId` - The ID of the mailer configuration to use
 - `continue` - (optional) If `true`, continue to next action even if email fails
 
+**Twig Variables:** Mailer templates have access to `{{ data.fieldName }}` for form field values and `{{ user.fieldName }}` for the authenticated user who triggered the action (e.g., `{{ user.name }}`, `{{ user.email }}`).
+
 **Example use cases:**
 - Send confirmation email after form submission
 - Notify admin when new object is created
 - Send notification to user after update
 - Trigger email workflows
+
+### Pushover
+
+Send a push notification via [Pushover](https://pushover.net). Requires **Pro edition** and Pushover configuration in **Settings > Push Notifications**.
+
+```json
+{
+	"action": "pushover",
+	"title": "New Submission",
+	"message": "{{ user.name }} created {{ data.title }}"
+}
+```
+
+**Properties:**
+- `action` - Must be `"pushover"`
+- `title` - Notification title (supports Twig)
+- `message` - Notification body (supports Twig, required)
+- `priority` - Priority level: `-2` (lowest), `-1` (low), `0` (normal), `1` (high), `2` (emergency)
+- `sound` - Notification sound (e.g., `cashregister`, `magic`, `none`)
+- `link` - Supplementary clickable URL (supports Twig)
+- `linkTitle` - Label for the URL (supports Twig)
+- `continue` - (optional) If `true`, continue to next action even if notification fails
+
+**Twig Variables:** All text fields support `{{ data.fieldName }}` for form values and `{{ user.fieldName }}` for the authenticated user.
+
+**Example with all options:**
+```json
+{
+	"action": "pushover",
+	"title": "New Order #{{ data.id }}",
+	"message": "{{ data.customerName }} placed an order for ${{ data.total }}",
+	"priority": 1,
+	"sound": "cashregister",
+	"link": "https://mysite.com/admin/collections/orders/{{ data.id }}",
+	"linkTitle": "View Order",
+	"continue": true
+}
+```
+
+**Example use cases:**
+- Get notified on your phone when new content is submitted
+- Alert admin of high-priority form submissions
+- Monitor e-commerce orders in real time
+
+For full documentation including sound options, priority levels, and setup instructions, see [Pushover Push Notifications](docs/notifications/pushover).
 
 ## Complete Examples
 

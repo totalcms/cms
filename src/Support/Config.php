@@ -39,6 +39,8 @@ class Config
 	/** @var array<string,mixed> */
 	public array $mailer = [];
 	/** @var array<string,mixed> */
+	public array $pushnotif = [];
+	/** @var array<string,mixed> */
 	public array $presets = [];
 
 	/** @param array<string,mixed> $settings */
@@ -67,6 +69,8 @@ class Config
 		$this->htmlclean  = $settings['htmlclean'] ?? [];
 		$this->smtp       = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
 		$this->mailer     = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
+		$pushnotif = $settings['pushnotif'] ?? [];
+		$this->pushnotif   = is_array($pushnotif) ? $pushnotif : [];
 		$this->presets    = is_array($settings['presets']['presetsettings'] ?? null) ? $settings['presets']['presetsettings'] : [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 

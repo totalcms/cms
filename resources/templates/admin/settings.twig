@@ -33,6 +33,10 @@
 		'label': t('settings.mailer'),
 		'description': t('settings.mailer_desc')
 	},
+	'pushnotif': {
+		'label': t('settings.pushnotif'),
+		'description': t('settings.pushnotif_desc')
+	},
 	'presets': {
 		'label': t('settings.presets'),
 		'description': t('settings.presets_desc')
@@ -113,6 +117,35 @@
 				', {
 					'method': 'POST',
 					'label': t('settings.smtp_test_btn'),
+					'buttonClass': 'cms-secondary',
+					'ajax': false
+				}) }}
+			{% endif %}
+		</section>
+		{% endif %}
+
+		{% if currentSection == 'pushnotif' %}
+		<section class="dash-content-section" style="margin-top: 40px;">
+			<h2>{{ t('settings.pushnotif_test_title') }}</h2>
+
+			{% if testResult is defined %}
+				{% if testResult.success %}
+					<p class="cms-success" role="alert">{{ testResult.message }}</p>
+				{% else %}
+					<p class="cms-error" role="alert">{{ testResult.message }}</p>
+				{% endif %}
+			{% else %}
+				<p>{{ t('settings.pushnotif_test_desc') }}</p>
+
+				{{ cms.form.simple('settings/pushnotif?test=1', '
+					<div class="field-wrapper field-text">
+						<label for="test_message">' ~ t('settings.pushnotif_test_message') ~ '</label>
+						<input type="text" id="test_message" name="test_message" placeholder="'~ t('settings.pushnotif_test_ph') ~'" />
+						<div class="help">'~ t('settings.pushnotif_test_help') ~'</div>
+					</div>
+				', {
+					'method': 'POST',
+					'label': t('settings.pushnotif_test_btn'),
 					'buttonClass': 'cms-secondary',
 					'ajax': false
 				}) }}

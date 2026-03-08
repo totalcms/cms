@@ -614,6 +614,17 @@ export default class TotalForm {
 				await showSuccessAndWait();
                 location.reload(true);
                 break;
+			case "pushover":
+				await this.api.postAPI('/action/pushover', {
+					data      : this.generateData(),
+					title     : action.title || '',
+					message   : action.message || '',
+					priority  : action.priority || 0,
+					sound     : action.sound || '',
+					link      : action.link || '',
+					linkTitle : action.linkTitle || '',
+				});
+				break;
 			case "ajax":
 			case "webhook":
 				const response = await fetch(action.link, {

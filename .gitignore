@@ -17,6 +17,7 @@ tmp/*
 logs/*
 tcms-data/*
 
+.env
 env.php
 config/env.php
 /cache

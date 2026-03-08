@@ -255,9 +255,10 @@ class TotalForm implements \Stringable
 			$actionType = $action['action'] ?? '';
 
 			return match ($actionType) {
-				'mailer'  => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
-				'webhook' => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
-				default   => true, // Allow unknown actions through
+				'mailer'   => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
+				'webhook'  => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
+				'pushover' => $this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS),
+				default    => true, // Allow unknown actions through
 			};
 		}));
 	}

@@ -313,6 +313,8 @@ return [
 	'settings.imageworks_desc'         => 'Procesamiento de imágenes y marcas de agua',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'Envío de Mailer y límites de velocidad',
+	'settings.pushnotif'               => 'Notificaciones Push',
+	'settings.pushnotif_desc'          => 'Configuración del servicio de notificaciones push',
 	'settings.presets'                 => 'Preajustes de configuración',
 	'settings.presets_desc'            => 'Preajustes de configuración de propiedades con nombre para reutilizar en schemas',
 	'settings.smtp'                    => 'SMTP',
@@ -325,6 +327,12 @@ return [
 	'settings.smtp_test_ph'            => 'su@correo.com',
 	'settings.smtp_test_help'          => 'Introduzca la dirección de correo donde desea recibir el correo de prueba.',
 	'settings.smtp_test_btn'           => 'Enviar correo de prueba',
+	'settings.pushnotif_test_title'    => 'Probar notificaciones push',
+	'settings.pushnotif_test_desc'     => 'Envíe una notificación de prueba para verificar que su configuración de Pushover funciona.',
+	'settings.pushnotif_test_message'  => 'Mensaje de prueba',
+	'settings.pushnotif_test_ph'       => 'Esta es una notificación de prueba de Total CMS.',
+	'settings.pushnotif_test_help'     => 'Introduzca un mensaje opcional para la notificación de prueba. Déjelo en blanco para el mensaje predeterminado.',
+	'settings.pushnotif_test_btn'      => 'Enviar notificación de prueba',
 
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                => 'Filtrar correos',

@@ -313,6 +313,8 @@ return [
 	'settings.imageworks_desc'         => 'Bildverarbeitung und Wasserzeichen',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'E-Mail-Versand und Ratenbegrenzung',
+	'settings.pushnotif'               => 'Push-Benachrichtigungen',
+	'settings.pushnotif_desc'          => 'Konfiguration des Push-Benachrichtigungsdienstes',
 	'settings.presets'                 => 'Einstellungs-Vorlagen',
 	'settings.presets_desc'            => 'Benannte Eigenschaftseinstellungs-Vorlagen zur Wiederverwendung in Schemas',
 	'settings.smtp'                    => 'SMTP',
@@ -325,6 +327,12 @@ return [
 	'settings.smtp_test_ph'            => 'ihre@email.de',
 	'settings.smtp_test_help'          => 'Geben Sie die E-Mail-Adresse ein, an die Sie die Test-E-Mail erhalten möchten.',
 	'settings.smtp_test_btn'           => 'Test-E-Mail senden',
+	'settings.pushnotif_test_title'    => 'Push-Benachrichtigungen testen',
+	'settings.pushnotif_test_desc'     => 'Senden Sie eine Testbenachrichtigung, um Ihre Pushover-Konfiguration zu überprüfen.',
+	'settings.pushnotif_test_message'  => 'Testnachricht',
+	'settings.pushnotif_test_ph'       => 'Dies ist eine Testbenachrichtigung von Total CMS.',
+	'settings.pushnotif_test_help'     => 'Geben Sie eine optionale Nachricht für die Testbenachrichtigung ein. Leer lassen für die Standardnachricht.',
+	'settings.pushnotif_test_btn'      => 'Testbenachrichtigung senden',
 
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                => 'E-Mails filtern',

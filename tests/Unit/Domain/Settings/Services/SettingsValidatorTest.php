@@ -45,7 +45,7 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(11, $sections);
+		$this->assertCount(12, $sections);
 		$this->assertContains('installation', $sections);
 		$this->assertContains('general', $sections);
 		$this->assertContains('dashboard', $sections);
@@ -55,6 +55,7 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertContains('auth', $sections);
 		$this->assertContains('htmlclean', $sections);
 		$this->assertContains('mailer', $sections);
+		$this->assertContains('pushnotif', $sections);
 		$this->assertContains('presets', $sections);
 		$this->assertContains('license', $sections);
 	}

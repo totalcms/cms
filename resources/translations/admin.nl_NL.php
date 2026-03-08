@@ -313,6 +313,8 @@ return [
 	'settings.imageworks_desc'         => 'Beeldverwerking en watermerken',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'E-mailverzending en snelheidslimiet',
+	'settings.pushnotif'               => 'Pushmeldingen',
+	'settings.pushnotif_desc'          => 'Configuratie van pushmeldingservices',
 	'settings.presets'                 => 'Instellingspresets',
 	'settings.presets_desc'            => 'Benoemde eigenschap-instellingspresets voor hergebruik in Schemas',
 	'settings.smtp'                    => 'SMTP',
@@ -325,6 +327,12 @@ return [
 	'settings.smtp_test_ph'            => 'uw@email.nl',
 	'settings.smtp_test_help'          => 'Voer het e-mailadres in waar u de test-e-mail wilt ontvangen.',
 	'settings.smtp_test_btn'           => 'Test-e-mail verzenden',
+	'settings.pushnotif_test_title'    => 'Pushmeldingen testen',
+	'settings.pushnotif_test_desc'     => 'Stuur een testmelding om te controleren of uw Pushover-configuratie werkt.',
+	'settings.pushnotif_test_message'  => 'Testbericht',
+	'settings.pushnotif_test_ph'       => 'Dit is een testmelding van Total CMS.',
+	'settings.pushnotif_test_help'     => 'Voer een optioneel bericht in voor de testmelding. Laat leeg voor het standaardbericht.',
+	'settings.pushnotif_test_btn'      => 'Testmelding verzenden',
 
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                => 'E-mails filteren',
