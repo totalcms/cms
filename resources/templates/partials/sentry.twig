@@ -57,6 +57,9 @@
 				// Ignore SyntaxError (corrupted files or unsupported browsers)
 				if (error && error.name === 'SyntaxError') return null;
 
+				// Ignore "not found" errors from third-party feature/plugin systems
+				if (message.includes('was not found')) return null;
+
 				return event;
 			}
 		});
