@@ -44,7 +44,7 @@ final class PushoverIntegrationTest extends TestCase
 			fn (string $template): string => $template
 		);
 
-		$config           = $this->createMock(Config::class);
+		$config            = $this->createMock(Config::class);
 		$config->pushnotif = ['pushoverAppToken' => $appToken, 'pushoverUserKey' => $userKey];
 
 		$editionFeatures = $this->createMock(EditionFeatureService::class);
@@ -91,9 +91,9 @@ final class PushoverIntegrationTest extends TestCase
 	public function testSendNotificationWithAllOptions(): void
 	{
 		$result = $this->service->send(
-			title: 'Total CMS Full Test',
 			message: 'Notification with all options from integration test',
 			priority: -1,
+			title: 'Total CMS Full Test',
 			sound: 'cashregister',
 			link: 'https://totalcms.co',
 			linkTitle: 'Visit Total CMS',
@@ -106,9 +106,9 @@ final class PushoverIntegrationTest extends TestCase
 	public function testSendHighPriorityNotification(): void
 	{
 		$result = $this->service->send(
-			title: 'Total CMS Priority Test',
 			message: 'High priority notification test',
 			priority: 1,
+			title: 'Total CMS Priority Test',
 		);
 
 		$this->assertTrue($result['success'], 'Failed: ' . ($result['message'] ?? 'unknown'));

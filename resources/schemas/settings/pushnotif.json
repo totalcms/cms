@@ -15,6 +15,12 @@
 			"label"       : "Pushover User Key",
 			"help"        : "Your Pushover user key. Found on your dashboard at pushover.net/dashboard",
 			"placeholder" : "uQiRzpo4DXghDmr9QzzfQu27cmVRsG"
+		},
+		"pushoverGroupKey": {
+			"type"        : "text",
+			"label"       : "Pushover Group Key",
+			"help"        : "Optional delivery group key to broadcast notifications to multiple users. Create groups at pushover.net/apps/groups",
+			"placeholder" : "gznej3rKEVAvPUxu9vvNnqpmZpokzF"
 		}
 	}
 }

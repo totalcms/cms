@@ -40,6 +40,7 @@ readonly class SendPushoverAction
 		$sound     = (string)($data['sound'] ?? '');
 		$link      = (string)($data['link'] ?? '');
 		$linkTitle = (string)($data['linkTitle'] ?? '');
+		$group     = (bool)($data['group'] ?? false);
 		$formData  = $data['data'] ?? [];
 		$image     = $data['image'] ?? [];
 
@@ -72,6 +73,7 @@ readonly class SendPushoverAction
 			link      : $link,
 			linkTitle : $linkTitle,
 			image     : $image,
+			group     : $group,
 		);
 
 		if (!$result['success']) {

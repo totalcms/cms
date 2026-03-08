@@ -55,6 +55,7 @@ The `pushover` action sends a push notification when a form is saved or an objec
 | `link` | string | No | | Supplementary clickable URL (max 512 characters). Supports Twig. |
 | `linkTitle` | string | No | | Label for the supplementary URL (max 100 characters). Supports Twig. |
 | `image` | object | No | | Image attachment from a collection (max 5MB, see below) |
+| `group` | bool | No | `false` | Send to group key instead of user key (see below) |
 | `continue` | bool | No | `false` | Continue to next action even if notification fails |
 
 ### Twig Variables
@@ -158,6 +159,25 @@ You can attach an image from a collection to the notification. The image is proc
 ```
 
 If the image cannot be generated (missing property, empty gallery, etc.), the notification is sent without an attachment.
+
+### Delivery Groups
+
+Pushover [delivery groups](https://pushover.net/api/groups) let you broadcast the same notification to multiple users with a single key. To use groups:
+
+1. Create a delivery group at [pushover.net/groups/build](https://pushover.net/groups/build) and add your team members
+2. Enter the group key in **Settings > Push Notifications > Pushover Group Key**
+3. Add `"group": true` to your action config
+
+```json
+{
+	"action": "pushover",
+	"title": "New Order",
+	"message": "{{ data.customerName }} placed an order",
+	"group": true
+}
+```
+
+When `group` is `true`, the notification is sent to the group key. When `false` (default), it uses the user key. This lets you configure both keys in settings and choose per-action which audience receives the notification.
 
 ## Complete Examples
 

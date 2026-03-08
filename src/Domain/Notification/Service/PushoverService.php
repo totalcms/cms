@@ -49,19 +49,21 @@ readonly class PushoverService
 	 * @param string $link Optional supplementary URL
 	 * @param string $linkTitle Optional URL title
 	 * @param array<string,string> $image Optional image attachment config (collection, id, property, name)
+	 * @param bool $group Send to group key instead of user key
 	 *
 	 * @return array{success:bool,message:string,error?:string}
 	 */
 	public function send(
 		string $message,
-		array  $data      = [],
-		array  $user      = [],
-		int    $priority  = 0,
+		array $data      = [],
+		array $user      = [],
+		int $priority  = 0,
 		string $title     = '',
 		string $sound     = '',
 		string $link      = '',
 		string $linkTitle = '',
-		array  $image     = [],
+		array $image     = [],
+		bool $group      = false,
 	): array {
 		if (!$this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS)) {
 			$this->logger->warning('Pushover action blocked by edition', [
@@ -74,18 +76,24 @@ readonly class PushoverService
 			];
 		}
 
-		$appToken = $this->config->pushnotif['pushoverAppToken'] ?? '';
-		$userKey  = $this->config->pushnotif['pushoverUserKey'] ?? '';
+		$appToken  = $this->config->pushnotif['pushoverAppToken'] ?? '';
+		$userKey   = $this->config->pushnotif['pushoverUserKey'] ?? '';
+		$groupKey  = $this->config->pushnotif['pushoverGroupKey'] ?? '';
+		$recipient = $group && $groupKey !== '' ? $groupKey : $userKey;
 
-		if ($appToken === '' || $userKey === '') {
+		if ($appToken === '' || $recipient === '') {
 			$this->logger->warning('Pushover not configured', [
 				'hasToken' => $appToken !== '',
 				'hasUser'  => $userKey !== '',
+				'hasGroup' => $groupKey !== '',
+				'useGroup' => $group,
 			]);
+
+			$missing = $group && $groupKey === '' ? 'Group Key' : 'User Key';
 
 			return [
 				'success' => false,
-				'message' => 'Pushover is not configured. Please set your Application Token and User Key in Settings.',
+				'message' => "Pushover is not configured. Please set your Application Token and {$missing} in Settings.",
 			];
 		}
 
@@ -94,12 +102,12 @@ readonly class PushoverService
 
 			$processedTitle     = $this->processTwig($title, $twigData);
 			$processedMessage   = $this->processTwig($message, $twigData);
-			$processedLink      = $link      !== '' ? $this->processTwig($link, $twigData) : '';
+			$processedLink      = $link !== '' ? $this->processTwig($link, $twigData) : '';
 			$processedLinkTitle = $linkTitle !== '' ? $this->processTwig($linkTitle, $twigData) : '';
 
 			$postData = [
 				'token'   => $appToken,
-				'user'    => $userKey,
+				'user'    => $recipient,
 				'message' => mb_substr($processedMessage, 0, self::MAX_MESSAGE_LENGTH),
 			];
 

@@ -624,6 +624,7 @@ export default class TotalForm {
 					link      : action.link || '',
 					linkTitle : action.linkTitle || '',
 					image     : action.image || {},
+					group     : action.group || false,
 				});
 				break;
 			case "ajax":

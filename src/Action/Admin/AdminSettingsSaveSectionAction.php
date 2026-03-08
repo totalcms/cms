@@ -139,8 +139,8 @@ readonly class AdminSettingsSaveSectionAction
 		}
 
 		$result = $this->pushoverService->send(
-			title: 'Total CMS Test',
 			message: $testMessage,
+			title: 'Total CMS Test',
 		);
 
 		if ($result['success']) {

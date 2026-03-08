@@ -401,6 +401,7 @@ Send a push notification via [Pushover](https://pushover.net). Requires **Pro ed
 - `link` - Supplementary clickable URL (supports Twig)
 - `linkTitle` - Label for the URL (supports Twig)
 - `image` - Image attachment object with `collection`, `id`, `property`, and optional `name` (for galleries)
+- `group` - (optional) If `true`, send to group key instead of user key
 - `continue` - (optional) If `true`, continue to next action even if notification fails
 
 **Twig Variables:** All text fields support `{{ data.fieldName }}` for form values and `{{ user.fieldName }}` for the authenticated user.
