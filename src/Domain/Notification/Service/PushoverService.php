@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Notification\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -18,10 +19,11 @@ use TotalCMS\Support\Config;
  */
 readonly class PushoverService
 {
-	private const MAX_TITLE_LENGTH     = 250;
-	private const MAX_MESSAGE_LENGTH   = 1024;
-	private const MAX_URL_LENGTH       = 512;
-	private const MAX_URL_TITLE_LENGTH = 100;
+	private const MAX_TITLE_LENGTH      = 250;
+	private const MAX_MESSAGE_LENGTH    = 1024;
+	private const MAX_URL_LENGTH        = 512;
+	private const MAX_URL_TITLE_LENGTH  = 100;
+	private const MAX_ATTACHMENT_BYTES  = 5242880;
 
 	private LoggerInterface $logger;
 
@@ -29,6 +31,7 @@ readonly class PushoverService
 		private TwigEngine $twigEngine,
 		private Config $config,
 		private EditionFeatureService $editionFeatures,
+		private ImageGenerator $imageGenerator,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('pushover.log')->createLogger('pushover-service');
@@ -45,6 +48,7 @@ readonly class PushoverService
 	 * @param string $sound Notification sound name
 	 * @param string $link Optional supplementary URL
 	 * @param string $linkTitle Optional URL title
+	 * @param array<string,string> $image Optional image attachment config (collection, id, property, name)
 	 *
 	 * @return array{success:bool,message:string,error?:string}
 	 */
@@ -57,6 +61,7 @@ readonly class PushoverService
 		string $sound     = '',
 		string $link      = '',
 		string $linkTitle = '',
+		array  $image     = [],
 	): array {
 		if (!$this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS)) {
 			$this->logger->warning('Pushover action blocked by edition', [
@@ -125,7 +130,9 @@ readonly class PushoverService
 
 			$postData['html'] = 1;
 
-			$result = $this->sendRequest($postData);
+			$attachment = $this->generateAttachment($image, $twigData);
+
+			$result = $this->sendRequest($postData, $attachment);
 
 			if ($result['success']) {
 				$this->logger->info('Pushover notification sent', [
@@ -155,13 +162,29 @@ readonly class PushoverService
 	 *
 	 * @return array{success:bool,message:string}
 	 */
-	private function sendRequest(array $postData): array
+	private function sendRequest(array $postData, ?string $attachment = null): array
 	{
 		try {
-			$client   = new Client(['timeout' => 10, 'connect_timeout' => 5]);
-			$response = $client->post('https://api.pushover.net/1/messages.json', [
-				'form_params' => $postData,
-			]);
+			$client  = new Client(['timeout' => 10, 'connect_timeout' => 5]);
+			$options = [];
+
+			if ($attachment !== null) {
+				$multipart = [];
+				foreach ($postData as $key => $value) {
+					$multipart[] = ['name' => $key, 'contents' => (string)$value];
+				}
+				$multipart[] = [
+					'name'     => 'attachment',
+					'contents' => $attachment,
+					'filename' => 'image.jpg',
+					'headers'  => ['Content-Type' => 'image/jpeg'],
+				];
+				$options['multipart'] = $multipart;
+			} else {
+				$options['form_params'] = $postData;
+			}
+
+			$response = $client->post('https://api.pushover.net/1/messages.json', $options);
 
 			$body = json_decode($response->getBody()->getContents(), true);
 
@@ -186,6 +209,64 @@ readonly class PushoverService
 				'success' => false,
 				'message' => 'Failed to connect to Pushover API',
 			];
+		}
+	}
+
+	/**
+	 * Generate image attachment bytes from an image config.
+	 *
+	 * @param array<string,string> $image Image config with collection, id, property, and optional name
+	 * @param array<string,mixed> $twigData Twig context for processing image.id
+	 */
+	private function generateAttachment(array $image, array $twigData): ?string
+	{
+		if ($image === []) {
+			return null;
+		}
+
+		$collection = $this->processTwig($image['collection'] ?? '', $twigData);
+		$id         = $this->processTwig($image['id'] ?? '', $twigData);
+		$property   = $this->processTwig($image['property'] ?? '', $twigData);
+		$name       = $this->processTwig($image['name'] ?? '', $twigData);
+
+		if ($collection === '' || $id === '' || $property === '') {
+			$this->logger->warning('Pushover image config incomplete', ['image' => $image]);
+
+			return null;
+		}
+
+		$params = ['w' => 1920, 'h' => 1920, 'fm' => 'jpg'];
+
+		try {
+			if ($name !== '') {
+				$response = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $name, $params);
+			} else {
+				$response = $this->imageGenerator->generateImage($collection, $id, $property, $params);
+			}
+
+			$bytes = $response->getBody()->getContents();
+
+			if (strlen($bytes) > self::MAX_ATTACHMENT_BYTES) {
+				$this->logger->warning('Pushover image exceeds 5MB limit', [
+					'size'       => strlen($bytes),
+					'collection' => $collection,
+					'id'         => $id,
+					'property'   => $property,
+				]);
+
+				return null;
+			}
+
+			return $bytes;
+		} catch (\Exception $e) {
+			$this->logger->warning('Pushover image generation failed', [
+				'error'      => $e->getMessage(),
+				'collection' => $collection,
+				'id'         => $id,
+				'property'   => $property,
+			]);
+
+			return null;
 		}
 	}
 

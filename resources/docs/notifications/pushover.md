@@ -54,6 +54,7 @@ The `pushover` action sends a push notification when a form is saved or an objec
 | `sound` | string | No | User default | Notification sound (see below) |
 | `link` | string | No | | Supplementary clickable URL (max 512 characters). Supports Twig. |
 | `linkTitle` | string | No | | Label for the supplementary URL (max 100 characters). Supports Twig. |
+| `image` | object | No | | Image attachment from a collection (max 5MB, see below) |
 | `continue` | bool | No | `false` | Continue to next action even if notification fails |
 
 ### Twig Variables
@@ -113,6 +114,50 @@ All text fields (`title`, `message`, `link`, `linkTitle`) support Twig template 
 | `none` | None (silent) |
 
 Users can also upload custom sounds to their Pushover account and reference them by name.
+
+### Image Attachments
+
+You can attach an image from a collection to the notification. The image is processed through ImageWorks (resized to 1920x1920 max, converted to JPEG) before sending. Pushover supports attachments up to 5MB.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `image.collection` | string | Yes | Collection name |
+| `image.id` | string | Yes | Object ID. Supports Twig (e.g., `{{ data.id }}`) |
+| `image.property` | string | Yes | Image or gallery property name |
+| `image.name` | string | No | Gallery image name. Use `first`, `last`, `random`, `featured`, or a specific filename |
+
+#### Single Image Property
+
+```json
+{
+	"action": "pushover",
+	"title": "New Product",
+	"message": "{{ data.title }} was added",
+	"image": {
+		"collection": "products",
+		"id": "{{ data.id }}",
+		"property": "photo"
+	}
+}
+```
+
+#### Gallery Property
+
+```json
+{
+	"action": "pushover",
+	"title": "Gallery Updated",
+	"message": "{{ data.title }}",
+	"image": {
+		"collection": "products",
+		"id": "{{ data.id }}",
+		"property": "gallery",
+		"name": "first"
+	}
+}
+```
+
+If the image cannot be generated (missing property, empty gallery, etc.), the notification is sent without an attachment.
 
 ## Complete Examples
 

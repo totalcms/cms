@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -52,10 +55,24 @@ final class PushoverIntegrationTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($logger);
 
+		$testImage = dirname(__DIR__) . '/test-data/test-image.jpg';
+		$jpeg      = file_get_contents($testImage);
+		assert($jpeg !== false);
+
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->method('getContents')->willReturn($jpeg);
+
+		$imageResponse = $this->createMock(ResponseInterface::class);
+		$imageResponse->method('getBody')->willReturn($stream);
+
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->method('generateImage')->willReturn($imageResponse);
+
 		$this->service = new PushoverService(
 			$twigEngine,
 			$config,
 			$editionFeatures,
+			$imageGenerator,
 			$loggerFactory
 		);
 	}
@@ -80,6 +97,7 @@ final class PushoverIntegrationTest extends TestCase
 			sound: 'cashregister',
 			link: 'https://totalcms.co',
 			linkTitle: 'Visit Total CMS',
+			image: ['collection' => 'test', 'id' => 'test-obj', 'property' => 'photo'],
 		);
 
 		$this->assertTrue($result['success'], 'Failed: ' . ($result['message'] ?? 'unknown'));

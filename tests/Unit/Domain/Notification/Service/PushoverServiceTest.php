@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Notification\Service;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Notification\Service\PushoverService;
@@ -33,10 +36,13 @@ final class PushoverServiceTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($this->logger);
 
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+
 		$this->service = new PushoverService(
 			$this->twigEngine,
 			$this->config,
 			$this->editionFeatures,
+			$imageGenerator,
 			$loggerFactory
 		);
 	}
@@ -87,10 +93,13 @@ final class PushoverServiceTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($this->logger);
 
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+
 		$service = new PushoverService(
 			$this->twigEngine,
 			$this->config,
 			$editionFeatures,
+			$imageGenerator,
 			$loggerFactory
 		);
 
@@ -172,10 +181,13 @@ final class PushoverServiceTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($this->logger);
 
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+
 		$service = new PushoverService(
 			$this->twigEngine,
 			$this->config,
 			$editionFeatures,
+			$imageGenerator,
 			$loggerFactory
 		);
 
@@ -187,5 +199,195 @@ final class PushoverServiceTest extends TestCase
 			);
 
 		$service->send(message: 'Hello', title: 'Test');
+	}
+
+	public function testGeneratesImageAttachment(): void
+	{
+		$imageBytes = str_repeat('x', 1024); // fake JPEG bytes
+
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->method('getContents')->willReturn($imageBytes);
+
+		$imageResponse = $this->createMock(ResponseInterface::class);
+		$imageResponse->method('getBody')->willReturn($stream);
+
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->expects($this->once())
+			->method('generateImage')
+			->with('products', 'abc123', 'photo', ['w' => 1920, 'h' => 1920, 'fm' => 'jpg'])
+			->willReturn($imageResponse);
+
+		$service = $this->buildServiceWith($imageGenerator);
+
+		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+
+		$result = $service->send(
+			message: 'New product',
+			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'photo'],
+		);
+
+		$this->assertIsBool($result['success']);
+	}
+
+	public function testGeneratesGalleryImageAttachment(): void
+	{
+		$imageBytes = str_repeat('x', 1024);
+
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->method('getContents')->willReturn($imageBytes);
+
+		$imageResponse = $this->createMock(ResponseInterface::class);
+		$imageResponse->method('getBody')->willReturn($stream);
+
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->expects($this->once())
+			->method('generateGalleryImage')
+			->with('products', 'abc123', 'gallery', 'first', ['w' => 1920, 'h' => 1920, 'fm' => 'jpg'])
+			->willReturn($imageResponse);
+
+		$service = $this->buildServiceWith($imageGenerator);
+
+		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+
+		$result = $service->send(
+			message: 'Gallery updated',
+			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'gallery', 'name' => 'first'],
+		);
+
+		$this->assertIsBool($result['success']);
+	}
+
+	public function testSkipsAttachmentOnImageGenerationFailure(): void
+	{
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->method('generateImage')
+			->willThrowException(new \UnexpectedValueException('Invalid image property found'));
+
+		$service = $this->buildServiceWith($imageGenerator);
+
+		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+
+		$this->logger->expects($this->atLeastOnce())
+			->method('warning')
+			->with(
+				'Pushover image generation failed',
+				$this->callback(fn ($ctx): bool => isset($ctx['error']) && isset($ctx['collection']))
+			);
+
+		$result = $service->send(
+			message: 'Test',
+			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'photo'],
+		);
+
+		// Should still attempt to send (without attachment), not throw
+		$this->assertIsBool($result['success']);
+	}
+
+	public function testSkipsAttachmentOnIncompleteImageConfig(): void
+	{
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->expects($this->never())->method('generateImage');
+		$imageGenerator->expects($this->never())->method('generateGalleryImage');
+
+		$service = $this->buildServiceWith($imageGenerator);
+
+		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+
+		$result = $service->send(
+			message: 'Test',
+			image: ['collection' => 'products'],
+		);
+
+		$this->assertIsBool($result['success']);
+	}
+
+	public function testSkipsAttachmentWhenImageExceeds5MB(): void
+	{
+		$oversizedBytes = str_repeat('x', 5242881); // 1 byte over 5MB
+
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->method('getContents')->willReturn($oversizedBytes);
+
+		$imageResponse = $this->createMock(ResponseInterface::class);
+		$imageResponse->method('getBody')->willReturn($stream);
+
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->method('generateImage')->willReturn($imageResponse);
+
+		$service = $this->buildServiceWith($imageGenerator);
+
+		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+
+		$this->logger->expects($this->atLeastOnce())
+			->method('warning')
+			->with(
+				'Pushover image exceeds 5MB limit',
+				$this->callback(fn ($ctx): bool => isset($ctx['size']) && $ctx['size'] === 5242881)
+			);
+
+		$result = $service->send(
+			message: 'Test',
+			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'photo'],
+		);
+
+		$this->assertIsBool($result['success']);
+	}
+
+	public function testProcessesTwigInImageId(): void
+	{
+		$imageBytes = str_repeat('x', 1024);
+
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->method('getContents')->willReturn($imageBytes);
+
+		$imageResponse = $this->createMock(ResponseInterface::class);
+		$imageResponse->method('getBody')->willReturn($stream);
+
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+		$imageGenerator->expects($this->once())
+			->method('generateImage')
+			->with('products', 'resolved-id', 'photo', $this->anything())
+			->willReturn($imageResponse);
+
+		$this->twigEngine->method('renderString')
+			->willReturnCallback(function (string $template): string {
+				if ($template === '{{ data.id }}') {
+					return 'resolved-id';
+				}
+
+				return $template;
+			});
+
+		$service = $this->buildServiceWith($imageGenerator);
+
+		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
+
+		$result = $service->send(
+			message: 'Test',
+			data: ['id' => 'resolved-id'],
+			image: ['collection' => 'products', 'id' => '{{ data.id }}', 'property' => 'photo'],
+		);
+
+		$this->assertIsBool($result['success']);
+	}
+
+	private function buildServiceWith(\PHPUnit\Framework\MockObject\MockObject $imageGenerator): PushoverService
+	{
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn($this->logger);
+
+		return new PushoverService(
+			$this->twigEngine,
+			$this->config,
+			$this->editionFeatures,
+			$imageGenerator,
+			$loggerFactory
+		);
 	}
 }

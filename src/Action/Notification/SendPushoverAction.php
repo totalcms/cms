@@ -41,6 +41,7 @@ readonly class SendPushoverAction
 		$link      = (string)($data['link'] ?? '');
 		$linkTitle = (string)($data['linkTitle'] ?? '');
 		$formData  = $data['data'] ?? [];
+		$image     = $data['image'] ?? [];
 
 		if ($formData === '') {
 			$formData = [];
@@ -55,6 +56,10 @@ readonly class SendPushoverAction
 			]);
 		}
 
+		if (!is_array($image)) {
+			$image = [];
+		}
+
 		$userData = $this->accessManager->userData();
 
 		$result = $this->pushoverService->send(
@@ -66,6 +71,7 @@ readonly class SendPushoverAction
 			sound     : $sound,
 			link      : $link,
 			linkTitle : $linkTitle,
+			image     : $image,
 		);
 
 		if (!$result['success']) {

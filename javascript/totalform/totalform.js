@@ -623,6 +623,7 @@ export default class TotalForm {
 					sound     : action.sound || '',
 					link      : action.link || '',
 					linkTitle : action.linkTitle || '',
+					image     : action.image || {},
 				});
 				break;
 			case "ajax":

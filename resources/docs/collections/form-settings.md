@@ -400,6 +400,7 @@ Send a push notification via [Pushover](https://pushover.net). Requires **Pro ed
 - `sound` - Notification sound (e.g., `cashregister`, `magic`, `none`)
 - `link` - Supplementary clickable URL (supports Twig)
 - `linkTitle` - Label for the URL (supports Twig)
+- `image` - Image attachment object with `collection`, `id`, `property`, and optional `name` (for galleries)
 - `continue` - (optional) If `true`, continue to next action even if notification fails
 
 **Twig Variables:** All text fields support `{{ data.fieldName }}` for form values and `{{ user.fieldName }}` for the authenticated user.
