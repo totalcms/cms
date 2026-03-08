@@ -126,6 +126,7 @@ $startTime = microtime(true);
 
 try {
 	$totalcms  = new TotalCMS\TotalCMS();
+	$totalcms->disableCache();
 	$jobRunner = $totalcms->jobRunner();
 
 	// Reset any stuck in-progress jobs first
