@@ -56,9 +56,15 @@ class CacheInvalidationMiddleware implements MiddlewareInterface
 
 				if (str_starts_with($entry, 'pattern:')) {
 					$pattern = substr($entry, 8);
-					$this->cacheManager->clearByPatternAllBackends($pattern);
+					// Re-apply web domain prefix to the unprefixed pattern
+					$this->cacheManager->clearByPatternAllBackends(
+						$this->cacheManager->applyDomainPrefix($pattern)
+					);
 				} else {
-					$this->cacheManager->clearData($entry);
+					// Re-apply web domain prefix to the unprefixed key
+					$this->cacheManager->clearData(
+						$this->cacheManager->applyDomainPrefix($entry)
+					);
 				}
 			}
 		} finally {

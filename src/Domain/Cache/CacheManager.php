@@ -152,6 +152,30 @@ class CacheManager
 	}
 
 	/**
+	 * Apply this process's domain prefix to an unprefixed cache key.
+	 * Used by CacheInvalidationMiddleware to re-prefix keys from CLI signals.
+	 */
+	public function applyDomainPrefix(string $key): string
+	{
+		return $this->createDomainKey($key);
+	}
+
+	/**
+	 * Strip the domain prefix from a fully-qualified cache key.
+	 * Used when signaling keys for cross-process invalidation so the
+	 * receiving process can re-apply its own correct domain prefix.
+	 */
+	private function stripDomainPrefix(string $key): string
+	{
+		$prefix = $this->domainPrefix . ':';
+		if (str_starts_with($key, $prefix)) {
+			return substr($key, strlen($prefix));
+		}
+
+		return $key;
+	}
+
+	/**
 	 * Store collection index data (fast access needed, can be large).
 	 * Priority: APCu > Redis > Memcached > Filesystem.
 	 *
@@ -323,8 +347,9 @@ class CacheManager
 		}
 
 		// Signal for cross-process invalidation (CLI → web)
+		// Strip domain prefix so the web process can re-apply its own correct prefix
 		if ($this->isCli && !$this->suppressSignals) {
-			$this->invalidationSignal->signal($key);
+			$this->invalidationSignal->signal($this->stripDomainPrefix($key));
 		}
 
 		return (bool)$success;
@@ -436,8 +461,9 @@ class CacheManager
 		$success = $this->clearByPatternAllBackends($pattern);
 
 		// Signal for cross-process invalidation (CLI → web)
+		// Strip domain prefix so the web process can re-apply its own correct prefix
 		if ($this->isCli && !$this->suppressSignals) {
-			$this->invalidationSignal->signalPattern($pattern);
+			$this->invalidationSignal->signalPattern($this->stripDomainPrefix($pattern));
 		}
 
 		return $success;
