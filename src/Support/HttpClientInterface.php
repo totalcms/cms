@@ -26,9 +26,9 @@ interface HttpClientInterface
 	 *   - 'sink'            => string|resource File path or stream to write response body to
 	 *   - 'max_bytes'       => int Maximum download size in bytes (0 = unlimited)
 	 *
-	 * @return HttpResponse
-	 *
 	 * @throws \RuntimeException on connection/transport errors
+	 *
+	 * @return HttpResponse
 	 */
 	public function request(string $method, string $url, array $options = []): HttpResponse;
 }

@@ -1,9 +1,6 @@
 <?php
 
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\UploadedFileInterface;
 use TotalCMS\Action\Property\File\FileSaveAction;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
@@ -23,9 +20,9 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 	$heicConverter = test()->createMock(HeicConverter::class);
 	$heicConverter->method('isHeicFile')->willReturn(false);
 
-	if ($config === null) {
-		$config = test()->createMock(Config::class);
-		$config->tmpdir = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
+	if (!$config instanceof Config) {
+		$config                  = test()->createMock(Config::class);
+		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		$config->maxDownloadSize = 2048;
 	}
 
@@ -43,20 +40,17 @@ function createDownloadRequest(string $url): ServerRequestInterface
 }
 
 describe('FileSaveAction URL Download', function (): void {
-
 	test('downloads file from URL using HTTP client', function (): void {
 		$fileContent = 'fake image binary content';
-		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient  = test()->createMock(HttpClientInterface::class);
 		$httpClient->expects(test()->once())
 			->method('request')
 			->with(
 				'GET',
 				'https://example.com/photo.jpg',
-				test()->callback(function (array $options): bool {
-					return ($options['timeout'] ?? 0) === 30
+				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 30
 						&& ($options['user_agent'] ?? '') === 'TotalCMS File Downloader'
-						&& ($options['verify_ssl'] ?? false) === true;
-				})
+						&& ($options['verify_ssl'] ?? false) === true)
 			)
 			->willReturn(new HttpResponse(200, $fileContent));
 
@@ -64,8 +58,7 @@ describe('FileSaveAction URL Download', function (): void {
 
 		// We need to test the private method indirectly via reflection
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('downloadFileFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('downloadFileFromUrl');
 
 		$result = $method->invoke($action, 'https://example.com/photo.jpg');
 
@@ -85,8 +78,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$action = createFileSaveAction($httpClient);
 
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('downloadFileFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('downloadFileFromUrl');
 
 		$method->invoke($action, 'https://example.com/missing.jpg');
 	})->throws(RuntimeException::class, 'HTTP error when downloading file: 404');
@@ -99,8 +91,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$action = createFileSaveAction($httpClient);
 
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('downloadFileFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('downloadFileFromUrl');
 
 		$method->invoke($action, 'https://example.com/photo.jpg');
 	})->throws(RuntimeException::class, 'Failed to download file from URL');
@@ -110,15 +101,14 @@ describe('FileSaveAction URL Download', function (): void {
 		$httpClient->method('request')
 			->willThrowException(new RuntimeException('Download exceeds maximum size limit'));
 
-		$config = test()->createMock(Config::class);
-		$config->tmpdir = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
+		$config                  = test()->createMock(Config::class);
+		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		$config->maxDownloadSize = 10;
 
 		$action = createFileSaveAction($httpClient, $config);
 
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('downloadFileFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('downloadFileFromUrl');
 
 		$method->invoke($action, 'https://example.com/huge-file.zip');
 	})->throws(RuntimeException::class, 'maximum download size');
@@ -130,22 +120,21 @@ describe('FileSaveAction URL Download', function (): void {
 			->with(
 				'GET',
 				test()->anything(),
-				test()->callback(function (array $options): bool {
+				test()->callback(
 					// 50 MB * 1024 * 1024 = 52428800 bytes
-					return ($options['max_bytes'] ?? 0) === 50 * 1024 * 1024;
-				})
+					fn (array $options): bool => ($options['max_bytes'] ?? 0) === 50 * 1024 * 1024
+				)
 			)
 			->willReturn(new HttpResponse(200, 'content'));
 
-		$config = test()->createMock(Config::class);
-		$config->tmpdir = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
+		$config                  = test()->createMock(Config::class);
+		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		$config->maxDownloadSize = 50;
 
 		$action = createFileSaveAction($httpClient, $config);
 
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('downloadFileFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('downloadFileFromUrl');
 
 		$result = $method->invoke($action, 'https://example.com/file.txt');
 
@@ -163,8 +152,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$action = createFileSaveAction($httpClient);
 
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('extractFilenameFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('extractFilenameFromUrl');
 
 		// Normal URL with filename
 		$result = $method->invoke($action, 'https://example.com/images/photo.jpg');
@@ -186,17 +174,14 @@ describe('FileSaveAction URL Download', function (): void {
 			->with(
 				'GET',
 				test()->anything(),
-				test()->callback(function (array $options): bool {
-					return ($options['follow_redirects'] ?? 0) === 5;
-				})
+				test()->callback(fn (array $options): bool => ($options['follow_redirects'] ?? 0) === 5)
 			)
 			->willReturn(new HttpResponse(200, 'content'));
 
 		$action = createFileSaveAction($httpClient);
 
 		$reflection = new ReflectionClass($action);
-		$method = $reflection->getMethod('downloadFileFromUrl');
-		$method->setAccessible(true);
+		$method     = $reflection->getMethod('downloadFileFromUrl');
 
 		$result = $method->invoke($action, 'https://example.com/redirect-test.jpg');
 

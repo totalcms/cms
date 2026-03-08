@@ -12,7 +12,7 @@ describe('CurlHttpClient', function (): void {
 	test('returns HttpResponse from request', function (): void {
 		// This is a lightweight integration test against a known public URL
 		// It verifies the curl implementation actually works end-to-end
-		$client = new CurlHttpClient();
+		$client   = new CurlHttpClient();
 		$response = $client->request('GET', 'https://httpbin.org/get', [
 			'timeout'          => 10,
 			'connect_timeout'  => 5,

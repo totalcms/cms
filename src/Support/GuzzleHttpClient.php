@@ -11,11 +11,8 @@ use GuzzleHttp\RequestOptions;
  */
 class GuzzleHttpClient implements HttpClientInterface
 {
-	private Client $client;
-
-	public function __construct(?Client $client = null)
+	public function __construct(private readonly ?Client $client = new Client())
 	{
-		$this->client = $client ?? new Client();
 	}
 
 	/**
@@ -87,9 +84,6 @@ class GuzzleHttpClient implements HttpClientInterface
 
 		try {
 			$response = $this->client->request($method, $url, $guzzleOptions);
-		} catch (\RuntimeException $e) {
-			// Re-throw RuntimeExceptions (including our max size one) as-is
-			throw $e;
 		} catch (GuzzleException $e) {
 			throw new \RuntimeException('HTTP request failed: ' . $e->getMessage(), 0, $e);
 		}

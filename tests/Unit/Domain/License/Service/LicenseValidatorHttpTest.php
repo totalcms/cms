@@ -10,8 +10,8 @@ use TotalCMS\Support\HttpResponse;
 
 function createMockConfig(string $env = 'prod', string $domain = 'example.com'): Config
 {
-	$config = test()->createMock(Config::class);
-	$config->env = $env;
+	$config         = test()->createMock(Config::class);
+	$config->env    = $env;
 	$config->domain = $domain;
 
 	return $config;
@@ -33,7 +33,7 @@ function createMockHttpClient(HttpResponse $response): HttpClientInterface
 	return $client;
 }
 
-function createMockHttpClientWithException(\RuntimeException $exception): HttpClientInterface
+function createMockHttpClientWithException(RuntimeException $exception): HttpClientInterface
 {
 	$client = test()->createMock(HttpClientInterface::class);
 	$client->method('request')->willThrowException($exception);
@@ -42,7 +42,6 @@ function createMockHttpClientWithException(\RuntimeException $exception): HttpCl
 }
 
 describe('LicenseValidator HTTP calls', function (): void {
-
 	test('successful API response creates valid LicenseData', function (): void {
 		$apiResponse = [
 			'valid'              => true,
@@ -57,7 +56,7 @@ describe('LicenseValidator HTTP calls', function (): void {
 		];
 
 		$httpClient = createMockHttpClient(new HttpResponse(200, (string)json_encode($apiResponse)));
-		$validator = new LicenseValidator(
+		$validator  = new LicenseValidator(
 			createMockConfig(),
 			createMockCacheManager(),
 			$httpClient,
@@ -85,7 +84,7 @@ describe('LicenseValidator HTTP calls', function (): void {
 		];
 
 		$httpClient = createMockHttpClient(new HttpResponse(200, (string)json_encode($apiResponse)));
-		$validator = new LicenseValidator(
+		$validator  = new LicenseValidator(
 			createMockConfig('prod', 'newsite.com'),
 			createMockCacheManager(),
 			$httpClient,
@@ -110,6 +109,7 @@ describe('LicenseValidator HTTP calls', function (): void {
 				test()->callback(function (array $options): bool {
 					// Verify body contains domain and version
 					$body = json_decode($options['body'] ?? '', true);
+
 					return isset($body['domain']) && isset($body['version']);
 				})
 			)
@@ -166,7 +166,7 @@ describe('LicenseValidator HTTP calls', function (): void {
 
 	test('HTTP error response throws LicenseException', function (): void {
 		$errorResponse = ['error' => 'Invalid license key'];
-		$httpClient = createMockHttpClient(new HttpResponse(400, (string)json_encode($errorResponse)));
+		$httpClient    = createMockHttpClient(new HttpResponse(400, (string)json_encode($errorResponse)));
 
 		$validator = new LicenseValidator(
 			createMockConfig(),
@@ -179,7 +179,7 @@ describe('LicenseValidator HTTP calls', function (): void {
 
 	test('API error with error object throws LicenseException', function (): void {
 		$errorResponse = ['error' => ['code' => 'EXPIRED', 'message' => 'License expired']];
-		$httpClient = createMockHttpClient(new HttpResponse(200, (string)json_encode($errorResponse)));
+		$httpClient    = createMockHttpClient(new HttpResponse(200, (string)json_encode($errorResponse)));
 
 		$validator = new LicenseValidator(
 			createMockConfig(),
@@ -216,9 +216,15 @@ describe('LicenseValidator HTTP calls', function (): void {
 
 	test('connection failure with cached data falls back to cache', function (): void {
 		$cachedLicense = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'standard',
-			message: 'cached', validationToken: 'token', updatesValid: true,
-			trialDaysRemaining: null, timestamp: time() - (25 * 60 * 60), // stale cache
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'standard',
+			message: 'cached',
+			validationToken: 'token',
+			updatesValid: true,
+			trialDaysRemaining: null,
+			timestamp: time() - (25 * 60 * 60), // stale cache
 		);
 
 		$httpClient = createMockHttpClientWithException(new RuntimeException('Connection failed'));
@@ -255,9 +261,15 @@ describe('LicenseValidator HTTP calls', function (): void {
 
 	test('valid cache skips HTTP call', function (): void {
 		$freshCache = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'enterprise',
-			message: 'from cache', validationToken: 'token', updatesValid: true,
-			trialDaysRemaining: null, timestamp: time() - 3600, // 1 hour old, still valid
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'enterprise',
+			message: 'from cache',
+			validationToken: 'token',
+			updatesValid: true,
+			trialDaysRemaining: null,
+			timestamp: time() - 3600, // 1 hour old, still valid
 		);
 
 		$httpClient = test()->createMock(HttpClientInterface::class);
@@ -275,9 +287,15 @@ describe('LicenseValidator HTTP calls', function (): void {
 
 	test('forceRefresh bypasses cache and makes HTTP call', function (): void {
 		$freshCache = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'standard',
-			message: 'cached', validationToken: 'token', updatesValid: true,
-			trialDaysRemaining: null, timestamp: time() - 3600,
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'standard',
+			message: 'cached',
+			validationToken: 'token',
+			updatesValid: true,
+			trialDaysRemaining: null,
+			timestamp: time() - 3600,
 		);
 
 		$apiResponse = ['valid' => true, 'trial' => false, 'domain' => 'example.com', 'edition' => 'pro', 'message' => 'fresh', 'validationToken' => 'new-token', 'updatesValid' => true, 'trialDaysRemaining' => null];
@@ -316,13 +334,11 @@ describe('LicenseValidator HTTP calls', function (): void {
 			->with(
 				'POST',
 				test()->anything(),
-				test()->callback(function (array $options): bool {
-					return ($options['timeout'] ?? 0) === 30
+				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 30
 						&& ($options['connect_timeout'] ?? 0) === 10
 						&& ($options['verify_ssl'] ?? false) === true
 						&& isset($options['headers'])
-						&& isset($options['body']);
-				})
+						&& isset($options['body']))
 			)
 			->willReturn(new HttpResponse(200, (string)json_encode(['valid' => true, 'trial' => false, 'domain' => 'test.com', 'edition' => 'pro', 'message' => '', 'validationToken' => null, 'updatesValid' => true, 'trialDaysRemaining' => null])));
 

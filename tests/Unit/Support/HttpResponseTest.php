@@ -24,7 +24,7 @@ describe('HttpResponse', function (): void {
 
 	test('json decodes valid JSON body', function (): void {
 		$response = new HttpResponse(200, '{"key":"value","num":42}');
-		$json = $response->json();
+		$json     = $response->json();
 		expect($json)->toBe(['key' => 'value', 'num' => 42]);
 	});
 

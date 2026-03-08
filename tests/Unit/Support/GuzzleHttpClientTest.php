@@ -10,7 +10,7 @@ describe('GuzzleHttpClient', function (): void {
 	});
 
 	test('returns HttpResponse from request', function (): void {
-		$client = new GuzzleHttpClient();
+		$client   = new GuzzleHttpClient();
 		$response = $client->request('GET', 'https://httpbin.org/get', [
 			'timeout'          => 10,
 			'connect_timeout'  => 5,
@@ -32,7 +32,7 @@ describe('GuzzleHttpClient', function (): void {
 	})->throws(RuntimeException::class);
 
 	test('handles POST with JSON body', function (): void {
-		$client = new GuzzleHttpClient();
+		$client   = new GuzzleHttpClient();
 		$response = $client->request('POST', 'https://httpbin.org/post', [
 			'body'    => '{"test":"value"}',
 			'headers' => [
@@ -47,7 +47,7 @@ describe('GuzzleHttpClient', function (): void {
 	})->skip(getenv('CI') !== false, 'Skipped in CI - requires network');
 
 	test('returns non-200 status without throwing', function (): void {
-		$client = new GuzzleHttpClient();
+		$client   = new GuzzleHttpClient();
 		$response = $client->request('GET', 'https://httpbin.org/status/404', [
 			'timeout' => 10,
 		]);

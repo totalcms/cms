@@ -203,9 +203,9 @@ readonly class FileSaveAction
 			]);
 		} catch (\RuntimeException $e) {
 			if ($maxBytes > 0 && str_contains($e->getMessage(), 'maximum size')) {
-				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB');
+				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB', $e->getCode(), $e);
 			}
-			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage());
+			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);
 		}
 
 		if ($response->statusCode !== 200) {

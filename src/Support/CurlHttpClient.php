@@ -34,7 +34,7 @@ class CurlHttpClient implements HttpClientInterface
 		}
 
 		// SSL verification
-		$verifySSL = $options['verify_ssl'] ?? true;
+		$verifySSL                           = $options['verify_ssl'] ?? true;
 		$curlOptions[CURLOPT_SSL_VERIFYPEER] = $verifySSL;
 		$curlOptions[CURLOPT_SSL_VERIFYHOST] = $verifySSL ? 2 : 0;
 
@@ -42,7 +42,7 @@ class CurlHttpClient implements HttpClientInterface
 		$followRedirects = $options['follow_redirects'] ?? false;
 		if ($followRedirects !== false) {
 			$curlOptions[CURLOPT_FOLLOWLOCATION] = true;
-			$curlOptions[CURLOPT_MAXREDIRS] = is_int($followRedirects) ? $followRedirects : 5;
+			$curlOptions[CURLOPT_MAXREDIRS]      = is_int($followRedirects) ? $followRedirects : 5;
 		}
 
 		// User agent
@@ -86,20 +86,20 @@ class CurlHttpClient implements HttpClientInterface
 		// Max download size enforcement via progress callback
 		$maxBytes = (int)($options['max_bytes'] ?? 0);
 		if ($maxBytes > 0) {
-			$curlOptions[CURLOPT_NOPROGRESS] = false;
+			$curlOptions[CURLOPT_NOPROGRESS]       = false;
 			$curlOptions[CURLOPT_PROGRESSFUNCTION] = fn (
 				\CurlHandle $resource,
 				int $downloadSize,
 				int $downloaded,
 				int $uploadSize,
-				int $uploaded
+				int $uploaded,
 			): int => ($downloadSize > $maxBytes || $downloaded > $maxBytes) ? 1 : 0;
 		}
 
 		curl_setopt_array($ch, $curlOptions);
 
 		$result    = curl_exec($ch);
-		$httpCode  = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$curlError = curl_error($ch);
 
 		if ($sinkFp !== null && is_string($options['sink'] ?? null)) {

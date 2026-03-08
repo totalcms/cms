@@ -13,7 +13,6 @@ afterEach(function (): void {
 });
 
 describe('FakerPicsum URL building', function (): void {
-
 	test('generates correct picsum URL with default dimensions', function (): void {
 		$url = FakerPicsum::picsumUrl();
 		expect($url)->toBe('https://picsum.photos/640/480.jpg');
@@ -42,7 +41,6 @@ describe('FakerPicsum URL building', function (): void {
 });
 
 describe('FakerPicsum image download', function (): void {
-
 	test('downloads image and saves to disk', function (): void {
 		$fakeImageData = str_repeat("\xFF\xD8\xFF\xE0", 100); // fake JPEG data
 
@@ -52,17 +50,15 @@ describe('FakerPicsum image download', function (): void {
 			->with(
 				'GET',
 				test()->stringStartsWith('https://picsum.photos/'),
-				test()->callback(function (array $options): bool {
-					return ($options['timeout'] ?? 0) === 10
+				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 10
 						&& ($options['connect_timeout'] ?? 0) === 5
-						&& ($options['user_agent'] ?? '') === 'TotalCMS/3.0';
-				})
+						&& ($options['user_agent'] ?? '') === 'TotalCMS/3.0')
 			)
 			->willReturn(new HttpResponse(200, $fakeImageData));
 
 		FakerPicsum::setHttpClient($httpClient);
 
-		$tmpDir = sys_get_temp_dir();
+		$tmpDir   = sys_get_temp_dir();
 		$filepath = FakerPicsum::picsum($tmpDir, 320, 240);
 
 		expect($filepath)->toBeString();

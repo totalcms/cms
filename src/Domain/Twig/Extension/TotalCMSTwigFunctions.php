@@ -115,7 +115,7 @@ class TotalCMSTwigFunctions
 		$count = count($items);
 
 		foreach ($items as $index => $item) {
-			$id = is_array($item) ? (string) ($item['id'] ?? '') : (string) $item;
+			$id = is_array($item) ? (string)($item['id'] ?? '') : (string)$item;
 			if ($id !== $currentId) {
 				continue;
 			}

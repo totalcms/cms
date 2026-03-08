@@ -263,7 +263,7 @@ class WordpressImporterTest extends TestCase
 		$loggerFactory->method('createLogger')->willReturn($logger);
 
 		$httpClient = $this->createMock(HttpClientInterface::class);
-		$importer = new WordpressImporter($collectionFetcher, $this->jobQueuer, $httpClient, $loggerFactory);
+		$importer   = new WordpressImporter($collectionFetcher, $this->jobQueuer, $httpClient, $loggerFactory);
 
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('does not exist');

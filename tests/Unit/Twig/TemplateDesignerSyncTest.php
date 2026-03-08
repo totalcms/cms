@@ -16,15 +16,15 @@ function createDesignerSync(
 	?TemplateSaver $templateSaver = null,
 	?TemplateDesignerRegistry $registry = null,
 ): TemplateDesignerSync {
-	$config = test()->createMock(Config::class);
+	$config         = test()->createMock(Config::class);
 	$config->domain = $currentDomain;
-	$config->api = '/api';
+	$config->api    = '/api';
 
 	$editionFeatures = test()->createMock(EditionFeatureService::class);
 	$editionFeatures->method('can')->with(EditionFeature::TEMPLATES)->willReturn($featureEnabled);
 
-	$templateSaver = $templateSaver ?? test()->createMock(TemplateSaver::class);
-	$registry = $registry ?? new TemplateDesignerRegistry();
+	$templateSaver ??= test()->createMock(TemplateSaver::class);
+	$registry ??= new TemplateDesignerRegistry();
 
 	return new TemplateDesignerSync($config, $templateSaver, $registry, $editionFeatures, $httpClient);
 }
@@ -40,12 +40,11 @@ function registerBlock(TemplateDesignerRegistry $registry, string $key = 'test-k
 }
 
 describe('TemplateDesignerSync', function (): void {
-
 	test('returns empty string when edition does not support templates', function (): void {
 		$httpClient = test()->createMock(HttpClientInterface::class);
 		$httpClient->expects(test()->never())->method('request');
 
-		$sync = createDesignerSync($httpClient, featureEnabled: false);
+		$sync   = createDesignerSync($httpClient, featureEnabled: false);
 		$result = $sync->sync('any-key');
 
 		expect($result)->toBe('');
@@ -55,7 +54,7 @@ describe('TemplateDesignerSync', function (): void {
 		$httpClient = test()->createMock(HttpClientInterface::class);
 		$httpClient->expects(test()->never())->method('request');
 
-		$sync = createDesignerSync($httpClient);
+		$sync   = createDesignerSync($httpClient);
 		$result = $sync->sync('nonexistent-key');
 
 		expect($result)->toBe('');
@@ -88,7 +87,7 @@ describe('TemplateDesignerSync', function (): void {
 		$registry = new TemplateDesignerRegistry();
 		registerBlock($registry);
 
-		$sync = createDesignerSync($httpClient, registry: $registry);
+		$sync   = createDesignerSync($httpClient, registry: $registry);
 		$result = $sync->sync('test-key');
 
 		expect($result)->toContain('Template Designer');
@@ -104,8 +103,8 @@ describe('TemplateDesignerSync', function (): void {
 				'PUT',
 				test()->anything(),
 				test()->callback(function (array $options): bool {
-					$headers = $options['headers'] ?? [];
-					$hasToken = false;
+					$headers        = $options['headers'] ?? [];
+					$hasToken       = false;
 					$hasContentType = false;
 					foreach ($headers as $header) {
 						if (str_starts_with($header, 'X-Designer-Token: my-secret-token')) {
@@ -115,6 +114,7 @@ describe('TemplateDesignerSync', function (): void {
 							$hasContentType = true;
 						}
 					}
+
 					return $hasToken && $hasContentType;
 				})
 			)
@@ -136,9 +136,7 @@ describe('TemplateDesignerSync', function (): void {
 			->with(
 				'PUT',
 				test()->anything(),
-				test()->callback(function (array $options) use ($content): bool {
-					return ($options['body'] ?? '') === $content;
-				})
+				test()->callback(fn (array $options): bool => ($options['body'] ?? '') === $content)
 			)
 			->willReturn(new HttpResponse(200, ''));
 
@@ -155,7 +153,7 @@ describe('TemplateDesignerSync', function (): void {
 		$registry = new TemplateDesignerRegistry();
 		registerBlock($registry);
 
-		$sync = createDesignerSync($httpClient, registry: $registry);
+		$sync   = createDesignerSync($httpClient, registry: $registry);
 		$result = $sync->sync('test-key');
 
 		expect($result)->toContain('tcms-designer-err');
@@ -169,7 +167,7 @@ describe('TemplateDesignerSync', function (): void {
 		$registry = new TemplateDesignerRegistry();
 		registerBlock($registry);
 
-		$sync = createDesignerSync($httpClient, registry: $registry);
+		$sync   = createDesignerSync($httpClient, registry: $registry);
 		$result = $sync->sync('test-key');
 
 		expect($result)->toContain('tcms-designer-err');
@@ -183,7 +181,7 @@ describe('TemplateDesignerSync', function (): void {
 		$registry = new TemplateDesignerRegistry();
 		registerBlock($registry, token: '');
 
-		$sync = createDesignerSync($httpClient, registry: $registry);
+		$sync   = createDesignerSync($httpClient, registry: $registry);
 		$result = $sync->sync('test-key');
 
 		expect($result)->toContain('Template Designer');
@@ -197,10 +195,8 @@ describe('TemplateDesignerSync', function (): void {
 			->with(
 				'PUT',
 				test()->anything(),
-				test()->callback(function (array $options): bool {
-					return ($options['timeout'] ?? 0) === 3
-						&& ($options['connect_timeout'] ?? 0) === 2;
-				})
+				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 3
+						&& ($options['connect_timeout'] ?? 0) === 2)
 			)
 			->willReturn(new HttpResponse(200, ''));
 
