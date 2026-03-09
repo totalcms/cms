@@ -542,10 +542,10 @@ return [
 	'jumpstart.logs_link'           => 'JumpStart-Protokolle',
 
 	// ── Project Setup ───────────────────────────────────────────────────────
-	'setup.actions_title'            => 'Projekteinrichtungsaktionen',
-	'setup.default_collections'      => 'Standardsammlungen',
-	'setup.default_collections_desc' => 'Diese Aktion generiert alle Standardsammlungen für das CMS.',
-	'setup.default_collections_btn'  => 'Standardsammlungen einrichten',
+	'setup.actions_title'            => 'Projekteinrichtungs-Aktionen',
+	'setup.default_collections'      => 'Default Collections',
+	'setup.default_collections_desc' => 'Diese Aktion generiert alle Default Collections für das CMS.',
+	'setup.default_collections_btn'  => 'Default Collections einrichten',
 	'setup.jumpstart_demo'           => 'JumpStart-Demoinhalte',
 	'setup.jumpstart_demo_desc'      => 'Starten Sie Ihr Projekt mit Demoinhalten per JumpStart.',
 	'setup.jumpstart_demo_btn'       => 'JumpStart-Demodaten',
@@ -967,7 +967,7 @@ return [
 	// ── Dashboard Quick Actions ─────────────────────────────────────────────
 	'dashboard.quick_actions'          => 'Schnellaktionen',
 	'dashboard.new_collection'         => 'Neue Collection',
-	'dashboard.new_schema'             => 'Neue Schema',
+	'dashboard.new_schema'             => 'Neues Schema',
 	'dashboard.new_template'           => 'Neue Vorlage',
 	'dashboard.log_analyzer'           => 'Log-Analyse',
 	'dashboard.job_queue_manager'      => 'Job-Warteschlange',

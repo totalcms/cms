@@ -2,35 +2,47 @@
 
 {% set action = getData.action %}
 
-<section class="dash-content-section">
-	<h2>{{ t('setup.default_collections') }}</h2>
 
+
+<section class="dash-content-section">
 	{% if action == "default-collections" %}
-		{% include "admin/utils/actions/default-collections.twig" %}
+		<section>
+			<h2>{{ t('setup.default_collections') }}</h2>
+			{% include "admin/utils/actions/default-collections.twig" %}
+		</section>
 	{% else %}
-		<p>{{ t('setup.default_collections_desc') }}</p>
+		<section>
+			<h2>{{ t('setup.default_collections') }}</h2>
+			<p>{{ t('setup.default_collections_desc') }}</p>
+		</section>
 		<a class="dash-button" href="utils/project-setup?action=default-collections">{{ t('setup.default_collections_btn') }}</a>
 	{% endif %}
 </section>
 
-
 <section class="dash-content-section">
 	{% if cms.env == "preview" or cms.env == "dev" %}
-		<h2>{{ t('setup.jumpstart_demo') }}</h2>
 		{% if action == "jumpstart-demo" %}
+		<section>
+			<h2>{{ t('setup.jumpstart_demo') }}</h2>
 			{% include "admin/utils/actions/jumpstart-demo.twig" %}
+		</section>
 		{% else %}
-			<p>{{ t('setup.jumpstart_demo_desc') }}</p>
+		<section>
+			<h2>{{ t('setup.jumpstart_demo') }}</h2>
+			<p style="margin-bottom: 1rem;">{{ t('setup.jumpstart_demo_desc') }}</p>
 			{{ cms.form.simple("/import/jumpstart?demo=true", '', {
 				method : "POST",
 				label  : t('setup.jumpstart_demo_btn'),
 				class  : "jumpstart-demo",
 			}) }}
+		</section>
 		{% endif %}
 	{% else %}
+	<section>
 		<h2>{{ t('setup.jumpstart_data') }}</h2>
 		<p>{{ t('setup.jumpstart_data_desc') }}</p>
-		<a class="dash-button transparent" href="utils/jumpstart">{{ t('setup.jumpstart_open') }}</a>
+	</section>
+	<a class="dash-button transparent" href="utils/jumpstart">{{ t('setup.jumpstart_open') }}</a>
 	{% endif %}
 </section>
 
