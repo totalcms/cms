@@ -5,7 +5,7 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class SelectField extends TotalField {
 
-    constructor(container, options) {
+    constructor(container, settings) {
         super(...arguments);
 
 		this.input.addEventListener("change", e => {
@@ -22,7 +22,7 @@ export default class SelectField extends TotalField {
 
 	setupClearButton() {
 		// Check if clearValue option is disabled
-		const clearValue = this.options.clearValue !== false;
+		const clearValue = this.settings.clearValue !== false;
 		if (!clearValue) return;
 
 		// Create clear button

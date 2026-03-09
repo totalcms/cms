@@ -27,9 +27,18 @@ class FakerFactory
 		$faker->addProvider(new FakerExtension($faker));
 
 		if (!is_dir($this->cacheDir)) {
-			mkdir($this->cacheDir, 0777, true);
+			mkdir($this->cacheDir, 0700, true);
 		}
 
+		FakerExtension::$dir = $this->cacheDir;
+
+		return $faker;
+	}
+
+	public function createFallbackFaker(): Generator
+	{
+		$faker = Factory::create('en_US');
+		$faker->addProvider(new FakerExtension($faker));
 		FakerExtension::$dir = $this->cacheDir;
 
 		return $faker;

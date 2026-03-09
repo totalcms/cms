@@ -36,6 +36,8 @@ class MemcachedService implements CacheInterface
 
 			return $memcached->get('test_key') === 'test_value';
 		} catch (\Exception) {
+			$this->memcached = null;
+
 			return false;
 		}
 	}
@@ -62,6 +64,8 @@ class MemcachedService implements CacheInterface
 
 			return $value !== false ? $value : null;
 		} catch (\Exception) {
+			$this->memcached = null;
+
 			return null;
 		}
 	}
@@ -77,6 +81,8 @@ class MemcachedService implements CacheInterface
 
 			return $memcached->set($key, $value, $ttl);
 		} catch (\Exception) {
+			$this->memcached = null;
+
 			return false;
 		}
 	}
@@ -92,6 +98,8 @@ class MemcachedService implements CacheInterface
 
 			return $memcached->delete($key);
 		} catch (\Exception) {
+			$this->memcached = null;
+
 			return false;
 		}
 	}
@@ -107,6 +115,8 @@ class MemcachedService implements CacheInterface
 
 			return $memcached->flush();
 		} catch (\Exception) {
+			$this->memcached = null;
+
 			return false;
 		}
 	}
@@ -131,6 +141,8 @@ class MemcachedService implements CacheInterface
 
 			return $memcached->flush();
 		} catch (\Exception) {
+			$this->memcached = null;
+
 			return false;
 		}
 	}
@@ -191,6 +203,11 @@ class MemcachedService implements CacheInterface
 
 	private function getConnection(): \Memcached
 	{
+		// Verify existing connection is still alive
+		if ($this->memcached instanceof \Memcached && $this->memcached->getStats() === []) {
+			$this->memcached = null;
+		}
+
 		if (!$this->memcached instanceof \Memcached) {
 			$this->memcached = new \Memcached();
 			$this->memcached->addServer($this->host, $this->port);

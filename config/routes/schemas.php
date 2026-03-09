@@ -3,20 +3,13 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Schema;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
-use TotalCMS\Middleware\License\EditionFeatureMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
+use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
 return function (App $app): void {
-	$container = $app->getContainer();
-	if (!$container instanceof Psr\Container\ContainerInterface) {
-		throw new RuntimeException('Container not available');
-	}
-
 	// Read-only schema routes (allow API keys)
 	$app->group('/schemas', function (RouteCollectorProxy $group): void {
 		$group->get('', Schema\SchemaListAction::class)->setName('schema-list');
@@ -24,7 +17,8 @@ return function (App $app): void {
 		$group->map(['HEAD'], '/{id}', Schema\SchemaExistsAction::class)->setName('schema-exists');
 	})->add(SchemaEditionMiddleware::class)
 		->add(SchemaAccessMiddleware::class)
-		->add(DualAuthMiddleware::class);
+		->add(DualAuthMiddleware::class)
+		->add(ExternalCorsMiddleware::class);
 
 	// Mutation schema routes (session-only, no API keys, Pro edition for custom schemas)
 	$app->group('/schemas', function (RouteCollectorProxy $group): void {
@@ -32,10 +26,6 @@ return function (App $app): void {
 		$group->put('/{id}', Schema\SchemaUpdateAction::class)->setName('schema-update');
 		$group->delete('/{id}', Schema\SchemaDeleteAction::class)->setName('schema-delete');
 	})->add(SchemaEditionMiddleware::class)
-		->add(new EditionFeatureMiddleware(
-			$container->get(EditionFeatureService::class),
-			EditionFeature::CUSTOM_SCHEMAS
-		))
 		->add(SchemaAccessMiddleware::class)
 		->add(AuthMiddleware::class);
 };

@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\RedirectRenderer;
 
 /**
@@ -22,6 +23,7 @@ readonly class DataPathSetupSubmitAction
 		private CacheManager $cacheManager,
 		private PhpSession $session,
 		private RedirectRenderer $redirectRenderer,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -42,7 +44,7 @@ readonly class DataPathSetupSubmitAction
 
 		// Validation
 		if ($dataPath === '') {
-			$flash->add('error', 'Please select a location for the data folder.');
+			$flash->add('error', $this->translator->trans('flash.datapath_select_location'));
 
 			return $this->redirectRenderer->redirectFor($response, 'setup-data-path');
 		}
@@ -102,7 +104,7 @@ readonly class DataPathSetupSubmitAction
 					'datadir' => $dataPath,
 				]);
 			} catch (\Exception $e) {
-				$flash->add('error', 'Failed to save configuration: ' . $e->getMessage());
+				$flash->add('error', $this->translator->trans('flash.config_save_failed', ['{error}' => $e->getMessage()]));
 
 				return $this->redirectRenderer->redirectFor($response, 'setup-data-path');
 			}

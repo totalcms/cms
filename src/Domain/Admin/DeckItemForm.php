@@ -7,14 +7,17 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Deck Item Form Builder.
@@ -46,6 +49,10 @@ class DeckItemForm extends TotalForm
 		AccessGroupLister $accessGroupLister,
 		CollectionEditionService $collectionEditionService,
 		EditionFeatureService $editionFeatures,
+		DataViewFilter $dataViewFilter,
+		CSRFTokenManager $csrfManager,
+		Config $config,
+		PropertyMetaResolver $metaResolver,
 		string $api,
 		string $collection             = '',
 		string $id                     = '',
@@ -69,7 +76,6 @@ class DeckItemForm extends TotalForm
 		bool $hideID                   = false,
 		bool $useFormGrid              = true,
 		bool $addOnly                  = false,
-		?CSRFTokenManager $csrfManager = null,
 	) {
 		parent::__construct(
 			objectFetcher            : $objectFetcher,
@@ -82,6 +88,10 @@ class DeckItemForm extends TotalForm
 			accessGroupLister        : $accessGroupLister,
 			collectionEditionService : $collectionEditionService,
 			editionFeatures          : $editionFeatures,
+			dataViewFilter    : $dataViewFilter,
+			csrfManager       : $csrfManager,
+			config            : $config,
+			metaResolver      : $metaResolver,
 			api                      : $api,
 			collection        : $collection,
 			id                : $id,
@@ -103,7 +113,6 @@ class DeckItemForm extends TotalForm
 			hideID            : $hideID,
 			useFormGrid       : $useFormGrid,
 			addOnly           : $addOnly,
-			csrfManager       : $csrfManager,
 		);
 	}
 

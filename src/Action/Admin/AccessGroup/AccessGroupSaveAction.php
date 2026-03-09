@@ -110,6 +110,7 @@ readonly class AccessGroupSaveAction
 			'templates'  => in_array('templates', $simplePermissions),
 			'mailer'     => in_array('mailer', $simplePermissions),
 			'playground' => in_array('playground', $simplePermissions),
+			'dataviews'  => in_array('dataviews', $simplePermissions),
 			'docs'       => in_array('docs', $simplePermissions),
 			'utils'      => [
 				'all'     => $utilsAll,

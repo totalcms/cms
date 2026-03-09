@@ -1,28 +1,23 @@
-<h1>Mailer Help</h1>
+<h1>{{ t('mailer.help_title') }}</h1>
 
 <section class="dash-content-section">
-	<h2>What is a Mailer?</h2>
-	<p>
-	Email templates allow you to create reusable email designs for forms and other automated emails.
-	Templates support Twig templating with access to form data via <code>{{ "{{ data.fieldName }}" }}</code>.
-	</p>
+	<section>
+	<h2>{{ t('mailer.what_is') }}</h2>
+	<p>{{ t('mailer.what_is_desc') }}</p>
+	</section>
 
-	<h2>Creating Email Templates</h2>
-	<p>
-	Click the "<a href="mailer/new">+ New Email</a>" button at the bottom of the page to create your first
-	email template. You can organize templates by category for better management.
-	</p>
+	<section>
+	<h2>{{ t('mailer.creating_title') }}</h2>
+	<p>{{ t('mailer.creating_desc') }}</p>
+	</section>
 
-	<h2>Using Templates in Forms</h2>
-	<p>
-	Once created, email templates can be used in form submissions. The template has access to all submitted
-	form data through the <code>data</code> object. For example, use <code>{{ "{{ data.email }}" }}</code> to
-	insert the submitted email address into the template.
-	</p>
+	<section>
+	<h2>{{ t('mailer.using_title') }}</h2>
+	<p>{{ t('mailer.using_desc') }}</p>
+	</section>
 
-	<h2>Testing Templates</h2>
-	<p>
-	Each template includes a test section where you can send test emails with sample data to verify the
-	template renders correctly before using it in production.
-	</p>
+	<section>
+	<h2>{{ t('mailer.testing_title') }}</h2>
+	<p>{{ t('mailer.testing_desc') }}</p>
+	</section>
 </section>

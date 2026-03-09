@@ -12,6 +12,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Support\Config;
 
@@ -31,7 +32,7 @@ final class SitemapBuilderFilterTest extends TestCase
 	{
 		// Use real IndexFilter with mocked IndexReader for proper filtering logic
 		$mockIndexReader             = $this->createMock(IndexReader::class);
-		$this->mockIndexFilter       = new IndexFilter($mockIndexReader);
+		$this->mockIndexFilter       = new IndexFilter($mockIndexReader, new ObjectFilter());
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->mockObjectUrlBuilder  = $this->createMock(ObjectUrlBuilder::class);
 		$this->mockConfig            = $this->createMock(Config::class);

@@ -13,11 +13,17 @@ readonly class JobQueuer
 	}
 
 	/** @param array<mixed> $data */
-	public function queueJob(string $type, string $collection, array $data = []): JobData
+	public function queueJob(string $type, string $collection, array $data = [], ?string $scheduledAt = null): JobData
 	{
 		$payload = json_encode($data, JSON_THROW_ON_ERROR);
 
-		return $this->jobRepository->queueJob($type, $collection, $payload);
+		return $this->jobRepository->queueJob($type, $collection, $payload, $scheduledAt);
+	}
+
+	/** @param array<mixed> $data */
+	public function queueEmail(array $data, ?string $scheduledAt = null): JobData
+	{
+		return $this->queueJob(JobData::TYPE_EMAIL, $data['collection'] ?? 'mailer', $data, $scheduledAt);
 	}
 
 	/** @param array<mixed> $data */
@@ -38,9 +44,20 @@ readonly class JobQueuer
 		return $this->queueJob(JobData::TYPE_EXPORT, $collection, $data);
 	}
 
+	public function queueViewUpdate(string $viewId): void
+	{
+		$payload = json_encode(['viewId' => $viewId], JSON_THROW_ON_ERROR);
+		if ($this->jobRepository->hasPendingJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', $payload)) {
+			return;
+		}
+		$this->queueJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', [
+			'viewId' => $viewId,
+		]);
+	}
+
 	public function queueBuildIndex(string $collection): void
 	{
-		if ($this->jobRepository->hasReindexQueuedFromCollection($collection)) {
+		if ($this->jobRepository->hasPendingJob(JobData::TYPE_REBUILD, $collection)) {
 			return;
 		}
 		$this->queueJob(JobData::TYPE_REBUILD, $collection);

@@ -4,15 +4,14 @@
 		hidden  : false,
 	}) }}
 	<div style="margin-top:2rem">
-		<h3>Factory Generation Options</h3>
+		<h3>{{ t('collection.factory_title') }}</h3>
 		<ul>
-			<li><strong>Small quantities (1-50):</strong> Generated immediately</li>
-			<li><strong>Large quantities (50+):</strong> Use job queue to avoid timeouts</li>
-			<li><strong>Job Queue:</strong> Allows generating thousands of objects in the background</li>
-			<li><strong>Monitor Progress:</strong> Check the <a href="utils/jobqueue">Job Queue Status</a> page</li>
+			<li><strong>{{ t('collection.factory_small') }}</strong> {{ t('collection.factory_small_desc') }}</li>
+			<li><strong>{{ t('collection.factory_large') }}</strong> {{ t('collection.factory_large_desc') }}</li>
+			<li><strong>{{ t('collection.factory_queue') }}</strong> {{ t('collection.factory_queue_desc') }}</li>
+			<li><strong>{{ t('collection.factory_monitor') }}</strong> {{ t('collection.factory_monitor_desc') }}</li>
 		</ul>
 	</div>
-	<p style="margin-top:2rem">The factory rules that are defined in the schema for this
-	collection will be used to generate new objects.</p>
-	<p>Make sure the check out the <a href="docs/factory">Factory Docs</a> to see all of the possibilities.</p>
+	<p style="margin-top:2rem">{{ t('collection.factory_rules') }}</p>
+	<p>{{ t('collection.factory_docs') }}</p>
 </section>

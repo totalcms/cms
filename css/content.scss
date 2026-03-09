@@ -1,6 +1,6 @@
 @use "variables";
 @use "depot-browser";
-@import "froala-editor/css/froala_style.css";
+@use "forms/styledtext-content";
 
 .cms-hide {
     display : none !important;
@@ -46,6 +46,7 @@
 .cms-success {
 	--alert-color : var(--totalform-success);
 }
+.cms-info,
 .cms-twig-info {
 	--alert-color : var(--totalform-info);
 }

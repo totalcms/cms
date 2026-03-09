@@ -13,44 +13,52 @@ export default class FieldVisibility {
 	// Initialize Visibility
 	//-------------------------
 	initialize() {
-		const fieldsWithOptions = Array.from(this.form.querySelectorAll('[data-options]'));
+		this.initializeScope(this.form, this.fields);
+	}
 
-		fieldsWithOptions.forEach(fieldElement => {
-			const options = JSON.parse(fieldElement.dataset.options || '{}');
-			const visibility = options.visibility;
+	//-------------------------
+	// Initialize Scoped Visibility
+	// Works within a specific container and field set (e.g., deck item dialogs)
+	//-------------------------
+	initializeScope(container, fields) {
+		const fieldsWithSettings = Array.from(container.querySelectorAll('[data-settings]'));
+
+		fieldsWithSettings.forEach(fieldElement => {
+			const settings = JSON.parse(fieldElement.dataset.settings || '{}');
+			const visibility = settings.visibility;
 
 			// Skip fields without visibility settings
 			if (!visibility || !visibility.watch) return;
 
 			const watchField = visibility.watch;
 
-			// Find the watched field element
-			const watchedFieldElement = this.form.querySelector(`[style*="grid-area: ${watchField}"]`);
+			// Find the watched field element within the scoped container
+			const watchedFieldElement = container.querySelector(`[style*="grid-area: ${watchField}"]`);
 			if (!watchedFieldElement) return;
 
 			// Set up change listener on the watched field
 			watchedFieldElement.addEventListener('change', () => {
-				this.updateFieldVisibility(fieldElement, visibility);
+				this.updateScopedVisibility(fieldElement, visibility, fields);
 			});
 
 			// Initial visibility evaluation
-			this.updateFieldVisibility(fieldElement, visibility);
+			this.updateScopedVisibility(fieldElement, visibility, fields);
 		});
 	}
 
 	//-------------------------
-	// Update Field Visibility
+	// Update Field Visibility (scoped)
 	//-------------------------
-	updateFieldVisibility(fieldElement, visibility) {
+	updateScopedVisibility(fieldElement, visibility, fields) {
 		const watchField = visibility.watch;
 		const expectedValue = visibility.value;
 		const operator = visibility.operator || '==';
 
-		// Get the watched field object
-		const watchedField = this.fields.find(f => f.property === watchField);
+		// Get the watched field object from the scoped fields
+		const watchedField = fields.find(f => f.property === watchField);
 		if (!watchedField) {
 			// If watched field not found, hide by default
-			const field = this.fields.find(f => f.container === fieldElement);
+			const field = fields.find(f => f.container === fieldElement);
 			if (field) field.hide();
 			return;
 		}
@@ -61,7 +69,7 @@ export default class FieldVisibility {
 		const isVisible = this.evaluateCondition(currentValue, expectedValue, operator);
 
 		// Get the field object and toggle visibility
-		const field = this.fields.find(f => f.container === fieldElement);
+		const field = fields.find(f => f.container === fieldElement);
 		if (field) {
 			isVisible ? field.show() : field.hide();
 		}

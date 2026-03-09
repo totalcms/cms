@@ -1,0 +1,110 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" name="filter" class="filter" placeholder="{{ t('dataview.filter') }}" autofocus />
+	</header>
+
+	<nav class="links" id="dataview-links">
+		{% set views = cms.collection.objects("dataviews") %}
+		{% if views|length == 0 %}
+			<h3>{{ t('dataview.title') }}</h3>
+			<ul>
+				<li class="no-views">{{ t('dataview.empty') }}</li>
+			</ul>
+		{% else %}
+			<details id="category-dataviews" open>
+				<summary>{{ t('dataview.title') }}</summary>
+				<ul>
+					{% for v in sortByKey(views) %}
+					<li>
+						<a  {% if url.id == v.id %}class="active"{% endif %}
+							href="dataviews/{{ v.id }}"
+							title="{{ v.description | escape }}">{{ v.name }}
+							{% if v.lastError %}<span class="status-dot error" title="Build error"></span>{% endif %}
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</details>
+		{% endif %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="dataviews/new" title="{{ t('dataview.new_desc') }}">{{ t('dataview.new') }}</a>
+	</footer>
+</aside>
+{% include "admin/sidebar-details.twig" %}
+
+<main class="dash-main-content">
+
+{% if not url.id %}
+
+	{% include "admin/dataviews/home.twig" %}
+
+{% else %}
+
+	<header>
+		<h1><a href="dataviews">data views</a> / <span>{{ url.id == 'new' ? 'new view' : url.id }}</span></h1>
+	</header>
+
+	<section class="dash-content-section">
+		{{ cms.form.dataviews(url.id == 'new' ? '' : url.id, {
+			deleteActions : [{
+				"action" : "redirect",
+				"link"   : "dataviews"
+			}],
+			newActions   : [{
+				"action" : "redirect-object",
+				"link"   : "dataviews/{id}"
+			}],
+		}) }}
+	</section>
+
+	<section class="dash-content-section">
+		<h3>{{ t('dataview.tools') }}</h3>
+		<div class="dataview-actions">
+			<button type="button" class="dash-button transparent" id="btn-test-view">{{ t('dataview.test_run') }}</button>
+			<script>
+			document.getElementById('btn-test-view')?.addEventListener('click', function() {
+				const btn = this;
+				const ta = document.querySelector('textarea[name="definition"]');
+				const cm = ta?.parentElement?.querySelector('.CodeMirror');
+				const definition = cm?.CodeMirror ? cm.CodeMirror.getValue() : ta?.value || '';
+				if (!definition) return;
+
+				btn.disabled = true;
+				btn.textContent = 'Testing...';
+				document.getElementById('test-results').style.display = 'block';
+
+				htmx.ajax('POST', '{{ cms.api }}/dataviews/test/html', {
+					target: '#test-output',
+					swap: 'innerHTML',
+					values: { definition },
+				}).then(() => {
+					btn.disabled = false;
+					btn.textContent = '{{ t('dataview.test_run') }}';
+				});
+			});
+			</script>
+			{% if url.id and url.id != 'new' %}
+			{{ cms.form.simple("/dataviews/" ~ url.id ~ "/rebuild", "", {
+				method : "POST",
+				label  : t('dataview.rebuild'),
+			}) }}
+			{% endif %}
+		</div>
+
+		<div id="test-results" class="test-results" style="display: none;">
+			<h3>{{ t('dataview.test_results') }}</h3>
+			<div id="test-output"></div>
+		</div>
+	</section>
+
+
+{% endif %}
+
+</main>
+{% endblock %}

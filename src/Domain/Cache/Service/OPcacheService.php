@@ -85,7 +85,6 @@ class OPcacheService implements CacheInterface
 		return 'OPcache';
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function getRecommendations(): array
 	{
 		if (!$this->isAvailable()) {

@@ -1,13 +1,13 @@
 {% extends "admin-dashboard.twig" %}
 
 {% set collectionIndex %}
-	<h1>Collection Help</h1>
-	<p>Choose a collection to edit or create a new one.</p>
+	<h1>{{ t('collection.help_title') }}</h1>
+	<p>{{ t('collection.help_choose') }}</p>
 {% endset %}
 
 
 {% macro collectionHeader(collection, page) %}
-	{% set collectionData = cms.collection(collection) %}
+	{% set collectionData = cms.collection.get(collection) %}
 	<header>
 		{% if page %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page | lower }}</span></h1>
@@ -15,43 +15,44 @@
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}"><span>{{ collection }}</span></a></h1>
 		{% endif %}
 		<div class="actions">
-			{% if cms.canAccessCollectionsMetaOperation('read') %}
-			<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
+			{% if cms.auth.canAccessCollectionsMetaOperation('read') %}
+			<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="{{ t('collection.edit') }}">{{ t('collection.edit') }}</a>
 			{% endif %}
-			{% set labelSingular = cms.collection(collection).labelSingular|default('object') %}
-			{% if cms.canAccessCollection(collection, 'create') %}
-			<a class="dash-button" href="collections/{{ collection }}/add" title="Add new {{ labelSingular | lower }} to collection">+ New {{ labelSingular|title }}</a>
+			{% set labelSingular = cms.collection.get(collection).labelSingular|default('object') %}
+			{% if cms.auth.canAccessCollection(collection, 'create') %}
+			<a class="dash-button" href="collections/{{ collection }}/add" title="{{ t('collection.add_new', {'{label}': labelSingular | lower}) }}">{{ t('collection.new_item', {'{label}': labelSingular|title}) }}</a>
 			{% endif %}
-			<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
+			<button class="dash-action-dots" title="{{ t('collection.actions') }}" popovertarget="collection-actions"></button>
 			<nav popover id="collection-actions">
 				<ul>
-					{% set collectionSchema = cms.collection(collection).schema %}
-					{% if cms.canAccessSchema(collectionSchema, 'read') %}
-					<li class="schema"><a href="schemas/{{ collectionSchema }}">Edit Schema</a></li>
+					{% set collectionSchema = cms.collection.get(collection).schema %}
+					{% if cms.auth.canAccessSchema(collectionSchema, 'read') %}
+					<li class="schema"><a href="schemas/{{ collectionSchema }}">{{ t('collection.edit_schema') }}</a></li>
 					{% endif %}
 					{# Show object link only when editing an object (css in edit.twig) #}
 					{% if collectionData.url and page %}
 					<li class="object-link" style="display:none">
-						<a href="{{ cms.objectUrl(collection, page) }}" target="_blank">Preview</a>
+						<a href="{{ cms.collection.objectUrl(collection, page) }}" target="_blank">{{ t('collection.preview') }}</a>
 					</li>
 					{% endif %}
 					{# Show duplicate link only when editing an object (css in edit.twig) #}
-					{% if cms.canAccessCollection(collection, 'create') %}
-					<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">Duplicate</a></li>
+					{% if cms.auth.canAccessCollection(collection, 'create') %}
+					<li class="duplicate" style="display:none"><a href="#" onclick="duplicateObject(event)">{{ t('btn.duplicate') }}</a></li>
 					{% endif %}
 					{# Show download zip only when editing an object (css in object.twig) #}
 					<li class="object-download" style="display:none">
-						<a href="{{ cms.api }}/export/collections/{{ collection }}/{{ page }}/zip">Download Zip</a>
+						<a href="{{ cms.api }}/export/collections/{{ collection }}/{{ page }}/zip">{{ t('collection.download_zip') }}</a>
 					</li>
-					<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
-					{% if cms.canAccessCollection(collection, 'create') %}
-					<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>
-					<li class="factory"><a href="collections/{{ collection }}/-factory">Factory</a></li>
+					<li class="export"><a href="collections/{{ collection }}/-export">{{ t('btn.export') }}</a></li>
+					{% if cms.auth.canAccessCollection(collection, 'create') %}
+					<li class="import"><a href="collections/{{ collection }}/-import">{{ t('btn.import') }}</a></li>
+					<li class="collection-report"><a href="utils/collection-report?collection={{ collection }}">{{ t('btn.report') }}</a></li>
+					<li class="factory"><a href="collections/{{ collection }}/-factory">{{ t('collection.factory') }}</a></li>
 					{% endif %}
-					<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">Sitemap</a></li>
-					<li class="feeds"><a href="collections/{{ collection }}/-feeds">Feeds</a></li>
-					{% if cms.canAccessCollection(collection, 'update') %}
-					<li class="reindex"><a class="cms-quick-action" data-reload data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
+					<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">{{ t('collection.sitemap') }}</a></li>
+					<li class="feeds"><a href="collections/{{ collection }}/-feeds">{{ t('collection.feeds') }}</a></li>
+					{% if cms.auth.canAccessCollection(collection, 'update') %}
+					<li class="reindex">{{ cms.admin.quickActionButton(t('collection.rebuild_index'), 'collections/' ~ collection ~ '/index', {method: 'put', reload: true}) }}</li>
 					{% endif %}
 				</ul>
 			</nav>
@@ -63,12 +64,12 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Collections" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('collection.filter') }}" {% if url.collection is empty %}autofocus{% endif %} />
 	</header>
 
 	<nav class="links" id="collection-links">
-		{% for category, collections in cms.collectionsByCategory() %}
-			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer']) %}
+		{% for category, collections in cms.collection.byCategory() %}
+			{% set collections = collections | filter(c => cms.auth.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer', 'dataviews']) %}
 			{% if collections | length > 0 %}
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
@@ -86,16 +87,16 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.isAdmin() %}
+	{% if cms.auth.isAdmin() %}
 	<footer>
-		<a class="dash-button full transparent" href="collections/new" title="Create a new collection">+ New Collection</a>
+		<a class="dash-button full transparent" href="collections/new" title="{{ t('collection.new') }}">{{ t('collection.new') }}</a>
 	</footer>
 	{% endif %}
 </aside>
 {% include "admin/sidebar-details.twig" %}
 
 <main class="dash-main-content">
-	{% set collection = cms.collection(url.collection) %}
+	{% set collection = cms.collection.get(url.collection) %}
 	{% set labelPlural = collection.labelPlural|default('objects') %}
 	{% set labelSingular = collection.labelSingular|default('object') %}
 

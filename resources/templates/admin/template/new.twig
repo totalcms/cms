@@ -2,7 +2,7 @@
 
 {% if duplicateData %}
 	{{ cms.form.template({
-		save        : cms.canAccessTemplates() ? "Save" : false,
+		save        : cms.auth.canAccessTemplates() ? "Save" : false,
 		helpStyle   : 'label',
 		helpOnFocus : true,
 		data        : duplicateData,
@@ -15,7 +15,7 @@
 	}) }}
 {% else %}
 	{{ cms.form.template({
-		save        : cms.canAccessTemplates() ? "Save" : false,
+		save        : cms.auth.canAccessTemplates() ? "Save" : false,
 		helpStyle   : 'label',
 		helpOnFocus : true,
 		newActions : [

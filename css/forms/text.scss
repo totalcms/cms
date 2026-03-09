@@ -122,6 +122,10 @@
 		}
 	}
 
+	.form-group:not(:has(.form-group-icon)) .select-clear-button {
+		right : 0;
+	}
+
 	// remove select background arrow when clear button is visible
 	.form-group:has(.select-clear-button.visible) select:not([multiple]) {
 		background-image : none;
@@ -161,6 +165,75 @@
 .json-field .form-group-icon {
 	&:after {
 		mask-image : var(--icon-json);
+	}
+}
+
+// JSON CodeMirror editor (dark theme)
+.totalform-json-editor {
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius) !important;
+	overflow      : hidden;
+	width         : 100%;
+	max-width     : 100%;
+	flex          : 1;
+	min-width     : 0;
+	resize        : vertical;
+
+	&.CodeMirror {
+		height           : auto;
+		min-height       : 100px;
+		font-family      : 'Fira Code', 'Consolas', 'Monaco', monospace;
+		font-size        : 14px;
+		line-height      : 1.5;
+		background       : oklch(var(--totalform-nearwhite));
+		color            : oklch(var(--totalform-nearblack));
+		padding          : 0.25rem 0;
+	}
+
+	.CodeMirror-scroll {
+		overflow-y : auto !important;
+		overflow-x : auto !important;
+	}
+
+	.CodeMirror-placeholder {
+		color   : oklch(var(--totalform-mediumgray)) !important;
+		opacity : 0.6;
+	}
+
+	.CodeMirror-scrollbar-filler {
+		display : none;
+	}
+
+	// Syntax colors
+	.cm-string            { color : oklch(var(--totalform-green));  } // string values
+	.cm-string.cm-property { color : oklch(var(--totalform-blue));  } // keys (string + property)
+	.cm-number    { color : oklch(var(--totalform-orange)); } // numbers
+	.cm-atom      { color : oklch(var(--totalform-yellow)); } // true, false, null
+	.cm-bracket   { color : oklch(var(--totalform-mediumgray)); } // brackets
+	.cm-error     { color : oklch(var(--totalform-red));    } // errors
+
+	.CodeMirror-selected {
+		background-color : oklch(var(--totalform-darkgray)) !important;
+	}
+
+	.CodeMirror-focused .CodeMirror-selected {
+		background-color : oklch(var(--totalform-gray)) !important;
+	}
+
+	.CodeMirror-cursor {
+		border-left : 2px solid oklch(var(--totalform-nearblack));
+	}
+
+	.CodeMirror-matchingbracket {
+		color            : oklch(var(--totalform-yellow)) !important;
+		outline          : 1px solid oklch(var(--totalform-yellow)) !important;
+		background-color : oklch(var(--totalform-darkgray)) !important;
+	}
+
+	.CodeMirror-nonmatchingbracket {
+		color            : oklch(var(--totalform-red)) !important;
+		outline          : 1px solid oklch(var(--totalform-red)) !important;
+		background-color : oklch(var(--totalform-darkgray)) !important;
 	}
 }
 

@@ -92,9 +92,11 @@ class SentryMiddleware implements MiddlewareInterface
 			// Server configuration errors
 			'Class "finfo" not found',
 			'No space left on device',
-			// Corrupted installation - missing class files
-			'Class "TotalCMS\\',
+			// Corrupted installation - missing class/function files or DI wiring mismatch
 			'Callable TotalCMS\\',
+			'" not found',
+			'must be of type',
+			'Failed opening required',
 			// License API rate limiting (not a bug, user/bot issue)
 			'Rate limit exceeded',
 			// License API unreachable (server network issue, not a bug)

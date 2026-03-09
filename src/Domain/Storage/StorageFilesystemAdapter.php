@@ -138,7 +138,14 @@ readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	public function import(string $import, string $dest): bool
 	{
 		$stream = fopen($import, 'r+');
-		$this->filesystem->writeStream($dest, $stream);
+
+		try {
+			$this->filesystem->writeStream($dest, $stream);
+		} finally {
+			if (is_resource($stream)) {
+				fclose($stream);
+			}
+		}
 
 		return $this->filesystem->fileExists($dest);
 	}

@@ -122,44 +122,44 @@
 {% endif %}
 
 <main class="admin-layout container">
-	<h1>Batch Image Processor</h1>
-	<p>Process multiple images with ImageWorks settings across collections and properties.</p>
+	<h1>{{ t('image_batcher.title') }}</h1>
+	<p>{{ t('image_batcher.desc') }}</p>
 
 	<!-- Wizard Steps Indicator -->
 	<div class="wizard-steps">
 		<div class="wizard-step {{ currentStep == 1 ? 'active' : (currentStep > 1 ? 'completed' : '') }}">
-			<strong>1. Collection</strong>
+			<strong>1. {{ t('label.collection') }}</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 2 ? 'active' : (currentStep > 2 ? 'completed' : '') }}">
-			<strong>2. Property</strong>
+			<strong>2. {{ t('image_batcher.property') }}</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 3 ? 'active' : (currentStep > 3 ? 'completed' : '') }}">
-			<strong>3. ImageWorks</strong>
+			<strong>3. {{ t('image_batcher.imageworks') }}</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 4 ? 'active' : '' }}">
-			<strong>4. Batch</strong>
+			<strong>4. {{ t('image_batcher.batch') }}</strong>
 		</div>
 	</div>
 
 	{% if currentStep == 1 %}
 		<!-- Step 1: Collection Selection -->
 		<section>
-			<h2>Step 1: Select Collection</h2>
-			<p>Choose the collection containing the images you want to process.</p>
+			<h2>{{ t('image_batcher.step1') }}</h2>
+			<p>{{ t('image_batcher.step1_desc') }}</p>
 
 			{% set step1Fields %}
 				{{ cms.form.field("select", "collection", {
-					placeholder : "Select a Collection",
-					label       : "Collection",
-					help        : "Select the collection that contains the images you want to process.",
+					placeholder : t('image_batcher.collection_ph'),
+					label       : t('image_batcher.collection_label'),
+					help        : t('image_batcher.collection_help'),
 					class       : "no-change-listener",
-					options     : cms.collections() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
+					options     : cms.collection.list() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
 				}) }}
 			{% endset %}
 
 			{{ cms.form.simple(url.path, step1Fields, {
 				method : "POST",
-				label  : "Next Step",
+				label  : t('image_batcher.next_step'),
 				ajax   : false,
 			}) }}
 		</section>
@@ -167,10 +167,10 @@
 	{% elseif currentStep == 2 %}
 		<!-- Step 2: Property Selection -->
 		<section>
-			<h2>Step 2: Select Property</h2>
-			<p>Choose which property contains the images in the <strong>{{ selectedCollection }}</strong> collection.</p>
+			<h2>{{ t('image_batcher.step2') }}</h2>
+			<p>{{ t('image_batcher.step2_desc') }}</p>
 
-			{% set schema = cms.schemaForCollection(selectedCollection) %}
+			{% set schema = cms.schema.forCollection(selectedCollection) %}
 			{% set propertyOptions = [] %}
 			{% set imageFields = ['image', 'gallery'] %}
 
@@ -189,9 +189,9 @@
 			{% set step2Fields %}
 				{{ cms.form.field("hidden", "collection", { value: selectedCollection }) }}
 				{{ cms.form.field("select", "property", {
-					placeholder : "Select a Property",
-					label       : "Property",
-					help        : "Select the property that contains the images you want to process.",
+					placeholder : t('image_batcher.property_ph'),
+					label       : t('image_batcher.property_label'),
+					help        : t('image_batcher.property_help'),
 					class       : "no-change-listener",
 					options     : propertyOptions,
 				}) }}
@@ -200,7 +200,7 @@
 			<div class="wizard-actions">
 				{{ cms.form.simple(url.path, step2Fields, {
 					method : "POST",
-					label  : "Next Step",
+					label  : t('image_batcher.next_step'),
 					ajax   : false,
 				}) }}
 			</div>
@@ -209,10 +209,8 @@
 	{% elseif currentStep == 3 %}
 		<!-- Step 3: ImageWorks Macro Input -->
 		<section>
-			<h2>Step 3: ImageWorks Macro</h2>
-			<p>Paste an ImageWorks macro to define the settings that will be applied to all images in
-			<strong>{{ selectedCollection }}.{{ selectedProperty }}</strong>. You can use the link
-			linking tool that is available on any image and gallery form field.</p>
+			<h2>{{ t('image_batcher.step3') }}</h2>
+			<p>{{ t('image_batcher.step3_desc') }}</p>
 
 			{% set step3Fields %}
 				{{ cms.form.field("hidden", "collection", { value: selectedCollection }) }}
@@ -220,9 +218,9 @@
 				{{ cms.form.field("hidden", "step", { value: "process" }) }}
 
 				{{ cms.form.field("textarea", "imageworks_macro", {
-					label : "ImageWorks Macro",
-					help  : "Paste your ImageWorks macro here.",
-					value : postData.imageworks_macro ?? "{{ cms.imagePath('example', {w:400, h:400, fit:'crop'}) }}",
+					label : t('image_batcher.macro_label'),
+					help  : t('image_batcher.macro_help'),
+					value : postData.imageworks_macro ?? "{{ cms.media.imagePath('example', {w:400, h:400, fit:'crop'}) }}",
 					rows  : 4,
 					class : "no-change-listener",
 				}) }}
@@ -231,7 +229,7 @@
 			<div class="wizard-actions">
 				{{ cms.form.simple(url.path, step3Fields, {
 					method: "POST",
-					label: "Start Batch Processing",
+					label: t('image_batcher.start_btn'),
 					ajax: false,
 				}) }}
 			</div>
@@ -240,26 +238,26 @@
 	{% elseif currentStep == 4 %}
 		<!-- Step 4: Batch Processing -->
 		<section>
-			<h2>Step 4: Batch Processing</h2>
-			<p>Processing images in <strong>{{ selectedCollection }}.{{ selectedProperty }}</strong> with the following ImageWorks macro:</p>
+			<h2>{{ t('image_batcher.step4') }}</h2>
+			<p>{{ t('image_batcher.step4_desc') }}</p>
 
 			<div class="macro-display">
 				<code>{{ imageworksMacro }}</code>
 			</div>
 
-			<img src="{{ include(template_from_string(imageworksMacro)) }}" alt="Macro Example" id="macro-example">
+			<img src="{{ include(template_from_string(imageworksMacro)) }}" alt="{{ t('image_batcher.macro_example') }}" id="macro-example">
 
 			<div class="progress-container">
 				<div class="progress-bar">
 					<div class="progress-fill" id="progress-fill"></div>
 				</div>
-				<p id="progress-text">Preparing batch process...</p>
+				<p id="progress-text">{{ t('image_batcher.preparing') }}</p>
 			</div>
 
 			<div class="batch-preview" id="batch-preview"></div>
 
 			<div class="wizard-actions">
-				<button type="button" id="restart-batch" class="button dash-button" style="display: none;">Start New Batch</button>
+				<button type="button" id="restart-batch" class="button dash-button" style="display: none;">{{ t('image_batcher.start_new_batch') }}</button>
 			</div>
 		</section>
 

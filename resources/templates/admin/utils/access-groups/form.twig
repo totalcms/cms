@@ -1,14 +1,14 @@
 {# Access Group Form Page #}
-<h1>{% if isEdit %}Edit{% else %}New{% endif %} Access Group</h1>
+<h1>{% if isEdit %}{{ t('access_groups.edit_title') }}{% else %}{{ t('access_groups.new_title') }}{% endif %}</h1>
 
 <section class="dash-content-section">
-	<p>Configure permissions for this access group. Users can belong to multiple groups, with permissions merging across all their groups.</p>
+	<p>{{ t('access_groups.form_desc') }} {{ t('access_groups.perm_merge') }}</p>
 
 	{% set formFields %}
 		{{ cms.form.field("id", "id", {
-			label       : "Group ID",
-			help        : "Unique identifier for this access group",
-			placeholder : "e.g., content-editor",
+			label       : t('access_groups.group_id'),
+			help        : t('access_groups.group_id_help'),
+			placeholder : t('access_groups.group_id_ph'),
 			required    : true,
 			value       : group ? group.id : '',
 			readonly    : isEdit,
@@ -16,24 +16,24 @@
 		}) }}
 
 		{{ cms.form.field("textarea", "description", {
-			label       : "Description",
-			help        : "Describe what this access group is for",
-			placeholder : "e.g., Content editors who can create and edit blog posts",
+			label       : t('access_groups.description'),
+			help        : t('access_groups.description_help'),
+			placeholder : t('access_groups.description_ph'),
 			value       : group ? group.description : '',
 			rows        : 3,
 		}) }}
 
 		<div class="permission-section">
-			<h3>Object Permissions</h3>
+			<h3>{{ t('access_groups.obj_permissions') }}</h3>
 
 			{{ cms.form.field("multicheckbox", "collections-operations", {
-				label    : "Operations Allowed on Objects",
+				label    : t('access_groups.obj_operations'),
 				value    : group ? group.permissions.collections.operations : ["read"],
 				options  : [
-					{value: "create", label: "Create"},
-					{value: "read", label: "Read"},
-					{value: "update", label: "Update"},
-					{value: "delete", label: "Delete"}
+					{value: "create", label: t('access_groups.op_create')},
+					{value: "read", label: t('access_groups.op_read')},
+					{value: "update", label: t('access_groups.op_update')},
+					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
 					fieldGrid: "150px"
@@ -41,10 +41,10 @@
 			}) }}
 
 			{{ cms.form.field("multicheckbox", "collections-all", {
-				label    : "Collection Access Level",
+				label    : t('access_groups.collection_access'),
 				value    : group ? (group.permissions.collections.all ? ["all"] : []) : ["all"],
 				options  : [
-					{value: "all", label: "All Object Collections"}
+					{value: "all", label: t('access_groups.all_obj_collections')}
 				]
 			}) }}
 
@@ -57,8 +57,8 @@
 			{% endfor %}
 
 			{{ cms.form.field("multicheckbox", "collections-allowed", {
-				label    : "Specific Collections",
-				help     : "Select which collections this group can access",
+				label    : t('access_groups.specific_collections'),
+				help     : t('access_groups.select_collections'),
 				value    : group ? group.permissions.collections.allowed : [],
 				options  : collectionOptions,
 				settings : {
@@ -73,16 +73,16 @@
 		</div>
 
 		<div class="permission-section">
-			<h3>Collection Meta Permissions</h3>
+			<h3>{{ t('access_groups.meta_permissions') }}</h3>
 
 			{{ cms.form.field("multicheckbox", "collectionsMeta-operations", {
-				label    : "Operations Allowed on Collection Metadata",
+				label    : t('access_groups.meta_operations'),
 				value    : group ? group.permissions.collectionsMeta.operations : ["read"],
 				options  : [
-					{value: "create", label: "Create"},
-					{value: "read", label: "Read"},
-					{value: "update", label: "Update"},
-					{value: "delete", label: "Delete"}
+					{value: "create", label: t('access_groups.op_create')},
+					{value: "read", label: t('access_groups.op_read')},
+					{value: "update", label: t('access_groups.op_update')},
+					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
 					fieldGrid: "150px"
@@ -90,16 +90,16 @@
 			}) }}
 
 			{{ cms.form.field("multicheckbox", "collectionsMeta-all", {
-				label    : "Collection Metadata Access Level",
+				label    : t('access_groups.meta_access'),
 				value    : group ? (group.permissions.collectionsMeta.all ? ["all"] : []) : ["all"],
 				options  : [
-					{value: "all", label: "All Collections"}
+					{value: "all", label: t('access_groups.all_collections_meta')}
 				]
 			}) }}
 
 			{{ cms.form.field("multicheckbox", "collectionsMeta-allowed", {
-				label    : "Specific Collections",
-				help     : "Select which collections' metadata this group can access",
+				label    : t('access_groups.specific_collections'),
+				help     : t('access_groups.select_meta'),
 				value    : group ? group.permissions.collectionsMeta.allowed : [],
 				options  : collectionOptions,
 				settings : {
@@ -114,16 +114,16 @@
 		</div>
 
 		<div class="permission-section">
-			<h3>Schema Permissions</h3>
+			<h3>{{ t('access_groups.schema_permissions') }}</h3>
 
 			{{ cms.form.field("multicheckbox", "schemas-operations", {
-				label    : "Operations Allowed on Schemas",
+				label    : t('access_groups.schema_operations'),
 				value    : group ? group.permissions.schemas.operations : ["read"],
 				options  : [
-					{value: "create", label: "Create"},
-					{value: "read", label: "Read"},
-					{value: "update", label: "Update"},
-					{value: "delete", label: "Delete"}
+					{value: "create", label: t('access_groups.op_create')},
+					{value: "read", label: t('access_groups.op_read')},
+					{value: "update", label: t('access_groups.op_update')},
+					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
 					fieldGrid: "150px"
@@ -131,10 +131,10 @@
 			}) }}
 
 			{{ cms.form.field("multicheckbox", "schemas-all", {
-				label    : "Schema Access Level",
+				label    : t('access_groups.schema_access'),
 				value    : group ? (group.permissions.schemas.all ? ["all"] : []) : ["all"],
 				options  : [
-					{value: "all", label: "All Schemas"}
+					{value: "all", label: t('access_groups.all_schemas')}
 				]
 			}) }}
 
@@ -147,8 +147,8 @@
 			{% endfor %}
 
 			{{ cms.form.field("multicheckbox", "schemas-allowed", {
-				label    : "Specific Schemas",
-				help     : "Select which schemas this group can access",
+				label    : t('access_groups.specific_schemas'),
+				help     : t('access_groups.select_schemas'),
 				value    : group ? group.permissions.schemas.allowed : [],
 				options  : schemaOptions,
 				settings : {
@@ -163,25 +163,28 @@
 		</div>
 
 		<div class="permission-section">
-			<h3>Other Permissions</h3>
+			<h3>{{ t('access_groups.other_permissions') }}</h3>
 
 			{{ cms.form.field("multicheckbox", "permissions-simple", {
-				label    : "Dashboard Features",
-				help     : "Select which dashboard features this group can access",
+				label    : t('access_groups.dashboard_features'),
+				help     : t('access_groups.select_features'),
 				value    : group ? (
 					(group.permissions.templates ? ["templates"] : [])|merge(
 						group.permissions.mailer ? ["mailer"] : []
 					)|merge(
 						group.permissions.playground ? ["playground"] : []
 					)|merge(
+						group.permissions.dataviews ? ["dataviews"] : []
+					)|merge(
 						group.permissions.docs ? ["docs"] : []
 					)
-				) : ["docs", "mailer", "templates", "playground"],
+				) : ["docs", "mailer", "templates", "playground", "dataviews"],
 				options  : [
-					{value: "docs", label: "Documentation"},
-					{value: "mailer", label: "Mailer"},
-					{value: "templates", label: "Templates"},
-					{value: "playground", label: "Twig Playground"},
+					{value: "docs", label: t('access_groups.feature_docs')},
+					{value: "mailer", label: t('access_groups.feature_mailer')},
+					{value: "templates", label: t('access_groups.feature_templates')},
+					{value: "playground", label: t('access_groups.feature_playground')},
+					{value: "dataviews", label: t('access_groups.feature_dataviews')},
 				],
 				settings : {
 					fieldGrid: "150px"
@@ -189,28 +192,28 @@
 			}) }}
 
 			{{ cms.form.field("multicheckbox", "utils-all", {
-				label    : "Utils Access Level",
+				label    : t('access_groups.utils_access'),
 				value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
 				options  : [
-					{value: "all", label: "All Utils"}
+					{value: "all", label: t('access_groups.all_utils')}
 				]
 			}) }}
 
 			{{ cms.form.field("multicheckbox", "utils-allowed", {
-				label    : "Specific Utils",
-				help     : "Select which utilities this group can access",
+				label    : t('access_groups.specific_utils'),
+				help     : t('access_groups.select_utils'),
 				value    : group ? group.permissions.utils.allowed : [],
 				options  : [
-					{value: "cache", label: "Cache Manager"},
-					{value: "image-batcher", label: "Image Batcher"},
-					{value: "jobqueue", label: "Job Queue Manager"},
-					{value: "jumpstart", label: "JumpStart"},
-					{value: "license", label: "License"},
-					{value: "log-analyzer", label: "Log Analyzer"},
-					{value: "pretty-url", label: "Pretty URL Builder"},
-					{value: "project-setup", label: "Project Setup"},
-					{value: "server-checker", label: "Server Checker"},
-					{value: "twig-debugger", label: "Twig Debugger"}
+					{value: "cache", label: t('access_groups.util_cache')},
+					{value: "image-batcher", label: t('access_groups.util_image_batcher')},
+					{value: "jobqueue", label: t('access_groups.util_jobqueue')},
+					{value: "jumpstart", label: t('access_groups.util_jumpstart')},
+					{value: "license", label: t('access_groups.util_license')},
+					{value: "log-analyzer", label: t('access_groups.util_logs')},
+					{value: "pretty-url", label: t('access_groups.util_pretty_url')},
+					{value: "project-setup", label: t('access_groups.util_setup')},
+					{value: "server-checker", label: t('access_groups.util_server')},
+					{value: "twig-debugger", label: t('access_groups.util_debugger')}
 				],
 				settings : {
 					fieldGrid: "150px",
@@ -229,7 +232,7 @@
 	{{ cms.form.totalform(apiRoute, formFields, {
 		class  : "access-groups-form",
 		method : isEdit ? "PUT" : "POST",
-		save   : isEdit ? "Update Access Group" : "Create Access Group",
+		save   : isEdit ? t('access_groups.update_submit') : t('access_groups.create_submit'),
 		newActions: [
 			{
 				action: "redirect",
@@ -318,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			.map(cb => cb.value);
 
 		// Create hidden inputs for each simple permission
-		['templates', 'mailer', 'playground', 'docs'].forEach(function(perm) {
+		['templates', 'mailer', 'playground', 'dataviews', 'docs'].forEach(function(perm) {
 			const existingInput = form.querySelector(`input[name="${perm}"]`);
 			if (existingInput) {
 				existingInput.remove();

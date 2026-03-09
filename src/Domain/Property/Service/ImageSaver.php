@@ -46,24 +46,36 @@ class ImageSaver extends FileSaver
 
 		$fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 
+		$colorData = ['palette' => []];
+
 		// Safely generate color palette - never let this break the upload
-		try {
-			$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
-		} catch (\RuntimeException $e) {
-			// Log palette generation failures
-			$this->getLogger()->warning('Palette generation failed', [
-				'collection' => $collection,
-				'objectID'   => $objectID,
-				'property'   => $property,
-				'file'       => $filePath,
-				'error'      => $e->getMessage(),
-			]);
-			// Continue with empty palette - upload should not fail
-			$colorData = ['palette' => []];
+		if ($this->settings['extractPalette'] ?? true) {
+			try {
+				$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
+			} catch (\RuntimeException $e) {
+				// Log palette generation failures
+				$this->getLogger()->warning('Palette generation failed', [
+					'collection' => $collection,
+					'objectID'   => $objectID,
+					'property'   => $property,
+					'file'       => $filePath,
+					'error'      => $e->getMessage(),
+				]);
+				// Continue with empty palette - upload should not fail
+				$colorData = ['palette' => []];
+			}
 		}
 
-		// Extract EXIF metadata (includes alt text and tags from IPTC/XMP)
-		$metaData  = ImageMetaReader::getMetaData($filePath);
+		// Extract full EXIF metadata (includes alt text and tags from IPTC/XMP)
+		if ($this->settings['extractExif'] ?? true) {
+			$metaData = ImageMetaReader::getMetaData($filePath);
+			if (!($this->config->imageworks['gatherLocation'] ?? true)) {
+				ImageMetaReader::stripLocationData($metaData);
+			}
+		} else {
+			// Always extract basic image dimensions (width/height)
+			$metaData = ImageMetaReader::getBasicImageData($filePath);
+		}
 
 		// Merge data with EXIF taking precedence for alt and tags if they're empty in existing data
 		$newImage = array_merge($fileData, $metaData, $colorData, $existingData);

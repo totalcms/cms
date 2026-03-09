@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 
 final class TotalCMSTwigAdapterBasicTest extends TestCase
 {
 	public function testLanguagesReturnsCorrectArray(): void
 	{
-		// Test the static languages method without dependencies
-		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
-		$method     = $reflection->getMethod('languages');
-
-		// Create a minimal instance for method testing
-		$languages = $method->invoke($this->createPartialMock(TotalCMSTwigAdapter::class, []));
+		$translator = $this->createMock(TranslationService::class);
+		$adapter    = new LocaleTwigAdapter($translator);
+		$languages  = $adapter->languages();
 
 		expect($languages)->toBeArray();
 		expect($languages)->toHaveKey('English');
@@ -33,8 +36,14 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testPrettyUrlHandlesBasicPath(): void
 	{
-		$adapter         = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->domain = 'example.com';
+		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
+
+		// Inject domain via config
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->domain = 'example.com';
+		$configProp->setValue($adapter, $config);
 
 		$result = $adapter->prettyUrl('/blog/post');
 
@@ -43,8 +52,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testPrettyUrlWithDomain(): void
 	{
-		$adapter         = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->domain = 'example.com';
+		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
+
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->domain = 'example.com';
+		$configProp->setValue($adapter, $config);
 
 		$result = $adapter->prettyUrl('/blog/post', true);
 
@@ -53,8 +67,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testPrettyUrlHandlesPhpExtension(): void
 	{
-		$adapter         = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->domain = 'example.com';
+		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
+
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->domain = 'example.com';
+		$configProp->setValue($adapter, $config);
 
 		$result = $adapter->prettyUrl('/blog/post.php');
 
@@ -63,8 +82,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testPrettyUrlHandlesFullUrl(): void
 	{
-		$adapter         = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->domain = 'example.com';
+		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
+
+		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
+		$configProp     = $reflection->getProperty('config');
+		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->domain = 'example.com';
+		$configProp->setValue($adapter, $config);
 
 		$result = $adapter->prettyUrl('https://example.com/blog/post');
 
@@ -73,7 +97,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testApacheRuleGeneratesCorrectRewriteRules(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
 
 		$result = $adapter->apacheRule('https://example.com/blog/post.php', 'Blog');
 
@@ -86,7 +110,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testNginxRuleGeneratesCorrectRewriteRules(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
 
 		$result = $adapter->nginxRule('https://example.com/blog/post.php', 'Blog');
 
@@ -98,8 +122,14 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testLoginUrlGeneration(): void
 	{
-		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->api = '/api';
+		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class, []);
+
+		// Inject config with api
+		$reflection  = new \ReflectionClass(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->api = '/api';
+		$configProp->setValue($adapter, $config);
 
 		$result = $adapter->login();
 		expect($result)->toBe('/api/login');
@@ -110,7 +140,6 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testJobQueuePendingInfoReturnsEmptyStringForNoPendingJobs(): void
 	{
-		// Clear any existing jobs from previous tests
 		$config = new \TotalCMS\Support\Config([
 			'env'        => 'test',
 			'template'   => sys_get_temp_dir(),
@@ -137,10 +166,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
 		$jobManager->clearQueue();
 
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
 
-		// Use reflection to inject the jobManager into the adapter
-		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$reflection = new \ReflectionClass(AdminTwigAdapter::class);
 		$property   = $reflection->getProperty('jobManager');
 		$property->setValue($adapter, $jobManager);
 
@@ -151,7 +179,6 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testJobQueueFailedInfoReturnsEmptyStringForNoFailedJobs(): void
 	{
-		// Clear any existing jobs from previous tests
 		$config = new \TotalCMS\Support\Config([
 			'env'        => 'test',
 			'template'   => sys_get_temp_dir(),
@@ -178,10 +205,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
 		$jobManager->clearQueue();
 
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
 
-		// Use reflection to inject the jobManager into the adapter
-		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
+		$reflection = new \ReflectionClass(AdminTwigAdapter::class);
 		$property   = $reflection->getProperty('jobManager');
 		$property->setValue($adapter, $jobManager);
 
@@ -192,8 +218,14 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testDownloadUrlGeneration(): void
 	{
-		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->api = '/api';
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
+
+		// Inject config with api
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->api = '/api';
+		$configProp->setValue($adapter, $config);
 
 		// Test basic download URL
 		$result = $adapter->download('test-id');
@@ -214,8 +246,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testStreamUrlGeneration(): void
 	{
-		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->api = '/api';
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
+
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->api = '/api';
+		$configProp->setValue($adapter, $config);
 
 		// Test basic stream URL
 		$result = $adapter->stream('test-id');
@@ -231,8 +268,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testDepotDownloadUrlGeneration(): void
 	{
-		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->api = '/api';
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
+
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->api = '/api';
+		$configProp->setValue($adapter, $config);
 
 		// Test basic depot download
 		$result = $adapter->depotDownload('depot-id', 'file.pdf');
@@ -246,8 +288,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testDepotStreamUrlGeneration(): void
 	{
-		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		$adapter->api = '/api';
+		$adapter = $this->createPartialMock(MediaTwigAdapter::class, []);
+
+		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
+		$configProp  = $reflection->getProperty('config');
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->api = '/api';
+		$configProp->setValue($adapter, $config);
 
 		// Test basic depot stream
 		$result = $adapter->depotStream('depot-id', 'file.mp4');
@@ -261,7 +308,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testRedirectIfNotFoundDoesNothingForNonEmptyObject(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(CollectionTwigAdapter::class, []);
 
 		// This should not trigger any redirect (no exception expected)
 		$adapter->redirectIfNotFound(['id' => '123', 'title' => 'Test']);
@@ -272,7 +319,26 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testProcessJobQueueCommandGeneratesCorrectCommand(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->env = 'prod';
+
+		$adapter = new AdminTwigAdapter(
+			$config,
+			$this->createMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaLister::class),
+			$this->createMock(\TotalCMS\Domain\Template\Service\TemplateLister::class),
+			$this->createMock(\TotalCMS\Domain\JobQueue\Service\JobManager::class),
+			$this->createMock(\TotalCMS\Domain\Cache\Service\DevModeManager::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionEditionService::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheReporter::class),
+			$this->createMock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
+			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
+			$this->createMock(\TotalCMS\Infrastructure\Diagnostics\ServerChecker::class),
+			$this->createMock(\TotalCMS\Infrastructure\Diagnostics\LogAnalyzer::class),
+			$this->createMock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			$this->createMock(\TotalCMS\Domain\Cache\CacheSizingAdvisor::class),
+		);
 
 		// Mock $_SERVER for test
 		$_SERVER['DOCUMENT_ROOT'] = '/var/www/html';
@@ -289,17 +355,15 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testSimpleDataAccessors(): void
 	{
-		// Test methods that use default options patterns
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter = $this->createPartialMock(DataTwigAdapter::class, ['raw']);
 
-		// Mock the data method to return test values
-		$adapter->method('data')
+		// Mock the raw method to return test values
+		$adapter->method('raw')
 			->willReturnMap([
 				['text', 'test-id', 'text', 'Sample text'],
 				['number', 'test-id', 'number', '42'],
 				['url', 'test-id', 'url', 'https://example.com'],
 				['styledtext', 'test-id', 'styledtext', '<p>Rich text</p>'],
-				['depot', 'test-id', 'depot', [['name' => 'file.pdf']]],
 				['toggle', 'test-id', 'status', true],
 				['date', 'test-id', 'date', '2024-01-15'],
 				['color', 'test-id', 'color', ['hex' => '#ff0000']],
@@ -321,10 +385,6 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$result = $adapter->styledtext('test-id');
 		expect($result)->toBe('<p>Rich text</p>');
 
-		// Test depot accessor
-		$result = $adapter->depot('test-id');
-		expect($result)->toBe([['name' => 'file.pdf']]);
-
 		// Test toggle accessor
 		$result = $adapter->toggle('test-id');
 		expect($result)->toBeTrue();
@@ -342,9 +402,47 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		expect($result)->toBe(['hex' => '#ff0000']);
 	}
 
+	public function testDepotAccessor(): void
+	{
+		$mockObject = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$mockObject->method('toArray')->willReturn([
+			'id'    => 'test-id',
+			'depot' => [['name' => 'file.pdf']],
+		]);
+
+		$objectFetcher = $this->createMock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class);
+		$objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config->api = '/api';
+
+		$adapter = new MediaTwigAdapter($objectFetcher, $config, $loggerFactory);
+
+		$result = $adapter->depot('test-id');
+		expect($result)->toBe([['name' => 'file.pdf']]);
+	}
+
 	public function testPaginationMethods(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		$adapter = new RenderTwigAdapter(
+			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(\TotalCMS\Support\Config::class),
+			$this->createMock(DataTwigAdapter::class),
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$loggerFactory,
+		);
 
 		// Test simple pagination
 		$result = $adapter->paginationSimple(100, 2, 10);

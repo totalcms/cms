@@ -3,12 +3,12 @@
 	<button class="dash-action-dots" title="Schema Actions" popovertarget="schema-actions"></button>
 	<nav popover id="schema-actions">
 		<ul>
-			{% if cms.canAccessSchema(url.schema, 'create') %}
-			<li class="duplicate"><a href="#" onclick="duplicateSchema(event)">Duplicate</a></li>
+			{% if cms.auth.canAccessSchema(url.schema, 'create') %}
+			<li class="duplicate"><a href="#" onclick="duplicateSchema(event)">{{ t('btn.duplicate') }}</a></li>
 			{% endif %}
-			<li class="export"><a href="{{ cms.api }}/export/schemas/{{ url.schema }}" download target="_blank">Export</a></li>
-			{% if cms.canAccessSchema(url.schema, 'create') %}
-			<li class="import"><a href="schemas/-import">Import</a></li>
+			<li class="export"><a href="{{ cms.api }}/export/schemas/{{ url.schema }}" download target="_blank">{{ t('btn.export') }}</a></li>
+			{% if cms.auth.canAccessSchema(url.schema, 'create') %}
+			<li class="import"><a href="schemas/-import">{{ t('btn.import') }}</a></li>
 			{% endif %}
 		</ul>
 	</nav>
@@ -16,8 +16,8 @@
 
 {{ cms.form.schema({
 	id          : url.schema,
-	save        : cms.canAccessSchema(url.schema, 'update') ? "Save" : false,
-	delete      : cms.canAccessSchema(url.schema, 'delete') ? "Delete" : false,
+	save        : cms.auth.canAccessSchema(url.schema, 'update') ? "Save" : false,
+	delete      : cms.auth.canAccessSchema(url.schema, 'delete') ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [
@@ -33,12 +33,11 @@
 	],
 }) }}
 
-{% set inheritedProps = cms.getInheritedProperties(url.schema) %}
+{% set inheritedProps = cms.schema.inheritedProperties(url.schema) %}
 {% if inheritedProps|length > 0 %}
 <div class="schema-inherited-properties">
-	<h3>Inherited Properties (Read-Only)</h3>
-	<p>The following properties are inherited from other schemas and cannot be modified directly.
-		To change them, edit the source schema or override the property.</p>
+	<h3>{{ t('schema.inherited_title') }}</h3>
+	<p>{{ t('schema.inherited_desc') }}</p>
 	<div class="inherited-properties-list">
 		{% for propName, prop in inheritedProps %}
 			<div class="schema-field {{ prop.field }}-field {{ prop.type }}-type">
@@ -47,29 +46,29 @@
 						class="button override"
 						data-property-name="{{ propName }}"
 						data-property-definition="{{ prop.definition|merge({type: prop.type, field: prop.field})|json_encode|e('html_attr') }}"
-						title="Override this property"></button>
-				<span class="property-source">from <a href="schemas/{{ prop.source }}">{{ prop.source }}</a></span>
+						title="{{ t('schema.override') }}"></button>
+				<span class="property-source">{{ t('schema.inherited_from') }} <a href="schemas/{{ prop.source }}">{{ prop.source }}</a></span>
 			</div>
 		{% endfor %}
 	</div>
 </div>
 {% endif %}
 
-{% set isDeckCompatible = cms.isDeckCompatible(url.schema) %}
-{% set incompatibleTypes = cms.getDeckIncompatibleTypes(url.schema) %}
+{% set isDeckCompatible = cms.schema.isDeckCompatible(url.schema) %}
+{% set incompatibleTypes = cms.schema.deckIncompatibleTypes(url.schema) %}
 
 <div class="schema-deck-compatibility">
 	{% if isDeckCompatible %}
 		<div class="deck-compatible-message">
 			<span class="status-icon compatible">✓</span>
-			<strong>Deck Compatible:</strong> This schema can be used as a deck property type.
+			<strong>{{ t('schema.deck_compatible') }}</strong> {{ t('schema.deck_compatible_desc') }}
 		</div>
 	{% else %}
 		<div class="deck-incompatible-message">
 			<span class="status-icon incompatible">⚠</span>
-			<strong>Deck Incompatible:</strong> This schema cannot be used as a deck property type.
+			<strong>{{ t('schema.deck_incompatible') }}</strong> {{ t('schema.deck_incompatible_desc') }}
 			{% if incompatibleTypes|length > 0 %}
-				<br><small>Incompatible property types: {{ incompatibleTypes|join(', ') }}</small>
+				<br><small>{{ t('schema.deck_incompatible_types', {'{types}': incompatibleTypes|join(', ')}) }}</small>
 			{% endif %}
 		</div>
 	{% endif %}

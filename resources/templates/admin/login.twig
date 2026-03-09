@@ -14,11 +14,11 @@
 		, ignore_missing = true) }}
 	</section>
 
-	{% set authCollection = cms.objects(cms.config('auth','collection')) %}
+	{% set authCollection = cms.collection.objects(cms.config('auth','collection')) %}
 	{% if authCollection is empty %}
 		<div class="cms-twig-info" role="alert" style="margin:0">
-			<h4>Setup First User Account</h4>
-			<p>The credentials that you type below will be used to create the first admin user.</p>
+			<h4>{{ t('login.setup_first_user') }}</h4>
+			<p>{{ t('login.setup_first_user_desc') }}</p>
 		</div>
 	{% endif %}
 
@@ -26,10 +26,11 @@
 	{% for message in flash.get('error') %}
 		{% set errorMessages = errorMessages|merge([message]) %}
 	{% endfor %}
-	{% set formOptions = {
+	{% set formSettings = {
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
-		flashMessages : errorMessages
+		flashMessages : errorMessages,
+		showPasskeys  : authCollection is not empty
 	} %}
 
 	{% if cms.edition.can('templates') %}
@@ -38,10 +39,10 @@
 			: ['login-options.twig']
 		, ignore_missing = true) %}
 		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
-		{% set formOptions = formOptions|merge(decoded) %}
+		{% set formSettings = formSettings|merge(decoded) %}
 	{% endif %}
 
-	{{ cms.form.loginForm(formOptions) }}
+	{{ cms.form.loginForm(formSettings) }}
 
 	<section class="login-below">
 		{% if cms.edition.can('whitelabel_templates') %}

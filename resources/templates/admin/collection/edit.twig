@@ -1,7 +1,7 @@
 {# Edit Collection #}
 
 {# URL Template Warnings #}
-{% set urlValidation = cms.validateUrlTemplateFields(url.collection) %}
+{% set urlValidation = cms.collection.validateUrlTemplateFields(url.collection) %}
 {% if urlValidation.prettyUrlDisabled or urlValidation.notIndexed is not empty or urlValidation.notRequired is not empty %}
 <div class="warning-box url-template-warning">
 	<div>
@@ -32,8 +32,8 @@
 
 {{ cms.form.collection({
 	id           : url.collection,
-	save         : cms.canAccessCollectionMeta(url.collection, 'update') ? "Save" : false,
-	delete       : cms.canAccessCollectionMeta(url.collection, 'delete') ? "Delete" : false,
+	save         : cms.auth.canAccessCollectionMeta(url.collection, 'update') ? "Save" : false,
+	delete       : cms.auth.canAccessCollectionMeta(url.collection, 'delete') ? "Delete" : false,
 	helpStyle    : 'label',
 	helpOnFocus  : true,
 	deleteActions : [

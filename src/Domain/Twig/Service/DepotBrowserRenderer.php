@@ -43,25 +43,27 @@ class DepotBrowserRenderer
 			'preview' => $options['preview'],
 		]), JSON_THROW_ON_ERROR);
 
-		$classes = HTMLUtils::mergeClasses('cms-depot-browser', $options['class']);
-		$html    = "<div class=\"{$classes}\" data-options='" . htmlspecialchars($dataOptions, ENT_QUOTES, 'UTF-8') . "'>";
+		$content = '';
 
 		if ($options['filter']) {
-			$html .= $this->buildFilter();
+			$content .= $this->buildFilter();
 		}
 
 		if ($options['folders']) {
-			$html .= $this->buildFileTree($files, '', $id, $options, $downloadUrl, $streamUrl);
+			$content .= $this->buildFileTree($files, '', $id, $options, $downloadUrl, $streamUrl);
 		} else {
-			$flat  = $this->flattenFiles($files, '');
-			$html .= $this->buildFileTree($flat, '', $id, $options, $downloadUrl, $streamUrl);
+			$flat     = $this->flattenFiles($files, '');
+			$content .= $this->buildFileTree($flat, '', $id, $options, $downloadUrl, $streamUrl);
 		}
 
 		if ($options['preview']) {
-			$html .= $this->buildPreviewDialog();
+			$content .= $this->buildPreviewDialog();
 		}
 
-		return $html . '</div>';
+		return HTMLUtils::element('div', $content, [
+			'class'         => HTMLUtils::mergeClasses('cms-depot-browser', $options['class']),
+			'data-settings' => $dataOptions,
+		]);
 	}
 
 	/**
@@ -80,8 +82,6 @@ class DepotBrowserRenderer
 		callable $downloadUrl,
 		callable $streamUrl,
 	): string {
-		$html = '<ul class="depot-browser-tree">';
-
 		// Folders first, then files
 		$folders = [];
 		$items   = [];
@@ -105,14 +105,15 @@ class DepotBrowserRenderer
 			$items   = array_reverse($items);
 		}
 
+		$content = '';
 		foreach ($folders as $folder) {
-			$html .= $this->buildFolder($folder, $path, $id, $options, $downloadUrl, $streamUrl);
+			$content .= $this->buildFolder($folder, $path, $id, $options, $downloadUrl, $streamUrl);
 		}
 		foreach ($items as $file) {
-			$html .= $this->buildFile($file, $path, $id, $options, $downloadUrl, $streamUrl);
+			$content .= $this->buildFile($file, $path, $id, $options, $downloadUrl, $streamUrl);
 		}
 
-		return $html . '</ul>';
+		return HTMLUtils::element('ul', $content, ['class' => 'depot-browser-tree']);
 	}
 
 	/**
@@ -145,42 +146,53 @@ class DepotBrowserRenderer
 
 		$displayName = $options['humanize'] ? $this->humanizeFilename($name) : $name;
 
-		$html = "<li class=\"depot-browser-item\" data-ext=\"{$ext}\" data-stream-url=\"" . htmlspecialchars($streamSrc, ENT_QUOTES, 'UTF-8') . '">';
+		$fileClass = "file file-icon icon-{$ext}";
+		$content   = '';
 
 		if ($options['download']) {
-			$html .= '<a href="' . htmlspecialchars($dlUrl, ENT_QUOTES, 'UTF-8') . "\" class=\"file file-icon icon-{$ext}\" download=\"{$this->escape($name)}\">{$this->escape($displayName)}</a>";
+			$content .= HTMLUtils::link($this->escape($displayName), $dlUrl, [
+				'class'    => $fileClass,
+				'download' => $name,
+			]);
 		} else {
-			$html .= "<span class=\"file file-icon icon-{$ext}\">{$this->escape($displayName)}</span>";
+			$content .= HTMLUtils::element('span', $this->escape($displayName), ['class' => $fileClass]);
 		}
 
-		$html .= '<span class="file-actions">';
+		// File actions (preview button, size)
+		$actions = '';
 		if ($options['preview']) {
-			$html .= '<button type="button" class="action-preview" title="Preview"></button>';
+			$actions .= HTMLUtils::element('button', '', ['type' => 'button', 'class' => 'action-preview', 'title' => 'Preview']);
 		}
 		if ($size > 0) {
-			$html .= '<span class="file-size">' . $this->formatSize($size) . '</span>';
+			$actions .= HTMLUtils::element('span', $this->formatSize($size), ['class' => 'file-size']);
 		}
-		$html .= '</span>';
+		$content .= HTMLUtils::element('span', $actions, ['class' => 'file-actions']);
 
+		// Comments
 		if ($options['comments']) {
 			$comments = trim((string)($file['comments'] ?? ''));
 			if ($comments !== '') {
-				$html .= '<p class="file-comments">' . $this->escape($comments) . '</p>';
+				$content .= HTMLUtils::element('p', $this->escape($comments), ['class' => 'file-comments']);
 			}
 		}
 
+		// Tags
 		if ($options['tags']) {
 			$tags = $file['tags'] ?? [];
 			if (is_array($tags) && $tags !== []) {
-				$html .= '<div class="file-tags">';
+				$tagHtml = '';
 				foreach ($tags as $tag) {
-					$html .= '<span>' . $this->escape((string)$tag) . '</span>';
+					$tagHtml .= HTMLUtils::element('span', $this->escape((string)$tag));
 				}
-				$html .= '</div>';
+				$content .= HTMLUtils::element('div', $tagHtml, ['class' => 'file-tags']);
 			}
 		}
 
-		return $html . '</li>';
+		return HTMLUtils::element('li', $content, [
+			'class'           => 'depot-browser-item',
+			'data-ext'        => $ext,
+			'data-stream-url' => $streamSrc,
+		]);
 	}
 
 	/**
@@ -203,13 +215,10 @@ class DepotBrowserRenderer
 		$children = is_array($folder['files'] ?? null) ? $folder['files'] : [];
 		$subPath  = $path !== '' ? $path . '/' . $name : $name;
 
-		$html  = '<li>';
-		$html .= '<details>';
-		$html .= '<summary class="folder">' . $this->escape($name) . '</summary>';
-		$html .= $this->buildFileTree($children, $subPath, $id, $options, $downloadUrl, $streamUrl);
-		$html .= '</details>';
+		$summary = HTMLUtils::element('summary', $this->escape($name), ['class' => 'folder']);
+		$tree    = $this->buildFileTree($children, $subPath, $id, $options, $downloadUrl, $streamUrl);
 
-		return $html . '</li>';
+		return HTMLUtils::element('li', HTMLUtils::element('details', $summary . $tree));
 	}
 
 	/**
@@ -289,16 +298,16 @@ class DepotBrowserRenderer
 
 	private function buildFilter(): string
 	{
-		return '<div class="depot-browser-filter">'
-			. '<input type="search" placeholder="Filter files...">'
-			. '</div>';
+		$input = HTMLUtils::inlineElement('input', ['type' => 'search', 'placeholder' => 'Filter files...']);
+
+		return HTMLUtils::element('div', $input, ['class' => 'depot-browser-filter']);
 	}
 
 	private function buildPreviewDialog(): string
 	{
-		return '<dialog class="cms-modal depot-browser-preview">'
-			. '<div class="preview-content"></div>'
-			. '</dialog>';
+		$content = HTMLUtils::element('div', '', ['class' => 'preview-content']);
+
+		return HTMLUtils::dialog($content, 'depot-browser-preview');
 	}
 
 	private function formatSize(int $bytes): string

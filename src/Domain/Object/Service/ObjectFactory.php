@@ -17,6 +17,7 @@ readonly class ObjectFactory
 		private SchemaFetcher $schemaFetcher,
 		private PropertyFactory $propertyFactory,
 		private AutogenIdService $autogenIdService,
+		private AutogenService $autogenService,
 	) {
 	}
 
@@ -43,7 +44,7 @@ readonly class ObjectFactory
 		// Ensure ID is properly slugified (handles CSV imports with non-slug IDs)
 		$objectData['id'] = SlugData::slugify($objectData['id']);
 
-		$properties = $this->generateProperties($objectData, $schema);
+		$properties = $this->generateProperties($collection, $objectData, $schema);
 
 		// Dynamically load object data based on the schema type
 		// Not sure if this is really needed but it's a good idea to have it.
@@ -65,8 +66,11 @@ readonly class ObjectFactory
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function generateProperties(array $objectData, SchemaData $schema): array
+	private function generateProperties(string $collection, array $objectData, SchemaData $schema): array
 	{
+		// Apply autogen for non-ID fields before generating properties
+		$objectData = $this->applyAutogenFields($collection, $objectData, $schema);
+
 		$properties = [];
 
 		// Loop through the schema properties and add them to the object properties.
@@ -89,6 +93,36 @@ readonly class ObjectFactory
 		}
 
 		return $properties;
+	}
+
+	/**
+	 * Apply autogen patterns to non-ID fields that have empty values.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function applyAutogenFields(string $collection, array $objectData, SchemaData $schema): array
+	{
+		foreach ($schema->properties as $property => $propertySchema) {
+			if ($property === 'id') {
+				continue; // ID autogen is handled separately
+			}
+
+			$autogenPattern = $propertySchema['settings']['autogen'] ?? null;
+			if (empty($autogenPattern)) {
+				continue;
+			}
+
+			// Only autogen if the field is empty or not provided
+			if (!empty($objectData[$property])) {
+				continue;
+			}
+
+			$objectData[$property] = $this->autogenService->generate($autogenPattern, $collection, $objectData);
+		}
+
+		return $objectData;
 	}
 
 	/**

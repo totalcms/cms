@@ -123,12 +123,12 @@
 			<div class="split-view">
 
 				{% if name %}
-					{% set gallery = cms.object(collection, id) %}
-					{% set imagePath = cms.galleryPath(gallery, name, values, {collection: collection, property: property}) %}
-					{% set imageData = cms.galleryImageData(gallery, name, {collection: collection, property: property}) %}
+					{% set gallery = cms.collection.object(collection, id) %}
+					{% set imagePath = cms.media.galleryPath(gallery, name, values, {collection: collection, property: property}) %}
+					{% set imageData = cms.media.galleryImageData(gallery, name, {collection: collection, property: property}) %}
 				{% else %}
-					{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
-					{% set imageData = cms.data(collection, id, property) %}
+					{% set imagePath = cms.media.imagePath(id, values, {collection: collection, property: property}) %}
+					{% set imageData = cms.data.raw(collection, id, property) %}
 				{% endif %}
 
 				<img src="{{ imagePath }}"
@@ -138,22 +138,29 @@
 					draggable="false" />
 				<div class="image-info">
 					<div>
-						<h4>Macro:</h4>
+						<h4>{{ t('imageworks.macros') }}</h4>
 
 						{% if name %}
-						<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
+						<pre id="twig-macro">&#123;&#123; cms.media.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
 						{% else %}
-						<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
+						<pre id="twig-macro">&#123;&#123; cms.media.imagePath("{{id}}") &#125;&#125;</pre>
 						{% endif %}
+						<button type="button" class="copy-macro cms-clip-button" data-clip="#twig-macro">{{ t('imageworks.copy_path_macro') }}</button>
 
-						<button type="button" id="copy-macro" class="cms-clip-button" data-clip="#twig-macro">Copy Path Macro</button>
-						<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
+						{% if name %}
+						<pre id="twig-render-macro">&#123;&#123; cms.render.galleryImage("{{id}}", "{{name}}") &#125;&#125;</pre>
+						{% else %}
+						<pre id="twig-render-macro">&#123;&#123; cms.render.image("{{id}}") &#125;&#125;</pre>
+						{% endif %}
+						<button type="button" class="copy-macro cms-clip-button" data-clip="#twig-render-macro">{{ t('imageworks.copy_render_macro') }}</button>
+
+						<a href="{{ imagePath }}" download id="download-image" title="{{ t('imageworks.download_preview') }}"></a>
 					</div>
-					<h4 class="new-size">New Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
-					<h5 class="original-size">Original: {{ imageData.size | filesize }} ({{ imageData.width }}x{{ imageData.height }} {{ imageData.mime | split('/')[1] }})</h5>
+					<h4 class="new-size">{{ t('imageworks.new_size') }} <span id="filesize"></span> <span id="dimensions"></span></h4>
+					<h5 class="original-size">{{ t('imageworks.original') }} {{ imageData.size | filesize }} ({{ imageData.width }}x{{ imageData.height }} {{ imageData.mime | split('/')[1] }})</h5>
 				</div>
 			</div>
-			<button type="button" id="refresh-image">Preview Image</button>
+			<button type="button" id="refresh-image">{{ t('imageworks.preview') }}</button>
 		</section>
 
 		<form class="totalform help-box help-on-hover">
@@ -166,20 +173,20 @@
 
 			<section>
 				{% set presets = cms.config("imageworks", "presets") | keys %}
-				{{ _self.select("p", "Preset", "icon-settings", help.p, values.p, selectOptions(presets)) }}
+				{{ _self.select("p", t('imageworks.preset'), "icon-settings", help.p, values.p, selectOptions(presets)) }}
 			</section>
 
 			<details class="cms-accordion">
-				<summary>Sizing &amp; Crop</summary>
+				<summary>{{ t('imageworks.sizing_crop') }}</summary>
 				<div class="content">
 					<section>
-						{{ _self.input("w", "number", "Width", "icon-width", help.w, values.w, { min:1 }) }}
-						{{ _self.input("h", "number", "Height", "icon-height", help.h, values.h, { min:1 }) }}
-						{{ _self.input("dpr", "number", "Pixel Density", "icon-pixels", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
+						{{ _self.input("w", "number", t('imageworks.width'), "icon-width", help.w, values.w, { min:1 }) }}
+						{{ _self.input("h", "number", t('imageworks.height'), "icon-height", help.h, values.h, { min:1 }) }}
+						{{ _self.input("dpr", "number", t('imageworks.pixel_density'), "icon-pixels", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
 					</section>
 					<section>
-						{{ _self.input("q", "number", "Quality", "icon-quality", help.q, values.q, { min:0, max:100 }) }}
-						{{ _self.select("fm", "Format", "icon-imageformat", help.fm, values.fm, [
+						{{ _self.input("q", "number", t('imageworks.quality'), "icon-quality", help.q, values.q, { min:0, max:100 }) }}
+						{{ _self.select("fm", t('imageworks.format'), "icon-imageformat", help.fm, values.fm, [
 							{ value: "jpg", label: "JPG" },
 							{ value: "pjpg", label: "Progressive JPG" },
 							{ value: "png", label: "PNG" },
@@ -187,27 +194,27 @@
 							{ value: "webp", label: "WebP" },
 							{ value: "avif", label: "AVIF" },
 						]) }}
-						{{ _self.input("fit", "text", "Fit and Crop", "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
-						<button type="button" class='open-fit-docs'>Fit Options Docs</button>
+						{{ _self.input("fit", "text", t('imageworks.fit_crop'), "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
+						<button type="button" class='open-fit-docs'>{{ t('imageworks.fit_docs') }}</button>
 					</section>
 				</div>
 			</details>
 
 			<details class="cms-accordion">
-				<summary>Effects</summary>
+				<summary>{{ t('imageworks.effects') }}</summary>
 				<div class="content">
 					<section>
-						{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
-						{{ _self.input("con", "number", "Contrast", "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
-						{{ _self.input("bri", "number", "Brightness", "icon-bright", help.bri, values.bri, { min:-100, max:100 }) }}
-						{{ _self.input("gam", "number", "Gamma", "icon-gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
+						{{ _self.input("sharp", "number", t('imageworks.sharpen'), "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
+						{{ _self.input("con", "number", t('imageworks.contrast'), "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
+						{{ _self.input("bri", "number", t('imageworks.brightness'), "icon-bright", help.bri, values.bri, { min:-100, max:100 }) }}
+						{{ _self.input("gam", "number", t('imageworks.gamma'), "icon-gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
 					</section>
 					<section>
-						{{ _self.input("blur", "number", "Blur", "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
-						{{ _self.input("pixel", "number", "Pixelate", "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
-						{{ _self.select("filt", "Filter", "icon-filters", help.filt, values.filt, [
-							{ value: "greyscale", label: "Black & White" },
-							{ value: "sepia", label: "Sepia" },
+						{{ _self.input("blur", "number", t('imageworks.blur'), "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
+						{{ _self.input("pixel", "number", t('imageworks.pixelate'), "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
+						{{ _self.select("filt", t('imageworks.filter_effect'), "icon-filters", help.filt, values.filt, [
+							{ value: "greyscale", label: t('imageworks.black_white') },
+							{ value: "sepia", label: t('imageworks.sepia') },
 						]) }}
 						{# {{ _self.select("flip", "Flip", "Flip the image", [
 							{ value: "v", label: "Vertical" },
@@ -226,80 +233,80 @@
 			</details>
 
 			<details class="cms-accordion">
-				<summary>Background &amp; Border</summary>
+				<summary>{{ t('imageworks.background_border') }}</summary>
 				<div class="content">
 					<section>
-						{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
+						{{ _self.input("bg", "text", t('imageworks.background'), "icon-paint-roller", help.bg, values.bg) }}
 					</section>
 					<section>
-						{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
+						{{ _self.input("border", "text", t('imageworks.border'), "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
 					</section>
 				</div>
 			</details>
 
 			<details class="cms-accordion">
-				<summary>Watermark <small>(Standard Edition)</small></summary>
+				<summary>{{ t('imageworks.watermark_title') }}</summary>
 				<div class="content">
 					<section>
 
 						{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
-						{% set watermarkData = cms.data("gallery", watermarkID, "gallery") | default([]) %}
+						{% set watermarkData = cms.data.raw("gallery", watermarkID, "gallery") | default([]) %}
 						{% set watermarks = selectOptions(watermarkData, "name", "name") %}
 
-						{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
-						{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
-						{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
-						{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
+						{{ _self.select("mark", t('imageworks.watermark'), "icon-copyright", help.mark, values.mark, watermarks) }}
+						{{ _self.input("markw", "text", t('imageworks.width'), "icon-width", help.markw, values.markw) }}
+						{{ _self.input("markh", "text", t('imageworks.height'), "icon-height", help.markh, values.markh) }}
+						{{ _self.input("markalpha", "number", t('imageworks.alpha'), "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
 					</section>
 					<section>
-						{{ _self.input("markpad", "text", "Padding", "icon-padding", help.markpad, values.markpad) }}
-						{{ _self.select("markpos", "Position", "icon-position", help.markpos, values.markpos, [
-							{ value: "top-left", label: "Top Left" },
-							{ value: "top-right", label: "Top Right" },
-							{ value: "bottom-left", label: "Bottom Left" },
-							{ value: "bottom-right", label: "Bottom Right" },
-							{ value: "top", label: "Top Center" },
-							{ value: "bottom", label: "Bottom Center" },
-							{ value: "left", label: "Left Center" },
-							{ value: "right", label: "Right Center" },
-							{ value: "center", label: "Center" },
+						{{ _self.input("markpad", "text", t('imageworks.padding'), "icon-padding", help.markpad, values.markpad) }}
+						{{ _self.select("markpos", t('imageworks.position'), "icon-position", help.markpos, values.markpos, [
+							{ value: "top-left", label: t('imageworks.pos_top_left') },
+							{ value: "top-right", label: t('imageworks.pos_top_right') },
+							{ value: "bottom-left", label: t('imageworks.pos_bottom_left') },
+							{ value: "bottom-right", label: t('imageworks.pos_bottom_right') },
+							{ value: "top", label: t('imageworks.pos_top_center') },
+							{ value: "bottom", label: t('imageworks.pos_bottom_center') },
+							{ value: "left", label: t('imageworks.pos_left_center') },
+							{ value: "right", label: t('imageworks.pos_right_center') },
+							{ value: "center", label: t('imageworks.pos_center') },
 						]) }}
-						{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
-						<button type="button" class='open-fit-docs'>Fit Options Docs</button>
+						{{ _self.input("markfit", "text", t('imageworks.fit_crop'), "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
+						<button type="button" class='open-fit-docs'>{{ t('imageworks.fit_docs') }}</button>
 					</section>
 				</div>
 			</details>
 
 			<details class="cms-accordion">
-				<summary>Text Watermark <small>(Pro Edition)</small></summary>
+				<summary>{{ t('imageworks.text_watermark_title') }}</summary>
 				<div class="content">
 					<section>
 						{% set watermarkDepotId = cms.config("imageworks", "watermarkFontsDepot") %}
-						{% set watermarkDepot = cms.data("depot", watermarkDepotId, "depot") | default([]) %}
+						{% set watermarkDepot = cms.data.raw("depot", watermarkDepotId, "depot") | default([]) %}
 						{% set watermarkFonts = selectOptions(watermarkDepot.files, "name", "name") %}
 
-						{{ _self.input("marktext", "text", "Watermark Text", "icon-text", help.marktext, values.marktext) }}
-						{{ _self.select("marktextfont", "Font", "icon-font", help.marktextfont, values.marktextfont, watermarkFonts) }}
-						{{ _self.input("marktextsize", "number", "Text Size", "icon-height", help.marktextsize, values.marktextsize) }}
-						{{ _self.input("marktextcolor", "text", "Text Color", "icon-paint-brush", help.marktextcolor, values.marktextcolor) }}
-						{{ _self.input("marktextbg", "text", "Text Background Color", "icon-paint-roller", help.marktextbg, values.marktextbg) }}
+						{{ _self.input("marktext", "text", t('imageworks.text'), "icon-text", help.marktext, values.marktext) }}
+						{{ _self.select("marktextfont", t('imageworks.font'), "icon-font", help.marktextfont, values.marktextfont, watermarkFonts) }}
+						{{ _self.input("marktextsize", "number", t('imageworks.text_size'), "icon-height", help.marktextsize, values.marktextsize) }}
+						{{ _self.input("marktextcolor", "text", t('imageworks.text_color'), "icon-paint-brush", help.marktextcolor, values.marktextcolor) }}
+						{{ _self.input("marktextbg", "text", t('imageworks.text_bg_color'), "icon-paint-roller", help.marktextbg, values.marktextbg) }}
 					</section>
 					<section>
-						{{ _self.input("marktextpad", "text", "Padding", "icon-padding", help.marktextpad, values.marktextpad) }}
-						{{ _self.select("marktextpos", "Position", "icon-position", help.marktextpos, values.marktextpos, [
-							{ value: "top-left", label: "Top Left" },
-							{ value: "top-right", label: "Top Right" },
-							{ value: "bottom-left", label: "Bottom Left" },
-							{ value: "bottom-right", label: "Bottom Right" },
-							{ value: "top", label: "Top Center" },
-							{ value: "bottom", label: "Bottom Center" },
-							{ value: "left", label: "Left Center" },
-							{ value: "right", label: "Right Center" },
-							{ value: "center", label: "Center" },
+						{{ _self.input("marktextpad", "text", t('imageworks.padding'), "icon-padding", help.marktextpad, values.marktextpad) }}
+						{{ _self.select("marktextpos", t('imageworks.position'), "icon-position", help.marktextpos, values.marktextpos, [
+							{ value: "top-left", label: t('imageworks.pos_top_left') },
+							{ value: "top-right", label: t('imageworks.pos_top_right') },
+							{ value: "bottom-left", label: t('imageworks.pos_bottom_left') },
+							{ value: "bottom-right", label: t('imageworks.pos_bottom_right') },
+							{ value: "top", label: t('imageworks.pos_top_center') },
+							{ value: "bottom", label: t('imageworks.pos_bottom_center') },
+							{ value: "left", label: t('imageworks.pos_left_center') },
+							{ value: "right", label: t('imageworks.pos_right_center') },
+							{ value: "center", label: t('imageworks.pos_center') },
 						]) }}
-						{{ _self.input("marktextangle", "number", "Angle", "icon-angle", help.marktextangle, values.marktextangle) }}
-						{{ _self.input("marktextw", "text", "Width", "icon-width", help.marktextw, values.marktextw) }}
-						{{ _self.input("marktextalpha", "number", "Alpha", "icon-eye", help.marktextalpha, values.marktextalpha, { min:0, max:100 }) }}
+						{{ _self.input("marktextangle", "number", t('imageworks.angle'), "icon-angle", help.marktextangle, values.marktextangle) }}
+						{{ _self.input("marktextw", "text", t('imageworks.width'), "icon-width", help.marktextw, values.marktextw) }}
+						{{ _self.input("marktextalpha", "number", t('imageworks.alpha'), "icon-eye", help.marktextalpha, values.marktextalpha, { min:0, max:100 }) }}
 					</section>
 				</div>
 			</details>

@@ -113,8 +113,6 @@ class CsvImporter
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function importNewObject(int $offset, array $record): bool
@@ -146,8 +144,6 @@ class CsvImporter
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function updateObject(int $offset, array $record): bool

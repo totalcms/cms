@@ -1,0 +1,22 @@
+<article class="cms-grid-item">
+	{# Feed LoadMore Item Template #}
+	<a href="{{ cms.collection.objectUrl(collection|default("feed"), object.id) | default('#') }}" title="{{ object.title }}" class="link-container">
+		{% if object.image %}
+			<div class="cms-image">
+				{{ cms.render.image(object, {w: 600, h: 400, fit: 'crop-focalpoint'}, {collection: collection|default("feed"), property: 'image'}) }}
+			</div>
+		{% endif %}
+
+		<div class="cms-content">
+			{% if object.created %}
+				{{ cms.render.grid.meta(cms.render.grid.date(object.created, 'relative')) }}
+			{% endif %}
+
+			<h3 class="cms-title">{{ object.title }}</h3>
+
+			{% if object.content %}
+				{{ cms.render.grid.excerpt(object.content, 200) }}
+			{% endif %}
+		</div>
+	</a>
+</article>

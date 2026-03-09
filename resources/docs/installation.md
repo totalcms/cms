@@ -1,3 +1,8 @@
+---
+title: "Installation & System Requirements"
+description: "Install Total CMS with PHP 8.2+ requirements, required extensions, web server configuration for Apache and Nginx, and troubleshooting tips."
+---
+
 # Installation & System Requirements
 
 This guide covers the system requirements and installation process for Total CMS.
@@ -90,5 +95,5 @@ Upload the Total CMS `tcms` folder to your web server. The directory structure s
 If you encounter issues:
 
 1. Check the [Community Forum](https://community.weavers.space/total-cms)
-2. Review the [Configuration](docs/configuration) guide
+2. Review the [Configuration](docs/advanced/configuration) guide
 3. Check PHP error logs for specific error messages

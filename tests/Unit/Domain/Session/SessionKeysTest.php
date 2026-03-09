@@ -30,7 +30,7 @@ class SessionKeysTest extends TestCase
 		$allKeys = SessionKeys::getAllKeys();
 
 		$this->assertIsArray($allKeys);
-		$this->assertCount(9, $allKeys);
+		$this->assertCount(11, $allKeys);
 
 		// Ensure all expected keys are present
 		$this->assertContains(SessionKeys::AUTH_USER, $allKeys);
@@ -42,6 +42,8 @@ class SessionKeysTest extends TestCase
 		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $allKeys);
 		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $allKeys);
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $allKeys);
+		$this->assertContains(SessionKeys::WEBAUTHN_REGISTER_OPTIONS, $allKeys);
+		$this->assertContains(SessionKeys::WEBAUTHN_AUTH_OPTIONS, $allKeys);
 	}
 
 	public function testIsTotalCMSKey(): void

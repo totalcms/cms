@@ -1,33 +1,31 @@
-<h1>Collection Help</h1>
+<h1>{{ t('collection.help_title') }}</h1>
 
 <section class="dash-content-section">
-	<h2>What is a Collection?</h2>
-	<p>
-	A collection is a group of objects that share the same schema. For example, a collection of blog posts.
-	Each object in a collection is an instance of the schema that the collection is based on.
-	</p>
+	<section>
+	<h2>{{ t('collection.what_is') }}</h2>
+	<p>{{ t('collection.what_is_desc') }}</p>
+	</section>
 
-	<h2>Setup Default Collections</h2>
-	<p>
-	If this is a new project, you can use the Project Setup tool to help you create some
-	starter collections. Or add your own collections with the New Collections button at the
-	bottom of this page.
-	</p>
-	<a class="dash-button transparent" href="utils/project-setup">Project Setup Tool</a>
+	<section>
+	<h2>{{ t('collection.setup_default') }}</h2>
+	<p>{{ t('collection.setup_default_desc') }}</p>
+	</section>
 
-	{% set inaccessibleCollections = cms.getInaccessibleCollections() %}
+	<a class="dash-button transparent" href="utils/project-setup">{{ t('collection.project_setup_tool') }}</a>
+
+	{% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}
 	{% if inaccessibleCollections|length > 0 %}
 	<div class="edition-alert">
 		<span class="icon-warn"></span>
 		<div class="edition-alert-content">
-			<strong>{{ inaccessibleCollections|length }} collection(s) unavailable</strong>
-			<p>The following collections use schemas that require a higher edition:</p>
+			<strong>{{ t('collection.unavailable', {'{count}': inaccessibleCollections|length}) }}</strong>
+			<p>{{ t('collection.unavailable_desc') }}</p>
 			<ul>
 			{% for collection in inaccessibleCollections %}
 				<li>{{ collection.label ?? collection.id }} <code>{{ collection.schema }}</code></li>
 			{% endfor %}
 			</ul>
-			<a href="utils/license-manager" class="dash-button">Upgrade to Regain Access</a>
+			<a href="utils/license-manager" class="dash-button">{{ t('collection.upgrade') }}</a>
 		</div>
 	</div>
 	{% endif %}

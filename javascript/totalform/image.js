@@ -7,8 +7,8 @@ import ImagePreview from "./image-preview";
 //-----------------------------------------------
 export default class ImageField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
 		this.previewContainer = container.querySelector(".total-preview");
 
@@ -53,7 +53,7 @@ export default class ImageField extends TotalField {
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : "image/*",
-			rules            : this.options.rules,
+			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}

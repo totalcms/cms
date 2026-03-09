@@ -13,23 +13,30 @@
 $docsDir    = __DIR__ . '/../resources/docs';
 $outputFile = $docsDir . '/search-index.json';
 
-// Get all markdown files
-$files = glob($docsDir . '/*.md');
+// Get all markdown files (including nested subdirectories)
+$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docsDir));
+$files    = [];
+foreach ($iterator as $file) {
+	if ($file->isFile() && $file->getExtension() === 'md') {
+		$files[] = $file->getPathname();
+	}
+}
 
 $index = [];
 
 foreach ($files as $file) {
-	$filename = basename($file, '.md');
+	$relativePath = str_replace($docsDir . '/', '', $file);
+	$path         = str_replace('.md', '', $relativePath);
 
 	// Skip the index file itself
-	if ($filename === 'index') {
+	if ($path === 'index') {
 		continue;
 	}
 
 	$content = file_get_contents($file);
 
 	// Extract title from first H1
-	$title = $filename;
+	$title = basename($file, '.md');
 	if (preg_match('/^#\s+(.+)$/m', $content, $matches)) {
 		$title = trim($matches[1]);
 	}
@@ -67,7 +74,7 @@ foreach ($files as $file) {
 	$keywords = strtolower($title . ' ' . implode(' ', $sections));
 
 	$index[] = [
-		'path'     => $filename,
+		'path'     => $path,
 		'title'    => $title,
 		'sections' => $sections,
 		'excerpt'  => $excerpt,

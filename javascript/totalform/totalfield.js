@@ -1,16 +1,21 @@
 import TotalDispatcher from "./dispatcher";
+import Autogen from "./autogen";
 
 //-----------------------------------------------
 // Total CMS Generic Field
 //-----------------------------------------------
 export default class TotalField {
 
-    constructor(container, options) {
+    constructor(container, settings) {
 		this.container = container;
 		this.input     = this.container.querySelector("input,textarea,select");
 
-		// Check if we're inside a deck-item
-		this.deckItem = container.closest('.deck-item');
+		if (!this.input) {
+			throw new Error(`TotalField: no input element found in .form-field[data-type="${container.dataset.type}"]`);
+		}
+
+		// Check if we're inside a deck-item or deck-table-row
+		this.deckItem = container.closest('.deck-item') || container.closest('.deck-table-row');
 		this.isInDeck = !!this.deckItem;
 
 		container.totalfield = this;
@@ -27,15 +32,15 @@ export default class TotalField {
 			form        : null,
 			sortOptions : false,
         };
-        this.options = Object.assign({}, defaults, options);
-        this.form = this.options.form;
+        this.settings = Object.assign({}, defaults, settings);
+        this.form = this.settings.form;
 
-		if (this.container.dataset.options) {
-			this.options = Object.assign(this.options, JSON.parse(this.container.dataset.options));
+		if (this.container.dataset.settings) {
+			this.settings = Object.assign(this.settings, JSON.parse(this.container.dataset.settings));
 		}
 
-        // Delele the form from the options in case its used in JSON
-        delete this.options.form;
+        // Delele the form from the settings in case its used in JSON
+        delete this.settings.form;
 
         if (this.form) {
             this.api = this.form.api;
@@ -44,7 +49,8 @@ export default class TotalField {
 		this.dispatcher = new TotalDispatcher(this.container);
 
 		this.changeListener();
-		if (this.options.sortOptions) {
+		this.initAutogen();
+		if (this.settings.sortOptions) {
 			this.sortOptions();
 		} else {
 			this.cleanupDuplicateOptions();
@@ -61,6 +67,28 @@ export default class TotalField {
 		this.container.addEventListener("change", () => this.changed());
 		// the input event happens once since the point is to mark the form as unsaved ASAP
 		this.input.addEventListener("input", () => this.changed());
+	}
+
+	/**
+	 * Initialize generic autogen support for non-ID fields.
+	 * ID fields handle their own autogen via Identifier class.
+	 */
+	initAutogen() {
+		if (!this.settings.autogen) return;
+		if (this.type === 'id' || this.type === 'slug') return; // Handled by Identifier
+
+		this.autogen = new Autogen(this);
+
+		// Set initial value if field is empty
+		if (this.getValue() === "") {
+			this.input.value = this.autogen.generate();
+		}
+
+		// Listen for changes to referenced fields
+		this.autogen.attachListeners(() => {
+			this.input.value = this.autogen.generate();
+			this.changed();
+		});
 	}
 
 	cleanupDuplicateOptions() {
@@ -112,8 +140,8 @@ export default class TotalField {
 		return (this.droplet && typeof this.droplet === "object");
 	}
 
-	isFroala() {
-		return (this.froala && typeof this.froala === "object");
+	isTiptap() {
+		return (this.tiptap && typeof this.tiptap === "object");
 	}
 
     getValue() {

@@ -6,8 +6,8 @@ import Dropzone from "@deltablot/dropzone";
 //-----------------------------------------------
 export default class DepotDropField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.preview = this.container.querySelector(".total-preview");
         this.previewTemplate = this.container.querySelector("template.file-template").innerHTML;
@@ -39,6 +39,7 @@ export default class DepotDropField extends TotalField {
         this.dropzone.on("uploadprogress", (file, progress) => this.onProgress(file, progress));
         this.dropzone.on("success", (file, response) => this.onSuccess(file, response));
         this.dropzone.on("error", (file, message) => this.onError(file, message));
+        this.dropzone.on("queuecomplete", () => this.onQueueComplete());
         this.dropzone.on("dragenter", () => this.container.classList.add("dz-drag-hover"));
         this.dropzone.on("dragleave", () => this.container.classList.remove("dz-drag-hover"));
         this.dropzone.on("drop", () => this.container.classList.remove("dz-drag-hover"));
@@ -46,7 +47,7 @@ export default class DepotDropField extends TotalField {
 
     apiUploadUrl() {
         const api     = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-        const path    = this.options.path || "";
+        const path    = this.settings.path || "";
         const options = path.length > 0 ? { path } : {};
         return this.form.api.buildApiQuery(api, options);
     }
@@ -101,6 +102,13 @@ export default class DepotDropField extends TotalField {
 
         file.previewElement.classList.remove("dz-processing");
         file.previewElement.classList.add("dz-success", "dz-complete");
+        this.hadSuccess = true;
+    }
+
+    onQueueComplete() {
+        if (!this.hadSuccess || !this.form) return;
+        this.hadSuccess = false;
+        this.form.runEditActions();
     }
 
     onError(file, message) {

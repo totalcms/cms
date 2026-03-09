@@ -57,7 +57,6 @@ class TotalCmsOneImporter
 		return $this->importCount;
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	private function importBlogs(): void
 	{
 		$blogPath = $this->cmsDataPath . '/blog';
@@ -127,7 +126,6 @@ class TotalCmsOneImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	private function importBlogPost(string $collectionId, string $postFile): void
 	{

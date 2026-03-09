@@ -14,63 +14,132 @@
 },{
 	"title": "Dashboard",
 	"sub": [
-		{ "title": "Overview", "path": "dashboard" },
-		{ "title": "Collection Settings", "path": "collection-settings" },
-		{ "title": "Collection Form Settings", "path": "collection-form-settings" },
-		{ "title": "Field Settings", "path": "field-settings" },
-		{ "title": "Field Options",  "path": "field-options" },
-		{ "title": "Form Grid Layout", "path": "formgrid" },
-		{ "title": "Schema Validation", "path": "schema-validation" },
-		{ "title": "Importing Data", "path": "import" },
-		{ "title": "Exporting Data", "path": "export" },
-		{ "title": "White Label", "path": "whitelabel" },
+		{ "title": "Overview", "path": "admin/dashboard" },
+		{ "title": "White Label", "path": "admin/whitelabel" },
 	]
 },{
-	"title": "Twig Templates",
+	"title": "Collections",
 	"sub": [
-		{ "title": "Overview", 			"path": "twig-overview" },
-		{ "title": "CMS Content",       "path": "twig-totalcms" },
-		{ "title": "CMS Grid Tag",      "path": "cmsgrid-tag" },
-		{ "title": "Filters", 			"path": "twig-filters" },
-		{ "title": "Collection Filtering", "path": "collection-filtering" },
-		{ "title": "Object Linking",    "path": "object-linking" },
-		{ "title": "Functions", 		"path": "twig-functions" },
-		{ "title": "Variables", 		"path": "twig-variables" },
-		{ "title": "Conditionals", 		"path": "twig-conditionals" },
-		{ "title": "Localization", 		"path": "twig-localization" },
-		{ "title": "Markdown", 			"path": "twig-markdown" },
-		{ "title": "Factory", 			"path": "twig-factory" },
-		{ "title": "QR Codes", 			"path": "twig-qrcodes" },
-		{ "title": "Bar Codes", 		"path": "twig-barcodes" },
-		{ "title": "Forms",    			"path": "twig-forms" },
+		{ "title": "Collection Settings", "path": "collections/settings" },
+		{ "title": "Form Settings", "path": "collections/form-settings" },
+		{ "title": "Pushover Notifications", "path": "notifications/pushover" },
+		{ "title": "Form Grid Layout", "path": "collections/formgrid" },
+		{ "title": "Importing Data", "path": "collections/import" },
+		{ "title": "Exporting Data", "path": "collections/export" },
+		{ "title": "Sitemap Builder",  "path": "advanced/sitemap-builder" },
+		{ "title": "Data Views",       "path": "collections/data-views" },
+	]
+},{
+	"title": "Property Settings",
+	"sub": [
+		{ "title": "All Fields",           "path": "property-settings/all-fields" },
+		{ "title": "Code",                 "path": "property-settings/code-editor" },
+		{ "title": "Date",                 "path": "property-settings/date" },
+		{ "title": "Deck",                 "path": "property-settings/deck" },
+		{ "title": "File & Depot",         "path": "property-settings/file-depot" },
+		{ "title": "ID",                   "path": "property-settings/id" },
+		{ "title": "Image & Gallery",      "path": "property-settings/image-gallery" },
+		{ "title": "Lists",                "path": "property-settings/lists" },
+		{ "title": "Number & Range",       "path": "property-settings/number-range" },
+		{ "title": "Password",             "path": "property-settings/password" },
+		{ "title": "Price",                "path": "property-settings/price" },
+		{ "title": "Radio & Multicheckbox","path": "property-settings/radio-multicheckbox" },
+		{ "title": "Select",               "path": "property-settings/select" },
+		{ "title": "Styled Text",          "path": "property-settings/styled-text" },
+		{ "title": "SVG",                  "path": "property-settings/svg" },
+		{ "title": "Text & Textarea",      "path": "property-settings/text-inputs" },
+	]
+},{
+	"title": "Property Options",
+	"sub": [
+		{ "title": "Static Options",     	"path": "property-options/static-options" },
+		{ "title": "Property Options",   	"path": "property-options/property-options" },
+		{ "title": "Relational Options", 	"path": "property-options/relational-options" },
+		{ "title": "Sorting Options",    	"path": "property-options/sorting-options" },
+		{ "title": "Access Group Options", "path": "property-options/access-group-options" },
+	]
+},{
+	"title": "Schemas",
+	"sub": [
+		{ "title": "Schema Validation", "path": "schemas/validation" },
+	]
+},{
+	"title": "Twig Language",
+	"sub": [
+		{ "title": "Overview",             "path": "twig/overview" },
+		{ "title": "Filters",              "path": "twig/filters" },
+		{ "title": "Functions",            "path": "twig/functions" },
+		{ "title": "Variables",            "path": "twig/variables" },
+		{ "title": "Conditionals",         "path": "twig/conditionals" },
+		{ "title": "Markdown",             "path": "twig/markdown" },
+		{ "title": "Factory",              "path": "twig/factory" },
+		{ "title": "Templates",            "path": "twig/templates" },
+	]
+},{
+	"title": "CMS Content",
+	"sub": [
+		{ "title": "CMS Content",          "path": "twig/totalcms" },
+		{ "title": "Collections",          "path": "twig/collections" },
+		{ "title": "Collection Filtering", "path": "twig/collection-filtering" },
+		{ "title": "Data",                 "path": "twig/data" },
+		{ "title": "Media",                "path": "twig/media" },
+		{ "title": "Render",               "path": "twig/render" },
+		{ "title": "CMS Grid Tag",         "path": "twig/cmsgrid-tag" },
+		{ "title": "Load More",            "path": "twig/load-more" },
+		{ "title": "Object Linking",       "path": "twig/object-linking" },
+		{ "title": "Locale",               "path": "twig/locale" },
+		{ "title": "Localization",         "path": "twig/localization" },
+		{ "title": "Views",                "path": "twig/views" },
+		{ "title": "QR Codes",             "path": "twig/qrcodes" },
+		{ "title": "Bar Codes",            "path": "twig/barcodes" },
+	]
+},{
+	"title": "CMS Admin",
+	"sub": [
+		{ "title": "Admin",                "path": "twig/admin" },
+		{ "title": "Auth",                 "path": "twig/auth" },
+		{ "title": "Edition",              "path": "twig/edition" },
+		{ "title": "Schemas",              "path": "twig/schemas" },
+		{ "title": "Forms Overview",       "path": "twig/forms/overview" },
+		{ "title": "Form Builder",         "path": "twig/forms/builder" },
+		{ "title": "Deck Forms",           "path": "twig/forms/deck" },
+		{ "title": "Form Options",         "path": "twig/forms/options" },
+		{ "title": "Field Settings",       "path": "twig/forms/fields" },
+		{ "title": "Select & List Options","path": "twig/forms/select-options" },
+		{ "title": "Validation Patterns",  "path": "twig/forms/patterns" },
+		{ "title": "Report Form",          "path": "twig/forms/report" },
+		{ "title": "Specialized Forms",    "path": "twig/forms/specialized" },
+	]
+},{
+	"title": "Authentication",
+	"sub": [
+		{ "title": "Authentication",   "path": "auth/auth" },
+		{ "title": "Access Groups",    "path": "auth/access-groups" },
+		{ "title": "Password Reset",   "path": "auth/password-reset" },
 	]
 },{
 	"title": "API",
 	"sub": [
-		{ "title": "REST API", 		"path": "rest-api" },
-		{ "title": "API Keys", 		"path": "api-keys" },
-		{ "title": "Index Filter", 	"path": "index-filter" },
-		{ "title": "OpenAPI Docs", 	"path": "api", },
-		{ "title": "PHP API", 		"path": "php-api" },
-		{ "title": "Download", 		"path": "download" },
-		{ "title": "Templates",    	"path": "templates" },
+		{ "title": "REST API",      "path": "api/rest-api" },
+		{ "title": "API Keys",      "path": "api/api-keys" },
+		{ "title": "Index Filter",  "path": "api/index-filter" },
+		{ "title": "OpenAPI Docs",  "path": "api/openapi" },
+		{ "title": "PHP API",       "path": "api/php-api" },
+		{ "title": "Download",      "path": "api/download" },
 	]
 },{
 	"title": "Behind the Scenes",
 	"sub": [
-		{ "title": "Search",        "path": "search" },
-		{ "title": "JumpStart",     "path": "jumpstart" },
-		{ "title": "Sitemap Builder", "path": "sitemap-builder" },
-		{ "title": "Migration from v1", "path": "migration-total-cms-one" },
-		{ "title": "Security",      "path": "security" },
-		{ "title": "Configuration", "path": "configuration" },
-		{ "title": "Deployment",    "path": "deployment" },
-		{ "title": "Authentication","path": "auth" },
-		{ "title": "Access Groups", "path": "access-groups" },
-		{ "title": "Password Reset","path": "password-reset" },
-		{ "title": "Filesystem", 	"path": "filesystem" },
-		{ "title": "Licenses", 		"path": "licenses" },
-		{ "title": "Data Model", 	"path": "data-model" },
+		{ "title": "Search",           "path": "advanced/search" },
+		{ "title": "JumpStart",        "path": "advanced/jumpstart" },
+		{ "title": "Migration from v1","path": "advanced/migration-total-cms-one" },
+		{ "title": "Security",         "path": "advanced/security" },
+		{ "title": "Configuration",    "path": "advanced/configuration" },
+		{ "title": "Server Sizing",    "path": "advanced/server-sizing" },
+		{ "title": "Deployment",       "path": "advanced/deployment" },
+		{ "title": "Filesystem",       "path": "advanced/filesystem" },
+		{ "title": "Licenses",         "path": "advanced/licenses" },
+		{ "title": "Data Model",       "path": "advanced/data-model" },
 	]
 }] %}
 
@@ -78,12 +147,12 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter Docs" autofocus />
+		<input type="search" class="filter" placeholder="{{ t('docs.filter') }}" />
 	</header>
 
 	<nav class="links docs">
 		{% for item in menu %}
-		<details id="category-{{ item.title | slug }}" open>
+		<details id="category-{{ item.title | slug }}"{% if page in item.sub|column('path') %} open{% endif %}>
 			<summary>{{ item.title }}</summary>
 			<ul>
 				{% for sub in item.sub %}
@@ -99,6 +168,7 @@
 
 	<footer>
 	</footer>
+	<script>document.querySelector('.docs a.active')?.scrollIntoView({ block: 'center' });</script>
 </aside>
 {% include "admin/sidebar-details.twig" %}
 

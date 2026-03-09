@@ -1,0 +1,111 @@
+.report-form {
+	display: grid;
+	gap: 1.5rem;
+	align-content: start;
+}
+
+.report-collection-selector {
+	display: grid;
+	gap: 0.25rem;
+
+	select {
+		padding: 0.5rem;
+		border: 1px solid oklch(var(--totalform-border-color));
+		border-radius: var(--totalform-radius);
+		background: oklch(var(--totalform-nearwhite));
+		font-size: 1rem;
+	}
+}
+
+.report-filters {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+}
+
+.report-filter-field {
+	display: grid;
+	gap: 0.25rem;
+
+	input {
+		padding: 0.5rem;
+		border: 1px solid oklch(var(--totalform-border-color));
+		border-radius: var(--totalform-radius);
+	}
+}
+
+.report-fields {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+	min-height: 100px;
+	background: oklch(var(--totalform-nearwhite));
+
+	h3 {
+		margin: 0 0 0.5rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: oklch(var(--totalform-darkgray));
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		&:not(:first-child) {
+			margin-top: 1rem;
+		}
+	}
+
+	.report-toggle-all {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.25rem;
+		height: 1.25rem;
+		padding: 0 0 1px 0;
+		font-size: 0.875rem;
+		line-height: 1;
+		text-transform: none;
+		letter-spacing: normal;
+		font-weight: bold;
+		cursor: pointer;
+		border-radius: var(--totalform-radius);
+		border: 1px solid oklch(var(--totalform-border-color));
+		background: transparent;
+		color: oklch(var(--totalform-darkgray));
+
+		&:hover {
+			background: oklch(var(--totalform-accent));
+			color: white;
+			border-color: oklch(var(--totalform-accent));
+		}
+	}
+}
+
+.report-field-grid {
+	display: grid;
+	grid-template-columns : repeat(auto-fill, minmax(var(--cms-report-checkbox-min-size, 150px), 1fr));
+	gap: 0.25rem 1rem;
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		cursor: pointer;
+		padding: 0.25rem 0;
+	}
+
+	input[type=checkbox] {
+		margin-bottom : 0;
+	}
+}
+
+.report-fields-placeholder {
+	color: oklch(var(--totalform-darkgray));
+	font-style: italic;
+	margin: 0;
+}
+
+.report-actions {
+	display: flex;
+	gap: 0.75rem;
+}

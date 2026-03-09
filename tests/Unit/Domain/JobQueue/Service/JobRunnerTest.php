@@ -8,15 +8,20 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
+use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
+use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class JobRunnerTest extends TestCase
 {
@@ -27,6 +32,7 @@ final class JobRunnerTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $factoryImporter;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $viewBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 
 	/**
@@ -57,11 +63,17 @@ final class JobRunnerTest extends TestCase
 		$this->indexBuilder         = $this->createMock(IndexBuilder::class);
 		$this->factoryImporter      = $this->createMock(FactoryImporter::class);
 		$this->collectionRepository = $this->createMock(CollectionRepository::class);
+		$this->viewBuilder          = $this->createMock(DataViewBuilder::class);
 		$this->loggerFactory        = $this->createMock(LoggerFactory::class);
 
 		// Set up logger factory to return itself for chaining and create a null logger
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
 		$this->loggerFactory->method('createLogger')->willReturn(new NullLogger());
+
+		$emailService          = $this->createMock(EmailService::class);
+		$bulkMailerRepository  = $this->createMock(BulkMailerRepository::class);
+		$objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$config                = $this->createMock(Config::class);
 
 		$this->jobRunner = new JobRunner(
 			$this->jobRepository,
@@ -70,6 +82,11 @@ final class JobRunnerTest extends TestCase
 			$this->indexBuilder,
 			$this->factoryImporter,
 			$this->collectionRepository,
+			$this->viewBuilder,
+			$emailService,
+			$bulkMailerRepository,
+			$objectFetcher,
+			$config,
 			$this->loggerFactory,
 		);
 	}

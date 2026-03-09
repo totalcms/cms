@@ -19,8 +19,14 @@ readonly class AuthLogoutAction
 	): ResponseInterface {
 		$this->logoutService->logout();
 
+		$referer = $request->getHeaderLine('Referer');
+
+		if (str_contains($referer, 'admin')) {
+			$referer = '';
+		}
+
 		$queryParams = $request->getQueryParams();
-		$redirect    = $queryParams['redirect'] ?? '/';
+		$redirect    = $queryParams['redirect'] ?? ($referer !== '' ? $referer : '/');
 
 		return $response->withStatus(302)->withHeader('Location', $redirect);
 	}

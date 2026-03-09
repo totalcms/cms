@@ -22,10 +22,11 @@
 	width: 100%; // Ensure full width
 	max-width: 100%; // Never exceed container width
 	min-width: 0; // Prevent flex shrinking below content size
+	resize: vertical; // Allow manual resizing
 
 	// Auto-resize functionality for editors
 	.CodeMirror-scroll {
-		overflow-y: visible !important; // Allow vertical expansion
+		overflow-y: auto !important; // Scroll when content exceeds height
 		overflow-x: auto !important; // Enable horizontal scrolling
 	}
 
@@ -40,8 +41,7 @@
 
 	// Ensure proper height and auto-resize
 	.CodeMirror {
-		height: auto;
-		min-height: 250px;
+		height: 100%; // Fill the wrapper (wrapper controls sizing)
 		width: 100%; // Ensure CodeMirror takes full width
 		max-width: 100%; // Never exceed wrapper width
 		font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;

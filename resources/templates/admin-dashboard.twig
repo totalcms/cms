@@ -34,6 +34,9 @@
 
 	{% include 'partials/sentry.twig' %}
 
+	<script src="{{ cms.api }}/assets/htmx.min.js?v={{ cms.version }}"></script>
+	<meta name="csrf-token" content="{{ csrf_token() }}">
+
     <base href="{{ cms.api }}/admin/">
 	<link rel="modulepreload" href="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"/>
 	<link rel="modulepreload" href="{{ cms.api }}/assets/content.js?v={{ cms.version }}"/>
@@ -69,82 +72,87 @@
 							: ['admin-logo-default.twig']
 						, ignore_missing = true) }}
                     </li>
-                    {% if cms.canAccessCollectionsOperation('read') %}
+                    {% if cms.auth.canAccessCollectionsOperation('read') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
-                        <a class="collections" href="collections" title="Collections">Collections</a>
+                        <a class="collections" href="collections" title="{{ t('nav.collections') }}">{{ t('nav.collections') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessSchemasOperation('read') %}
+                    {% if cms.auth.canAccessSchemasOperation('read') %}
                     <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
-                        <a class="schemas" href="schemas" title="Schemas">Schemas</a>
+                        <a class="schemas" href="schemas" title="{{ t('nav.schemas') }}">{{ t('nav.schemas') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessTemplates() and cms.edition.can('templates') %}
-                    <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
-                        <a class="templates" href="templates" title="Templates">Templates</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.canAccessMailer() and cms.edition.can('mailer_actions') %}
-                    <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
-                        <a class="mailer" href="mailer" title="Mailer">Mailer</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.canAccessPlayground() %}
+                    {% if cms.auth.canAccessPlayground() %}
                     <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
-                        <a class="playground" href="playground" title="Playground">Playground</a>
+                        <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessUtils() %}
+                    {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
+                    <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
+                        <a class="mailer" href="mailer" title="{{ t('nav.mailer') }}">{{ t('nav.mailer') }}</a>
+                    </li>
+                    {% endif %}
+                    {% if cms.auth.canAccessTemplates() and cms.edition.can('templates') %}
+                    <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
+                        <a class="templates" href="templates" title="{{ t('nav.templates') }}">{{ t('nav.templates') }}</a>
+                    </li>
+                    {% endif %}
+                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
+                    <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
+                        <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
+                    </li>
+                    {% endif %}
+                    {% if cms.auth.canAccessUtils() %}
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
-                        <a class="utils" href="utils" title="Utils">Utils</a>
+                        <a class="utils" href="utils" title="{{ t('nav.utils') }}">{{ t('nav.utils') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.isAdmin() %}
+                    {% if cms.auth.isAdmin() %}
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
-                        <a class="settings" href="settings" title="Settings">Settings</a>
+                        <a class="settings" href="settings" title="{{ t('nav.settings') }}">{{ t('nav.settings') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessDocs() %}
+                    {% if cms.auth.canAccessDocs() %}
                     <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
-                        <a class="docs" href="docs" title="Docs">Docs</a>
+                        <a class="docs" href="docs" title="{{ t('nav.docs') }}">{{ t('nav.docs') }}</a>
                     </li>
                     {% endif %}
                 </ul>
             </nav>
 
             {% set licenseStatus = cms.license.getSidebarStatus() %}
-            {% if licenseStatus.showIcon and cms.isAdmin() %}
+            {% if licenseStatus.showIcon and cms.auth.isAdmin() %}
             <a href="utils/license-manager"
 				class="license-status license-{{ licenseStatus.severity }}"
-				title="{{ licenseStatus.tooltip }}">License Status</a>
+				title="{{ licenseStatus.tooltip }}">{{ t('nav.license_status') }}</a>
             {% endif %}
 
             <div class="user-profile" >
-                {% if cms.userLoggedIn %}
+                {% if cms.auth.userLoggedIn %}
                 <button popovertarget="user-actions">
-                    {% set user = cms.userData %}
-                    <img src="{{ cms.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
+                    {% set user = cms.auth.userData %}
+                    <img src="{{ cms.media.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
                         alt="Profile Image for {{ user.name }}" onerror="this.remove();"/>
                 </button>
                 <nav popover id="user-actions">
                     <ul>
                         <li class="theme-selector">
-                            <label>Theme</label>
-                            <div class="theme-buttons" role="radiogroup" aria-label="Theme selection">
-                                <button type="button" data-theme="auto" aria-label="Auto theme" title="Auto">
+                            <label>{{ t('user.theme') }}</label>
+                            <div class="theme-buttons" role="radiogroup" aria-label="{{ t('user.theme') }}">
+                                <button type="button" data-theme="auto" aria-label="{{ t('user.theme_auto') }}" title="{{ t('user.theme_auto') }}">
                                     <span class="icon-auto"></span>
                                 </button>
-                                <button type="button" data-theme="light" aria-label="Light theme" title="Light">
+                                <button type="button" data-theme="light" aria-label="{{ t('user.theme_light') }}" title="{{ t('user.theme_light') }}">
                                     <span class="icon-sun"></span>
                                 </button>
-                                <button type="button" data-theme="dark" aria-label="Dark theme" title="Dark">
+                                <button type="button" data-theme="dark" aria-label="{{ t('user.theme_dark') }}" title="{{ t('user.theme_dark') }}">
                                     <span class="icon-moon"></span>
                                 </button>
                             </div>
                         </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
-                        <li class="edit"><a href="profile">Edit Profile</a></li>
-                        <li class="logout"><a href="../logout">Logout</a></li>
+                        <li class="edit"><a href="profile">{{ t('user.edit_profile') }}</a></li>
+                        <li class="logout"><a href="../logout">{{ t('user.logout') }}</a></li>
                     </ul>
                 </nav>
                 {% elseif cms.env == 'dev' %}
@@ -153,22 +161,22 @@
                 <nav popover id="user-actions">
                     <ul>
                         <li class="theme-selector">
-                            <label>Theme</label>
-                            <div class="theme-buttons" role="radiogroup" aria-label="Theme selection">
-                                <button type="button" data-theme="auto" aria-label="Auto theme" title="Auto">
+                            <label>{{ t('user.theme') }}</label>
+                            <div class="theme-buttons" role="radiogroup" aria-label="{{ t('user.theme') }}">
+                                <button type="button" data-theme="auto" aria-label="{{ t('user.theme_auto') }}" title="{{ t('user.theme_auto') }}">
                                     <span class="icon-auto"></span>
                                 </button>
-                                <button type="button" data-theme="light" aria-label="Light theme" title="Light">
+                                <button type="button" data-theme="light" aria-label="{{ t('user.theme_light') }}" title="{{ t('user.theme_light') }}">
                                     <span class="icon-sun"></span>
                                 </button>
-                                <button type="button" data-theme="dark" aria-label="Dark theme" title="Dark">
+                                <button type="button" data-theme="dark" aria-label="{{ t('user.theme_dark') }}" title="{{ t('user.theme_dark') }}">
                                     <span class="icon-moon"></span>
                                 </button>
                             </div>
                         </li>
-                        <li class="profile"><a href="javascript:void(0)" style="cursor:default">Dev User</a></li>
-                        <li class="edit"><a href="profile">Edit Profile</a></li>
-                        <li class="logout"><a href="../logout">Logout</a></li>
+                        <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ t('user.dev_user') }}</a></li>
+                        <li class="edit"><a href="profile">{{ t('user.edit_profile') }}</a></li>
+                        <li class="logout"><a href="../logout">{{ t('user.logout') }}</a></li>
                     </ul>
                 </nav>
                 {% endif %}
@@ -183,7 +191,7 @@
 
     {% endblock %}
 
-
+	<script>window.TCMS_TRANSLATIONS = {{ cms.locale.jsTranslations()|json_encode|raw }};</script>
 	<script type="module" src="{{ cms.api }}/assets/content.js?v={{ cms.version }}"></script>
 	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 

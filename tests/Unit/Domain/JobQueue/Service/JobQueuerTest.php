@@ -105,8 +105,8 @@ final class JobQueuerTest extends TestCase
 	public function testQueueBuildIndexSkipsIfAlreadyQueued(): void
 	{
 		$this->jobRepository->expects($this->once())
-			->method('hasReindexQueuedFromCollection')
-			->with('blog')
+			->method('hasPendingJob')
+			->with(JobData::TYPE_REBUILD, 'blog')
 			->willReturn(true);
 
 		$this->jobRepository->expects($this->never())
@@ -127,8 +127,8 @@ final class JobQueuerTest extends TestCase
 		]);
 
 		$this->jobRepository->expects($this->once())
-			->method('hasReindexQueuedFromCollection')
-			->with('blog')
+			->method('hasPendingJob')
+			->with(JobData::TYPE_REBUILD, 'blog')
 			->willReturn(false);
 
 		$this->jobRepository->expects($this->once())

@@ -5,15 +5,15 @@
 <main class="dash-main-content" style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
 	<div>
 		<h1 style="font-size: 6rem; margin: 0; color: oklch(var(--totalform-darkgray));">404</h1>
-		<h2 style="margin: 1rem 0;">Page Not Found</h2>
+		<h2 style="margin: 1rem 0;">{{ t('404.title') }}</h2>
 		<p style="color: oklch(var(--totalform-darkgray)); margin-bottom: 2rem;">
-			The admin page you're looking for doesn't exist.
+			{{ t('404.message') }}
 		</p>
 		<p style="font-family: monospace; color: oklch(var(--totalform-border-color)); margin-bottom: 2rem;">
 			{{ url.path }}
 		</p>
 		<a href="/admin" class="dash-button">
-			Go to Dashboard
+			{{ t('404.go_dashboard') }}
 		</a>
 	</div>
 </main>

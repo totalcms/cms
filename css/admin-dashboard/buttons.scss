@@ -21,6 +21,15 @@
 		color            : oklab(var(--totalform-nearblack));
 		border           : 2px solid oklch(var(--totalform-nearblack));
 	}
+	&.small {
+		padding   : 0.35rem 0.65rem;
+		font-size : 0.85em;
+	}
+	&.dash-button-danger {
+		color        : oklch(var(--totalform-error));
+		border-color : oklch(var(--totalform-error));
+		font-weight  : 400;
+	}
 }
 .dash-action-dots {
 	appearance       : none;
@@ -65,6 +74,7 @@ nav[popover]  {
 		&.logout { --action-icon : var(--icon-logout) }
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
+		&.collection-report { --action-icon : var(--icon-file-doc) }
 		&.export { --action-icon : var(--icon-export) }
 		&.object-link { --action-icon : var(--icon-external) }
 		&.duplicate { --action-icon : var(--icon-duplicate) }

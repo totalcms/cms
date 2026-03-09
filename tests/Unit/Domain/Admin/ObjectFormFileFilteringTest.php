@@ -6,13 +6,17 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Test ObjectForm file property filtering for object duplication.
@@ -32,6 +36,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 		$this->accessGroupLister        = $this->createMock(AccessGroupLister::class);
 		$this->collectionEditionService = $this->createMock(CollectionEditionService::class);
 		$this->editionFeatures          = $this->createMock(EditionFeatureService::class);
+		$this->csrfManager              = $this->createMock(CSRFTokenManager::class);
+		$this->config                   = Config::init();
+		$this->metaResolver             = $this->createMock(PropertyMetaResolver::class);
+		$this->dataViewFilter           = $this->createMock(DataViewFilter::class);
 
 		// Create mock schema with various property types
 		$this->schemaData             = new SchemaData();
@@ -83,6 +91,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -120,6 +132,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -151,6 +167,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -181,6 +201,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -212,6 +236,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -247,6 +275,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -293,6 +325,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -331,6 +367,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -356,6 +396,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			data: []
@@ -391,6 +435,10 @@ describe('ObjectForm File Property Filtering', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'test-collection',
 			id: 'existing-object-id', // Explicitly set ID for editing

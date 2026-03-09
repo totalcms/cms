@@ -10,7 +10,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
@@ -127,7 +127,7 @@ readonly class CollectionTable
 
 		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
-		$imageSrc   = TotalCMSTwigAdapter::buildImageworksAPI(
+		$imageSrc   = MediaTwigAdapter::buildImageworksAPI(
 			api: $this->api,
 			id: $id,
 			image: $image,
@@ -148,7 +148,7 @@ readonly class CollectionTable
 	{
 		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
-		$imageSrc   = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+		$imageSrc   = MediaTwigAdapter::buildImageworksGalleryAPI(
 			baseapi: $this->api,
 			id: $id,
 			name: 'first',
@@ -280,18 +280,18 @@ readonly class CollectionTable
 			$link = HTMLUtils::element('li', $link, ['class' => 'link']);
 		}
 
-		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
-			'class'        => 'delete-action',
-			'data-method'  => 'DELETE',
-			'data-confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
-			'href'         => implode('/', [
-				$this->config->api,
-				'collections',
-				$this->collectionData->id,
-				$id,
-			]),
+		$deleteRoute = implode('/', ['collections', $this->collectionData->id, $id]);
+		$deleteUrl   = rtrim($this->config->api, '/') . '/' . ltrim($deleteRoute, '/');
+		$deleteAttrs = HTMLUtils::htmxAttributes($deleteUrl, 'delete', [
+			'confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
+			'on'      => [
+				'error'         => 'QuickAction.error(this, event)',
+				'after:request' => 'QuickAction.reload()',
+			],
 		]);
-		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
+		$deleteAttrs['class'] = 'delete-action';
+		$delete               = HTMLUtils::element('a', 'Delete ' . $labelSingular, $deleteAttrs);
+		$delete               = HTMLUtils::element('li', $delete, ['class' => 'delete']);
 
 		$clone = HTMLUtils::element('a', 'Clone ' . $labelSingular, [
 			'href' => implode('/', [

@@ -5,27 +5,21 @@
 	{% set zipapi = cms.api ~ "/export/collections/" ~ url.collection ~ "/zip" %}
 
 	<div>
-		<h3>Export Collection to JSON Data</h3>
-		<p>Export the collection data in JSON format. This is useful for creating backups or
-		transferring data between systems. This data gives you the most true/rich data from the CMS.
-		While it will not contain images and files, it will contain all of their meta data.</p>
-		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">Export to JSON</a></p>
+		<h3>{{ t('collection.export_json_title') }}</h3>
+		<p>{{ t('collection.export_json_desc') }}</p>
+		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">{{ t('collection.export_json_btn') }}</a></p>
 	</div>
 
 	<div>
-		<h3>Export Collection to CSV Data</h3>
-		<p>Export the collection data in CSV format. This is a great way to quickly edit certain types
-		of data in a spreadsheet. This data is not as rich as the JSON data, but it is easier to
-		manipulate in a spreadsheet.</p>
-		<p><a href="{{ csvapi }}" class="dash-button" download target="_blank">Export to CSV</a></p>
+		<h3>{{ t('collection.export_csv_title') }}</h3>
+		<p>{{ t('collection.export_csv_desc') }}</p>
+		<p><a href="{{ csvapi }}" class="dash-button" download target="_blank">{{ t('collection.export_csv_btn') }}</a></p>
 	</div>
 
 	<div>
-		<h3>Export Collection to ZIP Archive</h3>
-		<p>Export the entire collection as a ZIP file containing all JSON data files, images, documents, 
-		and other assets. This creates a complete backup that includes both the data and all associated files.
-		Cache folders are excluded to keep the archive size manageable.</p>
-		<p><a href="{{ zipapi }}" class="dash-button" download target="_blank">Export to ZIP</a></p>
+		<h3>{{ t('collection.export_zip_title') }}</h3>
+		<p>{{ t('collection.export_zip_desc') }}</p>
+		<p><a href="{{ zipapi }}" class="dash-button" download target="_blank">{{ t('collection.export_zip_btn') }}</a></p>
 	</div>
 
 </section>

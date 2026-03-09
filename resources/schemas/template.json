@@ -24,6 +24,7 @@
 			"settings" : {
 				"mode"         : "twig",
 				"theme"        : "elegant",
+				"maxHeight"    : 600,
 				"lineNumbers"  : true,
 				"lineWrapping" : true,
 				"indentUnit"   : 2,
@@ -31,6 +32,28 @@
 				"foldGutter"   : true,
 				"matchBrackets": true,
 				"autoCloseTags": true
+			}
+		},
+		"designerEnabled": {
+			"type"    : "boolean",
+			"label"   : "Template Designer",
+			"help"    : "Enable the Template Designer to allow remote template updates from development tools like Stacks.",
+			"field"   : "toggle",
+			"default" : false
+		},
+		"designerToken": {
+			"type"     : "string",
+			"label"    : "Designer Token",
+			"help"     : "A unique token required for remote template updates. Share this with your development tool.",
+			"field"    : "id",
+			"settings" : {
+				"autogen"    : "${uid}${uid}",
+				"readonly"   : true,
+				"visibility" : {
+					"watch"    : "designerEnabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
 			}
 		}
 	},

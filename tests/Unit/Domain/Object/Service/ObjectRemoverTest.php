@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -26,16 +27,18 @@ final class ObjectRemoverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
 
 	protected function setUp(): void
 	{
-		$this->propStorage       = $this->createMock(PropertyRepository::class);
-		$this->storage           = $this->createMock(ObjectRepository::class);
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->objectUpdater     = $this->createMock(ObjectUpdater::class);
-		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
+		$this->propStorage           = $this->createMock(PropertyRepository::class);
+		$this->storage               = $this->createMock(ObjectRepository::class);
+		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$this->objectUpdater         = $this->createMock(ObjectUpdater::class);
+		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
+		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
+		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
+		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
 
 		$this->remover = new ObjectRemover(
 			$this->propStorage,
@@ -44,7 +47,8 @@ final class ObjectRemoverTest extends TestCase
 			$this->objectUpdater,
 			$this->indexBuilder,
 			$this->collectionFetcher,
-			$this->collectionSaver
+			$this->collectionSaver,
+			$this->viewUpdateScheduler,
 		);
 	}
 

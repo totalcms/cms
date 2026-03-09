@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Mailer\SendEmailAction;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -26,7 +27,10 @@ final class SendEmailActionTest extends TestCase
 		$this->request      = $this->createMock(ServerRequestInterface::class);
 		$this->response     = $this->createMock(ResponseInterface::class);
 
-		$this->action = new SendEmailAction($this->emailService, $this->renderer);
+		$accessManager = $this->createMock(AccessManager::class);
+		$accessManager->method('userData')->willReturn([]);
+
+		$this->action = new SendEmailAction($this->emailService, $this->renderer, $accessManager);
 	}
 
 	public function testSendsEmailSuccessfully(): void

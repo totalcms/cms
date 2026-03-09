@@ -192,7 +192,6 @@ class CollectionRefiner
 
 	/**
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<array<string,mixed>> $collection
 	 *
@@ -270,8 +269,6 @@ class CollectionRefiner
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $record
 	 */
 	public static function getPropertyValueForRecord(array $record, string $property): mixed

@@ -34,10 +34,12 @@ readonly class EmailService
 	 *
 	 * @param string $mailerId Mailer object ID
 	 * @param array<string,mixed> $data Data for Twig processing
+	 * @param string|null $overrideTo Override recipient email address (for bulk testing)
+	 * @param array<string,mixed> $user Current user data for Twig processing ({{ user.field }})
 	 *
 	 * @return array{success:bool,message:string,error?:string}
 	 */
-	public function sendEmail(string $mailerId, array $data = []): array
+	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = []): array
 	{
 		// Mailer actions require Standard edition or higher
 		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
@@ -69,16 +71,23 @@ readonly class EmailService
 			}
 
 			// Process all Twig fields
-			$twigData = ['data' => $data];
+			$twigData = ['data' => $data, 'user' => $user];
+
+			$processedTo = $overrideTo !== null && $overrideTo !== ''
+				? $overrideTo
+				: $this->processTwig($mailer->to, $twigData);
+
+			$processedHtml = $this->processTwig($mailer->bodyHtml, $twigData);
+			$processedHtml = $this->processInky($processedHtml);
 
 			$processedEmail = [
-				'to'        => $this->processTwig($mailer->to, $twigData),
+				'to'        => $processedTo,
 				'toName'    => $this->processTwig($mailer->toName, $twigData),
 				'from'      => $mailer->from !== '' ? $this->processTwig($mailer->from, $twigData) : '',
 				'fromName'  => $mailer->fromName !== '' ? $this->processTwig($mailer->fromName, $twigData) : '',
 				'replyTo'   => $mailer->replyTo !== '' ? $this->processTwig($mailer->replyTo, $twigData) : '',
 				'subject'   => $this->processTwig($mailer->subject, $twigData),
-				'bodyHtml'  => $this->processTwig($mailer->bodyHtml, $twigData),
+				'bodyHtml'  => $processedHtml,
 				'bodyText'  => $mailer->bodyText !== '' ? $this->processTwig($mailer->bodyText, $twigData) : '',
 				'cc'        => $this->processEmailList($mailer->cc, $twigData),
 				'bcc'       => $this->processEmailList($mailer->bcc, $twigData),
@@ -164,6 +173,29 @@ readonly class EmailService
 		}
 
 		return array_filter($processed);
+	}
+
+	/**
+	 * Process HTML through Inky for responsive email markup.
+	 * Plain HTML without Inky tags passes through unchanged.
+	 */
+	private function processInky(string $html): string
+	{
+		if ($html === '') {
+			return '';
+		}
+
+		try {
+			$doc = \Pinky\transformString($html);
+
+			return (string)$doc->saveHTML();
+		} catch (\Throwable $e) {
+			$this->logger->warning('Inky processing failed, returning original HTML', [
+				'error' => $e->getMessage(),
+			]);
+
+			return $html;
+		}
 	}
 
 	/**

@@ -23,7 +23,18 @@ readonly class ExportJsonAction
 		array $args,
 	): ResponseInterface {
 		$collection = $args['collection'];
-		$result     = $this->objectExporter->exportAllObjectsForJson($collection);
+		$params     = $request->getQueryParams();
+
+		// Backwards compatibility: remap 'filter' to 'include'
+		if (isset($params['filter']) && !isset($params['include'])) {
+			$params['include'] = $params['filter'];
+			unset($params['filter']);
+		}
+
+		$hasFilters = isset($params['include']) || isset($params['exclude']);
+		$result     = $hasFilters
+			? $this->objectExporter->exportFilteredObjectsForJson($collection, $params)
+			: $this->objectExporter->exportAllObjectsForJson($collection);
 		$objects    = $result['data'];
 		$errors     = $result['errors'];
 

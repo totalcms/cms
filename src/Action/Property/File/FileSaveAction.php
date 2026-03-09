@@ -8,6 +8,7 @@ use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 readonly class FileSaveAction
@@ -17,13 +18,12 @@ readonly class FileSaveAction
 		private SaverFactory $factory,
 		private Config $config,
 		private HeicConverter $heicConverter,
+		private HttpClientInterface $httpClient,
 	) {
 	}
 
 	/**
 	 * File Save Action.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,string> $args
 	 */
@@ -74,7 +74,7 @@ readonly class FileSaveAction
 		}
 
 		// Save the file (whether uploaded or downloaded)
-		$saver  = $this->factory->generateSaverService($args['collection'], $args['property']);
+		$saver  = $this->factory->generateSaverService($args['collection'], $args['property'], $args['id']);
 		$object = $saver->save(
 			$args['collection'],
 			$args['id'],
@@ -154,7 +154,7 @@ readonly class FileSaveAction
 
 		// Ensure the temporary directory exists
 		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0777, true);
+			mkdir($this->config->tmpdir, 0700, true);
 		}
 
 		// Move the uploaded chunk to the temporary directory
@@ -181,42 +181,39 @@ readonly class FileSaveAction
 	{
 		// Ensure the temporary directory exists
 		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0777, true);
+			mkdir($this->config->tmpdir, 0700, true);
 		}
 
 		// Extract filename from URL or generate one
 		$filename     = $this->extractFilenameFromUrl($url);
 		$tempFilePath = $this->config->tmpdir . '/' . $filename;
 
-		// Download the file using cURL for better control
-		$ch = curl_init();
-		if ($ch === false) {
-			throw new \RuntimeException('Failed to initialize cURL');
-		}
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'TotalCMS File Downloader');
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+		// Max download size in bytes (0 = unlimited)
+		$maxBytes = $this->config->maxDownloadSize > 0
+			? $this->config->maxDownloadSize * 1024 * 1024
+			: 0;
 
-		$fileContent = curl_exec($ch);
-		$httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$error       = curl_error($ch);
-		curl_close($ch);
-
-		if ($fileContent === false || $error !== '') {
-			throw new \RuntimeException('Failed to download file from URL: ' . $error);
+		try {
+			$response = $this->httpClient->request('GET', $url, [
+				'timeout'          => 30,
+				'follow_redirects' => 5,
+				'user_agent'       => 'TotalCMS File Downloader',
+				'verify_ssl'       => true,
+				'max_bytes'        => $maxBytes,
+			]);
+		} catch (\RuntimeException $e) {
+			if ($maxBytes > 0 && str_contains($e->getMessage(), 'maximum size')) {
+				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB', $e->getCode(), $e);
+			}
+			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);
 		}
 
-		if ($httpCode !== 200) {
-			throw new \RuntimeException('HTTP error when downloading file: ' . $httpCode);
+		if ($response->statusCode !== 200) {
+			throw new \RuntimeException('HTTP error when downloading file: ' . $response->statusCode);
 		}
 
 		// Save the downloaded content to a temporary file
-		$bytesWritten = file_put_contents($tempFilePath, $fileContent);
+		$bytesWritten = file_put_contents($tempFilePath, $response->body);
 		if ($bytesWritten === false) {
 			throw new \RuntimeException('Failed to save downloaded file to: ' . $tempFilePath);
 		}

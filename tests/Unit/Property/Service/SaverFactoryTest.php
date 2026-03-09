@@ -11,10 +11,12 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * Tests for SaverFactory - critical factory for creating property saver services.
@@ -29,6 +31,7 @@ class SaverFactoryTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $mockObjectPatcher;
 	private \PHPUnit\Framework\MockObject\MockObject $mockObjectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $mockLoggerFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $mockMetaResolver;
 
 	protected function setUp(): void
 	{
@@ -39,6 +42,11 @@ class SaverFactoryTest extends TestCase
 		$this->mockObjectPatcher      = $this->createMock(ObjectPatcher::class);
 		$this->mockObjectFetcher      = $this->createMock(ObjectFetcher::class);
 		$this->mockLoggerFactory      = $this->createMock(LoggerFactory::class);
+		$this->mockMetaResolver       = $this->createMock(PropertyMetaResolver::class);
+
+		$this->mockMetaResolver
+			->method('resolveSettings')
+			->willReturn([]);
 
 		$this->saverFactory = new SaverFactory(
 			$this->mockPropertyRepository,
@@ -47,7 +55,9 @@ class SaverFactoryTest extends TestCase
 			$this->mockSchemaFetcher,
 			$this->mockObjectPatcher,
 			$this->mockObjectFetcher,
-			$this->mockLoggerFactory
+			$this->mockLoggerFactory,
+			$this->createMock(Config::class),
+			$this->mockMetaResolver,
 		);
 	}
 

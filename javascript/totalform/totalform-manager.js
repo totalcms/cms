@@ -192,7 +192,7 @@ export default class TotalFormManager {
 		this.delayProcessing(() => {
 			this.bannerStatus("error");
 			this.statusBanner.addEventListener("click", () => {
-				navigator.clipboard.writeText(error);
+				if (navigator.clipboard?.writeText) navigator.clipboard.writeText(error);
 				this.bannerStatus();
 				this.statusBanner.style.setProperty('--totalform-formerror', "");
 			}, {once: true});

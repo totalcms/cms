@@ -10,27 +10,57 @@ export default class MacroBuilder {
 
 	static imagePath(data)
 	{
-		return this.buildMacro("imagePath", "image", "image", data);
+		return this.buildMacro("media", "imagePath", "image", "image", data);
 	}
 
 	static galleryPath(data)
 	{
-		return this.buildSetMacro("galleryPath", "gallery", "gallery", data);
+		return this.buildSetMacro("media", "galleryPath", "gallery", "gallery", data);
 	}
 
 	static download(data)
 	{
 		delete data.filename;
-		return this.buildMacro("download", "file", "file", data);
+		return this.buildMacro("media", "download", "file", "file", data);
 	}
 
 	static depotDownload(data)
 	{
 		delete data.filename;
-		return this.buildSetMacro("depotDownload", "depot", "depot", data);
+		return this.buildSetMacro("media", "depotDownload", "depot", "depot", data);
 	}
 
-	static buildMacro(method, defaultCollection, defaultProperty, data)
+	static renderImage(data)
+	{
+		return this.buildMacro("render", "image", "image", "image", data);
+	}
+
+	static renderGalleryImage(data)
+	{
+		return this.buildSetMacro("render", "galleryImage", "gallery", "gallery", data);
+	}
+
+	static dataImage(data)
+	{
+		return this.buildDataMacro("image", "image", "image", data);
+	}
+
+	static dataGallery(data)
+	{
+		return this.buildDataMacro("gallery", "gallery", "gallery", data);
+	}
+
+	static dataFile(data)
+	{
+		return this.buildDataMacro("file", "file", "file", data);
+	}
+
+	static dataDepot(data)
+	{
+		return this.buildDataMacro("depot", "depot", "depot", data);
+	}
+
+	static buildMacro(namespace, method, defaultCollection, defaultProperty, data)
 	{
 		const id         = data.id;
 		const collection = data.collection;
@@ -39,12 +69,12 @@ export default class MacroBuilder {
 		const options = this.buildOptions(data);
 		const optionsOrEmpty = options || ', {}';
 
-		let macro = `{{ cms.${method}('${id}'${optionsOrEmpty}, {collection:'${collection}',property:'${property}'}) }}`;
+		let macro = `{{ cms.${namespace}.${method}('${id}'${optionsOrEmpty}, {collection:'${collection}',property:'${property}'}) }}`;
 		if (property === defaultProperty) {
-			macro = `{{ cms.${method}('${id}'${optionsOrEmpty}, {collection:'${collection}'}) }}`;
+			macro = `{{ cms.${namespace}.${method}('${id}'${optionsOrEmpty}, {collection:'${collection}'}) }}`;
 
 			if (collection === defaultCollection) {
-				macro = `{{ cms.${method}('${id}'${options}) }}`;
+				macro = `{{ cms.${namespace}.${method}('${id}'${options}) }}`;
 			}
 		}
 
@@ -52,7 +82,7 @@ export default class MacroBuilder {
 	}
 
 	// This is for macros that need to access a specific item in a set like depot and gallery
-	static buildSetMacro(method, defaultCollection, defaultProperty, data)
+	static buildSetMacro(namespace, method, defaultCollection, defaultProperty, data)
 	{
 		if (!data.name) {
 			console.warn("Name is required for this macro", method, defaultCollection, defaultProperty, data);
@@ -67,12 +97,31 @@ export default class MacroBuilder {
 		const options = this.buildOptions(data);
 		const optionsOrEmpty = options || ', {}';
 
-		let macro = `{{ cms.${method}('${id}', '${name}'${optionsOrEmpty}, {collection:'${collection}',property:'${property}'}) }}`;
+		let macro = `{{ cms.${namespace}.${method}('${id}', '${name}'${optionsOrEmpty}, {collection:'${collection}',property:'${property}'}) }}`;
 		if (property === defaultProperty) {
-			macro = `{{ cms.${method}('${id}', '${name}'${optionsOrEmpty}, {collection:'${collection}'}) }}`;
+			macro = `{{ cms.${namespace}.${method}('${id}', '${name}'${optionsOrEmpty}, {collection:'${collection}'}) }}`;
 
 			if (collection === defaultCollection) {
-				macro = `{{ cms.${method}('${id}', '${name}'${options}) }}`;
+				macro = `{{ cms.${namespace}.${method}('${id}', '${name}'${options}) }}`;
+			}
+		}
+
+		return macro;
+	}
+
+	// Build a simple data accessor macro (no imageworks options)
+	static buildDataMacro(method, defaultCollection, defaultProperty, data)
+	{
+		const id         = data.id;
+		const collection = data.collection;
+		const property   = data.property;
+
+		let macro = `{{ cms.data.${method}('${id}', {collection:'${collection}',property:'${property}'}) }}`;
+		if (property === defaultProperty) {
+			macro = `{{ cms.data.${method}('${id}', {collection:'${collection}'}) }}`;
+
+			if (collection === defaultCollection) {
+				macro = `{{ cms.data.${method}('${id}') }}`;
 			}
 		}
 
@@ -106,8 +155,3 @@ export default class MacroBuilder {
 		return options;
 	}
 }
-
-// const generateTwigMacro = (data) => {
-// 	const macroContent = document.getElementById("twig-macro");
-// 	macroContent.textContent = MacroBuilder.imageMacro(data);
-// }

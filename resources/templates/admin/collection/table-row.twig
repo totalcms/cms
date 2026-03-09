@@ -1,0 +1,56 @@
+<tr data-object-id="{{ object.id }}">
+	<td class="action">
+		<button class="dash-action-dots" title="{{ _labelSingular }} Actions" popovertarget="object-action-{{ object.id }}"></button>
+		<nav popover class="object-action-popover" id="object-action-{{ object.id }}">
+			<ul>
+				<li class="edit"><a href="collections/{{ _collection }}/{{ object.id }}">Edit {{ _labelSingular }}</a></li>
+				{% if _collectionUrl %}
+					<li class="link"><a href="{{ _objectUrl }}" target="_blank">Link to Webpage</a></li>
+				{% endif %}
+				<li class="clone"><a href="/collections/{{ _collection }}/{{ object.id }}/clone">Clone {{ _labelSingular }}</a></li>
+				<li class="download"><a href="{{ cms.api }}/export/collections/{{ _collection }}/{{ object.id }}/zip">Download Zip</a></li>
+				<li class="delete">{{ cms.admin.quickActionButton('Delete ' ~ _labelSingular, 'collections/' ~ _collection ~ '/' ~ object.id, {method: 'delete', confirm: 'Are you sure you want to delete this ' ~ _labelSingular|lower ~ '?', reload: true, class: 'delete-action'}) }}</li>
+			</ul>
+		</nav>
+	</td>
+	{% for col in _columns %}
+		<td class="{{ col.type }}-data">
+			{% set value = attribute(object, col.name) %}
+			{% if value is null or value == '' %}
+			{% elseif col.type == 'boolean' %}
+				{{ value ? '&#10004;' : '' }}
+			{% elseif col.type == 'date' %}
+				{{ value|date('Y-m-d H:i')|replace({'00:00': ''})|trim }}
+			{% elseif col.type == 'image' %}
+				{% if value.size is defined and value.size > 0 %}
+					<img src="{{ cms.media.imagePath(object.id, {w:128, h:128, q:30, fit:'crop-focalpoint'}, {collection: _collection, property: col.name}) }}" alt="{{ value.alt|default('') }}" width="128" height="128" loading="lazy">
+				{% endif %}
+			{% elseif col.type == 'gallery' %}
+				{% if value|length > 0 %}
+					<div class="gallery-preview">
+						<img src="{{ cms.media.galleryPath(object.id, 'first', {w:128, h:128, q:30, fit:'crop-focalpoint'}, {collection: _collection, property: col.name}) }}" alt="{{ _collection }} / {{ object.id }} / {{ col.name }} gallery preview" width="128" height="128" loading="lazy">
+						<span class="image-count">{{ value|length }}</span>
+					</div>
+				{% endif %}
+			{% elseif col.type == 'color' %}
+				{% if value.hex is defined %}
+					<div class="color-preview" style="background-color: {{ value.hex }}">{{ value.hex }}</div>
+				{% endif %}
+			{% elseif col.type in ['deck', 'depot', 'array'] %}
+				{{ value|length }}
+			{% elseif col.type == 'file' %}
+				{{ value.name|default('') }}
+			{% elseif col.type == 'list' %}
+				{{ value|join(', ') }}
+			{% elseif col.type == 'svg' %}
+				{{ value|raw }}
+			{% elseif col.type == 'code' %}
+				{{ value|e }}
+			{% elseif col.type == 'password' %}
+				********
+			{% else %}
+				{{ value|striptags }}
+			{% endif %}
+		</td>
+	{% endfor %}
+</tr>

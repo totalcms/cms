@@ -38,7 +38,7 @@ class LoggerFactory
 		$this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
 
 		if ($this->path !== '' && !is_dir($this->path)) {
-			mkdir($this->path, 0777, true);
+			mkdir($this->path, 0755, true);
 		}
 
 		// This can be used for testing to make the Factory testable
@@ -95,7 +95,7 @@ class LoggerFactory
 	 *
 	 * @return self The logger factory
 	 */
-	public function addFileHandler(string $filename, int $maxFiles = 10, int $permissions = 0777, ?Level $level = null): self
+	public function addFileHandler(string $filename, int $maxFiles = 10, int $permissions = 0644, ?Level $level = null): self
 	{
 		$filename = sprintf('%s/%s', $this->path, $filename);
 		$level ??= $this->level;

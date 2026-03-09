@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -39,6 +40,7 @@ final class APCuIntegrationTest extends TestCase
 		$watermarkCleanupService    = new WatermarkCleanupService($mockStorage, $mockLoggerFactory);
 
 		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$invalidationSignal        = new CacheInvalidationSignal($this->config);
 		$this->cacheManager        = new CacheManager(
 			$filesystemService,
 			$opcacheService,
@@ -47,6 +49,7 @@ final class APCuIntegrationTest extends TestCase
 			$this->apcuService,
 			$watermarkCleanupService,
 			$devModeManager,
+			$invalidationSignal,
 			$this->config,
 			$mockLoggerFactoryForCache
 		);

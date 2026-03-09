@@ -35,7 +35,9 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -48,6 +50,14 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\DataView\Repository\DataViewRepository;
+use TotalCMS\Domain\DataView\Service\DataViewBuilder;
+use TotalCMS\Domain\DataView\Service\DataViewFetcher;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\DataView\Service\DataViewQueryService;
+use TotalCMS\Domain\DataView\Service\DataViewRemover;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -58,6 +68,7 @@ use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
@@ -70,6 +81,8 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\License\Service\OfflineLicenseValidator;
+use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
+use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
@@ -77,6 +90,7 @@ use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
+use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -91,6 +105,8 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
@@ -115,14 +131,28 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
+use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\SchemaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\ViewTwigAdapter;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerRegistry;
+use TotalCMS\Domain\Twig\Designer\TemplateDesignerSync;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -131,6 +161,8 @@ use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
+use TotalCMS\Middleware\Access\DesignerAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
@@ -138,13 +170,17 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\CacheInvalidationMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
+use TotalCMS\Middleware\License\BulkMailerEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
+use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
+use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
@@ -155,6 +191,8 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\GuzzleHttpClient;
+use TotalCMS\Support\HttpClientInterface;
 
 return [
 	// Application settings
@@ -170,6 +208,11 @@ return [
 
 	PhpSession::class => function (ContainerInterface $container): PhpSession {
 		$sessionConfig = $container->get(Config::class)->session;
+
+		// Skip session configuration in CLI mode (no HTTP context)
+		if (PHP_SAPI === 'cli') {
+			return new PhpSession();
+		}
 
 		// Ensure session directory exists
 		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
@@ -314,6 +357,7 @@ return [
 
 	IndexFilter::class => fn (ContainerInterface $container): IndexFilter => new IndexFilter(
 		$container->get(IndexReader::class),
+		$container->get(ObjectFilter::class),
 	),
 
 	ObjectFetcher::class => fn (ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
@@ -343,6 +387,10 @@ return [
 		$container->get(SettingsSchemaFetcher::class),
 		$container->get(SettingsFetcher::class),
 		$container->get(JobManager::class),
+		$container->get(DataViewLister::class),
+		$container->get(PropertyMetaResolver::class),
+		$container->get(DataViewFilter::class),
+		$container->get(TranslationService::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -353,36 +401,109 @@ return [
 		$container->get(EditionFeatureService::class),
 	),
 
-	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
+	HtmxRenderer::class => fn (): HtmxRenderer => new HtmxRenderer(),
+
+	RenderTwigAdapter::class => fn (ContainerInterface $container): RenderTwigAdapter => new RenderTwigAdapter(
+		$container->get(HtmxRenderer::class),
 		$container->get(Config::class),
-		$container->get(IndexReader::class),
-		$container->get(IndexSearcher::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(CollectionLister::class),
+		$container->get(DataTwigAdapter::class),
+		$container->get(MediaTwigAdapter::class),
 		$container->get(CollectionFetcher::class),
-		$container->get(CollectionEditionService::class),
-		$container->get(SchemaLister::class),
+		$container->get(CollectionLister::class),
 		$container->get(SchemaFetcher::class),
-		$container->get(DeckCompatibilityChecker::class),
-		$container->get(TemplateLister::class),
-		$container->get(ObjectUrlBuilder::class),
-		$container->get(TotalFormFactory::class),
-		$container->get(ServerChecker::class),
-		$container->get(CacheReporter::class),
-		$container->get(LogAnalyzer::class),
+		$container->get(GridRenderer::class),
+		$container->get(LoggerFactory::class),
+		$container->get(DepotBrowserRenderer::class),
+		$container->get(IndexQueryService::class),
+		fn () => $container->get(DataViewQueryService::class),
+		fn () => $container->get(TwigEngine::class),
+	),
+
+	ViewTwigAdapter::class => fn (ContainerInterface $container): ViewTwigAdapter => new ViewTwigAdapter(
+		$container->get(DataViewFetcher::class),
+		$container->get(DataViewLister::class),
+	),
+
+	MediaTwigAdapter::class => fn (ContainerInterface $container): MediaTwigAdapter => new MediaTwigAdapter(
+		$container->get(ObjectFetcher::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	DataTwigAdapter::class => fn (ContainerInterface $container): DataTwigAdapter => new DataTwigAdapter(
+		$container->get(ObjectFetcher::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	AuthTwigAdapter::class => fn (ContainerInterface $container): AuthTwigAdapter => new AuthTwigAdapter(
+		$container->get(Config::class),
 		$container->get(PhpSession::class),
 		$container->get(AccessManager::class),
 		$container->get(FileAccessManager::class),
 		$container->get(AccessControlService::class),
-		$container->get(ImageCacheService::class),
-		$container->get(GridRenderer::class),
-		$container->get(DepotBrowserRenderer::class),
+		$container->get(CollectionLister::class),
+		$container->get(TranslationService::class),
+		$container->get(EditionFeatureService::class),
+	),
+
+	CollectionTwigAdapter::class => fn (ContainerInterface $container): CollectionTwigAdapter => new CollectionTwigAdapter(
+		$container->get(Config::class),
+		$container->get(CollectionLister::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionEditionService::class),
+		$container->get(IndexReader::class),
+		$container->get(IndexSearcher::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUrlBuilder::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	SchemaTwigAdapter::class => fn (ContainerInterface $container): SchemaTwigAdapter => new SchemaTwigAdapter(
+		$container->get(SchemaLister::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(DeckCompatibilityChecker::class),
+		$container->get(CollectionEditionService::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	AdminTwigAdapter::class => fn (ContainerInterface $container): AdminTwigAdapter => new AdminTwigAdapter(
+		$container->get(Config::class),
+		$container->get(AuthTwigAdapter::class),
+		$container->get(CollectionLister::class),
+		$container->get(SchemaLister::class),
+		$container->get(TemplateLister::class),
+		$container->get(JobManager::class),
 		$container->get(DevModeManager::class),
+		$container->get(CollectionEditionService::class),
+		$container->get(CacheReporter::class),
+		$container->get(LicenseStatus::class),
+		$container->get(IndexReader::class),
+		$container->get(ServerChecker::class),
+		$container->get(LogAnalyzer::class),
+		$container->get(ImageCacheService::class),
+		$container->get(CacheSizingAdvisor::class),
+	),
+
+	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
+		$container->get(Config::class),
+		dirname(__DIR__) . '/resources/translations',
+	),
+
+	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
+		$container->get(Config::class),
+		$container->get(TotalFormFactory::class),
 		$container->get(LicenseStatus::class),
 		$container->get(EditionTwigAdapter::class),
-		$container->get(JobManager::class),
-		$container->get(CacheManager::class),
 		$container->get(LoggerFactory::class),
+		$container->get(RenderTwigAdapter::class),
+		$container->get(ViewTwigAdapter::class),
+		$container->get(SchemaTwigAdapter::class),
+		$container->get(AuthTwigAdapter::class),
+		$container->get(DataTwigAdapter::class),
+		$container->get(MediaTwigAdapter::class),
+		$container->get(CollectionTwigAdapter::class),
+		$container->get(AdminTwigAdapter::class),
+		new LocaleTwigAdapter($container->get(TranslationService::class)),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
@@ -395,6 +516,7 @@ return [
 		$container->get(BarcodeTwigAdapter::class),
 		$container->get(PhpSession::class),
 		$container->get(CSRFTokenManager::class),
+		$container->get(TranslationService::class),
 	),
 
 	QRCodeTwigAdapter::class => fn (ContainerInterface $container): QRCodeTwigAdapter => new QRCodeTwigAdapter($container->get(QRGenerator::class)),
@@ -514,6 +636,56 @@ return [
 		$container->get(LoggerFactory::class),
 	),
 
+	// Data View Services
+	DataViewRepository::class => fn (ContainerInterface $container): DataViewRepository => new DataViewRepository(
+		$container->get(StorageFilesystemAdapter::class),
+		$container->get(CacheManager::class),
+	),
+
+	DataViewLister::class => fn (ContainerInterface $container): DataViewLister => new DataViewLister(
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionRepository::class),
+		$container->get(IndexReader::class),
+	),
+
+	DataViewBuilder::class => fn (ContainerInterface $container): DataViewBuilder => new DataViewBuilder(
+		$container->get(DataViewRepository::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(TwigEngine::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	DataViewFetcher::class => fn (ContainerInterface $container): DataViewFetcher => new DataViewFetcher(
+		$container->get(DataViewRepository::class),
+	),
+
+	DataViewFilter::class => fn (ContainerInterface $container): DataViewFilter => new DataViewFilter(
+		$container->get(DataViewFetcher::class),
+		$container->get(ObjectFilter::class),
+	),
+
+	DataViewRemover::class => fn (ContainerInterface $container): DataViewRemover => new DataViewRemover(
+		$container->get(DataViewRepository::class),
+	),
+
+	DataViewUpdateScheduler::class => fn (ContainerInterface $container): DataViewUpdateScheduler => new DataViewUpdateScheduler(
+		$container->get(IndexReader::class),
+		$container->get(JobQueuer::class),
+	),
+
+	DataViewsAccessMiddleware::class => fn (ContainerInterface $container): DataViewsAccessMiddleware => new DataViewsAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
 	DocsAccessMiddleware::class => fn (ContainerInterface $container): DocsAccessMiddleware => new DocsAccessMiddleware(
 		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
@@ -556,10 +728,33 @@ return [
 		$container->get(TotalCMSTwigExtension::class),
 		$container->get(DevModeManager::class),
 		$container->get(EditionFeatureService::class),
+		$container->get(TemplateDesignerPreprocessor::class),
+		$container->get(TemplateDesignerSync::class),
 	),
 
 	TwigRenderer::class => fn (ContainerInterface $container): TwigRenderer => new TwigRenderer(
 		$container->get(TwigEngine::class)
+	),
+
+	// Template Designer Services
+	TemplateDesignerRegistry::class => fn (): TemplateDesignerRegistry => new TemplateDesignerRegistry(),
+
+	TemplateDesignerPreprocessor::class => fn (ContainerInterface $container): TemplateDesignerPreprocessor => new TemplateDesignerPreprocessor(
+		$container->get(TemplateDesignerRegistry::class),
+	),
+
+	TemplateDesignerSync::class => fn (ContainerInterface $container): TemplateDesignerSync => new TemplateDesignerSync(
+		$container->get(Config::class),
+		$container->get(TemplateSaver::class),
+		$container->get(TemplateDesignerRegistry::class),
+		$container->get(EditionFeatureService::class),
+		$container->get(HttpClientInterface::class),
+	),
+
+	DesignerAccessMiddleware::class => fn (ContainerInterface $container): DesignerAccessMiddleware => new DesignerAccessMiddleware(
+		$container->get(TemplateRepository::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
 	),
 
 	RedirectRenderer::class => fn (ContainerInterface $container): RedirectRenderer => new RedirectRenderer(
@@ -586,6 +781,15 @@ return [
 		$container->get(DevModeManager::class),
 	),
 
+	CacheSizingAdvisor::class => fn (ContainerInterface $container): CacheSizingAdvisor => new CacheSizingAdvisor(
+		$container->get(Config::class),
+		$container->get(CollectionLister::class),
+		$container->get(CacheManager::class),
+		$container->get(APCuService::class),
+		$container->get(RedisService::class),
+		$container->get(MemcachedService::class),
+	),
+
 	CacheManager::class => fn (ContainerInterface $container): CacheManager => new CacheManager(
 		$container->get(FilesystemService::class),
 		$container->get(OPcacheService::class),
@@ -594,8 +798,18 @@ return [
 		$container->get(APCuService::class),
 		$container->get(WatermarkCleanupService::class),
 		$container->get(DevModeManager::class),
+		$container->get(CacheInvalidationSignal::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class)
+	),
+
+	CacheInvalidationSignal::class => fn (ContainerInterface $container): CacheInvalidationSignal => new CacheInvalidationSignal(
+		$container->get(Config::class),
+	),
+
+	CacheInvalidationMiddleware::class => fn (ContainerInterface $container): CacheInvalidationMiddleware => new CacheInvalidationMiddleware(
+		$container->get(CacheInvalidationSignal::class),
+		$container->get(CacheManager::class),
 	),
 
 	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),
@@ -654,9 +868,12 @@ return [
 		$container->get(LoggerFactory::class),
 	),
 
+	HttpClientInterface::class => fn (): HttpClientInterface => new GuzzleHttpClient(),
+
 	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
 		$container->get(Config::class),
 		$container->get(CacheManager::class),
+		$container->get(HttpClientInterface::class),
 		$container->get(OfflineLicenseValidator::class),
 	),
 
@@ -699,6 +916,15 @@ return [
 	TemplatesEditionMiddleware::class => fn (ContainerInterface $container): TemplatesEditionMiddleware => new TemplatesEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	DataViewsEditionMiddleware::class => fn (ContainerInterface $container): DataViewsEditionMiddleware => new DataViewsEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
@@ -706,6 +932,15 @@ return [
 	MailerEditionMiddleware::class => fn (ContainerInterface $container): MailerEditionMiddleware => new MailerEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	BulkMailerEditionMiddleware::class => fn (ContainerInterface $container): BulkMailerEditionMiddleware => new BulkMailerEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
@@ -719,6 +954,14 @@ return [
 	),
 
 	ApiKeysEditionMiddleware::class => fn (ContainerInterface $container): ApiKeysEditionMiddleware => new ApiKeysEditionMiddleware(
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigRenderer::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	RssImportEditionMiddleware::class => fn (ContainerInterface $container): RssImportEditionMiddleware => new RssImportEditionMiddleware(
 		$container->get(EditionFeatureService::class),
 		$container->get(TwigRenderer::class),
 		$container->get(JsonRenderer::class),
@@ -765,11 +1008,12 @@ return [
 		$container->get(ObjectFactory::class),
 		$container->get(ObjectRepository::class),
 		$container->get(IndexBuilder::class),
+		$container->get(IndexReader::class),
 		$container->get(CollectionFetcher::class),
 		$container->get(CollectionSaver::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyRepository::class),
-		$container->get(CacheManager::class),
+		$container->get(DataViewFilter::class),
 		$container->get(FakerFactory::class),
 		$container->get(LoggerFactory::class),
 	),
@@ -808,14 +1052,19 @@ return [
 		$container->get(DeckCompatibilityChecker::class),
 	),
 
-	AutogenIdService::class => fn (ContainerInterface $container): AutogenIdService => new AutogenIdService(
+	AutogenService::class => fn (ContainerInterface $container): AutogenService => new AutogenService(
 		$container->get(CollectionFetcher::class),
+	),
+
+	AutogenIdService::class => fn (ContainerInterface $container): AutogenIdService => new AutogenIdService(
+		$container->get(AutogenService::class),
 	),
 
 	ObjectFactory::class => fn (ContainerInterface $container): ObjectFactory => new ObjectFactory(
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyFactory::class),
 		$container->get(AutogenIdService::class),
+		$container->get(AutogenService::class),
 	),
 
 	// Deck Services
@@ -885,6 +1134,20 @@ return [
 	DataDirectoryManager::class => fn (): DataDirectoryManager => new DataDirectoryManager(),
 
 	// Mailer Services
+	BulkMailerRepository::class => fn (ContainerInterface $container): BulkMailerRepository => new BulkMailerRepository(
+		$container->get(Config::class),
+	),
+
+	BulkMailerService::class => fn (ContainerInterface $container): BulkMailerService => new BulkMailerService(
+		$container->get(MailerFetcher::class),
+		$container->get(IndexFilter::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(JobQueuer::class),
+		$container->get(EditionFeatureService::class),
+		$container->get(TwigEngine::class),
+		$container->get(LoggerFactory::class),
+	),
+
 	EmailSender::class => fn (ContainerInterface $container): EmailSender => new EmailSender(
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class),

@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Object\Service;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -26,15 +27,17 @@ final class ObjectUpdaterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
 
 	protected function setUp(): void
 	{
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->repository        = $this->createMock(ObjectRepository::class);
-		$this->factory           = $this->createMock(ObjectFactory::class);
-		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
-		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
-		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
+		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$this->repository            = $this->createMock(ObjectRepository::class);
+		$this->factory               = $this->createMock(ObjectFactory::class);
+		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
+		$this->propertyProcessor     = $this->createMock(PropertyDataProcessorInterface::class);
+		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
+		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
 
 		$this->updater = new ObjectUpdater(
 			$this->objectFetcher,
@@ -42,7 +45,8 @@ final class ObjectUpdaterTest extends TestCase
 			$this->factory,
 			$this->indexBuilder,
 			$this->propertyProcessor,
-			$this->collectionSaver
+			$this->collectionSaver,
+			$this->viewUpdateScheduler,
 		);
 	}
 

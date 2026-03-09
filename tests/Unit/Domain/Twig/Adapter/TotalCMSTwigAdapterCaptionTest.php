@@ -6,22 +6,41 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class TotalCMSTwigAdapterCaptionTest extends TestCase
 {
 	private \ReflectionMethod $method;
-	private \PHPUnit\Framework\MockObject\MockObject $adapter;
+	private RenderTwigAdapter $adapter;
 
 	protected function setUp(): void
 	{
-		$this->adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
-		// Inject a NullLogger into the private $logger property (needed by catch block)
-		$reflection  = new \ReflectionClass(TotalCMSTwigAdapter::class);
-		$logProperty = $reflection->getProperty('logger');
-		$logProperty->setValue($this->adapter, new NullLogger());
+		$this->adapter = new RenderTwigAdapter(
+			$this->createMock(HtmxRenderer::class),
+			$this->createMock(Config::class),
+			$this->createMock(DataTwigAdapter::class),
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(CollectionLister::class),
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(GridRenderer::class),
+			$loggerFactory,
+		);
 
+		$reflection   = new \ReflectionClass(RenderTwigAdapter::class);
 		$this->method = $reflection->getMethod('renderCaptionTemplate');
 	}
 

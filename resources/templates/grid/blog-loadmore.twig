@@ -1,0 +1,30 @@
+<article class="cms-grid-item">
+	{# Blog LoadMore Item Template #}
+	<a href="{{ cms.collection.objectUrl(collection|default("blog"), object.id) | default('#') }}" title="{{ object.title }}" class="link-container">
+		{% if object.image %}
+			<div class="cms-image">
+				<a href="{{ cms.collection.objectUrl(collection|default("blog"), object.id) }}" title="{{ object.title }}" class="link-container">
+				{{ cms.render.image(object, {w: 600, h: 400, fit: 'crop-focalpoint'}, {collection: collection|default("blog"), property: 'image'}) }}
+				</a>
+			</div>
+		{% endif %}
+
+		<div class="cms-content">
+			<a href="{{ cms.collection.objectUrl(collection|default("blog"), object.id) }}" title="{{ object.title }}" class="link-container">
+				<h3 class="cms-title">{{ object.title }}</h3>
+			</a>
+
+			{% if object.date %}
+				{{ cms.render.grid.meta(cms.render.grid.date(object.date, 'relative')) }}
+			{% endif %}
+
+			{% if object.summary %}
+				{{ cms.render.grid.excerpt(object.summary, 150) }}
+			{% endif %}
+
+			{% if object.tags %}
+				{{ cms.render.grid.tags(object.tags) }}
+			{% endif %}
+		</div>
+	</a>
+</article>

@@ -1,56 +1,63 @@
 {# New API Key Form Page #}
-<h1>New API Key</h1>
+<h1>{{ t('api_keys.new_title') }}</h1>
 
 <section class="dash-content-section">
-	<p>Create a new API key to allow external services to access your Total CMS data. You can limit access by HTTP methods and specific API endpoints.</p>
+	<p>{{ t('api_keys.new_desc') }} {{ t('api_keys.limit_note') }}</p>
 
 	{% set formFields %}
 		{{ cms.form.field("text", "name", {
-			label       : "Name",
-			help        : "A name to help you identify this key (e.g., Service Integration, Mobile App, etc.)",
-			placeholder : "e.g., ActivePieces Integration",
+			label       : t('api_keys.name_label'),
+			help        : t('api_keys.name_help'),
+			placeholder : t('api_keys.name_ph'),
 			required    : true,
 		}) }}
 
 		{{ cms.form.field("multicheckbox", "methods", {
-			label    : "HTTP Methods",
-			help     : "Select which HTTP methods this key can use",
+			label    : t('api_keys.http_methods_label'),
+			help     : t('api_keys.http_methods_help'),
 			required : true,
 			value    : ["GET"],
 			options  : [
-				{value: "GET", label: "GET (Read)"},
-				{value: "POST", label: "POST (Create)"},
-				{value: "PUT", label: "PUT (Update)"},
-				{value: "PATCH", label: "PATCH (Partial Update)"},
-				{value: "DELETE", label: "DELETE (Delete)"}
+				{value: "GET", label: t('api_keys.method_get')},
+				{value: "POST", label: t('api_keys.method_post')},
+				{value: "PUT", label: t('api_keys.method_put')},
+				{value: "PATCH", label: t('api_keys.method_patch')},
+				{value: "DELETE", label: t('api_keys.method_delete')}
 			]
 		}) }}
 
 		{{ cms.form.field("radio", "endpoint-type", {
-			label    : "Allowed Endpoints",
-			help     : "Choose which endpoints this key can access",
+			label    : t('api_keys.endpoints_label'),
+			help     : t('api_keys.endpoints_help'),
 			required : true,
 			value    : "all",
 			options  : [
-				{value: "all", label: "All endpoints (*)"},
-				{value: "specific", label: "Specific endpoints"}
+				{value: "all", label: t('api_keys.all_endpoints_radio')},
+				{value: "specific", label: t('api_keys.specific_endpoints')}
 			]
 		}) }}
 
 		{% set collectionOptions = [] %}
-		{% for collection in cms.collections() %}
+		{% for collection in cms.collection.list() %}
 			{% set collectionOptions = collectionOptions|merge([{value: "/collections/" ~ collection.id, label: collection.name}]) %}
 		{% endfor %}
 
+		{% set dataviewOptions = [] %}
+		{% for view in cms.view.list() %}
+			{% set dataviewOptions = dataviewOptions|merge([{value: "/dataviews/" ~ view.id ~ "/data", label: view.name}]) %}
+		{% endfor %}
+
 		{% set endpointOptions = [
-			{value: "/schemas", label: "Schemas (Read-Only)"},
-			{value: "/collections", label: "All Collections"}
+			{value: "/schemas", label: t('api_keys.schemas_readonly')},
+			{value: "/collections", label: t('api_keys.all_collections_ep')},
+			{value: "/dataviews", label: t('api_keys.all_dataviews_ep')}
 		] %}
-		{% set endpointOptions = endpointOptions|merge({"Choose Specific Collections": collectionOptions}) %}
+		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_collections')): collectionOptions}) %}
+		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_dataviews')): dataviewOptions}) %}
 
 		{{ cms.form.field("multicheckbox", "paths", {
-			label    : "Select Endpoints",
-			help     : "Check the endpoints this key should have access to",
+			label    : t('api_keys.select_endpoints'),
+			help     : t('api_keys.select_endpoints_help'),
 			required : true,
 			value    : [],
 			options  : endpointOptions,
@@ -67,34 +74,34 @@
 	{{ cms.form.totalform("/apikeys", formFields, {
 		class  : "apikeys-form",
 		method : "POST",
-		save   : "Create API Key",
+		save   : t('api_keys.create_submit'),
 	}) }}
 
 </section>
 
 {# Show Created Key Modal #}
 <dialog id="show-apikey-modal" class="cms-modal small">
-	<h2>API Key Created Successfully</h2>
+	<h2>{{ t('api_keys.success_title') }}</h2>
 
 	<div class="warning-box">
 		<div>
-			<strong>Save this key now!</strong>
-			<p>This is the only time you'll see the full key. Copy it and store it securely.</p>
+			<strong>{{ t('api_keys.save_warning') }}</strong>
+			<p>{{ t('api_keys.save_desc') }}</p>
 		</div>
 	</div>
 
 	<form class="totalform">
 		{{ cms.form.field("text", "generated-key", {
-			label    : "API Key",
+			label    : t('api_keys.key_modal_label'),
 			class    : "api-key-display",
 			readonly : true,
 			icon     : false,
 		}) }}
-		<button type="button" class="dash-button cms-clip-button" data-clip="input[name='generated-key']">Copy to Clipboard</button>
+		<button type="button" class="dash-button cms-clip-button" data-clip="input[name='generated-key']">{{ t('btn.copy_clipboard') }}</button>
 	</form>
 
 	<div class="form-inline-fields" style="text-align: right; margin-top: 2rem;">
-		<a href="utils/api-keys" class="dash-button transparent">Done</a>
+		<a href="utils/api-keys" class="dash-button transparent">{{ t('btn.done') }}</a>
 	</div>
 </dialog>
 

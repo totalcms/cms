@@ -26,29 +26,30 @@
 		&:has(input:focus)::before {
 			background-color : oklch(var(--totalform-darkgray));
 		}
-	}
 
-	input {
-		appearance       : none;
-		width            : 100%;
-		height           : 2.4375rem;
-		background-color : transparent;
-		box-shadow       : none;
-		border           : none;
-		padding          : .5rem;
-		margin           : 0;
-		border-radius    : var(--totalform-radius);
-		font-family      : inherit;
-		font-size        : var(--totalform-font-size);
-		font-weight      : 400;
-		line-height      : 1.5;
-		color            : oklch(var(--totalform-text-color));
-		transition       : background-color 200ms ease-in-out;
-		text-indent      : 1.5rem;
+		input {
+			appearance       : none;
+			width            : 100%;
+			height           : 2.4375rem;
+			background-color : transparent;
+			box-shadow       : none;
+			border           : none;
+			padding          : .5rem;
+			margin           : 0;
+			border-radius    : var(--totalform-radius);
+			font-family      : inherit;
+			font-size        : var(--totalform-font-size);
+			font-weight      : 400;
+			line-height      : 1.5;
+			color            : oklch(var(--totalform-text-color));
+			transition       : background-color 200ms ease-in-out;
+			text-indent      : 1.5rem;
 
-		&:hover, &:focus {
-			background-color : oklch(var(--totalform-nearwhite));
-			outline          : none;
+			&:hover, &:focus {
+				background-color : oklch(var(--totalform-nearwhite));
+				outline          : none;
+			}
 		}
 	}
+
 }

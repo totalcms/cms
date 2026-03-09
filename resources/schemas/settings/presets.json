@@ -1,0 +1,20 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Property Setting Presets",
+	"description" : "Named presets of property settings for reuse across schemas and collections",
+	"type"        : "object",
+	"properties"  : {
+        "presetsettings": {
+            "field": "deck",
+            "label": "Property Setting Presets",
+            "help": "Named presets of property settings. Each preset has a name and a settings object. Reference in any property with {\"preset\": \"name\"}",
+            "deckref": "https:\/\/www.totalcms.co\/schemas\/preset-item.json",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/deck.json",
+            "patternProperties": {
+                "^[a-zA-Z]\\w*$": {
+                    "$ref": "https:\/\/www.totalcms.co\/schemas\/preset-item.json"
+                }
+            }
+        }
+	}
+}

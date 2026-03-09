@@ -118,7 +118,7 @@ function filterBrowser(container, input) {
 }
 
 function initBrowser(container) {
-	const options     = JSON.parse(container.dataset.options || "{}");
+	const options     = JSON.parse(container.dataset.settings || "{}");
 	const filterInput = container.querySelector(".depot-browser-filter input");
 	const dialog      = container.querySelector(".depot-browser-preview");
 	const preview     = dialog?.querySelector(".preview-content");

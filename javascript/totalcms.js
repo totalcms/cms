@@ -37,9 +37,29 @@ export default class TotalCMS {
 
         this.cache = this.options.cache;
 
+        // Auto-detect API URL from page forms if not provided
+        if (!this.options.url) {
+            const form = document.querySelector('form.totalform[data-api]');
+            if (form) this.options.url = form.dataset.api;
+        }
+
         // Configuration options that can be set for various CMS components
         this.config = this.options.config||{};
+
+		// Set up logout listeners
+		this.logoutListeners();
     }
+
+	logoutListeners() {
+		const logoutElements = document.querySelectorAll('.cms-logout');
+		if (logoutElements.length === 0) return;
+		logoutElements.forEach(el => {
+			el.addEventListener('click', (e) => {
+				e.preventDefault();
+				window.location.href = this.buildApiQuery('/logout');
+			});
+		});
+	}
 
 	clearTwigCacheListeners() {
 		const clearCacheButtons = Array.from(document.querySelectorAll("button.cms-clear-cache,a.cms-clear-cache,.cms-clear-cache a,.cms-clear-cache button"));

@@ -42,7 +42,6 @@ class CmsGridNode extends Node
 		parent::__construct($nodes, [], $lineno);
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function compile(Compiler $compiler): void
 	{
 		$compiler->addDebugInfo($this);

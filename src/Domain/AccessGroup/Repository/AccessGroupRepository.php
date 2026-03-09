@@ -46,6 +46,7 @@ class AccessGroupRepository extends StorageRepository
 			'templates'  => true,
 			'mailer'     => true,
 			'playground' => true,
+			'dataviews'  => true,
 			'docs'       => true,
 			'utils'      => [
 				'all'     => true,
@@ -82,6 +83,7 @@ class AccessGroupRepository extends StorageRepository
 			'templates'  => true,
 			'mailer'     => true,
 			'playground' => false,
+			'dataviews'  => false,
 			'docs'       => true,
 			'utils'      => [
 				'all'     => false,
@@ -118,6 +120,7 @@ class AccessGroupRepository extends StorageRepository
 			'templates'  => false,
 			'mailer'     => false,
 			'playground' => false,
+			'dataviews'  => false,
 			'docs'       => true,
 			'utils'      => [
 				'all'     => false,
@@ -154,6 +157,7 @@ class AccessGroupRepository extends StorageRepository
 			'templates'  => false,
 			'mailer'     => false,
 			'playground' => false,
+			'dataviews'  => false,
 			'docs'       => true,
 			'utils'      => [
 				'all'     => false,
@@ -174,17 +178,25 @@ class AccessGroupRepository extends StorageRepository
 
 	/**
 	 * Get all access groups.
+	 * The admin group always reflects the current template to ensure
+	 * new permissions are available without re-saving.
 	 *
 	 * @return array<AccessGroupData>
 	 */
 	public function getAll(): array
 	{
-		$data = $this->readFile();
+		$data   = $this->readFile();
+		$groups = [];
 
-		return array_map(
-			fn (array $groupData): AccessGroupData => new AccessGroupData($groupData),
-			$data['groups'] ?? []
-		);
+		foreach ($data['groups'] ?? [] as $groupData) {
+			if (($groupData['id'] ?? '') === 'admin') {
+				$groups[] = new AccessGroupData(self::ADMIN_GROUP_TEMPLATE);
+			} else {
+				$groups[] = new AccessGroupData($groupData);
+			}
+		}
+
+		return $groups;
 	}
 
 	/**

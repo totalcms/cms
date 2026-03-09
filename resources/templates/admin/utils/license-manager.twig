@@ -14,52 +14,52 @@
 <div class="offline-license-panel">
 	<div class="offline-license-header">
 		<span class="icon-lock"></span>
-		<h3>Offline License</h3>
+		<h3>{{ t('license.offline_title') }}</h3>
 		{% if isOffline %}
-			<span class="badge badge-success">Active</span>
+			<span class="badge badge-success">{{ t('label.active') }}</span>
 		{% else %}
-			<span class="badge badge-error">Invalid</span>
+			<span class="badge badge-error">{{ t('label.invalid') }}</span>
 		{% endif %}
 	</div>
 
 	<div class="offline-license-details">
 		{% if offlineDetails.error is defined %}
 			<div class="alert alert-error">
-				<strong>License Error:</strong> {{ offlineDetails.error }}
+				<strong>{{ t('license.error') }}</strong> {{ offlineDetails.error }}
 			</div>
 		{% else %}
 			<table class="offline-license-table">
 				<tr>
-					<th>Domain:</th>
+					<th>{{ t('license.domain') }}</th>
 					<td>
 						{{ offlineDetails.domain }}
 						{% if not offlineDetails.domainMatch %}
-							<span class="badge badge-error">Mismatch (current: {{ offlineDetails.currentDomain }})</span>
+							<span class="badge badge-error">{{ t('license.domain_mismatch', {'{domain}': offlineDetails.currentDomain}) }}</span>
 						{% endif %}
 					</td>
 				</tr>
 				<tr>
-					<th>Edition:</th>
+					<th>{{ t('license.edition') }}</th>
 					<td>{{ offlineDetails.edition | capitalize }}</td>
 				</tr>
 				<tr>
-					<th>License Key:</th>
+					<th>{{ t('license.key') }}</th>
 					<td><code>{{ offlineDetails.licenseKey }}</code></td>
 				</tr>
 				<tr>
-					<th>Updates Valid Until:</th>
+					<th>{{ t('license.updates_valid') }}</th>
 					<td>
 						{{ offlineDetails.updatesValidUntil }}
 						{% if offlineDetails.updatesValid %}
-							<span class="badge badge-success">Valid</span>
+							<span class="badge badge-success">{{ t('label.valid') }}</span>
 						{% else %}
-							<span class="badge badge-warning">Expired</span>
+							<span class="badge badge-warning">{{ t('label.expired') }}</span>
 						{% endif %}
 					</td>
 				</tr>
 				{% if offlineDetails.issuedAt %}
 				<tr>
-					<th>Issued:</th>
+					<th>{{ t('license.issued') }}</th>
 					<td>{{ offlineDetails.issuedAt }}</td>
 				</tr>
 				{% endif %}
@@ -69,7 +69,7 @@
 
 	<div class="offline-license-actions">
 		<p class="offline-license-note">
-			To update this license, place a new file at:<br>
+			{{ t('license.update_instructions') }}<br>
 			<code>tcms-data/{{ cms.license.getOfflineLicenseFilename() }}</code>
 		</p>
 	</div>

@@ -22,15 +22,14 @@ readonly class JobQueueStats implements \Stringable
 
 		$rows = '';
 		foreach ($stats as $key => $value) {
-			$col1 = HTMLUtils::element('td', $key);
-			$col2 = HTMLUtils::element('td', strval($value));
-			$rows .= HTMLUtils::element('tr', $col1 . $col2, ['class' => strtolower($key)]);
+			$col1     = HTMLUtils::element('td', $key);
+			$col2     = HTMLUtils::element('td', strval($value));
+			$cssClass = str_replace(' ', '-', strtolower($key));
+			$rows .= HTMLUtils::element('tr', $col1 . $col2, ['class' => $cssClass]);
 		}
 
 		$table = HTMLUtils::element('table', $rows, [
-			'class'           => 'jobqueue-stats jobqueue-by-type cms-colors',
-			'data-collection' => $this->collection,
-			'data-api'        => $this->api,
+			'class' => 'jobqueue-stats jobqueue-by-type cms-colors',
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);
@@ -54,9 +53,7 @@ readonly class JobQueueStats implements \Stringable
 		}
 
 		$table = HTMLUtils::element('table', $rows, [
-			'class'           => 'jobqueue-stats jobqueue-by-status cms-colors',
-			'data-collection' => $this->collection,
-			'data-api'        => $this->api,
+			'class' => 'jobqueue-stats jobqueue-by-status cms-colors',
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);
@@ -66,12 +63,22 @@ readonly class JobQueueStats implements \Stringable
 		]);
 	}
 
+	public function allStatsTables(): string
+	{
+		return $this->tableByType() . $this->tableByStatus();
+	}
+
 	public function allStats(): string
 	{
-		$tables  = $this->tableByType() . $this->tableByStatus();
+		$route = $this->collection === ''
+			? $this->api . '/jobqueue/stats/html'
+			: $this->api . '/jobqueue/stats/' . $this->collection . '/html';
 
-		return HTMLUtils::element('div', $tables, [
-			'class' => 'jobqueue-all-stats',
+		return HTMLUtils::element('div', $this->allStatsTables(), [
+			'class'      => 'jobqueue-all-stats',
+			'hx-get'     => $route,
+			'hx-trigger' => 'every 5s',
+			'hx-swap'    => 'innerHTML',
 		]);
 	}
 

@@ -42,6 +42,9 @@ class RedisService implements CacheInterface
 
 			return true;
 		} catch (\Exception) {
+			// Reset the connection so next call can reconnect
+			$this->redis = null;
+
 			return false;
 		}
 	}
@@ -66,8 +69,10 @@ class RedisService implements CacheInterface
 			$redis = $this->getConnection();
 			$value = $redis->get($key);
 
-			return $value !== false ? unserialize($value) : null;
+			return $value !== false ? unserialize($value, ['allowed_classes' => false]) : null;
 		} catch (\Exception) {
+			$this->redis = null;
+
 			return null;
 		}
 	}
@@ -88,6 +93,8 @@ class RedisService implements CacheInterface
 
 			return $redis->set($key, $serialized);
 		} catch (\Exception) {
+			$this->redis = null;
+
 			return false;
 		}
 	}
@@ -104,6 +111,8 @@ class RedisService implements CacheInterface
 
 			return is_int($result) && $result > 0;
 		} catch (\Exception) {
+			$this->redis = null;
+
 			return false;
 		}
 	}
@@ -119,6 +128,8 @@ class RedisService implements CacheInterface
 
 			return $redis->flushDB();
 		} catch (\Exception) {
+			$this->redis = null;
+
 			return false;
 		}
 	}
@@ -149,6 +160,8 @@ class RedisService implements CacheInterface
 
 			return true;
 		} catch (\Exception) {
+			$this->redis = null;
+
 			// Fall back to clearing everything if pattern clearing fails
 			return $this->clear();
 		}
@@ -208,6 +221,16 @@ class RedisService implements CacheInterface
 
 	private function getConnection(): \Redis
 	{
+		if ($this->redis instanceof \Redis) {
+			// Verify existing connection is still alive
+			try {
+				$this->redis->ping();
+			} catch (\Exception) {
+				// Connection died, reset for reconnect
+				$this->redis = null;
+			}
+		}
+
 		if (!$this->redis instanceof \Redis) {
 			$this->redis = new \Redis();
 			$this->redis->connect($this->host, $this->port, $this->timeout);

@@ -8,6 +8,20 @@ namespace TotalCMS\Domain\Media\Service;
  */
 class ImageMetaReader
 {
+	private const LOCATION_FIELDS = ['latitude', 'longitude', 'altitude', 'country', 'state', 'city', 'sublocation'];
+
+	/** @param array<string,mixed> $metaData */
+	public static function stripLocationData(array &$metaData): void
+	{
+		if (!isset($metaData['exif']) || !is_array($metaData['exif'])) {
+			return;
+		}
+
+		foreach (self::LOCATION_FIELDS as $field) {
+			unset($metaData['exif'][$field]);
+		}
+	}
+
 	/** @return array<string,string|int> */
 	public static function getBasicImageData(string $imagepath): array
 	{

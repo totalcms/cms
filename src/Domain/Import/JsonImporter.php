@@ -76,8 +76,6 @@ class JsonImporter
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function importNewObject(array $record): bool
@@ -109,8 +107,6 @@ class JsonImporter
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function updateObject(array $record): bool

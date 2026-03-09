@@ -32,13 +32,13 @@ class AccessManager
 	 *
 	 * @param string|array<string> $groups
 	 */
-	public function restrictPageAccess(array|string $groups = [], string $collection = ''): bool
+	public function restrictPageAccess(array|string $groups = [], string $collection = '', ?string $customLoginUrl = null): bool
 	{
 		$this->session->set(SessionKeys::REQUEST_REFERER_URL, $_SERVER['HTTP_REFERER'] ?? '');
 		$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, $_SERVER['REQUEST_URI']);
 
 		if (!$this->sessionHasUser()) {
-			$this->redirectToLogin($collection);
+			$this->redirectToLogin($collection, $customLoginUrl);
 
 			return true;
 		}
@@ -163,17 +163,22 @@ class AccessManager
 		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
 	}
 
-	private function redirectToLogin(string $collection = ''): void
+	private function redirectToLogin(string $collection = '', ?string $customLoginUrl = null): void
 	{
 		$loginUrl = $this->config->api . '/login';
 		if ($collection !== '') {
 			$loginUrl .= "/$collection";
 		}
 
+		if ($customLoginUrl !== null) {
+			$loginUrl = $customLoginUrl;
+		}
+
 		// Add the original requested URL as a redirect parameter
 		$originUrl = $this->session->get(SessionKeys::REQUEST_ORIGIN_URL);
 		if (!empty($originUrl)) {
-			$loginUrl .= '?' . http_build_query(['redirect' => $originUrl]);
+			$separator = str_contains($loginUrl, '?') ? '&' : '?';
+			$loginUrl .= $separator . http_build_query(['redirect' => $originUrl]);
 		}
 
 		header("Location: $loginUrl");

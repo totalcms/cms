@@ -60,7 +60,7 @@ class ApiKeyRepository extends StorageRepository
 		$keys = $this->getAll();
 
 		foreach ($keys as $apiKey) {
-			if ($apiKey->key === $key) {
+			if (hash_equals($apiKey->key, $key)) {
 				return $apiKey;
 			}
 		}

@@ -1,12 +1,12 @@
 import TotalFormManager from './totalform/totalform-manager';
 import TotalCMS from './totalcms';
+import QuickAction from './quickaction';
 import SimpleForm from './totalform/simpleform';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
 import AdminTable from './totalform/admin-table';
-import QuickAction from './quickaction';
+import SortableTable from './totalform/sortable-table';
 import ClipButton from './clipboard-button';
-import JobQueueStatsTable from './jobqueue-stats';
 import JSONField from './totalform/json';
 import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
@@ -16,9 +16,18 @@ import ThemeSwitcher from './theme-switcher';
 import initExternalLinks from './external-links';
 import DocSearch from './totalform/doc-search';
 import initDocHighlight from './doc-highlight';
+import PasskeyLogin from './passkey-login';
+import PasskeyManager from './passkeys';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
+globalThis.QuickAction = QuickAction;
+
+// Inject CSRF token into all HTMX requests
+document.addEventListener('htmx:config:request', (e) => {
+	const token = document.querySelector('meta[name="csrf-token"]');
+	if (token && e.detail.headers) e.detail.headers['X-CSRF-Token'] = token.content;
+});
 
 document.addEventListener("DOMContentLoaded", event => {
 	const manager = new TotalFormManager();
@@ -48,17 +57,16 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const tables = Array.from(document.getElementsByClassName("admin-table"));
-	tables.forEach(table => new AdminTable(table));
+	// HTMX-powered collection tables
+	const tableWrappers = Array.from(document.getElementsByClassName("admin-table-wrapper"));
+	tableWrappers.forEach(wrapper => new AdminTable(wrapper));
 
-	const reindex = Array.from(document.getElementsByClassName("cms-quick-action"));
-	reindex.forEach(link => new QuickAction(link));
+	// Sortable static tables (logs page)
+	const sortableTables = Array.from(document.querySelectorAll("table.admin-table[data-sort]"));
+	sortableTables.forEach(table => new SortableTable(table));
 
 	const copyButtons = Array.from(document.getElementsByClassName("cms-clip-button"));
 	copyButtons.forEach(button => new ClipButton(button));
-
-	const jobqueueStats = Array.from(document.getElementsByClassName("jobqueue-stats"));
-	jobqueueStats.forEach(table => new JobQueueStatsTable(table));
 
 	const inputs = Array.from(document.getElementsByClassName('slugify-input'));
 	inputs.forEach(input => new SlugifyInput(input));
@@ -112,17 +120,13 @@ document.addEventListener("DOMContentLoaded", event => {
 	// Highlight search terms in docs
 	initDocHighlight();
 
-	initExternalLinks();
+	// Passkey login button (on login page)
+	const passkeyLoginBtn = document.querySelector('.cms-passkey-login');
+	if (passkeyLoginBtn) new PasskeyLogin(passkeyLoginBtn);
 
-	// Logout handler - redirect to logout API
-	const logoutElements = document.querySelectorAll('.cms-logout');
-	if (logoutElements.length > 0) {
-		const api = new TotalCMS();
-		logoutElements.forEach(el => {
-			el.addEventListener('click', (e) => {
-				e.preventDefault();
-				window.location.href = api.buildApiQuery('/logout');
-			});
-		});
-	}
+	// Passkey manager (on profile page)
+	const passkeyMgr = document.getElementById('passkeys-manager');
+	if (passkeyMgr) new PasskeyManager(passkeyMgr);
+
+	initExternalLinks();
 });

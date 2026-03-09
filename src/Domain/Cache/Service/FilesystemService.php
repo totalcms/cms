@@ -86,7 +86,7 @@ readonly class FilesystemService implements CacheInterface
 			return null;
 		}
 
-		$data = unserialize($content);
+		$data = unserialize($content, ['allowed_classes' => false]);
 		if (!is_array($data) || !isset($data['expires'], $data['value'])) {
 			return null;
 		}
@@ -115,6 +115,7 @@ readonly class FilesystemService implements CacheInterface
 		$expires  = $ttl > 0 ? time() + $ttl : 0;
 
 		$data = [
+			'key'     => $key,
 			'expires' => $expires,
 			'value'   => $value,
 		];
@@ -155,9 +156,8 @@ readonly class FilesystemService implements CacheInterface
 
 	/**
 	 * Clear cache entries by pattern.
-	 * Note: Since filesystem cache uses hashed file structure, we need to read
-	 * each cache file to check if the key matches the pattern.
-	 * For efficiency, this falls back to clearing all cache.
+	 * Iterates cache files and deletes those whose stored key matches the pattern.
+	 * Pattern uses * as a wildcard (e.g., "prefix:api:*").
 	 */
 	public function clearByPattern(string $pattern): bool
 	{
@@ -166,11 +166,34 @@ readonly class FilesystemService implements CacheInterface
 		}
 
 		try {
-			// For filesystem cache with hashed structure, pattern matching is complex
-			// since the actual cache keys are hashed before being used as filenames.
-			// For now, fall back to clearing all cache to ensure pattern is cleared.
-			// TODO: Implement key tracking for more precise pattern clearing
-			return $this->clear();
+			// Convert glob-style pattern to regex
+			$regex = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/';
+
+			$iterator = new \RecursiveIteratorIterator(
+				new \RecursiveDirectoryIterator($this->cacheDir, \FilesystemIterator::SKIP_DOTS)
+			);
+
+			foreach ($iterator as $file) {
+				if (!$file->isFile() || $file->getExtension() !== 'cache') {
+					continue;
+				}
+
+				$content = file_get_contents($file->getPathname());
+				if ($content === false) {
+					continue;
+				}
+
+				$data = unserialize($content, ['allowed_classes' => false]);
+				if (!is_array($data) || !isset($data['key'])) {
+					continue;
+				}
+
+				if (preg_match($regex, (string)$data['key'])) {
+					unlink($file->getPathname());
+				}
+			}
+
+			return true;
 		} catch (\Exception) {
 			return false;
 		}

@@ -2,6 +2,8 @@
  * Image Batcher - Batch processing JavaScript for processing multiple images with ImageWorks
  */
 
+import { t } from "./i18n";
+
 class ImageBatcher {
 	constructor() {
 		this.batchData      = window.batchData || {};
@@ -307,7 +309,7 @@ class ImageBatcher {
 
 	async downloadAllImages() {
 		if (this.processedImages.length === 0) {
-			alert('No processed images to download');
+			alert(t("error.no_processed_images"));
 			return;
 		}
 

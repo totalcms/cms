@@ -2,14 +2,15 @@ import Details from "./details";
 import Dialog from "./dialog";
 import TotalField from "./totalfield";
 import DepotDroplet from "./droplet-depot";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Depot Droplet
 //-----------------------------------------------
 export default class DepotField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.browser       = this.container.querySelector(".depot-browser");
         this.folderPreview = this.container.querySelector(".folder-preview");
@@ -125,7 +126,7 @@ export default class DepotField extends TotalField {
 			acceptedFiles    : null,
 			chunking         : true,
 			singleMode       : false,
-			rules            : this.options.rules,
+			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
@@ -439,7 +440,7 @@ export default class DepotField extends TotalField {
 
     trashFiles(files) {
         const count = files.length;
-        if (!confirm(`Are you sure that you want to delete ${count} files? This cannot be undone.`)) return;
+        if (!confirm(t("confirm.delete_files", {count}))) return;
 
         files.forEach(file => {
             const name = this.getFileAttribute(file, "name");
@@ -461,7 +462,7 @@ export default class DepotField extends TotalField {
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
         if (path.length > 0) deleteApi += `?path=${path}`;
 
-        if (confirm("Are you sure that you want to delete this file? This cannot be undone.")) {
+        if (confirm(t("confirm.delete_file"))) {
             this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
                 file.remove();
                 return this.resetPreview();
@@ -484,7 +485,7 @@ export default class DepotField extends TotalField {
                 return this.resetPreview();
             });
         } else {
-            alert("Folder name entered does not match. Deletion cancelled.");
+            alert(t("confirm.delete_folder_name"));
         }
     }
 

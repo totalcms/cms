@@ -27,7 +27,7 @@ class SchemaField extends PropertyField
 	/**
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
+	 * @param array<string,mixed> $settings - JSON settings for the field added to data-settings attribute
 	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
@@ -217,7 +217,7 @@ class SchemaField extends PropertyField
 
 		try {
 			// Check if the form has schemaLister available
-			if (!($this->form instanceof SchemaForm)) {
+			if (!$this->form instanceof SchemaForm) {
 				return [['label' => '', 'value' => '']];
 			}
 

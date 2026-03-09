@@ -1,31 +1,30 @@
 
-<h1>Job Queue Manager</h1>
+<h1>{{ t('jobqueue.title') }}</h1>
 
 <section style="display:grid;align-content:start;gap:1rem">
 
 	{{ cms.form.jobqueueStats() }}
 
-	<p>This will clear the all the pending import jobs for <em><u>every collection</u></em>.
-	This will not delete any items that have already been imported.</p>
+	<p>{{ t('jobqueue.clear_desc')|raw }}</p>
 
 	{{ cms.form.clearqueue({
-		label      : 'Clear Import Queue',
+		label      : t('jobqueue.clear_btn'),
 	}) }}
 
-	<section style="margin-top:3rem;padding-left:0" class="doc-content">
-		<h4 style="">Process Jobs Scheduled Job</h4>
+	<section style="margin-top:3rem;padding-left:0;overflow:hidden" class="doc-content">
+		<h4 style="">{{ t('jobqueue.scheduled_title') }}</h4>
 
-		<p>The following command should be the exact command that you will need to in order to process the job
-		queue in the background.</p>
-		<p><em>If there is no path to the PHP command, you may need to find out what that is
-		from your hosting company. Depending on your server, it may or may not need it.</em></p>
+		<p>{{ t('jobqueue.command_desc') }}</p>
+		<p><em>{{ t('jobqueue.php_path_note') }} {{ t('jobqueue.server_note') }}</em></p>
 
-		<pre class="jobqueue-command"><code id="jobqueue-command-text">{{ cms.processJobQueueCommand() }}</code></pre>
-		<button type="button" class="cms-clip-button dash-button transparent" data-clip="#jobqueue-command-text">Copy Command</button>
+		<pre class="jobqueue-command"><code id="jobqueue-command-text">{{ cms.admin.processJobQueueCommand() }}</code></pre>
+		<button type="button" class="cms-clip-button dash-button transparent" data-clip="#jobqueue-command-text">{{ t('btn.copy_command') }}</button>
 	</section>
 
-	{{ cms.jobQueuePendingInfo() }}
-	{{ cms.jobQueueFailedInfo() }}
+	<div hx-get="{{ cms.api }}/jobqueue/jobs/html" hx-trigger="every 5s" hx-swap="innerHTML">
+		{{ cms.admin.jobQueuePendingInfo() }}
+		{{ cms.admin.jobQueueFailedInfo() }}
+	</div>
 
 </section>
 

@@ -38,7 +38,7 @@ class ObjectForm extends TotalForm
 			$this->duplicateData = $this->filterFileProperties($this->data);
 			$this->isDuplicate   = true;
 			// Blank out ID to allow autogen rules to work (unless keepIdOnDuplicate setting is enabled)
-			$keepId = $this->config?->dashboard['keepIdOnDuplicate'] ?? false;
+			$keepId = $this->config->dashboard['keepIdOnDuplicate'] ?? false;
 			if (!$keepId) {
 				$this->duplicateData['id'] = '';
 			}
@@ -86,16 +86,12 @@ class ObjectForm extends TotalForm
 		}
 
 		// Get the value from the object data if it exists (for editing)
-		if ($this->id !== '' && $this->objectData instanceof ObjectData) {
-			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
-
-			// Set value from object data
-			if (!isset($options['value'])) {
-				$value = $this->objectData->toArray()[$name] ?? null;
-				// Use strict checks to preserve zero values (0, 0.0, '0')
-				if ($value !== '' && $value !== null) {
-					$options['value'] = $value;
-				}
+		// Set value from object data
+		if ($this->id !== '' && $this->objectData instanceof ObjectData && !isset($options['value'])) {
+			$value = $this->objectData->toArray()[$name] ?? null;
+			// Use strict checks to preserve zero values (0, 0.0, '0')
+			if ($value !== '' && $value !== null) {
+				$options['value'] = $value;
 			}
 		}
 
@@ -119,34 +115,29 @@ class ObjectForm extends TotalForm
 	/** @return array<string,mixed> */
 	private function fieldDefaults(string $property): array
 	{
-		// Get the schema and collection settings for a property
-		$schema     = $this->schemaData->properties[$property] ?? [];
-		$collection = $this->collectionData->properties[$property] ?? [];
+		$defaults = $this->metaResolver->resolve($this->collection, $property, $this->id);
 
-		$defaults = array_merge($schema, $collection);
-
-		// Handle deckref for deck fields - move it to settings
+		// Handle deckref for deck fields - move it to settings after resolve
+		// This is a form-specific concern, not part of general resolution
 		if (isset($defaults['deckref'])) {
-			$settings             = $defaults['settings'] ?? [];
-			$settings['deckref']  = $defaults['deckref'];
-			$defaults['settings'] = $settings;
+			$defaults['settings']['deckref'] = $defaults['deckref'];
 			unset($defaults['deckref']);
 		}
+		if (isset($defaults['deckItemLabel'])) {
+			$defaults['settings']['deckItemLabel'] = $defaults['deckItemLabel'];
+			unset($defaults['deckItemLabel']);
+		}
 
-		return TotalForm::filterFieldProperties($defaults);
+		return $defaults;
 	}
 
 	/** @return array<string,mixed> */
 	protected function fieldAttributeSettings(string $property): array
 	{
-		// Get the schema and collection settings for a property
-		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
-		$collection = $this->collectionData->properties[$property]['settings'] ?? [];
-		$custom     = $this->collectionData->customProperties[$this->id][$property]['settings'] ?? [];
+		// Get the schema settings for a property
+		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
 
-		$attributes = array_merge($schema, $collection, $custom);
-
-		return self::filterFieldAttributes($attributes);
+		return self::filterFieldAttributes($schema);
 	}
 
 	private function isRequired(string $property): bool
@@ -156,23 +147,6 @@ class ObjectForm extends TotalForm
 		}
 
 		return in_array($property, $this->schemaData->required);
-	}
-
-	/**
-	 * Get the properties for a object from customProperties in the collection meta data.
-	 *
-	 * @return array<string,mixed>
-	 * */
-	private function objectFieldProperties(string $property): array
-	{
-		if ($this->id === '') {
-			return [];
-		}
-
-		// Get the schema and collection settings for a property
-		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
-
-		return TotalForm::filterFieldProperties($properties);
 	}
 
 	private function initCollectionData(): void

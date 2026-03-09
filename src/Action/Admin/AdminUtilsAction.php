@@ -9,6 +9,9 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Import\RssImporter;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -26,6 +29,8 @@ readonly class AdminUtilsAction
 		private CollectionRepository $collectionRepository,
 		private CollectionFetcher $collectionFetcher,
 		private SchemaLister $schemaLister,
+		private RssImporter $rssImporter,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -68,7 +73,7 @@ readonly class AdminUtilsAction
 
 		// Detect Total CMS 1 data for project-setup page
 		$totalcms1DetectionData = null;
-		if ($page === 'project-setup') {
+		if ($page === 'project-setup' || $page === 'import-totalcms-one') {
 			$totalcms1DetectionData = $this->detectTotalCms1Data();
 
 			// Create default collections when requested
@@ -87,6 +92,37 @@ readonly class AdminUtilsAction
 		$accessGroupsData = null;
 		if ($page === 'access-groups') {
 			$accessGroupsData = $this->createAccessGroupData($action);
+		}
+
+		// Check edition for import pages (RSS, WordPress)
+		if (in_array($page, ['import-rss', 'import-wordpress'], true) && !$this->editionFeatures->can(EditionFeature::RSS_IMPORT)) {
+			$feature         = EditionFeature::RSS_IMPORT;
+			$requiredEdition = $feature->requiredEdition();
+
+			return $this->twigRenderer->template($response, 'access-denied.twig', [
+				'message'  => sprintf(
+					'The "%s" feature requires the %s edition or higher.',
+					$feature->label(),
+					ucfirst($requiredEdition->value)
+				),
+				'details'  => null,
+				'referrer' => $request->getHeaderLine('Referer') ?: null,
+			]);
+		}
+
+		// Analyze RSS feed for import-rss page
+		$rssAnalysis = null;
+		$rssError    = null;
+		if ($page === 'import-rss' && $request->getMethod() === 'POST') {
+			$post    = (array)$request->getParsedBody();
+			$feedUrl = isset($post['url']) ? trim((string)$post['url']) : '';
+			if ($feedUrl !== '') {
+				try {
+					$rssAnalysis = $this->rssImporter->analyze($feedUrl);
+				} catch (\Throwable $e) {
+					$rssError = $e->getMessage();
+				}
+			}
 		}
 
 		// Handle twig-debugger page
@@ -122,6 +158,9 @@ readonly class AdminUtilsAction
 			'apiKeys'                => $apiKeys,
 			'accessGroupsData'       => $accessGroupsData,
 			'lintResults'            => $lintResults,
+			'rssAnalysis'            => $rssAnalysis,
+			'rssError'               => $rssError,
+			'rssCollections'         => $rssAnalysis !== null ? $this->collectionRepository->listAllCollections() : null,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}

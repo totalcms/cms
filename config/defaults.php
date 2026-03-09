@@ -32,12 +32,13 @@ $settings['sentry'] = true;
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain']   = $_SERVER['HTTP_HOST'] ?? 'unknown';
+$settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unknown';
 $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
 					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
-$settings['url']      = ($settings['is_https'] ? 'https://' : 'http://') . $settings['domain'];
-$settings['notfound'] = '/404';
+$settings['url']             = ($settings['is_https'] ? 'https://' : 'http://') . $settings['domain'];
+$settings['notfound']        = '/404';
+$settings['maxDownloadSize'] = 2048;
 
 // Path settings
 $settings['root']     = dirname(__DIR__);
@@ -106,7 +107,7 @@ $settings['logger'] = [
 	'name'        => 'totalcms',
 	'path'        => __DIR__ . '/../logs',
 	'filename'    => 'totalcms.log',
-	'level'       => Monolog\Level::Debug,
+	'level'       => Monolog\Level::Info,
 	'maxFiles'    => 10,
 	'permissions' => 0775,
 ];
@@ -138,12 +139,20 @@ $settings['session'] = [
 
 // SMTP settings
 $settings['smtp'] = [
-	'host'     => '127.0.0.1',
-	'port'     => '25',
-	'secure'   => 'TLS',
-	'from'     => '',
-	'fromName' => '',
-	'to'       => '',
+	'host'      => '127.0.0.1',
+	'port'      => '25',
+	'secure'    => 'TLS',
+	'from'      => '',
+	'fromName'  => '',
+	'to'        => '',
+	'sendDelay' => 0,
+];
+
+// Push notification settings
+$settings['pushnotif'] = [
+	'pushoverAppToken'  => '',
+	'pushoverUserKey'   => '',
+	'pushoverGroupKey'  => '',
 ];
 
 // Mailer settings (email sending system)
@@ -159,6 +168,7 @@ $settings['mailer'] = [
 ];
 
 $settings['imageworks'] = [
+	'gatherLocation'      => true,
 	'watermarksGallery'   => 'watermarks',
 	'watermarkFontsDepot' => 'watermark-fonts',
 	'defaults'            => [
@@ -189,6 +199,7 @@ $settings['imageworks'] = [
 
 $settings['auth'] = [
 	'enable'                  => true,
+	'usePasskeys'             => true,
 	'collection'              => 'auth',
 	'maxAttempts'             => 10,
 	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads
@@ -231,6 +242,10 @@ $settings['htmlclean'] = [
 	],
 	// 'allowed_tags' => ['p', 'strong', 'em'],
 	// 'allowed_iframe_domains' => ['www.youtube.com']
+];
+
+$settings['presets'] = [
+	'definitions' => '',
 ];
 
 $settings['dashboard'] = [

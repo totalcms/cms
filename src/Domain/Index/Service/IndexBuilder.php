@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Index\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -25,6 +26,7 @@ readonly class IndexBuilder
 		private ObjectFetcher $objectFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionSaver $collectionSaver,
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -39,57 +41,67 @@ readonly class IndexBuilder
 			'collection' => $collection,
 		]);
 
-		$objectIds = $this->storage->fetchObjectIds($collection);
+		// Bypass cache to ensure we get the current filesystem state.
+		// Cached IDs may include deleted objects or miss newly added ones.
+		$objectIds  = $this->storage->fetchObjectIdsFromDisk($collection);
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$indexProps = $schema->index;
 
 		$this->logger->info('Index build object count', [
 			'collection'    => $collection,
 			'object_count'  => count($objectIds),
 			'threshold'     => self::STREAMING_THRESHOLD,
 			'use_streaming' => count($objectIds) > self::STREAMING_THRESHOLD,
+			'id_only'       => $this->isIdOnlyIndex($indexProps),
 		]);
 
-		// Use streaming for large collections to minimize memory usage
-		if (count($objectIds) > self::STREAMING_THRESHOLD) {
-			return $this->buildIndexStreaming($collection, $objectIds);
+		// If the index only contains the id property, we can skip reading
+		// every JSON file since the ID is derived from the filename.
+		if ($this->isIdOnlyIndex($indexProps)) {
+			$index = $this->buildIndexFromIds($collection, $objectIds);
+		} elseif (count($objectIds) > self::STREAMING_THRESHOLD) {
+			// Use streaming for large collections to minimize memory usage
+			$index = $this->buildIndexStreaming($collection, $objectIds, $indexProps);
+		} else {
+			$index = $this->buildIndexStandard($collection, $objectIds, $indexProps);
 		}
 
-		return $this->buildIndexStandard($collection, $objectIds);
+		// Reset totalObjects to match the authoritative count from disk
+		$this->collectionSaver->patchCollection($collection, ['totalObjects' => count($objectIds)]);
+
+		return $index;
 	}
 
 	/**
 	 * Standard index building for small collections.
 	 *
 	 * @param array<string> $objectIds
+	 * @param array<string> $indexProps
 	 */
-	private function buildIndexStandard(string $collection, array $objectIds): IndexData
+	private function buildIndexStandard(string $collection, array $objectIds, array $indexProps): IndexData
 	{
 		$index = new IndexData();
 
-		if (count($objectIds) > 0) {
-			$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-			$indexProps = $schema->index;
-
-			foreach ($objectIds as $id) {
-				try {
-					// Bypass cache to ensure fresh data from filesystem
-					$object  = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
-					// The reject method is used to filter out properties that are not in the index
-					// The map method is used to transform the properties into an array
-					$summary = $object->properties
-						->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
-						->map(fn ($property): mixed => $property->transform());
-					$summary->put('id', $id);
-					$index->objects->push($summary->toArray());
-				} catch (\Throwable $e) {
-					// Skip objects that fail to load (e.g., type mismatches after schema changes)
-					// Log the error but continue building index with remaining valid objects
-					$this->logger->warning('Skipping object during index build due to error', [
-						'collection' => $collection,
-						'object_id'  => $id,
-						'error'      => $e->getMessage(),
-						'exception'  => $e::class,
-					]);
-				}
+		foreach ($objectIds as $id) {
+			try {
+				// Bypass cache to ensure fresh data from filesystem
+				$object  = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
+				// The reject method is used to filter out properties that are not in the index
+				// The map method is used to transform the properties into an array
+				$summary = $object->properties
+					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
+					->map(fn ($property): mixed => $property->transform());
+				$summary->put('id', $id);
+				$index->objects->push($summary->toArray());
+			} catch (\Throwable $e) {
+				// Skip objects that fail to load (e.g., type mismatches after schema changes)
+				// Log the error but continue building index with remaining valid objects
+				$this->logger->warning('Skipping object during index build due to error', [
+					'collection' => $collection,
+					'object_id'  => $id,
+					'error'      => $e->getMessage(),
+					'exception'  => $e::class,
+				]);
 			}
 		}
 
@@ -103,16 +115,14 @@ readonly class IndexBuilder
 	 * Writes index entries directly to file instead of accumulating in memory.
 	 *
 	 * @param array<string> $objectIds
+	 * @param array<string> $indexProps
 	 */
-	private function buildIndexStreaming(string $collection, array $objectIds): IndexData
+	private function buildIndexStreaming(string $collection, array $objectIds, array $indexProps): IndexData
 	{
 		$this->logger->info('Building index using streaming mode', [
 			'collection'   => $collection,
 			'object_count' => count($objectIds),
 		]);
-
-		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$indexProps = $schema->index;
 
 		// Open streaming writer
 		$handle  = $this->storage->openIndexStream($collection);
@@ -166,6 +176,40 @@ readonly class IndexBuilder
 	}
 
 	/**
+	 * Check if the index only contains the id property.
+	 *
+	 * @param array<string> $indexProps
+	 */
+	private function isIdOnlyIndex(array $indexProps): bool
+	{
+		return $indexProps === ['id'] || $indexProps === [];
+	}
+
+	/**
+	 * Build an index using only object IDs from filenames.
+	 * Skips reading/parsing JSON files since only the id property is needed.
+	 *
+	 * @param array<string> $objectIds
+	 */
+	private function buildIndexFromIds(string $collection, array $objectIds): IndexData
+	{
+		$this->logger->info('Building id-only index from filenames', [
+			'collection'   => $collection,
+			'object_count' => count($objectIds),
+		]);
+
+		$index = new IndexData();
+
+		foreach ($objectIds as $id) {
+			$index->objects->push(['id' => $id]);
+		}
+
+		$this->storage->saveIndex($collection, $index);
+
+		return $index;
+	}
+
+	/**
 	 * Append a new object to the existing index for immediate visibility.
 	 * This is more efficient than rebuilding the entire index.
 	 */
@@ -199,7 +243,6 @@ readonly class IndexBuilder
 		$this->storage->saveIndex($collection, $index);
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function smartBuildIndex(string $collection, ?ObjectData $newObject = null): void
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);

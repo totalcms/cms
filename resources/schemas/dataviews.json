@@ -1,0 +1,86 @@
+{
+ "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+ "$id"         : "https://www.totalcms.co/schemas/dataviews.json",
+ "id"          : "dataviews",
+ "type"        : "object",
+ "description" : "A schema for a Total CMS Data View",
+ "formgrid"    : "id .\nname name\ndescription description\ndependencies dependencies\ndefinition definition\nlastBuilt .",
+ "properties"  : {
+        "id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "View ID",
+			"field"    : "id",
+			"factory"  : "uid",
+			"settings" : {
+				"autogen" : "${name}"
+			}
+        },
+        "name": {
+			"type"    : "string",
+			"label"   : "Name",
+			"field"   : "text"
+        },
+		"description": {
+			"type"     : "string",
+			"label"    : "Description",
+			"field"    : "textarea",
+			"settings" : {
+				"rows" : 3
+			}
+		},
+		"dependencies": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Dependencies",
+			"help"     : "Collections this view depends on. The view will rebuild when these change.",
+			"field"    : "list",
+			"settings" : {
+				"propertyOptions" : "collectionIds"
+			}
+		},
+        "definition": {
+			"type"     : "string",
+			"label"    : "Twig Definition",
+			"help"     : "Populate a <code>data</code> variable with the result you want stored.",
+			"field"    : "code",
+			"settings" : {
+				"mode"         : "twig",
+				"theme"        : "elegant",
+				"rows"         : 20,
+				"maxHeight"    : 600,
+				"lineNumbers"  : true,
+				"lineWrapping" : true,
+				"indentUnit"   : 2,
+				"tabSize"      : 2,
+				"foldGutter"   : true,
+				"matchBrackets": true,
+				"autoCloseTags": true
+			}
+        },
+		"lastBuilt": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Last Built",
+			"field"    : "datetime",
+			"settings" : {
+				"readonly" : true
+			}
+		},
+		"lastError": {
+			"type"     : "string",
+			"label"    : "Last Error",
+			"field"    : "text",
+			"settings" : {
+				"hide" : true
+			}
+		}
+    },
+    "required": [
+        "id",
+        "name",
+        "definition"
+    ],
+    "index": [
+        "id",
+        "name",
+        "dependencies"
+    ]
+}

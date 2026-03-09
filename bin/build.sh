@@ -40,7 +40,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # remove imagine libs that are not required and take up too much space
-find vendor -not -name '*php' -not -name '*pem' -type f -delete
+find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -not -name '*.xsl' -type f -delete
 find vendor -name "*phpstorm*" -delete
 find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
@@ -76,31 +76,47 @@ find vendor -name "UPGRADE*" -delete
 find vendor -name "HISTORY*" -delete
 find vendor -name "NEWS*" -delete
 find vendor -name "composer.lock" -delete
+find vendor -name "composer.json" -delete
 find vendor -name ".gitignore" -delete
 find vendor -name ".gitattributes" -delete
 find vendor -name ".editorconfig" -delete
 find vendor -empty -type d -delete 2>/dev/null
 
-# Trim symfony/intl locale data to supported languages only (~1300 -> ~120 files)
+# Trim symfony/intl locale data to supported locales only
+# Only keep exact base locales and specific sub-locales from settings/general.json
 echo "Trimming symfony/intl to supported locales..."
 INTL_DATA="vendor/symfony/intl/Resources/data"
 if [ -d "$INTL_DATA" ]; then
-    # Locales to keep (matching settings/general.json locale options)
-    # ar=Arabic, cs=Czech, da=Danish, de=German, en=English, es=Spanish,
-    # fr=French, hu=Hungarian, it=Italian, ja=Japanese, km=Khmer, nl=Dutch, no=Norwegian,
-    # pl=Polish, pt=Portuguese, ru=Russian, tr=Turkish, uk=Ukrainian, vi=Vietnamese, zh=Chinese
-    KEEP_PATTERN="^(ar|cs|da|de|en|es|fr|hu|it|ja|km|nl|no|pl|pt|ru|tr|uk|vi|zh|meta)"
+    # Base locales + exact sub-locales from settings/general.json + meta files
+    INTL_KEEP="^(ar|cs|da|de|en|es|fr|hu|it|ja|km|nl|no|pl|pt|ru|tr|uk|vi|zh|meta|en_US|en_GB|en_CA|en_AU|en_SG|ar_SA|cs_CZ|da_DK|de_DE|es_ES|es_MX|fr_FR|fr_CA|hu_HU|it_IT|ja_JP|km_KH|nl_NL|no_NO|pl_PL|pt_BR|pt_PT|ru_RU|tr_TR|uk_UA|vi_VN|zh_CN)\."
     for subdir in currencies languages locales regions scripts timezones; do
         if [ -d "$INTL_DATA/$subdir" ]; then
             for file in "$INTL_DATA/$subdir"/*.php; do
                 filename=$(basename "$file")
-                if ! echo "$filename" | grep -qE "$KEEP_PATTERN"; then
+                if ! echo "$filename" | grep -qE "$INTL_KEEP"; then
                     rm -f "$file"
                 fi
             done
         fi
     done
 fi
+
+# Trim fakerphp/faker to supported locales only
+echo "Trimming Faker to supported locales..."
+FAKER_PROVIDERS="vendor/fakerphp/faker/src/Faker/Provider"
+if [ -d "$FAKER_PROVIDERS" ]; then
+    FAKER_KEEP="en_US|en_GB|en_CA|en_AU|en_SG|ar_SA|cs_CZ|da_DK|de_DE|es_ES|es_MX|fr_FR|fr_CA|hu_HU|it_IT|ja_JP|km_KH|nl_NL|no_NO|nb_NO|pl_PL|pt_BR|pt_PT|ru_RU|tr_TR|uk_UA|vi_VN|zh_CN"
+    for dir in "$FAKER_PROVIDERS"/*/; do
+        dirname=$(basename "$dir")
+        if ! echo "$dirname" | grep -qE "^($FAKER_KEEP)$"; then
+            rm -rf "$dir"
+        fi
+    done
+fi
+
+# Remove unused vendor packages
+echo "Removing unused vendor packages..."
+rm -rf vendor/ssnepenthe/color-utils
 
 # generate documentation search index
 echo "Building documentation search index..."

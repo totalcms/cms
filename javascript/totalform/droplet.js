@@ -8,7 +8,7 @@ globalThis.Dropzone = Dropzone;
 //-----------------------------------------------
 export default class Droplet {
 
-    constructor(field, options = {}) {
+    constructor(field, settings = {}) {
 		this.field     = field;
 		this.container = this.field.container;
 
@@ -27,12 +27,12 @@ export default class Droplet {
 			singleMode        : true,
 			chunking          : false,
         };
-		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
-        this.options = Object.assign({}, defaults, options, dataOptions);
+		const dataSettings = this.container.dataset.settings ? JSON.parse(this.container.dataset.settings) : {};
+        this.settings = Object.assign({}, defaults, settings, dataSettings);
 
         // Get the rule set for uploading the file
-        if (this.options.rules && Object.keys(this.options.rules).length > 0) {
-            this.testSet = new DropletTestSet(this.options.rules);
+        if (this.settings.rules && Object.keys(this.settings.rules).length > 0) {
+            this.testSet = new DropletTestSet(this.settings.rules);
         }
 
         this.setupDropzone();
@@ -54,21 +54,21 @@ export default class Droplet {
         const disableFunction = function(){};
 
         return new Dropzone(this.container, {
-			url               : this.options.apiUrl,
+			url               : this.settings.apiUrl,
 			method            : "post",
-			headers           : this.options.requestHeaders,
+			headers           : this.settings.requestHeaders,
 			parallelUploads   : 3,
-			paramName         : this.options.paramName,
-			autoProcessQueue  : this.options.autoProcessQueue,
+			paramName         : this.settings.paramName,
+			autoProcessQueue  : this.settings.autoProcessQueue,
 			thumbnailWidth    : null,
 			thumbnailHeight   : null,
-			previewsContainer : this.options.previewsContainer,
+			previewsContainer : this.settings.previewsContainer,
 			previewTemplate   : this.previewTemplate,
 			clickable         : Array.from(this.container.getElementsByClassName("dz-clickable")),
 			forceFallback     : false,
 			addedfile         : disableFunction,
-			acceptedFiles     : this.options.acceptedFiles,
-			chunking          : this.options.chunking,
+			acceptedFiles     : this.settings.acceptedFiles,
+			chunking          : this.settings.chunking,
             chunkSize         : 5 * 1024 * 1024, // 5MB
 			accept            : (file, done) => this.accept(file, done),
             maxFilesize       : null, // disabled in favor of test sets
@@ -168,7 +168,7 @@ export default class Droplet {
         file.previewElement  = Dropzone.createElement(this.dropzone.options.previewTemplate.trim());
         file.previewTemplate = file.previewElement;
 
-        if (this.options.singleMode) {
+        if (this.settings.singleMode) {
 			// Remove preview for image
 			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());
         }

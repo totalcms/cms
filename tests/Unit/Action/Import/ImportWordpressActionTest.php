@@ -5,27 +5,69 @@ namespace Tests\Unit\Action\Import;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Slim\Exception\HttpInternalServerErrorException;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use TotalCMS\Action\Import\ImportWordpressAction;
+use TotalCMS\Domain\Import\WordpressImporter;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class ImportWordpressActionTest extends TestCase
 {
-	private ImportWordpressAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
-
-	protected function setUp(): void
+	public function testReturnsBadRequestWhenNoFileUploaded(): void
 	{
-		$this->action   = new ImportWordpressAction();
-		$this->request  = $this->createMock(ServerRequestInterface::class);
-		$this->response = $this->createMock(ResponseInterface::class);
+		$importer = $this->createMock(WordpressImporter::class);
+		$renderer = $this->createMock(JsonRenderer::class);
+
+		$request  = $this->createMock(ServerRequestInterface::class);
+		$response = $this->createMock(ResponseInterface::class);
+
+		$request->method('getUploadedFiles')->willReturn([]);
+
+		$renderer->expects($this->once())
+			->method('json')
+			->with(
+				$response,
+				$this->callback(fn (array $data): bool => $data['success'] === false && str_contains((string)$data['message'], 'Missing')),
+				400,
+			)
+			->willReturn($response);
+
+		$action = new ImportWordpressAction($importer, $renderer);
+		$result = $action($request, $response);
+
+		$this->assertSame($response, $result);
 	}
 
-	public function testThrowsNotImplementedException(): void
+	public function testReturnsBadRequestWhenCollectionMissing(): void
 	{
-		$this->expectException(HttpInternalServerErrorException::class);
-		$this->expectExceptionMessage('Not implemented');
+		$importer = $this->createMock(WordpressImporter::class);
+		$renderer = $this->createMock(JsonRenderer::class);
 
-		($this->action)($this->request, $this->response);
+		$request  = $this->createMock(ServerRequestInterface::class);
+		$response = $this->createMock(ResponseInterface::class);
+
+		$uploadedFile = $this->createMock(UploadedFileInterface::class);
+		$uploadedFile->method('getError')->willReturn(UPLOAD_ERR_OK);
+
+		$stream = $this->createMock(StreamInterface::class);
+		$stream->method('__toString')->willReturn('<rss></rss>');
+		$uploadedFile->method('getStream')->willReturn($stream);
+
+		$request->method('getUploadedFiles')->willReturn(['wordpress' => $uploadedFile]);
+		$request->method('getParsedBody')->willReturn([]);
+
+		$renderer->expects($this->once())
+			->method('json')
+			->with(
+				$response,
+				$this->callback(fn (array $data): bool => $data['success'] === false && str_contains((string)$data['message'], 'collection')),
+				400,
+			)
+			->willReturn($response);
+
+		$action = new ImportWordpressAction($importer, $renderer);
+		$result = $action($request, $response);
+
+		$this->assertSame($response, $result);
 	}
 }

@@ -2,48 +2,56 @@
 
 {% set sections = {
 	'installation': {
-		'label': 'Installation',
-		'description': 'Bootstrap and installation configuration'
+		'label': t('settings.installation'),
+		'description': t('settings.installation_desc')
 	},
 	'general': {
-		'label': 'General',
-		'description': 'Core application settings'
+		'label': t('settings.general'),
+		'description': t('settings.general_desc')
 	},
 	'auth': {
-		'label': 'Authentication',
-		'description': 'User authentication settings'
+		'label': t('settings.authentication'),
+		'description': t('settings.authentication_desc')
 	},
 	'cache': {
-		'label': 'Cache',
-		'description': 'Cache backend configuration'
+		'label': t('settings.cache'),
+		'description': t('settings.cache_desc')
 	},
 	'dashboard': {
-		'label': 'Dashboard',
-		'description': 'Admin dashboard configuration'
+		'label': t('settings.dashboard'),
+		'description': t('settings.dashboard_desc')
 	},
 	'htmlclean': {
-		'label': 'HTML Sanitization',
-		'description': 'HTML cleaning and sanitization'
+		'label': t('settings.html_sanitization'),
+		'description': t('settings.html_sanitization_desc')
 	},
 	'imageworks': {
-		'label': 'ImageWorks',
-		'description': 'Image processing and watermarks'
+		'label': t('settings.imageworks'),
+		'description': t('settings.imageworks_desc')
 	},
 	'mailer': {
-		'label': 'Mailer',
-		'description': 'Email sending and rate limiting'
+		'label': t('settings.mailer'),
+		'description': t('settings.mailer_desc')
+	},
+	'pushnotif': {
+		'label': t('settings.pushnotif'),
+		'description': t('settings.pushnotif_desc')
+	},
+	'presets': {
+		'label': t('settings.presets'),
+		'description': t('settings.presets_desc')
 	},
 	'smtp': {
-		'label': 'SMTP',
-		'description': 'Email server configuration'
+		'label': t('settings.smtp'),
+		'description': t('settings.smtp_desc')
 	},
 } %}
 
 {% if cms.license.canSimulateEdition() %}
 	{% set sections = sections|merge({
 		'license': {
-			'label': 'License Simulator',
-			'description': 'License and edition simulation settings during trial period'
+			'label': t('settings.license_simulator'),
+			'description': t('settings.license_simulator_desc')
 		}
 	}) %}
 {% endif %}
@@ -52,7 +60,7 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Settings" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('settings.filter') }}" autofocus />
 	</header>
 
 	<nav class="links" id="settings-links">
@@ -78,11 +86,18 @@
 		<p>{{ sections[currentSection].description }}</p>
 		{% endif %}
 
+		{% if currentSection == 'presets' %}
+		<div class="cms-info">
+			<p><strong>Named presets</strong> &mdash; Reference a preset by name in a schema property's settings with <code>"preset": "my-preset-name"</code>. The preset's settings become the base, and any additional field settings override them.</p>
+			<p><strong>Type defaults</strong> &mdash; Name a preset after a field type (e.g., <code>styledtext</code>, <code>image</code>) and it will automatically apply to every field of that type that has no settings defined at the schema, collection, or object level.</p>
+		</div>
+		{% endif %}
+
 		{{ cms.form.settings(currentSection) }}
 
 		{% if currentSection == 'smtp' %}
 		<section class="dash-content-section" style="margin-top: 40px;">
-			<h2>Test SMTP Configuration</h2>
+			<h2>{{ t('settings.smtp_test_title') }}</h2>
 
 			{% if testResult is defined %}
 				{% if testResult.success %}
@@ -91,17 +106,46 @@
 					<p class="cms-error" role="alert">{{ testResult.message }}</p>
 				{% endif %}
 			{% else %}
-				<p>Send a test email to verify your SMTP settings are working correctly.</p>
+				<p>{{ t('settings.smtp_test_desc') }}</p>
 
 				{{ cms.form.simple('settings/smtp?test=1', '
 					<div class="field-wrapper field-email">
-						<label for="test_email">Test Email Address</label>
-						<input type="email" id="test_email" name="test_email" placeholder="your@email.com" required />
-						<div class="help">Enter the email address where you want to receive the test email.</div>
+						<label for="test_email">' ~ t('settings.smtp_test_email') ~ '</label>
+						<input type="email" id="test_email" name="test_email" placeholder="'~ t('settings.smtp_test_ph') ~'" required />
+						<div class="help">'~ t('settings.smtp_test_help') ~'</div>
 					</div>
 				', {
 					'method': 'POST',
-					'label': 'Send Test Email',
+					'label': t('settings.smtp_test_btn'),
+					'buttonClass': 'cms-secondary',
+					'ajax': false
+				}) }}
+			{% endif %}
+		</section>
+		{% endif %}
+
+		{% if currentSection == 'pushnotif' %}
+		<section class="dash-content-section" style="margin-top: 40px;">
+			<h2>{{ t('settings.pushnotif_test_title') }}</h2>
+
+			{% if testResult is defined %}
+				{% if testResult.success %}
+					<p class="cms-success" role="alert">{{ testResult.message }}</p>
+				{% else %}
+					<p class="cms-error" role="alert">{{ testResult.message }}</p>
+				{% endif %}
+			{% else %}
+				<p>{{ t('settings.pushnotif_test_desc') }}</p>
+
+				{{ cms.form.simple('settings/pushnotif?test=1', '
+					<div class="field-wrapper field-text">
+						<label for="test_message">' ~ t('settings.pushnotif_test_message') ~ '</label>
+						<input type="text" id="test_message" name="test_message" placeholder="'~ t('settings.pushnotif_test_ph') ~'" />
+						<div class="help">'~ t('settings.pushnotif_test_help') ~'</div>
+					</div>
+				', {
+					'method': 'POST',
+					'label': t('settings.pushnotif_test_btn'),
 					'buttonClass': 'cms-secondary',
 					'ajax': false
 				}) }}

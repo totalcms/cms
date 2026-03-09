@@ -333,6 +333,53 @@ HTML;
 	}
 
 	/**
+	 * Ensure all given field names are included in the grid layout.
+	 * Any missing fields are appended as full-width rows spanning all columns.
+	 *
+	 * @param array<string> $fieldNames
+	 */
+	public function ensureFieldsIncluded(array $fieldNames): void
+	{
+		$existingFields = $this->getFieldNames();
+		$columnCount    = max(1, $this->getColumnCount());
+
+		foreach ($fieldNames as $name) {
+			if (!$this->isValidGridAreaName($name) || $name === '.' || in_array($name, $existingFields, true)) {
+				continue;
+			}
+
+			// Add as a full-width row by repeating the name across all columns
+			$this->lines[] = implode(' ', array_fill(0, $columnCount, $name));
+		}
+	}
+
+	/**
+	 * Get all unique field names referenced in the grid layout.
+	 *
+	 * @return array<string>
+	 */
+	private function getFieldNames(): array
+	{
+		$fields = [];
+
+		foreach ($this->lines as $line) {
+			// Skip dividers and headers
+			if (self::DIVIDER === $line || preg_match(self::HEADER_REGEX, $line)) {
+				continue;
+			}
+
+			$columns = preg_split('/\s+/', $line) ?: [];
+			foreach ($columns as $area) {
+				if ($area !== '.' && $this->isValidGridAreaName($area)) {
+					$fields[$area] = true;
+				}
+			}
+		}
+
+		return array_keys($fields);
+	}
+
+	/**
 	 * Validate CSS grid area names according to CSS identifier rules.
 	 */
 	private function isValidGridAreaName(string $name): bool

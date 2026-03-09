@@ -1,18 +1,18 @@
 {# Edit Object Form #}
-{% set canSave = cms.canAccessCollection(url.collection, url.id ? 'update' : 'create') %}
-{% set canDelete = cms.canAccessCollection(url.collection, 'delete') %}
+{% set canSave = cms.auth.canAccessCollection(url.collection, url.id ? 'update' : 'create') %}
+{% set canDelete = cms.auth.canAccessCollection(url.collection, 'delete') %}
 
 {# URL Template Warning for Empty Segments (only for existing objects with template URLs) #}
-{% if url.id and cms.hasTemplateUrl(url.collection) %}
-	{% if cms.objectUrlHasEmptySegments(url.collection, url.id) %}
-		{% set urlFields = cms.getUrlTemplateFields(url.collection) %}
+{% if url.id and cms.collection.hasTemplateUrl(url.collection) %}
+	{% if cms.collection.objectUrlHasEmptySegments(url.collection, url.id) %}
+		{% set urlFields = cms.collection.urlTemplateFields(url.collection) %}
 		<div class="warning-box url-empty-warning">
 			<div>
 				<strong>URL Warning:</strong>
 				This object's URL has empty segments because some template fields are missing values.
 				The URL template uses these fields: <strong>{{ urlFields | join(', ') }}</strong>.
 				Consider making these fields required in the schema, or ensure they have values.
-				<br><small>Preview: <code>{{ cms.objectUrl(url.collection, url.id) }}</code></small>
+				<br><small>Preview: <code>{{ cms.collection.objectUrl(url.collection, url.id) }}</code></small>
 			</div>
 		</div>
 	{% endif %}

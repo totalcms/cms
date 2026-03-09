@@ -1,5 +1,6 @@
 import Dialog from "./dialog";
 import Details from "./details";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS File Droplet
@@ -99,7 +100,7 @@ export default class FilePreview {
 		if (deleteButton) {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
-				if (confirm("Are you sure that you want to delete this file?")) {
+				if (confirm(t("confirm.delete_file"))) {
 					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 						// Clear values before removing the container
@@ -107,7 +108,7 @@ export default class FilePreview {
 						this.container.remove();
 					}).catch(error => {
 						console.error("Failed to delete file", error);
-						alert("Failed to delete file. A network or timeout error occurred. Please try again.");
+						alert(t("error.delete_file"));
 					});
 				}
 			});

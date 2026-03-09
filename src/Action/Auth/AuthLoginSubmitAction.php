@@ -11,6 +11,7 @@ use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
 /**
@@ -26,6 +27,7 @@ readonly class AuthLoginSubmitAction
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
 		private LicenseValidator $licenseValidator,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -47,12 +49,12 @@ readonly class AuthLoginSubmitAction
 		$maxAttempts = $this->config->auth['maxAttempts'] ?? self::MAX_LOGIN_ATTEMPTS;
 
 		if ($attempts > $maxAttempts) {
-			$flash->add('error', 'Too many login attempts');
+			$flash->add('error', $this->translator->trans('flash.login_too_many_attempts'));
 		}
 
 		if (!isset($data['email'], $data['password'])) {
 			// throw new HttpUnauthorizedException($request, 'Email and password are required');
-			$flash->add('error', 'Email and password are required');
+			$flash->add('error', $this->translator->trans('flash.login_credentials_required'));
 		}
 
 		$router = RouteContext::fromRequest($request)->getRouteParser();
@@ -131,7 +133,7 @@ readonly class AuthLoginSubmitAction
 			$this->persistentLoginService->createPersistentToken();
 		}
 
-		$flash->add('success', 'Login successful');
+		$flash->add('success', $this->translator->trans('flash.login_success'));
 
 		return $response->withStatus(302)->withHeader('Location', $url);
 	}

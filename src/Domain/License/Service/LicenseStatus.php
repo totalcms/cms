@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\License\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Factory\LoggerFactory;
@@ -176,11 +177,13 @@ readonly class LicenseStatus
 
 	/**
 	 * Check if edition simulation is allowed.
-	 * Only development and trial licenses can simulate editions.
+	 * Pro and above editions (Pro, Enterprise, Development, Trial) can simulate.
 	 */
 	public function canSimulateEdition(): bool
 	{
-		return $this->isTrial() || $this->isDevelopment();
+		$edition = Edition::fromString($this->getEdition());
+
+		return $edition->level() >= Edition::PRO->level();
 	}
 
 	/**

@@ -170,7 +170,11 @@ class HTMLUtils
 		return self::button('', $attributes);
 	}
 
-	/** @param array<string,mixed> $attributes */
+	/**
+	 * Build a single option element with optional selected state.
+	 *
+	 * @param array<string,mixed> $attributes
+	 */
 	public static function option(string $label, string $eval = '', array $attributes = []): string
 	{
 		$attributes = array_merge([
@@ -182,6 +186,113 @@ class HTMLUtils
 		}
 
 		return self::element('option', $label, $attributes);
+	}
+
+	/**
+	 * Build option elements from an array.
+	 *
+	 * Supports all option formats:
+	 * - Simple strings: ["Option 1", "Option 2"]
+	 * - Value/label pairs: [{"value": "1", "label": "Option 1"}]
+	 * - Grouped options (optgroups): {"Group 1": ["Option 1", "Option 2"]}
+	 * - Grouped value/label: {"Group 1": [{"value": "1", "label": "Option 1"}]}
+	 *
+	 * Selected can be a single string or an array of strings (for multiselect).
+	 *
+	 * @param array<mixed> $options
+	 * @param string|array<string> $selected
+	 */
+	public static function options(array $options, string|array $selected = ''): string
+	{
+		$selectedValues = is_array($selected) ? $selected : ($selected !== '' ? [$selected] : []);
+
+		$html = '';
+		foreach ($options as $key => $option) {
+			// String key with array value = optgroup
+			if (is_string($key) && is_array($option)) {
+				$html .= self::optgroup($key, $option, $selectedValues);
+				continue;
+			}
+
+			$html .= self::buildOptionElement($option, $selectedValues);
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Build an optgroup element with its child options.
+	 *
+	 * @param array<mixed> $options
+	 * @param array<string> $selectedValues
+	 */
+	public static function optgroup(string $label, array $options, array $selectedValues = []): string
+	{
+		$optionHtml = '';
+		foreach ($options as $option) {
+			$optionHtml .= self::buildOptionElement($option, $selectedValues);
+		}
+
+		return self::element('optgroup', $optionHtml, ['label' => $label]);
+	}
+
+	/**
+	 * Build a single <option> element from a string or value/label array.
+	 *
+	 * @param string|array<string,string> $option
+	 * @param array<string> $selectedValues
+	 */
+	private static function buildOptionElement(string|array $option, array $selectedValues): string
+	{
+		if (is_array($option)) {
+			$value = $option['value'] ?? '';
+			$label = $option['label'] ?? $value;
+		} else {
+			$value = $option;
+			$label = $option;
+		}
+
+		$attrs = ['value' => $value];
+		if ($selectedValues !== [] && in_array($value, $selectedValues, true)) {
+			$attrs['selected'] = '';
+		}
+
+		return self::element('option', htmlspecialchars($label, ENT_QUOTES, 'UTF-8'), $attrs);
+	}
+
+	/**
+	 * Build a complete select element with optional placeholder.
+	 *
+	 * @param array<mixed> $options
+	 * @param string|array<string> $selected
+	 * @param array<string,mixed> $attributes
+	 */
+	public static function select(array $options, string|array $selected = '', string $placeholder = '', array $attributes = []): string
+	{
+		$optionHtml = '';
+
+		if ($placeholder !== '') {
+			$placeholderAttrs = ['value' => '', 'disabled' => ''];
+			// Mark placeholder as selected when no value is selected
+			if ($selected === '' || $selected === []) {
+				$placeholderAttrs['selected'] = '';
+			}
+			$optionHtml .= self::element('option', htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8'), $placeholderAttrs);
+		}
+
+		$optionHtml .= self::options($options, $selected);
+
+		return self::element('select', $optionHtml, $attributes);
+	}
+
+	/**
+	 * Build a datalist element from an array of options.
+	 *
+	 * @param array<mixed> $options
+	 */
+	public static function datalist(string $id, array $options): string
+	{
+		return self::element('datalist', self::options($options), ['id' => $id]);
 	}
 
 	// -------------------------
@@ -220,6 +331,41 @@ class HTMLUtils
 		}
 
 		return $attributes;
+	}
+
+	/**
+	 * Build HTMX attribute array for an action request.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,string>
+	 */
+	public static function htmxAttributes(string $url, string $method = 'get', array $options = []): array
+	{
+		$attrs = [
+			'hx-' . strtolower($method) => $url,
+			'hx-swap'                   => (string)($options['swap'] ?? 'none'),
+		];
+
+		if (!empty($options['confirm'])) {
+			$attrs['hx-confirm'] = (string)$options['confirm'];
+		}
+		if (!empty($options['trigger'])) {
+			$attrs['hx-trigger'] = (string)$options['trigger'];
+		}
+		if (!empty($options['target'])) {
+			$attrs['hx-target'] = (string)$options['target'];
+		}
+		if (!empty($options['select'])) {
+			$attrs['hx-select'] = (string)$options['select'];
+		}
+		if (isset($options['on']) && is_array($options['on'])) {
+			foreach ($options['on'] as $event => $handler) {
+				$attrs['hx-on:htmx:' . $event] = (string)$handler;
+			}
+		}
+
+		return $attrs;
 	}
 
 	// -------------------------

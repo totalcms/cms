@@ -4,19 +4,19 @@
 {% if cms.edition.isSimulating %}
 <div class="simulation-warning">
 	<span class="icon-warn"></span>
-	You are simulating <strong>{{ cms.edition.current | capitalize }}</strong> edition.
-	<a href="settings/license">Disable simulation</a>
+	{{ t('dashboard.simulation_warning', {'{edition}': cms.edition.current | capitalize}) | raw }}
+	<a href="settings/license">{{ t('dashboard.disable_simulation') }}</a>
 </div>
 {% endif %}
 
 {# Get dashboard data #}
-{% set stats = cms.dashboardStats() %}
-{% set collections = cms.dashboardRecentCollections() %}
+{% set stats = cms.admin.dashboardStats() %}
+{% set collections = cms.admin.dashboardRecentCollections() %}
 {# This is sloooooow #}
-{# {% set recentObjects = cms.dashboardRecentObjects() %} #}
-{% set emptyCollections = cms.dashboardEmptyCollections() %}
-{% set systemStatus = cms.dashboardSystemStatus() %}
-{% set inaccessibleCollections = cms.getInaccessibleCollections() %}
+{# {% set recentObjects = cms.admin.dashboardRecentObjects() %} #}
+{% set emptyCollections = cms.admin.dashboardEmptyCollections() %}
+{% set systemStatus = cms.admin.dashboardSystemStatus() %}
+{% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}
 
 
 {% if stats.collections <= 2 %}
@@ -52,7 +52,7 @@
 
 		<div class="dashboard-sidebar">
 			{# Development mode toggle #}
-			{% if cms.isAdmin() %}
+			{% if cms.auth.isAdmin() %}
 				{{ dashboard.devModeToggle() }}
 			{% endif %}
 
@@ -60,7 +60,7 @@
 			{# {{ dashboard.recentActivity() }} #}
 
 			{# System status #}
-			{% if cms.isAdmin() %}
+			{% if cms.auth.isAdmin() %}
 				{{ dashboard.systemStatus(systemStatus) }}
 			{% endif %}
 		</div>

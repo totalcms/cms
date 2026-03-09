@@ -1,0 +1,159 @@
+<h1>{{ t('import_rss.title') }}</h1>
+
+{% set action = getData.action %}
+
+<section class="dash-content-section">
+	<div class="rss-import-description">
+		<p>{{ t('import_rss.desc') }}</p>
+	</div>
+
+	{% set analyzeFields %}
+		{{ cms.form.field("text", "url", {
+			label       : t('import_rss.feed_url'),
+			placeholder : t('import_rss.feed_url_ph'),
+			help        : t('import_rss.feed_url_help'),
+			value       : postData.url | default(''),
+			required    : true
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple(url.path, analyzeFields, {
+		method : "POST",
+		label  : t('import_rss.analyze_btn'),
+		ajax   : false
+	}) }}
+
+	{% if rssError %}
+		<div class="message error">{{ t('import_rss.analysis_failed') }} {{ rssError }}</div>
+		<p><a class="dash-button transparent" href="utils/import-rss">{{ t('btn.try_again') }}</a></p>
+	{% endif %}
+
+	{% if rssAnalysis %}
+		{% set feed = rssAnalysis.feed %}
+		{% set entries = rssAnalysis.entries %}
+
+		{% if entries is empty %}
+			<div class="message error">{{ t('import_rss.no_entries') }}</div>
+			<p><a class="dash-button transparent" href="utils/import-rss">{{ t('btn.try_again') }}</a></p>
+		{% else %}
+
+			<div class="rss-feed-info">
+				{% if feed.title %}<h3>{{ feed.title }}</h3>{% endif %}
+				{% if feed.description %}<p>{{ feed.description }}</p>{% endif %}
+				<p><strong>{{ feed.count }} {{ t('import_rss.entries') }}</strong> found in this feed.</p>
+			</div>
+
+			{% set importFields %}
+				{{ cms.form.field("hidden", "url", {
+					value : postData.url | default('')
+				}) }}
+
+				{{ cms.form.field("select", "collection", {
+					label       : t('import_rss.target_collection'),
+					help        : t('import_rss.select_collection'),
+					options     : cms.collection.list() | map(c => { value: c.id, label: c.name }) | sortBy("label"),
+					value       : "blog"
+				}) }}
+
+				{{ cms.form.field("checkbox", "draft", {
+					label : t('import_rss.import_as_drafts'),
+					help  : t('import_rss.drafts_desc'),
+					value : true
+				}) }}
+
+				<details class="rss-field-mapping">
+					<summary><strong>{{ t('import_rss.field_mapping') }}</strong></summary>
+					<div style="margin-top: 0.5rem;">
+						<p class="help" style="margin-bottom: 0.5rem;">{{ t('import_rss.field_mapping_desc') }} {{ t('import_rss.leave_empty') }}</p>
+
+						{% set fieldDefaults = { title: 'title', content: 'content', summary: 'summary', date: 'date', author: 'author', categories: 'categories', link: 'media', image: 'image' } %}
+						{% for rssField, defaultValue in fieldDefaults %}
+							{{ cms.form.field("text", "fieldMap[" ~ rssField ~ "]", {
+								label       : rssField,
+								value       : defaultValue,
+								placeholder : t('import_rss.collection_field')
+							}) }}
+						{% endfor %}
+					</div>
+				</details>
+			{% endset %}
+
+			{{ cms.form.simple("/import/rss", importFields, {
+				method : "POST",
+				label  : "Import All " ~ entries|length ~ " Entries",
+				class  : "rss-import-form",
+			}) }}
+
+			<div id="rss-import-result"></div>
+
+			<div class="rss-entry-preview">
+				<h3>{{ t('import_rss.entry_preview') }}</h3>
+				<div class="rss-entry-list">
+					{% for entry in entries %}
+						<div class="rss-entry-item">
+							<strong>{{ entry.title }}</strong>
+							{% set meta = [] %}
+							{% if entry.date %}{% set meta = meta|merge([entry.date|date('M j, Y')]) %}{% endif %}
+							{% if entry.author %}{% set meta = meta|merge([entry.author]) %}{% endif %}
+							{% if entry.hasImage %}{% set meta = meta|merge([t('import_rss.has_image')]) %}{% endif %}
+							{% if meta is not empty %}
+								<div class="rss-entry-meta">{{ meta|join(' &middot; ') }}</div>
+							{% endif %}
+							{% if entry.summary %}
+								<div class="rss-entry-summary">{{ entry.summary }}</div>
+							{% endif %}
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		{% endif %}
+	{% endif %}
+
+	<script>
+		const importForm = document.querySelector('.rss-import-form');
+		if (importForm) {
+			importForm.addEventListener('simpleform:success', function(e) {
+				const data = e.detail.data;
+				const msg = data?.message || '{{ t('import_rss.queued') }}';
+
+				document.getElementById('rss-import-result').innerHTML =
+					`<div class="message success">${msg}</div>` +
+					'<p>{{ t('import_rss.queued') }}</p>';
+
+				const preview = document.querySelector('.rss-entry-preview');
+				if (preview) preview.style.display = 'none';
+
+				this.style.display = 'none';
+			});
+		}
+	</script>
+
+</section>
+
+<style>
+.dash-content-section { max-width: 800px; }
+.rss-import-description { margin-bottom: 1rem; }
+.message { padding: 1rem; border-radius: var(--totalform-radius); margin: 1rem 0; }
+.message.success { background-color: oklch(var(--totalform-success) / 0.1); border: 1px solid oklch(var(--totalform-success)); }
+.message.error { background-color: oklch(var(--totalform-error) / 0.1); border: 1px solid oklch(var(--totalform-error)); }
+.rss-feed-info { margin-top: 1rem; padding: 1rem; background: oklch(var(--totalform-nearwhite)); border-radius: var(--totalform-radius); }
+.rss-entry-preview { margin-top: 1.5rem; }
+.rss-entry-preview h3 { margin-bottom: 1rem; }
+.rss-entry-list {
+	max-height    : 400px;
+	overflow-y    : auto;
+	padding       : 1rem;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	background    : oklch(var(--totalform-nearwhite));
+	font-size     : 0.85rem;
+	line-height   : 1.5;
+}
+.rss-entry-item { padding: 0.75rem 0; border-bottom: 1px solid oklch(var(--totalform-border-color) / 0.5); }
+.rss-entry-item:first-child { padding-top: 0; }
+.rss-entry-item:last-child { border-bottom: none; padding-bottom: 0; }
+.rss-entry-meta { font-size: 0.8rem; color: oklch(var(--totalform-darkgray)); margin-top: 0.25rem; }
+.rss-entry-summary { font-size: 0.8rem; color: oklch(var(--totalform-text-color)); margin-top: 0.25rem; }
+.rss-field-mapping { border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius); padding: 0.75rem; margin-top: 1rem; }
+.rss-field-mapping summary { cursor: pointer; }
+</style>

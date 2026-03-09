@@ -8,8 +8,8 @@ const slugify = require('slugify')
 //-----------------------------------------------
 export default class CustomPropertiesField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		const objectFields = this.container.getElementsByClassName("customProperties-object");

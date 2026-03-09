@@ -21,7 +21,7 @@ class FormField
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
+	 * @param array<string,mixed> $settings - JSON settings for the field added to data-settings attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
 	public function __construct(
@@ -112,7 +112,7 @@ class FormField
 		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
-				$formFieldAtrributes['data-options'] = $json;
+				$formFieldAtrributes['data-settings'] = $json;
 			}
 		}
 
@@ -286,28 +286,6 @@ class FormField
 		return ['value' => $option, 'label' => $option];
 	}
 
-	/** @param array<string,string> $option */
-	protected function buildOption(array $option): string
-	{
-		$attributes = ['value' => $option['value']];
-
-		return HTMLUtils::option($option['label'], $this->value, $attributes);
-	}
-
-	/** @param array<string>|array<int,array<string,string>> $options */
-	protected function buildOptionGroup(string $group, array $options): string
-	{
-		$groupOptions = '';
-		foreach ($options as $option) {
-			if (is_string($option)) {
-				$option = $this->optionFromString($option);
-			}
-			$groupOptions .= $this->buildOption($option);
-		}
-
-		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
-	}
-
 	/**
 	 * Build options for propertyOptions setting.
 	 * Supports:
@@ -329,13 +307,15 @@ class FormField
 			return $this->form->categoryListForSchemas();
 		}
 
+		if ($source === 'collectionIds') {
+			return $this->form->collectionIdList();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @return array<array<string,string>>
 	 */
 	protected function buildRelationalOptions(): array
@@ -349,9 +329,10 @@ class FormField
 		$labelProperty = trim($settings['label'] ?? 'id');
 		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
+		$view          = $settings['view'] ?? '';
 
-		if ($collection === '') {
-			return []; // No collection specified, return empty array
+		if ($collection === '' && $view === '') {
+			return []; // No data source specified, return empty array
 		}
 
 		// Split label property by spaces to support multiple properties
@@ -369,7 +350,20 @@ class FormField
 			$filters['exclude'] = $settings['exclude'];
 		}
 
-		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
+		if ($view !== '') {
+			$properties = $this->form->propertiesForView($propertiesToFetch, $view, $filters);
+		} else {
+			$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
+		}
+
+		// Validate that properties is a list of arrays (not a wrapped structure like {"items": [...]})
+		$source = $view !== '' ? "view '{$view}'" : "collection '{$collection}'";
+		if ($properties === []) {
+			return [];
+		}
+		if (!array_is_list($properties) || !is_array($properties[0])) {
+			return [['value' => '', 'label' => "Error: {$source} returned invalid data for relationalOptions"]];
+		}
 
 		// Build the label from multiple properties if specified
 		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {
@@ -412,16 +406,13 @@ class FormField
 			$this->options = array_unique($this->options);
 		}
 
-		foreach ($this->options as $key => $option) {
-			if (is_string($option)) {
-				$option = $this->optionFromString($option);
-			}
-			if (is_array($option)) {
-				$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
-			}
+		if (($this->settings['sortOptions'] ?? false) === true) {
+			sort($this->options);
 		}
 
-		return $options;
+		$selected = is_array($this->value) ? $this->value : (string)($this->value ?? '');
+
+		return $options . HTMLUtils::options($this->options, $selected);
 	}
 
 	/** @param array<mixed> $array */
@@ -441,46 +432,3 @@ class FormField
 		return HTMLUtils::element('datalist', $this->buildOptions(), ['id' => "datalist-{$this->uuid}"]);
 	}
 }
-
-/* Options Possibilities
-
-Example 1: Simple list of options
-$field = new SelectField(options : ['Option 1', 'Option 2', 'Option 3']);
-
-Example 2: Options with values
-$field = new SelectField(options : [
-	['value' => '1', 'label' => 'Option 1'],
-	['value' => '2', 'label' => 'Option 2'],
-	['value' => '3', 'label' => 'Option 3'],
-]);
-
-Example 3: Grouped options
-$field = new SelectField(options : [
-	'Group 1' => ['Option 1', 'Option 2'],
-	'Group 2' => ['Option 3', 'Option 4'],
-]);
-
-Example 4: Grouped options with values
-$field = new SelectField(options : [
-	'Group 1' => [
-		['value' => '1', 'label' => 'Option 1'],
-		['value' => '2', 'label' => 'Option 2'],
-	],
-	'Group 2' => [
-		['value' => '3', 'label' => 'Option 3'],
-		['value' => '4', 'label' => 'Option 4'],
-	],
-]);
-
-### AutoBuild options via collection data
-
-"settings": {
-	"propertyOptions" : true,
-	"relationalOptions" : {
-		"collection" : "mycollection",
-		"label"      : "name",
-		"value"      : "id"
-	}
-},
-
-*/

@@ -21,6 +21,7 @@ readonly class SimpleForm implements \Stringable
 		private bool $ajax     = true,
 		private ?CSRFTokenManager $csrfManager = null,
 		private string $buttonClass = '',
+		private string $confirm = '',
 	) {
 	}
 
@@ -46,6 +47,10 @@ readonly class SimpleForm implements \Stringable
 			'data-refresh' => $this->refresh ? 'true' : 'false',
 			'data-ajax'    => $this->ajax ? 'true' : 'false',
 		];
+
+		if ($this->confirm !== '') {
+			$formAttrs['data-confirm'] = $this->confirm;
+		}
 
 		return HTMLUtils::element('form', $csrfField . $content . $buttonWrapper, $formAttrs);
 	}

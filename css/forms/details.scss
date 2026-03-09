@@ -4,7 +4,6 @@
 details.cms-accordion {
 	padding  : 1rem 1rem 0;
 	display  : grid;
-	gap      : 1rem;
 	// overflow : hidden;
 
 	summary {
@@ -38,6 +37,7 @@ details.cms-accordion {
 
 	&[open] {
 		padding : 1rem;
+		gap     : 1rem;
 
 		> .content {
 			opacity : 1;

@@ -5,9 +5,9 @@ import Droplet from './droplet';
 //-----------------------------------------------
 export default class DropletArray extends Droplet {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 		// Disable single file mode
-        this.options.singleMode = false;
+        this.settings.singleMode = false;
     }
 }

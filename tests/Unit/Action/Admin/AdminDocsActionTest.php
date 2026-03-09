@@ -53,7 +53,7 @@ final class AdminDocsActionTest extends TestCase
 	public function testLoadsSpecificPage(): void
 	{
 		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/docs/jumpstart');
+		$uri->method('getPath')->willReturn('/admin/docs/api/openapi');
 		$uri->method('getQuery')->willReturn('');
 
 		$this->request->method('getUri')->willReturn($uri);
@@ -64,11 +64,11 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(fn ($data): bool => isset($data['page']) && $data['page'] === 'jumpstart')
+				$this->callback(fn ($data): bool => isset($data['page']) && $data['page'] === 'api/openapi')
 			)
 			->willReturn($expectedResponse);
 
-		$result = ($this->action)($this->request, $this->response, ['page' => 'jumpstart']);
+		$result = ($this->action)($this->request, $this->response, ['page' => 'api/openapi']);
 
 		$this->assertSame($expectedResponse, $result);
 	}

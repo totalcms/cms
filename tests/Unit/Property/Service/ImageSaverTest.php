@@ -13,6 +13,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 class ImageSaverTest extends TestCase
 {
@@ -43,7 +44,8 @@ class ImageSaverTest extends TestCase
 			$this->mockObjectSaver,
 			$this->mockObjectPatcher,
 			$this->mockObjectFetcher,
-			$this->loggerFactory
+			$this->loggerFactory,
+			$this->createMock(Config::class),
 		);
 	}
 

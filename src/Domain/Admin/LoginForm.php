@@ -31,9 +31,12 @@ readonly class LoginForm implements \Stringable
 		private string $passwordLabel          = 'Password',
 		private string $rememberLabel          = 'Keep me signed in',
 		private string $forgotPasswordLabel    = 'Forgot Password?',
+		private bool $showPasskeys             = true,
+		private string $passkeyLabel           = 'Sign in with Passkey',
 	) {
 	}
 
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function build(): string
 	{
 		// Store current URL in session for redirect on login error
@@ -115,8 +118,11 @@ readonly class LoginForm implements \Stringable
 			$flashHtml = implode('', $messages);
 		}
 
+		// Passkey login button
+		$passkeyHtml = $this->buildPasskeyButton();
+
 		// Wrap in section
-		$sectionContent = $form . $flashHtml;
+		$sectionContent = $form . $passkeyHtml . $flashHtml;
 
 		return HTMLUtils::element('section', $sectionContent, [
 			'class' => 'login-form',
@@ -144,6 +150,7 @@ readonly class LoginForm implements \Stringable
 			'aria-describedby' => "help-{$uuid}",
 			'required'         => '',
 			'autofocus'        => '',
+			'autocomplete'     => 'username webauthn',
 		]);
 
 		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
@@ -214,6 +221,29 @@ readonly class LoginForm implements \Stringable
 			'class'     => 'form-field checkbox-field',
 			'data-type' => 'checkbox',
 		]);
+	}
+
+	private function buildPasskeyButton(): string
+	{
+		if (!$this->showPasskeys || $this->passkeyLabel === '') {
+			return '';
+		}
+
+		$divider = HTMLUtils::element('div', HTMLUtils::element('span', 'or'), [
+			'class' => 'login-divider',
+		]);
+
+		$button = HTMLUtils::button($this->passkeyLabel, [
+			'type'     => 'button',
+			'class'    => 'dash-button cms-passkey-login no-icon',
+			'data-api' => $this->api,
+		]);
+
+		$field = HTMLUtils::element('div', $button, [
+			'class' => 'form-field passkey-field',
+		]);
+
+		return $divider . $field;
 	}
 
 	public function __toString(): string

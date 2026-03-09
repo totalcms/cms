@@ -7,7 +7,7 @@
     100% { opacity: 1; }
 }
 
-:has(>.scrollable) {
+.scrollable-container {
 	overflow : hidden;
 	position : relative;
 }

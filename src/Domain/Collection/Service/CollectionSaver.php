@@ -166,8 +166,6 @@ readonly class CollectionSaver
 	/**
 	 * Increment the object count for a collection.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @throws \UnexpectedValueException
 	 */
 	public function incrementCount(string $collectionId, int $incrementBy = 1): CollectionData

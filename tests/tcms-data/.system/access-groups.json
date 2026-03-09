@@ -127,6 +127,7 @@
                 "templates": false,
                 "mailer": false,
                 "playground": false,
+                "dataviews": false,
                 "docs": true,
                 "utils": {
                     "all": false,

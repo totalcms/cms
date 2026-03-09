@@ -5,13 +5,18 @@ namespace TotalCMS\Domain\JobQueue\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
+use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 readonly class JobRunner
 {
@@ -29,6 +34,11 @@ readonly class JobRunner
 		private IndexBuilder $indexBuilder,
 		private FactoryImporter $factoryImporter,
 		private CollectionRepository $collectionRepository,
+		private DataViewBuilder $viewBuilder,
+		private EmailService $emailService,
+		private BulkMailerRepository $bulkMailerRepository,
+		private ObjectFetcher $objectFetcher,
+		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -151,7 +161,6 @@ readonly class JobRunner
 		}
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function processNextJob(): void
 	{
 		$job = $this->jobRepository->fetchNextJob();
@@ -195,6 +204,12 @@ readonly class JobRunner
 				break;
 			case JobData::TYPE_FACTORY:
 				$this->processFactoryJob($job);
+				break;
+			case JobData::TYPE_VIEW_UPDATE:
+				$this->processViewUpdateJob($job);
+				break;
+			case JobData::TYPE_EMAIL:
+				$this->processEmailJob($job);
 				break;
 			default:
 				$error = 'Unknown job type: ' . $job->type;
@@ -267,8 +282,6 @@ readonly class JobRunner
 
 	/**
 	 * Process export job by exporting collection data.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 */
 	private function processExportJob(JobData $job): void
 	{
@@ -304,6 +317,101 @@ readonly class JobRunner
 				'object_count' => count($exportedData),
 			]);
 		}
+	}
+
+	private function processViewUpdateJob(JobData $job): void
+	{
+		$data = json_decode($job->payload, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			$error = 'Invalid JSON payload: ' . json_last_error_msg();
+			$this->logger->error($error, $job->toArray());
+
+			return;
+		}
+
+		$viewId = (string)($data['viewId'] ?? '');
+		if ($viewId === '') {
+			$this->logger->info('Skipping view update: empty viewId');
+
+			return;
+		}
+
+		$this->viewBuilder->buildView($viewId);
+
+		$this->logger->info('View update job completed', [
+			'viewId' => $viewId,
+		]);
+	}
+
+	private function processEmailJob(JobData $job): void
+	{
+		$data = json_decode($job->payload, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			$error = 'Invalid JSON payload: ' . json_last_error_msg();
+			$this->logger->error($error, $job->toArray());
+
+			return;
+		}
+
+		$mailerId   = (string)($data['mailerId'] ?? '');
+		$objectId   = (string)($data['objectId'] ?? '');
+		$collection = (string)($data['collection'] ?? '');
+		$batchId    = (string)($data['batchId'] ?? '');
+		$overrideTo = isset($data['overrideTo']) ? (string)$data['overrideTo'] : null;
+
+		// Skip if already sent
+		if ($this->bulkMailerRepository->hasBeenSent($mailerId, $objectId)) {
+			$this->logger->info('Skipping already-sent email', [
+				'mailerId'   => $mailerId,
+				'objectId'   => $objectId,
+				'collection' => $collection,
+			]);
+
+			$this->bulkMailerRepository->log([
+				'batchId'    => $batchId,
+				'mailerId'   => $mailerId,
+				'collection' => $collection,
+				'objectId'   => $objectId,
+				'status'     => 'skipped',
+			]);
+
+			return;
+		}
+
+		// Apply send delay for throttling
+		$sendDelay = intval($this->config->smtp['sendDelay'] ?? 0);
+		if ($sendDelay > 0) {
+			usleep($sendDelay * 1000);
+		}
+
+		// Fetch object data
+		$object     = $this->objectFetcher->fetchObject($collection, $objectId);
+		$objectData = $object->toArray();
+
+		// Send email
+		$result = $this->emailService->sendEmail($mailerId, $objectData, $overrideTo);
+
+		// Log result
+		$this->bulkMailerRepository->log([
+			'batchId'    => $batchId,
+			'mailerId'   => $mailerId,
+			'collection' => $collection,
+			'objectId'   => $objectId,
+			'sentTo'     => $overrideTo ?? '',
+			'status'     => $result['success'] ? 'sent' : 'failed',
+			'error'      => $result['error'] ?? null,
+		]);
+
+		if (!$result['success']) {
+			throw new \RuntimeException('Email send failed: ' . $result['message']);
+		}
+
+		$this->logger->info('Bulk email sent', [
+			'mailerId'   => $mailerId,
+			'objectId'   => $objectId,
+			'collection' => $collection,
+			'batchId'    => $batchId,
+		]);
 	}
 
 	/**

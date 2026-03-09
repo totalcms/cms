@@ -47,7 +47,6 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	) {
 	}
 
-	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		// If auth is disabled globally, allow through

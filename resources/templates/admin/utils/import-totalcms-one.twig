@@ -1,0 +1,113 @@
+<h1>{{ t('import_totalcms1.title') }}</h1>
+
+{% set action = getData.action %}
+
+<section class="dash-content-section">
+	<div class="tcms1-import-description">
+		<p>{{ t('import_totalcms1.desc') }}</p>
+
+		<div class="cms-twig-info" style="margin-top: 1rem;">
+			<h4>{{ t('import_totalcms1.what_gets_imported') }}</h4>
+			<ul>
+				<li>{{ t('import_totalcms1.blogs') }}</li>
+				<li>{{ t('import_totalcms1.galleries') }}</li>
+				<li>{{ t('import_totalcms1.dates') }}</li>
+				<li>{{ t('import_totalcms1.depots') }}</li>
+				<li>{{ t('import_totalcms1.feeds') }}</li>
+				<li>{{ t('import_totalcms1.files') }}</li>
+				<li>{{ t('import_totalcms1.images') }}</li>
+				<li>{{ t('import_totalcms1.texts') }}</li>
+				<li>{{ t('import_totalcms1.videos') }}</li>
+			</ul>
+			<p>{{ t('import_totalcms1.no_delete') }}</p>
+		</div>
+	</div>
+
+	{% if totalcms1DetectionData is defined and totalcms1DetectionData %}
+		{# Auto-detected v1 data #}
+		<div class="cms-twig-info" style="margin-top: 1rem;">
+			<h4>{{ t('import_totalcms1.detected_title') }}</h4>
+			<p>{{ t('import_totalcms1.detected_desc') }} <code>{{ totalcms1DetectionData.path }}</code></p>
+		</div>
+
+		<div id="import-status"></div>
+
+		<button class="dash-button" id="tcms1-import-btn" onclick="startImport('{{ totalcms1DetectionData.path }}')">
+			{{ t('import_totalcms1.import_btn') }}
+		</button>
+	{% else %}
+		{# Manual path entry #}
+		<div class="cms-twig-info" style="margin-top: 1rem;">
+			<h4>{{ t('import_totalcms1.manual_title') }}</h4>
+			<p>{{ t('import_totalcms1.manual_desc') }}</p>
+		</div>
+
+		<form id="tcms1-manual-form" onsubmit="event.preventDefault(); startImport(document.getElementById('field-path').value);">
+			<div class="form-field text-field" data-type="text">
+				<label for="field-path">{{ t('import_totalcms1.path_label') }}</label>
+				<div class="form-group">
+					<input type="text" id="field-path" name="path" placeholder="{{ t('import_totalcms1.path_placeholder') }}" required>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help">{{ t('import_totalcms1.path_help') }}</p>
+			</div>
+
+			<div id="import-status"></div>
+
+			<button class="dash-button" type="submit" id="tcms1-import-btn">
+				{{ t('import_totalcms1.import_btn') }}
+			</button>
+		</form>
+	{% endif %}
+
+	<script>
+		function startImport(path) {
+			const btn = document.getElementById('tcms1-import-btn');
+			const statusEl = document.getElementById('import-status');
+			const originalText = btn.textContent;
+
+			btn.textContent = '{{ t('import_totalcms1.importing') }}';
+			btn.disabled = true;
+
+			statusEl.innerHTML = '<p>{{ t('import_totalcms1.import_starting') }}</p>';
+
+			fetch('{{ cms.api }}/import/totalcms-one', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRF-Token': '{{ csrf_token() }}'
+				},
+				body: JSON.stringify({ path: path })
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					statusEl.innerHTML =
+						`<div class="message success">${data.message}</div>` +
+						'<p>{{ t('import_totalcms1.import_queued') }} ' +
+						'<a href="utils/jobqueue">{{ t('import_totalcms1.job_queue_link') }}</a>.</p>';
+					btn.style.display = 'none';
+				} else {
+					statusEl.innerHTML = `<div class="message error">${data.message}</div>`;
+					btn.textContent = originalText;
+					btn.disabled = false;
+				}
+			})
+			.catch(error => {
+				statusEl.innerHTML = `<div class="message error">{{ t('import_totalcms1.import_failed') }} ${error.message}</div>`;
+				btn.textContent = originalText;
+				btn.disabled = false;
+			});
+		}
+	</script>
+
+</section>
+
+<style>
+.dash-content-section { max-width: 800px; }
+.tcms1-import-description { margin-bottom: 1rem; }
+.cms-twig-info ul { margin-left: 1.5rem; }
+.message { padding: 1rem; border-radius: var(--totalform-radius); margin: 1rem 0; }
+.message.success { background-color: oklch(var(--totalform-success) / 0.1); border: 1px solid oklch(var(--totalform-success)); }
+.message.error { background-color: oklch(var(--totalform-error) / 0.1); border: 1px solid oklch(var(--totalform-error)); }
+</style>

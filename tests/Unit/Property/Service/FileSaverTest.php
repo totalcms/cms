@@ -14,6 +14,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 class FileSaverTest extends TestCase
 {
@@ -40,7 +41,8 @@ class FileSaverTest extends TestCase
 			$this->mockObjectSaver,
 			$this->mockObjectPatcher,
 			$this->mockObjectFetcher,
-			$this->mockLoggerFactory
+			$this->mockLoggerFactory,
+			$this->createMock(Config::class),
 		);
 	}
 

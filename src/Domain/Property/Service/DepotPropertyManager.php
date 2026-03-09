@@ -117,7 +117,7 @@ class DepotPropertyManager
 
 		// Traverse through the structure to find or create the specified path
 		foreach ($files as &$item) {
-			if (!($item instanceof FolderData)) {
+			if (!$item instanceof FolderData) {
 				continue;
 			}
 			if ($item->name === $currentFolderName) {

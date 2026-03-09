@@ -4,11 +4,11 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter Templates" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('template.filter') }}" autofocus />
 	</header>
 
 	<nav class="links" id="template-links">
-		{% for folder, templates in cms.templatesByFolder() %}
+		{% for folder, templates in cms.admin.templatesByFolder() %}
 		<details id="category-{{ folder | slug }}" open>
 			<summary>{{ folder }}</summary>
 			<ul>
@@ -24,9 +24,9 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.canAccessTemplates() %}
+	{% if cms.auth.canAccessTemplates() %}
 	<footer>
-		<a class="dash-button full transparent" href="templates/new" title="Create a new template">+ New Template</a>
+		<a class="dash-button full transparent" href="templates/new" title="{{ t('template.new_desc') }}">{{ t('template.new') }}</a>
 	</footer>
 	{% endif %}
 </aside>

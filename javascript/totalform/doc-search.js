@@ -75,10 +75,18 @@ export default class DocSearch {
 			}, 150);
 		});
 
-		// Clear results on Escape
+		// Clear results and blur on Escape
 		this.searchInput.addEventListener('keydown', (e) => {
 			if (e.key === 'Escape') {
 				this.searchInput.value = '';
+				this.clearResults();
+				this.searchInput.blur();
+			}
+		});
+
+		// Handle browser-native clear (ESC or clear button on type="search")
+		this.searchInput.addEventListener('search', () => {
+			if (this.searchInput.value === '') {
 				this.clearResults();
 			}
 		});

@@ -7,8 +7,8 @@ import TotalSortable from "./total-sortable";
 //-----------------------------------------------
 export default class ListField extends MultiSelectField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
 		// Define option defaults
 		const defaults = {
@@ -19,18 +19,18 @@ export default class ListField extends MultiSelectField {
 			addChoices            : true,
 			maxItemCount          : -1,
 		};
-		this.options = Object.assign({}, this.options, defaults, options);
+		this.settings = Object.assign({}, this.settings, defaults, settings);
 
 		// Temporarily set maxItemCount to -1 to prevent initial notification
-		const tempMaxItemCount = this.options.maxItemCount;
-		const showNotification = this.options.maxItemCount > 0 && this.getValue().length >= this.options.maxItemCount;
+		const tempMaxItemCount = this.settings.maxItemCount;
+		const showNotification = this.settings.maxItemCount > 0 && this.getValue().length >= this.settings.maxItemCount;
 
 		this.choices = new Choices(this.input, {
-			allowHTML             : this.options.allowHTML,
-			removeItemButton      : this.options.removeItemButton,
-			duplicateItemsAllowed : this.options.duplicateItemsAllowed,
-			addChoices            : this.options.addChoices,
-			maxItemCount          : showNotification ? -1 : this.options.maxItemCount,
+			allowHTML             : this.settings.allowHTML,
+			removeItemButton      : this.settings.removeItemButton,
+			duplicateItemsAllowed : this.settings.duplicateItemsAllowed,
+			addChoices            : this.settings.addChoices,
+			maxItemCount          : showNotification ? -1 : this.settings.maxItemCount,
 			callbackOnInit        : () => {
 				this.initSortable();
 				// Restore the actual maxItemCount after initialization
@@ -76,7 +76,7 @@ export default class ListField extends MultiSelectField {
 		const list = this.container.querySelector('.choices__list');
 		if (list) value = Array.from(list.children).map(item => item.dataset.value);
 
-		if (this.options.asString) {
+		if (this.settings.asString) {
 			return value.join(',');
 		}
 		return value;
@@ -88,7 +88,7 @@ export default class ListField extends MultiSelectField {
 		// For list fields, we need to check if there are items when the field is required
 		if (this.input.required) {
 			const items = this.getValue();
-			if ((this.options.asString === true && items === '') || (this.options.asString === false && (!Array.isArray(items) || items.length === 0))) {
+			if ((this.settings.asString === true && items === '') || (this.settings.asString === false && (!Array.isArray(items) || items.length === 0))) {
 				const errorMessage = "Please add at least one item to the list.";
 				this.input.setCustomValidity(errorMessage);
 				this.input.reportValidity();

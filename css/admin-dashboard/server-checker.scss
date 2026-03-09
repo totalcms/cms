@@ -22,20 +22,22 @@
 	h2:not(:first-child) {
 		margin-top : 2rem;
 	}
-	td.gridjs-td {
-		padding     : 0 1rem;
-		white-space : wrap;
+	table.admin-table td {
+		padding        : 0 1rem;
+		white-space    : normal;
+		overflow       : visible;
+		text-overflow  : clip;
+		max-width      : none;
+		height         : auto;
+		word-break     : break-word;
 	}
-	th.gridjs-th:first-child {
+	th:first-child {
 		max-width : 200px !important;
 	}
-	.gridjs-wrapper, table {
+	table {
 		max-height : none;
 	}
 	pre {
 		padding: 0.5rem 0;
-	}
-	.gridjs-tbody .gridjs-tr {
-		cursor : inherit;
 	}
 }

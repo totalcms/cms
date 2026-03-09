@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+	xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:wp="http://wordpress.org/export/1.2/"
+>
+
+<channel>
+	<title>My WordPress Blog</title>
+	<link>https://example.com</link>
+	<description>A sample WordPress blog for testing</description>
+	<pubDate>Mon, 24 Feb 2026 12:00:00 +0000</pubDate>
+	<language>en-US</language>
+	<wp:wxr_version>1.2</wp:wxr_version>
+	<wp:base_site_url>https://example.com</wp:base_site_url>
+	<wp:base_blog_url>https://example.com</wp:base_blog_url>
+
+	<wp:author>
+		<wp:author_id>1</wp:author_id>
+		<wp:author_login><![CDATA[admin]]></wp:author_login>
+		<wp:author_email><![CDATA[admin@example.com]]></wp:author_email>
+		<wp:author_display_name><![CDATA[John Admin]]></wp:author_display_name>
+	</wp:author>
+
+	<wp:author>
+		<wp:author_id>2</wp:author_id>
+		<wp:author_login><![CDATA[janewriter]]></wp:author_login>
+		<wp:author_email><![CDATA[jane@example.com]]></wp:author_email>
+		<wp:author_display_name><![CDATA[Jane Writer]]></wp:author_display_name>
+	</wp:author>
+
+	<wp:category>
+		<wp:term_id>1</wp:term_id>
+		<wp:category_nicename><![CDATA[uncategorized]]></wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[Uncategorized]]></wp:cat_name>
+	</wp:category>
+
+	<wp:category>
+		<wp:term_id>2</wp:term_id>
+		<wp:category_nicename><![CDATA[technology]]></wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[Technology]]></wp:cat_name>
+	</wp:category>
+
+	<wp:category>
+		<wp:term_id>3</wp:term_id>
+		<wp:category_nicename><![CDATA[tutorials]]></wp:category_nicename>
+		<wp:category_parent></wp:category_parent>
+		<wp:cat_name><![CDATA[Tutorials]]></wp:cat_name>
+	</wp:category>
+
+	<wp:tag>
+		<wp:term_id>4</wp:term_id>
+		<wp:tag_slug><![CDATA[php]]></wp:tag_slug>
+		<wp:tag_name><![CDATA[PHP]]></wp:tag_name>
+	</wp:tag>
+
+	<wp:tag>
+		<wp:term_id>5</wp:term_id>
+		<wp:tag_slug><![CDATA[web-development]]></wp:tag_slug>
+		<wp:tag_name><![CDATA[Web Development]]></wp:tag_name>
+	</wp:tag>
+
+	<!-- Attachment item (featured image for post 10) -->
+	<item>
+		<title>featured-image-one</title>
+		<link>https://example.com/featured-image-one/</link>
+		<pubDate>Mon, 10 Jan 2025 08:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<description></description>
+		<content:encoded><![CDATA[]]></content:encoded>
+		<excerpt:encoded><![CDATA[]]></excerpt:encoded>
+		<wp:post_id>50</wp:post_id>
+		<wp:post_date><![CDATA[2025-01-10 08:00:00]]></wp:post_date>
+		<wp:post_date_gmt><![CDATA[2025-01-10 08:00:00]]></wp:post_date_gmt>
+		<wp:post_modified><![CDATA[2025-01-10 08:00:00]]></wp:post_modified>
+		<wp:post_modified_gmt><![CDATA[2025-01-10 08:00:00]]></wp:post_modified_gmt>
+		<wp:comment_status><![CDATA[open]]></wp:comment_status>
+		<wp:ping_status><![CDATA[closed]]></wp:ping_status>
+		<wp:post_name><![CDATA[featured-image-one]]></wp:post_name>
+		<wp:status><![CDATA[inherit]]></wp:status>
+		<wp:post_parent>10</wp:post_parent>
+		<wp:menu_order>0</wp:menu_order>
+		<wp:post_type><![CDATA[attachment]]></wp:post_type>
+		<wp:post_password><![CDATA[]]></wp:post_password>
+		<wp:is_sticky>0</wp:is_sticky>
+		<wp:attachment_url><![CDATA[https://picsum.photos/800/600]]></wp:attachment_url>
+	</item>
+
+	<!-- Published post with categories, tags, featured image -->
+	<item>
+		<title>Getting Started with PHP 8.2</title>
+		<link>https://example.com/2025/01/getting-started-with-php-82/</link>
+		<pubDate>Sat, 15 Jan 2025 10:30:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<guid isPermaLink="false">https://example.com/?p=10</guid>
+		<description></description>
+		<content:encoded><![CDATA[<p>PHP 8.2 brings exciting new features to the language. In this post, we'll explore the most important changes.</p>
+
+<h2>Readonly Classes</h2>
+<p>One of the headline features is readonly classes, which make all properties readonly by default.</p>
+
+<pre><code>readonly class User {
+    public function __construct(
+        public string $name,
+        public string $email,
+    ) {}
+}</code></pre>
+
+<h2>Disjunctive Normal Form Types</h2>
+<p>DNF types allow combining union and intersection types for more expressive type declarations.</p>
+
+<p>Stay tuned for more PHP tips and tutorials!</p>]]></content:encoded>
+		<excerpt:encoded><![CDATA[PHP 8.2 brings exciting new features including readonly classes and DNF types. Let's explore what's new.]]></excerpt:encoded>
+		<wp:post_id>10</wp:post_id>
+		<wp:post_date><![CDATA[2025-01-15 10:30:00]]></wp:post_date>
+		<wp:post_date_gmt><![CDATA[2025-01-15 10:30:00]]></wp:post_date_gmt>
+		<wp:post_modified><![CDATA[2025-01-20 14:00:00]]></wp:post_modified>
+		<wp:post_modified_gmt><![CDATA[2025-01-20 14:00:00]]></wp:post_modified_gmt>
+		<wp:comment_status><![CDATA[open]]></wp:comment_status>
+		<wp:ping_status><![CDATA[open]]></wp:ping_status>
+		<wp:post_name><![CDATA[getting-started-with-php-82]]></wp:post_name>
+		<wp:status><![CDATA[publish]]></wp:status>
+		<wp:post_parent>0</wp:post_parent>
+		<wp:menu_order>0</wp:menu_order>
+		<wp:post_type><![CDATA[post]]></wp:post_type>
+		<wp:post_password><![CDATA[]]></wp:post_password>
+		<wp:is_sticky>0</wp:is_sticky>
+		<category domain="category" nicename="technology"><![CDATA[Technology]]></category>
+		<category domain="category" nicename="tutorials"><![CDATA[Tutorials]]></category>
+		<category domain="post_tag" nicename="php"><![CDATA[PHP]]></category>
+		<category domain="post_tag" nicename="web-development"><![CDATA[Web Development]]></category>
+		<wp:postmeta>
+			<wp:meta_key><![CDATA[_thumbnail_id]]></wp:meta_key>
+			<wp:meta_value><![CDATA[50]]></wp:meta_value>
+		</wp:postmeta>
+		<wp:postmeta>
+			<wp:meta_key><![CDATA[_edit_last]]></wp:meta_key>
+			<wp:meta_value><![CDATA[1]]></wp:meta_value>
+		</wp:postmeta>
+	</item>
+
+	<!-- Draft post -->
+	<item>
+		<title>Understanding Dependency Injection</title>
+		<link>https://example.com/?p=20</link>
+		<pubDate>Wed, 12 Feb 2025 09:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[janewriter]]></dc:creator>
+		<guid isPermaLink="false">https://example.com/?p=20</guid>
+		<description></description>
+		<content:encoded><![CDATA[<p>Dependency Injection (DI) is a design pattern that promotes loose coupling between components. This article covers the fundamentals.</p>
+
+<h2>What is Dependency Injection?</h2>
+<p>Instead of creating dependencies inside a class, they are "injected" from outside — typically through the constructor.</p>
+
+<h2>Benefits</h2>
+<ul>
+<li>Easier testing with mock objects</li>
+<li>Better separation of concerns</li>
+<li>More flexible and reusable code</li>
+</ul>
+
+<p>We'll continue this series with practical examples using PHP-DI.</p>]]></content:encoded>
+		<excerpt:encoded><![CDATA[Learn the fundamentals of Dependency Injection and how it promotes better software architecture.]]></excerpt:encoded>
+		<wp:post_id>20</wp:post_id>
+		<wp:post_date><![CDATA[2025-02-12 09:00:00]]></wp:post_date>
+		<wp:post_date_gmt><![CDATA[2025-02-12 09:00:00]]></wp:post_date_gmt>
+		<wp:post_modified><![CDATA[2025-02-12 09:00:00]]></wp:post_modified>
+		<wp:post_modified_gmt><![CDATA[2025-02-12 09:00:00]]></wp:post_modified_gmt>
+		<wp:comment_status><![CDATA[open]]></wp:comment_status>
+		<wp:ping_status><![CDATA[open]]></wp:ping_status>
+		<wp:post_name><![CDATA[understanding-dependency-injection]]></wp:post_name>
+		<wp:status><![CDATA[draft]]></wp:status>
+		<wp:post_parent>0</wp:post_parent>
+		<wp:menu_order>0</wp:menu_order>
+		<wp:post_type><![CDATA[post]]></wp:post_type>
+		<wp:post_password><![CDATA[]]></wp:post_password>
+		<wp:is_sticky>0</wp:is_sticky>
+		<category domain="category" nicename="tutorials"><![CDATA[Tutorials]]></category>
+		<category domain="post_tag" nicename="php"><![CDATA[PHP]]></category>
+	</item>
+
+	<!-- Published post by second author, no featured image -->
+	<item>
+		<title>Building REST APIs with Slim 4</title>
+		<link>https://example.com/2025/03/building-rest-apis-with-slim-4/</link>
+		<pubDate>Mon, 03 Mar 2025 14:15:00 +0000</pubDate>
+		<dc:creator><![CDATA[janewriter]]></dc:creator>
+		<guid isPermaLink="false">https://example.com/?p=30</guid>
+		<description></description>
+		<content:encoded><![CDATA[<p>Slim 4 is a powerful micro-framework perfect for building RESTful APIs. Let's walk through creating a complete API.</p>
+
+<h2>Setting Up</h2>
+<p>Start by installing Slim via Composer:</p>
+<pre><code>composer require slim/slim slim/psr7</code></pre>
+
+<h2>Defining Routes</h2>
+<p>Slim's routing is clean and intuitive:</p>
+<pre><code>$app->get('/api/users', ListUsersAction::class);
+$app->post('/api/users', CreateUserAction::class);
+$app->get('/api/users/{id}', GetUserAction::class);</code></pre>
+
+<h2>Middleware</h2>
+<p>Add authentication, CORS, and other cross-cutting concerns with middleware.</p>
+
+<p>In the next post, we'll add database integration and testing.</p>]]></content:encoded>
+		<excerpt:encoded><![CDATA[A hands-on guide to building REST APIs using the Slim 4 PHP micro-framework.]]></excerpt:encoded>
+		<wp:post_id>30</wp:post_id>
+		<wp:post_date><![CDATA[2025-03-03 14:15:00]]></wp:post_date>
+		<wp:post_date_gmt><![CDATA[2025-03-03 14:15:00]]></wp:post_date_gmt>
+		<wp:post_modified><![CDATA[2025-03-05 10:00:00]]></wp:post_modified>
+		<wp:post_modified_gmt><![CDATA[2025-03-05 10:00:00]]></wp:post_modified_gmt>
+		<wp:comment_status><![CDATA[open]]></wp:comment_status>
+		<wp:ping_status><![CDATA[open]]></wp:ping_status>
+		<wp:post_name><![CDATA[building-rest-apis-with-slim-4]]></wp:post_name>
+		<wp:status><![CDATA[publish]]></wp:status>
+		<wp:post_parent>0</wp:post_parent>
+		<wp:menu_order>0</wp:menu_order>
+		<wp:post_type><![CDATA[post]]></wp:post_type>
+		<wp:post_password><![CDATA[]]></wp:post_password>
+		<wp:is_sticky>0</wp:is_sticky>
+		<category domain="category" nicename="technology"><![CDATA[Technology]]></category>
+		<category domain="post_tag" nicename="php"><![CDATA[PHP]]></category>
+		<category domain="post_tag" nicename="web-development"><![CDATA[Web Development]]></category>
+	</item>
+
+	<!-- A page (should be skipped by the importer) -->
+	<item>
+		<title>About Us</title>
+		<link>https://example.com/about/</link>
+		<pubDate>Sun, 01 Jan 2025 00:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<guid isPermaLink="false">https://example.com/?page_id=2</guid>
+		<description></description>
+		<content:encoded><![CDATA[<p>This is the about page. It should not be imported as a blog post.</p>]]></content:encoded>
+		<excerpt:encoded><![CDATA[]]></excerpt:encoded>
+		<wp:post_id>2</wp:post_id>
+		<wp:post_date><![CDATA[2025-01-01 00:00:00]]></wp:post_date>
+		<wp:post_date_gmt><![CDATA[2025-01-01 00:00:00]]></wp:post_date_gmt>
+		<wp:post_modified><![CDATA[2025-01-01 00:00:00]]></wp:post_modified>
+		<wp:post_modified_gmt><![CDATA[2025-01-01 00:00:00]]></wp:post_modified_gmt>
+		<wp:comment_status><![CDATA[closed]]></wp:comment_status>
+		<wp:ping_status><![CDATA[closed]]></wp:ping_status>
+		<wp:post_name><![CDATA[about]]></wp:post_name>
+		<wp:status><![CDATA[publish]]></wp:status>
+		<wp:post_parent>0</wp:post_parent>
+		<wp:menu_order>0</wp:menu_order>
+		<wp:post_type><![CDATA[page]]></wp:post_type>
+		<wp:post_password><![CDATA[]]></wp:post_password>
+		<wp:is_sticky>0</wp:is_sticky>
+	</item>
+
+	<!-- Post with no categories or tags, empty excerpt -->
+	<item>
+		<title>Hello World</title>
+		<link>https://example.com/2025/01/hello-world/</link>
+		<pubDate>Thu, 01 Jan 2025 00:00:00 +0000</pubDate>
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<guid isPermaLink="false">https://example.com/?p=1</guid>
+		<description></description>
+		<content:encoded><![CDATA[<p>Welcome to WordPress. This is your first post. Edit or delete it, then start writing!</p>]]></content:encoded>
+		<excerpt:encoded><![CDATA[]]></excerpt:encoded>
+		<wp:post_id>1</wp:post_id>
+		<wp:post_date><![CDATA[2025-01-01 00:00:00]]></wp:post_date>
+		<wp:post_date_gmt><![CDATA[2025-01-01 00:00:00]]></wp:post_date_gmt>
+		<wp:post_modified><![CDATA[2025-01-01 00:00:00]]></wp:post_modified>
+		<wp:post_modified_gmt><![CDATA[2025-01-01 00:00:00]]></wp:post_modified_gmt>
+		<wp:comment_status><![CDATA[open]]></wp:comment_status>
+		<wp:ping_status><![CDATA[open]]></wp:ping_status>
+		<wp:post_name><![CDATA[hello-world]]></wp:post_name>
+		<wp:status><![CDATA[publish]]></wp:status>
+		<wp:post_parent>0</wp:post_parent>
+		<wp:menu_order>0</wp:menu_order>
+		<wp:post_type><![CDATA[post]]></wp:post_type>
+		<wp:post_password><![CDATA[]]></wp:post_password>
+		<wp:is_sticky>0</wp:is_sticky>
+		<category domain="category" nicename="uncategorized"><![CDATA[Uncategorized]]></category>
+	</item>
+
+</channel>
+</rss>

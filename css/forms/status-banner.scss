@@ -10,7 +10,6 @@
 	z-index          : 999999;
 	pointer-events   : none;
 	background-color : transparent;
-	backdrop-filter  : blur(5px);
 
 	--totalform-formerror : "An error occurred. See the CMS logs for more details.";
 
@@ -47,7 +46,8 @@
 	}
 
     &.processing,&.success,&.error{
-        opacity : 1;
+        opacity         : 1;
+        backdrop-filter : blur(5px);
     }
     &.processing {
 		background-color : oklch(var(--totalform-blue) / 0.8);

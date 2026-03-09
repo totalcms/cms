@@ -5,11 +5,11 @@ namespace TotalCMS\Middleware\License;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -21,21 +21,19 @@ use TotalCMS\Support\Config;
  * - Blog, blog-legacy, depot schemas require Standard+
  * - Custom schemas require Pro
  */
-readonly class SchemaEditionMiddleware implements MiddlewareInterface
+readonly class SchemaEditionMiddleware extends BaseEditionMiddleware
 {
 	public function __construct(
 		private CollectionEditionService $collectionEditionService,
-		private EditionFeatureService $editionFeatures,
-		private TwigRenderer $twigRenderer,
-		private JsonRenderer $jsonRenderer,
-		private ResponseFactoryInterface $responseFactory,
-		private Config $config,
+		EditionFeatureService $editionFeatures,
+		TwigRenderer $twigRenderer,
+		JsonRenderer $jsonRenderer,
+		ResponseFactoryInterface $responseFactory,
+		Config $config,
 	) {
+		parent::__construct($editionFeatures, $twigRenderer, $jsonRenderer, $responseFactory, $config);
 	}
 
-	/**
-	 * Process the request and check schema edition access.
-	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		// Get schema from route argument
@@ -49,7 +47,23 @@ readonly class SchemaEditionMiddleware implements MiddlewareInterface
 		$schema = $route->getArgument('schema') ?? $route->getArgument('id');
 
 		if ($schema === null) {
-			// No schema specified (e.g., listing schemas) - allow through
+			// No schema ID — this is a POST to create a new schema (requires Pro)
+			if ($request->getMethod() === 'POST' && !$this->editionFeatures->can(EditionFeature::CUSTOM_SCHEMAS)) {
+				$feature = EditionFeature::CUSTOM_SCHEMAS;
+
+				$message = sprintf(
+					'The "%s" feature requires the %s edition or higher.',
+					$feature->label(),
+					ucfirst($feature->requiredEdition()->value)
+				);
+
+				if ($this->config->env === 'dev') {
+					$message .= sprintf(' Current edition: %s.', ucfirst($this->editionFeatures->getEdition()->value));
+				}
+
+				return $this->forbiddenResponse($request, $message);
+			}
+
 			return $handler->handle($request);
 		}
 
@@ -68,36 +82,5 @@ readonly class SchemaEditionMiddleware implements MiddlewareInterface
 		}
 
 		return $handler->handle($request);
-	}
-
-	/**
-	 * Return a 403 Forbidden response (JSON for API, HTML for admin UI).
-	 */
-	private function forbiddenResponse(ServerRequestInterface $request, string $message): ResponseInterface
-	{
-		$path = $request->getUri()->getPath();
-
-		// Admin UI requests get HTML response
-		if (str_starts_with($path, '/admin/')) {
-			$details = $this->config->env === 'dev'
-				? sprintf("Path: %s\nEdition: %s", $path, ucfirst($this->editionFeatures->getEdition()->value))
-				: null;
-
-			return $this->twigRenderer->template(
-				$this->responseFactory->createResponse()->withStatus(403),
-				'access-denied.twig',
-				[
-					'message'  => $message,
-					'details'  => $details,
-					'referrer' => $request->getHeaderLine('Referer') ?: null,
-				]
-			);
-		}
-
-		// API requests get JSON response
-		return $this->jsonRenderer->json(
-			$this->responseFactory->createResponse()->withStatus(403),
-			['error' => ['message' => $message]]
-		);
 	}
 }

@@ -11,29 +11,29 @@
 		{% endif %}
 	</section>
 
-	{% set formOptions = {} %}
+	{% set formSettings = {} %}
 	{% if cms.edition.can('templates') %}
 		{% set json = include(cms.edition.can('whitelabel_templates')
 			? ['whitelabel/download-auth-options.twig', 'download-auth-options.twig']
 			: ['download-auth-options.twig']
 		, ignore_missing = true) %}
 		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
-		{% set formOptions = formOptions|merge(decoded) %}
+		{% set formSettings = formSettings|merge(decoded) %}
 	{% endif %}
 
 	{# TODO: Refactor to use cms.form.downloadAuthForm() method for consistency #}
 	<section class="login-form">
 		<form class="totalform" method="post" data-disabled="true">
 			<div class="form-field password-field" data-type="password">
-				<label for="field-66e386299dfa7">{{ formOptions.passwordLabel | default('Password') }}</label>
+				<label for="field-66e386299dfa7">{{ formSettings.passwordLabel | default(t('download_auth.password_label')) }}</label>
 				<div class="form-group">
 					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
 					<div class="form-group-icon"></div>
 				</div>
-				<p class="cms-hide help" id="help-66e386299dfa7">Password to login</p>
+				<p class="cms-hide help" id="help-66e386299dfa7">{{ t('download_auth.password_ph') }}</p>
 			</div>
 
-			<button class="dash-button" type="submit">{{ formOptions.submitLabel | default('Download') }}</button>
+			<button class="dash-button" type="submit">{{ formSettings.submitLabel | default(t('download_auth.submit')) }}</button>
 			{% for message in flash.get('error') %}
 				<p class="cms-twig-error" role="alert">
 					{{ message }}

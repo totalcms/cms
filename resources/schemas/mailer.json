@@ -4,7 +4,6 @@
 	"id"          : "mailer",
 	"help" : "A schema for mailer email templates.",
 	"type"        : "object",
-	"formgrid"    : "active .\nid id\nname category\ndescription description\n---\nto from\ntoName fromName\nreplyTo .\ncc bcc\n---\nsubject subject\nbodyHtml bodyHtml\nbodyText bodyText",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -125,9 +124,10 @@
 			"placeholder" : "<p>Hello {{ data.name }},</p>\n<p>Thank you for contacting us.</p>",
 			"help"        : "HTML email body (supports twig variables)",
 			"settings"    : {
-				"rows"     : 15,
-				"mode"     : "twig",
-				"required" : true
+				"rows"      : 15,
+				"maxHeight" : 600,
+				"mode"      : "twig",
+				"required"  : true
 			}
 		},
 		"bodyText": {
@@ -139,6 +139,31 @@
 			"settings"    : {
 				"rows": 10
 			}
+		},
+		"bulkCollection": {
+			"type"        : "string",
+			"label"       : "Collection",
+			"field"       : "select",
+			"placeholder" : "Select a collection",
+			"help"        : "Collection to use for bulk sending. Each object becomes the template data for one email.",
+			"settings"    : {
+				"propertyOptions" : "collectionIds",
+				"sortOptions"     : true
+			}
+		},
+		"bulkInclude": {
+			"type"        : "string",
+			"label"       : "Include Filter",
+			"field"       : "text",
+			"placeholder" : "status:active,subscribed:true",
+			"help"        : "Only include objects matching this filter (e.g., status:active)."
+		},
+		"bulkExclude": {
+			"type"        : "string",
+			"label"       : "Exclude Filter",
+			"field"       : "text",
+			"placeholder" : "unsubscribed:true",
+			"help"        : "Exclude objects matching this filter (e.g., unsubscribed:true)."
 		}
 	},
 	"required": [

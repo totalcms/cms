@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
 /**
@@ -20,6 +21,7 @@ readonly class ResetPasswordSubmitAction
 		private PasswordResetService $passwordResetService,
 		private Config $config,
 		private PhpSession $session,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -44,26 +46,26 @@ readonly class ResetPasswordSubmitAction
 
 		// Validate inputs
 		if ($token === '') {
-			$flash->add('error', 'Invalid reset token.');
+			$flash->add('error', $this->translator->trans('flash.invalid_token'));
 
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
 		if ($newPassword === '') {
-			$flash->add('error', 'Please enter a new password.');
+			$flash->add('error', $this->translator->trans('flash.password_required'));
 
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
 		if ($newPassword !== $confirm) {
-			$flash->add('error', 'Passwords do not match.');
+			$flash->add('error', $this->translator->trans('flash.passwords_no_match'));
 
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
 		// Check minimum password length (should match auth schema requirements)
 		if (strlen($newPassword) < 4) {
-			$flash->add('error', 'Password must be at least 4 characters long.');
+			$flash->add('error', $this->translator->trans('flash.password_too_short'));
 
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
@@ -100,7 +102,7 @@ readonly class ResetPasswordSubmitAction
 		}
 
 		// Set success flash message for login page
-		$flash->add('success', 'Password reset successful! You can now log in with your new password.');
+		$flash->add('success', $this->translator->trans('flash.password_reset_success'));
 
 		return $response->withStatus(302)->withHeader('Location', $loginUrl);
 	}

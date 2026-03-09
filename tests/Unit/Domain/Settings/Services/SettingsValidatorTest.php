@@ -45,7 +45,7 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(10, $sections);
+		$this->assertCount(12, $sections);
 		$this->assertContains('installation', $sections);
 		$this->assertContains('general', $sections);
 		$this->assertContains('dashboard', $sections);
@@ -55,6 +55,8 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertContains('auth', $sections);
 		$this->assertContains('htmlclean', $sections);
 		$this->assertContains('mailer', $sections);
+		$this->assertContains('pushnotif', $sections);
+		$this->assertContains('presets', $sections);
 		$this->assertContains('license', $sections);
 	}
 
@@ -465,6 +467,129 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertEquals('', $result['datadir']);
 		$this->assertEquals('UTC', $result['timezone']);
 		$this->assertTrue($result['debug']);
+	}
+
+	// ==================== Presets Section ====================
+
+	public function testProcessPresetsDecodesOuterJSON(): void
+	{
+		$presets = [
+			'blog-editor' => [
+				'id'       => 'blog-editor',
+				'settings' => '{"height":400,"toolbar":"basic"}',
+			],
+		];
+
+		$data = [
+			'presetsettings' => json_encode($presets),
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		$this->assertIsArray($result['presetsettings']);
+		$this->assertArrayHasKey('blog-editor', $result['presetsettings']);
+		$this->assertIsArray($result['presetsettings']['blog-editor']['settings']);
+		$this->assertEquals(400, $result['presetsettings']['blog-editor']['settings']['height']);
+		$this->assertEquals('basic', $result['presetsettings']['blog-editor']['settings']['toolbar']);
+	}
+
+	public function testProcessPresetsDecodesMultipleItems(): void
+	{
+		$presets = [
+			'blog-editor' => [
+				'id'       => 'blog-editor',
+				'settings' => '{"height":400}',
+			],
+			'styledtext' => [
+				'id'       => 'styledtext',
+				'settings' => '{"toolbar":"minimal","height":300}',
+			],
+		];
+
+		$data = [
+			'presetsettings' => json_encode($presets),
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		$this->assertIsArray($result['presetsettings']);
+		$this->assertCount(2, $result['presetsettings']);
+		$this->assertIsArray($result['presetsettings']['blog-editor']['settings']);
+		$this->assertIsArray($result['presetsettings']['styledtext']['settings']);
+		$this->assertEquals(300, $result['presetsettings']['styledtext']['settings']['height']);
+	}
+
+	public function testProcessPresetsHandlesEmptyPresetsettings(): void
+	{
+		$data = [
+			'presetsettings' => '',
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		$this->assertEquals('', $result['presetsettings']);
+	}
+
+	public function testProcessPresetsHandlesInvalidOuterJSON(): void
+	{
+		$data = [
+			'presetsettings' => 'invalid-json{',
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		// Invalid JSON should remain as string
+		$this->assertIsString($result['presetsettings']);
+	}
+
+	public function testProcessPresetsHandlesInvalidItemSettingsJSON(): void
+	{
+		$presets = [
+			'bad-preset' => [
+				'id'       => 'bad-preset',
+				'settings' => 'not-valid-json{',
+			],
+		];
+
+		$data = [
+			'presetsettings' => json_encode($presets),
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		// Item with invalid settings JSON should keep the string
+		$this->assertIsString($result['presetsettings']['bad-preset']['settings']);
+	}
+
+	public function testProcessPresetsPreservesArraySettingsAlreadyDecoded(): void
+	{
+		// If presetsettings is already an array (not a JSON string), pass through
+		$data = [
+			'presetsettings' => [
+				'blog-editor' => [
+					'id'       => 'blog-editor',
+					'settings' => ['height' => 400],
+				],
+			],
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		// Already an array, should pass through unchanged
+		$this->assertIsArray($result['presetsettings']);
+		$this->assertIsArray($result['presetsettings']['blog-editor']['settings']);
+	}
+
+	public function testProcessPresetsHandlesMissingPresetsettingsKey(): void
+	{
+		$data = [
+			'someOtherField' => 'value',
+		];
+
+		$result = $this->validator->processSection('presets', $data);
+
+		$this->assertArrayNotHasKey('presetsettings', $result);
+		$this->assertEquals('value', $result['someOtherField']);
 	}
 
 	// ==================== Unknown Section ====================

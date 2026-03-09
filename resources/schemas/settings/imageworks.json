@@ -4,6 +4,12 @@
 	"description" : "Image processing and watermark configuration",
 	"type"        : "object",
 	"properties"  : {
+		"gatherLocation": {
+			"type"    : "toggle",
+			"label"   : "Gather Image Location Data",
+			"help"    : "Extract GPS coordinates and location metadata (latitude, longitude, altitude, country, state, city, sublocation) from uploaded images. Non-location EXIF data (camera, lens, exposure, author, copyright, date) is always preserved. Disable for GDPR compliance and privacy protection.",
+			"default" : true
+		},
 		"watermarksGallery": {
 			"type"        : "text",
 			"label"       : "Watermark Gallery",

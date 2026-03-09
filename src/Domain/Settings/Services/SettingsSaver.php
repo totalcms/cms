@@ -21,8 +21,6 @@ readonly class SettingsSaver
 	/**
 	 * Save settings for a specific section.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
 	 * @param array<string,mixed> $sectionData
 	 */
 	public function saveSection(string $section, array $sectionData): void
@@ -35,6 +33,10 @@ readonly class SettingsSaver
 		// General settings are saved at the top level, not under 'general' key
 		if ($section === 'general') {
 			$settings = self::deepMergeArrays($settings, $sectionData);
+		} elseif ($section === 'presets') {
+			// Presets use deck field - replace entirely rather than deep merge
+			// to ensure deleted items are actually removed
+			$settings[$section] = $sectionData;
 		} elseif (isset($settings[$section]) && is_array($settings[$section])) {
 			// Deep merge the section data
 			$settings[$section] = self::deepMergeArrays($settings[$section], $sectionData);
@@ -80,8 +82,6 @@ readonly class SettingsSaver
 
 	/**
 	 * Deep merge two arrays recursively.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $array1
 	 * @param array<string,mixed> $array2

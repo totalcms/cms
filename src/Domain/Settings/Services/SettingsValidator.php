@@ -26,6 +26,8 @@ readonly class SettingsValidator
 			'auth',
 			'htmlclean',
 			'mailer',
+			'pushnotif',
+			'presets',
 			'license',
 		];
 	}
@@ -69,6 +71,7 @@ readonly class SettingsValidator
 			'cache'        => $this->processCache($data),
 			'auth'         => $this->processAuth($data),
 			'htmlclean'    => $this->processHtmlClean($data),
+			'presets'      => $this->processPresets($data),
 			default        => $data,
 		};
 	}
@@ -109,6 +112,10 @@ readonly class SettingsValidator
 	 */
 	private function processGeneral(array $data): array
 	{
+		if (isset($data['maxDownloadSize'])) {
+			$data['maxDownloadSize'] = max(0, (int)$data['maxDownloadSize']);
+		}
+
 		return $data;
 	}
 
@@ -210,9 +217,11 @@ readonly class SettingsValidator
 	 */
 	private function processAuth(array $data): array
 	{
-		// Handle toggle field
-		if (isset($data['enable'])) {
-			$data['enable'] = in_array($data['enable'], ['on', '1', true], true);
+		// Handle toggle fields
+		foreach (['enable', 'usePasskeys'] as $toggle) {
+			if (isset($data[$toggle])) {
+				$data[$toggle] = in_array($data[$toggle], ['on', '1', true], true);
+			}
 		}
 
 		// Convert numeric fields to integers
@@ -229,6 +238,44 @@ readonly class SettingsValidator
 				$data[$field] = (int)$data[$field];
 			}
 		}
+
+		return $data;
+	}
+
+	/**
+	 * Process property setting presets.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function processPresets(array $data): array
+	{
+		if (!isset($data['presetsettings']) || !is_string($data['presetsettings'])) {
+			return $data;
+		}
+
+		if ($data['presetsettings'] === '') {
+			return $data;
+		}
+
+		$definitions = json_decode($data['presetsettings'], true);
+		if (json_last_error() !== JSON_ERROR_NONE || !is_array($definitions)) {
+			return $data;
+		}
+
+		// Deck submits items as {key: {id, settings}, ...}
+		// Decode each item's settings JSON string into an array
+		foreach ($definitions as $key => $item) {
+			if (is_array($item) && isset($item['settings']) && is_string($item['settings'])) {
+				$settings = json_decode($item['settings'], true);
+				if (json_last_error() === JSON_ERROR_NONE && is_array($settings)) {
+					$definitions[$key]['settings'] = $settings;
+				}
+			}
+		}
+
+		$data['presetsettings'] = $definitions;
 
 		return $data;
 	}

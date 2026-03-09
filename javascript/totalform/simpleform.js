@@ -24,6 +24,7 @@ export default class SimpleForm {
 		this.api     = new TotalCMS({ url: this.form.dataset.api});
 		this.refresh = this.form.dataset.refresh === "true";
 		this.ajax    = this.form.dataset.ajax    === "true";
+		this.confirm = this.form.dataset.confirm || "";
 		this.button  = this.form.querySelector("button[type=submit]");
 
 		if (this.ajax) {
@@ -125,6 +126,10 @@ export default class SimpleForm {
 	}
 
 	send() {
+		if (this.confirm && !window.confirm(this.confirm)) {
+			return;
+		}
+
 		this.button.classList.remove("success", "error");
 		this.button.classList.add("processing");
 

@@ -11,11 +11,16 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -23,6 +28,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
 /**
@@ -60,8 +66,38 @@ readonly class TotalFormFactory
 		private SettingsSchemaFetcher $settingsSchemaFetcher,
 		private SettingsFetcher $settingsFetcher,
 		private JobManager $jobManager,
+		private DataViewLister $dataViewLister,
+		private PropertyMetaResolver $metaResolver,
+		private DataViewFilter $dataViewFilter,
+		private TranslationService $translationService,
 	) {
 		$this->api = $this->config->api;
+	}
+
+	/**
+	 * Create a report export form.
+	 *
+	 * @param array<string,mixed> $options Options: include, exclude, includeOptions, excludeOptions, includeSelect, excludeSelect
+	 */
+	public function report(string $collection = '', array $options = []): string
+	{
+		$includeOptions = $options['includeOptions'] ?? [];
+		$excludeOptions = $options['excludeOptions'] ?? [];
+
+		$form = new ReportForm(
+			api              : $this->api,
+			collectionLister : $this->collectionLister,
+			translator       : $this->translationService->trans(...),
+			collection       : $collection,
+			include          : (string)($options['include'] ?? ''),
+			exclude          : (string)($options['exclude'] ?? ''),
+			includeOptions   : is_array($includeOptions) ? $includeOptions : [],
+			excludeOptions   : is_array($excludeOptions) ? $excludeOptions : [],
+			includeSelect    : (bool)($options['includeSelect'] ?? false),
+			excludeSelect    : (bool)($options['excludeSelect'] ?? false),
+		);
+
+		return $form->build();
 	}
 
 	/** @param array<string,mixed> $options */
@@ -94,7 +130,10 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new TotalForm(...$options);
@@ -121,9 +160,11 @@ readonly class TotalFormFactory
 	 */
 	public function loginForm(array $options = []): string
 	{
-		$options['api']         = $this->api;
-		$options['session']     = $this->session;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['api']          = $this->api;
+		$options['session']      = $this->session;
+		$options['csrfManager']  = $this->csrfManager;
+		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)
+			&& ($this->config->auth['usePasskeys'] ?? true);
 
 		$form = new LoginForm(...$options);
 
@@ -272,7 +313,10 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'schemaFactory'            => $this->schemaFactory,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -301,7 +345,10 @@ readonly class TotalFormFactory
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
 			'templateRepository'       => $this->templateRepository,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new TemplateForm(...$options);
@@ -325,18 +372,211 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function dataviews(string $id = '', array $options = []): string
+	{
+		$this->dataViewLister->ensureCollection();
+
+		$options = array_merge([
+			'save'        => 'Save',
+			'delete'      => 'Delete',
+			'class'       => 'dataview-form no-unsaved-warning',
+		], $options);
+		$options['id'] = $id;
+
+		$form = $this->builder('dataviews', $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function mailer(string $id = '', array $options = []): string
 	{
 		$options = array_merge([
-			'save'   => 'Save',
-			'delete' => 'Delete',
-			'class'  => 'help-on-hover help-box',
+			'save'        => 'Save',
+			'delete'      => 'Delete',
+			'class'       => 'help-on-hover help-box mailer-form formgrid',
+			'useFormGrid' => false,
 		], $options);
 		$options['id'] = $id;
 
 		$form = $this->builder('mailer', $options);
 
-		return $form->autoBuild();
+		// Row: Active toggle + ID
+		$content  = $form->field('active');
+		$content .= $form->field('id');
+		$content .= $form->field('name');
+		$content .= $form->field('category');
+		$content .= $form->field('description');
+
+		$content .= HTMLUtils::inlineElement('hr', ['class' => 'form-grid-section-divider']);
+
+		$content .= $form->field('to');
+		$content .= $form->field('from');
+		$content .= $form->field('toName');
+		$content .= $form->field('fromName');
+		$content .= $form->field('replyTo');
+		$content .= $form->field('cc');
+		$content .= $form->field('bcc');
+
+		$content .= HTMLUtils::inlineElement('hr', ['class' => 'form-grid-section-divider']);
+
+		// Subject, Body HTML, Body Text (full width)
+		$content .= $form->field('subject');
+		$content .= $form->field('bodyHtml');
+		$content .= $form->field('bodyText');
+
+		$bulkSection = '';
+
+		if ($id !== '') {
+			$hiddenMailerId = HTMLUtils::inlineElement('input', [
+				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id,
+			]);
+
+			$objectPickerScript = <<<'SCRIPT'
+			<script>
+			(function() {
+				let debounceTimer = null;
+				let cachedData = [];
+				const pickerInput = document.querySelector('select[name="bulkObjectIds[]"]');
+				const picker = pickerInput ? pickerInput.closest('.form-field') : null;
+				const previewInput = document.querySelector('select[name="bulkPreviewObjectId"]');
+				const previewField = previewInput ? previewInput.closest('.form-field') : null;
+				if (!picker) return;
+
+				function updateChoices(field, data) {
+					if (!field || !field.totalfield || !field.totalfield.choices) return;
+					const choices = field.totalfield.choices;
+					choices.clearStore();
+					if (data.length > 0) {
+						choices.setChoices(data, 'value', 'label', true);
+					}
+				}
+
+				function fetchObjects() {
+					const collection = document.querySelector('[name="bulkCollection"]');
+					const include = document.querySelector('[name="bulkInclude"]');
+					const exclude = document.querySelector('[name="bulkExclude"]');
+					if (!collection || !collection.value) return;
+
+					const params = new URLSearchParams({ bulkCollection: collection.value });
+					if (include && include.value) params.set('bulkInclude', include.value);
+					if (exclude && exclude.value) params.set('bulkExclude', exclude.value);
+
+					fetch('/action/mailer/bulk/objects?' + params.toString())
+						.then(r => r.json())
+						.then(data => {
+							cachedData = data;
+							updateChoices(picker, data);
+							updateChoices(previewField, data);
+						})
+						.catch(() => {});
+				}
+
+				function debouncedFetch() {
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(fetchObjects, 500);
+				}
+
+				const collectionEl = document.querySelector('[name="bulkCollection"]');
+				const includeEl = document.querySelector('[name="bulkInclude"]');
+				const excludeEl = document.querySelector('[name="bulkExclude"]');
+
+				if (collectionEl) collectionEl.addEventListener('change', fetchObjects);
+				if (includeEl) includeEl.addEventListener('input', debouncedFetch);
+				if (excludeEl) excludeEl.addEventListener('input', debouncedFetch);
+
+				// When the preview accordion opens, apply cached data
+				if (previewField) {
+					const details = previewField.closest('details');
+					if (details) {
+						details.addEventListener('toggle', () => {
+							if (details.open && cachedData.length > 0) {
+								updateChoices(previewField, cachedData);
+							}
+						});
+					}
+				}
+
+				if (collectionEl && collectionEl.value) fetchObjects();
+			})();
+			</script>
+			SCRIPT;
+
+			// Audience + Send combined accordion
+			$sendAttrs = array_merge(
+				HTMLUtils::htmxAttributes('/action/mailer/bulk', 'post', [
+					'target'  => '#bulk-send-output',
+					'swap'    => 'innerHTML',
+					'confirm' => 'Are you sure you want to queue a bulk email send? This will send one email per matching object.',
+				]),
+				['class' => 'dash-button accent', 'id' => 'bulk-send-btn']
+			);
+			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkOverrideTo"],[name="bulkscheduledAt"],[name="bulkObjectIds[]"]';
+
+			$bulkSendFields = $form->field('bulkCollection') .
+				$form->field('bulkInclude') .
+				$form->field('bulkExclude') .
+				$form->field('bulkObjectIds[]', [
+					'field'       => 'list',
+					'label'       => 'Specific Objects',
+					'help'        => 'Select specific objects to override filters. Leave empty to use filters above.',
+					'placeholder' => 'Select objects...',
+					'settings'    => [
+						'addChoices'       => false,
+						'removeItemButton' => true,
+					],
+				]) .
+				HTMLUtils::inlineElement('hr', ['class' => 'bulk-divider']) .
+				$form->field('bulkOverrideTo', [
+					'field'       => 'email',
+					'label'       => 'Override To Email (for testing)',
+					'placeholder' => 'test@example.com',
+					'help'        => 'Override recipient email for testing. All emails will be sent to this address instead.',
+				]) .
+				$form->field('bulkscheduledAt', [
+					'field'       => 'datetime',
+					'label'       => 'Schedule',
+					'placeholder' => 'Enter a date and time to schedule this email',
+				]) .
+				HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs) .
+				'<div id="bulk-send-output" class="bulk-send-output"></div>';
+			$bulkSendDetails = HTMLUtils::details('Audience & Send', $bulkSendFields);
+
+			// Preview accordion
+			$previewAttrs = array_merge(
+				HTMLUtils::htmxAttributes('/action/mailer/bulk/preview', 'post', [
+					'target' => '#bulk-preview-output',
+					'swap'   => 'innerHTML',
+				]),
+				['class' => 'dash-button', 'id' => 'bulk-preview-btn']
+			);
+			$previewAttrs['hx-include'] = '[name="mailerId"],[name="bulkPreviewObjectId"],[name="bulkCollection"]';
+
+			$bulkPreviewForm = $form->field('bulkPreviewObjectId', [
+				'field'       => 'list',
+				'label'       => 'Preview Object',
+				'placeholder' => 'Select an object to preview...',
+				'settings'    => [
+					'addChoices'       => false,
+					'removeItemButton' => true,
+					'maxItemCount'     => 1,
+				],
+			]) . HTMLUtils::element('button', 'Preview', $previewAttrs);
+			$bulkPreviewForm    = HTMLUtils::element('div', $bulkPreviewForm, ['class' => 'bulk-preview-form']);
+			$bulkPreviewOutput  = HTMLUtils::element('div', '', [
+				'id'    => 'bulk-preview-output',
+				'class' => 'bulk-preview-output',
+			]);
+			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
+
+			$bulkSection  = $hiddenMailerId;
+			$bulkSection .= HTMLUtils::element('h2', 'Bulk Send <span class="bulk-pro-badge">Pro</span>');
+			$bulkSection .= HTMLUtils::element('p', 'Send this email to every matching object in a collection.');
+			$bulkSection .= $bulkSendDetails . $bulkPreviewDetails . $objectPickerScript;
+			$bulkSection  = HTMLUtils::element('section', $bulkSection, ['class' => 'bulk-send-section']);
+		}
+
+		return $form->build($content, $bulkSection);
 	}
 
 	/** @param array<string,mixed> $options */
@@ -358,7 +598,10 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new CollectionForm(...$options);
@@ -383,8 +626,10 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		return new ObjectForm(...$options);
@@ -413,7 +658,10 @@ readonly class TotalFormFactory
 			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
 			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
 			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 
 		return new DeckItemForm(...$options);
@@ -432,35 +680,35 @@ readonly class TotalFormFactory
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
 	private function singleFieldFormBuilder(
 		string $id,
 		string $defaultCollection,
 		string $property,
 		string $field,
-		array $formOptions = [],
-		array $fieldOptions = [],
+		array $formSettings = [],
+		array $fieldSettings = [],
 	): string {
-		$formOptions = array_merge([
+		$formSettings = array_merge([
 			'collection' => $defaultCollection,
 			'hideID'     => true,
 			'id'         => $id,
-		], $formOptions);
+		], $formSettings);
 
-		$class                = $formOptions['class'] ?? ' custom-layout';
-		$formOptions['class'] = $class;
+		$class                 = $formSettings['class'] ?? ' custom-layout';
+		$formSettings['class'] = $class;
 
-		$collection = $formOptions['collection'];
-		unset($formOptions['collection']);
+		$collection = $formSettings['collection'];
+		unset($formSettings['collection']);
 
-		$fieldOptions['field'] = $field;
+		$fieldSettings['field'] = $field;
 
-		$form = $this->builder($collection, $formOptions);
+		$form = $this->builder($collection, $formSettings);
 
 		$form->addField('id');
-		$form->addField($property, $fieldOptions);
+		$form->addField($property, $fieldSettings);
 
 		return $form->build();
 	}
@@ -499,6 +747,9 @@ readonly class TotalFormFactory
 		$formfields = '';
 
 		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
+			// Resolve field type: "field" takes precedence over "type"
+			$fieldType = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
+
 			// Get current value with priority: sectionData > defaults > schema default > empty string
 			$currentValue = '';
 			if (isset($fieldSchema['default'])) {
@@ -515,13 +766,13 @@ readonly class TotalFormFactory
 			}
 
 			// Special handling for JSON fields - convert arrays to JSON strings for display
-			if ($fieldSchema['type'] === 'json' && is_array($currentValue)) {
+			if ($fieldType === 'json' && is_array($currentValue)) {
 				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
 			}
 
 			// Build field options
-			$fieldOptions = [
-				'field'       => $fieldSchema['type'],
+			$fieldSettings = [
+				'field'       => $fieldType,
 				'label'       => $fieldSchema['label'] ?? '',
 				'help'        => $fieldSchema['help'] ?? '',
 				'placeholder' => $fieldSchema['placeholder'] ?? '',
@@ -532,9 +783,19 @@ readonly class TotalFormFactory
 				'settings'    => $fieldSchema['settings'] ?? [],
 			];
 
+			// Merge deck-specific schema keys into settings
+			if ($fieldType === 'deck' || $fieldType === 'deckTable') {
+				if (isset($fieldSchema['deckref'])) {
+					$fieldSettings['settings']['deckref'] = $fieldSchema['deckref'];
+				}
+				if (isset($fieldSchema['deckItemLabel'])) {
+					$fieldSettings['settings']['deckItemLabel'] = $fieldSchema['deckItemLabel'];
+				}
+			}
+
 			// Special handling for select fields with options
 			if (isset($fieldSchema['options'])) {
-				$fieldOptions['options'] = $fieldSchema['options'];
+				$fieldSettings['options'] = $fieldSchema['options'];
 			}
 
 			// Special handling for timezone field
@@ -543,18 +804,16 @@ readonly class TotalFormFactory
 				foreach ($timezones as $tz) {
 					$timezoneOptions[] = ['value' => $tz, 'label' => $tz];
 				}
-				$fieldOptions['options'] = $timezoneOptions;
+				$fieldSettings['options'] = $timezoneOptions;
 			}
 
-			$formfields .= $this->field($fieldSchema['type'], $fieldName, $fieldOptions);
+			$formfields .= $this->field($fieldType, $fieldName, $fieldSettings);
 		}
 
-		return $this->simple('/admin/settings/' . $section, $formfields, [
+		return $this->totalform('/admin/settings/' . $section, $formfields, [
 			'method'      => 'POST',
-			'label'       => 'Save Settings',
-			'refresh'     => true,
+			'save'        => 'Save Settings',
 			'class'       => 'help-on-hover help-box',
-			'buttonClass' => 'cms-save',
 		]);
 	}
 
@@ -573,7 +832,7 @@ readonly class TotalFormFactory
 			'fields'     => [],
 		], $options);
 
-		$class            = $options['class'] ?? ' custom-layout';
+		$class            = trim('custom-layout ' . ($options['class'] ?? ''));
 		$options['class'] = $class;
 
 		$fields = array_merge([
@@ -664,50 +923,50 @@ readonly class TotalFormFactory
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function checkbox(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function checkbox(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		$formOptions['autosave'] = true;
+		$formSettings['autosave'] = true;
 
-		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'checkbox', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'checkbox', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function color(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function color(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'color', 'color', 'color', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'color', 'color', 'color', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function date(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function date(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'date', 'date', 'date', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'date', 'date', 'date', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function datetime(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function datetime(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'date', 'date', 'datetime', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'date', 'date', 'datetime', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function email(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function email(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'email', 'email', 'email', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'email', 'email', 'email', $formSettings, $fieldSettings);
 	}
 
 	/** @param array<string,mixed> $options */
@@ -719,7 +978,7 @@ readonly class TotalFormFactory
 			'delete'     => 'Delete',
 		], $options);
 
-		$class            = $options['class'] ?? ' custom-layout';
+		$class            = trim('custom-layout ' . ($options['class'] ?? ''));
 		$options['class'] = $class;
 
 		$form = $this->builder($options['collection'], $options);
@@ -740,157 +999,157 @@ readonly class TotalFormFactory
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function gallery(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function gallery(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'gallery', 'gallery', 'gallery', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'gallery', 'gallery', 'gallery', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function image(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function image(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'image', 'image', 'image', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'image', 'image', 'image', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function file(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function file(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'file', 'file', 'file', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'file', 'file', 'file', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function depot(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function depot(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'depot', 'depot', 'depot', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'depot', 'depot', 'depot', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function depotDrop(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function depotDrop(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		$formOptions = array_merge([
+		$formSettings = array_merge([
 			'collection' => 'depot',
 			'property'   => 'depot',
-		], $formOptions);
+		], $formSettings);
 
-		$property = $formOptions['property'];
-		unset($formOptions['property']);
+		$property = $formSettings['property'];
+		unset($formSettings['property']);
 
-		return $this->singleFieldFormBuilder($id, $formOptions['collection'], $property, 'depotDrop', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, $formSettings['collection'], $property, 'depotDrop', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function number(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function number(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'number', 'number', 'number', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'number', 'number', 'number', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function price(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function price(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'number', 'number', 'price', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'number', 'number', 'price', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function range(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function range(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'number', 'number', 'range', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'number', 'number', 'range', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function select(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function select(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'text', 'text', 'select', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'select', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function styledtext(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function styledtext(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'styledtext', 'styledtext', 'styledtext', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'styledtext', 'styledtext', 'styledtext', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function svg(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function svg(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'svg', 'svg', 'svg', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'svg', 'svg', 'svg', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function text(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function text(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'text', 'text', 'text', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'text', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function code(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function code(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'code', 'code', 'code', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'code', 'code', 'code', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function textarea(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function textarea(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'text', 'text', 'textarea', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'textarea', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function toggle(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function toggle(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		$formOptions['autosave'] = true;
+		$formSettings['autosave'] = true;
 
-		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $formSettings, $fieldSettings);
 	}
 
 	/**
-	 * @param array<string,mixed> $formOptions
-	 * @param array<string,mixed> $fieldOptions
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
 	 */
-	public function url(string $id, array $formOptions = [], array $fieldOptions = []): string
+	public function url(string $id, array $formSettings = [], array $fieldSettings = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'url', 'url', 'url', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'url', 'url', 'url', $formSettings, $fieldSettings);
 	}
 
 	private function dummyForm(): TotalForm
@@ -909,6 +1168,10 @@ readonly class TotalFormFactory
 			accessGroupLister        : $this->accessGroupLister,
 			collectionEditionService : $this->collectionEditionService,
 			editionFeatures          : $this->editionFeatures,
+			dataViewFilter           : $this->dataViewFilter,
+			csrfManager              : $this->csrfManager,
+			config                   : $this->config,
+			metaResolver             : $this->metaResolver,
 			api                      : $this->api,
 			collection               : '',
 		);
@@ -917,8 +1180,6 @@ readonly class TotalFormFactory
 	/**
 	 * Generate a single field HTML for a given collection, object, and property.
 	 * This allows you to create individual form fields without building a full form.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $options Field options to override defaults
 	 *

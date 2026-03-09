@@ -1,32 +1,28 @@
-<h1>JumpStart Data</h1>
+<h1>{{ t('jumpstart.title') }}</h1>
 
 {% set exportapi = cms.api ~ "/export/jumpstart" %}
 
 <section style="display:grid;align-content:start;gap:3rem">
 
 	<div>
-		<p>JumpStart is a feature of the CMS that allows you to quickly set up a content structure
-		by exporting and importing data in a standardized JSON format. This is particularly useful for
-		creating new projects or sharing content structures with others. See the
-		<a href="docs/jumpstart">JumpStart documentation</a> for more information.</p>
+		<p>{{ t('jumpstart.desc') }} See the
+		<a href="docs/jumpstart">{{ t('jumpstart.docs_link') }}</a> for more information.</p>
 
-		<p>You can also download the <a href="{{ exportapi ~ '/demo' }}" download>Demo JumpStart Data</a>
+		<p>You can also download the <a href="{{ exportapi ~ '/demo' }}" download>{{ t('jumpstart.demo_title') }}</a>
 		to see the structure and format of the JumpStart data.</p>
 	</div>
 
 	<div>
-		<h3>Export JumpStart Data</h3>
-		<p>This will export all of the data currently stored in the CMS into standardized JSON
-		file. This can be used in other projects to quickly set up a similar content structure.
-		If you have a large amount of data, the export process may take some time.</p>
-		<p><a href="{{ exportapi }}" class="dash-button" download target="_blank">Export JumpStart Data</a></p>
+		<h3>{{ t('jumpstart.export_title') }}</h3>
+		<p>{{ t('jumpstart.export_desc') }}</p>
+		<p><a href="{{ exportapi }}" class="dash-button" download target="_blank">{{ t('jumpstart.export_title') }}</a></p>
 	</div>
 
 	<div>
-		<h3>Import JumpStart Data</h3>
-		<p>Import data from an existing JumpStart JSON file that you have. Depending on how much data is inside
-		the JSON file, the import process may take some time. If there are any errors, you can see the details
-		in the <strong>JumpStart logs</strong> in the <a href="utils/logs">Log Analyzer</a>.</p>
+		<h3>{{ t('jumpstart.import_title') }}</h3>
+		<p>{{ t('jumpstart.import_desc') }}
+		If there are any errors, you can see the details
+		in the <strong>{{ t('jumpstart.logs_link') }}</strong> in the <a href="utils/logs">{{ t('logs.title') }}</a>.</p>
 		{{ cms.form.importJumpStart() }}
 	</div>
 

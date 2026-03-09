@@ -46,7 +46,7 @@ describe('Collection Metadata Updates', function (): void {
 		$afterCreate1 = getJson('/collections/metadata-test')->assertOk();
 		$response1    = json_decode((string)$afterCreate1->getBody(), true);
 		$data1        = $response1['data'];
-		expect($data1['totalObjects'])->toBe(2);
+		expect($data1['totalObjects'])->toBe(1);
 		expect($data1['lastUpdated'])->not()->toBe('');
 
 		$lastUpdated1 = $data1['lastUpdated'];
@@ -63,7 +63,7 @@ describe('Collection Metadata Updates', function (): void {
 		$afterCreate2 = getJson('/collections/metadata-test')->assertOk();
 		$response2    = json_decode((string)$afterCreate2->getBody(), true);
 		$data2        = $response2['data'];
-		expect($data2['totalObjects'])->toBe(3);
+		expect($data2['totalObjects'])->toBe(2);
 		expect($data2['lastUpdated'])->not()->toBe(''); // Should be set
 	});
 
@@ -90,7 +90,7 @@ describe('Collection Metadata Updates', function (): void {
 		$before         = getJson('/collections/delete-test')->assertOk();
 		$beforeResponse = json_decode((string)$before->getBody(), true);
 		$beforeData     = $beforeResponse['data'];
-		expect($beforeData['totalObjects'])->toBe(4);
+		expect($beforeData['totalObjects'])->toBe(3);
 
 		// Delete one object
 		deleteJson("/collections/delete-test/{$obj1Id}")->assertOk();
@@ -99,7 +99,7 @@ describe('Collection Metadata Updates', function (): void {
 		$after         = getJson('/collections/delete-test')->assertOk();
 		$afterResponse = json_decode((string)$after->getBody(), true);
 		$afterData     = $afterResponse['data'];
-		expect($afterData['totalObjects'])->toBe(3);
+		expect($afterData['totalObjects'])->toBe(2);
 		expect($afterData['lastUpdated'])->not()->toBe('');
 	});
 
@@ -128,7 +128,7 @@ describe('Collection Metadata Updates', function (): void {
 		$initialResponse    = json_decode((string)$initial->getBody(), true);
 		$initialData        = $initialResponse['data'];
 		$initialLastUpdated = $initialData['lastUpdated'];
-		expect($initialData['totalObjects'])->toBe(2);
+		expect($initialData['totalObjects'])->toBe(1);
 
 		// Update object
 		putJson("/collections/update-test/{$objId}", [
@@ -141,7 +141,7 @@ describe('Collection Metadata Updates', function (): void {
 		$after         = getJson('/collections/update-test')->assertOk();
 		$afterResponse = json_decode((string)$after->getBody(), true);
 		$afterData     = $afterResponse['data'];
-		expect($afterData['totalObjects'])->toBe(2); // Should not change
+		expect($afterData['totalObjects'])->toBe(1); // Should not change
 		expect($afterData['lastUpdated'])->not()->toBe(''); // Should be set
 	});
 
@@ -169,7 +169,7 @@ describe('Collection Metadata Updates', function (): void {
 		$before         = getJson('/collections/clone-test')->assertOk();
 		$beforeResponse = json_decode((string)$before->getBody(), true);
 		$beforeData     = $beforeResponse['data'];
-		expect($beforeData['totalObjects'])->toBe(2);
+		expect($beforeData['totalObjects'])->toBe(1);
 
 		// Clone object to same collection (just need new ID)
 		postJson("/collections/clone-test/{$objId}/clone", [
@@ -180,7 +180,7 @@ describe('Collection Metadata Updates', function (): void {
 		$after         = getJson('/collections/clone-test')->assertOk();
 		$afterResponse = json_decode((string)$after->getBody(), true);
 		$afterData     = $afterResponse['data'];
-		expect($afterData['totalObjects'])->toBe(3);
+		expect($afterData['totalObjects'])->toBe(2);
 		expect($afterData['lastUpdated'])->not()->toBe('');
 	});
 
@@ -210,7 +210,7 @@ describe('Collection Metadata Updates', function (): void {
 		$check1    = getJson('/collections/complex-test')->assertOk();
 		$response1 = json_decode((string)$check1->getBody(), true);
 		$data1     = $response1['data'];
-		expect($data1['totalObjects'])->toBe(6);
+		expect($data1['totalObjects'])->toBe(5);
 
 		// Delete 2 objects
 		deleteJson("/collections/complex-test/{$ids[0]}")->assertOk();
@@ -220,7 +220,7 @@ describe('Collection Metadata Updates', function (): void {
 		$check2    = getJson('/collections/complex-test')->assertOk();
 		$response2 = json_decode((string)$check2->getBody(), true);
 		$data2     = $response2['data'];
-		expect($data2['totalObjects'])->toBe(4);
+		expect($data2['totalObjects'])->toBe(3);
 
 		// Create 1 more object
 		postJson('/collections/complex-test', [
@@ -232,6 +232,6 @@ describe('Collection Metadata Updates', function (): void {
 		$check3    = getJson('/collections/complex-test')->assertOk();
 		$response3 = json_decode((string)$check3->getBody(), true);
 		$data3     = $response3['data'];
-		expect($data3['totalObjects'])->toBe(5);
+		expect($data3['totalObjects'])->toBe(4);
 	});
 });

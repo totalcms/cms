@@ -24,6 +24,9 @@ readonly class MailerData
 		public string $subject,
 		public string $bodyHtml,
 		public string $bodyText,
+		public string $bulkCollection,
+		public string $bulkInclude,
+		public string $bulkExclude,
 	) {
 	}
 
@@ -49,6 +52,9 @@ readonly class MailerData
 			subject: $data['subject'] ?? '',
 			bodyHtml: $data['bodyHtml'] ?? '',
 			bodyText: $data['bodyText'] ?? '',
+			bulkCollection: $data['bulkCollection'] ?? '',
+			bulkInclude: $data['bulkInclude'] ?? '',
+			bulkExclude: $data['bulkExclude'] ?? '',
 		);
 	}
 
@@ -60,20 +66,23 @@ readonly class MailerData
 	public function toArray(): array
 	{
 		return [
-			'id'          => $this->id,
-			'active'      => $this->active,
-			'name'        => $this->name,
-			'description' => $this->description,
-			'from'        => $this->from,
-			'fromName'    => $this->fromName,
-			'to'          => $this->to,
-			'toName'      => $this->toName,
-			'replyTo'     => $this->replyTo,
-			'cc'          => $this->cc,
-			'bcc'         => $this->bcc,
-			'subject'     => $this->subject,
-			'bodyHtml'    => $this->bodyHtml,
-			'bodyText'    => $this->bodyText,
+			'id'              => $this->id,
+			'active'          => $this->active,
+			'name'            => $this->name,
+			'description'     => $this->description,
+			'from'            => $this->from,
+			'fromName'        => $this->fromName,
+			'to'              => $this->to,
+			'toName'          => $this->toName,
+			'replyTo'         => $this->replyTo,
+			'cc'              => $this->cc,
+			'bcc'             => $this->bcc,
+			'subject'         => $this->subject,
+			'bodyHtml'        => $this->bodyHtml,
+			'bodyText'        => $this->bodyText,
+			'bulkCollection'  => $this->bulkCollection,
+			'bulkInclude'     => $this->bulkInclude,
+			'bulkExclude'     => $this->bulkExclude,
 		];
 	}
 }

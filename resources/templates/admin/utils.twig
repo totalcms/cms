@@ -1,95 +1,96 @@
 {% extends "admin-dashboard.twig" %}
 
-{% set adminMenu = [] %}
-
-{% if cms.edition.can('access_groups') %}
-	{% set adminMenu = adminMenu | merge([{"title": "Access Groups", "path": "access-groups"}]) %}
+{% set authSub = [] %}
+{% if cms.auth.isAdmin() and cms.edition.can('access_groups') %}
+	{% set authSub = authSub | merge([{ "title": "Access Groups", "path": "access-groups" }]) %}
+{% endif %}
+{% if cms.auth.isAdmin() and cms.edition.can('api_keys') %}
+	{% set authSub = authSub | merge([{ "title": "API Keys", "path": "api-keys" }]) %}
 {% endif %}
 
-{% if cms.edition.can('api_keys') %}
-	{% set adminMenu = adminMenu | merge([{"title": "API Keys", "path": "api-keys"}]) %}
-{% endif %}
-
-{% set menu = [
-	{
-		"title" : "Cache Manager",
-		"path"  : "cache-manager",
-	},
-	{
-		"title" : "Image Batcher",
-		"path"  : "image-batcher",
-	},
-	{
-		"title" : "Job Queue Manager",
-		"path"  : "jobqueue",
-	},
-	{
-		"title" : "JumpStart Data",
-		"path"  : "jumpstart",
-	},
-	{
-		"title" : "License Manager",
-		"path"  : "license-manager",
-	},
-	{
-		"title" : "Log Analyzer",
-		"path"  : "logs",
-	},
-	{
-		"title" : "Pretty URL Builder",
-		"path"  : "pretty-url-builder",
-	},
-	{
-		"title" : "Project Setup",
-		"path"  : "project-setup",
-	},
-	{
-		"title" : "Server Checker",
-		"path"  : "server-checker",
-	},
-	{
-		"title" : "Twig Debugger",
-		"path"  : "twig-debugger",
-	},
+{% set importSub = [
+	{ "title": "Import Alloy",       "path": "import-alloy" },
 ] %}
+{% if cms.auth.isAdmin() and cms.edition.can('rss_import') %}
+	{% set importSub = importSub | merge([{ "title": "Import RSS Feed", "path": "import-rss" }]) %}
+{% endif %}
+{% set importSub = importSub | merge([{ "title": "Import Total CMS 1", "path": "import-totalcms-one" }]) %}
+{% if cms.auth.isAdmin() and cms.edition.can('rss_import') %}
+	{% set importSub = importSub | merge([{ "title": "Import WordPress", "path": "import-wordpress" }]) %}
+{% endif %}
 
-{# {
-	"title" : "Macro Builder",
-	"path"  : "macro-builder",
-}, #}
+{% set menu = [{
+	"title": "Setup",
+	"sub": [
+		{ "title": "Project Setup",  "path": "project-setup" },
+		{ "title": "JumpStart Data", "path": "jumpstart" },
+	]
+},{
+	"title": "Authentication",
+	"sub": authSub
+},{
+	"title": "Cache",
+	"sub": [
+		{ "title": "Cache Manager",       "path": "cache-manager" },
+		{ "title": "Cache Sizing Advisor", "path": "cache-sizing" },
+		{ "title": "Image Batcher",        "path": "image-batcher" },
+		{ "title": "Image Cache",          "path": "image-cache" },
+	]
+},{
+	"title": "Import",
+	"sub": importSub
+},{
+	"title": "System",
+	"sub": [
+		{ "title": "Collection Report",  "path": "collection-report" },
+		{ "title": "Job Queue Manager",  "path": "jobqueue" },
+		{ "title": "License Manager",    "path": "license-manager" },
+		{ "title": "Log Analyzer",       "path": "logs" },
+		{ "title": "Orphan Scanner",     "path": "orphan-scanner" },
+		{ "title": "Pretty URL Builder", "path": "pretty-url-builder" },
+		{ "title": "Server Checker",     "path": "server-checker" },
+		{ "title": "Twig Debugger",      "path": "twig-debugger" },
+	]
+}] %}
 
 {% block dashcontent %}
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter Utils" autofocus />
+		<input type="search" class="filter" placeholder="{{ t('utils.filter') }}" autofocus />
 	</header>
 
-	<nav class="links">
-		<ul>
-		{% if cms.isAdmin() %}
-			{% for item in adminMenu %}
-			<li class="{{ item.path }}">
-				<a {% if page == item.path %}class="active"{% endif %}
-					href="utils/{{ item.path }}">{{ item.title }}</a>
-			</li>
-			{% endfor %}
-		{% endif %}
-
-		{% for item in menu %}
-			{% if cms.canAccessUtil(item.path, 'read') %}
-			<li class="{{ item.path }}">
-				<a {% if page == item.path %}class="active"{% endif %}
-					href="utils/{{ item.path }}">{{ item.title }}</a>
-			</li>
+	<nav class="links docs">
+		{% for group in menu %}
+		{% set groupPaths = group.sub|column('path') %}
+		{% set hasVisible = false %}
+		{% for item in group.sub %}
+			{% if cms.auth.canAccessUtil(item.path, 'read') %}
+				{% set hasVisible = true %}
 			{% endif %}
 		{% endfor %}
-		</ul>
+		{% if hasVisible %}
+		<details id="category-{{ group.title | slug }}" open>
+			<summary>{{ group.title }}</summary>
+			<ul>
+				{% for item in group.sub %}
+				{% if cms.auth.canAccessUtil(item.path, 'read') %}
+				<li class="{{ item.path }}">
+					<a {% if page == item.path %}class="active"{% endif %}
+						href="utils/{{ item.path }}">{{ item.title }}</a>
+				</li>
+				{% endif %}
+				{% endfor %}
+			</ul>
+		</details>
+		{% endif %}
+		{% endfor %}
 	</nav>
 
 	<footer>
 	</footer>
 </aside>
+{% include "admin/sidebar-details.twig" %}
 
 <main class="dash-main-content">
 

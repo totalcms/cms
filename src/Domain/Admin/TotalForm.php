@@ -11,12 +11,14 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -77,6 +79,7 @@ class TotalForm implements \Stringable
 		'Special Fields' => [
 			'color',
 			'deck',
+			'deckTable',
 			'depot',
 			'file',
 			'gallery',
@@ -93,6 +96,7 @@ class TotalForm implements \Stringable
 		'date',
 		'datetime',
 		'deck',
+		'deckTable',
 		'depot',
 		'email',
 		'file',
@@ -166,6 +170,10 @@ class TotalForm implements \Stringable
 		protected AccessGroupLister $accessGroupLister,
 		protected CollectionEditionService $collectionEditionService,
 		protected EditionFeatureService $editionFeatures,
+		protected DataViewFilter $dataViewFilter,
+		protected CSRFTokenManager $csrfManager,
+		protected Config $config,
+		protected PropertyMetaResolver $metaResolver,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',
@@ -188,8 +196,6 @@ class TotalForm implements \Stringable
 		protected bool $hideID                   = false,
 		protected bool $useFormGrid              = true,
 		protected bool $addOnly                  = false,
-		protected ?CSRFTokenManager $csrfManager = null,
-		protected ?Config $config                = null,
 	) {
 		$this->init();
 		$this->initClass();
@@ -249,9 +255,10 @@ class TotalForm implements \Stringable
 			$actionType = $action['action'] ?? '';
 
 			return match ($actionType) {
-				'mailer'  => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
-				'webhook' => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
-				default   => true, // Allow unknown actions through
+				'mailer'   => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
+				'webhook'  => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
+				'pushover' => $this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS),
+				default    => true, // Allow unknown actions through
 			};
 		}));
 	}
@@ -277,7 +284,7 @@ class TotalForm implements \Stringable
 		return HTMLUtils::element('p', $this->buildError, ['class' => 'cms-twig-error']);
 	}
 
-	public function build(string $content = ''): string
+	public function build(string $content = '', string $contentAfter = ''): string
 	{
 		$formId       = null;
 		$formStyleTag = '';
@@ -286,6 +293,7 @@ class TotalForm implements \Stringable
 			$this->class .= ' formgrid';
 			$formId       = 'form-' . bin2hex(random_bytes(8));
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
+			$gridBuilder->ensureFieldsIncluded(array_keys($this->fields));
 			$formStyleTag = $gridBuilder->toStyleTag($formId);
 		}
 
@@ -319,7 +327,7 @@ class TotalForm implements \Stringable
 
 		// Add CSRF token if manager is available and method requires protection
 		$csrfField = '';
-		if ($this->csrfManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+		if (in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
 			$csrfField = $this->csrfManager->getTokenField();
 		}
 
@@ -331,6 +339,8 @@ class TotalForm implements \Stringable
 		$content .= HTMLUtils::element('div', $save . $delete, [
 			'class' => 'form-inline-fields',
 		]);
+
+		$content .= $contentAfter;
 
 		$form = HTMLUtils::element('form', $content, $attributes);
 
@@ -392,9 +402,20 @@ class TotalForm implements \Stringable
 	}
 
 	/**
-	 * Get properties from collection objects with optional filtering.
+	 * Get a list of all collection IDs.
+	 * Used for propertyOptions: "collectionIds" in schema settings.
 	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 * @return array<string>
+	 */
+	public function collectionIdList(): array
+	{
+		$collections = $this->collectionLister->listAllCollections();
+
+		return array_map(fn (CollectionData $c): string => $c->id, $collections);
+	}
+
+	/**
+	 * Get properties from collection objects with optional filtering.
 	 *
 	 * @param array<string>        $properties Properties to fetch
 	 * @param string               $collection Collection name (defaults to current collection)
@@ -420,6 +441,23 @@ class TotalForm implements \Stringable
 		// Extract only the requested properties from each object
 		/** @phpstan-ignore-next-line argument.templateType */
 		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
+	}
+
+	/**
+	 * Get properties from DataView data with optional filtering.
+	 *
+	 * @param array<string>        $properties Properties to fetch
+	 * @param string               $viewId     DataView ID
+	 * @param array<string,string> $filters    Optional include/exclude filters
+	 *
+	 * @return array<mixed>
+	 */
+	public function propertiesForView(array $properties, string $viewId, array $filters = []): array
+	{
+		$data = $this->dataViewFilter->fetchFilteredViewData($viewId, $filters);
+
+		/** @phpstan-ignore-next-line argument.templateType */
+		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $data);
 	}
 
 	/**
@@ -599,11 +637,42 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
-		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
-			return new $typeClass(...$options);
+		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {
+			$typeClass = FormField::class;
 		}
 
-		return new FormField(...$options);
+		// Strip keys that aren't valid constructor parameters to avoid errors
+		// from schema-only keys (e.g. $ref, factory, type) leaking through
+		$options = $this->filterConstructorParams($typeClass, $options);
+
+		return new $typeClass(...$options);
+	}
+
+	/**
+	 * Filter an options array to only keys that match constructor parameter names.
+	 *
+	 * @param class-string $class
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filterConstructorParams(string $class, array $options): array
+	{
+		/** @var array<string, array<string, true>> */
+		static $cache = [];
+
+		if (!isset($cache[$class])) {
+			$ref           = new \ReflectionClass($class);
+			$constructor   = $ref->getConstructor();
+			$cache[$class] = [];
+			if ($constructor !== null) {
+				foreach ($constructor->getParameters() as $param) {
+					$cache[$class][$param->getName()] = true;
+				}
+			}
+		}
+
+		return array_intersect_key($options, $cache[$class]);
 	}
 
 	private function addFieldsFromSchema(): void

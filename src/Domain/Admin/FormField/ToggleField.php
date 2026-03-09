@@ -34,7 +34,7 @@ class ToggleField extends CheckboxField
 		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
-				$formFieldAtrributes['data-options'] = $json;
+				$formFieldAtrributes['data-settings'] = $json;
 			}
 		}
 

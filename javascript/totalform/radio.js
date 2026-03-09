@@ -6,8 +6,8 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class RadioField extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         // Get all radio inputs in this field
         this.radioInputs = this.container.querySelectorAll('input[type="radio"]');

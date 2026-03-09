@@ -340,6 +340,157 @@ final class EmailServiceTest extends TestCase
 		$this->service->sendEmail('test-mailer', ['orderId' => '12345']);
 	}
 
+	// ── Inky Processing Tests ──
+
+	public function testInkyTransformsRowAndColumnsToTable(): void
+	{
+		$inkyHtml   = '<row><columns small="12"><p>Hello World</p></columns></row>';
+		$mailerData = $this->createMailerData(bodyHtml: $inkyHtml);
+
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+
+		$this->emailSender->expects($this->once())
+			->method('send')
+			->with($this->callback(function (array $email): bool {
+				$html = $email['bodyHtml'];
+				// Inky should convert <row>/<columns> into table-based layout
+				$this->assertStringContainsString('<table', $html);
+				$this->assertStringContainsString('<th', $html);
+				$this->assertStringContainsString('Hello World', $html);
+				// Original Inky tags should be gone
+				$this->assertStringNotContainsString('<row>', $html);
+				$this->assertStringNotContainsString('<columns', $html);
+
+				return true;
+			}))
+			->willReturn(['success' => true, 'message' => 'Sent']);
+
+		$this->service->sendEmail('test-mailer');
+	}
+
+	public function testInkyTransformsButtonToTable(): void
+	{
+		$inkyHtml   = '<button href="https://example.com">Click Me</button>';
+		$mailerData = $this->createMailerData(bodyHtml: $inkyHtml);
+
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+
+		$this->emailSender->expects($this->once())
+			->method('send')
+			->with($this->callback(function (array $email): bool {
+				$html = $email['bodyHtml'];
+				// Inky button should become a table with an anchor
+				$this->assertStringContainsString('<table', $html);
+				$this->assertStringContainsString('https://example.com', $html);
+				$this->assertStringContainsString('Click Me', $html);
+
+				return true;
+			}))
+			->willReturn(['success' => true, 'message' => 'Sent']);
+
+		$this->service->sendEmail('test-mailer');
+	}
+
+	public function testInkyTransformsCallout(): void
+	{
+		$inkyHtml   = '<callout><p>Important notice</p></callout>';
+		$mailerData = $this->createMailerData(bodyHtml: $inkyHtml);
+
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+
+		$this->emailSender->expects($this->once())
+			->method('send')
+			->with($this->callback(function (array $email): bool {
+				$html = $email['bodyHtml'];
+				$this->assertStringContainsString('callout', $html);
+				$this->assertStringContainsString('Important notice', $html);
+				// Should be converted to table structure
+				$this->assertStringContainsString('<table', $html);
+
+				return true;
+			}))
+			->willReturn(['success' => true, 'message' => 'Sent']);
+
+		$this->service->sendEmail('test-mailer');
+	}
+
+	public function testPlainHtmlPassesThroughInkyUnchanged(): void
+	{
+		$plainHtml  = '<p>Simple paragraph</p>';
+		$mailerData = $this->createMailerData(bodyHtml: $plainHtml);
+
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+
+		$this->emailSender->expects($this->once())
+			->method('send')
+			->with($this->callback(function (array $email): bool {
+				$html = $email['bodyHtml'];
+				$this->assertStringContainsString('Simple paragraph', $html);
+
+				return true;
+			}))
+			->willReturn(['success' => true, 'message' => 'Sent']);
+
+		$this->service->sendEmail('test-mailer');
+	}
+
+	public function testEmptyBodyHtmlSkipsInkyProcessing(): void
+	{
+		$mailerData = $this->createMailerData(bodyHtml: '');
+
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+
+		$this->emailSender->expects($this->once())
+			->method('send')
+			->with($this->callback(function (array $email): bool {
+				$this->assertSame('', $email['bodyHtml']);
+
+				return true;
+			}))
+			->willReturn(['success' => true, 'message' => 'Sent']);
+
+		$this->service->sendEmail('test-mailer');
+	}
+
+	public function testInkyProcessingAfterTwig(): void
+	{
+		// Twig renders data into Inky markup, then Inky transforms it
+		$twigInkyHtml = '<row><columns small="12"><p>{{ data.name }}</p></columns></row>';
+		$mailerData   = $this->createMailerData(bodyHtml: $twigInkyHtml);
+
+		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
+		$this->twigEngine->method('renderString')
+			->willReturnCallback(fn (string $template): string => str_replace('{{ data.name }}', 'Alice', $template));
+		$this->config->mailer = ['whitelist' => []];
+
+		$this->emailSender->expects($this->once())
+			->method('send')
+			->with($this->callback(function (array $email): bool {
+				$html = $email['bodyHtml'];
+				// Twig should have rendered the name
+				$this->assertStringContainsString('Alice', $html);
+				// Inky should have transformed the layout
+				$this->assertStringContainsString('<table', $html);
+				$this->assertStringNotContainsString('<row>', $html);
+				$this->assertStringNotContainsString('<columns', $html);
+
+				return true;
+			}))
+			->willReturn(['success' => true, 'message' => 'Sent']);
+
+		$this->service->sendEmail('test-mailer', ['name' => 'Alice']);
+	}
+
 	private function createMailerData(
 		bool $active = true,
 		string $to = 'user@example.com',
@@ -367,7 +518,10 @@ final class EmailServiceTest extends TestCase
 			bcc: $bcc,
 			subject: $subject,
 			bodyHtml: $bodyHtml,
-			bodyText: $bodyText
+			bodyText: $bodyText,
+			bulkCollection: '',
+			bulkInclude: '',
+			bulkExclude: '',
 		);
 	}
 }

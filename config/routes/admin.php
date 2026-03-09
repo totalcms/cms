@@ -4,6 +4,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\Admin404Action;
 use TotalCMS\Action\Admin\AdminCollectionAction;
+use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
 use TotalCMS\Action\Admin\AdminEditProfileAction;
 use TotalCMS\Action\Admin\AdminFileLinksAction;
@@ -20,6 +21,7 @@ use TotalCMS\Action\Admin\LogDownloadAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
@@ -27,9 +29,11 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
+use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
@@ -66,6 +70,8 @@ return function (App $app): void {
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);
 
+		$group->get('/dataviews[/{id}]', AdminDataViewsAction::class)->setName('admin-dataviews')->add(DataViewsEditionMiddleware::class)->add(DataViewsAccessMiddleware::class);
+
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground')->add(PlaygroundAccessMiddleware::class);
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post')->add(PlaygroundAccessMiddleware::class);
 
@@ -80,5 +86,5 @@ return function (App $app): void {
 
 		// Catch-all 404 route - MUST BE LAST
 		$group->any('/{path:.*}', Admin404Action::class)->setName('admin-404');
-	})->add(AuthMiddleware::class)->add(NoCacheMiddleware::class);
+	})->add(VersionCheckMiddleware::class)->add(AuthMiddleware::class)->add(NoCacheMiddleware::class);
 };

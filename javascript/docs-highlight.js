@@ -53,6 +53,7 @@ function addCopyButtons() {
 			const code = pre.querySelector('code');
 			const text = code ? code.textContent : pre.textContent;
 
+			if (!navigator.clipboard?.writeText) return;
 			navigator.clipboard.writeText(text).then(() => {
 				button.textContent = 'Copied!';
 				button.classList.add('copied');

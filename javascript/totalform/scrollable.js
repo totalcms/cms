@@ -32,9 +32,11 @@ export default class Scrollable {
 	isScrollable() {
 		if (this.container.scrollHeight > this.maxHeight) {
 			this.container.classList.add('scrollable');
+			this.container.parentElement?.classList.add('scrollable-container');
 			return true;
 		}
 		this.container.classList.remove('scrollable');
+		this.container.parentElement?.classList.remove('scrollable-container');
 		return false;
 	}
 

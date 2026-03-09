@@ -155,9 +155,10 @@ class SessionStateValidationTest extends TestCase
 		$authKeys     = SessionKeys::getAuthKeys();
 		$requestKeys  = SessionKeys::getRequestKeys();
 		$activityKeys = SessionKeys::getActivityKeys();
+		$webauthnKeys = SessionKeys::getWebAuthnKeys();
 		$allKeys      = SessionKeys::getAllKeys();
 
-		$groupedKeysCount = count($authKeys) + count($requestKeys) + count($activityKeys);
+		$groupedKeysCount = count($authKeys) + count($requestKeys) + count($activityKeys) + count($webauthnKeys);
 		$allKeysCount     = count($allKeys);
 
 		$this->assertEquals(
@@ -167,7 +168,7 @@ class SessionStateValidationTest extends TestCase
 		);
 
 		// Verify no overlap between groups
-		$allGrouped    = array_merge($authKeys, $requestKeys, $activityKeys);
+		$allGrouped    = array_merge($authKeys, $requestKeys, $activityKeys, $webauthnKeys);
 		$uniqueGrouped = array_unique($allGrouped);
 
 		$this->assertCount(

@@ -427,7 +427,7 @@ class AlloyImporter
 				}
 
 				// Extract filename from URL and construct path
-				$urlPath = parse_url($data, PHP_URL_PATH);
+				$urlPath = parse_url((string)$data, PHP_URL_PATH);
 				if ($urlPath !== null && $urlPath !== false) {
 					$imageFilename = basename($urlPath);
 					$imagePath     = $imageUploadsPath . '/' . $imageFilename;

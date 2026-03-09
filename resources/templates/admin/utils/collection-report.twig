@@ -1,0 +1,16 @@
+{% set collection = getData.collection ? cms.collection.get(getData.collection) : null %}
+
+<h1>{{ t('report.title') }}{% if collection %} {{ t('report.title_for', {'{name}': collection.name}) }}{% endif %}</h1>
+
+<section class="dash-content-section">
+	{% if collection %}
+	<p>{{ t('report.description_with_collection') }}
+	<a href="utils/collection-report">{{ t('report.choose_another') }}</a></p>
+	{% else %}
+	<p>{{ t('report.description') }}</p>
+	{% endif %}
+
+	<section style="max-width:800px; margin-top:2rem;">
+		{{ cms.form.report(collection.id|default('')) }}
+	</section>
+</section>

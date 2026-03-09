@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -20,6 +21,7 @@ readonly class ObjectRemover
 		private IndexBuilder $indexBuilder,
 		private CollectionFetcher $collectionFetcher,
 		private CollectionSaver $collectionSaver,
+		private DataViewUpdateScheduler $viewUpdateScheduler,
 	) {
 	}
 
@@ -41,6 +43,8 @@ readonly class ObjectRemover
 			}
 			// Full rebuild
 			$this->indexBuilder->smartBuildIndex($collection);
+
+			$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
 		}
 
 		return $status;

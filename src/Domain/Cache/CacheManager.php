@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Cache;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInterface;
+use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -14,6 +15,7 @@ use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -38,21 +40,20 @@ class CacheManager
 	];
 
 	// Cache TTL constants for different data types
-	// Increased TTLs for production performance - cache invalidation via .cache_version handles updates
+	// Cross-process cache invalidation (CacheInvalidationSignal) handles freshness;
+	// TTLs are a safety net, not the primary invalidation mechanism.
 	public const DEFAULT_TTL             = 7200;              // 2 hours - default TTL for most data
-	public const TTL_COLLECTIONS_LIST    = 3600;      // 1 hour - collections rarely change in production
-	public const TTL_INDEX_DATA          = 3600;           // 1 hour - indexes change when objects are added/removed
-	public const TTL_OBJECT_IDS          = 1800;            // 30 minutes - changes when objects are added/removed
+	public const TTL_COLLECTIONS_LIST    = 7200;      // 2 hours - invalidated explicitly on collection changes
+	public const TTL_INDEX_DATA          = 14400;          // 4 hours - invalidated explicitly on index rebuild
+	public const TTL_OBJECT_IDS          = 14400;           // 4 hours - invalidated explicitly on object add/remove
 	public const TTL_OBJECT_DATA         = 14400;          // 4 hours - individual objects change infrequently
 	public const TTL_RESERVED_SCHEMAS    = 86400;     // 24 hours - reserved schemas NEVER change
 	public const TTL_RESERVED_SCHEMA_IDS = 86400;  // 24 hours - reserved schema IDs NEVER change
 	public const TTL_CUSTOM_SCHEMA       = 14400;        // 4 hours - custom schemas change infrequently
 	public const TTL_FLATTENED_SCHEMA    = 14400;       // 4 hours - flattened schemas (inheritance resolved)
-	public const TTL_API_RESPONSE        = 1800;          // 30 minutes - API responses can be cached longer
+	public const TTL_API_RESPONSE        = 7200;          // 2 hours - invalidated explicitly on collection changes
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
 	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)
-
-	private string $versionFile = '.cache_version';
 	private readonly string $domainPrefix;
 	private readonly LoggerInterface $logger;
 
@@ -66,6 +67,15 @@ class CacheManager
 	 */
 	private bool $cacheDisabled = false;
 
+	/**
+	 * When true, suppress writing to the invalidation signal file.
+	 * Used during replay to prevent infinite recursion.
+	 */
+	private bool $suppressSignals = false;
+
+	/** Whether this process is CLI (signals only needed from CLI → web). */
+	private readonly bool $isCli;
+
 	public function __construct(
 		private readonly FilesystemService $filesystemService,
 		private readonly OPcacheService $opcacheService,
@@ -74,6 +84,7 @@ class CacheManager
 		private readonly APCuService $apcuService,
 		private readonly WatermarkCleanupService $watermarkCleanupService,
 		private readonly DevModeManager $devModeManager,
+		private readonly CacheInvalidationSignal $invalidationSignal,
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -88,10 +99,10 @@ class CacheManager
 			'memcached'  => $this->memcachedService,
 			'apcu'       => $this->apcuService,
 		];
-		$this->versionFile  = $this->filesystemService->getCachDir() . '/' . $this->versionFile;
 
 		// Create domain-specific prefix to prevent cache collisions between installations
 		$this->domainPrefix = md5($this->config->domain);
+		$this->isCli        = php_sapi_name() === 'cli';
 	}
 
 	/**
@@ -124,11 +135,44 @@ class CacheManager
 	}
 
 	/**
+	 * Control whether invalidation signals are written.
+	 * Used by CacheInvalidationMiddleware during replay to prevent recursion.
+	 */
+	public function setSuppressSignals(bool $suppress): void
+	{
+		$this->suppressSignals = $suppress;
+	}
+
+	/**
 	 * Create a domain-specific cache key to prevent collisions between installations.
 	 */
 	private function createDomainKey(string $key): string
 	{
 		return $this->domainPrefix . ':' . $key;
+	}
+
+	/**
+	 * Apply this process's domain prefix to an unprefixed cache key.
+	 * Used by CacheInvalidationMiddleware to re-prefix keys from CLI signals.
+	 */
+	public function applyDomainPrefix(string $key): string
+	{
+		return $this->createDomainKey($key);
+	}
+
+	/**
+	 * Strip the domain prefix from a fully-qualified cache key.
+	 * Used when signaling keys for cross-process invalidation so the
+	 * receiving process can re-apply its own correct domain prefix.
+	 */
+	private function stripDomainPrefix(string $key): string
+	{
+		$prefix = $this->domainPrefix . ':';
+		if (str_starts_with($key, $prefix)) {
+			return substr($key, strlen($prefix));
+		}
+
+		return $key;
 	}
 
 	/**
@@ -198,25 +242,30 @@ class CacheManager
 		// These flags only bypass reads - we still want to populate cache with fresh data
 		// so that when the flags are turned off, the cache is warm and accurate.
 
-		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
+		// L1/L2 tiered caching: write to both APCu (L1) and a network cache (L2) when available.
+		// APCu is fastest (shared memory, no network hop) but local to a single server and
+		// cleared on PHP-FPM restart. Redis/Memcached survive restarts and serve as a warm
+		// backup that prevents cold-start cache misses.
+		$stored = false;
+
+		// L1: APCu (fastest, local memory)
 		if ($this->apcuService->isAvailable()) {
-			return $this->apcuService->set($key, $data, $ttl);
+			$stored = $this->apcuService->set($key, $data, $ttl);
 		}
 
+		// L2: Network cache (survives restarts, larger capacity)
 		if ($this->redisService->isAvailable()) {
-			return $this->redisService->set($key, $data, $ttl);
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			return $this->memcachedService->set($key, $data, $ttl);
+			$stored = $this->redisService->set($key, $data, $ttl) || $stored;
+		} elseif ($this->memcachedService->isAvailable()) {
+			$stored = $this->memcachedService->set($key, $data, $ttl) || $stored;
 		}
 
 		// Fallback to filesystem cache only if no memory caches available
-		if ($this->filesystemService->isAvailable()) {
-			return $this->filesystemService->set($key, $data, $ttl);
+		if (!$stored && $this->filesystemService->isAvailable()) {
+			$stored = $this->filesystemService->set($key, $data, $ttl);
 		}
 
-		return false;
+		return $stored;
 	}
 
 	public function getData(string $key): mixed
@@ -226,17 +275,25 @@ class CacheManager
 			return null;
 		}
 
-		// Check memory caches first (fastest)
-		if ($this->apcuService->isAvailable()) {
+		$apcuAvailable = $this->apcuService->isAvailable();
+
+		// L1: Check APCu first (fastest, local memory)
+		if ($apcuAvailable) {
 			$result = $this->apcuService->get($key);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
+		// L2: Check network caches (Redis, then Memcached)
+		// On hit, promote back to L1 (APCu) so subsequent requests are fast
 		if ($this->redisService->isAvailable()) {
 			$result = $this->redisService->get($key);
 			if ($result !== null) {
+				if ($apcuAvailable) {
+					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
+				}
+
 				return $result;
 			}
 		}
@@ -244,6 +301,10 @@ class CacheManager
 		if ($this->memcachedService->isAvailable()) {
 			$result = $this->memcachedService->get($key);
 			if ($result !== null) {
+				if ($apcuAvailable) {
+					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
+				}
+
 				return $result;
 			}
 		}
@@ -285,6 +346,12 @@ class CacheManager
 			$success &= $this->opcacheService->clear();
 		}
 
+		// Signal for cross-process invalidation (CLI → web)
+		// Strip domain prefix so the web process can re-apply its own correct prefix
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signal($this->stripDomainPrefix($key));
+		}
+
 		return (bool)$success;
 	}
 
@@ -314,10 +381,23 @@ class CacheManager
 
 	/**
 	 * Clear collection index cache from all backends.
+	 * Clears the index data, object IDs, and API response caches for the collection.
 	 */
 	public function clearCollectionIndex(string $collectionName): bool
 	{
-		return $this->clearData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
+		// Clear the collection index stored by storeCollectionIndex()
+		$collectionCleared = $this->clearData(
+			$this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}")
+		);
+
+		// Clear related computed caches
+		$indexCleared     = $this->clearComputedData("index:{$collectionName}");
+		$objectIdsCleared = $this->clearComputedData("object_ids:{$collectionName}");
+
+		// Clear cached API/query responses that depend on this collection's data
+		$this->clearByType(self::PREFIX_API_RESPONSE);
+
+		return $collectionCleared || $indexCleared || $objectIdsCleared;
 	}
 
 	/**
@@ -377,25 +457,37 @@ class CacheManager
 			return false;
 		}
 
-		$success = true;
 		$pattern = $this->domainPrefix . ':' . $type . ':*';
+		$success = $this->clearByPatternAllBackends($pattern);
 
-		// Clear from APCu
+		// Signal for cross-process invalidation (CLI → web)
+		// Strip domain prefix so the web process can re-apply its own correct prefix
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signalPattern($this->stripDomainPrefix($pattern));
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Clear cache entries by pattern across all available backends.
+	 */
+	public function clearByPatternAllBackends(string $pattern): bool
+	{
+		$success = true;
+
 		if ($this->apcuService->isAvailable()) {
 			$success &= $this->clearByPattern($this->apcuService, $pattern);
 		}
 
-		// Clear from Redis
 		if ($this->redisService->isAvailable()) {
 			$success &= $this->clearByPattern($this->redisService, $pattern);
 		}
 
-		// Clear from Memcached
 		if ($this->memcachedService->isAvailable()) {
 			$success &= $this->clearByPattern($this->memcachedService, $pattern);
 		}
 
-		// Clear from Filesystem
 		if ($this->filesystemService->isAvailable()) {
 			$success &= $this->clearByPattern($this->filesystemService, $pattern);
 		}
@@ -419,17 +511,32 @@ class CacheManager
 	}
 
 	/**
-	 * Set a new cache version (invalidates all caches).
+	 * Check if the app version has changed and clear all caches if so.
+	 * Used to automatically clear stale caches after a Total CMS update.
 	 */
-	private function setCacheVersion(string $version): void
+	public function clearIfVersionChanged(): bool
 	{
-		// Don't create version files when filesystem cache is not available
 		if (!$this->filesystemService->isAvailable()) {
-			return;
+			return false;
 		}
 
-		// Try to write version file
-		file_put_contents($this->versionFile, $version);
+		$appVersionFile = $this->filesystemService->getCachDir() . '/.app_version';
+		$currentVersion = Version::get();
+		$storedVersion  = is_file($appVersionFile) ? trim((string)file_get_contents($appVersionFile)) : '';
+
+		if ($storedVersion === $currentVersion) {
+			return false;
+		}
+
+		$this->logger->info('App version changed, clearing all caches', [
+			'previous' => $storedVersion,
+			'current'  => $currentVersion,
+		]);
+
+		$this->clearAllCaches();
+		file_put_contents($appVersionFile, $currentVersion);
+
+		return true;
 	}
 
 	/**
@@ -693,11 +800,12 @@ class CacheManager
 			$overallSuccess        = false;
 		}
 
-		// Generate new cache version
-		$this->setCacheVersion(date('Y-m-d-H-i-s') . '-' . uniqid());
-		$results['version'] = ['cleared' => true, 'reason' => 'new version generated'];
-
 		$results['success'] = $overallSuccess;
+
+		// Signal for cross-process invalidation (CLI → web)
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signalFull();
+		}
 
 		return $results;
 	}

@@ -101,14 +101,16 @@ describe('Cache Pattern Clearing', function (): void {
 		expect($filesystemService->get('computed:schema:blog-legacy'))->toBe(['type' => 'blog-legacy']);
 		expect($filesystemService->get('computed:other:data'))->toBe(['type' => 'other']);
 
-		// Clear schema pattern (falls back to clearing all cache due to hashed structure)
+		// Clear schema pattern (selectively deletes matching keys)
 		$result = $filesystemService->clearByPattern('computed:schema:*');
 		expect($result)->toBeTrue();
 
-		// All data should be cleared (filesystem limitation due to hashed structure)
+		// Schema data should be cleared
 		expect($filesystemService->get('computed:schema:blog'))->toBeNull();
 		expect($filesystemService->get('computed:schema:blog-legacy'))->toBeNull();
-		expect($filesystemService->get('computed:other:data'))->toBeNull();
+
+		// Non-matching data should remain
+		expect($filesystemService->get('computed:other:data'))->toBe(['type' => 'other']);
 	});
 
 	it('CacheManager uses service-specific pattern clearing', function (): void {
@@ -236,12 +238,12 @@ describe('Cache Service Pattern Clearing Edge Cases', function (): void {
 		// Store some data
 		$filesystemService->set('test:key', ['data' => 'value'], 300);
 
-		// Try clearing with empty pattern (should fallback to clear all)
+		// Try clearing with empty pattern (matches nothing since regex is /^$/)
 		$result = $filesystemService->clearByPattern('');
 		expect($result)->toBeTrue();
 
-		// Data should be cleared (filesystem clears all cache)
-		expect($filesystemService->get('test:key'))->toBeNull();
+		// Data should remain since empty pattern matches no keys
+		expect($filesystemService->get('test:key'))->toBe(['data' => 'value']);
 	});
 
 	it('handles special characters in patterns', function (): void {
@@ -253,14 +255,16 @@ describe('Cache Service Pattern Clearing Edge Cases', function (): void {
 		$filesystemService->set('computed:schema:blog_v2', ['data' => 'value2'], 300);
 		$filesystemService->set('computed:other:data', ['data' => 'value3'], 300);
 
-		// Clear pattern with special characters (filesystem clears all cache)
+		// Clear pattern with special characters (selectively deletes matching keys)
 		$result = $filesystemService->clearByPattern('computed:schema:*');
 		expect($result)->toBeTrue();
 
-		// All data should be cleared (filesystem limitation)
+		// Schema data should be cleared
 		expect($filesystemService->get('computed:schema:blog-legacy'))->toBeNull();
 		expect($filesystemService->get('computed:schema:blog_v2'))->toBeNull();
-		expect($filesystemService->get('computed:other:data'))->toBeNull();
+
+		// Non-matching data should remain
+		expect($filesystemService->get('computed:other:data'))->toBe(['data' => 'value3']);
 	});
 
 	it('Redis SCAN handles large key sets efficiently', function (): void {

@@ -5,8 +5,8 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class Code extends TotalField {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(container, settings) {
+        super(container, settings);
 
         this.editor = null;
         this.localStorageKey = `totalcms-code-${this.property}`;
@@ -48,6 +48,16 @@ export default class Code extends TotalField {
             ...editorOptions
         };
 
+        // Prevent CodeMirror from stealing page scroll during initialization.
+        // Override both focus() and scrollIntoView() so that nothing during
+        // editor creation can scroll the page.
+        const origFocus = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function(opts) {
+            origFocus.call(this, { preventScroll: true, ...opts });
+        };
+        const origScrollIntoView = Element.prototype.scrollIntoView;
+        Element.prototype.scrollIntoView = function() {};
+
         // Create the appropriate editor based on mode
         if (mode === 'twig') {
             this.editor = window.TotalCMSCodeMirror.createTwigEditor(this.input, config);
@@ -87,6 +97,10 @@ export default class Code extends TotalField {
         // Set up form submission handling
         this.setupFormSubmission();
 
+        // Restore original prototypes after all synchronous setup is complete
+        HTMLElement.prototype.focus = origFocus;
+        Element.prototype.scrollIntoView = origScrollIntoView;
+
         // Force a refresh after initialization to ensure proper gutter calculations
         setTimeout(() => {
             this.editor.refresh();
@@ -98,35 +112,72 @@ export default class Code extends TotalField {
     setupAutoResize() {
         if (!this.editor) return;
 
-        const resizeEditor = () => {
-            // Get the actual scroll height which accounts for wrapped lines
+        // Calculate height from rows attribute (like JSON field)
+        const rows = parseInt(this.input.getAttribute('rows')) || 10;
+        const lineHeight = this.editor.defaultTextHeight() || 20;
+        const rowsHeight = rows * lineHeight + 20;
+
+        // Read minHeight/maxHeight from data attributes (in pixels)
+        // maxHeight only caps auto-grow, not manual drag resize
+        const minHeight = parseInt(this.input.dataset.minHeight) || rowsHeight;
+        const maxHeight = parseInt(this.input.dataset.maxHeight) || 0;
+
+        const wrapper = this.editor.getWrapperElement();
+        wrapper.style.minHeight = minHeight + 'px';
+        // Note: no CSS max-height on wrapper so drag resize is unconstrained
+
+        // Set the editor to fill its wrapper
+        this.editor.setSize(null, '100%');
+
+        // Track whether the user has manually dragged to resize
+        let userResized = false;
+        let lastAutoHeight = 0;
+
+        // Detect manual drag resize via ResizeObserver
+        const resizeObserver = new ResizeObserver(() => {
+            const currentHeight = wrapper.offsetHeight;
+            // If the height changed but not from our auto-sizing, user dragged it
+            if (lastAutoHeight > 0 && Math.abs(currentHeight - lastAutoHeight) > 2) {
+                userResized = true;
+            }
+            this.editor.refresh();
+        });
+        resizeObserver.observe(wrapper);
+
+        // Auto-size wrapper height based on content, clamped to min/max
+        const setHeight = () => {
+            // Don't auto-shrink if user has manually resized larger
+            if (userResized && wrapper.offsetHeight > (maxHeight || Infinity)) {
+                return;
+            }
+
             const scrollInfo = this.editor.getScrollInfo();
-            const contentHeight = scrollInfo.height;
+            const contentHeight = scrollInfo.height + 20;
+            let targetHeight = Math.max(contentHeight, minHeight);
+            if (maxHeight > 0) {
+                targetHeight = Math.min(targetHeight, maxHeight);
+            }
 
-            // Use content height but enforce minimum height
-            const minHeight = 250;
-            const targetHeight = Math.max(contentHeight + 20, minHeight); // Add padding
+            // If user dragged larger than our target, don't shrink back
+            if (userResized && wrapper.offsetHeight > targetHeight) {
+                return;
+            }
 
-            this.editor.setSize(null, targetHeight);
+            userResized = false;
+            lastAutoHeight = targetHeight;
+            wrapper.style.height = targetHeight + 'px';
         };
 
-        // Initial resize after a short delay
+        // Initial sizing
         setTimeout(() => {
-            resizeEditor();
+            setHeight();
         }, 100);
 
         // Resize on content changes
         this.editor.on('changes', () => {
             setTimeout(() => {
-                resizeEditor();
+                setHeight();
                 this.forceGutterWidth();
-            }, 0);
-        });
-
-        // Also resize when the editor is refreshed (handles wrapping changes)
-        this.editor.on('refresh', () => {
-            setTimeout(() => {
-                resizeEditor();
             }, 0);
         });
     }

@@ -15,5 +15,7 @@ if (macroContent) {
 	if (macroContent.dataset.pwd) {
 		data.pwd = macroContent.dataset.pwd;
 	}
-	macroContent.textContent = data.name ? MacroBuilder.depotDownload(data) : MacroBuilder.download(data);
+	macroContent.textContent = data.name ? MacroBuilder.depotDownload({...data}) : MacroBuilder.download({...data});
 }
+
+

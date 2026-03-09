@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
+use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
@@ -23,6 +24,7 @@ readonly class AdminSettingsSaveSectionAction
 		private InstallationSettingsSaver $installationSettingsSaver,
 		private SettingsValidator $settingsValidator,
 		private EmailSender $emailSender,
+		private PushoverService $pushoverService,
 		private TwigRenderer $twigRenderer,
 		private EditionFeatureService $editionFeatureService,
 	) {
@@ -50,14 +52,17 @@ readonly class AdminSettingsSaveSectionAction
 		if ($section === 'license' && !$this->editionFeatureService->canSimulateEdition()) {
 			return $this->renderer->json($response, [
 				'success' => false,
-				'message' => 'Edition simulation is only available during trial or development',
+				'message' => 'Edition simulation is only available for Pro edition and above',
 			], 403);
 		}
 
-		// Check if this is an SMTP test request
+		// Check if this is a test request
 		$queryParams = $request->getQueryParams();
 		if ($section === 'smtp' && isset($queryParams['test'])) {
 			return $this->handleSmtpTest($request, $response);
+		}
+		if ($section === 'pushnotif' && isset($queryParams['test'])) {
+			return $this->handlePushoverTest($request, $response);
 		}
 
 		$formData = (array)$request->getParsedBody();
@@ -122,21 +127,51 @@ readonly class AdminSettingsSaveSectionAction
 	}
 
 	/**
+	 * Handle Pushover test notification request.
+	 */
+	private function handlePushoverTest(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		$formData    = (array)$request->getParsedBody();
+		$testMessage = trim((string)($formData['test_message'] ?? ''));
+
+		if ($testMessage === '') {
+			$testMessage = 'This is a test notification from Total CMS.';
+		}
+
+		$result = $this->pushoverService->send(
+			message: $testMessage,
+			title: 'Total CMS Test',
+		);
+
+		if ($result['success']) {
+			return $this->renderSettingsPage($response, [
+				'success' => true,
+				'message' => 'Test notification sent successfully. Check your Pushover app.',
+			], 'pushnotif');
+		}
+
+		return $this->renderSettingsPage($response, [
+			'success' => false,
+			'message' => 'Failed to send test notification: ' . $result['message'],
+		], 'pushnotif');
+	}
+
+	/**
 	 * Render settings page with test result.
 	 *
 	 * @param array{success:bool,message:string} $testResult
 	 */
-	private function renderSettingsPage(ResponseInterface $response, array $testResult): ResponseInterface
+	private function renderSettingsPage(ResponseInterface $response, array $testResult, string $section = 'smtp'): ResponseInterface
 	{
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
 			'url' => [
-				'path'    => '/admin/settings/smtp',
+				'path'    => '/admin/settings/' . $section,
 				'query'   => '',
-				'params'  => ['section' => 'smtp'],
+				'params'  => ['section' => $section],
 				'page'    => 'settings',
-				'section' => 'smtp',
+				'section' => $section,
 			],
-			'currentSection' => 'smtp',
+			'currentSection' => $section,
 			'testResult'     => $testResult,
 		]);
 	}

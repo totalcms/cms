@@ -80,17 +80,20 @@ esbuild.build({
             from : "node_modules/lightgallery/images/*",
             to   : "gallery"
         }}),
+		copy.default({assets: {
+            from : "node_modules/htmx.org/dist/htmx.min.js",
+            to   : "."
+        }}),
         // Sass includes
         sassPlugin({
             loadPaths: [
-                "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
                 "node_modules/codemirror/theme/",
                 "node_modules/codemirror/addon/",
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
 				"css/lightgallery/",
-                "node_modules/gridjs/dist/theme/",
+
                 "node_modules/highlight.js/styles/"
             ],
             importer: createImporter(),

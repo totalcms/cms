@@ -5,13 +5,17 @@ use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Support\Config;
 
 /**
  * Test addOnly security feature for forms to prevent editing existing objects
@@ -30,6 +34,10 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->accessGroupLister        = $this->createMock(AccessGroupLister::class);
 		$this->collectionEditionService = $this->createMock(CollectionEditionService::class);
 		$this->editionFeatures          = $this->createMock(EditionFeatureService::class);
+		$this->csrfManager              = $this->createMock(CSRFTokenManager::class);
+		$this->config                   = Config::init();
+		$this->metaResolver             = $this->createMock(PropertyMetaResolver::class);
+		$this->dataViewFilter           = $this->createMock(DataViewFilter::class);
 
 		// Mock existing object
 		$this->existingObject = $this->createMock(ObjectData::class);
@@ -58,6 +66,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'users',
 			addOnly: false  // Regular form behavior
@@ -89,6 +101,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'users',
 			addOnly: true  // Security: Add only mode
@@ -117,6 +133,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'users',
 			id: 'explicit-id-789',  // Explicitly passed ID
@@ -148,6 +168,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'users',
 			addOnly: true
@@ -182,6 +206,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'users',
 			addOnly: false  // Regular form
@@ -212,6 +240,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			accessGroupLister: $this->accessGroupLister,
 			collectionEditionService: $this->collectionEditionService,
 			editionFeatures: $this->editionFeatures,
+			dataViewFilter: $this->dataViewFilter,
+			csrfManager: $this->csrfManager,
+			config: $this->config,
+			metaResolver: $this->metaResolver,
 			api: '/api',
 			collection: 'users'
 			// No addOnly parameter - should default to false

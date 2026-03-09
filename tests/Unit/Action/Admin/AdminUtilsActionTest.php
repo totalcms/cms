@@ -11,6 +11,8 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Import\RssImporter;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
@@ -27,6 +29,8 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
+	private \PHPUnit\Framework\MockObject\MockObject $rssImporter;
+	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -40,6 +44,8 @@ final class AdminUtilsActionTest extends TestCase
 		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
 		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
 		$this->schemaLister          = $this->createMock(SchemaLister::class);
+		$this->rssImporter           = $this->createMock(RssImporter::class);
+		$this->editionFeatures       = $this->createMock(EditionFeatureService::class);
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 
@@ -51,7 +57,9 @@ final class AdminUtilsActionTest extends TestCase
 			$this->accessGroupLister,
 			$this->collectionRepository,
 			$this->collectionFetcher,
-			$this->schemaLister
+			$this->schemaLister,
+			$this->rssImporter,
+			$this->editionFeatures
 		);
 	}
 

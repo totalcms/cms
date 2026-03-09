@@ -11,6 +11,7 @@ use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
+use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
 return function (App $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
@@ -33,9 +34,13 @@ return function (App $app): void {
 		$group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
 	})->add(CollectionEditionMiddleware::class)
 		->add(CollectionMetaAccessMiddleware::class)
-		->add(DualAuthMiddleware::class);
+		->add(DualAuthMiddleware::class)
+		->add(ExternalCorsMiddleware::class);
 
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
+		// Collection Query (paginated)
+		$group->get('/{collection}/query', Collection\Index\IndexQueryAction::class)->setName('collection-query');
+
 		// Collection Index
 		$group->get('/{collection}/index', Collection\Index\IndexGetAction::class)->setName('collection-fetch-index');
 		$group->put('/{collection}/index', Collection\Index\IndexBuildAction::class)->setName('collection-reindex');
@@ -76,5 +81,6 @@ return function (App $app): void {
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
 	})->add(CollectionEditionMiddleware::class)
 		->add(CollectionAccessMiddleware::class)
-		->add(DualAuthMiddleware::class);
+		->add(DualAuthMiddleware::class)
+		->add(ExternalCorsMiddleware::class);
 };
