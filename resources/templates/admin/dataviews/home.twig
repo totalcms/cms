@@ -3,18 +3,25 @@
 </header>
 
 <section class="dash-content-section">
+	<section>
 	<h2>{{ t('dataview.what_is') }}</h2>
 	<p>{{ t('dataview.what_is_desc') }}</p>
+	</section>
 
+	<section>
 	<h2>{{ t('dataview.how_title') }}</h2>
 	<ol>
 		<li><strong>{{ t('dataview.how_step1') }}</strong></li>
 		<li><strong>{{ t('dataview.how_step2') }}</strong></li>
 		<li><strong>{{ t('dataview.how_step3') }}</strong></li>
 	</ol>
+	</section>
 
+	<section>
 	<h2>{{ t('dataview.example_title') }}</h2>
 	<p>{{ t('dataview.example_desc') }}</p>
+	</section>
+
 	<pre><code>{% verbatim %}{% set posts = cms.collection.objects('blog') %}
 {% set data = {
   "count": posts|length,
@@ -22,6 +29,8 @@
 } %}{% endverbatim %}</code></pre>
 	<p>{{ t('dataview.example_usage') }} <code>{% verbatim %}{{ cms.view.get('my-view').count }}{% endverbatim %}</code></p>
 
+	<section>
 	<h2>{{ t('dataview.jobqueue_title') }}</h2>
 	<p>{{ t('dataview.jobqueue_desc') }}</p>
+	</section>
 </section>

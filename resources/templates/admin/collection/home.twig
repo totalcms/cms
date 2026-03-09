@@ -1,11 +1,16 @@
 <h1>{{ t('collection.help_title') }}</h1>
 
 <section class="dash-content-section">
+	<section>
 	<h2>{{ t('collection.what_is') }}</h2>
 	<p>{{ t('collection.what_is_desc') }}</p>
+	</section>
 
+	<section>
 	<h2>{{ t('collection.setup_default') }}</h2>
 	<p>{{ t('collection.setup_default_desc') }}</p>
+	</section>
+
 	<a class="dash-button transparent" href="utils/project-setup">{{ t('collection.project_setup_tool') }}</a>
 
 	{% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}

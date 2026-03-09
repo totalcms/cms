@@ -281,7 +281,7 @@ body {
 	padding               : 2rem;
 	background-color      : oklch(var(--totalform-white));
 	display               : grid;
-	gap                   : 2rem;
+	gap                   : 3rem;
 	align-content         : stretch;
 	grid-template-rows    : max-content auto;
 	grid-template-columns : minmax(0, 1fr);
@@ -296,6 +296,11 @@ body {
 		}
 		span {
 			color : oklch(var(--totalform-darkgray));
+		}
+	}
+	h2, h3, h4, h5, h6 {
+		&:has(+p), &:has(+ul), &:has(+ol) {
+			margin-bottom : 0.5rem;
 		}
 	}
 	p:not(.help), ul, ol {
@@ -373,7 +378,7 @@ body {
 }
 .dash-content-section {
 	display       : grid;
-	gap           : 1rem;
+	gap           : 2rem;
 	align-content : start;
 
 	p:not(.help), ul, ol {
