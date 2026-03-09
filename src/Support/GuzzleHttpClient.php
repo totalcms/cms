@@ -11,7 +11,7 @@ use GuzzleHttp\RequestOptions;
  */
 class GuzzleHttpClient implements HttpClientInterface
 {
-	public function __construct(private readonly ?Client $client = new Client())
+	public function __construct(private readonly Client $client = new Client())
 	{
 	}
 
