@@ -44,14 +44,14 @@ readonly class ObjectCloner
 
 		$this->storage->copyObjectFiles($from['collection'], $from['id'], $to['collection'], $to['id']);
 
-		// Pass the cloned object for immediate index append when queueRebuildOnSave is enabled
-		$this->indexBuilder->smartBuildIndex($to['collection'], $object);
-
 		// Increment the collection count since we've added a new object
 		$this->collectionSaver->incrementCount($to['collection']);
 
 		// Increment totalObjects and update lastUpdated
 		$this->collectionSaver->incrementTotalObjects($to['collection']);
+
+		// Pass the cloned object for immediate index append when queueRebuildOnSave is enabled
+		$this->indexBuilder->smartBuildIndex($to['collection'], $object);
 
 		return $object;
 	}
