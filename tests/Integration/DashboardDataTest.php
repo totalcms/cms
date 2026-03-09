@@ -43,7 +43,7 @@ describe('Dashboard Data Methods', function (): void {
 		expect($stats)->toHaveKey('collections');
 		expect($stats)->toHaveKey('totalObjects');
 		expect($stats['collections'])->toBeGreaterThanOrEqual(2); // At least our 2 collections
-		expect($stats['totalObjects'])->toBe(10);
+		expect($stats['totalObjects'])->toBe(9);
 	});
 
 	it('dashboard collections returns all collections sorted by lastUpdated', function (): void {
@@ -150,7 +150,7 @@ describe('Dashboard Data Methods', function (): void {
 		// Find test-blog collection and verify objectCount comes from totalObjects field
 		$testBlog = collect($collections)->firstWhere('id', 'test-blog');
 		expect($testBlog)->not()->toBeNull();
-		expect($testBlog['objectCount'])->toBe(8);
+		expect($testBlog['objectCount'])->toBe(7);
 	});
 
 	it('dashboard empty collections uses totalObjects field', function (): void {

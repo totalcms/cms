@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Index\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -23,6 +24,7 @@ final class IndexBuilderTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
 	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
 
 	protected function setUp(): void
@@ -31,6 +33,7 @@ final class IndexBuilderTest extends TestCase
 		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
 		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
 		$this->jobQueuer         = $this->createMock(JobQueuer::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
@@ -42,6 +45,7 @@ final class IndexBuilderTest extends TestCase
 			$this->objectFetcher,
 			$this->schemaFetcher,
 			$this->collectionFetcher,
+			$this->collectionSaver,
 			$this->jobQueuer,
 			$loggerFactory,
 		);
