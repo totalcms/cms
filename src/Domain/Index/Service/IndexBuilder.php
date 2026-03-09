@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Index\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -25,6 +26,7 @@ readonly class IndexBuilder
 		private ObjectFetcher $objectFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionSaver $collectionSaver,
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -56,15 +58,18 @@ readonly class IndexBuilder
 		// If the index only contains the id property, we can skip reading
 		// every JSON file since the ID is derived from the filename.
 		if ($this->isIdOnlyIndex($indexProps)) {
-			return $this->buildIndexFromIds($collection, $objectIds);
+			$index = $this->buildIndexFromIds($collection, $objectIds);
+		} elseif (count($objectIds) > self::STREAMING_THRESHOLD) {
+			// Use streaming for large collections to minimize memory usage
+			$index = $this->buildIndexStreaming($collection, $objectIds, $indexProps);
+		} else {
+			$index = $this->buildIndexStandard($collection, $objectIds, $indexProps);
 		}
 
-		// Use streaming for large collections to minimize memory usage
-		if (count($objectIds) > self::STREAMING_THRESHOLD) {
-			return $this->buildIndexStreaming($collection, $objectIds, $indexProps);
-		}
+		// Reset totalObjects to match the authoritative count from disk
+		$this->collectionSaver->patchCollection($collection, ['totalObjects' => count($objectIds)]);
 
-		return $this->buildIndexStandard($collection, $objectIds, $indexProps);
+		return $index;
 	}
 
 	/**
