@@ -2,6 +2,89 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.2.0] - 2026-03-09
+
+### Added
+
+- **Styled Text**: All-new rich text editor replacing our old one, built with image uploads, video/file embeds, table editing, custom inline styles/classes, custom elements, anchor links, audio support, auto-markdown, and code view
+- **Passkey Authentication**: WebAuthn passkey support for passwordless admin login (Standard Edition), with setting to disable
+- **Data Views**: New collection data views system with API access, edition-gated visibility, and auto-creation of dataviews collection
+- **Load More System**: Frontend pagination with `loadMore` for progressive content loading, including empty state handling, dataview support, and blog templates
+- **Template Designer**: `{% templatedesigner %}` Twig tag for inline template definition with API endpoints, token-gated access, and companion `.designer.json` metadata files
+- **Collection Reports**: New reporting API and admin utility for collection data with form integration, include/exclude/search support, select-all, and translations
+- **WordPress Import**: Full WordPress import system with security validation (Standard Edition)
+- **RSS Import Utility**: Import content from RSS feeds (Standard Edition)
+- **JSON Feed Support**: Parse and import JSON feed format
+- **SVG Field**: New dedicated SVG form field with editing, dark mode support, ID sanitization, and drag and drop
+- **Deck Table Field**: New table-style display for deck items with horizontal scrolling, hidden field support, and visibility controls
+- **Setting Presets**: Configurable default settings for any field with preset overrides, migrated all setting forms to TotalForm
+- **Pushover Notifications**: Push notification support for form actions with image attachments and group messaging
+- **Localized Dashboard**: Multi-language admin interface with Dutch, German, Spanish, and UK English translations
+- **L1 + L2 Cache Architecture**: Two-tier caching system with APCu (L1) and filesystem/Redis/Memcached (L2), cache sizing advisor, and signal service for cron-based cache clearing
+- **Bulk Mailer**: Mailer form builder, bulk send to specific objects, and user data access in mailer templates
+- **T1 Import Utility**: Import data from Total CMS 1 installations
+- **Orphan Scanner Utility**: New admin utility to find orphaned files and data
+- **CMS Grid Utility Classes**: New `cms-grid` CSS utility classes for content grid layouts
+- **New Twig Functions**: `next`, `prev`, `setSessionData` functions and `cms.data` macros for image, gallery, file, and depot
+- **Twig Adapter Namespacing**: Improved Twig adapter organization with proper namespacing
+- **Gallery Sort Options**: Configurable sort order for gallery collections
+- **Deck Min/Max Items**: New `min` and `max` item count settings for deck fields
+- **Field Visibility in Deck**: Control field visibility within deck items
+- **Custom Login Form**: `restrictPageAccess` now supports custom login form templates
+- **Forgot Password Dropdown**: Password reset template setting converted to a dropdown selector
+- **Autogen for Deck Items**: Auto-generate values when creating deck items via API
+- **Gallery Launcher Filtering**: Include/exclude/search support for the gallery launcher
+- **Export API Filtering**: Include/exclude options added to the `/export` API
+- **Deck Export/Import**: Deck field support in the export and import APIs
+- **Cache Signal Service**: Clear cache from cron jobs via signal files
+- **Auto Cache Clear on Update**: Cache automatically clears when CMS is updated
+- **Clear Watermark Cache**: New admin utility to clear watermark image cache
+- **Clear All Image Cache**: Button to clear all processed image caches
+
+### Enhanced
+
+- **HTMX 4.0 Refactors**: Job queue, passkey UI, test data view, quickaction buttons, and collection sidebar refactored to use HTMX for reduced JavaScript complexity
+- **Gallery Performance**: Significant performance improvements for large galleries including optimized image processing and EXIF/color extraction toggle
+- **Index Builder Performance**: Improved performance for building ID-only indexes
+- **Cache TTLs**: Longer cache durations with cleanup of legacy caching logic
+- **Documentation**: Major reorganization with keyboard navigation, search improvements, SEO enhancements, and collapsible nav groups
+- **Admin Navigation**: Darker active nav styling, better details open/close logic, scroll position maintained in docs
+- **Admin Utilities**: Organized into logical groups with improved icons
+- **ImageWorks EXIF Control**: New setting to disable EXIF and color extraction for images and galleries (GDPR compliance)
+- **Property Meta Inheritance**: Better property meta resolution with new `PropertyMetaResolver` service
+- **Relational Options**: View support and factory compatibility for relational option fields
+- **Styled Text**: Default to no word count, fixed return of empty tags on no content
+- **Form Grid**: Auto-add missing properties to form grid layout
+- **Logout**: Now defaults to HTTP referer redirect, `cms.logout` supports redirect URL
+- **Gallery Sizing**: Gallery image sizing now controllable via CSS variable
+- **Collection Search**: Autofocus on collection search field on index pages
+- **Wildcard Filtering**: `ObjectFilter` now supports wildcard-based filtering
+- **HTMLUtils**: Centralized option and datalist generation with optimizations
+- **Vendor Files**: Slimmed down distribution vendor files
+- **Dev Environment**: Better watch script and dev environment prefix for CLI commands
+- **Centralized HTTP Client**: Moved to central Guzzle client, replacing direct curl usage
+- **License Simulator**: Pro Edition can now simulate any edition
+- **Collection totalObjects**: Rebuild Index now updates totalObjects for the collection
+
+### Fixed
+
+- **Security Fixes**: CORS limited to specific routes, CSRF header fix, max download size protection, WordPress import security validation, caching security fix
+- **Deck Items**: Fixed items not clickable, bad deck items ignored on save, validation fixes, fixed revert that broke deck
+- **Setup Wizard**: Fixed first-time setup flow, hide passkey option during initial account setup
+- **Collection Table**: Fixed delete object, layout fixes with autolink
+- **Form Fixes**: Fixed code field scroll-to on new forms, password confirmPlaceholder, SMTP setting form labels, hidden fields in DeckTable
+- **Gallery Fixes**: Fixed features gallery buttons, image height issues, proper error handling when gallery doesn't exist
+- **Cache Fixes**: Cache advisor fix, improved filesystem cache clearing, L2 cache connection fixes, disabled cache in processJobs
+- **Sentry Fixes**: JavaScript error fixes, proper domain default for processJobs
+- **Login/Auth**: Fixed custom login URL, don't redirect to admin on logout
+- **Template Fixes**: Fixed Twig syntax errors, macro documentation
+- **Depot**: Fixed browser PDF embed, restored depot browser functionality
+- **Build Fixes**: Fixed Inky email build, added translation JSONs to build, icon reference updates
+- **Log Permissions**: Adjusted logfile permissions for better compatibility
+- **Relational Options**: Graceful handling when data is not as expected
+- **Settings**: Return blank string if setting doesn't exist
+- **Feed/Blog Forms**: Fixed form configuration issues
+
 ## [3.1.8] - 2026-02-07
 
 ### Added
