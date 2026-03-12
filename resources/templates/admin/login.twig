@@ -30,7 +30,7 @@
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
 		flashMessages : errorMessages,
-		showPasskeys  : authCollection is not empty
+		showPasskeys  : authCollection is not empty and cms.config('auth', 'usePasskeys') != false
 	} %}
 
 	{% if cms.edition.can('templates') %}
