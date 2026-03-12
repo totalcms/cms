@@ -18,6 +18,27 @@ class StringData extends PropertyData implements \Stringable
 			// Use HTML sanitizer to clean the text
 			$this->text = HTMLSanitizer::sanitizeRichContent($this->text, $config->htmlclean);
 		}
+
+		// Trim empty paragraphs from the beginning and end of HTML content
+		if ($this->containsHTML()) {
+			$this->text = $this->trimEmptyParagraphs($this->text);
+		}
+	}
+
+	/**
+	 * Remove empty paragraphs from the beginning and end of HTML content.
+	 */
+	private function trimEmptyParagraphs(string $html): string
+	{
+		$pattern = '<p></p>';
+		while (str_starts_with($html, $pattern)) {
+			$html = substr($html, strlen($pattern));
+		}
+		while (str_ends_with($html, $pattern)) {
+			$html = substr($html, 0, -strlen($pattern));
+		}
+
+		return trim($html);
 	}
 
 	public function transform(): string
