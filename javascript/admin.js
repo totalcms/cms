@@ -22,6 +22,7 @@ import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
 globalThis.QuickAction = QuickAction;
+globalThis.JSONField = JSONField;
 
 // Inject CSRF token into all HTMX requests
 document.addEventListener('htmx:config:request', (e) => {

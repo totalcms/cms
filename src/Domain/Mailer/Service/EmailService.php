@@ -207,6 +207,11 @@ readonly class EmailService
 	{
 		$allowedDomains = $this->config->mailer['whitelist'] ?? [];
 
+		// Normalize to array (config may provide a single string value)
+		if (is_string($allowedDomains)) {
+			$allowedDomains = $allowedDomains !== '' ? [$allowedDomains] : [];
+		}
+
 		// If whitelist is empty, it's disabled
 		if ($allowedDomains === []) {
 			return ['success' => true, 'message' => 'Whitelist not enabled'];
