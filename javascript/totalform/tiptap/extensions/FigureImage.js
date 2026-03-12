@@ -12,7 +12,7 @@ const FigureImage = Node.create({
 
 	group: 'block',
 
-	content: 'inline*',
+	atom: true,
 
 	draggable: true,
 
