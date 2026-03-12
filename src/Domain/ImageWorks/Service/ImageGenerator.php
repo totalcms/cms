@@ -11,7 +11,7 @@ use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
@@ -29,7 +29,7 @@ class ImageGenerator
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
 		private readonly PropertyFetcher $propertyFetcher,
-		private readonly SchemaFetcher $schemaFetcher,
+		private readonly PropertyMetaResolver $metaResolver,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
 		private readonly Config $config,
@@ -179,14 +179,15 @@ class ImageGenerator
 		// Remove metadata params that don't affect image processing
 		unset($params['id'], $params['collection'], $params['property'], $params['name'], $params['cache']);
 
-		$defaults    = $this->config->imageworks['defaults'] ?? [];
-		$hasDefaults = is_array($defaults) && $defaults !== [];
+		$defaults      = $this->config->imageworks['defaults'] ?? [];
+		$hasDefaults   = is_array($defaults) && $defaults !== [];
+		$hasWatermarks = $this->getSchemaWatermarkSettings() !== [];
 
-		// If no params are provided and no defaults are configured, return the original image
+		// If no params are provided, no defaults configured, and no watermark settings, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
 		// If the only param is 'fm' and it matches the original image's format, return original
-		// But if defaults exist, we must let Glide process the image so defaults are applied
-		if (!$hasDefaults && ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm'])))) {
+		// But if defaults or watermarks exist, we must let Glide process the image
+		if (!$hasDefaults && !$hasWatermarks && ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm'])))) {
 			return [];
 		}
 
@@ -276,17 +277,16 @@ class ImageGenerator
 	}
 
 	/**
-	 * Get watermark settings from property schema.
-	 * Schema watermarks are enforced and cannot be overridden via URL parameters.
+	 * Get watermark settings from property metadata.
+	 * Resolves watermark settings across all three levels: schema, collection, and per-object overrides.
+	 * Watermarks are enforced and cannot be overridden via URL parameters.
 	 *
 	 * @return array<string,string|int>
 	 */
 	private function getSchemaWatermarkSettings(): array
 	{
 		try {
-			$schema         = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
-			$propertySchema = $schema->properties[$this->property] ?? [];
-			$settings       = $propertySchema['settings'] ?? [];
+			$settings = $this->metaResolver->resolveSettings($this->collection, $this->property, $this->id);
 
 			return $settings['watermark'] ?? [];
 		} catch (\Exception) {
