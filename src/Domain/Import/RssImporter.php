@@ -81,11 +81,15 @@ class RssImporter
 	 */
 	private function fetchRawFeed(string $feedUrl): string
 	{
-		$response = $this->httpClient->request('GET', $feedUrl, [
-			'timeout'          => 30,
-			'verify_ssl'       => false,
-			'follow_redirects' => true,
-		]);
+		try {
+			$response = $this->httpClient->request('GET', $feedUrl, [
+				'timeout'          => 30,
+				'verify_ssl'       => false,
+				'follow_redirects' => true,
+			]);
+		} catch (\RuntimeException $e) {
+			throw new \RuntimeException(sprintf('Failed to fetch feed from %s: %s', $feedUrl, $e->getMessage()), 0, $e);
+		}
 
 		if ($response->statusCode !== 200) {
 			throw new \RuntimeException(sprintf('Failed to fetch feed: HTTP %d', $response->statusCode));
