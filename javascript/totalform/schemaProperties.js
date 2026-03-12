@@ -175,10 +175,10 @@ export default class SchemaPropertiesField extends PropertiesField {
 		const duplicate = field.querySelector("button.duplicate");
 		const property  = field.querySelector("input");
 
-		// Ensure properties are all lowercase
+		// Ensure properties are all lowercase and valid Twig variable names
 		property?.addEventListener("change", () => {
 			// Replace hyphens with underscores because it makes for nicer twig macros
-			property.value = slugify(property.value, { lower: true }).replace(/-/g, "_");
+			property.value = slugify(property.value, { lower: true }).replace(/-/g, "_").replace(/^[0-9_]+/, "");
 		});
 
 		trash?.addEventListener("click", () => this.removeField(field));

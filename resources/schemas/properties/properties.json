@@ -5,7 +5,7 @@
 	"type"        : "object",
 	"description" : "A schema for a properties used in schemas and collection meta data files.",
 	"patternProperties" : {
-		"^\\S+$": {
+		"^[a-zA-Z]\\S*$": {
 			"type": "object",
 			"properties": {
 				"label": {
