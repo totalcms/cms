@@ -164,6 +164,41 @@ Date fields can be configured to automatically update:
 }
 ```
 
+## Lock on Edit
+
+Prevent a field from being changed after the initial object creation. When `lockOnEdit` is enabled, the field is editable on new objects but becomes readonly and disabled when editing an existing object. This works on all field types that use standard HTML inputs: text, number, select, date, textarea, etc.
+
+### Schema Definition
+
+```json
+{
+    "title": {
+        "field": "text",
+        "label": "Title",
+        "settings": {
+            "lockOnEdit": true
+        }
+    }
+}
+```
+
+### Using in Forms
+
+```twig
+{{ cms.form.text('slug', {}, {
+    label: 'URL Slug',
+    settings: { lockOnEdit: true }
+}) }}
+
+{{ cms.form.select('category', {}, {
+    label: 'Category',
+    settings: { lockOnEdit: true },
+    options: ['news', 'blog', 'tutorial']
+}) }}
+```
+
+> **Note:** Both `readonly` and `disabled` HTML attributes are set because `readonly` does not apply to `<select>` elements per the HTML spec. Values from locked fields are still included when saving because the form collects data via JavaScript, not HTML form submission.
+
 ## ID Auto-generation
 
 Configure automatic ID generation based on other field values:

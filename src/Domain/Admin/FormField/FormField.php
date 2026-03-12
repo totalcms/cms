@@ -73,6 +73,14 @@ class FormField
 			$this->value = $this->default;
 		}
 
+		// Lock field when editing an existing object.
+		// Sets both readonly (for input/textarea) and disabled (for select, which ignores readonly per HTML spec).
+		// Values are still submitted because generateData() reads via JS field.getValue(), not HTML form submission.
+		if (isset($this->settings['lockOnEdit']) && $this->settings['lockOnEdit'] === true && $this->form->isEditMode()) {
+			$this->readonly = true;
+			$this->disabled = true;
+		}
+
 		// Add cms-hide class if hide setting is true (check both property-level and settings)
 		if ($this->hide || (isset($this->settings['hide']) && $this->settings['hide'] === true)) {
 			$this->class = trim($this->class . ' cms-hide');
