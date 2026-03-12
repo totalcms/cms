@@ -179,10 +179,14 @@ class ImageGenerator
 		// Remove metadata params that don't affect image processing
 		unset($params['id'], $params['collection'], $params['property'], $params['name'], $params['cache']);
 
-		// If no params are provided, return the original image
+		$defaults    = $this->config->imageworks['defaults'] ?? [];
+		$hasDefaults = is_array($defaults) && $defaults !== [];
+
+		// If no params are provided and no defaults are configured, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
 		// If the only param is 'fm' and it matches the original image's format, return original
-		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm']))) {
+		// But if defaults exist, we must let Glide process the image so defaults are applied
+		if (!$hasDefaults && ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm'])))) {
 			return [];
 		}
 
