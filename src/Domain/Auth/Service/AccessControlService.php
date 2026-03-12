@@ -547,8 +547,26 @@ readonly class AccessControlService
 		$all     = $permissions['all'] ?? false;
 		$allowed = $permissions['allowed'] ?? [];
 
+		// Map route paths to their access group permission keys.
+		// This allows multiple routes to share a single permission toggle
+		// and fixes mismatches between route paths and stored permission values.
+		$routeToPermission = [
+			'cache-manager'      => 'cache',
+			'cache-sizing'       => 'cache',
+			'image-cache'        => 'cache',
+			'license-manager'    => 'license',
+			'logs'               => 'log-analyzer',
+			'pretty-url-builder' => 'pretty-url',
+			'import-alloy'       => 'import',
+			'import-rss'         => 'import',
+			'import-totalcms-one' => 'import',
+			'import-wordpress'   => 'import',
+		];
+
+		$permissionKey = $routeToPermission[$util] ?? $util;
+
 		// If they have access to this util (all or specific), grant access
-		return $all || in_array($util, $allowed);
+		return $all || in_array($permissionKey, $allowed);
 	}
 
 	/**
