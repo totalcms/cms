@@ -1,4 +1,5 @@
 import TotalField from "./totalfield";
+import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 
 //-----------------------------------------------
@@ -11,6 +12,11 @@ export default class DepotDropField extends TotalField {
 
         this.preview = this.container.querySelector(".total-preview");
         this.previewTemplate = this.container.querySelector("template.file-template").innerHTML;
+
+        if (this.settings.rules && Object.keys(this.settings.rules).length > 0) {
+            this.testSet = new DropletTestSet(this.settings.rules);
+        }
+
         this.setupDropzone();
     }
 
@@ -33,6 +39,7 @@ export default class DepotDropField extends TotalField {
             maxFilesize       : null,
             maxFiles          : null,
             addedfile         : () => {}, // Disable default, we handle it
+            accept            : (file, done) => this.acceptFile(file, done),
         });
 
         this.dropzone.on("addedfile", file => this.onFileAdded(file));
@@ -43,6 +50,24 @@ export default class DepotDropField extends TotalField {
         this.dropzone.on("dragenter", () => this.container.classList.add("dz-drag-hover"));
         this.dropzone.on("dragleave", () => this.container.classList.remove("dz-drag-hover"));
         this.dropzone.on("drop", () => this.container.classList.remove("dz-drag-hover"));
+    }
+
+    acceptFile(file, done) {
+        if (!this.testSet) {
+            done();
+            return;
+        }
+
+        const count = this.preview.querySelectorAll(".depot-drop-card").length;
+        if (!this.testSet.processRules(file, count)) {
+            const errors = this.testSet.errors.join(" & ");
+            this.input.setCustomValidity(errors);
+            this.input.reportValidity();
+            this.testSet.clearErrors();
+            done(errors);
+        } else {
+            done();
+        }
     }
 
     apiUploadUrl() {
@@ -124,7 +149,12 @@ export default class DepotDropField extends TotalField {
         const status = file.previewElement.querySelector(".dz-status");
         if (status) status.title = message;
 
+        if (!message || message === "") {
+            message = "Upload failed. Please check server logs for details.";
+        }
+
         console.error("Upload error:", message);
+        this.error(message);
     }
 
     getValue() {
