@@ -152,7 +152,7 @@ readonly class ObjectFactory
 
 			try {
 				$result                = $this->calcService->evaluate($calcExpression, $objectData);
-				$objectData[$property] = self::clampValue($result, $propertySchema['settings'] ?? []);
+				$objectData[$property] = $this->calcService->clampValue($result, $propertySchema['settings'] ?? []);
 			} catch (\RuntimeException) {
 				// Leave value as-is if calc expression fails
 			}
@@ -212,7 +212,7 @@ readonly class ObjectFactory
 					try {
 						$result                = $this->calcService->evaluate($expression, $itemData);
 						$settings              = $deckSchema->properties[$fieldName]['settings'] ?? [];
-						$itemData[$fieldName]  = self::clampValue($result, $settings);
+						$itemData[$fieldName]  = $this->calcService->clampValue($result, $settings);
 					} catch (\RuntimeException) {
 						// Leave value as-is
 					}
@@ -242,24 +242,4 @@ readonly class ObjectFactory
 		return '';
 	}
 
-	/**
-	 * Clamp a calc result to min/max settings if defined.
-	 *
-	 * @param array<string,mixed> $settings
-	 */
-	private static function clampValue(float $value, array $settings): float
-	{
-		$min = $settings['min'] ?? null;
-		$max = $settings['max'] ?? null;
-
-		if (is_numeric($min) && $value < (float)$min) {
-			$value = (float)$min;
-		}
-
-		if (is_numeric($max) && $value > (float)$max) {
-			$value = (float)$max;
-		}
-
-		return $value;
-	}
 }

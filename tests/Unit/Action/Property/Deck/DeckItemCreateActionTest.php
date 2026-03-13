@@ -7,41 +7,35 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Property\Deck\DeckItemCreateAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\AutogenIdService;
-use TotalCMS\Domain\Object\Service\AutogenService;
-use TotalCMS\Domain\Object\Service\CalcService;
+use TotalCMS\Domain\Property\Service\DeckItemFactory;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class DeckItemCreateActionTest extends TestCase
 {
 	private DeckItemCreateAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $deckItemSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $deckItemFactory;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $autogenIdService;
-	private \PHPUnit\Framework\MockObject\MockObject $autogenService;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->deckItemSaver    = $this->createMock(DeckItemSaver::class);
-		$this->renderer         = $this->createMock(JsonRenderer::class);
-		$this->schemaFetcher    = $this->createMock(SchemaFetcher::class);
-		$this->autogenIdService = $this->createMock(AutogenIdService::class);
-		$this->autogenService   = $this->createMock(AutogenService::class);
-		$this->request          = $this->createMock(ServerRequestInterface::class);
-		$this->response         = $this->createMock(ResponseInterface::class);
+		$this->deckItemSaver   = $this->createMock(DeckItemSaver::class);
+		$this->deckItemFactory = $this->createMock(DeckItemFactory::class);
+		$this->renderer        = $this->createMock(JsonRenderer::class);
+		$this->request         = $this->createMock(ServerRequestInterface::class);
+		$this->response        = $this->createMock(ResponseInterface::class);
+
+		// By default, prepareItemData returns the data unchanged
+		$this->deckItemFactory->method('prepareItemData')
+			->willReturnArgument(2);
 
 		$this->action = new DeckItemCreateAction(
 			$this->renderer,
 			$this->deckItemSaver,
-			$this->schemaFetcher,
-			$this->autogenIdService,
-			$this->autogenService,
-			new CalcService()
+			$this->deckItemFactory,
 		);
 	}
 
@@ -96,6 +90,8 @@ final class DeckItemCreateActionTest extends TestCase
 
 		$this->request->method('getParsedBody')->willReturn($data);
 
+		$this->deckItemFactory->method('generateIdIfNeeded')->willReturn('');
+
 		$this->deckItemSaver->expects($this->never())->method('saveDeckItem');
 
 		$jsonResponse = $this->createMock(ResponseInterface::class);
@@ -125,6 +121,8 @@ final class DeckItemCreateActionTest extends TestCase
 		$data = ['id' => '', 'title' => 'Feature']; // Empty id
 
 		$this->request->method('getParsedBody')->willReturn($data);
+
+		$this->deckItemFactory->method('generateIdIfNeeded')->willReturn('');
 
 		$this->deckItemSaver->expects($this->never())->method('saveDeckItem');
 

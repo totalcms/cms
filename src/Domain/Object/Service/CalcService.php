@@ -251,6 +251,27 @@ class CalcService
 		return $args;
 	}
 
+	/**
+	 * Clamp a calc result to min/max settings if defined.
+	 *
+	 * @param array<string,mixed> $settings
+	 */
+	public function clampValue(float $value, array $settings): float
+	{
+		$min = $settings['min'] ?? null;
+		$max = $settings['max'] ?? null;
+
+		if (is_numeric($min) && $value < (float)$min) {
+			$value = (float)$min;
+		}
+
+		if (is_numeric($max) && $value > (float)$max) {
+			$value = (float)$max;
+		}
+
+		return $value;
+	}
+
 	/** @param array<float> $args */
 	private function callFunction(string $name, array $args): float
 	{
