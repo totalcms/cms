@@ -307,6 +307,7 @@ export default class TiptapEditor {
 	}
 
 	toggleCodeView() {
+		if (!this.codeView) return;
 		const wrapper = this.container.querySelector('.ste-editor-wrapper');
 
 		if (this.codeView.isActive()) {
