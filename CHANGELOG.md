@@ -2,6 +2,34 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.2.1] - 2026-03-12
+
+### Added
+
+- **Lock on Edit**: New `lockOnEdit` field setting to prevent editing after creation
+- **Calc Field Settings**: New form field calc settings
+- **Access Group Utils**: New utilities for accessing groups
+- **Collection-Level Watermarks**: Watermark settings can now be set at the collection level for images
+
+### Enhanced
+
+- **Email Test Data Autosave**: Email test data now autosaves in the mailer form
+- **Styled Text Cleanup**: Empty paragraphs are automatically cleaned from the start and end of Styled Text content
+- **1Password Compatibility**: Reduced 1Password prompting on forms
+- **DeckItemFactory**: New DeckItemFactory with related refactoring
+- **Guzzle Error Handling**: Added connection exception catches for Guzzle HTTP calls
+
+### Fixed
+
+- **Passkey Login Control**: Passkey settings now control functionality in the login form
+- **Mailer API Calls**: Fixed API calls on the Mailer form
+- **ImageWorks Defaults**: Fixed imageworks default settings
+- **Test Email**: Fixed Test Email functionality
+- **Gallery Tags**: Fixed gallery tags
+- **Image Captions**: Fixed loading images with captions on edit
+- **Depot Drops**: Fixed depot drop validation errors
+- **Property Naming**: Enforce properties to start with a letter
+
 ## [3.2.0] - 2026-03-09
 
 ### Added
