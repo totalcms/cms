@@ -91,6 +91,7 @@ use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\AutogenService;
+use TotalCMS\Domain\Object\Service\CalcService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -1060,11 +1061,14 @@ return [
 		$container->get(AutogenService::class),
 	),
 
+	CalcService::class => fn (): CalcService => new CalcService(),
+
 	ObjectFactory::class => fn (ContainerInterface $container): ObjectFactory => new ObjectFactory(
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyFactory::class),
 		$container->get(AutogenIdService::class),
 		$container->get(AutogenService::class),
+		$container->get(CalcService::class),
 	),
 
 	// Deck Services

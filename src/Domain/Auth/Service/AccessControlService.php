@@ -551,16 +551,16 @@ readonly class AccessControlService
 		// This allows multiple routes to share a single permission toggle
 		// and fixes mismatches between route paths and stored permission values.
 		$routeToPermission = [
-			'cache-manager'      => 'cache',
-			'cache-sizing'       => 'cache',
-			'image-cache'        => 'cache',
-			'license-manager'    => 'license',
-			'logs'               => 'log-analyzer',
-			'pretty-url-builder' => 'pretty-url',
-			'import-alloy'       => 'import',
-			'import-rss'         => 'import',
+			'cache-manager'       => 'cache',
+			'cache-sizing'        => 'cache',
+			'image-cache'         => 'cache',
+			'license-manager'     => 'license',
+			'logs'                => 'log-analyzer',
+			'pretty-url-builder'  => 'pretty-url',
+			'import-alloy'        => 'import',
+			'import-rss'          => 'import',
 			'import-totalcms-one' => 'import',
-			'import-wordpress'   => 'import',
+			'import-wordpress'    => 'import',
 		];
 
 		$permissionKey = $routeToPermission[$util] ?? $util;

@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\AutogenService;
+use TotalCMS\Domain\Object\Service\CalcService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
@@ -33,7 +34,8 @@ final class ObjectFactoryTest extends TestCase
 			$this->schemaFetcher,
 			$this->propertyFactory,
 			$this->autogenIdService,
-			$this->autogenService
+			$this->autogenService,
+			new CalcService()
 		);
 	}
 

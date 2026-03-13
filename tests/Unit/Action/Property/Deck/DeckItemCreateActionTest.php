@@ -9,6 +9,7 @@ use TotalCMS\Action\Property\Deck\DeckItemCreateAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\AutogenService;
+use TotalCMS\Domain\Object\Service\CalcService;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
@@ -39,7 +40,8 @@ final class DeckItemCreateActionTest extends TestCase
 			$this->deckItemSaver,
 			$this->schemaFetcher,
 			$this->autogenIdService,
-			$this->autogenService
+			$this->autogenService,
+			new CalcService()
 		);
 	}
 
