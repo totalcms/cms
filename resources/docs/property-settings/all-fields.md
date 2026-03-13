@@ -125,6 +125,8 @@ Use `${fieldname}` to reference any other property in the same form. For referen
 * **sum(${deck.field})** - Sum all values
 * **avg(${deck.field})** - Average of all values
 * **count(${deck.field})** - Number of items
+* **min(${deck.field})** - Minimum value
+* **max(${deck.field})** - Maximum value
 
 ### Clamping with min/max
 
