@@ -53,7 +53,10 @@ readonly class DeckItemFactory
 			$autogenPattern = $idProperty['settings']['autogen'] ?? null;
 
 			if (!empty($autogenPattern)) {
-				return $this->autogenIdService->generateId($autogenPattern, $collection, $itemData);
+				$id = $this->autogenIdService->generateId($autogenPattern, $collection, $itemData);
+
+				// Deck item IDs use underscores instead of hyphens for Twig dot notation compatibility
+				return str_replace('-', '_', $id);
 			}
 		} catch (\Exception) {
 			// If anything fails, return empty and let the caller handle it
