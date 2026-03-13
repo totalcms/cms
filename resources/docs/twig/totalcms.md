@@ -24,6 +24,12 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 | `cms.schema.*` | Schema listing, fetching, inheritance, decks | [Schemas Reference](docs/twig/schemas) |
 | `cms.view.*` | Pre-computed data views | [Views Reference](docs/twig/views) |
 
+**Standalone systems:**
+
+| System | Description | Documentation |
+|--------|-------------|---------------|
+| ImageWorks | Image transformation, watermarks, presets, caching | [ImageWorks Reference](docs/twig/imageworks) |
+
 ## Root-Level Properties
 
 These properties are accessed directly on `cms` without a namespace.
@@ -68,43 +74,9 @@ Log messages from templates. Written to `twig.log` and viewable in the admin log
 | `level` | string | `'warning'` | Log level: `debug`, `info`, `warning`, `error` |
 | `context` | object | `{}` | Additional context data |
 
-## ImageWorks Parameters
+## ImageWorks
 
-These parameters are used with image transformation methods across `cms.media` and `cms.render`:
-
-### Basic Image Controls
-- `w` - Width in pixels
-- `h` - Height in pixels
-- `fit` - How to fit image: `contain`, `max`, `fill`, `stretch`, `crop`
-- `crop` - Crop position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
-- `fm` - Output format: `jpg`, `png`, `gif`, `webp`, `avif`
-- `q` - Quality (1-100)
-
-### Effects & Filters
-- `blur` - Blur amount (0-100)
-- `sharp` - Sharpen amount (0-100)
-- `pixel` - Pixelate amount (0-100)
-- `filt` - Filter: `greyscale`, `sepia`
-
-### Image Watermarks
-- `mark` - Watermark image path
-- `markw` - Watermark width
-- `markh` - Watermark height
-- `markpos` - Watermark position
-- `markpad` - Watermark padding
-- `markalpha` - Watermark opacity (0-100)
-
-### Text Watermarks
-- `marktext` - Text to display as watermark
-- `marktextfont` - Font family name (TTF/OTF fonts from watermark-fonts depot)
-- `marktextsize` - Text size in pixels (default: 500)
-- `marktextcolor` - Text color as hex (without #, e.g., 'ffffff' for white)
-- `marktextbg` - Background color as hex (optional, transparent if not set)
-- `marktextpad` - Padding around text in pixels (default: 10)
-- `marktextangle` - Text rotation angle in degrees (-360 to 360, default: 0)
-- `marktextpos` - Text position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
-- `marktextw` - Maximum text width in pixels or relative (e.g., '50w' for 50% of image width)
-- `marktextalpha` - Text transparency (0-100, where 100 is fully opaque)
+For the complete ImageWorks reference (resizing, cropping, effects, watermarks, presets, defaults, color palettes), see the dedicated [ImageWorks documentation](docs/twig/imageworks).
 
 ## Gallery Captions
 

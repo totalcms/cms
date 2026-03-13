@@ -432,7 +432,7 @@ readonly class TotalFormFactory
 				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id,
 			]);
 
-			$objectPickerScript = <<<'SCRIPT'
+			$objectPickerScript = <<<SCRIPT
 			<script>
 			(function() {
 				let debounceTimer = null;
@@ -462,7 +462,7 @@ readonly class TotalFormFactory
 					if (include && include.value) params.set('bulkInclude', include.value);
 					if (exclude && exclude.value) params.set('bulkExclude', exclude.value);
 
-					fetch('/action/mailer/bulk/objects?' + params.toString())
+					fetch('{$this->api}/action/mailer/bulk/objects?' + params.toString())
 						.then(r => r.json())
 						.then(data => {
 							cachedData = data;
@@ -504,7 +504,7 @@ readonly class TotalFormFactory
 
 			// Audience + Send combined accordion
 			$sendAttrs = array_merge(
-				HTMLUtils::htmxAttributes('/action/mailer/bulk', 'post', [
+				HTMLUtils::htmxAttributes($this->api . '/action/mailer/bulk', 'post', [
 					'target'  => '#bulk-send-output',
 					'swap'    => 'innerHTML',
 					'confirm' => 'Are you sure you want to queue a bulk email send? This will send one email per matching object.',
@@ -544,7 +544,7 @@ readonly class TotalFormFactory
 
 			// Preview accordion
 			$previewAttrs = array_merge(
-				HTMLUtils::htmxAttributes('/action/mailer/bulk/preview', 'post', [
+				HTMLUtils::htmxAttributes($this->api . '/action/mailer/bulk/preview', 'post', [
 					'target' => '#bulk-preview-output',
 					'swap'   => 'innerHTML',
 				]),

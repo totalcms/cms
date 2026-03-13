@@ -78,9 +78,6 @@ class TotalCMS
 		$sessionStarted       = false;
 
 		try {
-			$this->buffer     = $this->container->get(BufferController::class);
-			$this->twigEngine = $this->container->get(TwigEngine::class);
-
 			// Handle any existing session conflicts before creating PhpSession
 			$preservedSessionData = $this->handleSessionConflict();
 
@@ -96,6 +93,9 @@ class TotalCMS
 					$this->restorePreservedSessionData($preservedSessionData);
 				}
 			}
+
+			$this->buffer     = $this->container->get(BufferController::class);
+			$this->twigEngine = $this->container->get(TwigEngine::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}

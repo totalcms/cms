@@ -50,6 +50,19 @@ export default class ListField extends MultiSelectField {
 		});
 	}
 
+	setValue(value) {
+		if (!this.choices) return;
+
+		// Clear all existing items
+		this.choices.clearStore();
+
+		// Add each value as a new item
+		const items = Array.isArray(value) ? value : [];
+		items.forEach(item => {
+			if (item) this.choices.setValue([item]);
+		});
+	}
+
 	syncChoices(event) {
 		const oldIndex = event.oldIndex;
 		const newIndex = event.newIndex;

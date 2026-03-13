@@ -36,7 +36,7 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 | `imageworks` | array | `[]` | ImageWorks transformation parameters |
 | `options` | array | `[]` | Options: `collection`, `property` |
 
-For available ImageWorks parameters, see [ImageWorks Parameters](docs/twig/totalcms#imageworks-parameters).
+For available ImageWorks parameters, see the [ImageWorks Reference](docs/twig/imageworks).
 
 ## Galleries
 

@@ -91,11 +91,13 @@ use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\AutogenService;
+use TotalCMS\Domain\Object\Service\CalcService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\DeckItemFactory;
 use TotalCMS\Domain\Property\Service\DeckItemFetcher;
 use TotalCMS\Domain\Property\Service\DeckItemRemover;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
@@ -1060,11 +1062,14 @@ return [
 		$container->get(AutogenService::class),
 	),
 
+	CalcService::class => fn (): CalcService => new CalcService(),
+
 	ObjectFactory::class => fn (ContainerInterface $container): ObjectFactory => new ObjectFactory(
 		$container->get(SchemaFetcher::class),
 		$container->get(PropertyFactory::class),
 		$container->get(AutogenIdService::class),
 		$container->get(AutogenService::class),
+		$container->get(CalcService::class),
 	),
 
 	// Deck Services
@@ -1089,6 +1094,13 @@ return [
 		$container->get(ObjectUpdater::class),
 		$container->get(PropertyFactory::class),
 		$container->get(DeckItemValidator::class),
+	),
+
+	DeckItemFactory::class => fn (ContainerInterface $container): DeckItemFactory => new DeckItemFactory(
+		$container->get(SchemaFetcher::class),
+		$container->get(AutogenIdService::class),
+		$container->get(AutogenService::class),
+		$container->get(CalcService::class),
 	),
 
 	DeckItemRemover::class => fn (ContainerInterface $container): DeckItemRemover => new DeckItemRemover(

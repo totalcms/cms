@@ -127,6 +127,27 @@
 
 {% if url.id and url.id != 'new' and url.id[:1] != '-' %}
 <script>
+{# Persist test data in localStorage per mailer #}
+document.addEventListener('DOMContentLoaded', () => {
+	const storageKey = 'mailer-test-data:{{ url.id }}';
+	const container = document.querySelector('.test-email-form .form-field[data-type="json"]');
+	if (!container) return;
+
+	const textarea = container.querySelector('textarea');
+	const saved = localStorage.getItem(storageKey);
+	if (saved && textarea) textarea.value = saved;
+
+	// Initialize JSONField for CodeMirror syntax highlighting
+	const field = new JSONField(container, {});
+	container.classList.remove('unsaved');
+
+	// Persist changes to localStorage
+	container.addEventListener('field-change', () => {
+		const raw = field.editor ? field.editor.getValue() : textarea.value;
+		localStorage.setItem(storageKey, raw);
+	});
+});
+
 document.querySelector('.duplicate a')?.addEventListener('click', (e) => {
 	e.preventDefault();
 	const form = Object.assign(document.createElement('form'), {

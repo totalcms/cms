@@ -54,7 +54,7 @@ readonly class GlideFactory
 			'cache_path_prefix'      => sprintf('%s/%s', $source, $cacheDir ?? self::CACHEDIR),
 			'watermarks_path_prefix' => $watermarkPath ?? TextWatermarkFactory::WATERMARK_DIR,
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
-			'defaults'               => $this->config->imageworks['defaults'],
+			'defaults'               => is_array($this->config->imageworks['defaults'] ?? []) ? $this->config->imageworks['defaults'] : [],
 			'presets'                => $this->presets($imageData),
 			'response'               => new PsrResponseFactory(new Response(), fn ($stream): Stream => new Stream($stream)),
 		]);

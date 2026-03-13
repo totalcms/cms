@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\License\Service;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Exception\EditionFeatureException;
+use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 
 /**
@@ -96,6 +97,7 @@ class EditionFeatureService
 	 * Get the effective edition for feature gating.
 	 *
 	 * This respects the simulateEdition setting when in development or trial mode.
+	 * Falls back to LITE edition if license validation fails (e.g., API unreachable with no cache).
 	 */
 	public function getEdition(): Edition
 	{
@@ -104,8 +106,16 @@ class EditionFeatureService
 			return $this->cachedEdition;
 		}
 
-		$licenseData   = $this->licenseValidator->validateLicense();
-		$actualEdition = Edition::fromString($licenseData->edition);
+		try {
+			$licenseData   = $this->licenseValidator->validateLicense();
+			$actualEdition = Edition::fromString($licenseData->edition);
+		} catch (LicenseException) {
+			// If license validation fails entirely (API unreachable, no cache),
+			// default to LITE to allow the site to still render
+			$this->cachedEdition = Edition::LITE;
+
+			return $this->cachedEdition;
+		}
 
 		// Check for simulation override (only available in dev/trial mode)
 		if ($this->canSimulate($actualEdition)) {
@@ -127,9 +137,13 @@ class EditionFeatureService
 	 */
 	public function getActualEdition(): Edition
 	{
-		$licenseData = $this->licenseValidator->validateLicense();
+		try {
+			$licenseData = $this->licenseValidator->validateLicense();
 
-		return Edition::fromString($licenseData->edition);
+			return Edition::fromString($licenseData->edition);
+		} catch (LicenseException) {
+			return Edition::LITE;
+		}
 	}
 
 	/**

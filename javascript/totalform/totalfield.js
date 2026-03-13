@@ -1,5 +1,6 @@
 import TotalDispatcher from "./dispatcher";
 import Autogen from "./autogen";
+import Calc from "./calc";
 
 //-----------------------------------------------
 // Total CMS Generic Field
@@ -50,6 +51,7 @@ export default class TotalField {
 
 		this.changeListener();
 		this.initAutogen();
+		this.initCalc();
 		if (this.settings.sortOptions) {
 			this.sortOptions();
 		} else {
@@ -88,6 +90,35 @@ export default class TotalField {
 		this.autogen.attachListeners(() => {
 			this.input.value = this.autogen.generate();
 			this.changed();
+		});
+	}
+
+	/**
+	 * Initialize calc support for computed number fields.
+	 * Evaluates a math expression referencing other fields.
+	 */
+	initCalc() {
+		if (!this.settings.calc) return;
+
+		this.calc = new Calc(this);
+
+		// Make field readonly since it's computed
+		this.input.readOnly = true;
+		this.container.classList.add('calc-field');
+
+		// Calculate initial value
+		const result = this.calc.evaluate();
+		if (result !== null) {
+			this.input.value = result;
+		}
+
+		// Recalculate when referenced fields change
+		this.calc.attachListeners(() => {
+			const val = this.calc.evaluate();
+			if (val !== null) {
+				this.input.value = val;
+				this.changed();
+			}
 		});
 	}
 
