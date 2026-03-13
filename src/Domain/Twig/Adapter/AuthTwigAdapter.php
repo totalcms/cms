@@ -339,7 +339,7 @@ readonly class AuthTwigAdapter
 	/**
 	 * Render the passkey manager UI for registering and managing passkeys.
 	 *
-	 * Usage in Twig: {{ cms.auth.passkeyManager()|raw }}
+	 * Usage in Twig: {{ cms.auth.passkeyManager() }}
 	 */
 	public function passkeyManager(): string
 	{
