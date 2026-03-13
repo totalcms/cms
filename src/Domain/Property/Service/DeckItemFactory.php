@@ -32,9 +32,8 @@ readonly class DeckItemFactory
 	public function prepareItemData(string $collection, string $propertyName, array $itemData): array
 	{
 		$itemData = $this->applyAutogenFields($collection, $propertyName, $itemData);
-		$itemData = $this->applyCalcFields($collection, $propertyName, $itemData);
 
-		return $itemData;
+		return $this->applyCalcFields($collection, $propertyName, $itemData);
 	}
 
 	/**

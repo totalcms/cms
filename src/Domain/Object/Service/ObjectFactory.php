@@ -241,5 +241,4 @@ readonly class ObjectFactory
 
 		return '';
 	}
-
 }
