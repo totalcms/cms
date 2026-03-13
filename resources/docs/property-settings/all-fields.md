@@ -1,6 +1,6 @@
 ---
 title: "All Field Settings"
-description: "Universal settings for all Total CMS field types including hidden fields and conditional visibility with comparison operators."
+description: "Universal settings for all Total CMS field types including autogen, calc (computed fields), hidden fields, and conditional visibility."
 ---
 
 # All Field Settings
@@ -84,6 +84,166 @@ Generates: `My Article (2025)`
 ```
 
 **For ID-specific autogen features** (slugification, uniqueness checking, OID padding), see the [ID Settings](id.md) documentation.
+
+## Calc (Computed Fields)
+
+The `calc` setting evaluates a math expression to compute a field's value from other number fields. The field becomes **read-only** automatically since its value is derived.
+
+```json
+{
+	"calc": "${price} * ${quantity}"
+}
+```
+
+The value recalculates in real time whenever a referenced field changes.
+
+### Field References
+
+Use `${fieldname}` to reference any other property in the same form. For referencing fields inside deck items from the parent object, use dot notation: `${deckProperty.fieldName}`.
+
+### Operators
+
+* `+` Addition
+* `-` Subtraction
+* `*` Multiplication
+* `/` Division (division by zero returns 0)
+* `%` Modulo
+* `()` Parentheses for grouping
+* Unary `-` for negative numbers
+
+### Functions
+
+**Math functions:**
+* **round(x)** - Round to nearest integer
+* **floor(x)** - Round down
+* **ceil(x)** - Round up
+* **abs(x)** - Absolute value
+* **min(a, b, ...)** - Minimum value
+* **max(a, b, ...)** - Maximum value
+
+**Aggregate functions** (for deck item fields):
+* **sum(${deck.field})** - Sum all values
+* **avg(${deck.field})** - Average of all values
+* **count(${deck.field})** - Number of items
+
+### Clamping with min/max
+
+Use `min` and `max` settings alongside `calc` to clamp the computed result:
+
+```json
+{
+	"settings": {
+		"calc": "${subtotal} - ${discount}",
+		"min": 0
+	}
+}
+```
+
+This ensures the result never drops below 0, even if the discount exceeds the subtotal.
+
+### Examples
+
+**Line item total (within a deck item):**
+```json
+{
+	"lineTotal": {
+		"type": "number",
+		"field": "price",
+		"label": "Line Total",
+		"settings": {
+			"calc": "${unitPrice} * ${quantity}"
+		}
+	}
+}
+```
+
+**Subtotal from deck items:**
+```json
+{
+	"subtotal": {
+		"type": "number",
+		"field": "price",
+		"label": "Subtotal",
+		"settings": {
+			"calc": "sum(${items.lineTotal})"
+		}
+	}
+}
+```
+Sums the `lineTotal` field from every item in the `items` deck property.
+
+**Tax calculation:**
+```json
+{
+	"tax": {
+		"type": "number",
+		"field": "price",
+		"label": "Tax",
+		"settings": {
+			"calc": "round(sum(${items.lineTotal}) * ${taxRate} / 100)"
+		}
+	}
+}
+```
+
+**Grand total with discount and tax:**
+```json
+{
+	"grandTotal": {
+		"type": "number",
+		"field": "price",
+		"label": "Grand Total",
+		"settings": {
+			"min": 0,
+			"calc": "sum(${items.lineTotal}) - ${discount} + round((sum(${items.lineTotal}) - ${discount}) * ${taxRate} / 100)"
+		}
+	}
+}
+```
+
+**Average rating from reviews:**
+```json
+{
+	"avgRating": {
+		"type": "number",
+		"field": "number",
+		"label": "Average Rating",
+		"settings": {
+			"calc": "round(avg(${reviews.rating}))"
+		}
+	}
+}
+```
+
+**Item count:**
+```json
+{
+	"totalItems": {
+		"type": "number",
+		"field": "number",
+		"label": "Total Items",
+		"settings": {
+			"calc": "count(${items.id})"
+		}
+	}
+}
+```
+
+### Order of Operations
+
+When an object has both deck-item-level and object-level calc fields, they are processed in order:
+
+1. **Deck item calcs first** - e.g., `lineTotal = ${unitPrice} * ${quantity}` within each item
+2. **Object-level calcs second** - e.g., `grandTotal = sum(${items.lineTotal})` using already-computed values
+
+On the frontend, this happens naturally through the event system. On the backend (API saves, imports), the same ordering is enforced explicitly.
+
+### Important Notes
+
+- **Read-only:** Calc fields are automatically set to read-only on the frontend. Users cannot manually override computed values.
+- **Number fields:** Calc is designed for number fields (`number`, `price`). While it can be applied to other field types, the result is always numeric.
+- **Missing fields:** Any referenced field that is missing or non-numeric is treated as `0`.
+- **Backend evaluation:** Calc expressions are re-evaluated server-side on every object save, ensuring consistency even for API-driven updates.
 
 ## Hide Field
 
