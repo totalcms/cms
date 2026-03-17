@@ -120,7 +120,39 @@ class ServerChecker
 	/** @return array<string,mixed> */
 	public function getConfig(): array
 	{
-		return $this->config->toArray();
+		$config = $this->config->toArray();
+
+		// Redact sensitive values to prevent credential exposure
+		$config = $this->redactSensitiveValues($config);
+
+		return $config;
+	}
+
+	/**
+	 * Recursively redact sensitive keys from config arrays.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function redactSensitiveValues(array $data): array
+	{
+		$sensitiveKeys = ['password', 'secret', 'token', 'key', 'credentials'];
+
+		foreach ($data as $k => $v) {
+			if (is_array($v)) {
+				$data[$k] = $this->redactSensitiveValues($v);
+			} elseif (is_string($k)) {
+				foreach ($sensitiveKeys as $sensitive) {
+					if (stripos($k, $sensitive) !== false && $v !== null && $v !== '') {
+						$data[$k] = '********';
+						break;
+					}
+				}
+			}
+		}
+
+		return $data;
 	}
 
 	/** @return array<string,bool> */
