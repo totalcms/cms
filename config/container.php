@@ -877,6 +877,7 @@ return [
 		$container->get(CacheManager::class),
 		$container->get(HttpClientInterface::class),
 		$container->get(OfflineLicenseValidator::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	LicenseStatus::class => fn (ContainerInterface $container): LicenseStatus => new LicenseStatus(
