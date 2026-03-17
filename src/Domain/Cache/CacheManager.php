@@ -555,23 +555,27 @@ class CacheManager
 		$domainKey    = $this->createDomainKey($key);
 		$memoryStored = false;
 
+		// Store as plain array to avoid unserialize(allowed_classes:false) issues
+		// which would turn LicenseData into __PHP_Incomplete_Class and break cache reads
+		$arrayData = $data instanceof LicenseData ? $data->toArray() : $data;
+
 		// Store in memory cache (fastest) - use isInstalled() to bypass config disabled checks
 		// Try each memory cache in priority order until one succeeds
 		if ($this->apcuService->isInstalled()) {
-			$memoryStored = $this->apcuService->set($domainKey, $data, $ttl);
+			$memoryStored = $this->apcuService->set($domainKey, $arrayData, $ttl);
 		}
 
 		if (!$memoryStored && $this->redisService->isInstalled()) {
-			$memoryStored = $this->redisService->set($domainKey, $data, $ttl);
+			$memoryStored = $this->redisService->set($domainKey, $arrayData, $ttl);
 		}
 
 		if (!$memoryStored && $this->memcachedService->isInstalled()) {
-			$memoryStored = $this->memcachedService->set($domainKey, $data, $ttl);
+			$memoryStored = $this->memcachedService->set($domainKey, $arrayData, $ttl);
 		}
 
 		// ALWAYS store in filesystem as persistent backup
 		// This ensures license data survives memory cache eviction or server restarts
-		$filesystemStored = $this->filesystemService->set($domainKey, $data, $ttl);
+		$filesystemStored = $this->filesystemService->set($domainKey, $arrayData, $ttl);
 
 		// Success if stored in at least one location
 		return $memoryStored || $filesystemStored;
@@ -581,39 +585,43 @@ class CacheManager
 	 * Get license data - MANDATORY caching that cannot be disabled.
 	 * This method bypasses all cache disabled settings to prevent rate limit cascades.
 	 */
-	public function getLicenseData(string $key): mixed
+	public function getLicenseData(string $key): ?LicenseData
 	{
 		// License caching is MANDATORY - bypasses all cache disabled settings
 		// Use domain-specific key to prevent license data sharing between sites
 		$domainKey = $this->createDomainKey($key);
+		$result    = null;
 
 		// Check memory caches first (fastest)
 		// Use isInstalled() instead of isAvailable() to bypass config disabled checks
 		if ($this->apcuService->isInstalled()) {
 			$result = $this->apcuService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
 		}
 
-		if ($this->redisService->isInstalled()) {
+		if ($result === null && $this->redisService->isInstalled()) {
 			$result = $this->redisService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
 		}
 
-		if ($this->memcachedService->isInstalled()) {
+		if ($result === null && $this->memcachedService->isInstalled()) {
 			$result = $this->memcachedService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
 		}
 
 		// Filesystem is ALWAYS checked as absolute fallback for license data
-		$result = $this->filesystemService->get($domainKey);
+		if ($result === null) {
+			$result = $this->filesystemService->get($domainKey);
+		}
 
-		return $result;
+		// Reconstruct LicenseData from cached array
+		if (is_array($result) && isset($result['valid'], $result['domain'])) {
+			return LicenseData::fromArray($result);
+		}
+
+		// Handle legacy cached LicenseData objects (from before this fix)
+		if ($result instanceof LicenseData) {
+			return $result;
+		}
+
+		return null;
 	}
 
 	/**
