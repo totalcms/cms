@@ -71,7 +71,7 @@
     "twig/intl-extra": "^3.22",
     "twig/markdown-extra": "^3.21",
     "twig/string-extra": "^3.21",
-    "twig/twig": "^3.10",
+    "twig/twig": "^3.24.0",
     "web-auth/webauthn-lib": "^5",
     "webuni/front-matter": "^2.0"
   },
