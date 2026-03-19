@@ -13,6 +13,7 @@ readonly class VersionData implements \Stringable
 	public string $full;
 	public string $number;
 	public string $build;
+	public int $commits;
 	public ?string $date;
 	public bool $valid;
 
@@ -20,12 +21,13 @@ readonly class VersionData implements \Stringable
 	{
 		$data = Version::load();
 
-		$this->number = $data['version'] ?? 'unknown';
-		$this->build  = $data['build'] ?? 'unknown';
-		$this->date   = Version::date();
-		$this->valid  = Version::isValid();
+		$this->number  = $data['version'] ?? 'unknown';
+		$this->build   = $data['build'] ?? 'unknown';
+		$this->commits = (int) ($data['commits'] ?? 0);
+		$this->date    = Version::date();
+		$this->valid   = Version::isValid();
 
-		$this->full = $this->number === 'unknown' ? 'unknown' : $this->number . '-' . $this->build;
+		$this->full = Version::get();
 	}
 
 	/**

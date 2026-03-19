@@ -165,9 +165,19 @@ if [ $RELEASE -eq 1 ]; then
     fi
 else
     # Beta/dev build: generate version from git
-    VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
-    BUILD=$(git rev-parse --short HEAD)
-    php bin/generate-version.php "$VERSION" "$BUILD"
+    # git describe --long gives: v3.2.1-4-gbd6cf78 (tag-commits-ghash)
+    DESCRIBE=$(git describe --tags --long 2>/dev/null)
+    if [ -n "$DESCRIBE" ]; then
+        VERSION=$(echo "$DESCRIBE" | sed 's/^v//' | sed 's/-[0-9]*-g[a-f0-9]*$//')
+        COMMITS=$(echo "$DESCRIBE" | sed 's/.*-\([0-9]*\)-g[a-f0-9]*$/\1/')
+        BUILD=$(echo "$DESCRIBE" | sed 's/.*-g//')
+    else
+        # Fallback if no tags exist
+        VERSION="0.0.0"
+        COMMITS="0"
+        BUILD=$(git rev-parse --short HEAD)
+    fi
+    php bin/generate-version.php "$VERSION" "$BUILD" version.json "$COMMITS"
     cp version.json dist
     echo "Beta build for v$VERSION ($BUILD) is complete."
 fi

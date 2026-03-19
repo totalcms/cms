@@ -4,10 +4,10 @@
 /**
  * Generate version.json with HMAC signature.
  *
- * Usage: php bin/generate-version.php <version> <build> [output-file]
+ * Usage: php bin/generate-version.php <version> <build> [output-file] [commits]
  *
  * Example: php bin/generate-version.php 3.1.3 5e3c5139
- *          php bin/generate-version.php 3.1.3 5e3c5139 dist/version.json
+ *          php bin/generate-version.php 3.1.3 5e3c5139 version.json 4
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -23,6 +23,7 @@ if ($argc < 3) {
 $version    = $argv[1];
 $build      = $argv[2];
 $outputFile = $argv[3] ?? __DIR__ . '/../version.json';
+$commits    = (int) ($argv[4] ?? 0);
 $date       = date('Y-m-d');
 
 // Validate version format
@@ -43,6 +44,7 @@ $signature = Version::generateSignature($version, $date);
 $data = [
 	'version'   => $version,
 	'build'     => $build,
+	'commits'   => $commits,
 	'date'      => $date,
 	'signature' => $signature,
 ];

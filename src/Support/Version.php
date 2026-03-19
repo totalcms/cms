@@ -43,6 +43,7 @@ class Version
 		self::$data = [
 			'version'   => 'unknown',
 			'build'     => 'unknown',
+			'commits'   => 0,
 			'date'      => null,
 			'signature' => null,
 		];
@@ -78,16 +79,23 @@ class Version
 	}
 
 	/**
-	 * Get the full version string (e.g., "3.0.47-baee5e0e").
+	 * Get the full version string.
+	 * Production: "3.0.47-baee5e0e"
+	 * Beta: "3.0.47-4-baee5e0e" (includes commits since last tag)
 	 */
 	public static function get(): string
 	{
 		$data    = self::load();
 		$version = $data['version'] ?? 'unknown';
 		$build   = $data['build'] ?? 'unknown';
+		$commits = (int) ($data['commits'] ?? 0);
 
 		if ($version === 'unknown') {
 			return 'unknown';
+		}
+
+		if ($commits > 0) {
+			return $version . '-' . $commits . '-' . $build;
 		}
 
 		return $version . '-' . $build;
@@ -111,6 +119,17 @@ class Version
 		$data = self::load();
 
 		return $data['build'] ?? 'unknown';
+	}
+
+	/**
+	 * Get the number of commits since the last release tag.
+	 * Returns 0 for production releases.
+	 */
+	public static function commits(): int
+	{
+		$data = self::load();
+
+		return (int) ($data['commits'] ?? 0);
 	}
 
 	/**
