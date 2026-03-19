@@ -306,7 +306,12 @@ export default class Calc {
 
 	callFunction(name, args) {
 		switch (name.toLowerCase()) {
-			case 'round': return Math.round(args[0] ?? 0);
+			case 'round': {
+				const val = args[0] ?? 0;
+				const precision = args[1] ?? 0;
+				const factor = Math.pow(10, precision);
+				return Math.round((val + Number.EPSILON) * factor) / factor;
+			}
 			case 'floor': return Math.floor(args[0] ?? 0);
 			case 'ceil':  return Math.ceil(args[0] ?? 0);
 			case 'abs':   return Math.abs(args[0] ?? 0);

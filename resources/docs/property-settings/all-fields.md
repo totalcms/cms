@@ -115,6 +115,7 @@ Use `${fieldname}` to reference any other property in the same form. For referen
 
 **Math functions:**
 * **round(x)** - Round to nearest integer
+* **round(x, precision)** - Round to N decimal places (e.g., `round(${total}, 2)` for cents)
 * **floor(x)** - Round down
 * **ceil(x)** - Round up
 * **abs(x)** - Absolute value
@@ -182,7 +183,7 @@ Sums the `lineTotal` field from every item in the `items` deck property.
 		"field": "price",
 		"label": "Tax",
 		"settings": {
-			"calc": "round(sum(${items.lineTotal}) * ${taxRate} / 100)"
+			"calc": "round(sum(${items.lineTotal}) * ${taxRate} / 100, 2)"
 		}
 	}
 }
