@@ -256,8 +256,10 @@ class SchemaForm extends TotalForm
 		$options['form'] = $this;
 
 		if ($this->id !== '' && ($name === 'required' || $name === 'index')) {
-			// Set all of the properties as options for the required and index fields
-			$options['options'] = array_keys($this->schemaObjectData->toArray()['properties']);
+			// Set all own + inherited properties as options for the required and index fields
+			$ownProps      = array_keys($this->schemaObjectData->toArray()['properties']);
+			$inheritedProps = array_keys($this->getInheritedProperties());
+			$options['options'] = array_values(array_unique(array_merge($ownProps, $inheritedProps)));
 		}
 
 		if ($name === 'inheritFrom') {

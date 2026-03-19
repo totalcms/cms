@@ -15,6 +15,7 @@ readonly class SchemaSaver
 		private SchemaValidator $validator,
 		private IndexBuilder $indexBuilder,
 		private CollectionLister $collectionLister,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 
@@ -64,7 +65,7 @@ readonly class SchemaSaver
 
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schemaData['properties'] = self::normalizeDefaultValues($schemaData['properties']);
-		$schemaData               = self::sanitizeRequiredAndIndex($schemaData);
+		$schemaData               = self::sanitizeRequiredAndIndex($schemaData, $this->getInheritedPropertyNames($schemaData));
 		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (!isset($schema->id)) {
@@ -93,16 +94,17 @@ readonly class SchemaSaver
 	 * Sanitize required and index arrays to only contain existing properties.
 	 *
 	 * @param array<string,mixed> $schemaData
+	 * @param array<string> $inheritedProperties Property names from inherited schemas
 	 *
 	 * @return array<string,mixed>
 	 */
-	public static function sanitizeRequiredAndIndex(array $schemaData): array
+	public static function sanitizeRequiredAndIndex(array $schemaData, array $inheritedProperties = []): array
 	{
 		if (!isset($schemaData['properties']) || !is_array($schemaData['properties'])) {
 			return $schemaData;
 		}
 
-		$validProperties = array_keys($schemaData['properties']);
+		$validProperties = array_merge(array_keys($schemaData['properties']), $inheritedProperties);
 
 		// Sanitize required array
 		if (isset($schemaData['required']) && is_array($schemaData['required'])) {
@@ -207,6 +209,35 @@ readonly class SchemaSaver
 
 		// Final fallback to field type
 		return $propertyDef['field'] ?? 'text';
+	}
+
+	/**
+	 * Get property names from inherited schemas.
+	 *
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @return array<string>
+	 */
+	private function getInheritedPropertyNames(array $schemaData): array
+	{
+		$inheritFrom = $schemaData['inheritFrom'] ?? [];
+
+		if (!is_array($inheritFrom) || $inheritFrom === []) {
+			return [];
+		}
+
+		$inherited = [];
+
+		foreach ($inheritFrom as $parentId) {
+			try {
+				$parentSchema = $this->schemaFetcher->fetchRawSchema((string)$parentId);
+				$inherited    = array_merge($inherited, array_keys($parentSchema->properties));
+			} catch (\Exception) {
+				continue;
+			}
+		}
+
+		return array_unique($inherited);
 	}
 
 	private function rebuildIndexforCollectionsWithSchema(string $schemaId): void
