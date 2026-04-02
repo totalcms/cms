@@ -39,7 +39,7 @@ export default class Identifier extends TotalField {
 		if (this.getValue() !== "" && !this.isLocked()) {
 			this.validateIdExists();
 		}
-		if (this.settings.autogen && !this.isLocked()) {
+		if (this.settings.autogen && !this.isLocked() && this.getValue() === "") {
 			this.setValue(this.autogenId());
 			this.validateIdExists();
 		}
