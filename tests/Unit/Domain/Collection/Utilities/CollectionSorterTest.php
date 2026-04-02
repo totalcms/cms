@@ -161,6 +161,89 @@ final class CollectionSorterTest extends TestCase
 		$this->assertSame('B', $result[1]['title']);
 	}
 
+	// --- sortByProperty (static shorthand) ---
+
+	public function testSortByPropertyAscending(): void
+	{
+		$items = [
+			['id' => '2', 'title' => 'Banana'],
+			['id' => '1', 'title' => 'Apple'],
+			['id' => '3', 'title' => 'Cherry'],
+		];
+
+		$result = CollectionSorter::sortByProperty($items, 'title');
+
+		$this->assertSame('Apple', $result[0]['title']);
+		$this->assertSame('Banana', $result[1]['title']);
+		$this->assertSame('Cherry', $result[2]['title']);
+	}
+
+	public function testSortByPropertyDescending(): void
+	{
+		$items = [
+			['id' => '2', 'title' => 'Banana'],
+			['id' => '1', 'title' => 'Apple'],
+			['id' => '3', 'title' => 'Cherry'],
+		];
+
+		$result = CollectionSorter::sortByProperty($items, '-title');
+
+		$this->assertSame('Cherry', $result[0]['title']);
+		$this->assertSame('Banana', $result[1]['title']);
+		$this->assertSame('Apple', $result[2]['title']);
+	}
+
+	public function testSortByPropertyWithEmptyString(): void
+	{
+		$items = [
+			['id' => '2', 'title' => 'Banana'],
+			['id' => '1', 'title' => 'Apple'],
+		];
+
+		$result = CollectionSorter::sortByProperty($items, '');
+
+		$this->assertSame($items, $result);
+	}
+
+	public function testSortByPropertyWithSingleItem(): void
+	{
+		$items = [['id' => '1', 'title' => 'Only']];
+
+		$result = CollectionSorter::sortByProperty($items, 'title');
+
+		$this->assertSame($items, $result);
+	}
+
+	public function testSortByPropertyWithNumericValues(): void
+	{
+		$items = [
+			['id' => '1', 'count' => 100],
+			['id' => '2', 'count' => 5],
+			['id' => '3', 'count' => 50],
+		];
+
+		$result = CollectionSorter::sortByProperty($items, 'count');
+
+		$this->assertSame(5, $result[0]['count']);
+		$this->assertSame(50, $result[1]['count']);
+		$this->assertSame(100, $result[2]['count']);
+	}
+
+	public function testSortByPropertyDescendingNumeric(): void
+	{
+		$items = [
+			['id' => '1', 'count' => 100],
+			['id' => '2', 'count' => 5],
+			['id' => '3', 'count' => 50],
+		];
+
+		$result = CollectionSorter::sortByProperty($items, '-count');
+
+		$this->assertSame(100, $result[0]['count']);
+		$this->assertSame(50, $result[1]['count']);
+		$this->assertSame(5, $result[2]['count']);
+	}
+
 	public function testSortByRulesWithMultipleCriteria(): void
 	{
 		$collection = [

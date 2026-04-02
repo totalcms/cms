@@ -136,6 +136,29 @@ class CollectionSorter
 	}
 
 	/**
+	 * Sort items by a single property using shorthand format.
+	 *
+	 * @param array<int,array<string,mixed>> $items Items to sort
+	 * @param string                         $sort  Property name, prefix with "-" for descending (e.g. "title" or "-date")
+	 *
+	 * @return array<int,array<string,mixed>> Sorted items
+	 */
+	public static function sortByProperty(array $items, string $sort): array
+	{
+		$sort = trim($sort);
+		if ($sort === '' || count($items) <= 1) {
+			return $items;
+		}
+
+		$reverse  = str_starts_with($sort, '-');
+		$property = $reverse ? substr($sort, 1) : $sort;
+
+		$rules = [['property' => $property, 'reverse' => $reverse, 'natural' => false]];
+
+		return (new self($items))->sortByRules($rules);
+	}
+
+	/**
 	 * Preprocess and validate rules for better performance.
 	 *
 	 * @param array<array<string,mixed>> $rules

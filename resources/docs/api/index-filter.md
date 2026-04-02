@@ -1,6 +1,6 @@
 ---
 title: "Index Filtering"
-description: "Filter Total CMS collection indexes with include and exclude criteria for sitemaps, RSS feeds, and API endpoints using boolean, string, and array values."
+description: "Filter and sort Total CMS collection indexes with include, exclude, and sort criteria for sitemaps, RSS feeds, and API endpoints using boolean, string, and array values."
 ---
 
 # Index Filtering
@@ -13,6 +13,7 @@ The `IndexFilter` service provides a flexible way to filter collection objects u
 
 - **Include filters** - Object must match ALL specified criteria
 - **Exclude filters** - Object is excluded if it matches ANY criteria
+- **Sorting** - Sort results by any property, ascending or descending
 - **Boolean & String values** - Automatic type conversion
 - **Shorthand syntax** - Property name defaults to `true`
 
@@ -83,6 +84,45 @@ $results = $pipeline->execute($items, [
 ```
 
 > **Note:** Search results are not cached. When a `search` parameter is present, the cache is bypassed to ensure accurate results.
+
+## Sorting
+
+Results can be sorted by any property using the `sort` option. Prefix the property name with `-` for descending order.
+
+```
+sort=property                    # Sort ascending by property
+sort=-property                   # Sort descending by property
+```
+
+**URL Parameters:**
+```
+?sort=title                      # Sort by title A-Z
+?sort=-date                      # Sort by date newest first
+?sort=price                      # Sort by price low to high
+?sort=-price                     # Sort by price high to low
+```
+
+**PHP Code:**
+```php
+// Sort blog posts by title ascending
+$posts = $filter->fetchFilteredIndex('blog', [
+    'sort' => 'title',
+]);
+
+// Sort by date descending
+$posts = $filter->fetchFilteredIndex('blog', [
+    'sort' => '-date',
+]);
+
+// Combine with filters
+$posts = $filter->fetchFilteredIndex('blog', [
+    'include' => 'published:true',
+    'exclude' => 'draft:true',
+    'sort'    => '-date',
+]);
+```
+
+Sorting is applied after filtering, so only the matching objects are sorted. Sorting is supported in both `IndexFilter` (collections) and `DataViewFilter` (data views).
 
 ### Precedence
 

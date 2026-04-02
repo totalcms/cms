@@ -1,6 +1,6 @@
 ---
 title: "Relational Options"
-description: "Link form field options to another Total CMS collection or DataView with multi-field labels, include and exclude filtering for relational data."
+description: "Link form field options to another Total CMS collection or DataView with multi-field labels, sorting, and include/exclude filtering for relational data."
 ---
 
 # Relational Options
@@ -153,10 +153,54 @@ When no value is provided, it defaults to `true` (e.g., `featured` = `featured:t
 ```
 Filters work with array fields like `tags` or `categories` by checking if the value exists in the array.
 
+## Sorting Relational Options
+
+You can sort the options by any property using the `sort` setting. Prefix with `-` for descending order.
+
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "blog",
+  	"label"      : "title",
+  	"value"      : "id",
+  	"sort"       : "title"
+  }
+}
+```
+This will sort the dropdown options alphabetically by title.
+
+**Descending sort:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "events",
+  	"label"      : "name",
+  	"value"      : "id",
+  	"sort"       : "-date"
+  }
+}
+```
+This will sort events by date with the newest first.
+
+**Combined with filters:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "products",
+  	"label"      : "name",
+  	"value"      : "id",
+  	"include"    : "instock:true",
+  	"sort"       : "name"
+  }
+}
+```
+This will show only in-stock products, sorted alphabetically by name. Sorting works with both `collection` and `view` sources.
+
 ## Filter Logic
 
 - **include** - Object must match ALL specified criteria (AND logic)
 - **exclude** - Object is excluded if it matches ANY criteria (OR logic)
+- **sort** - Sort results by a property (`property` for ascending, `-property` for descending)
 - **Precedence** - Exclude takes precedence over include
 - **Array fields** - Checks if value exists within array (case-insensitive for strings)
 - **String values** - Case-insensitive matching for flexibility

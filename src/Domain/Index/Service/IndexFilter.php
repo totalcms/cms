@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Index\Service;
 
+use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 
@@ -23,7 +24,7 @@ readonly class IndexFilter
 	 * Fetch and filter index objects for a collection.
 	 *
 	 * @param string               $collection Collection name
-	 * @param array<string,string> $options    Filter options (include, exclude)
+	 * @param array<string,string> $options    Filter options (include, exclude, sort)
 	 *
 	 * @return array<int,array<string,mixed>> Filtered array of objects
 	 */
@@ -31,20 +32,23 @@ readonly class IndexFilter
 	{
 		$index = $this->indexReader->fetchIndex($collection);
 
-		return $this->objectFilter->filterObjects($index->objects->all(), $options);
+		$items = $this->objectFilter->filterObjects($index->objects->all(), $options);
+
+		return CollectionSorter::sortByProperty($items, $options['sort'] ?? '');
 	}
 
 	/**
 	 * Fetch the full IndexData with filtered objects.
 	 *
 	 * @param string               $collection Collection name
-	 * @param array<string,string> $options    Filter options (include, exclude)
+	 * @param array<string,string> $options    Filter options (include, exclude, sort)
 	 */
 	public function fetchFilteredIndexData(string $collection, array $options = []): IndexData
 	{
 		$index = $this->indexReader->fetchIndex($collection);
 
 		$filteredObjects = $this->objectFilter->filterObjects($index->objects->all(), $options);
+		$filteredObjects = CollectionSorter::sortByProperty($filteredObjects, $options['sort'] ?? '');
 
 		return new IndexData($filteredObjects);
 	}

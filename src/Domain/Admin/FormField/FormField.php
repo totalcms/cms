@@ -349,13 +349,16 @@ class FormField
 		// Combine label properties with value property for fetching
 		$propertiesToFetch = array_unique(array_merge($labelProperties, [$valueProperty]));
 
-		// Extract include/exclude filters from settings
+		// Extract include/exclude/sort filters from settings
 		$filters = [];
 		if (isset($settings['include'])) {
 			$filters['include'] = $settings['include'];
 		}
 		if (isset($settings['exclude'])) {
 			$filters['exclude'] = $settings['exclude'];
+		}
+		if (isset($settings['sort'])) {
+			$filters['sort'] = $settings['sort'];
 		}
 
 		if ($view !== '') {
