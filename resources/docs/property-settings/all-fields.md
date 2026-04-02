@@ -435,3 +435,9 @@ Field is visible if `deliveryMethod` matches ANY value in the array.
 ### Default Behavior
 
 Fields with a `visibility` setting are **hidden by default** until the condition is met. This ensures fields appear only when they should, even on initial form load.
+
+## Validation
+
+All fields support validation rules like `pattern`, `minLength`, `maxLength`, `minimum`, `maximum`, `enum`, and more. These are added in the **Extra Schema Definitions** section of a property, not in Settings.
+
+For full details and examples, see [Schema Validation](../schemas/validation.md).
