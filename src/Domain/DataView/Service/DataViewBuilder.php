@@ -9,6 +9,7 @@ use TotalCMS\Domain\DataView\Data\DataViewData;
 use TotalCMS\Domain\DataView\Repository\DataViewRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -49,7 +50,7 @@ readonly class DataViewBuilder
 			$this->objectUpdater->updateObject(DataViewData::COLLECTION_ID, $viewId, array_merge(
 				$object->toArray(),
 				[
-					'lastBuilt' => date('c'),
+					'lastBuilt' => DateData::cleanDate(),
 					'lastError' => '',
 				],
 			));
