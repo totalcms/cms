@@ -511,7 +511,7 @@ readonly class TotalFormFactory
 				]),
 				['class' => 'dash-button accent', 'id' => 'bulk-send-btn']
 			);
-			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkOverrideTo"],[name="bulkscheduledAt"],[name="bulkObjectIds[]"]';
+			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkCollection"],[name="bulkInclude"],[name="bulkExclude"],[name="bulkOverrideTo"],[name="bulkscheduledAt"],[name="bulkObjectIds[]"]';
 
 			$bulkSendFields = $form->field('bulkCollection') .
 				$form->field('bulkInclude') .
@@ -573,7 +573,7 @@ readonly class TotalFormFactory
 			$bulkSection .= HTMLUtils::element('h2', 'Bulk Send <span class="bulk-pro-badge">Pro</span>');
 			$bulkSection .= HTMLUtils::element('p', 'Send this email to every matching object in a collection.');
 			$bulkSection .= $bulkSendDetails . $bulkPreviewDetails . $objectPickerScript;
-			$bulkSection  = HTMLUtils::element('section', $bulkSection, ['class' => 'bulk-send-section']);
+			$bulkSection  = HTMLUtils::element('form', $bulkSection, ['class' => 'bulk-send-section totalform custom-layout help-on-hover help-box no-save no-unsaved-warning']);
 		}
 
 		return $form->build($content, $bulkSection);

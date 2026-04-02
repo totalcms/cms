@@ -30,6 +30,9 @@ readonly class BulkMailerAction
 			return $this->htmlResponse($response, '<div class="cms-error"><strong>Error:</strong> mailerId is required</div>');
 		}
 
+		$collection  = isset($data['bulkCollection']) && $data['bulkCollection'] !== '' ? (string)$data['bulkCollection'] : '';
+		$include     = isset($data['bulkInclude']) && $data['bulkInclude'] !== '' ? (string)$data['bulkInclude'] : '';
+		$exclude     = isset($data['bulkExclude']) && $data['bulkExclude'] !== '' ? (string)$data['bulkExclude'] : '';
 		$scheduledAt = isset($data['bulkscheduledAt']) && $data['bulkscheduledAt'] !== '' ? (string)$data['bulkscheduledAt'] : null;
 		$overrideTo  = isset($data['bulkOverrideTo']) && $data['bulkOverrideTo'] !== '' ? (string)$data['bulkOverrideTo'] : null;
 
@@ -44,7 +47,7 @@ readonly class BulkMailerAction
 			}
 		}
 
-		$result = $this->bulkMailerService->queueBulkSend($mailerId, $scheduledAt, $overrideTo, $objectIds);
+		$result = $this->bulkMailerService->queueBulkSend($mailerId, $collection, $include, $exclude, $scheduledAt, $overrideTo, $objectIds);
 
 		if ($result['success']) {
 			$message = htmlspecialchars($result['message']);

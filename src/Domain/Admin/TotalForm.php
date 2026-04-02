@@ -268,6 +268,11 @@ class TotalForm implements \Stringable
 		return strtoupper($this->method) !== 'POST' && $this->id !== '';
 	}
 
+	public function getCsrfManager(): CSRFTokenManager
+	{
+		return $this->csrfManager;
+	}
+
 	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();
@@ -340,8 +345,6 @@ class TotalForm implements \Stringable
 			'class' => 'form-inline-fields',
 		]);
 
-		$content .= $contentAfter;
-
 		$form = HTMLUtils::element('form', $content, $attributes);
 
 		// Wrap in container div for container queries (formgrid responsive layout)
@@ -349,7 +352,7 @@ class TotalForm implements \Stringable
 			$form = HTMLUtils::element('div', $form, ['id' => $formId . '-container']);
 		}
 
-		return $formStyleTag . $form;
+		return $formStyleTag . $form . $contentAfter;
 	}
 
 	public function layout2Columns(string $col1, string $col2): string

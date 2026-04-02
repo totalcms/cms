@@ -39,7 +39,7 @@ readonly class BulkMailerService
 	 *
 	 * @return array{success:bool,batchId?:string,count?:int,message:string}
 	 */
-	public function queueBulkSend(string $mailerId, ?string $scheduledAt = null, ?string $overrideTo = null, ?array $objectIds = null): array
+	public function queueBulkSend(string $mailerId, string $collection, string $include = '', string $exclude = '', ?string $scheduledAt = null, ?string $overrideTo = null, ?array $objectIds = null): array
 	{
 		if (!$this->editionFeatures->can(EditionFeature::BULK_MAILER)) {
 			return [
@@ -64,10 +64,10 @@ readonly class BulkMailerService
 			];
 		}
 
-		if ($mailer->bulkCollection === '') {
+		if ($collection === '') {
 			return [
 				'success' => false,
-				'message' => 'Bulk collection is not configured on this mailer template',
+				'message' => 'Bulk collection is required',
 			];
 		}
 
@@ -76,20 +76,20 @@ readonly class BulkMailerService
 			$objects = array_map(static fn (string $oid): array => ['id' => $oid], $objectIds);
 		} else {
 			$filterOptions = [];
-			if ($mailer->bulkInclude !== '') {
-				$filterOptions['include'] = $mailer->bulkInclude;
+			if ($include !== '') {
+				$filterOptions['include'] = $include;
 			}
-			if ($mailer->bulkExclude !== '') {
-				$filterOptions['exclude'] = $mailer->bulkExclude;
+			if ($exclude !== '') {
+				$filterOptions['exclude'] = $exclude;
 			}
 
-			$objects = $this->indexFilter->fetchFilteredIndex($mailer->bulkCollection, $filterOptions);
+			$objects = $this->indexFilter->fetchFilteredIndex($collection, $filterOptions);
 		}
 
 		if ($objects === []) {
 			return [
 				'success' => false,
-				'message' => 'No matching objects found in collection "' . $mailer->bulkCollection . '"',
+				'message' => 'No matching objects found in collection "' . $collection . '"',
 			];
 		}
 
@@ -107,7 +107,7 @@ readonly class BulkMailerService
 			$jobData = [
 				'mailerId'   => $mailerId,
 				'objectId'   => $objectId,
-				'collection' => $mailer->bulkCollection,
+				'collection' => $collection,
 				'batchId'    => $batchId,
 				'overrideTo' => $effectiveOverrideTo,
 			];
@@ -120,7 +120,7 @@ readonly class BulkMailerService
 			'mailerId'   => $mailerId,
 			'batchId'    => $batchId,
 			'count'      => $count,
-			'collection' => $mailer->bulkCollection,
+			'collection' => $collection,
 			'scheduled'  => $scheduledAt,
 		]);
 
