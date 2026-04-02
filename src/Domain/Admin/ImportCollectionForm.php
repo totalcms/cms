@@ -14,6 +14,8 @@ readonly class ImportCollectionForm implements \Stringable
 		private string $collection,
 		private string $input = 'csv',
 		private string $label = 'Import into Collection',
+		private bool $update = false,
+		private bool $queue = false,
 		private ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->simpleform = new SimpleForm(
@@ -56,6 +58,9 @@ readonly class ImportCollectionForm implements \Stringable
 			'name' => 'update',
 			'id'   => 'update',
 		];
+		if ($this->update) {
+			$checkAttrs['checked'] = 'checked';
+		}
 		$check = HTMLUtils::inlineElement('input', $checkAttrs);
 
 		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
@@ -73,6 +78,9 @@ readonly class ImportCollectionForm implements \Stringable
 			'name' => 'queue',
 			'id'   => 'queue',
 		];
+		if ($this->queue) {
+			$checkAttrs['checked'] = 'checked';
+		}
 		$check = HTMLUtils::inlineElement('input', $checkAttrs);
 
 		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
