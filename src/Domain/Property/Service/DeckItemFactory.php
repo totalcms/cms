@@ -39,6 +39,8 @@ readonly class DeckItemFactory
 	/**
 	 * Generate an item ID using autogen settings from the deck schema.
 	 *
+	 * Note: ${oid} is not supported for deck items — use ${uuid} or ${uid} instead.
+	 *
 	 * @param array<string,mixed> $itemData
 	 */
 	public function generateIdIfNeeded(string $collection, string $propertyName, array $itemData): string
