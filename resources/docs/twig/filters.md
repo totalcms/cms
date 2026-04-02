@@ -169,6 +169,22 @@ Calculates reading time in minutes.
 </div>
 ```
 
+#### `toSeconds(string $time): int`
+Converts a time string to total seconds. Supports `H:M:S`, `M:S`, or seconds-only formats.
+
+```twig
+{{ "1:30:00" | toSeconds }}  {# 5400 #}
+{{ "5:30" | toSeconds }}     {# 330 #}
+{{ "45" | toSeconds }}       {# 45 #}
+
+{# Useful for summing durations #}
+{% set total = 0 %}
+{% for track in album.tracks %}
+    {% set total = total + (track.duration | toSeconds) %}
+{% endfor %}
+{{ total }} total seconds
+```
+
 ### Specialized Text Processing
 
 #### `digitsOnly(string $text): string`
