@@ -68,6 +68,20 @@
 			"help"        : "Delay in milliseconds between emails during bulk sending. Use to avoid SMTP rate limits. 0 = no delay.",
 			"placeholder" : "0",
 			"default"     : 0
+		},
+		"maxPerHour": {
+			"type"        : "number",
+			"label"       : "Max Emails Per Hour",
+			"help"        : "Maximum number of emails that can be sent per hour. Queued emails will wait until the next hour when the limit is reached. 0 = unlimited.",
+			"placeholder" : "0",
+			"default"     : 0
+		},
+		"maxPerDay": {
+			"type"        : "number",
+			"label"       : "Max Emails Per Day",
+			"help"        : "Maximum number of emails that can be sent per day. Queued emails will wait until the next day when the limit is reached. 0 = unlimited.",
+			"placeholder" : "0",
+			"default"     : 0
 		}
 	}
 }
