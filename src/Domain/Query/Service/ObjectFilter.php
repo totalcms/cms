@@ -145,6 +145,8 @@ readonly class ObjectFilter
 						if ($this->matchesString($item, $filterValue)) {
 							return true;
 						}
+					} elseif ($this->matchesNumeric($item, $filterValue)) {
+						return true;
 					} elseif ($item === $filterValue) {
 						return true;
 					}
@@ -153,6 +155,8 @@ readonly class ObjectFilter
 				if ($this->matchesString($fieldValue, $filterValue)) {
 					return true;
 				}
+			} elseif ($this->matchesNumeric($fieldValue, $filterValue)) {
+				return true;
 			} elseif ($fieldValue === $filterValue) {
 				return true;
 			}
@@ -191,6 +195,9 @@ readonly class ObjectFilter
 							$found = true;
 							break;
 						}
+					} elseif ($this->matchesNumeric($item, $filterValue)) {
+						$found = true;
+						break;
 					} elseif ($item === $filterValue) {
 						$found = true;
 						break;
@@ -203,12 +210,24 @@ readonly class ObjectFilter
 				if (!$this->matchesString($fieldValue, $filterValue)) {
 					return false;
 				}
+			} elseif ($this->matchesNumeric($fieldValue, $filterValue)) {
+				// Numeric match — handled above
 			} elseif ($fieldValue !== $filterValue) {
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Match when one side is numeric and the other is a numeric string.
+	 * Handles cases like field value int 2 vs filter string "2".
+	 */
+	private function matchesNumeric(mixed $fieldValue, mixed $filterValue): bool
+	{
+		return is_numeric($fieldValue) && is_numeric($filterValue)
+			&& (string)$fieldValue === (string)$filterValue;
 	}
 
 	/**
