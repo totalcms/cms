@@ -81,10 +81,8 @@ export default class TotalField {
 
 		this.autogen = new Autogen(this);
 
-		// Set initial value if field is empty
-		if (this.getValue() === "") {
-			this.input.value = this.autogen.generate();
-		}
+		// Generate initial value from current form data (including defaults)
+		this.input.value = this.autogen.generate();
 
 		// Listen for changes to referenced fields
 		this.autogen.attachListeners(() => {
