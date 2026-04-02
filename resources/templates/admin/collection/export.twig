@@ -22,4 +22,10 @@
 		<p><a href="{{ zipapi }}" class="dash-button" download target="_blank">{{ t('collection.export_zip_btn') }}</a></p>
 	</div>
 
+	<div>
+		<h3>Export Deck CSV</h3>
+		<p>Export a deck property from an object as a CSV file. Each deck item becomes a row.</p>
+		{{ cms.form.exportDeck(url.collection) }}
+	</div>
+
 </section>

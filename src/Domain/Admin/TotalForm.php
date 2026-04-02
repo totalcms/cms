@@ -268,11 +268,6 @@ class TotalForm implements \Stringable
 		return strtoupper($this->method) !== 'POST' && $this->id !== '';
 	}
 
-	public function getCsrfManager(): CSRFTokenManager
-	{
-		return $this->csrfManager;
-	}
-
 	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();

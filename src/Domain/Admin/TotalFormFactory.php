@@ -184,6 +184,68 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function importDeck(string $collection, array $options = []): string
+	{
+		[$objects, $deckProperties] = $this->getDeckFormData($collection);
+
+		$options['api']            = $this->api;
+		$options['collection']     = $collection;
+		$options['objects']        = $objects;
+		$options['deckProperties'] = $deckProperties;
+		$options['csrfManager']    = $this->csrfManager;
+
+		$form = new ImportDeckForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function exportDeck(string $collection, array $options = []): string
+	{
+		[$objects, $deckProperties] = $this->getDeckFormData($collection);
+
+		$options['api']            = $this->api;
+		$options['collection']     = $collection;
+		$options['objects']        = $objects;
+		$options['deckProperties'] = $deckProperties;
+
+		$form = new ExportDeckForm(...$options);
+
+		return $form->build();
+	}
+
+	/**
+	 * Build the object list and deck property list for a collection.
+	 *
+	 * @return array{0: array<array{value:string,label:string}>, 1: array<array{value:string,label:string}>}
+	 */
+	private function getDeckFormData(string $collection): array
+	{
+		$index   = $this->collectionReader->fetchIndex($collection);
+		$objects = [];
+		foreach ($index->objects->all() as $object) {
+			$id       = (string)($object['id'] ?? '');
+			$title    = (string)($object['title'] ?? $object['name'] ?? $id);
+			$objects[] = ['value' => $id, 'label' => $title];
+		}
+
+		$deckProperties = [];
+		try {
+			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+			foreach ($schema->properties as $propName => $propConfig) {
+				$deckref = $propConfig['deckref'] ?? $propConfig['settings']['deckref'] ?? null;
+				if (!empty($deckref)) {
+					$deckProperties[] = ['value' => $propName, 'label' => $propName];
+				}
+			}
+		} catch (\Exception) {
+			// Schema lookup failed, leave empty
+		}
+
+		return [$objects, $deckProperties];
+	}
+
+	/** @param array<string,mixed> $options */
 	public function importSchema(array $options = []): string
 	{
 		$options['api']         = $this->api;
