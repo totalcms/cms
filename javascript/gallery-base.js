@@ -46,7 +46,7 @@ class Gallery {
 		const template = this.element.nextElementSibling;
 		if (template && template.matches('template.cms-gallery-dynamic')) {
 			try {
-				return JSON.parse(template.innerHTML);
+				return JSON.parse(template.content.textContent);
 			} catch (error) {
 				console.error('Failed to parse dynamic gallery data:', error);
 			}
