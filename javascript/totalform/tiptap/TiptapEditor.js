@@ -400,15 +400,32 @@ export default class TiptapEditor {
 			.trim();
 	}
 
+	/**
+	 * Remove wrapping <p> tags from list items that contain only a single paragraph.
+	 * Tiptap/ProseMirror always wraps list item content in <p> blocks internally,
+	 * but the output should be clean: <li>text</li> not <li><p>text</p></li>.
+	 */
+	cleanListParagraphs(html) {
+		const div = document.createElement('div');
+		div.innerHTML = html;
+		div.querySelectorAll('li').forEach(li => {
+			const children = Array.from(li.children);
+			if (children.length === 1 && children[0].tagName === 'P') {
+				li.innerHTML = children[0].innerHTML;
+			}
+		});
+		return div.innerHTML;
+	}
+
 	syncToTextarea() {
-		this.textarea.value = this.editor.getHTML();
+		this.textarea.value = this.cleanListParagraphs(this.editor.getHTML());
 	}
 
 	getHTML() {
 		if (this.codeView?.isActive()) {
 			return this.codeView.getValue();
 		}
-		return this.editor.getHTML();
+		return this.cleanListParagraphs(this.editor.getHTML());
 	}
 
 	setHTML(html) {
