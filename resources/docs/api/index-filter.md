@@ -87,17 +87,35 @@ $results = $pipeline->execute($items, [
 
 ## Sorting
 
-Results can be sorted by any property using the `sort` option. Prefix the property name with `-` for descending order.
+Results can be sorted by any property using the `sort` option.
+
+### Shorthand Format
+
+Prefix the property name with `-` for descending order.
 
 ```
 sort=property                    # Sort ascending by property
 sort=-property                   # Sort descending by property
 ```
 
+### Colon Format
+
+Use `property:direction` for explicit control. Supports multi-criteria sorting with comma separation and optional natural sort.
+
+```
+sort=property:asc                # Sort ascending
+sort=property:desc               # Sort descending
+sort=date:desc,title:asc         # Multi-criteria: date descending, then title ascending
+sort=title:asc:natural           # Natural sort (treats numbers in strings intelligently)
+sort=shuffle                     # Random order
+```
+
 **URL Parameters:**
 ```
 ?sort=title                      # Sort by title A-Z
 ?sort=-date                      # Sort by date newest first
+?sort=date:desc                  # Same as above (colon format)
+?sort=date:desc,title:asc        # Multi-sort: newest first, then alphabetical
 ?sort=price                      # Sort by price low to high
 ?sort=-price                     # Sort by price high to low
 ```
