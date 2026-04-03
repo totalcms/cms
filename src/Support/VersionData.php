@@ -23,7 +23,7 @@ readonly class VersionData implements \Stringable
 
 		$this->number  = $data['version'] ?? 'unknown';
 		$this->build   = $data['build'] ?? 'unknown';
-		$this->commits = (int) ($data['commits'] ?? 0);
+		$this->commits = (int)($data['commits'] ?? 0);
 		$this->date    = Version::date();
 		$this->valid   = Version::isValid();
 

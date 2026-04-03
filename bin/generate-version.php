@@ -23,7 +23,7 @@ if ($argc < 3) {
 $version    = $argv[1];
 $build      = $argv[2];
 $outputFile = $argv[3] ?? __DIR__ . '/../version.json';
-$commits    = (int) ($argv[4] ?? 0);
+$commits    = (int)($argv[4] ?? 0);
 $date       = date('Y-m-d');
 
 // Validate version format

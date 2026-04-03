@@ -78,7 +78,7 @@ class DeckCsvImporter
 
 		foreach ($records as $offset => $record) {
 			try {
-				$itemId = $this->resolveItemId($record, $hasIdColumn, $autogenPattern, $collection);
+				$itemId = $this->resolveItemId($record, $hasIdColumn, $autogenPattern);
 
 				if ($itemId === '') {
 					$this->logger->warning("Skipping row {$offset}: could not determine item ID");
@@ -130,7 +130,7 @@ class DeckCsvImporter
 	 *
 	 * @param array<string,mixed> $record
 	 */
-	private function resolveItemId(array $record, bool $hasIdColumn, string $autogenPattern, string $collection): string
+	private function resolveItemId(array $record, bool $hasIdColumn, string $autogenPattern): string
 	{
 		if ($hasIdColumn && trim((string)($record['id'] ?? '')) !== '') {
 			$id = SlugData::slugify((string)$record['id']);

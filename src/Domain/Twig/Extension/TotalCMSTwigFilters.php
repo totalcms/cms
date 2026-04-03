@@ -549,11 +549,11 @@ class TotalCMSTwigFilters
 	 */
 	public static function toSeconds(string $time): int
 	{
-		$parts = array_map('intval', explode(':', $time));
+		$parts = array_map(intval(...), explode(':', $time));
 
 		return match (count($parts)) {
-			3 => ($parts[0] * 3600) + ($parts[1] * 60) + $parts[2],
-			2 => ($parts[0] * 60) + $parts[1],
+			3       => ($parts[0] * 3600) + ($parts[1] * 60) + $parts[2],
+			2       => ($parts[0] * 60) + $parts[1],
 			default => $parts[0],
 		};
 	}

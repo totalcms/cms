@@ -50,7 +50,7 @@ class SortRuleParser
 			// Support shorthand "-property" for descending sort
 			$shorthandReverse = false;
 			if (!isset($segments[1]) && str_starts_with($property, '-')) {
-				$property = substr($property, 1);
+				$property         = substr($property, 1);
 				$shorthandReverse = true;
 			}
 

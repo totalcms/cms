@@ -81,14 +81,14 @@ class Version
 	/**
 	 * Get the full version string.
 	 * Production: "3.0.47-baee5e0e"
-	 * Beta: "3.0.47-4-baee5e0e" (includes commits since last tag)
+	 * Beta: "3.0.47-4-baee5e0e" (includes commits since last tag).
 	 */
 	public static function get(): string
 	{
 		$data    = self::load();
 		$version = $data['version'] ?? 'unknown';
 		$build   = $data['build'] ?? 'unknown';
-		$commits = (int) ($data['commits'] ?? 0);
+		$commits = (int)($data['commits'] ?? 0);
 
 		if ($version === 'unknown') {
 			return 'unknown';
@@ -129,7 +129,7 @@ class Version
 	{
 		$data = self::load();
 
-		return (int) ($data['commits'] ?? 0);
+		return (int)($data['commits'] ?? 0);
 	}
 
 	/**

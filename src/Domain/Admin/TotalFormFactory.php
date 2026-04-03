@@ -224,8 +224,8 @@ readonly class TotalFormFactory
 		$index   = $this->collectionReader->fetchIndex($collection);
 		$objects = [];
 		foreach ($index->objects->all() as $object) {
-			$id       = (string)($object['id'] ?? '');
-			$title    = (string)($object['title'] ?? $object['name'] ?? $id);
+			$id        = (string)($object['id'] ?? '');
+			$title     = (string)($object['title'] ?? $object['name'] ?? $id);
 			$objects[] = ['value' => $id, 'label' => $title];
 		}
 

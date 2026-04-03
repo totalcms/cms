@@ -32,7 +32,7 @@ class LicenseValidator
 		private readonly ?OfflineLicenseValidator $offlineValidator = null,
 		?LoggerFactory $loggerFactory = null,
 	) {
-		$this->logger = $loggerFactory
+		$this->logger = $loggerFactory instanceof LoggerFactory
 			? $loggerFactory->addFileHandler('license.log')->createLogger('license')
 			: new \Psr\Log\NullLogger();
 	}
