@@ -84,7 +84,7 @@ it('handles schema with missing required fields', function (): void {
 
 	// This should fail during validation because 'id' is missing
 	expect(fn () => $schemaSaver->saveSchema($invalidSchema))
-		->toThrow(\DomainException::class);
+		->toThrow(\UnexpectedValueException::class);
 });
 
 it('handles schema with invalid id format', function (): void {

@@ -75,10 +75,11 @@ class CollectionData
 		$labelPlural   = $this->labelPlural === '' ? $defaultLabels['labelPlural'] : $this->labelPlural;
 		$labelSingular = $this->labelSingular === '' ? $defaultLabels['labelSingular'] : $this->labelSingular;
 
+		/** @phpstan-ignore nullCoalesce.property */
 		$collection         = [
 			'id'                 => $this->id,
 			'schema'             => $this->schema,
-			'name'               => $this->name,
+			'name'               => $this->name ?? ucfirst($this->id),
 			'description'        => $description,
 			'url'                => $this->url,
 			'category'           => $this->category,
