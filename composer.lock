@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2b7ae25faa64540e415ecd1721866176",
+    "content-hash": "c75963ff2098425e723a982f1970bbc6",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2153,27 +2153,27 @@
         },
         {
             "name": "ksubileau/color-thief-php",
-            "version": "v2.0.2",
+            "version": "dev-fix-deprecations",
             "source": {
                 "type": "git",
-                "url": "https://github.com/ksubileau/color-thief-php.git",
-                "reference": "d6189b34a21b70aec6b56359aa5bf0e00ded9b4d"
+                "url": "https://github.com/joeworkman-forks/color-thief-php.git",
+                "reference": "cdb618dc5414a90f06217259c09843f3cc35b02d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksubileau/color-thief-php/zipball/d6189b34a21b70aec6b56359aa5bf0e00ded9b4d",
-                "reference": "d6189b34a21b70aec6b56359aa5bf0e00ded9b4d",
+                "url": "https://api.github.com/repos/joeworkman-forks/color-thief-php/zipball/cdb618dc5414a90f06217259c09843f3cc35b02d",
+                "reference": "cdb618dc5414a90f06217259c09843f3cc35b02d",
                 "shasum": ""
             },
             "require": {
                 "ext-fileinfo": "*",
-                "php": "^7.2|^8.0"
+                "php": "^8.2"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.4",
-                "phpstan/phpstan": "^1.2.0",
-                "phpstan/phpstan-phpunit": "^1.0.0",
-                "phpunit/phpunit": "^8.5"
+                "friendsofphp/php-cs-fixer": "^3.75",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^11.0"
             },
             "suggest": {
                 "ext-gd": "to use the GD image adapter.",
@@ -2186,7 +2186,25 @@
                     "ColorThief\\": "src/ColorThief"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "ColorThief\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "stan": [
+                    "phpstan analyse src/ --level=8"
+                ],
+                "cs": [
+                    "php-cs-fixer fix --dry-run --diff"
+                ],
+                "cs:fix": [
+                    "php-cs-fixer fix"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -2206,10 +2224,9 @@
                 "thief"
             ],
             "support": {
-                "issues": "https://github.com/ksubileau/color-thief-php/issues",
-                "source": "https://github.com/ksubileau/color-thief-php/tree/v2.0.2"
+                "source": "https://github.com/joeworkman-forks/color-thief-php/tree/fix-deprecations"
             },
-            "time": "2025-07-17T15:26:54+00:00"
+            "time": "2026-04-03T16:35:16+00:00"
         },
         {
             "name": "laminas/laminas-escaper",
@@ -15512,6 +15529,12 @@
             "version": "9999999-dev",
             "alias": "1.8.0",
             "alias_normalized": "1.8.0.0"
+        },
+        {
+            "package": "ksubileau/color-thief-php",
+            "version": "dev-fix-deprecations",
+            "alias": "2.0.3",
+            "alias_normalized": "2.0.3.0"
         }
     ],
     "minimum-stability": "stable",
@@ -15519,6 +15542,7 @@
         "erusev/parsedown": 20,
         "erusev/parsedown-extra": 20,
         "joeworkman-forks/couleur": 20,
+        "ksubileau/color-thief-php": 20,
         "nekofar/pest-plugin-slim": 20,
         "nekofar/slim-test": 20,
         "thepixeldeveloper/sitemap": 20
