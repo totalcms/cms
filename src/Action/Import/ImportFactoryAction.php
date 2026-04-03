@@ -49,6 +49,9 @@ readonly class ImportFactoryAction
 		if (isset($rules['queue'])) {
 			unset($rules['queue']);
 		}
+		if (isset($rules['csrf_token'])) {
+			unset($rules['csrf_token']);
+		}
 
 		// Use job queue for large quantities or when explicitly requested
 		if ($useQueue || $quantity > 50) {
