@@ -39,8 +39,12 @@ class SentryMiddleware implements MiddlewareInterface
 			HttpBadRequestException::class,
 			\League\Csv\SyntaxError::class,
 			\League\Flysystem\UnableToCreateDirectory::class,
+			\League\Flysystem\UnableToMoveFile::class,
 			\League\Flysystem\CorruptedPathDetected::class,
+			\FastRoute\BadRouteException::class, // Duplicate route registration - user configuration issue
+			\Opis\JsonSchema\Exceptions\InvalidKeywordException::class, // Invalid schema definition - user error
 			\ParseError::class, // Corrupted PHP files - user installation issue
+			\ArgumentCountError::class, // Constructor mismatch - stale deployment or corrupted installation
 			\DI\DependencyException::class, // Corrupted installation - missing classes or version mismatch
 			\DI\NotFoundException::class,
 		],
@@ -68,6 +72,11 @@ class SentryMiddleware implements MiddlewareInterface
 			'Cannot delete a built-in template',
 			'File was only partially uploaded',
 			'No file found in request',
+			'Unknown format',
+			'Upload target path is not writable',
+			'it could not be created: Read-only file system',
+			'Permission denied',
+			'contains invalid json type',
 			'File name too long',
 			'Uploaded file already moved',
 			'Invalid Collection data provided',
