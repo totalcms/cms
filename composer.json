@@ -41,7 +41,7 @@
     "league/commonmark": "^2.7",
     "league/csv": "^9.6",
     "league/flysystem": "^3.2",
-    "league/fractal": "^0.20.1",
+    "league/fractal": "^0.21",
     "league/glide": "^3.0",
     "league/uri": "^7.4",
     "middlewares/trailing-slash": "^2.0",
