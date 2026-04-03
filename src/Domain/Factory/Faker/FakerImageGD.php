@@ -55,14 +55,17 @@ class FakerImageGD extends Base
 		if ($width <= 0 || $height <= 0) {
 			throw new \InvalidArgumentException('Width and height must be greater than 0.');
 		}
-		$image = imagecreate($width, $height);
+		$image = imagecreatetruecolor($width, $height);
 
 		if ($image === false) {
 			throw new \RuntimeException('Failed to create image with GD.');
 		}
 
-		$bgColor = self::hex2rgb($bgColor);
-		imagecolorallocate($image, ...$bgColor);
+		$bgRgb   = self::hex2rgb($bgColor);
+		$bgColor = imagecolorallocate($image, ...$bgRgb);
+		if ($bgColor !== false) {
+			imagefill($image, 0, 0, $bgColor);
+		}
 
 		$textColor = self::hex2rgb($textColor);
 		$textColor = imagecolorallocate($image, ...$textColor);
@@ -142,14 +145,17 @@ class FakerImageGD extends Base
 		if ($width <= 0 || $height <= 0) {
 			throw new \InvalidArgumentException('Width and height must be greater than 0.');
 		}
-		$image = imagecreate($width, $height);
+		$image = imagecreatetruecolor($width, $height);
 
 		if ($image === false) {
 			throw new \RuntimeException('Failed to create image with GD.');
 		}
 
-		$bgColor = self::hex2rgb($bgColor);
-		imagecolorallocate($image, ...$bgColor);
+		$bgRgb   = self::hex2rgb($bgColor);
+		$bgColor = imagecolorallocate($image, ...$bgRgb);
+		if ($bgColor !== false) {
+			imagefill($image, 0, 0, $bgColor);
+		}
 
 		$rectCount = random_int(0, 1);
 		for ($i = 0; $i < $rectCount; $i++) {
