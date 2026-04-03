@@ -45,6 +45,9 @@ final class BulkMailerActionTest extends TestCase
 	{
 		$request = $this->createRequest([
 			'mailerId'         => 'test-mailer',
+			'bulkCollection'   => 'subscribers',
+			'bulkInclude'      => 'active:true',
+			'bulkExclude'      => 'draft:true',
 			'bulkscheduledAt'  => '2026-03-01 12:00:00',
 			'bulkOverrideTo'   => 'override@example.com',
 		]);
@@ -52,7 +55,7 @@ final class BulkMailerActionTest extends TestCase
 
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
-			->with('test-mailer', '2026-03-01 12:00:00', 'override@example.com', null)
+			->with('test-mailer', 'subscribers', 'active:true', 'draft:true', '2026-03-01 12:00:00', 'override@example.com', null)
 			->willReturn([
 				'success' => true,
 				'batchId' => 'bulk_123',
@@ -73,7 +76,7 @@ final class BulkMailerActionTest extends TestCase
 
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
-			->with('test-mailer', null, null, ['obj-1', 'obj-2'])
+			->with('test-mailer', '', '', '', null, null, ['obj-1', 'obj-2'])
 			->willReturn([
 				'success' => true,
 				'batchId' => 'bulk_123',
@@ -94,7 +97,7 @@ final class BulkMailerActionTest extends TestCase
 
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
-			->with('test-mailer', null, null, ['obj-1', 'obj-2'])
+			->with('test-mailer', '', '', '', null, null, ['obj-1', 'obj-2'])
 			->willReturn([
 				'success' => true,
 				'batchId' => 'bulk_123',
@@ -115,7 +118,7 @@ final class BulkMailerActionTest extends TestCase
 
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
-			->with('test-mailer', null, null, null)
+			->with('test-mailer', '', '', '', null, null, null)
 			->willReturn([
 				'success' => false,
 				'message' => 'Error',
@@ -134,7 +137,7 @@ final class BulkMailerActionTest extends TestCase
 
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
-			->with('test-mailer', null, null, null)
+			->with('test-mailer', '', '', '', null, null, null)
 			->willReturn([
 				'success' => false,
 				'message' => 'Error',

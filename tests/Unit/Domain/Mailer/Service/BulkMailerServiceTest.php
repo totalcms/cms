@@ -81,7 +81,7 @@ final class BulkMailerServiceTest extends TestCase
 			$loggerFactory,
 		);
 
-		$result = $service->queueBulkSend('test-mailer');
+		$result = $service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertFalse($result['success']);
 		$this->assertStringContainsString('Pro edition', $result['message']);
@@ -92,7 +92,7 @@ final class BulkMailerServiceTest extends TestCase
 		$this->mailerFetcher->method('fetchMailer')
 			->willThrowException(new \Exception('Not found'));
 
-		$result = $this->service->queueBulkSend('nonexistent');
+		$result = $this->service->queueBulkSend('nonexistent', 'subscribers');
 
 		$this->assertFalse($result['success']);
 		$this->assertStringContainsString('not found', $result['message']);
@@ -103,7 +103,7 @@ final class BulkMailerServiceTest extends TestCase
 		$mailer = $this->createMailerData(active: false);
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertFalse($result['success']);
 		$this->assertStringContainsString('not active', $result['message']);
@@ -114,10 +114,10 @@ final class BulkMailerServiceTest extends TestCase
 		$mailer = $this->createMailerData(bulkCollection: '');
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', '');
 
 		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not configured', $result['message']);
+		$this->assertStringContainsString('collection is required', $result['message']);
 	}
 
 	public function testReturnsErrorWhenNoMatchingObjectsFound(): void
@@ -126,7 +126,7 @@ final class BulkMailerServiceTest extends TestCase
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
 		$this->indexFilter->method('fetchFilteredIndex')->willReturn([]);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertFalse($result['success']);
 		$this->assertStringContainsString('No matching objects', $result['message']);
@@ -148,7 +148,7 @@ final class BulkMailerServiceTest extends TestCase
 			->method('queueEmail')
 			->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertTrue($result['success']);
 		$this->assertSame(3, $result['count']);
@@ -170,7 +170,7 @@ final class BulkMailerServiceTest extends TestCase
 			)
 			->willReturn($jobData);
 
-		$this->service->queueBulkSend('test-mailer', null, 'override@example.com');
+		$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, 'override@example.com');
 	}
 
 	public function testPassesScheduledAtThroughToJobQueuer(): void
@@ -188,15 +188,12 @@ final class BulkMailerServiceTest extends TestCase
 			)
 			->willReturn($jobData);
 
-		$this->service->queueBulkSend('test-mailer', '2026-03-01 12:00:00');
+		$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', '2026-03-01 12:00:00');
 	}
 
 	public function testPassesIncludeExcludeFiltersToIndexFilter(): void
 	{
-		$mailer = $this->createMailerData(
-			bulkInclude: 'status:active',
-			bulkExclude: 'type:draft',
-		);
+		$mailer = $this->createMailerData();
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
 
 		$this->indexFilter->expects($this->once())
@@ -208,7 +205,7 @@ final class BulkMailerServiceTest extends TestCase
 			)
 			->willReturn([]);
 
-		$this->service->queueBulkSend('test-mailer');
+		$this->service->queueBulkSend('test-mailer', 'subscribers', 'status:active', 'type:draft');
 	}
 
 	public function testSkipsObjectsWithEmptyIds(): void
@@ -226,7 +223,7 @@ final class BulkMailerServiceTest extends TestCase
 			->method('queueEmail')
 			->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertTrue($result['success']);
 		$this->assertSame(1, $result['count']);
@@ -241,7 +238,7 @@ final class BulkMailerServiceTest extends TestCase
 		$jobData = $this->createMock(JobData::class);
 		$this->jobQueuer->method('queueEmail')->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertTrue($result['success']);
 		$this->assertArrayHasKey('batchId', $result);
@@ -263,7 +260,7 @@ final class BulkMailerServiceTest extends TestCase
 			->method('queueEmail')
 			->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer', null, null, ['obj-1', 'obj-2']);
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, null, ['obj-1', 'obj-2']);
 
 		$this->assertTrue($result['success']);
 		$this->assertSame(2, $result['count']);
@@ -283,7 +280,7 @@ final class BulkMailerServiceTest extends TestCase
 				return $jobData;
 			});
 
-		$this->service->queueBulkSend('test-mailer', null, null, ['abc', 'def']);
+		$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, null, ['abc', 'def']);
 
 		$this->assertSame(['abc', 'def'], $capturedIds);
 	}
@@ -300,7 +297,7 @@ final class BulkMailerServiceTest extends TestCase
 		$jobData = $this->createMock(JobData::class);
 		$this->jobQueuer->method('queueEmail')->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer', null, null, []);
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, null, []);
 
 		$this->assertTrue($result['success']);
 		$this->assertSame(1, $result['count']);
@@ -318,7 +315,7 @@ final class BulkMailerServiceTest extends TestCase
 		$jobData = $this->createMock(JobData::class);
 		$this->jobQueuer->method('queueEmail')->willReturn($jobData);
 
-		$result = $this->service->queueBulkSend('test-mailer');
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
 		$this->assertTrue($result['success']);
 	}
@@ -338,7 +335,7 @@ final class BulkMailerServiceTest extends TestCase
 			)
 			->willReturn($jobData);
 
-		$this->service->queueBulkSend('test-mailer', null, '');
+		$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, '');
 	}
 
 	// ── previewEmail tests ──
