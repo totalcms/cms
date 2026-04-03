@@ -47,7 +47,14 @@ class SortRuleParser
 				continue;
 			}
 
-			$direction = isset($segments[1]) ? strtolower(trim($segments[1])) : 'asc';
+			// Support shorthand "-property" for descending sort
+			$shorthandReverse = false;
+			if (!isset($segments[1]) && str_starts_with($property, '-')) {
+				$property = substr($property, 1);
+				$shorthandReverse = true;
+			}
+
+			$direction = isset($segments[1]) ? strtolower(trim($segments[1])) : ($shorthandReverse ? 'desc' : 'asc');
 			$natural   = isset($segments[2]) && strtolower(trim($segments[2])) === 'natural';
 
 			$rules[] = [
