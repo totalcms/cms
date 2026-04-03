@@ -645,6 +645,7 @@ var_dump($matches); // true or false
 
 ## See Also
 
+- [URL Filters Utility](docs/twig/utils) - Convert URL query parameters into include/exclude/sort/search options for visitor-facing filtering
 - [Sitemap Builder Documentation](docs/advanced/sitemap-builder) - Using filters in sitemaps
 - [RSS Feed Documentation](docs/api/rss-feeds) - Using filters in RSS feeds
 - [Twig Integration](docs/twig/functions) - Using filters in templates

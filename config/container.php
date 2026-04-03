@@ -146,6 +146,7 @@ use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\SchemaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\UtilsTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\ViewTwigAdapter;
 use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
 use TotalCMS\Domain\Twig\Designer\TemplateDesignerRegistry;
@@ -506,6 +507,7 @@ return [
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
 		new LocaleTwigAdapter($container->get(TranslationService::class)),
+		new UtilsTwigAdapter(),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
