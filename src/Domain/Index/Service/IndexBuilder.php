@@ -249,7 +249,7 @@ readonly class IndexBuilder
 		if (!$collectionData instanceof CollectionData) {
 			throw new \DomainException(sprintf('Collection %s not found', $collection));
 		}
-		$queueReindex = $collectionData->queueRebuildOnSave ?? false;
+		$queueReindex = $collectionData->queueRebuildOnSave;
 
 		// If we have a new object and queueRebuildOnSave is enabled,
 		// append the object immediately for visibility, then queue full rebuild

@@ -123,7 +123,7 @@ class SchemaData
 			'description' => $this->description,
 			'properties'  => $this->properties,
 			'required'    => $this->required,
-			'index'       => $this->index ?? [],
+			'index'       => $this->index,
 		];
 
 		// Only include formgrid if it's not empty

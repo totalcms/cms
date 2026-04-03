@@ -68,7 +68,7 @@ readonly class SchemaSaver
 		$schemaData               = self::sanitizeRequiredAndIndex($schemaData, $this->getInheritedPropertyNames($schemaData));
 		$schema                   = $this->factory->generateSchema($schemaData);
 
-		if (!isset($schema->id)) {
+		if ($schema->id === '') {
 			throw new \UnexpectedValueException('Schema ID is required: ' . json_encode($schemaData), 1);
 		}
 

@@ -62,7 +62,7 @@ readonly class CollectionTable
 
 	private function buildCloneDialog(): string
 	{
-		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
+		$labelSingular = $this->collectionData->labelSingular;
 		$header        = HTMLUtils::element('h3', 'Clone ' . $labelSingular);
 
 		$collections = $this->collectionLister->listCollectionsWithSchema($this->schemaData->id);
@@ -231,8 +231,8 @@ readonly class CollectionTable
 	/** @return array<array<string,mixed>> */
 	private function sortObjects(): array
 	{
-		$sortBy      = $this->collectionData->sortBy ?? 'id';
-		$reverseSort = $this->collectionData->reverseSort ?? false;
+		$sortBy      = $this->collectionData->sortBy;
+		$reverseSort = $this->collectionData->reverseSort;
 
 		$objects = $this->objects;
 
@@ -258,7 +258,7 @@ readonly class CollectionTable
 	private function buildObjectActionButton(array $object): string
 	{
 		$id            = (string)($object['id'] ?? '');
-		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
+		$labelSingular = $this->collectionData->labelSingular;
 
 		// Edit link - same as clicking the row, but can be cmd+clicked to open in new tab
 		$edit = HTMLUtils::element('a', 'Edit ' . $labelSingular, [
@@ -361,7 +361,7 @@ readonly class CollectionTable
 	{
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
-		$labelPlural = $this->collectionData->labelPlural ?? 'Objects';
+		$labelPlural = $this->collectionData->labelPlural;
 		$attributes  = [
 			'class'            => 'admin-table',
 			'data-search'      => 'true',

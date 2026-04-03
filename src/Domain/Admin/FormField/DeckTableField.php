@@ -114,7 +114,7 @@ class DeckTableField extends FormField
 		try {
 			$schemaFetcher  = $this->form->getSchemaFetcher();
 			$schema         = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
-			$requiredFields = $schema->required ?? [];
+			$requiredFields = $schema->required;
 
 			foreach ($schema->properties as $propertyName => $propertySchema) {
 				$propSettings = $propertySchema['settings'] ?? [];
