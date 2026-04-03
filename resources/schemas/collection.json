@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
