@@ -181,6 +181,30 @@ class BulkMailerRepository
 	}
 
 	/**
+	 * Count emails successfully sent since a given datetime.
+	 */
+	public function countSentSince(string $since): int
+	{
+		if (!$this->dbExists()) {
+			return 0;
+		}
+
+		$sql = <<<SQL
+			SELECT COUNT(*) as count
+			FROM bulk_send_log
+			WHERE status = 'sent' AND sentAt >= :since
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':since', $since);
+		$stmt->execute();
+
+		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+		return intval($row['count'] ?? 0);
+	}
+
+	/**
 	 * Fetch statistics for a mailer.
 	 *
 	 * @return array{total:int,sent:int,failed:int,skipped:int}

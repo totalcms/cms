@@ -21,6 +21,20 @@ Control the editor's height with these settings:
 - **heightMin** - Minimum editor height in pixels. Default: `200`
 - **heightMax** - Maximum editor height in pixels. Default: `800`
 
+## Paste Behavior
+
+By default, the editor strips HTML formatting from pasted content and inserts plain text only. This prevents messy formatting when pasting from Word, Google Docs, or web pages.
+
+```json
+{
+  "pasteAsPlainText": false
+}
+```
+
+- **pasteAsPlainText** - Strip HTML formatting from pasted content. Default: `true`
+
+Set to `false` to allow pasting with rich formatting preserved.
+
 ## Character and Word Counters
 
 The editor displays character and word counts in the footer. You can configure limits that highlight when exceeded.

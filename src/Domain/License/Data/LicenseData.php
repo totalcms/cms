@@ -67,6 +67,27 @@ readonly class LicenseData
 	}
 
 	/**
+	 * Create from cached array (stored as plain array to avoid unserialize issues).
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	public static function fromArray(array $data): self
+	{
+		return new self(
+			valid              : (bool)($data['valid'] ?? false),
+			trial              : (bool)($data['trial'] ?? false),
+			domain             : (string)($data['domain'] ?? ''),
+			edition            : (string)($data['edition'] ?? 'unknown'),
+			message            : (string)($data['message'] ?? ''),
+			validationToken    : $data['validationToken'] ?? null,
+			updatesValid       : (bool)($data['updatesValid'] ?? false),
+			trialDaysRemaining : $data['trialDaysRemaining'] ?? null,
+			dnsVerified        : (bool)($data['dnsVerified'] ?? false),
+			timestamp          : (int)($data['timestamp'] ?? 0),
+		);
+	}
+
+	/**
 	 * Check if cache is still valid.
 	 */
 	public function isCacheValid(): bool

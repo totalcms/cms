@@ -38,7 +38,7 @@ readonly class EmailSender
 
 		try {
 			// Server settings
-			$smtpConfig = $this->config->smtp ?? [];
+			$smtpConfig = $this->config->smtp;
 
 			// Always use SMTP if type is smtp
 			if (($smtpConfig['type'] ?? 'smtp') === 'smtp') {

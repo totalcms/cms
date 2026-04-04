@@ -11,6 +11,7 @@ use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
+use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
 return function (App $app): void {
@@ -79,7 +80,8 @@ return function (App $app): void {
 		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
-	})->add(CollectionEditionMiddleware::class)
+	})->add(NoCacheMiddleware::class)
+		->add(CollectionEditionMiddleware::class)
 		->add(CollectionAccessMiddleware::class)
 		->add(DualAuthMiddleware::class)
 		->add(ExternalCorsMiddleware::class);

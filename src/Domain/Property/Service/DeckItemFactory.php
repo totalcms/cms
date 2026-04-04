@@ -39,6 +39,8 @@ readonly class DeckItemFactory
 	/**
 	 * Generate an item ID using autogen settings from the deck schema.
 	 *
+	 * Note: ${oid} is not supported for deck items — use ${uuid} or ${uid} instead.
+	 *
 	 * @param array<string,mixed> $itemData
 	 */
 	public function generateIdIfNeeded(string $collection, string $propertyName, array $itemData): string
@@ -53,7 +55,10 @@ readonly class DeckItemFactory
 			$autogenPattern = $idProperty['settings']['autogen'] ?? null;
 
 			if (!empty($autogenPattern)) {
-				return $this->autogenIdService->generateId($autogenPattern, $collection, $itemData);
+				$id = $this->autogenIdService->generateId($autogenPattern, $collection, $itemData);
+
+				// Deck item IDs use underscores instead of hyphens for Twig dot notation compatibility
+				return str_replace('-', '_', $id);
 			}
 		} catch (\Exception) {
 			// If anything fails, return empty and let the caller handle it

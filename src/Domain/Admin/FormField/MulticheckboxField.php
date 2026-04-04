@@ -159,25 +159,21 @@ class MulticheckboxField extends FormField
 
 	protected function processOptions(): void
 	{
-		// Options are already set via constructor parameter
-		if ($this->options === []) {
-			return;
-		}
+		// Process options using parent class functionality (includes relationalOptions)
+		$this->buildOptions();
 
-		// If already in correct format (array of arrays with value/label), use as-is
-		if (self::isMultiDimensionalArray($this->options)) {
-			return;
+		// Ensure options are in the correct format
+		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
+			// Convert simple array to value/label pairs
+			$processedOptions = [];
+			foreach ($this->options as $key => $value) {
+				$processedOptions[] = [
+					'label' => is_string($key) ? $key : $value,
+					'value' => $value,
+				];
+			}
+			$this->options = $processedOptions;
 		}
-
-		// Convert simple array to value/label pairs
-		$processedOptions = [];
-		foreach ($this->options as $key => $value) {
-			$processedOptions[] = [
-				'label' => is_string($key) ? $key : $value,
-				'value' => $value,
-			];
-		}
-		$this->options = $processedOptions;
 	}
 
 	/**

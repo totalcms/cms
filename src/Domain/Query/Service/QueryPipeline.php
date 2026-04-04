@@ -40,9 +40,10 @@ readonly class QueryPipeline
 		$offset = max(0, (int)($params['offset'] ?? 0));
 		$sort   = $params['sort'] ?? '';
 		$search = $params['search'] ?? '';
+		$filter = $params['filter'] ?? '';
 
-		// Check cache (skip for search queries)
-		$useCache = $search === '';
+		// Check cache (skip for search and filter queries)
+		$useCache = $search === '' && $filter === '';
 		if ($useCache) {
 			$cached = $this->cacheManager->getApiResponse($cachePrefix, $params);
 			if ($cached instanceof QueryResult) {
@@ -50,8 +51,10 @@ readonly class QueryPipeline
 			}
 		}
 
-		// Search or filter
-		if ($search !== '') {
+		// Filter, search, or include/exclude (mutually exclusive)
+		if ($filter !== '') {
+			$items = $this->containsFilter($items, $filter);
+		} elseif ($search !== '') {
 			$items = $this->objectSearcher->search($items, $search);
 		} else {
 			$filterOptions = $this->objectFilter->extractFilterOptions($params);
@@ -79,6 +82,31 @@ readonly class QueryPipeline
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Simple contains filter — matches if any scalar field contains the term (case-insensitive).
+	 *
+	 * @param array<int,array<string,mixed>> $items
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function containsFilter(array $items, string $term): array
+	{
+		$term = mb_strtolower(trim($term));
+		if ($term === '') {
+			return $items;
+		}
+
+		return array_values(array_filter($items, static function (array $item) use ($term): bool {
+			foreach ($item as $value) {
+				if (is_scalar($value) && str_contains(mb_strtolower((string)$value), $term)) {
+					return true;
+				}
+			}
+
+			return false;
+		}));
 	}
 
 	/**

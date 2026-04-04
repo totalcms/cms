@@ -16,7 +16,7 @@ readonly class FilesystemService implements CacheInterface
 		Config $config,
 	) {
 		$this->enabled  = $config->cache['filesystem'] ?? true;
-		$this->cacheDir = $config->cachedir ?? '';
+		$this->cacheDir = $config->cachedir;
 
 		$this->createCacheDir();
 	}

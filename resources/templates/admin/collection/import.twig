@@ -32,6 +32,14 @@
 		</details>
 
 		<details class="cms-accordion">
+			<summary>Import CSV into Deck</summary>
+			<div class="content" style="margin-bottom:2rem">
+				<p>Import CSV rows as deck items into an object. Each row becomes a deck item. CSV column headers should match deck schema field names.</p>
+				{{ cms.form.importDeck(url.collection) }}
+			</div>
+		</details>
+
+		<details class="cms-accordion">
 			<summary>{{ t('collection.import_manage_title', {'{collection}': url.collection | title}) }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>{{ t('collection.import_manage_desc') }}</p>

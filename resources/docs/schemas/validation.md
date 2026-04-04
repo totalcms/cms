@@ -13,6 +13,8 @@ Total CMS uses JSON Schema (Draft 2020-12) for data validation. In addition to t
 
 **Where to add these:** In the Schema admin interface, when editing a property, use the **Extra Schema Definitions** field to add validation keywords as JSON.
 
+> **Important:** Validation keywords like `pattern`, `minLength`, `maxLength`, `minimum`, `maximum`, etc. must be added in the **Extra Schema Definitions** section of a property — not in the property's Settings. The Settings section controls display and behavior options, while Extra Schema Definitions is where all JSON Schema validation rules go.
+
 ## Required Fields
 
 By default, required string and array fields are automatically validated:

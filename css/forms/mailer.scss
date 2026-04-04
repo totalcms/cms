@@ -39,19 +39,19 @@
 }
 .mail-test-section,
 .bulk-send-section {
-	margin-top: 3rem;
-	padding-top: 2rem;
-	border-top: 2px solid oklch(var(--totalform-border-color));
-}
-.mail-test-section h2,
-.bulk-send-section h2 {
-	margin-bottom: 0.5rem;
-	color: oklch(var(--totalform-nearblack));
-}
-.mail-test-section p,
-.bulk-send-section p {
-	margin-bottom: 1.5rem;
-	color: oklch(var(--totalform-darkgray));
+	max-width   : 800px;
+	margin-top  : 3rem;
+	padding-top : 2rem;
+	border-top  : 2px solid oklch(var(--totalform-border-color));
+
+	h2 {
+		margin-bottom : 0.5rem;
+		color         : oklch(var(--totalform-nearblack));
+	}
+	p {
+		margin-bottom : 1.5rem;
+		color         : oklch(var(--totalform-darkgray));
+	}
 }
 .bulk-pro-badge {
 	display: inline-block;

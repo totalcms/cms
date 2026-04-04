@@ -278,7 +278,7 @@ class CalcService
 		$val = $args[0] ?? 0.0;
 
 		return match (strtolower($name)) {
-			'round' => round($val),
+			'round' => round($val, (int)($args[1] ?? 0)),
 			'floor' => floor($val),
 			'ceil'  => ceil($val),
 			'abs'   => abs($val),

@@ -4,9 +4,11 @@ namespace TotalCMS\Domain\License\Service;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\Version;
@@ -21,12 +23,18 @@ class LicenseValidator
 	/** @var LicenseData|null In-memory cache for current request */
 	private ?LicenseData $cachedResult = null;
 
+	private readonly LoggerInterface $logger;
+
 	public function __construct(
 		private readonly Config $config,
 		private readonly CacheManager $cacheManager,
 		private readonly HttpClientInterface $httpClient,
 		private readonly ?OfflineLicenseValidator $offlineValidator = null,
+		?LoggerFactory $loggerFactory = null,
 	) {
+		$this->logger = $loggerFactory instanceof LoggerFactory
+			? $loggerFactory->addFileHandler('license.log')->createLogger('license')
+			: new \Psr\Log\NullLogger();
 	}
 
 	/**
@@ -70,6 +78,10 @@ class LicenseValidator
 		try {
 			// Make API call for fresh validation
 			$licenseData = $this->callLicenseApi();
+
+			$licenseInfo = $licenseData->toArray();
+			unset($licenseInfo['validationToken']);
+			$this->logger->info('License validated via API', $licenseInfo);
 
 			// Cache the result
 			$this->cacheLicense($licenseData);

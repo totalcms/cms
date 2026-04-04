@@ -10,6 +10,7 @@ use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\Mailer\Exception\EmailRateLimitException;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
@@ -93,7 +94,13 @@ readonly class JobRunner
 
 		// Process all jobs
 		while ($this->jobRepository->hasPendingJobs()) {
-			$this->processNextJob();
+			try {
+				$this->processNextJob();
+			} catch (EmailRateLimitException) {
+				// Rate limit reached — stop processing, remaining jobs stay pending
+				$this->logger->info('Stopping job processing: email rate limit reached');
+				break;
+			}
 		}
 
 		// Rebuild indexes and restore settings for optimized collections
@@ -168,6 +175,15 @@ readonly class JobRunner
 			$this->processJob($job);
 			$this->jobRepository->delete($job);
 			$this->logger->info('Job processed successfully', $job->toArray());
+		} catch (EmailRateLimitException $e) {
+			// Rate limit hit — reset job to pending without counting as a failure
+			$this->jobRepository->resetJobStatus($job);
+			$this->logger->info('Email rate limit reached, deferring job', [
+				'job_id'  => $job->id,
+				'message' => $e->getMessage(),
+			]);
+			// Re-throw so processPendingJobs can stop processing
+			throw $e;
 		} catch (\Throwable $e) {
 			$this->jobRepository->markFailed($job, $e->getMessage());
 
@@ -345,6 +361,8 @@ readonly class JobRunner
 
 	private function processEmailJob(JobData $job): void
 	{
+		$this->checkEmailRateLimit();
+
 		$data = json_decode($job->payload, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$error = 'Invalid JSON payload: ' . json_last_error_msg();
@@ -412,6 +430,33 @@ readonly class JobRunner
 			'collection' => $collection,
 			'batchId'    => $batchId,
 		]);
+	}
+
+	/**
+	 * Check if email rate limits have been exceeded.
+	 *
+	 * @throws EmailRateLimitException
+	 */
+	private function checkEmailRateLimit(): void
+	{
+		$maxPerHour = intval($this->config->smtp['maxPerHour'] ?? 0);
+		$maxPerDay  = intval($this->config->smtp['maxPerDay'] ?? 0);
+
+		if ($maxPerHour > 0) {
+			$since     = date('Y-m-d H:i:s', strtotime('-1 hour'));
+			$sentCount = $this->bulkMailerRepository->countSentSince($since);
+			if ($sentCount >= $maxPerHour) {
+				throw new EmailRateLimitException("Hourly email limit reached ({$sentCount}/{$maxPerHour})");
+			}
+		}
+
+		if ($maxPerDay > 0) {
+			$since     = date('Y-m-d H:i:s', strtotime('-24 hours'));
+			$sentCount = $this->bulkMailerRepository->countSentSince($since);
+			if ($sentCount >= $maxPerDay) {
+				throw new EmailRateLimitException("Daily email limit reached ({$sentCount}/{$maxPerDay})");
+			}
+		}
 	}
 
 	/**

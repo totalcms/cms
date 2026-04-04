@@ -115,6 +115,7 @@ Use `${fieldname}` to reference any other property in the same form. For referen
 
 **Math functions:**
 * **round(x)** - Round to nearest integer
+* **round(x, precision)** - Round to N decimal places (e.g., `round(${total}, 2)` for cents)
 * **floor(x)** - Round down
 * **ceil(x)** - Round up
 * **abs(x)** - Absolute value
@@ -125,6 +126,8 @@ Use `${fieldname}` to reference any other property in the same form. For referen
 * **sum(${deck.field})** - Sum all values
 * **avg(${deck.field})** - Average of all values
 * **count(${deck.field})** - Number of items
+* **min(${deck.field})** - Minimum value
+* **max(${deck.field})** - Maximum value
 
 ### Clamping with min/max
 
@@ -180,7 +183,7 @@ Sums the `lineTotal` field from every item in the `items` deck property.
 		"field": "price",
 		"label": "Tax",
 		"settings": {
-			"calc": "round(sum(${items.lineTotal}) * ${taxRate} / 100)"
+			"calc": "round(sum(${items.lineTotal}) * ${taxRate} / 100, 2)"
 		}
 	}
 }
@@ -432,3 +435,9 @@ Field is visible if `deliveryMethod` matches ANY value in the array.
 ### Default Behavior
 
 Fields with a `visibility` setting are **hidden by default** until the condition is met. This ensures fields appear only when they should, even on initial form load.
+
+## Validation
+
+All fields support validation rules like `pattern`, `minLength`, `maxLength`, `minimum`, `maximum`, `enum`, and more. These are added in the **Extra Schema Definitions** section of a property, not in Settings.
+
+For full details and examples, see [Schema Validation](../schemas/validation.md).

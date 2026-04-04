@@ -25,7 +25,7 @@
 
 	<div class="admin-table-wrapper" data-collection="{{ url.collection }}">
 		<header class="admin-table-header">
-			<input type="search" name="search" placeholder="Filter {{ actualObjectCount|number_format }} {{ labelPlural }}"
+			<input type="search" name="filter" placeholder="Filter {{ actualObjectCount|number_format }} {{ labelPlural }}"
 				hx-get="{{ cms.api }}/collections/{{ url.collection }}/query"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#table-body-{{ url.collection }}"

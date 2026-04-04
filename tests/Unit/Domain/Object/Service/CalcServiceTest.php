@@ -154,6 +154,20 @@ it('evaluates round()', function (): void {
 	expect($calc->evaluate('round(${a})', ['a' => 4.4]))->toBe(4.0);
 });
 
+it('evaluates round() with precision', function (): void {
+	$calc = new CalcService();
+	expect($calc->evaluate('round(${a}, 2)', ['a' => 4.567]))->toBe(4.57);
+	expect($calc->evaluate('round(${a}, 2)', ['a' => 4.564]))->toBe(4.56);
+	expect($calc->evaluate('round(${a}, 1)', ['a' => 4.567]))->toBe(4.6);
+	expect($calc->evaluate('round(${a}, 0)', ['a' => 4.567]))->toBe(5.0);
+});
+
+it('evaluates round() with precision in expression', function (): void {
+	$calc   = new CalcService();
+	$result = $calc->evaluate('round(${price} * ${quantity}, 2)', ['price' => 19.99, 'quantity' => 3]);
+	expect($result)->toBe(59.97);
+});
+
 it('evaluates floor()', function (): void {
 	$calc   = new CalcService();
 	$result = $calc->evaluate('floor(${a})', ['a' => 4.9]);

@@ -47,6 +47,7 @@ class TotalCMSTwigAdapter
 		public CollectionTwigAdapter $collection,
 		public AdminTwigAdapter $admin,
 		public LocaleTwigAdapter $locale,
+		public UtilsTwigAdapter $utils,
 	) {
 		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;

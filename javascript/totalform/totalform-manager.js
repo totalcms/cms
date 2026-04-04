@@ -46,7 +46,10 @@ export default class TotalFormManager {
 		for (const form of forms) {
 			// Skip simple forms - they handle their own initialization
 			if (form.classList.contains("simple-form")) continue;
-			totalforms.push(new TotalForm(form));
+			const tf = new TotalForm(form);
+			// no-save forms get field initialization but are excluded from Cmd+S saving
+			if (form.classList.contains("no-save")) continue;
+			totalforms.push(tf);
 		}
 		return totalforms;
 	}

@@ -19,6 +19,7 @@ readonly class ObjectSaver
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private CollectionSaver $collectionSaver,
 		private DataViewUpdateScheduler $viewUpdateScheduler,
+		private DateFieldResetter $dateFieldResetter,
 	) {
 	}
 
@@ -31,7 +32,10 @@ readonly class ObjectSaver
 			throw new \DomainException(sprintf('Object with id %s already exists in %s', $object->id, $collection));
 		}
 
-		// Run property actions before saving (ex: update date)
+		// Reset onCreate date fields to current time (handles duplications where the original date was copied)
+		$this->dateFieldResetter->resetOnCreateFields($object, $collection);
+
+		// Run property actions before saving (ex: onUpdate date)
 		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);

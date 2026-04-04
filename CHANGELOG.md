@@ -2,6 +2,65 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.2.2] - 2026-04-03
+
+### Added
+
+- **URL Filters Utility**: New `cms.utils.urlFilters()` Twig function converts URL query parameters into include/exclude/sort/search options for visitor-facing filtering with clean, shareable URLs
+- **Deck CSV/JSON Import**: Import CSV or JSON data into deck properties via the collection import page with object and property selection, update mode, and auto-generated IDs
+- **Deck CSV/JSON Export**: Export deck properties as CSV or JSON files from the collection export page with object and property selection and format choice
+- **Index Filter Sort**: New `sort` option for `IndexFilter` and `DataViewFilter` supporting shorthand (`-date`) and colon (`date:desc`) formats
+- **Relational Options Sort**: Sort support added to `relationalOptions` using the new IndexFilter sort capability
+- **Multicheckbox Relational Options**: `relationalOptions` now works with the multicheckbox field type
+- **Paste as Plain Text**: Styled text editor now defaults to pasting as plain text, stripping HTML formatting from clipboard content. Configurable via `pasteAsPlainText` setting
+- **Collection Table Filter**: Admin collection table filter now uses substring contains matching instead of word-boundary search for more intuitive filtering
+- **CalcService Decimal Precision**: Added support for decimal precision in `CalcService round()`
+- **toSeconds Twig Filter**: New filter to convert time strings to seconds
+- **Import Collection Options**: `importCollection` form now supports `update` and `queue` options with configurable defaults
+- **Bulk Mailer Enhancements**: Bulk mailer moved to its own standalone form with configurable max per day settings
+- **Commit Count in Version**: Version info now includes the commit count
+
+### Enhanced
+
+- **Autogen on Page Load**: Autogen fields now trigger on page load to pick up default values from other fields
+- **Webhook Content-Type**: Form webhook POST requests now send `Content-Type: application/json` header
+- **Styled Text Cleanup**: Improved cleanup of paragraphs inside styled text lists
+- **Schema Inherited Properties**: Inherited properties now show in schema required and index lists
+- **Sentry Error Filtering**: Expanded Sentry ignore rules for browser extensions, filesystem permission errors, stale deployments, and user schema errors
+- **PHPStan Compliance**: Cleaned up all null coalesce warnings for stricter type safety
+- **DateFieldResetter Utility**: Extracted date field reset logic from ObjectCloner into shared `DateFieldResetter` used by both ObjectCloner and ObjectSaver
+- **Bundle Checker**: Removed swagger.php from bundle verification
+
+### Fixed
+
+- **Duplicate Object onCreate Date**: Duplicating an object now correctly sets `onCreate` date fields to the current time instead of copying the original object's creation date
+- **Gallery Launcher on Mobile**: Fixed lightGallery not working on touch devices by using `template.content.textContent` instead of `innerHTML` for JSON parsing
+- **DataView Timezone**: Fixed `lastBuilt` timestamp using UTC instead of configured timezone when processed via job queue
+- **Depot Stream/Download Macros**: Fixed missing `path` parameter in stream macro output for depot files in subfolders
+- **Numeric Filter Values**: Fixed include/exclude filters not matching numeric values (e.g., `mail_group:2`) due to strict type comparison
+- **Autogen ID Override**: Fixed autogen overwriting existing IDs on page load for deck items and existing objects
+- **Factory CSRF Token**: Fixed factory import attempting to use CSRF token as a Faker method
+- **Factory Image Compatibility**: Fixed factory-generated images using palette-based PNGs incompatible with Intervention Image 3.x by switching to truecolor
+- **Deck Item IDs**: Deck item IDs now correctly replace hyphens with underscores for Twig dot notation compatibility
+- **License Caching**: Fixed caching license data by storing as array
+- **License Validation Logging**: Corrected license validation logging
+- **404 Logging**: Stopped logging 404 object-not-found errors
+- **Code View Crash**: Fixed crash in code view within styled text editor
+- **Collection Table Caching**: Fixed caching issue with new admin collection table
+- **Bulk Mailer Tests**: Updated bulk mailer tests to match new `queueBulkSend` signature
+
+### Documentation
+
+- **URL Filters Utility**: New documentation for `cms.utils.urlFilters()` with usage examples, filter links, and search forms
+- **Paste as Plain Text**: Documented `pasteAsPlainText` setting for styled text editor
+- **Index Filter Sort**: Documented sort option with shorthand and colon format examples
+- **Deck OID**: Clarified that `${oid}` is not supported for deck item IDs
+- **Relational Options Sort**: Documented sort option for relational dropdown options
+- **Nginx Configuration**: Added nginx deployment documentation
+- **Calc Settings**: Updated calc documentation
+- **Validation**: Added validation documentation
+- **Site Builder Plans**: Added planning document for Site Builder feature
+
 ## [3.2.1] - 2026-03-12
 
 ### Added

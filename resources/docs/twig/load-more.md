@@ -49,7 +49,7 @@ Works identically to the collection version but queries a DataView by its ID.
 |--------|------|---------|-------------|
 | `template` | string | **required** | Twig template file for rendering each item. Receives `{{ object }}` |
 | `limit` | int | `20` | Number of items per page |
-| `sort` | string | — | Sort field (e.g., `date`, `-date` for descending) |
+| `sort` | string | — | Sort field. Shorthand: `date` or `-date` (descending). Colon format: `date:asc`, `date:desc`, or `date:desc,title:asc` for multi-sort |
 | `include` | string | — | Include filter (e.g., `published:true,featured:true`) |
 | `exclude` | string | — | Exclude filter (e.g., `draft:true`) |
 | `search` | string | — | Search query string |
@@ -356,6 +356,7 @@ If you pre-rendered items server-side, set `offset` to skip those:
 
 ## See Also
 
+- [URL Filters Utility](docs/twig/utils) — Let visitors filter, sort, and search via URL query parameters
 - [Index Filtering](docs/api/index-filter) — Include/exclude filter syntax
 - [Total CMS Twig Adapter](docs/twig/totalcms) — Full `cms` variable reference
 - [Pagination](docs/twig/totalcms#pagination) — Traditional page-based pagination

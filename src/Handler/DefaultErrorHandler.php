@@ -60,8 +60,12 @@ readonly class DefaultErrorHandler
 			$this->opcacheService->clear();
 		}
 
-		// Log error
-		if ($logErrors) {
+		// Log error (skip expected 404s from HEAD existence checks)
+		$isExpected404 = $exception instanceof HttpException
+			&& $exception->getCode() === StatusCodeInterface::STATUS_NOT_FOUND
+			&& $request->getMethod() === 'HEAD';
+
+		if ($logErrors && !$isExpected404) {
 			$this->logger->error(
 				sprintf(
 					'Error: Method: %s, Path: %s, %s',
@@ -72,8 +76,10 @@ readonly class DefaultErrorHandler
 			);
 		}
 
-		// Integrate with Sentry
-		\Sentry\captureException($exception);
+		// Integrate with Sentry (skip expected 404s)
+		if (!$isExpected404) {
+			\Sentry\captureException($exception);
+		}
 
 		// Detect status code
 		$statusCode = $this->getHttpStatusCode($exception);

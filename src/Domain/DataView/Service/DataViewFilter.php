@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\DataView\Service;
 
+use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 
 /**
@@ -31,7 +32,7 @@ readonly class DataViewFilter
 	 * (associative arrays). Flat arrays or other shapes are returned as-is.
 	 *
 	 * @param string               $viewId  DataView ID
-	 * @param array<string,string> $options Filter options (include, exclude)
+	 * @param array<string,string> $options Filter options (include, exclude, sort)
 	 *
 	 * @return array<mixed>
 	 */
@@ -43,7 +44,10 @@ readonly class DataViewFilter
 			return $data;
 		}
 
-		return $this->objectFilter->filterObjects($data, $options);
+		$data = $this->objectFilter->filterObjects($data, $options);
+
+		/** @var array<int,array<string,mixed>> $data */
+		return CollectionSorter::sortByProperty($data, $options['sort'] ?? '');
 	}
 
 	/**

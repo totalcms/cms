@@ -55,7 +55,7 @@ readonly class SchemaLister
 	public function listCategories(): array
 	{
 		$schemas    = $this->listAllSchemas();
-		$categories = array_map(fn (SchemaData $s): string => $s->category ?? '', $schemas);
+		$categories = array_map(fn (SchemaData $s): string => $s->category, $schemas);
 
 		// Filter out empty values and get unique sorted list
 		$categories = array_filter($categories, fn (string $c): bool => $c !== '');

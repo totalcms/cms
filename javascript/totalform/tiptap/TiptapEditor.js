@@ -75,6 +75,7 @@ export default class TiptapEditor {
 			extensions: extensions,
 			content: this.textarea.value || '',
 			imageUploadConfig: this.buildUploadConfig('image'),
+			editorProps: this.buildEditorProps(),
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -141,6 +142,7 @@ export default class TiptapEditor {
 			extensions: this.buildExtensions(),
 			content: content,
 			imageUploadConfig: this.buildUploadConfig('image'),
+			editorProps: this.buildEditorProps(),
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -229,6 +231,33 @@ export default class TiptapEditor {
 		return extensions;
 	}
 
+	buildEditorProps() {
+		const props = {};
+
+		// Paste as plain text: strip HTML formatting from pasted content
+		if (this.options.pasteAsPlainText !== false) {
+			props.handlePaste = (view, event) => {
+				const clipboardData = event.clipboardData;
+				if (!clipboardData) return false;
+
+				// If there's HTML content, intercept and paste as plain text instead
+				const html = clipboardData.getData('text/html');
+				if (html) {
+					event.preventDefault();
+					const text = clipboardData.getData('text/plain');
+					if (text) {
+						view.dispatch(view.state.tr.insertText(text));
+					}
+					return true;
+				}
+
+				return false;
+			};
+		}
+
+		return props;
+	}
+
 	buildFooter() {
 		const showChars = this.options.charCounterCount;
 		const showWords = this.options.wordCounterCount;
@@ -307,6 +336,7 @@ export default class TiptapEditor {
 	}
 
 	toggleCodeView() {
+		if (!this.codeView) return;
 		const wrapper = this.container.querySelector('.ste-editor-wrapper');
 
 		if (this.codeView.isActive()) {
@@ -399,15 +429,32 @@ export default class TiptapEditor {
 			.trim();
 	}
 
+	/**
+	 * Remove wrapping <p> tags from list items that contain only a single paragraph.
+	 * Tiptap/ProseMirror always wraps list item content in <p> blocks internally,
+	 * but the output should be clean: <li>text</li> not <li><p>text</p></li>.
+	 */
+	cleanListParagraphs(html) {
+		const div = document.createElement('div');
+		div.innerHTML = html;
+		div.querySelectorAll('li').forEach(li => {
+			const children = Array.from(li.children);
+			if (children.length === 1 && children[0].tagName === 'P') {
+				li.innerHTML = children[0].innerHTML;
+			}
+		});
+		return div.innerHTML;
+	}
+
 	syncToTextarea() {
-		this.textarea.value = this.editor.getHTML();
+		this.textarea.value = this.cleanListParagraphs(this.editor.getHTML());
 	}
 
 	getHTML() {
 		if (this.codeView?.isActive()) {
 			return this.codeView.getValue();
 		}
-		return this.editor.getHTML();
+		return this.cleanListParagraphs(this.editor.getHTML());
 	}
 
 	setHTML(html) {

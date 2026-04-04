@@ -42,7 +42,7 @@ class CsvImporter
 	 *
 	 * @return array<int, array<string, mixed>> Cleaned CSV records
 	 */
-	private function cleanCsvData(Reader $csv): array
+	public static function cleanCsvData(Reader $csv): array
 	{
 		$headers = $csv->getHeader(); // Get the headers
 		$records = $csv->getRecords(); // Get the records
@@ -84,7 +84,7 @@ class CsvImporter
 		$csv = Reader::fromString((string)$file->getStream());
 		$csv->setHeaderOffset(0);
 
-		$cleanedRecords = $this->cleanCsvData($csv);
+		$cleanedRecords = self::cleanCsvData($csv);
 		$totalRecords   = count($cleanedRecords);
 		$this->logger->info(sprintf('Found %d records to import', $totalRecords));
 

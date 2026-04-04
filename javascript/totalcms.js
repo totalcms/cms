@@ -270,7 +270,7 @@ export default class TotalCMS {
 	}
     // Build a URL with a query string
 	buildApiQuery(api, params) {
-		let baseUrl = this.options.url;
+		let baseUrl = this.options.url || '';
 		if (!baseUrl.includes(window.location.origin)) {
 			baseUrl = window.location.origin + baseUrl;
 		}

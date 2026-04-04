@@ -26,6 +26,19 @@
 
 				// Ignore browser extension errors
 				if (message.includes('runtime.sendMessage')) return null;
+				if (event.exception && event.exception.values) {
+					var frames = event.exception.values.flatMap(function(v) {
+						return (v.stacktrace && v.stacktrace.frames) || [];
+					});
+					var isExtension = frames.some(function(f) {
+						return f.filename && (
+							f.filename.includes('safariextension') ||
+							f.filename.includes('chrome-extension://') ||
+							f.filename.includes('moz-extension://')
+						);
+					});
+					if (isExtension) return null;
+				}
 
 				// Ignore JSON parse errors (user input issues)
 				if (error && error.name === 'SyntaxError' && (

@@ -85,15 +85,15 @@
 			{% if filename %}
 				{% if collection == "depot" and property == "depot" %}
 					{% if password %}
-						<pre data-pwd="{{password}}" id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}', {pwd: '{{password | urldecode}}'}) &#125;&#125;</pre>
+						<pre data-pwd="{{password}}" id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}', { {% if path %}path: '{{path}}', {% endif %}pwd: '{{password | urldecode}}'}) &#125;&#125;</pre>
 					{% else %}
-						<pre id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}') &#125;&#125;</pre>
+						<pre id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}'{% if path %}, {path: '{{path}}'}{% endif %}) &#125;&#125;</pre>
 					{% endif %}
 				{% else %}
 					{% if password %}
-						<pre data-pwd="{{password}}" id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}', {pwd: '{{password | urldecode}}', collection: '{{collection}}', property: '{{property}}'}) &#125;&#125;</pre>
+						<pre data-pwd="{{password}}" id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}', {pwd: '{{password | urldecode}}',{% if path %} path: '{{path}}',{% endif %} collection: '{{collection}}', property: '{{property}}'}) &#125;&#125;</pre>
 					{% else %}
-						<pre id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}', {collection: '{{collection}}', property: '{{property}}'}) &#125;&#125;</pre>
+						<pre id="stream-macro">&#123;&#123; cms.media.depotStream('{{id}}', '{{filename}}', { {% if path %}path: '{{path}}', {% endif %}collection: '{{collection}}', property: '{{property}}'}) &#125;&#125;</pre>
 					{% endif %}
 				{% endif %}
 			{% else %}

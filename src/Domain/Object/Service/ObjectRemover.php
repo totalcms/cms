@@ -35,7 +35,7 @@ readonly class ObjectRemover
 
 			// Use optimized removal for immediate index update
 			$collectionData = $this->collectionFetcher->fetchCollection($collection);
-			$queueReindex   = $collectionData instanceof CollectionData && ($collectionData->queueRebuildOnSave ?? false);
+			$queueReindex   = $collectionData instanceof CollectionData && $collectionData->queueRebuildOnSave;
 
 			if ($queueReindex) {
 				// Remove immediately from index, then queue full rebuild for consistency

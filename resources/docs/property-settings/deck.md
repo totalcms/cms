@@ -22,8 +22,6 @@ The `deckItemLabel` setting controls how deck items are labeled in the admin int
 - **Field values:** `${fieldName}` - Any field from the deck item schema
 - **Multiple fields:** `${id} - ${title}` - Combine multiple fields with separators
 - **Dynamic values (new items only):**
-  - `${oid}` - Deck item count (1, 2, 3...)
-  - `${oid-00000}` - Zero-padded deck item count (00001, 00002...)
   - `${uid}` - Random unique ID
   - `${uuid}` - Full UUID
   - `${now}` - Current timestamp
@@ -41,18 +39,9 @@ The `deckItemLabel` setting controls how deck items are labeled in the admin int
 "deckItemLabel": "${rating} ★ - ${name}"
 ```
 
-**Sequential numbering:**
-```json
-"deckItemLabel": "Item ${oid}: ${title}"
-```
-
-**Zero-padded numbers:**
-```json
-"deckItemLabel": "Review ${oid-00000}"
-```
-Result: "Review 00001", "Review 00002", etc.
-
 ### Important Notes
+
+> **Note:** `${oid}` is not supported for deck items. Use `${uuid}` or `${uid}` for auto-generated deck item IDs instead.
 
 - **No slugification:** Values are displayed as-is without URL-safe transformation. If a field contains "The Big Red Fox", the label will show exactly that.
 - **Twig compatibility:** Deck item IDs are automatically sanitized to use underscores instead of hyphens for Twig dot notation access (`mydeck.item_id`).

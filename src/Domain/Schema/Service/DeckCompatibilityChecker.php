@@ -168,7 +168,7 @@ readonly class DeckCompatibilityChecker
 			// Check $ref property
 			if (isset($property['$ref'])) {
 				foreach (self::INCOMPATIBLE_TYPES as $type) {
-					if (str_contains($property['$ref'], "/$type.json")) {
+					if (str_contains((string)$property['$ref'], "/$type.json")) {
 						$foundIncompatibleTypes[] = $type;
 					}
 				}

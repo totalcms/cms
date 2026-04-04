@@ -630,9 +630,10 @@ export default class TotalForm {
 			case "ajax":
 			case "webhook":
 				const response = await fetch(action.link, {
-					method : 'POST',
-					mode   : 'cors',
-					body   : JSON.stringify(this.generateData()),
+					method  : 'POST',
+					mode    : 'cors',
+					headers : { 'Content-Type': 'application/json' },
+					body    : JSON.stringify(this.generateData()),
 				});
 				if (!response.ok) {
 					throw new Error(`Action ${action.action} failed: ${response.statusText}`);

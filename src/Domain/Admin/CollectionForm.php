@@ -176,7 +176,7 @@ class CollectionForm extends TotalForm
 		$sortField = $this->fields['sortBy'];
 		if ($this->collectionData instanceof CollectionData && $sortField instanceof SelectField) {
 			$schema     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
-			$properties = $schema->properties ?? [];
+			$properties = $schema->properties;
 			$options    = count($properties) > 0 ? array_keys($properties) : ['id'];
 			$sortField->setOptions($options);
 		}

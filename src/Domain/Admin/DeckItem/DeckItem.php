@@ -81,7 +81,7 @@ class DeckItem
 			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
 
 			// Get the list of required fields from the schema
-			$requiredFields = $schema->required ?? [];
+			$requiredFields = $schema->required;
 
 			// Generate form fields for each property in the schema
 			foreach ($schema->properties as $propertyName => $propertySchema) {

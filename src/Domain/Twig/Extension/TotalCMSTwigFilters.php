@@ -115,6 +115,7 @@ class TotalCMSTwigFilters
 		'pluck',
 		'groupBy',
 		'countBy',
+		'toSeconds',
 	];
 
 	/** @return array<TwigFilter> */
@@ -541,6 +542,20 @@ class TotalCMSTwigFilters
 		$wordCount = self::wordcount($text);
 
 		return ceil($wordCount / $wpm);
+	}
+
+	/**
+	 * Convert a time string (H:M:S, M:S, or S) to total seconds.
+	 */
+	public static function toSeconds(string $time): int
+	{
+		$parts = array_map(intval(...), explode(':', $time));
+
+		return match (count($parts)) {
+			3       => ($parts[0] * 3600) + ($parts[1] * 60) + $parts[2],
+			2       => ($parts[0] * 60) + $parts[1],
+			default => $parts[0],
+		};
 	}
 
 	// -------------------------

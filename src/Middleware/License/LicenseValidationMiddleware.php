@@ -58,10 +58,6 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 			// Get license data (uses cache if valid, otherwise validates)
 			$licenseData = $this->licenseValidator->validateLicense();
 
-			$licenseInfo = $licenseData->toArray();
-			unset($licenseInfo['validation_token']); // Remove sensitive info
-			$this->logger->info('License validation attempted', $licenseInfo);
-
 			// Check if license is valid
 			if (!$licenseData->valid) {
 				$message = 'Invalid license: ' . $licenseData->message;
@@ -97,10 +93,6 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 					return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 				}
 			}
-
-			// License and JWT validation passed - all checks completed
-
-			$this->logger->info('License validation successful');
 
 			// License is valid, continue with request
 			return $handler->handle($request);

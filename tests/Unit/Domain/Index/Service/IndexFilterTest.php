@@ -423,6 +423,87 @@ final class IndexFilterTest extends TestCase
 		$this->assertTrue($result); // Case-insensitive match
 	}
 
+	// --- sort option ---
+
+	public function testFetchFilteredIndexWithSortAscending(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '2', 'title' => 'Banana'],
+			['id' => '1', 'title' => 'Apple'],
+			['id' => '3', 'title' => 'Cherry'],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndex('blog', ['sort' => 'title']);
+
+		$this->assertSame('Apple', $result[0]['title']);
+		$this->assertSame('Banana', $result[1]['title']);
+		$this->assertSame('Cherry', $result[2]['title']);
+	}
+
+	public function testFetchFilteredIndexWithSortDescending(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '2', 'title' => 'Banana'],
+			['id' => '1', 'title' => 'Apple'],
+			['id' => '3', 'title' => 'Cherry'],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndex('blog', ['sort' => '-title']);
+
+		$this->assertSame('Cherry', $result[0]['title']);
+		$this->assertSame('Banana', $result[1]['title']);
+		$this->assertSame('Apple', $result[2]['title']);
+	}
+
+	public function testFetchFilteredIndexDataWithSort(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '3', 'title' => 'Cherry'],
+			['id' => '1', 'title' => 'Apple'],
+			['id' => '2', 'title' => 'Banana'],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndexData('blog', ['sort' => 'title']);
+
+		$this->assertSame('Apple', $result->objects[0]['title']);
+		$this->assertSame('Banana', $result->objects[1]['title']);
+		$this->assertSame('Cherry', $result->objects[2]['title']);
+	}
+
+	public function testFetchFilteredIndexWithFilterAndSort(): void
+	{
+		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+			['id' => '1', 'title' => 'Cherry', 'published' => true],
+			['id' => '2', 'title' => 'Apple', 'published' => false],
+			['id' => '3', 'title' => 'Banana', 'published' => true],
+		]);
+
+		$this->indexReader->method('fetchIndex')
+			->with('blog')
+			->willReturn($indexData);
+
+		$result = $this->filter->fetchFilteredIndex('blog', [
+			'include' => 'published:true',
+			'sort'    => 'title',
+		]);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('Banana', $result[0]['title']);
+		$this->assertSame('Cherry', $result[1]['title']);
+	}
+
 	public function testBooleanStillStrictComparison(): void
 	{
 		$object = ['id' => '1', 'published' => true];

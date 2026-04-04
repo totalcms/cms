@@ -75,24 +75,25 @@ class CollectionData
 		$labelPlural   = $this->labelPlural === '' ? $defaultLabels['labelPlural'] : $this->labelPlural;
 		$labelSingular = $this->labelSingular === '' ? $defaultLabels['labelSingular'] : $this->labelSingular;
 
+		/** @phpstan-ignore nullCoalesce.property */
 		$collection         = [
 			'id'                 => $this->id,
 			'schema'             => $this->schema,
 			'name'               => $this->name ?? ucfirst($this->id),
 			'description'        => $description,
-			'url'                => $this->url ?? '',
-			'category'           => $this->category ?? '',
+			'url'                => $this->url,
+			'category'           => $this->category,
 			'labelPlural'        => $labelPlural,
 			'labelSingular'      => $labelSingular,
-			'groups'             => $this->groups ?? [],
-			'publicOperations'   => $this->publicOperations ?? [],
-			'sortBy'             => $this->sortBy ?? 'id',
-			'reverseSort'        => $this->reverseSort ?? false,
-			'prettyUrl'          => $this->prettyUrl ?? false,
-			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
-			'count'              => $this->count ?? 0,
+			'groups'             => $this->groups,
+			'publicOperations'   => $this->publicOperations,
+			'sortBy'             => $this->sortBy,
+			'reverseSort'        => $this->reverseSort,
+			'prettyUrl'          => $this->prettyUrl,
+			'queueRebuildOnSave' => $this->queueRebuildOnSave,
+			'count'              => $this->count,
 			'totalObjects'       => max($this->totalObjects, 0),
-			'lastUpdated'        => $this->lastUpdated ?? '',
+			'lastUpdated'        => $this->lastUpdated,
 		];
 
 		if ($this->properties !== []) {

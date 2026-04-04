@@ -158,6 +158,62 @@ final class DataViewFilterTest extends TestCase
 		$this->assertSame('4', $result[1]['id']);
 	}
 
+	// --- sort option ---
+
+	public function testSortViewDataAscending(): void
+	{
+		$this->fetcher->method('getViewData')
+			->with('my-view')
+			->willReturn([
+				['id' => '2', 'title' => 'Banana'],
+				['id' => '1', 'title' => 'Apple'],
+				['id' => '3', 'title' => 'Cherry'],
+			]);
+
+		$result = $this->filter->fetchFilteredViewData('my-view', ['sort' => 'title']);
+
+		$this->assertSame('Apple', $result[0]['title']);
+		$this->assertSame('Banana', $result[1]['title']);
+		$this->assertSame('Cherry', $result[2]['title']);
+	}
+
+	public function testSortViewDataDescending(): void
+	{
+		$this->fetcher->method('getViewData')
+			->with('my-view')
+			->willReturn([
+				['id' => '2', 'title' => 'Banana'],
+				['id' => '1', 'title' => 'Apple'],
+				['id' => '3', 'title' => 'Cherry'],
+			]);
+
+		$result = $this->filter->fetchFilteredViewData('my-view', ['sort' => '-title']);
+
+		$this->assertSame('Cherry', $result[0]['title']);
+		$this->assertSame('Banana', $result[1]['title']);
+		$this->assertSame('Apple', $result[2]['title']);
+	}
+
+	public function testFilterAndSortViewData(): void
+	{
+		$this->fetcher->method('getViewData')
+			->with('my-view')
+			->willReturn([
+				['id' => '1', 'title' => 'Cherry', 'status' => 'active'],
+				['id' => '2', 'title' => 'Apple', 'status' => 'inactive'],
+				['id' => '3', 'title' => 'Banana', 'status' => 'active'],
+			]);
+
+		$result = $this->filter->fetchFilteredViewData('my-view', [
+			'include' => 'status:active',
+			'sort'    => 'title',
+		]);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('Banana', $result[0]['title']);
+		$this->assertSame('Cherry', $result[1]['title']);
+	}
+
 	// --- getViewData (raw passthrough) ---
 
 	public function testGetViewDataDelegates(): void
