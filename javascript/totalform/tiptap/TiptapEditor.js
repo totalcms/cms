@@ -75,6 +75,7 @@ export default class TiptapEditor {
 			extensions: extensions,
 			content: this.textarea.value || '',
 			imageUploadConfig: this.buildUploadConfig('image'),
+			editorProps: this.buildEditorProps(),
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -141,6 +142,7 @@ export default class TiptapEditor {
 			extensions: this.buildExtensions(),
 			content: content,
 			imageUploadConfig: this.buildUploadConfig('image'),
+			editorProps: this.buildEditorProps(),
 			onUpdate: ({ editor }) => {
 				this.syncToTextarea();
 				this.updateFooter();
@@ -227,6 +229,33 @@ export default class TiptapEditor {
 		}
 
 		return extensions;
+	}
+
+	buildEditorProps() {
+		const props = {};
+
+		// Paste as plain text: strip HTML formatting from pasted content
+		if (this.options.pasteAsPlainText !== false) {
+			props.handlePaste = (view, event) => {
+				const clipboardData = event.clipboardData;
+				if (!clipboardData) return false;
+
+				// If there's HTML content, intercept and paste as plain text instead
+				const html = clipboardData.getData('text/html');
+				if (html) {
+					event.preventDefault();
+					const text = clipboardData.getData('text/plain');
+					if (text) {
+						view.dispatch(view.state.tr.insertText(text));
+					}
+					return true;
+				}
+
+				return false;
+			};
+		}
+
+		return props;
 	}
 
 	buildFooter() {
