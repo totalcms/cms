@@ -20,6 +20,9 @@ foreach ($folders as $folder) {
 			if ('.DS_Store' === $file->getFilename()) {
 				continue;
 			}
+			if ($file->getFilename() === 'swagger.php') {
+				continue;
+			}
 			$filePath     = $file->getPathname();
 			$key          = (string)str_replace(BASEDIR, '', $filePath);
 			$bundle[$key] = hash_file('sha256', $filePath);
