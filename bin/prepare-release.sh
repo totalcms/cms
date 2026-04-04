@@ -324,6 +324,19 @@ print_info "Generating file checksums..."
 find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.css" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./cache/*" -not -path "./tmp/*" -exec sha256sum {} \; > checksums.txt
 print_success "Checksums generated"
 
+# Sync docs to docs site
+DOCS_SYNC="$HOME/Websites/docs.totalcms.co/bin/sync-from-totalcms.sh"
+if [ -x "$DOCS_SYNC" ]; then
+    print_info "Syncing documentation to docs site..."
+    if "$DOCS_SYNC" resources/docs; then
+        print_success "Documentation synced to docs site"
+    else
+        print_warning "Failed to sync documentation"
+    fi
+else
+    print_warning "Docs sync script not found at $DOCS_SYNC - skipping"
+fi
+
 # Upload source maps to Sentry (before deleting them from dist)
 upload_sourcemaps "$NEW_VERSION"
 
@@ -345,6 +358,7 @@ echo "  ✓ Autoloader optimized"
 echo "  ✓ Caches cleared"
 echo "  ✓ Permissions set"
 echo "  ✓ Checksums generated"
+echo "  ✓ Documentation synced to docs site"
 echo "  ✓ Source maps uploaded to Sentry"
 echo "  ✓ Sentry release notified"
 echo
