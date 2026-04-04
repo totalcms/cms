@@ -12,6 +12,8 @@ All notable changes to Total CMS will be documented in this file.
 - **Index Filter Sort**: New `sort` option for `IndexFilter` and `DataViewFilter` supporting shorthand (`-date`) and colon (`date:desc`) formats
 - **Relational Options Sort**: Sort support added to `relationalOptions` using the new IndexFilter sort capability
 - **Multicheckbox Relational Options**: `relationalOptions` now works with the multicheckbox field type
+- **Paste as Plain Text**: Styled text editor now defaults to pasting as plain text, stripping HTML formatting from clipboard content. Configurable via `pasteAsPlainText` setting
+- **Collection Table Filter**: Admin collection table filter now uses substring contains matching instead of word-boundary search for more intuitive filtering
 - **CalcService Decimal Precision**: Added support for decimal precision in `CalcService round()`
 - **toSeconds Twig Filter**: New filter to convert time strings to seconds
 - **Import Collection Options**: `importCollection` form now supports `update` and `queue` options with configurable defaults
@@ -26,9 +28,12 @@ All notable changes to Total CMS will be documented in this file.
 - **Schema Inherited Properties**: Inherited properties now show in schema required and index lists
 - **Sentry Error Filtering**: Expanded Sentry ignore rules for browser extensions, filesystem permission errors, stale deployments, and user schema errors
 - **PHPStan Compliance**: Cleaned up all null coalesce warnings for stricter type safety
+- **DateFieldResetter Utility**: Extracted date field reset logic from ObjectCloner into shared `DateFieldResetter` used by both ObjectCloner and ObjectSaver
+- **Bundle Checker**: Removed swagger.php from bundle verification
 
 ### Fixed
 
+- **Duplicate Object onCreate Date**: Duplicating an object now correctly sets `onCreate` date fields to the current time instead of copying the original object's creation date
 - **Gallery Launcher on Mobile**: Fixed lightGallery not working on touch devices by using `template.content.textContent` instead of `innerHTML` for JSON parsing
 - **DataView Timezone**: Fixed `lastBuilt` timestamp using UTC instead of configured timezone when processed via job queue
 - **Depot Stream/Download Macros**: Fixed missing `path` parameter in stream macro output for depot files in subfolders
@@ -47,6 +52,7 @@ All notable changes to Total CMS will be documented in this file.
 ### Documentation
 
 - **URL Filters Utility**: New documentation for `cms.utils.urlFilters()` with usage examples, filter links, and search forms
+- **Paste as Plain Text**: Documented `pasteAsPlainText` setting for styled text editor
 - **Index Filter Sort**: Documented sort option with shorthand and colon format examples
 - **Deck OID**: Clarified that `${oid}` is not supported for deck item IDs
 - **Relational Options Sort**: Documented sort option for relational dropdown options
