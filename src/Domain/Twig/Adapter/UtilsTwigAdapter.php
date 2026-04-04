@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 /**
- * Twig utility functions available as cms.utils.*
+ * Twig utility functions available as cms.utils.*.
  *
  * @SuppressWarnings("PHPMD.Superglobals")
  */
@@ -34,7 +34,7 @@ readonly class UtilsTwigAdapter
 	{
 		$sortParam   = (string)($options['sort'] ?? 'sort');
 		$searchParam = (string)($options['search'] ?? 'search');
-		$ignoreList  = array_filter(array_map('trim', explode(',', (string)($options['ignore'] ?? ''))));
+		$ignoreList  = array_filter(array_map(trim(...), explode(',', (string)($options['ignore'] ?? ''))));
 
 		// Reserved param names that are never treated as property filters
 		$reserved = array_merge([$sortParam, $searchParam], $ignoreList);
