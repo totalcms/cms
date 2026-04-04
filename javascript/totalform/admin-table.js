@@ -102,10 +102,10 @@ export default class AdminTable {
 			_api        : this.api,
 		});
 
-		// Include search term if active
-		const search = this.searchInput?.value?.trim();
-		if (search) {
-			params.set('search', search);
+		// Include filter term if active (contains match across all fields)
+		const filter = this.searchInput?.value?.trim();
+		if (filter) {
+			params.set('filter', filter);
 		}
 
 		const url    = `${this.api}/collections/${this.collection}/query?${params}`;
