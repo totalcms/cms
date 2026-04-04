@@ -403,6 +403,8 @@
         <span class="hero__badge">No Database</span>
         <span class="hero__badge">Twig Templates</span>
         <span class="hero__badge">REST API</span>
+        <span class="hero__badge">Passkeys</span>
+        <span class="hero__badge">HTMX</span>
       </div>
     </div>
   </div>
@@ -471,7 +473,7 @@
       <div class="feature-card">
         <div class="feature-card__icon">&#128274;</div>
         <h3 class="feature-card__title">Built-in Security</h3>
-        <p class="feature-card__description">User authentication, CSRF protection, brute force prevention, and SVG sanitization included out of the box.</p>
+        <p class="feature-card__description">Passwordless passkey login, CSRF protection, brute force prevention, and SVG sanitization included out of the box.</p>
       </div>
     </li>
     <li>
@@ -691,6 +693,12 @@
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
         </div>
         <div class="edition-compare__row">
+          <div class="edition-compare__cell">Passkey Login (WebAuthn)</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
           <div class="edition-compare__cell">Email Templates & Mailer</div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
@@ -718,9 +726,10 @@
           <p class="feature-section__description">Full Twig integration with 50+ custom filters and functions designed specifically for content management. Test templates live in the Playground.</p>
           <ul class="feature-section__list">
             <li>Powerful CMS Grid tag for content loops</li>
+            <li>Load More pagination for progressive content loading</li>
+            <li>Template Designer for live template editing from Stacks</li>
             <li>Custom filters for dates, text, colors, and more</li>
             <li>Factory data for realistic test content</li>
-            <li>QR codes and barcodes in templates</li>
           </ul>
         </div>
       </div>
@@ -759,6 +768,18 @@
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
         </div>
         <div class="edition-compare__row">
+          <div class="edition-compare__cell">Load More Pagination</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Template Designer</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
           <div class="edition-compare__cell">QR Codes</div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
@@ -787,6 +808,7 @@
           <ul class="feature-section__list">
             <li>Automatic RSS feed generation</li>
             <li>SEO-friendly XML sitemaps</li>
+            <li>Collection reports and analytics</li>
             <li>Export data as CSV or JSON</li>
             <li>Full REST API for headless CMS</li>
           </ul>
@@ -816,6 +838,12 @@
         </div>
         <div class="edition-compare__row">
           <div class="edition-compare__cell">XML Sitemaps</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Collection Reports</div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
           <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
@@ -867,8 +895,8 @@
           <ul class="feature-section__list">
             <li>Automatic Total CMS 1 migration</li>
             <li>Alloy CMS content import</li>
-            <li>CSV bulk import for spreadsheets</li>
-            <li>JSON import for structured data</li>
+            <li>WordPress import with media migration</li>
+            <li>CSV, JSON, RSS, and URL imports</li>
           </ul>
         </div>
       </div>
@@ -876,6 +904,48 @@
     <div class="small-12 medium-6 medium-pull-6 columns">
       <div class="feature-section__image">
         <img src="https://www.weavers.space/rw_common/plugins/stacks/dynamics/api.php/imageworks/products/total-cms/screenshots/totalcms-setup.jpg?w=1000&q=75&dpr=1&format=auto" alt="Migration tools">
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="small-12 columns">
+      <div class="edition-compare">
+        <div class="edition-compare__header">
+          <div class="edition-compare__header-cell">Feature</div>
+          <div class="edition-compare__header-cell">Lite</div>
+          <div class="edition-compare__header-cell">Standard</div>
+          <div class="edition-compare__header-cell">Pro</div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Total CMS 1 Migration</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">Alloy CMS Import</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">CSV & JSON Import</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">WordPress Import</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
+        <div class="edition-compare__row">
+          <div class="edition-compare__cell">RSS & URL Import</div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--no">&#10005;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+          <div class="edition-compare__cell"><span class="edition-compare__check edition-compare__check--yes">&#10003;</span></div>
+        </div>
       </div>
     </div>
   </div>
