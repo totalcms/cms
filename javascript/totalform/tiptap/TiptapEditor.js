@@ -422,7 +422,7 @@ export default class TiptapEditor {
 	}
 
 	getFormattedHTML() {
-		const html = this.editor.getHTML();
+		const html = this.cleanHTML(this.editor.getHTML());
 		return html
 			.replace(/></g, '>\n<')
 			.replace(/\n<\/(p|h[1-6]|ul|ol|li|blockquote|div|table|tr|td|th|thead|tbody|pre|hr|figure|figcaption)>/g, '</$1>\n')
@@ -434,27 +434,36 @@ export default class TiptapEditor {
 	 * Tiptap/ProseMirror always wraps list item content in <p> blocks internally,
 	 * but the output should be clean: <li>text</li> not <li><p>text</p></li>.
 	 */
-	cleanListParagraphs(html) {
+	cleanHTML(html) {
 		const div = document.createElement('div');
 		div.innerHTML = html;
+
+		// Remove wrapping <p> tags from list items with a single paragraph
 		div.querySelectorAll('li').forEach(li => {
 			const children = Array.from(li.children);
 			if (children.length === 1 && children[0].tagName === 'P') {
 				li.innerHTML = children[0].innerHTML;
 			}
 		});
+
+		// Remove trailing empty <p> tags
+		let last;
+		while ((last = div.lastElementChild) && last.tagName === 'P' && last.innerHTML.trim() === '') {
+			last.remove();
+		}
+
 		return div.innerHTML;
 	}
 
 	syncToTextarea() {
-		this.textarea.value = this.cleanListParagraphs(this.editor.getHTML());
+		this.textarea.value = this.cleanHTML(this.editor.getHTML());
 	}
 
 	getHTML() {
 		if (this.codeView?.isActive()) {
 			return this.codeView.getValue();
 		}
-		return this.cleanListParagraphs(this.editor.getHTML());
+		return this.cleanHTML(this.editor.getHTML());
 	}
 
 	setHTML(html) {
