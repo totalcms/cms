@@ -31,8 +31,9 @@ $context = stream_context_create([
 	],
 ]);
 
-$response           = @file_get_contents($testUrl, false, $context);
-$httpResponseHeader = $http_response_header ?? [];
+$response = @file_get_contents($testUrl, false, $context);
+/** @var list<string> $http_response_header */
+$httpResponseHeader = $http_response_header;
 
 if ($response === false) {
 	echo "❌ Failed to connect to emergency endpoint\n";
