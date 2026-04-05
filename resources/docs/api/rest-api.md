@@ -268,6 +268,418 @@ DELETE /collections/{collection}/{id}
 
 **Response (204 No Content)**
 
+### Clone Object
+
+```http
+POST /collections/{collection}/{id}/clone
+```
+
+Creates a copy of an existing object. Optionally clone to a different ID or collection.
+
+**Request Body (optional):**
+```json
+{
+    "id": "new-object-id",
+    "collection": "other-collection"
+}
+```
+
+If no body is provided, the clone uses the same ID and collection as the source.
+
+**Response (200 OK):**
+```json
+{
+    "id": "new-object-id",
+    "title": "My First Post",
+    "content": "Post content here...",
+    "created": "2024-01-20T14:30:00Z",
+    "modified": "2024-01-20T14:30:00Z"
+}
+```
+
+### Check Collection Exists
+
+```http
+HEAD /collections/{collection}
+```
+
+Returns `200 OK` if the collection exists, `404 Not Found` if it does not. No response body.
+
+### Check Object Exists
+
+```http
+HEAD /collections/{collection}/{id}
+```
+
+Returns `200 OK` if the object exists, `404 Not Found` if it does not. No response body.
+
+### Get Collection Schema
+
+```http
+GET /collections/{collection}/schema
+```
+
+Returns the schema definition for a specific collection.
+
+**Query Parameters:**
+- `raw` - Set to `true` to return the raw (non-flattened) schema. Default returns the flattened schema.
+
+**Response (200 OK):**
+```json
+{
+    "name": "blog",
+    "title": "Blog Posts",
+    "properties": {
+        "title": {
+            "type": "string",
+            "required": true,
+            "maxLength": 255
+        }
+    }
+}
+```
+
+## Query API
+
+The query endpoint provides paginated access to collection objects with filtering, sorting, and multiple output formats.
+
+### Query Objects
+
+```http
+GET /collections/{collection}/query
+```
+
+**Query Parameters:**
+- `limit` - Items per page
+- `offset` - Pagination offset
+- `sort` - Property name to sort by
+- `search` - Full-text search term
+- `include` - Comma-separated property names to include in results
+- `exclude` - Comma-separated property names to exclude from results
+- `format` - Output format: `json` (default), `csv`, `html`
+
+**Example:**
+```bash
+# Paginated query with sorting
+curl "https://yoursite.com/collections/blog/query?limit=10&offset=0&sort=date"
+
+# Search with field filtering
+curl "https://yoursite.com/collections/blog/query?search=tutorial&include=title,date,status"
+
+# Export as CSV
+curl "https://yoursite.com/collections/blog/query?format=csv&include=title,date"
+```
+
+**Response (JSON, default):**
+```json
+{
+    "data": [
+        {
+            "id": "my-post",
+            "title": "My Post",
+            "date": "2024-01-15"
+        }
+    ],
+    "pagination": {
+        "total": 25,
+        "count": 10,
+        "per_page": 10,
+        "current_page": 1,
+        "total_pages": 3
+    }
+}
+```
+
+### Get Collection Index
+
+```http
+GET /collections/{collection}/index
+```
+
+Returns the full collection index. Supports filtering and sorting.
+
+**Query Parameters:**
+- `include` - Comma-separated property names to include
+- `exclude` - Comma-separated property names to exclude
+- `sort` - Property name to sort by
+
+### Rebuild Collection Index
+
+```http
+PUT /collections/{collection}/index
+```
+
+Rebuilds the collection index from scratch. No request body required. Returns the rebuilt index.
+
+## Property Operations
+
+Update, patch, or delete individual properties on an object without sending the entire object.
+
+### Update Property
+
+```http
+PUT /collections/{collection}/{id}/{property}
+```
+
+Replaces the entire property value (PUT semantics).
+
+**Request Body:** The new value for the property.
+```json
+"New title value"
+```
+
+**Response (200 OK):** The updated object.
+
+### Patch Property
+
+```http
+PATCH /collections/{collection}/{id}/{property}
+```
+
+Merges into the existing property value (PATCH semantics). Useful for updating individual fields within a complex property.
+
+**Request Body:** Fields to merge.
+```json
+{
+    "alt": "Updated alt text"
+}
+```
+
+**Response (200 OK):** The updated object.
+
+### Delete Property
+
+```http
+DELETE /collections/{collection}/{id}/{property}
+```
+
+Removes the property from the object entirely.
+
+**Response (200 OK):** The updated object with the property removed.
+
+### Increment Property
+
+```http
+POST /collections/{collection}/{id}/{property}/increment
+POST /collections/{collection}/{id}/{property}/increment/{amount}
+```
+
+Increments a numeric property value. Defaults to incrementing by 1.
+
+**Examples:**
+```bash
+# Increment view count by 1
+curl -X POST https://yoursite.com/collections/blog/my-post/views/increment
+
+# Increment by 5
+curl -X POST https://yoursite.com/collections/blog/my-post/views/increment/5
+```
+
+**Response (200 OK):** The updated property value.
+
+**Response (400 Bad Request):** If the property is not numeric.
+
+### Decrement Property
+
+```http
+POST /collections/{collection}/{id}/{property}/decrement
+POST /collections/{collection}/{id}/{property}/decrement/{amount}
+```
+
+Decrements a numeric property value. Defaults to decrementing by 1.
+
+## Property Metadata
+
+Update metadata associated with individual files or items within a property (e.g., alt text on an image, captions on gallery items).
+
+### Update Property Metadata
+
+```http
+PUT /collections/{collection}/{id}/{property}/{name}
+```
+
+Replaces the metadata for a specific item within a property.
+
+**Query Parameters:**
+- `path` - Subfolder path for depot files
+
+**Request Body:** The metadata to set.
+```json
+{
+    "alt": "Photo of sunset",
+    "caption": "Taken in Hawaii"
+}
+```
+
+### Patch Property Metadata
+
+```http
+PATCH /collections/{collection}/{id}/{property}/{name}
+```
+
+Merges into existing metadata for a specific item within a property.
+
+**Query Parameters:**
+- `path` - Subfolder path for depot files
+
+**Request Body:** Fields to merge into existing metadata.
+
+## Deck Items API
+
+CRUD operations for items within a deck (repeatable sections) property. Deck is a Pro edition feature.
+
+### Create Deck Item
+
+```http
+POST /collections/{collection}/{id}/{property}/deck
+```
+
+**Request Body:**
+```json
+{
+    "id": "item-1",
+    "title": "Slide 1",
+    "image": "/media/slide1.jpg",
+    "caption": "Welcome slide"
+}
+```
+
+The `id` field is optional if the schema supports auto-generation.
+
+**Response (201 Created):** The updated parent object including the new deck item.
+
+### Get Deck Item
+
+```http
+GET /collections/{collection}/{id}/{property}/deck/{itemId}
+```
+
+**Response (200 OK):**
+```json
+{
+    "id": "item-1",
+    "title": "Slide 1",
+    "image": "/media/slide1.jpg",
+    "caption": "Welcome slide"
+}
+```
+
+**Response (404 Not Found):** If the deck item does not exist.
+
+### Update Deck Item
+
+```http
+PUT /collections/{collection}/{id}/{property}/deck/{itemId}
+```
+
+Replaces the deck item entirely.
+
+**Request Body:**
+```json
+{
+    "title": "Updated Slide 1",
+    "image": "/media/slide1-new.jpg",
+    "caption": "Updated caption"
+}
+```
+
+**Response (200 OK):** The updated parent object.
+
+### Delete Deck Item
+
+```http
+DELETE /collections/{collection}/{id}/{property}/deck/{itemId}
+```
+
+**Response (200 OK):** The updated parent object with the deck item removed.
+
+## Reports API
+
+Export collection data as CSV or JSON with field selection.
+
+### Get Report Fields
+
+```http
+GET /report/collections/{collection}/fields
+```
+
+Returns the list of fields available for export.
+
+**Query Parameters:**
+- `format` - `json` or `html` (default)
+
+**Response (JSON):**
+```json
+[
+    {
+        "name": "title",
+        "label": "Title",
+        "type": "string"
+    },
+    {
+        "name": "status",
+        "label": "Status",
+        "type": "string"
+    }
+]
+```
+
+### Export CSV Report
+
+```http
+GET /report/collections/{collection}/csv
+```
+
+**Query Parameters:**
+- `fields` (required) - Comma-separated field names to export. Use dot notation for deck fields: `name,items.value,items.status`
+- `include` - Filter objects by property values
+- `exclude` - Exclude objects by property values
+
+**Example:**
+```bash
+curl "https://yoursite.com/report/collections/blog/csv?fields=title,date,status"
+```
+
+**Response:** CSV file download with `Content-Disposition: attachment`.
+
+Deck fields expand into multiple rows per object — one row per deck item, with scalar fields repeated on each row.
+
+### Export JSON Report
+
+```http
+GET /report/collections/{collection}/json
+```
+
+**Query Parameters:**
+- `fields` (required) - Comma-separated field names to export. Supports dot notation for deck fields.
+- `include` - Filter objects by property values
+- `exclude` - Exclude objects by property values
+
+**Example:**
+```bash
+curl "https://yoursite.com/report/collections/blog/json?fields=title,date,status"
+```
+
+**Response:** JSON file download. Deck fields remain nested (not expanded like CSV).
+
+```json
+[
+    {
+        "title": "My Post",
+        "date": "2024-01-15",
+        "status": "published"
+    }
+]
+```
+
+If any objects are skipped due to data errors, the response wraps the data:
+```json
+{
+    "data": [...],
+    "errors": ["object-id-1", "object-id-2"]
+}
+```
+
 ## Schemas API
 
 ### Get All Schemas

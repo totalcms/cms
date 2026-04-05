@@ -43,6 +43,20 @@ Add to your Cursor MCP settings (Settings > MCP Servers):
 }
 ```
 
+### VS Code (GitHub Copilot)
+
+Add to your VS Code settings (`.vscode/mcp.json` in your project, or user settings):
+
+```json
+{
+  "servers": {
+    "totalcms-docs": {
+      "url": "https://mcp.totalcms.co/"
+    }
+  }
+}
+```
+
 ### Windsurf
 
 Add to your Windsurf MCP configuration:
