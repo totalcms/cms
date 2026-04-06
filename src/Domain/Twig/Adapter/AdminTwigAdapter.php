@@ -91,24 +91,21 @@ readonly class AdminTwigAdapter
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function processJobQueueCommand(): string
 	{
-		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
+		// php <install_dir>/resources/bin/tcms jobs:process
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
 		$installDir = realpath(__DIR__ . '/../../../..');
-		$docroot    = rtrim((string)$_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
-		$command    = $installDir . '/resources/bin/processJobs.php';
+		$command    = $installDir . '/resources/bin/tcms';
 
-		// Quote paths that contain spaces
+		// Quote path if it contains spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
-		$quotedDocroot = str_contains($docroot, ' ') ? '"' . $docroot . '"' : $docroot;
 
 		$envPrefix = $this->config->env === 'dev' ? 'APP_ENV=dev ' : '';
 
 		return sprintf(
-			'%s%s %s --docroot=%s',
+			'%s%s %s jobs:process',
 			$envPrefix,
 			$phpPath,
 			$quotedCommand,
-			$quotedDocroot,
 		);
 	}
 
