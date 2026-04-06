@@ -34,6 +34,7 @@ $app->addCommand(new Command\CollectionQueryCommand($totalcms));
 $app->addCommand(new Command\CollectionExportCommand($totalcms));
 $app->addCommand(new Command\ObjectListCommand($totalcms));
 $app->addCommand(new Command\ObjectGetCommand($totalcms));
+$app->addCommand(new Command\ObjectExportCommand($totalcms));
 $app->addCommand(new Command\CacheClearCommand($totalcms));
 $app->addCommand(new Command\JobsProcessCommand($totalcms));
 

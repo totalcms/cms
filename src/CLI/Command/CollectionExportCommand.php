@@ -18,9 +18,9 @@ class CollectionExportCommand extends BaseCommand
 		parent::configure();
 		$this
 			->setName('collection:export')
-			->setDescription('Export a collection to JSON or CSV')
+			->setDescription('Export a collection to JSON, CSV, or ZIP')
 			->addArgument('id', InputArgument::REQUIRED, 'Collection ID')
-			->addOption('format', 'f', InputOption::VALUE_REQUIRED, 'Export format: json or csv', 'json')
+			->addOption('format', 'f', InputOption::VALUE_REQUIRED, 'Export format: json, csv, or zip', 'json')
 			->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output file path (omit for stdout)');
 	}
 
@@ -32,6 +32,10 @@ class CollectionExportCommand extends BaseCommand
 
 		if (!$this->totalcms->collectionFetcher()->collectionExists($collectionId)) {
 			return $this->outputError($input, $output, "Collection '{$collectionId}' not found.");
+		}
+
+		if ($format === 'zip') {
+			return $this->exportZip($input, $output, $collectionId, $outputFile);
 		}
 
 		$index = $this->totalcms->indexReader()->fetchIndex($collectionId);
@@ -232,6 +236,33 @@ class CollectionExportCommand extends BaseCommand
 		}
 
 		$output->writeln($csvContent, OutputInterface::OUTPUT_RAW);
+		return Command::SUCCESS;
+	}
+
+	private function exportZip(InputInterface $input, OutputInterface $output, string $collectionId, mixed $outputFile): int
+	{
+		try {
+			$zipper  = $this->totalcms->collectionZipper();
+			$zipPath = $zipper->createCollectionZip($collectionId);
+		} catch (\RuntimeException $e) {
+			return $this->outputError($input, $output, "Zip export failed: {$e->getMessage()}");
+		}
+
+		$destination = is_string($outputFile) ? $outputFile : $zipper->getZipFilename($collectionId);
+		rename($zipPath, $destination);
+
+		if ($this->isJson($input)) {
+			$output->writeln((string) json_encode([
+				'success' => true,
+				'file'    => $destination,
+				'size'    => filesize($destination),
+			], JSON_PRETTY_PRINT));
+			return Command::SUCCESS;
+		}
+
+		$size = filesize($destination);
+		$sizeFormatted = $size !== false ? round($size / 1024 / 1024, 2) . ' MB' : 'unknown';
+		$output->writeln("<info>Exported to {$destination} ({$sizeFormatted})</info>");
 		return Command::SUCCESS;
 	}
 }

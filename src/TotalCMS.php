@@ -35,6 +35,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Export\Service\CollectionZipper;
+use TotalCMS\Domain\Export\Service\ObjectZipper;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
@@ -400,6 +401,11 @@ class TotalCMS
 	public function collectionZipper(): CollectionZipper
 	{
 		return $this->container->get(CollectionZipper::class);
+	}
+
+	public function objectZipper(): ObjectZipper
+	{
+		return $this->container->get(ObjectZipper::class);
 	}
 
 	public function indexQueryService(): IndexQueryService

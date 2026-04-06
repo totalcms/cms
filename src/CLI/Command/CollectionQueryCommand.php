@@ -103,7 +103,7 @@ class CollectionQueryCommand extends BaseCommand
 				$value = $row[$key] ?? '';
 				if ($value === true || $value === 1) {
 					$rowData[] = "\u{2714}";
-				} elseif ($value === false || ($value === 0 && is_bool($row[$key] ?? null))) {
+				} elseif ($value === false) {
 					$rowData[] = '';
 				} elseif (is_array($value)) {
 					$rowData[] = (string) json_encode($value, JSON_UNESCAPED_SLASHES);
