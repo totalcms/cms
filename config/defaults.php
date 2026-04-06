@@ -47,7 +47,27 @@ $settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
-$settings['docroot']  = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
+
+// Resolve DOCUMENT_ROOT: use server value if available, otherwise read from stored file.
+// Web requests persist the docroot so CLI tools can discover it automatically.
+$docrootFile         = $settings['cachedir'] . '/.docroot';
+$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
+
+if (!is_dir($settings['cachedir'])) {
+	@mkdir($settings['cachedir'], 0755, true);
+}
+
+if ($settings['docroot'] !== '' && PHP_SAPI !== 'cli' && !file_exists($docrootFile)) {
+	// Web request — persist for CLI tools (write once)
+	@file_put_contents($docrootFile, $settings['docroot']);
+} elseif ($settings['docroot'] === '' && file_exists($docrootFile)) {
+	// CLI without DOCUMENT_ROOT — read stored value
+	$storedDocroot = file_get_contents($docrootFile);
+	if ($storedDocroot !== false && $storedDocroot !== '') {
+		$settings['docroot']      = rtrim($storedDocroot, DIRECTORY_SEPARATOR);
+		$_SERVER['DOCUMENT_ROOT'] = $settings['docroot'];
+	}
+}
 
 $settings['api'] = str_replace($settings['docroot'], '', $settings['root']);
 $settings['api'] = $settings['api'] === '' ? '/' : $settings['api'];

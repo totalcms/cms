@@ -34,6 +34,12 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Export\Service\CollectionZipper;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
+use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
@@ -364,6 +370,41 @@ class TotalCMS
 	public function imageSaver(): ImageSaver
 	{
 		return $this->container->get(ImageSaver::class);
+	}
+
+	public function cacheManager(): CacheManager
+	{
+		return $this->cacheManager;
+	}
+
+	public function licenseValidator(): LicenseValidator
+	{
+		return $this->container->get(LicenseValidator::class);
+	}
+
+	public function editionFeatures(): EditionFeatureService
+	{
+		return $this->container->get(EditionFeatureService::class);
+	}
+
+	public function jumpStartExporter(): JumpStartExporter
+	{
+		return $this->container->get(JumpStartExporter::class);
+	}
+
+	public function jumpStartImporter(): JumpStartImporter
+	{
+		return $this->container->get(JumpStartImporter::class);
+	}
+
+	public function collectionZipper(): CollectionZipper
+	{
+		return $this->container->get(CollectionZipper::class);
+	}
+
+	public function indexQueryService(): IndexQueryService
+	{
+		return $this->container->get(IndexQueryService::class);
 	}
 
 	/**

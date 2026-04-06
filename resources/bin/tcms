@@ -1,0 +1,44 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+ini_set('memory_limit', '512M');
+
+require __DIR__ . '/../../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use TotalCMS\CLI\Command;
+use TotalCMS\Support\Version;
+use TotalCMS\TotalCMS;
+
+try {
+	$totalcms = new TotalCMS(autoStartBuffer: false);
+} catch (Throwable $e) {
+	fwrite(STDERR, "Error: Failed to initialize Total CMS.\n");
+	fwrite(STDERR, "This usually means no web request has been made yet to setup the environment.\n");
+	fwrite(STDERR, "Visit your Total CMS site in a browser first, then retry.\n");
+	exit(1);
+}
+$totalcms->disableCache();
+
+$app = new Application('Total CMS', Version::number());
+
+// Phase 1 commands
+$app->addCommand(new Command\InfoCommand($totalcms));
+$app->addCommand(new Command\SchemaListCommand($totalcms));
+$app->addCommand(new Command\SchemaGetCommand($totalcms));
+$app->addCommand(new Command\CollectionListCommand($totalcms));
+$app->addCommand(new Command\CollectionGetCommand($totalcms));
+$app->addCommand(new Command\CollectionQueryCommand($totalcms));
+$app->addCommand(new Command\CollectionExportCommand($totalcms));
+$app->addCommand(new Command\ObjectListCommand($totalcms));
+$app->addCommand(new Command\ObjectGetCommand($totalcms));
+$app->addCommand(new Command\CacheClearCommand($totalcms));
+$app->addCommand(new Command\JobsProcessCommand($totalcms));
+
+// Sync commands
+$app->addCommand(new Command\PushCommand($totalcms));
+$app->addCommand(new Command\PullCommand($totalcms));
+
+$app->run();
