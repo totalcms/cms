@@ -24,19 +24,35 @@ $totalcms->disableCache();
 
 $app = new Application('Total CMS', Version::number());
 
-// Phase 1 commands
+// Info & cache
 $app->addCommand(new Command\InfoCommand($totalcms));
+$app->addCommand(new Command\CacheClearCommand($totalcms));
+$app->addCommand(new Command\JobsProcessCommand($totalcms));
+
+// Schema commands
 $app->addCommand(new Command\SchemaListCommand($totalcms));
 $app->addCommand(new Command\SchemaGetCommand($totalcms));
+$app->addCommand(new Command\SchemaExportCommand($totalcms));
+$app->addCommand(new Command\SchemaImportCommand($totalcms));
+
+// Collection commands
 $app->addCommand(new Command\CollectionListCommand($totalcms));
 $app->addCommand(new Command\CollectionGetCommand($totalcms));
 $app->addCommand(new Command\CollectionQueryCommand($totalcms));
 $app->addCommand(new Command\CollectionExportCommand($totalcms));
+$app->addCommand(new Command\CollectionImportCommand($totalcms));
+
+// Object commands
 $app->addCommand(new Command\ObjectListCommand($totalcms));
 $app->addCommand(new Command\ObjectGetCommand($totalcms));
 $app->addCommand(new Command\ObjectExportCommand($totalcms));
-$app->addCommand(new Command\CacheClearCommand($totalcms));
-$app->addCommand(new Command\JobsProcessCommand($totalcms));
+
+// Deck commands
+$app->addCommand(new Command\DeckImportCommand($totalcms));
+
+// JumpStart commands
+$app->addCommand(new Command\JumpStartExportCommand($totalcms));
+$app->addCommand(new Command\JumpStartImportCommand($totalcms));
 
 // Sync commands
 $app->addCommand(new Command\PushCommand($totalcms));

@@ -36,7 +36,12 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Export\Service\CollectionZipper;
 use TotalCMS\Domain\Export\Service\ObjectZipper;
+use TotalCMS\Domain\Import\CsvImporter;
+use TotalCMS\Domain\Import\DeckCsvImporter;
+use TotalCMS\Domain\Import\DeckJsonImporter;
+use TotalCMS\Domain\Import\JsonImporter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -406,6 +411,31 @@ class TotalCMS
 	public function objectZipper(): ObjectZipper
 	{
 		return $this->container->get(ObjectZipper::class);
+	}
+
+	public function jsonImporter(): JsonImporter
+	{
+		return $this->container->get(JsonImporter::class);
+	}
+
+	public function csvImporter(): CsvImporter
+	{
+		return $this->container->get(CsvImporter::class);
+	}
+
+	public function deckJsonImporter(): DeckJsonImporter
+	{
+		return $this->container->get(DeckJsonImporter::class);
+	}
+
+	public function deckCsvImporter(): DeckCsvImporter
+	{
+		return $this->container->get(DeckCsvImporter::class);
+	}
+
+	public function schemaSaver(): SchemaSaver
+	{
+		return $this->container->get(SchemaSaver::class);
 	}
 
 	public function indexQueryService(): IndexQueryService
