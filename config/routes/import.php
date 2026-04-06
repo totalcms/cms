@@ -6,6 +6,7 @@ use TotalCMS\Action\Import;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 
 return function (App $app): void {
@@ -20,10 +21,14 @@ return function (App $app): void {
 
 		$group->post('/schemas', Import\ImportSchemaAction::class)->setName('import-schema')->add(SchemaAccessMiddleware::class);
 		$group->post('/totalcms-one', Import\ImportTotalCmsOneAction::class)->setName('import-totalcms-one');
-		$group->post('/jumpstart', Import\ImportJumpStartAction::class)->setName('import-jumpstart');
 		$group->post('/alloy-analyze', Import\ImportAlloyAnalyzeAction::class)->setName('import-alloy-analyze');
 		$group->post('/alloy', Import\ImportAlloyAction::class)->setName('import-alloy');
 		$group->post('/rss-analyze', Import\ImportRssAnalyzeAction::class)->setName('import-rss-analyze')->add(RssImportEditionMiddleware::class);
 		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss')->add(RssImportEditionMiddleware::class);
 	})->add(AuthMiddleware::class);
+
+	// JumpStart import route — support API key auth for CLI push/pull
+	$app->group('/import', function (RouteCollectorProxy $group): void {
+		$group->post('/jumpstart', Import\ImportJumpStartAction::class)->setName('import-jumpstart');
+	})->add(DualAuthMiddleware::class);
 };

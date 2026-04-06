@@ -319,6 +319,8 @@ return [
 	'settings.presets_desc'            => 'Named property setting presets for reuse across schemas',
 	'settings.smtp'                    => 'SMTP',
 	'settings.smtp_desc'               => 'Email server configuration',
+	'settings.sync'                    => 'Sync Data',
+	'settings.sync_desc'               => 'Push and pull schemas and templates to a production server',
 	'settings.license_simulator'       => 'License Simulator',
 	'settings.license_simulator_desc'  => 'License and edition simulation settings during trial period',
 	'settings.smtp_test_title'         => 'Test SMTP Configuration',

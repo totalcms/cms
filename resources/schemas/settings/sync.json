@@ -1,0 +1,20 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Sync Settings",
+	"description" : "Push and pull schemas and templates to a production server",
+	"type"        : "object",
+	"properties"  : {
+		"url": {
+			"type"        : "text",
+			"label"       : "Production Server API",
+			"help"        : "The URL of your production Total CMS installation.",
+			"placeholder" : "https://example.com/tcms"
+		},
+		"key": {
+			"type"        : "password",
+			"label"       : "API Key",
+			"help"        : "An API key from the production server with import/export permissions.",
+			"placeholder" : "your-api-key"
+		}
+	}
+}

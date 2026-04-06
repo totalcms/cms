@@ -319,6 +319,8 @@ return [
 	'settings.presets_desc'            => 'Preajustes de configuración de propiedades con nombre para reutilizar en schemas',
 	'settings.smtp'                    => 'SMTP',
 	'settings.smtp_desc'               => 'Configuración del servidor de correo',
+	'settings.sync'                    => 'Sync',
+	'settings.sync_desc'               => 'Enviar y recibir esquemas y plantillas de un servidor de producción',
 	'settings.license_simulator'       => 'Simulador de licencia',
 	'settings.license_simulator_desc'  => 'Configuración de simulación de licencia y edición durante el período de prueba',
 	'settings.smtp_test_title'         => 'Probar configuración SMTP',

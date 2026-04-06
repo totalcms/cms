@@ -319,6 +319,8 @@ return [
 	'settings.presets_desc'            => 'Benoemde eigenschap-instellingspresets voor hergebruik in Schemas',
 	'settings.smtp'                    => 'SMTP',
 	'settings.smtp_desc'               => 'E-mailserverconfiguratie',
+	'settings.sync'                    => 'Sync',
+	'settings.sync_desc'               => "Schema's en templates synchroniseren met een productieserver",
 	'settings.license_simulator'       => 'Licentiesimulator',
 	'settings.license_simulator_desc'  => 'Licentie- en editiesimulatieinstelling tijdens de proefperiode',
 	'settings.smtp_test_title'         => 'SMTP-configuratie testen',
