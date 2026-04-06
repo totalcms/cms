@@ -29,7 +29,7 @@ Setup the following schedule job in your hosting company's management panel or c
 that this job be scheduled to run every 10 minutes. However, the time can be adjusted to your needs.
 
 ```
-php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
+php <install_dir>/resources/bin/tcms jobs:process
 ```
 
 You can head over the to [Job Queue Manager](/admin/utils/jobqueue) page. It has a utility that
