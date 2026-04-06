@@ -432,8 +432,8 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$command = $adapter->processJobQueueCommand();
 
 		expect($command)->toBeString();
-		expect($command)->toContain('processJobs.php');
-		expect($command)->toContain('--docroot=');
+		expect($command)->toContain('tcms');
+		expect($command)->toContain('jobs:process');
 
 		// Clean up
 		unset($_SERVER['DOCUMENT_ROOT']);
