@@ -32,12 +32,14 @@ import AudioNode from './extensions/AudioNode.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
 import { createAnchorDialog } from './extensions/AnchorDialog.js';
+import { createBlockAttributesDialog } from './extensions/BlockAttributesDialog.js';
 import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import InlineStyle from './extensions/InlineStyle.js';
 import InlineElement from './extensions/InlineElement.js';
 import AnchorId from './extensions/AnchorId.js';
+import GlobalAttributes from './extensions/GlobalAttributes.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
@@ -163,7 +165,7 @@ export default class TiptapEditor {
 		const extensions = [
 			StarterKit.configure({
 				heading: {
-					levels: [2, 3, 4],
+					levels: [1, 2, 3, 4, 5, 6],
 				},
 				// Disable extensions we configure separately
 				link: false,
@@ -210,6 +212,7 @@ export default class TiptapEditor {
 			Superscript,
 			Subscript,
 			RawHTML,
+			GlobalAttributes,
 			InlineClass,
 		InlineStyle,
 		InlineElement,
@@ -332,6 +335,9 @@ export default class TiptapEditor {
 			case 'openAnchorDialog':
 				this.openAnchorDialog();
 				break;
+			case 'openBlockAttributesDialog':
+				this.openBlockAttributesDialog();
+				break;
 		}
 	}
 
@@ -357,6 +363,10 @@ export default class TiptapEditor {
 
 	openAnchorDialog() {
 		createAnchorDialog(this.editor);
+	}
+
+	openBlockAttributesDialog() {
+		createBlockAttributesDialog(this.editor, this.options.blockClasses);
 	}
 
 	openImageDialog() {

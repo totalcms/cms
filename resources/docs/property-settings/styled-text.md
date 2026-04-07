@@ -80,6 +80,7 @@ Each group has a `name`, a `buttons` array, and an optional `align` property (`"
 | Colors & Styling | `textColor`, `textBgColor`, `inlineStyles`, `inlineClasses` |
 | Block Formatting | `heading`, `bulletList`, `orderedList`, `blockquote`, `codeBlock`, `align` |
 | Insert | `link`, `image`, `video`, `file`, `table`, `horizontalRule`, `hardBreak`, `htmlSnippets`, `anchor` |
+| Block | `blockAttributes` |
 | Editor Controls | `clearFormatting`, `codeView`, `fullscreen` |
 
 **Default toolbar:**
@@ -91,6 +92,18 @@ Each group has a `name`, a `buttons` array, and an optional `align` property (`"
   { "name": "misc", "buttons": ["clearFormatting", "codeView"], "align": "right" }
 ]
 ```
+
+### Heading Levels
+
+Customize which heading levels appear in the Paragraph Format dropdown. By default, H2, H3, and H4 are shown. All heading levels (H1-H6) are always supported in the editor content, this setting only controls what appears in the dropdown.
+
+```json
+{
+  "headingLevels": [1, 2, 3, 4, 5, 6]
+}
+```
+
+- **headingLevels** - Array of heading levels (1-6) to show in the Paragraph Format dropdown. Default: `[2, 3, 4]`
 
 **Full toolbar with all buttons:**
 ```json
@@ -137,6 +150,18 @@ Define custom CSS classes available from the toolbar's "Inline Classes" dropdown
 ```
 
 The key is the label shown in the dropdown, and the value is the CSS class name to apply. Defaults to Code, Highlighted, and Badge if not specified.
+
+## Block Classes
+
+Define a list of CSS class suggestions for the Block Attributes dialog. These appear as autocomplete suggestions when typing in the class field, while still allowing freeform input. Requires the `blockAttributes` button in your toolbar config.
+
+```json
+{
+  "blockClasses": ["hero", "highlight", "card", "sidebar", "lead"]
+}
+```
+
+- **blockClasses** - Array of class name suggestions. Optional — the dialog works without it, but freeform only.
 
 ## HTML Snippets
 
