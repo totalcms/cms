@@ -1049,4 +1049,20 @@ return [
 	'report.download_json'               => 'Descargar JSON',
 	'report.alert_select_collection'     => 'Por favor seleccione una colección.',
 	'report.alert_select_field'          => 'Por favor seleccione al menos un campo.',
+
+	// Sync Manager
+	'sync.title'            => 'Gestor de Sincronización',
+	'sync.desc'             => 'Enviar esquemas y plantillas al servidor de producción, o descargarlos desde producción.',
+	'sync.not_configured'   => 'La sincronización aún no está configurada. Configure la URL del servidor y la clave API.',
+	'sync.configure_link'   => 'Configurar Sincronización',
+	'sync.remote'           => 'Remoto',
+	'sync.schemas_title'    => 'Esquemas',
+	'sync.templates_title'  => 'Plantillas',
+	'sync.select_all'       => 'Seleccionar todo',
+	'sync.push_btn'         => 'Enviar a Producción',
+	'sync.pull_btn'         => 'Descargar de Producción',
+	'sync.syncing'          => 'Sincronizando...',
+	'sync.nothing_to_sync'  => 'No hay esquemas o plantillas personalizados para sincronizar.',
+	'sync.specific_schemas' => 'Seleccionar Esquemas',
+	'sync.specific_templates' => 'Seleccionar Plantillas',
 ];

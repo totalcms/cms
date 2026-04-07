@@ -1049,4 +1049,20 @@ return [
 	'report.download_json'               => 'JSON herunterladen',
 	'report.alert_select_collection'     => 'Bitte wählen Sie eine Collection aus.',
 	'report.alert_select_field'          => 'Bitte wählen Sie mindestens ein Feld aus.',
+
+	// Sync Manager
+	'sync.title'            => 'Sync-Manager',
+	'sync.desc'             => 'Schemas und Templates auf den Produktionsserver pushen oder von dort pullen.',
+	'sync.not_configured'   => 'Sync ist noch nicht konfiguriert. Legen Sie die Produktionsserver-URL und den API-Schlüssel fest.',
+	'sync.configure_link'   => 'Sync-Einstellungen konfigurieren',
+	'sync.remote'           => 'Remote',
+	'sync.schemas_title'    => 'Schemas',
+	'sync.templates_title'  => 'Templates',
+	'sync.select_all'       => 'Alle auswählen',
+	'sync.push_btn'         => 'Zur Produktion pushen',
+	'sync.pull_btn'         => 'Von Produktion pullen',
+	'sync.syncing'          => 'Synchronisiere...',
+	'sync.nothing_to_sync'  => 'Keine benutzerdefinierten Schemas oder Templates zum Synchronisieren.',
+	'sync.specific_schemas' => 'Schemas auswählen',
+	'sync.specific_templates' => 'Templates auswählen',
 ];

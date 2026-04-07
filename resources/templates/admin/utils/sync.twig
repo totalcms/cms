@@ -1,0 +1,257 @@
+<h1>{{ t('sync.title') }}</h1>
+
+{% set settings = syncData.settings %}
+{% set schemas = syncData.schemas %}
+{% set templates = syncData.templates %}
+{% set isConfigured = settings.url is not empty and settings.key is not empty %}
+
+<section class="sync-utility">
+
+{% if not isConfigured %}
+	<div class="sync-notice">
+		<p>{{ t('sync.not_configured') }}</p>
+		<p><a href="settings/sync" class="dash-button">{{ t('sync.configure_link') }}</a></p>
+	</div>
+{% else %}
+	<p>{{ t('sync.desc') }}</p>
+	<p class="sync-remote-url"><strong>{{ t('sync.remote') }}:</strong> {{ settings.url }}</p>
+
+	{% if schemas|length == 0 and templates|length == 0 %}
+		<p>{{ t('sync.nothing_to_sync') }}</p>
+	{% else %}
+
+	{% set formFields %}
+
+		{% if schemas|length > 0 %}
+		<div class="sync-section">
+			<h3>{{ t('sync.schemas_title') }}</h3>
+
+			{{ cms.form.field("multicheckbox", "schemas-all", {
+				value   : [],
+				options : [
+					{value: "all", label: t('sync.select_all')}
+				],
+				settings : { relationalOptions: false }
+			}) }}
+
+			{% set schemaOptions = [] %}
+			{% for schema in schemas %}
+				{% set schemaOptions = schemaOptions|merge([{
+					value: schema.id,
+					label: schema.id
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("multicheckbox", "schemas", {
+				label    : t('sync.specific_schemas'),
+				value    : [],
+				options  : schemaOptions,
+				settings : {
+					fieldGrid: "200px",
+					visibility : {
+						watch    : "schemas-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+		{% endif %}
+
+		{% if templates|length > 0 %}
+		<div class="sync-section">
+			<h3>{{ t('sync.templates_title') }}</h3>
+
+			{{ cms.form.field("multicheckbox", "templates-all", {
+				value   : [],
+				options : [
+					{value: "all", label: t('sync.select_all')}
+				],
+				settings : { relationalOptions: false }
+			}) }}
+
+			{% set templateOptions = [] %}
+			{% for template in templates %}
+				{% set templateOptions = templateOptions|merge([{
+					value: template,
+					label: template
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("multicheckbox", "templates", {
+				label    : t('sync.specific_templates'),
+				value    : [],
+				options  : templateOptions,
+				settings : {
+					fieldGrid: "200px",
+					visibility : {
+						watch    : "templates-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+		{% endif %}
+
+	{% endset %}
+
+	{{ cms.form.totalform("", formFields, {
+		class  : "sync-form",
+		method : "POST",
+		save   : false,
+	}) }}
+
+	<div class="sync-actions">
+		<button type="button" class="dash-button" id="sync-push-btn">
+			{{ t('sync.push_btn') }}
+		</button>
+		<button type="button" class="dash-button transparent" id="sync-pull-btn">
+			{{ t('sync.pull_btn') }}
+		</button>
+		<span id="sync-spinner" style="display:none">{{ t('sync.syncing') }}</span>
+	</div>
+
+	<div id="sync-results"></div>
+
+	{% endif %}
+{% endif %}
+
+</section>
+
+<style>
+.sync-utility {
+	display: grid;
+	align-content: start;
+	gap: 1.5rem;
+	max-width: 900px;
+}
+
+.sync-notice {
+	padding: 2rem;
+	text-align: center;
+	border: 2px dashed oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+
+.sync-remote-url  {
+	color: oklch(var(--totalform-accent));
+	font-size: 1.05rem;
+}
+.sync-remote-url strong {
+	color: oklch(var(--totalform-darkgray));
+}
+
+
+.sync-section {
+	background: oklch(var(--totalform-nearwhite) / 0.5);
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin-block: 0.5rem;
+}
+
+.sync-section h3 {
+	margin-block-start: 0;
+	margin-block-end: 1rem;
+}
+
+.sync-section .multicheckbox-field {
+	margin-block-start: 1rem;
+}
+
+.sync-section .multicheckbox-field label {
+	max-width : 200px;
+}
+
+.sync-actions {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+#sync-results:not(:empty) {
+	margin-top: 1rem;
+	padding: 1rem 1.5rem;
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const form     = document.querySelector('.sync-form');
+	const results  = document.getElementById('sync-results');
+	const spinner  = document.getElementById('sync-spinner');
+	const pushBtn  = document.getElementById('sync-push-btn');
+	const pullBtn  = document.getElementById('sync-pull-btn');
+
+	if (!form || !pushBtn || !pullBtn) return;
+
+	function getSelectedItems(allFieldName, itemsFieldName) {
+		const allCheckbox = form.querySelector(`input[name="${allFieldName}"][value="all"]`);
+		if (allCheckbox && allCheckbox.checked) {
+			return null; // null means "all"
+		}
+		return Array.from(form.querySelectorAll(`input[name="${itemsFieldName}[]"]:checked`))
+			.map(cb => cb.value);
+	}
+
+	async function doSync(action) {
+		const body = new FormData();
+
+		// Get CSRF token from the form
+		const csrf = form.querySelector('input[name="_csrf_token"]');
+		if (csrf) body.append('_csrf_token', csrf.value);
+
+		const schemas = getSelectedItems('schemas-all', 'schemas');
+		const templates = getSelectedItems('templates-all', 'templates');
+
+		if (schemas !== null) {
+			schemas.forEach(s => body.append('schemas[]', s));
+		}
+		if (templates !== null) {
+			templates.forEach(t => body.append('templates[]', t));
+		}
+
+		spinner.style.display = 'inline';
+		pushBtn.disabled = true;
+		pullBtn.disabled = true;
+		results.innerHTML = '';
+
+		try {
+			const resp = await fetch(`{{ cms.api }}/sync/${action}`, {
+				method: 'POST',
+				body: body,
+			});
+			const data = await resp.json();
+
+			if (data.success) {
+				const counts = data.pushed || data.pulled || {};
+				results.innerHTML = `<p style="color:oklch(var(--totalform-success))"><strong>${data.message}</strong></p>` +
+					`<p>Schemas: ${counts.schemas || 0}, Templates: ${counts.templates || 0}</p>`;
+			} else {
+				results.innerHTML = `<p style="color:oklch(var(--totalform-error))"><strong>Error:</strong> ${data.error}</p>`;
+			}
+		} catch (err) {
+			results.innerHTML = `<p style="color:oklch(var(--totalform-error))">Request failed: ${err.message}</p>`;
+		} finally {
+			spinner.style.display = 'none';
+			pushBtn.disabled = false;
+			pullBtn.disabled = false;
+		}
+	}
+
+	pushBtn.addEventListener('click', () => {
+		if (confirm('Are you sure you want to push to production? This will overwrite schemas and templates on the remote server.')) {
+			doSync('push');
+		}
+	});
+	pullBtn.addEventListener('click', () => {
+		if (confirm('Are you sure you want to pull from production? This will overwrite local schemas and templates.')) {
+			doSync('pull');
+		}
+	});
+});
+</script>

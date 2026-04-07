@@ -1049,4 +1049,20 @@ return [
 	'report.download_json'               => 'JSON downloaden',
 	'report.alert_select_collection'     => 'Selecteer een collectie.',
 	'report.alert_select_field'          => 'Selecteer ten minste één veld.',
+
+	// Sync Manager
+	'sync.title'            => 'Sync Manager',
+	'sync.desc'             => "Schema's en templates naar de productieserver pushen of van productie pullen.",
+	'sync.not_configured'   => 'Sync is nog niet geconfigureerd. Stel de productieserver-URL en API-sleutel in.',
+	'sync.configure_link'   => 'Sync-instellingen configureren',
+	'sync.remote'           => 'Remote',
+	'sync.schemas_title'    => "Schema's",
+	'sync.templates_title'  => 'Templates',
+	'sync.select_all'       => 'Alles selecteren',
+	'sync.push_btn'         => 'Naar productie pushen',
+	'sync.pull_btn'         => 'Van productie pullen',
+	'sync.syncing'          => 'Synchroniseren...',
+	'sync.nothing_to_sync'  => "Geen aangepaste schema's of templates om te synchroniseren.",
+	'sync.specific_schemas' => "Schema's selecteren",
+	'sync.specific_templates' => 'Templates selecteren',
 ];

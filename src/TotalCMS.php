@@ -44,6 +44,7 @@ use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
@@ -401,6 +402,11 @@ class TotalCMS
 	public function jumpStartImporter(): JumpStartImporter
 	{
 		return $this->container->get(JumpStartImporter::class);
+	}
+
+	public function syncService(): SyncService
+	{
+		return $this->container->get(SyncService::class);
 	}
 
 	public function collectionZipper(): CollectionZipper

@@ -9,6 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\PushCommand;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\TotalCMS;
 
 use function Tests\Unit\CLI\Command\createTestConfig;
@@ -91,11 +92,14 @@ it('reports nothing to push when empty', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
 	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
 
-	$emptyJumpstart = new JumpStartData();
-	$exporter       = $this->createMock(JumpStartExporter::class);
-	$exporter->method('exportSyncData')->willReturn($emptyJumpstart);
-	$exporter->method('setMetadata');
-	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('push')->willReturn([
+		'success'   => true,
+		'message'   => 'Nothing to push — no matching schemas or templates found.',
+		'schemas'   => 0,
+		'templates' => 0,
+	]);
+	$totalcms->method('syncService')->willReturn($syncService);
 
 	$app     = new Application();
 	$command = new PushCommand($totalcms);
@@ -109,7 +113,7 @@ it('reports nothing to push when empty', function (): void {
 	expect($tester->getStatusCode())->toBe(0);
 });
 
-it('passes schema filter to exporter', function (): void {
+it('passes schema filter to exporter on dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
 	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
 
@@ -129,7 +133,7 @@ it('passes schema filter to exporter', function (): void {
 	$tester->execute(['--schemas' => 'products', '--dry-run' => true]);
 });
 
-it('passes template filter to exporter', function (): void {
+it('passes template filter to exporter on dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
 	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
 

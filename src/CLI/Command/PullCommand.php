@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\RequestOptions;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -38,97 +35,45 @@ class PullCommand extends BaseCommand
 			return $this->outputError($input, $output, 'Sync not configured.');
 		}
 
-		$url = $remote['url'];
-		$key = $remote['key'];
-
-		// Fetch JumpStart payload from remote
-		if (!$this->isJson($input)) {
-			$output->writeln("Pulling from <info>{$url}</info>...");
-		}
-
-		try {
-			$client   = new Client();
-			$response = $client->request('GET', $url . '/export/jumpstart?mode=sync', [
-				RequestOptions::HEADERS => [
-					'Authorization' => 'Bearer ' . $key,
-					'Accept'        => 'application/json',
-					'User-Agent'    => 'TotalCMS-CLI/1.0',
-				],
-				RequestOptions::TIMEOUT         => 60,
-				RequestOptions::CONNECT_TIMEOUT => 10,
-				RequestOptions::HTTP_ERRORS     => false,
-			]);
-		} catch (GuzzleException $e) {
-			return $this->outputError($input, $output, 'Pull failed: ' . $e->getMessage());
-		}
-
-		$statusCode = $response->getStatusCode();
-		$body       = (string) $response->getBody();
-		$payload    = json_decode($body, true);
-
-		if ($statusCode >= 400 || !is_array($payload)) {
-			$error = is_array($payload) ? ($payload['error'] ?? $body) : $body;
-			return $this->outputError($input, $output, "Pull failed (HTTP {$statusCode}): {$error}");
-		}
-
-		// Apply selective filters
 		$schemaFilter   = $this->parseFilter($input->getOption('schemas'));
 		$templateFilter = $this->parseFilter($input->getOption('templates'));
 
-		$schemas   = $payload['schemas'] ?? [];
-		$templates = $payload['templates'] ?? [];
-
-		if ($schemaFilter !== null) {
-			$schemas = array_values(array_filter($schemas, fn (array $s): bool => in_array($s['id'] ?? '', $schemaFilter, true)));
-			$payload['schemas'] = $schemas;
-		}
-		if ($templateFilter !== null) {
-			$templates = array_values(array_filter($templates, fn (array $t): bool => in_array($t['id'] ?? '', $templateFilter, true)));
-			$payload['templates'] = $templates;
-		}
-
-		if ($schemas === [] && $templates === []) {
-			if ($this->isJson($input)) {
-				$output->writeln((string) json_encode(['success' => true, 'schemas_pulled' => 0, 'templates_pulled' => 0]));
-				return Command::SUCCESS;
-			}
-			$output->writeln('Nothing to pull — no matching schemas or templates found.');
-			return Command::SUCCESS;
-		}
-
-		// Dry run
+		// Dry run — fetch and preview only, don't import
 		if ($input->getOption('dry-run')) {
-			return $this->dryRun($input, $output, $payload, $url);
+			if (!$this->isJson($input)) {
+				$output->writeln("Fetching from <info>{$remote['url']}</info>...");
+			}
+
+			try {
+				$payload = $this->totalcms->syncService()->fetchRemoteSyncData(
+					$remote['url'], $remote['key'], $schemaFilter, $templateFilter
+				);
+			} catch (\RuntimeException $e) {
+				return $this->outputError($input, $output, $e->getMessage());
+			}
+
+			return $this->dryRun($input, $output, $payload, $remote['url']);
 		}
 
-		// Import locally
+		// Actual pull via shared service
 		if (!$this->isJson($input)) {
-			$output->writeln("  " . count($schemas) . " schema(s), " . count($templates) . " template(s)");
-			$output->writeln('Importing...');
+			$output->writeln("Pulling from <info>{$remote['url']}</info>...");
 		}
 
-		$result = $this->totalcms->jumpStartImporter()->importFromDefinition($payload);
+		try {
+			$result = $this->totalcms->syncService()->pull($remote['url'], $remote['key'], $schemaFilter, $templateFilter);
+		} catch (\RuntimeException $e) {
+			return $this->outputError($input, $output, $e->getMessage());
+		}
 
 		if ($this->isJson($input)) {
-			$data = [
-				'success'          => true,
-				'remote'           => $url,
-				'schemas_pulled'   => count($schemas),
-				'templates_pulled' => count($templates),
-				'import_results'   => $result,
-			];
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string) json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('');
-		$output->writeln('<info>Pull complete.</info>');
-
-		$summary = $result['summary'];
-		foreach ($summary as $k => $value) {
-			$output->writeln("  {$k}: {$value}");
-		}
-
+		$output->writeln("<info>{$result['message']}</info>");
+		$output->writeln("  Schemas: {$result['schemas']}, Templates: {$result['templates']}");
 		return Command::SUCCESS;
 	}
 
@@ -139,6 +84,11 @@ class PullCommand extends BaseCommand
 	{
 		$schemas   = $payload['schemas'] ?? [];
 		$templates = $payload['templates'] ?? [];
+
+		if ($schemas === [] && $templates === []) {
+			$output->writeln('Nothing to pull — no matching schemas or templates found.');
+			return Command::SUCCESS;
+		}
 
 		if ($this->isJson($input)) {
 			$data = [

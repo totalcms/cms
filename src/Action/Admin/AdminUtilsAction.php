@@ -14,6 +14,8 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Renderer\TwigRenderer;
@@ -31,6 +33,8 @@ readonly class AdminUtilsAction
 		private SchemaLister $schemaLister,
 		private RssImporter $rssImporter,
 		private EditionFeatureService $editionFeatures,
+		private SettingsFetcher $settingsFetcher,
+		private TemplateLister $templateLister,
 	) {
 	}
 
@@ -125,6 +129,16 @@ readonly class AdminUtilsAction
 			}
 		}
 
+		// Sync utility data
+		$syncData = null;
+		if ($page === 'sync') {
+			$syncData = [
+				'settings'  => $this->settingsFetcher->loadSection('sync'),
+				'schemas'   => $this->schemaLister->listCustomSchemas(),
+				'templates' => $this->templateLister->listCustomTemplates(null, true),
+			];
+		}
+
 		// Handle twig-debugger page
 		$lintResults = null;
 		if ($page === 'twig-debugger') {
@@ -161,6 +175,7 @@ readonly class AdminUtilsAction
 			'rssAnalysis'            => $rssAnalysis,
 			'rssError'               => $rssError,
 			'rssCollections'         => $rssAnalysis !== null ? $this->collectionRepository->listAllCollections() : null,
+			'syncData'               => $syncData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}

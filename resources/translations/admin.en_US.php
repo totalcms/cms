@@ -1049,4 +1049,20 @@ return [
 	'report.download_json'               => 'Download JSON',
 	'report.alert_select_collection'     => 'Please select a collection.',
 	'report.alert_select_field'          => 'Please select at least one field.',
+
+	// Sync Manager
+	'sync.title'            => 'Sync Manager',
+	'sync.desc'             => 'Push schemas and templates to your production server, or pull them from production to your local environment.',
+	'sync.not_configured'   => 'Sync is not configured yet. Set your production server URL and API key to get started.',
+	'sync.configure_link'   => 'Configure Sync Settings',
+	'sync.remote'           => 'Remote',
+	'sync.schemas_title'    => 'Schemas',
+	'sync.templates_title'  => 'Templates',
+	'sync.select_all'       => 'Select All',
+	'sync.push_btn'         => 'Push to Production',
+	'sync.pull_btn'         => 'Pull from Production',
+	'sync.syncing'          => 'Syncing...',
+	'sync.nothing_to_sync'  => 'No custom schemas or templates to sync.',
+	'sync.specific_schemas' => 'Select Schemas',
+	'sync.specific_templates' => 'Select Templates',
 ];

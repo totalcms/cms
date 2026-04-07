@@ -18,6 +18,7 @@ use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
+use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
@@ -69,6 +70,8 @@ return function (App $app): void {
 
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);
+
+		$group->post('/sync/{action}', SyncAction::class)->setName('admin-sync')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/dataviews[/{id}]', AdminDataViewsAction::class)->setName('admin-dataviews')->add(DataViewsEditionMiddleware::class)->add(DataViewsAccessMiddleware::class);
 

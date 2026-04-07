@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\RequestOptions;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -38,88 +35,42 @@ class PushCommand extends BaseCommand
 			return $this->outputError($input, $output, 'Sync not configured.');
 		}
 
-		$url = $remote['url'];
-		$key = $remote['key'];
-
-		// Parse selective filters
 		$schemaFilter   = $this->parseFilter($input->getOption('schemas'));
 		$templateFilter = $this->parseFilter($input->getOption('templates'));
 
-		// Build the JumpStart payload
-		$exporter = $this->totalcms->jumpStartExporter();
-		$exporter->setMetadata('CLI Push', 'Schemas and templates pushed via tcms push');
-		$jumpstart = $exporter->exportSyncData($schemaFilter, $templateFilter);
+		// Dry run — preview only, don't push
+		if ($input->getOption('dry-run')) {
+			$exporter = $this->totalcms->jumpStartExporter();
+			$exporter->setMetadata('CLI Push', 'Dry run preview');
+			$jumpstart = $exporter->exportSyncData($schemaFilter, $templateFilter);
 
-		$schemaCount   = count($jumpstart->schemas);
-		$templateCount = count($jumpstart->templates);
-
-		if ($jumpstart->isEmpty()) {
-			if ($this->isJson($input)) {
-				$output->writeln((string) json_encode(['success' => true, 'schemas_pushed' => 0, 'templates_pushed' => 0]));
+			if ($jumpstart->isEmpty()) {
+				$output->writeln('Nothing to push — no matching schemas or templates found.');
 				return Command::SUCCESS;
 			}
-			$output->writeln('Nothing to push — no matching schemas or templates found.');
-			return Command::SUCCESS;
+
+			return $this->dryRun($input, $output, $jumpstart->toArray(), $remote['url']);
 		}
 
-		// Dry run
-		if ($input->getOption('dry-run')) {
-			return $this->dryRun($input, $output, $jumpstart->toArray(), $url);
-		}
-
-		// Push
+		// Actual push via shared service
 		if (!$this->isJson($input)) {
-			$output->writeln("Pushing to <info>{$url}</info>...");
-			$output->writeln("  {$schemaCount} schema(s), {$templateCount} template(s)");
+			$output->writeln("Pushing to <info>{$remote['url']}</info>...");
 		}
 
 		try {
-			$client   = new Client();
-			$response = $client->request('POST', $url . '/import/jumpstart', [
-				RequestOptions::JSON    => $jumpstart->toArray(),
-				RequestOptions::HEADERS => [
-					'Authorization' => 'Bearer ' . $key,
-					'Accept'        => 'application/json',
-					'User-Agent'    => 'TotalCMS-CLI/1.0',
-				],
-				RequestOptions::TIMEOUT         => 60,
-				RequestOptions::CONNECT_TIMEOUT => 10,
-				RequestOptions::HTTP_ERRORS     => false,
-			]);
-		} catch (GuzzleException $e) {
-			return $this->outputError($input, $output, 'Push failed: ' . $e->getMessage());
-		}
-
-		$statusCode = $response->getStatusCode();
-		$body       = (string) $response->getBody();
-		$result     = json_decode($body, true);
-
-		if ($statusCode >= 400 || !is_array($result)) {
-			$error = is_array($result) ? ($result['error'] ?? $body) : $body;
-			return $this->outputError($input, $output, "Push failed (HTTP {$statusCode}): {$error}");
+			$result = $this->totalcms->syncService()->push($remote['url'], $remote['key'], $schemaFilter, $templateFilter);
+		} catch (\RuntimeException $e) {
+			return $this->outputError($input, $output, $e->getMessage());
 		}
 
 		if ($this->isJson($input)) {
-			$data = [
-				'success'          => true,
-				'remote'           => $url,
-				'schemas_pushed'   => $schemaCount,
-				'templates_pushed' => $templateCount,
-				'response'         => $result,
-			];
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string) json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('');
-		$output->writeln('<info>Push complete.</info>');
-		$summary = $result['summary'] ?? [];
-		if (is_array($summary)) {
-			foreach ($summary as $summaryKey => $value) {
-				$output->writeln("  {$summaryKey}: {$value}");
-			}
-		}
-
+		$output->writeln("<info>{$result['message']}</info>");
+		$output->writeln("  Schemas: {$result['schemas']}, Templates: {$result['templates']}");
 		return Command::SUCCESS;
 	}
 
