@@ -16,6 +16,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Renderer\TwigRenderer;
@@ -35,6 +36,7 @@ readonly class AdminUtilsAction
 		private EditionFeatureService $editionFeatures,
 		private SettingsFetcher $settingsFetcher,
 		private TemplateLister $templateLister,
+		private UpdateChecker $updateChecker,
 	) {
 	}
 
@@ -129,6 +131,17 @@ readonly class AdminUtilsAction
 			}
 		}
 
+		// Update utility data
+		$updateInfo = null;
+		if ($page === 'update') {
+			$forceCheck = ($query['check'] ?? '') === '1';
+			try {
+				$updateInfo = $this->updateChecker->checkForUpdate($forceCheck);
+			} catch (\Throwable) {
+				// Silently fail — update check is not critical
+			}
+		}
+
 		// Sync utility data
 		$syncData = null;
 		if ($page === 'sync') {
@@ -175,6 +188,7 @@ readonly class AdminUtilsAction
 			'rssAnalysis'            => $rssAnalysis,
 			'rssError'               => $rssError,
 			'rssCollections'         => $rssAnalysis !== null ? $this->collectionRepository->listAllCollections() : null,
+			'updateInfo'             => $updateInfo,
 			'syncData'               => $syncData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);

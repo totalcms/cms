@@ -343,6 +343,78 @@ upload_sourcemaps "$NEW_VERSION"
 # Notify Sentry of new release
 notify_sentry_release "$NEW_VERSION" "$GIT_HASH"
 
+# Create dist zip for update system
+print_info "Creating distribution zip..."
+DIST_ZIP="totalcms-${NEW_VERSION}.zip"
+(cd dist && zip -qr "../${DIST_ZIP}" .)
+print_success "Distribution zip created: ${DIST_ZIP}"
+
+# Determine severity from version comparison
+determine_severity() {
+    local old=$1 new=$2
+    local old_major old_minor new_major new_minor
+    old_major=$(echo "$old" | cut -d. -f1)
+    old_minor=$(echo "$old" | cut -d. -f2)
+    new_major=$(echo "$new" | cut -d. -f1)
+    new_minor=$(echo "$new" | cut -d. -f2)
+
+    if [ "$new_major" != "$old_major" ]; then
+        echo "major"
+    elif [ "$new_minor" != "$old_minor" ]; then
+        echo "minor"
+    else
+        echo "patch"
+    fi
+}
+
+SEVERITY=$(determine_severity "$CURRENT_VERSION" "$NEW_VERSION")
+
+# Extract changelog (latest section from CHANGELOG.md)
+CHANGELOG=""
+if [ -f "CHANGELOG.md" ]; then
+    CHANGELOG=$(awk '/^## /{if(found)exit; found=1; next} found{print}' CHANGELOG.md | head -50)
+fi
+
+# Register version with license API
+TOTALCMS_RELEASE_KEY="${TOTALCMS_RELEASE_KEY:-}"
+if [ -n "$TOTALCMS_RELEASE_KEY" ]; then
+    print_info "Registering version with license API..."
+    RELEASE_DATE=$(date +%Y-%m-%d)
+
+    REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://license.totalcms.co/version" \
+        -H "X-Api-Key: ${TOTALCMS_RELEASE_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "$(cat <<EOF
+{
+    "versionNumber": "${NEW_VERSION}",
+    "releaseDate": "${RELEASE_DATE}",
+    "buildHash": "${GIT_HASH}",
+    "severity": "${SEVERITY}",
+    "changelog": $(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null || echo '""')
+}
+EOF
+)")
+
+    HTTP_CODE=$(echo "$REGISTER_RESPONSE" | tail -1)
+    if [ "$HTTP_CODE" = "200" ]; then
+        print_success "Version registered with license API"
+    else
+        print_warning "Failed to register version with license API (HTTP $HTTP_CODE)"
+    fi
+else
+    print_warning "TOTALCMS_RELEASE_KEY not set — skipping version registration"
+    print_info "Set TOTALCMS_RELEASE_KEY environment variable to auto-register releases"
+fi
+
+# Upload dist zip to S3
+S3_BUCKET="s3://totalcms-archive"
+print_info "Uploading dist zip to S3..."
+if aws s3 cp "${DIST_ZIP}" "${S3_BUCKET}/releases/totalcms-${NEW_VERSION}.zip"; then
+    print_success "Dist zip uploaded to ${S3_BUCKET}/releases/totalcms-${NEW_VERSION}.zip"
+else
+    print_warning "Failed to upload dist zip to S3"
+fi
+
 # Summary
 echo
 print_success "Release preparation complete!"
@@ -352,7 +424,7 @@ echo "  ✓ Prerequisites checked"
 echo "  ✓ Git status verified"
 echo "  ✓ Dependencies installed"
 echo "  ✓ Quality checks run"
-echo "  ✓ Version updated to $NEW_VERSION"
+echo "  ✓ Version updated to $NEW_VERSION ($SEVERITY)"
 echo "  ✓ Assets built"
 echo "  ✓ Autoloader optimized"
 echo "  ✓ Caches cleared"
@@ -361,6 +433,8 @@ echo "  ✓ Checksums generated"
 echo "  ✓ Documentation synced to docs site"
 echo "  ✓ Source maps uploaded to Sentry"
 echo "  ✓ Sentry release notified"
+echo "  ✓ Distribution zip created: $DIST_ZIP"
+echo "  ✓ Version registered with license API"
 echo
 echo "Next steps:"
 echo "  1. Review the changes one more time"
@@ -368,5 +442,4 @@ echo "  2. Test the production build locally"
 echo "  3. Create git tag: git tag -a v$NEW_VERSION -m 'Release version $NEW_VERSION'"
 echo "  4. Push to repository: git push && git push --tags"
 echo "  5. Create release on GitHub with changelog"
-echo "  6. Deploy to production"
 echo

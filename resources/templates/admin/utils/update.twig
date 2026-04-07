@@ -1,0 +1,147 @@
+<h1>{{ t('update.title') }}</h1>
+
+<section class="update-utility">
+
+	<div class="update-current">
+		<h3>{{ t('update.current_version') }}</h3>
+		<p class="version-number">{{ cms.version }}</p>
+	</div>
+
+	{% if updateInfo and updateInfo.available %}
+	<div class="update-available">
+		<h3>{{ t('update.available') }}</h3>
+		<div class="update-details">
+			<p class="version-number new-version">{{ updateInfo.version }}</p>
+			<span class="severity-badge severity-{{ updateInfo.severity }}">{{ updateInfo.severity }}</span>
+			<p class="release-date">{{ t('update.released') }}: {{ updateInfo.releaseDate }}</p>
+		</div>
+
+		{% if updateInfo.changelog %}
+		<div class="update-changelog">
+			<h4>{{ t('update.changelog') }}</h4>
+			<div class="changelog-content">{{ updateInfo.changelog }}</div>
+		</div>
+		{% endif %}
+
+		<div class="update-actions">
+			<button type="button" class="dash-button" id="update-btn"
+				hx-post="{{ cms.api }}/utils/update/apply"
+				hx-target="#update-results"
+				hx-confirm="{{ t('update.confirm') }}">
+				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
+			</button>
+		</div>
+	</div>
+	{% else %}
+	<div class="update-current-notice">
+		<p>{{ t('update.up_to_date') }}</p>
+	</div>
+	{% endif %}
+
+	<div class="update-check-action">
+		<a href="utils/update?check=1" class="dash-button transparent">{{ t('update.check_btn') }}</a>
+	</div>
+
+	<div id="update-results"></div>
+
+</section>
+
+<style>
+.update-utility {
+	display: grid;
+	align-content: start;
+	gap: 1.5rem;
+	max-width: 700px;
+}
+
+.update-current .version-number {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.update-available {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+}
+
+.update-available h3 {
+	margin-top: 0;
+}
+
+.new-version {
+	font-size: 1.3rem;
+	font-weight: 600;
+	display: inline;
+	margin-right: 0.75rem;
+}
+
+.severity-badge {
+	display: inline-block;
+	padding: 0.15rem 0.6rem;
+	border-radius: 1rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	vertical-align: middle;
+}
+
+.severity-patch { background: oklch(var(--totalform-accent) / 0.15); color: oklch(var(--totalform-accent)); }
+.severity-minor { background: oklch(0.8 0.15 85 / 0.2); color: oklch(0.5 0.15 85); }
+.severity-major { background: oklch(var(--totalform-error) / 0.15); color: oklch(var(--totalform-error)); }
+
+.release-date {
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+	margin-top: 0.5rem;
+}
+
+.update-changelog {
+	margin-top: 1.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid oklch(var(--totalform-border-color));
+}
+
+.changelog-content {
+	font-size: 0.9rem;
+	line-height: 1.6;
+	white-space: pre-wrap;
+}
+
+.update-actions {
+	margin-top: 1.5rem;
+}
+
+.update-current-notice {
+	color: oklch(var(--totalform-success));
+	font-weight: 500;
+}
+
+#update-results:not(:empty) {
+	margin-top: 1rem;
+	padding: 1rem 1.5rem;
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+}
+</style>
+
+<script>
+document.body.addEventListener('htmx:afterRequest', (e) => {
+	if (!e.detail.target || e.detail.target.id !== 'update-results') return;
+
+	const results = document.getElementById('update-results');
+	try {
+		const data = JSON.parse(e.detail.xhr.responseText);
+		if (data.success) {
+			results.innerHTML = `<p style="color:oklch(var(--totalform-success))"><strong>${data.message}</strong></p>`;
+			setTimeout(() => location.reload(), 3000);
+		} else {
+			results.innerHTML = `<p style="color:oklch(var(--totalform-error))"><strong>Error:</strong> ${data.error}</p>`;
+		}
+	} catch {
+		results.innerHTML = `<p style="color:oklch(var(--totalform-error))">Unexpected response from server.</p>`;
+	}
+});
+</script>

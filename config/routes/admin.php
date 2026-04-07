@@ -19,6 +19,7 @@ use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
 use TotalCMS\Action\Admin\SyncAction;
+use TotalCMS\Action\Admin\UpdateAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
@@ -67,6 +68,8 @@ return function (App $app): void {
 		$group->get('/utils/api-keys[/{action}]', AdminUtilsAction::class)->setName('admin-utils-api-keys')->add(ApiKeysEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 
 		$group->get('/utils/logs/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
+
+		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);

@@ -45,6 +45,9 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Sync\Service\SyncService;
+use TotalCMS\Domain\Update\Service\UpdateApplier;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Domain\Update\Service\UpdateDownloader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
@@ -407,6 +410,21 @@ class TotalCMS
 	public function syncService(): SyncService
 	{
 		return $this->container->get(SyncService::class);
+	}
+
+	public function updateChecker(): UpdateChecker
+	{
+		return $this->container->get(UpdateChecker::class);
+	}
+
+	public function updateDownloader(): UpdateDownloader
+	{
+		return $this->container->get(UpdateDownloader::class);
+	}
+
+	public function updateApplier(): UpdateApplier
+	{
+		return $this->container->get(UpdateApplier::class);
 	}
 
 	public function collectionZipper(): CollectionZipper

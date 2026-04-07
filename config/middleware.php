@@ -15,6 +15,7 @@ use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
+use TotalCMS\Middleware\MaintenanceModeMiddleware;
 use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\TotalCMS;
 
@@ -24,6 +25,7 @@ return function (App $app): void {
 	$app->add(CacheInvalidationMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(SessionStartMiddleware::class);
+	$app->add(MaintenanceModeMiddleware::class);
 	$app->add(SetupCheckMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
 	$app->add(LicenseValidationMiddleware::class);

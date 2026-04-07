@@ -127,6 +127,7 @@ use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
@@ -1190,5 +1191,6 @@ return [
 	SetupCheckMiddleware::class => fn (ContainerInterface $container): SetupCheckMiddleware => new SetupCheckMiddleware(
 		$container->get(Config::class),
 		$container->get(RedirectRenderer::class),
+		$container->get(SetupStateManager::class),
 	),
 ];

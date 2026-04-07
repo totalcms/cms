@@ -4,6 +4,8 @@ namespace TotalCMS\Support;
 
 class Config
 {
+	public const LICENSE_API_URL = 'https://license.totalcms.co';
+
 	public string $env          = 'prod';
 	public string $template     = '';
 	public string $datadir      = '';

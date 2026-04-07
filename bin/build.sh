@@ -149,6 +149,8 @@ find dist/resources -type f -exec chmod 444 {} +
 rm -f dist/resources/.bundle
 rm -f dist/resources/jobqueue
 rm -f dist/resources/bin/.processJobs
+rm -f dist/config/local.dev.php
+rm -f dist/config/local.test.php
 
 # Handle version.json
 if [ $RELEASE -eq 1 ]; then

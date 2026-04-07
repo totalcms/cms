@@ -272,9 +272,7 @@ class LicenseValidator
 	 */
 	private function getApiBaseUrl(): string
 	{
-		return $this->config->env === 'dev'
-			? 'https://license.totalcms.test'
-			: 'https://license.totalcms.co';
+		return Config::LICENSE_API_URL;
 	}
 
 	/**

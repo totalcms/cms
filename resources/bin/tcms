@@ -58,4 +58,9 @@ $app->addCommand(new Command\JumpStartImportCommand($totalcms));
 $app->addCommand(new Command\PushCommand($totalcms));
 $app->addCommand(new Command\PullCommand($totalcms));
 
+// Update commands
+$app->addCommand(new Command\UpdateCheckCommand($totalcms));
+$app->addCommand(new Command\UpdateApplyCommand($totalcms));
+$app->addCommand(new Command\UpdateRollbackCommand($totalcms));
+
 $app->run();
