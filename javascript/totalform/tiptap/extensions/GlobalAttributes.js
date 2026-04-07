@@ -44,6 +44,26 @@ const GlobalAttributes = Extension.create({
 							return { id: attributes.id };
 						},
 					},
+					dataAttrs: {
+						default: null,
+						parseHTML: (element) => {
+							const data = {};
+							for (const attr of element.attributes) {
+								if (attr.name.startsWith('data-')) {
+									data[attr.name] = attr.value;
+								}
+							}
+							return Object.keys(data).length > 0 ? JSON.stringify(data) : null;
+						},
+						renderHTML: (attributes) => {
+							if (!attributes.dataAttrs) return {};
+							try {
+								return JSON.parse(attributes.dataAttrs);
+							} catch {
+								return {};
+							}
+						},
+					},
 				},
 			},
 		];

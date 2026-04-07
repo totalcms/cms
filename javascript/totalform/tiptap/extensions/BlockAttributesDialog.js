@@ -1,5 +1,6 @@
 /**
- * BlockAttributesDialog - Dialog for editing class and id on the current block node.
+ * BlockAttributesDialog - Dialog for editing class, id, and data-* attributes
+ * on the current block node.
  * Uses the same ste-dialog pattern as AnchorDialog and LinkDialog.
  */
 
@@ -22,7 +23,7 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 
 	dialog.innerHTML = `
 		<div class="ste-dialog-header">
-			<h3>Block Attributes &mdash; &lt;${escapeHtml(blockInfo.tagName)}&gt;</h3>
+			<h3>Element Attributes &mdash; &lt;${escapeHtml(blockInfo.tagName)}&gt;</h3>
 			<button type="button" class="ste-dialog-close" aria-label="Close">&times;</button>
 		</div>
 		<div class="ste-dialog-body">
@@ -35,9 +36,14 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 				<label class="ste-link-label" for="ste-block-id">ID</label>
 				<input type="text" id="ste-block-id" class="ste-url-input" placeholder="my-id" value="${escapeAttr(blockInfo.id || '')}" spellcheck="false">
 			</div>
+			<div class="ste-block-data-section">
+				<label class="ste-link-label">Data Attributes</label>
+				<div class="ste-block-data-rows"></div>
+				<button type="button" class="ste-dialog-btn ste-dialog-btn--add-data" title="Add Data Attribute" aria-label="Add Data Attribute">&#xFF0B;</button>
+			</div>
 		</div>
 		<div class="ste-dialog-footer">
-			${(blockInfo.class || blockInfo.id) ? '<button type="button" class="ste-dialog-btn ste-dialog-btn--remove ste-dialog-btn--icon" style="--btn-icon: var(--icon-ste-trash)" aria-label="Remove Attributes" title="Remove Attributes"></button>' : ''}
+			${hasAttributes(blockInfo) ? '<button type="button" class="ste-dialog-btn ste-dialog-btn--remove ste-dialog-btn--icon" style="--btn-icon: var(--icon-ste-trash)" aria-label="Remove All Attributes" title="Remove All Attributes"></button>' : ''}
 			<div class="ste-dialog-actions">
 				<button type="button" class="ste-dialog-btn ste-dialog-btn--cancel">Cancel</button>
 				<button type="button" class="ste-dialog-btn ste-dialog-btn--insert">Apply</button>
@@ -49,8 +55,22 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 
 	const classInput = dialog.querySelector('#ste-block-class');
 	const idInput = dialog.querySelector('#ste-block-id');
+	const dataRowsContainer = dialog.querySelector('.ste-block-data-rows');
+	const addDataBtn = dialog.querySelector('.ste-dialog-btn--add-data');
 	const applyBtn = dialog.querySelector('.ste-dialog-btn--insert');
 	const removeBtn = dialog.querySelector('.ste-dialog-btn--remove');
+
+	// Populate existing data-* attributes
+	if (blockInfo.dataAttrs) {
+		for (const [key, value] of Object.entries(blockInfo.dataAttrs)) {
+			addDataRow(dataRowsContainer, key, value);
+		}
+	}
+
+	addDataBtn.addEventListener('click', (e) => {
+		e.preventDefault();
+		addDataRow(dataRowsContainer, '', '');
+	});
 
 	function close() {
 		overlay.remove();
@@ -60,7 +80,12 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 	function apply() {
 		const cls = classInput.value.trim() || null;
 		const id = idInput.value.trim().replace(/\s+/g, '-') || null;
-		setBlockAttributes(editor, blockInfo.pos, { class: cls, id: id });
+		const dataAttrs = collectDataAttrs(dataRowsContainer);
+		setBlockAttributes(editor, blockInfo.pos, {
+			class: cls,
+			id: id,
+			dataAttrs: dataAttrs,
+		});
 		overlay.remove();
 	}
 
@@ -68,7 +93,7 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 
 	if (removeBtn) {
 		removeBtn.addEventListener('click', () => {
-			setBlockAttributes(editor, blockInfo.pos, { class: null, id: null });
+			setBlockAttributes(editor, blockInfo.pos, { class: null, id: null, dataAttrs: null });
 			overlay.remove();
 		});
 	}
@@ -79,22 +104,84 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 		if (e.target === overlay) close();
 	});
 
-	const handleKeydown = (e) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			apply();
-		}
+	dialog.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			close();
 		}
-	};
-
-	classInput.addEventListener('keydown', handleKeydown);
-	idInput.addEventListener('keydown', handleKeydown);
+	});
 
 	document.body.appendChild(overlay);
 	classInput.focus();
+}
+
+/**
+ * Add a data attribute key/value row to the container.
+ */
+function addDataRow(container, key, value) {
+	const row = document.createElement('div');
+	row.className = 'ste-block-data-row';
+
+	const keyInput = document.createElement('input');
+	keyInput.type = 'text';
+	keyInput.className = 'ste-url-input ste-block-data-key';
+	keyInput.placeholder = 'data-name';
+	keyInput.value = key;
+	keyInput.spellcheck = false;
+
+	const valueInput = document.createElement('input');
+	valueInput.type = 'text';
+	valueInput.className = 'ste-url-input ste-block-data-value';
+	valueInput.placeholder = 'value';
+	valueInput.value = value;
+	valueInput.spellcheck = false;
+
+	const removeBtn = document.createElement('button');
+	removeBtn.type = 'button';
+	removeBtn.className = 'ste-block-data-remove';
+	removeBtn.textContent = '\u00d7';
+	removeBtn.title = 'Remove';
+	removeBtn.addEventListener('click', () => row.remove());
+
+	// Auto-prefix data- if user forgets
+	keyInput.addEventListener('blur', () => {
+		const val = keyInput.value.trim();
+		if (val && !val.startsWith('data-')) {
+			keyInput.value = 'data-' + val;
+		}
+	});
+
+	row.appendChild(keyInput);
+	row.appendChild(valueInput);
+	row.appendChild(removeBtn);
+	container.appendChild(row);
+
+	keyInput.focus();
+}
+
+/**
+ * Collect all data attribute rows into a JSON string.
+ */
+function collectDataAttrs(container) {
+	const rows = container.querySelectorAll('.ste-block-data-row');
+	const data = {};
+
+	for (const row of rows) {
+		const key = row.querySelector('.ste-block-data-key').value.trim();
+		const value = row.querySelector('.ste-block-data-value').value.trim();
+		if (key && key.startsWith('data-')) {
+			data[key] = value;
+		}
+	}
+
+	return Object.keys(data).length > 0 ? JSON.stringify(data) : null;
+}
+
+/**
+ * Check if a block has any attributes set.
+ */
+function hasAttributes(blockInfo) {
+	return !!(blockInfo.class || blockInfo.id || (blockInfo.dataAttrs && Object.keys(blockInfo.dataAttrs).length > 0));
 }
 
 /**
@@ -122,10 +209,21 @@ function getBlockAttributes(editor) {
 				orderedList: 'ol',
 				codeBlock: 'pre',
 			};
+
+			let dataAttrs = null;
+			if (node.attrs.dataAttrs) {
+				try {
+					dataAttrs = JSON.parse(node.attrs.dataAttrs);
+				} catch {
+					dataAttrs = null;
+				}
+			}
+
 			return {
 				pos: $from.before(depth),
 				class: node.attrs.class || null,
 				id: node.attrs.id || null,
+				dataAttrs: dataAttrs,
 				tagName: tagMap[node.type.name] || node.type.name,
 			};
 		}

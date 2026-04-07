@@ -500,6 +500,64 @@
 	overflow-y : auto;
 }
 
+// Block/Element attributes dialog — data-* rows
+.ste-block-data-section {
+	margin-top : 12px;
+}
+
+.ste-block-data-rows {
+	display        : flex;
+	flex-direction : column;
+	gap            : 6px;
+	margin-bottom  : 8px;
+}
+
+.ste-block-data-row {
+	display     : flex;
+	align-items : center;
+	gap         : 6px;
+
+	.ste-block-data-key {
+		flex : 2;
+	}
+
+	.ste-block-data-value {
+		flex : 3;
+	}
+}
+
+.ste-block-data-remove {
+	all              : unset;
+	cursor           : pointer;
+	font-size        : 16px;
+	line-height      : 1;
+	color            : oklch(var(--totalform-mediumgray));
+	padding          : 4px;
+	flex-shrink      : 0;
+
+	&:hover {
+		color : oklch(var(--totalform-danger, var(--totalform-darkgray)));
+	}
+}
+
+.ste-dialog-btn--add-data {
+	all            : unset;
+	cursor         : pointer;
+	display        : inline-flex;
+	align-items    : center;
+	justify-content: center;
+	width          : 22px;
+	height         : 22px;
+	border-radius  : var(--totalform-radius);
+	color          : oklch(var(--totalform-mediumgray));
+	border         : 1px solid oklch(var(--totalform-border-color));
+
+	&:hover {
+		color            : oklch(var(--totalform-accent));
+		border-color     : oklch(var(--totalform-accent));
+	}
+}
+
 .ste-dialog-panel {
 	display : none;
 
