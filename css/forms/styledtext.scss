@@ -1096,13 +1096,29 @@
 }
 
 .ste-raw-html-label {
-	position       : absolute;
-	top            : 2px;
-	left           : 6px;
-	font-size      : 10px;
-	font-family    : monospace;
-	color          : oklch(var(--totalform-mediumgray));
-	pointer-events : none;
+	position        : absolute;
+	top             : 2px;
+	left            : 6px;
+	right           : 6px;
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	font-size       : 10px;
+	font-family     : monospace;
+	color           : oklch(var(--totalform-mediumgray));
+}
+
+.ste-raw-html-remove {
+	all             : unset;
+	cursor          : pointer;
+	font-size       : 14px;
+	line-height     : 1;
+	color           : oklch(var(--totalform-mediumgray));
+	padding         : 0 2px;
+
+	&:hover {
+		color : oklch(var(--totalform-danger, var(--totalform-darkgray)));
+	}
 }
 
 .ste-raw-html-content {
