@@ -258,7 +258,11 @@ final class CollectionSorterTest extends TestCase
 			['property' => 'title'],
 		]);
 
-		// Should be sorted by category first, then by title
-		$this->assertCount(3, $result);
+		// First rule (category) is primary, second rule (title) breaks ties
+		$this->assertSame('A', $result[0]['category']);
+		$this->assertSame('First', $result[0]['title']);   // A, First
+		$this->assertSame('A', $result[1]['category']);
+		$this->assertSame('Second', $result[1]['title']);  // A, Second
+		$this->assertSame('B', $result[2]['category']);     // B, First
 	}
 }
