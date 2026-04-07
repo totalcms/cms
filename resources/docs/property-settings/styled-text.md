@@ -227,29 +227,60 @@ Configure uploads within the editor. Each upload type has its own rules setting 
 
 ```json
 {
+  "height": 500,
   "heightMin": 300,
-  "heightMax": 600,
+  "heightMax": 800,
+  "pasteAsPlainText": true,
+  "charCounterCount": true,
+  "charCounterMax": 5000,
   "wordCounterCount": true,
   "wordCounterMax": 2000,
-  "charCounterCount": true,
+  "headingLevels": [1, 2, 3, 4, 5, 6],
   "toolbarConfig": [
     { "name": "history", "buttons": ["undo", "redo"] },
-    { "name": "text", "buttons": ["bold", "italic", "underline", "strike"] },
-    { "name": "paragraph", "buttons": ["heading", "bulletList", "orderedList", "blockquote"] },
-    { "name": "insert", "buttons": ["link", "image", "table", "horizontalRule"] },
-    { "name": "misc", "buttons": ["clearFormatting", "codeView"], "align": "right" }
+    { "name": "text", "buttons": ["bold", "italic", "underline", "strike", "superscript", "subscript"] },
+    { "name": "format", "buttons": ["textColor", "textBgColor", "inlineStyles", "inlineClasses"] },
+    { "name": "paragraph", "buttons": ["heading", "bulletList", "orderedList", "blockquote", "codeBlock", "align", "blockAttributes"] },
+    { "name": "insert", "buttons": ["link", "image", "video", "file", "table", "horizontalRule", "hardBreak", "htmlSnippets", "anchor"] },
+    { "name": "misc", "buttons": ["clearFormatting", "codeView", "fullscreen"], "align": "right" }
   ],
-  "inlineClasses": {
-    "Lead Text": "lead",
-    "Small Print": "small-print"
+  "inlineStyles": {
+    "Large": "font-size: 1.25em",
+    "Small": "font-size: 0.85em",
+    "Uppercase": "text-transform: uppercase; letter-spacing: 0.05em",
+    "Highlight": "background-color: yellow; padding: 0 0.25em"
   },
+  "inlineClasses": {
+    "Code": "cms-inline-code",
+    "Highlighted": "cms-highlighted",
+    "Badge": "cms-badge",
+    "Important": "cms-important"
+  },
+  "blockClasses": ["hero", "highlight", "card", "sidebar", "lead"],
   "htmlSnippets": {
-    "Info Box": "<div class=\"info-box\">{content}</div>"
+    "Button": "<button class=\"cms-button\">{content}</button>",
+    "Callout": "<div class=\"cms-callout\">{content}</div>",
+    "Alert": "<div class=\"alert alert-warning\">{content}</div>"
+  },
+  "textColor": {
+    "colors": ["#000000", "#ffffff", "#ff0000", "#00ff00", "#0000ff"],
+    "allowCustom": true
+  },
+  "textBgColor": {
+    "colors": ["#ffff00", "#00ffff", "#ff00ff", "#f0f0f0"],
+    "allowCustom": false
   },
   "imagePreset": "blog",
   "imageUploadRules": {
     "size": { "max": 2097152 },
-    "filetype": ["image/jpeg", "image/png"]
+    "filetype": ["image/jpeg", "image/png", "image/webp"]
+  },
+  "mediaUploadRules": {
+    "size": { "max": 52428800 },
+    "filetype": ["video/mp4", "audio/mpeg"]
+  },
+  "fileUploadRules": {
+    "size": { "max": 10485760 }
   }
 }
 ```
