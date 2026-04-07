@@ -63,13 +63,13 @@ class CollectionSorter
 			}
 		}
 
-		// If shuffle is requested, always shuffle regardless of property rules
-		if ($shouldShuffle) {
-			return $this->shuffle();
-		}
-
 		// Pre-process and validate property rules (filter out shuffle)
 		$processedRules = $this->preprocessRules($rules);
+
+		// If shuffle with no property rules, just shuffle
+		if ($shouldShuffle && $processedRules === []) {
+			return $this->shuffle();
+		}
 
 		// If no property rules, return as-is
 		if ($processedRules === []) {
@@ -79,9 +79,17 @@ class CollectionSorter
 		// Pre-extract all property values to avoid repeated extraction
 		$this->extractPropertyValues($processedRules);
 
+		// If shuffle is requested, assign random keys for tiebreaking
+		$randomKeys = [];
+		if ($shouldShuffle) {
+			foreach ($this->collection as $item) {
+				$randomKeys[$this->getItemId($item)] = random_int(PHP_INT_MIN, PHP_INT_MAX);
+			}
+		}
+
 		$collection = $this->collection;
 
-		usort($collection, function (array $a, array $b) use ($processedRules): int {
+		usort($collection, function (array $a, array $b) use ($processedRules, $shouldShuffle, $randomKeys): int {
 			// Get unique identifiers for cache lookup
 			$aId = $this->getItemId($a);
 			$bId = $this->getItemId($b);
@@ -108,6 +116,11 @@ class CollectionSorter
 				} elseif ($bExists) {
 					return $reverse ? -1 : 1;
 				}
+			}
+
+			// If shuffle is enabled and all property comparisons are equal, randomize
+			if ($shouldShuffle) {
+				return $randomKeys[$aId] <=> $randomKeys[$bId];
 			}
 
 			return 0;
