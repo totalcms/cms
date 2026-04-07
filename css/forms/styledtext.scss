@@ -420,16 +420,16 @@
 	display          : flex;
 	align-items      : center;
 	justify-content  : center;
-	background-color : oklch(0 0 0 / 0.4);
+	background-color : oklch(0 0 0 / 0.6);
 }
 
 .ste-dialog {
 	width            : 480px;
 	max-width        : 90vw;
 	max-height       : 80vh;
-	background-color : oklch(var(--totalform-white));
+	background-color : oklch(var(--totalform-nearwhite));
 	border-radius    : 8px;
-	box-shadow       : 0 8px 32px oklch(0 0 0 / 0.2);
+	box-shadow       : 0 8px 32px oklch(0 0 0 / 0.6);
 	overflow         : hidden;
 	display          : flex;
 	flex-direction   : column;
