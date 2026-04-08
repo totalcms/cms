@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Setup\Service;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use TotalCMS\Support\Config;
 
 /**
@@ -20,7 +20,7 @@ class SetupStateManager
 	private const STEPS = ['environment', 'data-path', 'account', 'license'];
 
 	public function __construct(
-		private readonly PhpSession $session,
+		private readonly SessionInterface $session,
 		private readonly Config $config,
 	) {
 	}

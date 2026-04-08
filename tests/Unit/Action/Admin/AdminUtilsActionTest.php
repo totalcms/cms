@@ -35,6 +35,7 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
 	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
+	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -52,6 +53,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->editionFeatures       = $this->createMock(EditionFeatureService::class);
 		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
 		$this->templateLister        = $this->createMock(TemplateLister::class);
+		$this->updateChecker         = $this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class);
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 
@@ -68,6 +70,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->editionFeatures,
 			$this->settingsFetcher,
 			$this->templateLister,
+			$this->updateChecker,
 		);
 	}
 

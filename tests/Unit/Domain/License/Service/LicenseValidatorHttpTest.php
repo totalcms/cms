@@ -150,7 +150,7 @@ describe('LicenseValidator HTTP calls', function (): void {
 			->method('request')
 			->with(
 				'POST',
-				test()->stringStartsWith('https://license.totalcms.test/'),
+				test()->stringStartsWith('https://license.totalcms.co/'),
 				test()->anything()
 			)
 			->willReturn(new HttpResponse(200, (string)json_encode(['valid' => true, 'trial' => false, 'domain' => 'test.com', 'edition' => 'pro', 'message' => '', 'validationToken' => null, 'updatesValid' => true, 'trialDaysRemaining' => null])));

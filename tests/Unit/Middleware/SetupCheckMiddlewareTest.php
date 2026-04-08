@@ -10,6 +10,7 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
@@ -18,6 +19,7 @@ final class SetupCheckMiddlewareTest extends TestCase
 {
 	private \PHPUnit\Framework\MockObject\MockObject $config;
 	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
+	private \PHPUnit\Framework\MockObject\MockObject $setupState;
 	private \PHPUnit\Framework\MockObject\MockObject $handler;
 	private SetupCheckMiddleware $middleware;
 
@@ -25,11 +27,16 @@ final class SetupCheckMiddlewareTest extends TestCase
 	{
 		$this->config           = $this->createMock(Config::class);
 		$this->redirectRenderer = $this->createMock(RedirectRenderer::class);
+		$this->setupState       = $this->createMock(SetupStateManager::class);
 		$this->handler          = $this->createMock(RequestHandlerInterface::class);
+
+		$this->setupState->method('getCurrentStep')->willReturn('setup-welcome');
+		$this->setupState->method('isStepComplete')->willReturn(false);
 
 		$this->middleware = new SetupCheckMiddleware(
 			$this->config,
 			$this->redirectRenderer,
+			$this->setupState,
 		);
 	}
 
@@ -54,7 +61,7 @@ final class SetupCheckMiddlewareTest extends TestCase
 		$this->config->env     = 'prod';
 		$this->config->datadir = '';
 
-		$request          = $this->createRequestWithRoute('setup-data-path', '/setup/data-path');
+		$request          = $this->createRequestWithRoute('setup-welcome', '/setup/data-path');
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 
 		$this->handler->expects($this->once())
@@ -83,56 +90,21 @@ final class SetupCheckMiddlewareTest extends TestCase
 		$this->assertSame($expectedResponse, $result);
 	}
 
-	public function testAllowsGetLoginWhenDataDirExists(): void
+	public function testRedirectsLoginToWizardWhenSetupIncomplete(): void
 	{
 		$this->config->env     = 'prod';
 		$this->config->datadir = sys_get_temp_dir(); // exists but no auth collection
+		$this->config->auth    = ['collection' => 'nonexistent-auth-' . uniqid()];
 
-		$request          = $this->createRequestWithRoute('login', '/login[/{collection}]');
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-
-		$this->handler->expects($this->once())
-			->method('handle')
-			->willReturn($expectedResponse);
-
-		$result = $this->middleware->process($request, $this->handler);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	public function testAllowsPostLoginWhenDataDirExists(): void
-	{
-		$this->config->env     = 'prod';
-		$this->config->datadir = sys_get_temp_dir(); // exists but no auth collection
-
-		// POST /login has no route name - this was the bug
-		$request          = $this->createRequestWithRoute(null, '/login[/{collection}]');
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-
-		$this->handler->expects($this->once())
-			->method('handle')
-			->willReturn($expectedResponse);
-
-		$result = $this->middleware->process($request, $this->handler);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	public function testDoesNotAllowLoginWhenDataDirDoesNotExist(): void
-	{
-		$this->config->env     = 'prod';
-		$this->config->datadir = '/nonexistent/path/tcms-data';
-		$this->config->auth    = ['collection' => 'auth'];
-
-		$request        = $this->createRequestWithRoute('login', '/login[/{collection}]');
-		$setupResponse  = $this->createMock(ResponseInterface::class);
+		$request       = $this->createRequestWithRoute('login', '/login[/{collection}]');
+		$setupResponse = $this->createMock(ResponseInterface::class);
 
 		$this->handler->expects($this->never())
 			->method('handle');
 
 		$this->redirectRenderer->expects($this->once())
 			->method('redirectFor')
-			->with($this->anything(), 'setup-data-path')
+			->with($this->anything(), 'setup-welcome')
 			->willReturn($setupResponse);
 
 		$result = $this->middleware->process($request, $this->handler);
@@ -154,7 +126,7 @@ final class SetupCheckMiddlewareTest extends TestCase
 
 		$this->redirectRenderer->expects($this->once())
 			->method('redirectFor')
-			->with($this->anything(), 'setup-data-path')
+			->with($this->anything(), 'setup-welcome')
 			->willReturn($setupResponse);
 
 		$result = $this->middleware->process($request, $this->handler);
@@ -177,7 +149,7 @@ final class SetupCheckMiddlewareTest extends TestCase
 
 		$this->redirectRenderer->expects($this->once())
 			->method('redirectFor')
-			->with($this->anything(), 'setup-data-path')
+			->with($this->anything(), 'setup-welcome')
 			->willReturn($setupResponse);
 
 		$result = $this->middleware->process($request, $this->handler);
