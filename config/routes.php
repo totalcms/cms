@@ -5,6 +5,7 @@ use TotalCMS\Action\PreflightAction;
 
 return function (App $app): void {
 	$app->options('/', PreflightAction::class);
+	// $app->redirect('/', 'admin', 302);
 
 	(require __DIR__ . '/routes/admin.php')($app);
 	(require __DIR__ . '/routes/setup.php')($app);

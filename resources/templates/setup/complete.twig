@@ -1,0 +1,64 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.complete_title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="setup-header">
+		<h1>{{ t('wizard.complete_title') }}</h1>
+		<p>{{ t('wizard.complete_desc') }}</p>
+	</section>
+
+	<table class="summary-table">
+		<tr>
+			<td><strong>{{ t('wizard.complete_version') }}</strong></td>
+			<td>{{ version }}</td>
+		</tr>
+		<tr>
+			<td><strong>{{ t('wizard.complete_edition') }}</strong></td>
+			<td>{{ edition|capitalize }}</td>
+		</tr>
+		<tr>
+			<td><strong>{{ t('wizard.complete_datapath') }}</strong></td>
+			<td><code>{{ datadir }}</code></td>
+		</tr>
+		{% if adminEmail %}
+		<tr>
+			<td><strong>{{ t('wizard.complete_admin') }}</strong></td>
+			<td>{{ adminEmail }}</td>
+		</tr>
+		{% endif %}
+	</table>
+
+	<a href="{{ cms.api }}/login" class="dash-button setup-continue">{{ t('wizard.complete_btn') }}</a>
+</main>
+
+<style>
+.summary-table {
+	width: 100%;
+	max-width: 500px;
+	border-collapse: collapse;
+	margin-block: 1.5rem;
+}
+
+.summary-table td {
+	padding: 0.6rem 0.75rem;
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+}
+
+.summary-table td:first-child {
+	width: 120px;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.summary-table code {
+	font-size: 0.9em;
+	word-break: break-all;
+}
+
+.setup-continue {
+	margin-top: 1rem;
+	display: inline-block;
+}
+</style>
+{% endblock %}

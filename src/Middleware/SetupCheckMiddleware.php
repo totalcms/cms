@@ -8,12 +8,13 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
 
 /**
- * Middleware to check if Total CMS has been set up (tcms-data folder exists).
- * If not, redirect to the setup page.
+ * Middleware to check if Total CMS has been set up.
+ * If not, redirect to the appropriate setup wizard step.
  *
  * This middleware runs BEFORE authentication to allow initial setup without auth.
  */
@@ -22,6 +23,7 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 	public function __construct(
 		private Config $config,
 		private RedirectRenderer $redirectRenderer,
+		private SetupStateManager $setupState,
 	) {
 	}
 
@@ -30,12 +32,10 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
 		// Skip setup check entirely in preview environment
-		// Preview uses pre-configured datadir and doesn't need setup workflow
 		if ($this->config->env === 'preview') {
 			return $handler->handle($request);
 		}
 
-		// Get the matched route
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
@@ -45,52 +45,34 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset')) {
 				return $handler->handle($request);
 			}
-
-			// Allow login routes if data directory exists (for first user creation)
-			// even if auth collection doesn't exist yet
-			// Check route path pattern since POST login route may not have a name
-			if ($this->dataDirBasicExists()) {
-				$routePattern = $route->getPattern();
-				if ($routeName === 'login' || $routePattern === '/login[/{collection}]') {
-					return $handler->handle($request);
-				}
-			}
 		}
 
-		// Check if tcms-data exists in any of the expected locations
-		if ($this->dataDirExists()) {
-			// Data directory exists, continue normal flow
+		// If setup is complete (auth collection exists), allow normal flow
+		if ($this->setupComplete()) {
 			return $handler->handle($request);
 		}
 
-		// Data directory doesn't exist, redirect to setup page
-		return $this->redirectRenderer->redirectFor(new Response(), 'setup-data-path');
+		// Setup not complete — redirect to welcome or current wizard step
+		$currentStep = $this->setupState->getCurrentStep();
+
+		// If on the very first step, show the welcome page instead
+		if ($currentStep === 'setup-environment' && !$this->setupState->isStepComplete('environment')) {
+			return $this->redirectRenderer->redirectFor(new Response(), 'setup-welcome');
+		}
+
+		return $this->redirectRenderer->redirectFor(new Response(), $currentStep);
 	}
 
 	/**
-	 * Check if tcms-data directory exists (basic check).
-	 *
-	 * Used to allow login page access for first user creation.
+	 * Setup is considered complete when the auth collection exists.
+	 * This is the definitive check — once an admin user is created, setup is done.
 	 */
-	private function dataDirBasicExists(): bool
+	private function setupComplete(): bool
 	{
-		return $this->config->datadir !== '' && is_dir($this->config->datadir);
-	}
-
-	/**
-	 * Check if tcms-data directory is properly set up.
-	 *
-	 * A directory is considered "set up" if it contains an auth collection,
-	 * which indicates that the user has completed setup and created their first account.
-	 * System files like .system/access-groups.json are auto-created and don't count.
-	 */
-	private function dataDirExists(): bool
-	{
-		if (!$this->dataDirBasicExists()) {
+		if ($this->config->datadir === '' || !is_dir($this->config->datadir)) {
 			return false;
 		}
 
-		// Check if auth collection exists (indicates setup is complete)
 		$authCollection = $this->config->auth['collection'] ?? 'auth';
 		$authPath       = $this->config->datadir . '/' . $authCollection;
 

@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\RedirectRenderer;
 
@@ -24,17 +25,18 @@ readonly class DataPathSetupSubmitAction
 		private PhpSession $session,
 		private RedirectRenderer $redirectRenderer,
 		private TranslationService $translator,
+		private SetupStateManager $setupState,
 	) {
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$data  = (array)$request->getParsedBody();
+		$data  = (array) $request->getParsedBody();
 		$flash = $this->session->getFlash();
 
 		$location   = $data['location'] ?? '';
-		$customPath = (string)($data['customPath'] ?? '');
+		$customPath = (string) ($data['customPath'] ?? '');
 
 		// Get docroot from $_SERVER['DOCUMENT_ROOT']
 		$docroot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
@@ -110,11 +112,22 @@ readonly class DataPathSetupSubmitAction
 			}
 		}
 
+		// Save the user's language preference
+		$locale    = $this->session->get('setup_locale', 'en_US');
+		$systemDir = $dataPath . '/.system';
+		if (!is_dir($systemDir)) {
+			@mkdir($systemDir, 0755, true);
+		}
+		file_put_contents($systemDir . '/settings.json', (string) json_encode([
+			'locale' => $locale,
+		], JSON_PRETTY_PRINT));
+
 		// Clear any stale cache data from previous installations
-		// This ensures the login page correctly shows "Setup First User Account"
 		$this->cacheManager->clearAllCaches();
 
-		// Success! Redirect to login page for first-time user creation
-		return $this->redirectRenderer->redirectFor($response, 'login');
+		// Mark data path step complete and continue wizard
+		$this->setupState->completeStep('data-path');
+
+		return $this->redirectRenderer->redirectFor($response, 'setup-account');
 	}
 }

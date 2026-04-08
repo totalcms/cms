@@ -1,0 +1,64 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.welcome') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="welcome-header">
+		<h1>{{ t('wizard.welcome') }}</h1>
+		<p>{{ t('wizard.welcome_desc') }}</p>
+	</section>
+
+	<div class="welcome-locale">
+		<label for="locale-select">{{ t('wizard.language') }}</label>
+		<select id="locale-select" onchange="location.href='?lang='+this.value">
+			{% for code, label in locales %}
+			<option value="{{ code }}" {{ currentLocale == code ? 'selected' : '' }}>{{ label }}</option>
+			{% endfor %}
+		</select>
+	</div>
+
+	<a href="{{ cms.api }}/setup/environment" class="dash-button setup-continue">{{ t('wizard.get_started') }}</a>
+</main>
+
+<style>
+.welcome-header {
+	text-align: center;
+}
+
+.welcome-header h1 {
+	font-size: 2rem;
+	margin-bottom: 0.5rem;
+}
+
+.welcome-locale {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	justify-content: center;
+}
+
+.welcome-locale label {
+	display: none;
+	font-weight: 500;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.welcome-locale select {
+	padding: 0.4rem 0.75rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+	font-size: 0.95rem;
+	cursor: pointer;
+	width: 250px;
+}
+
+.setup-continue {
+	display: block;
+	text-align: center;
+	max-width: 200px;
+	margin: 0 auto;
+}
+</style>
+{% endblock %}
