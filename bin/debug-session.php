@@ -76,7 +76,7 @@ echo 'Expected session directory: ' . htmlspecialchars($expectedPath) . '<br>';
 echo 'Directory exists: ' . (is_dir($expectedPath) ? 'YES' : 'NO') . '<br>';
 if (is_dir($expectedPath)) {
 	$files = glob($expectedPath . '/sess_*');
-	echo 'Session files in directory: ' . count($files) . '<br>';
+	echo 'Session files in directory: ' . count($files ?: []) . '<br>';
 }
 
 echo '<h3>Cookie Information</h3>';

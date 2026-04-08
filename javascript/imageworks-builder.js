@@ -75,10 +75,11 @@ document.addEventListener("DOMContentLoaded", event => {
 					filesize.textContent = bytesToSize(contentLength);
 					return;
 				}
-				filesize.textContent = 'Unknown';
-				console.warn('Image Content-Length header missing:', response.headers);
-
-
+				// Content-Length missing (chunked transfer or compression) — read the body
+				console.warn('Content-Length header missing, reading blob size instead');
+				return response.blob().then(blob => {
+					filesize.textContent = bytesToSize(blob.size);
+				});
 			} else {
 				filesize.textContent = 'Error';
 				console.warn('Image size fetch failed:', response.status);

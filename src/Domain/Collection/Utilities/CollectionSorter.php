@@ -66,7 +66,7 @@ class CollectionSorter
 		// Pre-process and validate property rules (filter out shuffle)
 		$processedRules = $this->preprocessRules($rules);
 
-		// If only shuffle with no property rules, just shuffle
+		// If shuffle with no property rules, just shuffle
 		if ($shouldShuffle && $processedRules === []) {
 			return $this->shuffle();
 		}
@@ -80,12 +80,10 @@ class CollectionSorter
 		$this->extractPropertyValues($processedRules);
 
 		// If shuffle is requested, assign random keys for tiebreaking
-		// This allows shuffle to randomize order within groups of equal property values
 		$randomKeys = [];
 		if ($shouldShuffle) {
 			foreach ($this->collection as $item) {
-				$itemId              = $this->getItemId($item);
-				$randomKeys[$itemId] = random_int(PHP_INT_MIN, PHP_INT_MAX);
+				$randomKeys[$this->getItemId($item)] = random_int(PHP_INT_MIN, PHP_INT_MAX);
 			}
 		}
 
@@ -96,8 +94,7 @@ class CollectionSorter
 			$aId = $this->getItemId($a);
 			$bId = $this->getItemId($b);
 
-			// Process rules in reverse order for logical sorting
-			foreach (array_reverse($processedRules) as $rule) {
+			foreach ($processedRules as $rule) {
 				$property = $rule['property'];
 				$natsort  = $rule['natural'];
 				$reverse  = $rule['reverse'];
@@ -121,7 +118,7 @@ class CollectionSorter
 				}
 			}
 
-			// If shuffle is enabled and all property comparisons are equal, use random key as tiebreaker
+			// If shuffle is enabled and all property comparisons are equal, randomize
 			if ($shouldShuffle) {
 				return $randomKeys[$aId] <=> $randomKeys[$bId];
 			}

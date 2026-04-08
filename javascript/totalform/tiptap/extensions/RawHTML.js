@@ -65,8 +65,29 @@ const RawHTML = Node.create({
 		return [tagName, mergeAttributes(attrs), 0];
 	},
 
+	addCommands() {
+		return {
+			unwrapRawHtmlBlock: () => ({ tr, state, dispatch }) => {
+				const { $from } = state.selection;
+				for (let depth = $from.depth; depth >= 1; depth--) {
+					const node = $from.node(depth);
+					if (node.type.name === 'rawHtmlBlock') {
+						if (dispatch) {
+							const pos = $from.before(depth);
+							const end = pos + node.nodeSize;
+							// Replace the wrapper with its children
+							tr.replaceWith(pos, end, node.content);
+						}
+						return true;
+					}
+				}
+				return false;
+			},
+		};
+	},
+
 	addNodeView() {
-		return ({ node }) => {
+		return ({ node, editor, getPos }) => {
 			const tagName = node.attrs.tagName || 'div';
 			let attrs = {};
 
@@ -80,12 +101,29 @@ const RawHTML = Node.create({
 			dom.className = 'ste-raw-html-block';
 			dom.dataset.rawTag = tagName;
 
-			// Label showing snippet label or tag name
+			// Label bar
+			const labelBar = document.createElement('div');
+			labelBar.className = 'ste-raw-html-label';
+
 			const snippetLabel = attrs['data-label'];
-			const label = document.createElement('span');
-			label.className = 'ste-raw-html-label';
-			label.textContent = snippetLabel || `<${tagName}>`;
-			dom.appendChild(label);
+			const labelText = document.createElement('span');
+			labelText.textContent = snippetLabel || `<${tagName}>`;
+			labelBar.appendChild(labelText);
+
+			// Remove/unwrap button
+			const removeBtn = document.createElement('button');
+			removeBtn.type = 'button';
+			removeBtn.className = 'ste-raw-html-remove';
+			removeBtn.title = 'Unwrap element';
+			removeBtn.setAttribute('aria-label', 'Unwrap element');
+			removeBtn.textContent = '\u00d7';
+			removeBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				editor.commands.unwrapRawHtmlBlock();
+			});
+			labelBar.appendChild(removeBtn);
+
+			dom.appendChild(labelBar);
 
 			// Content area
 			const contentDOM = document.createElement('div');

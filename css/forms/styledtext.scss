@@ -420,16 +420,16 @@
 	display          : flex;
 	align-items      : center;
 	justify-content  : center;
-	background-color : oklch(0 0 0 / 0.4);
+	background-color : oklch(0 0 0 / 0.6);
 }
 
 .ste-dialog {
 	width            : 480px;
 	max-width        : 90vw;
 	max-height       : 80vh;
-	background-color : oklch(var(--totalform-white));
+	background-color : oklch(var(--totalform-nearwhite));
 	border-radius    : 8px;
-	box-shadow       : 0 8px 32px oklch(0 0 0 / 0.2);
+	box-shadow       : 0 8px 32px oklch(0 0 0 / 0.6);
 	overflow         : hidden;
 	display          : flex;
 	flex-direction   : column;
@@ -498,6 +498,64 @@
 .ste-dialog-body {
 	padding    : 16px;
 	overflow-y : auto;
+}
+
+// Block/Element attributes dialog — data-* rows
+.ste-block-data-section {
+	margin-top : 12px;
+}
+
+.ste-block-data-rows {
+	display        : flex;
+	flex-direction : column;
+	gap            : 6px;
+	margin-bottom  : 8px;
+}
+
+.ste-block-data-row {
+	display     : flex;
+	align-items : center;
+	gap         : 6px;
+
+	.ste-block-data-key {
+		flex : 2;
+	}
+
+	.ste-block-data-value {
+		flex : 3;
+	}
+}
+
+.ste-block-data-remove {
+	all              : unset;
+	cursor           : pointer;
+	font-size        : 16px;
+	line-height      : 1;
+	color            : oklch(var(--totalform-mediumgray));
+	padding          : 4px;
+	flex-shrink      : 0;
+
+	&:hover {
+		color : oklch(var(--totalform-danger, var(--totalform-darkgray)));
+	}
+}
+
+.ste-dialog-btn--add-data {
+	all            : unset;
+	cursor         : pointer;
+	display        : inline-flex;
+	align-items    : center;
+	justify-content: center;
+	width          : 22px;
+	height         : 22px;
+	border-radius  : var(--totalform-radius);
+	color          : oklch(var(--totalform-mediumgray));
+	border         : 1px solid oklch(var(--totalform-border-color));
+
+	&:hover {
+		color            : oklch(var(--totalform-accent));
+		border-color     : oklch(var(--totalform-accent));
+	}
 }
 
 .ste-dialog-panel {
@@ -1096,13 +1154,29 @@
 }
 
 .ste-raw-html-label {
-	position       : absolute;
-	top            : 2px;
-	left           : 6px;
-	font-size      : 10px;
-	font-family    : monospace;
-	color          : oklch(var(--totalform-mediumgray));
-	pointer-events : none;
+	position        : absolute;
+	top             : 2px;
+	left            : 6px;
+	right           : 6px;
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	font-size       : 10px;
+	font-family     : monospace;
+	color           : oklch(var(--totalform-mediumgray));
+}
+
+.ste-raw-html-remove {
+	all             : unset;
+	cursor          : pointer;
+	font-size       : 14px;
+	line-height     : 1;
+	color           : oklch(var(--totalform-mediumgray));
+	padding         : 0 2px;
+
+	&:hover {
+		color : oklch(var(--totalform-danger, var(--totalform-darkgray)));
+	}
 }
 
 .ste-raw-html-content {
@@ -1381,6 +1455,10 @@
 		p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6 {
 			margin-top    : 0;
 			margin-bottom : 1rem;
+		}
+
+		li > p {
+			margin-bottom : 0;
 		}
 	}
 }

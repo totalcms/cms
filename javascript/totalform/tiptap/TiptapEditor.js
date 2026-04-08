@@ -32,12 +32,14 @@ import AudioNode from './extensions/AudioNode.js';
 import { createFileDialog } from './extensions/FileLink.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
 import { createAnchorDialog } from './extensions/AnchorDialog.js';
+import { createBlockAttributesDialog } from './extensions/BlockAttributesDialog.js';
 import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import InlineStyle from './extensions/InlineStyle.js';
 import InlineElement from './extensions/InlineElement.js';
 import AnchorId from './extensions/AnchorId.js';
+import GlobalAttributes from './extensions/GlobalAttributes.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
@@ -163,7 +165,7 @@ export default class TiptapEditor {
 		const extensions = [
 			StarterKit.configure({
 				heading: {
-					levels: [2, 3, 4],
+					levels: [1, 2, 3, 4, 5, 6],
 				},
 				// Disable extensions we configure separately
 				link: false,
@@ -210,6 +212,7 @@ export default class TiptapEditor {
 			Superscript,
 			Subscript,
 			RawHTML,
+			GlobalAttributes,
 			InlineClass,
 		InlineStyle,
 		InlineElement,
@@ -332,6 +335,9 @@ export default class TiptapEditor {
 			case 'openAnchorDialog':
 				this.openAnchorDialog();
 				break;
+			case 'openBlockAttributesDialog':
+				this.openBlockAttributesDialog();
+				break;
 		}
 	}
 
@@ -357,6 +363,10 @@ export default class TiptapEditor {
 
 	openAnchorDialog() {
 		createAnchorDialog(this.editor);
+	}
+
+	openBlockAttributesDialog() {
+		createBlockAttributesDialog(this.editor, this.options.blockClasses);
 	}
 
 	openImageDialog() {
@@ -422,7 +432,7 @@ export default class TiptapEditor {
 	}
 
 	getFormattedHTML() {
-		const html = this.editor.getHTML();
+		const html = this.cleanHTML(this.editor.getHTML());
 		return html
 			.replace(/></g, '>\n<')
 			.replace(/\n<\/(p|h[1-6]|ul|ol|li|blockquote|div|table|tr|td|th|thead|tbody|pre|hr|figure|figcaption)>/g, '</$1>\n')
@@ -434,27 +444,36 @@ export default class TiptapEditor {
 	 * Tiptap/ProseMirror always wraps list item content in <p> blocks internally,
 	 * but the output should be clean: <li>text</li> not <li><p>text</p></li>.
 	 */
-	cleanListParagraphs(html) {
+	cleanHTML(html) {
 		const div = document.createElement('div');
 		div.innerHTML = html;
+
+		// Remove wrapping <p> tags from list items with a single paragraph
 		div.querySelectorAll('li').forEach(li => {
 			const children = Array.from(li.children);
 			if (children.length === 1 && children[0].tagName === 'P') {
 				li.innerHTML = children[0].innerHTML;
 			}
 		});
+
+		// Remove trailing empty <p> tags
+		let last;
+		while ((last = div.lastElementChild) && last.tagName === 'P' && last.innerHTML.trim() === '') {
+			last.remove();
+		}
+
 		return div.innerHTML;
 	}
 
 	syncToTextarea() {
-		this.textarea.value = this.cleanListParagraphs(this.editor.getHTML());
+		this.textarea.value = this.cleanHTML(this.editor.getHTML());
 	}
 
 	getHTML() {
 		if (this.codeView?.isActive()) {
 			return this.codeView.getValue();
 		}
-		return this.cleanListParagraphs(this.editor.getHTML());
+		return this.cleanHTML(this.editor.getHTML());
 	}
 
 	setHTML(html) {

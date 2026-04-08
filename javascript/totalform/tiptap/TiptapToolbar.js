@@ -43,6 +43,7 @@ const ICON_MAP = {
 	inlineClasses:   'inline-class',
 	htmlSnippets:    'add-element',
 	anchor:          'anchor',
+	blockAttributes: 'code',
 };
 
 const BUTTON_DEFS = {
@@ -72,15 +73,11 @@ const BUTTON_DEFS = {
 	codeView:        { command: 'toggleCodeView',     label: 'Code View' },
 	fullscreen:      { command: 'toggleFullscreen',   label: 'Fullscreen' },
 	hardBreak:       { command: 'setHardBreak',       label: 'Hard Break' },
-	anchor:          { command: 'openAnchorDialog',   label: 'Anchor ID' },
+	anchor:          { command: 'openAnchorDialog',          label: 'Anchor ID' },
+	blockAttributes: { command: 'openBlockAttributesDialog', label: 'Element Attributes' },
 };
 
-const HEADING_OPTIONS = [
-	{ level: 0,  label: 'Normal' },
-	{ level: 2,  label: 'Heading 2' },
-	{ level: 3,  label: 'Heading 3' },
-	{ level: 4,  label: 'Heading 4' },
-];
+const DEFAULT_HEADING_LEVELS = [2, 3, 4];
 
 const ALIGN_OPTIONS = [
 	{ value: 'left',    icon: 'align-left',    label: 'Align Left' },
@@ -191,7 +188,7 @@ export default class TiptapToolbar {
 					groupEl.appendChild(this.buildHtmlSnippetDropdown(snippets));
 					continue;
 				}
-	
+
 				const def = BUTTON_DEFS[buttonName];
 				if (!def) continue;
 
@@ -245,7 +242,13 @@ export default class TiptapToolbar {
 		const menu = document.createElement('div');
 		menu.className = 'ste-toolbar-dropdown-menu';
 
-		for (const opt of HEADING_OPTIONS) {
+		const levels = this.options.headingLevels || DEFAULT_HEADING_LEVELS;
+		const headingOptions = [
+			{ level: 0, label: 'Normal' },
+			...levels.map(l => ({ level: l, label: `Heading ${l}` })),
+		];
+
+		for (const opt of headingOptions) {
 			const item = document.createElement('button');
 			item.type = 'button';
 			item.className = 'ste-toolbar-dropdown-item';
@@ -704,6 +707,8 @@ export default class TiptapToolbar {
 	}
 
 	insertHtmlSnippet(template, label) {
+		if (typeof template !== 'string') return;
+
 		const BLOCK_TAGS = [
 			'div', 'section', 'aside', 'article', 'nav', 'header', 'footer',
 			'main', 'figure', 'details', 'blockquote', 'pre', 'table',
@@ -767,7 +772,7 @@ export default class TiptapToolbar {
 			'toggleCodeView', 'openLinkDialog', 'openImageDialog',
 			'openVideoDialog', 'openFileDialog', 'insertTable',
 			'setColor', 'setHighlight', 'setFontFamily', 'toggleFullscreen',
-			'openAnchorDialog',
+			'openAnchorDialog', 'openBlockAttributesDialog',
 		];
 
 		if (delegatedCommands.includes(command)) {

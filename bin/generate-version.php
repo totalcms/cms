@@ -14,6 +14,9 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use TotalCMS\Support\Version;
 
+$argc = $argc ?? 0;
+$argv = $argv ?? [];
+
 if ($argc < 3) {
 	echo "Usage: php bin/generate-version.php <version> <build> [output-file]\n";
 	echo "Example: php bin/generate-version.php 3.1.3 5e3c5139\n";

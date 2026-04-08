@@ -29,14 +29,14 @@ export default class SimpleForm {
 
 		if (this.ajax) {
 			this.form.addEventListener("submit", event => event.preventDefault());
-			this.button.addEventListener("click", event => {
+			this.button?.addEventListener("click", event => {
 				event.preventDefault();
 				this.send();
 			});
 		} else {
 			this.form.method = this.method;
 			this.form.action = this.route;
-			this.button.addEventListener("click", event => {
+			this.button?.addEventListener("click", event => {
 				this.form.submit();
 			});
 		}
@@ -130,8 +130,8 @@ export default class SimpleForm {
 			return;
 		}
 
-		this.button.classList.remove("success", "error");
-		this.button.classList.add("processing");
+		this.button?.classList.remove("success", "error");
+		this.button?.classList.add("processing");
 
 		if (this.hasFileField()) {
 			this.api.postFileAPI(this.route, new FormData(this.form), this.method)
@@ -161,7 +161,7 @@ export default class SimpleForm {
 	}
 
 	hasError() {
-		return this.button.classList.contains("error");
+		return this.button?.classList.contains("error") ?? false;
 	}
 
 	error(error) {
@@ -170,6 +170,7 @@ export default class SimpleForm {
 	}
 
 	toggleButton(state, label) {
+		if (!this.button) return;
 		setTimeout(() => {
 			const originalText = this.button.textContent;
 			this.button.style.width = `${this.button.offsetWidth}px`;
