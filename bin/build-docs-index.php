@@ -52,19 +52,19 @@ foreach ($files as $file) {
 
 	// Clean content for indexing:
 	// - Remove code block fences but keep the code content
-	$searchContent = (string) preg_replace('/```\w*\n?/', '', $content);
+	$searchContent = (string)preg_replace('/```\w*\n?/', '', $content);
 	// - Replace <pre> tags with their content (preserve code for searching)
-	$searchContent = (string) preg_replace('/<pre[^>]*>(.*?)<\/pre>/s', ' $1 ', $searchContent);
+	$searchContent = (string)preg_replace('/<pre[^>]*>(.*?)<\/pre>/s', ' $1 ', $searchContent);
 	// - Remove HTML tags
 	$searchContent = strip_tags($searchContent);
 	// - Remove markdown formatting but preserve dots (for cms.login, etc.)
-	$searchContent = (string) preg_replace('/[#*_`\[\]()]/', ' ', $searchContent);
+	$searchContent = (string)preg_replace('/[#*_`\[\]()]/', ' ', $searchContent);
 	// - Remove URLs
-	$searchContent = (string) preg_replace('/https?:\/\/[^\s]+/', '', $searchContent);
+	$searchContent = (string)preg_replace('/https?:\/\/[^\s]+/', '', $searchContent);
 	// - Remove Twig delimiters but keep the content
-	$searchContent = (string) preg_replace('/\{\{|\}\}|\{%|%\}/', ' ', $searchContent);
+	$searchContent = (string)preg_replace('/\{\{|\}\}|\{%|%\}/', ' ', $searchContent);
 	// - Normalize whitespace
-	$searchContent = (string) preg_replace('/\s+/', ' ', $searchContent);
+	$searchContent = (string)preg_replace('/\s+/', ' ', $searchContent);
 	$searchContent = trim($searchContent);
 
 	// Create excerpt (first 200 chars after title)
