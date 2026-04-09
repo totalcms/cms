@@ -38,6 +38,7 @@
 			<button type="button" class="dash-button" id="update-btn"
 				hx-post="utils/update/apply"
 				hx-target="#update-results"
+				hx-swap="none"
 				hx-confirm="{{ t('update.confirm') }}">
 				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
 			</button>
@@ -52,11 +53,10 @@
 	<div class="update-current-notice">
 		<p>{{ t('update.up_to_date') }}</p>
 	</div>
-	{% endif %}
-
 	<div class="update-check-action">
 		<a href="utils/update?check=1" class="dash-button transparent">{{ t('update.check_btn') }}</a>
 	</div>
+	{% endif %}
 
 	<div id="update-results"></div>
 

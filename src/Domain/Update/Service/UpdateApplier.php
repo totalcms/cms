@@ -63,6 +63,10 @@ class UpdateApplier
 			$this->maintenanceMode->disable();
 			$this->logger->info('Maintenance mode disabled');
 
+			// Clean up backup after successful update
+			$this->deleteDirectory($backupDir);
+			$this->logger->info('Backup cleaned up');
+
 			$this->logger->info("Update to {$version} complete");
 		} catch (\Throwable $e) {
 			$this->maintenanceMode->disable();
