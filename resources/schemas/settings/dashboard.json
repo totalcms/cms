@@ -31,7 +31,7 @@
 		},
 		"fullWidthForms": {
 			"type"    : "toggle",
-			"label"   : "Full Width Forms",
+			"label"   : "Full Width Object Forms",
 			"help"    : "When enabled, forms in the admin dashboard expand to fill the full available width instead of being capped at 800px.",
 			"default" : false
 		}
