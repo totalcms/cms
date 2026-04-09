@@ -73,6 +73,10 @@
 				// Ignore "not found" errors from third-party feature/plugin systems
 				if (message.includes('was not found')) return null;
 
+				// Ignore ProseMirror/Tiptap internal errors (not actionable)
+				if (message.includes('Applying a mismatched transaction')) return null;
+				if (message.includes('outside of fragment')) return null;
+
 				return event;
 			}
 		});

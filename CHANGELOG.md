@@ -2,6 +2,38 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.2.3] - 2026-04-07
+
+### Added
+
+- **Element Attributes Dialog**: New `blockAttributes` toolbar button for the styled text editor that lets users set class, id, and custom data-* attributes on block-level elements (headings, paragraphs, list items, etc.) without using code view
+- **Block Classes Setting**: New `blockClasses` setting for styled text provides autocomplete suggestions in the Element Attributes dialog via native datalist
+- **Global Attributes Extension**: Class, id, and data-* attributes now survive code view round-trips on all block-level elements in the styled text editor
+- **Heading Levels Setting**: New `headingLevels` setting for styled text controls which heading levels (1-6) appear in the Paragraph Format dropdown. Defaults to `[2, 3, 4]`
+- **HTML Snippet Unwrap**: HTML snippet blocks in the styled text editor now have a remove button to unwrap the element and keep the inner content
+
+### Enhanced
+
+- **Styled Text Heading Support**: All heading levels (H1-H6) are now supported in the editor. Previously only H2-H4 were available
+- **ImageWorks File Size Display**: Preview image file size now falls back to reading the response blob when the Content-Length header is missing, eliminating "Unknown" display on servers with chunked transfer or compression enabled
+
+### Fixed
+
+- **Collection Shuffle**: Fixed `sortCollection([{shuffle: true}])` Twig filter not properly randomizing collection items
+- **Collection Sort Priority**: Fixed multi-criteria sort rules so the first rule is primary and subsequent rules are tiebreakers, matching expected behavior
+- **SimpleForm Null Button**: Fixed TypeError crash on pages with `.simple-form` elements that lack a submit button (e.g., export pages)
+- **HTML Snippet Type Guard**: Fixed crash when an `htmlSnippets` setting contains a non-string template value
+- **List Item Attributes**: Element Attributes dialog now correctly targets the `<li>` element instead of the inner `<p>` when editing list items
+
+### Documentation
+
+- **Styled Text Settings**: Complete example now includes every toolbar button and all configuration options
+- **Heading Levels**: Documented new `headingLevels` setting
+- **Block Classes**: Documented new `blockClasses` setting
+- **Element Attributes**: Added `blockAttributes` to the available toolbar buttons list
+- **REST API**: Updated REST API documentation
+- **AI Integration**: Added MCP server documentation for AI agent integration
+
 ## [3.2.2] - 2026-04-03
 
 ### Added

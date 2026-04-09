@@ -707,6 +707,8 @@ export default class TiptapToolbar {
 	}
 
 	insertHtmlSnippet(template, label) {
+		if (typeof template !== 'string') return;
+
 		const BLOCK_TAGS = [
 			'div', 'section', 'aside', 'article', 'nav', 'header', 'footer',
 			'main', 'figure', 'details', 'blockquote', 'pre', 'table',
