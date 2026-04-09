@@ -226,6 +226,8 @@ body {
 			&.import-rss { --collection-icon : var(--icon-rss) }
 			&.import-wordpress { --collection-icon : var(--icon-wordpress) }
 			&.import-totalcms-one { --collection-icon : var(--icon-logo-fill) }
+			&.update { --collection-icon : var(--icon-update) }
+			&.sync { --collection-icon : var(--icon-refresh) }
 		}
 		a {
 			display         : flex;
@@ -310,7 +312,7 @@ body {
 	p:not(.help):first-of-type {
 		margin-top: 0;
 	}
-	form {
+	body:not(.full-width-forms) & form {
 		max-width : 800px;
 	}
 	header {
