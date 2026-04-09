@@ -41,10 +41,11 @@ readonly class UpdateDownloader
 		]);
 
 		if ($response->statusCode >= 400) {
+			$errorDetail = substr($response->body, 0, 200);
 			if (file_exists($tempPath)) {
 				unlink($tempPath);
 			}
-			throw new \RuntimeException("Download failed (HTTP {$response->statusCode})");
+			throw new \RuntimeException("Download failed (HTTP {$response->statusCode}): {$errorDetail}");
 		}
 
 		if (!file_exists($tempPath) || filesize($tempPath) === 0) {
