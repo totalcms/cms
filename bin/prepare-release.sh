@@ -316,7 +316,7 @@ print_success "Caches cleared"
 print_info "Setting proper file permissions..."
 find . -type f -name "*.php" -exec chmod 644 {} +
 find . -type d -exec chmod 755 {} +
-chmod +x bin/*.sh bin/*.php
+chmod +x bin/*.sh bin/*.php resources/bin/tcms
 print_success "File permissions set"
 
 # Generate checksums

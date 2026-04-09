@@ -40,47 +40,47 @@ if [ $? -ne 0 ]; then
 fi
 
 # remove imagine libs that are not required and take up too much space
-find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -not -name '*.xsl' -type f -delete
-find vendor -name "*phpstorm*" -delete
-find vendor -empty -type d -delete
-find vendor -name bin -type d | xargs rm -rf
-find vendor -name test -type d | xargs rm -rf
+# find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -not -name '*.xsl' -type f -delete
+# find vendor -name "*phpstorm*" -delete
+# find vendor -empty -type d -delete
+# find vendor -name bin -type d | xargs rm -rf
+# find vendor -name test -type d | xargs rm -rf
 
 # Enhanced cleanup for smaller distribution
-echo "Performing enhanced vendor cleanup..."
-find vendor -name "tests" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "Tests" -type d -exec rm -rf {} + 2>/dev/null
-# Only remove PHPUnit test files, not core library classes
-find vendor -path "*/tests/*" -name "*.php" -type f -delete 2>/dev/null
-find vendor -path "*/Tests/*" -name "*.php" -type f -delete 2>/dev/null
-find vendor -name "phpunit*" -type f -delete
-find vendor -name "docs" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "doc" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "examples" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "demo" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "samples" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name ".php-cs-fixer*" -delete
-find vendor -name ".cs.php" -delete
-find vendor -name "phpcs.xml*" -delete
-find vendor -name "phpunit.xml*" -delete
-find vendor -name "rector.php" -delete
-find vendor -name "psalm.xml*" -delete
-find vendor -name "phpstan.neon*" -delete
-find vendor -name ".github" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name ".circleci" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name ".travis.yml" -delete
-find vendor -name ".scrutinizer.yml" -delete
-find vendor -name "CHANGELOG*" -delete
-find vendor -name "CHANGES*" -delete
-find vendor -name "UPGRADE*" -delete
-find vendor -name "HISTORY*" -delete
-find vendor -name "NEWS*" -delete
-find vendor -name "composer.lock" -delete
-find vendor -name "composer.json" -delete
-find vendor -name ".gitignore" -delete
-find vendor -name ".gitattributes" -delete
-find vendor -name ".editorconfig" -delete
-find vendor -empty -type d -delete 2>/dev/null
+# echo "Performing enhanced vendor cleanup..."
+# find vendor -name "tests" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "Tests" -type d -exec rm -rf {} + 2>/dev/null
+# # Only remove PHPUnit test files, not core library classes
+# find vendor -path "*/tests/*" -name "*.php" -type f -delete 2>/dev/null
+# find vendor -path "*/Tests/*" -name "*.php" -type f -delete 2>/dev/null
+# find vendor -name "phpunit*" -type f -delete
+# find vendor -name "docs" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "doc" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "examples" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "demo" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "samples" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name ".php-cs-fixer*" -delete
+# find vendor -name ".cs.php" -delete
+# find vendor -name "phpcs.xml*" -delete
+# find vendor -name "phpunit.xml*" -delete
+# find vendor -name "rector.php" -delete
+# find vendor -name "psalm.xml*" -delete
+# find vendor -name "phpstan.neon*" -delete
+# find vendor -name ".github" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name ".circleci" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name ".travis.yml" -delete
+# find vendor -name ".scrutinizer.yml" -delete
+# find vendor -name "CHANGELOG*" -delete
+# find vendor -name "CHANGES*" -delete
+# find vendor -name "UPGRADE*" -delete
+# find vendor -name "HISTORY*" -delete
+# find vendor -name "NEWS*" -delete
+# find vendor -name "composer.lock" -delete
+# find vendor -name "composer.json" -delete
+# find vendor -name ".gitignore" -delete
+# find vendor -name ".gitattributes" -delete
+# find vendor -name ".editorconfig" -delete
+# find vendor -empty -type d -delete 2>/dev/null
 
 # Trim symfony/intl locale data to supported locales only
 # Only keep exact base locales and specific sub-locales from settings/general.json
