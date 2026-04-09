@@ -35,11 +35,7 @@
 
 		<div class="update-actions">
 			{% if updateInfo.updatesValid %}
-			<button type="button" class="dash-button" id="update-btn"
-				hx-post="utils/update/apply"
-				hx-target="#update-results"
-				hx-swap="none"
-				hx-confirm="{{ t('update.confirm') }}">
+			<button type="button" class="dash-button" id="update-btn">
 				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
 			</button>
 			{% else %}
@@ -149,30 +145,41 @@
 	font-weight: 500;
 }
 
-#update-results:not(:empty) {
-	margin-top: 1rem;
-	padding: 1rem 1.5rem;
-	border-radius: var(--totalform-radius);
-	background: oklch(var(--totalform-nearwhite));
-	border: 1px solid oklch(var(--totalform-border-color));
+.update-installing {
+	text-align: center;
+	padding: 2rem 1rem;
+}
+
+.update-installing.success h3 {
+	color: oklch(var(--totalform-success));
+}
+
+.update-installing.error h3 {
+	color: oklch(var(--totalform-error));
 }
 </style>
 
 <script>
-document.body.addEventListener('htmx:afterRequest', (e) => {
-	if (!e.detail.target || e.detail.target.id !== 'update-results') return;
+document.getElementById('update-btn')?.addEventListener('click', async () => {
+	if (!confirm('{{ t('update.confirm') }}')) return;
 
+	const available = document.querySelector('.update-available');
 	const results = document.getElementById('update-results');
+
+	available.innerHTML = '<div class="update-installing"><h3>Installing Update&hellip;</h3><p>Please wait while the update is being applied. Do not close this page.</p></div>';
+	results.innerHTML = '';
+
 	try {
-		const data = JSON.parse(e.detail.xhr.responseText);
+		const res = await fetch('utils/update/apply', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+		const data = await res.json();
 		if (data.success) {
-			results.innerHTML = `<p style="color:oklch(var(--totalform-success))"><strong>${data.message}</strong></p>`;
-			setTimeout(() => location.reload(), 3000);
+			available.innerHTML = `<div class="update-installing success"><h3>${data.message}</h3></div>`;
+			setTimeout(() => location.reload(), 2000);
 		} else {
-			results.innerHTML = `<p style="color:oklch(var(--totalform-error))"><strong>Error:</strong> ${data.error}</p>`;
+			available.innerHTML = `<div class="update-installing error"><h3>Update Failed</h3><p>${data.error}</p></div>`;
 		}
-	} catch {
-		results.innerHTML = `<p style="color:oklch(var(--totalform-error))">Unexpected response from server.</p>`;
+	} catch (err) {
+		available.innerHTML = `<div class="update-installing error"><h3>Update Failed</h3><p>Unexpected error. Check the server logs.</p></div>`;
 	}
 });
 </script>
