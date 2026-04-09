@@ -381,25 +381,32 @@ if [ -n "$TOTALCMS_RELEASE_KEY" ]; then
     print_info "Registering version with license API..."
     RELEASE_DATE=$(date +%Y-%m-%d)
 
-    REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://license.totalcms.co/version" \
-        -H "X-Api-Key: ${TOTALCMS_RELEASE_KEY}" \
-        -H "Content-Type: application/json" \
-        -d "$(cat <<EOF
+    CHANGELOG_JSON=$(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null || echo '""')
+
+    JSON_BODY=$(cat <<EOF
 {
     "versionNumber": "${NEW_VERSION}",
     "releaseDate": "${RELEASE_DATE}",
     "buildHash": "${GIT_HASH}",
     "severity": "${SEVERITY}",
-    "changelog": $(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null || echo '""')
+    "changelog": ${CHANGELOG_JSON}
 }
 EOF
-)")
+)
+
+    REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://license.totalcms.co/version" \
+        -H "X-API-Key: ${TOTALCMS_RELEASE_KEY}" \
+        -H "Content-Type: application/json" \
+        -A "TotalCMS-Release/1.0" \
+        -d "$JSON_BODY")
 
     HTTP_CODE=$(echo "$REGISTER_RESPONSE" | tail -1)
+    RESPONSE_BODY=$(echo "$REGISTER_RESPONSE" | sed '$d')
     if [ "$HTTP_CODE" = "200" ]; then
         print_success "Version registered with license API"
     else
         print_warning "Failed to register version with license API (HTTP $HTTP_CODE)"
+        print_warning "Response: $RESPONSE_BODY"
     fi
 else
     print_warning "TOTALCMS_RELEASE_KEY not set — skipping version registration"
