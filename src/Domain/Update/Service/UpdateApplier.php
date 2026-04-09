@@ -36,7 +36,7 @@ class UpdateApplier
 	{
 		$this->logger->info("Starting update to {$version}");
 
-		$extractDir = $this->config->cachedir . '/update-extract';
+		$extractDir = sys_get_temp_dir() . '/totalcms-update-extract';
 		$backupDir  = $this->appRoot . ".backup-{$version}-" . date('Ymd-His');
 
 		try {
