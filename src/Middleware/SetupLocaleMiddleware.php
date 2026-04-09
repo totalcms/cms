@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -18,7 +18,7 @@ use TotalCMS\Domain\Translation\TranslationService;
 readonly class SetupLocaleMiddleware implements MiddlewareInterface
 {
 	public function __construct(
-		private PhpSession $session,
+		private SessionInterface $session,
 		private TranslationService $translationService,
 	) {
 	}

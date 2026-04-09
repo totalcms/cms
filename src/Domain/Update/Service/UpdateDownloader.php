@@ -41,19 +41,23 @@ readonly class UpdateDownloader
 		]);
 
 		if ($response->statusCode >= 400) {
-			@unlink($tempPath);
+			if (file_exists($tempPath)) {
+				unlink($tempPath);
+			}
 			throw new \RuntimeException("Download failed (HTTP {$response->statusCode})");
 		}
 
 		if (!file_exists($tempPath) || filesize($tempPath) === 0) {
-			@unlink($tempPath);
+			if (file_exists($tempPath)) {
+				unlink($tempPath);
+			}
 			throw new \RuntimeException('Downloaded file is empty or missing');
 		}
 
 		// Verify it's a valid zip
 		$zip = new \ZipArchive();
 		if ($zip->open($tempPath) !== true) {
-			@unlink($tempPath);
+			unlink($tempPath);
 			throw new \RuntimeException('Downloaded file is not a valid zip archive');
 		}
 		$zip->close();

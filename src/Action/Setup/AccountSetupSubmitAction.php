@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Setup;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
@@ -20,7 +20,7 @@ readonly class AccountSetupSubmitAction
 	public function __construct(
 		private FirstLoginChecker $firstLoginChecker,
 		private SetupStateManager $setupState,
-		private PhpSession $session,
+		private SessionInterface $session,
 		private RedirectRenderer $redirectRenderer,
 		private TranslationService $translator,
 	) {

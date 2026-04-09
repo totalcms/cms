@@ -1076,6 +1076,10 @@ return [
 	'update.confirm'         => '¿Está seguro? El sitio no estará disponible brevemente durante la actualización.',
 	'update.check_btn'       => 'Buscar Actualizaciones',
 	'update.up_to_date'      => 'Total CMS está actualizado.',
+	'update.expires'         => 'Actualizaciones válidas hasta',
+	'update.expired_notice'  => 'Sus actualizaciones han expirado.',
+	'update.renew_required'  => 'Sus actualizaciones han expirado. Renueve su licencia para descargar esta actualización.',
+	'update.renew_link'      => 'Renovar Actualizaciones',
 
 	// Setup Wizard
 	'wizard.welcome'              => 'Bienvenido a Total CMS',

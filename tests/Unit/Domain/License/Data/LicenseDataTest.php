@@ -66,6 +66,53 @@ describe('LicenseData', function (): void {
 		expect($licenseData->trialDaysRemaining)->toBe(null);
 	});
 
+	test('creates from API response with updatesExpireDate', function (): void {
+		$response = [
+			'valid'              => true,
+			'trial'              => false,
+			'domain'             => 'example.com',
+			'edition'            => 'pro',
+			'message'            => 'License valid',
+			'validationToken'    => 'token',
+			'updatesValid'       => true,
+			'updatesExpireDate'  => '2027-04-09',
+			'trialDaysRemaining' => null,
+		];
+
+		$licenseData = LicenseData::fromApiResponse($response);
+
+		expect($licenseData->updatesExpireDate)->toBe('2027-04-09');
+		expect($licenseData->updatesValid)->toBe(true);
+	});
+
+	test('creates from cached array with updatesExpireDate', function (): void {
+		$data = [
+			'valid'              => true,
+			'trial'              => false,
+			'domain'             => 'example.com',
+			'edition'            => 'pro',
+			'message'            => 'License valid',
+			'validationToken'    => 'token',
+			'updatesValid'       => false,
+			'updatesExpireDate'  => '2025-01-01',
+			'trialDaysRemaining' => null,
+			'dnsVerified'        => true,
+			'timestamp'          => 1234567890,
+		];
+
+		$licenseData = LicenseData::fromArray($data);
+
+		expect($licenseData->updatesExpireDate)->toBe('2025-01-01');
+		expect($licenseData->updatesValid)->toBe(false);
+	});
+
+	test('updatesExpireDate defaults to null', function (): void {
+		$response    = ['valid' => true, 'edition' => 'pro'];
+		$licenseData = LicenseData::fromApiResponse($response);
+
+		expect($licenseData->updatesExpireDate)->toBeNull();
+	});
+
 	test('validates cache properly', function (): void {
 		$response    = ['valid' => true, 'edition' => 'pro'];
 		$licenseData = LicenseData::fromApiResponse($response);
@@ -99,6 +146,7 @@ describe('LicenseData', function (): void {
 			message: 'Trial active',
 			validationToken: 'token123',
 			updatesValid: false,
+			updatesExpireDate: '2026-12-31',
 			trialDaysRemaining: 15,
 			dnsVerified: true,
 			timestamp: 1234567890
@@ -114,6 +162,7 @@ describe('LicenseData', function (): void {
 			'message'            => 'Trial active',
 			'validationToken'    => 'token123',
 			'updatesValid'       => false,
+			'updatesExpireDate'  => '2026-12-31',
 			'trialDaysRemaining' => 15,
 			'dnsVerified'        => true,
 			'timestamp'          => 1234567890,

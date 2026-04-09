@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Setup;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -26,7 +26,7 @@ readonly class WelcomeAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private TranslationService $translationService,
-		private PhpSession $session,
+		private SessionInterface $session,
 	) {
 	}
 

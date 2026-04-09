@@ -1076,6 +1076,10 @@ return [
 	'update.confirm'         => 'Are you sure you want to update? The site will be briefly unavailable during the update.',
 	'update.check_btn'       => 'Check for Updates',
 	'update.up_to_date'      => 'Total CMS is up to date.',
+	'update.expires'         => 'Updates valid until',
+	'update.expired_notice'  => 'Your updates have expired.',
+	'update.renew_required'  => 'Your updates have expired. Renew your licence to download this update.',
+	'update.renew_link'      => 'Renew Updates',
 
 	// Setup Wizard
 	'wizard.welcome'              => 'Welcome to Total CMS',

@@ -83,7 +83,9 @@ class UpdateApplier
 			// Clean up extract directory
 			$this->deleteDirectory($extractDir);
 			// Clean up downloaded zip
-			@unlink($zipPath);
+			if (file_exists($zipPath)) {
+				unlink($zipPath);
+			}
 		}
 	}
 

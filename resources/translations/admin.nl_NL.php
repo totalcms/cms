@@ -1076,6 +1076,10 @@ return [
 	'update.confirm'         => 'Weet u het zeker? De website is tijdens de update kort niet bereikbaar.',
 	'update.check_btn'       => 'Controleren op Updates',
 	'update.up_to_date'      => 'Total CMS is up-to-date.',
+	'update.expires'         => 'Updates geldig tot',
+	'update.expired_notice'  => 'Uw updates zijn verlopen.',
+	'update.renew_required'  => 'Uw updates zijn verlopen. Vernieuw uw licentie om deze update te downloaden.',
+	'update.renew_link'      => 'Updates Vernieuwen',
 
 	// Setup Wizard
 	'wizard.welcome'              => 'Welkom bij Total CMS',
