@@ -29,8 +29,7 @@
 
 		{% if updateInfo.changelog %}
 		<div class="update-changelog">
-			<h4>{{ t('update.changelog') }}</h4>
-			<div class="changelog-content">{{ updateInfo.changelog|markdown }}</div>
+			{{ updateInfo.changelog|markdown }}
 		</div>
 		{% endif %}
 
@@ -132,12 +131,13 @@
 	margin-top: 1.5rem;
 	padding-top: 1rem;
 	border-top: 1px solid oklch(var(--totalform-border-color));
+	display: grid;
+	gap: 1rem;
+	font-size: 0.9em;
 }
 
-.changelog-content {
-	font-size: 0.9rem;
-	line-height: 1.6;
-	white-space: pre-wrap;
+.update-changelog > * {
+	margin : 0!important;
 }
 
 .update-actions {
