@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Update\Service;
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Update\Data\UpdateInfo;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -22,6 +23,7 @@ readonly class UpdateChecker
 	public function __construct(
 		private HttpClientInterface $httpClient,
 		private CacheManager $cacheManager,
+		private LicenseValidator $licenseValidator,
 	) {
 	}
 
@@ -35,7 +37,11 @@ readonly class UpdateChecker
 		if (!$forceRefresh) {
 			$cached = $this->cacheManager->getComputedData(self::CACHE_KEY);
 			if (is_array($cached)) {
-				return UpdateInfo::fromApiResponse($cached);
+				return UpdateInfo::fromApiResponse(
+					$cached,
+					$cached['updatesValid'] ?? true,
+					$cached['updatesExpireDate'] ?? null,
+				);
 			}
 		}
 
@@ -49,38 +55,69 @@ readonly class UpdateChecker
 		]);
 
 		if ($response->statusCode >= 400) {
-			return new UpdateInfo(
-				available: false,
-				version: $currentVersion,
-				releaseDate: '',
-				severity: '',
-				changelog: '',
-				buildHash: '',
-				downloadUrl: ''
-			);
+			return $this->noUpdate($currentVersion);
 		}
 
 		$data = json_decode($response->body, true);
 		if (!is_array($data)) {
-			return new UpdateInfo(
-				available: false,
-				version: $currentVersion,
-				releaseDate: '',
-				severity: '',
-				changelog: '',
-				buildHash: '',
-				downloadUrl: ''
-			);
+			return $this->noUpdate($currentVersion);
 		}
+
+		// Check if this license qualifies for updates
+		$licenseInfo       = $this->getLicenseInfo();
+		$updatesValid      = $licenseInfo['valid'];
+		$updatesExpireDate = $licenseInfo['expireDate'];
+
+		// Patch updates are always allowed, even with expired updates
+		$severity = (string) ($data['severity'] ?? 'patch');
+		if (!$updatesValid && $severity === 'patch') {
+			$updatesValid = true;
+		}
+
+		$data['updatesValid']      = $updatesValid;
+		$data['updatesExpireDate'] = $updatesExpireDate;
 
 		$this->cacheManager->storeComputedData(self::CACHE_KEY, $data, self::CACHE_TTL);
 
-		return UpdateInfo::fromApiResponse($data);
+		return UpdateInfo::fromApiResponse($data, $updatesValid, $updatesExpireDate);
 	}
 
 	public function clearCache(): void
 	{
 		$this->cacheManager->clearComputedData(self::CACHE_KEY);
+	}
+
+	/**
+	 * @return array{valid: bool, expireDate: ?string}
+	 */
+	private function getLicenseInfo(): array
+	{
+		try {
+			$license = $this->licenseValidator->validateLicense();
+			return [
+				'valid'      => $license->updatesValid,
+				'expireDate' => $license->updatesExpireDate,
+			];
+		} catch (\Throwable) {
+			return ['valid' => false, 'expireDate' => null];
+		}
+	}
+
+	private function noUpdate(string $currentVersion): UpdateInfo
+	{
+		$licenseInfo = $this->getLicenseInfo();
+
+		return new UpdateInfo(
+			available:         false,
+			version:           $currentVersion,
+			releaseDate:       '',
+			severity:          '',
+			changelog:         '',
+			buildHash:         '',
+			downloadUrl:       '',
+			updatesValid:      $licenseInfo['valid'],
+			updatesExpireDate: $licenseInfo['expireDate'],
+		);
 	}
 
 	private function getLicenseApiUrl(): string

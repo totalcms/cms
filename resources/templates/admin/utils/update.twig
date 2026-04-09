@@ -7,6 +7,17 @@
 		<p class="version-number">{{ cms.version }}</p>
 	</div>
 
+	{% if updateInfo %}
+	<div class="update-license-info">
+		{% if updateInfo.updatesExpireDate %}
+			<p>{{ t('update.expires') }}: <strong>{{ updateInfo.updatesExpireDate }}</strong></p>
+		{% endif %}
+		{% if not updateInfo.updatesValid %}
+			<p class="update-expired-notice">{{ t('update.expired_notice') }} <a href="utils/license-manager">{{ t('update.renew_link') }}</a></p>
+		{% endif %}
+	</div>
+	{% endif %}
+
 	{% if updateInfo and updateInfo.available %}
 	<div class="update-available">
 		<h3>{{ t('update.available') }}</h3>
@@ -24,12 +35,18 @@
 		{% endif %}
 
 		<div class="update-actions">
+			{% if updateInfo.updatesValid %}
 			<button type="button" class="dash-button" id="update-btn"
 				hx-post="{{ cms.api }}/utils/update/apply"
 				hx-target="#update-results"
 				hx-confirm="{{ t('update.confirm') }}">
 				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
 			</button>
+			{% else %}
+			<div class="update-renew-notice">
+				<p>{{ t('update.renew_required') }} <a href="utils/license-manager">{{ t('update.renew_link') }}</a></p>
+			</div>
+			{% endif %}
 		</div>
 	</div>
 	{% else %}
@@ -57,6 +74,20 @@
 .update-current .version-number {
 	font-size: 1.5rem;
 	font-weight: 600;
+}
+
+.update-license-info {
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+}
+
+.update-expired-notice {
+	color: oklch(var(--totalform-error));
+	font-weight: 500;
+}
+
+.update-renew-notice {
+	color: oklch(var(--totalform-error));
 }
 
 .update-available {

@@ -43,6 +43,10 @@ class UpdateApplyCommand extends BaseCommand
 			return Command::SUCCESS;
 		}
 
+		if (!$updateInfo->updatesValid) {
+			return $this->outputError($input, $output, 'Your updates have expired. Renew your license to download this update.');
+		}
+
 		if (!$isJson) {
 			$output->writeln("Update available: <info>{$updateInfo->version}</info> ({$updateInfo->severity})");
 			$output->writeln('Current version: ' . Version::number());

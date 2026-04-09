@@ -20,7 +20,8 @@ readonly class LicenseData
 		public string $message,
 		public ?string $validationToken,
 		public bool $updatesValid,
-		public ?int $trialDaysRemaining,
+		public ?string $updatesExpireDate = null,
+		public ?int $trialDaysRemaining = null,
 		public bool $dnsVerified = false,
 		public int $timestamp = 0,
 	) {
@@ -60,6 +61,7 @@ readonly class LicenseData
 			message             : $response['message'] ?? '',
 			validationToken     : $response['validationToken'] ?? null,
 			updatesValid        : $response['updatesValid'] ?? false,
+			updatesExpireDate   : $response['updatesExpireDate'] ?? null,
 			trialDaysRemaining  : $response['trialDaysRemaining'] ?? null,
 			dnsVerified         : $response['dnsVerified'] ?? false,
 			timestamp           : time(),
@@ -74,16 +76,17 @@ readonly class LicenseData
 	public static function fromArray(array $data): self
 	{
 		return new self(
-			valid              : (bool)($data['valid'] ?? false),
-			trial              : (bool)($data['trial'] ?? false),
-			domain             : (string)($data['domain'] ?? ''),
-			edition            : (string)($data['edition'] ?? 'unknown'),
-			message            : (string)($data['message'] ?? ''),
+			valid              : (bool) ($data['valid'] ?? false),
+			trial              : (bool) ($data['trial'] ?? false),
+			domain             : (string) ($data['domain'] ?? ''),
+			edition            : (string) ($data['edition'] ?? 'unknown'),
+			message            : (string) ($data['message'] ?? ''),
 			validationToken    : $data['validationToken'] ?? null,
-			updatesValid       : (bool)($data['updatesValid'] ?? false),
+			updatesValid       : (bool) ($data['updatesValid'] ?? false),
+			updatesExpireDate  : $data['updatesExpireDate'] ?? null,
 			trialDaysRemaining : $data['trialDaysRemaining'] ?? null,
-			dnsVerified        : (bool)($data['dnsVerified'] ?? false),
-			timestamp          : (int)($data['timestamp'] ?? 0),
+			dnsVerified        : (bool) ($data['dnsVerified'] ?? false),
+			timestamp          : (int) ($data['timestamp'] ?? 0),
 		);
 	}
 
@@ -110,6 +113,7 @@ readonly class LicenseData
 			'message'            => $this->message,
 			'validationToken'    => $this->validationToken,
 			'updatesValid'       => $this->updatesValid,
+			'updatesExpireDate'  => $this->updatesExpireDate,
 			'trialDaysRemaining' => $this->trialDaysRemaining,
 			'dnsVerified'        => $this->dnsVerified,
 			'timestamp'          => $this->timestamp,

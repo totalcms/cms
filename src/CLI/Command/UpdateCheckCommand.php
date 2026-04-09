@@ -43,12 +43,17 @@ class UpdateCheckCommand extends BaseCommand
 		if ($updateInfo->available) {
 			$output->writeln("<info>Update available: {$updateInfo->version}</info> ({$updateInfo->severity})");
 			$output->writeln('');
-			TableHelper::renderKeyValue($output, [
+
+			$details = [
 				'Current'  => Version::number(),
 				'Latest'   => $updateInfo->version,
 				'Released' => $updateInfo->releaseDate,
 				'Severity' => $updateInfo->severity,
-			]);
+			];
+			if ($updateInfo->updatesExpireDate !== null) {
+				$details['Updates Expire'] = $updateInfo->updatesExpireDate;
+			}
+			TableHelper::renderKeyValue($output, $details);
 
 			if ($updateInfo->changelog !== '') {
 				$output->writeln('');
@@ -57,9 +62,16 @@ class UpdateCheckCommand extends BaseCommand
 			}
 
 			$output->writeln('');
-			$output->writeln('Run <info>tcms update:apply</info> to update.');
+			if (!$updateInfo->updatesValid) {
+				$output->writeln('<comment>Your updates have expired. Renew your license to download this update.</comment>');
+			} else {
+				$output->writeln('Run <info>tcms update:apply</info> to update.');
+			}
 		} else {
 			$output->writeln('Total CMS ' . Version::number() . ' is up to date.');
+			if ($updateInfo->updatesExpireDate !== null) {
+				$output->writeln("Updates valid until: {$updateInfo->updatesExpireDate}");
+			}
 		}
 
 		$output->writeln('');

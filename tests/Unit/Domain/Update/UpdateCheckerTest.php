@@ -6,6 +6,8 @@ namespace Tests\Unit\Domain\Update;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\License\Data\LicenseData;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
@@ -15,13 +17,22 @@ final class UpdateCheckerTest extends TestCase
 	private UpdateChecker $checker;
 	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
 	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
+	private \PHPUnit\Framework\MockObject\MockObject $licenseValidator;
 
 	protected function setUp(): void
 	{
-		$this->httpClient   = $this->createMock(HttpClientInterface::class);
-		$this->cacheManager = $this->createMock(CacheManager::class);
+		$this->httpClient       = $this->createMock(HttpClientInterface::class);
+		$this->cacheManager     = $this->createMock(CacheManager::class);
+		$this->licenseValidator = $this->createMock(LicenseValidator::class);
 
-		$this->checker = new UpdateChecker($this->httpClient, $this->cacheManager);
+		$license = new LicenseData(
+			valid: true, trial: false, domain: 'example.com', edition: 'pro',
+			message: '', validationToken: null, updatesValid: true,
+			updatesExpireDate: '2027-04-09', trialDaysRemaining: null,
+		);
+		$this->licenseValidator->method('validateLicense')->willReturn($license);
+
+		$this->checker = new UpdateChecker($this->httpClient, $this->cacheManager, $this->licenseValidator);
 	}
 
 	public function testReturnsUpdateInfoFromApi(): void
@@ -94,6 +105,72 @@ final class UpdateCheckerTest extends TestCase
 		$result = $this->checker->checkForUpdate();
 
 		expect($result->available)->toBeFalse();
+	}
+
+	public function testPatchUpdatesAllowedWhenExpired(): void
+	{
+		// License with expired updates
+		$expiredLicense = new LicenseData(
+			valid: true, trial: false, domain: 'example.com', edition: 'pro',
+			message: '', validationToken: null, updatesValid: false,
+			updatesExpireDate: '2025-01-01', trialDaysRemaining: null,
+		);
+		$licenseValidator = $this->createMock(LicenseValidator::class);
+		$licenseValidator->method('validateLicense')->willReturn($expiredLicense);
+
+		$checker = new UpdateChecker($this->httpClient, $this->cacheManager, $licenseValidator);
+
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+			'available' => true,
+			'version'   => '3.2.3',
+			'severity'  => 'patch',
+		])));
+
+		$result = $checker->checkForUpdate(forceRefresh: true);
+
+		expect($result->available)->toBeTrue();
+		expect($result->updatesValid)->toBeTrue(); // Patch overrides expired
+	}
+
+	public function testMinorUpdatesBlockedWhenExpired(): void
+	{
+		$expiredLicense = new LicenseData(
+			valid: true, trial: false, domain: 'example.com', edition: 'pro',
+			message: '', validationToken: null, updatesValid: false,
+			updatesExpireDate: '2025-01-01', trialDaysRemaining: null,
+		);
+		$licenseValidator = $this->createMock(LicenseValidator::class);
+		$licenseValidator->method('validateLicense')->willReturn($expiredLicense);
+
+		$checker = new UpdateChecker($this->httpClient, $this->cacheManager, $licenseValidator);
+
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+			'available' => true,
+			'version'   => '3.3.0',
+			'severity'  => 'minor',
+		])));
+
+		$result = $checker->checkForUpdate(forceRefresh: true);
+
+		expect($result->available)->toBeTrue();
+		expect($result->updatesValid)->toBeFalse(); // Minor stays blocked
+	}
+
+	public function testIncludesExpireDateInResult(): void
+	{
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+			'available' => true,
+			'version'   => '3.3.0',
+			'severity'  => 'minor',
+		])));
+
+		$result = $this->checker->checkForUpdate(forceRefresh: true);
+
+		expect($result->updatesExpireDate)->toBe('2027-04-09');
+		expect($result->updatesValid)->toBeTrue();
 	}
 
 	public function testClearCache(): void

@@ -56,6 +56,18 @@ final class UpdateInfoTest extends TestCase
 		expect($info->severity)->toBe('patch');
 	}
 
+	public function testFromApiResponseWithUpdatesExpireDate(): void
+	{
+		$info = UpdateInfo::fromApiResponse(
+			['available' => true, 'version' => '3.3.0'],
+			updatesValid: true,
+			updatesExpireDate: '2027-04-09',
+		);
+
+		expect($info->updatesValid)->toBeTrue();
+		expect($info->updatesExpireDate)->toBe('2027-04-09');
+	}
+
 	public function testToArray(): void
 	{
 		$info = new UpdateInfo(
@@ -73,6 +85,6 @@ final class UpdateInfoTest extends TestCase
 		expect($array['available'])->toBeTrue();
 		expect($array['version'])->toBe('3.3.0');
 		expect($array['severity'])->toBe('minor');
-		expect($array)->toHaveCount(7);
+		expect($array)->toHaveCount(9);
 	}
 }
