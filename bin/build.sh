@@ -122,9 +122,6 @@ rm -rf vendor/ssnepenthe/color-utils
 echo "Building documentation search index..."
 php bin/build-docs-index.php
 
-# generate bundle to verify installation
-php bin/make-bundle.php
-
 # move required files to dist
 echo "Moving required files to dist..."
 rm -rf dist
@@ -142,15 +139,19 @@ rm -rf dist/public/false
 echo "Installing all required composer packages back for dev environment..."
 composer install --quiet
 
-# remove write permissions from all files
-find dist/resources -type f -exec chmod 444 {} +
-
-# Ensure this does not get shipped
+# Ensure these do not get shipped
 rm -f dist/resources/.bundle
 rm -f dist/resources/jobqueue
 rm -f dist/resources/bin/.processJobs
 rm -f dist/config/local.dev.php
 rm -f dist/config/local.test.php
+
+# Generate bundle hash against the final dist (after all cleanup)
+echo "Generating bundle integrity hash..."
+php bin/make-bundle.php dist
+
+# remove write permissions from all files
+find dist/resources -type f -exec chmod 444 {} +
 
 # Handle version.json
 if [ $RELEASE -eq 1 ]; then

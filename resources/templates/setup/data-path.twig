@@ -1,12 +1,12 @@
 {% extends "admin-layout.twig" %}
 
-{% block title %}Total CMS Setup - Data Path Configuration{% endblock %}
+{% block title %}{{ t('wizard.datapath_title') }}{% endblock %}
 
 {% block content %}
 <main class="login-layout admin-layout">
 	<section class="setup-header">
-		<h1>Welcome to Total CMS</h1>
-		<p>Let's configure where Total CMS should store its data.</p>
+		<h1>{{ t('wizard.datapath_title') }}</h1>
+		<p>{{ t('wizard.datapath_desc') }}</p>
 	</section>
 
 	{# Display flash messages #}
@@ -24,18 +24,18 @@
 
 	{% set formFields %}
 		{{ cms.form.field("radio", "location", {
-			label    : "Where should Total CMS store data?",
+			label    : t('wizard.datapath_label'),
 			required : true,
 			value    : "docroot",
 			options  : [
-				{value: "docroot", label: "Document Root (Default) <span class='path-preview'>" ~ docrootPath ~ "</span>"},
-				{value: "default", label: "Above Document Root (Recommended) <span class='path-preview'>" ~ defaultPath ~ "</span>"},
-				{value: "custom", label: "Custom Path"}
+				{value: "docroot", label: t('wizard.datapath_docroot') ~ " <span class='path-preview'>" ~ docrootPath ~ "</span>"},
+				{value: "default", label: t('wizard.datapath_above') ~ " <span class='path-preview'>" ~ defaultPath ~ "</span>"},
+				{value: "custom", label: t('wizard.datapath_custom')}
 			]
 		}) }}
 
 		{{ cms.form.field("text", "customPath", {
-			help        : "Enter the full path where the data folder should be created",
+			help        : t('wizard.datapath_custom_help'),
 			placeholder : "/path/to/custom-folder",
 			value       : customPath,
 			class       : "icon-folder",
@@ -51,7 +51,7 @@
 	{{ cms.form.simple(cms.api ~ '/setup/data-path', formFields, {
 		class  : "setup-form",
 		method : "POST",
-		label  : "Continue to Setup",
+		label  : t('wizard.datapath_btn'),
 		ajax   : false,
 	}) }}
 </main>

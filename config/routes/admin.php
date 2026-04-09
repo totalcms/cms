@@ -42,8 +42,6 @@ use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
-	$app->redirect('/', '/admin', 301);
-
 	$app->group('/admin', function (RouteCollectorProxy $group): void {
 		// Display Admin Interface
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
