@@ -1,7 +1,6 @@
 <?php
 
 use Slim\App;
-use TotalCMS\Action\PreflightAction;
 
 return function (App $app): void {
 	(require __DIR__ . '/routes/admin.php')($app);
