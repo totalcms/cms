@@ -36,7 +36,7 @@
 		<div class="update-actions">
 			{% if updateInfo.updatesValid %}
 			<button type="button" class="dash-button" id="update-btn"
-				hx-post="{{ cms.api }}/utils/update/apply"
+				hx-post="utils/update/apply"
 				hx-target="#update-results"
 				hx-confirm="{{ t('update.confirm') }}">
 				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
