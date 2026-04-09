@@ -411,6 +411,8 @@ S3_BUCKET="s3://totalcms-archive"
 print_info "Uploading dist zip to S3..."
 if aws s3 cp "${DIST_ZIP}" "${S3_BUCKET}/releases/totalcms-${NEW_VERSION}.zip"; then
     print_success "Dist zip uploaded to ${S3_BUCKET}/releases/totalcms-${NEW_VERSION}.zip"
+	rm -f "${DIST_ZIP}"
+	print_success "Dist zip uploaded and cleaned up"
 else
     print_warning "Failed to upload dist zip to S3"
 fi
