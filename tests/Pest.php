@@ -2,6 +2,12 @@
 
 $_SERVER['APP_ENV'] = 'test';
 
+// Ensure Symfony Console Resources directory exists (missing in some CI environments)
+$consoleResourcesDir = dirname((new ReflectionClass(Symfony\Component\Console\Application::class))->getFileName()) . '/Resources';
+if (!is_dir($consoleResourcesDir)) {
+	@mkdir($consoleResourcesDir, 0755, true);
+}
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

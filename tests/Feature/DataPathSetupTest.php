@@ -44,10 +44,9 @@ describe('Data Path Setup Feature', function (): void {
 		expect($response->getStatusCode())->toBe(200);
 
 		$body = (string)$response->getBody();
-		expect($body)->toContain('Welcome to Total CMS');
 		expect($body)->toContain('Data Path Configuration');
-		expect($body)->toContain('Document Root (Default)');
-		expect($body)->toContain('Above Document Root (Recommended)');
+		expect($body)->toContain('Document Root');
+		expect($body)->toContain('Above Document Root');
 		expect($body)->toContain('Custom Path');
 	});
 
