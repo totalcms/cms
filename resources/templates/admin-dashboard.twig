@@ -55,7 +55,7 @@
 		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
 </head>
-<body>
+<body{% if cms.config('dashboard', 'fullWidthForms') %} class="full-width-forms"{% endif %}>
 
     {% block content %}
 

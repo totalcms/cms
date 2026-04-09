@@ -28,6 +28,12 @@
 			"label"   : "Keep ID on Duplicate Object?",
 			"help"    : "When enabled, duplicating an object will keep the original ID (user must change it manually before saving). When disabled (default), the ID field is cleared to allow autogen rules to work.",
 			"default" : false
+		},
+		"fullWidthForms": {
+			"type"    : "toggle",
+			"label"   : "Full Width Forms",
+			"help"    : "When enabled, forms in the admin dashboard expand to fill the full available width instead of being capped at 800px.",
+			"default" : false
 		}
 	}
 }
