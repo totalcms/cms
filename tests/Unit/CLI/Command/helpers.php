@@ -43,4 +43,3 @@ function createTestConfig(array $overrides = []): Config
 
 	return new Config(array_merge($defaults, $overrides));
 }
-
