@@ -30,7 +30,7 @@
 		{% if updateInfo.changelog %}
 		<div class="update-changelog">
 			<h4>{{ t('update.changelog') }}</h4>
-			<div class="changelog-content">{{ updateInfo.changelog }}</div>
+			<div class="changelog-content">{{ updateInfo.changelog|markdown }}</div>
 		</div>
 		{% endif %}
 
