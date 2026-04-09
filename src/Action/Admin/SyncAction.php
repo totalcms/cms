@@ -70,7 +70,7 @@ readonly class SyncAction
 	private function parseList(mixed $value): ?array
 	{
 		if (is_array($value) && $value !== []) {
-			return array_values(array_filter(array_map('strval', $value)));
+			return array_values(array_filter(array_map(strval(...), $value)));
 		}
 
 		return null;

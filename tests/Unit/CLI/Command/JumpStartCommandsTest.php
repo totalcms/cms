@@ -67,7 +67,7 @@ describe('jumpstart:export', function (): void {
 
 		$this->tester->execute(['--output' => $tmpFile, '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data['success'])->toBeTrue();
 		expect($data['schemas'])->toBe(1);
 		expect($data['collections'])->toBe(1);
@@ -122,7 +122,7 @@ describe('jumpstart:import', function (): void {
 
 		$this->tester->execute(['file' => $tmpFile, '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data['success'])->toBeTrue();
 		expect($data['summary']['schemas_created'])->toBe(1);
 		@unlink($tmpFile);

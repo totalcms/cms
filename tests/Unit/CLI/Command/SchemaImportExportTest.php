@@ -37,7 +37,7 @@ describe('schema:export', function (): void {
 	it('exports schema JSON to stdout', function (): void {
 		$this->tester->execute(['id' => 'products']);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toBeArray();
 		expect($data['id'])->toBe('products');
 	});
@@ -100,7 +100,7 @@ describe('schema:import', function (): void {
 
 		$this->tester->execute(['file' => $tmpFile, '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data['success'])->toBeTrue();
 		expect($data['id'])->toBe('new-schema');
 		@unlink($tmpFile);

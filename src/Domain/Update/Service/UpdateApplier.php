@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Update\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
 
 /**
  * Applies downloaded updates by swapping the application directory.
@@ -20,7 +19,6 @@ class UpdateApplier
 	private readonly string $appRoot;
 
 	public function __construct(
-		private readonly Config $config,
 		private readonly MaintenanceMode $maintenanceMode,
 		private readonly CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,

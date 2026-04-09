@@ -25,19 +25,15 @@ class CollectionListCommand extends BaseCommand
 	{
 		$lister = $this->totalcms->collectionLister();
 
-		$schema = $input->getOption('schema');
-		if (is_string($schema)) {
-			$collections = $lister->listCollectionsWithSchema($schema);
-		} else {
-			$collections = $lister->listAllCollections();
-		}
+		$schema      = $input->getOption('schema');
+		$collections = is_string($schema) ? $lister->listCollectionsWithSchema($schema) : $lister->listAllCollections();
 
 		$category = $input->getOption('category');
 		if (is_string($category)) {
-			$collections = array_filter($collections, fn ($c) => $c->category === $category);
+			$collections = array_filter($collections, fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $c->category === $category);
 		}
 
-		$data = array_map(fn ($c) => $c->toArray(), array_values($collections));
+		$data = array_map(fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): array => $c->toArray(), array_values($collections));
 
 		return $this->outputData($input, $output, $data);
 	}

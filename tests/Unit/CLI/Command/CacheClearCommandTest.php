@@ -36,7 +36,7 @@ it('clears cache and shows results', function (): void {
 it('outputs JSON with --json', function (): void {
 	$this->tester->execute(['--json' => true]);
 
-	$data = json_decode($this->tester->getDisplay(), true);
+	$data = json_decode((string)$this->tester->getDisplay(), true);
 	expect($data)->toBeArray();
 	expect($data['filesystem'])->toHaveKey('cleared');
 	expect($data['filesystem']['cleared'])->toBeTrue();

@@ -120,7 +120,7 @@ class InfoCommand extends BaseCommand
 
 		TableHelper::renderKeyValue($output, [
 			'Domain'      => $data['domain'],
-			'Edition'     => ucfirst($data['edition']),
+			'Edition'     => ucfirst((string)$data['edition']),
 			'License'     => $status,
 			'Collections' => (string)$data['collections']['total'],
 			'Schemas'     => "{$data['schemas']['custom']} custom, {$data['schemas']['reserved']} reserved",

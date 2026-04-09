@@ -9,7 +9,6 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Update\Service\MaintenanceMode;
 use TotalCMS\Domain\Update\Service\UpdateApplier;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
 
 /**
  * Tests for UpdateApplier.
@@ -37,14 +36,11 @@ final class UpdateApplierTest extends TestCase
 
 	private function createApplier(): UpdateApplier
 	{
-		$config           = $this->createMock(Config::class);
-		$config->cachedir = $this->tmpDir;
-
 		$maintenanceMode = $this->createMock(MaintenanceMode::class);
 		$cacheManager    = $this->createMock(CacheManager::class);
 		$loggerFactory   = new LoggerFactory(['path' => $this->tmpDir . '/logs', 'level' => \Monolog\Level::Debug]);
 
-		return new UpdateApplier($config, $maintenanceMode, $cacheManager, $loggerFactory);
+		return new UpdateApplier($maintenanceMode, $cacheManager, $loggerFactory);
 	}
 
 	public function testApplyFailsWithInvalidZip(): void

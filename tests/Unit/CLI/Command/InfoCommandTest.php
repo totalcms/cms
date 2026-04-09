@@ -69,7 +69,7 @@ it('outputs valid JSON with --json flag', function (): void {
 	$this->tester->execute(['--json' => true]);
 
 	$output = $this->tester->getDisplay();
-	$data   = json_decode($output, true);
+	$data   = json_decode((string)$output, true);
 
 	expect($data)->toBeArray();
 	expect($data['domain'])->toBe('example.com');

@@ -14,7 +14,7 @@ final class UpdateDownloaderTest extends TestCase
 {
 	private string $tmpDir;
 	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
-	private Config $config;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
 
 	protected function setUp(): void
 	{

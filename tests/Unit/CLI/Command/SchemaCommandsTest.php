@@ -61,7 +61,7 @@ describe('schema:list', function (): void {
 	it('outputs JSON array with --json', function (): void {
 		$this->tester->execute(['--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toBeArray();
 		expect($data)->toHaveCount(2);
 		expect($data[0]['id'])->toBe('blog');
@@ -70,7 +70,7 @@ describe('schema:list', function (): void {
 	it('filters by --custom flag', function (): void {
 		$this->tester->execute(['--custom' => true, '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(1);
 		expect($data[0]['id'])->toBe('products');
 	});
@@ -78,7 +78,7 @@ describe('schema:list', function (): void {
 	it('filters by --reserved flag', function (): void {
 		$this->tester->execute(['--reserved' => true, '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(1);
 		expect($data[0]['id'])->toBe('blog');
 	});
@@ -86,7 +86,7 @@ describe('schema:list', function (): void {
 	it('filters by --category', function (): void {
 		$this->tester->execute(['--category' => 'Commerce', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(1);
 		expect($data[0]['id'])->toBe('products');
 	});
@@ -111,7 +111,7 @@ describe('schema:get', function (): void {
 	it('outputs full schema JSON with --json', function (): void {
 		$this->tester->execute(['id' => 'blog', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toBeArray();
 		expect($data['id'])->toBe('blog');
 	});
@@ -125,7 +125,7 @@ describe('schema:get', function (): void {
 	it('returns JSON error for nonexistent schema with --json', function (): void {
 		$this->tester->execute(['id' => 'nonexistent', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveKey('error');
 		expect($this->tester->getStatusCode())->toBe(1);
 	});

@@ -63,10 +63,10 @@ class CollectionExportCommand extends BaseCommand
 		}
 
 		if ($format === 'csv') {
-			return $this->exportCsv($input, $output, $objects, $outputFile);
+			return $this->exportCsv($output, $objects, $outputFile);
 		}
 
-		return $this->exportJson($input, $output, $objects, $outputFile);
+		return $this->exportJson($output, $objects, $outputFile);
 	}
 
 	/**
@@ -186,7 +186,7 @@ class CollectionExportCommand extends BaseCommand
 	/**
 	 * @param list<array<string,mixed>> $objects
 	 */
-	private function exportJson(InputInterface $input, OutputInterface $output, array $objects, mixed $outputFile): int
+	private function exportJson(OutputInterface $output, array $objects, mixed $outputFile): int
 	{
 		$json = (string)json_encode($objects, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
@@ -205,7 +205,7 @@ class CollectionExportCommand extends BaseCommand
 	/**
 	 * @param list<array<string,mixed>> $objects
 	 */
-	private function exportCsv(InputInterface $input, OutputInterface $output, array $objects, mixed $outputFile): int
+	private function exportCsv(OutputInterface $output, array $objects, mixed $outputFile): int
 	{
 		if ($objects === []) {
 			$output->writeln('No objects to export.');

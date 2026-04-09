@@ -56,21 +56,21 @@ describe('object:list', function (): void {
 	it('outputs JSON array with --json', function (): void {
 		$this->tester->execute(['collection' => 'blog', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toBe(['post-1', 'post-2', 'post-3']);
 	});
 
 	it('respects --limit', function (): void {
 		$this->tester->execute(['collection' => 'blog', '--limit' => '2', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(2);
 	});
 
 	it('respects --offset', function (): void {
 		$this->tester->execute(['collection' => 'blog', '--offset' => '1', '--limit' => '2', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(2);
 		expect($data[0])->toBe('post-2');
 	});
@@ -116,7 +116,7 @@ describe('object:get', function (): void {
 	it('outputs JSON with --json', function (): void {
 		$this->tester->execute(['collection' => 'blog', 'id' => 'post-1', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toBeArray();
 		expect($data['id'])->toBe('post-1');
 	});

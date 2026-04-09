@@ -34,7 +34,6 @@ final class UpdateCheckerTest extends TestCase
 			validationToken: null,
 			updatesValid: true,
 			updatesExpireDate: '2027-04-09',
-			trialDaysRemaining: null,
 		);
 		$this->licenseValidator->method('validateLicense')->willReturn($license);
 
@@ -125,7 +124,6 @@ final class UpdateCheckerTest extends TestCase
 			validationToken: null,
 			updatesValid: false,
 			updatesExpireDate: '2025-01-01',
-			trialDaysRemaining: null,
 		);
 		$licenseValidator = $this->createMock(LicenseValidator::class);
 		$licenseValidator->method('validateLicense')->willReturn($expiredLicense);
@@ -156,7 +154,6 @@ final class UpdateCheckerTest extends TestCase
 			validationToken: null,
 			updatesValid: false,
 			updatesExpireDate: '2025-01-01',
-			trialDaysRemaining: null,
 		);
 		$licenseValidator = $this->createMock(LicenseValidator::class);
 		$licenseValidator->method('validateLicense')->willReturn($expiredLicense);

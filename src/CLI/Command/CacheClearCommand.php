@@ -38,7 +38,7 @@ class CacheClearCommand extends BaseCommand
 		foreach ($data as $backend => $result) {
 			$status = 'N/A';
 			if (is_array($result)) {
-				$status = !empty($result['cleared']) ? 'Cleared' : 'Skipped';
+				$status = empty($result['cleared']) ? 'Skipped' : 'Cleared';
 			}
 			$rows[] = [(string)$backend, $status];
 		}

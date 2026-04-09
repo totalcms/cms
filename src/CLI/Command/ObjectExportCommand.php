@@ -39,10 +39,10 @@ class ObjectExportCommand extends BaseCommand
 			return $this->exportZip($input, $output, $collectionId, $objectId, $outputFile);
 		}
 
-		return $this->exportJson($input, $output, $collectionId, $objectId, $outputFile);
+		return $this->exportJson($output, $collectionId, $objectId, $outputFile);
 	}
 
-	private function exportJson(InputInterface $input, OutputInterface $output, string $collectionId, string $objectId, mixed $outputFile): int
+	private function exportJson(OutputInterface $output, string $collectionId, string $objectId, mixed $outputFile): int
 	{
 		$object = $this->totalcms->objectFetcher()->fetchObject($collectionId, $objectId);
 		$json   = (string)json_encode($object->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

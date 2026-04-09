@@ -91,7 +91,7 @@ class SetupStateManager
 	{
 		$steps = $this->session->get(self::SESSION_KEY);
 
-		return is_array($steps) ? array_values(array_filter($steps, 'is_string')) : [];
+		return is_array($steps) ? array_values(array_filter($steps, is_string(...))) : [];
 	}
 
 	private function dataPathExists(): bool

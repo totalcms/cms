@@ -135,6 +135,6 @@ class PullCommand extends BaseCommand
 			return null;
 		}
 
-		return array_map('trim', explode(',', $value));
+		return array_map(trim(...), explode(',', $value));
 	}
 }

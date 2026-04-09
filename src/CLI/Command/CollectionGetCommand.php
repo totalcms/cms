@@ -25,7 +25,7 @@ class CollectionGetCommand extends BaseCommand
 		$id         = (string)$input->getArgument('id');
 		$collection = $this->totalcms->collectionFetcher()->fetchCollection($id);
 
-		if ($collection === null) {
+		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			return $this->outputError($input, $output, "Collection '{$id}' not found.");
 		}
 

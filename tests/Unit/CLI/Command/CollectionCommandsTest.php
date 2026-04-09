@@ -77,7 +77,7 @@ describe('collection:list', function (): void {
 	it('outputs JSON with --json', function (): void {
 		$this->tester->execute(['--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(2);
 		expect($data[0]['id'])->toBe('blog');
 	});
@@ -85,7 +85,7 @@ describe('collection:list', function (): void {
 	it('filters by --schema', function (): void {
 		$this->tester->execute(['--schema' => 'products', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(1);
 		expect($data[0]['id'])->toBe('products');
 	});
@@ -93,7 +93,7 @@ describe('collection:list', function (): void {
 	it('filters by --category', function (): void {
 		$this->tester->execute(['--category' => 'Content', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data)->toHaveCount(1);
 		expect($data[0]['id'])->toBe('blog');
 	});
@@ -118,7 +118,7 @@ describe('collection:get', function (): void {
 	it('outputs JSON with --json', function (): void {
 		$this->tester->execute(['id' => 'blog', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data['id'])->toBe('blog');
 		expect($data['name'])->toBe('Blog');
 	});
@@ -164,7 +164,7 @@ describe('collection:query', function (): void {
 	it('outputs JSON with --json', function (): void {
 		$this->tester->execute(['id' => 'blog', '--json' => true]);
 
-		$data = json_decode($this->tester->getDisplay(), true);
+		$data = json_decode((string)$this->tester->getDisplay(), true);
 		expect($data['total'])->toBe(10);
 		expect($data['results'])->toHaveCount(2);
 		expect($data['results'][0]['id'])->toBe('post-1');

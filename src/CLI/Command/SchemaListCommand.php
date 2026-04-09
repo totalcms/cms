@@ -36,10 +36,10 @@ class SchemaListCommand extends BaseCommand
 
 		$category = $input->getOption('category');
 		if (is_string($category)) {
-			$schemas = array_filter($schemas, fn ($s) => $s->category === $category);
+			$schemas = array_filter($schemas, fn (\TotalCMS\Domain\Schema\Data\SchemaData $s): bool => $s->category === $category);
 		}
 
-		$data = array_map(fn ($s) => $s->toArray(), array_values($schemas));
+		$data = array_map(fn (\TotalCMS\Domain\Schema\Data\SchemaData $s): array => $s->toArray(), array_values($schemas));
 
 		return $this->outputData($input, $output, $data);
 	}
