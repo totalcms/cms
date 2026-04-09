@@ -26,9 +26,15 @@ final class UpdateCheckerTest extends TestCase
 		$this->licenseValidator = $this->createMock(LicenseValidator::class);
 
 		$license = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'pro',
-			message: '', validationToken: null, updatesValid: true,
-			updatesExpireDate: '2027-04-09', trialDaysRemaining: null,
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'pro',
+			message: '',
+			validationToken: null,
+			updatesValid: true,
+			updatesExpireDate: '2027-04-09',
+			trialDaysRemaining: null,
 		);
 		$this->licenseValidator->method('validateLicense')->willReturn($license);
 
@@ -111,9 +117,15 @@ final class UpdateCheckerTest extends TestCase
 	{
 		// License with expired updates
 		$expiredLicense = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'pro',
-			message: '', validationToken: null, updatesValid: false,
-			updatesExpireDate: '2025-01-01', trialDaysRemaining: null,
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'pro',
+			message: '',
+			validationToken: null,
+			updatesValid: false,
+			updatesExpireDate: '2025-01-01',
+			trialDaysRemaining: null,
 		);
 		$licenseValidator = $this->createMock(LicenseValidator::class);
 		$licenseValidator->method('validateLicense')->willReturn($expiredLicense);
@@ -121,7 +133,7 @@ final class UpdateCheckerTest extends TestCase
 		$checker = new UpdateChecker($this->httpClient, $this->cacheManager, $licenseValidator);
 
 		$this->cacheManager->method('getComputedData')->willReturn(null);
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available' => true,
 			'version'   => '3.2.3',
 			'severity'  => 'patch',
@@ -136,9 +148,15 @@ final class UpdateCheckerTest extends TestCase
 	public function testMinorUpdatesBlockedWhenExpired(): void
 	{
 		$expiredLicense = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'pro',
-			message: '', validationToken: null, updatesValid: false,
-			updatesExpireDate: '2025-01-01', trialDaysRemaining: null,
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'pro',
+			message: '',
+			validationToken: null,
+			updatesValid: false,
+			updatesExpireDate: '2025-01-01',
+			trialDaysRemaining: null,
 		);
 		$licenseValidator = $this->createMock(LicenseValidator::class);
 		$licenseValidator->method('validateLicense')->willReturn($expiredLicense);
@@ -146,7 +164,7 @@ final class UpdateCheckerTest extends TestCase
 		$checker = new UpdateChecker($this->httpClient, $this->cacheManager, $licenseValidator);
 
 		$this->cacheManager->method('getComputedData')->willReturn(null);
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available' => true,
 			'version'   => '3.3.0',
 			'severity'  => 'minor',
@@ -161,7 +179,7 @@ final class UpdateCheckerTest extends TestCase
 	public function testIncludesExpireDateInResult(): void
 	{
 		$this->cacheManager->method('getComputedData')->willReturn(null);
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available' => true,
 			'version'   => '3.3.0',
 			'severity'  => 'minor',

@@ -69,7 +69,7 @@ readonly class UpdateChecker
 		$updatesExpireDate = $licenseInfo['expireDate'];
 
 		// Patch updates are always allowed, even with expired updates
-		$severity = (string) ($data['severity'] ?? 'patch');
+		$severity = (string)($data['severity'] ?? 'patch');
 		if (!$updatesValid && $severity === 'patch') {
 			$updatesValid = true;
 		}
@@ -94,6 +94,7 @@ readonly class UpdateChecker
 	{
 		try {
 			$license = $this->licenseValidator->validateLicense();
+
 			return [
 				'valid'      => $license->updatesValid,
 				'expireDate' => $license->updatesExpireDate,
@@ -108,14 +109,14 @@ readonly class UpdateChecker
 		$licenseInfo = $this->getLicenseInfo();
 
 		return new UpdateInfo(
-			available:         false,
-			version:           $currentVersion,
-			releaseDate:       '',
-			severity:          '',
-			changelog:         '',
-			buildHash:         '',
-			downloadUrl:       '',
-			updatesValid:      $licenseInfo['valid'],
+			available: false,
+			version: $currentVersion,
+			releaseDate: '',
+			severity: '',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '',
+			updatesValid: $licenseInfo['valid'],
 			updatesExpireDate: $licenseInfo['expireDate'],
 		);
 	}

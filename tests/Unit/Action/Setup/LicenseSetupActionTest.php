@@ -37,8 +37,13 @@ final class LicenseSetupActionTest extends TestCase
 	public function testCompletesStepAndRendersLicense(): void
 	{
 		$license = new LicenseData(
-			valid: true, trial: true, domain: 'example.com', edition: 'trial',
-			message: 'Trial active', validationToken: null, updatesValid: true,
+			valid: true,
+			trial: true,
+			domain: 'example.com',
+			edition: 'trial',
+			message: 'Trial active',
+			validationToken: null,
+			updatesValid: true,
 		);
 
 		$this->licenseValidator->method('validateLicense')->willReturn($license);

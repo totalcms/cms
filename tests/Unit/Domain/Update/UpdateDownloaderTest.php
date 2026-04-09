@@ -21,8 +21,8 @@ final class UpdateDownloaderTest extends TestCase
 		$this->tmpDir = sys_get_temp_dir() . '/tcms-update-test-' . uniqid();
 		mkdir($this->tmpDir, 0755, true);
 
-		$this->httpClient = $this->createMock(HttpClientInterface::class);
-		$this->config     = $this->createMock(Config::class);
+		$this->httpClient       = $this->createMock(HttpClientInterface::class);
+		$this->config           = $this->createMock(Config::class);
 		$this->config->cachedir = $this->tmpDir;
 		$this->config->domain   = 'example.com';
 	}
@@ -47,7 +47,7 @@ final class UpdateDownloaderTest extends TestCase
 		$zip->open($zipPath, \ZipArchive::CREATE);
 		$zip->addFromString('test.txt', 'hello');
 		$zip->close();
-		$zipContent = (string) file_get_contents($zipPath);
+		$zipContent = (string)file_get_contents($zipPath);
 		unlink($zipPath);
 
 		$this->httpClient->method('request')->willReturnCallback(
@@ -133,7 +133,7 @@ final class UpdateDownloaderTest extends TestCase
 		$zip->open($zipPath, \ZipArchive::CREATE);
 		$zip->addFromString('test.txt', 'hello');
 		$zip->close();
-		$zipContent = (string) file_get_contents($zipPath);
+		$zipContent = (string)file_get_contents($zipPath);
 		unlink($zipPath);
 
 		$this->httpClient->expects($this->once())->method('request')->willReturnCallback(

@@ -28,14 +28,14 @@ readonly class UpdateInfo
 	public static function fromApiResponse(array $data, bool $updatesValid = true, ?string $updatesExpireDate = null): self
 	{
 		return new self(
-			available:         (bool) ($data['available'] ?? false),
-			version:           (string) ($data['version'] ?? ''),
-			releaseDate:       (string) ($data['releaseDate'] ?? ''),
-			severity:          (string) ($data['severity'] ?? 'patch'),
-			changelog:         (string) ($data['changelog'] ?? ''),
-			buildHash:         (string) ($data['buildHash'] ?? ''),
-			downloadUrl:       (string) ($data['downloadUrl'] ?? ''),
-			updatesValid:      $updatesValid,
+			available: (bool)($data['available'] ?? false),
+			version: (string)($data['version'] ?? ''),
+			releaseDate: (string)($data['releaseDate'] ?? ''),
+			severity: (string)($data['severity'] ?? 'patch'),
+			changelog: (string)($data['changelog'] ?? ''),
+			buildHash: (string)($data['buildHash'] ?? ''),
+			downloadUrl: (string)($data['downloadUrl'] ?? ''),
+			updatesValid: $updatesValid,
 			updatesExpireDate: $updatesExpireDate,
 		);
 	}

@@ -76,17 +76,17 @@ readonly class LicenseData
 	public static function fromArray(array $data): self
 	{
 		return new self(
-			valid              : (bool) ($data['valid'] ?? false),
-			trial              : (bool) ($data['trial'] ?? false),
-			domain             : (string) ($data['domain'] ?? ''),
-			edition            : (string) ($data['edition'] ?? 'unknown'),
-			message            : (string) ($data['message'] ?? ''),
+			valid              : (bool)($data['valid'] ?? false),
+			trial              : (bool)($data['trial'] ?? false),
+			domain             : (string)($data['domain'] ?? ''),
+			edition            : (string)($data['edition'] ?? 'unknown'),
+			message            : (string)($data['message'] ?? ''),
 			validationToken    : $data['validationToken'] ?? null,
-			updatesValid       : (bool) ($data['updatesValid'] ?? false),
+			updatesValid       : (bool)($data['updatesValid'] ?? false),
 			updatesExpireDate  : $data['updatesExpireDate'] ?? null,
 			trialDaysRemaining : $data['trialDaysRemaining'] ?? null,
-			dnsVerified        : (bool) ($data['dnsVerified'] ?? false),
-			timestamp          : (int) ($data['timestamp'] ?? 0),
+			dnsVerified        : (bool)($data['dnsVerified'] ?? false),
+			timestamp          : (int)($data['timestamp'] ?? 0),
 		);
 	}
 

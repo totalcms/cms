@@ -43,8 +43,13 @@ final class SetupCompleteActionTest extends TestCase
 	public function testRendersCompletePageWithLicense(): void
 	{
 		$license = new LicenseData(
-			valid: true, trial: false, domain: 'example.com', edition: 'pro',
-			message: '', validationToken: null, updatesValid: true,
+			valid: true,
+			trial: false,
+			domain: 'example.com',
+			edition: 'pro',
+			message: '',
+			validationToken: null,
+			updatesValid: true,
 		);
 		$this->licenseValidator->method('validateLicense')->willReturn($license);
 		$this->session->method('get')->with('setup_admin_email', '')->willReturn('admin@example.com');

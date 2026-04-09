@@ -4,9 +4,9 @@ namespace Tests\Unit\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Update\Service\MaintenanceMode;
 use TotalCMS\Middleware\MaintenanceModeMiddleware;
 
@@ -53,7 +53,7 @@ final class MaintenanceModeMiddlewareTest extends TestCase
 		$this->assertSame('text/html', $result->getHeaderLine('Content-Type'));
 		$this->assertSame('60', $result->getHeaderLine('Retry-After'));
 
-		$body = (string) $result->getBody();
+		$body = (string)$result->getBody();
 		$this->assertStringContainsString('Updating Total CMS', $body);
 	}
 

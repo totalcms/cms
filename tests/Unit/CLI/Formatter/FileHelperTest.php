@@ -32,7 +32,7 @@ final class FileHelperTest extends TestCase
 		expect($uploaded->getSize())->toBe(filesize($this->tmpFile));
 		expect($uploaded->getClientFilename())->toBe(basename($this->tmpFile));
 
-		$contents = (string) $uploaded->getStream();
+		$contents = (string)$uploaded->getStream();
 		expect($contents)->toBe('{"test": true}');
 	}
 

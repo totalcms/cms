@@ -37,7 +37,7 @@ final class UpdateApplierTest extends TestCase
 
 	private function createApplier(): UpdateApplier
 	{
-		$config = $this->createMock(Config::class);
+		$config           = $this->createMock(Config::class);
 		$config->cachedir = $this->tmpDir;
 
 		$maintenanceMode = $this->createMock(MaintenanceMode::class);

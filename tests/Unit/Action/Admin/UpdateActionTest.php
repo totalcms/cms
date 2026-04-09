@@ -47,8 +47,13 @@ final class UpdateActionTest extends TestCase
 	public function testReturnsUpToDateWhenNoUpdateAvailable(): void
 	{
 		$this->updateChecker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: false, version: '3.2.2', releaseDate: '', severity: '',
-			changelog: '', buildHash: '', downloadUrl: ''
+			available: false,
+			version: '3.2.2',
+			releaseDate: '',
+			severity: '',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: ''
 		));
 
 		$this->updateDownloader->expects($this->never())->method('download');
@@ -69,8 +74,13 @@ final class UpdateActionTest extends TestCase
 	public function testDownloadsAndAppliesUpdate(): void
 	{
 		$this->updateChecker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: 'New features', buildHash: 'abc', downloadUrl: '/version/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: 'New features',
+			buildHash: 'abc',
+			downloadUrl: '/version/download/3.3.0'
 		));
 
 		$this->updateDownloader->expects($this->once())
@@ -100,8 +110,13 @@ final class UpdateActionTest extends TestCase
 	public function testReturns500OnDownloadFailure(): void
 	{
 		$this->updateChecker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: '', buildHash: '', downloadUrl: '/version/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '/version/download/3.3.0'
 		));
 
 		$this->updateDownloader->method('download')
@@ -125,8 +140,13 @@ final class UpdateActionTest extends TestCase
 	public function testReturns500OnApplyFailure(): void
 	{
 		$this->updateChecker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: '', buildHash: '', downloadUrl: '/version/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '/version/download/3.3.0'
 		));
 
 		$this->updateDownloader->method('download')->willReturn('/tmp/update-3.3.0.zip');

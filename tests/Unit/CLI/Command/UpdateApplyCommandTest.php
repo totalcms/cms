@@ -19,8 +19,13 @@ describe('update:apply', function (): void {
 
 		$checker = $this->createMock(UpdateChecker::class);
 		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: false, version: '3.2.2', releaseDate: '', severity: '',
-			changelog: '', buildHash: '', downloadUrl: ''
+			available: false,
+			version: '3.2.2',
+			releaseDate: '',
+			severity: '',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: ''
 		));
 		$totalcms->method('updateChecker')->willReturn($checker);
 
@@ -40,9 +45,15 @@ describe('update:apply', function (): void {
 
 		$checker = $this->createMock(UpdateChecker::class);
 		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: '', buildHash: '', downloadUrl: '/download/3.3.0',
-			updatesValid: false, updatesExpireDate: '2025-01-01'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '/download/3.3.0',
+			updatesValid: false,
+			updatesExpireDate: '2025-01-01'
 		));
 		$totalcms->method('updateChecker')->willReturn($checker);
 
@@ -62,8 +73,13 @@ describe('update:apply', function (): void {
 
 		$checker = $this->createMock(UpdateChecker::class);
 		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: 'New features', buildHash: 'abc', downloadUrl: '/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: 'New features',
+			buildHash: 'abc',
+			downloadUrl: '/download/3.3.0'
 		));
 		$checker->expects($this->once())->method('clearCache');
 		$totalcms->method('updateChecker')->willReturn($checker);
@@ -96,8 +112,13 @@ describe('update:apply', function (): void {
 
 		$checker = $this->createMock(UpdateChecker::class);
 		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: '', buildHash: '', downloadUrl: '/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '/download/3.3.0'
 		));
 		$totalcms->method('updateChecker')->willReturn($checker);
 
@@ -125,8 +146,13 @@ describe('update:apply', function (): void {
 
 		$checker = $this->createMock(UpdateChecker::class);
 		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: '', buildHash: '', downloadUrl: '/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '/download/3.3.0'
 		));
 		$totalcms->method('updateChecker')->willReturn($checker);
 
@@ -150,8 +176,13 @@ describe('update:apply', function (): void {
 
 		$checker = $this->createMock(UpdateChecker::class);
 		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
-			available: true, version: '3.3.0', releaseDate: '2026-04-10', severity: 'minor',
-			changelog: '', buildHash: '', downloadUrl: '/download/3.3.0'
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '/download/3.3.0'
 		));
 		$totalcms->method('updateChecker')->willReturn($checker);
 
