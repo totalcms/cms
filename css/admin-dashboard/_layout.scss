@@ -312,8 +312,11 @@ body {
 	p:not(.help):first-of-type {
 		margin-top: 0;
 	}
-	body:not(.full-width-forms) & form {
+	form {
 		max-width : 800px;
+	}
+	body.full-width-forms & form[data-collection] {
+		max-width : none;
 	}
 	header {
 		display   : flex;
