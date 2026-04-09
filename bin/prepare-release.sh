@@ -314,8 +314,8 @@ print_success "Caches cleared"
 
 # Set proper permissions
 print_info "Setting proper file permissions..."
-find . -type f -name "*.php" -exec chmod 644 {} \;
-find . -type d -exec chmod 755 {} \;
+find . -type f -name "*.php" -exec chmod 644 {} +
+find . -type d -exec chmod 755 {} +
 chmod +x bin/*.sh bin/*.php
 print_success "File permissions set"
 
