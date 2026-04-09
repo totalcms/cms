@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\CLI\Command;
 
-use Illuminate\Support\Collection;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\ObjectGetCommand;
@@ -85,7 +84,7 @@ describe('object:list', function (): void {
 
 describe('object:get', function (): void {
 	beforeEach(function (): void {
-		$object = $this->createMock(ObjectData::class);
+		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
 		$object->method('toArray')->willReturn([
 			'id'      => 'post-1',

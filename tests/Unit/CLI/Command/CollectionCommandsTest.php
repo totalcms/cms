@@ -191,6 +191,7 @@ describe('collection:query', function (): void {
 				expect($params['include'])->toBe('featured:true');
 				expect($params)->toHaveKey('sort');
 				expect($params['sort'])->toBe('-date');
+
 				return true;
 			}))
 			->willReturn(new QueryResult([], 0, 20, 0));

@@ -22,7 +22,7 @@ class JumpStartImportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$filePath = (string) $input->getArgument('file');
+		$filePath = (string)$input->getArgument('file');
 
 		if (!file_exists($filePath)) {
 			return $this->outputError($input, $output, "File not found: {$filePath}");
@@ -39,7 +39,8 @@ class JumpStartImportCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 

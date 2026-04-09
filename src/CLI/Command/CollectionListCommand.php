@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -50,6 +49,7 @@ class CollectionListCommand extends BaseCommand
 	{
 		if ($data === []) {
 			$output->writeln('No collections found.');
+
 			return;
 		}
 
@@ -59,7 +59,7 @@ class CollectionListCommand extends BaseCommand
 				$col['id'] ?? '',
 				$col['name'] ?? '',
 				$col['schema'] ?? '',
-				(string) ($col['totalObjects'] ?? ''),
+				(string)($col['totalObjects'] ?? ''),
 			];
 		}
 

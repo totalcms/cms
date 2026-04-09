@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -23,7 +22,7 @@ class SchemaGetCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$id      = (string) $input->getArgument('id');
+		$id      = (string)$input->getArgument('id');
 		$fetcher = $this->totalcms->schemaFetcher();
 
 		if (!$fetcher->schemaExists($id)) {
@@ -67,10 +66,10 @@ class SchemaGetCommand extends BaseCommand
 				if ($type === '' && isset($prop['$ref']) && is_string($prop['$ref'])) {
 					$type = basename($prop['$ref'], '.json');
 				}
-				$field    = (string) ($prop['field'] ?? '');
+				$field    = (string)($prop['field'] ?? '');
 				$required = in_array($name, $data['required'] ?? [], true) ? 'Yes' : '';
 				$indexed  = in_array($name, $data['index'] ?? [], true) ? 'Yes' : '';
-				$rows[]   = [(string) $name, (string) $type, $field, $required, $indexed];
+				$rows[]   = [(string)$name, (string)$type, $field, $required, $indexed];
 			}
 
 			TableHelper::renderList($output, ['Name', 'Type', 'Field', 'Required', 'Indexed'], $rows);

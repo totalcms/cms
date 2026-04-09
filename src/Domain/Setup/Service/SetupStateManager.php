@@ -40,6 +40,7 @@ class SetupStateManager
 		}
 
 		$completed = $this->getCompletedSteps();
+
 		return in_array($step, $completed, true);
 	}
 
@@ -89,6 +90,7 @@ class SetupStateManager
 	private function getCompletedSteps(): array
 	{
 		$steps = $this->session->get(self::SESSION_KEY);
+
 		return is_array($steps) ? array_values(array_filter($steps, 'is_string')) : [];
 	}
 

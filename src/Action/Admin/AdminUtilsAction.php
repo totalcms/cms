@@ -16,9 +16,9 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Renderer\TwigRenderer;
 
 readonly class AdminUtilsAction

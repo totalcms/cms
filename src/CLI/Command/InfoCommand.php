@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
@@ -70,6 +69,7 @@ class InfoCommand extends BaseCommand
 	{
 		try {
 			$license = $this->totalcms->licenseValidator()->validateLicense();
+
 			return [
 				'valid'              => $license->valid,
 				'trial'              => $license->trial,
@@ -122,7 +122,7 @@ class InfoCommand extends BaseCommand
 			'Domain'      => $data['domain'],
 			'Edition'     => ucfirst($data['edition']),
 			'License'     => $status,
-			'Collections' => (string) $data['collections']['total'],
+			'Collections' => (string)$data['collections']['total'],
 			'Schemas'     => "{$data['schemas']['custom']} custom, {$data['schemas']['reserved']} reserved",
 			'Cache'       => $data['cache']['backend'],
 		]);

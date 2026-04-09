@@ -20,7 +20,7 @@ class FileHelper
 			throw new \RuntimeException("File not found: {$filePath}");
 		}
 
-		$stream = Stream::create((string) file_get_contents($filePath));
+		$stream = Stream::create((string)file_get_contents($filePath));
 		$size   = filesize($filePath);
 
 		return new UploadedFile(

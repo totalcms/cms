@@ -65,7 +65,7 @@ class SyncConfig
 			return;
 		}
 
-		$this->url = rtrim((string) ($sync['url'] ?? ''), '/');
-		$this->key = (string) ($sync['key'] ?? '');
+		$this->url = rtrim((string)($sync['url'] ?? ''), '/');
+		$this->key = (string)($sync['key'] ?? '');
 	}
 }

@@ -26,13 +26,13 @@ readonly class UpdateInfo
 	public static function fromApiResponse(array $data): self
 	{
 		return new self(
-			available:   (bool) ($data['available'] ?? false),
-			version:     (string) ($data['version'] ?? ''),
-			releaseDate: (string) ($data['releaseDate'] ?? ''),
-			severity:    (string) ($data['severity'] ?? 'patch'),
-			changelog:   (string) ($data['changelog'] ?? ''),
-			buildHash:   (string) ($data['buildHash'] ?? ''),
-			downloadUrl: (string) ($data['downloadUrl'] ?? ''),
+			available: (bool)($data['available'] ?? false),
+			version: (string)($data['version'] ?? ''),
+			releaseDate: (string)($data['releaseDate'] ?? ''),
+			severity: (string)($data['severity'] ?? 'patch'),
+			changelog: (string)($data['changelog'] ?? ''),
+			buildHash: (string)($data['buildHash'] ?? ''),
+			downloadUrl: (string)($data['downloadUrl'] ?? ''),
 		);
 	}
 

@@ -34,16 +34,18 @@ class UpdateApplyCommand extends BaseCommand
 
 		if (!$updateInfo->available) {
 			if ($isJson) {
-				$output->writeln((string) json_encode(['success' => true, 'message' => 'Already up to date.']));
+				$output->writeln((string)json_encode(['success' => true, 'message' => 'Already up to date.']));
+
 				return Command::SUCCESS;
 			}
 			$output->writeln('Total CMS ' . Version::number() . ' is already up to date.');
+
 			return Command::SUCCESS;
 		}
 
 		if (!$isJson) {
 			$output->writeln("Update available: <info>{$updateInfo->version}</info> ({$updateInfo->severity})");
-			$output->writeln("Current version: " . Version::number());
+			$output->writeln('Current version: ' . Version::number());
 			$output->writeln('');
 		}
 
@@ -61,6 +63,7 @@ class UpdateApplyCommand extends BaseCommand
 
 			if (!$helper->ask($input, $output, $question)) {
 				$output->writeln('Update cancelled.');
+
 				return Command::SUCCESS;
 			}
 		}
@@ -90,16 +93,18 @@ class UpdateApplyCommand extends BaseCommand
 		$this->totalcms->updateChecker()->clearCache();
 
 		if ($isJson) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success' => true,
 				'message' => "Updated to {$updateInfo->version} successfully.",
 				'version' => $updateInfo->version,
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('');
 		$output->writeln("<info>Updated to {$updateInfo->version} successfully.</info>");
+
 		return Command::SUCCESS;
 	}
 }

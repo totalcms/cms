@@ -24,8 +24,8 @@ class JumpStartExportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$name        = (string) $input->getOption('name');
-		$description = (string) $input->getOption('description');
+		$name        = (string)$input->getOption('name');
+		$description = (string)$input->getOption('description');
 		$outputFile  = $input->getOption('output');
 
 		$exporter = $this->totalcms->jumpStartExporter();
@@ -49,7 +49,7 @@ class JumpStartExportCommand extends BaseCommand
 		file_put_contents($outputFile, $json);
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success'     => true,
 				'file'        => $outputFile,
 				'schemas'     => count($jumpstart->schemas),
@@ -57,14 +57,16 @@ class JumpStartExportCommand extends BaseCommand
 				'objects'     => count($jumpstart->objects),
 				'templates'   => count($jumpstart->templates),
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln("<info>JumpStart exported to {$outputFile}</info>");
-		$output->writeln("  Schemas:     " . count($jumpstart->schemas));
-		$output->writeln("  Collections: " . (count($jumpstart->collections['reserved']) + count($jumpstart->collections['custom'])));
-		$output->writeln("  Objects:     " . count($jumpstart->objects));
-		$output->writeln("  Templates:   " . count($jumpstart->templates));
+		$output->writeln('  Schemas:     ' . count($jumpstart->schemas));
+		$output->writeln('  Collections: ' . (count($jumpstart->collections['reserved']) + count($jumpstart->collections['custom'])));
+		$output->writeln('  Objects:     ' . count($jumpstart->objects));
+		$output->writeln('  Templates:   ' . count($jumpstart->templates));
+
 		return Command::SUCCESS;
 	}
 }

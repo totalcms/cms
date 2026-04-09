@@ -7,17 +7,13 @@ namespace Tests\Unit\CLI\Command;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\InfoCommand;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\License\Data\LicenseData;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\TotalCMS;
-
-use function Tests\Unit\CLI\Command\createTestConfig;
 
 require_once __DIR__ . '/helpers.php';
 
@@ -40,8 +36,14 @@ beforeEach(function (): void {
 	$this->totalcms->method('schemaLister')->willReturn($schemaLister);
 
 	$license = new LicenseData(
-		valid: true, trial: false, domain: 'example.com', edition: 'pro',
-		message: '', validationToken: null, updatesValid: true, trialDaysRemaining: null
+		valid: true,
+		trial: false,
+		domain: 'example.com',
+		edition: 'pro',
+		message: '',
+		validationToken: null,
+		updatesValid: true,
+		trialDaysRemaining: null
 	);
 	$licenseValidator = $this->createMock(LicenseValidator::class);
 	$licenseValidator->method('validateLicense')->willReturn($license);

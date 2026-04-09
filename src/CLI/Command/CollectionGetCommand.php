@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -23,7 +22,7 @@ class CollectionGetCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$id         = (string) $input->getArgument('id');
+		$id         = (string)$input->getArgument('id');
 		$collection = $this->totalcms->collectionFetcher()->fetchCollection($id);
 
 		if ($collection === null) {
@@ -47,7 +46,7 @@ class CollectionGetCommand extends BaseCommand
 			'Schema'        => $data['schema'] ?? '',
 			'Category'      => $data['category'] ?? '',
 			'Description'   => $data['description'] ?? '',
-			'Objects'       => (string) ($data['totalObjects'] ?? ''),
+			'Objects'       => (string)($data['totalObjects'] ?? ''),
 			'Sort By'       => $data['sortBy'] ?? '',
 			'Reverse Sort'  => ($data['reverseSort'] ?? false) ? 'Yes' : 'No',
 			'Last Updated'  => $data['lastUpdated'] ?? '',

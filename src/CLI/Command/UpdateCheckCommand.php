@@ -33,7 +33,8 @@ class UpdateCheckCommand extends BaseCommand
 				['current' => Version::number()],
 				$updateInfo->toArray()
 			);
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 
@@ -62,6 +63,7 @@ class UpdateCheckCommand extends BaseCommand
 		}
 
 		$output->writeln('');
+
 		return Command::SUCCESS;
 	}
 }

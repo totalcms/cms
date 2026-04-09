@@ -26,7 +26,7 @@ abstract class BaseCommand extends Command
 
 	protected function isJson(InputInterface $input): bool
 	{
-		return (bool) $input->getOption('json');
+		return (bool)$input->getOption('json');
 	}
 
 	/**
@@ -37,11 +37,13 @@ abstract class BaseCommand extends Command
 	protected function outputData(InputInterface $input, OutputInterface $output, array $data): int
 	{
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 
 		$this->renderHuman($input, $output, $data);
+
 		return Command::SUCCESS;
 	}
 
@@ -52,7 +54,7 @@ abstract class BaseCommand extends Command
 	 */
 	protected function renderHuman(InputInterface $input, OutputInterface $output, array $data): void
 	{
-		$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 	}
 
 	/**
@@ -65,7 +67,7 @@ abstract class BaseCommand extends Command
 			: $output;
 
 		if ($this->isJson($input)) {
-			$stderr->writeln((string) json_encode(['error' => $message]));
+			$stderr->writeln((string)json_encode(['error' => $message]));
 		} else {
 			$stderr->writeln("<error>{$message}</error>");
 		}

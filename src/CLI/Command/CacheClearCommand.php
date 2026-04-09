@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
@@ -41,7 +40,7 @@ class CacheClearCommand extends BaseCommand
 			if (is_array($result)) {
 				$status = !empty($result['cleared']) ? 'Cleared' : 'Skipped';
 			}
-			$rows[] = [(string) $backend, $status];
+			$rows[] = [(string)$backend, $status];
 		}
 
 		TableHelper::renderList($output, ['Backend', 'Status'], $rows);

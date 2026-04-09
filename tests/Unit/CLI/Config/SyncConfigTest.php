@@ -120,7 +120,7 @@ final class SyncConfigTest extends TestCase
 	{
 		file_put_contents(
 			$this->tmpDir . '/.system/settings.json',
-			(string) json_encode($settings, JSON_PRETTY_PRINT)
+			(string)json_encode($settings, JSON_PRETTY_PRINT)
 		);
 	}
 }

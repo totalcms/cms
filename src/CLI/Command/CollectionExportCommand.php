@@ -26,8 +26,8 @@ class CollectionExportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('id');
-		$format       = (string) $input->getOption('format');
+		$collectionId = (string)$input->getArgument('id');
+		$format       = (string)$input->getOption('format');
 		$outputFile   = $input->getOption('output');
 
 		if (!$this->totalcms->collectionFetcher()->collectionExists($collectionId)) {
@@ -98,7 +98,7 @@ class CollectionExportCommand extends BaseCommand
 
 			try {
 				$object = $this->totalcms->objectFetcher()->fetchObject($collectionId, $id);
-				$json   = (string) json_encode($object->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+				$json   = (string)json_encode($object->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
 				if ($written > 0) {
 					fwrite($handle, ",\n");
@@ -106,7 +106,7 @@ class CollectionExportCommand extends BaseCommand
 
 				// Indent each line of the object JSON by 4 spaces
 				$indented = preg_replace('/^/m', '    ', $json);
-				fwrite($handle, (string) $indented);
+				fwrite($handle, (string)$indented);
 				$written++;
 				unset($object, $json, $indented);
 			} catch (\Throwable $e) {
@@ -125,6 +125,7 @@ class CollectionExportCommand extends BaseCommand
 
 		if ($written === 0 && $total > 0) {
 			@unlink($outputFile);
+
 			return $this->outputError($input, $output, "Failed to fetch any of the {$total} objects in '{$collectionId}'. Run with -v for details.");
 		}
 
@@ -187,15 +188,17 @@ class CollectionExportCommand extends BaseCommand
 	 */
 	private function exportJson(InputInterface $input, OutputInterface $output, array $objects, mixed $outputFile): int
 	{
-		$json = (string) json_encode($objects, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		$json = (string)json_encode($objects, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
 		if (is_string($outputFile)) {
 			file_put_contents($outputFile, $json);
-			$output->writeln("<info>Exported " . count($objects) . " objects to {$outputFile}</info>");
+			$output->writeln('<info>Exported ' . count($objects) . " objects to {$outputFile}</info>");
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln($json, OutputInterface::OUTPUT_RAW);
+
 		return Command::SUCCESS;
 	}
 
@@ -206,6 +209,7 @@ class CollectionExportCommand extends BaseCommand
 	{
 		if ($objects === []) {
 			$output->writeln('No objects to export.');
+
 			return Command::SUCCESS;
 		}
 
@@ -221,8 +225,8 @@ class CollectionExportCommand extends BaseCommand
 			foreach ($headers as $key) {
 				$value = $obj[$key] ?? '';
 				$row[] = is_array($value)
-					? (string) json_encode($value, JSON_UNESCAPED_SLASHES)
-					: (string) $value;
+					? (string)json_encode($value, JSON_UNESCAPED_SLASHES)
+					: (string)$value;
 			}
 			$csv->insertOne($row);
 		}
@@ -231,11 +235,13 @@ class CollectionExportCommand extends BaseCommand
 
 		if (is_string($outputFile)) {
 			file_put_contents($outputFile, $csvContent);
-			$output->writeln("<info>Exported " . count($objects) . " objects to {$outputFile}</info>");
+			$output->writeln('<info>Exported ' . count($objects) . " objects to {$outputFile}</info>");
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln($csvContent, OutputInterface::OUTPUT_RAW);
+
 		return Command::SUCCESS;
 	}
 
@@ -252,17 +258,19 @@ class CollectionExportCommand extends BaseCommand
 		rename($zipPath, $destination);
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success' => true,
 				'file'    => $destination,
 				'size'    => filesize($destination),
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
-		$size = filesize($destination);
+		$size          = filesize($destination);
 		$sizeFormatted = $size !== false ? round($size / 1024 / 1024, 2) . ' MB' : 'unknown';
 		$output->writeln("<info>Exported to {$destination} ({$sizeFormatted})</info>");
+
 		return Command::SUCCESS;
 	}
 }

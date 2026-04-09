@@ -27,6 +27,7 @@ readonly class UpdateChecker
 
 	/**
 	 * Check for available updates.
+	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
 	public function checkForUpdate(bool $forceRefresh = false): UpdateInfo
@@ -49,16 +50,26 @@ readonly class UpdateChecker
 
 		if ($response->statusCode >= 400) {
 			return new UpdateInfo(
-				available: false, version: $currentVersion, releaseDate: '',
-				severity: '', changelog: '', buildHash: '', downloadUrl: ''
+				available: false,
+				version: $currentVersion,
+				releaseDate: '',
+				severity: '',
+				changelog: '',
+				buildHash: '',
+				downloadUrl: ''
 			);
 		}
 
 		$data = json_decode($response->body, true);
 		if (!is_array($data)) {
 			return new UpdateInfo(
-				available: false, version: $currentVersion, releaseDate: '',
-				severity: '', changelog: '', buildHash: '', downloadUrl: ''
+				available: false,
+				version: $currentVersion,
+				releaseDate: '',
+				severity: '',
+				changelog: '',
+				buildHash: '',
+				downloadUrl: ''
 			);
 		}
 

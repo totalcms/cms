@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -25,8 +24,8 @@ class ObjectListCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('collection');
-		$offset       = (int) $input->getOption('offset');
+		$collectionId = (string)$input->getArgument('collection');
+		$offset       = (int)$input->getOption('offset');
 		$limit        = $input->getOption('limit');
 
 		if (!$this->totalcms->collectionFetcher()->collectionExists($collectionId)) {
@@ -37,7 +36,7 @@ class ObjectListCommand extends BaseCommand
 		$ids   = $index->objects->pluck('id')->filter()->values();
 
 		if ($limit !== null) {
-			$ids = $ids->slice($offset, (int) $limit)->values();
+			$ids = $ids->slice($offset, (int)$limit)->values();
 		} elseif ($offset > 0) {
 			$ids = $ids->slice($offset)->values();
 		}
@@ -54,11 +53,12 @@ class ObjectListCommand extends BaseCommand
 	{
 		if ($data === []) {
 			$output->writeln('No objects found.');
+
 			return;
 		}
 
 		foreach ($data as $id) {
-			$output->writeln((string) $id);
+			$output->writeln((string)$id);
 		}
 
 		$output->writeln('');

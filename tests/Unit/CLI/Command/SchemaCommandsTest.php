@@ -16,14 +16,14 @@ use TotalCMS\TotalCMS;
 beforeEach(function (): void {
 	$this->totalcms = $this->createMock(TotalCMS::class);
 
-	$this->schema1             = new SchemaData();
-	$this->schema1->id         = 'blog';
-	$this->schema1->category   = 'Content';
+	$this->schema1              = new SchemaData();
+	$this->schema1->id          = 'blog';
+	$this->schema1->category    = 'Content';
 	$this->schema1->description = 'Blog schema';
 
-	$this->schema2             = new SchemaData();
-	$this->schema2->id         = 'products';
-	$this->schema2->category   = 'Commerce';
+	$this->schema2              = new SchemaData();
+	$this->schema2->id          = 'products';
+	$this->schema2->category    = 'Commerce';
 	$this->schema2->description = 'Products schema';
 
 	$this->schemaLister = $this->createMock(SchemaLister::class);

@@ -19,14 +19,14 @@ class TableHelper
 		// Find longest key for alignment
 		$maxKeyLen = 0;
 		foreach (array_keys($data) as $key) {
-			$maxKeyLen = max($maxKeyLen, mb_strlen((string) $key));
+			$maxKeyLen = max($maxKeyLen, mb_strlen((string)$key));
 		}
 
 		foreach ($data as $key => $value) {
 			$displayValue = is_array($value)
-				? (string) json_encode($value, JSON_UNESCAPED_SLASHES)
-				: (string) $value;
-			$padding = str_repeat(' ', $maxKeyLen - mb_strlen((string) $key));
+				? (string)json_encode($value, JSON_UNESCAPED_SLASHES)
+				: (string)$value;
+			$padding = str_repeat(' ', $maxKeyLen - mb_strlen((string)$key));
 			$output->writeln("  <info>{$key}</info>{$padding}  {$displayValue}");
 		}
 	}

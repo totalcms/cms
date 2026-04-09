@@ -24,7 +24,7 @@ class SchemaExportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$id      = (string) $input->getArgument('id');
+		$id      = (string)$input->getArgument('id');
 		$fetcher = $this->totalcms->schemaFetcher();
 
 		if (!$fetcher->schemaExists($id)) {
@@ -32,16 +32,18 @@ class SchemaExportCommand extends BaseCommand
 		}
 
 		$schema     = $fetcher->fetchSchema($id);
-		$json       = (string) json_encode($schema->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		$json       = (string)json_encode($schema->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 		$outputFile = $input->getOption('output');
 
 		if (is_string($outputFile)) {
 			file_put_contents($outputFile, $json);
 			$output->writeln("<info>Schema '{$id}' exported to {$outputFile}</info>");
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln($json, OutputInterface::OUTPUT_RAW);
+
 		return Command::SUCCESS;
 	}
 }

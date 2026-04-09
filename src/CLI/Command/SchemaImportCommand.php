@@ -22,7 +22,7 @@ class SchemaImportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$filePath = (string) $input->getArgument('file');
+		$filePath = (string)$input->getArgument('file');
 
 		if (!file_exists($filePath)) {
 			return $this->outputError($input, $output, "File not found: {$filePath}");
@@ -45,14 +45,16 @@ class SchemaImportCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success' => true,
 				'id'      => $schema->id,
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln("<info>Schema '{$schema->id}' imported successfully.</info>");
+
 		return Command::SUCCESS;
 	}
 }

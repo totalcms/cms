@@ -12,8 +12,6 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\TotalCMS;
 
-use function Tests\Unit\CLI\Command\createTestConfig;
-
 require_once __DIR__ . '/helpers.php';
 
 beforeEach(function (): void {
@@ -21,7 +19,7 @@ beforeEach(function (): void {
 
 	$this->tmpDir = sys_get_temp_dir() . '/tcms-push-test-' . uniqid();
 	mkdir($this->tmpDir . '/.system', 0755, true);
-	file_put_contents($this->tmpDir . '/.system/settings.json', (string) json_encode([
+	file_put_contents($this->tmpDir . '/.system/settings.json', (string)json_encode([
 		'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key'],
 	]));
 

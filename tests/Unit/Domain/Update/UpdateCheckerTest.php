@@ -28,7 +28,7 @@ final class UpdateCheckerTest extends TestCase
 	{
 		$this->cacheManager->method('getComputedData')->willReturn(null);
 
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) json_encode([
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available'   => true,
 			'version'     => '3.3.0',
 			'releaseDate' => '2026-04-10',
@@ -68,7 +68,7 @@ final class UpdateCheckerTest extends TestCase
 		$this->cacheManager->method('getComputedData')->willReturn(['available' => false]);
 
 		$this->httpClient->expects($this->once())->method('request')->willReturn(
-			new HttpResponse(200, (string) json_encode(['available' => true, 'version' => '3.3.0']))
+			new HttpResponse(200, (string)json_encode(['available' => true, 'version' => '3.3.0']))
 		);
 
 		$result = $this->checker->checkForUpdate(forceRefresh: true);

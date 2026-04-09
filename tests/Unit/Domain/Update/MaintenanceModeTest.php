@@ -6,7 +6,6 @@ namespace Tests\Unit\Domain\Update;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Update\Service\MaintenanceMode;
-use TotalCMS\Support\Config;
 
 use function Tests\Unit\CLI\Command\createTestConfig;
 

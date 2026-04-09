@@ -30,11 +30,11 @@ foreach ($folders as $folder) {
 				continue;
 			}
 			$filePath     = $file->getPathname();
-			$key          = (string) str_replace($baseDir, '', $filePath);
+			$key          = (string)str_replace($baseDir, '', $filePath);
 			$bundle[$key] = hash_file('sha256', $filePath);
 		}
 	}
 }
 
-file_put_contents($bundleFile, base64_encode((string) json_encode($bundle)));
-echo "Bundle generated: " . count($bundle) . " files hashed\n";
+file_put_contents($bundleFile, base64_encode((string)json_encode($bundle)));
+echo 'Bundle generated: ' . count($bundle) . " files hashed\n";

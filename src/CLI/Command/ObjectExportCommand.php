@@ -26,9 +26,9 @@ class ObjectExportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('collection');
-		$objectId     = (string) $input->getArgument('id');
-		$format       = (string) $input->getOption('format');
+		$collectionId = (string)$input->getArgument('collection');
+		$objectId     = (string)$input->getArgument('id');
+		$format       = (string)$input->getOption('format');
 		$outputFile   = $input->getOption('output');
 
 		if (!$this->totalcms->objectFetcher()->existsObject($collectionId, $objectId)) {
@@ -45,15 +45,17 @@ class ObjectExportCommand extends BaseCommand
 	private function exportJson(InputInterface $input, OutputInterface $output, string $collectionId, string $objectId, mixed $outputFile): int
 	{
 		$object = $this->totalcms->objectFetcher()->fetchObject($collectionId, $objectId);
-		$json   = (string) json_encode($object->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		$json   = (string)json_encode($object->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
 		if (is_string($outputFile)) {
 			file_put_contents($outputFile, $json);
 			$output->writeln("<info>Exported to {$outputFile}</info>");
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln($json, OutputInterface::OUTPUT_RAW);
+
 		return Command::SUCCESS;
 	}
 
@@ -71,17 +73,19 @@ class ObjectExportCommand extends BaseCommand
 		rename($zipPath, $destination);
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success' => true,
 				'file'    => $destination,
 				'size'    => filesize($destination),
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
-		$size = filesize($destination);
+		$size          = filesize($destination);
 		$sizeFormatted = $size !== false ? round($size / 1024 / 1024, 2) . ' MB' : 'unknown';
 		$output->writeln("<info>Exported to {$destination} ({$sizeFormatted})</info>");
+
 		return Command::SUCCESS;
 	}
 }

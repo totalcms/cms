@@ -7,7 +7,6 @@ namespace Tests\Unit\Action\Admin;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
@@ -50,6 +49,7 @@ final class SyncActionTest extends TestCase
 			->with($this->response, $this->callback(function (array $data): bool {
 				expect($data['success'])->toBeFalse();
 				expect($data['error'])->toContain('not configured');
+
 				return true;
 			}))
 			->willReturn($this->response);
@@ -65,6 +65,7 @@ final class SyncActionTest extends TestCase
 			->method('json')
 			->with($this->response, $this->callback(function (array $data): bool {
 				expect($data['success'])->toBeFalse();
+
 				return true;
 			}))
 			->willReturn($this->response);
@@ -164,6 +165,7 @@ final class SyncActionTest extends TestCase
 			->with($this->response, $this->callback(function (array $data): bool {
 				expect($data['success'])->toBeFalse();
 				expect($data['error'])->toContain('Unknown sync action');
+
 				return true;
 			}))
 			->willReturn($this->response);
@@ -188,6 +190,7 @@ final class SyncActionTest extends TestCase
 			->with($this->response, $this->callback(function (array $data): bool {
 				expect($data['success'])->toBeFalse();
 				expect($data['error'])->toContain('Connection refused');
+
 				return true;
 			}))
 			->willReturn($this->response);

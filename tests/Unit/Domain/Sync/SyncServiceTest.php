@@ -66,6 +66,7 @@ final class SyncServiceTest extends TestCase
 				$this->callback(function (array $options): bool {
 					expect($options['body'])->toContain('products');
 					expect($options['headers'][0])->toContain('Bearer test-key');
+
 					return true;
 				})
 			)
@@ -142,7 +143,7 @@ final class SyncServiceTest extends TestCase
 		$this->httpClient->expects($this->once())
 			->method('request')
 			->with('GET', 'https://example.com/export/jumpstart?mode=sync', $this->anything())
-			->willReturn(new HttpResponse(200, (string) $remotePayload));
+			->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
@@ -188,13 +189,14 @@ final class SyncServiceTest extends TestCase
 			'templates' => [],
 		]);
 
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) $remotePayload));
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
 			->with($this->callback(function (array $payload): bool {
 				expect($payload['schemas'])->toHaveCount(1);
 				expect($payload['schemas'][0]['id'])->toBe('products');
+
 				return true;
 			}))
 			->willReturn(['success' => true, 'results' => [], 'errors' => [], 'summary' => []]);
@@ -212,13 +214,14 @@ final class SyncServiceTest extends TestCase
 			],
 		]);
 
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) $remotePayload));
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
 			->with($this->callback(function (array $payload): bool {
 				expect($payload['templates'])->toHaveCount(1);
 				expect($payload['templates'][0]['id'])->toBe('sidebar');
+
 				return true;
 			}))
 			->willReturn(['success' => true, 'results' => [], 'errors' => [], 'summary' => []]);
@@ -261,7 +264,7 @@ final class SyncServiceTest extends TestCase
 			],
 		]);
 
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) $remotePayload));
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		$result = $this->service->fetchRemoteSyncData('https://example.com', 'key', ['products'], ['sidebar']);
 
@@ -278,7 +281,7 @@ final class SyncServiceTest extends TestCase
 			'templates' => [['id' => 'blog-post']],
 		]);
 
-		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string) $remotePayload));
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		$result = $this->service->fetchRemoteSyncData('https://example.com', 'key');
 

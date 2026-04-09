@@ -40,7 +40,7 @@ describe('jumpstart:export', function (): void {
 		$this->tester->execute(['--output' => $tmpFile]);
 
 		expect(file_exists($tmpFile))->toBeTrue();
-		$data = json_decode((string) file_get_contents($tmpFile), true);
+		$data = json_decode((string)file_get_contents($tmpFile), true);
 		expect($data)->toHaveKey('schemas');
 		expect($data)->toHaveKey('templates');
 		expect($data)->toHaveKey('objects');
@@ -87,12 +87,12 @@ describe('jumpstart:import', function (): void {
 			'results' => ['Schema products: created', 'Template post: created'],
 			'errors'  => [],
 			'summary' => [
-				'schemas_created'     => 1,
-				'collections_created' => 0,
-				'templates_created'   => 1,
-				'objects_created'     => 0,
+				'schemas_created'       => 1,
+				'collections_created'   => 0,
+				'templates_created'     => 1,
+				'objects_created'       => 0,
 				'factory_items_created' => 0,
-				'total_errors'        => 0,
+				'total_errors'          => 0,
 			],
 		]);
 		$this->totalcms->method('jumpStartImporter')->willReturn($importer);

@@ -48,11 +48,12 @@ class JobsProcessCommand extends BaseCommand
 
 		if (!flock($lockFile, LOCK_EX | LOCK_NB)) {
 			fclose($lockFile);
+
 			return $this->outputError($input, $output, 'Job processor is already running.');
 		}
 
 		ftruncate($lockFile, 0);
-		fwrite($lockFile, (string) getmypid());
+		fwrite($lockFile, (string)getmypid());
 
 		// Release lock on shutdown
 		register_shutdown_function(function () use ($lockFile, $lockFilePath): void {
@@ -102,19 +103,21 @@ class JobsProcessCommand extends BaseCommand
 				$output->writeln('');
 				$output->writeln('No jobs in queue.');
 				$this->printSeparator($output);
+
 				return Command::SUCCESS;
 			}
 		}
 
 		// Check for empty queue in JSON mode
 		if ($isJson && $initialStatus['Total'] === 0) {
-			$output->writeln((string) json_encode([
-				'stuck_recovered' => $stuckCount,
-				'processed'       => 0,
-				'succeeded'       => 0,
-				'failed'          => 0,
+			$output->writeln((string)json_encode([
+				'stuck_recovered'  => $stuckCount,
+				'processed'        => 0,
+				'succeeded'        => 0,
+				'failed'           => 0,
 				'duration_seconds' => 0,
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
@@ -216,7 +219,8 @@ class JobsProcessCommand extends BaseCommand
 				'maintenance'      => $maintenance,
 				'duration_seconds' => $executionTime,
 			];
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT));
+			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 

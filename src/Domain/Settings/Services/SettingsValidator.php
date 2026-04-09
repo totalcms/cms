@@ -317,8 +317,8 @@ readonly class SettingsValidator
 	private function processSync(array $data): array
 	{
 		return [
-			'url' => trim((string) ($data['url'] ?? '')),
-			'key' => trim((string) ($data['key'] ?? '')),
+			'url' => trim((string)($data['url'] ?? '')),
+			'key' => trim((string)($data['key'] ?? '')),
 		];
 	}
 }

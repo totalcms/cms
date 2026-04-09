@@ -46,7 +46,10 @@ class PullCommand extends BaseCommand
 
 			try {
 				$payload = $this->totalcms->syncService()->fetchRemoteSyncData(
-					$remote['url'], $remote['key'], $schemaFilter, $templateFilter
+					$remote['url'],
+					$remote['key'],
+					$schemaFilter,
+					$templateFilter
 				);
 			} catch (\RuntimeException $e) {
 				return $this->outputError($input, $output, $e->getMessage());
@@ -67,13 +70,15 @@ class PullCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('');
 		$output->writeln("<info>{$result['message']}</info>");
 		$output->writeln("  Schemas: {$result['schemas']}, Templates: {$result['templates']}");
+
 		return Command::SUCCESS;
 	}
 
@@ -87,6 +92,7 @@ class PullCommand extends BaseCommand
 
 		if ($schemas === [] && $templates === []) {
 			$output->writeln('Nothing to pull — no matching schemas or templates found.');
+
 			return Command::SUCCESS;
 		}
 
@@ -94,10 +100,11 @@ class PullCommand extends BaseCommand
 			$data = [
 				'dry_run'   => true,
 				'remote'    => $url,
-				'schemas'   => is_array($schemas) ? array_map(fn (array $s): string => (string) ($s['id'] ?? ''), $schemas) : [],
-				'templates' => is_array($templates) ? array_map(fn (array $t): string => (string) ($t['id'] ?? ''), $templates) : [],
+				'schemas'   => is_array($schemas) ? array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas) : [],
+				'templates' => is_array($templates) ? array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates) : [],
 			];
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 

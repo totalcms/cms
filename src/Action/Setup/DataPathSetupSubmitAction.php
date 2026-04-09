@@ -32,11 +32,11 @@ readonly class DataPathSetupSubmitAction
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$data  = (array) $request->getParsedBody();
+		$data  = (array)$request->getParsedBody();
 		$flash = $this->session->getFlash();
 
 		$location   = $data['location'] ?? '';
-		$customPath = (string) ($data['customPath'] ?? '');
+		$customPath = (string)($data['customPath'] ?? '');
 
 		// Get docroot from $_SERVER['DOCUMENT_ROOT']
 		$docroot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
@@ -118,7 +118,7 @@ readonly class DataPathSetupSubmitAction
 		if (!is_dir($systemDir)) {
 			@mkdir($systemDir, 0755, true);
 		}
-		file_put_contents($systemDir . '/settings.json', (string) json_encode([
+		file_put_contents($systemDir . '/settings.json', (string)json_encode([
 			'locale' => $locale,
 		], JSON_PRETTY_PRINT));
 

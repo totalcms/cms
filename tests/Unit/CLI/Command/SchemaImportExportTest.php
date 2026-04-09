@@ -48,7 +48,7 @@ describe('schema:export', function (): void {
 		$this->tester->execute(['id' => 'products', '--output' => $tmpFile]);
 
 		expect(file_exists($tmpFile))->toBeTrue();
-		$data = json_decode((string) file_get_contents($tmpFile), true);
+		$data = json_decode((string)file_get_contents($tmpFile), true);
 		expect($data['id'])->toBe('products');
 		@unlink($tmpFile);
 	});

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -24,8 +23,8 @@ class ObjectGetCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('collection');
-		$objectId     = (string) $input->getArgument('id');
+		$collectionId = (string)$input->getArgument('collection');
+		$objectId     = (string)$input->getArgument('id');
 
 		if (!$this->totalcms->objectFetcher()->existsObject($collectionId, $objectId)) {
 			return $this->outputError($input, $output, "Object '{$objectId}' not found in collection '{$collectionId}'.");
@@ -49,10 +48,10 @@ class ObjectGetCommand extends BaseCommand
 		$display = [];
 		foreach ($data as $key => $value) {
 			if (is_array($value)) {
-				$display[(string) $key] = (string) json_encode($value, JSON_UNESCAPED_SLASHES);
+				$display[(string)$key] = (string)json_encode($value, JSON_UNESCAPED_SLASHES);
 			} else {
-				$strValue       = (string) $value;
-				$display[(string) $key] = mb_strimwidth($strValue, 0, 120, '...');
+				$strValue              = (string)$value;
+				$display[(string)$key] = mb_strimwidth($strValue, 0, 120, '...');
 			}
 		}
 

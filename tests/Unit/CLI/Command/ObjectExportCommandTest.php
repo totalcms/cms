@@ -15,7 +15,7 @@ use TotalCMS\TotalCMS;
 beforeEach(function (): void {
 	$this->totalcms = $this->createMock(TotalCMS::class);
 
-	$object = $this->createMock(ObjectData::class);
+	$object     = $this->createMock(ObjectData::class);
 	$object->id = 'post-1';
 	$object->method('toArray')->willReturn([
 		'id'    => 'post-1',
@@ -55,7 +55,7 @@ it('exports object JSON to file with --output', function (): void {
 	$tester->execute(['collection' => 'blog', 'id' => 'post-1', '--output' => $tmpFile]);
 
 	expect(file_exists($tmpFile))->toBeTrue();
-	$data = json_decode((string) file_get_contents($tmpFile), true);
+	$data = json_decode((string)file_get_contents($tmpFile), true);
 	expect($data['id'])->toBe('post-1');
 	@unlink($tmpFile);
 });

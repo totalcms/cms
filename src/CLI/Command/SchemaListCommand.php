@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -52,6 +51,7 @@ class SchemaListCommand extends BaseCommand
 	{
 		if ($data === []) {
 			$output->writeln('No schemas found.');
+
 			return;
 		}
 

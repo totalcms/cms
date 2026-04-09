@@ -29,8 +29,8 @@ readonly class SyncAction
 
 		// Validate sync is configured
 		$syncSettings = $this->settingsFetcher->loadSection('sync');
-		$url          = trim((string) ($syncSettings['url'] ?? ''));
-		$key          = trim((string) ($syncSettings['key'] ?? ''));
+		$url          = trim((string)($syncSettings['url'] ?? ''));
+		$key          = trim((string)($syncSettings['key'] ?? ''));
 
 		if ($url === '' || $key === '') {
 			return $this->renderer->json($response, [
@@ -39,14 +39,14 @@ readonly class SyncAction
 			])->withStatus(400);
 		}
 
-		$post      = (array) $request->getParsedBody();
+		$post      = (array)$request->getParsedBody();
 		$schemas   = $this->parseList($post['schemas'] ?? []);
 		$templates = $this->parseList($post['templates'] ?? []);
 
 		try {
 			$result = match ($action) {
-				'push' => $this->syncService->push($url, $key, $schemas, $templates),
-				'pull' => $this->syncService->pull($url, $key, $schemas, $templates),
+				'push'  => $this->syncService->push($url, $key, $schemas, $templates),
+				'pull'  => $this->syncService->pull($url, $key, $schemas, $templates),
 				default => throw new \InvalidArgumentException("Unknown sync action: {$action}"),
 			};
 		} catch (\InvalidArgumentException $e) {

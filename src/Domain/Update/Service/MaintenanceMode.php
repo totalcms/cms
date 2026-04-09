@@ -20,7 +20,7 @@ readonly class MaintenanceMode
 
 	public function enable(): void
 	{
-		file_put_contents($this->flagFile, (string) time());
+		file_put_contents($this->flagFile, (string)time());
 	}
 
 	public function disable(): void

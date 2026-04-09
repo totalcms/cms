@@ -28,15 +28,15 @@ final class JumpStartExportSyncDataTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$collectionLister = $this->createMock(CollectionLister::class);
+		$collectionLister      = $this->createMock(CollectionLister::class);
 		$this->schemaLister    = $this->createMock(SchemaLister::class);
-		$schemaFetcher    = $this->createMock(SchemaFetcher::class);
-		$objectFetcher    = $this->createMock(ObjectFetcher::class);
-		$indexReader      = $this->createMock(IndexReader::class);
+		$schemaFetcher         = $this->createMock(SchemaFetcher::class);
+		$objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$indexReader           = $this->createMock(IndexReader::class);
 		$this->templateLister  = $this->createMock(TemplateLister::class);
 		$this->templateFetcher = $this->createMock(TemplateFetcher::class);
-		$cacheManager     = $this->createMock(CacheManager::class);
-		$loggerFactory    = $this->createMock(LoggerFactory::class);
+		$cacheManager          = $this->createMock(CacheManager::class);
+		$loggerFactory         = $this->createMock(LoggerFactory::class);
 
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));

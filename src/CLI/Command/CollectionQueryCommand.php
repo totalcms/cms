@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -31,7 +30,7 @@ class CollectionQueryCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('id');
+		$collectionId = (string)$input->getArgument('id');
 
 		if (!$this->totalcms->collectionFetcher()->collectionExists($collectionId)) {
 			return $this->outputError($input, $output, "Collection '{$collectionId}' not found.");
@@ -39,8 +38,8 @@ class CollectionQueryCommand extends BaseCommand
 
 		// Build query params matching IndexQueryService expectations
 		$params = [
-			'limit'  => (string) $input->getOption('limit'),
-			'offset' => (string) $input->getOption('offset'),
+			'limit'  => (string)$input->getOption('limit'),
+			'offset' => (string)$input->getOption('offset'),
 		];
 
 		$search  = $input->getOption('search');
@@ -86,6 +85,7 @@ class CollectionQueryCommand extends BaseCommand
 
 		if ($results === []) {
 			$output->writeln('No results found.');
+
 			return;
 		}
 
@@ -106,9 +106,9 @@ class CollectionQueryCommand extends BaseCommand
 				} elseif ($value === false) {
 					$rowData[] = '';
 				} elseif (is_array($value)) {
-					$rowData[] = (string) json_encode($value, JSON_UNESCAPED_SLASHES);
+					$rowData[] = (string)json_encode($value, JSON_UNESCAPED_SLASHES);
 				} else {
-					$rowData[] = mb_strimwidth((string) $value, 0, 60, '...');
+					$rowData[] = mb_strimwidth((string)$value, 0, 60, '...');
 				}
 			}
 			$rows[] = $rowData;

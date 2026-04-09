@@ -37,6 +37,7 @@ class UpdateRollbackCommand extends BaseCommand
 
 			if (!$helper->ask($input, $output, $question)) {
 				$output->writeln('Rollback cancelled.');
+
 				return Command::SUCCESS;
 			}
 		}
@@ -48,14 +49,16 @@ class UpdateRollbackCommand extends BaseCommand
 		}
 
 		if ($isJson) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success' => true,
 				'message' => 'Rollback complete.',
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('<info>Rollback complete.</info>');
+
 		return Command::SUCCESS;
 	}
 }

@@ -27,9 +27,9 @@ class CollectionImportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('id');
-		$filePath     = (string) $input->getArgument('file');
-		$update       = (bool) $input->getOption('update');
+		$collectionId = (string)$input->getArgument('id');
+		$filePath     = (string)$input->getArgument('file');
+		$update       = (bool)$input->getOption('update');
 
 		if (!file_exists($filePath)) {
 			return $this->outputError($input, $output, "File not found: {$filePath}");
@@ -59,17 +59,19 @@ class CollectionImportCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success'  => true,
 				'imported' => $count,
 				'format'   => $format,
 				'update'   => $update,
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
 		$mode = $update ? 'updated' : 'imported';
 		$output->writeln("<info>{$count} object(s) {$mode} into '{$collectionId}'.</info>");
+
 		return Command::SUCCESS;
 	}
 }

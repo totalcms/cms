@@ -29,11 +29,11 @@ class DeckImportCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$collectionId = (string) $input->getArgument('collection');
-		$objectId     = (string) $input->getArgument('object');
-		$property     = (string) $input->getArgument('property');
-		$filePath     = (string) $input->getArgument('file');
-		$update       = (bool) $input->getOption('update');
+		$collectionId = (string)$input->getArgument('collection');
+		$objectId     = (string)$input->getArgument('object');
+		$property     = (string)$input->getArgument('property');
+		$filePath     = (string)$input->getArgument('file');
+		$update       = (bool)$input->getOption('update');
 
 		if (!file_exists($filePath)) {
 			return $this->outputError($input, $output, "File not found: {$filePath}");
@@ -63,7 +63,7 @@ class DeckImportCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode([
+			$output->writeln((string)json_encode([
 				'success'    => true,
 				'imported'   => $count,
 				'collection' => $collectionId,
@@ -71,10 +71,12 @@ class DeckImportCommand extends BaseCommand
 				'property'   => $property,
 				'format'     => $format,
 			], JSON_PRETTY_PRINT));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln("<info>{$count} deck item(s) imported into '{$collectionId}/{$objectId}/{$property}'.</info>");
+
 		return Command::SUCCESS;
 	}
 }

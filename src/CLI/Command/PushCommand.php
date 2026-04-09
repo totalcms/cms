@@ -46,6 +46,7 @@ class PushCommand extends BaseCommand
 
 			if ($jumpstart->isEmpty()) {
 				$output->writeln('Nothing to push — no matching schemas or templates found.');
+
 				return Command::SUCCESS;
 			}
 
@@ -64,13 +65,15 @@ class PushCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string) json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('');
 		$output->writeln("<info>{$result['message']}</info>");
 		$output->writeln("  Schemas: {$result['schemas']}, Templates: {$result['templates']}");
+
 		return Command::SUCCESS;
 	}
 
@@ -86,10 +89,11 @@ class PushCommand extends BaseCommand
 			$data = [
 				'dry_run'   => true,
 				'remote'    => $url,
-				'schemas'   => array_map(fn (array $s): string => (string) ($s['id'] ?? ''), $schemas),
-				'templates' => array_map(fn (array $t): string => (string) ($t['id'] ?? ''), $templates),
+				'schemas'   => array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas),
+				'templates' => array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates),
 			];
-			$output->writeln((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
 			return Command::SUCCESS;
 		}
 
