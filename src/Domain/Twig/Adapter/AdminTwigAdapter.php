@@ -18,6 +18,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
 
@@ -48,6 +49,7 @@ readonly class AdminTwigAdapter
 		public LogAnalyzer $logAnalyzer,
 		public ImageCacheService $imageCacheService,
 		public CacheSizingAdvisor $cacheSizingAdvisor,
+		private UpdateChecker $updateChecker,
 	) {
 	}
 
@@ -414,6 +416,19 @@ readonly class AdminTwigAdapter
 
 		$licenseStatus = $this->licenseStatus->getSidebarStatus();
 
+		$updateInfo = null;
+		try {
+			$update = $this->updateChecker->checkForUpdate();
+			if ($update->available) {
+				$updateInfo = [
+					'version'  => $update->version,
+					'severity' => $update->severity,
+				];
+			}
+		} catch (\Throwable) {
+			// Update check is non-critical
+		}
+
 		return [
 			'phpVersion'       => PHP_VERSION,
 			'totalcmsVersion'  => $this->config->version ?? '3.0',
@@ -426,6 +441,7 @@ readonly class AdminTwigAdapter
 				'message'       => $licenseStatus->tooltip,
 				'daysRemaining' => $licenseStatus->daysRemaining,
 			],
+			'update'           => $updateInfo,
 		];
 	}
 

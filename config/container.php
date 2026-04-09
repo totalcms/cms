@@ -135,6 +135,7 @@ use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
@@ -486,6 +487,7 @@ return [
 		$container->get(LogAnalyzer::class),
 		$container->get(ImageCacheService::class),
 		$container->get(CacheSizingAdvisor::class),
+		$container->get(UpdateChecker::class),
 	),
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(

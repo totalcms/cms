@@ -219,6 +219,17 @@
 				<span class="status-value">{{ cms.version }}{% if cms.version.date %} <span class="version-date">({{ cms.version.date }})</span>{% endif %}</span>
 			</div>
 
+			{% if status.update %}
+			<div class="status-item">
+				<span class="status-label"></span>
+				<span class="status-value">
+					<a href="utils/update" style="color: oklch(var(--totalform-accent)); font-weight: 500; text-decoration: none;">
+						{{ t('update.available') }}: {{ status.update.version }} ({{ status.update.severity }}) &rarr;
+					</a>
+				</span>
+			</div>
+			{% endif %}
+
 			<div class="status-item">
 				<span class="status-label">{{ t('dashboard.php_version') }}</span>
 				<span class="status-value">{{ status.phpVersion }}</span>
