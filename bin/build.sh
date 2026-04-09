@@ -152,6 +152,7 @@ php bin/make-bundle.php dist
 
 # remove write permissions from all files
 find dist/resources -type f -exec chmod 444 {} +
+chmod +x dist/resources/bin/tcms
 
 # Handle version.json
 if [ $RELEASE -eq 1 ]; then
