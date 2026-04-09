@@ -41,7 +41,7 @@ readonly class UpdateChecker
 		$licenseUrl     = $this->getLicenseApiUrl();
 		$currentVersion = Version::number();
 
-		$response = $this->httpClient->request('GET', $licenseUrl . '/version/latest?current=' . urlencode($currentVersion), [
+		$response = $this->httpClient->request('GET', $licenseUrl . '/version?current=' . urlencode($currentVersion), [
 			'timeout'         => 10,
 			'connect_timeout' => 5,
 			'user_agent'      => 'TotalCMS/' . $currentVersion,
