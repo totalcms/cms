@@ -343,6 +343,11 @@ upload_sourcemaps "$NEW_VERSION"
 # Notify Sentry of new release
 notify_sentry_release "$NEW_VERSION" "$GIT_HASH"
 
+# Generate Composer package manifest for dist
+print_info "Generating Composer package manifest..."
+php bin/make-dist-composer.php dist
+print_success "Composer package manifest generated"
+
 # Create dist zip for update system
 print_info "Creating distribution zip..."
 DIST_ZIP="totalcms-${NEW_VERSION}.zip"
