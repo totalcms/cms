@@ -189,6 +189,7 @@ readonly class AdminUtilsAction
 			'rssError'               => $rssError,
 			'rssCollections'         => $rssAnalysis !== null ? $this->collectionRepository->listAllCollections() : null,
 			'updateInfo'             => $updateInfo,
+			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'               => $syncData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);

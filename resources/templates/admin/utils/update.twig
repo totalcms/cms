@@ -34,7 +34,11 @@
 		{% endif %}
 
 		<div class="update-actions">
-			{% if updateInfo.updatesValid %}
+			{% if composerInstall %}
+			<div class="update-composer-notice">
+				<p>This installation is managed by Composer. Run <code>composer update totalcms/cms</code> to update.</p>
+			</div>
+			{% elseif updateInfo.updatesValid %}
 			<button type="button" class="dash-button" id="update-btn">
 				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
 			</button>
@@ -83,6 +87,17 @@
 
 .update-renew-notice {
 	color: oklch(var(--totalform-error));
+}
+
+.update-composer-notice {
+	color: oklch(var(--totalform-darkgray));
+}
+
+.update-composer-notice code {
+	background: oklch(var(--totalform-nearwhite));
+	padding: 0.15rem 0.4rem;
+	border-radius: 3px;
+	font-size: 0.9em;
 }
 
 .update-available {
