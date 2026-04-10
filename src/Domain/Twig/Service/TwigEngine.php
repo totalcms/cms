@@ -45,7 +45,7 @@ readonly class TwigEngine
 		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 	) {
-		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
+		$internalTemplates = TemplateRepository::reservedTemplateDir();
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
 		}

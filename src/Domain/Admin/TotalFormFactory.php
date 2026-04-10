@@ -30,6 +30,7 @@ use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Total Form Builder.
@@ -799,7 +800,7 @@ readonly class TotalFormFactory
 		// Load schema and data using injected services
 		$schema      = $this->settingsSchemaFetcher->getSchema($section);
 		$sectionData = $this->settingsFetcher->loadSection($section);
-		$defaults    = require __DIR__ . '/../../../config/defaults.php';
+		$defaults    = require PathResolver::packageRoot() . '/config/defaults.php';
 		$timezones   = $options['timezones'] ?? timezone_identifiers_list();
 
 		if ($schema === null || !isset($schema['properties']) || !is_array($schema['properties'])) {

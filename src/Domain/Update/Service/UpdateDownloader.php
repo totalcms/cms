@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Update\Service;
 
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Downloads update zip files from the license server.
@@ -25,6 +26,10 @@ readonly class UpdateDownloader
 	 */
 	public function download(string $version, string $downloadUrl): string
 	{
+		if (PathResolver::isComposerInstall()) {
+			throw new \RuntimeException('This installation is managed by Composer. Run `composer update totalcms/cms` to update.');
+		}
+
 		$licenseUrl = $this->getLicenseApiUrl();
 		$fullUrl    = $licenseUrl . $downloadUrl;
 		$tempPath   = $this->config->cachedir . "/update-{$version}.zip";

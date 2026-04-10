@@ -21,6 +21,7 @@ use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Twig sub-adapter for admin dashboard and management operations.
@@ -95,7 +96,7 @@ readonly class AdminTwigAdapter
 	{
 		// php <install_dir>/resources/bin/tcms jobs:process
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
-		$installDir = realpath(__DIR__ . '/../../../..');
+		$installDir = PathResolver::packageRoot();
 		$command    = $installDir . '/resources/bin/tcms';
 
 		// Quote path if it contains spaces

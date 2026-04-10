@@ -8,6 +8,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Text watermark generator for ImageWorks.
@@ -17,7 +18,11 @@ use TotalCMS\Support\Config;
 readonly class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.system/watermarks';
-	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
+
+	private static function fontPath(): string
+	{
+		return PathResolver::packageRoot() . '/resources/fonts/RobotoRegular.ttf';
+	}
 	private LoggerInterface $logger;
 
 	public function __construct(
@@ -342,8 +347,8 @@ readonly class TextWatermarkFactory
 		}
 
 		// Default font: Always use Roboto Regular
-		if (file_exists(self::FONT_PATH)) {
-			return self::FONT_PATH;
+		if (file_exists(self::fontPath())) {
+			return self::fontPath();
 		}
 
 		// No font available

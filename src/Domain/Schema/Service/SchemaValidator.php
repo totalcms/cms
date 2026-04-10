@@ -37,8 +37,8 @@ readonly class SchemaValidator
 
 		if ($resolver instanceof SchemaResolver) {
 			// Register default schemas and properties
-			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX, SchemaRepository::DEFAULT_SCHEMA_DIR);
-			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX . 'properties/', SchemaRepository::DEFAULT_SCHEMA_DIR . 'properties/');
+			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX, SchemaRepository::defaultSchemaDir());
+			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX . 'properties/', SchemaRepository::defaultSchemaDir() . 'properties/');
 			// Register custom schemas with their own prefix
 			$resolver->registerPrefix(SchemaData::SCHEMA_CUSTOM_PREFIX, $this->schemaRepository->getCustomSchemaDir());
 		}

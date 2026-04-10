@@ -6,6 +6,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Repository.
@@ -14,7 +15,10 @@ use TotalCMS\Domain\Template\Service\TemplateFactory;
  */
 class TemplateRepository extends StorageRepository
 {
-	public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../resources/templates/';
+	public static function reservedTemplateDir(): string
+	{
+		return PathResolver::packageRoot() . '/resources/templates/';
+	}
 	public const FILE_EXT                 = '.twig';
 	public const DESIGNER_META_EXT        = '.designer.json';
 	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
@@ -130,7 +134,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function reservedPath(string $template): string
 	{
-		return self::RESERVED_TEMPLATE_DIR . $template . self::FILE_EXT;
+		return self::reservedTemplateDir() . $template . self::FILE_EXT;
 	}
 
 	/**
@@ -332,7 +336,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function listReservedTemplates(): array
 	{
-		$files = glob(self::RESERVED_TEMPLATE_DIR . '*' . self::FILE_EXT);
+		$files = glob(self::reservedTemplateDir() . '*' . self::FILE_EXT);
 
 		if ($files === false) {
 			throw new \RuntimeException('Failed to list reserved templates');

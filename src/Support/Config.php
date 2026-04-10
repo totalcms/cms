@@ -87,6 +87,6 @@ class Config
 
 	public static function init(): self
 	{
-		return new Config(require __DIR__ . '/../../config/settings.php');
+		return new Config(require PathResolver::packageRoot() . '/config/settings.php');
 	}
 }

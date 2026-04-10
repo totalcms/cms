@@ -14,11 +14,15 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\PathResolver;
 
 /** @SuppressWarnings("PHPMD.ExcessiveClassComplexity") */
 class JumpStartImporter
 {
-	private const DEMO_JUMPSTART_FILE = __DIR__ . '/../../../../resources/jumpstart/demo.json';
+	private static function demoJumpstartFile(): string
+	{
+		return PathResolver::packageRoot() . '/resources/jumpstart/demo.json';
+	}
 
 	private readonly LoggerInterface $logger;
 
@@ -82,7 +86,7 @@ class JumpStartImporter
 	 */
 	public function importDemoDefinition(): array
 	{
-		return $this->importFromFile(self::DEMO_JUMPSTART_FILE);
+		return $this->importFromFile(self::demoJumpstartFile());
 	}
 
 	/**

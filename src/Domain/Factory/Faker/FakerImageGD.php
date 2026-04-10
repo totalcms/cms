@@ -5,13 +5,17 @@ namespace TotalCMS\Domain\Factory\Faker;
 use Faker\Provider\Base;
 use Faker\Provider\Color;
 use Faker\Provider\Lorem;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Provider for the Faker generator.
  */
 class FakerImageGD extends Base
 {
-	private const FONT_PATH = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
+	private static function fontPath(): string
+	{
+		return PathResolver::packageRoot() . '/resources/fonts/RobotoRegular.ttf';
+	}
 
 	/** @return array<int<0,255>> */
 	private static function hex2rgb(string $hex): array
@@ -75,7 +79,7 @@ class FakerImageGD extends Base
 		}
 
 		if (function_exists('imageftbbox')) {
-			$fontFile = self::FONT_PATH; // Roboto Regular
+			$fontFile = self::fontPath(); // Roboto Regular
 			$textBox  = imageftbbox($textSize, 0, $fontFile, $text);
 
 			if (!is_array($textBox)) {

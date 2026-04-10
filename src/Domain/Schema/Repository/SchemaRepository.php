@@ -9,13 +9,17 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Repository.
  */
 class SchemaRepository extends StorageRepository
 {
-	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../resources/schemas/';
+	public static function defaultSchemaDir(): string
+	{
+		return PathResolver::packageRoot() . '/resources/schemas/';
+	}
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
 	/**
@@ -131,7 +135,7 @@ class SchemaRepository extends StorageRepository
 		}
 
 		// Cache miss - load from filesystem
-		$schemaFile = self::DEFAULT_SCHEMA_DIR . $id . self::FILE_EXT;
+		$schemaFile = self::defaultSchemaDir() . $id . self::FILE_EXT;
 		$contents   = null;
 
 		// Cannot use flysystem here because

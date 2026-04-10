@@ -159,6 +159,7 @@ use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Support\PathResolver;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
@@ -492,7 +493,7 @@ return [
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
 		$container->get(Config::class),
-		dirname(__DIR__) . '/resources/translations',
+		PathResolver::packageRoot() . '/resources/translations',
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(

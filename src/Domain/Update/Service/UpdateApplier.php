@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Update\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Applies downloaded updates by swapping the application directory.
@@ -24,7 +25,7 @@ class UpdateApplier
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger  = $loggerFactory->addFileHandler('updates.log')->createLogger('update');
-		$this->appRoot = dirname(__DIR__, 4); // src/Domain/Update/Service → app root
+		$this->appRoot = PathResolver::projectRoot();
 	}
 
 	/**
@@ -32,6 +33,10 @@ class UpdateApplier
 	 */
 	public function apply(string $zipPath, string $version): void
 	{
+		if (PathResolver::isComposerInstall()) {
+			throw new \RuntimeException('This installation is managed by Composer. Run `composer update totalcms/cms` to update.');
+		}
+
 		$this->logger->info("Starting update to {$version}");
 
 		$extractDir = sys_get_temp_dir() . '/totalcms-update-extract';

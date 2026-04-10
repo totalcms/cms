@@ -6,10 +6,14 @@ use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Bundle\Repository\BundleRepository;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Support\PathResolver;
 
 class BundleChecker
 {
-	private const BASEDIR   = __DIR__ . '/../../../../';
+	private static function baseDir(): string
+	{
+		return PathResolver::packageRoot() . '/';
+	}
 	private const REINSTALL = 'Total CMS installation has been corrupted. Please reinstall. ';
 
 	private BundleData $bundle;
@@ -49,7 +53,7 @@ class BundleChecker
 	private function compareBundle(): bool
 	{
 		foreach ($this->bundle->bundle as $name => $bundle) {
-			$bundlePath = self::BASEDIR . $name;
+			$bundlePath = self::baseDir() . $name;
 
 			if (!file_exists($bundlePath)) {
 				throw new \DomainException(self::REINSTALL . "$name missing from local Bundle.");
@@ -66,7 +70,7 @@ class BundleChecker
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 		foreach ($schemas as $schema) {
-			$schemaPath = SchemaRepository::DEFAULT_SCHEMA_DIR . "{$schema->id}.json";
+			$schemaPath = SchemaRepository::defaultSchemaDir() . "{$schema->id}.json";
 			$bundlePath = "resources/schemas/{$schema->id}.json";
 
 			if (!isset($this->bundle->bundle[$bundlePath])) {

@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Infrastructure\Filesystem\MimeLookup;
+use TotalCMS\Support\PathResolver;
 
 // This Action is used to serve static assets from the public/assets directory
 // This should really only ever be used with using the PHP built-in server
@@ -35,10 +36,10 @@ class StaticPublicAssetsAction
 			throw new HttpNotFoundException($request, 'Invalid asset path');
 		}
 
-		$assetPath = __DIR__ . '/../../../public/assets/' . $asset;
+		$assetPath = PathResolver::packageRoot() . '/public/assets/' . $asset;
 
 		// Ensure the resolved path is within the assets directory
-		$assetsDir    = realpath(__DIR__ . '/../../../public/assets');
+		$assetsDir    = realpath(PathResolver::packageRoot() . '/public/assets');
 		$resolvedPath = realpath($assetPath);
 
 		if ($resolvedPath === false || $assetsDir === false || !str_starts_with($resolvedPath, $assetsDir)) {
