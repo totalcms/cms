@@ -21,10 +21,6 @@ class SentryMiddleware implements MiddlewareInterface
 {
 	public const SALT = 's3ntryR0cks';
 
-	/** Domains to completely ignore (corrupted/problematic installations) */
-	private const IGNORED_DOMAINS = [
-		'komiksdiner',
-	];
 
 	/** @var array<string,mixed> */
 	private const DEFAULT_OPTIONS = [
@@ -182,14 +178,6 @@ class SentryMiddleware implements MiddlewareInterface
 	 */
 	private static function filterEvent(Event $event, ?EventHint $hint): ?Event
 	{
-		// Check if this domain should be completely ignored
-		$host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
-		foreach (self::IGNORED_DOMAINS as $domain) {
-			if (stripos((string)$host, $domain) !== false) {
-				return null;
-			}
-		}
-
 		if (!$hint instanceof EventHint || $hint->exception === null) {
 			return $event;
 		}
