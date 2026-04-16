@@ -85,22 +85,19 @@ describe('ExtensionManager', function (): void {
 
 		$manifests = $discovery->discover();
 
-		// Sanitize paths for CI (GitHub Actions masks runner paths)
-		$sanitizedMessages = array_map(
-			fn (string $m): string => preg_replace('#/[^ ]*/(tests/)#', '$1', $m) ?? $m,
-			$testLogger->messages,
-		);
-		$vendorContents = scandir($extDir . '/test-vendor') ?: [];
-		$manifestExists = is_file($extDir . '/test-vendor/hello-world/extension.json');
-		$manifestContent = $manifestExists ? file_get_contents($extDir . '/test-vendor/hello-world/extension.json') : 'FILE_NOT_FOUND';
+		if ($manifests === []) {
+			$vendorContents = scandir($extDir . '/test-vendor') ?: [];
+			$manifestExists = is_file($extDir . '/test-vendor/hello-world/extension.json');
+			fwrite(STDERR, "\n=== EXTENSION DISCOVERY DEBUG ===\n");
+			fwrite(STDERR, "vendorScan: " . json_encode($vendorContents) . "\n");
+			fwrite(STDERR, "manifestExists: " . ($manifestExists ? 'yes' : 'no') . "\n");
+			foreach ($testLogger->messages as $msg) {
+				fwrite(STDERR, "LOG: {$msg}\n");
+			}
+			fwrite(STDERR, "=== END DEBUG ===\n");
+		}
 
-		expect($manifests)->not->toBeEmpty(
-			"Discovery returned empty."
-			. " vendorScan=" . json_encode($vendorContents)
-			. " manifestExists=" . ($manifestExists ? 'yes' : 'no')
-			. " manifestJSON=" . substr((string) $manifestContent, 0, 100)
-			. " loggerMessages=" . json_encode($sanitizedMessages)
-		);
+		expect($manifests)->not->toBeEmpty("Discovery returned empty - check stderr for debug output");
 
 		$manager = createExtensionManager($fixturesDir);
 		$manager->discoverAndRegister();
