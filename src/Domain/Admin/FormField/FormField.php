@@ -408,7 +408,30 @@ class FormField
 			$this->options = array_merge($this->options, $this->form->accessGroupOptionsForField());
 		}
 		if (is_array($this->value) && $this->value !== [] && !isset($this->settings['relationalOptions'])) {
-			$this->options = array_merge($this->value, $this->options); // value is first to maintain order
+			// Only merge values that aren't already represented in the options
+			// to avoid duplicating predefined options (e.g. multicheckbox fields)
+			$existingValues = [];
+			foreach ($this->options as $key => $option) {
+				if (is_array($option) && isset($option['value'])) {
+					$existingValues[] = (string)$option['value'];
+				} elseif (is_string($option)) {
+					$existingValues[] = $option;
+				}
+				if (is_string($key) && is_array($option)) {
+					// Grouped options: harvest nested values too
+					foreach ($option as $groupedOption) {
+						if (is_array($groupedOption) && isset($groupedOption['value'])) {
+							$existingValues[] = (string)$groupedOption['value'];
+						} elseif (is_string($groupedOption)) {
+							$existingValues[] = $groupedOption;
+						}
+					}
+				}
+			}
+			$newValues = array_values(array_diff(array_map('strval', $this->value), $existingValues));
+			if ($newValues !== []) {
+				$this->options = array_merge($newValues, $this->options); // value is first to maintain order
+			}
 		}
 
 		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
