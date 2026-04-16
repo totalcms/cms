@@ -30,7 +30,12 @@ function createExtensionManager(
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());
+	$logger = new class extends \Psr\Log\AbstractLogger {
+		public function log($level, \Stringable|string $message, array $context = []): void {
+			fwrite(STDERR, "[ext-test:{$level}] {$message}\n");
+		}
+	};
+	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), $logger);
 	$container = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
 
@@ -79,10 +84,22 @@ describe('ExtensionManager', function (): void {
 		expect(is_dir($extDir))->toBeTrue("Discovery extensions dir not found: {$extDir}");
 
 		$manifests = $discovery->discover();
+
+		// Sanitize paths for CI (GitHub Actions masks runner paths)
+		$sanitizedMessages = array_map(
+			fn (string $m): string => preg_replace('#/[^ ]*/(tests/)#', '$1', $m) ?? $m,
+			$testLogger->messages,
+		);
+		$vendorContents = scandir($extDir . '/test-vendor') ?: [];
+		$manifestExists = is_file($extDir . '/test-vendor/hello-world/extension.json');
+		$manifestContent = $manifestExists ? file_get_contents($extDir . '/test-vendor/hello-world/extension.json') : 'FILE_NOT_FOUND';
+
 		expect($manifests)->not->toBeEmpty(
-			"Discovery returned empty. ExtDir: {$extDir}, scandir: " . json_encode(scandir($extDir) ?: [])
-			. ", vendorScan: " . json_encode(scandir($extDir . '/test-vendor') ?: [])
-			. ", logger: " . json_encode($testLogger->messages)
+			"Discovery returned empty."
+			. " vendorScan=" . json_encode($vendorContents)
+			. " manifestExists=" . ($manifestExists ? 'yes' : 'no')
+			. " manifestJSON=" . substr((string) $manifestContent, 0, 100)
+			. " loggerMessages=" . json_encode($sanitizedMessages)
 		);
 
 		$manager = createExtensionManager($fixturesDir);
