@@ -23,9 +23,9 @@ enum Edition: string
 	public function level(): int
 	{
 		return match ($this) {
-			self::UNKNOWN  => 0,
-			self::LITE     => 1,
-			self::STANDARD => 2,
+			self::UNKNOWN                                               => 0,
+			self::LITE                                                  => 1,
+			self::STANDARD                                              => 2,
 			self::PRO, self::ENTERPRISE, self::DEVELOPMENT, self::TRIAL => 3,
 		};
 	}

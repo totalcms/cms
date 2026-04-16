@@ -8,10 +8,10 @@ $settings = require __DIR__ . '/defaults.php';
 // Load configuration overrides
 // For Composer installs: project-level config/tcms.php
 // For zip installs: package-level config/tcms.php (Stacks integration)
-$projectTcms = \TotalCMS\Support\PathResolver::projectRoot() . '/config/tcms.php';
+$projectTcms = TotalCMS\Support\PathResolver::projectRoot() . '/config/tcms.php';
 $packageTcms = __DIR__ . '/tcms.php';
 
-if (\TotalCMS\Support\PathResolver::isComposerInstall() && file_exists($projectTcms)) {
+if (TotalCMS\Support\PathResolver::isComposerInstall() && file_exists($projectTcms)) {
 	$installationSettings = require $projectTcms;
 	if (is_array($installationSettings)) {
 		$settings = array_replace_recursive($settings, $installationSettings);

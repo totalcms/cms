@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Security\Authentication\PasswordUtils;
 

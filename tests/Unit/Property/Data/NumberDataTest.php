@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Property\Data\NumberData;
 
 describe('NumberData', function (): void {

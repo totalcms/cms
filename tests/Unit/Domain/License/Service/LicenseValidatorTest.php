@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\License\Data\LicenseData;
 
 describe('LicenseValidator Caching', function (): void {

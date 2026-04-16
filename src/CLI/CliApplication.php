@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\CLI;
 
 use Symfony\Component\Console\Application;
-use TotalCMS\CLI\Command;
 use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 use TotalCMS\TotalCMS;

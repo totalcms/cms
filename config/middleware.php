@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Middlewares\TrailingSlash;
 use Odan\Session\Middleware\SessionStartMiddleware;
 use Selective\BasePath\BasePathMiddleware;

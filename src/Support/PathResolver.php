@@ -38,7 +38,7 @@ class PathResolver
 	public static function projectRoot(): string
 	{
 		return self::$projectRoot ??= defined('TCMS_PROJECT_ROOT')
-			? (string) TCMS_PROJECT_ROOT
+			? (string)TCMS_PROJECT_ROOT
 			: self::packageRoot();
 	}
 

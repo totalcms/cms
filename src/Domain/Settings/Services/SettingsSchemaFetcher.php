@@ -9,7 +9,7 @@ use TotalCMS\Support\PathResolver;
  */
 class SettingsSchemaFetcher
 {
-	private static function schemasPath(): string
+	private function schemasPath(): string
 	{
 		return PathResolver::packageRoot() . '/resources/schemas';
 	}
@@ -32,7 +32,7 @@ class SettingsSchemaFetcher
 			return $this->requestCache[$section];
 		}
 
-		$schemaPath = self::schemasPath() . '/settings/' . $section . '.json';
+		$schemaPath = $this->schemasPath() . '/settings/' . $section . '.json';
 
 		if (!file_exists($schemaPath)) {
 			$this->requestCache[$section] = null;
@@ -76,7 +76,7 @@ class SettingsSchemaFetcher
 	 */
 	public function schemaExists(string $section): bool
 	{
-		$schemaPath = self::schemasPath() . '/settings/' . $section . '.json';
+		$schemaPath = $this->schemasPath() . '/settings/' . $section . '.json';
 
 		return file_exists($schemaPath);
 	}

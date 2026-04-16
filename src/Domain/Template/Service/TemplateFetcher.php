@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Template\Service;
 
 use TotalCMS\Domain\Template\Data\TemplateData;

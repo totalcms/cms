@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\License\Data\LicenseData;
 
 describe('LicenseData', function (): void {
@@ -49,7 +51,7 @@ describe('LicenseData', function (): void {
 	});
 
 	test('versionAuthorized defaults to true when missing from response', function (): void {
-		$response = ['valid' => true, 'edition' => 'pro'];
+		$response    = ['valid' => true, 'edition' => 'pro'];
 		$licenseData = LicenseData::fromApiResponse($response);
 
 		expect($licenseData->versionAuthorized)->toBe(true);

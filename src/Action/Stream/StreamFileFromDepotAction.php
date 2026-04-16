@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Stream;
 
 use Odan\Session\PhpSession;

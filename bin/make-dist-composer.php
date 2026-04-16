@@ -9,11 +9,10 @@
  *
  * Usage: php bin/make-dist-composer.php [output-dir]
  */
-
-$outputDir = $argv[1] ?? __DIR__ . '/..';
+$outputDir  = $argv[1] ?? __DIR__ . '/..';
 $sourceFile = __DIR__ . '/../composer.json';
 
-$source = json_decode((string) file_get_contents($sourceFile), true);
+$source = json_decode((string)file_get_contents($sourceFile), true);
 if (!is_array($source)) {
 	fwrite(STDERR, "Error: Failed to read composer.json\n");
 	exit(1);
@@ -48,7 +47,7 @@ $dist = [
 	],
 ];
 
-$json = json_encode($dist, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+$json       = json_encode($dist, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
 $outputPath = rtrim($outputDir, '/') . '/composer.json';
 
 file_put_contents($outputPath, $json);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // Development Environment
 // echo "DEV Environment\n";
 

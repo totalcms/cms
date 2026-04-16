@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Index\Service;
 
 use TotalCMS\Domain\Index\Data\IndexData;

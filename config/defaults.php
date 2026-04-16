@@ -41,12 +41,12 @@ $settings['notfound']        = '/404';
 $settings['maxDownloadSize'] = 2048;
 
 // Path settings
-$settings['root']     = \TotalCMS\Support\PathResolver::projectRoot();
+$settings['root']     = TotalCMS\Support\PathResolver::projectRoot();
 $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
-$settings['template'] = \TotalCMS\Support\PathResolver::packageRoot() . '/resources/templates';
-$settings['schemas']  = \TotalCMS\Support\PathResolver::packageRoot() . '/resources/schemas';
+$settings['template'] = TotalCMS\Support\PathResolver::packageRoot() . '/resources/templates';
+$settings['schemas']  = TotalCMS\Support\PathResolver::packageRoot() . '/resources/schemas';
 
 // Resolve DOCUMENT_ROOT: use server value if available, otherwise read from stored file.
 // Web requests persist the docroot so CLI tools can discover it automatically.
@@ -125,7 +125,7 @@ $settings['error'] = [
 // Logger settings
 $settings['logger'] = [
 	'name'        => 'totalcms',
-	'path'        => \TotalCMS\Support\PathResolver::projectRoot() . '/logs',
+	'path'        => TotalCMS\Support\PathResolver::projectRoot() . '/logs',
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
 	'maxFiles'    => 10,

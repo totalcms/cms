@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // may need to increase memory limit for tests in php.ini
 ini_set('memory_limit', '1G');
 

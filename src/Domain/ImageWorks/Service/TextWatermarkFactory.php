@@ -19,7 +19,7 @@ readonly class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.system/watermarks';
 
-	private static function fontPath(): string
+	private function fontPath(): string
 	{
 		return PathResolver::packageRoot() . '/resources/fonts/RobotoRegular.ttf';
 	}
@@ -347,8 +347,8 @@ readonly class TextWatermarkFactory
 		}
 
 		// Default font: Always use Roboto Regular
-		if (file_exists(self::fontPath())) {
-			return self::fontPath();
+		if (file_exists($this->fontPath())) {
+			return $this->fontPath();
 		}
 
 		// No font available

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Bundle\Service;
 
 use TotalCMS\Domain\Bundle\Data\BundleData;
@@ -10,7 +12,7 @@ use TotalCMS\Support\PathResolver;
 
 class BundleChecker
 {
-	private static function baseDir(): string
+	private function baseDir(): string
 	{
 		return PathResolver::packageRoot() . '/';
 	}
@@ -53,7 +55,7 @@ class BundleChecker
 	private function compareBundle(): bool
 	{
 		foreach ($this->bundle->bundle as $name => $bundle) {
-			$bundlePath = self::baseDir() . $name;
+			$bundlePath = $this->baseDir() . $name;
 
 			if (!file_exists($bundlePath)) {
 				throw new \DomainException(self::REINSTALL . "$name missing from local Bundle.");

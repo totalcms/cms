@@ -159,7 +159,6 @@ use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
-use TotalCMS\Support\PathResolver;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
@@ -199,6 +198,7 @@ use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\PathResolver;
 
 return [
 	// Application settings

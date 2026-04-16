@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
 test('price filter with default prepend format', function (): void {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Property\Data\DateData;
 
 // Test that DateData processes dates correctly (the core functionality tested in deck processing)

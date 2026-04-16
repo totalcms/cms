@@ -14,13 +14,13 @@ if (php_sapi_name() == 'cli-server') {
 	}
 }
 
-if (!class_exists(\TotalCMS\Support\PathResolver::class, false)) {
+if (!class_exists(TotalCMS\Support\PathResolver::class, false)) {
 	require_once __DIR__ . '/../vendor/autoload.php';
 }
 
 // Define ROOT for CakePHP I18n translations (resources/locales/)
 if (!defined('ROOT')) {
-	define('ROOT', \TotalCMS\Support\PathResolver::packageRoot());
+	define('ROOT', TotalCMS\Support\PathResolver::packageRoot());
 }
 
 $container = new Container(require __DIR__ . '/container.php');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // Stacks Publish Environment
 // echo "Stacks Publish Environment\n";
 

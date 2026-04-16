@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Domain\License\Exception;
 
 use PHPUnit\Framework\TestCase;

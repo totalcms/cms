@@ -19,7 +19,7 @@ use TotalCMS\Support\PathResolver;
 /** @SuppressWarnings("PHPMD.ExcessiveClassComplexity") */
 class JumpStartImporter
 {
-	private static function demoJumpstartFile(): string
+	private function demoJumpstartFile(): string
 	{
 		return PathResolver::packageRoot() . '/resources/jumpstart/demo.json';
 	}
@@ -86,7 +86,7 @@ class JumpStartImporter
 	 */
 	public function importDemoDefinition(): array
 	{
-		return $this->importFromFile(self::demoJumpstartFile());
+		return $this->importFromFile($this->demoJumpstartFile());
 	}
 
 	/**

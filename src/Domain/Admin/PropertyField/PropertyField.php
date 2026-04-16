@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Admin\PropertyField;
 
 use TotalCMS\Domain\Admin\TotalForm;

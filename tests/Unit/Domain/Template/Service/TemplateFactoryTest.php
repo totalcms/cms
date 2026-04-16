@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Domain\Template\Service;
 
 use PHPUnit\Framework\TestCase;
