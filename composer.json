@@ -1,6 +1,6 @@
 {
-  "name": "joeworkman/totalcms",
-  "type": "project",
+  "name": "totalcms/cms",
+  "type": "library",
   "description": "Total CMS",
   "keywords": [
     "total-cms",
@@ -106,6 +106,7 @@
       "php": "8.2.0"
     }
   },
+  "bin": ["resources/bin/tcms"],
   "autoload": {
     "psr-4": {
       "TotalCMS\\": "src/"

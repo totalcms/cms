@@ -456,4 +456,5 @@ echo "  2. Test the production build locally"
 echo "  3. Create git tag: git tag -a v$NEW_VERSION -m 'Release version $NEW_VERSION'"
 echo "  4. Push to repository: git push && git push --tags"
 echo "  5. Create release on GitHub with changelog"
+echo "  6. Packagist auto-updates from the git tag (via webhook)"
 echo
