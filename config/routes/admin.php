@@ -9,6 +9,7 @@ use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
 use TotalCMS\Action\Admin\AdminEditProfileAction;
+use TotalCMS\Action\Admin\AdminExtensionsAction;
 use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
@@ -19,6 +20,7 @@ use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
+use TotalCMS\Action\Admin\ExtensionToggleAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Action\Admin\UpdateAction;
@@ -89,6 +91,10 @@ return function (App $app): void {
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
+
+		// Extension management
+		$group->get('/extensions', AdminExtensionsAction::class)->setName('admin-extensions')->add(AdminOnlyMiddleware::class);
+		$group->post('/extensions/{extension}/{action:enable|disable}', ExtensionToggleAction::class)->setName('admin-extension-toggle')->add(AdminOnlyMiddleware::class);
 
 		// Catch-all 404 route - MUST BE LAST
 		$group->any('/{path:.*}', Admin404Action::class)->setName('admin-404');

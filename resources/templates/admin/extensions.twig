@@ -1,0 +1,73 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<div class="dash-content-main full-width">
+	<header class="content-header">
+		<h1>{{ t('nav.extensions') }}</h1>
+	</header>
+
+	<div class="extension-list">
+		{% if extensions is empty %}
+		<div class="empty-state">
+			<p>No extensions installed.</p>
+			<p class="hint">Extensions are installed to <code>tcms-data/extensions/</code></p>
+		</div>
+		{% else %}
+		<div class="card-grid">
+			{% for ext in extensions %}
+			<div class="extension-card{% if ext.error %} has-error{% endif %}" id="ext-{{ ext.id|replace({'/': '-'}) }}">
+				<div class="extension-header">
+					<h3>{{ ext.name }}</h3>
+					<span class="version">v{{ ext.version }}</span>
+				</div>
+
+				{% if ext.description %}
+				<p class="description">{{ ext.description }}</p>
+				{% endif %}
+
+				{% if ext.author.name is defined %}
+				<p class="author">By {{ ext.author.name }}</p>
+				{% endif %}
+
+				{% if ext.error %}
+				<div class="extension-error">
+					<strong>Error:</strong> {{ ext.error }}
+				</div>
+				{% endif %}
+
+				{% if ext.permissions %}
+				<div class="permissions">
+					{% for perm in ext.permissions %}
+					<span class="permission-badge">{{ perm }}</span>
+					{% endfor %}
+				</div>
+				{% endif %}
+
+				<div class="extension-actions">
+					{% if ext.enabled %}
+					<button class="btn btn-sm btn-warning"
+						hx-post="extensions/{{ ext.id }}/disable"
+						hx-swap="none"
+						hx-on::after-request="window.location.reload()">
+						Disable
+					</button>
+					<span class="status-badge enabled">Enabled</span>
+					{% else %}
+					<button class="btn btn-sm btn-primary"
+						hx-post="extensions/{{ ext.id }}/enable"
+						hx-swap="none"
+						hx-on::after-request="window.location.reload()">
+						Enable
+					</button>
+					<span class="status-badge disabled">Disabled</span>
+					{% endif %}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+		{% endif %}
+	</div>
+</div>
+
+{% endblock %}

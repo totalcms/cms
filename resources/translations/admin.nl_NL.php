@@ -13,6 +13,7 @@ return [
 	'nav.utils'          => 'Hulpmiddelen',
 	'nav.settings'       => 'Instellingen',
 	'nav.docs'           => 'Documentatie',
+	'nav.extensions'     => 'Extensies',
 	'nav.license_status' => 'Licentiestatus',
 
 	// ── User Menu ───────────────────────────────────────────────────────────

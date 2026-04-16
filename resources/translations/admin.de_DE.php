@@ -13,6 +13,7 @@ return [
 	'nav.utils'          => 'Werkzeuge',
 	'nav.settings'       => 'Einstellungen',
 	'nav.docs'           => 'Dokumentation',
+	'nav.extensions'     => 'Erweiterungen',
 	'nav.license_status' => 'Lizenzstatus',
 
 	// ── User Menu ───────────────────────────────────────────────────────────

@@ -108,6 +108,9 @@
                     </li>
                     {% endif %}
                     {% if cms.auth.isAdmin() %}
+                    <li class="menu-item{% if url.page == 'extensions' %} active{% endif %}">
+                        <a class="extensions" href="extensions" title="{{ t('nav.extensions') }}">{{ t('nav.extensions') }}</a>
+                    </li>
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="{{ t('nav.settings') }}">{{ t('nav.settings') }}</a>
                     </li>
