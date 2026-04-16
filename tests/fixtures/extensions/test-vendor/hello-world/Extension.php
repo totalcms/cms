@@ -17,7 +17,7 @@ use Twig\TwigFunction;
 class Extension implements ExtensionInterface
 {
 	public bool $registered = false;
-	public bool $booted = false;
+	public bool $booted     = false;
 
 	/** @var list<array<string,mixed>> */
 	public array $receivedEvents = [];
@@ -48,7 +48,7 @@ class Extension implements ExtensionInterface
 			$this->receivedEvents[] = ['event' => 'object.created', 'payload' => $payload];
 		});
 
-		$helloCmd = new class () extends Command {
+		$helloCmd = new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('test-vendor:hello');

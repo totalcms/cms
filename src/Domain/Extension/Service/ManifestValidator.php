@@ -83,7 +83,7 @@ final class ManifestValidator
 		}
 
 		$currentVersion = Version::number();
-		if ($currentVersion === '' || $currentVersion === 'unknown' || $currentVersion === '0.0.0') {
+		if (in_array($currentVersion, ['', 'unknown', '0.0.0'], true)) {
 			return true;
 		}
 

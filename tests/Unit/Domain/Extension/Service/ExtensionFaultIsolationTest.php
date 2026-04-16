@@ -25,7 +25,7 @@ describe('Extension fault isolation', function (): void {
 		$storage->method('write')->willReturn(true);
 		$stateRepo = new ExtensionStateRepository($storage);
 
-		$config = (new ReflectionClass(\TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+		$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->datadir = $fixturesDir;
 
 		$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
@@ -83,7 +83,7 @@ describe('Extension fault isolation', function (): void {
 		});
 		$stateRepo = new ExtensionStateRepository($storage);
 
-		$config = (new ReflectionClass(\TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+		$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->datadir = $fixturesDir;
 
 		$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
