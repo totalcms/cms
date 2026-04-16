@@ -1,6 +1,7 @@
 ---
 title: "Extension Points"
 description: "All the ways extensions can add functionality to Total CMS: Twig functions, CLI commands, routes, admin pages, field types, events, and more."
+since: "3.3.0"
 ---
 
 # Extension Points

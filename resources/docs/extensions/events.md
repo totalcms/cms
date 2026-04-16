@@ -1,6 +1,7 @@
 ---
 title: "Extension Events"
 description: "Reference for all content events that extensions can subscribe to in Total CMS."
+since: "3.3.0"
 ---
 
 # Extension Events

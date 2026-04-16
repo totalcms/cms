@@ -1,6 +1,7 @@
 ---
 title: "Extensions Overview"
 description: "Learn how to extend Total CMS with custom functionality using the extension system. Add Twig functions, CLI commands, admin pages, custom schemas, and more."
+since: "3.3.0"
 ---
 
 # Extensions Overview

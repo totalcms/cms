@@ -1,6 +1,7 @@
 ---
 title: "Updates"
 description: "Keep Total CMS up to date with one-click dashboard updates, CLI commands, or manual upgrades. Includes rollback and maintenance mode details."
+since: "3.3.0"
 ---
 
 # Updates

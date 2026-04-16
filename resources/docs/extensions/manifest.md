@@ -1,6 +1,7 @@
 ---
 title: "Extension Manifest Reference"
 description: "Complete reference for the extension.json manifest file that every Total CMS extension requires."
+since: "3.3.0"
 ---
 
 # Extension Manifest Reference
