@@ -47,7 +47,16 @@ function createExtensionManager(
 describe('ExtensionManager', function (): void {
 	test('discovers extensions in fixture directory', function (): void {
 		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
-		$manager     = createExtensionManager($fixturesDir);
+
+		// Verify fixture directory exists (helps debug CI failures)
+		expect(is_dir($fixturesDir . '/extensions'))->toBeTrue(
+			"Fixture extensions directory not found at: {$fixturesDir}/extensions"
+		);
+		expect(is_file($fixturesDir . '/extensions/test-vendor/hello-world/extension.json'))->toBeTrue(
+			"Hello world fixture not found at: {$fixturesDir}/extensions/test-vendor/hello-world/extension.json"
+		);
+
+		$manager = createExtensionManager($fixturesDir);
 
 		$manager->discoverAndRegister();
 		$manifests = $manager->getDiscoveredManifests();
