@@ -56,13 +56,30 @@ describe('ExtensionManager', function (): void {
 			"Hello world fixture not found at: {$fixturesDir}/extensions/test-vendor/hello-world/extension.json"
 		);
 
+		// Verify Config datadir is set correctly
+		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->datadir = $fixturesDir;
+		expect($config->datadir)->toBe($fixturesDir, "Config datadir not set: got [{$config->datadir}]");
+
+		$discovery = new \TotalCMS\Domain\Extension\Service\ExtensionDiscovery(
+			$config,
+			new \TotalCMS\Domain\Extension\Service\ManifestValidator(),
+			new \Psr\Log\NullLogger(),
+		);
+		$extDir = $discovery->getExtensionsDirectory();
+		expect(is_dir($extDir))->toBeTrue("Discovery extensions dir not found: {$extDir}");
+
+		$manifests = $discovery->discover();
+		expect($manifests)->not->toBeEmpty(
+			"Discovery returned empty. ExtDir: {$extDir}, scandir: " . json_encode(scandir($extDir) ?: [])
+		);
+
 		$manager = createExtensionManager($fixturesDir);
-
 		$manager->discoverAndRegister();
-		$manifests = $manager->getDiscoveredManifests();
+		$allManifests = $manager->getDiscoveredManifests();
 
-		expect($manifests)->toHaveKey('test-vendor/hello-world');
-		expect($manifests)->toHaveKey('test-vendor/broken-ext');
+		expect($allManifests)->toHaveKey('test-vendor/hello-world');
+		expect($allManifests)->toHaveKey('test-vendor/broken-ext');
 	});
 
 	test('registers enabled extensions', function (): void {
