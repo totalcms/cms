@@ -30,12 +30,7 @@ function createExtensionManager(
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$logger = new class extends \Psr\Log\AbstractLogger {
-		public function log($level, \Stringable|string $message, array $context = []): void {
-			fwrite(STDERR, "[ext-test:{$level}] {$message}\n");
-		}
-	};
-	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), $logger);
+	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());
 	$container = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
 
@@ -52,57 +47,13 @@ function createExtensionManager(
 describe('ExtensionManager', function (): void {
 	test('discovers extensions in fixture directory', function (): void {
 		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$manager     = createExtensionManager($fixturesDir);
 
-		// Verify fixture directory exists (helps debug CI failures)
-		expect(is_dir($fixturesDir . '/extensions'))->toBeTrue(
-			"Fixture extensions directory not found at: {$fixturesDir}/extensions"
-		);
-		expect(is_file($fixturesDir . '/extensions/test-vendor/hello-world/extension.json'))->toBeTrue(
-			"Hello world fixture not found at: {$fixturesDir}/extensions/test-vendor/hello-world/extension.json"
-		);
-
-		// Verify Config datadir is set correctly
-		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->datadir = $fixturesDir;
-		expect($config->datadir)->toBe($fixturesDir, "Config datadir not set: got [{$config->datadir}]");
-
-		// Use a test logger that captures messages
-		$testLogger = new class extends \Psr\Log\AbstractLogger {
-			/** @var list<string> */
-			public array $messages = [];
-			public function log($level, \Stringable|string $message, array $context = []): void {
-				$this->messages[] = "[{$level}] {$message}";
-			}
-		};
-
-		$discovery = new \TotalCMS\Domain\Extension\Service\ExtensionDiscovery(
-			$config,
-			new \TotalCMS\Domain\Extension\Service\ManifestValidator(),
-			$testLogger,
-		);
-		$extDir = $discovery->getExtensionsDirectory();
-		expect(is_dir($extDir))->toBeTrue("Discovery extensions dir not found: {$extDir}");
-
-		$manifests = $discovery->discover();
-
-		if ($manifests === []) {
-			fwrite(STDERR, "\n=== EXTENSION DISCOVERY DEBUG ===\n");
-			fwrite(STDERR, "Version::number(): " . \TotalCMS\Support\Version::number() . "\n");
-			fwrite(STDERR, "Version::get(): " . \TotalCMS\Support\Version::get() . "\n");
-			foreach ($testLogger->messages as $msg) {
-				fwrite(STDERR, "LOG: {$msg}\n");
-			}
-			fwrite(STDERR, "=== END DEBUG ===\n");
-		}
-
-		expect($manifests)->not->toBeEmpty("Discovery returned empty - check stderr for debug output");
-
-		$manager = createExtensionManager($fixturesDir);
 		$manager->discoverAndRegister();
-		$allManifests = $manager->getDiscoveredManifests();
+		$manifests = $manager->getDiscoveredManifests();
 
-		expect($allManifests)->toHaveKey('test-vendor/hello-world');
-		expect($allManifests)->toHaveKey('test-vendor/broken-ext');
+		expect($manifests)->toHaveKey('test-vendor/hello-world');
+		expect($manifests)->toHaveKey('test-vendor/broken-ext');
 	});
 
 	test('registers enabled extensions', function (): void {
