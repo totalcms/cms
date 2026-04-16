@@ -46,13 +46,49 @@ readonly class LicenseStatus
 		try {
 			$license = $this->licenseValidator->validateLicense();
 
-			// Licensed and valid with no issues = show nothing
+			// Fully valid with no issues — show nothing
 			if ($this->isFullyValid($license)) {
 				return new LicenseStatusData(showIcon: false);
 			}
 
-			// DNS not verified for valid license - show warning
-			if ($license->valid && !$license->trial && !$license->dnsVerified) {
+			// License blocked/invalid — most severe
+			if (!$license->valid) {
+				return new LicenseStatusData(
+					showIcon : true,
+					severity : 'error',
+					tooltip  : 'License validation failed: ' . $license->message
+				);
+			}
+
+			// Running a version not authorized for this license
+			if (!$license->versionAuthorized) {
+				$allowed = $license->allowedVersion !== null
+					? "Your license allows up to version {$license->allowedVersion}."
+					: 'Please renew your updates or downgrade.';
+
+				return new LicenseStatusData(
+					showIcon : true,
+					severity : 'error',
+					tooltip  : "This version is not authorized for your license. {$allowed}"
+				);
+			}
+
+			// Trial logic
+			if ($license->trial && $license->trialDaysRemaining !== null) {
+				return $this->getTrialStatus($license->trialDaysRemaining);
+			}
+
+			// Updates expired
+			if (!$license->updatesValid) {
+				return new LicenseStatusData(
+					showIcon : true,
+					severity : 'warning',
+					tooltip  : 'License updates have expired. Some features may be limited.'
+				);
+			}
+
+			// DNS not verified
+			if (!$license->trial && !$license->dnsVerified) {
 				return new LicenseStatusData(
 					showIcon : true,
 					severity : 'warning',
@@ -69,30 +105,7 @@ readonly class LicenseStatus
 				);
 			}
 
-			// Trial logic
-			if ($license->trial && $license->trialDaysRemaining !== null) {
-				return $this->getTrialStatus($license->trialDaysRemaining);
-			}
-
-			// Updates expired but license valid
-			if ($license->valid && !$license->updatesValid) {
-				return new LicenseStatusData(
-					showIcon : true,
-					severity : 'warning',
-					tooltip  : 'License updates have expired. Some features may be limited.'
-				);
-			}
-
-			// License blocked/invalid
-			if (!$license->valid) {
-				return new LicenseStatusData(
-					showIcon : true,
-					severity : 'error',
-					tooltip  : 'License validation failed: ' . $license->message
-				);
-			}
-
-			// Fallback - show nothing if status unclear
+			// Fallback — show nothing if status unclear
 			return new LicenseStatusData(showIcon: false);
 		} catch (\Exception) {
 			// Network error or cache issue - show offline warning
@@ -111,6 +124,7 @@ readonly class LicenseStatus
 	{
 		return $license->valid
 			&& $license->updatesValid
+			&& $license->versionAuthorized
 			&& $license->dnsVerified
 			&& !$license->trial;
 	}
