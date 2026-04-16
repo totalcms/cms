@@ -7,9 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites running Total CMS 3.
 
 ### Related Projects
-- **Total CMS License API** (`/Users/joeworkman/Websites/license.totalcms.co`): License validation and trial management with similar Slim 4 architecture
-- **Total CMS 3 Stacks** (`/Users/joeworkman/Developer/stacks/TotalCMS3`): Stacks plugin (claude project root: `/Users/joeworkman/Developer/stacks`)
-- **Documentation Site** (`/Users/joeworkman/Websites/docs.totalcms.co`): Public docs at docs.totalcms.co. Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
+- **Total CMS License API** ([totalcms/license.totalcms.co](https://github.com/totalcms/license.totalcms.co)): License validation and trial management with similar Slim 4 architecture
+- **Total CMS 3 Stacks**: Stacks plugin for the Stacks platform
+- **Documentation Site** ([totalcms/docs.totalcms.co](https://github.com/totalcms/docs.totalcms.co)): Public docs at docs.totalcms.co. Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
 
 ## Technology Stack
 
@@ -102,7 +102,7 @@ composer run test:all
 - **Storage**: Flat-file JSON storage (no traditional database)
 - **Caching**: Multi-backend Twig caching with APCu-first priority (APCu, Redis, Memcached, filesystem, OPcache)
 - **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features with PHP 8.4 compatibility
-- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements at `/Users/joeworkman/Developer/forks/couleur`
+- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements ([joeworkman-forks/couleur](https://github.com/joeworkman-forks/couleur))
 - **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
 - **Emergency Cache**: `/emergency/cache/clear` endpoint for customer self-service cache clearing
 
