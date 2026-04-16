@@ -1,0 +1,98 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TotalCMS\Domain\Extension\Data;
+
+/**
+ * Typed representation of an extension's extension.json manifest.
+ */
+final readonly class ExtensionManifest
+{
+	/**
+	 * @param string               $id             e.g. "vendor/extension-name"
+	 * @param string               $name           Human-readable name
+	 * @param string               $description    Short description
+	 * @param string               $version        Semver version
+	 * @param array<string,string> $requires       version constraints: totalcms, php, etc
+	 * @param array<int,string>    $permissions     Permission identifiers
+	 * @param string               $entrypoint     Relative path to the ExtensionInterface class
+	 * @param string|null          $settingsSchema  Relative path to settings JSON schema
+	 * @param string               $minEdition      Minimum edition required (lite, standard, pro)
+	 * @param array<string,string> $author         Author info (name, url)
+	 * @param string               $license        License identifier
+	 */
+	public function __construct(
+		public string $id,
+		public string $name,
+		public string $description,
+		public string $version,
+		public array $requires,
+		public array $permissions,
+		public string $entrypoint,
+		public ?string $settingsSchema,
+		public string $minEdition,
+		public array $author,
+		public string $license,
+	) {
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 */
+	public static function fromArray(array $data): self
+	{
+		return new self(
+			id: (string)($data['id'] ?? ''),
+			name: (string)($data['name'] ?? ''),
+			description: (string)($data['description'] ?? ''),
+			version: (string)($data['version'] ?? '0.0.0'),
+			requires: is_array($data['requires'] ?? null) ? $data['requires'] : [],
+			permissions: is_array($data['permissions'] ?? null) ? $data['permissions'] : [],
+			entrypoint: (string)($data['entrypoint'] ?? 'Extension.php'),
+			settingsSchema: isset($data['settings_schema']) ? (string)$data['settings_schema'] : null,
+			minEdition: (string)($data['min_edition'] ?? 'lite'),
+			author: is_array($data['author'] ?? null) ? $data['author'] : [],
+			license: (string)($data['license'] ?? 'proprietary'),
+		);
+	}
+
+	public function requiresTotalCmsVersion(): string
+	{
+		return (string)($this->requires['totalcms'] ?? '>=3.0.0');
+	}
+
+	public function requiresPhpVersion(): string
+	{
+		return (string)($this->requires['php'] ?? '>=8.2');
+	}
+
+	/**
+	 * @return array<string,string> Extension ID => version constraint
+	 */
+	public function requiredExtensions(): array
+	{
+		$extensions = $this->requires['extensions'] ?? [];
+
+		return is_array($extensions) ? $extensions : [];
+	}
+
+	public function hasPermission(string $permission): bool
+	{
+		return in_array($permission, $this->permissions, true);
+	}
+
+	public function vendor(): string
+	{
+		$parts = explode('/', $this->id, 2);
+
+		return $parts[0];
+	}
+
+	public function shortName(): string
+	{
+		$parts = explode('/', $this->id, 2);
+
+		return $parts[1] ?? $this->id;
+	}
+}

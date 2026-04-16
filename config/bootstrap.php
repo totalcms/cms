@@ -34,10 +34,17 @@ if ($sentryEnabled === true) {
 // Create App instance
 $app = $container->get(App::class);
 
+// Discover and register extensions (before middleware/routes so extensions can add container definitions)
+$extensionManager = $container->get(TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+$extensionManager->discoverAndRegister();
+
 // Register middleware
 (require __DIR__ . '/middleware.php')($app);
 
 // Register routes
 (require __DIR__ . '/routes.php')($app);
+
+// Boot extensions (after core routes so extensions can add their own routes)
+$extensionManager->bootAll($app);
 
 return $app;

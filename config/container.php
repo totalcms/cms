@@ -58,6 +58,13 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
+use TotalCMS\Domain\Extension\Event\EventDispatcher;
+use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
+use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -1195,5 +1202,40 @@ return [
 		$container->get(Config::class),
 		$container->get(RedirectRenderer::class),
 		$container->get(SetupStateManager::class),
+	),
+
+	// -------------------------------------------------------------------------
+	// Extensions
+	// -------------------------------------------------------------------------
+
+	EventDispatcher::class => fn (ContainerInterface $container): EventDispatcher => new EventDispatcher(
+		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('events'),
+	),
+
+	ManifestValidator::class => fn (): ManifestValidator => new ManifestValidator(),
+
+	ExtensionDependencySorter::class => fn (): ExtensionDependencySorter => new ExtensionDependencySorter(),
+
+	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	ExtensionStateRepository::class => fn (ContainerInterface $container): ExtensionStateRepository => new ExtensionStateRepository(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	ExtensionDiscovery::class => fn (ContainerInterface $container): ExtensionDiscovery => new ExtensionDiscovery(
+		$container->get(Config::class),
+		$container->get(ManifestValidator::class),
+		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('extensions'),
+	),
+
+	ExtensionManager::class => fn (ContainerInterface $container): ExtensionManager => new ExtensionManager(
+		$container->get(ExtensionDiscovery::class),
+		$container->get(ExtensionStateRepository::class),
+		$container->get(ExtensionDependencySorter::class),
+		$container->get(ExtensionSettingsManager::class),
+		$container,
+		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('extensions'),
 	),
 ];

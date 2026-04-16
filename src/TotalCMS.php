@@ -182,6 +182,11 @@ class TotalCMS
 	// ---------------------------------------------------------------------------------
 	// Public methods to access Total CMS services
 	// ---------------------------------------------------------------------------------
+	public function container(): Container
+	{
+		return $this->container;
+	}
+
 	public function collectionLister(): CollectionLister
 	{
 		return $this->container->get(CollectionLister::class);
