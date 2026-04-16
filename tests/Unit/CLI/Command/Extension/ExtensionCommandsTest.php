@@ -34,7 +34,7 @@ function createTestDependencies(): array
 	$storage->method('write')->willReturn(true);
 	$stateRepo = new ExtensionStateRepository($storage);
 
-	$config          = test()->createStub(Config::class);
+	$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = $fixturesDir;
 
 	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());

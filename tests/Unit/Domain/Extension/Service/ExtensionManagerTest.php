@@ -15,7 +15,7 @@ function createExtensionManager(
 	string $extensionsDir,
 	?ExtensionStateRepository $stateRepo = null,
 ): ExtensionManager {
-	$config          = test()->createStub(Config::class);
+	$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = $extensionsDir;
 
 	// Use a mock storage adapter for the state repo
