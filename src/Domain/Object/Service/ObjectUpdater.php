@@ -22,6 +22,7 @@ readonly class ObjectUpdater
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private CollectionSaver $collectionSaver,
 		private DataViewUpdateScheduler $viewUpdateScheduler,
+		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
 	) {
 	}
 
@@ -48,6 +49,11 @@ readonly class ObjectUpdater
 		$this->indexBuilder->smartBuildIndex($collection, $object);
 
 		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
+
+		$this->eventDispatcher?->dispatch('object.updated', [
+			'collection' => $collection,
+			'id'         => $object->id,
+		]);
 
 		return $object;
 	}

@@ -20,6 +20,7 @@ readonly class ObjectSaver
 		private CollectionSaver $collectionSaver,
 		private DataViewUpdateScheduler $viewUpdateScheduler,
 		private DateFieldResetter $dateFieldResetter,
+		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
 	) {
 	}
 
@@ -50,6 +51,11 @@ readonly class ObjectSaver
 		$this->indexBuilder->smartBuildIndex($collection, $object);
 
 		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
+
+		$this->eventDispatcher?->dispatch('object.created', [
+			'collection' => $collection,
+			'id'         => $object->id,
+		]);
 
 		return $object;
 	}

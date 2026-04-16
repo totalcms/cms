@@ -152,4 +152,24 @@ readonly class TwigEngine
 			throw $e->getPrevious() ?? $e;
 		}
 	}
+
+	/**
+	 * Register Twig functions, filters, and globals from extensions.
+	 *
+	 * @param list<TwigFunction> $functions
+	 * @param list<\Twig\TwigFilter>   $filters
+	 * @param array<string,mixed>      $globals
+	 */
+	public function registerExtensionItems(array $functions, array $filters, array $globals): void
+	{
+		foreach ($functions as $fn) {
+			$this->twig->addFunction($fn);
+		}
+		foreach ($filters as $filter) {
+			$this->twig->addFilter($filter);
+		}
+		foreach ($globals as $name => $value) {
+			$this->twig->addGlobal($name, $value);
+		}
+	}
 }

@@ -16,6 +16,7 @@ readonly class SchemaSaver
 		private IndexBuilder $indexBuilder,
 		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
+		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
 	) {
 	}
 
@@ -86,6 +87,10 @@ readonly class SchemaSaver
 		}
 
 		$this->storage->saveSchema($schema);
+
+		$this->eventDispatcher?->dispatch('schema.saved', [
+			'schema' => $schema->id,
+		]);
 
 		return $schema;
 	}

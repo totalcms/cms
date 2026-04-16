@@ -79,6 +79,25 @@ class CliApplication
 		$app->addCommand(new Command\UpdateApplyCommand($totalcms));
 		$app->addCommand(new Command\UpdateRollbackCommand($totalcms));
 
+		// Extension management commands
+		$app->addCommand(new Command\Extension\ExtensionListCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionEnableCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionDisableCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionRemoveCommand($totalcms));
+
+		// Extension-provided commands
+		try {
+			$extensionManager = $totalcms->container()->get(
+				\TotalCMS\Domain\Extension\Service\ExtensionManager::class
+			);
+			$extensionManager->discoverAndRegister();
+			foreach ($extensionManager->getAllCommands() as $command) {
+				$app->addCommand($command);
+			}
+		} catch (\Throwable $e) {
+			fwrite(STDERR, "Warning: Failed to load extension commands: {$e->getMessage()}\n");
+		}
+
 		$app->run();
 	}
 }

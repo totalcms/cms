@@ -27,6 +27,9 @@ class SchemaRepository extends StorageRepository
 	 *
 	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
 	 */
+	/** @var list<string> Absolute paths to extension schema directories */
+	private array $extensionSchemaDirs = [];
+
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly SchemaFactory $factory,
@@ -34,6 +37,17 @@ class SchemaRepository extends StorageRepository
 		private readonly Config $config,
 	) {
 		parent::__construct($filesystem);
+	}
+
+	/**
+	 * Register an extension's schema directory.
+	 * Schemas in this directory are read-only and managed by the extension.
+	 */
+	public function registerExtensionSchemaDir(string $absolutePath): void
+	{
+		if (is_dir($absolutePath)) {
+			$this->extensionSchemaDirs[] = $absolutePath;
+		}
 	}
 
 	public function getCustomSchemaDir(): string
@@ -186,11 +200,78 @@ class SchemaRepository extends StorageRepository
 	}
 
 	/**
+	 * Fetch a schema from extension directories (read-only, managed by extensions).
+	 */
+	public function fetchExtensionSchema(string $id): ?SchemaData
+	{
+		foreach ($this->extensionSchemaDirs as $dir) {
+			$file = $dir . '/' . $id . '.json';
+			if (is_file($file)) {
+				$json = file_get_contents($file);
+				if ($json === false) {
+					continue;
+				}
+				$data = json_decode($json, true);
+				if (!is_array($data)) {
+					continue;
+				}
+
+				try {
+					return $this->factory->generateSchema($data);
+				} catch (\Exception) {
+					continue;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * List all schemas provided by extensions.
+	 *
+	 * @return array<SchemaData>
+	 */
+	public function listExtensionSchemas(): array
+	{
+		$schemas = [];
+
+		foreach ($this->extensionSchemaDirs as $dir) {
+			$files = glob($dir . '/*.json');
+			if ($files === false) {
+				continue;
+			}
+			foreach ($files as $file) {
+				$json = file_get_contents($file);
+				if ($json === false) {
+					continue;
+				}
+				$data = json_decode($json, true);
+				if (!is_array($data)) {
+					continue;
+				}
+
+				try {
+					$schemas[] = $this->factory->generateSchema($data);
+				} catch (\Exception) {
+					// Skip invalid schemas
+				}
+			}
+		}
+
+		return $schemas;
+	}
+
+	/**
 	 * fetch a schema for one of the default schema types.
 	 */
 	public function getSchema(string $id): SchemaData
 	{
 		$schema = $this->fetchDefaultSchema($id);
+
+		if (!$schema instanceof SchemaData) {
+			$schema = $this->fetchExtensionSchema($id);
+		}
 
 		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);
@@ -206,6 +287,10 @@ class SchemaRepository extends StorageRepository
 	public function schemaExists(string $id): bool
 	{
 		$schema = $this->fetchDefaultSchema($id);
+
+		if (!$schema instanceof SchemaData) {
+			$schema = $this->fetchExtensionSchema($id);
+		}
 
 		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);

@@ -24,6 +24,7 @@ readonly class ObjectRemover
 		private CollectionFetcher $collectionFetcher,
 		private CollectionSaver $collectionSaver,
 		private DataViewUpdateScheduler $viewUpdateScheduler,
+		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
 	) {
 	}
 
@@ -47,6 +48,11 @@ readonly class ObjectRemover
 			$this->indexBuilder->smartBuildIndex($collection);
 
 			$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
+
+			$this->eventDispatcher?->dispatch('object.deleted', [
+				'collection' => $collection,
+				'id'         => $id,
+			]);
 		}
 
 		return $status;
