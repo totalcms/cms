@@ -86,11 +86,9 @@ describe('ExtensionManager', function (): void {
 		$manifests = $discovery->discover();
 
 		if ($manifests === []) {
-			$vendorContents = scandir($extDir . '/test-vendor') ?: [];
-			$manifestExists = is_file($extDir . '/test-vendor/hello-world/extension.json');
 			fwrite(STDERR, "\n=== EXTENSION DISCOVERY DEBUG ===\n");
-			fwrite(STDERR, "vendorScan: " . json_encode($vendorContents) . "\n");
-			fwrite(STDERR, "manifestExists: " . ($manifestExists ? 'yes' : 'no') . "\n");
+			fwrite(STDERR, "Version::number(): " . \TotalCMS\Support\Version::number() . "\n");
+			fwrite(STDERR, "Version::get(): " . \TotalCMS\Support\Version::get() . "\n");
 			foreach ($testLogger->messages as $msg) {
 				fwrite(STDERR, "LOG: {$msg}\n");
 			}
