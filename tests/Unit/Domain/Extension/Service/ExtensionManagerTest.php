@@ -61,10 +61,19 @@ describe('ExtensionManager', function (): void {
 		$config->datadir = $fixturesDir;
 		expect($config->datadir)->toBe($fixturesDir, "Config datadir not set: got [{$config->datadir}]");
 
+		// Use a test logger that captures messages
+		$testLogger = new class extends \Psr\Log\AbstractLogger {
+			/** @var list<string> */
+			public array $messages = [];
+			public function log($level, \Stringable|string $message, array $context = []): void {
+				$this->messages[] = "[{$level}] {$message}";
+			}
+		};
+
 		$discovery = new \TotalCMS\Domain\Extension\Service\ExtensionDiscovery(
 			$config,
 			new \TotalCMS\Domain\Extension\Service\ManifestValidator(),
-			new \Psr\Log\NullLogger(),
+			$testLogger,
 		);
 		$extDir = $discovery->getExtensionsDirectory();
 		expect(is_dir($extDir))->toBeTrue("Discovery extensions dir not found: {$extDir}");
@@ -72,6 +81,8 @@ describe('ExtensionManager', function (): void {
 		$manifests = $discovery->discover();
 		expect($manifests)->not->toBeEmpty(
 			"Discovery returned empty. ExtDir: {$extDir}, scandir: " . json_encode(scandir($extDir) ?: [])
+			. ", vendorScan: " . json_encode(scandir($extDir . '/test-vendor') ?: [])
+			. ", logger: " . json_encode($testLogger->messages)
 		);
 
 		$manager = createExtensionManager($fixturesDir);
