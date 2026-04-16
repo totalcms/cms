@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/broken-ext",
+    "name": "Broken Extension",
+    "description": "Extension that throws during boot for fault isolation testing",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0"
+    },
+    "permissions": [],
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}
