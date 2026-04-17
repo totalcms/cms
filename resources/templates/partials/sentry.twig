@@ -77,6 +77,18 @@
 				if (message.includes('Applying a mismatched transaction')) return null;
 				if (message.includes('outside of fragment')) return null;
 
+				// Ignore CodeMirror closetag addon bug: accesses context.length before null-checking context.
+				// CodeMirror 5 is abandoned upstream so no fix is coming.
+				if (event.exception && event.exception.values) {
+					var cmFrames = event.exception.values.flatMap(function(v) {
+						return (v.stacktrace && v.stacktrace.frames) || [];
+					});
+					var isClosetagBug = cmFrames.some(function(f) {
+						return f.filename && f.filename.includes('codemirror/addon/edit/closetag');
+					});
+					if (isClosetagBug) return null;
+				}
+
 				return event;
 			}
 		});
