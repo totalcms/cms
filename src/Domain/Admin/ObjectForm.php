@@ -64,6 +64,13 @@ class ObjectForm extends TotalForm
 			return $options;
 		}
 
+		// For sub-fields of composite properties (file, image, depot, gallery, etc.),
+		// skip parent schema lookup so sub-field names like `name`, `alt`, `tags` don't
+		// inherit settings/options from a top-level object property of the same name.
+		if (isset($options['subfield']) && $options['subfield'] === true) {
+			return $options;
+		}
+
 		$defaults = $this->fieldDefaults($name);
 		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
