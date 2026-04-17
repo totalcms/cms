@@ -49,7 +49,7 @@
 			}) }}
 
 			{% set collectionOptions = [] %}
-			{% for collection in collections | sort((a, b) => a.name <=> b.name) %}
+			{% for collection in collections | sort((a, b) => a.name|lower <=> b.name|lower) %}
 				{% set collectionOptions = collectionOptions|merge([{
 					value: collection.id,
 					label: collection.name
@@ -62,7 +62,7 @@
 				value    : group ? group.permissions.collections.allowed : [],
 				options  : collectionOptions,
 				settings : {
-					fieldGrid: "150px",
+					fieldColumns: "150px",
 					visibility : {
 						watch    : "collections-all",
 						value    : "all",
@@ -103,7 +103,7 @@
 				value    : group ? group.permissions.collectionsMeta.allowed : [],
 				options  : collectionOptions,
 				settings : {
-					fieldGrid: "150px",
+					fieldColumns: "150px",
 					visibility : {
 						watch    : "collectionsMeta-all",
 						value    : "all",
@@ -187,7 +187,7 @@
 					{value: "dataviews", label: t('access_groups.feature_dataviews')},
 				],
 				settings : {
-					fieldGrid: "150px"
+					fieldColumns: "150px"
 				}
 			}) }}
 
@@ -219,7 +219,7 @@
 					{value: "twig-debugger", label: t('access_groups.util_debugger')}
 				],
 				settings : {
-					fieldGrid: "150px",
+					fieldColumns: "150px",
 					visibility : {
 						watch : "utils-all",
 						value : "all",

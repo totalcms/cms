@@ -29,6 +29,10 @@ class RadioField extends FormField
 			if (isset($this->settings['fieldGrid'])) {
 				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';
 			}
+			if (isset($this->settings['fieldColumns'])) {
+				$formFieldAttributes['class'] .= ' radio-field--columns';
+				$formFieldAttributes['style'] .= '--fieldset-columns:' . $this->settings['fieldColumns'] . ';';
+			}
 		}
 
 		// Handle visibility settings

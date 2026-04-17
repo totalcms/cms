@@ -1,15 +1,17 @@
 ---
 title: "Radio & Multicheckbox"
-description: "Configure radio button and multicheckbox fields in Total CMS with responsive fieldGrid layout settings for multi-column option displays."
+description: "Configure radio button and multicheckbox fields in Total CMS with responsive fieldGrid and fieldColumns layout settings for multi-column option displays."
 ---
 
 # Radio & Multicheckbox
 
 Radio and Multicheckbox fields allow users to select options from multiple choices. For how to define options, see [All Field Settings](docs/property-options/static-options).
 
-## Grid Layout Settings
+Two layout settings are available for arranging options into multiple columns. Use one or the other — they control different flow directions.
 
-Use the `fieldGrid` setting to specify the minimum width for each option in the grid. This setting is supported by both `radio` and `multicheckbox` fields. By default, options display in a single column (full width). When you specify a `fieldGrid` value, the options will automatically flow into a responsive grid layout.
+## Grid Layout (`fieldGrid`)
+
+Use the `fieldGrid` setting to specify the minimum width for each option in a responsive grid. Options flow **left-to-right, then wrap to new rows**. Supported by both `radio` and `multicheckbox` fields.
 
 ```json
 {
@@ -17,7 +19,20 @@ Use the `fieldGrid` setting to specify the minimum width for each option in the 
 }
 ```
 
-This creates a responsive grid where:
 - Each option has a minimum width of `250px`
-- Options automatically wrap to new rows when needed
-- Grid adjusts based on container width
+- Options wrap to new rows when the container is full
+- Row-major reading order (like text)
+
+## Column Layout (`fieldColumns`)
+
+Use the `fieldColumns` setting to arrange options in CSS columns. Options flow **top-to-bottom, then into the next column** — useful for longer option lists where alphabetical scanning by column is preferable. Supported by both `radio` and `multicheckbox` fields.
+
+```json
+{
+    "fieldColumns": "150px"
+}
+```
+
+- Each column has a minimum width of `150px`
+- The browser creates as many columns as will fit in the container
+- Column-major reading order (top-to-bottom within a column)
