@@ -151,8 +151,8 @@ dialog.cms-modal.cms-confirm {
 	}
 
 	.cms-confirm-ok {
-		background-color : oklch(var(--totalform-error));
-		border-color     : oklch(var(--totalform-error));
+		background-color : oklch(var(--totalform-error) / 0.8);
+		border-color     : oklch(var(--totalform-error) / 0.8);
 		color            : oklch(var(--totalform-purewhite));
 
 		&:disabled {

@@ -1,3 +1,4 @@
+import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
 
 //-----------------------------------------------
@@ -152,22 +153,22 @@ export default class GalleryPreview {
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
 		if (deleteButton) {
-			deleteButton.addEventListener("click", event => {
+			deleteButton.addEventListener("click", async event => {
 				event.preventDefault();
-				if (confirm(t("confirm.delete_image"))) {
-					const name = this.getImageName();
-					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-						this.gallery.imageDataStore.delete(name);
-						if (this.gallery.activePreview === this) {
-							this.gallery.closeSharedDialog();
-						}
-						this.container.remove();
-					}).catch(error => {
-						console.error("Failed to delete image", error);
-						alert(t("error.delete_image"));
-					});
-				}
+				const ok = await tcmsConfirm({ message: t("confirm.delete_image"), countdown: 0 });
+				if (!ok) return;
+				const name = this.getImageName();
+				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+					this.gallery.imageDataStore.delete(name);
+					if (this.gallery.activePreview === this) {
+						this.gallery.closeSharedDialog();
+					}
+					this.container.remove();
+				}).catch(error => {
+					console.error("Failed to delete image", error);
+					alert(t("error.delete_image"));
+				});
 			});
 		}
 	}

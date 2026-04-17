@@ -5,6 +5,7 @@
  */
 
 import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
+import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
 
 /**
@@ -210,7 +211,7 @@ function createFileDialog(editor, uploadConfig) {
 		});
 	}
 
-	function handleDeleteFile(filename, row) {
+	async function handleDeleteFile(filename, row) {
 		const editorHtml = editor.getHTML();
 		const inUse = editorHtml.includes(filename);
 
@@ -218,7 +219,7 @@ function createFileDialog(editor, uploadConfig) {
 			? t("confirm.file_in_use")
 			: t("confirm.delete_label", {label: "file"});
 
-		if (!confirm(message)) return;
+		if (!(await tcmsConfirm({ message }))) return;
 
 		const listUrl = getUploadUrl(uploadConfig);
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;

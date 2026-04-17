@@ -6,6 +6,7 @@
 
 import Youtube from '@tiptap/extension-youtube';
 import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
+import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
 
 const AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma', 'opus'];
@@ -228,7 +229,7 @@ function createVideoDialog(editor, uploadConfig) {
 		});
 	}
 
-	function handleDeleteFile(filename, row, label) {
+	async function handleDeleteFile(filename, row, label) {
 		const editorHtml = editor.getHTML();
 		const inUse = editorHtml.includes(filename);
 
@@ -236,7 +237,7 @@ function createVideoDialog(editor, uploadConfig) {
 			? t("confirm.video_in_use", {label})
 			: t("confirm.delete_label", {label});
 
-		if (!confirm(message)) return;
+		if (!(await tcmsConfirm({ message }))) return;
 
 		const listUrl = getUploadUrl(uploadConfig);
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;
