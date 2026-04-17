@@ -6,6 +6,8 @@ namespace Tests\Unit\Property\Service;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Property\Data\GalleryData;
+use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
@@ -207,6 +209,64 @@ final class PropertyDataProcessorTest extends TestCase
 
 		// Should return the same instance (no cloning in current implementation)
 		$this->assertSame($dateData, $result);
+	}
+
+	public function testProcessImageDataComputesHash(): void
+	{
+		$imageData = new ImageData(['name' => 'photo.jpg', 'alt' => 'a photo']);
+		$this->assertSame('', $imageData->hash);
+
+		$result = $this->processor->processBeforeSave($imageData);
+
+		$this->assertInstanceOf(ImageData::class, $result);
+		$this->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $result->hash);
+	}
+
+	public function testProcessImageDataIsIdempotent(): void
+	{
+		$imageData = new ImageData(['name' => 'photo.jpg', 'alt' => 'a photo']);
+
+		$first  = $this->processor->processBeforeSave($imageData)->hash;
+		$second = $this->processor->processBeforeSave($imageData)->hash;
+
+		$this->assertSame($first, $second);
+	}
+
+	public function testProcessImageDataDetectsFocalpointChange(): void
+	{
+		$before = new ImageData(['name' => 'photo.jpg', 'focalpoint' => ['x' => 50, 'y' => 50]]);
+		$after  = new ImageData(['name' => 'photo.jpg', 'focalpoint' => ['x' => 25, 'y' => 75]]);
+
+		$beforeHash = $this->processor->processBeforeSave($before)->hash;
+		$afterHash  = $this->processor->processBeforeSave($after)->hash;
+
+		$this->assertNotSame($beforeHash, $afterHash);
+	}
+
+	public function testProcessGalleryDataHashesEveryImage(): void
+	{
+		$gallery = new GalleryData([
+			['name' => 'a.jpg', 'alt' => 'first'],
+			['name' => 'b.jpg', 'alt' => 'second'],
+			['name' => 'c.jpg', 'alt' => 'third'],
+		]);
+
+		$result = $this->processor->processBeforeSave($gallery);
+
+		$this->assertInstanceOf(GalleryData::class, $result);
+		foreach ($result->images as $image) {
+			$this->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $image->hash);
+		}
+	}
+
+	public function testProcessGalleryDataEmptyGalleryIsSafe(): void
+	{
+		$gallery = new GalleryData([]);
+
+		$result = $this->processor->processBeforeSave($gallery);
+
+		$this->assertInstanceOf(GalleryData::class, $result);
+		$this->assertSame([], $result->images);
 	}
 
 	public function testProcessBeforeSaveHandlesMultiplePropertyTypes(): void

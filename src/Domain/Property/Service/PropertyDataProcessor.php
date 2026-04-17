@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Property\Data\GalleryData;
+use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 
 /**
@@ -23,12 +25,35 @@ class PropertyDataProcessor implements PropertyDataProcessorInterface
 			return $this->processDateData($property);
 		}
 
-		// Add other property type processing here as needed
-		// if ($property instanceof OtherDataType) {
-		//     return $this->processOtherDataType($property);
-		// }
+		if ($property instanceof ImageData) {
+			return $this->processImageData($property);
+		}
+
+		if ($property instanceof GalleryData) {
+			return $this->processGalleryData($property);
+		}
 
 		return $property;
+	}
+
+	/**
+	 * Compute a fresh content hash so ImageWorks URLs bust cached crops.
+	 */
+	private function processImageData(ImageData $imageData): ImageData
+	{
+		$payload         = $imageData->transform();
+		$imageData->hash = ImageHashService::compute($payload);
+
+		return $imageData;
+	}
+
+	private function processGalleryData(GalleryData $galleryData): GalleryData
+	{
+		foreach ($galleryData->images as $image) {
+			$this->processImageData($image);
+		}
+
+		return $galleryData;
 	}
 
 	/**

@@ -125,6 +125,81 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		expect($result)->toContain("cache=$expectedCache");
 	}
 
+	public function testBuildImageworksAPICacheBustingPrefersHashOverUploadDate(): void
+	{
+		$image = [
+			'name'       => 'test.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
+			'hash'       => 'abc12345',
+		];
+
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
+
+		expect($result)->toContain('cache=abc12345');
+		// The reversed uploadDate fallback should NOT appear when hash is present.
+		$legacy = strrev((string)preg_replace('/\W+/', '', '2024-01-15T12:30:45Z'));
+		expect($result)->not->toContain("cache=$legacy");
+	}
+
+	public function testBuildImageworksAPIFallsBackToUploadDateWhenHashEmpty(): void
+	{
+		$image = [
+			'name'       => 'test.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
+			'hash'       => '',
+		];
+
+		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
+
+		$expected = strrev((string)preg_replace('/\W+/', '', '2024-01-15T12:30:45Z'));
+		expect($result)->toContain("cache=$expected");
+	}
+
+	public function testBuildImageworksGalleryAPICacheBustingPrefersHash(): void
+	{
+		$image = ['name' => 'photo.jpg', 'uploadDate' => '2024-01-15T12:30:45Z', 'hash' => 'deadbeef'];
+
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI('/api', 'gallery-1', 'photo.jpg', $image);
+
+		expect($result)->toContain('cache=deadbeef');
+	}
+
+	public function testBuildImageworksGalleryAPIDynamicRouteUsesResolvedImageHash(): void
+	{
+		foreach (['first', 'last', 'featured'] as $route) {
+			$image  = ['name' => 'chosen.jpg', 'uploadDate' => '2024-01-15T12:30:45Z', 'hash' => 'cafe1234'];
+			$result = MediaTwigAdapter::buildImageworksGalleryAPI('/api', 'gallery-1', $route, $image);
+
+			expect($result)->toContain("/api/imageworks/gallery/gallery-1/gallery/$route");
+			expect($result)->toContain('cache=cafe1234');
+		}
+	}
+
+	public function testBuildImageworksGalleryAPIRandomStillUsesUniqueToken(): void
+	{
+		$image = ['name' => 'chosen.jpg', 'uploadDate' => '2024-01-15T12:30:45Z', 'hash' => 'cafe1234'];
+
+		$resultA = MediaTwigAdapter::buildImageworksGalleryAPI('/api', 'gallery-1', 'random', $image);
+		$resultB = MediaTwigAdapter::buildImageworksGalleryAPI('/api', 'gallery-1', 'random', $image);
+
+		// Random must never reuse the image's hash — successive builds should differ.
+		expect($resultA)->not->toContain('cache=cafe1234');
+		expect($resultA)->not->toBe($resultB);
+	}
+
+	public function testBuildImageworksGalleryAPIAcceptsHashWithoutUploadDate(): void
+	{
+		$result = MediaTwigAdapter::buildImageworksGalleryAPI(
+			'/api',
+			'gallery-1',
+			'photo.jpg',
+			['name' => 'photo.jpg', 'hash' => 'deadbeef'],
+		);
+
+		expect($result)->toContain('cache=deadbeef');
+		expect($result)->toContain('/api/imageworks/gallery/gallery-1/gallery/photo.jpg');
+	}
+
 	public function testBuildImageworksAPIHandlesExistingQueryParams(): void
 	{
 		$api   = '/api/imageworks/image/test-id/image.jpg?existing=param';

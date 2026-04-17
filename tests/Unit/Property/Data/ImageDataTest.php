@@ -303,6 +303,25 @@ describe('ImageData', function (): void {
 		expect($image->size)->toBe(0);
 	});
 
+	test('ImageData → hash defaults to empty string', function (): void {
+		$image = new ImageData();
+
+		expect($image->hash)->toBe('');
+	});
+
+	test('ImageData → preserves stored hash without recomputing', function (): void {
+		$image = new ImageData(['hash' => 'abc12345', 'name' => 'photo.jpg']);
+
+		expect($image->hash)->toBe('abc12345');
+	});
+
+	test('ImageData → includes hash in transform output', function (): void {
+		$image  = new ImageData(['hash' => 'abc12345']);
+		$result = $image->transform();
+
+		expect($result)->toHaveKey('hash', 'abc12345');
+	});
+
 	test('ImageData → handles various aspect ratios', function (): void {
 		$aspectRatios = [
 			['width' => 1920, 'height' => 1080], // 16:9
