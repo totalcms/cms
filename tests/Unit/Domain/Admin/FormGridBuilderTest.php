@@ -158,4 +158,61 @@ describe('FormGridBuilder', function (): void {
 		expect($css)->toContain("'content content'");
 		expect($css)->not->toContain('123invalid');
 	});
+
+	test('hasGrid reports whether any usable layout lines were provided', function (): void {
+		expect((new FormGridBuilder(''))->hasGrid())->toBeFalse();
+		expect((new FormGridBuilder("\n\n"))->hasGrid())->toBeFalse();
+		expect((new FormGridBuilder('title date'))->hasGrid())->toBeTrue();
+	});
+
+	test('renderLayout wraps content in a plain .formgrid div when no layout is defined', function (): void {
+		$builder = new FormGridBuilder('');
+
+		$html = $builder->renderLayout('<p>fields</p>');
+
+		// No style tag, no container-queries wrapper - just the grid div so CSS
+		// (`.formgrid { display: grid; gap: 1rem; }`) provides vertical spacing.
+		expect($html)->toBe('<div class="formgrid"><p>fields</p></div>');
+	});
+
+	test('renderLayout appends an extra class alongside .formgrid', function (): void {
+		$builder = new FormGridBuilder('');
+
+		$html = $builder->renderLayout('<p>fields</p>', 'deckitem-formgrid');
+
+		expect($html)->toContain('class="formgrid deckitem-formgrid"');
+		expect($html)->toContain('<p>fields</p>');
+	});
+
+	test('renderLayout with a layout emits style tag, container wrapper, grid div and section HTML', function (): void {
+		$builder = new FormGridBuilder("title date\n---Meta---\nauthor author");
+
+		$html = $builder->renderLayout('<p>fields</p>');
+
+		// Style tag for grid-template-areas
+		expect($html)->toContain('<style>');
+		expect($html)->toContain('container-type: inline-size');
+		// Outer container-queries wrapper uses `-container` id suffix of the grid id
+		expect($html)->toMatch('/<div id="formgrid-[0-9a-f]+-container"><div id="formgrid-[0-9a-f]+" class="formgrid">/');
+		// Section HTML (header) appears inside the grid, before the fields
+		expect($html)->toContain('<h3');
+		expect($html)->toContain('Meta');
+		// Fields appear after the section HTML
+		expect($html)->toContain('<p>fields</p>');
+		expect(strpos($html, '<h3'))->toBeLessThan(strpos($html, '<p>fields</p>'));
+	});
+
+	test('renderLayout generates a unique id per call so multiple grids can coexist', function (): void {
+		$builder = new FormGridBuilder('title date');
+
+		$one = $builder->renderLayout('a');
+		$two = $builder->renderLayout('b');
+
+		preg_match('/id="(formgrid-[0-9a-f]+)"/', $one, $m1);
+		preg_match('/id="(formgrid-[0-9a-f]+)"/', $two, $m2);
+
+		expect($m1[1] ?? '')->not->toBe('');
+		expect($m2[1] ?? '')->not->toBe('');
+		expect($m1[1])->not->toBe($m2[1]);
+	});
 });
