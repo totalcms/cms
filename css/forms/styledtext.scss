@@ -278,63 +278,10 @@
 			&.ProseMirror-selectednode {
 				outline : 2px solid oklch(var(--totalform-accent));
 			}
-
-			// Image float & size (standalone images via classes)
-			&.ste-img--float-left {
-				float        : left;
-				margin-right : 1rem;
-			}
-
-			&.ste-img--float-right {
-				float         : right;
-				margin-left   : 1rem;
-			}
-
-			&.ste-img--small  { width : 25%; }
-			&.ste-img--medium { width : 50%; }
 		}
 
-		// Figure with image
-		figure.ste-figure {
-			margin        : 0 0 1rem;
-			border-radius : 4px;
-			max-width     : 100%;
-
-			img {
-				display       : block;
-				max-width     : 100%;
-				height        : auto;
-				border-radius : 4px 4px 0 0;
-				margin-bottom : 0;
-			}
-
-			figcaption {
-				padding          : 6px 10px;
-				font-size        : 0.85rem;
-				color            : oklch(var(--totalform-darkgray));
-				background-color : oklch(var(--totalform-nearwhite));
-				border-radius    : 0 0 4px 4px;
-				text-align       : center;
-			}
-
-			&.ProseMirror-selectednode {
-				outline : 2px solid oklch(var(--totalform-accent));
-			}
-
-			// Float
-			&--left {
-				float        : left;
-				margin-right : 1rem;
-			}
-
-			&--right {
-				float         : right;
-				margin-left   : 1rem;
-			}
-
-			// Size
-			&--small  { width : 25%; }
-			&--medium { width : 50%; }
+		figure.ste-figure.ProseMirror-selectednode {
+			outline : 2px solid oklch(var(--totalform-accent));
 		}
 
 		// Placeholder
