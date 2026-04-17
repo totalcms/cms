@@ -118,6 +118,9 @@ readonly class OperationDetector
 		'admin-collection-edit',
 		'admin-dataviews',
 		'export-object-zip',
+		'report-fields',
+		'report-csv',
+		'report-json',
 	];
 
 	/**
