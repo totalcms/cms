@@ -20,42 +20,9 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Middleware\Access\BaseAccessMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
-
-// Concrete subclass for testing. Declared at file scope so it isn't rebuilt
-// on each describe() invocation — nested anonymous classes inside closures
-// caused Pest to exit 255 with no output. BaseAccessMiddleware is readonly
-// so the subclass must be readonly too; checkPermission logic is injected
-// via constructor-time callable.
-if (!class_exists(TestableAccessMiddleware::class)) {
-	readonly class TestableAccessMiddleware extends BaseAccessMiddleware
-	{
-		protected const RESOURCE_NAME = 'widget';
-
-		public function __construct(
-			UserValidationService $userValidation,
-			AccessControlService $accessControl,
-			SessionInterface $session,
-			JsonRenderer $jsonRenderer,
-			TwigRenderer $twigRenderer,
-			ResponseFactoryInterface $responseFactory,
-			Config $config,
-			OperationDetector $operationDetector,
-			LoggerFactory $loggerFactory,
-			private \Closure $checkPermissionCallback,
-		) {
-			parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory);
-		}
-
-		protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
-		{
-			return ($this->checkPermissionCallback)($userId, $operation, $request);
-		}
-	}
-}
 
 describe('BaseAccessMiddleware', function (): void {
 	beforeEach(function (): void {
