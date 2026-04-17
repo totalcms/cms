@@ -428,7 +428,7 @@ class FormField
 					}
 				}
 			}
-			$newValues = array_values(array_diff(array_map('strval', $this->value), $existingValues));
+			$newValues = array_values(array_diff(array_map(strval(...), $this->value), $existingValues));
 			if ($newValues !== []) {
 				$this->options = array_merge($newValues, $this->options); // value is first to maintain order
 			}

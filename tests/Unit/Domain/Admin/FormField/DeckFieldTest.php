@@ -164,8 +164,7 @@ describe('DeckField', function (): void {
 			],
 		);
 
-		$method = new ReflectionMethod($field, 'formFieldAttributes');
-		$method->setAccessible(true);
+		$method     = new ReflectionMethod($field, 'formFieldAttributes');
 		$attributes = $method->invoke($field);
 
 		expect($attributes['data-deckref'])->toBe('https://www.totalcms.co/schemas/deck/comment.json');
@@ -175,8 +174,7 @@ describe('DeckField', function (): void {
 	test('formFieldAttributes omits data-deckref when empty', function (): void {
 		$field = new DeckField(form: $this->form, name: 'comments');
 
-		$method = new ReflectionMethod($field, 'formFieldAttributes');
-		$method->setAccessible(true);
+		$method     = new ReflectionMethod($field, 'formFieldAttributes');
 		$attributes = $method->invoke($field);
 
 		expect($attributes)->not->toHaveKey('data-deckref');

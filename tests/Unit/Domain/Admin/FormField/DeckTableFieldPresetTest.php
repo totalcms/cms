@@ -62,7 +62,6 @@ describe('DeckTableField preset resolution', function (): void {
 	{
 		$ref    = new ReflectionClass($field);
 		$method = $ref->getMethod('buildRow');
-		$method->setAccessible(true);
 
 		return $method->invoke($field, 'item-1', []);
 	}

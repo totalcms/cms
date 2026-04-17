@@ -2,12 +2,19 @@
 
 declare(strict_types=1);
 
+namespace Tests\Unit\Middleware\Access;
+
 use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerInterface;
+use Slim\Interfaces\RouteInterface;
+use Slim\Interfaces\RouteParserInterface;
+use Slim\Routing\RouteContext;
+use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -23,13 +30,10 @@ use TotalCMS\Support\Config;
 // caused Pest to exit 255 with no output. BaseAccessMiddleware is readonly
 // so the subclass must be readonly too; checkPermission logic is injected
 // via constructor-time callable.
-if (!class_exists('TestableAccessMiddleware')) {
+if (!class_exists(TestableAccessMiddleware::class)) {
 	readonly class TestableAccessMiddleware extends BaseAccessMiddleware
 	{
 		protected const RESOURCE_NAME = 'widget';
-
-		/** @var \Closure */
-		private \Closure $checkPermissionCallback;
 
 		public function __construct(
 			UserValidationService $userValidation,
@@ -41,10 +45,9 @@ if (!class_exists('TestableAccessMiddleware')) {
 			Config $config,
 			OperationDetector $operationDetector,
 			LoggerFactory $loggerFactory,
-			\Closure $checkPermissionCallback,
+			private \Closure $checkPermissionCallback,
 		) {
 			parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory);
-			$this->checkPermissionCallback = $checkPermissionCallback;
 		}
 
 		protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
@@ -76,20 +79,18 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->config->env   = 'prod';
 		$this->config->debug = false;
 
-		$this->make = function (?\Closure $checkPermission = null): TestableAccessMiddleware {
-			return new TestableAccessMiddleware(
-				$this->userValidation,
-				$this->accessControl,
-				$this->session,
-				$this->jsonRenderer,
-				$this->twigRenderer,
-				$this->responseFactory,
-				$this->config,
-				$this->operationDetector,
-				$this->loggerFactory,
-				$checkPermission ?? (fn (): bool => true),
-			);
-		};
+		$this->make = (fn (?\Closure $checkPermission = null): TestableAccessMiddleware => new TestableAccessMiddleware(
+			$this->userValidation,
+			$this->accessControl,
+			$this->session,
+			$this->jsonRenderer,
+			$this->twigRenderer,
+			$this->responseFactory,
+			$this->config,
+			$this->operationDetector,
+			$this->loggerFactory,
+			$checkPermission ?? (fn (): bool => true),
+		));
 
 		$this->requestFor = function (string $path = '/api/collections/blog'): ServerRequestInterface {
 			$uri = $this->createMock(UriInterface::class);
@@ -205,7 +206,7 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->operationDetector->method('detectOperation')->willReturn(null);
 
 		// The dev-mode logger path reads the request's route context
-		$route = $this->createMock(\Slim\Interfaces\RouteInterface::class);
+		$route = $this->createMock(RouteInterface::class);
 		$route->method('getName')->willReturn('some-route');
 
 		$uri = $this->createMock(UriInterface::class);
@@ -217,13 +218,13 @@ describe('BaseAccessMiddleware', function (): void {
 		$request->method('getAttribute')->willReturnMap([
 			['publicSubmission', null, null],
 			['authMethod', null, null],
-			[\Slim\Routing\RouteContext::ROUTE, null, $route],
-			[\Slim\Routing\RouteContext::ROUTE_PARSER, null, $this->createMock(\Slim\Interfaces\RouteParserInterface::class)],
-			[\Slim\Routing\RouteContext::ROUTING_RESULTS, null, $this->createMock(\Slim\Routing\RoutingResults::class)],
-			[\Slim\Routing\RouteContext::BASE_PATH, null, null],
+			[RouteContext::ROUTE, null, $route],
+			[RouteContext::ROUTE_PARSER, null, $this->createMock(RouteParserInterface::class)],
+			[RouteContext::ROUTING_RESULTS, null, $this->createMock(RoutingResults::class)],
+			[RouteContext::BASE_PATH, null, null],
 		]);
 
-		$logger = $this->createMock(Psr\Log\LoggerInterface::class);
+		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
 		$this->loggerFactory->expects($this->once())->method('addFileHandler')->willReturnSelf();
 		$this->loggerFactory->expects($this->once())->method('createLogger')->willReturn($logger);
@@ -300,7 +301,7 @@ describe('BaseAccessMiddleware', function (): void {
 			->method('json')
 			->with(
 				$this->anything(),
-				$this->callback(fn (array $body): bool => str_contains($body['error']['message'], 'widget')),
+				$this->callback(fn (array $body): bool => str_contains((string)$body['error']['message'], 'widget')),
 			);
 
 		($this->make)(fn (): bool => false)->process(($this->requestFor)(), $this->handler);

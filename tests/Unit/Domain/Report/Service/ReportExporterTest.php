@@ -59,12 +59,12 @@ describe('ReportExporter', function (): void {
 
 	test('parseParams throws when fields is missing', function (): void {
 		expect(fn () => $this->exporter->parseParams([]))
-			->toThrow(\InvalidArgumentException::class, 'fields');
+			->toThrow(InvalidArgumentException::class, 'fields');
 	});
 
 	test('parseParams throws when fields list is effectively empty', function (): void {
 		expect(fn () => $this->exporter->parseParams(['fields' => '  ,  , ']))
-			->toThrow(\InvalidArgumentException::class, 'At least one field');
+			->toThrow(InvalidArgumentException::class, 'At least one field');
 	});
 
 	test('parseParams forwards include and exclude options', function (): void {
@@ -144,7 +144,7 @@ describe('ReportExporter', function (): void {
 
 		$this->objectFetcher->method('fetchObject')->willReturnCallback(function (string $_c, string $id): ObjectData {
 			if ($id === 'bad') {
-				throw new \RuntimeException('corrupt');
+				throw new RuntimeException('corrupt');
 			}
 
 			return makeObject('good', ['title' => new StringData('OK')]);
@@ -171,7 +171,7 @@ describe('ReportExporter', function (): void {
 		$this->storage->method('fetchObjectIds')->willReturn(['a', 'b']);
 		$this->objectFetcher->method('fetchObject')->willReturnCallback(function (string $_c, string $id): ObjectData {
 			if ($id === 'b') {
-				throw new \RuntimeException('nope');
+				throw new RuntimeException('nope');
 			}
 
 			return makeObject($id, []);

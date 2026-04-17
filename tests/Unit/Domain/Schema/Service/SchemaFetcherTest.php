@@ -116,14 +116,14 @@ describe('SchemaFetcher', function (): void {
 		$this->collectionFetcher->method('fetchCollection')->willReturn(null);
 
 		expect(fn () => $this->fetcher->fetchSchemaForCollection('missing'))
-			->toThrow(\UnexpectedValueException::class);
+			->toThrow(UnexpectedValueException::class);
 	});
 
 	test('fetchRawSchemaForCollection throws when the collection is missing', function (): void {
 		$this->collectionFetcher->method('fetchCollection')->willReturn(null);
 
 		expect(fn () => $this->fetcher->fetchRawSchemaForCollection('missing'))
-			->toThrow(\UnexpectedValueException::class);
+			->toThrow(UnexpectedValueException::class);
 	});
 
 	// --- inheritance resolution ---
@@ -184,7 +184,7 @@ describe('SchemaFetcher', function (): void {
 			if ($id === 'blog-pro') {
 				return $child;
 			}
-			throw new \RuntimeException('schema not found: ' . $id);
+			throw new RuntimeException('schema not found: ' . $id);
 		});
 		$this->cacheManager->method('getComputedData')->willReturn(null);
 

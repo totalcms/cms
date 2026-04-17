@@ -104,7 +104,6 @@ describe('DeckItemForm preset resolution', function (): void {
 	{
 		$ref    = new ReflectionClass($form);
 		$method = $ref->getMethod('deckFieldDefaults');
-		$method->setAccessible(true);
 
 		return $method->invoke($form, $property);
 	}
@@ -113,7 +112,6 @@ describe('DeckItemForm preset resolution', function (): void {
 	{
 		$ref    = new ReflectionClass($form);
 		$method = $ref->getMethod('fieldAttributeSettings');
-		$method->setAccessible(true);
 
 		return $method->invoke($form, $property);
 	}

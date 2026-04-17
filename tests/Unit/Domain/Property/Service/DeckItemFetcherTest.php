@@ -49,7 +49,7 @@ describe('DeckItemFetcher', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($object);
 
 		expect(fn () => $this->fetcher->fetchDeckItem('blog', 'post-1', 'title', 'anything'))
-			->toThrow(\InvalidArgumentException::class, "Property 'title' is not a deck property");
+			->toThrow(InvalidArgumentException::class, "Property 'title' is not a deck property");
 	});
 
 	test('fetchAllDeckItems returns the whole deck array', function (): void {
@@ -68,7 +68,7 @@ describe('DeckItemFetcher', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($object);
 
 		expect(fn () => $this->fetcher->fetchAllDeckItems('blog', 'post-1', 'title'))
-			->toThrow(\InvalidArgumentException::class);
+			->toThrow(InvalidArgumentException::class);
 	});
 
 	test('fetchDeckItemIds returns just the keys, preserving order', function (): void {
@@ -87,6 +87,6 @@ describe('DeckItemFetcher', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($object);
 
 		expect(fn () => $this->fetcher->fetchDeckItemIds('blog', 'post-1', 'title'))
-			->toThrow(\InvalidArgumentException::class);
+			->toThrow(InvalidArgumentException::class);
 	});
 });

@@ -40,6 +40,7 @@ describe('DeckItemFactory', function (): void {
 	{
 		$s             = new SchemaData();
 		$s->properties = $properties;
+
 		return $s;
 	}
 
@@ -78,7 +79,7 @@ describe('DeckItemFactory', function (): void {
 		]));
 		$this->autogenIdService
 			->method('generateId')
-			->willThrowException(new \RuntimeException('boom'));
+			->willThrowException(new RuntimeException('boom'));
 
 		expect($this->factory->generateIdIfNeeded('blog', 'comments', []))->toBe('');
 	});
@@ -159,7 +160,7 @@ describe('DeckItemFactory', function (): void {
 
 		$this->calcService
 			->method('evaluate')
-			->willThrowException(new \RuntimeException('invalid expression'));
+			->willThrowException(new RuntimeException('invalid expression'));
 		$this->calcService->expects($this->never())->method('clampValue');
 
 		$result = $this->factory->prepareItemData('blog', 'comments', ['total' => 'preset', 'price' => 1]);

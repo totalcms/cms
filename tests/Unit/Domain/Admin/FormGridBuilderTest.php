@@ -112,7 +112,7 @@ describe('FormGridBuilder', function (): void {
 	});
 
 	test('ensureFieldsIncluded appends missing fields as full-width rows', function (): void {
-		$builder = new FormGridBuilder("title date");
+		$builder = new FormGridBuilder('title date');
 
 		$builder->ensureFieldsIncluded(['title', 'date', 'content', 'summary']);
 
@@ -137,7 +137,7 @@ describe('FormGridBuilder', function (): void {
 	});
 
 	test('ensureFieldsIncluded ignores empty cell markers and invalid names', function (): void {
-		$builder = new FormGridBuilder("title date");
+		$builder = new FormGridBuilder('title date');
 
 		$builder->ensureFieldsIncluded(['.', '123invalid', 'valid_name']);
 

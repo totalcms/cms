@@ -107,7 +107,6 @@ describe('Subfield name-collision protection', function (): void {
 	{
 		$ref    = new ReflectionClass($form);
 		$method = $ref->getMethod('buildFieldOptions');
-		$method->setAccessible(true);
 
 		return $method->invoke($form, $name, $options);
 	}
@@ -179,7 +178,6 @@ describe('Subfield name-collision protection', function (): void {
 
 		$ref    = new ReflectionClass($form);
 		$method = $ref->getMethod('createDynamicField');
-		$method->setAccessible(true);
 
 		$field = $method->invoke($form, 'password', [
 			'subfield' => true,

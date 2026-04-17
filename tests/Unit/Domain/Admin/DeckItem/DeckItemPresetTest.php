@@ -28,7 +28,6 @@ describe('DeckItem preset resolution', function (): void {
 	{
 		$ref    = new ReflectionClass($deckItem);
 		$method = $ref->getMethod('resolveDeckFieldSettings');
-		$method->setAccessible(true);
 
 		return $method->invoke($deckItem, $propertySchema);
 	}

@@ -51,11 +51,9 @@ describe('DeckItemSaver', function (): void {
 			->with(
 				$this->equalTo('blog'),
 				$this->equalTo('post-1'),
-				$this->callback(function (array $data): bool {
-					return isset($data['comments']['existing'])
+				$this->callback(fn (array $data): bool => isset($data['comments']['existing'])
 						&& isset($data['comments']['new'])
-						&& $data['comments']['new']['body'] === 'fresh';
-				}),
+						&& $data['comments']['new']['body'] === 'fresh'),
 			)
 			->willReturn($updated);
 
@@ -86,7 +84,7 @@ describe('DeckItemSaver', function (): void {
 		$this->objectUpdater->expects($this->never())->method('updateObject');
 
 		expect(fn () => $this->saver->saveDeckItem('blog', 'post-1', 'title', 'x', []))
-			->toThrow(\InvalidArgumentException::class, "Property 'title' is not a deck property");
+			->toThrow(InvalidArgumentException::class, "Property 'title' is not a deck property");
 	});
 
 	test('saveDeckItem throws when the itemId already exists', function (): void {
@@ -98,7 +96,7 @@ describe('DeckItemSaver', function (): void {
 		$this->validator->expects($this->never())->method('validate');
 
 		expect(fn () => $this->saver->saveDeckItem('blog', 'post-1', 'comments', 'dupe', []))
-			->toThrow(\InvalidArgumentException::class, "Deck item 'dupe' already exists");
+			->toThrow(InvalidArgumentException::class, "Deck item 'dupe' already exists");
 	});
 
 	test('saveDeckItem propagates validation exceptions and does not persist', function (): void {
@@ -107,11 +105,11 @@ describe('DeckItemSaver', function (): void {
 
 		$this->validator
 			->method('validate')
-			->willThrowException(new \InvalidArgumentException('bad data'));
+			->willThrowException(new InvalidArgumentException('bad data'));
 
 		$this->objectUpdater->expects($this->never())->method('updateObject');
 
 		expect(fn () => $this->saver->saveDeckItem('blog', 'post-1', 'comments', 'new', ['body' => 'x']))
-			->toThrow(\InvalidArgumentException::class, 'bad data');
+			->toThrow(InvalidArgumentException::class, 'bad data');
 	});
 });

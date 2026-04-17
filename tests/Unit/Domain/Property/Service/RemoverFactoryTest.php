@@ -38,6 +38,7 @@ describe('RemoverFactory', function (): void {
 	{
 		$s             = new SchemaData();
 		$s->properties = [$name => ['$ref' => $ref]];
+
 		return $s;
 	}
 

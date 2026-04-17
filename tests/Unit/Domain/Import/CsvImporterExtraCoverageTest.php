@@ -219,7 +219,7 @@ describe('CsvImporter extra coverage', function (): void {
 			->willReturnCallback(function () use (&$calls): ObjectData {
 				$calls++;
 				if ($calls === 1) {
-					throw new \RuntimeException('row-1 boom');
+					throw new RuntimeException('row-1 boom');
 				}
 
 				return new ObjectData('stub', []);

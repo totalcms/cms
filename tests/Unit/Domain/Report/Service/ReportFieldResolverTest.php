@@ -140,7 +140,7 @@ describe('ReportFieldResolver', function (): void {
 
 		$this->schemaFetcher
 			->method('fetchSchema')
-			->willThrowException(new \RuntimeException('schema not found'));
+			->willThrowException(new RuntimeException('schema not found'));
 
 		$result = makeReportFieldResolver($this)->resolve('blog');
 

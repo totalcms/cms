@@ -65,9 +65,9 @@ describe('DeckItemValidator', function (): void {
 	test('validate re-throws DomainException as InvalidArgumentException', function (): void {
 		$this->schemaValidator
 			->method('validateSchema')
-			->willThrowException(new \DomainException('property "title" is required'));
+			->willThrowException(new DomainException('property "title" is required'));
 
 		expect(fn () => $this->validator->validate('blog', 'comments', []))
-			->toThrow(\InvalidArgumentException::class, 'property "title" is required');
+			->toThrow(InvalidArgumentException::class, 'property "title" is required');
 	});
 });

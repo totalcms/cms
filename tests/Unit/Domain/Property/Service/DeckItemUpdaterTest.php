@@ -51,10 +51,8 @@ describe('DeckItemUpdater', function (): void {
 			->with(
 				$this->equalTo('blog'),
 				$this->equalTo('post-1'),
-				$this->callback(function (array $data): bool {
-					return $data['comments']['target']['body'] === 'new'
-						&& $data['comments']['other']['body'] === 'keep';
-				}),
+				$this->callback(fn (array $data): bool => $data['comments']['target']['body'] === 'new'
+						&& $data['comments']['other']['body'] === 'keep'),
 			)
 			->willReturn($updated);
 
@@ -88,7 +86,7 @@ describe('DeckItemUpdater', function (): void {
 		$this->objectUpdater->expects($this->never())->method('updateObject');
 
 		expect(fn () => $this->updater->updateDeckItem('blog', 'post-1', 'title', 'x', []))
-			->toThrow(\InvalidArgumentException::class, "Property 'title' is not a deck property");
+			->toThrow(InvalidArgumentException::class, "Property 'title' is not a deck property");
 	});
 
 	test('updateDeckItem throws when the itemId does not exist', function (): void {
@@ -97,7 +95,7 @@ describe('DeckItemUpdater', function (): void {
 		$this->objectUpdater->expects($this->never())->method('updateObject');
 
 		expect(fn () => $this->updater->updateDeckItem('blog', 'post-1', 'comments', 'ghost', []))
-			->toThrow(\InvalidArgumentException::class, "Deck item 'ghost' does not exist");
+			->toThrow(InvalidArgumentException::class, "Deck item 'ghost' does not exist");
 	});
 
 	test('updateDeckItem propagates validation exceptions and does not persist', function (): void {
@@ -108,11 +106,11 @@ describe('DeckItemUpdater', function (): void {
 
 		$this->validator
 			->method('validate')
-			->willThrowException(new \InvalidArgumentException('schema mismatch'));
+			->willThrowException(new InvalidArgumentException('schema mismatch'));
 
 		$this->objectUpdater->expects($this->never())->method('updateObject');
 
 		expect(fn () => $this->updater->updateDeckItem('blog', 'post-1', 'comments', 'target', ['body' => 'x']))
-			->toThrow(\InvalidArgumentException::class, 'schema mismatch');
+			->toThrow(InvalidArgumentException::class, 'schema mismatch');
 	});
 });
