@@ -40,11 +40,13 @@
 		{% set collectionOptions = [] %}
 		{% for collection in cms.collection.list() %}
 			{% set collectionOptions = collectionOptions|merge([{value: "/collections/" ~ collection.id, label: collection.name}]) %}
+			{% set collectionOptions = collectionOptions|sort((a, b) => a.label|lower <=> b.label|lower) %}
 		{% endfor %}
 
 		{% set dataviewOptions = [] %}
 		{% for view in cms.view.list() %}
 			{% set dataviewOptions = dataviewOptions|merge([{value: "/dataviews/" ~ view.id ~ "/data", label: view.name}]) %}
+			{% set dataviewOptions = dataviewOptions|sort((a, b) => a.label|lower <=> b.label|lower) %}
 		{% endfor %}
 
 		{% set endpointOptions = [
