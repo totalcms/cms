@@ -222,10 +222,9 @@ class DeckItemForm extends TotalForm
 			return [];
 		}
 
-		// Get the deck schema settings for this property
-		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
+		$settings = $this->resolveDeckFieldSettings($property);
 
-		return self::filterFieldAttributes($schema);
+		return self::filterFieldAttributes($settings);
 	}
 
 	/**
@@ -240,9 +239,35 @@ class DeckItemForm extends TotalForm
 			return [];
 		}
 
-		$propertySchema = $this->schemaData->properties[$property] ?? [];
+		$propertySchema       = $this->schemaData->properties[$property] ?? [];
+		$defaults             = TotalForm::filterFieldProperties($propertySchema);
+		$defaults['settings'] = $this->resolveDeckFieldSettings($property);
 
-		return TotalForm::filterFieldProperties($propertySchema);
+		return $defaults;
+	}
+
+	/**
+	 * Resolve preset references for a deck sub-field's settings so that
+	 * deck fields inherit dashboard preset settings the same way top-level
+	 * properties do via PropertyMetaResolver.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function resolveDeckFieldSettings(string $property): array
+	{
+		if (!$this->schemaData instanceof SchemaData) {
+			return [];
+		}
+
+		$propertySchema = $this->schemaData->properties[$property] ?? [];
+		$settings       = is_array($propertySchema['settings'] ?? null) ? $propertySchema['settings'] : [];
+		$settings       = $this->metaResolver->resolvePreset($settings);
+
+		if ($settings === [] && !empty($propertySchema['field'])) {
+			$settings = $this->metaResolver->resolveTypePreset((string)$propertySchema['field']);
+		}
+
+		return $settings;
 	}
 
 	/**

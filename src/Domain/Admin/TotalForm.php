@@ -217,6 +217,11 @@ class TotalForm implements \Stringable
 		return $this->schemaFetcher;
 	}
 
+	public function getMetaResolver(): PropertyMetaResolver
+	{
+		return $this->metaResolver;
+	}
+
 	protected function initClass(): void
 	{
 		if ($this->autosave) {

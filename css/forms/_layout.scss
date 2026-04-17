@@ -51,7 +51,7 @@
 	}
 
 	&:not(.formgrid) > *,
-	dialog .form-field {
+	dialog .form-field:not(.formgrid .form-field) {
 		grid-area: unset !important;
 	}
 
