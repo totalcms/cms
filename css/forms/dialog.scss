@@ -114,3 +114,55 @@ dialog.cms-modal {
 		}
 	}
 }
+
+//--------------------------------
+// Confirm Dialog
+//--------------------------------
+dialog.cms-modal.cms-confirm {
+	width       : max-content;
+	max-width   : 500px;
+	height      : fit-content;
+	max-height  : none;
+	padding     : 2rem;
+
+	&[open] {
+		display        : flex;
+		flex-direction : column;
+		gap            : 2rem;
+	}
+
+	h2 {
+		margin : 0;
+	}
+
+	.cms-confirm-message {
+		margin     : 0;
+		font-size  : 1rem;
+		line-height: 1.5;
+		color      : oklch(var(--totalform-text-color));
+	}
+
+	.cms-confirm-buttons {
+		display         : flex;
+		justify-content : flex-end;
+		gap             : 0.5rem;
+		margin-top      : 0.5rem;
+		width           : 100%;
+	}
+
+	.cms-confirm-ok {
+		background-color : oklch(var(--totalform-error));
+		border-color     : oklch(var(--totalform-error));
+		color            : oklch(var(--totalform-purewhite));
+
+		&:disabled {
+			opacity : 0.5;
+			cursor  : not-allowed;
+		}
+
+		.cms-confirm-ok-counter {
+			font-variant-numeric : tabular-nums;
+			opacity              : 0.85;
+		}
+	}
+}
