@@ -194,9 +194,9 @@ class DeckItem
 		// Trim the final label
 		$label = trim($label);
 
-		// If empty, return "Unknown"
+		// Fall back to the item's id when the pattern resolves to an empty string
 		if ($label === '') {
-			return 'Unknown';
+			return $this->itemId;
 		}
 
 		return $label;
