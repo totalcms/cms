@@ -61,6 +61,12 @@
 	}
 }
 
+.formgrid {
+	display       : grid;
+	gap           : 1rem;
+	align-content : start;
+}
+
 .totalform:not(.edit-mode) {
 	.customProperties-field,
 	.properties-field {

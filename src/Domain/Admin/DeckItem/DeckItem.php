@@ -91,11 +91,10 @@ class DeckItem
 
 		$fields = $this->buildFields($schema);
 
-		if ($schema->formgrid === '') {
-			return $fields;
-		}
+		$gridBuilder = new FormGridBuilder($schema->formgrid);
+		$gridBuilder->ensureFieldsIncluded(array_keys($schema->properties));
 
-		return $this->wrapInFormGrid($schema, $fields);
+		return $gridBuilder->renderLayout($fields);
 	}
 
 	protected function buildFields(SchemaData $schema): string
@@ -146,22 +145,6 @@ class DeckItem
 		}
 
 		return $content;
-	}
-
-	protected function wrapInFormGrid(SchemaData $schema, string $fields): string
-	{
-		$gridId      = 'deckitem-grid-' . bin2hex(random_bytes(8));
-		$gridBuilder = new FormGridBuilder($schema->formgrid);
-		$gridBuilder->ensureFieldsIncluded(array_keys($schema->properties));
-
-		$grid = HTMLUtils::element('div', $gridBuilder->buildGridSectionHtml() . $fields, [
-			'id'    => $gridId,
-			'class' => 'formgrid deckitem-formgrid',
-		]);
-
-		$container = HTMLUtils::element('div', $grid, ['id' => $gridId . '-container']);
-
-		return $gridBuilder->toStyleTag($gridId) . $container;
 	}
 
 	/**

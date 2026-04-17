@@ -238,12 +238,6 @@
 		}
 	}
 }
-.deckitem-formgrid {
-	display       : grid;
-	gap           : 1rem;
-	align-content : start;
-}
-
 .deck-item {
 	padding               : 0.5rem 1rem;
 	grid-template-columns : auto max-content max-content max-content;
