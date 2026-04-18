@@ -42,7 +42,7 @@
     "awesomplete": "^1.1.5",
     "choices.js": "11.0.4",
     "codemirror": "^5.65.0",
-    "dompurify": "^3.0.2",
+    "dompurify": "^3.4.0",
     "highlight.js": "^11.11.1",
     "htmx.org": "4.0.0-alpha7",
     "js-beautify": "^1.15.4",
