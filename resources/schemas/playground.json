@@ -42,7 +42,8 @@
 				"tabSize"      : 2,
 				"foldGutter"   : true,
 				"matchBrackets": true,
-				"autoCloseTags": true
+				"autoCloseTags": true,
+				"maxHeight"    : 600
 			}
         }
     },

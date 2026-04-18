@@ -51,7 +51,7 @@
 	}
 
 	&:not(.formgrid) > *,
-	dialog .form-field {
+	dialog .form-field:not(.formgrid .form-field) {
 		grid-area: unset !important;
 	}
 
@@ -59,6 +59,12 @@
 		// Make sure the the buttons stay at the bottom of the form
 		grid-column: 1/-1;
 	}
+}
+
+.formgrid {
+	display       : grid;
+	gap           : 1rem;
+	align-content : start;
 }
 
 .totalform:not(.edit-mode) {

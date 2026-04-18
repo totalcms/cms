@@ -3,6 +3,7 @@ import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
 import FieldVisibility from './field-visibility';
 import Identifier from './identifier';
+import tcmsConfirm from '../confirm-dialog';
 import { t } from '../i18n';
 import Checkbox from './checkbox';
 import RadioField from './radio';
@@ -513,11 +514,11 @@ export default class TotalForm {
             .catch(error => this.error(error));
     }
 
-    delete() {
+    async delete() {
         // Only delete if editing object
         if (!this.isEditMode()) return;
 
-        if (window.confirm(t("confirm.delete_item"))) {
+        if (await tcmsConfirm({ message: t("confirm.delete_item") })) {
             this.validated = true;
             this.processing();
 

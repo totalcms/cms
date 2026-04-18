@@ -19,6 +19,8 @@ const ICON_MAP = {
 	bulletList:      'unordered-list',
 	orderedList:     'ordered-list',
 	blockquote:      'blockquote',
+	indent:          'indent',
+	outdent:         'outdent',
 	codeBlock:       'code',
 	horizontalRule:  'hr',
 	alignLeft:       'align-left',
@@ -56,6 +58,8 @@ const BUTTON_DEFS = {
 	bulletList:      { command: 'toggleBulletList',   label: 'Bullet List' },
 	orderedList:     { command: 'toggleOrderedList',  label: 'Ordered List' },
 	blockquote:      { command: 'toggleBlockquote',   label: 'Blockquote' },
+	indent:          { command: 'indent',             label: 'Indent' },
+	outdent:         { command: 'outdent',            label: 'Outdent' },
 	codeBlock:       { command: 'toggleCodeBlock',    label: 'Code Block' },
 	horizontalRule:  { command: 'setHorizontalRule',  label: 'Horizontal Rule' },
 	alignLeft:       { command: 'setTextAlign',       args: 'left',    label: 'Align Left' },
@@ -127,7 +131,7 @@ export default class TiptapToolbar {
 	defaultConfig() {
 		return [
 			{ name: 'text', buttons: ['bold', 'italic', 'underline'] },
-			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote'] },
+			{ name: 'paragraph', buttons: ['heading', 'bulletList', 'orderedList', 'blockquote', 'outdent', 'indent'] },
 			{ name: 'insert', buttons: ['link', 'image', 'horizontalRule'] },
 			{ name: 'misc', buttons: ['clearFormatting', 'codeView'], align: 'right' },
 		];

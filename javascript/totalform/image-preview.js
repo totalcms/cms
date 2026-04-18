@@ -1,6 +1,7 @@
 import Dialog from "./dialog";
 import Details from "./details";
 import TotalSortable from "./total-sortable";
+import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
 
 //-----------------------------------------------
@@ -137,18 +138,18 @@ setupActionBar() {
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
 		if (deleteButton) {
-			deleteButton.addEventListener("click", event => {
+			deleteButton.addEventListener("click", async event => {
 				event.preventDefault();
-				if (confirm(t("confirm.delete_image"))) {
-					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-						this.clearValue();
-						this.container.remove();
-					}).catch(error => {
-						console.error("Failed to delete image", error);
-						alert(t("error.delete_image"));
-					});
-				}
+				const ok = await tcmsConfirm({ message: t("confirm.delete_image"), countdown: 0 });
+				if (!ok) return;
+				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+					this.clearValue();
+					this.container.remove();
+				}).catch(error => {
+					console.error("Failed to delete image", error);
+					alert(t("error.delete_image"));
+				});
 			});
 		}
 	}

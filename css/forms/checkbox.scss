@@ -106,6 +106,17 @@
 		cursor        : pointer;
 	}
 
+	&--columns fieldset {
+		display      : block;
+		column-width : var(--fieldset-columns, 150px);
+		column-gap   : 1rem;
+
+		.checkbox {
+			break-inside  : avoid;
+			margin-bottom : 0.5rem;
+		}
+	}
+
 	.checkbox {
 		// Ensure each checkbox item displays properly within grid cell
 		display     : flex;

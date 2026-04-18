@@ -121,21 +121,21 @@ class FileField extends FormField
 	/** @param array<string,mixed> $fileData */
 	private function infoFields(array $fileData): string
 	{
-		$content = $this->form->field('download', [
+		$content = $this->form->subField('download', [
 			'field'    => 'text',
 			'label'    => 'Download Name',
 			'help'     => 'The name of the file when it gets downloaded.',
 			'value'    => $fileData['download'] ?? $fileData['name'] ?? '',
 			'required' => false,
 		]);
-		$content .= $this->form->field('comments', [
+		$content .= $this->form->subField('comments', [
 			'field'       => 'textarea',
 			'label'       => 'Comments',
 			'help'        => 'Comments about this file',
 			'value'       => $fileData['comments'] ?? '',
 			'required'    => false,
 		]);
-		$content .= $this->form->field('tags', [
+		$content .= $this->form->subField('tags', [
 			'field'       => 'list',
 			'label'       => 'Tags',
 			'help'        => 'Add tags to help organize your files.',
@@ -153,14 +153,14 @@ class FileField extends FormField
 		// Determine default protected value from settings or default to true
 		$defaultProtected = $this->settings['protectedByCollection'] ?? true;
 
-		$content = $this->form->field('protected', [
+		$content = $this->form->subField('protected', [
 			'field'       => 'checkbox',
 			'label'       => 'Protected by Collection',
 			'help'        => 'Access group protection is set in the Collection.',
 			'value'       => $fileData['protected'] ?? $defaultProtected,
 			'required'    => false,
 		]);
-		$content .= $this->form->field('password', [
+		$content .= $this->form->subField('password', [
 			'field'    => 'password',
 			'label'    => 'Password',
 			'help'     => 'Require a password to download this file. This overrides all collection level access controls.',
@@ -174,42 +174,42 @@ class FileField extends FormField
 	/** @param array<string,mixed> $fileData */
 	private function metaFields(array $fileData): string
 	{
-		$content = $this->form->field('name', [
+		$content = $this->form->subField('name', [
 			'field'    => 'text',
 			'label'    => 'Filename',
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['name'] ?? '',
 		]);
-		$content .= $this->form->field('ext', [
+		$content .= $this->form->subField('ext', [
 			'field'    => 'text',
 			'label'    => 'Extension',
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['ext'] ?? '',
 		]);
-		$content .= $this->form->field('size', [
+		$content .= $this->form->subField('size', [
 			'field'    => 'number',
 			'label'    => 'Size',
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['size'] ?? '',
 		]);
-		$content .= $this->form->field('count', [
+		$content .= $this->form->subField('count', [
 			'field'    => 'number',
 			'label'    => 'Download Count',
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['count'] ?? '',
 		]);
-		$content .= $this->form->field('mime', [
+		$content .= $this->form->subField('mime', [
 			'field'    => 'text',
 			'label'    => 'MIME Type',
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['mime'] ?? '',
 		]);
-		$content .= $this->form->field('uploadDate', [
+		$content .= $this->form->subField('uploadDate', [
 			'field'    => 'datetime',
 			'label'    => 'Upload Date',
 			'icon'     => false,

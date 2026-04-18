@@ -82,16 +82,16 @@
 }
 
 .report-field-grid {
-	display: grid;
-	grid-template-columns : repeat(auto-fill, minmax(var(--cms-report-checkbox-min-size, 150px), 1fr));
-	gap: 0.25rem 1rem;
+	column-width : var(--cms-report-checkbox-min-size, 150px);
+	column-gap   : 1rem;
 
 	label {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		cursor: pointer;
-		padding: 0.25rem 0;
+		display       : flex;
+		align-items   : center;
+		gap           : 0.375rem;
+		cursor        : pointer;
+		padding       : 0.25rem 0;
+		break-inside  : avoid;
 	}
 
 	input[type=checkbox] {

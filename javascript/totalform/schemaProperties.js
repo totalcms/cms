@@ -190,6 +190,17 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
 	duplicateField(field) {
+		// Capture CodeMirror values by textarea name — CodeMirror syncs to the
+		// textarea's .value DOM property, which does not survive cloneNode.
+		const editorValues = new Map();
+		field.querySelectorAll('.CodeMirror').forEach(wrapper => {
+			if (!wrapper.CodeMirror) return;
+			const textarea = wrapper.previousElementSibling;
+			if (textarea && textarea.tagName === 'TEXTAREA' && textarea.name) {
+				editorValues.set(textarea.name, wrapper.CodeMirror.getValue());
+			}
+		});
+
 		// Get all select values before cloning
 		const selects = field.querySelectorAll('select');
 		const selectValues = Array.from(selects).map(select => select.value);
@@ -199,6 +210,16 @@ export default class SchemaPropertiesField extends PropertiesField {
 		parent.insertBefore(clone, field.nextSibling);
 
 		const newField = field.nextSibling;
+
+		// Remove cloned CodeMirror wrappers so JSONField re-inits cleanly
+		// instead of stacking a second editor next to the cloned one.
+		newField.querySelectorAll('.CodeMirror').forEach(wrapper => wrapper.remove());
+
+		// Restore captured CodeMirror values onto the cloned textareas
+		editorValues.forEach((value, name) => {
+			const textarea = newField.querySelector(`textarea[name="${name}"]`);
+			if (textarea) textarea.value = value;
+		});
 
 		// Restore select values after cloning
 		const clonedSelects = newField.querySelectorAll('select');

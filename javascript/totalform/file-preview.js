@@ -1,5 +1,6 @@
 import Dialog from "./dialog";
 import Details from "./details";
+import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
 
 //-----------------------------------------------
@@ -98,19 +99,19 @@ export default class FilePreview {
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
 		if (deleteButton) {
-			deleteButton.addEventListener("click", event => {
+			deleteButton.addEventListener("click", async event => {
 				event.preventDefault();
-				if (confirm(t("confirm.delete_file"))) {
-					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-						// Clear values before removing the container
-						this.clearValue();
-						this.container.remove();
-					}).catch(error => {
-						console.error("Failed to delete file", error);
-						alert(t("error.delete_file"));
-					});
-				}
+				const ok = await tcmsConfirm({ message: t("confirm.delete_file"), countdown: 0 });
+				if (!ok) return;
+				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+					// Clear values before removing the container
+					this.clearValue();
+					this.container.remove();
+				}).catch(error => {
+					console.error("Failed to delete file", error);
+					alert(t("error.delete_file"));
+				});
 			});
 		}
 	}

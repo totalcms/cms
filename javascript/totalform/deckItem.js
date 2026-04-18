@@ -119,9 +119,9 @@ export default class DeckItem {
 		// Trim whitespace
 		label = label.trim();
 
-		// If empty, return "Unknown"
+		// Fall back to the item's id when the pattern resolves to an empty string
 		if (label === '' || label === 'null' || label === 'undefined') {
-			return 'Unknown';
+			return fieldData.id || '';
 		}
 
 		return label;

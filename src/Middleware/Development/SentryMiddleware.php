@@ -82,6 +82,7 @@ class SentryMiddleware implements MiddlewareInterface
 			'Invalid Collection data provided',
 			'Invalid URL',
 			'Deck must be a dictionary of named objects',
+			'Cannot save object with a reserved name',
 			'Unable to fetch object',
 			'installation has been corrupted',
 			'Invalid SVG content',

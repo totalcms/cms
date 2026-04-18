@@ -78,7 +78,7 @@ Each group has a `name`, a `buttons` array, and an optional `align` property (`"
 | History | `undo`, `redo` |
 | Text Formatting | `bold`, `italic`, `underline`, `strike`, `superscript`, `subscript` |
 | Colors & Styling | `textColor`, `textBgColor`, `inlineStyles`, `inlineClasses` |
-| Block Formatting | `heading`, `bulletList`, `orderedList`, `blockquote`, `codeBlock`, `align` |
+| Block Formatting | `heading`, `bulletList`, `orderedList`, `blockquote`, `indent`, `outdent`, `codeBlock`, `align` |
 | Insert | `link`, `image`, `video`, `file`, `table`, `horizontalRule`, `hardBreak`, `htmlSnippets`, `anchor` |
 | Block | `blockAttributes` |
 | Editor Controls | `clearFormatting`, `codeView`, `fullscreen` |
@@ -87,7 +87,7 @@ Each group has a `name`, a `buttons` array, and an optional `align` property (`"
 ```json
 [
   { "name": "text", "buttons": ["bold", "italic", "underline"] },
-  { "name": "paragraph", "buttons": ["heading", "bulletList", "orderedList", "blockquote"] },
+  { "name": "paragraph", "buttons": ["heading", "bulletList", "orderedList", "blockquote", "outdent", "indent"] },
   { "name": "insert", "buttons": ["link", "image", "horizontalRule"] },
   { "name": "misc", "buttons": ["clearFormatting", "codeView"], "align": "right" }
 ]

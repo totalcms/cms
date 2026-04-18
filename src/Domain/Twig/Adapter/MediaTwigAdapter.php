@@ -401,7 +401,7 @@ readonly class MediaTwigAdapter
 
 		$api .= "/imageworks/$collection/$id/$property.$type";
 
-		$imageworks['cache'] = strrev((string)preg_replace('/\W+/', '', (string)$image['uploadDate']));
+		$imageworks['cache'] = self::resolveCacheToken($image);
 
 		unset($imageworks['datadir']);
 		unset($imageworks['route']);
@@ -423,6 +423,23 @@ readonly class MediaTwigAdapter
 	}
 
 	/**
+	 * Pick the cache-busting token for an image URL.
+	 *
+	 * Prefers the deterministic content hash written on save; falls back to
+	 * a reversed uploadDate for records that predate the hash field.
+	 *
+	 * @param array<string,mixed> $image
+	 */
+	private static function resolveCacheToken(array $image): string
+	{
+		if (!empty($image['hash']) && is_string($image['hash'])) {
+			return $image['hash'];
+		}
+
+		return strrev((string)preg_replace('/\W+/', '', (string)($image['uploadDate'] ?? '')));
+	}
+
+	/**
 	 * Build an ImageWorks Gallery API URL.
 	 *
 	 * @param array<string,mixed> $image
@@ -440,11 +457,18 @@ readonly class MediaTwigAdapter
 		$property   = $options['property'];
 
 		$api                 = $baseapi . "/imageworks/$collection/$id/$property/$name";
-		$imageworks['cache'] = uniqid();
 		$dynamicRoutes       = ['first', 'last', 'random', 'featured'];
+		$isDynamic           = in_array($name, $dynamicRoutes);
 
-		if (!in_array($name, $dynamicRoutes)) {
-			if (!array_key_exists('uploadDate', $image)) {
+		if ($isDynamic) {
+			// Random varies per request by design — keep uniqid so browsers and
+			// CDNs never cache a single pick. For first/last/featured the
+			// resolved image is known, so use its deterministic cache token.
+			$imageworks['cache'] = $name === 'random' || $image === []
+				? uniqid()
+				: self::resolveCacheToken($image);
+		} else {
+			if (!array_key_exists('uploadDate', $image) && empty($image['hash'])) {
 				return '';
 			}
 
@@ -458,7 +482,7 @@ readonly class MediaTwigAdapter
 
 			$api = $baseapi . "/imageworks/$collection/$id/$property/$basename.$type";
 
-			$imageworks['cache'] = strrev((string)preg_replace('/\W+/', '', (string)$image['uploadDate']));
+			$imageworks['cache'] = self::resolveCacheToken($image);
 		}
 
 		unset($imageworks['datadir']);

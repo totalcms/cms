@@ -192,6 +192,9 @@
     {% endblock %}
 
 	<script>window.TCMS_TRANSLATIONS = {{ cms.locale.jsTranslations()|json_encode|raw }};</script>
+	<script>window.TCMS_CONFIG = {
+		confirmCountdown: {{ cms.config('dashboard', 'confirmCountdown')|json_encode|raw }}
+	};</script>
 	<script type="module" src="{{ cms.api }}/assets/content.js?v={{ cms.version }}"></script>
 	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 

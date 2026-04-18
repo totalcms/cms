@@ -39,6 +39,7 @@ import InlineClass from './extensions/InlineClass.js';
 import InlineStyle from './extensions/InlineStyle.js';
 import InlineElement from './extensions/InlineElement.js';
 import AnchorId from './extensions/AnchorId.js';
+import Indent from './extensions/Indent.js';
 import GlobalAttributes from './extensions/GlobalAttributes.js';
 import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
 
@@ -217,6 +218,7 @@ export default class TiptapEditor {
 		InlineStyle,
 		InlineElement,
 		AnchorId,
+			Indent,
 			Typography,
 			Markdown,
 			CharacterCount.configure({

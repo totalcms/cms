@@ -116,6 +116,8 @@ class DeckTableField extends FormField
 			$schema         = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
 			$requiredFields = $schema->required;
 
+			$metaResolver = $this->form->getMetaResolver();
+
 			foreach ($schema->properties as $propertyName => $propertySchema) {
 				$propSettings = $propertySchema['settings'] ?? [];
 				$isHidden     = isset($propSettings['hide']) && $propSettings['hide'] === true;
@@ -127,6 +129,15 @@ class DeckTableField extends FormField
 					$fieldValue = $defaultValue;
 				}
 
+				// Run settings through the preset pipeline so named presets
+				// and type-default presets are applied the same way as for
+				// top-level fields and inline DeckItem sub-fields.
+				$resolvedSettings = is_array($propertySchema['settings'] ?? null) ? $propertySchema['settings'] : [];
+				$resolvedSettings = $metaResolver->resolvePreset($resolvedSettings);
+				if ($resolvedSettings === [] && !empty($propertySchema['field'])) {
+					$resolvedSettings = $metaResolver->resolveTypePreset((string)$propertySchema['field']);
+				}
+
 				$fieldConfig = [
 					'field'        => $propertySchema['field'] ?? 'text',
 					'label'        => '',
@@ -134,15 +145,14 @@ class DeckTableField extends FormField
 					'default'      => $defaultValue,
 					'placeholder'  => $propertySchema['placeholder'] ?? '',
 					'options'      => $propertySchema['options'] ?? [],
-					'settings'     => $propertySchema['settings'] ?? [],
+					'settings'     => $resolvedSettings,
 					'value'        => $fieldValue,
 					'deck_context' => true,
 					'required'     => in_array($propertyName, $requiredFields, true),
 				];
 
-				// Extract attribute settings
-				$attributeSettings  = $propertySchema['settings'] ?? [];
-				$filteredAttributes = \TotalCMS\Domain\Admin\TotalForm::filterFieldAttributes($attributeSettings);
+				// Extract attribute settings from the resolved settings
+				$filteredAttributes = \TotalCMS\Domain\Admin\TotalForm::filterFieldAttributes($resolvedSettings);
 				$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
 
 				// For template rows (empty itemId), keep the default value if present

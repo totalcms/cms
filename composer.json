@@ -115,7 +115,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "TotalCMS\\Test\\": "tests/"
+      "TotalCMS\\Test\\": "tests/",
+      "Tests\\":          "tests/"
     }
   },
   "scripts": {

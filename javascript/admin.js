@@ -18,6 +18,7 @@ import DocSearch from './totalform/doc-search';
 import initDocHighlight from './doc-highlight';
 import PasskeyLogin from './passkey-login';
 import PasskeyManager from './passkeys';
+import tcmsConfirm from './confirm-dialog';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
@@ -28,6 +29,28 @@ globalThis.JSONField = JSONField;
 document.addEventListener('htmx:config:request', (e) => {
 	const token = document.querySelector('meta[name="csrf-token"]');
 	if (token && e.detail.headers) e.detail.headers['X-CSRF-Token'] = token.content;
+});
+
+// Intercept hx-confirm and route through the custom countdown dialog
+document.body.addEventListener('htmx:confirm', (e) => {
+	const elt = e.detail.elt;
+	const message = elt.getAttribute('hx-confirm');
+	if (!message) return;
+
+	e.preventDefault();
+
+	const countdownAttr = elt.getAttribute('data-confirm-countdown');
+	const countdown = countdownAttr !== null ? parseInt(countdownAttr, 10) : null;
+
+	tcmsConfirm({
+		title        : elt.getAttribute('data-confirm-title') || '',
+		message,
+		confirmLabel : elt.getAttribute('data-confirm-label') || undefined,
+		cancelLabel  : elt.getAttribute('data-confirm-cancel') || undefined,
+		countdown,
+	}).then((ok) => {
+		if (ok) e.detail.issueRequest(true);
+	});
 });
 
 document.addEventListener("DOMContentLoaded", event => {
