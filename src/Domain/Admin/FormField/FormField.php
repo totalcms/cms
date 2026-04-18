@@ -434,10 +434,8 @@ class FormField
 			}
 		}
 
-		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
-			// Ensure that duplicate options are not created
-			// array_unique will not work with multi-dimensional arrays
-			$this->options = array_unique($this->options);
+		if ($this->options !== []) {
+			$this->options = self::deduplicateOptionsByValue($this->options);
 		}
 
 		if (($this->settings['sortOptions'] ?? false) === true) {
@@ -459,6 +457,48 @@ class FormField
 		}
 
 		return false; // The array is not multidimensional
+	}
+
+	/**
+	 * Remove duplicate options by their value, keeping the first occurrence.
+	 * Works across mixed shapes (plain strings, {value,label} arrays) so that
+	 * static options and derived options (propertyOptions, relationalOptions)
+	 * don't produce duplicates when merged.
+	 *
+	 * Grouped options (string key => array of options) are passed through
+	 * untouched since they represent <optgroup> structures.
+	 *
+	 * @param  array<mixed> $options
+	 * @return array<mixed>
+	 */
+	protected static function deduplicateOptionsByValue(array $options): array
+	{
+		$seen   = [];
+		$result = [];
+		foreach ($options as $key => $option) {
+			// Grouped options: preserve the group key and its children as-is
+			if (is_string($key) && is_array($option) && !isset($option['value'])) {
+				$result[$key] = $option;
+				continue;
+			}
+
+			if (is_array($option) && isset($option['value'])) {
+				$value = (string)$option['value'];
+			} elseif (is_string($option) || is_numeric($option)) {
+				$value = (string)$option;
+			} else {
+				$result[] = $option;
+				continue;
+			}
+
+			if (in_array($value, $seen, true)) {
+				continue;
+			}
+			$seen[]   = $value;
+			$result[] = $option;
+		}
+
+		return $result;
 	}
 
 	protected function buildDatalist(): string
