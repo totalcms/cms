@@ -9,6 +9,7 @@ import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { getUploadUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
+import tcmsConfirm from '../../../confirm-dialog';
 import { createImagePopoverPlugin } from './ImagePopover.js';
 import { t } from '../../../i18n';
 
@@ -242,7 +243,7 @@ function createImageDialog(editor, uploadConfig) {
 		});
 	}
 
-	function handleDeleteImage(filename, card) {
+	async function handleDeleteImage(filename, card) {
 		// Check if this image is currently used in the editor content
 		const editorHtml = editor.getHTML();
 		const inUse = editorHtml.includes(filename);
@@ -251,7 +252,7 @@ function createImageDialog(editor, uploadConfig) {
 			? t("confirm.image_in_use")
 			: t("confirm.delete_label", {label: "image"});
 
-		if (!confirm(message)) return;
+		if (!(await tcmsConfirm({ message }))) return;
 
 		const listUrl = getUploadUrl(uploadConfig);
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;

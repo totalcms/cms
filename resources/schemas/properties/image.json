@@ -10,6 +10,10 @@
       "$comment": "The date the image was uploaded",
       "$ref": "https://www.totalcms.co/schemas/properties/date.json"
     },
+    "hash": {
+      "$comment": "Short content hash (first 8 chars of sha1 over canonical image data). Recomputed on every save and used as a cache-buster in ImageWorks URLs.",
+      "type": "string"
+    },
     "featured": {
       "default": false,
       "$comment": "Set the image as featured",

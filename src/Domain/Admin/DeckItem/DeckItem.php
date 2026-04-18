@@ -2,8 +2,11 @@
 
 namespace TotalCMS\Domain\Admin\DeckItem;
 
+use TotalCMS\Domain\Admin\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
@@ -13,6 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 class DeckItem
 {
 	protected SchemaFetcher $schemaFetcher;
+	protected PropertyMetaResolver $metaResolver;
 
 	/**
 	 * @param array<string,mixed> $itemData
@@ -25,6 +29,7 @@ class DeckItem
 		protected string $deckItemLabel = '${id}',
 	) {
 		$this->schemaFetcher = $form->getSchemaFetcher();
+		$this->metaResolver  = $form->getMetaResolver();
 	}
 
 	public function build(): string
@@ -74,64 +79,92 @@ class DeckItem
 
 	protected function buildSchemaBasedFields(): string
 	{
-		$content = '';
-
 		try {
-			// Fetch the schema for this deck
 			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
-
-			// Get the list of required fields from the schema
-			$requiredFields = $schema->required;
-
-			// Generate form fields for each property in the schema
-			foreach ($schema->properties as $propertyName => $propertySchema) {
-				$fieldValue   = $this->itemData[$propertyName] ?? '';
-				$defaultValue = $propertySchema['default'] ?? '';
-
-				// Apply default value if field value is empty (not set in itemData)
-				// This handles new deck items where defaults should be used
-				if ($fieldValue === '' && $defaultValue !== '') {
-					$fieldValue = $defaultValue;
-				}
-
-				$fieldConfig = [
-					'field'        => $propertySchema['field'] ?? 'text',
-					'label'        => $propertySchema['label'] ?? ucfirst($propertyName),
-					'help'         => $propertySchema['help'] ?? '',
-					'default'      => $defaultValue,
-					'placeholder'  => $propertySchema['placeholder'] ?? '',
-					'options'      => $propertySchema['options'] ?? [],
-					'settings'     => $propertySchema['settings'] ?? [],
-					'value'        => $fieldValue,
-					'deck_context' => true, // Indicate this field is within a deck item
-					'required'     => in_array($propertyName, $requiredFields, true),
-				];
-
-				// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
-				// This ensures they're available as constructor parameters for FormField
-				$attributeSettings  = $propertySchema['settings'] ?? [];
-				$filteredAttributes = TotalForm::filterFieldAttributes($attributeSettings);
-				$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
-
-				// For template items (empty itemId), keep the default value if present
-				// The template is cloned by JavaScript to create new items, so defaults should be preserved
-				// Only clear value if there's no default (to show placeholder instead)
-				if ($this->itemId === '' && $defaultValue === '') {
-					$fieldConfig['value'] = '';
-				}
-
-				$content .= $this->form->field($propertyName, $fieldConfig);
-			}
 		} catch (\Exception $e) {
-			// If schema can't be loaded, show a simple text field
-			$content .= HTMLUtils::element(
+			return HTMLUtils::element(
 				'p',
 				'Unable to load schema fields: ' . htmlspecialchars($e->getMessage()),
 				['class' => 'error']
 			);
 		}
 
+		$fields = $this->buildFields($schema);
+
+		$gridBuilder = new FormGridBuilder($schema->formgrid);
+		$gridBuilder->ensureFieldsIncluded(array_keys($schema->properties));
+
+		return $gridBuilder->renderLayout($fields);
+	}
+
+	protected function buildFields(SchemaData $schema): string
+	{
+		$content        = '';
+		$requiredFields = $schema->required;
+
+		foreach ($schema->properties as $propertyName => $propertySchema) {
+			$fieldValue   = $this->itemData[$propertyName] ?? '';
+			$defaultValue = $propertySchema['default'] ?? '';
+
+			// Apply default value if field value is empty (not set in itemData)
+			// This handles new deck items where defaults should be used
+			if ($fieldValue === '' && $defaultValue !== '') {
+				$fieldValue = $defaultValue;
+			}
+
+			// Resolve named presets and type-default presets for the field's settings
+			// so deck sub-fields inherit dashboard preset values like top-level fields do.
+			$resolvedSettings = $this->resolveDeckFieldSettings($propertySchema);
+
+			$fieldConfig = [
+				'field'        => $propertySchema['field'] ?? 'text',
+				'label'        => $propertySchema['label'] ?? ucfirst($propertyName),
+				'help'         => $propertySchema['help'] ?? '',
+				'default'      => $defaultValue,
+				'placeholder'  => $propertySchema['placeholder'] ?? '',
+				'options'      => $propertySchema['options'] ?? [],
+				'settings'     => $resolvedSettings,
+				'value'        => $fieldValue,
+				'deck_context' => true, // Indicate this field is within a deck item
+				'required'     => in_array($propertyName, $requiredFields, true),
+			];
+
+			// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
+			// This ensures they're available as constructor parameters for FormField
+			$filteredAttributes = TotalForm::filterFieldAttributes($resolvedSettings);
+			$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
+
+			// For template items (empty itemId), keep the default value if present
+			// The template is cloned by JavaScript to create new items, so defaults should be preserved
+			// Only clear value if there's no default (to show placeholder instead)
+			if ($this->itemId === '' && $defaultValue === '') {
+				$fieldConfig['value'] = '';
+			}
+
+			$content .= $this->form->field($propertyName, $fieldConfig);
+		}
+
 		return $content;
+	}
+
+	/**
+	 * Resolve a deck sub-field's settings through the preset pipeline so named
+	 * presets (settings.preset) and type-default presets are applied.
+	 *
+	 * @param array<string,mixed> $propertySchema
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function resolveDeckFieldSettings(array $propertySchema): array
+	{
+		$settings = is_array($propertySchema['settings'] ?? null) ? $propertySchema['settings'] : [];
+		$settings = $this->metaResolver->resolvePreset($settings);
+
+		if ($settings === [] && !empty($propertySchema['field'])) {
+			$settings = $this->metaResolver->resolveTypePreset((string)$propertySchema['field']);
+		}
+
+		return $settings;
 	}
 
 	/**
@@ -161,9 +194,9 @@ class DeckItem
 		// Trim the final label
 		$label = trim($label);
 
-		// If empty, return "Unknown"
+		// Fall back to the item's id when the pattern resolves to an empty string
 		if ($label === '') {
-			return 'Unknown';
+			return $this->itemId;
 		}
 
 		return $label;

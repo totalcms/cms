@@ -19,6 +19,7 @@ class ImageData extends PropertyData implements \Stringable
 	public string $mime;
 	public string $link;
 	public string $name;
+	public string $hash;
 	public int $size;
 	public int $width;
 	public int $height;
@@ -36,6 +37,7 @@ class ImageData extends PropertyData implements \Stringable
 		$this->exif       = $file['exif'] ?? ['nodata' => ''];
 		$this->featured   = $file['featured'] ?? false;
 		$this->focalpoint = $file['focalpoint'] ?? self::DEFAULT_FOCALPOINT;
+		$this->hash       = $file['hash'] ?? '';
 		$this->height     = intval($file['height'] ?? 0);
 		$this->link       = $file['link'] ?? '';
 		$this->mime       = $file['mime'] ?? '';
@@ -62,6 +64,7 @@ class ImageData extends PropertyData implements \Stringable
 			'exif'       => $this->exif,
 			'featured'   => $this->featured,
 			'focalpoint' => $this->focalpoint,
+			'hash'       => $this->hash,
 			'height'     => $this->height,
 			'link'       => $this->link,
 			'mime'       => $this->mime,

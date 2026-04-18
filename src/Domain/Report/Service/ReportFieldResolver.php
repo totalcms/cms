@@ -44,20 +44,10 @@ readonly class ReportFieldResolver
 			$properties[$name] = $this->resolveFieldType($definition);
 		}
 
-		// Always include 'id' as the first property, then sort the rest alphabetically
-		unset($properties['id']);
 		ksort($properties);
-		$properties = ['id' => 'string'] + $properties;
-
-		// Sort deck names and their fields alphabetically, with 'id' first
 		ksort($decks);
 		foreach ($decks as $deckName => $deckFields) {
-			$deckId = $deckFields['id'] ?? null;
-			unset($deckFields['id']);
 			ksort($deckFields);
-			if ($deckId !== null) {
-				$deckFields = ['id' => $deckId] + $deckFields;
-			}
 			$decks[$deckName] = $deckFields;
 		}
 

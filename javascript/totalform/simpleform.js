@@ -1,5 +1,6 @@
 import TotalCMS from '../totalcms';
 import FieldVisibility from './field-visibility';
+import tcmsConfirm from '../confirm-dialog';
 
 //-----------------------------------------------
 // Total CMS Simple Form constructor
@@ -125,8 +126,8 @@ export default class SimpleForm {
 		return this.form.querySelector("input[type=file]");
 	}
 
-	send() {
-		if (this.confirm && !window.confirm(this.confirm)) {
+	async send() {
+		if (this.confirm && !(await tcmsConfirm({ message: this.confirm }))) {
 			return;
 		}
 

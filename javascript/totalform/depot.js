@@ -2,6 +2,7 @@ import Details from "./details";
 import Dialog from "./dialog";
 import TotalField from "./totalfield";
 import DepotDroplet from "./droplet-depot";
+import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
 
 //-----------------------------------------------
@@ -438,9 +439,9 @@ export default class DepotField extends TotalField {
         return type === "file" ? this.trashFile(selected) : this.trashFolder(selected);
     }
 
-    trashFiles(files) {
+    async trashFiles(files) {
         const count = files.length;
-        if (!confirm(t("confirm.delete_files", {count}))) return;
+        if (!(await tcmsConfirm({ message: t("confirm.delete_files", {count}) }))) return;
 
         files.forEach(file => {
             const name = this.getFileAttribute(file, "name");
@@ -455,14 +456,14 @@ export default class DepotField extends TotalField {
         this.resetPreview();
     }
 
-    trashFile(file) {
+    async trashFile(file) {
         const name = this.getFileAttribute(file, "name");
         const path = this.getPath();
 
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
         if (path.length > 0) deleteApi += `?path=${path}`;
 
-        if (confirm(t("confirm.delete_file"))) {
+        if (await tcmsConfirm({ message: t("confirm.delete_file") })) {
             this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
                 file.remove();
                 return this.resetPreview();

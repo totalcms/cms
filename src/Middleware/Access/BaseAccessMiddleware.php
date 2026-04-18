@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Access;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -37,7 +37,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	public function __construct(
 		protected UserValidationService $userValidation,
 		protected AccessControlService $accessControl,
-		protected PhpSession $session,
+		protected SessionInterface $session,
 		protected JsonRenderer $jsonRenderer,
 		protected TwigRenderer $twigRenderer,
 		protected ResponseFactoryInterface $responseFactory,

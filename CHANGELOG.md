@@ -2,6 +2,41 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.2.4] - 2026-04-17
+
+### Added
+
+- **Indent / Outdent Buttons**: New `indent` and `outdent` toolbar buttons for the styled text editor. Uses a stackable `data-indent` attribute on paragraphs and headings rather than nesting blockquotes, preserving semantic HTML. Inside lists, the buttons delegate to the native list sink/lift behavior
+- **Standardized Confirm Dialog**: New `tcmsConfirm` dialog replaces the browser's native `confirm()` across the admin. Supports an optional auto-dismiss timer and consistent styling
+- **Field Columns**: New `fieldColumns` setting for the Radio and Multicheckbox fields arranges options in multiple columns
+- **Report API Access**: Access groups with read permission on a collection now automatically gain access to the matching `/report` API endpoint
+
+### Enhanced
+
+- **Image Cache Strategy**: Image cache keys now include a content hash so cached derivatives invalidate correctly when a source file is replaced without renaming
+- **Code Field Performance**: Reduced initialization overhead for the code field editor
+- **Playground Max Height**: Twig Playground code field now has a `maxHeight` cap to prevent runaway growth on long templates
+- **Styled Text Content Styles**: Figure, image float/size, and indent styles moved to shared `styledtext-content.scss` so they render consistently on both the admin preview and the public site
+- **Deck Form Formgrid**: Formgrid layouts now work inside deck item forms, and deck item setting presets are applied correctly
+- **Collection Report Sorting**: Report property sorting now produces a predictable ordering
+- **API Key Form Sorting**: Collections and data views in the API key form are now sorted alphabetically
+- **Sentry Filtering**: Expanded ignore rules to drop reserved-name validation errors and the CodeMirror closetag addon null-check crash
+
+### Fixed
+
+- **DeckTableField Inheritance**: Property settings now inherit correctly for DeckTableField
+- **Subfield Name Collisions**: Depot, file, and image subfield properties no longer collide with parent object property names
+- **Duplicate JSON Fields**: Duplicating a property in the schema editor no longer produces duplicate JSON fields in the output
+- **Duplicate Multicheckbox Options**: Fixed duplicate checkboxes rendering in the multicheckbox field
+- **BaseAccessMiddleware Dependency**: Fixed missing dependency wiring for `BaseAccessMiddleware`
+
+### Documentation
+
+- **Indent / Outdent**: Documented the new `indent`/`outdent` toolbar buttons in the styled text toolbar reference
+- **Field Columns**: Documented the new `fieldColumns` setting for radio and multicheckbox fields
+- **README**: Trimmed and refreshed the project README
+- **License**: Project license updated and migrated to `LICENSE.md`
+
 ## [3.2.3] - 2026-04-07
 
 ### Added

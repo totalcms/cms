@@ -193,6 +193,16 @@ describe('RadioField', function (): void {
 		expect($html)->toContain('--fieldset-grid-size:250px');
 	});
 
+	test('RadioField → includes fieldColumns setting as column-width CSS var', function (): void {
+		$field = new RadioField($this->form, 'choice', settings: ['fieldColumns' => '150px'], options: ['A']);
+
+		$html = $field->build();
+
+		expect($html)
+			->toContain('--fieldset-columns:150px')
+			->toContain('radio-field--columns');
+	});
+
 	test('RadioField → processes propertyOptions setting', function (): void {
 		$this->form->method('propertyListForCollection')
 			->willReturn(['prop1', 'prop2']);

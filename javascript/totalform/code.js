@@ -32,7 +32,6 @@ export default class Code extends TotalField {
         // Default editor configuration
         const config = {
             theme          : theme,
-            viewportMargin : Infinity,                                              // Auto-expand
             indentUnit     : editorOptions.indentUnit || 2,
             tabSize        : editorOptions.tabSize || 2,
             lineNumbers    : editorOptions.lineNumbers !== false,
@@ -133,14 +132,16 @@ export default class Code extends TotalField {
         let userResized = false;
         let lastAutoHeight = 0;
 
-        // Detect manual drag resize via ResizeObserver
+        // Detect manual drag resize via ResizeObserver.
+        // Only refresh on real user drags — our own setHeight writes match
+        // lastAutoHeight and must not trigger a refresh, or every keystroke
+        // pays a full editor re-layout.
         const resizeObserver = new ResizeObserver(() => {
             const currentHeight = wrapper.offsetHeight;
-            // If the height changed but not from our auto-sizing, user dragged it
             if (lastAutoHeight > 0 && Math.abs(currentHeight - lastAutoHeight) > 2) {
                 userResized = true;
+                this.editor.refresh();
             }
-            this.editor.refresh();
         });
         resizeObserver.observe(wrapper);
 
@@ -173,12 +174,13 @@ export default class Code extends TotalField {
             setHeight();
         }, 100);
 
-        // Resize on content changes
+        // Debounced resize on content changes. setHeight reads getScrollInfo()
+        // which forces layout; doing that plus editor.refresh() on every
+        // keystroke makes typing in large documents unusable.
+        let setHeightTimer = null;
         this.editor.on('changes', () => {
-            setTimeout(() => {
-                setHeight();
-                this.forceGutterWidth();
-            }, 0);
+            clearTimeout(setHeightTimer);
+            setHeightTimer = setTimeout(setHeight, 100);
         });
     }
 

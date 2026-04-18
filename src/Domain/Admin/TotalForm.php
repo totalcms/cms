@@ -217,6 +217,11 @@ class TotalForm implements \Stringable
 		return $this->schemaFetcher;
 	}
 
+	public function getMetaResolver(): PropertyMetaResolver
+	{
+		return $this->metaResolver;
+	}
+
 	protected function initClass(): void
 	{
 		if ($this->autosave) {
@@ -624,6 +629,21 @@ class TotalForm implements \Stringable
 		return $field->build();
 	}
 
+	/**
+	 * Render a field as a sub-field of a composite property (file, image, depot,
+	 * gallery, deck-table, etc.). Skips parent-object schema inheritance so that
+	 * a sub-field with a name matching a top-level property (e.g. `name`, `alt`,
+	 * `tags`) does not pick up that property's settings/options.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function subField(string $name, array $options = []): string
+	{
+		$options['subfield'] = true;
+
+		return $this->field($name, $options);
+	}
+
 	/** @param array<string,mixed> $options */
 	private function createDynamicField(string $name, array $options = []): FormField
 	{
@@ -633,6 +653,7 @@ class TotalForm implements \Stringable
 		// Deck uses deck_context to determine if it is a deck field for
 		// buildFieldOptions in an ObjectForm
 		unset($options['deck_context']);
+		unset($options['subfield']);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
 		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {

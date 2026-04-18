@@ -34,6 +34,10 @@ class MulticheckboxField extends FormField
 			if (isset($this->settings['fieldGrid'])) {
 				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';
 			}
+			if (isset($this->settings['fieldColumns'])) {
+				$formFieldAttributes['class'] .= ' multicheckbox-field--columns';
+				$formFieldAttributes['style'] .= '--fieldset-columns:' . $this->settings['fieldColumns'] . ';';
+			}
 		}
 
 		// Handle visibility settings

@@ -332,6 +332,40 @@ HTML;
 		return $maxColumns;
 	}
 
+	public function hasGrid(): bool
+	{
+		return $this->lines !== [];
+	}
+
+	/**
+	 * Render form content inside a grid layout container.
+	 *
+	 * Always wraps content in a `.formgrid` div so fields have consistent vertical spacing.
+	 * When the formgrid layout is non-empty, prepends a <style> tag with grid-template-areas,
+	 * inserts section headers/dividers ahead of the fields, and wraps in an outer
+	 * container-queries div.
+	 *
+	 * @param string $content Pre-rendered field HTML
+	 * @param string $extraClass Additional class names for the inner grid element
+	 */
+	public function renderLayout(string $content, string $extraClass = ''): string
+	{
+		$classes = trim('formgrid ' . $extraClass);
+
+		if (!$this->hasGrid()) {
+			return HTMLUtils::element('div', $content, ['class' => $classes]);
+		}
+
+		$gridId = 'formgrid-' . bin2hex(random_bytes(8));
+		$inner  = HTMLUtils::element('div', $this->buildGridSectionHtml() . $content, [
+			'id'    => $gridId,
+			'class' => $classes,
+		]);
+		$container = HTMLUtils::element('div', $inner, ['id' => $gridId . '-container']);
+
+		return $this->toStyleTag($gridId) . $container;
+	}
+
 	/**
 	 * Ensure all given field names are included in the grid layout.
 	 * Any missing fields are appended as full-width rows spanning all columns.

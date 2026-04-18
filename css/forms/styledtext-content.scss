@@ -14,3 +14,48 @@ ol.ste-upper-alpha { list-style-type: upper-alpha; }
 ol.ste-lower-roman { list-style-type: lower-roman; }
 ol.ste-upper-roman { list-style-type: upper-roman; }
 ol.ste-none        { list-style-type: none; }
+
+// Block indent levels (from indent/outdent toolbar buttons)
+[data-indent="1"] { padding-inline-start: 2rem; }
+[data-indent="2"] { padding-inline-start: 4rem; }
+[data-indent="3"] { padding-inline-start: 6rem; }
+[data-indent="4"] { padding-inline-start: 8rem; }
+[data-indent="5"] { padding-inline-start: 10rem; }
+[data-indent="6"] { padding-inline-start: 12rem; }
+[data-indent="7"] { padding-inline-start: 14rem; }
+[data-indent="8"] { padding-inline-start: 16rem; }
+
+// Standalone image float & size (from image toolbar options)
+img.ste-img--float-left  { float : left;  margin-right : 1rem; }
+img.ste-img--float-right { float : right; margin-left  : 1rem; }
+img.ste-img--small       { width : 25%; }
+img.ste-img--medium      { width : 50%; }
+
+// Figure with image (editor-inserted figures)
+figure.ste-figure {
+	margin        : 0 0 1rem;
+	border-radius : 4px;
+	max-width     : 100%;
+
+	img {
+		display       : block;
+		max-width     : 100%;
+		height        : auto;
+		border-radius : 4px 4px 0 0;
+		margin-bottom : 0;
+	}
+
+	figcaption {
+		padding          : 6px 10px;
+		font-size        : 0.85rem;
+		color            : oklch(var(--totalform-darkgray));
+		background-color : oklch(var(--totalform-nearwhite));
+		border-radius    : 0 0 4px 4px;
+		text-align       : center;
+	}
+
+	&--left   { float : left;  margin-right : 1rem; }
+	&--right  { float : right; margin-left  : 1rem; }
+	&--small  { width : 25%; }
+	&--medium { width : 50%; }
+}
