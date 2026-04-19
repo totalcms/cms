@@ -104,15 +104,38 @@ class FormField
 
 	public function createFormField(string $content): string
 	{
-		$label = $this->label === '' ? '' : HTMLUtils::element('label', $this->label, [
-			'for' => "field-{$this->uuid}",
-		]);
-		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
+		return HTMLUtils::element('div', $this->createFieldLabel() . $content . $this->createHelpText(), $this->buildFieldAttributes());
+	}
+
+	/**
+	 * Render the field's visible label. Defaults to `<label for="field-{uuid}">`;
+	 * pass `'legend'` for fieldset-based fields (radio, multicheckbox).
+	 */
+	protected function createFieldLabel(string $tag = 'label'): string
+	{
+		if ($this->label === '') {
+			return '';
+		}
+
+		$attributes = $tag === 'label' ? ['for' => "field-{$this->uuid}"] : [];
+
+		return HTMLUtils::element($tag, $this->label, $attributes);
+	}
+
+	/**
+	 * Render the field's help text paragraph. Returns an empty string when no
+	 * help is configured. The id matches the `aria-describedby` emitted by inputs.
+	 */
+	protected function createHelpText(): string
+	{
+		if ($this->help === '') {
+			return '';
+		}
+
+		return HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
-
-		return HTMLUtils::element('div', $label . $content . $help, $this->buildFieldAttributes());
 	}
 
 	/**

@@ -11,9 +11,7 @@ class RadioField extends FormField
 
 	public function build(): string
 	{
-		$label  = $this->buildFieldLabel();
 		$radios = $this->buildRadioOptions();
-		$help   = $this->buildHelpText();
 
 		$extraStyles  = [];
 		$extraClasses = [];
@@ -25,18 +23,9 @@ class RadioField extends FormField
 			$extraClasses[]                    = 'radio-field--columns';
 		}
 
-		$fieldset = HTMLUtils::element('fieldset', $label . $radios);
+		$fieldset = HTMLUtils::element('fieldset', $this->createFieldLabel('legend') . $radios);
 
-		return HTMLUtils::element('div', $fieldset . $help, $this->buildFieldAttributes($extraStyles, $extraClasses));
-	}
-
-	protected function buildFieldLabel(): string
-	{
-		if ($this->label === '') {
-			return '';
-		}
-
-		return HTMLUtils::element('legend', $this->label);
+		return HTMLUtils::element('div', $fieldset . $this->createHelpText(), $this->buildFieldAttributes($extraStyles, $extraClasses));
 	}
 
 	protected function buildRadioOptions(): string
@@ -121,18 +110,6 @@ class RadioField extends FormField
 	protected function isOptionSelected(string $optionValue): bool
 	{
 		return (string)$this->value === $optionValue;
-	}
-
-	protected function buildHelpText(): string
-	{
-		if ($this->help === '') {
-			return '';
-		}
-
-		return HTMLUtils::element('p', $this->help, [
-			'class' => 'help',
-			'id'    => "help-{$this->uuid}",
-		]);
 	}
 
 	protected function processOptions(): void

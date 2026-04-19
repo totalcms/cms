@@ -21,11 +21,7 @@ class ToggleField extends CheckboxField
 
 		$group = HTMLUtils::element('div', $switch, ['class' => 'form-group']);
 		$label = HTMLUtils::element('label', $this->label, ['for' => "field-{$this->uuid}"]);
-		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
-			'class' => 'help',
-			'id'    => "help-{$this->uuid}",
-		]);
 
-		return HTMLUtils::element('div', $label . $group . $help, $this->buildFieldAttributes());
+		return HTMLUtils::element('div', $label . $group . $this->createHelpText(), $this->buildFieldAttributes());
 	}
 }

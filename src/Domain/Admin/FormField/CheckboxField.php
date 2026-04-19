@@ -14,12 +14,8 @@ class CheckboxField extends FormField
 		$input = $this->buildFormField();
 		$label = HTMLUtils::element('label', $this->label, ['for' => "field-{$this->uuid}"]);
 		$group = HTMLUtils::element('div', $input . $label, ['class' => 'form-group']);
-		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
-			'class' => 'help',
-			'id'    => "help-{$this->uuid}",
-		]);
 
-		return HTMLUtils::element('div', $group . $help, $this->buildFieldAttributes());
+		return HTMLUtils::element('div', $group . $this->createHelpText(), $this->buildFieldAttributes());
 	}
 
 	/** @return array<string,?string> */

@@ -11,9 +11,7 @@ class MulticheckboxField extends FormField
 
 	public function build(): string
 	{
-		$label      = $this->buildFieldLabel();
 		$checkboxes = $this->buildCheckboxOptions();
-		$help       = $this->buildHelpText();
 
 		$extraStyles  = [];
 		$extraClasses = [];
@@ -32,18 +30,9 @@ class MulticheckboxField extends FormField
 			$formFieldAttributes['data-required'] = 'true';
 		}
 
-		$fieldset = HTMLUtils::element('fieldset', $label . $checkboxes);
+		$fieldset = HTMLUtils::element('fieldset', $this->createFieldLabel('legend') . $checkboxes);
 
-		return HTMLUtils::element('div', $fieldset . $help, $formFieldAttributes);
-	}
-
-	protected function buildFieldLabel(): string
-	{
-		if ($this->label === '') {
-			return '';
-		}
-
-		return HTMLUtils::element('legend', $this->label);
+		return HTMLUtils::element('div', $fieldset . $this->createHelpText(), $formFieldAttributes);
 	}
 
 	protected function buildCheckboxOptions(): string
@@ -136,18 +125,6 @@ class MulticheckboxField extends FormField
 
 		// Support single value
 		return (string)$currentValue === $optionValue;
-	}
-
-	protected function buildHelpText(): string
-	{
-		if ($this->help === '') {
-			return '';
-		}
-
-		return HTMLUtils::element('p', $this->help, [
-			'class' => 'help',
-			'id'    => "help-{$this->uuid}",
-		]);
 	}
 
 	protected function processOptions(): void
