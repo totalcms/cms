@@ -359,27 +359,36 @@
 
 //------------------------------
 // Dialogs (Image, Video, File upload)
+//
+// Uses native <dialog> + showModal() so the dialog enters the browser's top
+// layer — this lets it stack correctly above other open modals (e.g., a deck
+// dialog that hosts the styledtext field). The ::backdrop pseudo-element
+// replaces the former .ste-dialog-overlay dark scrim.
 //------------------------------
-.ste-dialog-overlay {
+dialog.ste-dialog {
 	position         : fixed;
-	inset            : 0;
-	z-index          : 10000;
-	display          : flex;
-	align-items      : center;
-	justify-content  : center;
-	background-color : oklch(0 0 0 / 0.6);
-}
-
-.ste-dialog {
+	top              : 50%;
+	left             : 50%;
+	transform        : translate(-50%, -50%);
+	margin           : 0;
 	width            : 480px;
 	max-width        : 90vw;
 	max-height       : 80vh;
 	background-color : oklch(var(--totalform-nearwhite));
+	border           : none;
 	border-radius    : 8px;
 	box-shadow       : 0 8px 32px oklch(0 0 0 / 0.6);
+	padding          : 0;
 	overflow         : hidden;
-	display          : flex;
-	flex-direction   : column;
+
+	&[open] {
+		display        : flex;
+		flex-direction : column;
+	}
+
+	&::backdrop {
+		background-color : oklch(0 0 0 / 0.6);
+	}
 }
 
 .ste-dialog-header {

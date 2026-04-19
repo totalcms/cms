@@ -9,13 +9,12 @@ import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
 
 /**
- * Creates a file upload dialog
+ * Creates a file upload dialog. Mounts and shows itself as a native <dialog>
+ * so it stacks correctly above other modals (e.g., a deck dialog hosting the
+ * styledtext field).
  */
 function createFileDialog(editor, uploadConfig) {
-	const overlay = document.createElement('div');
-	overlay.className = 'ste-dialog-overlay';
-
-	const dialog = document.createElement('div');
+	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog ste-dialog--file-manager';
 
 	dialog.innerHTML = `
@@ -53,8 +52,6 @@ function createFileDialog(editor, uploadConfig) {
 			</div>
 		</div>
 	`;
-
-	overlay.appendChild(dialog);
 
 	// Tab switching
 	let filesLoaded = false;
@@ -264,17 +261,22 @@ function createFileDialog(editor, uploadConfig) {
 	}
 
 	// Close handlers
-	const close = () => overlay.remove();
+	const close = () => dialog.close();
 	dialog.querySelector('.ste-dialog-close').addEventListener('click', close);
 	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', close);
-	overlay.addEventListener('click', (e) => {
-		if (e.target === overlay) close();
+
+	// Backdrop click closes (Escape is handled natively)
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) close();
 	});
 
 	// Insert handler
 	dialog.querySelector('.ste-dialog-btn--insert').addEventListener('click', insertFile);
 
-	return overlay;
+	dialog.addEventListener('close', () => dialog.remove());
+
+	document.body.appendChild(dialog);
+	dialog.showModal();
 }
 
 export { createFileDialog };

@@ -14,13 +14,12 @@ import { createImagePopoverPlugin } from './ImagePopover.js';
 import { t } from '../../../i18n';
 
 /**
- * Creates an image upload dialog element with Upload and Images tabs
+ * Creates an image upload dialog with Upload and Images tabs. Mounts and shows
+ * itself as a native <dialog> so it stacks correctly above other modals (e.g.,
+ * a deck dialog hosting the styledtext field).
  */
 function createImageDialog(editor, uploadConfig) {
-	const overlay = document.createElement('div');
-	overlay.className = 'ste-dialog-overlay';
-
-	const dialog = document.createElement('div');
+	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog ste-dialog--image-manager';
 
 	dialog.innerHTML = `
@@ -58,8 +57,6 @@ function createImageDialog(editor, uploadConfig) {
 			</div>
 		</div>
 	`;
-
-	overlay.appendChild(dialog);
 
 	// Tab switching
 	let imagesLoaded = false;
@@ -291,17 +288,22 @@ function createImageDialog(editor, uploadConfig) {
 	}
 
 	// Close handlers
-	const close = () => overlay.remove();
+	const close = () => dialog.close();
 	dialog.querySelector('.ste-dialog-close').addEventListener('click', close);
 	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', close);
-	overlay.addEventListener('click', (e) => {
-		if (e.target === overlay) close();
+
+	// Backdrop click closes (Escape is handled natively)
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) close();
 	});
 
 	// Insert handler
 	dialog.querySelector('.ste-dialog-btn--insert').addEventListener('click', insertImage);
 
-	return overlay;
+	dialog.addEventListener('close', () => dialog.remove());
+
+	document.body.appendChild(dialog);
+	dialog.showModal();
 }
 
 /**
@@ -344,8 +346,7 @@ const ImageUpload = Image.extend({
 			...this.parent?.(),
 			openImageDialog: () => ({ editor }) => {
 				const uploadConfig = editor.options.imageUploadConfig || {};
-				const dialog = createImageDialog(editor, uploadConfig);
-				document.body.appendChild(dialog);
+				createImageDialog(editor, uploadConfig);
 				return true;
 			},
 		};
