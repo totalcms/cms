@@ -9,6 +9,14 @@ describe('MulticheckboxField', function (): void {
 		$this->form->id = 123;
 	});
 
+	test('MulticheckboxField → wrapper carries both multicheckbox-field and choice-field classes', function (): void {
+		$field = new MulticheckboxField($this->form, 'choice', options: ['A']);
+
+		expect($field->build())
+			->toContain('multicheckbox-field')
+			->toContain('choice-field');
+	});
+
 	test('MulticheckboxField → includes fieldGrid setting in style when provided', function (): void {
 		$field = new MulticheckboxField($this->form, 'choice', settings: ['fieldGrid' => '250px'], options: ['A']);
 
