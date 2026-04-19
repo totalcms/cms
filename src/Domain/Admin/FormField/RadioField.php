@@ -18,7 +18,7 @@ class RadioField extends FormField
 		$formFieldAttributes = [
 			'class'     => "form-field {$this->field}-field {$this->class}",
 			'data-type' => $this->field,
-			'style'     => "grid-area: {$this->name};",
+			'style'     => "--grid-area: {$this->name};",
 		];
 
 		if ($this->settings !== []) {

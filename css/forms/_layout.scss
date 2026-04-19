@@ -14,9 +14,6 @@
 
 	&.custom-layout {
 		display : block;
-		.form-field {
-			grid-area : unset !important;
-		}
 	}
 
 	input:focus,
@@ -50,11 +47,6 @@
 		align-content : start;
 	}
 
-	&:not(.formgrid) > *,
-	dialog .form-field:not(.formgrid .form-field) {
-		grid-area: unset !important;
-	}
-
 	>div:last-child:has(.cms-save) {
 		// Make sure the the buttons stay at the bottom of the form
 		grid-column: 1/-1;
@@ -65,6 +57,12 @@
 	display       : grid;
 	gap           : 1rem;
 	align-content : start;
+
+	// Fields only opt into grid placement inside a formgrid; the field itself
+	// emits `--grid-area` as an inline style (see FormField::createFormField).
+	> .form-field {
+		grid-area : var(--grid-area);
+	}
 }
 
 .totalform:not(.edit-mode) {
