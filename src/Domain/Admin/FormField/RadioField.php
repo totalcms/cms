@@ -2,132 +2,20 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-
-class RadioField extends FormField
+class RadioField extends ChoiceField
 {
 	protected string $defaultInputType = 'radio';
 	protected string $defaultFieldType = 'radio';
 
-	public function build(): string
-	{
-		$radios = $this->buildRadioOptions();
-
-		$extraStyles  = [];
-		$extraClasses = [];
-		if (isset($this->settings['fieldGrid'])) {
-			$extraStyles['--fieldset-grid-size'] = $this->settings['fieldGrid'];
-		}
-		if (isset($this->settings['fieldColumns'])) {
-			$extraStyles['--fieldset-columns'] = $this->settings['fieldColumns'];
-			$extraClasses[]                    = 'radio-field--columns';
-		}
-
-		$fieldset = HTMLUtils::element('fieldset', $this->createFieldLabel('legend') . $radios);
-
-		return HTMLUtils::element('div', $fieldset . $this->createHelpText(), $this->buildFieldAttributes($extraStyles, $extraClasses));
-	}
-
-	protected function buildRadioOptions(): string
-	{
-		$this->processOptions();
-
-		$radiosHtml = '';
-		$index      = 1;
-
-		foreach ($this->options as $key => $option) {
-			// Check if this is a grouped option (string key with array value)
-			if (is_string($key) && is_array($option)) {
-				$radiosHtml .= $this->buildRadioGroup($key, $option, $index);
-				$index += count($option);
-			} else {
-				// Regular option
-				if (is_string($option)) {
-					$option = $this->optionFromString($option);
-				}
-
-				$radiosHtml .= $this->buildSingleRadio($option, $index);
-				$index++;
-			}
-		}
-
-		return $radiosHtml;
-	}
-
-	/**
-	 * Build a group of radio buttons with a legend.
-	 *
-	 * @param array<mixed> $options Array of strings or arrays with value/label
-	 */
-	protected function buildRadioGroup(string $groupLabel, array $options, int &$index): string
-	{
-		$groupHtml = '';
-
-		foreach ($options as $option) {
-			if (is_string($option)) {
-				$option = $this->optionFromString($option);
-			}
-
-			$groupHtml .= $this->buildSingleRadio($option, $index);
-			$index++;
-		}
-
-		$legend  = HTMLUtils::element('legend', $groupLabel, ['class' => 'radio-group-legend']);
-		$content = $legend . $groupHtml;
-
-		return HTMLUtils::element('fieldset', $content, ['class' => 'radio-group-fieldset']);
-	}
-
-	/** @param array<string,string> $option */
-	protected function buildSingleRadio(array $option, int $index): string
-	{
-		$radioId   = "field-{$this->uuid}-{$index}";
-		$isChecked = $this->isOptionSelected($option['value']);
-
-		$inputAttributes = [
-			'id'               => $radioId,
-			'name'             => $this->name,
-			'type'             => 'radio',
-			'value'            => $option['value'],
-			'required'         => $this->required ? '' : null,
-			'disabled'         => $this->disabled ? '' : null,
-			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
-			'checked'          => $isChecked ? '' : null,
-		];
-
-		// Remove null values from the attributes array
-		$inputAttributes = array_filter($inputAttributes, fn (?string $x): bool => !is_null($x));
-
-		$input = HTMLUtils::inlineElement('input', $inputAttributes);
-		$label = HTMLUtils::element('label', $option['label'], [
-			'for'   => $radioId,
-			'class' => 'radio-label',
-		]);
-
-		return HTMLUtils::element('div', $input . $label, ['class' => 'radio']);
-	}
+	protected const INPUT_TYPE           = 'radio';
+	protected const OPTION_CLASS         = 'radio';
+	protected const LABEL_CLASS          = 'radio-label';
+	protected const GROUP_FIELDSET_CLASS = 'radio-group-fieldset';
+	protected const GROUP_LEGEND_CLASS   = 'radio-group-legend';
+	protected const REQUIRED_ON_OPTION   = true;
 
 	protected function isOptionSelected(string $optionValue): bool
 	{
 		return (string)$this->value === $optionValue;
-	}
-
-	protected function processOptions(): void
-	{
-		// Process options using parent class functionality
-		$this->buildOptions();
-
-		// Ensure options are in the correct format
-		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
-			// Convert simple array to key-value pairs
-			$processedOptions = [];
-			foreach ($this->options as $key => $value) {
-				$processedOptions[] = [
-					'label' => is_string($key) ? $key : $value,
-					'value' => $value,
-				];
-			}
-			$this->options = $processedOptions;
-		}
 	}
 }

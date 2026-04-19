@@ -200,7 +200,7 @@ describe('RadioField', function (): void {
 
 		expect($html)
 			->toContain('--fieldset-columns:150px')
-			->toContain('radio-field--columns');
+			->toContain('choice-field--columns');
 	});
 
 	test('RadioField → processes propertyOptions setting', function (): void {

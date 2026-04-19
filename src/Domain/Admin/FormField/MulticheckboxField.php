@@ -2,158 +2,37 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-
-class MulticheckboxField extends FormField
+class MulticheckboxField extends ChoiceField
 {
 	protected string $defaultInputType = 'checkbox';
 	protected string $defaultFieldType = 'multicheckbox';
 
-	public function build(): string
-	{
-		$checkboxes = $this->buildCheckboxOptions();
-
-		$extraStyles  = [];
-		$extraClasses = [];
-		if (isset($this->settings['fieldGrid'])) {
-			$extraStyles['--fieldset-grid-size'] = $this->settings['fieldGrid'];
-		}
-		if (isset($this->settings['fieldColumns'])) {
-			$extraStyles['--fieldset-columns'] = $this->settings['fieldColumns'];
-			$extraClasses[]                    = 'multicheckbox-field--columns';
-		}
-
-		$formFieldAttributes = $this->buildFieldAttributes($extraStyles, $extraClasses);
-
-		// Store required state on container for JavaScript validation
-		if ($this->required) {
-			$formFieldAttributes['data-required'] = 'true';
-		}
-
-		$fieldset = HTMLUtils::element('fieldset', $this->createFieldLabel('legend') . $checkboxes);
-
-		return HTMLUtils::element('div', $fieldset . $this->createHelpText(), $formFieldAttributes);
-	}
-
-	protected function buildCheckboxOptions(): string
-	{
-		$this->processOptions();
-
-		$checkboxesHtml = '';
-		$index          = 1;
-
-		foreach ($this->options as $key => $option) {
-			// Check if this is a grouped option (string key with array value)
-			if (is_string($key) && is_array($option)) {
-				$checkboxesHtml .= $this->buildCheckboxGroup($key, $option, $index);
-				$index += count($option);
-			} else {
-				// Regular option
-				if (is_string($option)) {
-					$option = $this->optionFromString($option);
-				}
-
-				$checkboxesHtml .= $this->buildSingleCheckbox($option, $index);
-				$index++;
-			}
-		}
-
-		return $checkboxesHtml;
-	}
-
-	/**
-	 * Build a group of checkboxes with a legend.
-	 *
-	 * @param array<mixed> $options Array of strings or arrays with value/label
-	 */
-	protected function buildCheckboxGroup(string $groupLabel, array $options, int &$index): string
-	{
-		$groupHtml = '';
-
-		foreach ($options as $option) {
-			if (is_string($option)) {
-				$option = $this->optionFromString($option);
-			}
-
-			$groupHtml .= $this->buildSingleCheckbox($option, $index);
-			$index++;
-		}
-
-		$legend  = HTMLUtils::element('legend', $groupLabel, ['class' => 'checkbox-group-legend']);
-		$content = $legend . $groupHtml;
-
-		return HTMLUtils::element('fieldset', $content, ['class' => 'multicheckbox-group']);
-	}
-
-	/** @param array<string,string> $option */
-	protected function buildSingleCheckbox(array $option, int $index): string
-	{
-		$checkboxId = "field-{$this->uuid}-{$index}";
-		$isChecked  = $this->isOptionSelected($option['value']);
-
-		$inputAttributes = [
-			'id'               => $checkboxId,
-			'name'             => $this->name,
-			'type'             => 'checkbox',
-			'class'            => 'checkbox',
-			'value'            => $option['value'],
-			'disabled'         => $this->disabled ? '' : null,
-			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
-			'checked'          => $isChecked ? '' : null,
-		];
-
-		// Remove null values from the attributes array
-		$inputAttributes = array_filter($inputAttributes, fn (?string $x): bool => !is_null($x));
-
-		$input = HTMLUtils::inlineElement('input', $inputAttributes);
-		$label = HTMLUtils::element('label', $option['label'], [
-			'for'   => $checkboxId,
-			'class' => 'checkbox-label',
-		]);
-
-		return HTMLUtils::element('div', $input . $label, ['class' => 'checkbox']);
-	}
+	protected const INPUT_TYPE             = 'checkbox';
+	protected const OPTION_CLASS           = 'checkbox';
+	protected const LABEL_CLASS            = 'checkbox-label';
+	protected const GROUP_FIELDSET_CLASS   = 'multicheckbox-group';
+	protected const GROUP_LEGEND_CLASS     = 'checkbox-group-legend';
+	protected const INPUT_CLASS            = 'checkbox';
+	protected const REQUIRED_ON_CONTAINER  = true;
 
 	protected function isOptionSelected(string $optionValue): bool
 	{
 		$currentValue = $this->getValue();
 
-		// Support array values
 		if (is_array($currentValue)) {
 			return in_array($optionValue, $currentValue, true);
 		}
 
-		// Support single value
 		return (string)$currentValue === $optionValue;
 	}
 
-	protected function processOptions(): void
-	{
-		// Process options using parent class functionality (includes relationalOptions)
-		$this->buildOptions();
-
-		// Ensure options are in the correct format
-		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
-			// Convert simple array to value/label pairs
-			$processedOptions = [];
-			foreach ($this->options as $key => $value) {
-				$processedOptions[] = [
-					'label' => is_string($key) ? $key : $value,
-					'value' => $value,
-				];
-			}
-			$this->options = $processedOptions;
-		}
-	}
-
 	/**
-	 * Get the field value, ensuring proper array handling.
+	 * Normalize empty/missing values to an empty array so array-shaped checks work.
 	 */
 	public function getValue(): mixed
 	{
 		$value = parent::getValue();
 
-		// Ensure we return an array for array values, or the value as-is
 		if ($value === null || $value === '') {
 			return [];
 		}

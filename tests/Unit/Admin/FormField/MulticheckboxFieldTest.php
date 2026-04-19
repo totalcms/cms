@@ -24,7 +24,7 @@ describe('MulticheckboxField', function (): void {
 
 		expect($html)
 			->toContain('--fieldset-columns:150px')
-			->toContain('multicheckbox-field--columns');
+			->toContain('choice-field--columns');
 	});
 
 	test('MulticheckboxField → does not duplicate predefined options when value already matches', function (): void {
