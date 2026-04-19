@@ -15,32 +15,19 @@ class RadioField extends FormField
 		$radios = $this->buildRadioOptions();
 		$help   = $this->buildHelpText();
 
-		$formFieldAttributes = [
-			'class'     => "form-field {$this->field}-field {$this->class}",
-			'data-type' => $this->field,
-			'style'     => "--grid-area: {$this->name};",
-		];
-
-		if ($this->settings !== []) {
-			$json = json_encode($this->settings);
-			if ($json) {
-				$formFieldAttributes['data-settings'] = $json;
-			}
-			if (isset($this->settings['fieldGrid'])) {
-				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';
-			}
-			if (isset($this->settings['fieldColumns'])) {
-				$formFieldAttributes['class'] .= ' radio-field--columns';
-				$formFieldAttributes['style'] .= '--fieldset-columns:' . $this->settings['fieldColumns'] . ';';
-			}
+		$extraStyles  = [];
+		$extraClasses = [];
+		if (isset($this->settings['fieldGrid'])) {
+			$extraStyles['--fieldset-grid-size'] = $this->settings['fieldGrid'];
 		}
-
-		// Handle visibility settings
-		$this->applyVisibility($formFieldAttributes);
+		if (isset($this->settings['fieldColumns'])) {
+			$extraStyles['--fieldset-columns'] = $this->settings['fieldColumns'];
+			$extraClasses[]                    = 'radio-field--columns';
+		}
 
 		$fieldset = HTMLUtils::element('fieldset', $label . $radios);
 
-		return HTMLUtils::element('div', $fieldset . $help, $formFieldAttributes);
+		return HTMLUtils::element('div', $fieldset . $help, $this->buildFieldAttributes($extraStyles, $extraClasses));
 	}
 
 	protected function buildFieldLabel(): string

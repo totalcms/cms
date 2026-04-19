@@ -26,18 +26,6 @@ class ToggleField extends CheckboxField
 			'id'    => "help-{$this->uuid}",
 		]);
 
-		$formFieldAtrributes = [
-			'class'     => "form-field {$this->field}-field {$this->class}",
-			'data-type' => $this->field,
-			'style'     => "--grid-area: {$this->name};",
-		];
-		if ($this->settings !== []) {
-			$json = json_encode($this->settings);
-			if ($json) {
-				$formFieldAtrributes['data-settings'] = $json;
-			}
-		}
-
-		return HTMLUtils::element('div', $label . $group . $help, $formFieldAtrributes);
+		return HTMLUtils::element('div', $label . $group . $help, $this->buildFieldAttributes());
 	}
 }

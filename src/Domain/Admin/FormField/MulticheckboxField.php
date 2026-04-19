@@ -15,33 +15,22 @@ class MulticheckboxField extends FormField
 		$checkboxes = $this->buildCheckboxOptions();
 		$help       = $this->buildHelpText();
 
-		$formFieldAttributes = [
-			'class'     => "form-field {$this->field}-field {$this->class}",
-			'data-type' => $this->field,
-			'style'     => "--grid-area: {$this->name};",
-		];
+		$extraStyles  = [];
+		$extraClasses = [];
+		if (isset($this->settings['fieldGrid'])) {
+			$extraStyles['--fieldset-grid-size'] = $this->settings['fieldGrid'];
+		}
+		if (isset($this->settings['fieldColumns'])) {
+			$extraStyles['--fieldset-columns'] = $this->settings['fieldColumns'];
+			$extraClasses[]                    = 'multicheckbox-field--columns';
+		}
+
+		$formFieldAttributes = $this->buildFieldAttributes($extraStyles, $extraClasses);
 
 		// Store required state on container for JavaScript validation
 		if ($this->required) {
 			$formFieldAttributes['data-required'] = 'true';
 		}
-
-		if ($this->settings !== []) {
-			$json = json_encode($this->settings);
-			if ($json) {
-				$formFieldAttributes['data-settings'] = $json;
-			}
-			if (isset($this->settings['fieldGrid'])) {
-				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';
-			}
-			if (isset($this->settings['fieldColumns'])) {
-				$formFieldAttributes['class'] .= ' multicheckbox-field--columns';
-				$formFieldAttributes['style'] .= '--fieldset-columns:' . $this->settings['fieldColumns'] . ';';
-			}
-		}
-
-		// Handle visibility settings
-		$this->applyVisibility($formFieldAttributes);
 
 		$fieldset = HTMLUtils::element('fieldset', $label . $checkboxes);
 

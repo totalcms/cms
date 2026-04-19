@@ -112,22 +112,44 @@ class FormField
 			'id'    => "help-{$this->uuid}",
 		]);
 
-		$formFieldAtrributes = [
-			'class'     => "form-field {$this->field}-field {$this->class}",
+		return HTMLUtils::element('div', $label . $content . $help, $this->buildFieldAttributes());
+	}
+
+	/**
+	 * Build the outer HTML attributes shared by every form-field wrapper.
+	 *
+	 * @param array<string,string|int|float> $extraStyles Additional CSS custom properties to append (e.g. ['--fieldset-columns' => 2])
+	 * @param array<string> $extraClasses Additional class names to append
+	 * @return array<string,string>
+	 */
+	protected function buildFieldAttributes(array $extraStyles = [], array $extraClasses = []): array
+	{
+		$classes = "form-field {$this->field}-field {$this->class}";
+		foreach ($extraClasses as $class) {
+			$classes .= ' ' . $class;
+		}
+
+		$style = "--grid-area: {$this->name};";
+		foreach ($extraStyles as $prop => $value) {
+			$style .= $prop . ':' . $value . ';';
+		}
+
+		$attributes = [
+			'class'     => $classes,
 			'data-type' => $this->field,
-			'style'     => "--grid-area: {$this->name};",
+			'style'     => $style,
 		];
+
 		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
-				$formFieldAtrributes['data-settings'] = $json;
+				$attributes['data-settings'] = $json;
 			}
 		}
 
-		// Handle visibility settings
-		$this->applyVisibility($formFieldAtrributes);
+		$this->applyVisibility($attributes);
 
-		return HTMLUtils::element('div', $label . $content . $help, $formFieldAtrributes);
+		return $attributes;
 	}
 
 	/**
