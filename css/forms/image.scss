@@ -72,10 +72,23 @@ dialog.image-link-dialog {
 		border     : 10px solid oklch(var(--totalform-purewhite));
 		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
 		overflow   : visible;
+		box-sizing : content-box;
 
 		img {
 			width   : 100%;
 			display : block;
+		}
+
+		// On small portrait viewports, cap the preview height so the form
+		// fields below remain reachable. The section's inline `aspect-ratio`
+		// (set in ImageField::imagePreviewSection) makes width shrink in
+		// proportion to the clamped height — so section dimensions stay
+		// equal to image dimensions and the focal-point coordinates remain
+		// accurate. `justify-self: center` keeps the now-narrower section
+		// centered in its grid column instead of stretched.
+		@media screen and (max-width: 45em) {
+			max-height   : 40svh;
+			justify-self : center;
 		}
 	}
 
