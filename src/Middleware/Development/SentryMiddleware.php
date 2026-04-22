@@ -62,6 +62,7 @@ class SentryMiddleware implements MiddlewareInterface
 			'Required field(s) cannot be empty',
 			'already exists in',
 			'Unable to delete schema',
+			'is reserved',
 			'Schema Validation Failed',
 			'Collection does not exist',
 			'Invalid email',
