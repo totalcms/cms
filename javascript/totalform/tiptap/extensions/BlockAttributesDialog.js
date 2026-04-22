@@ -1,17 +1,15 @@
 /**
  * BlockAttributesDialog - Dialog for editing class, id, and data-* attributes
  * on the current block node.
- * Uses the same ste-dialog pattern as AnchorDialog and LinkDialog.
+ * Uses a native <dialog> element so it joins the top layer alongside any
+ * enclosing modal (e.g., a deck dialog hosting the styledtext field).
  */
 
 export function createBlockAttributesDialog(editor, blockClasses) {
 	const blockInfo = getBlockAttributes(editor);
 	if (!blockInfo) return;
 
-	const overlay = document.createElement('div');
-	overlay.className = 'ste-dialog-overlay';
-
-	const dialog = document.createElement('div');
+	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog';
 
 	const datalistId = 'ste-block-class-suggestions';
@@ -51,8 +49,6 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 		</div>
 	`;
 
-	overlay.appendChild(dialog);
-
 	const classInput = dialog.querySelector('#ste-block-class');
 	const idInput = dialog.querySelector('#ste-block-id');
 	const dataRowsContainer = dialog.querySelector('.ste-block-data-rows');
@@ -72,11 +68,6 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 		addDataRow(dataRowsContainer, '', '');
 	});
 
-	function close() {
-		overlay.remove();
-		editor.chain().focus().run();
-	}
-
 	function apply() {
 		const cls = classInput.value.trim() || null;
 		const id = idInput.value.trim().replace(/\s+/g, '-') || null;
@@ -86,7 +77,7 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 			id: id,
 			dataAttrs: dataAttrs,
 		});
-		overlay.remove();
+		dialog.close();
 	}
 
 	applyBtn.addEventListener('click', apply);
@@ -94,24 +85,25 @@ export function createBlockAttributesDialog(editor, blockClasses) {
 	if (removeBtn) {
 		removeBtn.addEventListener('click', () => {
 			setBlockAttributes(editor, blockInfo.pos, { class: null, id: null, dataAttrs: null });
-			overlay.remove();
+			dialog.close();
 		});
 	}
 
-	dialog.querySelector('.ste-dialog-close').addEventListener('click', close);
-	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', close);
-	overlay.addEventListener('click', (e) => {
-		if (e.target === overlay) close();
+	dialog.querySelector('.ste-dialog-close').addEventListener('click', () => dialog.close());
+	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', () => dialog.close());
+
+	// Backdrop click closes (Escape is handled natively)
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) dialog.close();
 	});
 
-	dialog.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			close();
-		}
+	dialog.addEventListener('close', () => {
+		dialog.remove();
+		editor.chain().focus().run();
 	});
 
-	document.body.appendChild(overlay);
+	document.body.appendChild(dialog);
+	dialog.showModal();
 	classInput.focus();
 }
 

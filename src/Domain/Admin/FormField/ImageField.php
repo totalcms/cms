@@ -128,7 +128,18 @@ class ImageField extends FormField
 			'style' => "top:{$top}%;left:{$left}%",
 		]);
 
-		return HTMLUtils::element('section', $image . $fpoint, ['class' => 'image-preview']);
+		// Lock the section's aspect ratio to the image's so any height clamp
+		// (e.g., max-height on mobile) shrinks width proportionally — keeping
+		// section dimensions = image dimensions, which is required for the
+		// focal-point overlay's percentage coordinates to land accurately.
+		$sectionAttrs = ['class' => 'image-preview'];
+		$width        = (int)($imageData['width'] ?? 0);
+		$height       = (int)($imageData['height'] ?? 0);
+		if ($width > 0 && $height > 0) {
+			$sectionAttrs['style'] = "aspect-ratio: {$width}/{$height};";
+		}
+
+		return HTMLUtils::element('section', $image . $fpoint, $sectionAttrs);
 	}
 
 	/** @param array<string,mixed> $imageData */

@@ -2,6 +2,22 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.2.5] - 2026-04-21
+
+### Enhanced
+
+- **Styled Text Dialogs**: Link, Anchor, File, Image, Video, and Block Attributes dialogs in the styled text editor now use the native `<dialog>` element with proper focus management, ESC-to-close, and backdrop click handling
+- **Choice Field Refactor**: Radio and Multicheckbox fields now share a common `ChoiceField` base class for consistent behavior and reduced duplication
+- **Form Grid-Area Application**: Simplified how grid-area names are applied to form fields, removing special-case handling across Checkbox, Toggle, Radio, Multicheckbox, and DeckTable layouts
+- **Centralized Help Text**: Field help text rendering consolidated into a single shared helper
+- **FormField Attribute Builder**: New `buildFieldAttributes()` method on `FormField` reduces duplication across field types
+- **Sentry Filtering**: Added ignore rules for reserved-name schema validation errors and the SortableJS touch-drag race condition when elements are detached during HTMX swaps
+
+### Fixed
+
+- **HTMX Confirm Handler**: Fixed `hx-confirm` dialog crashing on every confirmation request after the HTMX 4 upgrade. The handler now reads the element and confirm message from HTMX 4's updated event detail (`ctx` + event target) instead of the removed `detail.elt` property
+- **Portrait Image Preview on Mobile**: Fixed scroll lock on the image preview info panel that prevented editing image metadata on portrait-oriented mobile screens
+
 ## [3.2.4] - 2026-04-17
 
 ### Added

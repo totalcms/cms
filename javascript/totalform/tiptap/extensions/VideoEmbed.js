@@ -20,13 +20,12 @@ function isAudioFile(nameOrUrl) {
 }
 
 /**
- * Creates a media dialog (video + audio)
+ * Creates a media dialog (video + audio). Mounts and shows itself as a
+ * native <dialog> so it stacks correctly above other modals (e.g., a deck
+ * dialog hosting the styledtext field).
  */
 function createVideoDialog(editor, uploadConfig) {
-	const overlay = document.createElement('div');
-	overlay.className = 'ste-dialog-overlay';
-
-	const dialog = document.createElement('div');
+	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog ste-dialog--file-manager';
 
 	dialog.innerHTML = `
@@ -68,8 +67,6 @@ function createVideoDialog(editor, uploadConfig) {
 			</div>
 		</div>
 	`;
-
-	overlay.appendChild(dialog);
 
 	// Tab switching
 	let mediaLoaded = false;
@@ -300,17 +297,22 @@ function createVideoDialog(editor, uploadConfig) {
 	}
 
 	// Close handlers
-	const close = () => overlay.remove();
+	const close = () => dialog.close();
 	dialog.querySelector('.ste-dialog-close').addEventListener('click', close);
 	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', close);
-	overlay.addEventListener('click', (e) => {
-		if (e.target === overlay) close();
+
+	// Backdrop click closes (Escape is handled natively)
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) close();
 	});
 
 	// Insert handler
 	dialog.querySelector('.ste-dialog-btn--insert').addEventListener('click', insertMedia);
 
-	return overlay;
+	dialog.addEventListener('close', () => dialog.remove());
+
+	document.body.appendChild(dialog);
+	dialog.showModal();
 }
 
 export { Youtube, createVideoDialog };

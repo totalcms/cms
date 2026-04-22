@@ -98,11 +98,6 @@ export default class DeckTableField extends TotalField {
     }
 
     initRow(row) {
-        // Strip grid-area inline styles from form-field elements (they're meant for the parent form grid)
-        row.querySelectorAll('.form-field').forEach(el => {
-            el.style.removeProperty('grid-area');
-        });
-
         // Store reference on the DOM element
         row.deckTableRow = this;
 

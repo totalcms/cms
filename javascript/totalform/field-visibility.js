@@ -33,7 +33,7 @@ export default class FieldVisibility {
 			const watchField = visibility.watch;
 
 			// Find the watched field element within the scoped container
-			const watchedFieldElement = container.querySelector(`[style*="grid-area: ${watchField}"]`);
+			const watchedFieldElement = container.querySelector(`[style*="--grid-area: ${watchField}"]`);
 			if (!watchedFieldElement) return;
 
 			// Set up change listener on the watched field

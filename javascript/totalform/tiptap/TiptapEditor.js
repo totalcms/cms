@@ -376,13 +376,11 @@ export default class TiptapEditor {
 	}
 
 	openVideoDialog() {
-		const dialog = createVideoDialog(this.editor, this.buildUploadConfig('media'));
-		document.body.appendChild(dialog);
+		createVideoDialog(this.editor, this.buildUploadConfig('media'));
 	}
 
 	openFileDialog() {
-		const dialog = createFileDialog(this.editor, this.buildUploadConfig('file'));
-		document.body.appendChild(dialog);
+		createFileDialog(this.editor, this.buildUploadConfig('file'));
 	}
 
 	insertTable() {

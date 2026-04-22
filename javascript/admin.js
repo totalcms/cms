@@ -33,9 +33,9 @@ document.addEventListener('htmx:config:request', (e) => {
 
 // Intercept hx-confirm and route through the custom countdown dialog
 document.body.addEventListener('htmx:confirm', (e) => {
-	const elt = e.detail.elt;
-	const message = elt.getAttribute('hx-confirm');
-	if (!message) return;
+	const elt = e.target;
+	const message = e.detail?.ctx?.confirm || elt?.getAttribute?.('hx-confirm');
+	if (!elt || !message) return;
 
 	e.preventDefault();
 
