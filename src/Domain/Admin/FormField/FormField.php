@@ -143,6 +143,7 @@ class FormField
 	 *
 	 * @param array<string,string|int|float> $extraStyles Additional CSS custom properties to append (e.g. ['--fieldset-columns' => 2])
 	 * @param array<string> $extraClasses Additional class names to append
+	 *
 	 * @return array<string,string>
 	 */
 	protected function buildFieldAttributes(array $extraStyles = [], array $extraClasses = []): array

@@ -84,7 +84,7 @@ abstract class ChoiceField extends FormField
 		foreach ($this->options as $key => $option) {
 			// Grouped entry: string key with an array of options
 			if (is_string($key) && is_array($option)) {
-				$html  .= $this->renderChoiceGroup($key, $option, $index);
+				$html .= $this->renderChoiceGroup($key, $option, $index);
 				$index += count($option);
 				continue;
 			}
