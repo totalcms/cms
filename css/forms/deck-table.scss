@@ -156,11 +156,6 @@
 			.form-group-icon {
 				display : none;
 			}
-
-			// Reset grid-area
-			&[style*="grid-area"] {
-				grid-area : unset !important;
-			}
 		}
 
 		// Simplify input appearance

@@ -1,16 +1,14 @@
 /**
  * AnchorDialog - Creates and manages the anchor ID dialog.
- * Uses the same ste-dialog pattern as LinkDialog.
+ * Uses a native <dialog> element so it joins the top layer alongside any
+ * enclosing modal (e.g., a deck dialog hosting the styledtext field).
  */
 
 export function createAnchorDialog(editor) {
 	const currentId = getAnchorId(editor);
 	const isEditing = !!currentId;
 
-	const overlay = document.createElement('div');
-	overlay.className = 'ste-dialog-overlay';
-
-	const dialog = document.createElement('div');
+	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog';
 
 	dialog.innerHTML = `
@@ -33,16 +31,9 @@ export function createAnchorDialog(editor) {
 		</div>
 	`;
 
-	overlay.appendChild(dialog);
-
 	const idInput = dialog.querySelector('#ste-anchor-id');
 	const insertBtn = dialog.querySelector('.ste-dialog-btn--insert');
 	const removeBtn = dialog.querySelector('.ste-dialog-btn--remove');
-
-	function close() {
-		overlay.remove();
-		editor.chain().focus().run();
-	}
 
 	function applyAnchor() {
 		const id = idInput.value.trim().replace(/\s+/g, '-');
@@ -51,7 +42,7 @@ export function createAnchorDialog(editor) {
 		} else {
 			editor.chain().focus().removeAnchorId().run();
 		}
-		overlay.remove();
+		dialog.close();
 	}
 
 	insertBtn.addEventListener('click', applyAnchor);
@@ -59,28 +50,33 @@ export function createAnchorDialog(editor) {
 	if (removeBtn) {
 		removeBtn.addEventListener('click', () => {
 			editor.chain().focus().removeAnchorId().run();
-			overlay.remove();
+			dialog.close();
 		});
 	}
 
-	dialog.querySelector('.ste-dialog-close').addEventListener('click', close);
-	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', close);
-	overlay.addEventListener('click', (e) => {
-		if (e.target === overlay) close();
+	dialog.querySelector('.ste-dialog-close').addEventListener('click', () => dialog.close());
+	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', () => dialog.close());
+
+	// Backdrop click closes
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) dialog.close();
 	});
 
+	// Enter key submits (Escape is handled natively)
 	idInput.addEventListener('keydown', (e) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			applyAnchor();
 		}
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			close();
-		}
 	});
 
-	document.body.appendChild(overlay);
+	dialog.addEventListener('close', () => {
+		dialog.remove();
+		editor.chain().focus().run();
+	});
+
+	document.body.appendChild(dialog);
+	dialog.showModal();
 	idInput.focus();
 	idInput.select();
 }

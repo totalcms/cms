@@ -89,6 +89,18 @@
 					if (isClosetagBug) return null;
 				}
 
+				// Ignore SortableJS touch-drag race: setInterval fires after dragEl was
+				// detached (e.g., by HTMX swap), so dragEl.parentNode is null.
+				if (event.exception && event.exception.values) {
+					var sortableFrames = event.exception.values.flatMap(function(v) {
+						return (v.stacktrace && v.stacktrace.frames) || [];
+					});
+					var isSortableRace = sortableFrames.some(function(f) {
+						return f.filename && f.filename.includes('sortablejs');
+					}) && /parentNode/.test(message);
+					if (isSortableRace) return null;
+				}
+
 				return event;
 			}
 		});

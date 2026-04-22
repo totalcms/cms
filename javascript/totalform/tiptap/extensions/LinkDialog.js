@@ -1,6 +1,8 @@
 /**
  * LinkDialog - Creates and manages the link insert/edit dialog.
- * Replaces the browser prompt() with a proper dialog using the ste-dialog pattern.
+ * Uses a native <dialog> element opened with showModal() so the link dialog
+ * joins the browser top layer and stacks correctly above other open modals
+ * (e.g., when a styledtext field is edited inside a deck dialog).
  */
 
 export function createLinkDialog(editor) {
@@ -9,10 +11,7 @@ export function createLinkDialog(editor) {
 	const previousTarget = attrs.target || '';
 	const isEditing = !!previousUrl;
 
-	const overlay = document.createElement('div');
-	overlay.className = 'ste-dialog-overlay';
-
-	const dialog = document.createElement('div');
+	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog';
 
 	dialog.innerHTML = `
@@ -41,24 +40,17 @@ export function createLinkDialog(editor) {
 		</div>
 	`;
 
-	overlay.appendChild(dialog);
-
 	const urlInput = dialog.querySelector('#ste-link-url');
 	const newTabCheckbox = dialog.querySelector('#ste-link-newtab');
 	const insertBtn = dialog.querySelector('.ste-dialog-btn--insert');
 	const removeBtn = dialog.querySelector('.ste-dialog-btn--remove');
-
-	function close() {
-		overlay.remove();
-		editor.chain().focus().run();
-	}
 
 	function applyLink() {
 		const url = urlInput.value.trim();
 		if (!url) {
 			// Empty URL = remove link
 			editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			overlay.remove();
+			dialog.close();
 			return;
 		}
 
@@ -73,7 +65,7 @@ export function createLinkDialog(editor) {
 			rel,
 		}).run();
 
-		overlay.remove();
+		dialog.close();
 	}
 
 	// Insert/Update button
@@ -83,31 +75,35 @@ export function createLinkDialog(editor) {
 	if (removeBtn) {
 		removeBtn.addEventListener('click', () => {
 			editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			overlay.remove();
+			dialog.close();
 		});
 	}
 
 	// Cancel & close
-	dialog.querySelector('.ste-dialog-close').addEventListener('click', close);
-	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', close);
-	overlay.addEventListener('click', (e) => {
-		if (e.target === overlay) close();
+	dialog.querySelector('.ste-dialog-close').addEventListener('click', () => dialog.close());
+	dialog.querySelector('.ste-dialog-btn--cancel').addEventListener('click', () => dialog.close());
+
+	// Backdrop click closes (native dialog fires target===dialog for backdrop hits)
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) dialog.close();
 	});
 
-	// Enter key submits
+	// Enter key submits (Escape is handled natively by <dialog>)
 	urlInput.addEventListener('keydown', (e) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			applyLink();
 		}
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			close();
-		}
 	});
 
-	// Mount and focus
-	document.body.appendChild(overlay);
+	// Self-cleanup and restore editor focus on close (fires for programmatic close + Escape key)
+	dialog.addEventListener('close', () => {
+		dialog.remove();
+		editor.chain().focus().run();
+	});
+
+	document.body.appendChild(dialog);
+	dialog.showModal();
 	urlInput.focus();
 	urlInput.select();
 }

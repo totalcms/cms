@@ -1,0 +1,82 @@
+//------------------------------
+// Choice Field (shared base for Radio + Multicheckbox)
+//------------------------------
+// Layout scaffolding that radio and multicheckbox share: the fieldset grid,
+// nested group fieldset, option labels, column-layout modifier, and the
+// individual option wrapper. The type-specific input visuals (radio circle,
+// checkbox tick) live in their own files.
+.choice-field {
+	--fieldset-grid-size : 1fr;
+
+	fieldset {
+		border  : none;
+		padding : 0;
+
+		display : grid;
+		gap     : 0.75rem;
+		width   : 100%;
+
+		grid-template-columns : 1fr;
+		grid-template-columns : repeat(auto-fit, minmax(var(--fieldset-grid-size), 1fr));
+
+		legend {
+			margin-bottom : 0.5rem;
+		}
+	}
+
+	fieldset fieldset {
+		border       : 1px solid oklch(var(--totalform-mediumgray));
+		padding      : 1rem 2rem;
+		margin-block : 0.5rem;
+		grid-column  : 1 / -1;
+
+		legend {
+			margin : 0;
+		}
+	}
+
+	.radio-label,
+	.checkbox-label {
+		line-height : 1;
+		font-size   : 1.1rem;
+
+		// Allow wrapping if text is too long for grid cell
+		word-wrap     : break-word;
+		overflow-wrap : break-word;
+
+		// But prefer not to wrap
+		white-space : nowrap;
+
+		// Truncate with ellipsis if absolutely necessary
+		text-overflow : ellipsis;
+		overflow      : hidden;
+		cursor        : pointer;
+	}
+
+	&--columns fieldset {
+		display      : block;
+		column-width : var(--fieldset-columns, 150px);
+		column-gap   : 1rem;
+
+		.radio,
+		.checkbox {
+			break-inside  : avoid;
+			margin-bottom : 0.5rem;
+		}
+	}
+
+	.radio,
+	.checkbox {
+		// Ensure each option displays properly within grid cell
+		display     : flex;
+		align-items : center;
+		gap         : 0.5rem;
+
+		// Let the grid cell size the item, but don't stretch the content
+		width       : max-content;
+		max-width   : 100%;
+
+		// Prevent overflow within grid cell
+		overflow    : hidden;
+	}
+}

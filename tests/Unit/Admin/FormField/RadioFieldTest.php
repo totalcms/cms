@@ -24,7 +24,8 @@ describe('RadioField', function (): void {
 
 		expect($field->build())
 			->toContain('data-type="radio"')
-			->toContain('radio-field');
+			->toContain('radio-field')
+			->toContain('choice-field');
 	});
 
 	test('RadioField → generates fieldset with legend', function (): void {
@@ -200,7 +201,7 @@ describe('RadioField', function (): void {
 
 		expect($html)
 			->toContain('--fieldset-columns:150px')
-			->toContain('radio-field--columns');
+			->toContain('choice-field--columns');
 	});
 
 	test('RadioField → processes propertyOptions setting', function (): void {
