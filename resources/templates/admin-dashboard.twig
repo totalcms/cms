@@ -102,6 +102,17 @@
                         <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
                     </li>
                     {% endif %}
+                    {% if extensionNavItems is defined and extensionNavItems is iterable %}
+						{% for item in extensionNavItems %}
+							{% if item.permission == 'any' or (item.permission == 'admin' and cms.auth.isAdmin()) %}
+							<li class="menu-item{% if url.path ends with item.slug %} active{% endif %}">
+								<a class="ext-nav" href="{{ item.url }}" title="{{ item.label }}"
+									{% if item.icon %} style="--ext-icon: url('data:image/svg+xml,{{ item.icon|url_encode }}')"{% endif %}
+								>{{ item.label }}</a>
+							</li>
+							{% endif %}
+						{% endfor %}
+                    {% endif %}
                     {% if cms.auth.canAccessUtils() %}
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
                         <a class="utils" href="utils" title="{{ t('nav.utils') }}">{{ t('nav.utils') }}</a>

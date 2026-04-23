@@ -171,14 +171,27 @@ final class ExtensionManager
 
 		// Wire Twig items from extensions into the TwigEngine (with collision protection)
 		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
+			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
+			$twigEngine = $this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class);
+
 			$twigRegistrar = new TwigExtensionRegistrar($this->logger);
 			$twigRegistrar->filterAndRegister(
-				$this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class),
+				$twigEngine,
 				$this->container->get(\TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension::class),
 				$this->getAllTwigFunctions(),
 				$this->getAllTwigFilters(),
 				$this->getAllTwigGlobals(),
 			);
+
+			// Pass extension nav items and widgets to templates as globals
+			$navItems = $this->getAllAdminNavItems();
+			$widgets  = $this->getAllDashboardWidgets();
+			if ($navItems !== [] || $widgets !== []) {
+				$twigEngine->registerExtensionItems([], [], [
+					'extensionNavItems'      => $navItems,
+					'extensionDashWidgets'   => $widgets,
+				]);
+			}
 		}
 
 		$this->booted = true;

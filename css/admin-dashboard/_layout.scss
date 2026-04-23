@@ -97,6 +97,9 @@ body {
 	.extensions {
 		mask-image : var(--icon-extension);
 	}
+	.ext-nav {
+		mask-image : var(--ext-icon, var(--icon-puzzle));
+	}
 }
 
 .dash-content {
