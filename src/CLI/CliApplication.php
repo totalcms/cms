@@ -85,13 +85,25 @@ class CliApplication
 		$app->addCommand(new Command\Extension\ExtensionDisableCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionRemoveCommand($totalcms));
 
-		// Extension-provided commands
+		// Extension-provided commands (with collision protection)
 		try {
 			$extensionManager = $totalcms->container()->get(
 				\TotalCMS\Domain\Extension\Service\ExtensionManager::class
 			);
 			$extensionManager->discoverAndRegister();
+
+			$coreNames = array_map(
+				fn (string $name): string => $name,
+				array_keys($app->all()),
+			);
+
 			foreach ($extensionManager->getAllCommands() as $command) {
+				$name = $command->getName();
+				if ($name !== null && in_array($name, $coreNames, true)) {
+					fwrite(STDERR, "Warning: Extension command '{$name}' blocked: conflicts with a core command.\n");
+
+					continue;
+				}
 				$app->addCommand($command);
 			}
 		} catch (\Throwable $e) {
