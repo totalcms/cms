@@ -146,6 +146,28 @@ final class ExtensionManager
 				});
 			}
 
+			// Static asset route at /ext/{vendor}/{name}/assets/ (no auth, serves files)
+			$assetsDir = $context->extensionPath() . '/assets';
+			if (is_dir($assetsDir)) {
+				$app->get('/ext/' . $extPath . '/assets/{file:.+}', function ($request, $response, $args) use ($assetsDir) {
+					$file = $assetsDir . '/' . $args['file'];
+
+					if (!is_file($file) || str_contains($args['file'], '..')) {
+						return $response->withStatus(404);
+					}
+
+					$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+					$mimeTypes = ['css' => 'text/css', 'js' => 'application/javascript', 'svg' => 'image/svg+xml', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'woff2' => 'font/woff2'];
+					$contentType = $mimeTypes[$ext] ?? 'application/octet-stream';
+
+					$response->getBody()->write((string) file_get_contents($file));
+
+					return $response
+						->withHeader('Content-Type', $contentType)
+						->withHeader('Cache-Control', 'public, max-age=86400');
+				});
+			}
+
 			// Admin routes at /admin/ext/{vendor}/{name}/ (full admin auth)
 			$adminRoutes = $context->getRegisteredAdminRoutes();
 			if ($adminRoutes !== []) {
@@ -186,10 +208,10 @@ final class ExtensionManager
 			$this->registerExtensionSchemas();
 		}
 
-		// Register extension field types in the schema property editor
+		// Register extension field types in the form builder and schema property editor
 		$extFieldTypes = $this->getAllFieldTypes();
 		if ($extFieldTypes !== []) {
-			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldTypes(array_keys($extFieldTypes));
+			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldTypes($extFieldTypes);
 		}
 
 		// Wire event listeners from extensions into the EventDispatcher
@@ -228,14 +250,24 @@ final class ExtensionManager
 				}
 			}
 
-			// Pass extension nav items and widgets to templates as globals
+			// Pass extension nav items, widgets, and assets to templates as globals
 			$navItems = $this->getAllAdminNavItems();
 			$widgets  = $this->getAllDashboardWidgets();
-			if ($navItems !== [] || $widgets !== []) {
-				$twigEngine->registerExtensionItems([], [], [
-					'extensionNavItems'      => $navItems,
-					'extensionDashWidgets'   => $widgets,
-				]);
+			$assets   = $this->getAllAdminAssets();
+
+			$globals = [];
+			if ($navItems !== []) {
+				$globals['extensionNavItems'] = $navItems;
+			}
+			if ($widgets !== []) {
+				$globals['extensionDashWidgets'] = $widgets;
+			}
+			if ($assets['css'] !== [] || $assets['js'] !== []) {
+				$globals['extensionAssets'] = $assets;
+			}
+
+			if ($globals !== []) {
+				$twigEngine->registerExtensionItems([], [], $globals);
 			}
 		}
 
@@ -358,6 +390,37 @@ final class ExtensionManager
 		}
 
 		return $types;
+	}
+
+	/**
+	 * Get all admin asset URLs resolved to servable paths.
+	 *
+	 * @return array{css: list<string>, js: list<string>}
+	 */
+	public function getAllAdminAssets(): array
+	{
+		$css = [];
+		$js  = [];
+
+		foreach ($this->contexts as $id => $context) {
+			$manifest = $this->discoveredManifests[$id] ?? null;
+			if ($manifest === null) {
+				continue;
+			}
+
+			$extPath = $manifest->vendor() . '/' . $manifest->shortName();
+
+			foreach ($context->getRegisteredAdminAssets() as $asset) {
+				$url = '/ext/' . $extPath . '/assets/' . ltrim($asset['path'], '/');
+				if ($asset['type'] === 'css') {
+					$css[] = $url;
+				} elseif ($asset['type'] === 'js') {
+					$js[] = $url;
+				}
+			}
+		}
+
+		return ['css' => $css, 'js' => $js];
 	}
 
 	/** @return array<string,list<array{callable, int}>> */

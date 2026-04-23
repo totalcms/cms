@@ -35,7 +35,7 @@ class PropertyField
 			'help'        => 'The type form field that this field will use',
 			'value'       => $this->field,
 			// 'disabled'    => ($this->property === 'id'), // Disable field type for id property
-			'options'     => TotalForm::FIELDS_BY_TYPE,
+			'options'     => TotalForm::getFieldsByType(),
 			'settings'    => ['clearValue' => false],
 		]);
 	}

@@ -89,6 +89,45 @@ class TotalForm implements \Stringable
 		],
 	];
 
+	/** @var array<string,class-string> Extension-registered field types: name => FQCN */
+	private static array $extensionFieldTypes = [];
+
+	/**
+	 * Register extension field types for both the form builder and schema property editor.
+	 *
+	 * @param array<string,class-string> $types Field name => fully qualified class name
+	 */
+	public static function registerExtensionFieldTypes(array $types): void
+	{
+		self::$extensionFieldTypes = array_merge(self::$extensionFieldTypes, $types);
+	}
+
+	/**
+	 * Get the extension field type class map.
+	 *
+	 * @return array<string,class-string>
+	 */
+	public static function getExtensionFieldTypes(): array
+	{
+		return self::$extensionFieldTypes;
+	}
+
+	/**
+	 * Get all field types grouped by category, including extension types.
+	 *
+	 * @return array<string,list<string>>
+	 */
+	public static function getFieldsByType(): array
+	{
+		$fields = self::FIELDS_BY_TYPE;
+
+		if (self::$extensionFieldTypes !== []) {
+			$fields['Extension Fields'] = array_values(array_unique(array_keys(self::$extensionFieldTypes)));
+		}
+
+		return $fields;
+	}
+
 	public const FIELDS = [
 		'checkbox',
 		'code',
@@ -655,7 +694,12 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 		unset($options['subfield']);
 
-		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
+		$fieldType = $options['field'] ?? '';
+		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
+		$typeClass = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+			? $builtInClass
+			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
+
 		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {
 			$typeClass = FormField::class;
 		}

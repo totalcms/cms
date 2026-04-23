@@ -53,6 +53,9 @@ final class ExtensionContext
 	/** @var array<string,class-string> */
 	private array $fieldTypes = [];
 
+	/** @var list<array{type: string, path: string}> */
+	private array $adminAssets = [];
+
 	/** @var array<string,list<array{callable, int}>> */
 	private array $eventListeners = [];
 
@@ -222,6 +225,17 @@ final class ExtensionContext
 	}
 
 	/**
+	 * Register a CSS or JS asset to be loaded in the admin.
+	 *
+	 * @param string $type 'css' or 'js'
+	 * @param string $path Path relative to the extension's assets/ directory
+	 */
+	public function addAdminAsset(string $type, string $path): void
+	{
+		$this->adminAssets[] = ['type' => $type, 'path' => $path];
+	}
+
+	/**
 	 * Register a custom field type.
 	 *
 	 * @param string $typeName The field type name (used in schemas)
@@ -311,6 +325,12 @@ final class ExtensionContext
 	public function getRegisteredDashboardWidgets(): array
 	{
 		return $this->dashboardWidgets;
+	}
+
+	/** @return list<array{type: string, path: string}> */
+	public function getRegisteredAdminAssets(): array
+	{
+		return $this->adminAssets;
 	}
 
 	/** @return array<string,class-string> */

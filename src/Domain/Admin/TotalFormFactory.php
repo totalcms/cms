@@ -1255,7 +1255,12 @@ readonly class TotalFormFactory
 			'name' => $name,
 		], $options);
 
-		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
+		// Check built-in field types first, then extension-registered types
+		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
+		$typeClass = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+			? $builtInClass
+			: (TotalForm::getExtensionFieldTypes()[$type] ?? $builtInClass);
+
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			$field = new $typeClass(...$options);
 		} else {
