@@ -237,6 +237,13 @@ final class ExtensionManager
 			}
 			if ($assets['css'] !== [] || $assets['js'] !== []) {
 				$globals['extensionAssets'] = $assets;
+
+				// Also set on the CMS adapter for {{ cms.extensionAssets() }}
+				if ($this->container->has(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class)) {
+					/** @var \TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter $cmsAdapter */
+					$cmsAdapter = $this->container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+					$cmsAdapter->setExtensionAssets($assets);
+				}
 			}
 
 			if ($globals !== []) {

@@ -231,4 +231,37 @@ class TotalCMSTwigAdapter
 
 		throw new \BadMethodCallException("Method '{$name}' does not exist on TotalCMSTwigAdapter.");
 	}
+
+	/** @var array{css: list<string>, js: list<string>} */
+	private array $extensionAssetUrls = ['css' => [], 'js' => []];
+
+	/**
+	 * Set extension asset URLs (called by ExtensionManager during boot).
+	 *
+	 * @param array{css: list<string>, js: list<string>} $assets
+	 */
+	public function setExtensionAssets(array $assets): void
+	{
+		$this->extensionAssetUrls = $assets;
+	}
+
+	/**
+	 * Render extension CSS and JS asset tags.
+	 *
+	 * Usage in Twig: {{ cms.extensionAssets() }}
+	 */
+	public function extensionAssets(): string
+	{
+		$html = '';
+
+		foreach ($this->extensionAssetUrls['css'] as $css) {
+			$html .= '<link rel="stylesheet" href="' . htmlspecialchars($this->api . $css) . '">' . "\n";
+		}
+
+		foreach ($this->extensionAssetUrls['js'] as $js) {
+			$html .= '<script type="module" src="' . htmlspecialchars($this->api . $js) . '"></script>' . "\n";
+		}
+
+		return $html;
+	}
 }

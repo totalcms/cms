@@ -51,14 +51,7 @@
 	{% endif %}
 
 	{% block head %}{% endblock %}
-	{% if extensionAssets is defined %}
-		{% for css in extensionAssets.css|default([]) %}
-		<link rel="stylesheet" href="{{ cms.api }}{{ css }}">
-		{% endfor %}
-		{% for js in extensionAssets.js|default([]) %}
-		<script type="module" src="{{ cms.api }}{{ js }}"></script>
-		{% endfor %}
-	{% endif %}
+	{{ cms.extensionAssets() }}
 	{% if cms.edition.can('whitelabel_templates') %}
 		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
