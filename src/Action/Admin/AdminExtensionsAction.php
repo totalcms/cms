@@ -37,15 +37,16 @@ readonly class AdminExtensionsAction
 		foreach ($manifests as $id => $manifest) {
 			$state        = $states[$id] ?? null;
 			$extensions[] = [
-				'id'          => $id,
-				'name'        => $manifest->name,
-				'description' => $manifest->description,
-				'version'     => $manifest->version,
-				'author'      => $manifest->author,
-				'license'     => $manifest->license,
-				'permissions' => $manifest->permissions,
-				'enabled'     => $state !== null && $state->enabled,
-				'error'       => $state?->error,
+				'id'              => $id,
+				'name'            => $manifest->name,
+				'description'     => $manifest->description,
+				'version'         => $manifest->version,
+				'author'          => $manifest->author,
+				'license'         => $manifest->license,
+				'permissions'     => $manifest->permissions,
+				'enabled'         => $state !== null && $state->enabled,
+				'error'           => $state?->error,
+				'hasSettings'     => $manifest->settingsSchema !== null,
 			];
 		}
 

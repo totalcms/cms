@@ -51,9 +51,14 @@
 				<footer>
 					{% if ext.enabled %}
 					<span class="dash-status enabled">Enabled</span>
-					<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/disable" style="margin:0;">
-						<button type="submit" class="btn btn-sm">Disable</button>
-					</form>
+					<div style="display:flex; gap:0.5rem; align-items:center;">
+						{% if ext.hasSettings %}
+						<a href="extensions/{{ ext.id }}/settings" class="dash-card-action edit" title="Settings" style="--icon-edit: var(--icon-cog);"></a>
+						{% endif %}
+						<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/disable" style="margin:0;">
+							<button type="submit" class="btn btn-sm">Disable</button>
+						</form>
+					</div>
 					{% else %}
 					<span class="dash-status disabled">Disabled</span>
 					<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/enable" style="margin:0;">

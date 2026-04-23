@@ -404,6 +404,8 @@ return [
 		$container->get(PropertyMetaResolver::class),
 		$container->get(DataViewFilter::class),
 		$container->get(TranslationService::class),
+		$container->get(ExtensionDiscovery::class),
+		$container->get(ExtensionSettingsManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),

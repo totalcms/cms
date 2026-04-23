@@ -95,6 +95,8 @@ return function (App $app): void {
 		// Extension management
 		$group->get('/extensions', AdminExtensionsAction::class)->setName('admin-extensions')->add(AdminOnlyMiddleware::class);
 		$group->post('/extensions/{extension:.+}/{action:enable|disable}', ExtensionToggleAction::class)->setName('admin-extension-toggle')->add(AdminOnlyMiddleware::class);
+		$group->get('/extensions/{extension:.+}/settings', \TotalCMS\Action\Admin\ExtensionSettingsAction::class)->setName('admin-extension-settings')->add(AdminOnlyMiddleware::class);
+		$group->post('/extensions/{extension:.+}/settings', \TotalCMS\Action\Admin\ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
 
 		// Catch-all 404 route - MUST BE LAST (excludes /admin/ext/ which is handled by extensions)
 		$group->any('/{path:(?!ext/).*}', Admin404Action::class)->setName('admin-404');

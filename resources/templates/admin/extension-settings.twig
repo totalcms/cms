@@ -1,0 +1,15 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<main class="dash-main-content" style="max-width:100%;">
+	<header>
+		<h1><a href="extensions">{{ t('nav.extensions') }}</a> / <span>{{ extensionName }}</span> / Settings</h1>
+	</header>
+
+	<section class="dash-content-section">
+		{{ cms.form.extensionSettings(extensionId) }}
+	</section>
+</main>
+
+{% endblock %}
