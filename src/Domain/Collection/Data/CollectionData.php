@@ -13,6 +13,7 @@ class CollectionData
 {
 	// Reserved names that cannot be used for collections
 	public const RESERVED_NAMES = [
+		'extensions',
 		'templates',
 		'logs',
 		'.schemas',
