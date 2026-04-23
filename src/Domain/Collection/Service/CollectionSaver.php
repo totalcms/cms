@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Collection\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
@@ -20,6 +22,7 @@ readonly class CollectionSaver
 		private IndexRepository $indexRepository,
 		private CollectionFetcher $collectionFetcher,
 		private EditionFeatureService $editionFeatures,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -77,6 +80,10 @@ readonly class CollectionSaver
 
 		// Clear request-level cache so subsequent fetches get fresh data
 		$this->collectionFetcher->clearCache($collection->id);
+
+		$this->eventDispatcher->dispatch('collection.created', [
+			'collection' => $collection->id,
+		]);
 
 		return $collection;
 	}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
@@ -15,6 +16,7 @@ readonly class SchemaRemover
 	public function __construct(
 		private SchemaRepository $storage,
 		private CollectionLister $collectionLister,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -32,7 +34,15 @@ readonly class SchemaRemover
 		$this->collectionExistsWithSchema($id);
 		$this->schemaIsInherited($id);
 
-		return $this->storage->deleteSchema($id);
+		$result = $this->storage->deleteSchema($id);
+
+		if ($result) {
+			$this->eventDispatcher->dispatch('schema.deleted', [
+				'schema' => $id,
+			]);
+		}
+
+		return $result;
 	}
 
 	/**

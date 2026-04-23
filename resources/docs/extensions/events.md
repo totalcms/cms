@@ -70,6 +70,34 @@ $context->addEventListener('object.deleted', function (array $payload): void {
 });
 ```
 
+### `collection.created`
+
+Fired after a new collection is created.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | Collection ID |
+
+```php
+$context->addEventListener('collection.created', function (array $payload): void {
+    // e.g., set up default content for a new collection
+});
+```
+
+### `collection.deleted`
+
+Fired after a collection is deleted.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | Collection ID |
+
+```php
+$context->addEventListener('collection.deleted', function (array $payload): void {
+    // e.g., clean up extension data related to this collection
+});
+```
+
 ### `schema.saved`
 
 Fired after a schema is created or updated.
@@ -83,6 +111,64 @@ $context->addEventListener('schema.saved', function (array $payload): void {
     // e.g., regenerate a search index
 });
 ```
+
+### `schema.deleted`
+
+Fired after a schema is deleted.
+
+| Key | Type | Description |
+|---|---|---|
+| `schema` | `string` | Schema ID |
+
+```php
+$context->addEventListener('schema.deleted', function (array $payload): void {
+    // e.g., remove cached data for this schema
+});
+```
+
+### `user.login`
+
+Fired after a user successfully logs in.
+
+| Key | Type | Description |
+|---|---|---|
+| `user` | `string` | User ID or email |
+
+```php
+$context->addEventListener('user.login', function (array $payload): void {
+    // e.g., track login activity
+});
+```
+
+### `user.logout`
+
+Fired after a user logs out.
+
+| Key | Type | Description |
+|---|---|---|
+| `user` | `string` | User ID or email |
+
+```php
+$context->addEventListener('user.logout', function (array $payload): void {
+    // e.g., clean up temporary data
+});
+```
+
+### `extension.enabled`
+
+Fired after an extension is enabled.
+
+| Key | Type | Description |
+|---|---|---|
+| `id` | `string` | Extension ID (e.g. `vendor/name`) |
+
+### `extension.disabled`
+
+Fired after an extension is disabled.
+
+| Key | Type | Description |
+|---|---|---|
+| `id` | `string` | Extension ID (e.g. `vendor/name`) |
 
 ## Listener Isolation
 

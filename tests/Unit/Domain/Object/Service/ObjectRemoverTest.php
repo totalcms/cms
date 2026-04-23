@@ -49,6 +49,7 @@ final class ObjectRemoverTest extends TestCase
 			$this->collectionFetcher,
 			$this->collectionSaver,
 			$this->viewUpdateScheduler,
+			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
 		);
 	}
 

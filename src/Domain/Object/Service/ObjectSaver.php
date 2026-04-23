@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -20,7 +22,7 @@ readonly class ObjectSaver
 		private CollectionSaver $collectionSaver,
 		private DataViewUpdateScheduler $viewUpdateScheduler,
 		private DateFieldResetter $dateFieldResetter,
-		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -52,7 +54,7 @@ readonly class ObjectSaver
 
 		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
 
-		$this->eventDispatcher?->dispatch('object.created', [
+		$this->eventDispatcher->dispatch('object.created', [
 			'collection' => $collection,
 			'id'         => $object->id,
 		]);

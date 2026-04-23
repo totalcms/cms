@@ -58,7 +58,7 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Extension\Event\EventDispatcher;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -869,6 +869,7 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(LoggerFactory::class),
 		$container->get(PersistentLoginService::class),
+		$container->get(EventDispatcher::class),
 	),
 
 	// License Services

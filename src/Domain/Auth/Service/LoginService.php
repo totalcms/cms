@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+
 use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -19,6 +21,7 @@ class LoginService
 		private readonly FirstLoginChecker $firstLoginChecker,
 		private readonly LoggerFactory $loggerFactory,
 		private readonly Config $config,
+		private readonly EventDispatcher $eventDispatcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger('login');
 	}
@@ -68,6 +71,10 @@ class LoginService
 		$this->updateService->updateLoginDate($collection, $user['id']);
 
 		$this->logger->info("User {$this->account} logged in");
+
+		$this->eventDispatcher->dispatch('user.login', [
+			'user' => $user['id'] ?? $this->account,
+		]);
 
 		return $user;
 	}

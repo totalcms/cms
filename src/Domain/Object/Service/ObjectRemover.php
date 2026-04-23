@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
@@ -24,7 +26,7 @@ readonly class ObjectRemover
 		private CollectionFetcher $collectionFetcher,
 		private CollectionSaver $collectionSaver,
 		private DataViewUpdateScheduler $viewUpdateScheduler,
-		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -49,7 +51,7 @@ readonly class ObjectRemover
 
 			$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
 
-			$this->eventDispatcher?->dispatch('object.deleted', [
+			$this->eventDispatcher->dispatch('object.deleted', [
 				'collection' => $collection,
 				'id'         => $id,
 			]);

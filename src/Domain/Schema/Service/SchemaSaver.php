@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -16,7 +18,7 @@ readonly class SchemaSaver
 		private IndexBuilder $indexBuilder,
 		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
-		private ?\TotalCMS\Domain\Extension\Event\EventDispatcher $eventDispatcher = null,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -89,7 +91,7 @@ readonly class SchemaSaver
 
 		$this->storage->saveSchema($schema);
 
-		$this->eventDispatcher?->dispatch('schema.saved', [
+		$this->eventDispatcher->dispatch('schema.saved', [
 			'schema' => $schema->id,
 		]);
 

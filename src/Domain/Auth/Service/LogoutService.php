@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -17,6 +19,7 @@ readonly class LogoutService
 		private PhpSession $session,
 		private LoggerFactory $loggerFactory,
 		private PersistentLoginService $persistentLoginService,
+		private EventDispatcher $eventDispatcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('logout');
 	}
@@ -32,6 +35,10 @@ readonly class LogoutService
 		if ($persistentLogin) {
 			$this->persistentLoginService->clearPersistentLogin();
 		}
+
+		$this->eventDispatcher->dispatch('user.logout', [
+			'user' => $user,
+		]);
 
 		$this->session->clear();
 		$this->session->destroy();

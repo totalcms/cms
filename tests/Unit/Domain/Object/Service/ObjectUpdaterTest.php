@@ -47,6 +47,7 @@ final class ObjectUpdaterTest extends TestCase
 			$this->propertyProcessor,
 			$this->collectionSaver,
 			$this->viewUpdateScheduler,
+			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
 		);
 	}
 

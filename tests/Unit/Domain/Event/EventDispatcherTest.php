@@ -1,7 +1,7 @@
 <?php
 
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Extension\Event\EventDispatcher;
+use TotalCMS\Domain\Event\EventDispatcher;
 
 describe('EventDispatcher', function (): void {
 	test('dispatches event to registered listener', function (): void {

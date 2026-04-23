@@ -186,12 +186,18 @@ final class ExtensionManager
 			$this->registerExtensionSchemas();
 		}
 
+		// Register extension field types in the schema property editor
+		$extFieldTypes = $this->getAllFieldTypes();
+		if ($extFieldTypes !== []) {
+			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldTypes(array_keys($extFieldTypes));
+		}
+
 		// Wire event listeners from extensions into the EventDispatcher
-		if ($this->container->has(\TotalCMS\Domain\Extension\Event\EventDispatcher::class)) {
+		if ($this->container->has(\TotalCMS\Domain\Event\EventDispatcher::class)) {
 			$eventListeners = $this->getAllEventListeners();
 			if ($eventListeners !== []) {
-				/** @var \TotalCMS\Domain\Extension\Event\EventDispatcher $dispatcher */
-				$dispatcher = $this->container->get(\TotalCMS\Domain\Extension\Event\EventDispatcher::class);
+				/** @var \TotalCMS\Domain\Event\EventDispatcher $dispatcher */
+				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\EventDispatcher::class);
 				$dispatcher->registerAll($eventListeners);
 			}
 		}
@@ -255,6 +261,7 @@ final class ExtensionManager
 		}
 
 		$this->stateRepository->saveState($extensionId, $state);
+		$this->dispatchEvent('extension.enabled', ['id' => $extensionId]);
 	}
 
 	public function disable(string $extensionId): void
@@ -264,6 +271,7 @@ final class ExtensionManager
 			$state->enabled = false;
 			$state->error   = null;
 			$this->stateRepository->saveState($extensionId, $state);
+			$this->dispatchEvent('extension.disabled', ['id' => $extensionId]);
 		}
 	}
 
@@ -392,6 +400,22 @@ final class ExtensionManager
 	// -------------------------------------------------------------------------
 	// Internal
 	// -------------------------------------------------------------------------
+
+	/**
+	 * @param array<string,mixed> $payload
+	 */
+	private function dispatchEvent(string $event, array $payload): void
+	{
+		try {
+			if ($this->container->has(\TotalCMS\Domain\Event\EventDispatcher::class)) {
+				/** @var \TotalCMS\Domain\Event\EventDispatcher $dispatcher */
+				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\EventDispatcher::class);
+				$dispatcher->dispatch($event, $payload);
+			}
+		} catch (\Throwable) {
+			// Don't let event dispatch failures affect extension management
+		}
+	}
 
 	private function registerExtensionSchemas(): void
 	{

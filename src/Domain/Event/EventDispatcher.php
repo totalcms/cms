@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Extension\Event;
+namespace TotalCMS\Domain\Event;
 
 use Psr\Log\LoggerInterface;
 
