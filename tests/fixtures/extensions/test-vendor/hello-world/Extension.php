@@ -63,6 +63,30 @@ class Extension implements ExtensionInterface
 			}
 		};
 		$context->addCommand($helloCmd);
+
+		// API route (DualAuth)
+		$context->addRoutes(function (\Slim\Routing\RouteCollectorProxy $group): void {
+			$group->get('/api/data', function ($request, $response) {
+				$response->getBody()->write('{"ok":true}');
+				return $response;
+			});
+		});
+
+		// Public route (no auth)
+		$context->addPublicRoutes(function (\Slim\Routing\RouteCollectorProxy $group): void {
+			$group->post('/webhook', function ($request, $response) {
+				$response->getBody()->write('received');
+				return $response;
+			});
+		});
+
+		// Admin route (full admin auth)
+		$context->addAdminRoutes(function (\Slim\Routing\RouteCollectorProxy $group): void {
+			$group->get('/dashboard', function ($request, $response) {
+				$response->getBody()->write('admin page');
+				return $response;
+			});
+		});
 	}
 
 	public function boot(ExtensionContext $context): void

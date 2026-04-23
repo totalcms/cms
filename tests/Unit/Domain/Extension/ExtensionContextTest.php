@@ -138,6 +138,69 @@ describe('ExtensionContext', function (): void {
 		expect($defs)->toHaveKey('App\\Service');
 	});
 
+	test('registers and retrieves public routes', function (): void {
+		$ctx    = createTestContext();
+		$called = false;
+
+		$ctx->addPublicRoutes(function () use (&$called): void {
+			$called = true;
+		});
+
+		$routes = $ctx->getRegisteredPublicRoutes();
+		expect($routes)->toHaveCount(1);
+
+		$routes[0]();
+		expect($called)->toBeTrue();
+	});
+
+	test('registers and retrieves admin routes', function (): void {
+		$ctx    = createTestContext();
+		$called = false;
+
+		$ctx->addAdminRoutes(function () use (&$called): void {
+			$called = true;
+		});
+
+		$routes = $ctx->getRegisteredAdminRoutes();
+		expect($routes)->toHaveCount(1);
+
+		$routes[0]();
+		expect($called)->toBeTrue();
+	});
+
+	test('keeps API, public, and admin routes separate', function (): void {
+		$ctx = createTestContext();
+
+		$ctx->addRoutes(fn () => null);
+		$ctx->addRoutes(fn () => null);
+		$ctx->addPublicRoutes(fn () => null);
+		$ctx->addAdminRoutes(fn () => null);
+		$ctx->addAdminRoutes(fn () => null);
+		$ctx->addAdminRoutes(fn () => null);
+
+		expect($ctx->getRegisteredRoutes())->toHaveCount(2);
+		expect($ctx->getRegisteredPublicRoutes())->toHaveCount(1);
+		expect($ctx->getRegisteredAdminRoutes())->toHaveCount(3);
+	});
+
+	test('admin nav item encodes raw SVG icon', function (): void {
+		$item = new AdminNavItem(
+			label: 'Test',
+			icon: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="black"/></svg>',
+			url: '/admin/ext/test/dashboard',
+		);
+
+		expect($item->icon)->toContain('<svg');
+		expect($item->label)->toBe('Test');
+		expect($item->slug())->toBe('admin/ext/test/dashboard');
+	});
+
+	test('admin nav item defaults to empty icon', function (): void {
+		$item = new AdminNavItem(label: 'Test');
+
+		expect($item->icon)->toBe('');
+	});
+
 	test('starts with empty registrations', function (): void {
 		$ctx = createTestContext();
 
@@ -146,6 +209,8 @@ describe('ExtensionContext', function (): void {
 		expect($ctx->getRegisteredTwigGlobals())->toBe([]);
 		expect($ctx->getRegisteredCommands())->toBe([]);
 		expect($ctx->getRegisteredRoutes())->toBe([]);
+		expect($ctx->getRegisteredPublicRoutes())->toBe([]);
+		expect($ctx->getRegisteredAdminRoutes())->toBe([]);
 		expect($ctx->getRegisteredAdminNavItems())->toBe([]);
 		expect($ctx->getRegisteredDashboardWidgets())->toBe([]);
 		expect($ctx->getRegisteredFieldTypes())->toBe([]);
