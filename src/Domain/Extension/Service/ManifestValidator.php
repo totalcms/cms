@@ -12,23 +12,6 @@ use TotalCMS\Support\Version;
  */
 final class ManifestValidator
 {
-	/** @var list<string> */
-	private const VALID_PERMISSIONS = [
-		'twig:functions',
-		'twig:filters',
-		'twig:globals',
-		'cli:commands',
-		'routes:api',
-		'routes:admin',
-		'admin:nav',
-		'admin:widgets',
-		'events:listen',
-		'fields:register',
-		'settings:read',
-		'settings:write',
-		'container:definitions',
-	];
-
 	/**
 	 * Validate a manifest. Returns null if valid, or an error message.
 	 */
@@ -54,13 +37,6 @@ final class ManifestValidator
 		// Validate version format
 		if (!preg_match('/^\d+\.\d+\.\d+/', $manifest->version)) {
 			return "Invalid version '{$manifest->version}': must be semver (e.g. 1.0.0)";
-		}
-
-		// Validate permissions
-		foreach ($manifest->permissions as $permission) {
-			if (!in_array($permission, self::VALID_PERMISSIONS, true)) {
-				return "Unknown permission '{$permission}'";
-			}
 		}
 
 		// Validate minEdition

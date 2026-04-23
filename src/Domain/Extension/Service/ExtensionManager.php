@@ -122,20 +122,26 @@ final class ExtensionManager
 
 		// Collect extension routes into lookup tables (dispatched by static route handlers)
 		foreach ($this->contexts as $id => $context) {
+			$state = $this->stateRepository->getState($id);
+
 			$extRoutes = [];
 
 			// Authenticated API routes
-			foreach ($context->getRegisteredRoutes() as $registrar) {
-				$collector = new RouteCollector(isPublic: false);
-				$registrar($collector);
-				$extRoutes = array_merge($extRoutes, $collector->getRoutes());
+			if ($state === null || $state->isPermitted('routes:api')) {
+				foreach ($context->getRegisteredRoutes() as $registrar) {
+					$collector = new RouteCollector(isPublic: false);
+					$registrar($collector);
+					$extRoutes = array_merge($extRoutes, $collector->getRoutes());
+				}
 			}
 
 			// Public routes
-			foreach ($context->getRegisteredPublicRoutes() as $registrar) {
-				$collector = new RouteCollector(isPublic: true);
-				$registrar($collector);
-				$extRoutes = array_merge($extRoutes, $collector->getRoutes());
+			if ($state === null || $state->isPermitted('routes:public')) {
+				foreach ($context->getRegisteredPublicRoutes() as $registrar) {
+					$collector = new RouteCollector(isPublic: true);
+					$registrar($collector);
+					$extRoutes = array_merge($extRoutes, $collector->getRoutes());
+				}
 			}
 
 			if ($extRoutes !== []) {
@@ -143,15 +149,17 @@ final class ExtensionManager
 			}
 
 			// Admin routes
-			$adminRoutes = [];
-			foreach ($context->getRegisteredAdminRoutes() as $registrar) {
-				$collector = new RouteCollector(isPublic: false);
-				$registrar($collector);
-				$adminRoutes = array_merge($adminRoutes, $collector->getRoutes());
-			}
+			if ($state === null || $state->isPermitted('routes:admin')) {
+				$adminRoutes = [];
+				foreach ($context->getRegisteredAdminRoutes() as $registrar) {
+					$collector = new RouteCollector(isPublic: false);
+					$registrar($collector);
+					$adminRoutes = array_merge($adminRoutes, $collector->getRoutes());
+				}
 
-			if ($adminRoutes !== []) {
-				$this->extensionAdminRoutes[$id] = $adminRoutes;
+				if ($adminRoutes !== []) {
+					$this->extensionAdminRoutes[$id] = $adminRoutes;
+				}
 			}
 		}
 
@@ -260,16 +268,38 @@ final class ExtensionManager
 
 	public function enable(string $extensionId): void
 	{
+		$manifest = $this->discoveredManifests[$extensionId] ?? null;
+
+		// Detect capabilities by doing a trial register
+		$capabilities = $this->detectCapabilities($extensionId);
+
 		$state = $this->stateRepository->getState($extensionId);
 		if (!$state instanceof ExtensionState) {
 			$state = new ExtensionState(
 				enabled: true,
 				installedAt: date('c'),
-				version: $this->discoveredManifests[$extensionId]->version ?? '0.0.0',
+				version: $manifest->version ?? '0.0.0',
+				permissions: $capabilities,
 			);
 		} else {
 			$state->enabled = true;
 			$state->error   = null;
+
+			// On first enable (no permissions set yet), turn on all detected capabilities.
+			// On re-enable, preserve the user's existing permission choices but add
+			// any new capabilities the extension may have gained.
+			if ($state->permissions === []) {
+				$state->permissions = $capabilities;
+			} else {
+				// Add new capabilities as ON, keep existing choices
+				foreach ($capabilities as $cap => $val) {
+					if (!isset($state->permissions[$cap])) {
+						$state->permissions[$cap] = true;
+					}
+				}
+				// Remove capabilities the extension no longer uses
+				$state->permissions = array_intersect_key($state->permissions, $capabilities);
+			}
 		}
 
 		$this->stateRepository->saveState($extensionId, $state);
@@ -301,15 +331,142 @@ final class ExtensionManager
 		}
 	}
 
+	/**
+	 * Update permissions for an extension.
+	 *
+	 * @param array<string,bool> $permissions
+	 */
+	public function savePermissions(string $extensionId, array $permissions): void
+	{
+		$state = $this->stateRepository->getState($extensionId);
+		if (!$state instanceof ExtensionState) {
+			return;
+		}
+
+		$state->permissions = $permissions;
+		$this->stateRepository->saveState($extensionId, $state);
+	}
+
+	/**
+	 * Get the permissions for an extension.
+	 *
+	 * @return array<string,bool>
+	 */
+	public function getPermissions(string $extensionId): array
+	{
+		$state = $this->stateRepository->getState($extensionId);
+
+		return $state instanceof ExtensionState ? $state->permissions : [];
+	}
+
+	/**
+	 * Get detected capabilities for an extension that is currently loaded.
+	 *
+	 * @return array<string,bool>
+	 */
+	public function getCapabilities(string $extensionId): array
+	{
+		$context = $this->contexts[$extensionId] ?? null;
+		if ($context !== null) {
+			return $context->getCapabilities();
+		}
+
+		// Fall back to stored permissions (which reflect what was detected at enable time)
+		return $this->getPermissions($extensionId);
+	}
+
+	/**
+	 * Save form data from the extension settings page.
+	 *
+	 * Separates permission fields (perm_*) from custom settings,
+	 * saves permissions to state and custom settings to disk.
+	 *
+	 * @param array<string,mixed> $formData Raw form POST body (without framework fields)
+	 */
+	public function saveFormData(string $extensionId, array $formData): void
+	{
+		$permissions    = $this->getPermissions($extensionId);
+		$newPermissions = [];
+		$customSettings = [];
+
+		foreach ($formData as $key => $value) {
+			if (str_starts_with((string) $key, 'perm_')) {
+				$capability = str_replace('_', ':', substr((string) $key, 5));
+				if (isset($permissions[$capability])) {
+					$newPermissions[$capability] = $value === '1' || $value === 'on' || $value === 'true' || $value === true;
+				}
+			} else {
+				$customSettings[$key] = $value;
+			}
+		}
+
+		// Save permissions — unchecked toggles won't be submitted, so default to false
+		if ($newPermissions !== [] || $permissions !== []) {
+			$mergedPermissions = [];
+			foreach ($permissions as $cap => $current) {
+				$mergedPermissions[$cap] = $newPermissions[$cap] ?? false;
+			}
+			$this->savePermissions($extensionId, $mergedPermissions);
+		}
+
+		$this->settingsManager->saveSettings($extensionId, $customSettings);
+	}
+
+	/**
+	 * Build a list of all discovered extensions with their current state.
+	 *
+	 * Used by the admin UI to display the extensions management page.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	public function listExtensions(): array
+	{
+		$manifests        = $this->discovery->discover();
+		$states           = $this->stateRepository->loadAll();
+		$capabilityLabels = ExtensionContext::capabilityLabels();
+
+		$extensions = [];
+		foreach ($manifests as $id => $manifest) {
+			$state       = $states[$id] ?? null;
+			$enabled     = $state !== null && $state->enabled;
+			$permissions = $state !== null ? $state->permissions : [];
+
+			$capabilities = [];
+			foreach ($permissions as $cap => $capEnabled) {
+				if ($capEnabled) {
+					$capabilities[] = $capabilityLabels[$cap] ?? $cap;
+				}
+			}
+
+			$extensions[] = [
+				'id'           => $id,
+				'name'         => $manifest->name,
+				'description'  => $manifest->description,
+				'version'      => $manifest->version,
+				'author'       => $manifest->author,
+				'license'      => $manifest->license,
+				'capabilities' => $capabilities,
+				'enabled'      => $enabled,
+				'error'        => $state?->error,
+				'hasSettings'  => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
+			];
+		}
+
+		return $extensions;
+	}
+
 	// -------------------------------------------------------------------------
-	// Accessors for collected registrations
+	// Accessors for collected registrations (filtered by permissions)
 	// -------------------------------------------------------------------------
 
 	/** @return list<TwigFunction> */
 	public function getAllTwigFunctions(): array
 	{
 		$functions = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'twig:functions')) {
+				continue;
+			}
 			$functions = array_merge($functions, $context->getRegisteredTwigFunctions());
 		}
 
@@ -320,7 +477,10 @@ final class ExtensionManager
 	public function getAllTwigFilters(): array
 	{
 		$filters = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'twig:filters')) {
+				continue;
+			}
 			$filters = array_merge($filters, $context->getRegisteredTwigFilters());
 		}
 
@@ -331,7 +491,10 @@ final class ExtensionManager
 	public function getAllTwigGlobals(): array
 	{
 		$globals = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'twig:functions')) {
+				continue;
+			}
 			$globals = array_merge($globals, $context->getRegisteredTwigGlobals());
 		}
 
@@ -342,7 +505,10 @@ final class ExtensionManager
 	public function getAllCommands(): array
 	{
 		$commands = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'cli:commands')) {
+				continue;
+			}
 			$commands = array_merge($commands, $context->getRegisteredCommands());
 		}
 
@@ -353,7 +519,10 @@ final class ExtensionManager
 	public function getAllAdminNavItems(): array
 	{
 		$items = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'admin:nav')) {
+				continue;
+			}
 			$items = array_merge($items, $context->getRegisteredAdminNavItems());
 		}
 
@@ -366,7 +535,10 @@ final class ExtensionManager
 	public function getAllDashboardWidgets(): array
 	{
 		$widgets = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'admin:widgets')) {
+				continue;
+			}
 			$widgets = array_merge($widgets, $context->getRegisteredDashboardWidgets());
 		}
 
@@ -379,7 +551,10 @@ final class ExtensionManager
 	public function getAllFieldTypes(): array
 	{
 		$types = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'fields')) {
+				continue;
+			}
 			$types = array_merge($types, $context->getRegisteredFieldTypes());
 		}
 
@@ -397,6 +572,10 @@ final class ExtensionManager
 		$js  = [];
 
 		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'admin:assets')) {
+				continue;
+			}
+
 			$manifest = $this->discoveredManifests[$id] ?? null;
 			if ($manifest === null) {
 				continue;
@@ -421,7 +600,10 @@ final class ExtensionManager
 	public function getAllEventListeners(): array
 	{
 		$listeners = [];
-		foreach ($this->contexts as $context) {
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'events:listen')) {
+				continue;
+			}
 			foreach ($context->getRegisteredEventListeners() as $event => $eventListeners) {
 				foreach ($eventListeners as $listener) {
 					$listeners[$event][] = $listener;
@@ -491,6 +673,73 @@ final class ExtensionManager
 	// -------------------------------------------------------------------------
 
 	/**
+	 * Check if a capability is permitted for an extension.
+	 */
+	private function isCapabilityPermitted(string $extensionId, string $capability): bool
+	{
+		$state = $this->stateRepository->getState($extensionId);
+
+		return $state === null || $state->isPermitted($capability);
+	}
+
+	/**
+	 * Detect capabilities by doing a trial register of the extension.
+	 *
+	 * Used during enable() to discover what the extension actually registers
+	 * before any permissions exist.
+	 *
+	 * @return array<string,bool> Capability key => true for each detected capability
+	 */
+	private function detectCapabilities(string $extensionId): array
+	{
+		// If already loaded (e.g. during bootstrap), use the live context
+		$context = $this->contexts[$extensionId] ?? null;
+		if ($context !== null) {
+			return $context->getCapabilities();
+		}
+
+		$manifest = $this->discoveredManifests[$extensionId] ?? null;
+		if ($manifest === null) {
+			return [];
+		}
+
+		$extPath = $this->discovery->getExtensionPath($extensionId);
+		if ($extPath === null) {
+			return [];
+		}
+
+		// Load autoloader and entrypoint
+		$autoloadFile = $extPath . '/vendor/autoload.php';
+		if (is_file($autoloadFile)) {
+			require_once $autoloadFile;
+		}
+
+		$entrypointFile = $extPath . '/' . $manifest->entrypoint;
+		if (!is_file($entrypointFile)) {
+			return [];
+		}
+
+		require_once $entrypointFile;
+
+		$className = $this->resolveClassName($entrypointFile);
+		if ($className === null || !class_exists($className) || !is_subclass_of($className, ExtensionInterface::class)) {
+			return [];
+		}
+
+		try {
+			$extension  = new $className();
+			$trialCtx   = new ExtensionContext($manifest, $extPath, $this->container, $this->settingsManager, $this->logger);
+			$extension->register($trialCtx);
+
+			return $trialCtx->getCapabilities();
+		} catch (\Throwable $e) {
+			$this->logger->warning("Capability detection failed for '{$extensionId}': " . $e->getMessage());
+
+			return [];
+		}
+	}
+
+	/**
 	 * @param array<string,mixed> $payload
 	 */
 	private function dispatchEvent(string $event, array $payload): void
@@ -528,6 +777,10 @@ final class ExtensionManager
 		$schemaRepo = $this->container->get(\TotalCMS\Domain\Schema\Repository\SchemaRepository::class);
 
 		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'schemas')) {
+				continue;
+			}
+
 			$schemasDir = $context->extensionPath() . '/schemas';
 			if (is_dir($schemasDir)) {
 				$schemaRepo->registerExtensionSchemaDir($schemasDir);
@@ -610,12 +863,46 @@ final class ExtensionManager
 			$this->loadedExtensions[$id] = $extension;
 			$this->contexts[$id]         = $context;
 			$this->stateRepository->clearError($id);
+
+			// Update stored capabilities so they stay current with the extension code
+			$this->updateStoredCapabilities($id, $context);
 		} catch (\Throwable $e) {
 			$this->logger->error("Extension '{$id}' failed in register(): {$e->getMessage()}", [
 				'exception' => $e,
 			]);
 			$this->stateRepository->recordError($id, 'register() failed: ' . $e->getMessage());
 		}
+	}
+
+	/**
+	 * After a successful register(), update stored permissions to reflect
+	 * the extension's current capabilities. New capabilities default to ON,
+	 * removed capabilities are pruned, existing choices are preserved.
+	 */
+	private function updateStoredCapabilities(string $id, ExtensionContext $context): void
+	{
+		$state = $this->stateRepository->getState($id);
+		if (!$state instanceof ExtensionState) {
+			return;
+		}
+
+		$capabilities = $context->getCapabilities();
+
+		if ($state->permissions === []) {
+			// First run — set all detected capabilities to ON
+			$state->permissions = $capabilities;
+		} else {
+			// Add new capabilities as ON, preserve existing choices
+			foreach ($capabilities as $cap => $val) {
+				if (!isset($state->permissions[$cap])) {
+					$state->permissions[$cap] = true;
+				}
+			}
+			// Remove capabilities the extension no longer uses
+			$state->permissions = array_intersect_key($state->permissions, $capabilities);
+		}
+
+		$this->stateRepository->saveState($id, $state);
 	}
 
 	/**

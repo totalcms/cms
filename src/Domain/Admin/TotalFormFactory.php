@@ -12,7 +12,9 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -75,6 +77,7 @@ readonly class TotalFormFactory
 		private TranslationService $translationService,
 		private ExtensionDiscovery $extensionDiscovery,
 		private ExtensionSettingsManager $extensionSettingsManager,
+		private ExtensionManager $extensionManager,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -886,43 +889,68 @@ readonly class TotalFormFactory
 
 	/**
 	 * Generate a settings form for an extension.
+	 *
+	 * Includes auto-generated permission toggles for each detected capability,
+	 * followed by the extension's custom settings (if a settings schema exists).
 	 */
 	public function extensionSettings(string $extensionId): string
 	{
-		$manifests = $this->extensionDiscovery->discover();
-		$manifest  = $manifests[$extensionId] ?? null;
+		$formfields  = $this->buildPermissionToggles($extensionId);
+		$formfields .= $this->buildExtensionSettingsFields($extensionId, $formfields !== '');
 
-		if ($manifest === null || $manifest->settingsSchema === null) {
-			return '<p class="error">No settings schema found for this extension.</p>';
+		if ($formfields === '') {
+			return '<p>This extension has no configurable settings.</p>';
 		}
 
-		$extPath    = $this->extensionDiscovery->getExtensionPath($extensionId);
-		$schemaFile = $extPath . '/' . $manifest->settingsSchema;
+		return $this->totalform('/admin/extensions/' . $extensionId . '/settings', $formfields, [
+			'method' => 'POST',
+			'save'   => 'Save Settings',
+			'class'  => 'help-on-hover help-box',
+		]);
+	}
 
-		if ($extPath === null || !is_file($schemaFile)) {
-			return '<p class="error">Settings schema file not found.</p>';
+	private function buildPermissionToggles(string $extensionId): string
+	{
+		$permissions      = $this->extensionManager->getPermissions($extensionId);
+		$capabilityLabels = ExtensionContext::capabilityLabels();
+
+		if ($permissions === []) {
+			return '';
 		}
 
-		$schemaJson = file_get_contents($schemaFile);
-		if ($schemaJson === false) {
-			return '<p class="error">Failed to read settings schema.</p>';
+		$toggles = '';
+		foreach ($permissions as $capability => $enabled) {
+			$label    = $capabilityLabels[$capability] ?? $capability;
+			$toggles .= $this->field('toggle', 'perm_' . str_replace(':', '_', $capability), [
+				'field' => 'toggle',
+				'label' => $label,
+				'value' => $enabled,
+			]);
 		}
 
-		$schema = json_decode($schemaJson, true);
-		if (!is_array($schema) || !isset($schema['properties']) || !is_array($schema['properties'])) {
-			return '<p class="error">Invalid settings schema.</p>';
+		return '<fieldset class="ext-permissions">'
+			. '<legend>Permissions</legend>'
+			. '<div class="ext-permissions-grid">' . $toggles . '</div>'
+			. '</fieldset>';
+	}
+
+	private function buildExtensionSettingsFields(string $extensionId, bool $hasPermissions): string
+	{
+		$schema = $this->loadExtensionSettingsSchema($extensionId);
+		if ($schema === null) {
+			return '';
 		}
 
 		$settings   = $this->extensionSettingsManager->getSettings($extensionId);
 		$formfields = '';
 
-		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
-			$fieldType = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
+		if ($hasPermissions) {
+			$formfields .= '<h3 style="margin:2rem 0 0.5rem;">Settings</h3>';
+		}
 
-			$currentValue = $fieldSchema['default'] ?? '';
-			if (isset($settings[$fieldName])) {
-				$currentValue = $settings[$fieldName];
-			}
+		foreach ($schema as $fieldName => $fieldSchema) {
+			$fieldType    = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
+			$currentValue = $settings[$fieldName] ?? $fieldSchema['default'] ?? '';
 
 			if ($fieldType === 'json' && is_array($currentValue)) {
 				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
@@ -947,11 +975,44 @@ readonly class TotalFormFactory
 			$formfields .= $this->field($fieldType, $fieldName, $fieldSettings);
 		}
 
-		return $this->totalform('/admin/extensions/' . $extensionId . '/settings', $formfields, [
-			'method' => 'POST',
-			'save'   => 'Save Settings',
-			'class'  => 'help-on-hover help-box',
-		]);
+		return $formfields;
+	}
+
+	/**
+	 * Load and validate the settings schema properties for an extension.
+	 *
+	 * @return array<string,array<string,mixed>>|null
+	 */
+	private function loadExtensionSettingsSchema(string $extensionId): ?array
+	{
+		$manifests = $this->extensionDiscovery->discover();
+		$manifest  = $manifests[$extensionId] ?? null;
+
+		if ($manifest === null || $manifest->settingsSchema === null) {
+			return null;
+		}
+
+		$extPath = $this->extensionDiscovery->getExtensionPath($extensionId);
+		if ($extPath === null) {
+			return null;
+		}
+
+		$schemaFile = $extPath . '/' . $manifest->settingsSchema;
+		if (!is_file($schemaFile)) {
+			return null;
+		}
+
+		$schemaJson = file_get_contents($schemaFile);
+		if ($schemaJson === false) {
+			return null;
+		}
+
+		$schema = json_decode($schemaJson, true);
+		if (!is_array($schema) || !isset($schema['properties']) || !is_array($schema['properties'])) {
+			return null;
+		}
+
+		return $schema['properties'];
 	}
 
 	/**

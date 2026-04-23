@@ -37,12 +37,12 @@
 				</div>
 				{% endif %}
 
-				{% if ext.permissions %}
+				{% if ext.capabilities %}
 				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
-					<strong>Permissions:</strong>
+					<strong>Capabilities:</strong>
 					<div class="dash-badge-group">
-						{% for perm in ext.permissions %}
-						<span class="dash-badge accent">{{ perm }}</span>
+						{% for cap in ext.capabilities %}
+						<span class="dash-badge accent">{{ cap }}</span>
 						{% endfor %}
 					</div>
 				</div>

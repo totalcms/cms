@@ -6,7 +6,6 @@
     "requires": {
         "totalcms": ">=3.0.0"
     },
-    "permissions": [],
     "entrypoint": "Extension.php",
     "license": "MIT"
 }

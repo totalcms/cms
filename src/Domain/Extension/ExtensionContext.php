@@ -350,4 +350,86 @@ final class ExtensionContext
 	{
 		return $this->containerDefinitions;
 	}
+
+	// -------------------------------------------------------------------------
+	// Capability detection
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Capability keys and their human-readable labels.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function capabilityLabels(): array
+	{
+		return [
+			'twig:functions' => 'Twig Functions',
+			'twig:filters'   => 'Twig Filters',
+			'routes:api'     => 'API Routes',
+			'routes:public'  => 'Public Routes',
+			'routes:admin'   => 'Admin Pages',
+			'cli:commands'   => 'CLI Commands',
+			'admin:nav'      => 'Admin Navigation',
+			'admin:widgets'  => 'Dashboard Widgets',
+			'admin:assets'   => 'Admin Assets',
+			'events:listen'  => 'Event Listeners',
+			'fields'         => 'Custom Fields',
+			'schemas'        => 'Schemas',
+			'container'      => 'Container Definitions',
+		];
+	}
+
+	/**
+	 * Detect which capabilities this extension actually registered.
+	 *
+	 * Returns only capabilities that have at least one registration.
+	 *
+	 * @return array<string,bool> Capability key => true
+	 */
+	public function getCapabilities(): array
+	{
+		$caps = [];
+
+		if ($this->twigFunctions !== []) {
+			$caps['twig:functions'] = true;
+		}
+		if ($this->twigFilters !== []) {
+			$caps['twig:filters'] = true;
+		}
+		if ($this->twigGlobals !== []) {
+			$caps['twig:globals'] = true;
+		}
+		if ($this->commands !== []) {
+			$caps['cli:commands'] = true;
+		}
+		if ($this->routes !== []) {
+			$caps['routes:api'] = true;
+		}
+		if ($this->publicRoutes !== []) {
+			$caps['routes:public'] = true;
+		}
+		if ($this->adminRoutes !== []) {
+			$caps['routes:admin'] = true;
+		}
+		if ($this->adminNavItems !== []) {
+			$caps['admin:nav'] = true;
+		}
+		if ($this->dashboardWidgets !== []) {
+			$caps['admin:widgets'] = true;
+		}
+		if ($this->adminAssets !== []) {
+			$caps['admin:assets'] = true;
+		}
+		if ($this->eventListeners !== []) {
+			$caps['events:listen'] = true;
+		}
+		if ($this->fieldTypes !== []) {
+			$caps['fields'] = true;
+		}
+		if ($this->containerDefinitions !== []) {
+			$caps['container'] = true;
+		}
+
+		return $caps;
+	}
 }

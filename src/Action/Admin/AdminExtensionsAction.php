@@ -6,8 +6,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
-use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -17,8 +16,7 @@ readonly class AdminExtensionsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
-		private ExtensionDiscovery $discovery,
-		private ExtensionStateRepository $stateRepository,
+		private ExtensionManager $manager,
 	) {
 	}
 
@@ -30,26 +28,6 @@ readonly class AdminExtensionsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$manifests = $this->discovery->discover();
-		$states    = $this->stateRepository->loadAll();
-
-		$extensions = [];
-		foreach ($manifests as $id => $manifest) {
-			$state        = $states[$id] ?? null;
-			$extensions[] = [
-				'id'              => $id,
-				'name'            => $manifest->name,
-				'description'     => $manifest->description,
-				'version'         => $manifest->version,
-				'author'          => $manifest->author,
-				'license'         => $manifest->license,
-				'permissions'     => $manifest->permissions,
-				'enabled'         => $state !== null && $state->enabled,
-				'error'           => $state?->error,
-				'hasSettings'     => $manifest->settingsSchema !== null,
-			];
-		}
-
 		return $this->twigRenderer->template($response, 'admin/extensions.twig', [
 			'url' => [
 				'path'   => $request->getUri()->getPath(),
@@ -57,7 +35,7 @@ readonly class AdminExtensionsAction
 				'params' => $args,
 				'page'   => 'extensions',
 			],
-			'extensions' => $extensions,
+			'extensions' => $this->manager->listExtensions(),
 		]);
 	}
 }

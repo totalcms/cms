@@ -6,8 +6,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
-use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -16,8 +15,7 @@ use TotalCMS\Renderer\JsonRenderer;
 readonly class ExtensionSettingsSaveAction
 {
 	public function __construct(
-		private ExtensionDiscovery $discovery,
-		private ExtensionSettingsManager $settingsManager,
+		private ExtensionManager $manager,
 		private JsonRenderer $renderer,
 	) {
 	}
@@ -32,17 +30,15 @@ readonly class ExtensionSettingsSaveAction
 	): ResponseInterface {
 		$extensionId = $args['extension'] ?? '';
 
-		$manifests = $this->discovery->discover();
+		$manifests = $this->manager->getDiscoveredManifests();
 		if (!isset($manifests[$extensionId])) {
 			return $this->renderer->json($response, ['error' => 'Extension not found'])->withStatus(404);
 		}
 
 		$body = (array) $request->getParsedBody();
-
-		// Remove framework fields
 		unset($body['_csrf_token'], $body['_method']);
 
-		$this->settingsManager->saveSettings($extensionId, $body);
+		$this->manager->saveFormData($extensionId, $body);
 
 		return $this->renderer->json($response, [
 			'status'  => 'success',

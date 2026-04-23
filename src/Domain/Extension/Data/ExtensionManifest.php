@@ -15,7 +15,6 @@ final readonly class ExtensionManifest
 	 * @param string               $description    Short description
 	 * @param string               $version        Semver version
 	 * @param array<string,string> $requires       version constraints: totalcms, php, etc
-	 * @param array<int,string>    $permissions     Permission identifiers
 	 * @param string               $entrypoint     Relative path to the ExtensionInterface class
 	 * @param string|null          $settingsSchema  Relative path to settings JSON schema
 	 * @param string               $minEdition      Minimum edition required (lite, standard, pro)
@@ -28,7 +27,6 @@ final readonly class ExtensionManifest
 		public string $description,
 		public string $version,
 		public array $requires,
-		public array $permissions,
 		public string $entrypoint,
 		public ?string $settingsSchema,
 		public string $minEdition,
@@ -48,7 +46,6 @@ final readonly class ExtensionManifest
 			description: (string)($data['description'] ?? ''),
 			version: (string)($data['version'] ?? '0.0.0'),
 			requires: is_array($data['requires'] ?? null) ? $data['requires'] : [],
-			permissions: is_array($data['permissions'] ?? null) ? $data['permissions'] : [],
 			entrypoint: (string)($data['entrypoint'] ?? 'Extension.php'),
 			settingsSchema: isset($data['settings_schema']) ? (string)$data['settings_schema'] : null,
 			minEdition: (string)($data['min_edition'] ?? 'lite'),
@@ -75,11 +72,6 @@ final readonly class ExtensionManifest
 		$extensions = $this->requires['extensions'] ?? [];
 
 		return is_array($extensions) ? $extensions : [];
-	}
-
-	public function hasPermission(string $permission): bool
-	{
-		return in_array($permission, $this->permissions, true);
 	}
 
 	public function vendor(): string

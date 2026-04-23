@@ -839,3 +839,41 @@ pre {
 		}
 	}
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Extension permissions fieldset
+// ─────────────────────────────────────────────────────────────────────────────
+.ext-permissions {
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.25rem;
+	margin        : 0;
+
+	legend {
+		font-weight : 600;
+		font-size   : 0.95rem;
+		padding     : 0 0.5rem;
+	}
+
+	.ext-permissions-grid {
+		display               : grid;
+		grid-template-columns : repeat(auto-fill, minmax(200px, 1fr));
+		gap                   : 0.75rem;
+
+		// Compact toggle style inside the grid
+		.field-wrapper {
+			margin  : 0;
+			padding : 0.5rem 0.75rem;
+			background    : oklch(var(--totalform-nearwhite) / 0.5);
+			border-radius : var(--totalform-radius);
+
+			label {
+				font-size : 0.85rem;
+			}
+
+			.help {
+				display : none;
+			}
+		}
+	}
+}

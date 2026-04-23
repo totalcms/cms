@@ -12,7 +12,6 @@ describe('ExtensionManifest', function (): void {
 			'description' => 'A test extension',
 			'version'     => '1.0.0',
 			'requires'    => ['totalcms' => '>=3.3.0', 'php' => '>=8.2'],
-			'permissions' => ['twig:functions', 'cli:commands'],
 			'entrypoint'  => 'Extension.php',
 			'author'      => ['name' => 'Test', 'url' => 'https://example.com'],
 			'license'     => 'MIT',
@@ -21,7 +20,6 @@ describe('ExtensionManifest', function (): void {
 		expect($manifest->id)->toBe('vendor/my-ext');
 		expect($manifest->name)->toBe('My Extension');
 		expect($manifest->version)->toBe('1.0.0');
-		expect($manifest->permissions)->toBe(['twig:functions', 'cli:commands']);
 		expect($manifest->entrypoint)->toBe('Extension.php');
 		expect($manifest->settingsSchema)->toBeNull();
 		expect($manifest->minEdition)->toBe('lite');
@@ -47,7 +45,6 @@ describe('ExtensionManifest', function (): void {
 		expect($manifest->entrypoint)->toBe('Extension.php');
 		expect($manifest->license)->toBe('proprietary');
 		expect($manifest->minEdition)->toBe('lite');
-		expect($manifest->permissions)->toBe([]);
 		expect($manifest->requires)->toBe([]);
 	});
 
@@ -82,14 +79,5 @@ describe('ExtensionManifest', function (): void {
 		]);
 
 		expect($manifest->requiredExtensions())->toBe(['vendor/other' => '>=1.0.0']);
-	});
-
-	test('checks permissions', function (): void {
-		$manifest = ExtensionManifest::fromArray([
-			'permissions' => ['twig:functions', 'events:listen'],
-		]);
-
-		expect($manifest->hasPermission('twig:functions'))->toBeTrue();
-		expect($manifest->hasPermission('cli:commands'))->toBeFalse();
 	});
 });

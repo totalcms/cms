@@ -406,6 +406,7 @@ return [
 		$container->get(TranslationService::class),
 		$container->get(ExtensionDiscovery::class),
 		$container->get(ExtensionSettingsManager::class),
+		$container->get(ExtensionManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
