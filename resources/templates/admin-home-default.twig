@@ -48,6 +48,15 @@
 
 			{# Empty collections alert #}
 			{{ dashboard.emptyCollectionsAlert(emptyCollections) }}
+
+			{# Extension widgets (main area) #}
+			{% if extensionDashWidgets is defined %}
+				{% for widget in extensionDashWidgets %}
+					{% if widget.position == 'main' %}
+						{% include widget.template ignore missing %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
 		</div>
 
 		<div class="dashboard-sidebar">
@@ -62,6 +71,15 @@
 			{# System status #}
 			{% if cms.auth.isAdmin() %}
 				{{ dashboard.systemStatus(systemStatus) }}
+			{% endif %}
+
+			{# Extension widgets (sidebar) #}
+			{% if extensionDashWidgets is defined %}
+				{% for widget in extensionDashWidgets %}
+					{% if widget.position == 'sidebar' %}
+						{% include widget.template ignore missing %}
+					{% endif %}
+				{% endfor %}
 			{% endif %}
 		</div>
 	</div>

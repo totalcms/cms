@@ -36,6 +36,7 @@ use Twig\TwigFunction;
 readonly class TwigEngine
 {
 	private TwigEnvironment $twig;
+	private TwigFilesystemLoader $filesystemLoader;
 
 	public function __construct(
 		Config $config,
@@ -65,8 +66,8 @@ readonly class TwigEngine
 		$devModeActive  = $devModeManager->isDevModeActive();
 		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
-		$filesystemLoader = new TwigFilesystemLoader($paths);
-		$loader           = new DesignerAwareLoader($filesystemLoader, $this->designerPreprocessor);
+		$this->filesystemLoader = new TwigFilesystemLoader($paths);
+		$loader                 = new DesignerAwareLoader($this->filesystemLoader, $this->designerPreprocessor);
 		$this->twig       = new TwigEnvironment($loader, [
 			'cache'            => $cacheEnabled ? $cacheDir : false,
 			'debug'            => $config->debug || $devModeActive,
@@ -173,4 +174,13 @@ readonly class TwigEngine
 		}
 	}
 
+	/**
+	 * Register an extension's template directory as a namespaced Twig path.
+	 *
+	 * Templates are then accessible as @vendor-name/template.twig
+	 */
+	public function addExtensionTemplatePath(string $path, string $namespace): void
+	{
+		$this->filesystemLoader->addPath($path, $namespace);
+	}
 }

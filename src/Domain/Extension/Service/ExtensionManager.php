@@ -210,6 +210,18 @@ final class ExtensionManager
 				$this->getAllTwigGlobals(),
 			);
 
+			// Register extension template directories as Twig namespaces
+			foreach ($this->contexts as $id => $context) {
+				$templatesDir = $context->extensionPath() . '/templates';
+				if (is_dir($templatesDir)) {
+					$manifest  = $this->discoveredManifests[$id] ?? null;
+					$namespace = $manifest !== null
+						? $manifest->vendor() . '-' . $manifest->shortName()
+						: str_replace('/', '-', $id);
+					$twigEngine->addExtensionTemplatePath($templatesDir, $namespace);
+				}
+			}
+
 			// Pass extension nav items and widgets to templates as globals
 			$navItems = $this->getAllAdminNavItems();
 			$widgets  = $this->getAllDashboardWidgets();
