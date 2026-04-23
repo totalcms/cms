@@ -38,6 +38,12 @@ final class ExtensionContext
 	/** @var list<callable> */
 	private array $routes = [];
 
+	/** @var list<callable> */
+	private array $publicRoutes = [];
+
+	/** @var list<callable> */
+	private array $adminRoutes = [];
+
 	/** @var list<AdminNavItem> */
 	private array $adminNavItems = [];
 
@@ -174,13 +180,35 @@ final class ExtensionContext
 	}
 
 	/**
-	 * Register routes under the extension's namespace.
+	 * Register API routes under /ext/{vendor}/{name}/.
 	 *
-	 * The callable receives a RouteCollectorProxy scoped to /ext/{vendor}/{name}/.
+	 * These routes require authentication (session or API key).
 	 */
 	public function addRoutes(callable $registrar): void
 	{
 		$this->routes[] = $registrar;
+	}
+
+	/**
+	 * Register public routes under /ext/{vendor}/{name}/.
+	 *
+	 * These routes have NO authentication — use for webhooks, embeds,
+	 * and endpoints that must be accessible without credentials.
+	 */
+	public function addPublicRoutes(callable $registrar): void
+	{
+		$this->publicRoutes[] = $registrar;
+	}
+
+	/**
+	 * Register admin routes under /admin/ext/{vendor}/{name}/.
+	 *
+	 * These routes are protected by admin auth middleware.
+	 * Templates can extend admin-dashboard.twig for the admin layout.
+	 */
+	public function addAdminRoutes(callable $registrar): void
+	{
+		$this->adminRoutes[] = $registrar;
 	}
 
 	public function addAdminNavItem(AdminNavItem $item): void
@@ -259,6 +287,18 @@ final class ExtensionContext
 	public function getRegisteredRoutes(): array
 	{
 		return $this->routes;
+	}
+
+	/** @return list<callable> */
+	public function getRegisteredPublicRoutes(): array
+	{
+		return $this->publicRoutes;
+	}
+
+	/** @return list<callable> */
+	public function getRegisteredAdminRoutes(): array
+	{
+		return $this->adminRoutes;
 	}
 
 	/** @return list<AdminNavItem> */

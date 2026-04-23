@@ -1,0 +1,15 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<main class="dash-main-content" style="max-width:100%;">
+	<header>
+		<h1>{{ extTitle | default('Extension') }}</h1>
+	</header>
+
+	<section class="dash-content-section">
+		{{ extContent | raw }}
+	</section>
+</main>
+
+{% endblock %}

@@ -119,17 +119,44 @@ final class ExtensionManager
 
 		// Register extension routes
 		foreach ($this->contexts as $id => $context) {
+			$manifest = $this->discoveredManifests[$id] ?? null;
+			if ($manifest === null) {
+				continue;
+			}
+
+			$extPath = $manifest->vendor() . '/' . $manifest->shortName();
+
+			// API routes at /ext/{vendor}/{name}/ (session or API key auth)
 			$routes = $context->getRegisteredRoutes();
 			if ($routes !== []) {
-				$manifest = $this->discoveredManifests[$id] ?? null;
-				if ($manifest !== null) {
-					$routePrefix = '/ext/' . $manifest->vendor() . '/' . $manifest->shortName();
-					$app->group($routePrefix, function (RouteCollectorProxy $group) use ($routes): void {
-						foreach ($routes as $registrar) {
-							$registrar($group);
-						}
-					});
-				}
+				$app->group('/ext/' . $extPath, function (RouteCollectorProxy $group) use ($routes): void {
+					foreach ($routes as $registrar) {
+						$registrar($group);
+					}
+				})->add(\TotalCMS\Middleware\Auth\DualAuthMiddleware::class);
+			}
+
+			// Public routes at /ext/{vendor}/{name}/ (no auth)
+			$publicRoutes = $context->getRegisteredPublicRoutes();
+			if ($publicRoutes !== []) {
+				$app->group('/ext/' . $extPath, function (RouteCollectorProxy $group) use ($publicRoutes): void {
+					foreach ($publicRoutes as $registrar) {
+						$registrar($group);
+					}
+				});
+			}
+
+			// Admin routes at /admin/ext/{vendor}/{name}/ (full admin auth)
+			$adminRoutes = $context->getRegisteredAdminRoutes();
+			if ($adminRoutes !== []) {
+				$app->group('/admin/ext/' . $extPath, function (RouteCollectorProxy $group) use ($adminRoutes): void {
+					foreach ($adminRoutes as $registrar) {
+						$registrar($group);
+					}
+				})
+					->add(\TotalCMS\Middleware\Cache\VersionCheckMiddleware::class)
+					->add(\TotalCMS\Middleware\Auth\AuthMiddleware::class)
+					->add(\TotalCMS\Middleware\Response\NoCacheMiddleware::class);
 			}
 		}
 
