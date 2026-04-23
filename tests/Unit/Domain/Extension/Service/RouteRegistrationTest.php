@@ -2,11 +2,6 @@
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
-use Slim\Factory\AppFactory;
-use Slim\Routing\RouteCollectorProxy;
-use TotalCMS\Domain\Extension\Data\ExtensionManifest;
-use TotalCMS\Domain\Extension\ExtensionContext;
-use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -17,58 +12,56 @@ use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
 
 describe('Extension route registration', function (): void {
-	test('API routes are registered under /ext/{vendor}/{name}/', function (): void {
-		$app     = AppFactory::create();
+	test('API routes are matchable after boot', function (): void {
 		$manager = createRouteTestManager();
-
 		$manager->discoverAndRegister();
-		$manager->bootAll($app);
+		$manager->bootAll();
 
-		$routes     = $app->getRouteCollector()->getRoutes();
-		$patterns   = array_map(fn ($r) => $r->getPattern(), $routes);
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/api/data');
 
-		expect($patterns)->toContain('/ext/test-vendor/hello-world/api/data');
+		expect($match)->not->toBeNull();
+		expect($match->public)->toBeFalse();
 	});
 
-	test('public routes are registered under /ext/{vendor}/{name}/', function (): void {
-		$app     = AppFactory::create();
+	test('public routes are matchable after boot', function (): void {
 		$manager = createRouteTestManager();
-
 		$manager->discoverAndRegister();
-		$manager->bootAll($app);
+		$manager->bootAll();
 
-		$routes   = $app->getRouteCollector()->getRoutes();
-		$patterns = array_map(fn ($r) => $r->getPattern(), $routes);
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'POST', '/webhook');
 
-		expect($patterns)->toContain('/ext/test-vendor/hello-world/webhook');
+		expect($match)->not->toBeNull();
+		expect($match->public)->toBeTrue();
 	});
 
-	test('admin routes are registered under /admin/ext/{vendor}/{name}/', function (): void {
-		$app     = AppFactory::create();
+	test('admin routes are matchable after boot', function (): void {
 		$manager = createRouteTestManager();
-
 		$manager->discoverAndRegister();
-		$manager->bootAll($app);
+		$manager->bootAll();
 
-		$routes   = $app->getRouteCollector()->getRoutes();
-		$patterns = array_map(fn ($r) => $r->getPattern(), $routes);
+		$match = $manager->matchExtensionAdminRoute('test-vendor/hello-world', 'GET', '/dashboard');
 
-		expect($patterns)->toContain('/admin/ext/test-vendor/hello-world/dashboard');
+		expect($match)->not->toBeNull();
 	});
 
-	test('all three route types coexist', function (): void {
-		$app     = AppFactory::create();
+	test('unknown route returns null', function (): void {
 		$manager = createRouteTestManager();
-
 		$manager->discoverAndRegister();
-		$manager->bootAll($app);
+		$manager->bootAll();
 
-		$routes   = $app->getRouteCollector()->getRoutes();
-		$patterns = array_map(fn ($r) => $r->getPattern(), $routes);
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/nonexistent');
 
-		expect($patterns)->toContain('/ext/test-vendor/hello-world/api/data');
-		expect($patterns)->toContain('/ext/test-vendor/hello-world/webhook');
-		expect($patterns)->toContain('/admin/ext/test-vendor/hello-world/dashboard');
+		expect($match)->toBeNull();
+	});
+
+	test('disabled extension routes return null', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		$match = $manager->matchExtensionRoute('test-vendor/broken-ext', 'GET', '/anything');
+
+		expect($match)->toBeNull();
 	});
 });
 

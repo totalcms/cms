@@ -6,12 +6,11 @@ namespace TotalCMS\Domain\Extension\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Slim\App;
-use Slim\Routing\RouteCollectorProxy;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
+use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
@@ -32,6 +31,12 @@ final class ExtensionManager
 
 	/** @var array<string,ExtensionInterface> */
 	private array $loadedExtensions = [];
+
+	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool}>> */
+	private array $extensionRoutes = [];
+
+	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool}>> */
+	private array $extensionAdminRoutes = [];
 
 	private bool $registered = false;
 	private bool $booted     = false;
@@ -108,77 +113,45 @@ final class ExtensionManager
 	/**
 	 * Run the boot phase for all registered extensions.
 	 * Call this AFTER middleware and routes are registered.
-	 *
-	 * @param App<ContainerInterface> $app
 	 */
-	public function bootAll(App $app): void
+	public function bootAll(): void
 	{
 		if ($this->booted) {
 			return;
 		}
 
-		// Register extension routes
+		// Collect extension routes into lookup tables (dispatched by static route handlers)
 		foreach ($this->contexts as $id => $context) {
-			$manifest = $this->discoveredManifests[$id] ?? null;
-			if ($manifest === null) {
-				continue;
+			$extRoutes = [];
+
+			// Authenticated API routes
+			foreach ($context->getRegisteredRoutes() as $registrar) {
+				$collector = new RouteCollector(isPublic: false);
+				$registrar($collector);
+				$extRoutes = array_merge($extRoutes, $collector->getRoutes());
 			}
 
-			$extPath = $manifest->vendor() . '/' . $manifest->shortName();
-
-			// API routes at /ext/{vendor}/{name}/ (session or API key auth)
-			$routes = $context->getRegisteredRoutes();
-			if ($routes !== []) {
-				$app->group('/ext/' . $extPath, function (RouteCollectorProxy $group) use ($routes): void {
-					foreach ($routes as $registrar) {
-						$registrar($group);
-					}
-				})->add(\TotalCMS\Middleware\Auth\DualAuthMiddleware::class);
+			// Public routes
+			foreach ($context->getRegisteredPublicRoutes() as $registrar) {
+				$collector = new RouteCollector(isPublic: true);
+				$registrar($collector);
+				$extRoutes = array_merge($extRoutes, $collector->getRoutes());
 			}
 
-			// Public routes at /ext/{vendor}/{name}/ (no auth)
-			$publicRoutes = $context->getRegisteredPublicRoutes();
-			if ($publicRoutes !== []) {
-				$app->group('/ext/' . $extPath, function (RouteCollectorProxy $group) use ($publicRoutes): void {
-					foreach ($publicRoutes as $registrar) {
-						$registrar($group);
-					}
-				});
+			if ($extRoutes !== []) {
+				$this->extensionRoutes[$id] = $extRoutes;
 			}
 
-			// Static asset route at /ext/{vendor}/{name}/assets/ (no auth, serves files)
-			$assetsDir = $context->extensionPath() . '/assets';
-			if (is_dir($assetsDir)) {
-				$app->get('/ext/' . $extPath . '/assets/{file:.+}', function ($request, $response, $args) use ($assetsDir) {
-					$file = $assetsDir . '/' . $args['file'];
-
-					if (!is_file($file) || str_contains($args['file'], '..')) {
-						return $response->withStatus(404);
-					}
-
-					$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-					$mimeTypes = ['css' => 'text/css', 'js' => 'application/javascript', 'svg' => 'image/svg+xml', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'woff2' => 'font/woff2'];
-					$contentType = $mimeTypes[$ext] ?? 'application/octet-stream';
-
-					$response->getBody()->write((string) file_get_contents($file));
-
-					return $response
-						->withHeader('Content-Type', $contentType)
-						->withHeader('Cache-Control', 'public, max-age=86400');
-				});
+			// Admin routes
+			$adminRoutes = [];
+			foreach ($context->getRegisteredAdminRoutes() as $registrar) {
+				$collector = new RouteCollector(isPublic: false);
+				$registrar($collector);
+				$adminRoutes = array_merge($adminRoutes, $collector->getRoutes());
 			}
 
-			// Admin routes at /admin/ext/{vendor}/{name}/ (full admin auth)
-			$adminRoutes = $context->getRegisteredAdminRoutes();
 			if ($adminRoutes !== []) {
-				$app->group('/admin/ext/' . $extPath, function (RouteCollectorProxy $group) use ($adminRoutes): void {
-					foreach ($adminRoutes as $registrar) {
-						$registrar($group);
-					}
-				})
-					->add(\TotalCMS\Middleware\Cache\VersionCheckMiddleware::class)
-					->add(\TotalCMS\Middleware\Auth\AuthMiddleware::class)
-					->add(\TotalCMS\Middleware\Response\NoCacheMiddleware::class);
+				$this->extensionAdminRoutes[$id] = $adminRoutes;
 			}
 		}
 
@@ -294,6 +267,20 @@ final class ExtensionManager
 
 		$this->stateRepository->saveState($extensionId, $state);
 		$this->dispatchEvent('extension.enabled', ['id' => $extensionId]);
+	}
+
+	public function isEnabled(string $extensionId): bool
+	{
+		return $this->stateRepository->isEnabled($extensionId);
+	}
+
+	public function getExtensionPath(string $extensionId): ?string
+	{
+		if (!$this->isEnabled($extensionId)) {
+			return null;
+		}
+
+		return $this->discovery->getExtensionPath($extensionId);
 	}
 
 	public function disable(string $extensionId): void
@@ -442,6 +429,38 @@ final class ExtensionManager
 		}
 
 		return $listeners;
+	}
+
+	/**
+	 * Match a request against extension-registered routes.
+	 */
+	public function matchExtensionRoute(string $extensionId, string $method, string $path): ?ExtensionRoute
+	{
+		$routes = $this->extensionRoutes[$extensionId] ?? [];
+
+		foreach ($routes as $route) {
+			if ($route['method'] === $method && $route['path'] === $path) {
+				return new ExtensionRoute(handler: $route['handler'], public: $route['public']);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Match a request against extension-registered admin routes.
+	 */
+	public function matchExtensionAdminRoute(string $extensionId, string $method, string $path): ?ExtensionRoute
+	{
+		$routes = $this->extensionAdminRoutes[$extensionId] ?? [];
+
+		foreach ($routes as $route) {
+			if ($route['method'] === $method && $route['path'] === $path) {
+				return new ExtensionRoute(handler: $route['handler']);
+			}
+		}
+
+		return null;
 	}
 
 	/**

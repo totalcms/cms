@@ -65,7 +65,7 @@ class Extension implements ExtensionInterface
 		$context->addCommand($helloCmd);
 
 		// API route (DualAuth)
-		$context->addRoutes(function (\Slim\Routing\RouteCollectorProxy $group): void {
+		$context->addRoutes(function ($group): void {
 			$group->get('/api/data', function ($request, $response) {
 				$response->getBody()->write('{"ok":true}');
 				return $response;
@@ -73,7 +73,7 @@ class Extension implements ExtensionInterface
 		});
 
 		// Public route (no auth)
-		$context->addPublicRoutes(function (\Slim\Routing\RouteCollectorProxy $group): void {
+		$context->addPublicRoutes(function ($group): void {
 			$group->post('/webhook', function ($request, $response) {
 				$response->getBody()->write('received');
 				return $response;
@@ -81,7 +81,7 @@ class Extension implements ExtensionInterface
 		});
 
 		// Admin route (full admin auth)
-		$context->addAdminRoutes(function (\Slim\Routing\RouteCollectorProxy $group): void {
+		$context->addAdminRoutes(function ($group): void {
 			$group->get('/dashboard', function ($request, $response) {
 				$response->getBody()->write('admin page');
 				return $response;

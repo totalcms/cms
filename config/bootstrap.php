@@ -44,7 +44,7 @@ $extensionManager->discoverAndRegister();
 // Register routes
 (require __DIR__ . '/routes.php')($app);
 
-// Boot extensions (after core routes so extensions can add their own routes)
-$extensionManager->bootAll($app);
+// Boot extensions (register Twig items, schemas, events, etc.)
+$extensionManager->bootAll();
 
 return $app;

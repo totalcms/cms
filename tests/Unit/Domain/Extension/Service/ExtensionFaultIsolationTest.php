@@ -52,9 +52,7 @@ describe('Extension fault isolation', function (): void {
 		expect($loaded)->toHaveKey('test-vendor/hello-world');
 		expect($loaded)->toHaveKey('test-vendor/broken-ext');
 
-		// Create a minimal Slim app for booting
-		$app = Slim\Factory\AppFactory::create();
-		$manager->bootAll($app);
+		$manager->bootAll();
 
 		// After boot: hello-world should still be loaded, broken-ext should be removed
 		$loaded = $manager->getLoadedExtensions();
@@ -104,8 +102,7 @@ describe('Extension fault isolation', function (): void {
 
 		$manager->discoverAndRegister();
 
-		$app = Slim\Factory\AppFactory::create();
-		$manager->bootAll($app);
+		$manager->bootAll();
 
 		// The state should have the error recorded
 		expect($writtenData)->toHaveKey('test-vendor/broken-ext');

@@ -30,5 +30,6 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/playground.php')($app);
 	(require __DIR__ . '/routes/dataviews.php')($app);
 	(require __DIR__ . '/routes/orphan.php')($app);
+	(require __DIR__ . '/routes/ext.php')($app);
 	(require __DIR__ . '/routes/action.php')($app);
 };
