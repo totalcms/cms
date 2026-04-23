@@ -11,12 +11,15 @@ use TotalCMS\Support\Config;
 /**
  * Discovers extensions by scanning the extensions directory for valid manifests.
  */
-final readonly class ExtensionDiscovery
+final class ExtensionDiscovery
 {
+	/** @var array<string,string> Extension ID => absolute directory path */
+	private array $discoveredPaths = [];
+
 	public function __construct(
-		private Config $config,
-		private ManifestValidator $validator,
-		private LoggerInterface $logger,
+		private readonly Config $config,
+		private readonly ManifestValidator $validator,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -55,6 +58,7 @@ final readonly class ExtensionDiscovery
 				$manifest = $this->loadManifest($manifestFile);
 				if ($manifest instanceof ExtensionManifest) {
 					$manifests[$manifest->id] = $manifest;
+					$this->discoveredPaths[$manifest->id] = $extPath;
 				}
 			}
 		}
@@ -67,6 +71,12 @@ final readonly class ExtensionDiscovery
 	 */
 	public function getExtensionPath(string $extensionId): ?string
 	{
+		// Use discovered path if available (handles ID ≠ directory name)
+		if (isset($this->discoveredPaths[$extensionId])) {
+			return $this->discoveredPaths[$extensionId];
+		}
+
+		// Fallback: reconstruct from ID
 		$parts = explode('/', $extensionId, 2);
 		if (count($parts) !== 2) {
 			return null;

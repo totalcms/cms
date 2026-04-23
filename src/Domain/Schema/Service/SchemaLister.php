@@ -25,6 +25,7 @@ readonly class SchemaLister
 	{
 		return array_merge(
 			$this->listReservedSchemas(),
+			$this->listExtensionSchemas(),
 			$this->listCustomSchemas()
 		);
 	}
@@ -37,6 +38,16 @@ readonly class SchemaLister
 	public function listReservedSchemas(): array
 	{
 		return $this->storage->listReservedSchemas();
+	}
+
+	/**
+	 * List extension-provided Schemas.
+	 *
+	 * @return array<SchemaData>
+	 */
+	public function listExtensionSchemas(): array
+	{
+		return $this->storage->listExtensionSchemas();
 	}
 
 	/**

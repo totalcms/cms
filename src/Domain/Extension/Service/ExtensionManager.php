@@ -355,8 +355,9 @@ final class ExtensionManager
 					return; // Below Pro — skip extension schemas
 				}
 			}
-		} catch (\Throwable) {
-			return;
+		} catch (\Throwable $e) {
+			$this->logger->warning('Edition check failed for extension schemas: ' . $e->getMessage());
+			// Fail open — allow schemas if we can't determine the edition
 		}
 
 		/** @var \TotalCMS\Domain\Schema\Repository\SchemaRepository $schemaRepo */
