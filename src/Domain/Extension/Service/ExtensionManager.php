@@ -439,7 +439,7 @@ final class ExtensionManager
 
 		try {
 			$extension = new $className();
-			$context   = new ExtensionContext($manifest, $extPath, $this->container, $this->settingsManager);
+			$context   = new ExtensionContext($manifest, $extPath, $this->container, $this->settingsManager, $this->logger);
 
 			$extension->register($context);
 

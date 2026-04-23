@@ -128,7 +128,12 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function reservedSchemasIds(): array
 	{
-		return SchemaData::RESERVED_SCHEMAS;
+		$extensionIds = array_map(
+			fn (SchemaData $s): string => $s->id,
+			$this->listExtensionSchemas(),
+		);
+
+		return array_merge(SchemaData::RESERVED_SCHEMAS, $extensionIds);
 	}
 
 	/**
@@ -283,6 +288,7 @@ class SchemaRepository extends StorageRepository
 
 		return $schema;
 	}
+
 
 	public function schemaExists(string $id): bool
 	{

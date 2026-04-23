@@ -47,11 +47,11 @@ readonly class SchemaFetcher
 	}
 
 	/**
-	 * Check if a schema ID is a custom (non-reserved) schema.
+	 * Check if a schema ID is a custom (non-reserved, non-extension) schema.
 	 */
 	public function isCustomSchema(string $schemaId): bool
 	{
-		return !in_array($schemaId, SchemaData::RESERVED_SCHEMAS, true);
+		return !in_array($schemaId, $this->storage->reservedSchemasIds(), true);
 	}
 
 	/**

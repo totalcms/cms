@@ -30,17 +30,20 @@ acme/seo-pro/
     "category": "seo",
     "properties": {
         "title": {
-            "type": "text",
+            "type": "string",
+            "field": "text",
             "label": "SEO Title",
             "maxLength": 60
         },
         "description": {
-            "type": "text",
+            "type": "string",
+            "field": "text",
             "label": "Meta Description",
             "maxLength": 160
         },
         "canonical": {
-            "type": "url",
+            "type": "string",
+            "field": "url",
             "label": "Canonical URL"
         }
     },
@@ -79,16 +82,19 @@ public function boot(ExtensionContext $context): void
         'properties' => [
             'rating' => [
                 'type' => 'number',
+                'field' => 'number',
                 'label' => 'Rating',
                 'min' => 1,
                 'max' => 5,
             ],
             'review' => [
-                'type' => 'styledtext',
+                'type' => 'string',
+                'field' => 'styledtext',
                 'label' => 'Review',
             ],
             'author' => [
-                'type' => 'text',
+                'type' => 'string',
+                'field' => 'text',
                 'label' => 'Author Name',
             ],
         ],

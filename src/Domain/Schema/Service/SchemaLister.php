@@ -61,6 +61,14 @@ readonly class SchemaLister
 	}
 
 	/**
+	 * Check if a schema ID is reserved (built-in or extension-provided).
+	 */
+	public function isReservedSchema(string $id): bool
+	{
+		return in_array($id, $this->storage->reservedSchemasIds(), true);
+	}
+
+	/**
 	 * Get a sorted list of unique category values from all schemas.
 	 *
 	 * @return array<string>

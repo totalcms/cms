@@ -60,7 +60,8 @@ readonly class SchemaSaver
 		}
 
 		// Check for reserved schema names early, before processing
-		if (isset($schemaData['id']) && (in_array($schemaData['id'], SchemaData::RESERVED_SCHEMAS) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
+		$reservedIds = $this->storage->reservedSchemasIds();
+		if (isset($schemaData['id']) && (in_array($schemaData['id'], $reservedIds) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
 			throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
 		}
 

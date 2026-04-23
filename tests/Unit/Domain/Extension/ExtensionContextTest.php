@@ -23,7 +23,7 @@ function createTestContext(): ExtensionContext
 	$storage->method('fileExists')->willReturn(false);
 	$settings = new ExtensionSettingsManager($storage);
 
-	return new ExtensionContext($manifest, '/path/to/extension', $container, $settings);
+	return new ExtensionContext($manifest, '/path/to/extension', $container, $settings, new \Psr\Log\NullLogger());
 }
 
 describe('ExtensionContext', function (): void {

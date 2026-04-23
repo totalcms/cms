@@ -58,6 +58,7 @@ final class ExtensionContext
 		private readonly string $extensionPath,
 		private readonly ContainerInterface $container,
 		private readonly ExtensionSettingsManager $settingsManager,
+		private readonly \Psr\Log\LoggerInterface $logger,
 	) {
 	}
 
@@ -139,9 +140,13 @@ final class ExtensionContext
 			return;
 		}
 
-		/** @var \TotalCMS\Domain\Schema\Service\SchemaSaver $schemaSaver */
-		$schemaSaver = $this->container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-		$schemaSaver->saveSchema($schemaData);
+		try {
+			/** @var \TotalCMS\Domain\Schema\Service\SchemaSaver $schemaSaver */
+			$schemaSaver = $this->container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+			$schemaSaver->saveSchema($schemaData);
+		} catch (\Throwable $e) {
+			$this->logger->error("installSchema failed for '{$id}': " . $e->getMessage());
+		}
 	}
 
 	// -------------------------------------------------------------------------
