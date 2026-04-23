@@ -5,20 +5,50 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Extension\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
- * Filters extension Twig registrations to prevent collisions with core.
+ * Filters extension Twig registrations to prevent collisions with core,
+ * then registers the safe items into the TwigEngine.
  *
  * - Core collisions (functions, filters, globals): blocked and logged
  * - Extension-to-extension collisions: allowed with warning, last wins
  */
-final class TwigCollisionFilter
+final class TwigExtensionRegistrar
 {
 	public function __construct(
 		private readonly LoggerInterface $logger,
 	) {
+	}
+
+	/**
+	 * Filter extension Twig items against core and register the safe ones.
+	 *
+	 * @param list<TwigFunction>  $functions
+	 * @param list<TwigFilter>    $filters
+	 * @param array<string,mixed> $globals
+	 */
+	public function filterAndRegister(
+		TwigEngine $twigEngine,
+		TotalCMSTwigExtension $coreExtension,
+		array $functions,
+		array $filters,
+		array $globals,
+	): void {
+		// Get core names directly from the extension class (avoids triggering Twig initialization)
+		$coreFunctionNames = array_values(array_map(fn (TwigFunction $f): string => $f->getName(), $coreExtension->getFunctions()));
+		$coreFilterNames   = array_values(array_map(fn (TwigFilter $f): string => $f->getName(), $coreExtension->getFilters()));
+		/** @var list<string> $coreGlobalNames */
+		$coreGlobalNames = array_keys($coreExtension->getGlobals());
+
+		$filtered = $this->filter($functions, $filters, $globals, $coreFunctionNames, $coreFilterNames, $coreGlobalNames);
+
+		if ($filtered['functions'] !== [] || $filtered['filters'] !== [] || $filtered['globals'] !== []) {
+			$twigEngine->registerExtensionItems($filtered['functions'], $filtered['filters'], $filtered['globals']);
+		}
 	}
 
 	/**

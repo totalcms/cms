@@ -1,7 +1,7 @@
 <?php
 
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Extension\Service\TwigCollisionFilter;
+use TotalCMS\Domain\Extension\Service\TwigExtensionRegistrar;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -18,9 +18,9 @@ function createTestLogger(): object
 	};
 }
 
-describe('TwigCollisionFilter', function (): void {
+describe('TwigExtensionRegistrar', function (): void {
 	test('passes through functions with no collisions', function (): void {
-		$filter = new TwigCollisionFilter(new NullLogger());
+		$filter = new TwigExtensionRegistrar(new NullLogger());
 
 		$result = $filter->filter(
 			[new TwigFunction('ext_hello', fn () => 'hello')],
@@ -37,7 +37,7 @@ describe('TwigCollisionFilter', function (): void {
 
 	test('blocks functions that collide with core', function (): void {
 		$logger = createTestLogger();
-		$filter = new TwigCollisionFilter($logger);
+		$filter = new TwigExtensionRegistrar($logger);
 
 		$result = $filter->filter(
 			[
@@ -60,7 +60,7 @@ describe('TwigCollisionFilter', function (): void {
 
 	test('blocks filters that collide with core', function (): void {
 		$logger = createTestLogger();
-		$filter = new TwigCollisionFilter($logger);
+		$filter = new TwigExtensionRegistrar($logger);
 
 		$result = $filter->filter(
 			[],
@@ -82,7 +82,7 @@ describe('TwigCollisionFilter', function (): void {
 
 	test('blocks globals that collide with core', function (): void {
 		$logger = createTestLogger();
-		$filter = new TwigCollisionFilter($logger);
+		$filter = new TwigExtensionRegistrar($logger);
 
 		$result = $filter->filter(
 			[],
@@ -100,7 +100,7 @@ describe('TwigCollisionFilter', function (): void {
 
 	test('warns on extension-to-extension function collision but allows it', function (): void {
 		$logger = createTestLogger();
-		$filter = new TwigCollisionFilter($logger);
+		$filter = new TwigExtensionRegistrar($logger);
 
 		$result = $filter->filter(
 			[
@@ -123,7 +123,7 @@ describe('TwigCollisionFilter', function (): void {
 
 	test('warns on extension-to-extension filter collision but allows it', function (): void {
 		$logger = createTestLogger();
-		$filter = new TwigCollisionFilter($logger);
+		$filter = new TwigExtensionRegistrar($logger);
 
 		$result = $filter->filter(
 			[],
@@ -143,7 +143,7 @@ describe('TwigCollisionFilter', function (): void {
 	});
 
 	test('handles empty inputs', function (): void {
-		$filter = new TwigCollisionFilter(new NullLogger());
+		$filter = new TwigExtensionRegistrar(new NullLogger());
 
 		$result = $filter->filter([], [], [], [], [], []);
 
@@ -154,7 +154,7 @@ describe('TwigCollisionFilter', function (): void {
 
 	test('multiple collision types in one call', function (): void {
 		$logger = createTestLogger();
-		$filter = new TwigCollisionFilter($logger);
+		$filter = new TwigExtensionRegistrar($logger);
 
 		$result = $filter->filter(
 			[

@@ -169,24 +169,16 @@ final class ExtensionManager
 			}
 		}
 
-		// Wire Twig items from extensions into the TwigEngine
+		// Wire Twig items from extensions into the TwigEngine (with collision protection)
 		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
-			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
-			$twigEngine      = $this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class);
-			$collisionFilter = new TwigCollisionFilter($this->logger);
-
-			$filtered = $collisionFilter->filter(
+			$twigRegistrar = new TwigExtensionRegistrar($this->logger);
+			$twigRegistrar->filterAndRegister(
+				$this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class),
+				$this->container->get(\TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension::class),
 				$this->getAllTwigFunctions(),
 				$this->getAllTwigFilters(),
 				$this->getAllTwigGlobals(),
-				$twigEngine->getRegisteredFunctionNames(),
-				$twigEngine->getRegisteredFilterNames(),
-				$twigEngine->getRegisteredGlobalNames(),
 			);
-
-			if ($filtered['functions'] !== [] || $filtered['filters'] !== [] || $filtered['globals'] !== []) {
-				$twigEngine->registerExtensionItems($filtered['functions'], $filtered['filters'], $filtered['globals']);
-			}
 		}
 
 		$this->booted = true;
