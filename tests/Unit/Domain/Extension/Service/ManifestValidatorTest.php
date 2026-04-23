@@ -7,10 +7,9 @@ describe('ManifestValidator', function (): void {
 	test('validates a correct manifest', function (): void {
 		$validator = new ManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
-			'id'          => 'vendor/my-ext',
-			'name'        => 'My Extension',
-			'version'     => '1.0.0',
-			'permissions' => ['twig:functions'],
+			'id'      => 'vendor/my-ext',
+			'name'    => 'My Extension',
+			'version' => '1.0.0',
 		]);
 
 		expect($validator->validate($manifest))->toBeNull();
@@ -38,7 +37,6 @@ describe('ManifestValidator', function (): void {
 			description: '',
 			version: '',
 			requires: [],
-			permissions: [],
 			entrypoint: 'Extension.php',
 			settingsSchema: null,
 			minEdition: 'lite',
@@ -71,36 +69,6 @@ describe('ManifestValidator', function (): void {
 		]);
 
 		expect($validator->validate($manifest))->toContain('semver');
-	});
-
-	test('rejects unknown permissions', function (): void {
-		$validator = new ManifestValidator();
-		$manifest  = ExtensionManifest::fromArray([
-			'id'          => 'vendor/test',
-			'name'        => 'Test',
-			'version'     => '1.0.0',
-			'permissions' => ['twig:functions', 'fake:permission'],
-		]);
-
-		expect($validator->validate($manifest))->toContain('fake:permission');
-	});
-
-	test('allows valid permissions', function (): void {
-		$validator = new ManifestValidator();
-		$manifest  = ExtensionManifest::fromArray([
-			'id'          => 'vendor/test',
-			'name'        => 'Test',
-			'version'     => '1.0.0',
-			'permissions' => [
-				'twig:functions', 'twig:filters', 'twig:globals',
-				'cli:commands', 'routes:api', 'routes:admin',
-				'admin:nav', 'admin:widgets', 'events:listen',
-				'fields:register', 'settings:read', 'settings:write',
-				'container:definitions',
-			],
-		]);
-
-		expect($validator->validate($manifest))->toBeNull();
 	});
 
 	test('rejects invalid min_edition', function (): void {

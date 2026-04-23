@@ -201,6 +201,70 @@ describe('ExtensionContext', function (): void {
 		expect($item->icon)->toBe('');
 	});
 
+	test('detects capabilities from registrations', function (): void {
+		$ctx = createTestContext();
+
+		$ctx->addTwigFunction(new TwigFunction('fn', fn (): string => ''));
+		$ctx->addCommand(new Symfony\Component\Console\Command\Command('test:cmd'));
+		$ctx->addEventListener('object.created', fn (): null => null);
+
+		$caps = $ctx->getCapabilities();
+
+		expect($caps)->toHaveKey('twig:functions');
+		expect($caps)->toHaveKey('cli:commands');
+		expect($caps)->toHaveKey('events:listen');
+		expect($caps)->not->toHaveKey('twig:filters');
+		expect($caps)->not->toHaveKey('routes:api');
+		expect($caps)->not->toHaveKey('admin:nav');
+		expect($caps)->not->toHaveKey('fields');
+	});
+
+	test('detects all capability types', function (): void {
+		$ctx = createTestContext();
+
+		$ctx->addTwigFunction(new TwigFunction('fn', fn (): string => ''));
+		$ctx->addTwigFilter(new TwigFilter('fl', fn (string $v): string => $v));
+		$ctx->addTwigGlobal('g', 'val');
+		$ctx->addCommand(new Symfony\Component\Console\Command\Command('cmd'));
+		$ctx->addRoutes(fn () => null);
+		$ctx->addPublicRoutes(fn () => null);
+		$ctx->addAdminRoutes(fn () => null);
+		$ctx->addAdminNavItem(new AdminNavItem(label: 'Nav'));
+		$ctx->addDashboardWidget(new DashboardWidget(id: 'w', label: 'W', template: 't'));
+		$ctx->addAdminAsset('css', 'style.css');
+		$ctx->addEventListener('e', fn (): null => null);
+		$ctx->addFieldType('ft', 'FT');
+		$ctx->addContainerDefinition('svc', fn (): stdClass => new stdClass());
+
+		$caps = $ctx->getCapabilities();
+
+		expect($caps)->toHaveCount(13);
+	});
+
+	test('returns empty capabilities when nothing registered', function (): void {
+		$ctx = createTestContext();
+
+		expect($ctx->getCapabilities())->toBe([]);
+	});
+
+	test('capability labels covers all detectable capabilities', function (): void {
+		$labels = \TotalCMS\Domain\Extension\ExtensionContext::capabilityLabels();
+
+		expect($labels)->toHaveKey('twig:functions');
+		expect($labels)->toHaveKey('twig:filters');
+		expect($labels)->toHaveKey('routes:api');
+		expect($labels)->toHaveKey('routes:public');
+		expect($labels)->toHaveKey('routes:admin');
+		expect($labels)->toHaveKey('cli:commands');
+		expect($labels)->toHaveKey('admin:nav');
+		expect($labels)->toHaveKey('admin:widgets');
+		expect($labels)->toHaveKey('admin:assets');
+		expect($labels)->toHaveKey('events:listen');
+		expect($labels)->toHaveKey('fields');
+		expect($labels)->toHaveKey('schemas');
+		expect($labels)->toHaveKey('container');
+	});
+
 	test('starts with empty registrations', function (): void {
 		$ctx = createTestContext();
 

@@ -210,6 +210,129 @@ describe('ExtensionManager', function (): void {
 		expect($loaded)->toBe([]);
 	});
 
+	test('filters twig functions by permissions', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'test-vendor/hello-world' => [
+				'enabled'      => true,
+				'installed_at' => '',
+				'version'      => '1.0.0',
+				'error'        => null,
+				'permissions'  => ['twig:functions' => false, 'twig:filters' => true],
+			],
+		]));
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo);
+		$manager->discoverAndRegister();
+
+		$functions = $manager->getAllTwigFunctions();
+		expect($functions)->toBe([]);
+
+		$filters = $manager->getAllTwigFilters();
+		$names   = array_map(fn (Twig\TwigFilter $f): string => $f->getName(), $filters);
+		expect($names)->toContain('shout');
+	});
+
+	test('filters commands by permissions', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'test-vendor/hello-world' => [
+				'enabled'      => true,
+				'installed_at' => '',
+				'version'      => '1.0.0',
+				'error'        => null,
+				'permissions'  => ['cli:commands' => false],
+			],
+		]));
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo);
+		$manager->discoverAndRegister();
+
+		expect($manager->getAllCommands())->toBe([]);
+	});
+
+	test('detects capabilities on enable', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$written = [];
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$storage->method('write')->willReturnCallback(function (string $path, string $content) use (&$written): bool {
+			$written[$path] = $content;
+
+			return true;
+		});
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo);
+		$manager->discoverAndRegister();
+
+		$manager->enable('test-vendor/hello-world');
+
+		$permissions = $manager->getPermissions('test-vendor/hello-world');
+
+		// hello-world fixture registers twig functions, filters, commands, nav, events, field types
+		expect($permissions)->toHaveKey('twig:functions');
+		expect($permissions)->toHaveKey('twig:filters');
+		expect($permissions)->toHaveKey('cli:commands');
+		expect($permissions)->toHaveKey('admin:nav');
+		expect($permissions)->toHaveKey('events:listen');
+		expect($permissions)->toHaveKey('fields');
+
+		// All detected capabilities should default to ON
+		foreach ($permissions as $enabled) {
+			expect($enabled)->toBeTrue();
+		}
+	});
+
+	test('listExtensions returns structured data', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'test-vendor/hello-world' => [
+				'enabled'      => true,
+				'installed_at' => '',
+				'version'      => '1.0.0',
+				'error'        => null,
+				'permissions'  => ['twig:functions' => true],
+			],
+		]));
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo);
+		$manager->discoverAndRegister();
+
+		$list = $manager->listExtensions();
+
+		expect($list)->not->toBeEmpty();
+
+		$helloWorld = null;
+		foreach ($list as $ext) {
+			if ($ext['id'] === 'test-vendor/hello-world') {
+				$helloWorld = $ext;
+			}
+		}
+
+		expect($helloWorld)->not->toBeNull();
+		expect($helloWorld['name'])->toBe('Hello World');
+		expect($helloWorld['enabled'])->toBeTrue();
+		expect($helloWorld['capabilities'])->toContain('Twig Functions');
+		expect($helloWorld['hasSettings'])->toBeTrue();
+	});
+
 	test('enable and disable changes state', function (): void {
 		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
 
