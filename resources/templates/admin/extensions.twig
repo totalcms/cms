@@ -2,72 +2,70 @@
 
 {% block dashcontent %}
 
-<div class="dash-content-main full-width">
-	<header class="content-header">
+<main class="dash-main-content" style="max-width:100%;">
+	<header>
 		<h1>{{ t('nav.extensions') }}</h1>
 	</header>
 
-	<div class="extension-list">
+	<section class="dash-content-section">
 		{% if extensions is empty %}
-		<div class="empty-state">
+		<div class="dash-empty-state">
 			<p>No extensions installed.</p>
-			<p class="hint">Extensions are installed to <code>tcms-data/extensions/</code></p>
+			<p>Place extensions in <code>tcms-data/extensions/vendor/name/</code></p>
 		</div>
 		{% else %}
-		<div class="card-grid">
+		<div class="dash-card-grid">
 			{% for ext in extensions %}
-			<div class="extension-card{% if ext.error %} has-error{% endif %}" id="ext-{{ ext.id|replace({'/': '-'}) }}">
-				<div class="extension-header">
-					<h3>{{ ext.name }}</h3>
-					<span class="version">v{{ ext.version }}</span>
-				</div>
+			<article class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}">
+				<header>
+					<div>
+						<h3>{{ ext.name }}</h3>
+						{% if ext.description %}
+						<p style="margin:0.25rem 0 0; color:oklch(var(--totalform-darkgray)); font-size:0.85rem;">{{ ext.description }}</p>
+						{% endif %}
+					</div>
+					<span class="dash-badge muted sm">v{{ ext.version }}</span>
+				</header>
 
-				{% if ext.description %}
-				<p class="description">{{ ext.description }}</p>
-				{% endif %}
-
-				{% if ext.author.name is defined %}
-				<p class="author">By {{ ext.author.name }}</p>
+				{% if ext.author.name is defined and ext.author.name %}
+				<p style="margin:0; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">By {{ ext.author.name }}</p>
 				{% endif %}
 
 				{% if ext.error %}
-				<div class="extension-error">
-					<strong>Error:</strong> {{ ext.error }}
+				<div style="background:oklch(var(--totalform-danger) / 0.1); color:oklch(var(--totalform-danger)); border:1px solid oklch(var(--totalform-danger) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
+					{{ ext.error }}
 				</div>
 				{% endif %}
 
 				{% if ext.permissions %}
-				<div class="permissions">
-					{% for perm in ext.permissions %}
-					<span class="permission-badge">{{ perm }}</span>
-					{% endfor %}
+				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
+					<strong>Permissions:</strong>
+					<div class="dash-badge-group">
+						{% for perm in ext.permissions %}
+						<span class="dash-badge accent">{{ perm }}</span>
+						{% endfor %}
+					</div>
 				</div>
 				{% endif %}
 
-				<div class="extension-actions">
+				<footer>
 					{% if ext.enabled %}
-					<button class="btn btn-sm btn-warning"
-						hx-post="extensions/{{ ext.id }}/disable"
-						hx-swap="none"
-						hx-on::after-request="window.location.reload()">
-						Disable
-					</button>
-					<span class="status-badge enabled">Enabled</span>
+					<span class="dash-status enabled">Enabled</span>
+					<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/disable" style="margin:0;">
+						<button type="submit" class="btn btn-sm">Disable</button>
+					</form>
 					{% else %}
-					<button class="btn btn-sm btn-primary"
-						hx-post="extensions/{{ ext.id }}/enable"
-						hx-swap="none"
-						hx-on::after-request="window.location.reload()">
-						Enable
-					</button>
-					<span class="status-badge disabled">Disabled</span>
+					<span class="dash-status disabled">Disabled</span>
+					<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/enable" style="margin:0;">
+						<button type="submit" class="btn btn-sm btn-primary">Enable</button>
+					</form>
 					{% endif %}
-				</div>
-			</div>
+				</footer>
+			</article>
 			{% endfor %}
 		</div>
 		{% endif %}
-	</div>
-</div>
+	</section>
+</main>
 
 {% endblock %}

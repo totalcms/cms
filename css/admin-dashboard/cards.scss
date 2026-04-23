@@ -1,0 +1,246 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared card system for admin dashboard
+// Used by: extensions, access groups, API keys, and other card-based layouts
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Grid container
+.dash-card-grid {
+	display               : grid;
+	gap                   : 1.5rem;
+	grid-template-columns : repeat(auto-fill, minmax(400px, 1fr));
+	margin-top            : 1rem;
+}
+
+// Individual card
+.dash-card {
+	background     : oklch(var(--totalform-nearwhite) / 0.5);
+	border         : 1px solid oklch(var(--totalform-border-color));
+	border-radius  : var(--totalform-radius);
+	padding        : 1.5rem;
+	display        : flex;
+	flex-direction : column;
+	gap            : 1rem;
+
+	// Accent variant (built-in, special items)
+	&.accent {
+		background   : oklch(var(--totalform-accent) / 0.05);
+		border-color : oklch(var(--totalform-accent) / 0.3);
+	}
+
+	// Error variant
+	&.error {
+		border-color : oklch(var(--totalform-danger));
+	}
+
+	// Card header: title + actions
+	> header {
+		display         : flex;
+		justify-content : space-between;
+		align-items     : center;
+		padding-bottom  : 1rem;
+		border-bottom   : 1px solid oklch(var(--totalform-border-color));
+
+		h3 {
+			margin      : 0;
+			font-size   : 1.2rem;
+			font-weight : 600;
+		}
+	}
+
+	// Card footer: status + actions
+	> footer {
+		display         : flex;
+		justify-content : space-between;
+		align-items     : center;
+		margin-top      : auto;
+		padding-top     : 1rem;
+		border-top      : 1px solid oklch(var(--totalform-border-color));
+	}
+}
+
+// Key-value detail rows inside cards
+.dash-card-details {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.75rem;
+}
+
+.dash-card-detail {
+	display               : grid;
+	grid-template-columns : 140px 1fr;
+	gap                   : 1rem;
+	align-items           : start;
+
+	strong {
+		color       : oklch(var(--totalform-darkgray));
+		font-size   : 0.9rem;
+		font-weight : 500;
+	}
+
+	code {
+		font-size : 0.9rem;
+	}
+}
+
+// Description block inside cards
+.dash-card-description {
+	padding       : 1rem;
+	background    : oklch(var(--totalform-purewhite));
+	border-radius : var(--totalform-radius);
+
+	p {
+		margin : 0;
+
+		& + p {
+			margin-top : 0.5rem;
+		}
+	}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Badges
+// ─────────────────────────────────────────────────────────────────────────────
+
+.dash-badge {
+	display       : inline-block;
+	padding       : 0.25rem 0.75rem;
+	border-radius : 4px;
+	font-size     : 0.85rem;
+	font-weight   : 500;
+
+	// Color variants
+	&.accent {
+		background : oklch(var(--totalform-accent) / 0.1);
+		color      : oklch(var(--totalform-accent));
+	}
+
+	&.success {
+		background : oklch(var(--totalform-success) / 0.1);
+		color      : oklch(var(--totalform-success));
+	}
+
+	&.warning {
+		background : oklch(var(--totalform-warning) / 0.1);
+		color      : oklch(var(--totalform-warning));
+	}
+
+	&.danger {
+		background : oklch(var(--totalform-danger) / 0.1);
+		color      : oklch(var(--totalform-danger));
+	}
+
+	&.muted {
+		background : oklch(var(--totalform-icon-bg));
+		color      : oklch(var(--totalform-darkgray));
+	}
+
+	// Size variants
+	&.sm {
+		font-size : 0.75rem;
+		padding   : 0.15rem 0.5rem;
+	}
+}
+
+// Badge group (inline list of badges)
+.dash-badge-group {
+	display   : flex;
+	gap       : 0.35rem;
+	flex-wrap : wrap;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card action buttons (edit, delete)
+// ─────────────────────────────────────────────────────────────────────────────
+
+.dash-card-actions {
+	display     : flex;
+	gap         : 0.75rem;
+	align-items : center;
+}
+
+.dash-card-action {
+	display         : flex;
+	align-items     : center;
+	gap             : 0.5rem;
+	text-decoration : none;
+	padding         : 0.5rem 1rem;
+	border-radius   : var(--totalform-radius);
+	font-size       : 0.9rem;
+	font-weight     : 500;
+	transition      : background-color 0.2s;
+	cursor          : pointer;
+
+	&.edit {
+		color : oklch(var(--totalform-accent));
+
+		&:hover {
+			background : oklch(var(--totalform-accent) / 0.1);
+		}
+
+		&:before {
+			content          : "";
+			display          : inline-block;
+			width            : 1rem;
+			height           : 1rem;
+			background-color : currentColor;
+			mask-image       : var(--icon-edit);
+			mask-size        : contain;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+		}
+	}
+
+	&.delete {
+		color : oklch(var(--totalform-error));
+
+		&:hover {
+			background : oklch(var(--totalform-error) / 0.1);
+		}
+
+		&:before {
+			content          : "";
+			display          : inline-block;
+			width            : 1rem;
+			height           : 1rem;
+			background-color : currentColor;
+			mask-image       : var(--icon-trash);
+			mask-size        : contain;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+		}
+	}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty state
+// ─────────────────────────────────────────────────────────────────────────────
+
+.dash-empty-state {
+	text-align    : center;
+	padding       : 3rem;
+	background    : oklch(var(--totalform-nearwhite));
+	border-radius : var(--totalform-radius);
+	color         : oklch(var(--totalform-darkgray));
+	margin-top    : 2rem;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Status indicators
+// ─────────────────────────────────────────────────────────────────────────────
+
+.dash-status {
+	font-size   : 0.85rem;
+	font-weight : 600;
+
+	&.enabled, &.active {
+		color : oklch(var(--totalform-success));
+	}
+
+	&.disabled, &.inactive {
+		color : oklch(var(--totalform-darkgray));
+	}
+
+	&.error {
+		color : oklch(var(--totalform-danger));
+	}
+}

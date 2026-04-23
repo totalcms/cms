@@ -6,19 +6,17 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use Slim\Interfaces\RouteParserInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
-use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * HTMX action to enable or disable an extension.
+ * Enable or disable an extension, then redirect back to the extensions page.
  */
 readonly class ExtensionToggleAction
 {
 	public function __construct(
 		private ExtensionManager $manager,
-		private ExtensionStateRepository $stateRepository,
-		private JsonRenderer $renderer,
+		private RouteParserInterface $routeParser,
 	) {
 	}
 
@@ -33,24 +31,16 @@ readonly class ExtensionToggleAction
 		$extensionId = $args['extension'] ?? '';
 		$action      = $args['action'] ?? '';
 
-		if ($extensionId === '') {
-			return $this->renderer->json($response, ['error' => 'Extension ID required'])->withStatus(400);
-		}
-
-		if ($action === 'enable') {
+		if ($action === 'enable' && $extensionId !== '') {
 			$this->manager->enable($extensionId);
-		} elseif ($action === 'disable') {
+		} elseif ($action === 'disable' && $extensionId !== '') {
 			$this->manager->disable($extensionId);
-		} else {
-			return $this->renderer->json($response, ['error' => 'Invalid action'])->withStatus(400);
 		}
 
-		$state = $this->stateRepository->getState($extensionId);
+		$redirectUrl = $this->routeParser->urlFor('admin-extensions');
 
-		return $this->renderer->json($response, [
-			'id'      => $extensionId,
-			'enabled' => $state instanceof \TotalCMS\Domain\Extension\Data\ExtensionState && $state->enabled,
-			'message' => $action === 'enable' ? 'Extension enabled' : 'Extension disabled',
-		]);
+		return $response
+			->withHeader('Location', $redirectUrl)
+			->withStatus(302);
 	}
 }
