@@ -171,14 +171,23 @@ final class ExtensionManager
 
 		// Wire Twig items from extensions into the TwigEngine
 		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
+			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
+			$twigEngine    = $this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class);
 			$twigFunctions = $this->getAllTwigFunctions();
 			$twigFilters   = $this->getAllTwigFilters();
 			$twigGlobals   = $this->getAllTwigGlobals();
 
-			if ($twigFunctions !== [] || $twigFilters !== [] || $twigGlobals !== []) {
-				/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
-				$twigEngine = $this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class);
-				$twigEngine->registerExtensionItems($twigFunctions, $twigFilters, $twigGlobals);
+			$twigFunctions = $this->filterTwigCollisions(
+				$twigFunctions,
+				$twigFilters,
+				$twigGlobals,
+				$twigEngine->getRegisteredFunctionNames(),
+				$twigEngine->getRegisteredFilterNames(),
+				$twigEngine->getRegisteredGlobalNames(),
+			);
+
+			if ($twigFunctions['functions'] !== [] || $twigFunctions['filters'] !== [] || $twigFunctions['globals'] !== []) {
+				$twigEngine->registerExtensionItems($twigFunctions['functions'], $twigFunctions['filters'], $twigFunctions['globals']);
 			}
 		}
 
@@ -393,6 +402,73 @@ final class ExtensionManager
 		} catch (\Throwable) {
 			return true; // Fail open — don't block extensions if edition check fails
 		}
+	}
+
+	/**
+	 * Filter Twig items: block core collisions, warn on extension-to-extension collisions.
+	 *
+	 * @param list<\Twig\TwigFunction> $functions
+	 * @param list<\Twig\TwigFilter>   $filters
+	 * @param array<string,mixed>      $globals
+	 * @param list<string>             $coreFunctionNames
+	 * @param list<string>             $coreFilterNames
+	 * @param list<string>             $coreGlobalNames
+	 *
+	 * @return array{functions: list<\Twig\TwigFunction>, filters: list<\Twig\TwigFilter>, globals: array<string,mixed>}
+	 */
+	private function filterTwigCollisions(
+		array $functions,
+		array $filters,
+		array $globals,
+		array $coreFunctionNames,
+		array $coreFilterNames,
+		array $coreGlobalNames,
+	): array {
+		$coreFunc = array_flip($coreFunctionNames);
+		$seen     = [];
+		$filtered = [];
+		foreach ($functions as $fn) {
+			$name = $fn->getName();
+			if (isset($coreFunc[$name])) {
+				$this->logger->warning("Twig function '{$name}' from extension blocked: conflicts with a core function.");
+				continue;
+			}
+			if (isset($seen[$name])) {
+				$this->logger->warning("Twig function '{$name}' registered by multiple extensions. Last registration wins.");
+			}
+			$seen[$name] = true;
+			$filtered[]  = $fn;
+		}
+		$functions = $filtered;
+
+		$coreFilt = array_flip($coreFilterNames);
+		$seen     = [];
+		$filtered = [];
+		foreach ($filters as $filter) {
+			$name = $filter->getName();
+			if (isset($coreFilt[$name])) {
+				$this->logger->warning("Twig filter '{$name}' from extension blocked: conflicts with a core filter.");
+				continue;
+			}
+			if (isset($seen[$name])) {
+				$this->logger->warning("Twig filter '{$name}' registered by multiple extensions. Last registration wins.");
+			}
+			$seen[$name] = true;
+			$filtered[]  = $filter;
+		}
+		$filters = $filtered;
+
+		$coreGlob        = array_flip($coreGlobalNames);
+		$filteredGlobals  = [];
+		foreach ($globals as $name => $value) {
+			if (isset($coreGlob[$name])) {
+				$this->logger->warning("Twig global '{$name}' from extension blocked: conflicts with a core global.");
+				continue;
+			}
+			$filteredGlobals[$name] = $value;
+		}
+
+		return ['functions' => $functions, 'filters' => $filters, 'globals' => $filteredGlobals];
 	}
 
 	private function registerExtension(string $id, ExtensionManifest $manifest): void

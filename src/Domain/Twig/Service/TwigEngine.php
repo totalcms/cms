@@ -172,4 +172,34 @@ readonly class TwigEngine
 			$this->twig->addGlobal($name, $value);
 		}
 	}
+
+	/**
+	 * Get names of all currently registered Twig functions.
+	 *
+	 * @return list<string>
+	 */
+	public function getRegisteredFunctionNames(): array
+	{
+		return array_keys($this->twig->getFunctions());
+	}
+
+	/**
+	 * Get names of all currently registered Twig filters.
+	 *
+	 * @return list<string>
+	 */
+	public function getRegisteredFilterNames(): array
+	{
+		return array_keys($this->twig->getFilters());
+	}
+
+	/**
+	 * Get names of all currently registered Twig globals.
+	 *
+	 * @return list<string>
+	 */
+	public function getRegisteredGlobalNames(): array
+	{
+		return array_keys($this->twig->getGlobals());
+	}
 }

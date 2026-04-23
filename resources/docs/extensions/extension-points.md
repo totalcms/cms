@@ -8,6 +8,16 @@ since: "3.3.0"
 
 Extensions interact with Total CMS through the `ExtensionContext` object passed to `register()` and `boot()`. This page covers every available extension point.
 
+## Naming Conventions
+
+To avoid collisions with core T3 functions and other extensions, always prefix your Twig functions, filters, and CLI commands with your vendor name:
+
+- Twig functions: `vendor_functionname` (e.g. `acme_seo_title`)
+- Twig filters: `vendor_filtername` (e.g. `acme_readinglevel`)
+- CLI commands: `vendor:commandname` (e.g. `acme:generate-sitemap`)
+
+If a name collision is detected at boot time, a warning is logged to `extensions.log` and the last registered function/filter wins. Prefixing with your vendor name prevents this.
+
 ## Twig Functions
 
 Add custom functions available in all Twig templates.
