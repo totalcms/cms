@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use TotalCMS\Domain\Event\EventDispatcher;
-
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 

@@ -23,7 +23,7 @@ function createTestContext(): ExtensionContext
 	$storage->method('fileExists')->willReturn(false);
 	$settings = new ExtensionSettingsManager($storage);
 
-	return new ExtensionContext($manifest, '/path/to/extension', $container, $settings, new \Psr\Log\NullLogger());
+	return new ExtensionContext($manifest, '/path/to/extension', $container, $settings, new Psr\Log\NullLogger());
 }
 
 describe('ExtensionContext', function (): void {
@@ -171,12 +171,12 @@ describe('ExtensionContext', function (): void {
 	test('keeps API, public, and admin routes separate', function (): void {
 		$ctx = createTestContext();
 
-		$ctx->addRoutes(fn () => null);
-		$ctx->addRoutes(fn () => null);
-		$ctx->addPublicRoutes(fn () => null);
-		$ctx->addAdminRoutes(fn () => null);
-		$ctx->addAdminRoutes(fn () => null);
-		$ctx->addAdminRoutes(fn () => null);
+		$ctx->addRoutes(fn (): null => null);
+		$ctx->addRoutes(fn (): null => null);
+		$ctx->addPublicRoutes(fn (): null => null);
+		$ctx->addAdminRoutes(fn (): null => null);
+		$ctx->addAdminRoutes(fn (): null => null);
+		$ctx->addAdminRoutes(fn (): null => null);
 
 		expect($ctx->getRegisteredRoutes())->toHaveCount(2);
 		expect($ctx->getRegisteredPublicRoutes())->toHaveCount(1);
@@ -226,9 +226,9 @@ describe('ExtensionContext', function (): void {
 		$ctx->addTwigFilter(new TwigFilter('fl', fn (string $v): string => $v));
 		$ctx->addTwigGlobal('g', 'val');
 		$ctx->addCommand(new Symfony\Component\Console\Command\Command('cmd'));
-		$ctx->addRoutes(fn () => null);
-		$ctx->addPublicRoutes(fn () => null);
-		$ctx->addAdminRoutes(fn () => null);
+		$ctx->addRoutes(fn (): null => null);
+		$ctx->addPublicRoutes(fn (): null => null);
+		$ctx->addAdminRoutes(fn (): null => null);
 		$ctx->addAdminNavItem(new AdminNavItem(label: 'Nav'));
 		$ctx->addDashboardWidget(new DashboardWidget(id: 'w', label: 'W', template: 't'));
 		$ctx->addAdminAsset('css', 'style.css');
@@ -248,7 +248,7 @@ describe('ExtensionContext', function (): void {
 	});
 
 	test('capability labels covers all detectable capabilities', function (): void {
-		$labels = \TotalCMS\Domain\Extension\ExtensionContext::capabilityLabels();
+		$labels = ExtensionContext::capabilityLabels();
 
 		expect($labels)->toHaveKey('twig:functions');
 		expect($labels)->toHaveKey('twig:filters');

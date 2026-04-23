@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Extension;
 
 use Psr\Container\ContainerInterface;
-use Slim\Routing\RouteCollectorProxy;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;

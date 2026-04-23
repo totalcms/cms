@@ -20,7 +20,6 @@ final class RouteCollector
 	) {
 	}
 
-	/** @param mixed $handler */
 	public function get(string $path, mixed $handler): self
 	{
 		$this->routes[] = ['method' => 'GET', 'path' => $path, 'handler' => $handler, 'public' => $this->isPublic];
@@ -28,7 +27,6 @@ final class RouteCollector
 		return $this;
 	}
 
-	/** @param mixed $handler */
 	public function post(string $path, mixed $handler): self
 	{
 		$this->routes[] = ['method' => 'POST', 'path' => $path, 'handler' => $handler, 'public' => $this->isPublic];
@@ -36,7 +34,6 @@ final class RouteCollector
 		return $this;
 	}
 
-	/** @param mixed $handler */
 	public function put(string $path, mixed $handler): self
 	{
 		$this->routes[] = ['method' => 'PUT', 'path' => $path, 'handler' => $handler, 'public' => $this->isPublic];
@@ -44,7 +41,6 @@ final class RouteCollector
 		return $this;
 	}
 
-	/** @param mixed $handler */
 	public function patch(string $path, mixed $handler): self
 	{
 		$this->routes[] = ['method' => 'PATCH', 'path' => $path, 'handler' => $handler, 'public' => $this->isPublic];
@@ -52,7 +48,6 @@ final class RouteCollector
 		return $this;
 	}
 
-	/** @param mixed $handler */
 	public function delete(string $path, mixed $handler): self
 	{
 		$this->routes[] = ['method' => 'DELETE', 'path' => $path, 'handler' => $handler, 'public' => $this->isPublic];
@@ -60,7 +55,6 @@ final class RouteCollector
 		return $this;
 	}
 
-	/** @param mixed $handler */
 	public function any(string $path, mixed $handler): self
 	{
 		foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $method) {

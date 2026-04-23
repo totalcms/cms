@@ -12,11 +12,11 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
-use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
@@ -1392,7 +1392,7 @@ readonly class TotalFormFactory
 
 		// Check built-in field types first, then extension-registered types
 		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
-		$typeClass = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
 			? $builtInClass
 			: (TotalForm::getExtensionFieldTypes()[$type] ?? $builtInClass);
 

@@ -14,7 +14,7 @@ use Symfony\Component\Console\Command\Command;
 describe('CLI command collision protection', function (): void {
 	test('extension command with unique name is registered', function (): void {
 		$app = new Application();
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('cache:clear');
@@ -23,7 +23,7 @@ describe('CLI command collision protection', function (): void {
 
 		$coreNames = array_keys($app->all());
 
-		$extCommand = new class () extends Command {
+		$extCommand = new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('acme:greet');
@@ -37,13 +37,13 @@ describe('CLI command collision protection', function (): void {
 
 	test('extension command that matches core command is blocked', function (): void {
 		$app = new Application();
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('cache:clear');
 			}
 		});
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('schema:list');
@@ -53,7 +53,7 @@ describe('CLI command collision protection', function (): void {
 		$coreNames = array_keys($app->all());
 
 		// Extension tries to register cache:clear
-		$extCommand = new class () extends Command {
+		$extCommand = new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('cache:clear');
@@ -67,13 +67,13 @@ describe('CLI command collision protection', function (): void {
 
 	test('extension command that matches extension management command is blocked', function (): void {
 		$app = new Application();
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('extension:list');
 			}
 		});
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('extension:enable');
@@ -82,7 +82,7 @@ describe('CLI command collision protection', function (): void {
 
 		$coreNames = array_keys($app->all());
 
-		$extCommand = new class () extends Command {
+		$extCommand = new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('extension:list');
@@ -96,13 +96,13 @@ describe('CLI command collision protection', function (): void {
 
 	test('multiple extension commands filtered correctly', function (): void {
 		$app = new Application();
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('cache:clear');
 			}
 		});
-		$app->addCommand(new class () extends Command {
+		$app->addCommand(new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('info');
@@ -112,25 +112,25 @@ describe('CLI command collision protection', function (): void {
 		$coreNames = array_keys($app->all());
 
 		$extCommands = [
-			new class () extends Command {
+			new class extends Command {
 				protected function configure(): void
 				{
 					$this->setName('acme:safe');
 				}
 			},
-			new class () extends Command {
+			new class extends Command {
 				protected function configure(): void
 				{
 					$this->setName('cache:clear');
 				}
 			},
-			new class () extends Command {
+			new class extends Command {
 				protected function configure(): void
 				{
 					$this->setName('acme:also-safe');
 				}
 			},
-			new class () extends Command {
+			new class extends Command {
 				protected function configure(): void
 				{
 					$this->setName('info');
@@ -162,7 +162,7 @@ describe('CLI command collision protection', function (): void {
 		expect(in_array('help', $coreNames, true))->toBeTrue();
 		expect(in_array('list', $coreNames, true))->toBeTrue();
 
-		$extCommand = new class () extends Command {
+		$extCommand = new class extends Command {
 			protected function configure(): void
 			{
 				$this->setName('list');

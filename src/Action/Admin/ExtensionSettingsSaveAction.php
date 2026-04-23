@@ -35,7 +35,7 @@ readonly class ExtensionSettingsSaveAction
 			return $this->renderer->json($response, ['error' => 'Extension not found'])->withStatus(404);
 		}
 
-		$body = (array) $request->getParsedBody();
+		$body = (array)$request->getParsedBody();
 		unset($body['_csrf_token'], $body['_method']);
 
 		$this->manager->saveFormData($extensionId, $body);

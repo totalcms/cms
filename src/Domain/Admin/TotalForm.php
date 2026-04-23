@@ -694,9 +694,9 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 		unset($options['subfield']);
 
-		$fieldType = $options['field'] ?? '';
+		$fieldType    = $options['field'] ?? '';
 		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
-		$typeClass = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
 			? $builtInClass
 			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
 

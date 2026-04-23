@@ -77,6 +77,6 @@ readonly class ExtensionRouteAction
 		}
 
 		// Check API key auth
-		return $this->apiKeyAuthenticator->authenticate($request) !== null;
+		return $this->apiKeyAuthenticator->authenticate($request) instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 	}
 }

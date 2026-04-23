@@ -17,10 +17,10 @@ use Twig\TwigFunction;
  * - Core collisions (functions, filters, globals): blocked and logged
  * - Extension-to-extension collisions: allowed with warning, last wins
  */
-final class TwigExtensionRegistrar
+final readonly class TwigExtensionRegistrar
 {
 	public function __construct(
-		private readonly LoggerInterface $logger,
+		private LoggerInterface $logger,
 	) {
 	}
 

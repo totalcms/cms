@@ -2,10 +2,9 @@
 
 namespace TotalCMS\Domain\Collection\Service;
 
-use TotalCMS\Domain\Event\EventDispatcher;
-
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;

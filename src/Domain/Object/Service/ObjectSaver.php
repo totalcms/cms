@@ -2,10 +2,9 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Event\EventDispatcher;
-
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;

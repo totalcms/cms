@@ -141,7 +141,7 @@ readonly class SchemaTwigAdapter
 
 		// Sort order: custom categories → Extension Schemas → Built-in Schemas
 		uksort($categories, function ($a, $b): int {
-			$order = ['Built-in Schemas' => 3, 'Extension Schemas' => 2, 'Custom Schemas' => 1];
+			$order  = ['Built-in Schemas' => 3, 'Extension Schemas' => 2, 'Custom Schemas' => 1];
 			$aOrder = $order[$a] ?? 0;
 			$bOrder = $order[$b] ?? 0;
 

@@ -57,7 +57,7 @@ final class ExtensionDiscovery
 
 				$manifest = $this->loadManifest($manifestFile);
 				if ($manifest instanceof ExtensionManifest) {
-					$manifests[$manifest->id] = $manifest;
+					$manifests[$manifest->id]             = $manifest;
 					$this->discoveredPaths[$manifest->id] = $extPath;
 				}
 			}

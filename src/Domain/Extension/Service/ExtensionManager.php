@@ -127,7 +127,7 @@ final class ExtensionManager
 			$extRoutes = [];
 
 			// Authenticated API routes
-			if ($state === null || $state->isPermitted('routes:api')) {
+			if (!$state instanceof ExtensionState || $state->isPermitted('routes:api')) {
 				foreach ($context->getRegisteredRoutes() as $registrar) {
 					$collector = new RouteCollector(isPublic: false);
 					$registrar($collector);
@@ -136,7 +136,7 @@ final class ExtensionManager
 			}
 
 			// Public routes
-			if ($state === null || $state->isPermitted('routes:public')) {
+			if (!$state instanceof ExtensionState || $state->isPermitted('routes:public')) {
 				foreach ($context->getRegisteredPublicRoutes() as $registrar) {
 					$collector = new RouteCollector(isPublic: true);
 					$registrar($collector);
@@ -149,7 +149,7 @@ final class ExtensionManager
 			}
 
 			// Admin routes
-			if ($state === null || $state->isPermitted('routes:admin')) {
+			if (!$state instanceof ExtensionState || $state->isPermitted('routes:admin')) {
 				$adminRoutes = [];
 				foreach ($context->getRegisteredAdminRoutes() as $registrar) {
 					$collector = new RouteCollector(isPublic: false);
@@ -292,7 +292,7 @@ final class ExtensionManager
 				$state->permissions = $capabilities;
 			} else {
 				// Add new capabilities as ON, keep existing choices
-				foreach ($capabilities as $cap => $val) {
+				foreach (array_keys($capabilities) as $cap) {
 					if (!isset($state->permissions[$cap])) {
 						$state->permissions[$cap] = true;
 					}
@@ -390,10 +390,10 @@ final class ExtensionManager
 		$customSettings = [];
 
 		foreach ($formData as $key => $value) {
-			if (str_starts_with((string) $key, 'perm_')) {
-				$capability = str_replace('_', ':', substr((string) $key, 5));
+			if (str_starts_with((string)$key, 'perm_')) {
+				$capability = str_replace('_', ':', substr((string)$key, 5));
 				if (isset($permissions[$capability])) {
-					$newPermissions[$capability] = $value === '1' || $value === 'on' || $value === 'true' || $value === true;
+					$newPermissions[$capability] = in_array($value, ['1', 'on', 'true', true], true);
 				}
 			} else {
 				$customSettings[$key] = $value;
@@ -403,7 +403,7 @@ final class ExtensionManager
 		// Save permissions — unchecked toggles won't be submitted, so default to false
 		if ($newPermissions !== [] || $permissions !== []) {
 			$mergedPermissions = [];
-			foreach ($permissions as $cap => $current) {
+			foreach (array_keys($permissions) as $cap) {
 				$mergedPermissions[$cap] = $newPermissions[$cap] ?? false;
 			}
 			$this->savePermissions($extensionId, $mergedPermissions);
@@ -679,7 +679,7 @@ final class ExtensionManager
 	{
 		$state = $this->stateRepository->getState($extensionId);
 
-		return $state === null || $state->isPermitted($capability);
+		return !$state instanceof ExtensionState || $state->isPermitted($capability);
 	}
 
 	/**
@@ -893,7 +893,7 @@ final class ExtensionManager
 			$state->permissions = $capabilities;
 		} else {
 			// Add new capabilities as ON, preserve existing choices
-			foreach ($capabilities as $cap => $val) {
+			foreach (array_keys($capabilities) as $cap) {
 				if (!isset($state->permissions[$cap])) {
 					$state->permissions[$cap] = true;
 				}

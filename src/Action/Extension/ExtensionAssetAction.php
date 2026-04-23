@@ -48,7 +48,7 @@ readonly class ExtensionAssetAction
 			return $response->withStatus(404);
 		}
 
-		$response->getBody()->write((string) file_get_contents($filePath));
+		$response->getBody()->write((string)file_get_contents($filePath));
 
 		return $response
 			->withHeader('Content-Type', MimeLookup::getMimeType($filePath))

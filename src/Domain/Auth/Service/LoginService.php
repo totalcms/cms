@@ -2,9 +2,8 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use TotalCMS\Domain\Event\EventDispatcher;
-
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 

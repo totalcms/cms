@@ -7,11 +7,11 @@ use Twig\TwigFunction;
 
 function createTestLogger(): object
 {
-	return new class extends \Psr\Log\AbstractLogger {
+	return new class extends Psr\Log\AbstractLogger {
 		/** @var list<string> */
 		public array $messages = [];
 
-		public function log($level, \Stringable|string $message, array $context = []): void
+		public function log($level, Stringable|string $message, array $context = []): void
 		{
 			$this->messages[] = "[{$level}] {$message}";
 		}
@@ -23,7 +23,7 @@ describe('TwigExtensionRegistrar', function (): void {
 		$filter = new TwigExtensionRegistrar(new NullLogger());
 
 		$result = $filter->filter(
-			[new TwigFunction('ext_hello', fn () => 'hello')],
+			[new TwigFunction('ext_hello', fn (): string => 'hello')],
 			[],
 			[],
 			['selectOptions', 'embed'],
@@ -41,8 +41,8 @@ describe('TwigExtensionRegistrar', function (): void {
 
 		$result = $filter->filter(
 			[
-				new TwigFunction('selectOptions', fn () => []),
-				new TwigFunction('ext_safe', fn () => 'safe'),
+				new TwigFunction('selectOptions', fn (): array => []),
+				new TwigFunction('ext_safe', fn (): string => 'safe'),
 			],
 			[],
 			[],
@@ -65,7 +65,7 @@ describe('TwigExtensionRegistrar', function (): void {
 		$result = $filter->filter(
 			[],
 			[
-				new TwigFilter('truncate', fn (string $v) => $v),
+				new TwigFilter('truncate', fn (string $v): string => $v),
 				new TwigFilter('ext_shout', fn (string $v) => strtoupper($v)),
 			],
 			[],
@@ -104,8 +104,8 @@ describe('TwigExtensionRegistrar', function (): void {
 
 		$result = $filter->filter(
 			[
-				new TwigFunction('shared_name', fn () => 'first'),
-				new TwigFunction('shared_name', fn () => 'second'),
+				new TwigFunction('shared_name', fn (): string => 'first'),
+				new TwigFunction('shared_name', fn (): string => 'second'),
 			],
 			[],
 			[],
@@ -128,8 +128,8 @@ describe('TwigExtensionRegistrar', function (): void {
 		$result = $filter->filter(
 			[],
 			[
-				new TwigFilter('shared_filter', fn (string $v) => $v),
-				new TwigFilter('shared_filter', fn (string $v) => $v),
+				new TwigFilter('shared_filter', fn (string $v): string => $v),
+				new TwigFilter('shared_filter', fn (string $v): string => $v),
 			],
 			[],
 			[],
@@ -158,12 +158,12 @@ describe('TwigExtensionRegistrar', function (): void {
 
 		$result = $filter->filter(
 			[
-				new TwigFunction('embed', fn () => ''),
-				new TwigFunction('ext_ok', fn () => ''),
+				new TwigFunction('embed', fn (): string => ''),
+				new TwigFunction('ext_ok', fn (): string => ''),
 			],
 			[
-				new TwigFilter('truncate', fn (string $v) => $v),
-				new TwigFilter('ext_ok', fn (string $v) => $v),
+				new TwigFilter('truncate', fn (string $v): string => $v),
+				new TwigFilter('ext_ok', fn (string $v): string => $v),
 			],
 			['cms' => 'bad', 'extVar' => 'good'],
 			['embed', 'selectOptions'],

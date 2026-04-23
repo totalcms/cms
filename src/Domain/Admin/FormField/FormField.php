@@ -515,6 +515,7 @@ class FormField
 	 * untouched since they represent <optgroup> structures.
 	 *
 	 * @param  array<mixed> $options
+	 *
 	 * @return array<mixed>
 	 */
 	protected static function deduplicateOptionsByValue(array $options): array

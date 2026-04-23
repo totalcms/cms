@@ -68,7 +68,7 @@ readonly class TwigEngine
 
 		$this->filesystemLoader = new TwigFilesystemLoader($paths);
 		$loader                 = new DesignerAwareLoader($this->filesystemLoader, $this->designerPreprocessor);
-		$this->twig       = new TwigEnvironment($loader, [
+		$this->twig             = new TwigEnvironment($loader, [
 			'cache'            => $cacheEnabled ? $cacheDir : false,
 			'debug'            => $config->debug || $devModeActive,
 			'auto_reload'      => $config->debug || $devModeActive,   // Auto-reload in dev or devmode

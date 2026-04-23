@@ -68,6 +68,7 @@ class Extension implements ExtensionInterface
 		$context->addRoutes(function ($group): void {
 			$group->get('/api/data', function ($request, $response) {
 				$response->getBody()->write('{"ok":true}');
+
 				return $response;
 			});
 		});
@@ -76,6 +77,7 @@ class Extension implements ExtensionInterface
 		$context->addPublicRoutes(function ($group): void {
 			$group->post('/webhook', function ($request, $response) {
 				$response->getBody()->write('received');
+
 				return $response;
 			});
 		});
@@ -84,6 +86,7 @@ class Extension implements ExtensionInterface
 		$context->addAdminRoutes(function ($group): void {
 			$group->get('/dashboard', function ($request, $response) {
 				$response->getBody()->write('admin page');
+
 				return $response;
 			});
 		});

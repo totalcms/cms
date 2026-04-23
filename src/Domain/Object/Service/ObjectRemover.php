@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Event\EventDispatcher;
-
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;

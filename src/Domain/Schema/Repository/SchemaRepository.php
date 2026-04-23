@@ -289,7 +289,6 @@ class SchemaRepository extends StorageRepository
 		return $schema;
 	}
 
-
 	public function schemaExists(string $id): bool
 	{
 		$schema = $this->fetchDefaultSchema($id);
