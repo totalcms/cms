@@ -4,12 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites running Total CMS 3.
+Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites. Current development is on 3.3 which adds the CLI, extension system, event system, and Composer distribution.
 
 ### Related Projects
 - **Total CMS License API** ([totalcms/license.totalcms.co](https://github.com/totalcms/license.totalcms.co)): License validation and trial management with similar Slim 4 architecture
 - **Total CMS 3 Stacks**: Stacks plugin for the Stacks platform
 - **Documentation Site** ([totalcms/docs.totalcms.co](https://github.com/totalcms/docs.totalcms.co)): Public docs at docs.totalcms.co. Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
+- **Extension Starter** ([totalcms/extension-starter](https://github.com/totalcms/extension-starter)): Template repo for building T3 extensions, demonstrates every extension point
+- **MCP Docs Server** ([totalcms/mcp.totalcms.co](https://github.com/totalcms/mcp.totalcms.co)): MCP server that serves T3 documentation to AI agents
+- **Project Repo** ([totalcms/totalcms-project](https://github.com/totalcms/totalcms-project)): Composer project template for installing T3 via `composer create-project`
 
 ## Technology Stack
 
@@ -55,23 +58,28 @@ composer run test:all
 ## Architecture Overview
 
 ### Directory Structure
-- **`/src/Action/`** - HTTP action handlers organized by domain (Admin, Auth, Collection, Upload, etc.)
+- **`/src/Action/`** - HTTP action handlers organized by domain (Admin, Auth, Collection, Extension, Upload, etc.)
 - **`/src/Domain/`** - Business logic layer with services, repositories, and data objects
+  - **`/src/Domain/Extension/`** - Extension system: discovery, lifecycle, permissions, settings, route collection
+  - **`/src/Domain/Event/`** - Core event dispatcher (used by extensions and internal services)
   - **`/src/Domain/JumpStart/`** - JumpStart data import/export system
   - **`/src/Domain/Import/`** - CMS import systems (Alloy, Total CMS 1, Wordpress, CSV, JSON, RSS, URL)
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
   - **`/src/Domain/ImageWorks/`** - Image processing with watermarking, font management, and caching
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
+- **`/src/CLI/`** - Symfony Console CLI application and commands
 - **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, validation
 - **`/src/Renderer/`** - Response rendering (JSON, XML, Twig, Raw)
 - **`/src/Utils/`** - Utility classes for file handling, image processing, QR codes
 - **`/config/`** - Hierarchical PHP configuration and route definitions
 - **`/tcms-data/`** - JSON-based flat-file storage for collections
+- **`/tcms-data/extensions/`** - Third-party extensions installed as `{vendor}/{name}/`
 - **`/resources/schemas/`** - JSON schemas for data validation
 - **`/resources/templates/`** - Twig templates for admin interface
 - **`/resources/docs/`** - Documentation files (source of truth for docs.totalcms.co)
 - **`/resources/fonts/`** - Centralized font storage (default: RobotoRegular.ttf)
 - **`/tests/test-data/`** - Test datasets for integration testing
+- **`/tests/fixtures/extensions/`** - Test extension fixtures (must be committed to git)
 
 ### Design Patterns
 - **Domain-Driven Design**: Clear separation between Actions, Domain services, and Data layers
@@ -95,6 +103,10 @@ composer run test:all
 - **Admin Interface**: Form builder with 20+ field types, JavaScript components
 - **Passkey Authentication**: WebAuthn passkey support for passwordless admin login
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
+- **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, and extension management
+- **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
+- **Event System**: Synchronous event dispatcher with 11 core events (object/collection/schema/user CRUD, extension lifecycle)
+- **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/project`
 - **Build System**: ESBuild with code splitting
 
 ## Important Notes
@@ -102,6 +114,8 @@ composer run test:all
 - **Storage**: Flat-file JSON storage (no traditional database)
 - **Caching**: Multi-backend Twig caching with APCu-first priority (APCu, Redis, Memcached, filesystem, OPcache)
 - **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features with PHP 8.4 compatibility
+- **Distribution**: Public Packagist via `totalcms/cms`. Installed with `composer create-project totalcms/project`
+- **Extensions**: Third-party extensions in `tcms-data/extensions/{vendor}/{name}/` with auto-detected capability permissions
 - **Enhanced Libraries**: Custom couleur fork with OKLCH improvements ([joeworkman-forks/couleur](https://github.com/joeworkman-forks/couleur))
 - **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
 - **Emergency Cache**: `/emergency/cache/clear` endpoint for customer self-service cache clearing
@@ -197,6 +211,32 @@ These are non-obvious details that are important when working in these areas:
 - **Schema**: `designerEnabled` (toggle) + `designerToken` (UUID, readonly)
 - **Metadata**: Companion `.designer.json` files alongside `.twig` files
 
+### Extension System
+- **Lifecycle**: Two-phase — `register()` during container build, `boot()` after routes are loaded
+- **API Surface**: `ExtensionContext` provides curated methods; extensions never touch the raw container directly
+- **Extension Points**: Twig functions/filters, CLI commands, routes (API/public/admin), admin nav items, dashboard widgets, custom field types, event listeners, admin assets, container definitions, schemas
+- **Capability Detection**: After `register()`, the system detects what the extension actually registered (not self-declared). Capabilities become toggleable permissions in the admin UI.
+- **Permissions**: Stored in `tcms-data/.system/extensions.json` per-extension. Admins can disable individual capabilities without uninstalling. All `getAll*()` accessors filter by permission state.
+- **Settings**: Per-extension custom settings in `tcms-data/.system/extension-settings/{vendor}/{name}.json`. Settings schemas use the same `type` + `field` format as collection/settings schemas.
+- **Routes**: Extensions register routes via `RouteCollector` (not Slim directly). Three static route handlers dispatch at runtime: `ExtensionRouteAction` (API), `ExtensionAdminRouteAction` (admin), `ExtensionAssetAction` (static assets).
+- **Admin UI**: Extension management page with enable/disable, auto-generated permission toggles, and custom settings forms via `TotalFormFactory::extensionSettings()`.
+- **Twig Collision Protection**: `TwigExtensionRegistrar` blocks extensions from overriding core Twig functions/filters and warns on extension-to-extension collisions.
+- **Fault Isolation**: Every `register()` and `boot()` call is wrapped in try/catch. Failures are logged, recorded in state, and the extension is skipped.
+- **Key Files**: `ExtensionManager` (orchestrator), `ExtensionContext` (public API), `ExtensionDiscovery` (filesystem scanner), `ExtensionState` (runtime state with permissions)
+
+### CLI System (`tcms`)
+- **Framework**: Symfony Console via `CliApplication`
+- **Entry Point**: `resources/bin/tcms` (shipped), `bin/tcms` (dev symlink)
+- **Commands**: `collection:list`, `collection:get`, `collection:export`, `collection:import`, `collection:query`, `object:list`, `object:get`, `object:export`, `schema:list`, `schema:get`, `schema:export`, `schema:import`, `jumpstart:export`, `jumpstart:import`, `extension:list`, `extension:enable`, `extension:disable`, `extension:remove`, `update:check`, `update:apply`, `update:rollback`, `cache:clear`, `info`, `pull`, `push`, `deck:import`, `jobs:process`
+- **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
+- **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
+
+### Event System
+- **Dispatcher**: `src/Domain/Event/EventDispatcher.php` — synchronous, priority-ordered
+- **Core Events**: `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`
+- **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, ExtensionManager
+- **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
+
 ### Configuration System
 - **Deep Merge**: Override specific nested settings without replacing entire arrays
 - **Usage**: Return array from tcms.php for deep merging
@@ -206,3 +246,4 @@ These are non-obvious details that are important when working in these areas:
 - **Validation Flow**: Middleware -> Service -> API call -> JWT validation -> Cache
 - **Data Structure**: 8 essential fields (valid, trial, domain, edition, message, validationToken, updatesValid, trialDaysRemaining)
 - **Cache Integration**: Multi-backend with 24-hour TTL
+- **Version Authorization**: License API validates the running T3 version is authorized for the license. Unauthorized versions show a dashboard warning.
