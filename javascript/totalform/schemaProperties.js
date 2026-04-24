@@ -190,14 +190,16 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
 	duplicateField(field) {
-		// Capture CodeMirror values by textarea name — CodeMirror syncs to the
-		// textarea's .value DOM property, which does not survive cloneNode.
+		// Capture CodeMirror values by textarea name — CM6 editor state
+		// does not survive cloneNode.
 		const editorValues = new Map();
-		field.querySelectorAll('.CodeMirror').forEach(wrapper => {
-			if (!wrapper.CodeMirror) return;
-			const textarea = wrapper.previousElementSibling;
+		field.querySelectorAll('.cm-editor').forEach(wrapper => {
+			if (!wrapper._totalcmsEditor) return;
+			// The textarea is a sibling of the editor's container div
+			const container = wrapper.parentElement;
+			const textarea = container?.previousElementSibling;
 			if (textarea && textarea.tagName === 'TEXTAREA' && textarea.name) {
-				editorValues.set(textarea.name, wrapper.CodeMirror.getValue());
+				editorValues.set(textarea.name, wrapper._totalcmsEditor.getValue());
 			}
 		});
 
@@ -211,11 +213,12 @@ export default class SchemaPropertiesField extends PropertiesField {
 
 		const newField = field.nextSibling;
 
-		// Remove cloned CodeMirror wrappers so JSONField re-inits cleanly
-		// instead of stacking a second editor next to the cloned one.
-		newField.querySelectorAll('.CodeMirror').forEach(wrapper => wrapper.remove());
+		// Remove cloned editor wrappers so fields re-init cleanly
+		newField.querySelectorAll('.cm-editor').forEach(wrapper => wrapper.remove());
+		// Also remove cloned editor containers
+		newField.querySelectorAll('.totalform-json-editor-container').forEach(c => c.remove());
 
-		// Restore captured CodeMirror values onto the cloned textareas
+		// Restore captured editor values onto the cloned textareas
 		editorValues.forEach((value, name) => {
 			const textarea = newField.querySelector(`textarea[name="${name}"]`);
 			if (textarea) textarea.value = value;

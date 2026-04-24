@@ -1,5 +1,5 @@
 /**
- * TiptapCodeView - CodeMirror 5 integration for HTML source editing.
+ * TiptapCodeView - CodeMirror 6 integration for HTML source editing.
  * Toggle hides ProseMirror, shows CodeMirror instance.
  */
 
@@ -8,8 +8,8 @@ export default class TiptapCodeView {
 	constructor(container, options = {}) {
 		this.container = container;
 		this.options = options;
-		this.codeMirror = null;
-		this.codeArea = null;
+		this.editor = null;
+		this.editorContainer = null;
 		this.active = false;
 	}
 
@@ -27,34 +27,33 @@ export default class TiptapCodeView {
 		// Hide the editor wrapper
 		wrapper.style.display = 'none';
 
-		// Create code view textarea
-		this.codeArea = document.createElement('textarea');
-		this.codeArea.className = 'ste-code-view';
-		this.codeArea.value = html;
-		this.container.appendChild(this.codeArea);
+		// Create container for CM6 editor
+		this.editorContainer = document.createElement('div');
+		this.editorContainer.className = 'ste-code-view';
+		this.container.appendChild(this.editorContainer);
 
-		// Initialize CodeMirror if available
-		if (window.CodeMirror) {
-			this.codeMirror = window.CodeMirror.fromTextArea(this.codeArea, {
-				indentWithTabs: true,
-				lineNumbers: true,
-				lineWrapping: true,
-				readOnly: false,
-				mode: 'text/html',
-				tabMode: 'indent',
+		// Initialize CodeMirror 6 via factory
+		if (window.TotalCMSCodeMirror) {
+			this.editor = window.TotalCMSCodeMirror.createHtmlEditor(this.editorContainer, {
+				value: html,
 				tabSize: 2,
 				...this.options,
 			});
 
 			// Use the same height as the editor wrapper so CodeMirror scrolls internally
-			this.codeMirror.setSize('100%', editorHeight);
+			this.editor.setSize('100%', editorHeight);
 
 			// Refresh after a tick to ensure proper rendering
-			setTimeout(() => this.codeMirror?.refresh(), 50);
+			setTimeout(() => this.editor?.refresh(), 50);
 		} else {
 			// Plain textarea fallback
-			this.codeArea.style.height = `${editorHeight}px`;
-			this.codeArea.style.overflowY = 'auto';
+			this.editorContainer.style.height = `${editorHeight}px`;
+			this.editorContainer.style.overflowY = 'auto';
+			const textarea = document.createElement('textarea');
+			textarea.value = html;
+			textarea.style.width = '100%';
+			textarea.style.height = '100%';
+			this.editorContainer.appendChild(textarea);
 		}
 	}
 
@@ -64,16 +63,20 @@ export default class TiptapCodeView {
 
 		let html = null;
 
-		if (this.codeMirror) {
-			html = this.codeMirror.getValue();
-			this.codeMirror.toTextArea();
-			this.codeMirror = null;
+		if (this.editor) {
+			html = this.editor.getValue();
+			this.editor.destroy();
+			this.editor = null;
 		}
 
-		if (this.codeArea) {
-			if (!html) html = this.codeArea.value;
-			this.codeArea.remove();
-			this.codeArea = null;
+		if (this.editorContainer) {
+			// If no editor (textarea fallback), grab value from textarea
+			if (!html) {
+				const textarea = this.editorContainer.querySelector('textarea');
+				html = textarea?.value || '';
+			}
+			this.editorContainer.remove();
+			this.editorContainer = null;
 		}
 
 		// Show editor wrapper
@@ -83,19 +86,20 @@ export default class TiptapCodeView {
 	}
 
 	getValue() {
-		if (this.codeMirror) {
-			return this.codeMirror.getValue();
+		if (this.editor) {
+			return this.editor.getValue();
 		}
-		return this.codeArea?.value || '';
+		const textarea = this.editorContainer?.querySelector('textarea');
+		return textarea?.value || '';
 	}
 
 	destroy() {
-		if (this.codeMirror) {
-			this.codeMirror.toTextArea();
-			this.codeMirror = null;
+		if (this.editor) {
+			this.editor.destroy();
+			this.editor = null;
 		}
-		this.codeArea?.remove();
-		this.codeArea = null;
+		this.editorContainer?.remove();
+		this.editorContainer = null;
 		this.active = false;
 	}
 }

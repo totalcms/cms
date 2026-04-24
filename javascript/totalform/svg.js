@@ -1,9 +1,6 @@
 import TotalField from "./totalfield.js";
 import DOMPurify from 'dompurify';
 
-import CodeMirror from "codemirror";
-import "codemirror/mode/xml/xml";
-
 //-----------------------------------------------
 // Total CMS SVG Field
 //-----------------------------------------------
@@ -70,17 +67,15 @@ export default class SVGField extends TotalField {
 		this.dropZone.textContent = 'Drop SVG file';
 		this.fieldWrapper.appendChild(this.dropZone);
 
-		// Init CodeMirror
-		this.codeMirror = CodeMirror(editorPane, {
+		// Init editor via factory
+		if (!window.TotalCMSCodeMirror) {
+			console.warn('TotalCMSCodeMirror not loaded yet');
+			return;
+		}
+
+		this.codeMirror = window.TotalCMSCodeMirror.createXmlEditor(editorPane, {
 			value: this.input.value || '',
-			indentWithTabs: true,
-			lineNumbers: true,
 			lineWrapping: true,
-			readOnly: false,
-			autofocus: false,
-			mode: 'xml',
-			theme: 'elegant',
-			tabMode: 'indent',
 			tabSize: 2,
 		});
 

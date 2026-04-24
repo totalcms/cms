@@ -22,13 +22,20 @@ export default class JSONField extends TotalField {
         const lineHeight = 20;
         const height = rows * lineHeight + 20;
 
-        this.editor = window.TotalCMSCodeMirror.createJsonEditor(this.input, {
+        // Create container for CM6 (it needs a parent element, not a textarea)
+        const editorContainer = document.createElement('div');
+        editorContainer.className = 'totalform-json-editor-container';
+        this.input.style.display = 'none';
+        this.input.parentNode.insertBefore(editorContainer, this.input.nextSibling);
+
+        editorContainer.style.height = height + 'px';
+
+        this.editor = window.TotalCMSCodeMirror.createJsonEditor(editorContainer, {
+            value: this.input.value || '',
             matchBrackets: true,
             autoCloseBrackets: true,
             lineWrapping: true,
         });
-
-        this.editor.setSize(null, height);
 
         // Sync editor content to textarea on change
         this.editor.on('change', () => {

@@ -87,9 +87,6 @@ esbuild.build({
         // Sass includes
         sassPlugin({
             loadPaths: [
-                "node_modules/codemirror/lib/",
-                "node_modules/codemirror/theme/",
-                "node_modules/codemirror/addon/",
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
 				"css/lightgallery/",

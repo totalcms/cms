@@ -3,12 +3,8 @@ import TiptapEditor from "./tiptap/TiptapEditor.js";
 import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
 
-import CodeMirror from "codemirror";
-import "codemirror/mode/xml/xml";
-import "codemirror/mode/twig/twig";
 import DOMPurify from 'dompurify';
 
-window.CodeMirror = CodeMirror;
 window.DOMPurify = DOMPurify;
 
 //-----------------------------------------------

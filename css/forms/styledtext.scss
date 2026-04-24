@@ -301,12 +301,13 @@
 	width            : 100%;
 	box-sizing       : border-box;
 	min-height       : 200px;
-	padding          : 1rem;
-	border           : none;
+	padding          : 0;
 	resize           : vertical;
 	font-family      : monospace;
 	font-size        : 1rem;
 	line-height      : 1.5;
+	border           : none;
+	border-top       : 1px solid oklch(var(--totalform-border-color));
 	color            : oklch(var(--totalform-text-color));
 	background-color : oklch(var(--totalform-white));
 	tab-size         : 2;
@@ -317,7 +318,7 @@
 }
 
 // CodeMirror inside code view
-.ste-editor-container .CodeMirror {
+.ste-editor-container .cm-editor {
 	border    : none;
 	font-size : 1rem;
 }

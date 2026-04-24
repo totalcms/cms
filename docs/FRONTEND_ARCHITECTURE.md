@@ -30,7 +30,7 @@ Total CMS uses a modern frontend architecture built around:
 - **Build Tool**: ESBuild 0.16.17
 - **Module System**: ES6 Modules with ESM format
 - **Styling**: SCSS with Sass Extended Importer
-- **Code Editor**: CodeMirror 5.65
+- **Code Editor**: CodeMirror 6
 - **Rich Text**: Tiptap 3.x
 - **File Upload**: Dropzone 7.1.1
 - **Data Tables**: Native HTML tables with CSS sticky headers and vanilla JS sorting
