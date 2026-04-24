@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Event;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\Payload\EventPayload;
 
 /**
  * Simple synchronous event dispatcher for extensions.
@@ -51,22 +52,25 @@ final class EventDispatcher
 	/**
 	 * Dispatch an event to all registered listeners.
 	 *
-	 * @param string              $event   Event name
-	 * @param array<string,mixed> $payload Event data
+	 * @param string       $event   Event name
+	 * @param EventPayload $payload Typed event payload
 	 */
-	public function dispatch(string $event, array $payload = []): void
+	public function dispatch(string $event, EventPayload $payload): void
 	{
 		$listeners = $this->listeners[$event] ?? [];
 		if ($listeners === []) {
 			return;
 		}
 
+		// Convert typed payload to array for listener compatibility
+		$payloadArray = $payload->toArray();
+
 		// Sort by priority (lower = first)
 		usort($listeners, fn (array $a, array $b): int => $a[1] <=> $b[1]);
 
 		foreach ($listeners as [$listener, $priority]) {
 			try {
-				$listener($payload);
+				$listener($payloadArray);
 			} catch (\Throwable $e) {
 				$this->logger->error("Event listener for '{$event}' threw an exception: {$e->getMessage()}", [
 					'event'     => $event,

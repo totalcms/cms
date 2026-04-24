@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -110,10 +111,7 @@ class CsvImporter
 		}
 
 		// Single index rebuild at end of import
-		$this->eventDispatcher->dispatch('import.completed', [
-			'collection' => $collection,
-			'count'      => $importCount,
-		]);
+		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount));
 
 		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
 

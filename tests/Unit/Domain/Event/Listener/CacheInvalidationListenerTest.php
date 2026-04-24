@@ -9,6 +9,9 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
+use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
+use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
 
 final class CacheInvalidationListenerTest extends TestCase
 {
@@ -30,9 +33,7 @@ final class CacheInvalidationListenerTest extends TestCase
 			->method('clearCollectionIndex')
 			->with('posts');
 
-		$this->dispatcher->dispatch('collection.created', [
-			'collection' => 'posts',
-		]);
+		$this->dispatcher->dispatch('collection.created', new CollectionEventPayload('posts'));
 	}
 
 	public function testCollectionUpdatedClearsCollectionIndex(): void
@@ -42,9 +43,7 @@ final class CacheInvalidationListenerTest extends TestCase
 			->method('clearCollectionIndex')
 			->with('posts');
 
-		$this->dispatcher->dispatch('collection.updated', [
-			'collection' => 'posts',
-		]);
+		$this->dispatcher->dispatch('collection.updated', new CollectionEventPayload('posts'));
 	}
 
 	public function testCollectionDeletedClearsCollectionIndex(): void
@@ -54,9 +53,7 @@ final class CacheInvalidationListenerTest extends TestCase
 			->method('clearCollectionIndex')
 			->with('team');
 
-		$this->dispatcher->dispatch('collection.deleted', [
-			'collection' => 'team',
-		]);
+		$this->dispatcher->dispatch('collection.deleted', new CollectionEventPayload('team'));
 	}
 
 	public function testImportCompletedClearsCollectionIndex(): void
@@ -66,10 +63,7 @@ final class CacheInvalidationListenerTest extends TestCase
 			->method('clearCollectionIndex')
 			->with('products');
 
-		$this->dispatcher->dispatch('import.completed', [
-			'collection' => 'products',
-			'count'      => 50,
-		]);
+		$this->dispatcher->dispatch('import.completed', new ImportEventPayload('products', 50));
 	}
 
 	public function testSchemaSavedClearsFlattenedSchemaCache(): void
@@ -79,8 +73,6 @@ final class CacheInvalidationListenerTest extends TestCase
 			->method('clearComputedData')
 			->with('schema_flattened:blog');
 
-		$this->dispatcher->dispatch('schema.saved', [
-			'schema' => 'blog',
-		]);
+		$this->dispatcher->dispatch('schema.saved', new SchemaEventPayload('blog'));
 	}
 }

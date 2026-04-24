@@ -12,6 +12,7 @@ use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
+use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
@@ -303,7 +304,7 @@ final class ExtensionManager
 		}
 
 		$this->stateRepository->saveState($extensionId, $state);
-		$this->dispatchEvent('extension.enabled', ['id' => $extensionId]);
+		$this->dispatchEvent('extension.enabled', new ExtensionEventPayload($extensionId));
 	}
 
 	public function isEnabled(string $extensionId): bool
@@ -327,7 +328,7 @@ final class ExtensionManager
 			$state->enabled = false;
 			$state->error   = null;
 			$this->stateRepository->saveState($extensionId, $state);
-			$this->dispatchEvent('extension.disabled', ['id' => $extensionId]);
+			$this->dispatchEvent('extension.disabled', new ExtensionEventPayload($extensionId));
 		}
 	}
 
@@ -739,10 +740,7 @@ final class ExtensionManager
 		}
 	}
 
-	/**
-	 * @param array<string,mixed> $payload
-	 */
-	private function dispatchEvent(string $event, array $payload): void
+	private function dispatchEvent(string $event, ExtensionEventPayload $payload): void
 	{
 		try {
 			if ($this->container->has(\TotalCMS\Domain\Event\EventDispatcher::class)) {

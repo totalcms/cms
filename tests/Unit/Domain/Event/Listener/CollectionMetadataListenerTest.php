@@ -9,6 +9,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 
 final class CollectionMetadataListenerTest extends TestCase
 {
@@ -35,10 +36,7 @@ final class CollectionMetadataListenerTest extends TestCase
 			->method('incrementTotalObjects')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testObjectUpdatedUpdatesLastUpdated(): void
@@ -48,10 +46,7 @@ final class CollectionMetadataListenerTest extends TestCase
 			->method('updateLastUpdated')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.updated', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testObjectDeletedDecrementsTotalObjects(): void
@@ -61,9 +56,6 @@ final class CollectionMetadataListenerTest extends TestCase
 			->method('decrementTotalObjects')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.deleted', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('posts', 'test-id'));
 	}
 }

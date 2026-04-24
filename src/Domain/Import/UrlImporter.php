@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
@@ -58,10 +59,7 @@ readonly class UrlImporter
 			$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
 			// @todo Add logic that will download the image and save it to the post
 
-			$this->eventDispatcher->dispatch('import.completed', [
-				'collection' => $collection,
-				'count'      => 1,
-			]);
+			$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, 1));
 		} catch (\Exception $exception) {
 			$this->logger->error(
 				sprintf('Error importing URL: %s', $exception->getMessage())

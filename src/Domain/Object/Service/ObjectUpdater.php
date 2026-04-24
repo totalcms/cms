@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -37,11 +38,7 @@ readonly class ObjectUpdater
 
 		$this->storage->saveObject($collection, $object);
 
-		$this->eventDispatcher->dispatch('object.updated', [
-			'collection' => $collection,
-			'id'         => $object->id,
-			'object'     => $object,
-		]);
+		$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object));
 
 		return $object;
 	}

@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 
@@ -40,11 +41,7 @@ readonly class ObjectCloner
 
 		$this->storage->copyObjectFiles($from['collection'], $from['id'], $to['collection'], $to['id']);
 
-		$this->eventDispatcher->dispatch('object.created', [
-			'collection' => $to['collection'],
-			'id'         => $object->id,
-			'object'     => $object,
-		]);
+		$this->eventDispatcher->dispatch('object.created', new ObjectEventPayload($to['collection'], $object->id, $object));
 
 		return $object;
 	}

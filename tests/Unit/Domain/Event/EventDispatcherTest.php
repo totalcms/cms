@@ -2,6 +2,8 @@
 
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 
 describe('EventDispatcher', function (): void {
 	test('dispatches event to registered listener', function (): void {
@@ -12,7 +14,7 @@ describe('EventDispatcher', function (): void {
 			$received[] = $payload;
 		});
 
-		$dispatcher->dispatch('object.created', ['collection' => 'blog', 'id' => 'post-1']);
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'post-1'));
 
 		expect($received)->toHaveCount(1);
 		expect($received[0]['collection'])->toBe('blog');
@@ -30,7 +32,7 @@ describe('EventDispatcher', function (): void {
 			$calls[] = 'listener-2';
 		});
 
-		$dispatcher->dispatch('object.created');
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'test'));
 
 		expect($calls)->toBe(['listener-1', 'listener-2']);
 	});
@@ -49,7 +51,7 @@ describe('EventDispatcher', function (): void {
 			$calls[] = 'priority-30';
 		}, 30);
 
-		$dispatcher->dispatch('test');
+		$dispatcher->dispatch('test', new CollectionEventPayload('test'));
 
 		expect($calls)->toBe(['priority-10', 'priority-30', 'priority-50']);
 	});
@@ -58,7 +60,7 @@ describe('EventDispatcher', function (): void {
 		$dispatcher = new EventDispatcher(new NullLogger());
 
 		// Should not throw
-		$dispatcher->dispatch('nonexistent.event', ['data' => 'test']);
+		$dispatcher->dispatch('nonexistent.event', new CollectionEventPayload('test'));
 
 		expect(true)->toBeTrue();
 	});
@@ -74,7 +76,7 @@ describe('EventDispatcher', function (): void {
 			$secondCalled = true;
 		});
 
-		$dispatcher->dispatch('test');
+		$dispatcher->dispatch('test', new CollectionEventPayload('test'));
 
 		expect($secondCalled)->toBeTrue();
 	});
@@ -110,8 +112,8 @@ describe('EventDispatcher', function (): void {
 			],
 		]);
 
-		$dispatcher->dispatch('object.created');
-		$dispatcher->dispatch('object.deleted');
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'test'));
+		$dispatcher->dispatch('object.deleted', new ObjectEventPayload('blog', 'test'));
 
 		expect($calls)->toBe(['ext-1', 'ext-2', 'ext-3']);
 	});

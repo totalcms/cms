@@ -9,6 +9,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\DataViewListener;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 
 final class DataViewListenerTest extends TestCase
 {
@@ -30,10 +31,7 @@ final class DataViewListenerTest extends TestCase
 			->method('scheduleUpdatesForCollection')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testObjectUpdatedSchedulesViewUpdates(): void
@@ -43,10 +41,7 @@ final class DataViewListenerTest extends TestCase
 			->method('scheduleUpdatesForCollection')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.updated', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testObjectDeletedSchedulesViewUpdates(): void
@@ -56,9 +51,6 @@ final class DataViewListenerTest extends TestCase
 			->method('scheduleUpdatesForCollection')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.deleted', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('posts', 'test-id'));
 	}
 }

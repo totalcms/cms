@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
@@ -37,9 +38,7 @@ readonly class SchemaRemover
 		$result = $this->storage->deleteSchema($id);
 
 		if ($result) {
-			$this->eventDispatcher->dispatch('schema.deleted', [
-				'schema' => $id,
-			]);
+			$this->eventDispatcher->dispatch('schema.deleted', new SchemaEventPayload($id));
 		}
 
 		return $result;

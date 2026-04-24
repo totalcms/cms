@@ -12,6 +12,9 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 
 final class IndexBuildListenerTest extends TestCase
@@ -46,11 +49,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('posts', $object);
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-			'object'     => $object,
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id', $object));
 	}
 
 	public function testObjectUpdatedCallsSmartBuildIndexWithObject(): void
@@ -62,11 +61,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('posts', $object);
 
-		$this->dispatcher->dispatch('object.updated', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-			'object'     => $object,
-		]);
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('posts', 'test-id', $object));
 	}
 
 	public function testObjectDeletedWithQueueRebuildCallsBothMethods(): void
@@ -90,10 +85,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.deleted', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testObjectDeletedWithoutQueueRebuildCallsOnlySmartBuild(): void
@@ -115,10 +107,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('posts');
 
-		$this->dispatcher->dispatch('object.deleted', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testSchemaSavedRebuildsIndexForMatchingCollections(): void
@@ -148,9 +137,7 @@ final class IndexBuildListenerTest extends TestCase
 				expect($collection)->toBeIn(['posts', 'news']);
 			});
 
-		$this->dispatcher->dispatch('schema.saved', [
-			'schema' => 'blog',
-		]);
+		$this->dispatcher->dispatch('schema.saved', new SchemaEventPayload('blog'));
 	}
 
 	public function testSuspendedCollectionSkipsIndexOnCreate(): void
@@ -161,10 +148,7 @@ final class IndexBuildListenerTest extends TestCase
 			->expects($this->never())
 			->method('smartBuildIndex');
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testSuspendedCollectionSkipsIndexOnUpdate(): void
@@ -175,10 +159,7 @@ final class IndexBuildListenerTest extends TestCase
 			->expects($this->never())
 			->method('smartBuildIndex');
 
-		$this->dispatcher->dispatch('object.updated', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('posts', 'test-id'));
 	}
 
 	public function testSuspendOnlyAffectsTargetCollection(): void
@@ -190,10 +171,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('team', null);
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'team',
-			'id'         => 'test-id',
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('team', 'test-id'));
 	}
 
 	public function testResumeRestoresIndexRebuilds(): void
@@ -208,11 +186,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('posts', $object);
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'posts',
-			'id'         => 'test-id',
-			'object'     => $object,
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id', $object));
 	}
 
 	public function testImportCompletedRebuildsIndexAndResumes(): void
@@ -224,10 +198,7 @@ final class IndexBuildListenerTest extends TestCase
 			->method('buildIndex')
 			->with('posts');
 
-		$this->dispatcher->dispatch('import.completed', [
-			'collection' => 'posts',
-			'count'      => 10,
-		]);
+		$this->dispatcher->dispatch('import.completed', new ImportEventPayload('posts', 10));
 
 		// After import.completed, the collection should be resumed.
 		// Dispatch another object.created to verify it's no longer suspended.
@@ -236,9 +207,6 @@ final class IndexBuildListenerTest extends TestCase
 			->method('smartBuildIndex')
 			->with('posts', null);
 
-		$this->dispatcher->dispatch('object.created', [
-			'collection' => 'posts',
-			'id'         => 'new-post',
-		]);
+		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'new-post'));
 	}
 }
