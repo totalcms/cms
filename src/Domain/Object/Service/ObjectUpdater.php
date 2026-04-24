@@ -2,10 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -19,10 +16,7 @@ readonly class ObjectUpdater
 		private ObjectFetcher $objectFetcher,
 		private ObjectRepository $storage,
 		private ObjectFactory $factory,
-		private IndexBuilder $indexBuilder,
 		private PropertyDataProcessorInterface $propertyProcessor,
-		private CollectionSaver $collectionSaver,
-		private DataViewUpdateScheduler $viewUpdateScheduler,
 		private EventDispatcher $eventDispatcher,
 	) {
 	}
@@ -43,17 +37,10 @@ readonly class ObjectUpdater
 
 		$this->storage->saveObject($collection, $object);
 
-		// Update lastUpdated timestamp
-		$this->collectionSaver->updateLastUpdated($collection);
-
-		// Pass the updated object for immediate index update when queueRebuildOnSave is enabled
-		$this->indexBuilder->smartBuildIndex($collection, $object);
-
-		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
-
 		$this->eventDispatcher->dispatch('object.updated', [
 			'collection' => $collection,
 			'id'         => $object->id,
+			'object'     => $object,
 		]);
 
 		return $object;

@@ -2,10 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\PropertyData;
@@ -16,10 +13,7 @@ readonly class ObjectSaver
 	public function __construct(
 		private ObjectRepository $storage,
 		private ObjectFactory $factory,
-		private IndexBuilder $indexBuilder,
 		private PropertyDataProcessorInterface $propertyProcessor,
-		private CollectionSaver $collectionSaver,
-		private DataViewUpdateScheduler $viewUpdateScheduler,
 		private DateFieldResetter $dateFieldResetter,
 		private EventDispatcher $eventDispatcher,
 	) {
@@ -42,20 +36,10 @@ readonly class ObjectSaver
 
 		$this->storage->saveObject($collection, $object);
 
-		// Increment the collection count for newly created objects
-		$this->collectionSaver->incrementCount($collection);
-
-		// Increment totalObjects and update lastUpdated
-		$this->collectionSaver->incrementTotalObjects($collection);
-
-		// Pass the new object for immediate index append when queueRebuildOnSave is enabled
-		$this->indexBuilder->smartBuildIndex($collection, $object);
-
-		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
-
 		$this->eventDispatcher->dispatch('object.created', [
 			'collection' => $collection,
 			'id'         => $object->id,
+			'object'     => $object,
 		]);
 
 		return $object;

@@ -2,9 +2,7 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Event\EventDispatcher;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
@@ -14,8 +12,6 @@ readonly class SchemaSaver
 		private SchemaRepository $storage,
 		private SchemaFactory $factory,
 		private SchemaValidator $validator,
-		private IndexBuilder $indexBuilder,
-		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
 		private EventDispatcher $eventDispatcher,
 	) {
@@ -35,8 +31,6 @@ readonly class SchemaSaver
 		// Make sure the schema exists
 		$this->storage->getSchema($schemaId);
 		$schema = $this->saveSchema($schemaData);
-
-		$this->rebuildIndexforCollectionsWithSchema($schema->id);
 
 		return $schema;
 	}
@@ -247,14 +241,4 @@ readonly class SchemaSaver
 		return array_unique($inherited);
 	}
 
-	private function rebuildIndexforCollectionsWithSchema(string $schemaId): void
-	{
-		$collections = $this->collectionLister->listAllCollections();
-
-		foreach ($collections as $collection) {
-			if ($collection->schema === $schemaId) {
-				$this->indexBuilder->smartBuildIndex($collection->id);
-			}
-		}
-	}
 }

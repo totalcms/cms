@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -21,10 +16,6 @@ readonly class ObjectRemover
 		private ObjectRepository $storage,
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
-		private IndexBuilder $indexBuilder,
-		private CollectionFetcher $collectionFetcher,
-		private CollectionSaver $collectionSaver,
-		private DataViewUpdateScheduler $viewUpdateScheduler,
 		private EventDispatcher $eventDispatcher,
 	) {
 	}
@@ -34,22 +25,6 @@ readonly class ObjectRemover
 		$status = $this->storage->deleteObject($collection, $id);
 
 		if ($status) {
-			// Decrement totalObjects and update lastUpdated
-			$this->collectionSaver->decrementTotalObjects($collection);
-
-			// Use optimized removal for immediate index update
-			$collectionData = $this->collectionFetcher->fetchCollection($collection);
-			$queueReindex   = $collectionData instanceof CollectionData && $collectionData->queueRebuildOnSave;
-
-			if ($queueReindex) {
-				// Remove immediately from index, then queue full rebuild for consistency
-				$this->indexBuilder->removeObjectFromIndex($collection, $id);
-			}
-			// Full rebuild
-			$this->indexBuilder->smartBuildIndex($collection);
-
-			$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
-
 			$this->eventDispatcher->dispatch('object.deleted', [
 				'collection' => $collection,
 				'id'         => $id,

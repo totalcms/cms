@@ -6,9 +6,6 @@ namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
@@ -24,30 +21,30 @@ final class ObjectUpdaterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $repository;
 	private \PHPUnit\Framework\MockObject\MockObject $factory;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
+	private \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher;
+
+	/** @var array<string,mixed>|null */
+	private ?array $dispatchedPayload = null;
 
 	protected function setUp(): void
 	{
-		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
-		$this->repository            = $this->createMock(ObjectRepository::class);
-		$this->factory               = $this->createMock(ObjectFactory::class);
-		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
-		$this->propertyProcessor     = $this->createMock(PropertyDataProcessorInterface::class);
-		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
-		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
+		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
+		$this->repository        = $this->createMock(ObjectRepository::class);
+		$this->factory           = $this->createMock(ObjectFactory::class);
+		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
+		$this->eventDispatcher   = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
+
+		$this->eventDispatcher->listen('object.updated', function (array $payload): void {
+			$this->dispatchedPayload = $payload;
+		});
 
 		$this->updater = new ObjectUpdater(
 			$this->objectFetcher,
 			$this->repository,
 			$this->factory,
-			$this->indexBuilder,
 			$this->propertyProcessor,
-			$this->collectionSaver,
-			$this->viewUpdateScheduler,
-			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
+			$this->eventDispatcher,
 		);
 	}
 
@@ -70,12 +67,6 @@ final class ObjectUpdaterTest extends TestCase
 		$this->repository
 			->expects($this->once())
 			->method('saveObject')
-			->with('posts', $objectData);
-
-		// Set up index builder expectation
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
 			->with('posts', $objectData);
 
 		// Execute
@@ -112,12 +103,6 @@ final class ObjectUpdaterTest extends TestCase
 		$this->repository
 			->expects($this->once())
 			->method('saveObject')
-			->with('posts', $generatedObject);
-
-		// Set up index builder expectation
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
 			->with('posts', $generatedObject);
 
 		// Execute
@@ -158,7 +143,6 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Set up expectations for final update
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute
 		$result = $this->updater->updateObjectPropertyMeta(
@@ -192,7 +176,6 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Set up expectations for final update
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute
 		$result = $this->updater->updateObjectPropertyMeta(
@@ -226,7 +209,6 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Set up expectations for final update
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute with subpath
 		$result = $this->updater->updateObjectPropertyMeta(
@@ -284,13 +266,39 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Set up other expectations
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute
 		$result = $this->updater->updateObject('posts', 'test-id', $objectData);
 
 		// Verify
 		expect($result)->toBe($objectData);
+	}
+
+	public function testUpdateObjectDispatchesUpdatedEvent(): void
+	{
+		$objectData = $this->createMockObjectData('test-id', []);
+
+		$this->propertyProcessor->method('processBeforeSave')->willReturnArgument(0);
+
+		$result = $this->updater->updateObject('posts', 'test-id', $objectData);
+
+		expect($this->dispatchedPayload)->not->toBeNull();
+		expect($this->dispatchedPayload['collection'])->toBe('posts');
+		expect($this->dispatchedPayload['id'])->toBe('test-id');
+		expect($this->dispatchedPayload['object'])->toBe($result);
+	}
+
+	public function testUpdateObjectEventNotDispatchedOnIdMismatch(): void
+	{
+		$objectData = $this->createMockObjectData('wrong-id', []);
+
+		try {
+			$this->updater->updateObject('posts', 'test-id', $objectData);
+		} catch (\UnexpectedValueException) {
+			// Expected
+		}
+
+		expect($this->dispatchedPayload)->toBeNull();
 	}
 
 	private function createMockObjectData(string $id, array $properties): ObjectData

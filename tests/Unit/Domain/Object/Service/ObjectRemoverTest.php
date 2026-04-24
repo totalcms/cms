@@ -5,11 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Object\Service;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -24,165 +19,76 @@ final class ObjectRemoverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
+	private \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher;
+
+	/** @var array<string,mixed>|null */
+	private ?array $dispatchedPayload = null;
 
 	protected function setUp(): void
 	{
-		$this->propStorage           = $this->createMock(PropertyRepository::class);
-		$this->storage               = $this->createMock(ObjectRepository::class);
-		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
-		$this->objectUpdater         = $this->createMock(ObjectUpdater::class);
-		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
-		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
-		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
-		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
+		$this->propStorage   = $this->createMock(PropertyRepository::class);
+		$this->storage       = $this->createMock(ObjectRepository::class);
+		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
+		$this->objectUpdater = $this->createMock(ObjectUpdater::class);
+		$this->eventDispatcher = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
+
+		$this->eventDispatcher->listen('object.deleted', function (array $payload): void {
+			$this->dispatchedPayload = $payload;
+		});
 
 		$this->remover = new ObjectRemover(
 			$this->propStorage,
 			$this->storage,
 			$this->objectFetcher,
 			$this->objectUpdater,
-			$this->indexBuilder,
-			$this->collectionFetcher,
-			$this->collectionSaver,
-			$this->viewUpdateScheduler,
-			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
+			$this->eventDispatcher,
 		);
 	}
 
 	public function testDeleteObjectSuccessfully(): void
 	{
-		// Mock collection that doesn't require queueing
-		$mockCollection = $this->createMock(CollectionData::class);
-
-		// Set up storage to return success
 		$this->storage
 			->expects($this->once())
 			->method('deleteObject')
 			->with('posts', 'test-id')
 			->willReturn(true);
 
-		// Set up collection fetcher
-		$this->collectionFetcher
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('posts')
-			->willReturn($mockCollection);
-
-		// Set up index builder expectation for full rebuild
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts');
-
-		// Execute
 		$result = $this->remover->deleteObject('posts', 'test-id');
 
-		// Verify
-		expect($result)->toBeTrue();
-	}
-
-	public function testDeleteObjectWithQueueRebuildOnSave(): void
-	{
-		// Mock collection with queueRebuildOnSave enabled
-		$mockCollection                     = $this->createMock(CollectionData::class);
-		$mockCollection->queueRebuildOnSave = true;
-
-		// Set up storage to return success
-		$this->storage
-			->expects($this->once())
-			->method('deleteObject')
-			->with('posts', 'test-id')
-			->willReturn(true);
-
-		// Set up collection fetcher
-		$this->collectionFetcher
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('posts')
-			->willReturn($mockCollection);
-
-		// Set up index builder expectations - should call both methods
-		$this->indexBuilder
-			->expects($this->once())
-			->method('removeObjectFromIndex')
-			->with('posts', 'test-id');
-
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts');
-
-		// Execute
-		$result = $this->remover->deleteObject('posts', 'test-id');
-
-		// Verify
 		expect($result)->toBeTrue();
 	}
 
 	public function testDeleteObjectFailure(): void
 	{
-		// Set up storage to return failure
 		$this->storage
 			->expects($this->once())
 			->method('deleteObject')
 			->with('posts', 'test-id')
 			->willReturn(false);
 
-		// Collection fetcher and index builder should not be called on failure
-		$this->collectionFetcher
-			->expects($this->never())
-			->method('fetchCollection');
-
-		$this->indexBuilder
-			->expects($this->never())
-			->method('smartBuildIndex');
-
-		$this->indexBuilder
-			->expects($this->never())
-			->method('removeObjectFromIndex');
-
-		// Execute
 		$result = $this->remover->deleteObject('posts', 'test-id');
 
-		// Verify
 		expect($result)->toBeFalse();
 	}
 
-	public function testDeleteObjectWithNonCollectionDataResponse(): void
+	public function testDeleteObjectDispatchesDeletedEvent(): void
 	{
-		// Set up storage to return success
-		$this->storage
-			->expects($this->once())
-			->method('deleteObject')
-			->with('posts', 'test-id')
-			->willReturn(true);
+		$this->storage->method('deleteObject')->willReturn(true);
 
-		// Collection fetcher returns non-CollectionData (null)
-		$this->collectionFetcher
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('posts')
-			->willReturn(null);
+		$this->remover->deleteObject('posts', 'test-id');
 
-		// Should still call smartBuildIndex but not removeObjectFromIndex
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts');
+		expect($this->dispatchedPayload)->not->toBeNull();
+		expect($this->dispatchedPayload['collection'])->toBe('posts');
+		expect($this->dispatchedPayload['id'])->toBe('test-id');
+	}
 
-		$this->indexBuilder
-			->expects($this->never())
-			->method('removeObjectFromIndex');
+	public function testDeleteObjectDoesNotDispatchEventOnFailure(): void
+	{
+		$this->storage->method('deleteObject')->willReturn(false);
 
-		// Execute
-		$result = $this->remover->deleteObject('posts', 'test-id');
+		$this->remover->deleteObject('posts', 'test-id');
 
-		// Verify
-		expect($result)->toBeTrue();
+		expect($this->dispatchedPayload)->toBeNull();
 	}
 
 	public function testDeleteObjectPropertySetsPropertyToNull(): void

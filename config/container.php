@@ -59,6 +59,9 @@ use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
+use TotalCMS\Domain\Event\Listener\DataViewListener;
+use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -1208,13 +1211,39 @@ return [
 		$container->get(SetupStateManager::class),
 	),
 
+	EventDispatcher::class => function (ContainerInterface $container): EventDispatcher {
+		$dispatcher = new EventDispatcher(
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('events'),
+		);
+
+		// Register internal listeners with lazy resolution to avoid circular deps.
+		// Listeners are resolved from the container on first event dispatch, not at registration time.
+		$lazy = fn (string $class, string $method): \Closure => function (array $payload) use ($container, $class, $method): void {
+			$container->get($class)->$method($payload);
+		};
+
+		// CollectionMetadataListener (priority -100 = before extensions)
+		$dispatcher->listen('object.created', $lazy(CollectionMetadataListener::class, 'onObjectCreated'), -100);
+		$dispatcher->listen('object.updated', $lazy(CollectionMetadataListener::class, 'onObjectUpdated'), -100);
+		$dispatcher->listen('object.deleted', $lazy(CollectionMetadataListener::class, 'onObjectDeleted'), -100);
+
+		// IndexBuildListener
+		$dispatcher->listen('object.created', $lazy(IndexBuildListener::class, 'onObjectCreated'), -100);
+		$dispatcher->listen('object.updated', $lazy(IndexBuildListener::class, 'onObjectUpdated'), -100);
+		$dispatcher->listen('object.deleted', $lazy(IndexBuildListener::class, 'onObjectDeleted'), -100);
+		$dispatcher->listen('schema.saved', $lazy(IndexBuildListener::class, 'onSchemaSaved'), -100);
+
+		// DataViewListener
+		$dispatcher->listen('object.created', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('object.updated', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('object.deleted', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+
+		return $dispatcher;
+	},
+
 	// -------------------------------------------------------------------------
 	// Extensions
 	// -------------------------------------------------------------------------
-
-	EventDispatcher::class => fn (ContainerInterface $container): EventDispatcher => new EventDispatcher(
-		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('events'),
-	),
 
 	ManifestValidator::class => fn (): ManifestValidator => new ManifestValidator(),
 
