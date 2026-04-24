@@ -18,6 +18,11 @@ body {
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
 	grid-template-rows : auto 1fr auto;
 	overflow-y         : auto;
+	background         : linear-gradient(180deg,
+		oklch(var(--totalform-accent) / 0.45) 0%,
+		oklch(var(--totalform-accent) / 0.20) 45%,
+		transparent 85%
+	);
 
 	.menu {
 		display         : grid;
@@ -28,17 +33,18 @@ body {
 		list-style      : none;
 
 		.menu-item {
-			background-color : transparent;
-			transition       : background-color 200ms ease-in-out;
+			background-color : oklch(var(--totalform-nearwhite) / 0);
+			transition       : background-color 200ms ease;
 			border-radius    : calc(var(--totalform-radius) * 2);
 			border           : 2px solid transparent;
+			will-change      : background-color;
 
 			&:hover {
-				background-color: oklch(var(--totalform-nearwhite));
+				background-color: oklch(var(--totalform-nearwhite) / 0.25);
 			}
 			&.active {
 				background-color : transparent;
-				border-color     : oklch(var(--totalform-nearblack));
+				border-color     : oklch(var(--totalform-nearblack) / 0.5);
 			}
 		}
 		a {

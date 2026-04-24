@@ -16,10 +16,20 @@
 		display : block;
 		width   : 100%;
 	}
+	&:hover {
+		background-color : oklch(var(--totalform-accent) / 0.75);
+		border-color     : oklch(var(--totalform-accent) / 0.85);
+	}
 	&.transparent {
 		background-color : transparent;
 		color            : oklab(var(--totalform-nearblack));
 		border           : 2px solid oklch(var(--totalform-nearblack));
+
+		&:hover {
+			background-color : oklch(var(--totalform-accent) / 0.10);
+			border-color     : oklch(var(--totalform-accent));
+			color            : oklch(var(--totalform-accent));
+		}
 	}
 	&.small {
 		padding   : 0.35rem 0.65rem;
