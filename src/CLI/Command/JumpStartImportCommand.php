@@ -39,13 +39,13 @@ class JumpStartImportCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string)json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($result->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
 			return Command::SUCCESS;
 		}
 
-		$summary = $result['summary'];
-		$errors  = $result['errors'];
+		$summary = $result->data['summary'];
+		$errors  = $result->data['errors'];
 
 		$output->writeln('');
 		$output->writeln('<info>JumpStart import complete.</info>');

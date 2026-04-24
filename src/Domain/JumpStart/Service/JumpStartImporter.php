@@ -14,6 +14,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
 
 /** @SuppressWarnings("PHPMD.ExcessiveClassComplexity") */
@@ -59,10 +60,8 @@ class JumpStartImporter
 
 	/**
 	 * @param string $filePath Path to the jumpstart JSON file
-	 *
-	 * @return array{success:bool,results:array<int,string>,errors:array<int,string>,summary:array<string,int>}
 	 */
-	public function importFromFile(string $filePath): array
+	public function importFromFile(string $filePath): OperationResult
 	{
 		if (!file_exists($filePath)) {
 			throw new \Exception("Jumpstart file not found: {$filePath}");
@@ -81,20 +80,15 @@ class JumpStartImporter
 		return $this->importFromDefinition($definition);
 	}
 
-	/**
-	 * @return array{success:bool,results:array<int,string>,errors:array<int,string>,summary:array<string,int>}
-	 */
-	public function importDemoDefinition(): array
+	public function importDemoDefinition(): OperationResult
 	{
 		return $this->importFromFile($this->demoJumpstartFile());
 	}
 
 	/**
 	 * @param array<string, mixed> $definition
-	 *
-	 * @return array{success:bool,results:array<int,string>,errors:array<int,string>,summary:array<string,int>}
 	 */
-	public function importFromDefinition(array $definition): array
+	public function importFromDefinition(array $definition): OperationResult
 	{
 		$this->results = [];
 		$this->errors  = [];
@@ -124,12 +118,17 @@ class JumpStartImporter
 			$this->processFactory($definition['factory']);
 		}
 
-		return [
-			'success' => $this->errors === [],
+		$data = [
 			'results' => $this->results,
 			'errors'  => $this->errors,
 			'summary' => $this->generateSummary(),
 		];
+
+		if ($this->errors !== []) {
+			return OperationResult::failure('Import completed with errors', null, $data);
+		}
+
+		return OperationResult::success('Import completed successfully', $data);
 	}
 
 	/**

@@ -70,14 +70,14 @@ class PullCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$output->writeln((string)json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+			$output->writeln((string)json_encode($result->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
 			return Command::SUCCESS;
 		}
 
 		$output->writeln('');
-		$output->writeln("<info>{$result['message']}</info>");
-		$output->writeln("  Schemas: {$result['schemas']}, Templates: {$result['templates']}");
+		$output->writeln("<info>{$result->message}</info>");
+		$output->writeln("  Schemas: {$result->data['schemas']}, Templates: {$result->data['templates']}");
 
 		return Command::SUCCESS;
 	}

@@ -138,9 +138,9 @@ final class DataViewBuilderTest extends TestCase
 
 		$result = $this->builder->testView('{% set data = {"result": "ok"} %}');
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(['result' => 'ok'], $result['data']);
-		$this->assertNull($result['error']);
+		$this->assertTrue($result->success);
+		$this->assertSame(['result' => 'ok'], $result->data['data']);
+		$this->assertNull($result->error);
 	}
 
 	public function testTestViewReturnsErrorResultOnFailure(): void
@@ -150,8 +150,8 @@ final class DataViewBuilderTest extends TestCase
 
 		$result = $this->builder->testView('{% invalid %}');
 
-		$this->assertFalse($result['success']);
-		$this->assertNull($result['data']);
-		$this->assertSame('Template syntax error', $result['error']);
+		$this->assertFalse($result->success);
+		$this->assertNull($result->data['data']);
+		$this->assertSame('Template syntax error', $result->error);
 	}
 }

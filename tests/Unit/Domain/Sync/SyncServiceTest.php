@@ -11,6 +11,7 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\OperationResult;
 
 final class SyncServiceTest extends TestCase
 {
@@ -43,10 +44,10 @@ final class SyncServiceTest extends TestCase
 
 		$result = $this->service->push('https://example.com', 'key');
 
-		expect($result['success'])->toBeTrue();
-		expect($result['schemas'])->toBe(0);
-		expect($result['templates'])->toBe(0);
-		expect($result['message'])->toContain('Nothing to push');
+		expect($result->success)->toBeTrue();
+		expect($result->data['schemas'])->toBe(0);
+		expect($result->data['templates'])->toBe(0);
+		expect($result->message)->toContain('Nothing to push');
 	}
 
 	public function testPushSendsDataToRemote(): void
@@ -77,10 +78,10 @@ final class SyncServiceTest extends TestCase
 
 		$result = $this->service->push('https://example.com', 'test-key');
 
-		expect($result['success'])->toBeTrue();
-		expect($result['message'])->toBe('Push complete.');
-		expect($result['schemas'])->toBe(1);
-		expect($result['templates'])->toBe(1);
+		expect($result->success)->toBeTrue();
+		expect($result->message)->toBe('Push complete.');
+		expect($result->data['schemas'])->toBe(1);
+		expect($result->data['templates'])->toBe(1);
 	}
 
 	public function testPushPassesFiltersToExporter(): void
@@ -147,19 +148,18 @@ final class SyncServiceTest extends TestCase
 
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
-			->willReturn([
-				'success' => true,
+			->willReturn(\TotalCMS\Support\OperationResult::success('Import complete.', [
 				'results' => [],
 				'errors'  => [],
 				'summary' => ['schemas_created' => 1, 'templates_created' => 1],
-			]);
+			]));
 
 		$result = $this->service->pull('https://example.com', 'key');
 
-		expect($result['success'])->toBeTrue();
-		expect($result['message'])->toBe('Pull complete.');
-		expect($result['schemas'])->toBe(1);
-		expect($result['templates'])->toBe(1);
+		expect($result->success)->toBeTrue();
+		expect($result->message)->toBe('Pull complete.');
+		expect($result->data['schemas'])->toBe(1);
+		expect($result->data['templates'])->toBe(1);
 	}
 
 	public function testPullReturnsNothingWhenRemoteEmpty(): void
@@ -173,10 +173,10 @@ final class SyncServiceTest extends TestCase
 
 		$result = $this->service->pull('https://example.com', 'key');
 
-		expect($result['success'])->toBeTrue();
-		expect($result['schemas'])->toBe(0);
-		expect($result['templates'])->toBe(0);
-		expect($result['message'])->toContain('Nothing to pull');
+		expect($result->success)->toBeTrue();
+		expect($result->data['schemas'])->toBe(0);
+		expect($result->data['templates'])->toBe(0);
+		expect($result->message)->toContain('Nothing to pull');
 	}
 
 	public function testPullFiltersSchemas(): void
@@ -199,7 +199,7 @@ final class SyncServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'results' => [], 'errors' => [], 'summary' => []]);
+			->willReturn(\TotalCMS\Support\OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
 
 		$this->service->pull('https://example.com', 'key', ['products']);
 	}
@@ -224,7 +224,7 @@ final class SyncServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'results' => [], 'errors' => [], 'summary' => []]);
+			->willReturn(\TotalCMS\Support\OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
 
 		$this->service->pull('https://example.com', 'key', null, ['sidebar']);
 	}

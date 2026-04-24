@@ -84,8 +84,8 @@ final class PushoverIntegrationTest extends TestCase
 			title: 'Total CMS Test',
 		);
 
-		$this->assertTrue($result['success'], 'Failed: ' . ($result['message'] ?? 'unknown'));
-		$this->assertSame('Notification sent', $result['message']);
+		$this->assertTrue($result->success, 'Failed: ' . ($result->message ?? 'unknown'));
+		$this->assertSame('Notification sent', $result->message);
 	}
 
 	public function testSendNotificationWithAllOptions(): void
@@ -100,7 +100,7 @@ final class PushoverIntegrationTest extends TestCase
 			image: ['collection' => 'test', 'id' => 'test-obj', 'property' => 'photo'],
 		);
 
-		$this->assertTrue($result['success'], 'Failed: ' . ($result['message'] ?? 'unknown'));
+		$this->assertTrue($result->success, 'Failed: ' . ($result->message ?? 'unknown'));
 	}
 
 	public function testSendHighPriorityNotification(): void
@@ -111,7 +111,7 @@ final class PushoverIntegrationTest extends TestCase
 			title: 'Total CMS Priority Test',
 		);
 
-		$this->assertTrue($result['success'], 'Failed: ' . ($result['message'] ?? 'unknown'));
+		$this->assertTrue($result->success, 'Failed: ' . ($result->message ?? 'unknown'));
 	}
 
 	/**

@@ -8,6 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Orphan\Data\OrphanEntry;
 use TotalCMS\Domain\Orphan\Data\OrphanReport;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\OperationResult;
 
 readonly class OrphanCleaner
 {
@@ -27,8 +28,6 @@ readonly class OrphanCleaner
 	 * Clean a single property on a single object.
 	 *
 	 * @param array<string> $orphanedIds
-	 *
-	 * @return array{success:bool,error:string}
 	 */
 	public function cleanProperty(
 		string $collection,
@@ -36,7 +35,7 @@ readonly class OrphanCleaner
 		string $property,
 		array $orphanedIds,
 		bool $isArray,
-	): array {
+	): OperationResult {
 		try {
 			$object     = $this->objectFetcher->fetchObject($collection, $objectId);
 			$objectData = $object->toArray();
@@ -63,7 +62,7 @@ readonly class OrphanCleaner
 				'orphanedIds' => $orphanedIds,
 			]);
 
-			return ['success' => true, 'error' => ''];
+			return OperationResult::success();
 		} catch (\Exception $e) {
 			$this->logger->error('Failed to clean orphaned references', [
 				'collection' => $collection,
@@ -72,26 +71,22 @@ readonly class OrphanCleaner
 				'error'      => $e->getMessage(),
 			]);
 
-			return ['success' => false, 'error' => $e->getMessage()];
+			return OperationResult::failure($e->getMessage());
 		}
 	}
 
 	/**
 	 * Clean all entries in a report.
-	 *
-	 * @return array{cleaned:int,failed:int,errors:array<string>}
 	 */
-	public function cleanAll(OrphanReport $report): array
+	public function cleanAll(OrphanReport $report): OperationResult
 	{
 		return $this->cleanEntries($report->getEntries());
 	}
 
 	/**
 	 * Clean only entries for a specific collection.
-	 *
-	 * @return array{cleaned:int,failed:int,errors:array<string>}
 	 */
-	public function cleanByCollection(OrphanReport $report, string $collection): array
+	public function cleanByCollection(OrphanReport $report, string $collection): OperationResult
 	{
 		$entries = array_filter(
 			$report->getEntries(),
@@ -103,10 +98,8 @@ readonly class OrphanCleaner
 
 	/**
 	 * Clean only entries for a specific collection + property.
-	 *
-	 * @return array{cleaned:int,failed:int,errors:array<string>}
 	 */
-	public function cleanByCollectionProperty(OrphanReport $report, string $collection, string $property): array
+	public function cleanByCollectionProperty(OrphanReport $report, string $collection, string $property): OperationResult
 	{
 		$entries = array_filter(
 			$report->getEntries(),
@@ -118,10 +111,8 @@ readonly class OrphanCleaner
 
 	/**
 	 * @param array<OrphanEntry> $entries
-	 *
-	 * @return array{cleaned:int,failed:int,errors:array<string>}
 	 */
-	private function cleanEntries(array $entries): array
+	private function cleanEntries(array $entries): OperationResult
 	{
 		$cleaned = 0;
 		$failed  = 0;
@@ -137,18 +128,18 @@ readonly class OrphanCleaner
 				$entry->isArray,
 			);
 
-			if ($result['success']) {
+			if ($result->success) {
 				$cleaned++;
 			} else {
 				$failed++;
-				$errors[] = "{$entry->collection}/{$entry->objectId}.{$entry->property}: {$result['error']}";
+				$errors[] = "{$entry->collection}/{$entry->objectId}.{$entry->property}: {$result->error}";
 			}
 		}
 
-		return [
+		return OperationResult::success('', [
 			'cleaned' => $cleaned,
 			'failed'  => $failed,
 			'errors'  => $errors,
-		];
+		]);
 	}
 }

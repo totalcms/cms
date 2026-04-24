@@ -11,6 +11,7 @@ use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Mailer\BulkMailerPreviewAction;
 use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Renderer\RawRenderer;
+use TotalCMS\Support\OperationResult;
 
 final class BulkMailerPreviewActionTest extends TestCase
 {
@@ -86,12 +87,11 @@ final class BulkMailerPreviewActionTest extends TestCase
 		$this->bulkMailerService->expects($this->once())
 			->method('previewEmail')
 			->with('test-mailer', 'obj-1', 'subscribers')
-			->willReturn([
-				'success' => true,
+			->willReturn(OperationResult::success('', [
 				'html'    => '<p>Hello</p>',
 				'subject' => 'Test Subject',
 				'to'      => 'user@example.com',
-			]);
+			]));
 
 		($this->action)($request, $response);
 	}
@@ -106,12 +106,11 @@ final class BulkMailerPreviewActionTest extends TestCase
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('previewEmail')
-			->willReturn([
-				'success' => true,
+			->willReturn(OperationResult::success('', [
 				'html'    => '<p>Welcome John</p>',
 				'subject' => 'Hello John',
 				'to'      => 'john@example.com',
-			]);
+			]));
 
 		$result = ($this->action)($request, $response);
 
@@ -134,10 +133,7 @@ final class BulkMailerPreviewActionTest extends TestCase
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('previewEmail')
-			->willReturn([
-				'success' => false,
-				'message' => 'Preview error: Object not found',
-			]);
+			->willReturn(OperationResult::failure('Preview error: Object not found'));
 
 		$result = ($this->action)($request, $response);
 
@@ -156,10 +152,7 @@ final class BulkMailerPreviewActionTest extends TestCase
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('previewEmail')
-			->willReturn([
-				'success' => false,
-				'message' => 'Error',
-			]);
+			->willReturn(OperationResult::failure('Error'));
 
 		$result = ($this->action)($request, $response);
 

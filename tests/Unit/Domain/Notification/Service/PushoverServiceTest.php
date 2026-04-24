@@ -54,8 +54,8 @@ final class PushoverServiceTest extends TestCase
 
 		$result = $this->service->send(message: 'Hello', title: 'Test');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not configured', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not configured', $result->message);
 	}
 
 	public function testReturnsFailureWhenMissingUserKey(): void
@@ -65,8 +65,8 @@ final class PushoverServiceTest extends TestCase
 
 		$result = $this->service->send(message: 'Hello', title: 'Test');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not configured', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not configured', $result->message);
 	}
 
 	public function testReturnsFailureWhenMissingAppToken(): void
@@ -76,8 +76,8 @@ final class PushoverServiceTest extends TestCase
 
 		$result = $this->service->send(message: 'Hello', title: 'Test');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not configured', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not configured', $result->message);
 	}
 
 	public function testBlockedByEditionGating(): void
@@ -105,8 +105,8 @@ final class PushoverServiceTest extends TestCase
 
 		$result = $service->send(message: 'Hello', title: 'Test');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Pro edition', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Pro edition', $result->message);
 	}
 
 	public function testProcessesTwigInTitleAndMessage(): void
@@ -131,7 +131,7 @@ final class PushoverServiceTest extends TestCase
 		);
 
 		// Will fail at API level (fake creds), but Twig processing was tested
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testHandlesTwigProcessingErrors(): void
@@ -150,7 +150,7 @@ final class PushoverServiceTest extends TestCase
 		// Should not throw — gracefully falls back to original template
 		$result = $this->service->send(message: 'Valid message', title: '{{ invalid syntax');
 
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testLogsWarningWhenNotConfigured(): void
@@ -227,7 +227,7 @@ final class PushoverServiceTest extends TestCase
 			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'photo'],
 		);
 
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testGeneratesGalleryImageAttachment(): void
@@ -256,7 +256,7 @@ final class PushoverServiceTest extends TestCase
 			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'gallery', 'name' => 'first'],
 		);
 
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testSkipsAttachmentOnImageGenerationFailure(): void
@@ -283,7 +283,7 @@ final class PushoverServiceTest extends TestCase
 		);
 
 		// Should still attempt to send (without attachment), not throw
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testSkipsAttachmentOnIncompleteImageConfig(): void
@@ -302,7 +302,7 @@ final class PushoverServiceTest extends TestCase
 			image: ['collection' => 'products'],
 		);
 
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testSkipsAttachmentWhenImageExceeds5MB(): void
@@ -335,7 +335,7 @@ final class PushoverServiceTest extends TestCase
 			image: ['collection' => 'products', 'id' => 'abc123', 'property' => 'photo'],
 		);
 
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	public function testProcessesTwigInImageId(): void
@@ -373,7 +373,7 @@ final class PushoverServiceTest extends TestCase
 			image: ['collection' => 'products', 'id' => '{{ data.id }}', 'property' => 'photo'],
 		);
 
-		$this->assertIsBool($result['success']);
+		$this->assertIsBool($result->success);
 	}
 
 	private function buildServiceWith(\PHPUnit\Framework\MockObject\MockObject $imageGenerator): PushoverService

@@ -110,7 +110,7 @@ readonly class AdminSettingsSaveSectionAction
 			'bodyHtml' => '<p>This is a test email from Total CMS to verify your SMTP configuration.</p><p>If you received this email, your SMTP settings are working correctly!</p>',
 		], 10);
 
-		if ($result['success']) {
+		if ($result->success) {
 			return $this->renderSettingsPage($response, [
 				'success' => true,
 				'message' => 'Test email sent successfully to ' . $testEmail . '. Please check your inbox.',
@@ -118,7 +118,7 @@ readonly class AdminSettingsSaveSectionAction
 		}
 
 		// Use detailed error message if available, otherwise use generic message
-		$errorMessage = $result['error'] ?? $result['message'];
+		$errorMessage = $result->error ?? $result->message;
 
 		return $this->renderSettingsPage($response, [
 			'success' => false,
@@ -143,7 +143,7 @@ readonly class AdminSettingsSaveSectionAction
 			title: 'Total CMS Test',
 		);
 
-		if ($result['success']) {
+		if ($result->success) {
 			return $this->renderSettingsPage($response, [
 				'success' => true,
 				'message' => 'Test notification sent successfully. Check your Pushover app.',
@@ -152,7 +152,7 @@ readonly class AdminSettingsSaveSectionAction
 
 		return $this->renderSettingsPage($response, [
 			'success' => false,
-			'message' => 'Failed to send test notification: ' . $result['message'],
+			'message' => 'Failed to send test notification: ' . $result->message,
 		], 'pushnotif');
 	}
 

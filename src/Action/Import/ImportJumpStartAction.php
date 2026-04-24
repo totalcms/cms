@@ -34,9 +34,9 @@ readonly class ImportJumpStartAction
 
 	private function importDemoDefinition(ResponseInterface $response): ResponseInterface
 	{
-		$definition = $this->jumpStartImporter->importDemoDefinition();
+		$result = $this->jumpStartImporter->importDemoDefinition();
 
-		return $this->renderer->json($response, $definition);
+		return $this->renderer->json($response, $result->toArray());
 	}
 
 	private function importFromUploadedFile(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
@@ -63,6 +63,6 @@ readonly class ImportJumpStartAction
 		// Import using JumpstartImporter
 		$result = $this->jumpStartImporter->importFromDefinition($definition);
 
-		return $this->renderer->json($response, $result);
+		return $this->renderer->json($response, $result->toArray());
 	}
 }

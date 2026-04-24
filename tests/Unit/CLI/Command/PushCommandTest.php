@@ -10,6 +10,7 @@ use TotalCMS\CLI\Command\PushCommand;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\Sync\Service\SyncService;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\TotalCMS;
 
 require_once __DIR__ . '/helpers.php';
@@ -91,12 +92,10 @@ it('reports nothing to push when empty', function (): void {
 	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
 
 	$syncService = $this->createMock(SyncService::class);
-	$syncService->method('push')->willReturn([
-		'success'   => true,
-		'message'   => 'Nothing to push — no matching schemas or templates found.',
-		'schemas'   => 0,
-		'templates' => 0,
-	]);
+	$syncService->method('push')->willReturn(OperationResult::success(
+		'Nothing to push — no matching schemas or templates found.',
+		['schemas' => 0, 'templates' => 0],
+	));
 	$totalcms->method('syncService')->willReturn($syncService);
 
 	$app     = new Application();

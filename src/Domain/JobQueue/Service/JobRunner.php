@@ -416,12 +416,12 @@ readonly class JobRunner
 			'collection' => $collection,
 			'objectId'   => $objectId,
 			'sentTo'     => $overrideTo ?? '',
-			'status'     => $result['success'] ? 'sent' : 'failed',
-			'error'      => $result['error'] ?? null,
+			'status'     => $result->success ? 'sent' : 'failed',
+			'error'      => $result->error,
 		]);
 
-		if (!$result['success']) {
-			throw new \RuntimeException('Email send failed: ' . $result['message']);
+		if (!$result->success) {
+			throw new \RuntimeException('Email send failed: ' . $result->message);
 		}
 
 		$this->logger->info('Bulk email sent', [

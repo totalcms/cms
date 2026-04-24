@@ -11,6 +11,7 @@ use TotalCMS\CLI\Command\JumpStartImportCommand;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\TotalCMS;
 
 describe('jumpstart:export', function (): void {
@@ -82,8 +83,7 @@ describe('jumpstart:import', function (): void {
 		$this->totalcms = $this->createMock(TotalCMS::class);
 
 		$importer = $this->createMock(JumpStartImporter::class);
-		$importer->method('importFromFile')->willReturn([
-			'success' => true,
+		$importer->method('importFromFile')->willReturn(OperationResult::success('Import completed successfully', [
 			'results' => ['Schema products: created', 'Template post: created'],
 			'errors'  => [],
 			'summary' => [
@@ -94,7 +94,7 @@ describe('jumpstart:import', function (): void {
 				'factory_items_created' => 0,
 				'total_errors'          => 0,
 			],
-		]);
+		]));
 		$this->totalcms->method('jumpStartImporter')->willReturn($importer);
 
 		$app     = new Application();
@@ -135,12 +135,11 @@ describe('jumpstart:import', function (): void {
 
 	it('shows errors from import', function (): void {
 		$importer = $this->createMock(JumpStartImporter::class);
-		$importer->method('importFromFile')->willReturn([
-			'success' => false,
+		$importer->method('importFromFile')->willReturn(OperationResult::failure('Import completed with errors', null, [
 			'results' => [],
 			'errors'  => ['Schema bad: validation failed'],
 			'summary' => ['schemas_created' => 0, 'total_errors' => 1],
-		]);
+		]));
 		$totalcms = $this->createMock(TotalCMS::class);
 		$totalcms->method('jumpStartImporter')->willReturn($importer);
 

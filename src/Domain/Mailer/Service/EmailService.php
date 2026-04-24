@@ -10,6 +10,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 /**
  * EmailService handles email template processing and sending.
@@ -37,9 +38,8 @@ readonly class EmailService
 	 * @param string|null $overrideTo Override recipient email address (for bulk testing)
 	 * @param array<string,mixed> $user Current user data for Twig processing ({{ user.field }})
 	 *
-	 * @return array{success:bool,message:string,error?:string}
 	 */
-	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = []): array
+	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = []): OperationResult
 	{
 		// Mailer actions require Standard edition or higher
 		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
@@ -48,10 +48,7 @@ readonly class EmailService
 				'edition'  => $this->editionFeatures->getEdition()->value,
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'Mailer actions require the Standard edition or higher',
-			];
+			return OperationResult::failure('Mailer actions require the Standard edition or higher');
 		}
 
 		try {
@@ -64,10 +61,7 @@ readonly class EmailService
 					'mailerId' => $mailerId,
 				]);
 
-				return [
-					'success' => false,
-					'message' => 'Email template is not active',
-				];
+				return OperationResult::failure('Email template is not active');
 			}
 
 			// Process all Twig fields
@@ -95,14 +89,14 @@ readonly class EmailService
 
 			// Validate email whitelist if enabled
 			$whitelistResult = $this->validateEmailWhitelist($processedEmail['to']);
-			if (!$whitelistResult['success']) {
+			if (!$whitelistResult->success) {
 				return $whitelistResult;
 			}
 
 			// Send email
 			$result = $this->emailSender->send($processedEmail);
 
-			if ($result['success']) {
+			if ($result->success) {
 				$this->logger->info('Email sent successfully', [
 					'mailerId' => $mailerId,
 					'to'       => $processedEmail['to'],
@@ -118,11 +112,7 @@ readonly class EmailService
 				'trace'    => $e->getTraceAsString(),
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'Email service error',
-				'error'   => $e->getMessage(),
-			];
+			return OperationResult::failure('Email service error', $e->getMessage());
 		}
 	}
 
@@ -200,10 +190,8 @@ readonly class EmailService
 
 	/**
 	 * Validate email against whitelist if enabled.
-	 *
-	 * @return array{success:bool,message:string}
 	 */
-	private function validateEmailWhitelist(string $email): array
+	private function validateEmailWhitelist(string $email): OperationResult
 	{
 		$allowedDomains = $this->config->mailer['whitelist'] ?? [];
 
@@ -214,7 +202,7 @@ readonly class EmailService
 
 		// If whitelist is empty, it's disabled
 		if ($allowedDomains === []) {
-			return ['success' => true, 'message' => 'Whitelist not enabled'];
+			return OperationResult::success('Whitelist not enabled');
 		}
 
 		// Extract domain from email
@@ -223,7 +211,7 @@ readonly class EmailService
 		// Check if email domain matches any whitelisted domain
 		foreach ($allowedDomains as $allowedDomain) {
 			if (str_ends_with($emailDomain, (string)$allowedDomain)) {
-				return ['success' => true, 'message' => 'Email domain allowed'];
+				return OperationResult::success('Email domain allowed');
 			}
 		}
 
@@ -232,9 +220,6 @@ readonly class EmailService
 			'domain' => $emailDomain,
 		]);
 
-		return [
-			'success' => false,
-			'message' => 'Email domain not in whitelist',
-		];
+		return OperationResult::failure('Email domain not in whitelist');
 	}
 }

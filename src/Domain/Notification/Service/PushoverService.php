@@ -13,6 +13,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 /**
  * PushoverService handles sending push notifications via the Pushover API.
@@ -50,8 +51,6 @@ readonly class PushoverService
 	 * @param string $linkTitle Optional URL title
 	 * @param array<string,string> $image Optional image attachment config (collection, id, property, name)
 	 * @param bool $group Send to group key instead of user key
-	 *
-	 * @return array{success:bool,message:string,error?:string}
 	 */
 	public function send(
 		string $message,
@@ -64,16 +63,13 @@ readonly class PushoverService
 		string $linkTitle = '',
 		array $image     = [],
 		bool $group      = false,
-	): array {
+	): OperationResult {
 		if (!$this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS)) {
 			$this->logger->warning('Pushover action blocked by edition', [
 				'edition' => $this->editionFeatures->getEdition()->value,
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'Pushover actions require the Pro edition',
-			];
+			return OperationResult::failure('Pushover actions require the Pro edition');
 		}
 
 		$appToken  = $this->config->pushnotif['pushoverAppToken'] ?? '';
@@ -91,10 +87,7 @@ readonly class PushoverService
 
 			$missing = $group && $groupKey === '' ? 'Group Key' : 'User Key';
 
-			return [
-				'success' => false,
-				'message' => "Pushover is not configured. Please set your Application Token and {$missing} in Settings.",
-			];
+			return OperationResult::failure("Pushover is not configured. Please set your Application Token and {$missing} in Settings.");
 		}
 
 		try {
@@ -142,7 +135,7 @@ readonly class PushoverService
 
 			$result = $this->sendRequest($postData, $attachment);
 
-			if ($result['success']) {
+			if ($result->success) {
 				$this->logger->info('Pushover notification sent', [
 					'title' => $processedTitle,
 				]);
@@ -155,11 +148,7 @@ readonly class PushoverService
 				'trace' => $e->getTraceAsString(),
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'Pushover service error',
-				'error'   => $e->getMessage(),
-			];
+			return OperationResult::failure('Pushover service error', $e->getMessage());
 		}
 	}
 
@@ -167,10 +156,8 @@ readonly class PushoverService
 	 * Send the HTTP request to Pushover API.
 	 *
 	 * @param array<string,mixed> $postData
-	 *
-	 * @return array{success:bool,message:string}
 	 */
-	private function sendRequest(array $postData, ?string $attachment = null): array
+	private function sendRequest(array $postData, ?string $attachment = null): OperationResult
 	{
 		try {
 			$client  = new Client(['timeout' => 10, 'connect_timeout' => 5]);
@@ -197,26 +184,17 @@ readonly class PushoverService
 			$body = json_decode($response->getBody()->getContents(), true);
 
 			if (isset($body['status']) && $body['status'] === 1) {
-				return [
-					'success' => true,
-					'message' => 'Notification sent',
-				];
+				return OperationResult::success('Notification sent');
 			}
 
 			$errors = $body['errors'] ?? ['Unknown error'];
 			$this->logger->warning('Pushover API error', ['errors' => $errors]);
 
-			return [
-				'success' => false,
-				'message' => 'Pushover error: ' . implode(', ', is_array($errors) ? $errors : [$errors]),
-			];
+			return OperationResult::failure('Pushover error: ' . implode(', ', is_array($errors) ? $errors : [$errors]));
 		} catch (GuzzleException $e) {
 			$this->logger->error('Pushover API connection error', ['error' => $e->getMessage()]);
 
-			return [
-				'success' => false,
-				'message' => 'Failed to connect to Pushover API',
-			];
+			return OperationResult::failure('Failed to connect to Pushover API');
 		}
 	}
 

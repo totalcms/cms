@@ -11,6 +11,7 @@ use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\OperationResult;
 
 final class SyncActionTest extends TestCase
 {
@@ -82,12 +83,10 @@ final class SyncActionTest extends TestCase
 
 		$this->request->method('getParsedBody')->willReturn([]);
 
-		$pushResult = [
-			'success'   => true,
-			'message'   => 'Push complete.',
+		$pushResult = OperationResult::success('Push complete.', [
 			'schemas'   => 2,
 			'templates' => 1,
-		];
+		]);
 
 		$this->syncService->expects($this->once())
 			->method('push')
@@ -96,7 +95,7 @@ final class SyncActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $pushResult)
+			->with($this->response, $pushResult->toArray())
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, ['action' => 'push']);
@@ -111,12 +110,10 @@ final class SyncActionTest extends TestCase
 
 		$this->request->method('getParsedBody')->willReturn([]);
 
-		$pullResult = [
-			'success'   => true,
-			'message'   => 'Pull complete.',
+		$pullResult = OperationResult::success('Pull complete.', [
 			'schemas'   => 3,
 			'templates' => 2,
-		];
+		]);
 
 		$this->syncService->expects($this->once())
 			->method('pull')
@@ -125,7 +122,7 @@ final class SyncActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $pullResult)
+			->with($this->response, $pullResult->toArray())
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, ['action' => 'pull']);
@@ -146,7 +143,7 @@ final class SyncActionTest extends TestCase
 		$this->syncService->expects($this->once())
 			->method('push')
 			->with('https://example.com', 'key', ['products', 'invoice'], ['blog-post'])
-			->willReturn(['success' => true, 'message' => 'Push complete.', 'schemas' => 2, 'templates' => 1]);
+			->willReturn(OperationResult::success('Push complete.', ['schemas' => 2, 'templates' => 1]));
 
 		($this->action)($this->request, $this->response, ['action' => 'push']);
 	}

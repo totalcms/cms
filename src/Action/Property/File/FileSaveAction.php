@@ -66,8 +66,8 @@ readonly class FileSaveAction
 		// Convert HEIC to JPEG if applicable (for image properties only)
 		if ($this->heicConverter->isHeicFile($finalFilePath)) {
 			$conversionResult = $this->heicConverter->convertAndReplace($finalFilePath);
-			if ($conversionResult['success']) {
-				$finalFilePath = $conversionResult['path'];
+			if ($conversionResult->success) {
+				$finalFilePath = (string)$conversionResult->data['path'];
 			}
 			// If conversion fails, continue with original HEIC file
 			// The file will be saved as-is and conversion can be attempted again later

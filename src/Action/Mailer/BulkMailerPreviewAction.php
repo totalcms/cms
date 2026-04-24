@@ -42,15 +42,15 @@ readonly class BulkMailerPreviewAction
 
 		$result = $this->bulkMailerService->previewEmail($mailerId, $objectId, $collection);
 
-		if (!$result['success']) {
-			$message = htmlspecialchars((string)($result['message'] ?? 'Preview failed'));
+		if (!$result->success) {
+			$message = htmlspecialchars($result->message ?: 'Preview failed');
 
 			return $this->htmlResponse($response, '<span class="cms-error">' . $message . '</span>');
 		}
 
-		$subject = htmlspecialchars((string)($result['subject'] ?? ''));
-		$to      = htmlspecialchars((string)($result['to'] ?? ''));
-		$srcdoc  = htmlspecialchars((string)($result['html'] ?? ''));
+		$subject = htmlspecialchars((string)($result->data['subject'] ?? ''));
+		$to      = htmlspecialchars((string)($result->data['to'] ?? ''));
+		$srcdoc  = htmlspecialchars((string)($result->data['html'] ?? ''));
 
 		$html = '<div class="bulk-preview-meta"><strong>Subject:</strong> ' . $subject .
 			'<br><strong>To:</strong> ' . $to . '</div>' .

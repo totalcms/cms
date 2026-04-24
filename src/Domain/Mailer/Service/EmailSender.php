@@ -9,6 +9,7 @@ use PHPMailer\PHPMailer\SMTP;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 /**
  * EmailSender wraps PHPMailer for sending emails.
@@ -30,9 +31,8 @@ readonly class EmailSender
 	 * @param array<string,mixed> $emailData
 	 * @param int $timeout SMTP connection timeout in seconds (default: 30)
 	 *
-	 * @return array{success:bool,message:string,error?:string}
 	 */
-	public function send(array $emailData, int $timeout = 30): array
+	public function send(array $emailData, int $timeout = 30): OperationResult
 	{
 		$mail = new PHPMailer(true);
 
@@ -126,10 +126,7 @@ readonly class EmailSender
 				'from'    => $fromEmail,
 			]);
 
-			return [
-				'success' => true,
-				'message' => 'Email sent successfully',
-			];
+			return OperationResult::success('Email sent successfully');
 		} catch (\Exception $e) {
 			$this->logger->error('Failed to send email', [
 				'to'      => $emailData['to'] ?? 'unknown',
@@ -143,11 +140,7 @@ readonly class EmailSender
 				$errorMsg = 'SMTP connection failed. Please verify your SMTP settings (host, port, username, password).';
 			}
 
-			return [
-				'success' => false,
-				'message' => $errorMsg,
-				'error'   => $errorMsg,
-			];
+			return OperationResult::failure($errorMsg, $errorMsg);
 		}
 	}
 }

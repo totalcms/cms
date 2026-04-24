@@ -12,6 +12,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\OperationResult;
 
 /**
  * BulkMailerService orchestrates bulk email sending via the job queue.
@@ -37,38 +38,25 @@ readonly class BulkMailerService
 	 *
 	 * @param list<string>|null $objectIds Specific object IDs to send to (overrides filters)
 	 *
-	 * @return array{success:bool,batchId?:string,count?:int,message:string}
 	 */
-	public function queueBulkSend(string $mailerId, string $collection, string $include = '', string $exclude = '', ?string $scheduledAt = null, ?string $overrideTo = null, ?array $objectIds = null): array
+	public function queueBulkSend(string $mailerId, string $collection, string $include = '', string $exclude = '', ?string $scheduledAt = null, ?string $overrideTo = null, ?array $objectIds = null): OperationResult
 	{
 		if (!$this->editionFeatures->can(EditionFeature::BULK_MAILER)) {
-			return [
-				'success' => false,
-				'message' => 'Bulk Mailer requires the Pro edition',
-			];
+			return OperationResult::failure('Bulk Mailer requires the Pro edition');
 		}
 
 		try {
 			$mailer = $this->mailerFetcher->fetchMailer($mailerId);
 		} catch (\Exception $e) {
-			return [
-				'success' => false,
-				'message' => 'Mailer template not found: ' . $e->getMessage(),
-			];
+			return OperationResult::failure('Mailer template not found: ' . $e->getMessage());
 		}
 
 		if (!$mailer->active) {
-			return [
-				'success' => false,
-				'message' => 'Email template is not active',
-			];
+			return OperationResult::failure('Email template is not active');
 		}
 
 		if ($collection === '') {
-			return [
-				'success' => false,
-				'message' => 'Bulk collection is required',
-			];
+			return OperationResult::failure('Bulk collection is required');
 		}
 
 		// Use specific object IDs if provided, otherwise apply filters
@@ -87,10 +75,7 @@ readonly class BulkMailerService
 		}
 
 		if ($objects === []) {
-			return [
-				'success' => false,
-				'message' => 'No matching objects found in collection "' . $collection . '"',
-			];
+			return OperationResult::failure('No matching objects found in collection "' . $collection . '"');
 		}
 
 		$effectiveOverrideTo = ($overrideTo !== null && $overrideTo !== '') ? $overrideTo : null;
@@ -124,28 +109,21 @@ readonly class BulkMailerService
 			'scheduled'  => $scheduledAt,
 		]);
 
-		return [
-			'success' => true,
-			'batchId' => $batchId,
-			'count'   => $count,
-			'message' => sprintf('Queued %d emails for sending', $count),
-		];
+		return OperationResult::success(
+			sprintf('Queued %d emails for sending', $count),
+			['batchId' => $batchId, 'count' => $count],
+		);
 	}
 
 	/**
 	 * Preview a bulk email for a specific object.
-	 *
-	 * @return array{success:bool,html?:string,subject?:string,to?:string,message?:string}
 	 */
-	public function previewEmail(string $mailerId, string $objectId, string $collection): array
+	public function previewEmail(string $mailerId, string $objectId, string $collection): OperationResult
 	{
 		try {
 			$mailer = $this->mailerFetcher->fetchMailer($mailerId);
 		} catch (\Exception $e) {
-			return [
-				'success' => false,
-				'message' => 'Mailer template not found: ' . $e->getMessage(),
-			];
+			return OperationResult::failure('Mailer template not found: ' . $e->getMessage());
 		}
 
 		try {
@@ -156,17 +134,13 @@ readonly class BulkMailerService
 			$subject = $this->twigEngine->renderString($mailer->subject, $twigData);
 			$to      = $this->twigEngine->renderString($mailer->to, $twigData);
 
-			return [
-				'success' => true,
+			return OperationResult::success('', [
 				'html'    => $html,
 				'subject' => $subject,
 				'to'      => $to,
-			];
+			]);
 		} catch (\Exception $e) {
-			return [
-				'success' => false,
-				'message' => 'Preview error: ' . $e->getMessage(),
-			];
+			return OperationResult::failure('Preview error: ' . $e->getMessage());
 		}
 	}
 }

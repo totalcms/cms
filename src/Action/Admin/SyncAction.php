@@ -61,7 +61,7 @@ readonly class SyncAction
 			])->withStatus(502);
 		}
 
-		return $this->renderer->json($response, $result);
+		return $this->renderer->json($response, $result->toArray());
 	}
 
 	/**

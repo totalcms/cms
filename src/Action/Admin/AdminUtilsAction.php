@@ -264,7 +264,7 @@ readonly class AdminUtilsAction
 	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
-	 * @return array{success: bool, error?: array{message: string, line: int, context: string}, file: string}
+	 * @return array<string,mixed>
 	 */
 	private function lintTwigFile(string $relativePath): array
 	{
@@ -304,6 +304,6 @@ readonly class AdminUtilsAction
 			];
 		}
 
-		return $this->twigLintService->lintFile($realPath);
+		return $this->twigLintService->lintFile($realPath)->toArray();
 	}
 }

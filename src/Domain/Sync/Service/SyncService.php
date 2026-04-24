@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Sync\Service;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\OperationResult;
 
 /**
  * Shared sync service used by both the CLI and admin dashboard.
@@ -29,20 +30,17 @@ readonly class SyncService
 	 * @param list<string>|null $schemaFilter
 	 * @param list<string>|null $templateFilter
 	 *
-	 * @return array{success: bool, message: string, schemas: int, templates: int, remote_result?: array<string,mixed>}
 	 */
-	public function push(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): array
+	public function push(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): OperationResult
 	{
 		$this->jumpStartExporter->setMetadata('Sync Push', 'Pushed via Total CMS sync');
 		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter);
 
 		if ($jumpstart->isEmpty()) {
-			return [
-				'success'   => true,
-				'message'   => 'Nothing to push — no matching schemas or templates found.',
+			return OperationResult::success('Nothing to push — no matching schemas or templates found.', [
 				'schemas'   => 0,
 				'templates' => 0,
-			];
+			]);
 		}
 
 		$httpResponse = $this->httpClient->request('POST', $url . '/import/jumpstart', [
@@ -63,13 +61,11 @@ readonly class SyncService
 
 		$remoteResult = json_decode($httpResponse->body, true);
 
-		return [
-			'success'       => true,
-			'message'       => 'Push complete.',
+		return OperationResult::success('Push complete.', [
 			'schemas'       => count($jumpstart->schemas),
 			'templates'     => count($jumpstart->templates),
 			'remote_result' => is_array($remoteResult) ? $remoteResult : [],
-		];
+		]);
 	}
 
 	/**
@@ -109,9 +105,8 @@ readonly class SyncService
 	 * @param list<string>|null $schemaFilter
 	 * @param list<string>|null $templateFilter
 	 *
-	 * @return array{success: bool, message: string, schemas: int, templates: int, import_result?: array<string,mixed>}
 	 */
-	public function pull(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): array
+	public function pull(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): OperationResult
 	{
 		$payload = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter);
 
@@ -119,23 +114,19 @@ readonly class SyncService
 		$templateCount = count($payload['templates'] ?? []);
 
 		if ($schemaCount === 0 && $templateCount === 0) {
-			return [
-				'success'   => true,
-				'message'   => 'Nothing to pull — no matching schemas or templates found.',
+			return OperationResult::success('Nothing to pull — no matching schemas or templates found.', [
 				'schemas'   => 0,
 				'templates' => 0,
-			];
+			]);
 		}
 
 		$result = $this->jumpStartImporter->importFromDefinition($payload);
 
-		return [
-			'success'       => true,
-			'message'       => 'Pull complete.',
+		return OperationResult::success('Pull complete.', [
 			'schemas'       => $schemaCount,
 			'templates'     => $templateCount,
 			'import_result' => $result,
-		];
+		]);
 	}
 
 	/**

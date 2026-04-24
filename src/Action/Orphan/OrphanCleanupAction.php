@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Orphan\Service\OrphanCleaner;
 use TotalCMS\Domain\Orphan\Service\OrphanScanner;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\OperationResult;
 
 readonly class OrphanCleanupAction
 {
@@ -29,12 +30,12 @@ readonly class OrphanCleanupAction
 		if (is_array($entries) && $entries !== []) {
 			$result = $this->cleanExplicitEntries($entries);
 
-			return $this->renderer->json($response, $result);
+			return $this->renderer->json($response, $result->toArray());
 		}
 
 		// Mode-based cleanup: scan then clean
 		$report = null;
-		$result = ['cleaned' => 0, 'failed' => 0, 'errors' => []];
+		$result = null;
 
 		switch ($mode) {
 			case 'all':
@@ -71,17 +72,15 @@ readonly class OrphanCleanupAction
 				return $this->renderer->json($response, ['error' => 'Invalid mode. Use: all, collection, property, or provide entries array']);
 		}
 
-		return $this->renderer->json($response, $result);
+		return $this->renderer->json($response, $result->toArray());
 	}
 
 	/**
 	 * Clean explicitly specified entries from UI selection.
 	 *
 	 * @param array<mixed> $entries
-	 *
-	 * @return array{cleaned:int,failed:int,errors:array<string>}
 	 */
-	private function cleanExplicitEntries(array $entries): array
+	private function cleanExplicitEntries(array $entries): OperationResult
 	{
 		$cleaned = 0;
 		$failed  = 0;
@@ -108,18 +107,18 @@ readonly class OrphanCleanupAction
 			/** @var array<string> $orphanedIds */
 			$result = $this->cleaner->cleanProperty($collection, $objectId, $property, $orphanedIds, $isArray);
 
-			if ($result['success']) {
+			if ($result->success) {
 				$cleaned++;
 			} else {
 				$failed++;
-				$errors[] = "{$collection}/{$objectId}.{$property}: {$result['error']}";
+				$errors[] = "{$collection}/{$objectId}.{$property}: {$result->error}";
 			}
 		}
 
-		return [
+		return OperationResult::success('', [
 			'cleaned' => $cleaned,
 			'failed'  => $failed,
 			'errors'  => $errors,
-		];
+		]);
 	}
 }
