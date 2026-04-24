@@ -59,6 +59,7 @@ use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
 use TotalCMS\Domain\Event\Listener\DataViewListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
@@ -1232,11 +1233,19 @@ return [
 		$dispatcher->listen('object.updated', $lazy(IndexBuildListener::class, 'onObjectUpdated'), -100);
 		$dispatcher->listen('object.deleted', $lazy(IndexBuildListener::class, 'onObjectDeleted'), -100);
 		$dispatcher->listen('schema.saved', $lazy(IndexBuildListener::class, 'onSchemaSaved'), -100);
+		$dispatcher->listen('import.completed', $lazy(IndexBuildListener::class, 'onImportCompleted'), -100);
 
 		// DataViewListener
 		$dispatcher->listen('object.created', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
 		$dispatcher->listen('object.updated', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
 		$dispatcher->listen('object.deleted', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+
+		// CacheInvalidationListener
+		$dispatcher->listen('collection.created', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('collection.updated', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('collection.deleted', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('import.completed', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('schema.saved', $lazy(CacheInvalidationListener::class, 'onSchemaSaved'), -90);
 
 		return $dispatcher;
 	},

@@ -6,7 +6,8 @@ use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -23,7 +24,8 @@ class CsvImporter
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectImporter $objectImporter,
-		private readonly IndexBuilder $indexBuilder,
+		private readonly IndexBuildListener $indexBuildListener,
+		private readonly EventDispatcher $eventDispatcher,
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -88,6 +90,9 @@ class CsvImporter
 		$totalRecords   = count($cleanedRecords);
 		$this->logger->info(sprintf('Found %d records to import', $totalRecords));
 
+		// Suspend per-object index rebuilds during batch import
+		$this->indexBuildListener->suspendForCollection($collection);
+
 		foreach ($cleanedRecords as $offset => $record) {
 			try {
 				$imported = $updateObject ?
@@ -104,8 +109,11 @@ class CsvImporter
 			}
 		}
 
-		// Rebuild index
-		$this->indexBuilder->buildIndex($collection);
+		// Single index rebuild at end of import
+		$this->eventDispatcher->dispatch('import.completed', [
+			'collection' => $collection,
+			'count'      => $importCount,
+		]);
 
 		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
 

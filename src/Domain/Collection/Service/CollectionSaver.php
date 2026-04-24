@@ -146,6 +146,10 @@ readonly class CollectionSaver
 		// Clear request-level cache so subsequent fetches get fresh data
 		$this->collectionFetcher->clearCache($collectionId);
 
+		$this->eventDispatcher->dispatch('collection.updated', [
+			'collection' => $collectionId,
+		]);
+
 		return $collection;
 	}
 

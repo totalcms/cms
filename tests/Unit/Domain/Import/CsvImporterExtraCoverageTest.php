@@ -7,8 +7,9 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Import\CsvImporter;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -22,12 +23,12 @@ use TotalCMS\Factory\LoggerFactory;
  */
 describe('CsvImporter extra coverage', function (): void {
 	beforeEach(function (): void {
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->objectImporter    = $this->createMock(ObjectImporter::class);
-		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
-		$this->jobQueuer         = $this->createMock(JobQueuer::class);
-		$this->logger            = $this->createMock(LoggerInterface::class);
+		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
+		$this->objectFetcher      = $this->createMock(ObjectFetcher::class);
+		$this->objectImporter     = $this->createMock(ObjectImporter::class);
+		$this->indexBuildListener = $this->createMock(IndexBuildListener::class);
+		$this->jobQueuer          = $this->createMock(JobQueuer::class);
+		$this->logger             = $this->createMock(LoggerInterface::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -37,7 +38,8 @@ describe('CsvImporter extra coverage', function (): void {
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->objectImporter,
-			$this->indexBuilder,
+			$this->indexBuildListener,
+			new EventDispatcher(new \Psr\Log\NullLogger()),
 			$this->jobQueuer,
 			$loggerFactory,
 		);
@@ -99,17 +101,12 @@ describe('CsvImporter extra coverage', function (): void {
 
 	// --- import(): happy paths ---
 
-	test('import creates new objects via ObjectImporter and rebuilds the index', function (): void {
+	test('import creates new objects via ObjectImporter', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 
 		$this->objectImporter
 			->expects($this->exactly(2))
 			->method('importObject');
-
-		$this->indexBuilder
-			->expects($this->once())
-			->method('buildIndex')
-			->with('blog');
 
 		$count = $this->importer->import('blog', ($this->uploadedFileFrom)("id,title\npost-1,Hello\npost-2,World"));
 
@@ -233,15 +230,13 @@ describe('CsvImporter extra coverage', function (): void {
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$failingImporter,
-			$this->indexBuilder,
+			$this->indexBuildListener,
+			new EventDispatcher(new \Psr\Log\NullLogger()),
 			$this->jobQueuer,
 			$loggerFactory,
 		);
 
 		$this->objectFetcher->method('existsObject')->willReturn(false);
-
-		// Index rebuild must still run even after a row error
-		$this->indexBuilder->expects($this->once())->method('buildIndex');
 
 		$count = $importer->import('blog', ($this->uploadedFileFrom)("id,title\na,A\nb,B"));
 

@@ -8,7 +8,7 @@ use League\Uri\Uri;
 use Psr\Log\LoggerInterface;
 use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
@@ -21,7 +21,7 @@ readonly class UrlImporter
 	public function __construct(
 		private ObjectRepository $storage,
 		private CakeValidationFactory $validationFactory,
-		private IndexBuilder $indexBuilder,
+		private EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('url-importer');
@@ -58,8 +58,10 @@ readonly class UrlImporter
 			$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
 			// @todo Add logic that will download the image and save it to the post
 
-			// Rebuild index
-			$this->indexBuilder->buildIndex($collection);
+			$this->eventDispatcher->dispatch('import.completed', [
+				'collection' => $collection,
+				'count'      => 1,
+			]);
 		} catch (\Exception $exception) {
 			$this->logger->error(
 				sprintf('Error importing URL: %s', $exception->getMessage())

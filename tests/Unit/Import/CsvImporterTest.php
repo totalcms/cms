@@ -9,8 +9,9 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Import\CsvImporter;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -22,21 +23,21 @@ final class CsvImporterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $indexBuildListener;
 	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
 	private \PHPUnit\Framework\MockObject\MockObject $logger;
 	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{
-		// Create mocks for all dependencies (now possible since final was removed)
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->objectImporter    = $this->createMock(ObjectImporter::class);
-		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
-		$this->jobQueuer         = $this->createMock(JobQueuer::class);
-		$this->logger            = $this->createMock(LoggerInterface::class);
-		$this->loggerFactory     = $this->createMock(LoggerFactory::class);
+		// Create mocks for all dependencies
+		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
+		$this->objectFetcher      = $this->createMock(ObjectFetcher::class);
+		$this->objectImporter     = $this->createMock(ObjectImporter::class);
+		$this->indexBuildListener = $this->createMock(IndexBuildListener::class);
+		$this->jobQueuer          = $this->createMock(JobQueuer::class);
+		$this->logger             = $this->createMock(LoggerInterface::class);
+		$this->loggerFactory      = $this->createMock(LoggerFactory::class);
 
 		// Setup logger factory chain
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -46,7 +47,8 @@ final class CsvImporterTest extends TestCase
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->objectImporter,
-			$this->indexBuilder,
+			$this->indexBuildListener,
+			new EventDispatcher(new \Psr\Log\NullLogger()),
 			$this->jobQueuer,
 			$this->loggerFactory
 		);

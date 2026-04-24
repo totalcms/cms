@@ -6,7 +6,6 @@ namespace TotalCMS\Domain\Import;
 
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -30,7 +29,6 @@ class DeckJsonImporter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectUpdater $objectUpdater,
 		private readonly SchemaFetcher $schemaFetcher,
-		private readonly IndexBuilder $indexBuilder,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('deck-json-importer');
@@ -104,7 +102,6 @@ class DeckJsonImporter
 		$objectData[$property] = $existingDeck;
 
 		$this->objectUpdater->updateObject($collection, $objectId, $objectData);
-		$this->indexBuilder->buildIndex($collection);
 
 		$this->logger->info("Deck JSON import completed. Imported {$importCount} items");
 

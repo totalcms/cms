@@ -84,6 +84,20 @@ $context->addEventListener('collection.created', function (array $payload): void
 });
 ```
 
+### `collection.updated`
+
+Fired after a collection's settings are updated.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | Collection ID |
+
+```php
+$context->addEventListener('collection.updated', function (array $payload): void {
+    // e.g., react to collection configuration changes
+});
+```
+
 ### `collection.deleted`
 
 Fired after a collection is deleted.
@@ -95,6 +109,23 @@ Fired after a collection is deleted.
 ```php
 $context->addEventListener('collection.deleted', function (array $payload): void {
     // e.g., clean up extension data related to this collection
+});
+```
+
+### `import.completed`
+
+Fired after a batch import (CSV, JSON, or URL) finishes processing.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | Collection ID |
+| `count` | `int` | Number of objects imported |
+
+```php
+$context->addEventListener('import.completed', function (array $payload): void {
+    $collection = $payload['collection'];
+    $count = $payload['count'];
+    // e.g., send a notification that import is done
 });
 ```
 
@@ -193,3 +224,45 @@ $context->addEventListener('object.created', $listenerB, priority: 20);
 ```
 
 If two listeners have the same priority, they execute in the order they were registered.
+
+## Sending Notifications from Event Listeners
+
+Extensions can use events to trigger notifications automatically when content changes. The built-in `PushoverService` and `EmailService` are available via the DI container in the `boot()` phase.
+
+### Pushover Notification on Object Created
+
+```php
+use TotalCMS\Domain\Notification\Service\PushoverService;
+
+public function boot(ExtensionContext $context): void
+{
+    $pushover = $context->get(PushoverService::class);
+
+    $context->addEventListener('object.created', function (array $payload) use ($pushover): void {
+        $pushover->send(
+            message: "New {$payload['collection']} object: {$payload['id']}",
+            title: 'Content Created',
+        );
+    });
+}
+```
+
+### Email Notification on Import Completed
+
+```php
+use TotalCMS\Domain\Mailer\Service\EmailService;
+
+public function boot(ExtensionContext $context): void
+{
+    $mailer = $context->get(EmailService::class);
+
+    $context->addEventListener('import.completed', function (array $payload) use ($mailer): void {
+        $mailer->sendEmail('import-notification', [
+            'collection' => $payload['collection'],
+            'count'      => $payload['count'],
+        ]);
+    });
+}
+```
+
+These listeners run after the core operation completes. If sending fails, the exception is caught and logged without affecting the content operation.

@@ -17,6 +17,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 final class IndexBuildListenerTest extends TestCase
 {
 	private EventDispatcher $dispatcher;
+	private IndexBuildListener $listener;
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
@@ -28,11 +29,12 @@ final class IndexBuildListenerTest extends TestCase
 		$this->collectionLister  = $this->createMock(CollectionLister::class);
 		$this->dispatcher        = new EventDispatcher(new NullLogger());
 
-		(new IndexBuildListener(
+		$this->listener = new IndexBuildListener(
 			$this->indexBuilder,
 			$this->collectionFetcher,
 			$this->collectionLister,
-		))->register($this->dispatcher);
+		);
+		$this->listener->register($this->dispatcher);
 	}
 
 	public function testObjectCreatedCallsSmartBuildIndexWithObject(): void
@@ -148,6 +150,95 @@ final class IndexBuildListenerTest extends TestCase
 
 		$this->dispatcher->dispatch('schema.saved', [
 			'schema' => 'blog',
+		]);
+	}
+
+	public function testSuspendedCollectionSkipsIndexOnCreate(): void
+	{
+		$this->listener->suspendForCollection('posts');
+
+		$this->indexBuilder
+			->expects($this->never())
+			->method('smartBuildIndex');
+
+		$this->dispatcher->dispatch('object.created', [
+			'collection' => 'posts',
+			'id'         => 'test-id',
+		]);
+	}
+
+	public function testSuspendedCollectionSkipsIndexOnUpdate(): void
+	{
+		$this->listener->suspendForCollection('posts');
+
+		$this->indexBuilder
+			->expects($this->never())
+			->method('smartBuildIndex');
+
+		$this->dispatcher->dispatch('object.updated', [
+			'collection' => 'posts',
+			'id'         => 'test-id',
+		]);
+	}
+
+	public function testSuspendOnlyAffectsTargetCollection(): void
+	{
+		$this->listener->suspendForCollection('posts');
+
+		$this->indexBuilder
+			->expects($this->once())
+			->method('smartBuildIndex')
+			->with('team', null);
+
+		$this->dispatcher->dispatch('object.created', [
+			'collection' => 'team',
+			'id'         => 'test-id',
+		]);
+	}
+
+	public function testResumeRestoresIndexRebuilds(): void
+	{
+		$object = $this->createMock(ObjectData::class);
+
+		$this->listener->suspendForCollection('posts');
+		$this->listener->resumeForCollection('posts');
+
+		$this->indexBuilder
+			->expects($this->once())
+			->method('smartBuildIndex')
+			->with('posts', $object);
+
+		$this->dispatcher->dispatch('object.created', [
+			'collection' => 'posts',
+			'id'         => 'test-id',
+			'object'     => $object,
+		]);
+	}
+
+	public function testImportCompletedRebuildsIndexAndResumes(): void
+	{
+		$this->listener->suspendForCollection('posts');
+
+		$this->indexBuilder
+			->expects($this->once())
+			->method('buildIndex')
+			->with('posts');
+
+		$this->dispatcher->dispatch('import.completed', [
+			'collection' => 'posts',
+			'count'      => 10,
+		]);
+
+		// After import.completed, the collection should be resumed.
+		// Dispatch another object.created to verify it's no longer suspended.
+		$this->indexBuilder
+			->expects($this->once())
+			->method('smartBuildIndex')
+			->with('posts', null);
+
+		$this->dispatcher->dispatch('object.created', [
+			'collection' => 'posts',
+			'id'         => 'new-post',
 		]);
 	}
 }
