@@ -29,9 +29,9 @@ Every extension requires an `extension.json` manifest file in its root directory
         "cli:commands",
         "routes:admin",
         "admin:nav",
+        "admin:assets",
         "events:listen",
-        "settings:read",
-        "settings:write"
+        "settings:read"
     ],
     "min_edition": "standard",
     "entrypoint": "Extension.php",
@@ -104,14 +104,15 @@ Declares what the extension can do. These are shown to the user before installat
 | `twig:filters` | Register custom Twig filters |
 | `twig:globals` | Register Twig global variables |
 | `cli:commands` | Register CLI commands |
-| `routes:api` | Register REST API endpoints |
+| `routes:api` | Register authenticated API endpoints |
 | `routes:admin` | Register admin pages |
+| `routes:public` | Register unauthenticated public endpoints |
 | `admin:nav` | Add items to the admin navigation |
 | `admin:widgets` | Add dashboard widgets |
+| `admin:assets` | Load CSS/JS in the admin interface |
 | `events:listen` | Subscribe to content events |
 | `fields:register` | Register custom field types |
 | `settings:read` | Read extension settings |
-| `settings:write` | Write extension settings |
 | `container:definitions` | Register DI container services |
 
 ### `min_edition`

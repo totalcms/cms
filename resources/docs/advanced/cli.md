@@ -478,3 +478,72 @@ tcms update:rollback --force
 | `--force` | Skip confirmation prompt |
 
 Restores the backup directory created during the most recent update.
+
+---
+
+## Extension Commands
+
+### `extension:list`
+
+List all discovered extensions with their status.
+
+```bash
+tcms extension:list
+tcms extension:list --json
+```
+
+**JSON output:**
+```json
+[
+    {
+        "id": "acme/seo-pro",
+        "name": "SEO Pro",
+        "version": "1.2.0",
+        "enabled": true,
+        "error": null
+    }
+]
+```
+
+### `extension:enable`
+
+Enable a discovered extension.
+
+```bash
+tcms extension:enable acme/seo-pro
+tcms extension:enable acme/seo-pro --json
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Extension ID (e.g. `vendor/extension-name`) |
+
+### `extension:disable`
+
+Disable an extension without removing it.
+
+```bash
+tcms extension:disable acme/seo-pro
+tcms extension:disable acme/seo-pro --json
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Extension ID (e.g. `vendor/extension-name`) |
+
+### `extension:remove`
+
+Remove an extension's files. Extension data in `tcms-data` is preserved.
+
+```bash
+tcms extension:remove acme/seo-pro
+tcms extension:remove acme/seo-pro --force
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Extension ID (e.g. `vendor/extension-name`) |
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Skip confirmation prompt |

@@ -123,9 +123,13 @@ Usage:
 tcms acme:generate-sitemap
 ```
 
-## Routes (API and Admin)
+## Routes
 
-Register routes under your extension's namespace. Routes are automatically prefixed with `/ext/{vendor}/{name}/`.
+Extensions can register three types of routes, each with different authentication and URL prefixes.
+
+### API Routes
+
+Register authenticated API routes under `/ext/{vendor}/{name}/`.
 
 ```php
 use Slim\Routing\RouteCollectorProxy;
@@ -133,17 +137,61 @@ use Slim\Routing\RouteCollectorProxy;
 public function register(ExtensionContext $context): void
 {
     $context->addRoutes(function (RouteCollectorProxy $group): void {
-        $group->get('/dashboard', MyDashboardAction::class);
-        $group->post('/api/analyze', AnalyzeAction::class);
+        $group->get('/status', StatusAction::class);
+        $group->post('/analyze', AnalyzeAction::class);
     });
 }
 ```
 
-**Permissions:** `routes:api`, `routes:admin`
+**Permission:** `routes:api`
 
 The routes above are accessible at:
-- `/ext/acme/seo-pro/dashboard`
-- `/ext/acme/seo-pro/api/analyze`
+- `/ext/acme/seo-pro/status`
+- `/ext/acme/seo-pro/analyze`
+
+### Admin Routes
+
+Register routes under `/admin/ext/{vendor}/{name}/`. These routes are protected by admin authentication middleware. Templates can extend `admin-dashboard.twig` for the admin layout.
+
+```php
+use Slim\Routing\RouteCollectorProxy;
+
+public function register(ExtensionContext $context): void
+{
+    $context->addAdminRoutes(function (RouteCollectorProxy $group): void {
+        $group->get('/dashboard', MyDashboardAction::class);
+        $group->get('/settings', MySettingsAction::class);
+    });
+}
+```
+
+**Permission:** `routes:admin`
+
+The routes above are accessible at:
+- `/admin/ext/acme/seo-pro/dashboard`
+- `/admin/ext/acme/seo-pro/settings`
+
+### Public Routes
+
+Register unauthenticated routes under `/ext/{vendor}/{name}/`. These routes have no authentication — use for webhooks, embeds, and endpoints that must be accessible without credentials.
+
+```php
+use Slim\Routing\RouteCollectorProxy;
+
+public function register(ExtensionContext $context): void
+{
+    $context->addPublicRoutes(function (RouteCollectorProxy $group): void {
+        $group->post('/webhook', WebhookAction::class);
+        $group->get('/embed/{id}', EmbedAction::class);
+    });
+}
+```
+
+**Permission:** `routes:public`
+
+The routes above are accessible at:
+- `/ext/acme/seo-pro/webhook`
+- `/ext/acme/seo-pro/embed/{id}`
 
 ## Admin Navigation
 
@@ -249,9 +297,25 @@ public function register(ExtensionContext $context): void
 
 **Permission:** `container:definitions`
 
+## Admin Assets
+
+Load custom CSS or JavaScript files in the admin interface.
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $context->addAdminAsset('css', 'styles/admin.css');
+    $context->addAdminAsset('js', 'scripts/admin.js');
+}
+```
+
+**Permission:** `admin:assets`
+
+The path is relative to the extension's `assets/` directory. For example, the CSS file above would be at `tcms-data/extensions/acme/seo-pro/assets/styles/admin.css`.
+
 ## Settings
 
-Read and write per-extension settings. Settings are stored in `tcms-data/.system/extension-settings/`.
+Read per-extension settings. Settings are stored in `tcms-data/.system/extension-settings/`.
 
 ```php
 public function boot(ExtensionContext $context): void
@@ -261,9 +325,9 @@ public function boot(ExtensionContext $context): void
 }
 ```
 
-**Permissions:** `settings:read`, `settings:write`
+**Permission:** `settings:read`
 
-Define a `settings_schema` in your manifest to enable a settings form in the admin UI.
+Define a `settings_schema` in your manifest to enable a settings form in the admin UI. Settings are managed by admins through the extension settings page in the dashboard.
 
 ## Service Resolution (Boot Phase)
 
