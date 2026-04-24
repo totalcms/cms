@@ -4,10 +4,10 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Storage\StorageRepository;
 
 /**
  * Service.
@@ -21,22 +21,18 @@ readonly class PropertyFactory
 	}
 
 	/**
-	 * create a property object.
-	 *
-	 * @param array<string,mixed>  $propertySchema
+	 * Create a property object from a schema definition and value.
 	 *
 	 * @throws \DomainException
 	 * @throws \UnexpectedValueException
 	 */
-	public function generateProperty(array $propertySchema, mixed $value): PropertyData
+	public function generateProperty(PropertyDefinition $definition, mixed $value): PropertyData
 	{
-		$type = $propertySchema['type'] ?? basename($propertySchema['$ref'] ?? '', StorageRepository::FILE_EXT);
+		$type = $definition->resolveType();
 
 		// Special handling for deck properties
 		if ($type === 'deck') {
-			$settings = $propertySchema['settings'] ?? [];
-
-			return $this->createDeck($propertySchema, $value, $settings);
+			return $this->createDeck($definition, $value, $definition->settings);
 		}
 
 		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst((string)$type) . 'Data';
@@ -44,8 +40,8 @@ readonly class PropertyFactory
 			throw new \UnexpectedValueException('Unknown property type for object.');
 		}
 
-		if (isset($propertySchema['default'])) {
-			$value = $className::defaultValue($value, $propertySchema['default']);
+		if ($definition->default !== null) {
+			$value = $className::defaultValue($value, $definition->default);
 		}
 
 		// Handle array passed to string type (schema/form mismatch)
@@ -65,9 +61,7 @@ readonly class PropertyFactory
 			}
 		}
 
-		$settings = $propertySchema['settings'] ?? [];
-
-		$property = null === $value ? new $className(settings: $settings) : new $className($value, $settings);
+		$property = null === $value ? new $className(settings: $definition->settings) : new $className($value, $definition->settings);
 
 		if (!$property instanceof PropertyData) {
 			throw new \DomainException('Error creating property for object.');
@@ -79,19 +73,17 @@ readonly class PropertyFactory
 	/**
 	 * Create a DeckData object with properly processed items.
 	 *
-	 * @param array<string,mixed> $propertySchema The deck property schema
 	 * @param mixed $value The raw deck data
 	 * @param array<string,mixed> $settings The deck settings
 	 */
-	public function createDeck(array $propertySchema, mixed $value, array $settings = []): DeckData
+	public function createDeck(PropertyDefinition $definition, mixed $value, array $settings = []): DeckData
 	{
 		// If no deck data provided, return empty deck
 		if (empty($value) || !is_array($value)) {
 			return new DeckData([], $settings);
 		}
 
-		// Get deckref from property schema (can be in settings or directly in property)
-		$deckref = $propertySchema['deckref'] ?? $propertySchema['settings']['deckref'] ?? $settings['deckref'] ?? null;
+		$deckref = $definition->deckref;
 
 		// If no deckref, return deck as-is (no processing)
 		if (empty($deckref)) {
@@ -121,7 +113,7 @@ readonly class PropertyFactory
 				foreach ($deckSchema->properties as $fieldName => $fieldSchema) {
 					$fieldValue = $itemData[$fieldName] ?? null;
 					// Use generateProperty for proper data conversion and default handling
-					$propertyObject                = $this->generateProperty($fieldSchema, $fieldValue);
+					$propertyObject                = $this->generateProperty(PropertyDefinition::fromArray($fieldSchema), $fieldValue);
 					$processedItemData[$fieldName] = $propertyObject->transform();
 				}
 
@@ -155,16 +147,7 @@ readonly class PropertyFactory
 			return $itemData; // No property config found, return as-is
 		}
 
-		// Create a simulated deck with just this one item to process it through deck processing
-		$deckPropertySchema = [
-			'type'     => 'deck',
-			'settings' => $propertyConfig['settings'] ?? [],
-		];
-
-		// Add deckref from property config if it exists
-		if (isset($propertyConfig['deckref'])) {
-			$deckPropertySchema['deckref'] = $propertyConfig['deckref'];
-		}
+		$deckDefinition = PropertyDefinition::fromArray($propertyConfig);
 
 		$singleItemDeck = [
 			$itemData['id'] => $itemData,
@@ -172,7 +155,7 @@ readonly class PropertyFactory
 
 		try {
 			// Use deck processing to process the single-item deck
-			$processedDeckData = $this->createDeck($deckPropertySchema, $singleItemDeck);
+			$processedDeckData = $this->createDeck($deckDefinition, $singleItemDeck);
 			$processedDeck     = $processedDeckData->transform();
 
 			return $processedDeck[$itemData['id']] ?? $itemData;

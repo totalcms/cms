@@ -5,8 +5,8 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Storage\StorageRepository;
 
 readonly class RemoverFactory
 {
@@ -46,6 +46,6 @@ readonly class RemoverFactory
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-		return basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		return PropertyDefinition::fromArray($schema->properties[$property])->resolveType();
 	}
 }

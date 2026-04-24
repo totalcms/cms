@@ -6,8 +6,8 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -29,7 +29,7 @@ readonly class SaverFactory
 	public function generateSaverService(string $collection, string $property, string $objectId = ''): FileSaver
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$type   = basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		$type   = PropertyDefinition::fromArray($schema->properties[$property])->resolveType();
 
 		$className = 'TotalCMS\\Domain\\Property\\Service\\' . ucfirst($type) . 'Saver';
 		if (!class_exists($className)) {

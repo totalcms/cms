@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -93,7 +94,7 @@ readonly class ObjectFactory
 
 			$value = $objectData[$property];
 
-			$properties[$property] = $this->propertyFactory->generateProperty($propertySchema, $value);
+			$properties[$property] = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 		}
 
 		return $properties;
