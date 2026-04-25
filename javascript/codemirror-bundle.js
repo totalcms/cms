@@ -137,7 +137,15 @@ class TotalCMSEditorView {
 			extensions.push(foldGutter());
 		}
 		if (options.matchBrackets !== false) {
-			extensions.push(bracketMatching());
+			// Use a compartment so bracket matching only activates on focus
+			// Exclude <> from bracket matching — HTML/Twig tag matching handles those
+			const bracketCompartment = new Compartment();
+			extensions.push(bracketCompartment.of([]));
+			extensions.push(EditorView.focusChangeEffect.of((state, focusing) => {
+				return focusing
+					? bracketCompartment.reconfigure(bracketMatching())
+					: bracketCompartment.reconfigure([]);
+			}));
 		}
 		if (options.autoCloseBrackets !== false) {
 			extensions.push(closeBrackets());
