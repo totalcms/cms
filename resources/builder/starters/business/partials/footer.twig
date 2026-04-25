@@ -1,0 +1,13 @@
+<footer style="background: #111; color: #999; padding: 3rem 0; margin-top: 4rem;">
+	<div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+		<p>&copy; {{ 'now' | date('Y') }} {{ cms.config('domain') }}. All rights reserved.</p>
+		<ul style="list-style: none; display: flex; gap: 1.5rem;">
+			{% set pages = cms.collection.objects('builder-pages', {sort: 'sort:asc'}) %}
+			{% for page in pages %}
+				{% if not page.draft %}
+				<li><a href="{{ page.path == '' ? '/' : '/' ~ page.path }}" style="color: #ccc; text-decoration: none;">{{ page.title }}</a></li>
+				{% endif %}
+			{% endfor %}
+		</ul>
+	</div>
+</footer>

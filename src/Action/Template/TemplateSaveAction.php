@@ -32,14 +32,20 @@ readonly class TemplateSaveAction
 
 		$id       = (string)($data['id'] ?? '');
 		$template = (string)($data['template'] ?? '');
+		$category = (string)($data['category'] ?? '');
+
+		// Prepend category to ID if the form sent them separately
+		if ($category !== '' && !str_starts_with($id, $category . '/')) {
+			$id = $category . '/' . $id;
+		}
 
 		// Parse the ID to extract folder and template name
 		[$folder, $templateId] = TemplateRepository::parsePath($id);
 
 		$templateData = $this->service->saveTemplate($templateId, $template, $folder);
 
-		// Save designer metadata if provided
-		if (isset($data['designerEnabled']) || isset($data['designerToken'])) {
+		// Save designer metadata only for templates (not layouts, pages, partials, etc.)
+		if ($category === 'templates' && (isset($data['designerEnabled']) || isset($data['designerToken']))) {
 			$meta                  = new DesignerMetadata();
 			$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
 			$meta->designerToken   = (string)($data['designerToken'] ?? '');

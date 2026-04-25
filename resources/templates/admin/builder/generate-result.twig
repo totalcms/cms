@@ -1,0 +1,11 @@
+{% if result.success %}
+<div class="cms-notice cms-notice-success">
+	<strong>Generated {{ result.generated }} page(s)</strong>
+	{% if result.skipped > 0 %} &middot; {{ result.skipped }} draft(s) skipped{% endif %}
+	{% if result.cleaned > 0 %} &middot; {{ result.cleaned }} orphan(s) cleaned{% endif %}
+</div>
+{% else %}
+<div class="cms-notice cms-notice-error">
+	<strong>Generation failed:</strong> {{ result.errors | join(', ') }}
+</div>
+{% endif %}

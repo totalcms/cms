@@ -44,6 +44,9 @@ class Config
 	public array $pushnotif = [];
 	/** @var array<string,mixed> */
 	public array $presets = [];
+	public string $docroot = '';
+	/** @var array<string,mixed> */
+	public array $builder = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -75,6 +78,8 @@ class Config
 		$this->pushnotif       = is_array($pushnotif) ? $pushnotif : [];
 		$this->presets         = is_array($settings['presets']['presetsettings'] ?? null) ? $settings['presets']['presetsettings'] : [];
 		$this->timezone        = $settings['timezone'] ?? date_default_timezone_get();
+		$this->docroot         = $settings['docroot'] ?? $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$this->builder         = is_array($settings['builder'] ?? []) ? $settings['builder'] : [];
 
 		date_default_timezone_set($this->timezone);
 	}

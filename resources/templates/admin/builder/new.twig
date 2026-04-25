@@ -1,0 +1,15 @@
+<header>
+	<h1><a href="builder">builder</a> / <span>new template</span></h1>
+</header>
+
+{{ cms.form.template({
+	save        : cms.auth.canAccessTemplates() ? "Save" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	newActions : [
+		{
+			"action" : "redirect-object",
+			"link"   : "builder/"
+		}
+	],
+}) }}

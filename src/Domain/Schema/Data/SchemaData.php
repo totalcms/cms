@@ -38,6 +38,7 @@ class SchemaData
 		'image',
 		'mailer',
 		'number',
+		'builder-page',
 		'playground',
 		'preset-item',
 		'styledtext',

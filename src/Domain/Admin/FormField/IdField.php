@@ -17,9 +17,10 @@ class IdField extends FormField
 			$this->required = true;
 		}
 
-		// Only set readonly if we have a value AND we're not in duplicate mode
+		// Only set readonly if we have a value AND we're not in duplicate mode or template form
 		// In duplicate mode, user needs to edit the ID before saving
-		if (!empty($this->value) && !$this->form->isDuplicate) {
+		// Template forms support rename/move, so the ID must remain editable
+		if (!empty($this->value) && !$this->form->isDuplicate && $this->form->getFormType() !== 'template') {
 			$this->readonly = true;
 		}
 	}

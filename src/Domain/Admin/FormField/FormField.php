@@ -365,6 +365,10 @@ class FormField
 			return $this->form->collectionIdList();
 		}
 
+		if ($source === 'layouts') {
+			return $this->form->layoutListForBuilder();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}

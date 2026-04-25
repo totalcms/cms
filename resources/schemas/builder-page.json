@@ -1,0 +1,124 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/builder-page.json",
+	"id": "builder-page",
+	"type": "object",
+	"description": "A schema for a Site Builder page",
+	"formgrid": "draft .\ntitle title\nid id\npath parent\nsort layout\ndescription description\nupdated created",
+	"properties": {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Page ID",
+			"help"     : "Unique identifier for this page. Used as the template filename.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"autogen": "${title}"
+			}
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Page Title",
+			"help"    : "The page title, used in the title tag and navigation",
+			"field"   : "text",
+			"factory" : "catchPhrase"
+		},
+		"path": {
+			"type"        : "string",
+			"label"       : "URL Path",
+			"help"        : "URL path for this page (e.g. about or blog/archive). Leave empty for homepage.",
+			"field"       : "text",
+			"default"     : "",
+			"placeholder" : "about/team"
+		},
+		"layout": {
+			"type"    : "string",
+			"label"   : "Layout",
+			"help"    : "The layout template this page extends. Create layouts in the Builder under layouts/.",
+			"field"   : "select",
+			"default" : "default",
+			"settings" : {
+				"propertyOptions": "layouts",
+				"sortOptions" : true
+			}
+		},
+		"description": {
+			"type"    : "string",
+			"label"   : "Meta Description",
+			"help"    : "SEO meta description for this page",
+			"field"   : "textarea",
+			"factory" : "catchPhrase"
+		},
+		"draft": {
+			"type"    : "boolean",
+			"label"   : "Draft",
+			"help"    : "Draft pages are excluded from site generation",
+			"field"   : "toggle",
+			"default" : false,
+			"factory" : "boolean"
+		},
+		"sort": {
+			"type"    : "number",
+			"label"   : "Sort Order",
+			"help"    : "Ordering for navigation menus. Lower numbers appear first.",
+			"field"   : "number",
+			"default" : 0
+		},
+		"parent": {
+			"type"        : "string",
+			"label"       : "Parent Page",
+			"help"        : "Parent page ID for hierarchical navigation",
+			"field"       : "select",
+			"placeholder" : "Select a parent...",
+			"default"     : "",
+			"settings"    : {
+				"relationalOptions" : {
+					"collection" : "builder-pages",
+					"label"      : "path: title",
+					"value"      : "id",
+					"join"       : ": "
+				},
+				"sortOptions" : true
+			}
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated Date",
+			"help"     : "Last modified date",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
+		},
+		"created": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Creation Date",
+			"help"     : "Page creation date",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"onCreate": true,
+				"readonly": true
+			}
+		}
+	},
+	"required": [
+		"id",
+		"title",
+		"updated",
+		"created"
+	],
+	"index": [
+		"id",
+		"title",
+		"path",
+		"layout",
+		"draft",
+		"sort",
+		"parent",
+		"updated",
+		"created"
+	]
+}

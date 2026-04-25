@@ -29,14 +29,14 @@ export default class Identifier extends TotalField {
 		const isExistingDeckItem = this.isInDeck && deckItemId && deckItemId.length > 0;
 
 		if (
-			(this.form.id && this.form.id.length > 0 && !this.isInDeck) ||
+			(this.form.id && this.form.id.length > 0 && !this.isInDeck && !this.form.isTemplateForm()) ||
 			isExistingDeckItem
 		) {
-			// The ID cannot be changed when editing
+			// The ID cannot be changed when editing (except templates which support rename/move)
 			this.disable();
 			this.valid = true; // ID is valid in edit mode since it can't be changed
 		}
-		if (this.getValue() !== "" && !this.isLocked()) {
+		if (this.getValue() !== "" && !this.isLocked() && !this.form.isTemplateForm()) {
 			this.validateIdExists();
 		}
 		if (this.settings.autogen && !this.isLocked() && this.getValue() === "") {
@@ -68,6 +68,14 @@ export default class Identifier extends TotalField {
         // Check ID changes directly
         this.input.addEventListener("input",  e => this.lock(), {once: true});
 		this.input.addEventListener("change", e => this.validateIdExists());
+
+		// Re-validate when category changes (template forms only)
+		if (this.form.isTemplateForm()) {
+			const categoryField = this.form.form.querySelector('select[name="category"]');
+			if (categoryField) {
+				categoryField.addEventListener("change", () => this.validateIdExists());
+			}
+		}
 	}
 
 	autogenId() {
@@ -202,7 +210,9 @@ export default class Identifier extends TotalField {
 			api = `/schemas/${id}`;
 		}
 		if (this.form.isTemplateForm()) {
-			api = `/templates/${id}`;
+			const categoryField = this.form.form.querySelector('select[name="category"]');
+			const category = categoryField ? categoryField.value : '';
+			api = category ? `/templates/${category}/${id}` : `/templates/${id}`;
 		}
 
         this.api.existsAPI(api).then(response => {
@@ -211,6 +221,13 @@ export default class Identifier extends TotalField {
 				this.idAvailable(); // Assume available on network error
 				return;
 			}
+
+			// If editing a template and the path matches the original, it's the same file
+			if (response.ok && this.form.isTemplateEditMode() && this.form.route === api) {
+				this.idAvailable();
+				return;
+			}
+
 			response.ok ? this.idExists() : this.idAvailable();
 		});
     }

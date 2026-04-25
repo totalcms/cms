@@ -1,0 +1,11 @@
+{
+	"name": "Business",
+	"description": "A professional business website with service pages and contact form",
+	"version": "1.0.0",
+	"pages": [
+		{"id": "home", "title": "Home", "path": "", "layout": "default", "sort": 0},
+		{"id": "about", "title": "About", "path": "about", "layout": "default", "sort": 1},
+		{"id": "services", "title": "Services", "path": "services", "layout": "default", "sort": 2},
+		{"id": "contact", "title": "Contact", "path": "contact", "layout": "default", "sort": 3}
+	]
+}

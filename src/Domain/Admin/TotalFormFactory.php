@@ -32,6 +32,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
@@ -78,6 +79,7 @@ readonly class TotalFormFactory
 		private ExtensionDiscovery $extensionDiscovery,
 		private ExtensionSettingsManager $extensionSettingsManager,
 		private ExtensionManager $extensionManager,
+		private TemplateLister $templateLister,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -422,6 +424,7 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new TemplateForm(...$options);
+		$form->setTemplateLister($this->templateLister);
 
 		return $form->autoBuild();
 	}
@@ -702,7 +705,10 @@ readonly class TotalFormFactory
 			'metaResolver'             => $this->metaResolver,
 		]);
 
-		return new ObjectForm(...$options);
+		$form = new ObjectForm(...$options);
+		$form->setTemplateLister($this->templateLister);
+
+		return $form;
 	}
 
 	/**

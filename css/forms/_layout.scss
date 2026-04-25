@@ -312,6 +312,7 @@ button.cms-add {
 	justify-content : flex-start;
 	gap             : 1.5rem;
 	margin-top      : 1rem;
+	grid-column     : 1/-1;
 
 	& > .form-field {
 		margin : 0;

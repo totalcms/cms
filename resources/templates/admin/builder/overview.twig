@@ -1,0 +1,57 @@
+<header>
+	<h1>Site Builder</h1>
+</header>
+
+<section class="dash-content-section">
+
+	<section>
+	<h2>What is Site Builder?</h2>
+	<p>Build your website using Twig templates. Create layouts, pages, and partials, then generate PHP stubs to your docroot.</p>
+	</section>
+
+	<section>
+	<div class="builder-stats">
+		<div class="stat-grid">
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.layouts|length }}</span>
+				<span class="stat-label">Layouts</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.pages|length }}</span>
+				<span class="stat-label">Pages</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.partials|length }}</span>
+				<span class="stat-label">Partials</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.macros|length }}</span>
+				<span class="stat-label">Macros</span>
+			</div>
+		</div>
+	</div>
+	</section>
+
+	{% if builder.docroot %}
+	<section class="builder-info">
+		<h3>Site Generation</h3>
+		<table class="admin-table">
+			<tr>
+				<td>Docroot</td>
+				<td><code>{{ builder.docroot }}</code></td>
+			</tr>
+		</table>
+	</section>
+	{% endif %}
+
+	<section>
+	<h3>Getting Started</h3>
+	<ol>
+		<li>Create a <strong>layout</strong> in <code>layouts/</code> with your base HTML structure</li>
+		<li>Create <strong>pages</strong> in <code>pages/</code> that extend your layout</li>
+		<li>Add page entries to your <strong>pages collection</strong> with paths and metadata</li>
+		<li>Click <strong>Generate Stubs</strong> to write PHP files to your docroot</li>
+	</ol>
+	</section>
+
+</section>

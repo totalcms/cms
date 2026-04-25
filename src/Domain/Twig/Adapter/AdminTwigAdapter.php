@@ -239,7 +239,7 @@ readonly class AdminTwigAdapter
 	public function templatesByFolder(): array
 	{
 		// Get all templates recursively
-		$templates = $this->templateLister->listCustomTemplates(null, true);
+		$templates = $this->templateLister->listBuilderTemplates(null, true);
 
 		$folders = [];
 
@@ -282,6 +282,30 @@ readonly class AdminTwigAdapter
 		return $folders;
 	}
 
+	/**
+	 * Get the builder file tree organized by category.
+	 *
+	 * @return array<string,list<array{id:string,path:string}>>
+	 */
+	public function builderFileTree(): array
+	{
+		$tree = [];
+		$categories = TemplateRepository::BUILDER_CATEGORIES;
+
+		foreach ($categories as $category) {
+			$templates = $this->templateLister->listBuilderTemplates($category, true);
+			$tree[$category] = [];
+			foreach ($templates as $templatePath) {
+				$tree[$category][] = [
+					'id'   => $templatePath,
+					'path' => $category . '/' . $templatePath,
+				];
+			}
+		}
+
+		return $tree;
+	}
+
 	// -------------------------
 	// Dashboard Data Methods
 	// -------------------------
@@ -295,7 +319,7 @@ readonly class AdminTwigAdapter
 	{
 		$collections = $this->collectionLister->listAllCollections();
 		$schemas     = $this->schemaLister->listCustomSchemas();
-		$templates   = $this->templateLister->listCustomTemplates();
+		$templates   = $this->templateLister->listBuilderTemplates();
 
 		// Sum totalObjects from all collections (much faster than counting index objects)
 		$totalObjects = 0;

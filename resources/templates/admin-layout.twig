@@ -47,7 +47,7 @@
 	{% endif %}
 
 	{% block head %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
 </head>
@@ -57,7 +57,7 @@
 	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 
 	{% block bodyBelow %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 	{% endif %}
 </body>

@@ -1,0 +1,29 @@
+<?php
+
+// Total CMS Site Builder Bootstrap — generated file, do not edit
+require_once __DIR__ . '/__AUTOLOAD_PATH__';
+
+function tcms_render(string $template, array $data = []): void
+{
+	static $tcms = null;
+	static $twigEngine = null;
+
+	try {
+		if ($tcms === null) {
+			$tcms = new \TotalCMS\TotalCMS(autoStartBuffer: false);
+			$twigEngine = $tcms->container()->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class);
+		}
+
+		header('Content-Type: text/html; charset=utf-8');
+		echo $twigEngine->render($template, $data);
+	} catch (\Throwable $e) {
+		if (!headers_sent()) {
+			http_response_code(500);
+			header('Content-Type: text/html; charset=utf-8');
+		}
+		echo '<h1>500 Internal Server Error</h1>';
+		if ($tcms?->config->debug ?? false) {
+			echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
+		}
+	}
+}

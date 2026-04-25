@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\Admin404Action;
+use TotalCMS\Action\Admin\AdminBuilderAction;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
@@ -53,8 +54,9 @@ return function (App $app): void {
 		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema')->add(SchemaEditionMiddleware::class)->add(SchemaAccessMiddleware::class);
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate')->add(SchemaEditionMiddleware::class)->add(SchemaAccessMiddleware::class);
 
-		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template')->add(TemplatesEditionMiddleware::class)->add(TemplateAccessMiddleware::class);
-		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate')->add(TemplatesEditionMiddleware::class)->add(TemplateAccessMiddleware::class);
+		// Builder (replaces Templates) — available to all editions
+		$group->get('/builder[/{section}[/{path:.*}]]', AdminBuilderAction::class)->setName('admin-builder')->add(TemplateAccessMiddleware::class);
+		$group->post('/builder/{section}[/{path:.*}]', AdminBuilderAction::class)->setName('admin-builder-post')->add(TemplateAccessMiddleware::class);
 
 		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);
 		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionEditionMiddleware::class)->add(CollectionMetaAccessMiddleware::class);

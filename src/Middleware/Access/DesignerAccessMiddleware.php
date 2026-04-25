@@ -43,7 +43,7 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 		[$folder, $name] = TemplateRepository::parsePath($path);
 
 		// Check if the template exists
-		if (!$this->templateRepository->customTemplateExists($name, $folder)) {
+		if (!$this->templateRepository->builderTemplateExists($name, $folder)) {
 			return $this->errorResponse(404, 'Template not found');
 		}
 

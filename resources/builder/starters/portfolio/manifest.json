@@ -1,0 +1,11 @@
+{
+	"name": "Portfolio",
+	"description": "A portfolio site to showcase your work with project pages and contact info",
+	"version": "1.0.0",
+	"pages": [
+		{"id": "home", "title": "Home", "path": "", "layout": "default", "sort": 0},
+		{"id": "work", "title": "Work", "path": "work", "layout": "default", "sort": 1},
+		{"id": "about", "title": "About", "path": "about", "layout": "default", "sort": 2},
+		{"id": "contact", "title": "Contact", "path": "contact", "layout": "default", "sort": 3}
+	]
+}

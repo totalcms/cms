@@ -133,7 +133,8 @@ export default class Code extends TotalField {
     setupAutoSave() {
         if (!this.editor || !this.localStorageKey) return;
 
-        if (this.form && this.form.isEditMode()) {
+        const isEditing = this.form && (this.form.isEditMode() || this.form.isTemplateEditMode());
+        if (isEditing) {
             if (window.localStorage) {
                 window.localStorage.removeItem(this.localStorageKey);
             }
@@ -152,7 +153,7 @@ export default class Code extends TotalField {
         }
 
         this.editor.on('change', () => {
-            if (!this.form || !this.form.isEditMode()) {
+            if (!this.form || (!this.form.isEditMode() && !this.form.isTemplateEditMode())) {
                 if (window.TotalCMSCodeMirror?.saveToStorage) {
                     window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue().replace(/\n+$/, ''));
                 }

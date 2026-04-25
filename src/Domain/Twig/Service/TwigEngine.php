@@ -6,8 +6,6 @@ use Cake\Chronos\Chronos;
 use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Designer\DesignerAwareLoader;
 use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
@@ -42,7 +40,6 @@ readonly class TwigEngine
 		Config $config,
 		TotalCMSTwigExtension $extension,
 		DevModeManager $devModeManager,
-		EditionFeatureService $editionFeatures,
 		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 	) {
@@ -52,10 +49,10 @@ readonly class TwigEngine
 		}
 		$paths = [$internalTemplates];
 
-		// Only add custom templates path if edition allows templates feature
-		$customTemplates = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
-		if (file_exists($customTemplates) && $editionFeatures->can(EditionFeature::TEMPLATES)) {
-			$paths[] = $customTemplates;
+		// Add builder templates path (available to all editions)
+		$builderDir = $config->datadir . '/' . TemplateRepository::BUILDER_DIR;
+		if (file_exists($builderDir)) {
+			$paths[] = $builderDir;
 		}
 
 		// Twig requires filesystem caching for compiled templates (can't use APCu/Redis)

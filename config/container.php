@@ -25,6 +25,9 @@ use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\StarterService;
+use TotalCMS\Domain\Builder\Service\SiteGenerator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
@@ -144,6 +147,7 @@ use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Template\Service\TemplateMigrationService;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
@@ -411,6 +415,7 @@ return [
 		$container->get(ExtensionDiscovery::class),
 		$container->get(ExtensionSettingsManager::class),
 		$container->get(ExtensionManager::class),
+		$container->get(TemplateLister::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -749,7 +754,6 @@ return [
 		$container->get(Config::class),
 		$container->get(TotalCMSTwigExtension::class),
 		$container->get(DevModeManager::class),
-		$container->get(EditionFeatureService::class),
 		$container->get(TemplateDesignerPreprocessor::class),
 		$container->get(TemplateDesignerSync::class),
 	),
@@ -1279,5 +1283,33 @@ return [
 		$container->get(ExtensionSettingsManager::class),
 		$container,
 		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('extensions'),
+	),
+
+	TemplateMigrationService::class => fn (ContainerInterface $container): TemplateMigrationService => new TemplateMigrationService(
+		$container->get(StorageAdapterInterface::class),
+	),
+
+	// Builder
+	BuilderConfigService::class => fn (ContainerInterface $container): BuilderConfigService => new BuilderConfigService(
+		$container->get(Config::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionSaver::class),
+		$container->get(TemplateMigrationService::class),
+		$container->get(TemplateFetcher::class),
+		$container->get(TemplateSaver::class),
+	),
+
+	StarterService::class => fn (ContainerInterface $container): StarterService => new StarterService(
+		$container->get(BuilderConfigService::class),
+		$container->get(ObjectSaver::class),
+		$container->get(TemplateLister::class),
+		$container->get(TemplateMigrationService::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	SiteGenerator::class => fn (ContainerInterface $container): SiteGenerator => new SiteGenerator(
+		$container->get(BuilderConfigService::class),
+		$container->get(IndexReader::class),
+		$container->get(LoggerFactory::class),
 	),
 ];

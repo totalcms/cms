@@ -52,7 +52,7 @@
 
 	{% block head %}{% endblock %}
 	{{ cms.extensionAssets() }}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
 </head>
@@ -68,7 +68,7 @@
             <nav>
                 <ul class="menu">
                     <li class="menu-item">
-						{{ include(cms.edition.can('whitelabel_templates')
+						{{ include(cms.edition.can('whitelabel_pro')
 							? ['whitelabel/admin-logo.twig', 'admin-logo-default.twig']
 							: ['admin-logo-default.twig']
 						, ignore_missing = true) }}
@@ -83,24 +83,22 @@
                         <a class="schemas" href="schemas" title="{{ t('nav.schemas') }}">{{ t('nav.schemas') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.auth.canAccessPlayground() %}
-                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
-                        <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>
+                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
+                    <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
+                        <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
                     </li>
                     {% endif %}
+                    <li class="menu-item{% if url.page == 'builder' %} active{% endif %}">
+                        <a class="builder" href="builder" title="Builder">Builder</a>
+                    </li>
                     {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
                     <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
                         <a class="mailer" href="mailer" title="{{ t('nav.mailer') }}">{{ t('nav.mailer') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.auth.canAccessTemplates() and cms.edition.can('templates') %}
-                    <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
-                        <a class="templates" href="templates" title="{{ t('nav.templates') }}">{{ t('nav.templates') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
-                    <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
-                        <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
+                    {% if cms.auth.canAccessPlayground() %}
+                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
+                        <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>
                     </li>
                     {% endif %}
                     {% if extensionNavItems is defined and extensionNavItems is iterable %}
@@ -214,7 +212,7 @@
 	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 
 	{% block bodyBelow %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 	{% endif %}
 </body>

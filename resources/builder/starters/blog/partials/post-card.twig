@@ -1,0 +1,7 @@
+<article class="post-card">
+	<h2><a href="/blog/post" style="text-decoration: none; color: #111;">{{ post.title }}</a></h2>
+	<p class="post-meta">{{ post.date | date('F j, Y') }}{% if post.author is defined and post.author %} &middot; {{ post.author }}{% endif %}</p>
+	{% if post.summary is defined and post.summary %}
+		<div>{{ post.summary | raw }}</div>
+	{% endif %}
+</article>

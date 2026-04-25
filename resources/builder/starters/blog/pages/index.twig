@@ -1,0 +1,16 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Home — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<section class="section">
+	<h1>Latest Posts</h1>
+
+	{% set posts = cms.collection.objects('blog', {sort: 'date:desc', limit: 5}) %}
+	{% for post in posts %}
+		{% include 'partials/post-card.twig' with {post: post} %}
+	{% else %}
+		<p>No posts yet. Create a blog collection with the blog schema to get started.</p>
+	{% endfor %}
+</section>
+{% endblock %}

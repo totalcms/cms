@@ -1,0 +1,23 @@
+{% extends 'layouts/default.twig' %}
+
+{# This is a template for individual blog posts. #}
+{# In production, you would use URL parameters or routing to load the specific post. #}
+
+{% block title %}Blog Post — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<article class="section">
+	<header style="margin-bottom: 2rem;">
+		<h1>Blog Post Title</h1>
+		<p class="post-meta">Replace this template with dynamic post loading using cms.data functions.</p>
+	</header>
+
+	<div class="post-content">
+		<p>This is a placeholder for individual blog post content. Use <code>cms.data.raw()</code> to load specific post data based on the URL or query parameters.</p>
+	</div>
+
+	<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+		<a href="/blog">&larr; Back to all posts</a>
+	</footer>
+</article>
+{% endblock %}

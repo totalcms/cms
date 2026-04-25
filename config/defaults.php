@@ -282,6 +282,13 @@ $settings['license'] = [
 	'simulateEdition' => null, // Set to 'lite', 'standard', or 'pro' to test edition restrictions
 ];
 
+// Site Builder
+$settings['builder'] = [
+	'pagesCollection' => 'builder-pages', // Collection ID for page metadata (must have path and status fields)
+	'autoGenerate'    => false,           // Auto-regenerate stubs on page save in admin
+	'cleanOrphans'    => true,            // Remove orphan stubs during generation
+];
+
 // https://www.php.net/manual/en/timezones.php
 // DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();

@@ -196,7 +196,7 @@ readonly class JumpStartExporter
 		$this->logger->info('Exporting templates');
 
 		// Export custom templates only (not reserved templates)
-		$templates = $this->templateLister->listCustomTemplates(null, true);
+		$templates = $this->templateLister->listBuilderTemplates(null, true);
 
 		foreach ($templates as $templatePath) {
 			try {

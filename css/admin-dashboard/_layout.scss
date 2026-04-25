@@ -18,10 +18,15 @@ body {
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
 	grid-template-rows : auto 1fr auto;
 	overflow-y         : auto;
-	background         : linear-gradient(180deg,
-		oklch(var(--totalform-accent) / 0.45) 0%,
-		oklch(var(--totalform-accent) / 0.20) 45%,
-		transparent 85%
+	// background         : linear-gradient(180deg,
+	// 	oklch(var(--totalform-accent) / 0.45) 0%,
+	// 	oklch(var(--totalform-accent) / 0.20) 45%,
+	// 	transparent 85%
+	// );
+	background: linear-gradient(180deg,
+		transparent 15%,
+		oklch(var(--totalform-accent)/.2) 55%,
+		oklch(var(--totalform-accent)/.45) 100%
 	);
 
 	.menu {
@@ -73,7 +78,7 @@ body {
 	.home {
 		mask-image : var(--icon-logo);
 	}
-	.templates {
+	.builder {
 		mask-image : var(--icon-templates);
 	}
 	.schemas {
@@ -184,6 +189,11 @@ body {
 			--collection-icon : var(--icon-data-views);
 		}
 		li {
+			&.empty {
+				opacity   : 0.5;
+				font-size : 0.8em;
+			}
+
 			--collection-icon : var(--icon-collections);
 
 			&[class*="schema-"] {
@@ -192,7 +202,7 @@ body {
 			&[class*="settings-"] {
 				--collection-icon : var(--icon-cog);
 			}
-			&[class*="template-"] {
+			&[class*="builder-"] {
 				--collection-icon : var(--icon-file-code);
 			}
 			&[class*="mailer-"] {
@@ -278,8 +288,9 @@ body {
 		display : none;
 
 		&:has(.dash-button) {
-			display : block;
+			display : grid;
 			padding : 1rem;
+			gap     : 1rem;
 		}
 	}
 }

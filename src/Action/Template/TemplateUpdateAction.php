@@ -41,9 +41,15 @@ readonly class TemplateUpdateAction
 		// Parse path from URL to get current location
 		[$folder, $id] = TemplateRepository::parsePath($path);
 
-		// Get updated values from JSON body (ID now contains the full path)
+		// Get updated values from JSON body
 		$newPath     = (string)($data['id'] ?? $path);
 		$template    = (string)($data['template'] ?? '');
+		$category    = (string)($data['category'] ?? '');
+
+		// Prepend category to ID if the form sent them separately
+		if ($category !== '' && !str_starts_with($newPath, $category . '/')) {
+			$newPath = $category . '/' . $newPath;
+		}
 
 		// Parse the new path
 		[$newFolder, $newId] = TemplateRepository::parsePath($newPath);
@@ -56,8 +62,9 @@ readonly class TemplateUpdateAction
 		// Save the template (with new name/folder if changed)
 		$templateData = $this->saver->saveTemplate($newId, $template, $newFolder);
 
-		// Save designer metadata if provided
-		if (isset($data['designerEnabled']) || isset($data['designerToken'])) {
+		// Save designer metadata only for templates (not layouts, pages, partials, etc.)
+		$category = (string)($data['category'] ?? '');
+		if ($category === 'templates' && (isset($data['designerEnabled']) || isset($data['designerToken']))) {
 			$meta                  = new DesignerMetadata();
 			$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
 			$meta->designerToken   = (string)($data['designerToken'] ?? '');

@@ -32,7 +32,8 @@ enum EditionFeature: string
 
 	// Template features
 	case TEMPLATES            = 'templates';
-	case WHITELABEL_TEMPLATES = 'whitelabel_templates';
+	case WHITELABEL_STANDARD = 'whitelabel_standard';
+	case WHITELABEL_PRO      = 'whitelabel_pro';
 
 	// Data features
 	case DATA_VIEWS = 'data_views';
@@ -68,7 +69,8 @@ enum EditionFeature: string
 			self::QR_CODES             => 'QR Codes',
 			self::BARCODES             => 'Barcodes',
 			self::TEMPLATES            => 'Templates',
-			self::WHITELABEL_TEMPLATES => 'Whitelabel Templates',
+			self::WHITELABEL_STANDARD => 'Whitelabel Standard',
+			self::WHITELABEL_PRO      => 'Whitelabel Pro',
 			self::DATA_VIEWS           => 'Data Views',
 			self::RSS_IMPORT           => 'RSS Import',
 			self::BULK_MAILER          => 'Bulk Mailer',
@@ -84,13 +86,16 @@ enum EditionFeature: string
 	public function requiredEdition(): Edition
 	{
 		return match ($this) {
+			// Lite features (all editions)
+			self::TEMPLATES => Edition::LITE,
+
 			// Standard features
 			self::BLOG_SCHEMA,
 			self::DEPOT_SCHEMA,
 			self::IMAGE_WATERMARKS,
 			self::MAILER_ACTIONS,
 			self::QR_CODES,
-			self::TEMPLATES,
+			self::WHITELABEL_STANDARD,
 			self::PASSKEYS,
 			self::ACCESS_GROUPS,
 			self::RSS_IMPORT => Edition::STANDARD,
@@ -102,7 +107,7 @@ enum EditionFeature: string
 			self::PUSHOVER_ACTIONS,
 			self::EXTERNAL_REST_API,
 			self::BARCODES,
-			self::WHITELABEL_TEMPLATES,
+			self::WHITELABEL_PRO,
 			self::DATA_VIEWS,
 			self::API_KEYS,
 			self::BULK_MAILER => Edition::PRO,

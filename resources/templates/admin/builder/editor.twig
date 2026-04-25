@@ -1,0 +1,34 @@
+<header>
+	<h1><a href="builder">builder</a> / <span>{{ url.file }}</span></h1>
+</header>
+
+{% if template %}
+
+{{ cms.form.template({
+	path        : url.file,
+	save        : cms.auth.canAccessTemplates() ? "Save" : false,
+	delete      : cms.auth.canAccessTemplates() ? "Delete" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "builder"
+		}
+	],
+	editActions : [
+		{
+			"action" : "refresh",
+		}
+	],
+}) }}
+
+{% else %}
+
+<section class="dash-content-section">
+	<div class="cms-notice cms-notice-error">
+		<strong>Template not found:</strong> {{ url.file }}
+	</div>
+</section>
+
+{% endif %}

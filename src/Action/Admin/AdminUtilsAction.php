@@ -8,6 +8,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -31,6 +32,7 @@ readonly class AdminUtilsAction
 		private AccessGroupLister $accessGroupLister,
 		private CollectionRepository $collectionRepository,
 		private CollectionFetcher $collectionFetcher,
+		private BuilderConfigService $builderConfig,
 		private SchemaLister $schemaLister,
 		private RssImporter $rssImporter,
 		private EditionFeatureService $editionFeatures,
@@ -148,7 +150,7 @@ readonly class AdminUtilsAction
 			$syncData = [
 				'settings'  => $this->settingsFetcher->loadSection('sync'),
 				'schemas'   => $this->schemaLister->listCustomSchemas(),
-				'templates' => $this->templateLister->listCustomTemplates(null, true),
+				'templates' => $this->templateLister->listBuilderTemplates(null, true),
 			];
 		}
 
@@ -251,12 +253,15 @@ readonly class AdminUtilsAction
 	private function createDefaultCollections(): void
 	{
 		foreach (SchemaData::RESERVED_SCHEMAS as $schemaId) {
-			// Skip blog-legacy schema
-			if ($schemaId === 'blog-legacy') {
+			// Skip schemas that don't map 1:1 to a collection
+			if ($schemaId === 'blog-legacy' || $schemaId === 'builder-page') {
 				continue;
 			}
 			$this->collectionFetcher->fetchOrCreateReserved($schemaId);
 		}
+
+		// Builder pages collection uses a different collection ID than schema ID
+		$this->builderConfig->ensurePagesCollection();
 	}
 
 	/**

@@ -153,6 +153,9 @@ export default class TotalForm {
 	isTemplateForm() {
 		return this.type === "template";
 	}
+	isTemplateEditMode() {
+		return this.isTemplateForm() && this.method.toUpperCase() === "PUT";
+	}
     // Check to see if the object is a HTML node.
     isDomNode(node){
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
@@ -515,8 +518,8 @@ export default class TotalForm {
     }
 
     async delete() {
-        // Only delete if editing object
-        if (!this.isEditMode()) return;
+        // Only delete if editing object (templates always allow delete since they skip edit mode)
+        if (!this.isEditMode() && !this.isTemplateForm()) return;
 
         if (await tcmsConfirm({ message: t("confirm.delete_item") })) {
             this.validated = true;
@@ -554,7 +557,8 @@ export default class TotalForm {
     }
 
     afterSaveAction(response) {
-		const runEditActions = this.isEditMode();
+		// Templates skip edit mode but still need to run edit actions when updating
+		const runEditActions = this.isEditMode() || this.isTemplateEditMode();
 
 		// Extract ID from response for new objects (needed for actions like redirect-object)
 		if (response && response.id && (!this.id || this.id.length === 0)) {
@@ -697,6 +701,10 @@ export default class TotalForm {
     // Form States
     //-------------------------
 	isEditMode() {
+		// Template forms support rename/move — PHP sets the route and method,
+		// so skip edit mode to keep the ID field editable
+		if (this.isTemplateForm()) return false;
+
 		return (["PUT", "PATCH"].includes(this.method.toUpperCase()) && this.form.classList.contains("edit-mode"));
     }
 

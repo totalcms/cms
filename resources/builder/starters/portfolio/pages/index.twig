@@ -1,0 +1,42 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}{{ cms.config('domain') }} — Portfolio{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 6rem 0;">
+	<div class="container">
+		<h1>Hello, I'm a designer<br>and developer.</h1>
+		<p style="font-size: 1.25rem; max-width: 560px;">I craft digital experiences that are thoughtful, functional, and beautiful. Take a look at my work below.</p>
+	</div>
+</section>
+
+<section class="section" style="background: #fff; padding: 4rem 0;">
+	<div class="container">
+		<h2>Featured Work</h2>
+		<div class="grid-3" style="margin-top: 2rem;">
+			<div class="project-card">
+				<div class="project-card-image"></div>
+				<div class="project-card-body">
+					<h3>Project One</h3>
+					<p>A brief description of this project and the problems it solved.</p>
+				</div>
+			</div>
+			<div class="project-card">
+				<div class="project-card-image"></div>
+				<div class="project-card-body">
+					<h3>Project Two</h3>
+					<p>A brief description of this project and the problems it solved.</p>
+				</div>
+			</div>
+			<div class="project-card">
+				<div class="project-card-image"></div>
+				<div class="project-card-body">
+					<h3>Project Three</h3>
+					<p>A brief description of this project and the problems it solved.</p>
+				</div>
+			</div>
+		</div>
+		<p style="text-align: center; margin-top: 2rem;"><a href="/work">View all work &rarr;</a></p>
+	</div>
+</section>
+{% endblock %}

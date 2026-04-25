@@ -59,7 +59,14 @@ export default class FieldVisibility {
 		if (!watchedField) {
 			// If watched field not found, hide by default
 			const field = fields.find(f => f.container === fieldElement);
-			if (field) field.hide();
+			if (field) this.setVisibility(field, false);
+			return;
+		}
+
+		// If the watched field is hidden, this field should also be hidden
+		if (!watchedField.isVisible()) {
+			const field = fields.find(f => f.container === fieldElement);
+			if (field) this.setVisibility(field, false);
 			return;
 		}
 
@@ -71,7 +78,20 @@ export default class FieldVisibility {
 		// Get the field object and toggle visibility
 		const field = fields.find(f => f.container === fieldElement);
 		if (field) {
-			isVisible ? field.show() : field.hide();
+			this.setVisibility(field, isVisible);
+		}
+	}
+
+	//-------------------------
+	// Set field visibility and dispatch change event to cascade to dependents
+	//-------------------------
+	setVisibility(field, isVisible) {
+		const wasVisible = !field.container.classList.contains('cms-hide');
+		isVisible ? field.show() : field.hide();
+
+		// If visibility changed, dispatch a change event so dependent fields re-evaluate
+		if (wasVisible !== isVisible) {
+			field.container.dispatchEvent(new Event('change', { bubbles: true }));
 		}
 	}
 

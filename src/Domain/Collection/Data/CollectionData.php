@@ -178,6 +178,7 @@ class CollectionData
 			'gallery'    => ['labelPlural' => 'Galleries', 'labelSingular' => 'Gallery'],
 			'image'      => ['labelPlural' => 'Images', 'labelSingular' => 'Image'],
 			'number'     => ['labelPlural' => 'Numbers', 'labelSingular' => 'Number'],
+			'builder-page' => ['labelPlural' => 'Pages', 'labelSingular' => 'Page'],
 			'styledtext' => ['labelPlural' => 'Content', 'labelSingular' => 'Styled Text'],
 			'svg'        => ['labelPlural' => 'SVGs', 'labelSingular' => 'SVG'],
 			'text'       => ['labelPlural' => 'Content', 'labelSingular' => 'Text'],

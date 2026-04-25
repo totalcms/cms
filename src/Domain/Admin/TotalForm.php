@@ -24,6 +24,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Support\Config;
 
 /**
@@ -312,6 +313,11 @@ class TotalForm implements \Stringable
 		return strtoupper($this->method) !== 'POST' && $this->id !== '';
 	}
 
+	public function getFormType(): string
+	{
+		return $this->formType;
+	}
+
 	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();
@@ -333,10 +339,17 @@ class TotalForm implements \Stringable
 		$formId       = null;
 		$formStyleTag = '';
 
-		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
+		if ($this->schemaData instanceof SchemaData && $this->useFormGrid) {
+			$formgrid = $this->schemaData->formgrid;
+
+			// Generate a default formgrid from field names if none defined
+			if ($formgrid === '') {
+				$formgrid = implode("\n", array_keys($this->fields));
+			}
+
 			$this->class .= ' formgrid';
 			$formId       = 'form-' . bin2hex(random_bytes(8));
-			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
+			$gridBuilder  = new FormGridBuilder($formgrid);
 			$gridBuilder->ensureFieldsIncluded(array_keys($this->fields));
 			$formStyleTag = $gridBuilder->toStyleTag($formId);
 		}
@@ -454,6 +467,28 @@ class TotalForm implements \Stringable
 		$collections = $this->collectionLister->listAllCollections();
 
 		return array_map(fn (CollectionData $c): string => $c->id, $collections);
+	}
+
+	protected ?TemplateLister $templateLister = null;
+
+	public function setTemplateLister(TemplateLister $lister): void
+	{
+		$this->templateLister = $lister;
+	}
+
+	/**
+	 * Get a list of available layout templates from the builder/layouts/ directory.
+	 * Used for propertyOptions: "layouts" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function layoutListForBuilder(): array
+	{
+		if ($this->templateLister === null) {
+			return [];
+		}
+
+		return $this->templateLister->listBuilderTemplates('layouts', true);
 	}
 
 	/**
