@@ -437,7 +437,7 @@ return [
 	'cache.clear_content_btn'       => 'Inhoudscaches wissen',
 	'cache.status_disabled'         => 'Cachestatus: Uitgeschakeld (Ontwikkelingsmodus)',
 	'cache.status_disabled_desc'    => 'Twig-sjablooncaching is momenteel uitgeschakeld vanwege de actieve ontwikkelingsmodus.',
-	'cache.opcache_note'            => 'Let op: OPcache kan nog steeds actief zijn en PHP-bestanden cachen.',
+	'cache.opcache_note'            => 'Het wissen van OPcache wordt mogelijk pas volledig van kracht nadat alle webserverprocessen een verzoek hebben verwerkt. Als wijzigingen na het wissen niet zichtbaar zijn, herstart uw webserver.',
 	'cache.available_systems'       => 'Beschikbare cachesystemen',
 	'cache.type'                    => 'Cachetype',
 	'cache.performance_data'        => 'Prestatiegegevens',

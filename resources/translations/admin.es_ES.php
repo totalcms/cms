@@ -437,7 +437,7 @@ return [
 	'cache.clear_content_btn'       => 'Limpiar cachés de contenido',
 	'cache.status_disabled'         => 'Estado de caché: Deshabilitado (modo de desarrollo)',
 	'cache.status_disabled_desc'    => 'El caché de plantillas Twig está actualmente deshabilitado debido al modo de desarrollo activo.',
-	'cache.opcache_note'            => 'Nota: OPcache puede seguir activo y almacenando en caché archivos PHP.',
+	'cache.opcache_note'            => 'Es posible que la limpieza de OPcache no surta efecto completo hasta que todos los procesos del servidor web hayan atendido una solicitud. Si los cambios no se reflejan después de limpiar, reinicie su servidor web.',
 	'cache.available_systems'       => 'Sistemas de caché disponibles',
 	'cache.type'                    => 'Tipo de caché',
 	'cache.performance_data'        => 'Datos de rendimiento',

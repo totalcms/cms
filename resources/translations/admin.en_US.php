@@ -437,7 +437,7 @@ return [
 	'cache.clear_content_btn'       => 'Clear Content Caches',
 	'cache.status_disabled'         => 'Cache Status: Disabled (Development Mode)',
 	'cache.status_disabled_desc'    => 'Twig template caching is currently disabled due to active development mode.',
-	'cache.opcache_note'            => 'Note: OPcache may still be active and caching PHP files.',
+	'cache.opcache_note'            => 'OPcache clearing may not take full effect until all web server processes have handled a request. If changes are not reflected after clearing, restart your web server.',
 	'cache.available_systems'       => 'Available Cache Systems',
 	'cache.type'                    => 'Cache Type',
 	'cache.performance_data'        => 'Performance Data',

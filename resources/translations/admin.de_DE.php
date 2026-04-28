@@ -437,7 +437,7 @@ return [
 	'cache.clear_content_btn'       => 'Inhalts-Caches leeren',
 	'cache.status_disabled'         => 'Cache-Status: Deaktiviert (Entwicklungsmodus)',
 	'cache.status_disabled_desc'    => 'Das Twig-Vorlagen-Caching ist aufgrund des aktiven Entwicklungsmodus derzeit deaktiviert.',
-	'cache.opcache_note'            => 'Hinweis: OPcache ist möglicherweise weiterhin aktiv und cached PHP-Dateien.',
+	'cache.opcache_note'            => 'Das Leeren von OPcache wird möglicherweise erst vollständig wirksam, wenn alle Webserver-Prozesse eine Anfrage verarbeitet haben. Wenn Änderungen nach dem Leeren nicht sichtbar sind, starten Sie Ihren Webserver neu.',
 	'cache.available_systems'       => 'Verfügbare Cache-Systeme',
 	'cache.type'                    => 'Cache-Typ',
 	'cache.performance_data'        => 'Leistungsdaten',
