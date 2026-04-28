@@ -492,6 +492,21 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Get a list of available page templates from the builder/pages/ directory.
+	 * Used for propertyOptions: "pages" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function pageListForBuilder(): array
+	{
+		if ($this->templateLister === null) {
+			return [];
+		}
+
+		return $this->templateLister->listBuilderTemplates('pages', true);
+	}
+
+	/**
 	 * Get properties from collection objects with optional filtering.
 	 *
 	 * @param array<string>        $properties Properties to fetch

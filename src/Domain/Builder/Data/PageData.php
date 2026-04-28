@@ -8,7 +8,8 @@ readonly class PageData
 {
 	public string $id;
 	public string $title;
-	public string $path;
+	public string $route;
+	public string $template;
 	public string $layout;
 	public string $description;
 	public bool $draft;
@@ -20,7 +21,8 @@ readonly class PageData
 	{
 		$this->id          = (string)($data['id'] ?? '');
 		$this->title       = (string)($data['title'] ?? '');
-		$this->path        = trim((string)($data['path'] ?? ''), '/');
+		$this->route       = (string)($data['route'] ?? '');
+		$this->template    = (string)($data['template'] ?? '');
 		$this->layout      = (string)($data['layout'] ?? 'default');
 		$this->description = (string)($data['description'] ?? '');
 		$this->draft       = (bool)($data['draft'] ?? false);
@@ -28,47 +30,24 @@ readonly class PageData
 		$this->parent      = (string)($data['parent'] ?? '');
 	}
 
-	/**
-	 * Template path relative to tcms-data/templates/.
-	 * Homepage (empty path) maps to pages/index.twig.
-	 */
-	public function templatePath(): string
-	{
-		if ($this->path === '') {
-			return 'pages/index.twig';
-		}
-
-		return 'pages/' . $this->path . '.twig';
-	}
-
-	/**
-	 * Stub path relative to docroot.
-	 * Homepage maps to index.php, others to {path}/index.php.
-	 */
-	public function stubPath(): string
-	{
-		if ($this->path === '') {
-			return 'index.php';
-		}
-
-		return $this->path . '/index.php';
-	}
-
 	public function isPublished(): bool
 	{
 		return !$this->draft;
 	}
 
-	/**
-	 * Number of directory levels in the stub path.
-	 * Used to calculate relative path back to tcms-boot.php.
-	 */
-	public function stubDepth(): int
+	/** @return array<string,mixed> */
+	public function toArray(): array
 	{
-		if ($this->path === '') {
-			return 0;
-		}
-
-		return count(explode('/', $this->path));
+		return [
+			'id'          => $this->id,
+			'title'       => $this->title,
+			'route'       => $this->route,
+			'template'    => $this->template,
+			'layout'      => $this->layout,
+			'description' => $this->description,
+			'draft'       => $this->draft,
+			'sort'        => $this->sort,
+			'parent'      => $this->parent,
+		];
 	}
 }

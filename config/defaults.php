@@ -284,9 +284,7 @@ $settings['license'] = [
 
 // Site Builder
 $settings['builder'] = [
-	'pagesCollection' => 'builder-pages', // Collection ID for page metadata (must have path and status fields)
-	'autoGenerate'    => false,           // Auto-regenerate stubs on page save in admin
-	'cleanOrphans'    => true,            // Remove orphan stubs during generation
+	'pagesCollection' => 'builder-pages', // Collection ID for page metadata
 ];
 
 // https://www.php.net/manual/en/timezones.php

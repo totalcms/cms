@@ -11,7 +11,7 @@ readonly class StarterManifest
 	public string $version;
 	public string $directory;
 
-	/** @var list<array{id:string,title:string,path:string,layout:string,sort:int}> */
+	/** @var list<array{id:string,title:string,route:string,template:string,layout:string,sort:int}> */
 	public array $pages;
 
 	/** @param array<string,mixed> $data */
@@ -27,12 +27,14 @@ readonly class StarterManifest
 			if (!is_array($page)) {
 				continue;
 			}
+			$id = (string)($page['id'] ?? '');
 			$pages[] = [
-				'id'     => (string)($page['id'] ?? ''),
-				'title'  => (string)($page['title'] ?? ''),
-				'path'   => (string)($page['path'] ?? ''),
-				'layout' => (string)($page['layout'] ?? 'default'),
-				'sort'   => (int)($page['sort'] ?? 0),
+				'id'       => $id,
+				'title'    => (string)($page['title'] ?? ''),
+				'route'    => (string)($page['route'] ?? ('/' . ltrim($page['path'] ?? '', '/'))),
+				'template' => (string)($page['template'] ?? $id),
+				'layout'   => (string)($page['layout'] ?? 'default'),
+				'sort'     => (int)($page['sort'] ?? 0),
 			];
 		}
 		$this->pages = $pages;

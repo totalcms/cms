@@ -7,20 +7,8 @@
 		"pagesCollection": {
 			"type"        : "text",
 			"label"       : "Pages Collection",
-			"help"        : "The collection used for page metadata. The collection must have <code>path</code> and <code>status</code> fields. Change this if you use a custom schema that extends <code>builder-page</code>.",
+			"help"        : "The collection used for page metadata. Change this if you use a custom schema that extends <code>builder-page</code>.",
 			"placeholder" : "builder-pages"
-		},
-		"autoGenerate": {
-			"type"    : "toggle",
-			"label"   : "Auto-Generate Stubs",
-			"help"    : "Automatically regenerate PHP stubs when pages are saved in the admin.",
-			"default" : false
-		},
-		"cleanOrphans": {
-			"type"    : "toggle",
-			"label"   : "Clean Orphan Stubs",
-			"help"    : "Remove generated stub files that no longer correspond to published pages during generation.",
-			"default" : true
 		}
 	}
 }

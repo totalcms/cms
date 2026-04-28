@@ -324,8 +324,8 @@ class TemplateRepository extends StorageRepository
 			$files = [];
 			foreach ($contents as $item) {
 				if ($item->isFile() && str_ends_with($item->path(), self::FILE_EXT)) {
-					// Remove base path and .twig extension
-					$relativePath = str_replace(self::BUILDER_DIR, '', $item->path());
+					// Remove base path and .twig extension (strip folder prefix, not just BUILDER_DIR)
+					$relativePath = substr($item->path(), strlen($basePath));
 					$files[]      = substr($relativePath, 0, -strlen(self::FILE_EXT));
 				}
 			}

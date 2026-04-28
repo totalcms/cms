@@ -5,7 +5,7 @@
 			{% set pages = cms.collection.objects('builder-pages', {sort: 'sort:asc'}) %}
 			{% for page in pages %}
 				{% if not page.draft %}
-				<li><a href="{{ page.path == '' ? '/' : '/' ~ page.path }}" style="text-decoration: none; color: #555; font-weight: 500;">{{ page.title }}</a></li>
+				<li><a href="{{ page.route }}" style="text-decoration: none; color: #555; font-weight: 500;">{{ page.title }}</a></li>
 				{% endif %}
 			{% endfor %}
 		</ul>

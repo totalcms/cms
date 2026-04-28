@@ -15,6 +15,7 @@ use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\BundleMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\MaintenanceModeMiddleware;
+use TotalCMS\Middleware\PageRouterMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
@@ -43,4 +44,7 @@ return function (App $app): void {
 	if (TotalCMS::isPreview()) {
 		$app->add(PreviewRouteMiddleware::class);
 	}
+
+	// Page router wraps everything — catches 404s from Slim and tries builder pages
+	$app->add(PageRouterMiddleware::class);
 };

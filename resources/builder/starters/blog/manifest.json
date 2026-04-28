@@ -3,9 +3,9 @@
 	"description": "A blog-focused site with post listing, single post, and about page",
 	"version": "1.0.0",
 	"pages": [
-		{"id": "home", "title": "Home", "path": "", "layout": "default", "sort": 0},
-		{"id": "blog", "title": "Blog", "path": "blog", "layout": "default", "sort": 1},
-		{"id": "blog-post", "title": "Blog Post", "path": "blog/post", "layout": "default", "sort": 2},
-		{"id": "about", "title": "About", "path": "about", "layout": "default", "sort": 3}
+		{"id": "home", "title": "Home", "route": "/", "template": "index", "layout": "default", "sort": 0},
+		{"id": "blog", "title": "Blog", "route": "/blog", "template": "blog/index", "layout": "default", "sort": 1},
+		{"id": "blog-post", "title": "Blog Post", "route": "/blog/{id}", "template": "blog/post", "layout": "default", "sort": 2},
+		{"id": "about", "title": "About", "route": "/about", "template": "about", "layout": "default", "sort": 3}
 	]
 }

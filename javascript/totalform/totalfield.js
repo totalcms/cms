@@ -48,6 +48,7 @@ export default class TotalField {
         }
 
 		this.dispatcher = new TotalDispatcher(this.container);
+		this.storedValue = this.getValue();
 
 		this.changeListener();
 		this.initAutogen();

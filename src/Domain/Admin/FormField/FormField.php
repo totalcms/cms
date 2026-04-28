@@ -369,6 +369,10 @@ class FormField
 			return $this->form->layoutListForBuilder();
 		}
 
+		if ($source === 'pages') {
+			return $this->form->pageListForBuilder();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}

@@ -4,12 +4,12 @@
 	"id": "builder-page",
 	"type": "object",
 	"description": "A schema for a Site Builder page",
-	"formgrid": "draft .\ntitle title\nid id\npath parent\nsort layout\ndescription description\nupdated created",
+	"formgrid": "draft .\ntitle title\nid id\nroute template\nlayout parent\nsort sort\ndescription description\nupdated created",
 	"properties": {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"    : "Page ID",
-			"help"     : "Unique identifier for this page. Used as the template filename.",
+			"help"     : "Unique identifier for this page.",
 			"field"    : "id",
 			"factory"  : "slug",
 			"settings" : {
@@ -23,13 +23,23 @@
 			"field"   : "text",
 			"factory" : "catchPhrase"
 		},
-		"path": {
+		"route": {
 			"type"        : "string",
-			"label"       : "URL Path",
-			"help"        : "URL path for this page (e.g. about or blog/archive). Leave empty for homepage.",
+			"label"       : "Route",
+			"help"        : "URL path for this page. Use {param} for dynamic segments (e.g. /products/{id}).",
 			"field"       : "text",
 			"default"     : "",
-			"placeholder" : "about/team"
+			"placeholder" : "/about"
+		},
+		"template": {
+			"type"    : "string",
+			"label"   : "Template",
+			"help"    : "The page template to render. Multiple pages can share the same template.",
+			"field"   : "text",
+			"default" : "",
+			"settings" : {
+				"propertyOptions": "pages"
+			}
 		},
 		"layout": {
 			"type"    : "string",
@@ -52,7 +62,7 @@
 		"draft": {
 			"type"    : "boolean",
 			"label"   : "Draft",
-			"help"    : "Draft pages are excluded from site generation",
+			"help"    : "Draft pages are excluded from routing",
 			"field"   : "toggle",
 			"default" : false,
 			"factory" : "boolean"
@@ -74,7 +84,7 @@
 			"settings"    : {
 				"relationalOptions" : {
 					"collection" : "builder-pages",
-					"label"      : "path: title",
+					"label"      : "route: title",
 					"value"      : "id",
 					"join"       : ": "
 				},
@@ -113,7 +123,8 @@
 	"index": [
 		"id",
 		"title",
-		"path",
+		"route",
+		"template",
 		"layout",
 		"draft",
 		"sort",

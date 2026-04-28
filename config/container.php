@@ -26,8 +26,8 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Builder\Service\StarterService;
-use TotalCMS\Domain\Builder\Service\SiteGenerator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
@@ -1307,9 +1307,11 @@ return [
 		$container->get(LoggerFactory::class),
 	),
 
-	SiteGenerator::class => fn (ContainerInterface $container): SiteGenerator => new SiteGenerator(
+	PageRouter::class => fn (ContainerInterface $container): PageRouter => new PageRouter(
 		$container->get(BuilderConfigService::class),
 		$container->get(IndexReader::class),
-		$container->get(LoggerFactory::class),
+		$container->get(CollectionLister::class),
+		$container->get(ObjectUrlBuilder::class),
+		$container->get(ObjectFetcher::class),
 	),
 ];

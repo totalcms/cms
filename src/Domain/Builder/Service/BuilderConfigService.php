@@ -113,13 +113,5 @@ readonly class BuilderConfigService
 		return $this->config->docroot;
 	}
 
-	public function shouldAutoGenerate(): bool
-	{
-		return (bool)($this->config->builder['autoGenerate'] ?? false);
-	}
 
-	public function shouldCleanOrphans(): bool
-	{
-		return (bool)($this->config->builder['cleanOrphans'] ?? true);
-	}
 }

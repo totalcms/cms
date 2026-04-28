@@ -154,12 +154,13 @@ readonly class StarterService
 		foreach ($manifest->pages as $page) {
 			try {
 				$this->objectSaver->saveObject($this->builderConfig->getPagesCollectionId(), [
-					'id'     => $page['id'],
-					'title'  => $page['title'],
-					'path'   => $page['path'],
-					'layout' => $page['layout'],
-					'draft'  => false,
-					'sort'   => $page['sort'],
+					'id'       => $page['id'],
+					'title'    => $page['title'],
+					'route'    => $page['route'],
+					'template' => $page['template'],
+					'layout'   => $page['layout'],
+					'draft'    => false,
+					'sort'     => $page['sort'],
 				]);
 				$created++;
 			} catch (\DomainException) {
