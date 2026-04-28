@@ -83,13 +83,13 @@ This key can access any API route.
 Restrict access to specific collections:
 
 ```
-Allowed Paths: /collections/blog
+Allowed Paths: /api/collections/blog
 ```
 
 This key can access:
-- `/collections/blog` (list blog objects)
-- `/collections/blog/123` (view/edit specific blog object)
-- `/collections/blog/new` (create new blog object)
+- `/api/collections/blog` (list blog objects)
+- `/api/collections/blog/123` (view/edit specific blog object)
+- `/api/collections/blog/new` (create new blog object)
 
 #### Multiple Paths
 
@@ -109,9 +109,9 @@ This key can access blog, news, and events collections, but not products, galler
 **Important**: Total CMS uses prefix-based matching with `str_starts_with()`, so you do NOT need to add `/*` wildcards.
 
 **Example:**
-- Allowed path: `/collections/blog`
-- Matches: `/collections/blog`, `/collections/blog/123`, `/collections/blog/456/edit`
-- Does NOT match: `/collections/products`, `/api/settings`
+- Allowed path: `/api/collections/blog`
+- Matches: `/api/collections/blog`, `/api/collections/blog/123`, `/api/collections/blog/456/edit`
+- Does NOT match: `/api/collections/products`, `/api/settings`
 
 **Common Patterns:**
 
@@ -119,7 +119,7 @@ This key can access blog, news, and events collections, but not products, galler
 |-------------|---------|----------|
 | `*` | All routes | Full API access |
 | `/collections` | All collections | Access to all collection data |
-| `/collections/blog` | Blog collection only | Blog-specific integration |
+| `/api/collections/blog` | Blog collection only | Blog-specific integration |
 | `/api/settings` | Settings API | Configuration management |
 | `/schemas` | Schema management | Schema editor integration |
 
@@ -129,17 +129,17 @@ Scopes work together - both HTTP methods AND paths must match for a request to b
 
 **Example: Read-Only Blog Access**
 - HTTP Methods: `GET`
-- Allowed Paths: `/collections/blog`
+- Allowed Paths: `/api/collections/blog`
 - Result: Can view blog objects, cannot create/edit/delete
 
 **Example: Full Blog Editor**
 - HTTP Methods: `GET`, `POST`, `PUT`, `DELETE`
-- Allowed Paths: `/collections/blog`
+- Allowed Paths: `/api/collections/blog`
 - Result: Complete blog management, no access to other collections
 
 **Example: Multi-Collection Content Editor**
 - HTTP Methods: `GET`, `POST`, `PUT`
-- Allowed Paths: `/collections/blog`, `/collections/news`, `/collections/events`
+- Allowed Paths: `/api/collections/blog`, `/api/collections/news`, `/api/collections/events`
 - Result: Can view and edit three collections, cannot delete
 
 ## Using API Keys
@@ -150,12 +150,12 @@ Include the API key in the `X-API-Key` header:
 
 ```bash
 curl -H "X-API-Key: tcms_1234567890abcdef1234567890abcdef" \
-     https://yoursite.com/collections/blog
+     https://yoursite.com/api/collections/blog
 ```
 
 **JavaScript Example:**
 ```javascript
-fetch('https://yoursite.com/collections/blog', {
+fetch('https://yoursite.com/api/collections/blog', {
   headers: {
     'X-API-Key': 'tcms_1234567890abcdef1234567890abcdef'
   }
@@ -164,7 +164,7 @@ fetch('https://yoursite.com/collections/blog', {
 
 **PHP Example:**
 ```php
-$ch = curl_init('https://yoursite.com/collections/blog');
+$ch = curl_init('https://yoursite.com/api/collections/blog');
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'X-API-Key: tcms_1234567890abcdef1234567890abcdef'
 ]);
@@ -176,7 +176,7 @@ $response = curl_exec($ch);
 Alternatively, pass the API key as a query parameter:
 
 ```
-https://yoursite.com/collections/blog?api_key=tcms_1234567890abcdef1234567890abcdef
+https://yoursite.com/api/collections/blog?api_key=tcms_1234567890abcdef1234567890abcdef
 ```
 
 **Note**: Header authentication is preferred for better security (query parameters may be logged).
@@ -243,7 +243,7 @@ Last used timestamps appear in the API Keys management interface and update with
 
 **Causes:**
 - HTTP method not allowed in key scopes (e.g., trying POST with GET-only key)
-- Path not allowed in key scopes (e.g., accessing `/collections/products` when only `/collections/blog` is permitted)
+- Path not allowed in key scopes (e.g., accessing `/api/collections/products` when only `/api/collections/blog` is permitted)
 
 **Solution:** Edit the API key scopes or create a new key with appropriate permissions.
 
@@ -253,12 +253,12 @@ Last used timestamps appear in the API Keys management interface and update with
 
 **Incorrect:**
 ```
-Allowed Paths: /collections/blog/*
+Allowed Paths: /api/collections/blog/*
 ```
 
 **Correct:**
 ```
-Allowed Paths: /collections/blog
+Allowed Paths: /api/collections/blog
 ```
 
-Path matching uses prefix matching, so `/collections/blog` automatically matches `/collections/blog/123` and all sub-paths.
+Path matching uses prefix matching, so `/api/collections/blog` automatically matches `/api/collections/blog/123` and all sub-paths.
