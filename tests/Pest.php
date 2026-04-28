@@ -67,7 +67,7 @@ function cmsDataDir(): string
 
 function templatePath(string $id, ?string $folder = null): string
 {
-	$basePath = cmsDataDir() . 'templates/';
+	$basePath = cmsDataDir() . 'builder/';
 	if ($folder !== null && $folder !== '') {
 		$basePath .= $folder . '/';
 	}
@@ -77,7 +77,7 @@ function templatePath(string $id, ?string $folder = null): string
 
 function designerMetaPath(string $id, ?string $folder = null): string
 {
-	$basePath = cmsDataDir() . 'templates/';
+	$basePath = cmsDataDir() . 'builder/';
 	if ($folder !== null && $folder !== '') {
 		$basePath .= $folder . '/';
 	}

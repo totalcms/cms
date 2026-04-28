@@ -24,7 +24,7 @@ describe('Factory Operations', function (): void {
 			'schema' => 'blog',
 		];
 
-		postJson('/collections', $collection)
+		postJson('/api/collections', $collection)
 			->assertOk();
 
 		// Test factory data generation
@@ -40,7 +40,7 @@ describe('Factory Operations', function (): void {
 
 		// If factory was successful, check that objects were created
 		if ($response->getStatusCode() === 200 || $response->getStatusCode() === 201) {
-			get('/collections/factory-test/index')
+			get('/api/collections/factory-test/index')
 				->assertOk()
 				->assertJson();
 		}
@@ -87,7 +87,7 @@ describe('Factory Operations', function (): void {
 				'schema' => $schema,
 			];
 
-			postJson('/collections', $collection)->assertOk();
+			postJson('/api/collections', $collection)->assertOk();
 
 			$factoryParams = [
 				'count'  => 2,
@@ -107,10 +107,10 @@ describe('Factory Operations', function (): void {
 			'schema' => 'text',
 		];
 
-		postJson('/collections', $collection)->assertOk();
+		postJson('/api/collections', $collection)->assertOk();
 
 		// Check initial counts
-		$response = get('/collections/factory-count-test');
+		$response = get('/api/collections/factory-count-test');
 		$response->assertOk();
 		$initialData         = json_decode((string)$response->getBody(), true);
 		$initialCount        = $initialData['data']['count'] ?? 0;
@@ -126,7 +126,7 @@ describe('Factory Operations', function (): void {
 
 		// If factory was successful, verify counts were updated
 		if ($factoryResponse->getStatusCode() === 200 || $factoryResponse->getStatusCode() === 201) {
-			$response = get('/collections/factory-count-test');
+			$response = get('/api/collections/factory-count-test');
 			$response->assertOk();
 			$updatedData = json_decode((string)$response->getBody(), true);
 

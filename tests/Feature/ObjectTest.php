@@ -34,7 +34,7 @@ beforeEach(function (): void {
 it('saves a new object', function (): void {
 	$collection = 'blog';
 
-	get("/collections/{$collection}")
+	get("/api/collections/{$collection}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -46,7 +46,7 @@ it('saves a new object', function (): void {
 	$post = blogTestData();
 	$id   = $post['id'];
 
-	postJson("/collections/{$collection}", $post)
+	postJson("/api/collections/{$collection}", $post)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($post);
@@ -60,7 +60,7 @@ it('can get an object', function (): void {
 	$post = blogTestData();
 	$id   = $post['id'];
 
-	get("/collections/{$collection}/{$id}")
+	get("/api/collections/{$collection}/{$id}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($post);
@@ -72,7 +72,7 @@ it('add an object to the collection index', function (): void {
 	$post = blogTestData();
 	$id   = $post['id'];
 
-	get("/collections/{$collection}/index")
+	get("/api/collections/{$collection}/index")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -91,7 +91,7 @@ it('can rebuild the collection index from api', function (): void {
 	$post = blogTestData();
 	$id   = $post['id'];
 
-	put("/collections/{$collection}/index")
+	put("/api/collections/{$collection}/index")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -109,7 +109,7 @@ it('does not create an object if one exists', function (): void {
 
 	$this->assertFileExists(objectPath($collection, $id));
 
-	postJson("/collections/{$collection}", $post)
+	postJson("/api/collections/{$collection}", $post)
 		->assertBadRequest()
 		->assertSee('already exists');
 });
@@ -118,7 +118,7 @@ it('can automatically rebuild the collection index', function (): void {
 	$collection = 'blog';
 
 	// Ensure the collection exists
-	get("/collections/{$collection}")
+	get("/api/collections/{$collection}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -133,7 +133,7 @@ it('can automatically rebuild the collection index', function (): void {
 	$objectFile = objectPath($collection, $id);
 	if (!file_exists($objectFile)) {
 		// Object doesn't exist, create it
-		postJson("/collections/{$collection}", $post)
+		postJson("/api/collections/{$collection}", $post)
 			->assertOk();
 	}
 
@@ -142,7 +142,7 @@ it('can automatically rebuild the collection index', function (): void {
 		unlink($index);
 	}
 
-	get("/collections/{$collection}/index")
+	get("/api/collections/{$collection}/index")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -161,7 +161,7 @@ it('knows if an object exists', function (): void {
 	// !PR: Using my own fork for now
 	// !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
 	// !PR: https://github.com/nekofar/slim-test/pull/84
-	head("/collections/{$collection}/$id")->assertOk();
+	head("/api/collections/{$collection}/$id")->assertOk();
 });
 
 it('test if an object does not exists', function (): void {
@@ -170,7 +170,7 @@ it('test if an object does not exists', function (): void {
 	// !PR: Using my own fork for now
 	// !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
 	// !PR: https://github.com/nekofar/slim-test/pull/84
-	head("/collections/{$collection}/does-not-exist")->assertNotFound();
+	head("/api/collections/{$collection}/does-not-exist")->assertNotFound();
 });
 
 it('can update an object with new data', function (): void {
@@ -182,7 +182,7 @@ it('can update an object with new data', function (): void {
 
 	$post['content'] = $content;
 
-	putJson("/collections/{$collection}/{$id}", $post)
+	putJson("/api/collections/{$collection}/{$id}", $post)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -192,7 +192,7 @@ it('can update an object with new data', function (): void {
 
 	$post['id'] = 'broken-id';
 
-	putJson("/collections/{$collection}/{$id}", $post)
+	putJson("/api/collections/{$collection}/{$id}", $post)
 		->assertBadRequest()
 		->assertSee('Does not match object ID');
 });
@@ -204,7 +204,7 @@ it('can patch an object with partial data', function (): void {
 	$id    = $post['id'];
 	$patch = ['content' => 'Patched Content'];
 
-	patchJson("/collections/{$collection}/{$id}", $patch)
+	patchJson("/api/collections/{$collection}/{$id}", $patch)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -212,7 +212,7 @@ it('can patch an object with partial data', function (): void {
 			'content' => $patch['content'],
 		]);
 
-	get("/collections/{$collection}/{$id}")
+	get("/api/collections/{$collection}/{$id}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -226,8 +226,8 @@ it('can delete an object', function (): void {
 	$post       = blogTestData();
 	$id         = $post['id'];
 
-	delete("/collections/{$collection}/{$id}")->assertOk();
-	get("/collections/{$collection}/{$id}")->assertNotFound();
+	delete("/api/collections/{$collection}/{$id}")->assertOk();
+	get("/api/collections/{$collection}/{$id}")->assertNotFound();
 
 	// Verify object json is gone
 	$this->assertFileDoesNotExist(objectPath($collection, $id));
@@ -241,14 +241,14 @@ it('can clone an object to a new collection', function (): void {
 	$id         = $post['id'];
 
 	// Save test object
-	postJson("/collections/{$collection}", $post)->assertOk();
+	postJson("/api/collections/{$collection}", $post)->assertOk();
 
 	// Create archive collection
 	$archive = [
 		'id'     => 'archive',
 		'schema' => 'blog',
 	];
-	postJson('/collections', $archive)
+	postJson('/api/collections', $archive)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($archive);
@@ -262,17 +262,17 @@ it('can clone an object to a new collection', function (): void {
 		'id'      => $to['id'],
 		'content' => $post['content'],
 	];
-	postJson("/collections/{$collection}/{$id}/clone", $to)
+	postJson("/api/collections/{$collection}/{$id}/clone", $to)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($verify);
 
-	get("/collections/{$to['collection']}/{$to['id']}")
+	get("/api/collections/{$to['collection']}/{$to['id']}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($verify);
 
-	get("/collections/{$to['collection']}/index")
+	get("/api/collections/{$to['collection']}/index")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -295,19 +295,19 @@ it('can clone an object to the same collection', function (): void {
 	];
 
 	// Clone object to same collection
-	postJson("/collections/{$collection}/{$id}/clone", $to)
+	postJson("/api/collections/{$collection}/{$id}/clone", $to)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($verify);
 
 	// Verify object exists
-	get("/collections/{$collection}/{$to['id']}")
+	get("/api/collections/{$collection}/{$to['id']}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($verify);
 
 	// Verify object is in index
-	get("/collections/{$collection}/index")
+	get("/api/collections/{$collection}/index")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -338,7 +338,7 @@ it('can save an objects for every property type', function (): void {
 	];
 
 	// Create collection
-	$response = postJson('/collections', $schema);
+	$response = postJson('/api/collections', $schema);
 	if ($response->getStatusCode() !== 200) {
 		// Skip test if collection creation fails
 		expect($response->getStatusCode())->toBeIn([400, 500]); // 400 for validation, 500 for other errors
@@ -361,15 +361,15 @@ it('can save an objects for every property type', function (): void {
 	];
 
 	// Save object
-	postJson("/collections/{$testCollection}", $testObject)
+	postJson("/api/collections/{$testCollection}", $testObject)
 		->assertOk()
 		->assertJsonFragment($testObject);
 
 	// Verify object was saved correctly
-	get("/collections/{$testCollection}/{$testObject['id']}")
+	get("/api/collections/{$testCollection}/{$testObject['id']}")
 		->assertOk()
 		->assertJsonFragment($testObject);
 
 	// Clean up
-	delete("/collections/{$testCollection}")->assertOk();
+	delete("/api/collections/{$testCollection}")->assertOk();
 });

@@ -17,7 +17,7 @@ beforeEach(function (): void {
 
 describe('ObjectPatchPropertyAction', function (): void {
 	it('handles patch property request', function (): void {
-		$response = patchJson('/collections/blog/objects/test-id/properties/title', [
+		$response = patchJson('/api/collections/blog/objects/test-id/properties/title', [
 			'value' => 'Updated Title',
 		]);
 		// Should return success or error depending on auth/existence
@@ -25,7 +25,7 @@ describe('ObjectPatchPropertyAction', function (): void {
 	});
 
 	it('handles patch property with invalid collection', function (): void {
-		$response = patchJson('/collections/nonexistent/objects/test-id/properties/title', [
+		$response = patchJson('/api/collections/nonexistent/objects/test-id/properties/title', [
 			'value' => 'Test',
 		]);
 		expect($response->getStatusCode())->toBeIn([400, 401, 403, 404, 405]);
@@ -34,31 +34,31 @@ describe('ObjectPatchPropertyAction', function (): void {
 
 describe('ObjectPropertyIncrementAction', function (): void {
 	it('handles increment request', function (): void {
-		$response = postJson('/collections/blog/objects/test-id/properties/views/increment', []);
+		$response = postJson('/api/collections/blog/objects/test-id/properties/views/increment', []);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404, 405]);
 	});
 
 	it('handles increment with amount', function (): void {
-		$response = postJson('/collections/blog/objects/test-id/properties/views/increment/5', []);
+		$response = postJson('/api/collections/blog/objects/test-id/properties/views/increment/5', []);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404, 405]);
 	});
 });
 
 describe('ObjectPropertyDecrementAction', function (): void {
 	it('handles decrement request', function (): void {
-		$response = postJson('/collections/blog/objects/test-id/properties/stock/decrement', []);
+		$response = postJson('/api/collections/blog/objects/test-id/properties/stock/decrement', []);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404, 405]);
 	});
 
 	it('handles decrement with amount', function (): void {
-		$response = postJson('/collections/blog/objects/test-id/properties/stock/decrement/2', []);
+		$response = postJson('/api/collections/blog/objects/test-id/properties/stock/decrement/2', []);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404, 405]);
 	});
 });
 
 describe('ObjectExistsAction', function (): void {
 	it('returns 404 for nonexistent object', function (): void {
-		$response = get('/collections/blog/objects/nonexistent-id/exists');
+		$response = get('/api/collections/blog/objects/nonexistent-id/exists');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
 	});
 });

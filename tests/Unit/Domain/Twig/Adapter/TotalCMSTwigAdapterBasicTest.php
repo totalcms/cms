@@ -128,14 +128,14 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$reflection  = new \ReflectionClass(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		$result = $adapter->login();
-		expect($result)->toBe('/api/login');
+		expect($result)->toBe('/admin/login');
 
 		$result = $adapter->login('admin');
-		expect($result)->toBe('/api/login/admin');
+		expect($result)->toBe('/admin/login/admin');
 	}
 
 	public function testJobQueuePendingInfoReturnsEmptyStringForNoPendingJobs(): void
@@ -224,7 +224,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test basic download URL
@@ -251,7 +251,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test basic stream URL
@@ -273,7 +273,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test basic depot download
@@ -293,7 +293,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test basic depot stream
@@ -419,7 +419,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 
 		$adapter = new MediaTwigAdapter($objectFetcher, $config, $loggerFactory);
 

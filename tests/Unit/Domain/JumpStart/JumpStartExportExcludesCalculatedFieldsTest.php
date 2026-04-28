@@ -116,7 +116,7 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 
 		$this->templateLister
 			->expects($this->once())
-			->method('listCustomTemplates')
+			->method('listBuilderTemplates')
 			->willReturn([]);
 
 		// Export (this will call the methods we're testing)
@@ -163,7 +163,7 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 
 		$this->templateLister
 			->expects($this->once())
-			->method('listCustomTemplates')
+			->method('listBuilderTemplates')
 			->willReturn([]);
 
 		$result = $this->exporter->exportCurrentData();
@@ -224,7 +224,7 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 
 		$this->templateLister
 			->expects($this->once())
-			->method('listCustomTemplates')
+			->method('listBuilderTemplates')
 			->willReturn([]);
 
 		$result = $this->exporter->exportCurrentData();

@@ -40,7 +40,7 @@ function createBlogPosts(int $count = 5): array
 			'content'    => "Content for post {$i}",
 		];
 
-		postJson('/collections/blog', $post);
+		postJson('/api/collections/blog', $post);
 		$posts[$post['id']] = $post;
 	}
 
@@ -52,7 +52,7 @@ function createBlogPosts(int $count = 5): array
 it('returns paginated JSON with default params', function (): void {
 	createBlogPosts(5);
 
-	get('/collections/blog/query')
+	get('/api/collections/blog/query')
 		->assertOk()
 		->assertJson()
 		->assertHeader('X-Total', '5')
@@ -62,7 +62,7 @@ it('returns paginated JSON with default params', function (): void {
 });
 
 it('respects limit and offset for JSON', function (): void {
-	get('/collections/blog/query?limit=2&offset=0')
+	get('/api/collections/blog/query?limit=2&offset=0')
 		->assertOk()
 		->assertJson()
 		->assertHeader('X-Total', '5')
@@ -73,7 +73,7 @@ it('respects limit and offset for JSON', function (): void {
 });
 
 it('returns second page of results', function (): void {
-	get('/collections/blog/query?limit=2&offset=2')
+	get('/api/collections/blog/query?limit=2&offset=2')
 		->assertOk()
 		->assertJson()
 		->assertHeader('X-Offset', '2')
@@ -82,7 +82,7 @@ it('returns second page of results', function (): void {
 });
 
 it('returns partial last page', function (): void {
-	get('/collections/blog/query?limit=2&offset=4')
+	get('/api/collections/blog/query?limit=2&offset=4')
 		->assertOk()
 		->assertJson()
 		->assertHeader('X-Has-More', 'false')
@@ -90,7 +90,7 @@ it('returns partial last page', function (): void {
 });
 
 it('returns empty data when offset exceeds total', function (): void {
-	get('/collections/blog/query?limit=10&offset=100')
+	get('/api/collections/blog/query?limit=10&offset=100')
 		->assertOk()
 		->assertJson()
 		->assertHeader('X-Total', '5')
@@ -99,7 +99,7 @@ it('returns empty data when offset exceeds total', function (): void {
 });
 
 it('includes Fractal pagination metadata in JSON', function (): void {
-	$response = get('/collections/blog/query?limit=2&offset=0');
+	$response = get('/api/collections/blog/query?limit=2&offset=0');
 
 	$response->assertOk()->assertJson();
 
@@ -113,19 +113,19 @@ it('includes Fractal pagination metadata in JSON', function (): void {
 });
 
 it('clamps limit to max 100', function (): void {
-	get('/collections/blog/query?limit=999')
+	get('/api/collections/blog/query?limit=999')
 		->assertOk()
 		->assertHeader('X-Limit', '100');
 });
 
 it('clamps limit to min 1', function (): void {
-	get('/collections/blog/query?limit=0')
+	get('/api/collections/blog/query?limit=0')
 		->assertOk()
 		->assertHeader('X-Limit', '1');
 });
 
 it('clamps negative offset to 0', function (): void {
-	get('/collections/blog/query?offset=-5')
+	get('/api/collections/blog/query?offset=-5')
 		->assertOk()
 		->assertHeader('X-Offset', '0');
 });
@@ -134,21 +134,21 @@ it('clamps negative offset to 0', function (): void {
 
 it('filters with include param', function (): void {
 	// featured:true matches posts 1-2
-	get('/collections/blog/query?include=featured:true')
+	get('/api/collections/blog/query?include=featured:true')
 		->assertOk()
 		->assertHeader('X-Total', '2');
 });
 
 it('filters with exclude param', function (): void {
 	// draft:true matches post 5 only, excluding it leaves 4
-	get('/collections/blog/query?exclude=draft:true')
+	get('/api/collections/blog/query?exclude=draft:true')
 		->assertOk()
 		->assertHeader('X-Total', '4');
 });
 
 it('combines include and exclude filters', function (): void {
 	// draft:false matches posts 1-4, exclude featured:true removes posts 1-2, leaves 2
-	get('/collections/blog/query?include=draft:false&exclude=featured:true')
+	get('/api/collections/blog/query?include=draft:false&exclude=featured:true')
 		->assertOk()
 		->assertHeader('X-Total', '2');
 });
@@ -156,7 +156,7 @@ it('combines include and exclude filters', function (): void {
 // ─── Sorting ───────────────────────────────────────────────────────
 
 it('sorts results by property ascending', function (): void {
-	$response = get('/collections/blog/query?sort=title:asc&limit=5');
+	$response = get('/api/collections/blog/query?sort=title:asc&limit=5');
 	$response->assertOk();
 
 	$json   = json_decode((string)$response->getBody(), true);
@@ -172,7 +172,7 @@ it('sorts results by property ascending', function (): void {
 });
 
 it('sorts results by property descending', function (): void {
-	$response = get('/collections/blog/query?sort=title:desc&limit=5');
+	$response = get('/api/collections/blog/query?sort=title:desc&limit=5');
 	$response->assertOk();
 
 	$json   = json_decode((string)$response->getBody(), true);
@@ -190,12 +190,12 @@ it('sorts results by property descending', function (): void {
 // ─── Search ────────────────────────────────────────────────────────
 
 it('returns search results', function (): void {
-	get('/collections/blog/query?search=Test+Post+1')
+	get('/api/collections/blog/query?search=Test+Post+1')
 		->assertOk()
 		->assertJson();
 
 	// Search should return at least the matching post
-	$response = get('/collections/blog/query?search=Test+Post+1');
+	$response = get('/api/collections/blog/query?search=Test+Post+1');
 	$json     = json_decode((string)$response->getBody(), true);
 
 	expect(count($json['data']))->toBeGreaterThanOrEqual(1);
@@ -204,13 +204,13 @@ it('returns search results', function (): void {
 // ─── HTML Format ───────────────────────────────────────────────────
 
 it('returns 400 when HTML format missing template', function (): void {
-	get('/collections/blog/query?format=html')
+	get('/api/collections/blog/query?format=html')
 		->assertBadRequest();
 });
 
 it('renders HTML with template and pagination headers', function (): void {
-	// Create a test template in the custom templates directory
-	$templateDir = cmsDataDir() . 'templates/test/';
+	// Create a test template in the builder directory
+	$templateDir = cmsDataDir() . 'builder/test/';
 	if (!is_dir($templateDir)) {
 		mkdir($templateDir, 0755, true);
 	}
@@ -219,7 +219,7 @@ it('renders HTML with template and pagination headers', function (): void {
 	// Re-bootstrap to pick up the new template directory
 	$this->setUpApp(bootstrap());
 
-	$response = get('/collections/blog/query?format=html&template=test/card&limit=2');
+	$response = get('/api/collections/blog/query?format=html&template=test/card&limit=2');
 
 	$response->assertOk()
 		->assertHeader('Content-Type', 'text/html')
@@ -230,7 +230,7 @@ it('renders HTML with template and pagination headers', function (): void {
 });
 
 it('renders HTMX trigger when more items exist', function (): void {
-	$response = get('/collections/blog/query?format=html&template=test/card&limit=2');
+	$response = get('/api/collections/blog/query?format=html&template=test/card&limit=2');
 
 	$response->assertOk()
 		->assertSee('hx-get=')
@@ -241,7 +241,7 @@ it('renders HTMX trigger when more items exist', function (): void {
 });
 
 it('does not render HTMX trigger on last page', function (): void {
-	$response = get('/collections/blog/query?format=html&template=test/card&limit=10');
+	$response = get('/api/collections/blog/query?format=html&template=test/card&limit=10');
 
 	$response->assertOk()
 		->assertDontSee('hx-get=')
@@ -249,7 +249,7 @@ it('does not render HTMX trigger on last page', function (): void {
 });
 
 it('renders click trigger when requested', function (): void {
-	$response = get('/collections/blog/query?format=html&template=test/card&limit=2&trigger=click&buttonLabel=Show+More');
+	$response = get('/api/collections/blog/query?format=html&template=test/card&limit=2&trigger=click&buttonLabel=Show+More');
 
 	$response->assertOk()
 		->assertSee('<button')
@@ -260,7 +260,7 @@ it('renders click trigger when requested', function (): void {
 // ─── CSV Format ────────────────────────────────────────────────────
 
 it('returns CSV with pagination headers', function (): void {
-	$response = get('/collections/blog/query?format=csv&limit=3');
+	$response = get('/api/collections/blog/query?format=csv&limit=3');
 
 	$response->assertOk()
 		->assertHeader('Content-Type', 'text/csv')
@@ -276,7 +276,7 @@ it('returns CSV with pagination headers', function (): void {
 });
 
 it('returns CSV with Content-Disposition header', function (): void {
-	get('/collections/blog/query?format=csv')
+	get('/api/collections/blog/query?format=csv')
 		->assertOk()
 		->assertHeader('Content-Disposition', 'attachment; filename="collection-blog.csv"');
 });
@@ -289,7 +289,7 @@ it('handles query on empty collection', function (): void {
 	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('text');
 
-	$response = get('/collections/text/query');
+	$response = get('/api/collections/text/query');
 	expect($response->getStatusCode())->toBeIn([200, 400]);
 
 	if ($response->getStatusCode() === 200) {

@@ -35,25 +35,25 @@ describe('Access Middleware - Admin Routes', function (): void {
 
 describe('Access Middleware - API Routes', function (): void {
 	it('handles collection list request', function (): void {
-		$response = get('/collections');
+		$response = get('/api/collections');
 		// Should work or require auth
 		expect($response->getStatusCode())->toBeIn([200, 401, 403]);
 	});
 
 	it('handles schema list request', function (): void {
-		$response = get('/schemas');
+		$response = get('/api/schemas');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403]);
 	});
 
 	it('handles template list request', function (): void {
-		$response = get('/templates');
+		$response = get('/api/templates');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403]);
 	});
 });
 
 describe('Access Middleware - Protected Operations', function (): void {
 	it('handles collection create without auth', function (): void {
-		$response = postJson('/collections', [
+		$response = postJson('/api/collections', [
 			'id'   => 'test-collection',
 			'type' => 'blog',
 		]);
@@ -62,12 +62,12 @@ describe('Access Middleware - Protected Operations', function (): void {
 	});
 
 	it('handles collection delete without auth', function (): void {
-		$response = deleteJson('/collections/nonexistent');
+		$response = deleteJson('/api/collections/nonexistent');
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404]);
 	});
 
 	it('handles schema create without auth', function (): void {
-		$response = postJson('/schemas', [
+		$response = postJson('/api/schemas', [
 			'id'         => 'test-schema',
 			'properties' => [],
 		]);

@@ -21,7 +21,7 @@ afterEach(function (): void {
 it('allows public create operation', function (): void {
 	// Create collection with public create
 	$collectionData = json_decode(file_get_contents(testData('public-collection.json')), true);
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	$data = [
 		'id'   => 'test-public-create',
@@ -29,7 +29,7 @@ it('allows public create operation', function (): void {
 	];
 
 	// Make request without authentication
-	$response = postJson('/collections/public-collection', $data);
+	$response = postJson('/api/collections/public-collection', $data);
 
 	// Should succeed
 	expect($response->getStatusCode())->toBeIn([200, 201]);
@@ -43,14 +43,14 @@ it('allows public create operation', function (): void {
 it('allows public read operation', function (): void {
 	// Create collection with public read
 	$collectionData = json_decode(file_get_contents(testData('public-collection.json')), true);
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Create an object first
 	$objectData = ['id' => 'test-read', 'text' => 'Test content'];
-	postJson('/collections/public-collection', $objectData);
+	postJson('/api/collections/public-collection', $objectData);
 
 	// Try to read without authentication
-	$response = get('/collections/public-collection/test-read');
+	$response = get('/api/collections/public-collection/test-read');
 
 	// Should succeed
 	expect($response->getStatusCode())->toBe(200);
@@ -62,15 +62,15 @@ it('allows public read operation', function (): void {
 it('rejects operations not in publicOperations array', function (): void {
 	// Create collection with only create and read
 	$collectionData = json_decode(file_get_contents(testData('public-collection.json')), true);
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Create an object first
 	$objectData = ['id' => 'test-update', 'text' => 'Original'];
-	postJson('/collections/public-collection', $objectData);
+	postJson('/api/collections/public-collection', $objectData);
 
 	// Try to update without authentication (update not in publicOperations)
 	$updateData = ['text' => 'Updated'];
-	$response   = putJson('/collections/public-collection/test-update', $updateData);
+	$response   = putJson('/api/collections/public-collection/test-update', $updateData);
 
 	// Should fail - update not allowed publicly
 	expect($response->getStatusCode())->toBeIn([302, 401, 403]);
@@ -88,15 +88,15 @@ it('allows public update when configured', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Create object
 	$objectData = ['id' => 'test-update', 'text' => 'Original'];
-	postJson('/collections/public-update-test', $objectData);
+	postJson('/api/collections/public-update-test', $objectData);
 
 	// Update without authentication (PUT requires full object including ID)
 	$updateData = ['id' => 'test-update', 'text' => 'Updated text'];
-	$response   = putJson('/collections/public-update-test/test-update', $updateData);
+	$response   = putJson('/api/collections/public-update-test/test-update', $updateData);
 
 	// Should succeed
 	expect($response->getStatusCode())->toBeIn([200, 201]);
@@ -114,14 +114,14 @@ it('allows public delete when configured', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Create object
 	$objectData = ['id' => 'test-delete', 'text' => 'Will be deleted'];
-	postJson('/collections/public-delete-test', $objectData);
+	postJson('/api/collections/public-delete-test', $objectData);
 
 	// Delete without authentication
-	$response = delete('/collections/public-delete-test/test-delete');
+	$response = delete('/api/collections/public-delete-test/test-delete');
 
 	// Should succeed
 	expect($response->getStatusCode())->toBeIn([200, 204]);
@@ -139,11 +139,11 @@ it('normalizes operation names to lowercase', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Should work - operations normalized to lowercase
 	$objectData = ['id' => 'test-case', 'text' => 'Test'];
-	$response   = postJson('/collections/case-test', $objectData);
+	$response   = postJson('/api/collections/case-test', $objectData);
 
 	expect($response->getStatusCode())->toBeIn([200, 201]);
 });
@@ -160,11 +160,11 @@ it('ignores invalid operation names', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Valid operations should work
 	$objectData = ['id' => 'test', 'text' => 'Test'];
-	$response   = postJson('/collections/invalid-ops-test', $objectData);
+	$response   = postJson('/api/collections/invalid-ops-test', $objectData);
 
 	expect($response->getStatusCode())->toBeIn([200, 201]);
 });
@@ -181,20 +181,20 @@ it('always allows HEAD requests for object existence checking', function (): voi
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/collections', $collectionData);
+	postJson('/api/collections',$collectionData);
 
 	// Create object (authenticated)
 	$objectData = ['id' => 'test-exists', 'text' => 'Test'];
-	postJson('/collections/private-head-test', $objectData);
+	postJson('/api/collections/private-head-test', $objectData);
 
 	// HEAD request should work even though read is not in publicOperations
-	$response = \Nekofar\Slim\Pest\head('/collections/private-head-test/test-exists');
+	$response = \Nekofar\Slim\Pest\head('/api/collections/private-head-test/test-exists');
 
 	// Should succeed - HEAD always allowed
 	expect($response->getStatusCode())->toBe(200);
 
 	// HEAD for non-existent object
-	$response404 = \Nekofar\Slim\Pest\head('/collections/private-head-test/does-not-exist');
+	$response404 = \Nekofar\Slim\Pest\head('/api/collections/private-head-test/does-not-exist');
 
 	// Should return 404 (not auth error)
 	expect($response404->getStatusCode())->toBe(404);

@@ -328,7 +328,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		];
 
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 
 		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -399,7 +399,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test basic download URL
@@ -425,7 +425,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test basic stream URL
@@ -446,7 +446,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
 		// Test depot download
@@ -470,12 +470,12 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$reflection  = new \ReflectionClass(AuthTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
-		$config->api = '/api';
+		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
-		expect($adapter->login())->toBe('/api/login');
-		expect($adapter->login('admin'))->toBe('/api/login/admin');
-		expect($adapter->login(''))->toBe('/api/login');
+		expect($adapter->login())->toBe('/admin/login');
+		expect($adapter->login('admin'))->toBe('/admin/login/admin');
+		expect($adapter->login(''))->toBe('/admin/login');
 	}
 
 	public function testProcessJobQueueCommandGeneration(): void

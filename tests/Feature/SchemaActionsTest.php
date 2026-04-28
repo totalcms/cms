@@ -16,19 +16,19 @@ beforeEach(function (): void {
 
 describe('SchemaExistsAction', function (): void {
 	it('returns 404 for nonexistent schema', function (): void {
-		$response = get('/schemas/nonexistent-schema/exists');
+		$response = get('/api/schemas/nonexistent-schema/exists');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
 	});
 
 	it('handles exists check for valid schema ID format', function (): void {
-		$response = get('/schemas/blog-schema/exists');
+		$response = get('/api/schemas/blog-schema/exists');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
 	});
 });
 
 describe('SchemaUpdateAction', function (): void {
 	it('handles schema update request', function (): void {
-		$response = putJson('/schemas/test-schema', [
+		$response = putJson('/api/schemas/test-schema', [
 			'id'         => 'test-schema',
 			'properties' => [],
 		]);
@@ -36,7 +36,7 @@ describe('SchemaUpdateAction', function (): void {
 	});
 
 	it('handles update for nonexistent schema', function (): void {
-		$response = putJson('/schemas/nonexistent-schema', [
+		$response = putJson('/api/schemas/nonexistent-schema', [
 			'id'         => 'nonexistent-schema',
 			'properties' => [],
 		]);

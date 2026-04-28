@@ -15,7 +15,7 @@ beforeEach(function (): void {
 
 describe('AuthLoginAction Feature Tests', function (): void {
 	it('renders login page successfully', function (): void {
-		$response = get('/login');
+		$response = get('/admin/login');
 
 		expect($response->getStatusCode())->toBe(200);
 
@@ -26,7 +26,7 @@ describe('AuthLoginAction Feature Tests', function (): void {
 	});
 
 	it('handles login page with collection parameter', function (): void {
-		$response = get('/login/users');
+		$response = get('/admin/login/users');
 
 		// Should either render (200) or redirect (302) for new installations
 		expect($response->getStatusCode())->toBeIn([200, 302]);
@@ -47,7 +47,7 @@ describe('AuthLoginAction Feature Tests', function (): void {
 		// Clean up any existing data to simulate new installation
 		recursiveDelete(cmsDataDir());
 
-		$response = get('/login/admin');
+		$response = get('/admin/login/admin');
 
 		// For new installations with collection, should redirect to /login
 		expect($response->getStatusCode())->toBeIn([200, 302]);
@@ -59,14 +59,14 @@ describe('AuthLoginAction Feature Tests', function (): void {
 	});
 
 	it('handles non-existent collection gracefully', function (): void {
-		$response = get('/login/nonexistent');
+		$response = get('/admin/login/nonexistent');
 
 		// Should handle gracefully - either render or redirect
 		expect($response->getStatusCode())->toBeIn([200, 302, 404]);
 	});
 
 	it('contains proper HTML structure', function (): void {
-		$response = get('/login');
+		$response = get('/admin/login');
 		expect($response->getStatusCode())->toBe(200);
 
 		$body = (string)$response->getBody();
@@ -81,7 +81,7 @@ describe('AuthLoginAction Feature Tests', function (): void {
 	});
 
 	it('includes proper Content-Type header', function (): void {
-		$response = get('/login');
+		$response = get('/admin/login');
 
 		expect($response->getStatusCode())->toBe(200);
 
@@ -99,7 +99,7 @@ describe('AuthLoginAction Feature Tests', function (): void {
 		$collections = ['users', 'admin', 'auth', 'members'];
 
 		foreach ($collections as $collection) {
-			$response = get("/login/{$collection}");
+			$response = get("/admin/login/{$collection}");
 
 			// All should be handled without server errors
 			expect($response->getStatusCode())->toBeIn([200, 302, 404]);
@@ -109,17 +109,17 @@ describe('AuthLoginAction Feature Tests', function (): void {
 
 	it('maintains session state between requests', function (): void {
 		// First request
-		$response1 = get('/login');
+		$response1 = get('/admin/login');
 		expect($response1->getStatusCode())->toBe(200);
 
 		// Second request - should also work (session should be handled properly)
-		$response2 = get('/login');
+		$response2 = get('/admin/login');
 		expect($response2->getStatusCode())->toBe(200);
 	});
 
 	it('works with different HTTP methods allowed by route', function (): void {
 		// AuthLoginAction only handles GET requests
-		$response = get('/login');
+		$response = get('/admin/login');
 		expect($response->getStatusCode())->toBe(200);
 
 		// POST should go to AuthLoginSubmitAction (different endpoint)
@@ -128,7 +128,7 @@ describe('AuthLoginAction Feature Tests', function (): void {
 
 	it('handles URL encoding in collection names', function (): void {
 		$encodedCollection = urlencode('test collection');
-		$response          = get("/login/{$encodedCollection}");
+		$response          = get("/admin/login/{$encodedCollection}");
 
 		// Should handle URL-encoded collection names gracefully
 		expect($response->getStatusCode())->toBeIn([200, 302, 404]);

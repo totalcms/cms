@@ -17,24 +17,24 @@ beforeEach(function (): void {
 describe('ResetPasswordAction', function (): void {
 	it('redirects when token is empty', function (): void {
 		// Empty token in URL - this would 404 because route requires token
-		$response = get('/reset-password/');
+		$response = get('/admin/reset-password/');
 		expect($response->getStatusCode())->toBeIn([302, 404]);
 	});
 
 	it('redirects when token is invalid', function (): void {
-		$response = get('/reset-password/invalid-token-12345');
+		$response = get('/admin/reset-password/invalid-token-12345');
 		expect($response->getStatusCode())->toBe(302);
 	});
 
 	it('redirects when token does not exist', function (): void {
-		$response = get('/reset-password/nonexistent-token');
+		$response = get('/admin/reset-password/nonexistent-token');
 		expect($response->getStatusCode())->toBe(302);
 	});
 });
 
 describe('ResetPasswordSubmitAction', function (): void {
 	it('redirects when password is empty', function (): void {
-		$response = post('/reset-password/some-token', [
+		$response = post('/admin/reset-password/some-token', [
 			'password'         => '',
 			'password_confirm' => '',
 		]);
@@ -42,7 +42,7 @@ describe('ResetPasswordSubmitAction', function (): void {
 	});
 
 	it('redirects when passwords do not match', function (): void {
-		$response = post('/reset-password/some-token', [
+		$response = post('/admin/reset-password/some-token', [
 			'password'         => 'newpassword123',
 			'password_confirm' => 'differentpassword',
 		]);
@@ -50,7 +50,7 @@ describe('ResetPasswordSubmitAction', function (): void {
 	});
 
 	it('redirects when password is too short', function (): void {
-		$response = post('/reset-password/some-token', [
+		$response = post('/admin/reset-password/some-token', [
 			'password'         => '123',
 			'password_confirm' => '123',
 		]);
@@ -58,7 +58,7 @@ describe('ResetPasswordSubmitAction', function (): void {
 	});
 
 	it('redirects when token is invalid', function (): void {
-		$response = post('/reset-password/invalid-token', [
+		$response = post('/admin/reset-password/invalid-token', [
 			'password'         => 'validpassword123',
 			'password_confirm' => 'validpassword123',
 		]);
@@ -66,12 +66,12 @@ describe('ResetPasswordSubmitAction', function (): void {
 	});
 
 	it('handles missing password fields', function (): void {
-		$response = post('/reset-password/some-token', []);
+		$response = post('/admin/reset-password/some-token', []);
 		expect($response->getStatusCode())->toBe(302);
 	});
 
 	it('trims whitespace from passwords', function (): void {
-		$response = post('/reset-password/some-token', [
+		$response = post('/admin/reset-password/some-token', [
 			'password'         => '  validpassword  ',
 			'password_confirm' => '  validpassword  ',
 		]);

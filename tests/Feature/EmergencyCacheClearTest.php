@@ -32,7 +32,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 		expect($cacheManager->getApiResponse('/api/test', []))->toBeArray();
 
 		// Call emergency cache clear endpoint
-		$request  = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		// Should respond with success
@@ -65,7 +65,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 		// This test simulates what happens when cache backends fail
 		// We can't easily force a failure, but we can test the endpoint structure
 
-		$request  = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		// Should always respond, even if cache clearing fails
@@ -93,7 +93,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 		// Emergency cache clear should be accessible without authentication
 		// to help when admin interface is broken due to cached errors
 
-		$request  = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		// Should not return 401 or 403 (authentication/authorization errors)
@@ -103,7 +103,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 	});
 
 	it('provides helpful usage information', function (): void {
-		$request  = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		$responseBody = (string)$response->getBody();
@@ -140,7 +140,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 		expect($cached)->toBe($staleBlogLegacySchema);
 
 		// Call emergency cache clear
-		$request  = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		expect($response->getStatusCode())->toBe(200);
@@ -164,8 +164,8 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 
 	it('handles concurrent emergency cache clear requests', function (): void {
 		// Test that multiple simultaneous cache clear requests don't cause issues
-		$request1 = $this->createRequest('GET', '/emergency/cache/clear');
-		$request2 = $this->createRequest('GET', '/emergency/cache/clear');
+		$request1 = $this->createRequest('GET', '/api/emergency/cache/clear');
+		$request2 = $this->createRequest('GET', '/api/emergency/cache/clear');
 
 		$response1 = $this->app->handle($request1);
 		$response2 = $this->app->handle($request2);

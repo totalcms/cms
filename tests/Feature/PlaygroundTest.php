@@ -46,7 +46,7 @@ beforeEach(function (): void {
 
 // Test playground collection access
 it('provides access to playground collection', function (): void {
-	get('/playground')
+	get('/api/playground')
 		->assertOk()
 		->assertJson();
 });
@@ -57,7 +57,7 @@ it('saves a new playground snippet', function (): void {
 	$snippet    = playgroundTestData();
 	$id         = $snippet['id'];
 
-	postJson('/playground', $snippet)
+	postJson('/api/playground', $snippet)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($snippet);
@@ -72,12 +72,12 @@ it('fetches a specific playground snippet', function (): void {
 	$id            = $snippet['id'];
 
 	// First create the snippet
-	postJson('/playground', $snippet)
+	postJson('/api/playground', $snippet)
 		->assertOk()
 		->assertJson();
 
 	// Then fetch it
-	get("/playground/{$id}")
+	get("/api/playground/{$id}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment(['id' => $id]);
@@ -91,7 +91,7 @@ it('updates a playground snippet', function (): void {
 	$id            = $snippet['id'];
 
 	// Create initial snippet
-	postJson('/playground', $snippet)
+	postJson('/api/playground', $snippet)
 		->assertOk();
 
 	// Update the snippet
@@ -100,7 +100,7 @@ it('updates a playground snippet', function (): void {
 		'snippet' => '{% set updated = "Updated Hello World" %}{{ updated }}',
 	]);
 
-	putJson("/playground/{$id}", $updatedSnippet)
+	putJson("/api/playground/{$id}", $updatedSnippet)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment(['name' => 'Updated Test Snippet']);
@@ -114,13 +114,13 @@ it('deletes a playground snippet', function (): void {
 	$id            = $snippet['id'];
 
 	// Create snippet
-	postJson('/playground', $snippet)
+	postJson('/api/playground', $snippet)
 		->assertOk();
 
 	$this->assertFileExists(objectPath($collection, $id));
 
 	// Delete snippet
-	delete("/playground/{$id}")
+	delete("/api/playground/{$id}")
 		->assertOk();
 
 	$this->assertFileDoesNotExist(objectPath($collection, $id));
@@ -134,11 +134,11 @@ it('lists all playground snippets', function (): void {
 	$snippet2['id'] = 'list-test-snippet-2'; // Unique ID for this test
 
 	// Create two snippets
-	postJson('/playground', $snippet1)->assertOk();
-	postJson('/playground', $snippet2)->assertOk();
+	postJson('/api/playground', $snippet1)->assertOk();
+	postJson('/api/playground', $snippet2)->assertOk();
 
 	// List all snippets
-	get('/playground')
+	get('/api/playground')
 		->assertOk()
 		->assertJson();
 });
@@ -152,12 +152,12 @@ it('handles playground snippets with special characters', function (): void {
 		'snippet'  => "{% set data = {'key': \"value with 'quotes'\"} %}\n{{ data.key|escape }}",
 	];
 
-	postJson('/playground', $snippet)
+	postJson('/api/playground', $snippet)
 		->assertOk()
 		->assertJson();
 
 	// Verify it can be fetched back correctly
-	get("/playground/{$snippet['id']}")
+	get("/api/playground/{$snippet['id']}")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment(['id' => $snippet['id']]);
@@ -176,18 +176,18 @@ it('supports full CRUD operations on playground snippets', function (): void {
 	$id            = $snippet['id'];
 
 	// Create
-	postJson('/playground', $snippet)->assertOk();
+	postJson('/api/playground', $snippet)->assertOk();
 
 	// Read
-	get("/playground/{$id}")->assertOk();
+	get("/api/playground/{$id}")->assertOk();
 
 	// Update
 	$updated = array_merge($snippet, ['name' => 'Updated Name']);
-	putJson("/playground/{$id}", $updated)->assertOk();
+	putJson("/api/playground/{$id}", $updated)->assertOk();
 
 	// Delete
-	delete("/playground/{$id}")->assertOk();
+	delete("/api/playground/{$id}")->assertOk();
 
 	// Verify deletion
-	get("/playground/{$id}")->assertNotFound();
+	get("/api/playground/{$id}")->assertNotFound();
 });

@@ -68,7 +68,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 		$template1->id       = 'blog-post';
 		$template1->contents = '<h1>Blog</h1>';
 
-		$this->templateLister->method('listCustomTemplates')->willReturn(['blog-post']);
+		$this->templateLister->method('listBuilderTemplates')->willReturn(['blog-post']);
 		$this->templateFetcher->method('fetchTemplate')->with('blog-post')->willReturn($template1);
 
 		$result = $this->exporter->exportSyncData();
@@ -83,7 +83,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 	public function testExportSyncDataDoesNotExportCollectionsOrObjects(): void
 	{
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
-		$this->templateLister->method('listCustomTemplates')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
 
 		$result = $this->exporter->exportSyncData();
 
@@ -102,7 +102,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 		$schema3->id = 'invoice';
 
 		$this->schemaLister->method('listCustomSchemas')->willReturn([$schema1, $schema2, $schema3]);
-		$this->templateLister->method('listCustomTemplates')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
 
 		$result = $this->exporter->exportSyncData(['products', 'invoice']);
 
@@ -127,7 +127,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 		$template3->id       = 'sidebar';
 		$template3->contents = '<aside>Side</aside>';
 
-		$this->templateLister->method('listCustomTemplates')->willReturn(['blog-post', 'blog-list', 'sidebar']);
+		$this->templateLister->method('listBuilderTemplates')->willReturn(['blog-post', 'blog-list', 'sidebar']);
 		$this->templateFetcher->method('fetchTemplate')->willReturnCallback(
 			fn (string $path): TemplateData => match ($path) {
 				'blog-post' => $template1,
@@ -160,7 +160,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 		$template2->id       = 'sidebar';
 		$template2->contents = '<aside>Side</aside>';
 
-		$this->templateLister->method('listCustomTemplates')->willReturn(['blog-post', 'sidebar']);
+		$this->templateLister->method('listBuilderTemplates')->willReturn(['blog-post', 'sidebar']);
 		$this->templateFetcher->method('fetchTemplate')->willReturnCallback(
 			fn (string $path): TemplateData => match ($path) {
 				'blog-post' => $template1,
@@ -182,7 +182,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 		$schema->id = 'products';
 
 		$this->schemaLister->method('listCustomSchemas')->willReturn([$schema]);
-		$this->templateLister->method('listCustomTemplates')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
 
 		$result = $this->exporter->exportSyncData([], []);
 
