@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Middleware\License;
 
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -11,6 +12,7 @@ use Psr\Log\LoggerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
@@ -27,6 +29,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		private Config $config,
 		private ResponseFactoryInterface $responseFactory,
 		private RedirectRenderer $redirectRenderer,
+		private PhpSession $session,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('license.log')->createLogger('license');
@@ -37,11 +40,16 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// Skip license validation
-		if (PHP_SAPI === 'cli-server'
-			|| $this->config->env === 'test'
-			|| $this->isAuthenticationEndpoint($request)
-			|| $this->isReadOnlyRequest($request)
+		// AuthLoginSubmitAction sets this flag so the post-login request validates
+		// the license once (regardless of method) instead of blocking the login itself.
+		$checkDue = (bool)$this->session->get(SessionKeys::LICENSE_CHECK_DUE, false);
+
+		// Skip license validation (unless a deferred post-login check is due)
+		if (!$checkDue
+			&& (PHP_SAPI === 'cli-server'
+				|| $this->config->env === 'test'
+				|| $this->isAuthenticationEndpoint($request)
+				|| $this->isReadOnlyRequest($request))
 		) {
 			return $handler->handle($request);
 		}
@@ -57,6 +65,12 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		try {
 			// Get license data (uses cache if valid, otherwise validates)
 			$licenseData = $this->licenseValidator->validateLicense();
+
+			// We've now validated post-login; clear the deferred flag so
+			// subsequent requests follow the normal skip rules.
+			if ($checkDue) {
+				$this->session->delete(SessionKeys::LICENSE_CHECK_DUE);
+			}
 
 			// Check if license is valid
 			if (!$licenseData->valid) {

@@ -747,6 +747,7 @@ return [
 		$container->get(Config::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(RedirectRenderer::class),
+		$container->get(PhpSession::class),
 		$container->get(LoggerFactory::class),
 	),
 

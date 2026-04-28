@@ -334,8 +334,8 @@ describe('LicenseValidator HTTP calls', function (): void {
 			->with(
 				'POST',
 				test()->anything(),
-				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 30
-						&& ($options['connect_timeout'] ?? 0) === 10
+				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 5
+						&& ($options['connect_timeout'] ?? 0) === 2
 						&& ($options['verify_ssl'] ?? false) === true
 						&& isset($options['headers'])
 						&& isset($options['body']))

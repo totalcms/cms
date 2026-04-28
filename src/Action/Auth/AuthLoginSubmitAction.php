@@ -9,7 +9,6 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
-use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -26,7 +25,6 @@ readonly class AuthLoginSubmitAction
 		private LoginService $loginService,
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
-		private LicenseValidator $licenseValidator,
 		private TranslationService $translator,
 	) {
 	}
@@ -104,17 +102,6 @@ readonly class AuthLoginSubmitAction
 		$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
 		$url         = $redirectUrl;
 
-		// If license is invalid, redirect to license manager instead
-		try {
-			$licenseData = $this->licenseValidator->validateLicense();
-			if (!$licenseData->valid) {
-				$url = $router->urlFor('admin-utils', ['page' => 'license-manager']);
-			}
-		} catch (\Exception) {
-			// If license validation fails, redirect to license manager
-			$url = $router->urlFor('admin-utils', ['page' => 'license-manager']);
-		}
-
 		$this->session->destroy();
 		$this->session->start();
 		$this->session->regenerateId();
@@ -127,6 +114,12 @@ readonly class AuthLoginSubmitAction
 		$this->session->set(SessionKeys::AUTH_COLLECTION, $sessionCollection);
 		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
 		$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
+
+		// Defer license validation to the next request so login isn't blocked
+		// by a network round-trip. LicenseValidationMiddleware picks up this flag
+		// and validates (with redirect to license-manager on failure) on the
+		// next admin request, regardless of method.
+		$this->session->set(SessionKeys::LICENSE_CHECK_DUE, true);
 
 		// If persistent login is checked, create persistent token
 		if ($persistentLogin) {

@@ -30,6 +30,9 @@ final class SessionKeys
 	public const LOGIN_ORIGIN      = 'totalcms.loginOrigin';
 	public const DOWNLOAD_ATTEMPTS = 'totalcms.downloadAttempts';
 
+	// Deferred work flags
+	public const LICENSE_CHECK_DUE = 'totalcms.licenseCheckDue';
+
 	// WebAuthn Keys
 	public const WEBAUTHN_REGISTER_OPTIONS = 'totalcms.webauthn.register_options';
 	public const WEBAUTHN_AUTH_OPTIONS     = 'totalcms.webauthn.auth_options';
@@ -56,6 +59,7 @@ final class SessionKeys
 			self::DOWNLOAD_ATTEMPTS,
 			self::WEBAUTHN_REGISTER_OPTIONS,
 			self::WEBAUTHN_AUTH_OPTIONS,
+			self::LICENSE_CHECK_DUE,
 		];
 	}
 
