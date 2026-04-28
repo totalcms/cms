@@ -117,11 +117,9 @@ final class ExtensionDiscovery
 			return null;
 		}
 
-		if (!$this->validator->isCompatible($manifest)) {
-			$this->logger->info("Extension {$manifest->id} requires T3 {$manifest->requiresTotalCmsVersion()}, skipping");
-
-			return null;
-		}
+		// Compatibility (Total CMS / PHP version) is intentionally NOT enforced here.
+		// Incompatible extensions are returned so they remain visible in the admin UI
+		// with a "cannot be enabled" message. Enable() guards against actually loading them.
 
 		return $manifest;
 	}

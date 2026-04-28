@@ -355,4 +355,39 @@ describe('ExtensionManager', function (): void {
 		$manager->disable('test-vendor/hello-world');
 		expect($stateRepo->isEnabled('test-vendor/hello-world'))->toBeFalse();
 	});
+
+	test('lists incompatible extensions with reasons', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$manager     = createExtensionManager($fixturesDir);
+		$manager->discoverAndRegister();
+
+		$listing      = $manager->listExtensions();
+		$incompatible = null;
+		foreach ($listing as $ext) {
+			if ($ext['id'] === 'test-vendor/incompatible-ext') {
+				$incompatible = $ext;
+				break;
+			}
+		}
+
+		expect($incompatible)->not->toBeNull();
+		expect($incompatible['incompatibility'])->not->toBe([]);
+		expect($incompatible['incompatibility'][0])->toContain('PHP');
+	});
+
+	test('refuses to enable an incompatible extension', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo);
+		$manager->discoverAndRegister();
+
+		expect(fn () => $manager->enable('test-vendor/incompatible-ext'))
+			->toThrow(\RuntimeException::class, 'cannot be enabled');
+		expect($stateRepo->isEnabled('test-vendor/incompatible-ext'))->toBeFalse();
+	});
 });

@@ -1,0 +1,11 @@
+{
+    "id": "test-vendor/incompatible-ext",
+    "name": "Incompatible Extension",
+    "description": "Fixture with an impossible PHP version requirement",
+    "version": "1.0.0",
+    "requires": {
+        "php": ">=99.0"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

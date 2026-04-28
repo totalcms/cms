@@ -34,7 +34,11 @@ class ExtensionEnableCommand extends BaseCommand
 			return $this->outputError($input, $output, "Extension '{$id}' not found");
 		}
 
-		$manager->enable($id);
+		try {
+			$manager->enable($id);
+		} catch (\RuntimeException $e) {
+			return $this->outputError($input, $output, $e->getMessage());
+		}
 
 		if ($this->isJson($input)) {
 			$output->writeln((string)json_encode(['status' => 'enabled', 'id' => $id]));

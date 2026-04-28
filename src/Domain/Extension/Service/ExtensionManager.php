@@ -52,6 +52,7 @@ final class ExtensionManager
 		private readonly ExtensionSettingsManager $settingsManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly ManifestValidator $manifestValidator = new ManifestValidator(),
 	) {
 	}
 
@@ -274,6 +275,15 @@ final class ExtensionManager
 	{
 		$manifest = $this->discoveredManifests[$extensionId] ?? null;
 
+		if ($manifest instanceof ExtensionManifest) {
+			$reasons = $this->manifestValidator->getIncompatibilityReasons($manifest);
+			if ($reasons !== []) {
+				throw new \RuntimeException(
+					"Extension '{$extensionId}' cannot be enabled: " . implode('; ', $reasons),
+				);
+			}
+		}
+
 		// Detect capabilities by doing a trial register
 		$capabilities = $this->detectCapabilities($extensionId);
 
@@ -443,16 +453,17 @@ final class ExtensionManager
 			}
 
 			$extensions[] = [
-				'id'           => $id,
-				'name'         => $manifest->name,
-				'description'  => $manifest->description,
-				'version'      => $manifest->version,
-				'author'       => $manifest->author,
-				'license'      => $manifest->license,
-				'capabilities' => $capabilities,
-				'enabled'      => $enabled,
-				'error'        => $state?->error,
-				'hasSettings'  => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
+				'id'              => $id,
+				'name'            => $manifest->name,
+				'description'     => $manifest->description,
+				'version'         => $manifest->version,
+				'author'          => $manifest->author,
+				'license'         => $manifest->license,
+				'capabilities'    => $capabilities,
+				'enabled'         => $enabled,
+				'error'           => $state?->error,
+				'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
+				'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
 			];
 		}
 

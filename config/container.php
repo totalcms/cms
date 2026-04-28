@@ -1283,6 +1283,7 @@ return [
 		$container->get(ExtensionSettingsManager::class),
 		$container,
 		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('extensions'),
+		$container->get(ManifestValidator::class),
 	),
 
 	TemplateMigrationService::class => fn (ContainerInterface $container): TemplateMigrationService => new TemplateMigrationService(

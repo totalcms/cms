@@ -49,28 +49,43 @@ final class ManifestValidator
 	}
 
 	/**
-	 * Check if the manifest is compatible with the current T3 version.
+	 * Return human-readable reasons why a manifest is incompatible with the
+	 * current environment. Empty array means compatible.
+	 *
+	 * Checks both the required Total CMS version and the required PHP version.
+	 *
+	 * @return list<string>
 	 */
-	public function isCompatible(ExtensionManifest $manifest): bool
+	public function getIncompatibilityReasons(ExtensionManifest $manifest): array
 	{
-		$requiredVersion = $manifest->requiresTotalCmsVersion();
-		if ($requiredVersion === '') {
+		$reasons = [];
+
+		$cmsRequired = $manifest->requiresTotalCmsVersion();
+		$cmsCurrent  = Version::number();
+		if ($cmsRequired !== '' && !in_array($cmsCurrent, ['', 'unknown', '0.0.0'], true)
+			&& !$this->satisfies($cmsCurrent, $cmsRequired)) {
+			$reasons[] = "Requires Total CMS {$cmsRequired} (current: {$cmsCurrent})";
+		}
+
+		$phpRequired = $manifest->requiresPhpVersion();
+		if ($phpRequired !== '' && !$this->satisfies(PHP_VERSION, $phpRequired)) {
+			$reasons[] = "Requires PHP {$phpRequired} (current: " . PHP_VERSION . ')';
+		}
+
+		return $reasons;
+	}
+
+	/**
+	 * Returns true if $current satisfies a constraint like ">=3.3.0" or "<8.4".
+	 * Unknown constraint formats fall through as satisfied so we don't reject
+	 * extensions on parse errors.
+	 */
+	private function satisfies(string $current, string $constraint): bool
+	{
+		if (!preg_match('/^([<>=!]+)\s*(\d+(?:\.\d+){0,2})$/', $constraint, $matches)) {
 			return true;
 		}
 
-		$currentVersion = Version::number();
-		if (in_array($currentVersion, ['', 'unknown', '0.0.0'], true)) {
-			return true;
-		}
-
-		// Parse constraint like ">=3.3.0"
-		if (preg_match('/^([<>=!]+)(\d+\.\d+\.\d+)$/', $requiredVersion, $matches)) {
-			$operator = $matches[1];
-			$version  = $matches[2];
-
-			return version_compare($currentVersion, $version, $operator);
-		}
-
-		return true;
+		return version_compare($current, $matches[2], $matches[1]);
 	}
 }

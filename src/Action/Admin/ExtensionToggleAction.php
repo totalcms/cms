@@ -32,7 +32,12 @@ readonly class ExtensionToggleAction
 		$action      = $args['action'] ?? '';
 
 		if ($action === 'enable' && $extensionId !== '') {
-			$this->manager->enable($extensionId);
+			try {
+				$this->manager->enable($extensionId);
+			} catch (\RuntimeException) {
+				// Extension is incompatible. The listing already surfaces the reason
+				// to the user; the redirect below will return them to that view.
+			}
 		} elseif ($action === 'disable' && $extensionId !== '') {
 			$this->manager->disable($extensionId);
 		}

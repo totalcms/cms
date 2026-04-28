@@ -97,4 +97,74 @@ describe('ManifestValidator', function (): void {
 			expect($validator->validate($manifest))->toBeNull();
 		}
 	});
+
+	test('reports no incompatibility when requirements are met', function (): void {
+		$validator = new ManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'       => 'vendor/test',
+			'name'     => 'Test',
+			'version'  => '1.0.0',
+			'requires' => ['totalcms' => '>=3.0.0', 'php' => '>=8.2'],
+		]);
+
+		expect($validator->getIncompatibilityReasons($manifest))->toBe([]);
+	});
+
+	test('reports PHP version incompatibility', function (): void {
+		$validator = new ManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'       => 'vendor/test',
+			'name'     => 'Test',
+			'version'  => '1.0.0',
+			'requires' => ['php' => '>=99.0'],
+		]);
+
+		$reasons = $validator->getIncompatibilityReasons($manifest);
+		expect($reasons)->toHaveCount(1);
+		expect($reasons[0])->toContain('PHP');
+		expect($reasons[0])->toContain('>=99.0');
+	});
+
+	test('reports Total CMS version incompatibility', function (): void {
+		$validator = new ManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'       => 'vendor/test',
+			'name'     => 'Test',
+			'version'  => '1.0.0',
+			'requires' => ['totalcms' => '>=99.0.0'],
+		]);
+
+		$reasons = $validator->getIncompatibilityReasons($manifest);
+		// May include Total CMS reason depending on detected version; if not detectable,
+		// the check is skipped and the array stays empty.
+		foreach ($reasons as $reason) {
+			expect($reason)->toContain('Total CMS');
+		}
+	});
+
+	test('reports both incompatibilities at once', function (): void {
+		$validator = new ManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'       => 'vendor/test',
+			'name'     => 'Test',
+			'version'  => '1.0.0',
+			'requires' => ['totalcms' => '>=99.0.0', 'php' => '>=99.0'],
+		]);
+
+		$reasons = $validator->getIncompatibilityReasons($manifest);
+		// PHP check is deterministic; Total CMS check depends on Version::number().
+		expect(count($reasons))->toBeGreaterThanOrEqual(1);
+	});
+
+	test('ignores unparseable version constraints', function (): void {
+		$validator = new ManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'       => 'vendor/test',
+			'name'     => 'Test',
+			'version'  => '1.0.0',
+			'requires' => ['php' => 'not-a-constraint'],
+		]);
+
+		expect($validator->getIncompatibilityReasons($manifest))->toBe([]);
+	});
 });

@@ -37,6 +37,17 @@
 				</div>
 				{% endif %}
 
+				{% if ext.incompatibility %}
+				<div style="background:oklch(var(--totalform-warning) / 0.1); color:oklch(var(--totalform-warning)); border:1px solid oklch(var(--totalform-warning) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
+					<strong>Cannot be enabled:</strong>
+					<ul style="margin:0.25rem 0 0 1rem; padding:0;">
+						{% for reason in ext.incompatibility %}
+						<li>{{ reason }}</li>
+						{% endfor %}
+					</ul>
+				</div>
+				{% endif %}
+
 				{% if ext.capabilities %}
 				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
 					<strong>Capabilities:</strong>
@@ -61,9 +72,13 @@
 					</div>
 					{% else %}
 					<span class="dash-status disabled">Disabled</span>
+					{% if ext.incompatibility %}
+					<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ') }}">Enable</button>
+					{% else %}
 					<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
 						<button type="submit" class="btn btn-sm btn-primary">Enable</button>
 					</form>
+					{% endif %}
 					{% endif %}
 				</footer>
 			</article>
