@@ -7,7 +7,6 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
-use TotalCMS\Domain\Builder\Service\SiteGenerator;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\RawRenderer;
@@ -20,7 +19,6 @@ readonly class AdminBuilderAction
 		private RawRenderer $rawRenderer,
 		private TwigEngine $twigEngine,
 		private BuilderConfigService $builderConfig,
-		private SiteGenerator $stubGenerator,
 		private TemplateFetcher $templateFetcher,
 	) {
 	}
@@ -37,9 +35,8 @@ readonly class AdminBuilderAction
 
 		if ($request->getMethod() === 'POST') {
 			return match ($section) {
-				'preview'  => $this->handlePreview($request, $response),
-				'generate' => $this->handleGenerate($response),
-				default    => $response->withStatus(404),
+				'preview' => $this->handlePreview($request, $response),
+				default   => $response->withStatus(404),
 			};
 		}
 
@@ -100,12 +97,4 @@ readonly class AdminBuilderAction
 		return $this->rawRenderer->render($response, $render);
 	}
 
-	private function handleGenerate(ResponseInterface $response): ResponseInterface
-	{
-		$result = $this->stubGenerator->generate();
-
-		return $this->twigRenderer->template($response, 'admin/builder/generate-result.twig', [
-			'result' => $result->toArray(),
-		]);
-	}
 }

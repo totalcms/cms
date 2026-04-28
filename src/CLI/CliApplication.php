@@ -79,6 +79,9 @@ class CliApplication
 		$app->addCommand(new Command\UpdateApplyCommand($totalcms));
 		$app->addCommand(new Command\UpdateRollbackCommand($totalcms));
 
+		// Builder commands
+		$app->addCommand(new Command\BuilderInitCommand($totalcms));
+
 		// Extension management commands
 		$app->addCommand(new Command\Extension\ExtensionListCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionEnableCommand($totalcms));
