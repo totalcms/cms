@@ -22,8 +22,12 @@ readonly class ObjectUpdater
 	) {
 	}
 
-	/** @param ObjectData|array<string,mixed> $object */
-	public function updateObject(string $collection, string $id, ObjectData|array $object): ObjectData
+	/**
+	 * @param ObjectData|array<string,mixed> $object
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function updateObject(string $collection, string $id, ObjectData|array $object, bool $silent = false): ObjectData
 	{
 		if (!$object instanceof ObjectData) {
 			$object = $this->factory->generateObject($collection, $object);
@@ -38,7 +42,13 @@ readonly class ObjectUpdater
 
 		$this->storage->saveObject($collection, $object);
 
-		$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object));
+		// Silent updates skip the object.updated cascade (collection metadata,
+		// index rebuild, dataviews, cache invalidation). Use only for internal
+		// bookkeeping writes where no listener legitimately needs to react —
+		// e.g. recording a login timestamp.
+		if (!$silent) {
+			$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object));
+		}
 
 		return $object;
 	}

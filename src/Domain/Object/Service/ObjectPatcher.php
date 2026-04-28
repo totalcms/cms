@@ -15,14 +15,18 @@ readonly class ObjectPatcher
 	) {
 	}
 
-	/** @param array<string,mixed> $newData */
-	public function patchObject(string $collection, string $id, array $newData): ObjectData
+	/**
+	 * @param array<string,mixed> $newData
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function patchObject(string $collection, string $id, array $newData, bool $silent = false): ObjectData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
 		$mergedObject = array_merge($object->toArray(), $newData);
 
-		return $this->objectUpdater->updateObject($collection, $id, $mergedObject);
+		return $this->objectUpdater->updateObject($collection, $id, $mergedObject, $silent);
 	}
 
 	/** @param array<string,mixed> $newData */
