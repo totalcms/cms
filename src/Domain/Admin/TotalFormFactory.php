@@ -127,9 +127,11 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
+		// Admin routes (/admin/...) don't have the /api prefix
+		$api = str_starts_with($route, '/admin') ? $this->config->api : $this->api;
 		$options = array_merge($options, [
 			'route'                    => $route,
-			'api'                      => $this->api,
+			'api'                      => $api,
 			'objectFetcher'            => $this->objectFetcher,
 			'collectionFetcher'        => $this->collectionFetcher,
 			'collectionLister'         => $this->collectionLister,
