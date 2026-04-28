@@ -48,7 +48,7 @@
 		}) }}
 	{% endset %}
 
-	{{ cms.form.simple(cms.api ~ '/setup/data-path', formFields, {
+	{{ cms.form.simple(cms.base ~ '/setup/data-path', formFields, {
 		class  : "setup-form",
 		method : "POST",
 		label  : t('wizard.datapath_btn'),

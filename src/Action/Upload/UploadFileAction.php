@@ -75,7 +75,7 @@ readonly class UploadFileAction
 			$filepath
 		);
 
-		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';
 		$mime    = $file->getClientMediaType() ?? '';
 
 		$link = $this->buildLink($apiPath, $path, $mime);

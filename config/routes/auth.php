@@ -8,7 +8,7 @@ use TotalCMS\Action\Auth;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
-	$app->group('', function (RouteCollectorProxy $group): void {
+	$app->group('/admin', function (RouteCollectorProxy $group): void {
 		$group->any('/logout', Auth\AuthLogoutAction::class)->setName('logout');
 		$group->any('/denied', Auth\AuthDeniedAction::class)->setName('denied');
 		$group->get('/login[/{collection}]', Auth\AuthLoginAction::class)->setName('login');

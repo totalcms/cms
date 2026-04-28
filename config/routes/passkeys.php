@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\License\PasskeyEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/passkeys', function (RouteCollectorProxy $group): void {
 		// Login ceremony (no auth required)
 		$group->get('/login/options', Auth\PasskeyLoginOptionsAction::class);

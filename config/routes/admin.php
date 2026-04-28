@@ -100,6 +100,9 @@ return function (App $app): void {
 		$group->get('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsAction::class)->setName('admin-extension-settings')->add(AdminOnlyMiddleware::class);
 		$group->post('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
 
+		// Extension admin pages (routed by extension system)
+		$group->any('/ext/{vendor}/{name}/{path:.+}', \TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route');
+
 		// Catch-all 404 route - MUST BE LAST (excludes /admin/ext/ which is handled by extensions)
 		$group->any('/{path:(?!ext/).*}', Admin404Action::class)->setName('admin-404');
 	})->add(VersionCheckMiddleware::class)->add(AuthMiddleware::class)->add(NoCacheMiddleware::class);

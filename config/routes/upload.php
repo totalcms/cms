@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Upload;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/upload', function (RouteCollectorProxy $group): void {
 		$group->post('/{collection}/{id}/{property}', Upload\UploadFileAction::class)->setName('upload-post');
 		$group->get('/{collection}/{id}/{property}', Upload\ListUploadFilesAction::class)->setName('upload-list');

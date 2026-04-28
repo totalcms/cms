@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\AccessGroup\AccessGroupDeleteAction;
 use TotalCMS\Action\Admin\AccessGroup\AccessGroupSaveAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	// API endpoints for managing access groups (requires super admin)
 	$app->group('/access-groups', function (RouteCollectorProxy $group): void {
 		$group->post('', AccessGroupSaveAction::class)->setName('access-group-save');

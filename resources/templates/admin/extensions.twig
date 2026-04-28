@@ -55,13 +55,13 @@
 						{% if ext.hasSettings %}
 						<a href="extensions/{{ ext.id }}/settings" class="dash-card-action edit" title="Settings" style="--icon-edit: var(--icon-cog);"></a>
 						{% endif %}
-						<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/disable" style="margin:0;">
+						<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/disable" style="margin:0;">
 							<button type="submit" class="btn btn-sm">Disable</button>
 						</form>
 					</div>
 					{% else %}
 					<span class="dash-status disabled">Disabled</span>
-					<form method="post" action="{{ cms.api }}/admin/extensions/{{ ext.id }}/enable" style="margin:0;">
+					<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
 						<button type="submit" class="btn btn-sm btn-primary">Enable</button>
 					</form>
 					{% endif %}

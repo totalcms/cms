@@ -22,6 +22,7 @@ class TotalCMSTwigAdapter
 	private readonly LoggerInterface $logger;
 
 	public string $env;
+	public string $base;
 	public string $api;
 	public string $dashboard;
 	public string $login;
@@ -51,9 +52,10 @@ class TotalCMSTwigAdapter
 	) {
 		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;
-		$this->api        = $this->config->api;
+		$this->base       = $this->config->api;
+		$this->api        = $this->base . '/api';
 		$this->clearcache = $this->api . '/emergency/cache/clear';
-		$this->dashboard  = $this->api . '/admin';
+		$this->dashboard  = $this->base . '/admin';
 		$this->domain     = $this->config->domain;
 		$this->currentUrl = $_SERVER['REQUEST_URI'] ?? '';
 		$this->version    = new VersionData();

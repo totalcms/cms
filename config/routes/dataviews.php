@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\DataView;
 use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
@@ -11,7 +11,7 @@ use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/dataviews', function (RouteCollectorProxy $group): void {
 		$group->post('/test', DataView\DataViewTestAction::class)->setName('dataview-test');
 		$group->post('/test/html', DataView\DataViewTestHtmlAction::class)->setName('dataview-test-html');

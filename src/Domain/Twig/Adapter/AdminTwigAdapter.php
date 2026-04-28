@@ -69,7 +69,7 @@ readonly class AdminTwigAdapter
 		$redirect = (string)($options['redirect'] ?? '');
 		$class    = (string)($options['class'] ?? '');
 
-		$url = rtrim($this->config->api, '/') . '/' . ltrim($route, '/');
+		$url = rtrim($this->config->api . '/api', '/') . '/' . ltrim($route, '/');
 		$on  = ['error' => 'QuickAction.error(this, event)'];
 
 		if ($redirect !== '') {

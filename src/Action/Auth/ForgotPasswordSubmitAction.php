@@ -97,7 +97,7 @@ readonly class ForgotPasswordSubmitAction
 		$userName = $user?->toArray()['name'] ?? '';
 
 		// Build reset URL
-		$resetUrl = $this->config->url . $this->config->api . '/reset-password/' . $token;
+		$resetUrl = $this->config->url . $this->config->api . '/admin/reset-password/' . $token;
 
 		// Get expiry minutes from config
 		$expiryMinutes = (int)($this->config->auth['resetTokenExpiry'] ?? 30);

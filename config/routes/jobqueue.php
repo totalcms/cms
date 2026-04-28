@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\JobQueue;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/jobqueue', function (RouteCollectorProxy $group): void {
 		$group->delete('', JobQueue\JobQueueClearAction::class)->setName('clear-queue');
 		$group->delete('/{collection}', JobQueue\JobQueueClearCollectionAction::class)->setName('clear-queue-collection');

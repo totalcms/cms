@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Feed;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/feed', function (RouteCollectorProxy $group): void {
 		$group->get('/rss/{collection}', Feed\RssFeedAction::class)->setName('rss-feed');
 		// $group->get('/activitypub/{collection}', Sitemap\RssFeedAction::class)->setName('actpub-feed');

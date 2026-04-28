@@ -110,7 +110,7 @@ class RenderTwigAdapter
 			return $this->loadItems($collection, $template, $limit, $options);
 		}
 
-		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+		$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 
 		return $this->buildTrigger($baseUrl, $options);
 	}
@@ -154,7 +154,7 @@ class RenderTwigAdapter
 			return $this->loadDataViewItems($viewId, $template, $limit, $options);
 		}
 
-		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+		$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 
 		return $this->buildTrigger($baseUrl, $options);
 	}
@@ -180,7 +180,7 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMoreButton: "target" option is required -->';
 		}
 
-		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+		$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 
 		return $this->buildButtonTrigger($baseUrl, $options);
 	}
@@ -203,7 +203,7 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMoreDataViewButton: "target" option is required -->';
 		}
 
-		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+		$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 
 		return $this->buildButtonTrigger($baseUrl, $options);
 	}
@@ -278,7 +278,7 @@ class RenderTwigAdapter
 		$html = $this->renderItems($result->items, $template, $collection);
 
 		if ($result->hasMore()) {
-			$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+			$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 			$html .= $this->buildTrigger($baseUrl, $options);
 		}
 
@@ -300,7 +300,7 @@ class RenderTwigAdapter
 		$html = $this->renderItems($result->items, $template);
 
 		if ($result->hasMore()) {
-			$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+			$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 			$html .= $this->buildTrigger($baseUrl, $options);
 		}
 
@@ -1062,7 +1062,7 @@ class RenderTwigAdapter
 		$idField = HTMLUtils::element('div', $label . $input);
 
 		$form = new \TotalCMS\Domain\Admin\SimpleForm(
-			api     : $this->config->api,
+			api     : $this->config->api . '/api',
 			route   : '',
 			method  : 'POST',
 			label   : 'Clone ' . $labelSingular,
@@ -1086,7 +1086,7 @@ class RenderTwigAdapter
 	{
 		$imageworks = $this->media->resolvePresetFormat($imageworks);
 
-		return MediaTwigAdapter::buildImageworksGalleryAPI($this->config->api, $id, $image['name'] ?? '', $image, $imageworks, $options);
+		return MediaTwigAdapter::buildImageworksGalleryAPI($this->config->api . '/api', $id, $image['name'] ?? '', $image, $imageworks, $options);
 	}
 
 	/**

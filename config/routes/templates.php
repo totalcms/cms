@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Template;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/templates', function (RouteCollectorProxy $group): void {
 		// Template list (root level)
 		$group->get('', Template\TemplateListAction::class)->setName('template-list');

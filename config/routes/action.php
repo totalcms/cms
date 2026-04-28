@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Mailer\BulkMailerAction;
 use TotalCMS\Action\Mailer\BulkMailerPreviewAction;
@@ -13,7 +13,7 @@ use TotalCMS\Middleware\License\BulkMailerEditionMiddleware;
 use TotalCMS\Middleware\License\PushoverEditionMiddleware;
 use TotalCMS\Middleware\Security\RateLimitMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/action', function (RouteCollectorProxy $group): void {
 		// Email sending endpoint with rate limiting
 		$group->post('/mailer', SendEmailAction::class)->setName('action-send-email')->add(RateLimitMiddleware::class);

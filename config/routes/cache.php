@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Cache\AllCollectionImageCacheDeleteAction;
 use TotalCMS\Action\Cache\CacheDeleteAction;
@@ -13,7 +13,7 @@ use TotalCMS\Action\Cache\DevModeStatusAction;
 use TotalCMS\Action\Cache\WatermarkCacheDeleteAction;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/cache', function (RouteCollectorProxy $group): void {
 		$group->delete('', CacheDeleteAction::class)->setName('cache-delete');
 		$group->delete('/images', CollectionImageCacheDeleteAction::class)->setName('post-collection-image-cache-delete');

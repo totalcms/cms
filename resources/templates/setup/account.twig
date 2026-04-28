@@ -33,7 +33,7 @@
 		}) }}
 	{% endset %}
 
-	{{ cms.form.simple(cms.api ~ '/setup/account', formFields, {
+	{{ cms.form.simple(cms.base ~ '/setup/account', formFields, {
 		class  : "setup-form",
 		method : "POST",
 		label  : t('wizard.account_btn'),

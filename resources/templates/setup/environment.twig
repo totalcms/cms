@@ -39,7 +39,7 @@
 	</section>
 
 	{% if allRequiredPassed %}
-		<a href="{{ cms.api }}/setup/data-path" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+		<a href="{{ cms.base }}/setup/data-path" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
 	{% else %}
 		<div class="cms-error" role="alert">
 			{{ t('wizard.env_failed') }}

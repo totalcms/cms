@@ -27,7 +27,7 @@ readonly class JobQueueStatsHtmlAction
 		$collection = $args['collection'] ?? '';
 
 		$stats = new JobQueueStats(
-			api: $this->config->api,
+			api: $this->config->api . '/api',
 			jobManager: $this->manager,
 			collection: $collection,
 		);

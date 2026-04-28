@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action;
 use TotalCMS\Action\Collection;
@@ -16,7 +16,7 @@ use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
 		// Collection
 		$group->post('', Collection\CollectionSaveAction::class)->setName('collection-save');

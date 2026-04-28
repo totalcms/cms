@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Schema;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
@@ -11,7 +11,7 @@ use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	// Read-only schema routes (allow API keys)
 	$app->group('/schemas', function (RouteCollectorProxy $group): void {
 		$group->get('', Schema\SchemaListAction::class)->setName('schema-list');

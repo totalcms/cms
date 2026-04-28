@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Slim\App;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
@@ -11,7 +11,7 @@ use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 
-return function (App $app): void {
+return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/import', function (RouteCollectorProxy $group): void {
 		$group->post('/collections/{collection}/factory', Import\ImportFactoryAction::class)->setName('import-factory')->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/csv', Import\ImportCsvAction::class)->setName('import-csv')->add(CollectionAccessMiddleware::class);

@@ -32,7 +32,7 @@ readonly class ListUploadFilesAction
 		$property   = $args['property'];
 
 		$files   = $this->fetcher->listFiles($collection, $id, $property);
-		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';
 
 		$queryParams = $request->getQueryParams();
 		$preset      = $queryParams['preset'] ?? null;

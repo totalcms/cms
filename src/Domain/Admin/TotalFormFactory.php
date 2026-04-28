@@ -81,7 +81,7 @@ readonly class TotalFormFactory
 		private ExtensionManager $extensionManager,
 		private TemplateLister $templateLister,
 	) {
-		$this->api = $this->config->api;
+		$this->api = $this->config->api . '/api';
 	}
 
 	/**

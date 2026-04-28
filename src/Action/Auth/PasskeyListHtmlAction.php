@@ -54,7 +54,7 @@ readonly class PasskeyListHtmlAction
 			$deleteBtn = HTMLUtils::button('Delete', [
 				'type'       => 'button',
 				'class'      => 'cms-button cms-button-small cms-button-danger passkey-delete',
-				'hx-delete'  => $this->config->api . '/passkeys/' . urlencode($credId),
+				'hx-delete'  => $this->config->api . '/api/passkeys/' . urlencode($credId),
 				'hx-confirm' => 'Delete this passkey? You will no longer be able to sign in with it.',
 				'hx-target'  => '#passkeys-list',
 				'hx-swap'    => 'innerHTML',

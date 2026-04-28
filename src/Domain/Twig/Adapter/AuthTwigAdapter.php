@@ -37,7 +37,7 @@ readonly class AuthTwigAdapter
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function logout(string $redirect = ''): string
 	{
-		$url = $this->config->api . '/logout';
+		$url = $this->config->api . '/admin/logout';
 		if ($redirect !== '') {
 			$url .= '?redirect=' . urlencode($redirect);
 		}
@@ -49,8 +49,8 @@ readonly class AuthTwigAdapter
 	public function login(string $collection = '', ?string $redirect = null): string
 	{
 		$loginUrl = $collection === ''
-			? sprintf('%s/%s', $this->config->api, 'login')
-			: sprintf('%s/%s/%s', $this->config->api, 'login', $collection);
+			? sprintf('%s/%s', $this->config->api, 'admin/login')
+			: sprintf('%s/%s/%s', $this->config->api, 'admin/login', $collection);
 
 		if ($redirect === null) {
 			$redirect = $_SERVER['REQUEST_URI'] ?? '';
@@ -357,7 +357,7 @@ readonly class AuthTwigAdapter
 
 		$heading     = HTMLUtils::element('h2', $this->translator->trans('passkey.title'));
 		$description = HTMLUtils::element('p', $this->translator->trans('passkey.description'));
-		$listUrl     = $this->config->api . '/passkeys/list/html';
+		$listUrl     = $this->config->api . '/api/passkeys/list/html';
 		$list        = HTMLUtils::element('div', '', [
 			'id'         => 'passkeys-list',
 			'hx-get'     => $listUrl,
@@ -378,7 +378,7 @@ readonly class AuthTwigAdapter
 		return HTMLUtils::element('section', $heading . $description . $list . $button . $status, [
 			'class'    => 'passkeys-manager',
 			'id'       => 'passkeys-manager',
-			'data-api' => $this->config->api,
+			'data-api' => $this->config->api . '/api',
 		]);
 	}
 }
