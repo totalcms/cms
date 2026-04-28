@@ -165,7 +165,7 @@
                         </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
                         <li class="edit"><a href="profile">{{ t('user.edit_profile') }}</a></li>
-                        <li class="logout"><a href="../logout">{{ t('user.logout') }}</a></li>
+                        <li class="logout"><a href="{{cms.dashboard }}/logout">{{ t('user.logout') }}</a></li>
                     </ul>
                 </nav>
                 {% elseif cms.env == 'dev' %}
@@ -189,7 +189,7 @@
                         </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ t('user.dev_user') }}</a></li>
                         <li class="edit"><a href="profile">{{ t('user.edit_profile') }}</a></li>
-                        <li class="logout"><a href="../logout">{{ t('user.logout') }}</a></li>
+                        <li class="logout"><a href="{{cms.dashboard }}/logout">{{ t('user.logout') }}</a></li>
                     </ul>
                 </nav>
                 {% endif %}

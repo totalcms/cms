@@ -172,7 +172,7 @@ readonly class TotalFormFactory
 	 */
 	public function loginForm(array $options = []): string
 	{
-		$options['api']          = $this->api;
+		$options['api']          = $this->config->api;
 		$options['session']      = $this->session;
 		$options['csrfManager']  = $this->csrfManager;
 		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)

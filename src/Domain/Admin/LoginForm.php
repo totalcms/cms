@@ -47,8 +47,8 @@ readonly class LoginForm implements \Stringable
 
 		// Determine the action URL
 		$action = $this->collection === null || $this->collection === ''
-			? "{$this->api}/login"
-			: "{$this->api}/login/{$this->collection}";
+			? "{$this->api}/admin/login"
+			: "{$this->api}/admin/login/{$this->collection}";
 
 		// Build form fields
 		$fields = [];
@@ -76,8 +76,8 @@ readonly class LoginForm implements \Stringable
 		$forgotPasswordLink = '';
 		if ($this->showForgotPassword) {
 			$forgotPasswordUrl = $this->collection
-				? "{$this->api}/forgot-password/{$this->collection}"
-				: "{$this->api}/forgot-password";
+				? "{$this->api}/admin/forgot-password/{$this->collection}"
+				: "{$this->api}/admin/forgot-password";
 
 			$forgotPasswordLink = HTMLUtils::element(
 				'p',
