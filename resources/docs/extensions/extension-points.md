@@ -35,7 +35,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `twig:functions`
+**Capability:** `twig:functions`
 
 Usage in templates:
 ```twig
@@ -64,7 +64,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `twig:filters`
+**Capability:** `twig:filters`
 
 Usage in templates:
 ```twig
@@ -82,7 +82,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `twig:globals`
+**Capability:** `twig:globals`
 
 Usage in templates:
 ```twig
@@ -116,7 +116,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `cli:commands`
+**Capability:** `cli:commands`
 
 Usage:
 ```bash
@@ -143,7 +143,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `routes:api`
+**Capability:** `routes:api`
 
 The routes above are accessible at:
 - `/ext/acme/seo-pro/status`
@@ -165,7 +165,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `routes:admin`
+**Capability:** `routes:admin`
 
 The routes above are accessible at:
 - `/admin/ext/acme/seo-pro/dashboard`
@@ -187,7 +187,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `routes:public`
+**Capability:** `routes:public`
 
 The routes above are accessible at:
 - `/ext/acme/seo-pro/webhook`
@@ -212,7 +212,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `admin:nav`
+**Capability:** `admin:nav`
 
 The `priority` field controls ordering (lower numbers appear first). The `permission` field controls visibility (`admin` = admin users only).
 
@@ -235,7 +235,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `admin:widgets`
+**Capability:** `admin:widgets`
 
 The template path is relative to the extension's `templates/` directory. Position is `main` or `sidebar`.
 
@@ -250,7 +250,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `fields:register`
+**Capability:** `fields`
 
 The class must extend `TotalCMS\Domain\Admin\FormField\FormField`. Once registered, the field type can be used in schemas:
 
@@ -279,7 +279,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `events:listen`
+**Capability:** `events:listen`
 
 ## Container Definitions
 
@@ -295,7 +295,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `container:definitions`
+**Capability:** `container`
 
 ## Admin Assets
 
@@ -309,7 +309,7 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `admin:assets`
+**Capability:** `admin:assets`
 
 The path is relative to the extension's `assets/` directory. For example, the CSS file above would be at `tcms-data/extensions/acme/seo-pro/assets/styles/admin.css`.
 
@@ -325,7 +325,7 @@ public function boot(ExtensionContext $context): void
 }
 ```
 
-**Permission:** `settings:read`
+Settings access is not a separate capability — `$context->setting()` and `$context->settings()` are always available regardless of permission state.
 
 Define a `settings_schema` in your manifest to enable a settings form in the admin UI. Settings are managed by admins through the extension settings page in the dashboard.
 

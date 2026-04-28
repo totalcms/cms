@@ -109,11 +109,11 @@ describe('extension:list command', function (): void {
 
 		$data = json_decode($tester->getDisplay(), true);
 		expect($data)->toBeArray();
-		expect($data)->toHaveCount(2);
 
 		$ids = array_column($data, 'id');
 		expect($ids)->toContain('test-vendor/hello-world');
 		expect($ids)->toContain('test-vendor/broken-ext');
+		expect($ids)->toContain('test-vendor/incompatible-ext');
 	});
 });
 

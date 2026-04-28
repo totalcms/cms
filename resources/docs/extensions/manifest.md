@@ -23,16 +23,6 @@ Every extension requires an `extension.json` manifest file in its root directory
             "acme/analytics": ">=1.0.0"
         }
     },
-    "permissions": [
-        "twig:functions",
-        "twig:filters",
-        "cli:commands",
-        "routes:admin",
-        "admin:nav",
-        "admin:assets",
-        "events:listen",
-        "settings:read"
-    ],
     "min_edition": "standard",
     "entrypoint": "Extension.php",
     "settings_schema": "settings-schema.json",
@@ -101,27 +91,6 @@ Extensions listed under `extensions` are loaded before this extension (dependenc
 If the running Total CMS or PHP version doesn't satisfy these constraints, the extension is **listed on the admin Extensions page but cannot be enabled**. A warning panel on the card explains which requirement failed (e.g. "Requires PHP >=8.4 (current: 8.2.10)"), and the Enable button is disabled. The CLI `tcms extension:enable` will exit with the same message. This means users can still see the extension and read its docs/links before upgrading their environment.
 
 Constraint format: a comparison operator (`>=`, `>`, `<=`, `<`, `=`, `!=`) followed by a version. Constraints that don't match this pattern are treated as "no restriction" so a typo doesn't accidentally lock users out.
-
-### `permissions`
-
-Declares what the extension can do. These are shown to the user before installation. An extension that tries to use a capability not declared in its permissions may be blocked in future versions.
-
-| Permission | Description |
-|---|---|
-| `twig:functions` | Register custom Twig functions |
-| `twig:filters` | Register custom Twig filters |
-| `twig:globals` | Register Twig global variables |
-| `cli:commands` | Register CLI commands |
-| `routes:api` | Register authenticated API endpoints |
-| `routes:admin` | Register admin pages |
-| `routes:public` | Register unauthenticated public endpoints |
-| `admin:nav` | Add items to the admin navigation |
-| `admin:widgets` | Add dashboard widgets |
-| `admin:assets` | Load CSS/JS in the admin interface |
-| `events:listen` | Subscribe to content events |
-| `fields:register` | Register custom field types |
-| `settings:read` | Read extension settings |
-| `container:definitions` | Register DI container services |
 
 ### `min_edition`
 
@@ -192,3 +161,30 @@ License identifier (e.g. `MIT`, `proprietary`).
 ```json
 "license": "MIT"
 ```
+
+## Capabilities
+
+Capabilities describe what an extension does — registering Twig functions, adding admin pages, listening to events, and so on. Unlike traditional plugin systems, **capabilities are not declared in the manifest**. They are auto-detected from the calls your extension makes in its `register()` method (and from filesystem markers like a `schemas/` directory).
+
+When an extension is enabled, the system runs a trial registration to discover what it provides, then writes the detected capabilities to `tcms-data/.system/extensions.json`. Each capability becomes a toggleable **permission** that admins can switch on or off in the admin Extensions page. Toggling a permission off disables that part of the extension's functionality without uninstalling it.
+
+| Capability key | Detection trigger | Description |
+|---|---|---|
+| `twig:functions` | `$context->addTwigFunction(...)` | Custom Twig functions |
+| `twig:filters` | `$context->addTwigFilter(...)` | Custom Twig filters |
+| `twig:globals` | `$context->addTwigGlobal(...)` | Twig global variables |
+| `cli:commands` | `$context->addCommand(...)` | CLI commands |
+| `routes:api` | `$context->addRoutes(...)` | Authenticated API endpoints |
+| `routes:public` | `$context->addPublicRoutes(...)` | Unauthenticated public endpoints |
+| `routes:admin` | `$context->addAdminRoutes(...)` | Admin pages |
+| `admin:nav` | `$context->addAdminNavItem(...)` | Items in the admin sidebar |
+| `admin:widgets` | `$context->addDashboardWidget(...)` | Dashboard widgets |
+| `admin:assets` | `$context->addAdminAsset(...)` | CSS/JS loaded in the admin |
+| `events:listen` | `$context->addEventListener(...)` | Content event subscribers |
+| `fields` | `$context->addFieldType(...)` | Custom field types |
+| `schemas` | `schemas/` directory exists in the extension | Read-only schemas (Pro+ only) |
+| `container` | `$context->addContainerDefinition(...)` | DI container services |
+
+If you add a new capability to an already-enabled extension (for example, you create a `schemas/` directory after the fact), disable + re-enable the extension so the trial registration picks up the new capability and adds it to the permissions list.
+
+For details on each capability and how to register it, see [Extension Points](extension-points.md).
