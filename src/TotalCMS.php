@@ -117,6 +117,18 @@ class TotalCMS
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
 
+		// Discover and boot extensions so their Twig functions/filters/globals,
+		// schemas, field types, and event listeners are available on the public API
+		// (Stacks frontend). The Slim admin app and CLI run their own bootstrap;
+		// the manager guards against double-init.
+		try {
+			$extensionManager = $this->container->get(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+			$extensionManager->discoverAndRegister();
+			$extensionManager->bootAll();
+		} catch (\Throwable $th) {
+			$this->logger->error('Extension bootstrap failed: ' . $th->getMessage(), ['exception' => $th]);
+		}
+
 		// Start session if it wasn't started during preservation
 		if (!self::isPreview() && !$sessionStarted) {
 			$this->session->start();
