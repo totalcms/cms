@@ -10,16 +10,17 @@ namespace TotalCMS\Domain\Extension\Data;
 final readonly class ExtensionManifest
 {
 	/**
-	 * @param string               $id             e.g. "vendor/extension-name"
-	 * @param string               $name           Human-readable name
-	 * @param string               $description    Short description
-	 * @param string               $version        Semver version
-	 * @param array<string,string> $requires       version constraints: totalcms, php, etc
-	 * @param string               $entrypoint     Relative path to the ExtensionInterface class
-	 * @param string|null          $settingsSchema  Relative path to settings JSON schema
-	 * @param string               $minEdition      Minimum edition required (lite, standard, pro)
-	 * @param array<string,string> $author         Author info (name, url)
-	 * @param string               $license        License identifier
+	 * @param string                                  $id             e.g. "vendor/extension-name"
+	 * @param string                                  $name           Human-readable name
+	 * @param string                                  $description    Short description
+	 * @param string                                  $version        Semver version
+	 * @param array<string,string>                    $requires       version constraints: totalcms, php, etc
+	 * @param string                                  $entrypoint     Relative path to the ExtensionInterface class
+	 * @param string|null                             $settingsSchema  Relative path to settings JSON schema
+	 * @param string                                  $minEdition      Minimum edition required (lite, standard, pro)
+	 * @param array<string,string>                    $author         Author info (name, url)
+	 * @param string                                  $license        License identifier
+	 * @param list<array{label: string, url: string}> $links          Card-level links (admin pages, docs, etc.)
 	 */
 	public function __construct(
 		public string $id,
@@ -32,6 +33,7 @@ final readonly class ExtensionManifest
 		public string $minEdition,
 		public array $author,
 		public string $license,
+		public array $links = [],
 	) {
 	}
 
@@ -51,7 +53,36 @@ final readonly class ExtensionManifest
 			minEdition: (string)($data['min_edition'] ?? 'lite'),
 			author: is_array($data['author'] ?? null) ? $data['author'] : [],
 			license: (string)($data['license'] ?? 'proprietary'),
+			links: self::parseLinks($data['links'] ?? null),
 		);
+	}
+
+	/**
+	 * Normalize the manifest's links field. Accepts a list of {label, url}
+	 * objects; silently drops malformed entries.
+	 *
+	 * @return list<array{label: string, url: string}>
+	 */
+	private static function parseLinks(mixed $raw): array
+	{
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$links = [];
+		foreach ($raw as $entry) {
+			if (!is_array($entry)) {
+				continue;
+			}
+			$label = (string)($entry['label'] ?? '');
+			$url   = (string)($entry['url'] ?? '');
+			if ($label === '' || $url === '') {
+				continue;
+			}
+			$links[] = ['label' => $label, 'url' => $url];
+		}
+
+		return $links;
 	}
 
 	public function requiresTotalCmsVersion(): string

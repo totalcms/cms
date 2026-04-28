@@ -58,6 +58,8 @@ Read-only schemas:
 - Are removed when the extension is disabled or removed
 - Appear in the schema list alongside built-in and custom schemas
 
+The presence of a `schemas/` directory is auto-detected when the extension is enabled and surfaces as a `Schemas` capability on the extension's permission list. Admins can toggle this capability off to hide the extension's read-only schemas without uninstalling the extension. If you add a `schemas/` directory to an already-enabled extension, disable + re-enable so the capability is re-detected.
+
 ### Lookup Priority
 
 When Total CMS looks up a schema, it checks in this order:
@@ -109,6 +111,8 @@ Installable schemas:
 - Are skipped if a schema with the same ID already exists (no overwrites)
 - Become user-owned after installation -- the user can edit them freely
 - Persist after the extension is removed (the data belongs to the user)
+
+`installSchema()` is gated to **Pro edition or higher**. On lower editions the call returns silently without copying anything, so the same boot code is safe to ship without an explicit edition check.
 
 ## When to Use Which
 

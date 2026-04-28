@@ -48,6 +48,19 @@
 				</div>
 				{% endif %}
 
+				{% set visibleLinks = ext.links|filter(link => ext.enabled or link.url starts with 'http://' or link.url starts with 'https://') %}
+				{% if visibleLinks|length > 0 %}
+				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
+					<strong>Links:</strong>
+					<div class="dash-badge-group">
+						{% for link in visibleLinks %}
+						{% set external = link.url starts with 'http://' or link.url starts with 'https://' %}
+						<a class="dash-badge" href="{{ link.url }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}</a>
+						{% endfor %}
+					</div>
+				</div>
+				{% endif %}
+
 				{% if ext.capabilities %}
 				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
 					<strong>Capabilities:</strong>

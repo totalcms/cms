@@ -40,6 +40,10 @@ Every extension requires an `extension.json` manifest file in its root directory
         "name": "Acme Corp",
         "url": "https://acme.example.com"
     },
+    "links": [
+        {"label": "Documentation", "url": "https://docs.example.com/seo-pro"},
+        {"label": "Dashboard", "url": "/admin/ext/acme/seo-pro/dashboard"}
+    ],
     "license": "proprietary"
 }
 ```
@@ -93,6 +97,10 @@ Version constraints for Total CMS, PHP, and other extensions.
 ```
 
 Extensions listed under `extensions` are loaded before this extension (dependency ordering).
+
+If the running Total CMS or PHP version doesn't satisfy these constraints, the extension is **listed on the admin Extensions page but cannot be enabled**. A warning panel on the card explains which requirement failed (e.g. "Requires PHP >=8.4 (current: 8.2.10)"), and the Enable button is disabled. The CLI `tcms extension:enable` will exit with the same message. This means users can still see the extension and read its docs/links before upgrading their environment.
+
+Constraint format: a comparison operator (`>=`, `>`, `<=`, `<`, `=`, `!=`) followed by a version. Constraints that don't match this pattern are treated as "no restriction" so a typo doesn't accidentally lock users out.
 
 ### `permissions`
 
@@ -155,6 +163,27 @@ Author information displayed in the admin UI and marketplace.
     "url": "https://acme.example.com"
 }
 ```
+
+### `links`
+
+Card-level links displayed on the extension's tile in the admin Extensions page. Useful for documentation, support, or quick access to admin pages your extension registers.
+
+```json
+"links": [
+    {"label": "Documentation", "url": "https://docs.example.com/seo-pro"},
+    {"label": "Support", "url": "https://example.com/support"},
+    {"label": "Dashboard", "url": "/admin/ext/acme/seo-pro/dashboard"}
+]
+```
+
+Each entry must have a `label` and a `url`. Malformed entries are silently dropped during parsing.
+
+**External vs internal links:**
+
+- URLs starting with `http://` or `https://` are treated as **external** and open in a new tab (`target="_blank"`). They are always shown — including when the extension is disabled or has unmet requirements — so users can read your documentation before deciding to enable.
+- All other URLs are treated as **internal** (admin pages your extension registers) and open in the current tab. Internal links are only shown when the extension is **enabled**, since the routes wouldn't resolve otherwise.
+
+If filtering leaves no visible links for the current state, the entire links row is hidden.
 
 ### `license`
 

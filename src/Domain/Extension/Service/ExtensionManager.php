@@ -463,6 +463,7 @@ final class ExtensionManager
 				'enabled'         => $enabled,
 				'error'           => $state?->error,
 				'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
+				'links'           => $manifest->links,
 				'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
 			];
 		}

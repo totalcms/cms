@@ -80,4 +80,38 @@ describe('ExtensionManifest', function (): void {
 
 		expect($manifest->requiredExtensions())->toBe(['vendor/other' => '>=1.0.0']);
 	});
+
+	test('parses links with label and url', function (): void {
+		$manifest = ExtensionManifest::fromArray([
+			'links' => [
+				['label' => 'Documentation', 'url' => 'https://example.com/docs'],
+				['label' => 'Dashboard', 'url' => '/admin/ext/vendor/name/dashboard'],
+			],
+		]);
+
+		expect($manifest->links)->toHaveCount(2);
+		expect($manifest->links[0])->toBe(['label' => 'Documentation', 'url' => 'https://example.com/docs']);
+		expect($manifest->links[1])->toBe(['label' => 'Dashboard', 'url' => '/admin/ext/vendor/name/dashboard']);
+	});
+
+	test('drops malformed link entries', function (): void {
+		$manifest = ExtensionManifest::fromArray([
+			'links' => [
+				['label' => 'Good', 'url' => '/ok'],
+				['label' => 'Missing url'],
+				['url' => 'https://example.com/missing-label'],
+				'not-an-object',
+				['label' => '', 'url' => '/empty-label'],
+			],
+		]);
+
+		expect($manifest->links)->toHaveCount(1);
+		expect($manifest->links[0]['label'])->toBe('Good');
+	});
+
+	test('defaults links to empty list', function (): void {
+		$manifest = ExtensionManifest::fromArray([]);
+
+		expect($manifest->links)->toBe([]);
+	});
 });
