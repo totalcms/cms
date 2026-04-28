@@ -75,7 +75,7 @@ class BuilderInitCommand extends BaseCommand
 		}
 
 		if ($this->isJson($input)) {
-			$data = array_map(fn ($s) => $s->toArray(), $starters);
+			$data = array_map(fn ($s): array => $s->toArray(), $starters);
 			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
 			return Command::SUCCESS;

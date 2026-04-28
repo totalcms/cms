@@ -72,8 +72,8 @@ final class BuilderConfigServiceTest extends TestCase
 
 		$this->collectionSaver->expects($this->once())
 			->method('saveCollection')
-			->with($this->callback(fn (array $data): bool =>
-				$data['id'] === 'builder-pages'
+			->with($this->callback(
+				fn (array $data): bool => $data['id'] === 'builder-pages'
 				&& $data['schema'] === 'builder-page'
 				&& $data['name'] === 'Pages'
 			));

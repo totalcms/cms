@@ -7,12 +7,12 @@ namespace TotalCMS\Domain\Extension\Service;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
+use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
-use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
@@ -803,14 +803,14 @@ final class ExtensionManager
 		}
 
 		try {
-			if (!$this->container->has(\TotalCMS\Domain\License\Service\EditionFeatureService::class)) {
+			if (!$this->container->has(EditionFeatureService::class)) {
 				return true; // Edition service not available, allow
 			}
 
-			/** @var \TotalCMS\Domain\License\Service\EditionFeatureService $editionService */
-			$editionService = $this->container->get(\TotalCMS\Domain\License\Service\EditionFeatureService::class);
+			/** @var EditionFeatureService $editionService */
+			$editionService = $this->container->get(EditionFeatureService::class);
 			$currentEdition = $editionService->getEdition();
-			$required       = \TotalCMS\Domain\License\Data\Edition::fromString($requiredEdition);
+			$required       = Edition::fromString($requiredEdition);
 
 			return $currentEdition->level() >= $required->level();
 		} catch (\Throwable) {

@@ -112,6 +112,4 @@ readonly class BuilderConfigService
 	{
 		return $this->config->docroot;
 	}
-
-
 }

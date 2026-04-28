@@ -99,7 +99,7 @@ describe('ExtensionManifest', function (): void {
 			'links' => [
 				['label' => 'Good', 'url' => '/ok'],
 				['label' => 'Missing url'],
-				['url' => 'https://example.com/missing-label'],
+				['url'   => 'https://example.com/missing-label'],
 				'not-an-object',
 				['label' => '', 'url' => '/empty-label'],
 			],

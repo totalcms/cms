@@ -177,7 +177,7 @@ class TemplateForm extends TotalForm
 		if ($name === 'category') {
 			// Extract category from path when editing
 			if ($this->path !== '') {
-				$parts = explode('/', $this->path);
+				$parts            = explode('/', $this->path);
 				$options['value'] = $parts[0];
 			}
 
@@ -188,7 +188,7 @@ class TemplateForm extends TotalForm
 			if ($name === 'id') {
 				if ($this->path !== '') {
 					// Strip the category prefix (e.g., "templates/test" → "test")
-					$parts = explode('/', $this->path, 2);
+					$parts            = explode('/', $this->path, 2);
 					$options['value'] = $parts[1] ?? $this->path;
 				} else {
 					$options['value'] = $this->templateData->id;

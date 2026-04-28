@@ -52,7 +52,7 @@ class IndexBuildListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectCreated(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		if (isset($this->suspendedCollections[$collection])) {
 			return;
@@ -69,7 +69,7 @@ class IndexBuildListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectUpdated(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		if (isset($this->suspendedCollections[$collection])) {
 			return;
@@ -86,11 +86,11 @@ class IndexBuildListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectDeleted(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
-		$id = (string) $payload['id'];
+		$collection = (string)$payload['collection'];
+		$id         = (string)$payload['id'];
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		$queueReindex = $collectionData instanceof CollectionData && $collectionData->queueRebuildOnSave;
+		$queueReindex   = $collectionData instanceof CollectionData && $collectionData->queueRebuildOnSave;
 
 		if ($queueReindex) {
 			$this->indexBuilder->removeObjectFromIndex($collection, $id);
@@ -102,7 +102,7 @@ class IndexBuildListener
 	/** @param array<string,mixed> $payload */
 	public function onSchemaSaved(array $payload): void
 	{
-		$schemaId = (string) $payload['schema'];
+		$schemaId    = (string)$payload['schema'];
 		$collections = $this->collectionLister->listAllCollections();
 
 		foreach ($collections as $collection) {
@@ -115,7 +115,7 @@ class IndexBuildListener
 	/** @param array<string,mixed> $payload */
 	public function onImportCompleted(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		$this->resumeForCollection($collection);
 		$this->indexBuilder->buildIndex($collection);

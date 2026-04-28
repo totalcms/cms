@@ -18,7 +18,6 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\OperationResult;
 
 final class BulkMailerServiceTest extends TestCase
 {

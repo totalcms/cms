@@ -30,7 +30,6 @@ readonly class EmailSender
 	 *
 	 * @param array<string,mixed> $emailData
 	 * @param int $timeout SMTP connection timeout in seconds (default: 30)
-	 *
 	 */
 	public function send(array $emailData, int $timeout = 30): OperationResult
 	{

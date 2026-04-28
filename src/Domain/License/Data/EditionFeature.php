@@ -32,8 +32,8 @@ enum EditionFeature: string
 
 	// Template features
 	case TEMPLATES            = 'templates';
-	case WHITELABEL_STANDARD = 'whitelabel_standard';
-	case WHITELABEL_PRO      = 'whitelabel_pro';
+	case WHITELABEL_STANDARD  = 'whitelabel_standard';
+	case WHITELABEL_PRO       = 'whitelabel_pro';
 
 	// Data features
 	case DATA_VIEWS = 'data_views';
@@ -69,8 +69,8 @@ enum EditionFeature: string
 			self::QR_CODES             => 'QR Codes',
 			self::BARCODES             => 'Barcodes',
 			self::TEMPLATES            => 'Templates',
-			self::WHITELABEL_STANDARD => 'Whitelabel Standard',
-			self::WHITELABEL_PRO      => 'Whitelabel Pro',
+			self::WHITELABEL_STANDARD  => 'Whitelabel Standard',
+			self::WHITELABEL_PRO       => 'Whitelabel Pro',
 			self::DATA_VIEWS           => 'Data Views',
 			self::RSS_IMPORT           => 'RSS Import',
 			self::BULK_MAILER          => 'Bulk Mailer',

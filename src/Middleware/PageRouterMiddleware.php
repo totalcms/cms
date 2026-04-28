@@ -43,7 +43,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		$path  = $request->getUri()->getPath();
 		$match = $this->pageRouter->match($path);
 
-		if ($match === null) {
+		if (!$match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
 			return $response;
 		}
 

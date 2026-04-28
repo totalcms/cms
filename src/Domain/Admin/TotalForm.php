@@ -484,7 +484,7 @@ class TotalForm implements \Stringable
 	 */
 	public function layoutListForBuilder(): array
 	{
-		if ($this->templateLister === null) {
+		if (!$this->templateLister instanceof TemplateLister) {
 			return [];
 		}
 
@@ -499,7 +499,7 @@ class TotalForm implements \Stringable
 	 */
 	public function pageListForBuilder(): array
 	{
-		if ($this->templateLister === null) {
+		if (!$this->templateLister instanceof TemplateLister) {
 			return [];
 		}
 

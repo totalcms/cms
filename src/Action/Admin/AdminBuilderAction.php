@@ -62,7 +62,7 @@ readonly class AdminBuilderAction
 		// Load template content for editor
 		if ($file !== '' && $section !== 'new') {
 			try {
-				$template = $this->templateFetcher->fetchTemplate($path, $section);
+				$template                 = $this->templateFetcher->fetchTemplate($path, $section);
 				$templateData['template'] = [
 					'id'       => $template->id,
 					'contents' => $template->contents,
@@ -96,5 +96,4 @@ readonly class AdminBuilderAction
 
 		return $this->rawRenderer->render($response, $render);
 	}
-
 }

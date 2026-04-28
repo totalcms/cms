@@ -24,7 +24,7 @@ readonly class DataViewListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectChanged(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
 	}

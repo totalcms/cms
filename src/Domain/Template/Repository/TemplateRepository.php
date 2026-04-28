@@ -15,9 +15,9 @@ use TotalCMS\Support\PathResolver;
  */
 class TemplateRepository extends StorageRepository
 {
-	public  const FILE_EXT           = '.twig';
-	public  const DESIGNER_META_EXT  = '.designer.json';
-	public  const BUILDER_DIR        = 'builder/';
+	public const FILE_EXT            = '.twig';
+	public const DESIGNER_META_EXT   = '.designer.json';
+	public const BUILDER_DIR         = 'builder/';
 	private const CACHE_KEY_BUILDER  = 'builder:';
 	private const CACHE_KEY_RESERVED = 'reserved:';
 
@@ -28,7 +28,7 @@ class TemplateRepository extends StorageRepository
 		'macros',
 		'templates',
 		'whitelabel',
-		];
+	];
 
 	public static function reservedTemplateDir(): string
 	{

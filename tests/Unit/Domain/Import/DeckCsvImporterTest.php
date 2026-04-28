@@ -127,7 +127,7 @@ final class DeckCsvImporterTest extends TestCase
 		$this->objectFetcher->method('fetchObject')->willReturn($object);
 		$this->objectUpdater->expects($this->never())->method('updateObject');
 
-		$csv   = "id,name";
+		$csv   = 'id,name';
 		$count = $this->importer->import('posts', 'obj-1', 'items', $this->createFile($csv));
 
 		expect($count)->toBe(0);

@@ -72,11 +72,10 @@ final class PageRouterMiddlewareTest extends TestCase
 		$handler = $this->createHandler(404);
 
 		$match = new RouteMatch(
-			template:   'pages/about.twig',
-			layout:     'default',
-			pageData:   ['id' => 'about', 'title' => 'About Us'],
-			params:     [],
-			collection: null,
+			template: 'pages/about.twig',
+			layout: 'default',
+			pageData: ['id' => 'about', 'title' => 'About Us'],
+			params: [],
 		);
 
 		$this->pageRouter->method('match')->with('/about')->willReturn($match);
@@ -107,10 +106,10 @@ final class PageRouterMiddlewareTest extends TestCase
 		$handler = $this->createHandler(404);
 
 		$match = new RouteMatch(
-			template:   'pages/about.twig',
-			layout:     'default',
-			pageData:   ['id' => 'about', 'title' => 'About'],
-			params:     [],
+			template: 'pages/about.twig',
+			layout: 'default',
+			pageData: ['id' => 'about', 'title' => 'About'],
+			params: [],
 		);
 
 		$this->pageRouter->method('match')->willReturn($match);
@@ -127,10 +126,10 @@ final class PageRouterMiddlewareTest extends TestCase
 		$handler = $this->createHandler(404);
 
 		$match = new RouteMatch(
-			template:   'pages/product.twig',
-			layout:     'default',
-			pageData:   ['id' => 'product', 'title' => 'Product'],
-			params:     ['id' => 'widget'],
+			template: 'pages/product.twig',
+			layout: 'default',
+			pageData: ['id' => 'product', 'title' => 'Product'],
+			params: ['id' => 'widget'],
 		);
 
 		$this->pageRouter->method('match')->willReturn($match);

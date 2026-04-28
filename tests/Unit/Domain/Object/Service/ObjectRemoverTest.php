@@ -26,10 +26,10 @@ final class ObjectRemoverTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->propStorage   = $this->createMock(PropertyRepository::class);
-		$this->storage       = $this->createMock(ObjectRepository::class);
-		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->objectUpdater = $this->createMock(ObjectUpdater::class);
+		$this->propStorage     = $this->createMock(PropertyRepository::class);
+		$this->storage         = $this->createMock(ObjectRepository::class);
+		$this->objectFetcher   = $this->createMock(ObjectFetcher::class);
+		$this->objectUpdater   = $this->createMock(ObjectUpdater::class);
 		$this->eventDispatcher = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
 
 		$this->eventDispatcher->listen('object.deleted', function (array $payload): void {

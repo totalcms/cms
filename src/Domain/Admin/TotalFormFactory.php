@@ -128,7 +128,7 @@ readonly class TotalFormFactory
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
 		// Admin routes (/admin/...) don't have the /api prefix
-		$api = str_starts_with($route, '/admin') ? $this->config->api : $this->api;
+		$api     = str_starts_with($route, '/admin') ? $this->config->api : $this->api;
 		$options = array_merge($options, [
 			'route'                    => $route,
 			'api'                      => $api,

@@ -289,11 +289,11 @@ readonly class AdminTwigAdapter
 	 */
 	public function builderFileTree(): array
 	{
-		$tree = [];
+		$tree       = [];
 		$categories = TemplateRepository::BUILDER_CATEGORIES;
 
 		foreach ($categories as $category) {
-			$templates = $this->templateLister->listBuilderTemplates($category, true);
+			$templates       = $this->templateLister->listBuilderTemplates($category, true);
 			$tree[$category] = [];
 			foreach ($templates as $templatePath) {
 				$tree[$category][] = [

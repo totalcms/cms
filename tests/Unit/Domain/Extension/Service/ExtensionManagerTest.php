@@ -387,7 +387,7 @@ describe('ExtensionManager', function (): void {
 		$manager->discoverAndRegister();
 
 		expect(fn () => $manager->enable('test-vendor/incompatible-ext'))
-			->toThrow(\RuntimeException::class, 'cannot be enabled');
+			->toThrow(RuntimeException::class, 'cannot be enabled');
 		expect($stateRepo->isEnabled('test-vendor/incompatible-ext'))->toBeFalse();
 	});
 });

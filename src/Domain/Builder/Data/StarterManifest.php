@@ -9,25 +9,23 @@ readonly class StarterManifest
 	public string $name;
 	public string $description;
 	public string $version;
-	public string $directory;
 
 	/** @var list<array{id:string,title:string,route:string,template:string,layout:string,sort:int}> */
 	public array $pages;
 
 	/** @param array<string,mixed> $data */
-	public function __construct(array $data, string $directory)
+	public function __construct(array $data, public string $directory)
 	{
 		$this->name        = (string)($data['name'] ?? 'Unknown');
 		$this->description = (string)($data['description'] ?? '');
 		$this->version     = (string)($data['version'] ?? '1.0.0');
-		$this->directory   = $directory;
 
 		$pages = [];
 		foreach (($data['pages'] ?? []) as $page) {
 			if (!is_array($page)) {
 				continue;
 			}
-			$id = (string)($page['id'] ?? '');
+			$id      = (string)($page['id'] ?? '');
 			$pages[] = [
 				'id'       => $id,
 				'title'    => (string)($page['title'] ?? ''),

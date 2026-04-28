@@ -39,7 +39,7 @@ readonly class StarterService
 			return [];
 		}
 
-		$starters = [];
+		$starters  = [];
 		$entries   = scandir($startersDir);
 		if ($entries === false) {
 			return [];
@@ -76,7 +76,7 @@ readonly class StarterService
 	 */
 	public function scaffold(string $starterName, bool $force = false): OperationResult
 	{
-		$starterDir = $this->startersDir() . '/' . $starterName;
+		$starterDir   = $this->startersDir() . '/' . $starterName;
 		$manifestPath = $starterDir . '/manifest.json';
 
 		if (!file_exists($manifestPath)) {
@@ -179,5 +179,4 @@ readonly class StarterService
 	{
 		return PathResolver::packageRoot() . '/resources/builder/starters';
 	}
-
 }

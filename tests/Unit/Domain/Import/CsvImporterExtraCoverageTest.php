@@ -39,7 +39,7 @@ describe('CsvImporter extra coverage', function (): void {
 			$this->objectFetcher,
 			$this->objectImporter,
 			$this->indexBuildListener,
-			new EventDispatcher(new \Psr\Log\NullLogger()),
+			new EventDispatcher(new Psr\Log\NullLogger()),
 			$this->jobQueuer,
 			$loggerFactory,
 		);
@@ -231,7 +231,7 @@ describe('CsvImporter extra coverage', function (): void {
 			$this->objectFetcher,
 			$failingImporter,
 			$this->indexBuildListener,
-			new EventDispatcher(new \Psr\Log\NullLogger()),
+			new EventDispatcher(new Psr\Log\NullLogger()),
 			$this->jobQueuer,
 			$loggerFactory,
 		);

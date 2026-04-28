@@ -43,13 +43,14 @@ class Config
 	/** @var array<string,mixed> */
 	public array $pushnotif = [];
 	/** @var array<string,mixed> */
-	public array $presets = [];
+	public array $presets  = [];
 	public string $docroot = '';
 	/** @var array<string,mixed> */
 	public array $builder = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
+	 *
 	 * @param array<string,mixed> $settings
 	 */
 	public function __construct(array $settings)
@@ -77,10 +78,10 @@ class Config
 		$this->timezone        = $settings['timezone'] ?? date_default_timezone_get();
 		$this->docroot         = $settings['docroot'] ?? $_SERVER['DOCUMENT_ROOT'] ?? '';
 		$this->htmlclean       = is_array($settings['htmlclean'] ?? null) ? $settings['htmlclean'] : [];
-		$this->smtp            = is_array($settings['smtp'] ?? null)      ? $settings['smtp'] : [];
-		$this->mailer          = is_array($settings['mailer'] ?? null)    ? $settings['mailer'] : [];
+		$this->smtp            = is_array($settings['smtp'] ?? null) ? $settings['smtp'] : [];
+		$this->mailer          = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
 		$this->pushnotif       = is_array($settings['pushnotif'] ?? null) ? $settings['pushnotif'] : [];
-		$this->builder         = is_array($settings['builder'] ?? null)   ? $settings['builder'] : [];
+		$this->builder         = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

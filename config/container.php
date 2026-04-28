@@ -25,9 +25,6 @@ use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Builder\Service\BuilderConfigService;
-use TotalCMS\Domain\Builder\Service\PageRouter;
-use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
@@ -36,6 +33,9 @@ use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\PageRouter;
+use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
@@ -1223,7 +1223,7 @@ return [
 
 		// Register internal listeners with lazy resolution to avoid circular deps.
 		// Listeners are resolved from the container on first event dispatch, not at registration time.
-		$lazy = fn (string $class, string $method): \Closure => function (array $payload) use ($container, $class, $method): void {
+		$lazy = fn (string $class, string $method): Closure => function (array $payload) use ($container, $class, $method): void {
 			$container->get($class)->$method($payload);
 		};
 

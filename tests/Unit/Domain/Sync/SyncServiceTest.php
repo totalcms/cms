@@ -148,7 +148,7 @@ final class SyncServiceTest extends TestCase
 
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
-			->willReturn(\TotalCMS\Support\OperationResult::success('Import complete.', [
+			->willReturn(OperationResult::success('Import complete.', [
 				'results' => [],
 				'errors'  => [],
 				'summary' => ['schemas_created' => 1, 'templates_created' => 1],
@@ -199,7 +199,7 @@ final class SyncServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(\TotalCMS\Support\OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
+			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
 
 		$this->service->pull('https://example.com', 'key', ['products']);
 	}
@@ -224,7 +224,7 @@ final class SyncServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(\TotalCMS\Support\OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
+			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
 
 		$this->service->pull('https://example.com', 'key', null, ['sidebar']);
 	}

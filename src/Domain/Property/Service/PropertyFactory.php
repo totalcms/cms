@@ -35,7 +35,7 @@ readonly class PropertyFactory
 			return $this->createDeck($definition, $value, $definition->settings);
 		}
 
-		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst((string)$type) . 'Data';
+		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
 		if (!class_exists($className)) {
 			throw new \UnexpectedValueException('Unknown property type for object.');
 		}
@@ -86,7 +86,7 @@ readonly class PropertyFactory
 		$deckref = $definition->deckref;
 
 		// If no deckref, return deck as-is (no processing)
-		if (empty($deckref)) {
+		if (in_array($deckref, [null, '', '0'], true)) {
 			return new DeckData($value, $settings);
 		}
 

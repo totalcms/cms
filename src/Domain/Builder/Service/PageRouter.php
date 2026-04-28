@@ -32,7 +32,7 @@ readonly class PageRouter
 
 		// 1. Try builder page routes (highest priority)
 		$match = $this->matchBuilderPage($path);
-		if ($match !== null) {
+		if ($match instanceof RouteMatch) {
 			return $match;
 		}
 
@@ -111,7 +111,7 @@ readonly class PageRouter
 			}
 
 			$match = $this->tryCollectionMatch($path, $collection);
-			if ($match !== null) {
+			if ($match instanceof RouteMatch) {
 				return $match;
 			}
 		}
@@ -206,10 +206,10 @@ readonly class PageRouter
 		$templatePath = 'templates/' . $collection->id . '.twig';
 
 		return new RouteMatch(
-			template:   $templatePath,
-			layout:     'default',
-			pageData:   $object->toArray(),
-			params:     $params,
+			template: $templatePath,
+			layout: 'default',
+			pageData: $object->toArray(),
+			params: $params,
 			collection: $collection->id,
 		);
 	}
@@ -246,7 +246,7 @@ readonly class PageRouter
 
 	/**
 	 * Convert a route pattern like /products/{category}/{id}
-	 * into a regex like /^\/products\/([^\/]+)\/([^\/]+)$/
+	 * into a regex like /^\/products\/([^\/]+)\/([^\/]+)$/.
 	 */
 	private function routeToRegex(string $route): string
 	{
@@ -279,11 +279,10 @@ readonly class PageRouter
 		$templatePath = 'pages/' . $page->template . '.twig';
 
 		return new RouteMatch(
-			template:   $templatePath,
-			layout:     $page->layout,
-			pageData:   $page->toArray(),
-			params:     $params,
-			collection: null,
+			template: $templatePath,
+			layout: $page->layout,
+			pageData: $page->toArray(),
+			params: $params,
 		);
 	}
 

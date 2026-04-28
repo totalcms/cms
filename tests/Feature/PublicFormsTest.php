@@ -21,7 +21,7 @@ afterEach(function (): void {
 it('allows public create operation', function (): void {
 	// Create collection with public create
 	$collectionData = json_decode(file_get_contents(testData('public-collection.json')), true);
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	$data = [
 		'id'   => 'test-public-create',
@@ -43,7 +43,7 @@ it('allows public create operation', function (): void {
 it('allows public read operation', function (): void {
 	// Create collection with public read
 	$collectionData = json_decode(file_get_contents(testData('public-collection.json')), true);
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Create an object first
 	$objectData = ['id' => 'test-read', 'text' => 'Test content'];
@@ -62,7 +62,7 @@ it('allows public read operation', function (): void {
 it('rejects operations not in publicOperations array', function (): void {
 	// Create collection with only create and read
 	$collectionData = json_decode(file_get_contents(testData('public-collection.json')), true);
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Create an object first
 	$objectData = ['id' => 'test-update', 'text' => 'Original'];
@@ -88,7 +88,7 @@ it('allows public update when configured', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Create object
 	$objectData = ['id' => 'test-update', 'text' => 'Original'];
@@ -114,7 +114,7 @@ it('allows public delete when configured', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Create object
 	$objectData = ['id' => 'test-delete', 'text' => 'Will be deleted'];
@@ -139,7 +139,7 @@ it('normalizes operation names to lowercase', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Should work - operations normalized to lowercase
 	$objectData = ['id' => 'test-case', 'text' => 'Test'];
@@ -160,7 +160,7 @@ it('ignores invalid operation names', function (): void {
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Valid operations should work
 	$objectData = ['id' => 'test', 'text' => 'Test'];
@@ -181,7 +181,7 @@ it('always allows HEAD requests for object existence checking', function (): voi
 			'text' => ['label' => 'Text', 'field' => 'textarea'],
 		],
 	];
-	postJson('/api/collections',$collectionData);
+	postJson('/api/collections', $collectionData);
 
 	// Create object (authenticated)
 	$objectData = ['id' => 'test-exists', 'text' => 'Test'];

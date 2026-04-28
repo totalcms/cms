@@ -11,10 +11,10 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 
 final class IndexBuildListenerTest extends TestCase

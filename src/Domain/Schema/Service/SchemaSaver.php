@@ -32,9 +32,8 @@ readonly class SchemaSaver
 
 		// Make sure the schema exists
 		$this->storage->getSchema($schemaId);
-		$schema = $this->saveSchema($schemaData);
 
-		return $schema;
+		return $this->saveSchema($schemaData);
 	}
 
 	/**
@@ -225,5 +224,4 @@ readonly class SchemaSaver
 
 		return array_unique($inherited);
 	}
-
 }

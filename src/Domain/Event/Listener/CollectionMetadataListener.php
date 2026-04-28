@@ -24,7 +24,7 @@ readonly class CollectionMetadataListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectCreated(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		$this->collectionSaver->incrementCount($collection);
 		$this->collectionSaver->incrementTotalObjects($collection);
@@ -33,7 +33,7 @@ readonly class CollectionMetadataListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectUpdated(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		$this->collectionSaver->updateLastUpdated($collection);
 	}
@@ -41,7 +41,7 @@ readonly class CollectionMetadataListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectDeleted(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		$this->collectionSaver->decrementTotalObjects($collection);
 	}

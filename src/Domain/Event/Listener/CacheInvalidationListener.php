@@ -26,7 +26,7 @@ readonly class CacheInvalidationListener
 	/** @param array<string,mixed> $payload */
 	public function onCollectionChanged(array $payload): void
 	{
-		$collection = (string) $payload['collection'];
+		$collection = (string)$payload['collection'];
 
 		$this->cacheManager->clearCollectionIndex($collection);
 	}
@@ -34,7 +34,7 @@ readonly class CacheInvalidationListener
 	/** @param array<string,mixed> $payload */
 	public function onSchemaSaved(array $payload): void
 	{
-		$schemaId = (string) $payload['schema'];
+		$schemaId = (string)$payload['schema'];
 
 		$this->cacheManager->clearComputedData("schema_flattened:{$schemaId}");
 	}

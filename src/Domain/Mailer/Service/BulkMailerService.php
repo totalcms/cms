@@ -37,7 +37,6 @@ readonly class BulkMailerService
 	 * Queue a bulk send for all matching objects in a collection.
 	 *
 	 * @param list<string>|null $objectIds Specific object IDs to send to (overrides filters)
-	 *
 	 */
 	public function queueBulkSend(string $mailerId, string $collection, string $include = '', string $exclude = '', ?string $scheduledAt = null, ?string $overrideTo = null, ?array $objectIds = null): OperationResult
 	{

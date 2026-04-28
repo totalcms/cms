@@ -237,7 +237,7 @@ final class EmailServiceTest extends TestCase
 
 		$this->assertFalse($result->success);
 		$this->assertNotNull($result->error);
-		$this->assertStringContainsString('Mailer not found', (string)$result->error);
+		$this->assertStringContainsString('Mailer not found', $result->error);
 	}
 
 	public function testLogsSuccessfulEmail(): void

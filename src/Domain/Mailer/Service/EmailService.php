@@ -37,7 +37,6 @@ readonly class EmailService
 	 * @param array<string,mixed> $data Data for Twig processing
 	 * @param string|null $overrideTo Override recipient email address (for bulk testing)
 	 * @param array<string,mixed> $user Current user data for Twig processing ({{ user.field }})
-	 *
 	 */
 	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = []): OperationResult
 	{

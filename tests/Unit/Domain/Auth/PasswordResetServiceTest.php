@@ -13,7 +13,6 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\OperationResult;
 
 final class PasswordResetServiceTest extends TestCase
 {
@@ -117,7 +116,7 @@ final class PasswordResetServiceTest extends TestCase
 
 		$this->assertTrue($result->success);
 		$this->assertArrayHasKey('token', $result->data);
-		$this->assertSame(64, strlen($result->data['token']));
+		$this->assertSame(64, strlen((string)$result->data['token']));
 		$this->assertStringContainsString('created successfully', $result->message);
 	}
 

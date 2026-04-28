@@ -29,7 +29,6 @@ readonly class SyncService
 	 *
 	 * @param list<string>|null $schemaFilter
 	 * @param list<string>|null $templateFilter
-	 *
 	 */
 	public function push(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): OperationResult
 	{
@@ -104,7 +103,6 @@ readonly class SyncService
 	 *
 	 * @param list<string>|null $schemaFilter
 	 * @param list<string>|null $templateFilter
-	 *
 	 */
 	public function pull(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): OperationResult
 	{

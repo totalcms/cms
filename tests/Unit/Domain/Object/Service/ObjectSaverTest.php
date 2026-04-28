@@ -26,7 +26,7 @@ final class ObjectSaverTest extends TestCase
 
 	/** @var array<string,mixed>|null */
 	private ?array $dispatchedPayload = null;
-	private ?string $dispatchedEvent = null;
+	private ?string $dispatchedEvent  = null;
 
 	protected function setUp(): void
 	{

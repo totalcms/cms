@@ -48,5 +48,4 @@ readonly class TemplateLister
 	{
 		return array_merge($this->listReservedTemplates(), $this->listBuilderTemplates($folder, $recursive));
 	}
-
 }

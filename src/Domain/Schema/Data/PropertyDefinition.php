@@ -41,7 +41,7 @@ readonly class PropertyDefinition
 	public static function fromArray(array $data): self
 	{
 		// Extract deckref from settings if not at top level
-		$deckref = $data['deckref'] ?? $data['settings']['deckref'] ?? null;
+		$deckref       = $data['deckref'] ?? $data['settings']['deckref'] ?? null;
 		$deckItemLabel = $data['deckItemLabel'] ?? $data['settings']['deckItemLabel'] ?? null;
 
 		$known = [
@@ -52,15 +52,15 @@ readonly class PropertyDefinition
 		$extra = array_diff_key($data, array_flip($known));
 
 		return new self(
-			type: isset($data['type']) ? (string) $data['type'] : null,
-			ref: isset($data['$ref']) ? (string) $data['$ref'] : null,
-			field: (string) ($data['field'] ?? 'text'),
-			label: (string) ($data['label'] ?? ''),
-			help: (string) ($data['help'] ?? ''),
-			placeholder: (string) ($data['placeholder'] ?? ''),
+			type: isset($data['type']) ? (string)$data['type'] : null,
+			ref: isset($data['$ref']) ? (string)$data['$ref'] : null,
+			field: (string)($data['field'] ?? 'text'),
+			label: (string)($data['label'] ?? ''),
+			help: (string)($data['help'] ?? ''),
+			placeholder: (string)($data['placeholder'] ?? ''),
 			default: $data['default'] ?? null,
-			deckref: $deckref !== null ? (string) $deckref : null,
-			deckItemLabel: $deckItemLabel !== null ? (string) $deckItemLabel : null,
+			deckref: $deckref !== null ? (string)$deckref : null,
+			deckItemLabel: $deckItemLabel !== null ? (string)$deckItemLabel : null,
 			options: is_array($data['options'] ?? null) ? $data['options'] : [],
 			settings: is_array($data['settings'] ?? null) ? $data['settings'] : [],
 			extra: $extra,

@@ -19,7 +19,6 @@ use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
-use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Action\Admin\ExtensionToggleAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
@@ -43,7 +42,6 @@ use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
-use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
@@ -101,7 +99,7 @@ return function (App $app): void {
 		$group->post('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
 
 		// Extension admin pages (routed by extension system)
-		$group->any('/ext/{vendor}/{name}/{path:.+}', \TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route');
+		$group->any('/ext/{vendor}/{name}/{path:.+}', TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route');
 
 		// Catch-all 404 route - MUST BE LAST (excludes /admin/ext/ which is handled by extensions)
 		$group->any('/{path:(?!ext/).*}', Admin404Action::class)->setName('admin-404');

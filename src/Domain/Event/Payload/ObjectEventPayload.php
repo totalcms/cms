@@ -26,7 +26,7 @@ readonly class ObjectEventPayload extends EventPayload
 			'id'         => $this->id,
 		];
 
-		if ($this->object !== null) {
+		if ($this->object instanceof ObjectData) {
 			$data['object'] = $this->object;
 		}
 
