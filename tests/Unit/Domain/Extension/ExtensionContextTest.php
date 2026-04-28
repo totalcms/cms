@@ -6,11 +6,15 @@ use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
-function createTestContext(): ExtensionContext
+function createTestContext(string $extensionPath = '/path/to/extension'): ExtensionContext
 {
 	$manifest = ExtensionManifest::fromArray([
 		'id'      => 'test-vendor/test-ext',
@@ -23,7 +27,7 @@ function createTestContext(): ExtensionContext
 	$storage->method('fileExists')->willReturn(false);
 	$settings = new ExtensionSettingsManager($storage);
 
-	return new ExtensionContext($manifest, '/path/to/extension', $container, $settings, new Psr\Log\NullLogger());
+	return new ExtensionContext($manifest, $extensionPath, $container, $settings, new Psr\Log\NullLogger());
 }
 
 describe('ExtensionContext', function (): void {
@@ -245,6 +249,109 @@ describe('ExtensionContext', function (): void {
 		$ctx = createTestContext();
 
 		expect($ctx->getCapabilities())->toBe([]);
+	});
+
+	test('detects schemas capability when schemas directory exists', function (): void {
+		$tmpPath = sys_get_temp_dir() . '/tcms-ext-test-' . uniqid();
+		mkdir($tmpPath . '/schemas', 0o777, true);
+
+		try {
+			$ctx = createTestContext($tmpPath);
+
+			expect($ctx->getCapabilities())->toHaveKey('schemas');
+		} finally {
+			rmdir($tmpPath . '/schemas');
+			rmdir($tmpPath);
+		}
+	});
+
+	test('does not detect schemas capability when schemas directory missing', function (): void {
+		$ctx = createTestContext();
+
+		expect($ctx->getCapabilities())->not->toHaveKey('schemas');
+	});
+
+	test('installSchema is blocked below Pro edition', function (): void {
+		$schemaSaver = test()->createMock(SchemaSaver::class);
+		$schemaSaver->expects(test()->never())->method('saveSchema');
+
+		$schemaRepo = test()->createMock(SchemaRepository::class);
+		$schemaRepo->method('schemaExists')->willReturn(false);
+
+		$editionService = test()->createMock(EditionFeatureService::class);
+		$editionService->method('getEdition')->willReturn(Edition::LITE);
+
+		$container = test()->createMock(ContainerInterface::class);
+		$container->method('has')->willReturnMap([
+			[SchemaSaver::class, true],
+			[EditionFeatureService::class, true],
+		]);
+		$container->method('get')->willReturnMap([
+			[SchemaSaver::class, $schemaSaver],
+			[SchemaRepository::class, $schemaRepo],
+			[EditionFeatureService::class, $editionService],
+		]);
+
+		$manifest = ExtensionManifest::fromArray(['id' => 'v/x', 'name' => 'X', 'version' => '1.0.0']);
+		$storage  = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new Psr\Log\NullLogger());
+
+		$ctx->installSchema(['id' => 'demo', 'properties' => []]);
+	});
+
+	test('installSchema proceeds at Pro edition', function (): void {
+		$schemaSaver = test()->createMock(SchemaSaver::class);
+		$schemaSaver->expects(test()->once())->method('saveSchema');
+
+		$schemaRepo = test()->createMock(SchemaRepository::class);
+		$schemaRepo->method('schemaExists')->willReturn(false);
+
+		$editionService = test()->createMock(EditionFeatureService::class);
+		$editionService->method('getEdition')->willReturn(Edition::PRO);
+
+		$container = test()->createMock(ContainerInterface::class);
+		$container->method('has')->willReturnMap([
+			[SchemaSaver::class, true],
+			[EditionFeatureService::class, true],
+		]);
+		$container->method('get')->willReturnMap([
+			[SchemaSaver::class, $schemaSaver],
+			[SchemaRepository::class, $schemaRepo],
+			[EditionFeatureService::class, $editionService],
+		]);
+
+		$manifest = ExtensionManifest::fromArray(['id' => 'v/x', 'name' => 'X', 'version' => '1.0.0']);
+		$storage  = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new Psr\Log\NullLogger());
+
+		$ctx->installSchema(['id' => 'demo', 'properties' => []]);
+	});
+
+	test('installSchema proceeds when edition service is unavailable', function (): void {
+		$schemaSaver = test()->createMock(SchemaSaver::class);
+		$schemaSaver->expects(test()->once())->method('saveSchema');
+
+		$schemaRepo = test()->createMock(SchemaRepository::class);
+		$schemaRepo->method('schemaExists')->willReturn(false);
+
+		$container = test()->createMock(ContainerInterface::class);
+		$container->method('has')->willReturnMap([
+			[SchemaSaver::class, true],
+			[EditionFeatureService::class, false],
+		]);
+		$container->method('get')->willReturnMap([
+			[SchemaSaver::class, $schemaSaver],
+			[SchemaRepository::class, $schemaRepo],
+		]);
+
+		$manifest = ExtensionManifest::fromArray(['id' => 'v/x', 'name' => 'X', 'version' => '1.0.0']);
+		$storage  = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new Psr\Log\NullLogger());
+
+		$ctx->installSchema(['id' => 'demo', 'properties' => []]);
 	});
 
 	test('capability labels covers all detectable capabilities', function (): void {

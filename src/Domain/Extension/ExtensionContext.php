@@ -10,6 +10,10 @@ use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -131,7 +135,7 @@ final class ExtensionContext
 	 */
 	public function installSchema(array $schemaData): void
 	{
-		if (!$this->container->has(\TotalCMS\Domain\Schema\Service\SchemaSaver::class)) {
+		if (!$this->container->has(SchemaSaver::class)) {
 			return;
 		}
 
@@ -140,8 +144,15 @@ final class ExtensionContext
 			return;
 		}
 
-		/** @var \TotalCMS\Domain\Schema\Repository\SchemaRepository $schemaRepo */
-		$schemaRepo = $this->container->get(\TotalCMS\Domain\Schema\Repository\SchemaRepository::class);
+		// Extension schemas require Pro edition or higher
+		if ($this->container->has(EditionFeatureService::class)) {
+			$editionService = $this->container->get(EditionFeatureService::class);
+			if ($editionService->getEdition()->level() < Edition::PRO->level()) {
+				return;
+			}
+		}
+
+		$schemaRepo = $this->container->get(SchemaRepository::class);
 
 		// Don't overwrite existing schemas
 		if ($schemaRepo->schemaExists($id)) {
@@ -149,8 +160,7 @@ final class ExtensionContext
 		}
 
 		try {
-			/** @var \TotalCMS\Domain\Schema\Service\SchemaSaver $schemaSaver */
-			$schemaSaver = $this->container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+			$schemaSaver = $this->container->get(SchemaSaver::class);
 			$schemaSaver->saveSchema($schemaData);
 		} catch (\Throwable $e) {
 			$this->logger->error("installSchema failed for '{$id}': " . $e->getMessage());
@@ -427,6 +437,9 @@ final class ExtensionContext
 		}
 		if ($this->containerDefinitions !== []) {
 			$caps['container'] = true;
+		}
+		if (is_dir($this->extensionPath . '/schemas')) {
+			$caps['schemas'] = true;
 		}
 
 		return $caps;

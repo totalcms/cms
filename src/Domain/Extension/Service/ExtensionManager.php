@@ -16,6 +16,9 @@ use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -186,7 +189,7 @@ final class ExtensionManager
 		}
 
 		// Register extension schema directories (Pro+ only)
-		if ($this->container->has(\TotalCMS\Domain\Schema\Repository\SchemaRepository::class)) {
+		if ($this->container->has(SchemaRepository::class)) {
 			$this->registerExtensionSchemas();
 		}
 
@@ -756,23 +759,16 @@ final class ExtensionManager
 	private function registerExtensionSchemas(): void
 	{
 		// Extension schemas require Pro edition or higher
-		try {
-			if ($this->container->has(\TotalCMS\Domain\License\Service\EditionFeatureService::class)) {
-				/** @var \TotalCMS\Domain\License\Service\EditionFeatureService $editionService */
-				$editionService = $this->container->get(\TotalCMS\Domain\License\Service\EditionFeatureService::class);
-				$edition        = $editionService->getEdition();
-
-				if ($edition->level() < \TotalCMS\Domain\License\Data\Edition::PRO->level()) {
-					return; // Below Pro — skip extension schemas
-				}
+		if ($this->container->has(EditionFeatureService::class)) {
+			/** @var EditionFeatureService $editionService */
+			$editionService = $this->container->get(EditionFeatureService::class);
+			if ($editionService->getEdition()->level() < Edition::PRO->level()) {
+				return;
 			}
-		} catch (\Throwable $e) {
-			$this->logger->warning('Edition check failed for extension schemas: ' . $e->getMessage());
-			// Fail open — allow schemas if we can't determine the edition
 		}
 
-		/** @var \TotalCMS\Domain\Schema\Repository\SchemaRepository $schemaRepo */
-		$schemaRepo = $this->container->get(\TotalCMS\Domain\Schema\Repository\SchemaRepository::class);
+		/** @var SchemaRepository $schemaRepo */
+		$schemaRepo = $this->container->get(SchemaRepository::class);
 
 		foreach ($this->contexts as $id => $context) {
 			if (!$this->isCapabilityPermitted($id, 'schemas')) {
