@@ -44,8 +44,12 @@ Automatically transform text on save. Useful for enforcing consistent casing (e.
 | `uppercase` | `john doe` | `JOHN DOE` |
 | `titlecase` | `john doe` | `John Doe` |
 | `sentencecase` | `john doe` | `John doe` |
+| `smart-titlecase` | `JOHN DOE` | `John Doe` |
+| `smart-sentencecase` | `JOHN DOE` | `John doe` |
 
 The transform is applied server-side on save, so it works regardless of how data is entered (admin, API, CLI, or import). It only applies to plain text — HTML content (styled text) is not affected.
+
+The `smart-` variants only transform text that is entirely uppercase or entirely lowercase. If the text is already mixed case, it is left unchanged. This is useful for name fields where you want to fix `MARIA DE SILVA` → `Maria De Silva` but leave `Maria de Silva` alone if someone typed it correctly.
 
 ### Schema Example
 
