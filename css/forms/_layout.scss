@@ -63,6 +63,12 @@
 	> .form-field {
 		grid-area : var(--grid-area);
 	}
+
+	// Push buttons to the end of the grid when using explicit grid-template-areas
+	> .form-inline-fields {
+		grid-column : 1 / -1;
+		grid-row    : -1;
+	}
 }
 
 .totalform:not(.edit-mode) {
