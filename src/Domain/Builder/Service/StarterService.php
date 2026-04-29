@@ -160,6 +160,7 @@ readonly class StarterService
 					'template' => $page['template'],
 					'layout'   => $page['layout'],
 					'draft'    => false,
+					'nav'      => $page['nav'],
 					'sort'     => $page['sort'],
 				]);
 				$created++;
