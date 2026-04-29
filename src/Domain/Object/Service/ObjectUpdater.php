@@ -52,6 +52,23 @@ readonly class ObjectUpdater
 		return $object;
 	}
 
+	/**
+	 * Save an object property without triggering index rebuild or dataview updates.
+	 * Used for lightweight metadata changes like download count increments.
+	 *
+	 * @param array<string,mixed> $newData
+	 */
+	public function updateObjectPropertyQuietly(string $collection, string $id, string $property, array $newData): void
+	{
+		$object = $this->objectFetcher->fetchObject($collection, $id);
+
+		$objectData            = $object->toArray();
+		$objectData[$property] = $newData;
+
+		$object = $this->factory->generateObject($collection, $objectData);
+		$this->storage->saveObject($collection, $object);
+	}
+
 	/** @param array<string,mixed> $newData */
 	public function updateObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
 	{

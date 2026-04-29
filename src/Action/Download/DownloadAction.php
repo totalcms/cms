@@ -120,8 +120,17 @@ abstract class DownloadAction
 
 		$this->session->delete('downloadAttempts');
 
+		// Close session before streaming to release file locks
+		$this->session->save();
+
+		// Clean any output buffers to prevent memory bloat on shared hosting
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
+
 		$response = $response->withHeader('Content-Type', $file->mime)
-			->withHeader('Content-Disposition', "attachment; filename={$file->download}");
+			->withHeader('Content-Disposition', "attachment; filename=\"{$file->download}\"")
+			->withHeader('X-Accel-Buffering', 'no');
 
 		return $response->withBody(Stream::create($this->streamFile()));
 	}

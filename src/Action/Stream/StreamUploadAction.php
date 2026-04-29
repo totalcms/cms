@@ -48,11 +48,20 @@ readonly class StreamUploadAction
 		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name);
 		$fileSize = $this->uploadFetcher->fileSize($collection, $id, $property, $name);
 
+		// Close session before streaming to release file locks
+		$this->session->save();
+
+		// Clean any output buffers to prevent memory bloat on shared hosting
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
+
 		$response = $response
 			->withHeader('Content-Type', $mimeType)
 			->withHeader('Content-Disposition', "inline; filename=\"{$name}\"")
 			->withHeader('Accept-Ranges', 'bytes')
-			->withHeader('Cache-Control', 'no-cache');
+			->withHeader('Cache-Control', 'no-cache')
+			->withHeader('X-Accel-Buffering', 'no');
 
 		// Handle range requests for video seeking
 		$rangeHeader = $request->getHeaderLine('Range');

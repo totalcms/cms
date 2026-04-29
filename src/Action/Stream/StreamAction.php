@@ -33,6 +33,8 @@ abstract class StreamAction
 
 	abstract protected function incrementCount(FileData $file): void;
 
+	abstract protected function actualFileSize(): int;
+
 	/** @return resource */
 	abstract protected function streamFile();
 
@@ -92,15 +94,26 @@ abstract class StreamAction
 
 	private function buildStreamResponse(ServerRequestInterface $request, ResponseInterface $response, FileData $file): ResponseInterface
 	{
-		$fileSize    = $file->size;
+		$fileSize    = $this->actualFileSize();
 		$rangeHeader = $request->getHeaderLine('Range');
+
+		// Close session before streaming to release file locks
+		// This prevents shared hosts from killing long-running locked processes
+		$this->session->save();
+
+		// Clean any output buffers to prevent memory bloat on shared hosting
+		// PHP output buffering can silently truncate large binary streams
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
 
 		// Basic headers for all responses
 		$response = $response
 			->withHeader('Content-Type', $file->mime)
-			->withHeader('Content-Disposition', "inline; filename={$file->download}")
+			->withHeader('Content-Disposition', "inline; filename=\"{$file->download}\"")
 			->withHeader('Accept-Ranges', 'bytes')
-			->withHeader('Cache-Control', 'no-cache');
+			->withHeader('Cache-Control', 'no-cache')
+			->withHeader('X-Accel-Buffering', 'no');
 
 		// Handle range requests for Safari video streaming
 		if ($rangeHeader !== '' && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {

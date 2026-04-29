@@ -37,6 +37,11 @@ readonly class DepotFileFetcher
 		return $this->storage->fileExists($collection, $id, $property, $name, $subpath);
 	}
 
+	public function fileSize(string $collection, string $id, string $property, string $name, ?string $subpath = null): int
+	{
+		return $this->storage->fileSize($collection, $id, $property, $name, $subpath);
+	}
+
 	/** @return resource */
 	public function streamFile(string $collection, string $id, string $property, string $name, ?string $subpath = null)
 	{

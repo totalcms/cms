@@ -31,6 +31,13 @@ readonly class FileFetcher
 		return $this->storage->fileExists($collection, $id, $property, $file->name);
 	}
 
+	public function fileSize(string $collection, string $id, string $property): int
+	{
+		$file = $this->fetchFile($collection, $id, $property);
+
+		return $this->storage->fileSize($collection, $id, $property, $file->name);
+	}
+
 	/** @return resource */
 	public function streamFile(string $collection, string $id, string $property)
 	{
