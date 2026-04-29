@@ -59,7 +59,7 @@ class FileAccessManager
 
 	public function sessionHasUser(): bool
 	{
-		return $this->session->has('user') && $this->session->has('collection');
+		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
 	}
 
 	public function isProtectedByGroups(): bool

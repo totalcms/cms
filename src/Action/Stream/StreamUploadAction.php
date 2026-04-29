@@ -106,7 +106,7 @@ readonly class StreamUploadAction
 		}
 
 		// Protection is enabled — require authenticated user in collection groups
-		if (!$this->session->has('user') || !$this->session->has('collection')) {
+		if (!$this->session->has(SessionKeys::AUTH_USER) || !$this->session->has(SessionKeys::AUTH_COLLECTION)) {
 			throw new HttpForbiddenException($request, 'Authentication required');
 		}
 

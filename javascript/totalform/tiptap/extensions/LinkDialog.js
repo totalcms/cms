@@ -32,7 +32,7 @@ export function createLinkDialog(editor) {
 			</div>
 		</div>
 		<div class="ste-dialog-footer">
-			${isEditing ? '<button type="button" class="ste-dialog-btn ste-dialog-btn--remove">Remove Link</button>' : ''}
+			${isEditing ? '<button type="button" class="ste-dialog-btn ste-dialog-btn--remove ste-dialog-btn--icon" style="--btn-icon: var(--icon-ste-trash)" aria-label="Remove Link" title="Remove Link"></button>' : ''}
 			<div class="ste-dialog-actions">
 				<button type="button" class="ste-dialog-btn ste-dialog-btn--cancel">Cancel</button>
 				<button type="button" class="ste-dialog-btn ste-dialog-btn--insert">${isEditing ? 'Update' : 'Insert'}</button>

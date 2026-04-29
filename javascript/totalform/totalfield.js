@@ -82,8 +82,13 @@ export default class TotalField {
 
 		this.autogen = new Autogen(this);
 
-		// Generate initial value from current form data (including defaults)
-		this.input.value = this.autogen.generate();
+		// Defer initial generation until the form is fully initialized
+		// so that generateData() can read values from all fields
+		this.form.form.addEventListener('totalform:ready', () => {
+			if (this.getValue() === "") {
+				this.input.value = this.autogen.generate();
+			}
+		}, { once: true });
 
 		// Listen for changes to referenced fields
 		this.autogen.attachListeners(() => {
