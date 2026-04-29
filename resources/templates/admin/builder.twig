@@ -4,10 +4,28 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter templates..." autofocus />
+		<input type="search" name="filter" class="filter" placeholder="Filter..." autofocus />
 	</header>
 
 	<nav class="links" id="builder-links">
+		<details id="category-builder-pages" open>
+			<summary>Site Pages</summary>
+			<ul>
+			{% for page in builder.pages %}
+				<li class="builder-page-item">
+					<a {% if url.section == 'page' and url.params.path == page.id %}class="active"{% endif %}
+						href="builder/page/{{ page.id }}"
+						title="{{ page.route ?: '(no route)' }}">{{ page.title }}</a>
+				</li>
+			{% endfor %}
+			{% if builder.pages is empty %}
+				<li class="empty">no pages yet</li>
+			{% endif %}
+			</ul>
+		</details>
+
+		<hr class="sidebar-divider" />
+
 		{% set fileTree = cms.admin.builderFileTree() %}
 		{% for category, templates in fileTree %}
 		<details id="category-{{ category }}" {% if templates is not empty %}open{% endif %}>
@@ -29,6 +47,7 @@
 	</nav>
 
 	<footer>
+		<a class="dash-button full transparent" href="builder/page/add" title="Create a new page">+ New Page</a>
 		<a class="dash-button full transparent" href="builder/new" title="Create a new template">+ New Template</a>
 	</footer>
 </aside>
@@ -36,7 +55,15 @@
 
 <main class="dash-main-content">
 
-	{% if url.section == 'new' %}
+	{% if url.section == 'page' and url.params.path == 'add' %}
+
+		{% include "admin/builder/page-add.twig" %}
+
+	{% elseif url.section == 'page' and url.params.path is not empty %}
+
+		{% include "admin/builder/page.twig" %}
+
+	{% elseif url.section == 'new' %}
 
 		{% include "admin/builder/new.twig" %}
 

@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\RawRenderer;
@@ -20,6 +21,7 @@ readonly class AdminBuilderAction
 		private TwigEngine $twigEngine,
 		private BuilderConfigService $builderConfig,
 		private TemplateFetcher $templateFetcher,
+		private IndexReader $indexReader,
 	) {
 	}
 
@@ -45,6 +47,8 @@ readonly class AdminBuilderAction
 		$this->builderConfig->ensureDefaultLayout();
 		$this->builderConfig->ensurePagesCollection();
 
+		$pagesCollectionId = $this->builderConfig->getPagesCollectionId();
+
 		$templateData = [
 			'url' => [
 				'path'    => $request->getUri()->getPath(),
@@ -55,12 +59,16 @@ readonly class AdminBuilderAction
 				'file'    => $file,
 			],
 			'builder' => [
-				'docroot' => $this->builderConfig->getDocroot(),
+				'docroot'         => $this->builderConfig->getDocroot(),
+				'pagesCollection' => $pagesCollectionId,
+				'pages'           => $this->loadPages($pagesCollectionId),
 			],
 		];
 
 		// Load template content for editor
-		if ($file !== '' && $section !== 'new') {
+		if ($section === 'page') {
+			// Page section — handled by page templates
+		} elseif ($file !== '' && $section !== 'new') {
 			try {
 				$template                 = $this->templateFetcher->fetchTemplate($path, $section);
 				$templateData['template'] = [
@@ -74,6 +82,18 @@ readonly class AdminBuilderAction
 		}
 
 		return $this->twigRenderer->template($response, 'admin/builder.twig', $templateData);
+	}
+
+	/** @return array<array<string,mixed>> */
+	private function loadPages(string $collectionId): array
+	{
+		try {
+			$index = $this->indexReader->fetchIndex($collectionId);
+
+			return $index->objects->sortBy('sort')->values()->toArray();
+		} catch (\Exception) {
+			return [];
+		}
 	}
 
 	private function handlePreview(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface

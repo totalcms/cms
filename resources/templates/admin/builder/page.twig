@@ -1,0 +1,26 @@
+<header>
+	<h1><a href="builder">builder</a> / <span>{{ url.params.path }}</span></h1>
+</header>
+
+{% set canSave = cms.auth.canAccessCollection(builder.pagesCollection, 'update') %}
+{% set canDelete = cms.auth.canAccessCollection(builder.pagesCollection, 'delete') %}
+
+{% set form = cms.form.builder(builder.pagesCollection, {
+	id          : url.params.path,
+	save        : canSave ? "Save" : false,
+	delete      : canDelete ? "Delete" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "builder"
+		}
+	],
+	editActions : [
+		{
+			"action" : "refresh"
+		}
+	],
+}) %}
+{{ form.autoBuild() }}

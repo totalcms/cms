@@ -205,6 +205,9 @@ body {
 			&[class*="builder-"] {
 				--collection-icon : var(--icon-file-code);
 			}
+			&.builder-page-item {
+				--collection-icon : var(--icon-file-text);
+			}
 			&[class*="mailer-"] {
 				--collection-icon : var(--icon-plane);
 			}
@@ -284,6 +287,12 @@ body {
 		grid-template-rows: min-content 1fr min-content;
 	}
 
+	.sidebar-divider {
+		border     : none;
+		border-top : 1px solid oklch(var(--totalform-lightgray));
+		margin     : 2rem 1rem;
+	}
+
 	footer {
 		display : none;
 
@@ -338,6 +347,7 @@ body {
 	form {
 		max-width : 800px;
 	}
+	body.full-width-forms & form[data-form="template"],
 	body.full-width-forms & form[data-collection] {
 		max-width : none;
 	}

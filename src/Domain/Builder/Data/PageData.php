@@ -13,6 +13,7 @@ readonly class PageData
 	public string $layout;
 	public string $description;
 	public bool $draft;
+	public bool $nav;
 	public int $sort;
 	public string $parent;
 
@@ -26,6 +27,7 @@ readonly class PageData
 		$this->layout      = (string)($data['layout'] ?? 'default');
 		$this->description = (string)($data['description'] ?? '');
 		$this->draft       = (bool)($data['draft'] ?? false);
+		$this->nav         = (bool)($data['nav'] ?? true);
 		$this->sort        = (int)($data['sort'] ?? 0);
 		$this->parent      = (string)($data['parent'] ?? '');
 	}
@@ -46,6 +48,7 @@ readonly class PageData
 			'layout'      => $this->layout,
 			'description' => $this->description,
 			'draft'       => $this->draft,
+			'nav'         => $this->nav,
 			'sort'        => $this->sort,
 			'parent'      => $this->parent,
 		];

@@ -4,7 +4,7 @@
 	"id": "builder-page",
 	"type": "object",
 	"description": "A schema for a Site Builder page",
-	"formgrid": "draft .\ntitle title\nid id\nroute template\nlayout parent\nsort sort\ndescription description\nupdated created",
+	"formgrid": "draft nav\ntitle title\nid id\nroute template\nlayout parent\nsort sort\ndescription description\nupdated created",
 	"properties": {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -67,6 +67,14 @@
 			"default" : false,
 			"factory" : "boolean"
 		},
+		"nav": {
+			"type"    : "boolean",
+			"label"   : "Show in Nav",
+			"help"    : "Include this page in navigation menus",
+			"field"   : "toggle",
+			"default" : true,
+			"factory" : "boolean"
+		},
 		"sort": {
 			"type"    : "number",
 			"label"   : "Sort Order",
@@ -127,6 +135,7 @@
 		"template",
 		"layout",
 		"draft",
+		"nav",
 		"sort",
 		"parent",
 		"updated",
