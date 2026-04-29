@@ -1273,7 +1273,9 @@ return [
 	// Extensions
 	// -------------------------------------------------------------------------
 
-	ManifestValidator::class => fn (): ManifestValidator => new ManifestValidator(),
+	ManifestValidator::class => fn (ContainerInterface $container): ManifestValidator => new ManifestValidator(
+		$container->get(EditionFeatureService::class),
+	),
 
 	ExtensionDependencySorter::class => fn (): ExtensionDependencySorter => new ExtensionDependencySorter(),
 

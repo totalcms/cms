@@ -52,7 +52,7 @@ final class ExtensionManager
 		private readonly ExtensionSettingsManager $settingsManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly ManifestValidator $manifestValidator = new ManifestValidator(),
+		private readonly ManifestValidator $manifestValidator,
 	) {
 	}
 
@@ -99,12 +99,10 @@ final class ExtensionManager
 				continue;
 			}
 
-			if (!$this->meetsEditionRequirement($manifest)) {
-				$this->logger->info("Extension '{$id}' requires edition '{$manifest->minEdition}', skipping");
-				$this->stateRepository->recordError(
-					$id,
-					"Requires {$manifest->minEdition} edition or higher",
-				);
+			$reasons = $this->manifestValidator->getIncompatibilityReasons($manifest);
+			if ($reasons !== []) {
+				$this->logger->info("Extension '{$id}' is incompatible, skipping: " . implode('; ', $reasons));
+				$this->stateRepository->recordError($id, implode('; ', $reasons));
 
 				continue;
 			}
@@ -792,29 +790,6 @@ final class ExtensionManager
 				$schemaRepo->registerExtensionSchemaDir($schemasDir);
 				$this->logger->debug("Registered extension schemas from '{$id}'");
 			}
-		}
-	}
-
-	private function meetsEditionRequirement(ExtensionManifest $manifest): bool
-	{
-		$requiredEdition = $manifest->minEdition;
-		if ($requiredEdition === '' || $requiredEdition === 'lite') {
-			return true; // No restriction or lowest tier
-		}
-
-		try {
-			if (!$this->container->has(EditionFeatureService::class)) {
-				return true; // Edition service not available, allow
-			}
-
-			/** @var EditionFeatureService $editionService */
-			$editionService = $this->container->get(EditionFeatureService::class);
-			$currentEdition = $editionService->getEdition();
-			$required       = Edition::fromString($requiredEdition);
-
-			return $currentEdition->level() >= $required->level();
-		} catch (\Throwable) {
-			return true; // Fail open — don't block extensions if edition check fails
 		}
 	}
 

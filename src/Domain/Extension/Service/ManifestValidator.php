@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Extension\Service;
 
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Support\Version;
 
 /**
@@ -12,6 +14,11 @@ use TotalCMS\Support\Version;
  */
 final class ManifestValidator
 {
+	public function __construct(
+		private readonly EditionFeatureService $editionFeatureService,
+	) {
+	}
+
 	/**
 	 * Validate a manifest. Returns null if valid, or an error message.
 	 */
@@ -70,6 +77,19 @@ final class ManifestValidator
 		$phpRequired = $manifest->requiresPhpVersion();
 		if ($phpRequired !== '' && !$this->satisfies(PHP_VERSION, $phpRequired)) {
 			$reasons[] = "Requires PHP {$phpRequired} (current: " . PHP_VERSION . ')';
+		}
+
+		$requiredEdition = $manifest->minEdition;
+		if ($requiredEdition !== '' && $requiredEdition !== 'lite') {
+			try {
+				$currentEdition = $this->editionFeatureService->getEdition();
+				$required       = Edition::fromString($requiredEdition);
+				if ($currentEdition->level() < $required->level()) {
+					$reasons[] = "Requires {$requiredEdition} edition or higher (current: {$currentEdition->value})";
+				}
+			} catch (\Throwable) {
+				// Edition service unavailable — fail open
+			}
 		}
 
 		return $reasons;
