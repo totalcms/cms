@@ -1,23 +1,34 @@
-{% extends 'layouts/default.twig' %}
+{% extends 'layouts/' ~ page.layout ~ '.twig' %}
 
-{# This is a template for individual blog posts. #}
-{# In production, you would use URL parameters or routing to load the specific post. #}
+{% set post = cms.data.raw('blog', params.id) %}
 
-{% block title %}Blog Post — {{ cms.config('domain') }}{% endblock %}
+{% block title %}{{ post.title ?? 'Post Not Found' }} — {{ cms.config('domain') }}{% endblock %}
+{% block description %}{{ post.summary | default('') | striptags | slice(0, 160) }}{% endblock %}
 
 {% block content %}
-<article class="section">
-	<header style="margin-bottom: 2rem;">
-		<h1>Blog Post Title</h1>
-		<p class="post-meta">Replace this template with dynamic post loading using cms.data functions.</p>
-	</header>
+<section class="section">
+	{% if post %}
+		<article>
+			<header style="margin-bottom: 2rem;">
+				<h1>{{ post.title }}</h1>
+				<p class="post-meta">
+					{{ post.date | date('F j, Y') }}
+					{% if post.author %} &middot; {{ post.author }}{% endif %}
+				</p>
+			</header>
 
-	<div class="post-content">
-		<p>This is a placeholder for individual blog post content. Use <code>cms.data.raw()</code> to load specific post data based on the URL or query parameters.</p>
-	</div>
+			{% if post.content %}
+				<div>{{ post.content | raw }}</div>
+			{% endif %}
 
-	<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-		<a href="/blog">&larr; Back to all posts</a>
-	</footer>
-</article>
+			<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+				<a href="/blog">&larr; Back to all posts</a>
+			</footer>
+		</article>
+	{% else %}
+		<h1>Post Not Found</h1>
+		<p>The blog post <code>{{ params.id }}</code> could not be found.</p>
+		<p><a href="/blog">&larr; Back to all posts</a></p>
+	{% endif %}
+</section>
 {% endblock %}

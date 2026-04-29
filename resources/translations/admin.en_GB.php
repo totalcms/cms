@@ -701,7 +701,7 @@ return [
 
 	// ── Pretty URL Builder ──────────────────────────────────────────────────
 	'pretty_url.title'              => 'Pretty URL Builder',
-	'pretty_url.desc'               => 'Configure pretty URLs for your collections.',
+	'pretty_url.desc'               => 'Generate server rewrite rules for pretty URLs. Select a collection and enter the full path to the PHP page that displays a single object (e.g., <code>/blog/post.php</code>). Recommendation: Avoid using <code>index.php</code> — use a named file like <code>post.php</code> so the directory path stays clean for pretty URLs.',
 	'pretty_url.select_collection'  => 'Select a Collection',
 	'pretty_url.path_label'         => 'Path to Object Webpage',
 	'pretty_url.path_ph'            => '/path-to-object/page.php',

@@ -137,6 +137,83 @@ The middleware also matches collection URL patterns. If a collection has a `url`
 
 This works with both simple URLs (`/blog/{id}`) and template URLs (`/blog/{{ category }}/{{ id }}`).
 
+## Linking to Collection Objects
+
+A common pattern is a **list page** that shows collection objects in a grid, linking to a **detail page** that shows a single object. Here's how to set this up with builder pages.
+
+### Setup
+
+Create two builder pages and configure the collection's URL:
+
+| Page | Route | Template | Purpose |
+|------|-------|----------|---------|
+| Blog | `/blog` | `blog-index` | Lists all posts |
+| Blog Post | `/blog/{id}` | `blog-post` | Shows a single post |
+
+Set the blog collection's URL to `/blog` with **Pretty URLs** enabled. This makes `objectUrl()` generate URLs like `/blog/my-post` that match the builder page route.
+
+The Blog Post page should have **Show in Nav** set to `false` — it's a dynamic page, not a navigation item.
+
+### List Page Template
+
+Use `objectUrl()` to generate links to the detail page:
+
+```twig
+{% set posts = cms.collection.objects('blog') | sortCollectionByString('date:desc') %}
+{% for post in posts %}
+    <article>
+        <h2><a href="{{ cms.collection.objectUrl('blog', post) }}">{{ post.title }}</a></h2>
+        <p>{{ post.summary }}</p>
+    </article>
+{% endfor %}
+```
+
+`objectUrl()` reads the collection's URL settings and generates the correct path. Pass the full object (not just the ID) for best performance with templated URLs.
+
+### Detail Page Template
+
+Use `params` to load the object from the URL:
+
+```twig
+{% set post = cms.data.raw('blog', params.id) %}
+
+{% if post %}
+    <h1>{{ post.title }}</h1>
+    <div>{{ post.content | raw }}</div>
+{% else %}
+    <h1>Post Not Found</h1>
+    <p>The post <code>{{ params.id }}</code> could not be found.</p>
+{% endif %}
+```
+
+The `params` variable contains extracted URL parameters. For route `/blog/{id}`, visiting `/blog/my-post` sets `params.id` to `my-post`.
+
+### How It Works
+
+1. `objectUrl('blog', post)` generates `/blog/my-post` (from collection URL settings)
+2. User clicks the link
+3. PageRouterMiddleware intercepts the request
+4. Builder page `blog-post` with route `/blog/{id}` matches
+5. Template receives `params.id = 'my-post'` and loads the object
+
+### With Templated URLs
+
+For more complex URL patterns, use URL templates on the collection:
+
+```
+Collection URL: /blog/{{ category }}/{{ id }}
+Builder page route: /blog/{category}/{id}
+```
+
+The detail template receives both parameters:
+
+```twig
+{% set post = cms.data.raw('blog', params.id) %}
+{# params.category is also available #}
+```
+
+See [Object Linking](docs/twig/object-linking) for full documentation on URL templates, canonical URLs, and redirects.
+
 ## Pages Collection
 
 Page metadata is stored in the `builder-pages` collection using the `builder-page` schema.

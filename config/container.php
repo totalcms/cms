@@ -509,6 +509,8 @@ return [
 		$container->get(ImageCacheService::class),
 		$container->get(CacheSizingAdvisor::class),
 		$container->get(UpdateChecker::class),
+		$container->get(BuilderConfigService::class),
+		$container->get(CollectionFetcher::class),
 	),
 
 	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
