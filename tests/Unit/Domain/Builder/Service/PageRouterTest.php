@@ -100,6 +100,18 @@ final class PageRouterTest extends TestCase
 		$this->assertNull($match);
 	}
 
+	public function testRoutesNavFalsePages(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'privacy', 'title' => 'Privacy', 'route' => '/privacy', 'template' => 'privacy', 'layout' => 'default', 'nav' => false],
+		]);
+
+		$match = $this->router->match('/privacy');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('pages/privacy.twig', $match->template);
+	}
+
 	public function testSkipsPagesWithEmptyRoute(): void
 	{
 		$this->setupPagesCollection([

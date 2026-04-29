@@ -114,6 +114,7 @@ final class SessionKeys
 			self::LOGIN_ATTEMPTS,
 			self::LOGIN_ORIGIN,
 			self::DOWNLOAD_ATTEMPTS,
+			self::LICENSE_CHECK_DUE,
 		];
 	}
 
