@@ -467,6 +467,15 @@ final class ExtensionManager
 			];
 		}
 
+		// Sort: enabled first, then alphabetical by name
+		usort($extensions, function (array $a, array $b): int {
+			if ($a['enabled'] !== $b['enabled']) {
+				return $b['enabled'] <=> $a['enabled'];
+			}
+
+			return strcasecmp($a['name'], $b['name']);
+		});
+
 		return $extensions;
 	}
 
