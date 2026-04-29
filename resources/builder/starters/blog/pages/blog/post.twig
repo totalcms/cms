@@ -1,6 +1,6 @@
 {% extends 'layouts/' ~ page.layout ~ '.twig' %}
 
-{% set post = cms.data.raw('blog', params.id) %}
+{% set post = cms.collection.object('blog', params.id) %}
 
 {% block title %}{{ post.title ?? 'Post Not Found' }} — {{ cms.config('domain') }}{% endblock %}
 {% block description %}{{ post.summary | default('') | striptags | slice(0, 160) }}{% endblock %}

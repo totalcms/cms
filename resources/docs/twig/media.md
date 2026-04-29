@@ -9,6 +9,16 @@ The media adapter provides URL generation for images (with ImageWorks transforma
 
 ## Images
 
+Image functions take **three separate arguments**: the object, image transform options, and collection context. These are separate objects — do not merge them.
+
+```twig
+cms.media.imagePath(object, {transforms}, {context})
+                     │         │              │
+                     │         │              └── collection, property
+                     │         └── w, h, fit, fm, etc.
+                     └── object ID or full object
+```
+
 ### imagePath()
 
 Get the ImageWorks API URL for an image. Use this when you need just the URL (not a full `<img>` tag).
@@ -23,7 +33,7 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 {# WebP format #}
 <div style="background-image: url('{{ cms.media.imagePath('bg', {w: 1920, fm: 'webp'}) }}')"></div>
 
-{# Custom collection and property #}
+{# Custom collection and property — note: separate argument from transforms #}
 {{ cms.media.imagePath('widget', {w: 400}, {collection: 'products', property: 'photo'}) }}
 
 {# Pass object directly (avoids re-fetching) #}
@@ -33,8 +43,8 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `idOrObject` | string\|array\|null | required | Object ID or full object data |
-| `imageworks` | array | `[]` | ImageWorks transformation parameters |
-| `options` | array | `[]` | Options: `collection`, `property` |
+| `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
+| `options` | array | `[]` | Collection context: `collection`, `property` |
 
 For available ImageWorks parameters, see the [ImageWorks Reference](docs/twig/imageworks).
 

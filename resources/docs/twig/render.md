@@ -9,6 +9,16 @@ The render adapter generates complete HTML output for images, galleries, paginat
 
 ## Images
 
+Image functions take **three separate arguments**: the object, image transform options, and collection/render context. These are separate objects — do not merge them.
+
+```twig
+cms.render.image(object, {transforms}, {context})
+                  │         │              │
+                  │         │              └── collection, property, loading
+                  │         └── w, h, fit, fm, etc.
+                  └── object ID or full object
+```
+
 ### image()
 
 Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and lazy loading.
@@ -20,7 +30,7 @@ Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and laz
 {# With ImageWorks transformations #}
 {{ cms.render.image('hero', {w: 800, h: 600, fit: 'crop'}) }}
 
-{# Custom collection and property #}
+{# Custom collection and property — note: separate argument from transforms #}
 {{ cms.render.image('widget', {}, {collection: 'products', property: 'photo'}) }}
 
 {# Pass object directly (recommended) #}
@@ -33,8 +43,8 @@ Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and laz
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `idOrObject` | string\|array\|null | required | Object ID or full object data |
-| `imageworks` | array | `[]` | ImageWorks transformation parameters |
-| `options` | array | `[]` | Options: `collection`, `property`, `loading` |
+| `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
+| `options` | array | `[]` | Collection context: `collection`, `property`, `loading` |
 
 ### alt()
 
