@@ -50,7 +50,12 @@ class StreamFileFromDepotAction extends StreamAction
 		// increment the download count
 		$depotManager = new DepotPropertyManager($depot);
 		$depotManager->patchMeta($this->name, ['count' => $file->count + 1], $this->subpath);
-		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $depot->transform());
+		$this->objectUpdater->updateObjectPropertyQuietly($this->collection, $this->id, $this->property, $depot->transform());
+	}
+
+	protected function actualFileSize(): int
+	{
+		return $this->fileFetcher->fileSize($this->collection, $this->id, $this->property, $this->name, $this->subpath);
 	}
 
 	protected function streamFile()

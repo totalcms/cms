@@ -38,7 +38,12 @@ class StreamFileAction extends StreamAction
 	protected function incrementCount(FileData $file): void
 	{
 		$file->count++;
-		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform());
+		$this->objectUpdater->updateObjectPropertyQuietly($this->collection, $this->id, $this->property, $file->transform());
+	}
+
+	protected function actualFileSize(): int
+	{
+		return $this->fileFetcher->fileSize($this->collection, $this->id, $this->property);
 	}
 
 	protected function streamFile()
