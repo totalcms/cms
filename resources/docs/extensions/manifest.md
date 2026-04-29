@@ -16,6 +16,7 @@ Every extension requires an `extension.json` manifest file in its root directory
     "name": "SEO Pro",
     "description": "Advanced SEO tools for Total CMS",
     "version": "1.2.0",
+    "icon": "icon.svg",
     "requires": {
         "totalcms": ">=3.3.0",
         "php": ">=8.2",
@@ -105,6 +106,16 @@ Minimum Total CMS edition required. The extension will not load on lower edition
 ```json
 "min_edition": "pro"
 ```
+
+### `icon`
+
+Relative path to an icon image displayed on the extension card in the admin UI. Supports PNG, JPG, GIF, WebP, and SVG formats. The file must be under 64KB. These icons are embedded inline onto the webpage. Please keep them as small as possible.
+
+```json
+"icon": "icon.svg"
+```
+
+If omitted, the card displays without an icon.
 
 ### `entrypoint`
 

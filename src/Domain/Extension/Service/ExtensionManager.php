@@ -463,6 +463,7 @@ final class ExtensionManager
 				'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
 				'links'           => $manifest->links,
 				'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
+				'icon'            => $this->resolveIcon($id, $manifest),
 			];
 		}
 
@@ -912,5 +913,56 @@ final class ExtensionManager
 		}
 
 		return $namespace !== '' ? $namespace . '\\' . $class : $class;
+	}
+
+	/**
+	 * Resolve an extension's icon to a data URI, or null if no icon exists.
+	 */
+	private function resolveIcon(string $id, ExtensionManifest $manifest): ?string
+	{
+		if ($manifest->icon === '') {
+			return null;
+		}
+
+		$extPath = $this->discovery->getExtensionPath($id);
+		if ($extPath === null) {
+			return null;
+		}
+
+		// Block path traversal
+		if (str_contains($manifest->icon, '..')) {
+			return null;
+		}
+
+		$iconPath = $extPath . '/' . $manifest->icon;
+		if (!is_file($iconPath)) {
+			return null;
+		}
+
+		// Limit to 64KB to prevent abuse
+		$size = filesize($iconPath);
+		if ($size === false || $size > 65536) {
+			return null;
+		}
+
+		$contents = file_get_contents($iconPath);
+		if ($contents === false) {
+			return null;
+		}
+
+		$mime = match (strtolower(pathinfo($iconPath, PATHINFO_EXTENSION))) {
+			'svg'          => 'image/svg+xml',
+			'png'          => 'image/png',
+			'jpg', 'jpeg'  => 'image/jpeg',
+			'gif'          => 'image/gif',
+			'webp'         => 'image/webp',
+			default        => null,
+		};
+
+		if ($mime === null) {
+			return null;
+		}
+
+		return 'data:' . $mime . ';base64,' . base64_encode($contents);
 	}
 }

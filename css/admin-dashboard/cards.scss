@@ -45,6 +45,14 @@
 			font-size   : 1.2rem;
 			font-weight : 600;
 		}
+
+		// When an icon is present, use grid for cleaner alignment
+		&:has(img) {
+			display               : grid;
+			grid-template-columns : auto 1fr auto;
+			align-items           : start;
+			gap                   : 1rem;
+		}
 	}
 
 	// Card footer: status + actions
@@ -56,6 +64,15 @@
 		padding-top     : 1rem;
 		border-top      : 1px solid oklch(var(--totalform-border-color));
 	}
+}
+
+// Extension icon in card header
+.ext-icon {
+	width         : 40px;
+	height        : 40px;
+	border-radius : var(--totalform-radius);
+	object-fit    : contain;
+	flex-shrink   : 0;
 }
 
 // Key-value detail rows inside cards
@@ -72,9 +89,10 @@
 	align-items           : start;
 
 	strong {
-		color       : oklch(var(--totalform-darkgray));
-		font-size   : 0.9rem;
-		font-weight : 500;
+		color         : oklch(var(--totalform-darkgray));
+		font-size     : 0.9rem;
+		font-weight   : 500;
+		padding-block : 0.25rem;
 	}
 
 	code {

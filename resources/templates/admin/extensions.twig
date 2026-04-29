@@ -18,6 +18,9 @@
 			{% for ext in extensions %}
 			<article class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}">
 				<header>
+					{% if ext.icon %}
+					<img src="{{ ext.icon }}" alt="" class="ext-icon">
+					{% endif %}
 					<div>
 						<h3>{{ ext.name }}</h3>
 						{% if ext.description %}

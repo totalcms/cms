@@ -21,6 +21,7 @@ final readonly class ExtensionManifest
 	 * @param array<string,string>                    $author         Author info (name, url)
 	 * @param string                                  $license        License identifier
 	 * @param list<array{label: string, url: string}> $links          Card-level links (admin pages, docs, etc.)
+	 * @param string                                  $icon           Relative path to icon image file
 	 */
 	public function __construct(
 		public string $id,
@@ -34,6 +35,7 @@ final readonly class ExtensionManifest
 		public array $author,
 		public string $license,
 		public array $links = [],
+		public string $icon = '',
 	) {
 	}
 
@@ -54,6 +56,7 @@ final readonly class ExtensionManifest
 			author: is_array($data['author'] ?? null) ? $data['author'] : [],
 			license: (string)($data['license'] ?? 'proprietary'),
 			links: self::parseLinks($data['links'] ?? null),
+			icon: (string)($data['icon'] ?? ''),
 		);
 	}
 
