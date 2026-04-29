@@ -144,18 +144,18 @@ A complete HTML5 document with:
 
 ### Navigation (`partials/nav.twig`)
 
-Dynamic navigation that reads from the `builder-pages` collection:
+Dynamic navigation using the builder nav function:
 
 ```twig
-{% set pages = cms.collection.objects('builder-pages', {sort: 'sort:asc'}) %}
-{% for page in pages %}
-    {% if page.status == 'published' %}
-    <a href="{{ page.path == '' ? '/' : '/' ~ page.path }}">{{ page.title }}</a>
-    {% endif %}
+{% set pages = cms.builder.nav() %}
+{% for p in pages %}
+    <a href="{{ p.route }}">{{ p.title }}</a>
 {% endfor %}
 ```
 
-This means your nav updates automatically when you add, remove, or reorder pages in the collection. Draft pages are hidden from navigation.
+`cms.builder.nav()` returns top-level pages that are published (not draft) and have navigation enabled (`nav: true`), sorted by sort order. Your nav updates automatically when you add, remove, or reorder pages in the admin.
+
+See [Navigation](docs/builder/overview#navigation) for `subnav()` and `navTree()` functions.
 
 ### Footer (`partials/footer.twig`)
 

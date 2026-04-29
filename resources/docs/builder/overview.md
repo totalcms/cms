@@ -152,8 +152,68 @@ Page metadata is stored in the `builder-pages` collection using the `builder-pag
 | `layout` | select | Layout template from `builder/layouts/` |
 | `description` | textarea | Meta description |
 | `draft` | toggle | Exclude from routing |
-| `sort` | number | Navigation ordering |
+| `nav` | toggle | Include in navigation menus (default: true) |
+| `sort` | number | Navigation ordering (lower = first) |
 | `parent` | select | Hierarchical parent page |
+
+## Navigation
+
+T3 provides Twig functions to build navigation menus from your pages collection. These functions automatically filter out draft pages and pages with `nav` set to false, and sort by the `sort` field.
+
+### Top-Level Navigation
+
+```twig
+{% for p in cms.builder.nav() %}
+    <a href="{{ p.route }}">{{ p.title }}</a>
+{% endfor %}
+```
+
+### Sub-Navigation
+
+Get the children of a specific page:
+
+```twig
+{% for p in cms.builder.subnav('blog') %}
+    <a href="{{ p.route }}">{{ p.title }}</a>
+{% endfor %}
+```
+
+### Multi-Level Navigation Tree
+
+Get the full page hierarchy with nested `children` arrays:
+
+```twig
+{% set tree = cms.builder.navTree() %}
+{% for p in tree %}
+    <a href="{{ p.route }}">{{ p.title }}</a>
+    {% if p.children is not empty %}
+    <ul>
+        {% for child in p.children %}
+            <li><a href="{{ child.route }}">{{ child.title }}</a></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{% endfor %}
+```
+
+### Custom Collection
+
+All three functions accept an optional collection ID to use a different pages collection:
+
+```twig
+{% set pages = cms.builder.nav('my-custom-pages') %}
+{% set children = cms.builder.subnav('services', 'my-custom-pages') %}
+{% set tree = cms.builder.navTree('my-custom-pages') %}
+```
+
+### Draft vs Nav
+
+The `draft` and `nav` toggles serve different purposes:
+
+- **Draft** controls whether the page is routable — a draft page cannot be visited at all
+- **Nav** controls whether the page appears in navigation — a page can be published (not draft) but hidden from menus (nav: false)
+
+This is useful for pages like privacy policies, 404 pages, or dynamic sub-pages (e.g., `/blog/{id}`) that should be accessible but not listed in navigation.
 
 ## URL Structure
 
