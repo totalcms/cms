@@ -153,6 +153,7 @@ use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
@@ -510,6 +511,11 @@ return [
 		$container->get(UpdateChecker::class),
 	),
 
+	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
+		$container->get(BuilderConfigService::class),
+		$container->get(IndexReader::class),
+	),
+
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
 		$container->get(Config::class),
 		PathResolver::packageRoot() . '/resources/translations',
@@ -529,6 +535,7 @@ return [
 		$container->get(MediaTwigAdapter::class),
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
+		$container->get(BuilderTwigAdapter::class),
 		new LocaleTwigAdapter($container->get(TranslationService::class)),
 		new UtilsTwigAdapter(),
 	),

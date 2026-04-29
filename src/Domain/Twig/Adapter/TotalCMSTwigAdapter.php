@@ -47,6 +47,7 @@ class TotalCMSTwigAdapter
 		public MediaTwigAdapter $media,
 		public CollectionTwigAdapter $collection,
 		public AdminTwigAdapter $admin,
+		public BuilderTwigAdapter $builder,
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
 	) {
