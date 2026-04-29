@@ -28,6 +28,40 @@ The following can be used on text fields to limit the number of characters.
 }
 ```
 
+## Text Transform
+
+Automatically transform text on save. Useful for enforcing consistent casing (e.g., names, titles).
+
+```json
+{
+  "textTransform" : "titlecase"
+}
+```
+
+| Value | Input | Output |
+|-------|-------|--------|
+| `lowercase` | `JOHN DOE` | `john doe` |
+| `uppercase` | `john doe` | `JOHN DOE` |
+| `titlecase` | `john doe` | `John Doe` |
+| `sentencecase` | `john doe` | `John doe` |
+
+The transform is applied server-side on save, so it works regardless of how data is entered (admin, API, CLI, or import). It only applies to plain text — HTML content (styled text) is not affected.
+
+### Schema Example
+
+```json
+{
+  "firstName": {
+    "type": "string",
+    "label": "First Name",
+    "field": "text",
+    "settings": {
+      "textTransform": "titlecase"
+    }
+  }
+}
+```
+
 ## Purifying HTML in Text
 
 Default all text will be scanned for HTML and sanitized to help prevent from XSS attacks.
