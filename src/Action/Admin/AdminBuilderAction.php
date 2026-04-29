@@ -139,11 +139,11 @@ readonly class AdminBuilderAction
 			}
 
 			match (true) {
-				in_array($ext, ['css', 'scss', 'less'], true)                           => $result['css'][]    = $relative,
-				in_array($ext, ['js', 'mjs', 'ts'], true)                               => $result['js'][]     = $relative,
-				in_array($ext, ['woff', 'woff2', 'ttf', 'otf', 'eot'], true)            => $result['fonts'][]  = $relative,
+				in_array($ext, ['css', 'scss', 'less'], true)                                     => $result['css'][]              = $relative,
+				in_array($ext, ['js', 'mjs', 'ts'], true)                                         => $result['js'][]               = $relative,
+				in_array($ext, ['woff', 'woff2', 'ttf', 'otf', 'eot'], true)                      => $result['fonts'][]            = $relative,
 				in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'avif'], true) => $result['images'][] = $relative,
-				default                                                                  => $result['other'][]  = $relative,
+				default                                                                           => $result['other'][]           = $relative,
 			};
 		}
 

@@ -44,7 +44,7 @@ final class BuilderTwigAdapterTest extends TestCase
 			['id' => 'home',     'title' => 'Home',     'route' => '/',          'sort' => 0, 'parent' => '',     'draft' => false, 'nav' => true],
 			['id' => 'about',    'title' => 'About',    'route' => '/about',     'sort' => 1, 'parent' => '',     'draft' => false, 'nav' => true],
 			['id' => 'blog',     'title' => 'Blog',     'route' => '/blog',      'sort' => 2, 'parent' => '',     'draft' => false, 'nav' => true],
-			['id' => 'blog-post','title' => 'Blog Post','route' => '/blog/{id}', 'sort' => 3, 'parent' => 'blog', 'draft' => false, 'nav' => false],
+			['id' => 'blog-post', 'title' => 'Blog Post', 'route' => '/blog/{id}', 'sort' => 3, 'parent' => 'blog', 'draft' => false, 'nav' => false],
 			['id' => 'contact',  'title' => 'Contact',  'route' => '/contact',   'sort' => 4, 'parent' => '',     'draft' => false, 'nav' => true],
 			['id' => 'privacy',  'title' => 'Privacy',  'route' => '/privacy',   'sort' => 5, 'parent' => '',     'draft' => false, 'nav' => false],
 			['id' => 'drafts',   'title' => 'Drafts',   'route' => '/drafts',    'sort' => 6, 'parent' => '',     'draft' => true,  'nav' => true],

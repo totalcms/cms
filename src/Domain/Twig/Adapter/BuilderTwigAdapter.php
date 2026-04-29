@@ -15,8 +15,8 @@ use TotalCMS\Support\Config;
  */
 class BuilderTwigAdapter
 {
-	/** @var array<string,array{file:string}>|null|false false = not loaded yet */
-	private array|null|false $manifestCache = false;
+	/** @var array<string,array{file:string}>|false|null false = not loaded yet */
+	private array|false|null $manifestCache = false;
 
 	public function __construct(
 		private readonly BuilderConfigService $builderConfig,
@@ -100,7 +100,7 @@ class BuilderTwigAdapter
 	public function js(string $path, array $options = []): string
 	{
 		$url  = $this->resolveAssetUrl($path);
-		$type = !empty($options['module']) ? ' type="module"' : '';
+		$type = empty($options['module']) ? '' : ' type="module"';
 
 		return '<script' . $type . ' src="' . htmlspecialchars($url) . '"></script>';
 	}
@@ -155,13 +155,13 @@ class BuilderTwigAdapter
 	{
 		$byParent = [];
 		foreach ($pages as $page) {
-			$parent = (string)($page['parent'] ?? '');
+			$parent              = (string)($page['parent'] ?? '');
 			$byParent[$parent][] = $page;
 		}
 
 		$attach = function (array $page) use (&$attach, $byParent): array {
-			$id = (string)($page['id'] ?? '');
-			$children = $byParent[$id] ?? [];
+			$id               = (string)($page['id'] ?? '');
+			$children         = $byParent[$id] ?? [];
 			$page['children'] = array_map($attach, $children);
 
 			return $page;

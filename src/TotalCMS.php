@@ -122,7 +122,7 @@ class TotalCMS
 		// (Stacks frontend). The Slim admin app and CLI run their own bootstrap;
 		// the manager guards against double-init.
 		try {
-			$extensionManager = $this->container->get(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+			$extensionManager = $this->container->get(Domain\Extension\Service\ExtensionManager::class);
 			$extensionManager->discoverAndRegister();
 			$extensionManager->bootAll();
 		} catch (\Throwable $th) {

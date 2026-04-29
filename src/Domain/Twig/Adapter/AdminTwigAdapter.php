@@ -581,7 +581,7 @@ NGINX;
 	public function builderRouteForCollection(string $collectionId): ?array
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
-		if ($collection === null || $collection->url === '' || !$collection->prettyUrl) {
+		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData || $collection->url === '' || !$collection->prettyUrl) {
 			return null;
 		}
 
@@ -649,7 +649,7 @@ NGINX;
 	 */
 	private function routeMatchesPattern(string $pageRoute, string $expectedRoute): bool
 	{
-		$pageRoute    = rtrim($pageRoute, '/');
+		$pageRoute     = rtrim($pageRoute, '/');
 		$expectedRoute = rtrim($expectedRoute, '/');
 
 		$pageSegments     = explode('/', ltrim($pageRoute, '/'));
@@ -660,8 +660,8 @@ NGINX;
 		}
 
 		foreach ($pageSegments as $i => $segment) {
-			$expected = $expectedSegments[$i];
-			$segIsDynamic     = str_starts_with($segment, '{') && str_ends_with($segment, '}');
+			$expected          = $expectedSegments[$i];
+			$segIsDynamic      = str_starts_with($segment, '{') && str_ends_with($segment, '}');
 			$expectedIsDynamic = str_starts_with($expected, '{') && str_ends_with($expected, '}');
 
 			// Both dynamic — match
