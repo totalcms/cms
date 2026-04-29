@@ -11,6 +11,8 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Factory\LoggerFactory;
@@ -85,6 +87,7 @@ class CacheManager
 		private readonly WatermarkCleanupService $watermarkCleanupService,
 		private readonly DevModeManager $devModeManager,
 		private readonly CacheInvalidationSignal $invalidationSignal,
+		private readonly EventDispatcher $eventDispatcher,
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -814,6 +817,8 @@ class CacheManager
 		if ($this->isCli && !$this->suppressSignals) {
 			$this->invalidationSignal->signalFull();
 		}
+
+		$this->eventDispatcher->dispatch('cache.cleared', new SystemEventPayload($results));
 
 		return $results;
 	}

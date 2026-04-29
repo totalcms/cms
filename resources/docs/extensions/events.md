@@ -201,6 +201,48 @@ Fired after an extension is disabled.
 |---|---|---|
 | `id` | `string` | Extension ID (e.g. `vendor/name`) |
 
+### `devmode.enabled`
+
+Fired after development mode is enabled.
+
+| Key | Type | Description |
+|---|---|---|
+| `duration` | `int` | Duration in seconds |
+
+```php
+$context->addEventListener('devmode.enabled', function (array $payload): void {
+    // e.g., enable verbose logging in your extension
+});
+```
+
+### `devmode.disabled`
+
+Fired after development mode is disabled.
+
+The payload array is empty.
+
+```php
+$context->addEventListener('devmode.disabled', function (array $payload): void {
+    // e.g., disable debug features in your extension
+});
+```
+
+### `cache.cleared`
+
+Fired after all caches are cleared.
+
+| Key | Type | Description |
+|---|---|---|
+| `success` | `bool` | Whether all caches cleared successfully |
+
+The payload also includes per-service results (e.g. `filesystem`, `redis`, `apcu`).
+
+```php
+$context->addEventListener('cache.cleared', function (array $payload): void {
+    // e.g., clear your extension's own cache
+});
+```
+
 ## Listener Isolation
 
 Each listener is wrapped in a try/catch. If your listener throws:

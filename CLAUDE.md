@@ -233,7 +233,7 @@ These are non-obvious details that are important when working in these areas:
 
 ### Event System
 - **Dispatcher**: `src/Domain/Event/EventDispatcher.php` — synchronous, priority-ordered
-- **Core Events**: `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`
+- **Core Events**: `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
 - **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, ExtensionManager
 - **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
 

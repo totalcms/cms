@@ -417,6 +417,7 @@ return [
 		$container->get(ExtensionSettingsManager::class),
 		$container->get(ExtensionManager::class),
 		$container->get(TemplateLister::class),
+		$container->get(DevModeManager::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -836,6 +837,7 @@ return [
 		$container->get(WatermarkCleanupService::class),
 		$container->get(DevModeManager::class),
 		$container->get(CacheInvalidationSignal::class),
+		$container->get(EventDispatcher::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class)
 	),
@@ -849,7 +851,9 @@ return [
 		$container->get(CacheManager::class),
 	),
 
-	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),
+	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(
+		$container->get(EventDispatcher::class),
+	),
 
 	SchemaRepository::class => fn (ContainerInterface $container): SchemaRepository => new SchemaRepository(
 		$container->get(StorageAdapterInterface::class),

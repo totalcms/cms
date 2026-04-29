@@ -80,6 +80,7 @@ readonly class TotalFormFactory
 		private ExtensionSettingsManager $extensionSettingsManager,
 		private ExtensionManager $extensionManager,
 		private TemplateLister $templateLister,
+		private DevModeManager $devModeManager,
 	) {
 		$this->api = $this->config->api . '/api';
 	}
@@ -332,8 +333,7 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function devmode(array $options = []): string
 	{
-		$devModeManager = new DevModeManager();
-		$devModeStatus  = $devModeManager->getDevModeStatus();
+		$devModeStatus = $this->devModeManager->getDevModeStatus();
 
 		$options = array_merge([
 			'form'  => $this->dummyForm(),
