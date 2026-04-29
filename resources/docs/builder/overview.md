@@ -241,6 +241,8 @@ RewriteRule ^ /path/to/tcms [QSA,L]
 
 ## See Also
 
+- [Frontend Assets](docs/builder/frontend) — Vite setup, CSS/JS compilation, and build tool configuration
+- [Builder Twig Reference](docs/twig/builder) — `nav()`, `subnav()`, `navTree()`, `css()`, `js()`, `asset()`, `preload()`
 - [Builder CLI Commands](docs/builder/cli)
 - [Builder Admin UI](docs/builder/admin)
 - [Starter Templates](docs/builder/starters)
