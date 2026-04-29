@@ -13,7 +13,7 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 |-----------|-------------|---------------|
 | `cms.admin.*` | Dashboard stats, job queue, dev mode, URL helpers | [Admin Reference](docs/twig/admin) |
 | `cms.auth.*` | Login/logout, user info, access control, passkeys | [Auth Reference](docs/twig/auth) |
-| `cms.builder.*` | Site Builder navigation helpers (nav, subnav, navTree) | [Builder Reference](docs/twig/builder) |
+| `cms.builder.*` | Site Builder navigation and asset helpers | [Builder Reference](docs/twig/builder) |
 | `cms.barcode.*` | Barcode generation (Code 128, EAN-13, UPC-A, etc.) | [Barcode Reference](docs/twig/barcodes) |
 | `cms.collection.*` | Collection listing, objects, search, URLs, navigation | [Collections Reference](docs/twig/collections) |
 | `cms.data.*` | Typed data access (text, toggle, date, color, etc.) | [Data Reference](docs/twig/data) |

@@ -285,6 +285,7 @@ $settings['license'] = [
 // Site Builder
 $settings['builder'] = [
 	'pagesCollection' => 'builder-pages', // Collection ID for page metadata
+	'assetsPath'      => 'assets',        // Public assets directory relative to docroot
 ];
 
 // https://www.php.net/manual/en/timezones.php

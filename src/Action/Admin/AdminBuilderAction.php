@@ -12,6 +12,7 @@ use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 readonly class AdminBuilderAction
 {
@@ -22,6 +23,7 @@ readonly class AdminBuilderAction
 		private BuilderConfigService $builderConfig,
 		private TemplateFetcher $templateFetcher,
 		private IndexReader $indexReader,
+		private Config $config,
 	) {
 	}
 
@@ -49,6 +51,11 @@ readonly class AdminBuilderAction
 
 		$pagesCollectionId = $this->builderConfig->getPagesCollectionId();
 
+		$assetsPath = (string)($this->config->builder['assetsPath'] ?? 'assets');
+		if ($assetsPath === '') {
+			$assetsPath = 'assets';
+		}
+
 		$templateData = [
 			'url' => [
 				'path'    => $request->getUri()->getPath(),
@@ -62,6 +69,8 @@ readonly class AdminBuilderAction
 				'docroot'         => $this->builderConfig->getDocroot(),
 				'pagesCollection' => $pagesCollectionId,
 				'pages'           => $this->loadPages($pagesCollectionId),
+				'assetsPath'      => $assetsPath,
+				'assets'          => $this->scanAssets($assetsPath),
 			],
 		];
 

@@ -514,6 +514,7 @@ return [
 	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
 		$container->get(BuilderConfigService::class),
 		$container->get(IndexReader::class),
+		$container->get(Config::class),
 	),
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(

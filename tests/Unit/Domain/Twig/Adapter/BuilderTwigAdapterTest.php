@@ -7,23 +7,29 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
+use TotalCMS\Support\Config;
 
 final class BuilderTwigAdapterTest extends TestCase
 {
 	private BuilderTwigAdapter $adapter;
 	private \PHPUnit\Framework\MockObject\MockObject $builderConfig;
 	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
 
 	protected function setUp(): void
 	{
 		$this->builderConfig = $this->createMock(BuilderConfigService::class);
 		$this->indexReader   = $this->createMock(IndexReader::class);
+		$this->config        = $this->createMock(Config::class);
 
 		$this->builderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
+		$this->config->builder = ['assetsPath' => 'assets'];
+		$this->config->docroot = sys_get_temp_dir();
 
 		$this->adapter = new BuilderTwigAdapter(
 			$this->builderConfig,
 			$this->indexReader,
+			$this->config,
 		);
 	}
 
@@ -299,5 +305,121 @@ final class BuilderTwigAdapterTest extends TestCase
 
 		$this->assertArrayHasKey('children', $tree[0]);
 		$this->assertSame([], $tree[0]['children']);
+	}
+
+	// --- asset() ---
+
+	public function testAssetReturnsPathWithMtimeWhenFileExists(): void
+	{
+		$dir = sys_get_temp_dir() . '/assets';
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		$file = $dir . '/style.css';
+		file_put_contents($file, 'body{}');
+
+		$result = $this->adapter->asset('style.css');
+
+		$this->assertStringStartsWith('/assets/style.css?v=', $result);
+		@unlink($file);
+	}
+
+	public function testAssetReturnsRawPathWhenFileDoesNotExist(): void
+	{
+		$result = $this->adapter->asset('nonexistent.css');
+
+		$this->assertSame('/assets/nonexistent.css', $result);
+	}
+
+	// --- css() ---
+
+	public function testCssOutputsLinkTag(): void
+	{
+		$result = $this->adapter->css('style.css');
+
+		$this->assertStringContainsString('<link rel="stylesheet" href="', $result);
+		$this->assertStringContainsString('/assets/style.css', $result);
+		$this->assertStringContainsString('>', $result);
+	}
+
+	// --- js() ---
+
+	public function testJsOutputsScriptTag(): void
+	{
+		$result = $this->adapter->js('app.js');
+
+		$this->assertStringContainsString('<script src="', $result);
+		$this->assertStringContainsString('/assets/app.js', $result);
+		$this->assertStringContainsString('></script>', $result);
+	}
+
+	public function testJsWithModuleOption(): void
+	{
+		$result = $this->adapter->js('app.js', ['module' => true]);
+
+		$this->assertStringContainsString('type="module"', $result);
+		$this->assertStringContainsString('/assets/app.js', $result);
+	}
+
+	public function testJsWithoutModuleOption(): void
+	{
+		$result = $this->adapter->js('app.js');
+
+		$this->assertStringNotContainsString('type="module"', $result);
+	}
+
+	// --- preload() ---
+
+	public function testPreloadOutputsPreloadTag(): void
+	{
+		$result = $this->adapter->preload('hero.webp', 'image');
+
+		$this->assertStringContainsString('<link rel="preload" href="', $result);
+		$this->assertStringContainsString('/assets/hero.webp', $result);
+		$this->assertStringContainsString('as="image"', $result);
+	}
+
+	public function testPreloadAddsCrossoriginForFonts(): void
+	{
+		$result = $this->adapter->preload('fonts/inter.woff2', 'font');
+
+		$this->assertStringContainsString('as="font"', $result);
+		$this->assertStringContainsString('crossorigin', $result);
+	}
+
+	public function testPreloadNoCrossoriginForNonFonts(): void
+	{
+		$result = $this->adapter->preload('app.js', 'script');
+
+		$this->assertStringNotContainsString('crossorigin', $result);
+	}
+
+	// --- manifest ---
+
+	public function testAssetResolvesFromManifest(): void
+	{
+		$dir = sys_get_temp_dir() . '/assets';
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		file_put_contents($dir . '/manifest.json', json_encode([
+			'css/style.css' => ['file' => 'css/style.a1b2c3.css'],
+			'js/app.js'     => ['file' => 'js/app.d4e5f6.js'],
+		]));
+
+		// Need a fresh adapter to reset the static manifest cache
+		$adapter = new BuilderTwigAdapter(
+			$this->builderConfig,
+			$this->indexReader,
+			$this->config,
+		);
+
+		$result = $adapter->asset('css/style.css');
+		$this->assertSame('/assets/css/style.a1b2c3.css', $result);
+
+		$result = $adapter->asset('js/app.js');
+		$this->assertSame('/assets/js/app.d4e5f6.js', $result);
+
+		@unlink($dir . '/manifest.json');
 	}
 }
