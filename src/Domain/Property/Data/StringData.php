@@ -41,10 +41,20 @@ class StringData extends PropertyData implements \Stringable
 		return match ($transform) {
 			'lowercase'    => mb_strtolower($text),
 			'uppercase'    => mb_strtoupper($text),
-			'titlecase'    => mb_convert_case($text, MB_CASE_TITLE),
-			'sentencecase' => mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)),
+			'titlecase'         => mb_convert_case($text, MB_CASE_TITLE),
+			'sentencecase'      => mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)),
+			'smart-titlecase'   => self::isUniformCase($text) ? mb_convert_case($text, MB_CASE_TITLE) : $text,
+			'smart-sentencecase' => self::isUniformCase($text) ? mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)) : $text,
 			default        => $text,
 		};
+	}
+
+	/**
+	 * Check if a string is entirely uppercase or entirely lowercase.
+	 */
+	private static function isUniformCase(string $text): bool
+	{
+		return $text === mb_strtoupper($text) || $text === mb_strtolower($text);
 	}
 
 	/**
