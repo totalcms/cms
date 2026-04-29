@@ -58,6 +58,8 @@ class JsonImporter
 		$this->indexBuildListener->suspendForCollection($collection);
 
 		$importCount = 0;
+		$createdIds  = [];
+		$updatedIds  = [];
 
 		foreach ($records as $offset => $record) {
 			try {
@@ -65,7 +67,13 @@ class JsonImporter
 					$this->updateObject($record) :
 					$this->importNewObject($record);
 
-				if ($imported) {
+				if ($imported && isset($record['id'])) {
+					$id = (string)$record['id'];
+					if ($updateObject) {
+						$updatedIds[] = $id;
+					} else {
+						$createdIds[] = $id;
+					}
 					$importCount++;
 				}
 			} catch (\Exception $exception) {
@@ -76,7 +84,7 @@ class JsonImporter
 		}
 
 		// Single index rebuild at end of import
-		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount));
+		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
 
 		return $importCount;
 	}

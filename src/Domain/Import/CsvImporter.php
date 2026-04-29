@@ -82,6 +82,8 @@ class CsvImporter
 
 		$this->logger->info(sprintf('Starting CSV import for collection: %s', $collection));
 		$importCount = 0;
+		$createdIds  = [];
+		$updatedIds  = [];
 
 		// Take the uploaded file and update object with related data
 		$csv = Reader::fromString((string)$file->getStream());
@@ -100,7 +102,13 @@ class CsvImporter
 					$this->updateObject($offset, $record) :
 					$this->importNewObject($offset, $record);
 
-				if ($imported) {
+				if ($imported && isset($record['id'])) {
+					$id = (string)$record['id'];
+					if ($updateObject) {
+						$updatedIds[] = $id;
+					} else {
+						$createdIds[] = $id;
+					}
 					$importCount++;
 				}
 			} catch (\Exception $exception) {
@@ -111,7 +119,7 @@ class CsvImporter
 		}
 
 		// Single index rebuild at end of import
-		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount));
+		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
 
 		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
 

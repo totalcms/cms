@@ -59,7 +59,7 @@ readonly class UrlImporter
 			$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
 			// @todo Add logic that will download the image and save it to the post
 
-			$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, 1));
+			$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, 1, [$record['id']]));
 		} catch (\Exception $exception) {
 			$this->logger->error(
 				sprintf('Error importing URL: %s', $exception->getMessage())

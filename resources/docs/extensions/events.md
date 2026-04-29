@@ -120,12 +120,19 @@ Fired after a batch import (CSV, JSON, or URL) finishes processing.
 |---|---|---|
 | `collection` | `string` | Collection ID |
 | `count` | `int` | Number of objects imported |
+| `created` | `string[]` | IDs of newly created objects |
+| `updated` | `string[]` | IDs of updated objects |
 
 ```php
 $context->addEventListener('import.completed', function (array $payload): void {
     $collection = $payload['collection'];
     $count = $payload['count'];
     // e.g., send a notification that import is done
+
+    // Act on specific updated objects
+    foreach ($payload['updated'] as $id) {
+        // e.g., send an email to updated members
+    }
 });
 ```
 

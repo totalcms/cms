@@ -9,9 +9,15 @@ namespace TotalCMS\Domain\Event\Payload;
  */
 readonly class ImportEventPayload extends EventPayload
 {
+	/**
+	 * @param array<string> $created IDs of newly created objects
+	 * @param array<string> $updated IDs of updated objects
+	 */
 	public function __construct(
 		public string $collection,
 		public int $count,
+		public array $created = [],
+		public array $updated = [],
 	) {
 	}
 
@@ -21,6 +27,8 @@ readonly class ImportEventPayload extends EventPayload
 		return [
 			'collection' => $this->collection,
 			'count'      => $this->count,
+			'created'    => $this->created,
+			'updated'    => $this->updated,
 		];
 	}
 }
