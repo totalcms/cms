@@ -44,7 +44,7 @@ class DownloadFileAction extends DownloadAction
 	protected function incrementCount(FileData $file): void
 	{
 		$file->count++;
-		$this->objectUpdater->updateObjectPropertyQuietly($this->collection, $this->id, $this->property, $file->transform());
+		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform(), silent: true);
 	}
 
 	protected function streamFile()
