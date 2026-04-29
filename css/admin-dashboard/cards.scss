@@ -92,7 +92,6 @@
 		color         : oklch(var(--totalform-darkgray));
 		font-size     : 0.9rem;
 		font-weight   : 500;
-		padding-block : 0.25rem;
 	}
 
 	code {
@@ -157,6 +156,9 @@
 		font-size : 0.75rem;
 		padding   : 0.15rem 0.5rem;
 	}
+}
+a.dash-badge {
+	padding-block : 0;
 }
 
 // Badge group (inline list of badges)
