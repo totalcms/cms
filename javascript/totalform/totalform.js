@@ -110,6 +110,9 @@ export default class TotalForm {
         this.registerButtons();
 		this.visibility.initialize();
 
+		// Signal that all fields are initialized and form is ready
+		this.form.dispatchEvent(new CustomEvent('totalform:ready'));
+
 		if (this.form.classList.contains("autosave")) {
 			this.autosave = true;
 		}
