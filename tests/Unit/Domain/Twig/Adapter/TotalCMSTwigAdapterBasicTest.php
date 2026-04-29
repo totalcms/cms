@@ -339,6 +339,8 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
 			$this->createMock(\TotalCMS\Domain\Cache\CacheSizingAdvisor::class),
 			$this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class),
+			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderConfigService::class),
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 		);
 
 		// Mock $_SERVER for test
