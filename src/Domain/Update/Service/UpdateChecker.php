@@ -63,6 +63,13 @@ readonly class UpdateChecker
 			return $this->noUpdate($currentVersion);
 		}
 
+		// Suppress updates when the offered version is not actually newer than what's running.
+		// This handles the beta/prerelease case where the server doesn't know the local build is ahead.
+		$offeredVersion = (string)($data['version'] ?? '');
+		if ((bool)($data['available'] ?? false) && $offeredVersion !== '' && version_compare($offeredVersion, $currentVersion, '<=')) {
+			$data['available'] = false;
+		}
+
 		// Check if this license qualifies for updates
 		$licenseInfo       = $this->getLicenseInfo();
 		$updatesValid      = $licenseInfo['valid'];

@@ -181,7 +181,10 @@ else
         COMMITS="0"
         BUILD=$(git rev-parse --short HEAD)
     fi
-    php bin/generate-version.php "$VERSION" "$BUILD" version.json "$COMMITS"
+    if ! php bin/generate-version.php "$VERSION" "$BUILD" version.json "$COMMITS"; then
+        echo "ERROR: Failed to generate version.json"
+        exit 1
+    fi
     cp version.json dist
     echo "Beta build for v$VERSION ($BUILD) is complete."
 fi
