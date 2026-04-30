@@ -25,6 +25,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -247,8 +248,7 @@ readonly class TotalFormFactory
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 			foreach ($schema->properties as $propName => $propConfig) {
-				$deckref = $propConfig['deckref'] ?? $propConfig['settings']['deckref'] ?? null;
-				if (!empty($deckref)) {
+				if (PropertyDefinition::extractSchemaRef($propConfig) !== null) {
 					$deckProperties[] = ['value' => $propName, 'label' => $propName];
 				}
 			}
@@ -864,8 +864,9 @@ readonly class TotalFormFactory
 
 			// Merge deck-specific schema keys into settings
 			if ($fieldType === 'deck' || $fieldType === 'deckTable') {
-				if (isset($fieldSchema['deckref'])) {
-					$fieldSettings['settings']['deckref'] = $fieldSchema['deckref'];
+				$schemaref = PropertyDefinition::extractSchemaRef($fieldSchema);
+				if ($schemaref !== null) {
+					$fieldSettings['settings']['schemaref'] = $schemaref;
 				}
 				if (isset($fieldSchema['deckItemLabel'])) {
 					$fieldSettings['settings']['deckItemLabel'] = $fieldSchema['deckItemLabel'];

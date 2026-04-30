@@ -124,10 +124,15 @@ class ObjectForm extends TotalForm
 	{
 		$defaults = $this->metaResolver->resolve($this->collection, $property, $this->id);
 
-		// Handle deckref for deck fields - move it to settings after resolve
-		// This is a form-specific concern, not part of general resolution
+		// Handle schema reference for deck/card fields — move to settings after resolve
+		// This is a form-specific concern, not part of general resolution.
+		// Accept both the canonical `schemaref` and the legacy `deckref` alias.
+		if (isset($defaults['schemaref'])) {
+			$defaults['settings']['schemaref'] = $defaults['schemaref'];
+			unset($defaults['schemaref']);
+		}
 		if (isset($defaults['deckref'])) {
-			$defaults['settings']['deckref'] = $defaults['deckref'];
+			$defaults['settings']['schemaref'] ??= $defaults['deckref'];
 			unset($defaults['deckref']);
 		}
 		if (isset($defaults['deckItemLabel'])) {

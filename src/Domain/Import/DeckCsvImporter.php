@@ -12,6 +12,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\SlugData;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -158,12 +159,12 @@ class DeckCsvImporter
 				return '';
 			}
 
-			$deckref = $propertyConfig['deckref'] ?? $propertyConfig['settings']['deckref'] ?? null;
-			if (empty($deckref)) {
+			$schemaref = PropertyDefinition::extractSchemaRef($propertyConfig);
+			if ($schemaref === null) {
 				return '';
 			}
 
-			$deckSchemaId = SchemaFetcher::extractSchemaId((string)$deckref);
+			$deckSchemaId = SchemaFetcher::extractSchemaId($schemaref);
 			$deckSchema   = $this->schemaFetcher->fetchSchema($deckSchemaId);
 
 			return $deckSchema->properties['id']['settings']['autogen'] ?? '';

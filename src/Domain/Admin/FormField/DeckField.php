@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\DeckItem\DeckItem;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 
 /**
  * Deck Form Field - Manages a collection of deck items.
@@ -16,7 +17,7 @@ class DeckField extends FormField
 	/** @var array<string,DeckItem> */
 	protected array $deckItems = [];
 
-	protected string $deckref       = '';
+	protected string $schemaref     = '';
 	protected string $deckItemLabel = '';
 
 	public function init(): void
@@ -26,8 +27,8 @@ class DeckField extends FormField
 		$this->inputType = $this->defaultInputType;
 		$this->icon      = false;
 
-		// Extract deckref from settings if available
-		$this->deckref       = $this->settings['deckref'] ?? '';
+		// Extract schema reference from settings (accepts schemaref or legacy deckref)
+		$this->schemaref       = PropertyDefinition::extractSchemaRef($this->settings) ?? '';
 		$this->deckItemLabel = $this->settings['deckItemLabel'] ?? '${id}';
 
 		// Initialize deck items from value
@@ -61,7 +62,7 @@ class DeckField extends FormField
 		}
 
 		// Add template for new items
-		if ($this->deckref !== '') {
+		if ($this->schemaref !== '') {
 			$template = $this->createDeckItem('', []);
 			$content .= HTMLUtils::element('template', $template->build(), ['class' => 'deck-template']);
 		}
@@ -77,9 +78,9 @@ class DeckField extends FormField
 	{
 		$attributes = parent::formFieldAttributes();
 
-		// Add deckref as a data attribute
-		if ($this->deckref !== '') {
-			$attributes['data-deckref'] = $this->deckref;
+		// Add schemaref as a data attribute
+		if ($this->schemaref !== '') {
+			$attributes['data-schemaref'] = $this->schemaref;
 		}
 
 		// Add deck item label pattern as a data attribute
@@ -101,7 +102,7 @@ class DeckField extends FormField
 			form            : $this->form,
 			itemId          : $itemId,
 			itemData        : $itemData,
-			deckref         : $this->deckref,
+			schemaref       : $this->schemaref,
 			deckItemLabel   : $this->deckItemLabel,
 		);
 	}

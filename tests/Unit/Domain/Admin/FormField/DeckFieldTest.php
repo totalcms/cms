@@ -42,21 +42,34 @@ describe('DeckField', function (): void {
 		$this->form->method('subField')->willReturn('');
 	});
 
-	test('init() extracts deckref and deckItemLabel from settings', function (): void {
+	test('init() extracts schemaref and deckItemLabel from settings', function (): void {
 		$field = new DeckField(
 			form    : $this->form,
 			name    : 'comments',
 			settings: [
-				'deckref'       => 'https://www.totalcms.co/schemas/deck/comment.json',
+				'schemaref'     => 'https://www.totalcms.co/schemas/deck/comment.json',
 				'deckItemLabel' => '${author}: ${id}',
 			],
 		);
 
-		$deckref = (new ReflectionProperty($field, 'deckref'))->getValue($field);
-		$label   = (new ReflectionProperty($field, 'deckItemLabel'))->getValue($field);
+		$schemaref = (new ReflectionProperty($field, 'schemaref'))->getValue($field);
+		$label     = (new ReflectionProperty($field, 'deckItemLabel'))->getValue($field);
 
-		expect($deckref)->toBe('https://www.totalcms.co/schemas/deck/comment.json');
+		expect($schemaref)->toBe('https://www.totalcms.co/schemas/deck/comment.json');
 		expect($label)->toBe('${author}: ${id}');
+	});
+
+	test('init() accepts the legacy `deckref` settings key as an alias', function (): void {
+		$field = new DeckField(
+			form    : $this->form,
+			name    : 'comments',
+			settings: [
+				'deckref' => 'https://www.totalcms.co/schemas/deck/comment.json',
+			],
+		);
+
+		$schemaref = (new ReflectionProperty($field, 'schemaref'))->getValue($field);
+		expect($schemaref)->toBe('https://www.totalcms.co/schemas/deck/comment.json');
 	});
 
 	test('init() defaults the deck item label to ${id} when not supplied', function (): void {
@@ -154,12 +167,12 @@ describe('DeckField', function (): void {
 		expect($html)->toContain('Add Item');
 	});
 
-	test('formFieldAttributes includes data-deckref and data-deck-label-pattern', function (): void {
+	test('formFieldAttributes includes data-schemaref and data-deck-label-pattern', function (): void {
 		$field = new DeckField(
 			form    : $this->form,
 			name    : 'comments',
 			settings: [
-				'deckref'       => 'https://www.totalcms.co/schemas/deck/comment.json',
+				'schemaref'     => 'https://www.totalcms.co/schemas/deck/comment.json',
 				'deckItemLabel' => '${author}',
 			],
 		);
@@ -167,16 +180,16 @@ describe('DeckField', function (): void {
 		$method     = new ReflectionMethod($field, 'formFieldAttributes');
 		$attributes = $method->invoke($field);
 
-		expect($attributes['data-deckref'])->toBe('https://www.totalcms.co/schemas/deck/comment.json');
+		expect($attributes['data-schemaref'])->toBe('https://www.totalcms.co/schemas/deck/comment.json');
 		expect($attributes['data-deck-label-pattern'])->toBe('${author}');
 	});
 
-	test('formFieldAttributes omits data-deckref when empty', function (): void {
+	test('formFieldAttributes omits data-schemaref when empty', function (): void {
 		$field = new DeckField(form: $this->form, name: 'comments');
 
 		$method     = new ReflectionMethod($field, 'formFieldAttributes');
 		$attributes = $method->invoke($field);
 
-		expect($attributes)->not->toHaveKey('data-deckref');
+		expect($attributes)->not->toHaveKey('data-schemaref');
 	});
 });

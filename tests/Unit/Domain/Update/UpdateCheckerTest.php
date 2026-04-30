@@ -133,7 +133,7 @@ final class UpdateCheckerTest extends TestCase
 		$this->cacheManager->method('getComputedData')->willReturn(null);
 		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available' => true,
-			'version'   => '3.2.3',
+			'version'   => '99.99.99',
 			'severity'  => 'patch',
 		])));
 

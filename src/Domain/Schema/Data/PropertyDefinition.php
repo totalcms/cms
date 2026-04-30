@@ -13,9 +13,9 @@ namespace TotalCMS\Domain\Schema\Data;
 readonly class PropertyDefinition
 {
 	/**
-	 * @param array<mixed>        $options  Select/checkbox options
-	 * @param array<string,mixed> $settings Field-specific configuration
-	 * @param array<string,mixed> $extra    Validation constraints and unrecognized keys
+	 * @param array<mixed>        $options   Select/checkbox options
+	 * @param array<string,mixed> $settings  Field-specific configuration
+	 * @param array<string,mixed> $extra     Validation constraints and unrecognized keys
 	 */
 	public function __construct(
 		public ?string $type = null,
@@ -25,12 +25,45 @@ readonly class PropertyDefinition
 		public string $help = '',
 		public string $placeholder = '',
 		public mixed $default = null,
-		public ?string $deckref = null,
+		public ?string $schemaref = null,
 		public ?string $deckItemLabel = null,
 		public array $options = [],
 		public array $settings = [],
 		public array $extra = [],
 	) {
+	}
+
+	/**
+	 * Backward-compatible accessor for the legacy `deckref` property name.
+	 * Reads should prefer `$schemaref`.
+	 */
+	public function __get(string $name): mixed
+	{
+		if ($name === 'deckref') {
+			return $this->schemaref;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Resolve a schema reference from a raw property config array.
+	 * Accepts both the canonical `schemaref` key and the legacy `deckref` alias,
+	 * at the top level or nested in `settings`.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	public static function extractSchemaRef(array $data): ?string
+	{
+		$ref = $data['schemaref']
+			?? $data['deckref']
+			?? (is_array($data['settings'] ?? null) ? ($data['settings']['schemaref'] ?? $data['settings']['deckref'] ?? null) : null);
+
+		if ($ref === null || $ref === '') {
+			return null;
+		}
+
+		return (string)$ref;
 	}
 
 	/**
@@ -40,13 +73,12 @@ readonly class PropertyDefinition
 	 */
 	public static function fromArray(array $data): self
 	{
-		// Extract deckref from settings if not at top level
-		$deckref       = $data['deckref'] ?? $data['settings']['deckref'] ?? null;
+		$schemaref     = self::extractSchemaRef($data);
 		$deckItemLabel = $data['deckItemLabel'] ?? $data['settings']['deckItemLabel'] ?? null;
 
 		$known = [
 			'type', '$ref', 'field', 'label', 'help', 'placeholder',
-			'default', 'deckref', 'deckItemLabel', 'options', 'settings',
+			'default', 'schemaref', 'deckref', 'deckItemLabel', 'options', 'settings',
 		];
 
 		$extra = array_diff_key($data, array_flip($known));
@@ -59,7 +91,7 @@ readonly class PropertyDefinition
 			help: (string)($data['help'] ?? ''),
 			placeholder: (string)($data['placeholder'] ?? ''),
 			default: $data['default'] ?? null,
-			deckref: $deckref !== null ? (string)$deckref : null,
+			schemaref: $schemaref,
 			deckItemLabel: $deckItemLabel !== null ? (string)$deckItemLabel : null,
 			options: is_array($data['options'] ?? null) ? $data['options'] : [],
 			settings: is_array($data['settings'] ?? null) ? $data['settings'] : [],
@@ -97,8 +129,8 @@ readonly class PropertyDefinition
 		if ($this->default !== null) {
 			$data['default'] = $this->default;
 		}
-		if ($this->deckref !== null) {
-			$data['deckref'] = $this->deckref;
+		if ($this->schemaref !== null) {
+			$data['schemaref'] = $this->schemaref;
 		}
 		if ($this->deckItemLabel !== null) {
 			$data['deckItemLabel'] = $this->deckItemLabel;

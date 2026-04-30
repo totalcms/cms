@@ -67,8 +67,8 @@ export default class SchemaPropertiesField extends PropertiesField {
 		this.populateFieldValue(field, 'default', definition.default);
 		this.populateFieldValue(field, 'factory', definition.factory);
 
-		// Populate select fields
-		this.populateSelectValue(field, 'deckref', definition.deckref);
+		// Populate select fields. Accept canonical `schemaref` and the legacy `deckref` alias.
+		this.populateSelectValue(field, 'schemaref', definition.schemaref ?? definition.deckref);
 
 		// Populate JSON fields (settings, options, extra)
 		this.populateJsonField(field, 'settings', definition.settings);
@@ -125,7 +125,7 @@ export default class SchemaPropertiesField extends PropertiesField {
 		// Standard schema property fields that should not be in extra
 		const standardFields = [
 			'field', 'type', 'label', 'help', 'placeholder', 'default',
-			'factory', 'deckref', 'settings', 'options', '$ref'
+			'factory', 'schemaref', 'deckref', 'settings', 'options', '$ref'
 		];
 
 		const extra = {};

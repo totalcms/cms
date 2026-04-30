@@ -83,16 +83,19 @@ final class PageDataTest extends TestCase
 	public function testToArrayIncludesAllFields(): void
 	{
 		$data = [
-			'id'          => 'home',
-			'title'       => 'Home',
-			'route'       => '/',
-			'template'    => 'index',
-			'layout'      => 'default',
-			'description' => 'Welcome',
-			'draft'       => false,
-			'nav'         => true,
-			'sort'        => 0,
-			'parent'      => '',
+			'id'              => 'home',
+			'title'           => 'Home',
+			'route'           => '/',
+			'template'        => 'index',
+			'layout'          => 'default',
+			'description'     => 'Welcome',
+			'draft'           => false,
+			'nav'             => true,
+			'sort'            => 0,
+			'parent'          => '',
+			'sitemap'         => true,
+			'changeFrequency' => 'weekly',
+			'priority'        => 0.8,
 		];
 
 		$page = new PageData($data);

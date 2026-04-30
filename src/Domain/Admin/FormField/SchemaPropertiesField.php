@@ -54,13 +54,20 @@ class SchemaPropertiesField extends PropertiesField
 			unset($options['$ref']);
 		}
 
+		// Coalesce legacy `deckref` input into the canonical `schemaref` before filtering,
+		// so it's preserved as a schema property rather than being treated as extra.
+		if (isset($options['deckref'])) {
+			$options['schemaref'] ??= $options['deckref'];
+			unset($options['deckref']);
+		}
+
 		$extra   = SchemaField::filterExtraProperties($options);
 		$options = SchemaField::filterSchemaProperties($options);
 
-		// Check if this is a transformed deck property and extract deckref
+		// Check if this is a transformed deck property and reconstruct schemaref
 		if (isset($extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'])) {
-			$options['deckref'] = $extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'];
-			// Remove the patternProperties from extra since we've extracted the deckref
+			$options['schemaref'] = $extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'];
+			// Remove the patternProperties from extra since we've extracted the schemaref
 			unset($extra['patternProperties']);
 			if ($extra === []) {
 				$extra = [];

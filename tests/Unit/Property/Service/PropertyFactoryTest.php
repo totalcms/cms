@@ -509,4 +509,41 @@ class PropertyFactoryTest extends TestCase
 		$this->assertInstanceOf(DeckData::class, $deck1);
 		$this->assertInstanceOf(DeckData::class, $deck2);
 	}
+
+	/**
+	 * Canonical-path coverage: createDeck resolves the schema via the new `schemaref`
+	 * key (top-level and inside settings).
+	 */
+	public function testSchemaRefFromDifferentSchemaLocations(): void
+	{
+		$propertySchema1 = [
+			'type'      => 'deck',
+			'schemaref' => 'root-schemaref',
+		];
+		$propertySchema2 = [
+			'type'     => 'deck',
+			'settings' => ['schemaref' => 'settings-schemaref'],
+		];
+
+		$value = ['item1' => ['title' => 'Test']];
+
+		$mockSchema = new SchemaData([
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
+			'properties' => ['title' => ['type' => 'string']],
+		]);
+		$this->schemaFetcher->expects($this->exactly(2))
+			->method('fetchSchema')
+			->willReturn($mockSchema);
+
+		$this->deckCompatibilityChecker->expects($this->exactly(2))
+			->method('isCompatible')
+			->willReturn(true);
+
+		$deck1 = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema1), $value);
+		$deck2 = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema2), $value);
+
+		$this->assertInstanceOf(DeckData::class, $deck1);
+		$this->assertInstanceOf(DeckData::class, $deck2);
+	}
 }

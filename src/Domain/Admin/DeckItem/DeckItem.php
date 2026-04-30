@@ -25,7 +25,7 @@ class DeckItem
 		protected TotalForm $form,
 		protected string $itemId,
 		protected array $itemData = [],
-		protected string $deckref = '',
+		protected string $schemaref = '',
 		protected string $deckItemLabel = '${id}',
 	) {
 		$this->schemaFetcher = $form->getSchemaFetcher();
@@ -69,8 +69,8 @@ class DeckItem
 	{
 		$content = '';
 
-		// Generate form fields based on deckref schema
-		if ($this->deckref !== '') {
+		// Generate form fields based on the referenced schema
+		if ($this->schemaref !== '') {
 			$content .= $this->buildSchemaBasedFields();
 		}
 
@@ -80,7 +80,7 @@ class DeckItem
 	protected function buildSchemaBasedFields(): string
 	{
 		try {
-			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
+			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
 		} catch (\Exception $e) {
 			return HTMLUtils::element(
 				'p',

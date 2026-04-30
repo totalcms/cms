@@ -83,16 +83,16 @@ readonly class PropertyFactory
 			return new DeckData([], $settings);
 		}
 
-		$deckref = $definition->deckref;
+		$schemaref = $definition->schemaref;
 
-		// If no deckref, return deck as-is (no processing)
-		if (in_array($deckref, [null, '', '0'], true)) {
+		// If no schema reference, return deck as-is (no processing)
+		if (in_array($schemaref, [null, '', '0'], true)) {
 			return new DeckData($value, $settings);
 		}
 
 		try {
 			// Get the deck item schema
-			$schemaId   = SchemaFetcher::extractSchemaId($deckref);
+			$schemaId   = SchemaFetcher::extractSchemaId($schemaref);
 			$deckSchema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			// Validate that the deck schema doesn't contain incompatible properties

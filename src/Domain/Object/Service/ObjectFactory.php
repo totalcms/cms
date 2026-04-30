@@ -172,8 +172,8 @@ readonly class ObjectFactory
 	private function applyDeckItemCalcFields(array $objectData, SchemaData $schema): array
 	{
 		foreach ($schema->properties as $property => $propertySchema) {
-			$deckref = $propertySchema['deckref'] ?? $propertySchema['settings']['deckref'] ?? null;
-			if (empty($deckref)) {
+			$schemaref = PropertyDefinition::extractSchemaRef($propertySchema);
+			if ($schemaref === null) {
 				continue;
 			}
 
@@ -183,7 +183,7 @@ readonly class ObjectFactory
 			}
 
 			// Fetch the deck schema to find calc fields
-			$deckSchemaId = SchemaFetcher::extractSchemaId($deckref);
+			$deckSchemaId = SchemaFetcher::extractSchemaId($schemaref);
 
 			try {
 				$deckSchema = $this->schemaFetcher->fetchSchema($deckSchemaId);

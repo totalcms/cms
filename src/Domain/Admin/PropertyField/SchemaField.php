@@ -13,7 +13,7 @@ class SchemaField extends PropertyField
 {
 	public const SCHEMA_PROPERTY_FIELDS = [
 		'default',
-		'deckref',
+		'schemaref',
 		'factory',
 		'field',
 		'help',
@@ -41,7 +41,7 @@ class SchemaField extends PropertyField
 		protected string $placeholder = '',
 		protected string $factory     = '',
 		protected string $default     = '',
-		protected string $deckref     = '',
+		protected string $schemaref   = '',
 		protected array $options      = [],
 		protected array $settings     = [],
 		protected array $extra        = [],
@@ -109,12 +109,11 @@ class SchemaField extends PropertyField
 			'settings'    => ['datalistOptions' => true],
 			'options'     => FakerExamples::FAKER_EXAMPLES,
 		]);
-		$content .= $this->form->field('deckref', [
+		$content .= $this->form->field('schemaref', [
 			'field'       => 'select',
-			'label'       => 'Deck Schema Reference',
-			// 'placeholder' => 'Select a schema compatible with deck',
-			'help'        => 'The schema reference for deck items. Only compatible schemas are shown.',
-			'value'       => $this->deckref,
+			'label'       => 'Schema Reference',
+			'help'        => 'The schema reference for deck or card items. Only compatible schemas are shown.',
+			'value'       => $this->schemaref,
 			'options'     => $this->getDeckCompatibleSchemaOptions(),
 		]);
 		$content .= $this->form->field('extra', [
