@@ -869,6 +869,10 @@ final class ExtensionManager
 	 * After a successful register(), update stored permissions to reflect
 	 * the extension's current capabilities. New capabilities default to ON,
 	 * removed capabilities are pruned, existing choices are preserved.
+	 *
+	 * Skips persisting if nothing changed — avoids hammering the state file
+	 * on every request, which would otherwise create a race with concurrent
+	 * readers in discoverAndRegister().
 	 */
 	private function updateStoredCapabilities(string $id, ExtensionContext $context): void
 	{
@@ -878,6 +882,7 @@ final class ExtensionManager
 		}
 
 		$capabilities = $context->getCapabilities();
+		$original     = $state->permissions;
 
 		if ($state->permissions === []) {
 			// First run — set all detected capabilities to ON
@@ -891,6 +896,10 @@ final class ExtensionManager
 			}
 			// Remove capabilities the extension no longer uses
 			$state->permissions = array_intersect_key($state->permissions, $capabilities);
+		}
+
+		if ($state->permissions === $original) {
+			return;
 		}
 
 		$this->stateRepository->saveState($id, $state);

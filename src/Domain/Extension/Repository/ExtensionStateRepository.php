@@ -110,8 +110,16 @@ final class ExtensionStateRepository
 		}
 
 		$json = json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-		if ($json !== false) {
-			$this->storage->write(self::STATE_FILE, $json);
+		if ($json === false) {
+			return;
 		}
+
+		// Write atomically via temp file + rename. A non-atomic write leaves a
+		// window where concurrent readers see an empty/partial file, which causes
+		// discoverAndRegister() to treat the extension as new and overwrite the
+		// state with enabled=false.
+		$tmpFile = self::STATE_FILE . '.tmp.' . bin2hex(random_bytes(4));
+		$this->storage->write($tmpFile, $json);
+		$this->storage->move($tmpFile, self::STATE_FILE);
 	}
 }
