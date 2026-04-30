@@ -176,6 +176,12 @@ class TotalForm implements \Stringable
 		'placeholder',
 		'settings',
 		'options',
+		// Schema-reference keys for card / deck / deckTable fields.
+		// These flow through buildFieldOptions and get moved into `settings`
+		// before the field is constructed.
+		'schemaref',
+		'deckref',
+		'deckItemLabel',
 	];
 
 	// These are settings that can get passed to the FormField class
@@ -507,6 +513,48 @@ class TotalForm implements \Stringable
 		}
 
 		return $this->templateLister->listBuilderTemplates('pages', true);
+	}
+
+	/**
+	 * Get the property names defined on the current collection's object schema.
+	 * Used for propertyOptions: "schemaProperties" in schema settings — useful
+	 * when a field needs to reference a property of the collection being edited
+	 * (e.g. picking the date property for a sitemap).
+	 *
+	 * Resolution order: explicit `$collection` arg → loaded `collectionData->schema`
+	 * (works for CollectionForm where the collection name lives in $this->id) →
+	 * `$this->collection` (works for ObjectForm). Returns an empty list when no
+	 * source is available or the schema can't be loaded.
+	 *
+	 * @return array<string>
+	 */
+	public function schemaPropertyKeys(string $collection = ''): array
+	{
+		try {
+			if ($collection !== '') {
+				$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+
+				return array_keys($schema->properties);
+			}
+
+			// CollectionForm path: schema name lives on the loaded CollectionData
+			if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
+				$schema = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+
+				return array_keys($schema->properties);
+			}
+
+			// ObjectForm path: collection name on the form itself
+			if ($this->collection !== '') {
+				$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
+
+				return array_keys($schema->properties);
+			}
+		} catch (\Throwable) {
+			return [];
+		}
+
+		return [];
 	}
 
 	/**

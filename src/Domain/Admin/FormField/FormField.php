@@ -382,6 +382,10 @@ class FormField
 			return $this->form->pageListForBuilder();
 		}
 
+		if ($source === 'schemaProperties') {
+			return $this->form->schemaPropertyKeys();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}

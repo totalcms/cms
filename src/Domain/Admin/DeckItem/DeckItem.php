@@ -130,7 +130,8 @@ class DeckItem
 			];
 
 			// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
-			// This ensures they're available as constructor parameters for FormField
+			// This ensures they're available as constructor parameters for FormField.
+			// Mirror of CardField::buildSubFields — keep the two in sync.
 			$filteredAttributes = TotalForm::filterFieldAttributes($resolvedSettings);
 			$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
 

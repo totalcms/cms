@@ -14,6 +14,21 @@ export default class CardField extends TotalField {
         super(container, settings);
 
         this.schemaref = container.dataset.schemaref || container.dataset.deckref || '';
+
+        // Visibility lookups (`watch: enabled`) need to resolve against the card's
+        // sub-fields, not the parent form's top-level fields. Defer until the form
+        // is ready so all sub-field TotalField instances exist on their containers.
+        if (this.form && this.form.form) {
+            this.form.form.addEventListener('totalform:ready', () => this.initVisibility(), { once: true });
+        }
+    }
+
+    initVisibility() {
+        if (!this.form || !this.form.visibility) return;
+        const fields = this.subFields();
+        if (fields.length > 0) {
+            this.form.visibility.initializeScope(this.container, fields);
+        }
     }
 
     //-------------------------

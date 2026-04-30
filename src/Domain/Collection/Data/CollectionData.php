@@ -56,6 +56,9 @@ class CollectionData
 	/** @var array<string,array<string>> */
 	public array $manualSort = [];  // Manual sort orders keyed by property name
 
+	/** @var array<string,mixed> */
+	public array $sitemap = [];  // Sitemap card settings (enabled, date, frequency, priority, include, exclude)
+
 	public function __construct()
 	{
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -111,6 +114,10 @@ class CollectionData
 
 		if ($this->manualSort !== []) {
 			$collection['manualSort'] = $this->manualSort;
+		}
+
+		if ($this->sitemap !== []) {
+			$collection['sitemap'] = $this->sitemap;
 		}
 
 		return $collection;

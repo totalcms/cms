@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -91,6 +92,16 @@ class CardField extends FormField
 		return $attributes;
 	}
 
+	/**
+	 * Cards render their sub-fields inside a CSS Grid container that needs to be
+	 * a direct child of `.form-field` for the layout to lay out cleanly. Skip the
+	 * default `.form-group` wrapper that the base class adds.
+	 */
+	public function createFormGroup(string $content): string
+	{
+		return $content;
+	}
+
 	private function fetchCardSchema(): SchemaData
 	{
 		$schemaFetcher = $this->form->getSchemaFetcher();
@@ -146,6 +157,12 @@ class CardField extends FormField
 				'required'     => in_array($propertyName, $requiredFields, true),
 				'card_context' => true,
 			];
+
+			// Promote attribute settings (min, max, step, pattern, rows, etc.) from
+			// `settings` to top-level so they reach the FormField constructor params.
+			// Mirror of DeckItem::buildFields — keep the two in sync.
+			$filteredAttributes = TotalForm::filterFieldAttributes($resolvedSettings);
+			$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
 
 			$content .= $this->form->subField($propertyName, $fieldConfig);
 		}

@@ -862,8 +862,8 @@ readonly class TotalFormFactory
 				'settings'    => $fieldSchema['settings'] ?? [],
 			];
 
-			// Merge deck-specific schema keys into settings
-			if ($fieldType === 'deck' || $fieldType === 'deckTable') {
+			// Merge schema-reference keys into settings for fields that hydrate from another schema
+			if (in_array($fieldType, ['deck', 'deckTable', 'card'], true)) {
 				$schemaref = PropertyDefinition::extractSchemaRef($fieldSchema);
 				if ($schemaref !== null) {
 					$fieldSettings['settings']['schemaref'] = $schemaref;
