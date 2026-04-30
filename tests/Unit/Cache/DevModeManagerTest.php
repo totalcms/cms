@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Tests\Unit\Cache;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Event\EventDispatcher;
 
 /**
  * Test DevModeManager service.
@@ -17,7 +19,7 @@ final class DevModeManagerTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->devModeManager = new DevModeManager();
+		$this->devModeManager = new DevModeManager(new EventDispatcher(new NullLogger()));
 		$this->testFile       = sys_get_temp_dir() . '/totalcms_devmode.json';
 
 		// Clean up any existing state

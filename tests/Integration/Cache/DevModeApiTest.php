@@ -36,7 +36,7 @@ final class DevModeApiTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		$this->devModeManager = new DevModeManager();
+		$this->devModeManager = new DevModeManager(new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()));
 
 		// Create a simple CacheManager for testing (all services disabled)
 		$config = new Config([
@@ -86,6 +86,7 @@ final class DevModeApiTest extends TestCase
 			$watermarkCleanupService,
 			$this->devModeManager,
 			$invalidationSignal,
+			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
 			$config,
 			$mockLoggerFactoryForCache
 		);

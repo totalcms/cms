@@ -83,7 +83,8 @@ function createRouteTestManager(): ExtensionManager
 	$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
 	$settingsStorage->method('fileExists')->willReturn(false);
 
-	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());
+	$manifestValidator = new ManifestValidator(test()->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$discovery = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 	$container = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
 
@@ -94,5 +95,6 @@ function createRouteTestManager(): ExtensionManager
 		new ExtensionSettingsManager($settingsStorage),
 		$container,
 		new NullLogger(),
+		$manifestValidator,
 	);
 }

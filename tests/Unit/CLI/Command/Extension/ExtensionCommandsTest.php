@@ -37,7 +37,8 @@ function createTestDependencies(): array
 	$config          = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = $fixturesDir;
 
-	$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());
+	$manifestValidator = new ManifestValidator(test()->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$discovery = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 
 	$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
 	$settingsStorage->method('fileExists')->willReturn(false);
@@ -53,6 +54,7 @@ function createTestDependencies(): array
 		$settingsManager,
 		$mockContainer,
 		new NullLogger(),
+		$manifestValidator,
 	);
 
 	return [

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -29,6 +30,7 @@ final class CacheManagerVersionCheckTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $watermarkCleanupService;
 	private \PHPUnit\Framework\MockObject\MockObject $devModeManager;
 	private \PHPUnit\Framework\MockObject\MockObject $invalidationSignal;
+	private EventDispatcher $eventDispatcher;
 	private \PHPUnit\Framework\MockObject\MockObject $config;
 	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 
@@ -46,6 +48,7 @@ final class CacheManagerVersionCheckTest extends TestCase
 		$this->watermarkCleanupService = $this->createMock(WatermarkCleanupService::class);
 		$this->devModeManager          = $this->createMock(DevModeManager::class);
 		$this->invalidationSignal      = $this->createMock(CacheInvalidationSignal::class);
+		$this->eventDispatcher         = new EventDispatcher($this->createMock(\Psr\Log\LoggerInterface::class));
 		$this->config                  = $this->createMock(Config::class);
 		$this->loggerFactory           = $this->createMock(LoggerFactory::class);
 
@@ -89,6 +92,7 @@ final class CacheManagerVersionCheckTest extends TestCase
 			$this->watermarkCleanupService,
 			$this->devModeManager,
 			$this->invalidationSignal,
+			$this->eventDispatcher,
 			$this->config,
 			$this->loggerFactory,
 		);

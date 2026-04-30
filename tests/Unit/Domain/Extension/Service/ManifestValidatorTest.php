@@ -2,10 +2,17 @@
 
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+
+function createManifestValidator(): ManifestValidator
+{
+	$editionService = test()->createMock(EditionFeatureService::class);
+	return new ManifestValidator($editionService);
+}
 
 describe('ManifestValidator', function (): void {
 	test('validates a correct manifest', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'      => 'vendor/my-ext',
 			'name'    => 'My Extension',
@@ -16,21 +23,21 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('rejects missing ID', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray(['name' => 'Test', 'version' => '1.0.0']);
 
 		expect($validator->validate($manifest))->toContain('id');
 	});
 
 	test('rejects missing name', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray(['id' => 'vendor/test', 'version' => '1.0.0']);
 
 		expect($validator->validate($manifest))->toContain('name');
 	});
 
 	test('rejects missing version', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = new ExtensionManifest(
 			id: 'vendor/test',
 			name: 'Test',
@@ -50,7 +57,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('rejects invalid ID format', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'      => 'InvalidFormat',
 			'name'    => 'Test',
@@ -61,7 +68,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('rejects invalid version format', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'      => 'vendor/test',
 			'name'    => 'Test',
@@ -72,7 +79,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('rejects invalid min_edition', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'          => 'vendor/test',
 			'name'        => 'Test',
@@ -84,7 +91,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('allows valid min_edition values', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 
 		foreach (['lite', 'standard', 'pro'] as $edition) {
 			$manifest = ExtensionManifest::fromArray([
@@ -99,7 +106,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('reports no incompatibility when requirements are met', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'       => 'vendor/test',
 			'name'     => 'Test',
@@ -111,7 +118,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('reports PHP version incompatibility', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'       => 'vendor/test',
 			'name'     => 'Test',
@@ -126,7 +133,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('reports Total CMS version incompatibility', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'       => 'vendor/test',
 			'name'     => 'Test',
@@ -143,7 +150,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('reports both incompatibilities at once', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'       => 'vendor/test',
 			'name'     => 'Test',
@@ -157,7 +164,7 @@ describe('ManifestValidator', function (): void {
 	});
 
 	test('ignores unparseable version constraints', function (): void {
-		$validator = new ManifestValidator();
+		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
 			'id'       => 'vendor/test',
 			'name'     => 'Test',

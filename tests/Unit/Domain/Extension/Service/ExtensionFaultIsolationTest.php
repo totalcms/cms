@@ -32,7 +32,8 @@ describe('Extension fault isolation', function (): void {
 		$settingsStorage->method('fileExists')->willReturn(false);
 		$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-		$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());
+		$manifestValidator = new ManifestValidator(test()->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class));
+		$discovery = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 		$container = test()->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);
 
@@ -43,6 +44,7 @@ describe('Extension fault isolation', function (): void {
 			$settingsManager,
 			$container,
 			new NullLogger(),
+			$manifestValidator,
 		);
 
 		$manager->discoverAndRegister();
@@ -87,7 +89,8 @@ describe('Extension fault isolation', function (): void {
 		$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
 		$settingsStorage->method('fileExists')->willReturn(false);
 
-		$discovery = new ExtensionDiscovery($config, new ManifestValidator(), new NullLogger());
+		$manifestValidator = new ManifestValidator(test()->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class));
+		$discovery = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 		$container = test()->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);
 
@@ -98,6 +101,7 @@ describe('Extension fault isolation', function (): void {
 			new ExtensionSettingsManager($settingsStorage),
 			$container,
 			new NullLogger(),
+			$manifestValidator,
 		);
 
 		$manager->discoverAndRegister();
