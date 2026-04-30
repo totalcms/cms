@@ -154,7 +154,9 @@ export default class QuickNav {
 		this.list.innerHTML = this.filtered.map((item, i) => {
 			const activeClass = i === this.activeIndex ? ' active' : '';
 			const label = query ? highlightMatch(item.label, query) : escapeHtml(item.label);
+			const iconKey = iconKeyFor(item);
 			return `<li class="quick-nav-item${activeClass}" data-index="${i}">
+				<span class="quick-nav-icon" data-icon="${iconKey}"></span>
 				<span class="quick-nav-section">${escapeHtml(item.section)}</span>
 				<span class="quick-nav-label">${label}</span>
 			</li>`;
@@ -210,6 +212,35 @@ function highlightMatch(text, query) {
 
 function escapeRegex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function iconKeyFor(item) {
+	const sectionMap = {
+		'Collections' : 'collections',
+		'Schemas'     : 'schemas',
+		'Data Views'  : 'dataviews',
+		'Utilities'   : 'utils',
+		'Settings'    : 'settings',
+		'Docs'        : 'docs',
+		'Extensions'  : 'extensions',
+	};
+	if (sectionMap[item.section]) return sectionMap[item.section];
+
+	// Top-level Navigation: derive from path's first segment
+	const first = String(item.path || '').split('/')[0];
+	const navMap = {
+		'collections' : 'collections',
+		'schemas'     : 'schemas',
+		'dataviews'   : 'dataviews',
+		'builder'     : 'builder',
+		'mailer'      : 'mailer',
+		'playground'  : 'playground',
+		'utils'       : 'utils',
+		'extensions'  : 'extensions',
+		'settings'    : 'settings',
+		'docs'        : 'docs',
+	};
+	return navMap[first] || 'utils';
 }
 
 function scoreItem(item, terms) {

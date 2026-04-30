@@ -55,7 +55,7 @@ window.TCMS_QUICK_NAV = [
 {% if cms.auth.canAccessSchemasOperation('read') %}
 {% for category, schemas in cms.schema.byCategory() %}
 {% for s in schemas %}
-{% if cms.auth.canAccessSchema(s.id, 'read') %}
+{% if s.id != 'blog-legacy' and cms.auth.canAccessSchema(s.id, 'read') %}
 {"label":"{{ s.id | e('js') }}","section":"Schemas","path":"schemas/{{ s.id | e('js') }}","keywords":"{{ category | e('js') }} {{ s.description | e('js') }}"},
 {% endif %}
 {% endfor %}

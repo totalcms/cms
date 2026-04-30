@@ -79,7 +79,7 @@ dialog.quick-nav {
 		padding       : 0.6rem 1.25rem;
 		cursor        : pointer;
 		display       : flex;
-		align-items   : baseline;
+		align-items   : center;
 		gap           : 0.75rem;
 
 		&.active {
@@ -89,6 +89,32 @@ dialog.quick-nav {
 		&:hover:not(.active) {
 			background-color : oklch(var(--totalform-nearwhite));
 		}
+	}
+
+	// ── Section icon (reuses sidebar nav icon variables) ──
+	.quick-nav-icon {
+		flex-shrink      : 0;
+		width            : 1.25rem;
+		height           : 1.25rem;
+		background-color : oklch(var(--totalform-darkgray) / 0.7);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+
+		&[data-icon="collections"] { mask-image : var(--icon-collections); }
+		&[data-icon="schemas"]     { mask-image : var(--icon-schema); }
+		&[data-icon="dataviews"]   { mask-image : var(--icon-data-views); }
+		&[data-icon="builder"]     { mask-image : var(--icon-templates); }
+		&[data-icon="mailer"]      { mask-image : var(--icon-mailer); }
+		&[data-icon="playground"]  { mask-image : var(--icon-twig-playground); }
+		&[data-icon="utils"]       { mask-image : var(--icon-tools); }
+		&[data-icon="settings"]    { mask-image : var(--icon-cog); }
+		&[data-icon="docs"]        { mask-image : var(--icon-docs); }
+		&[data-icon="extensions"]  { mask-image : var(--icon-extension); }
+	}
+
+	.quick-nav-item.active .quick-nav-icon {
+		background-color : oklch(var(--totalform-accent));
 	}
 
 	.quick-nav-section {
