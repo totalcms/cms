@@ -311,4 +311,65 @@ final class DeckCompatibilityCheckerTest extends TestCase
 
 		$this->assertTrue($this->checker->isCompatible($schema));
 	}
+
+	// --- Card composition rules ---
+	//
+	// The same compatibility checker is used to validate both deck item schemas
+	// and card sub-schemas. The rules:
+	//
+	//   card-in-card  → allowed (nested config object grouping)
+	//   card-in-deck  → allowed (deck items can hold card config)
+	//   deck-in-card  → blocked (deck.json is in INCOMPATIBLE_REFS)
+	//   deck-in-deck  → blocked (existing behavior)
+
+	public function testIsCompatibleAllowsCardPropertyByType(): void
+	{
+		$schema = [
+			'properties' => [
+				'sitemap' => ['type' => 'card'],
+				'title'   => ['type' => 'string'],
+			],
+		];
+
+		$this->assertTrue($this->checker->isCompatible($schema));
+	}
+
+	public function testIsCompatibleAllowsCardPropertyByRef(): void
+	{
+		$schema = [
+			'properties' => [
+				'sitemap' => [
+					'$ref'      => 'https://www.totalcms.co/schemas/properties/card.json',
+					'schemaref' => 'https://www.totalcms.co/schemas/sitemap-settings.json',
+				],
+			],
+		];
+
+		$this->assertTrue($this->checker->isCompatible($schema));
+	}
+
+	public function testIsCompatibleBlocksDeckPropertyByType(): void
+	{
+		$schema = [
+			'properties' => [
+				'features' => ['type' => 'deck'],
+			],
+		];
+
+		$this->assertFalse($this->checker->isCompatible($schema));
+	}
+
+	public function testIsCompatibleBlocksDeckPropertyByRef(): void
+	{
+		$schema = [
+			'properties' => [
+				'features' => [
+					'$ref'      => 'https://www.totalcms.co/schemas/properties/deck.json',
+					'schemaref' => 'https://www.totalcms.co/schemas/feature.json',
+				],
+			],
+		];
+
+		$this->assertFalse($this->checker->isCompatible($schema));
+	}
 }

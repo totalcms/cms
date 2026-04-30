@@ -79,6 +79,7 @@ class TotalForm implements \Stringable
 			'multiselect',
 		],
 		'Special Fields' => [
+			'card',
 			'color',
 			'deck',
 			'deckTable',

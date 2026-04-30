@@ -19,6 +19,7 @@
                 {"type": "string"},
                 {"type": "number"},
                 {"type": "boolean"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/card.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/color.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/email.json"},

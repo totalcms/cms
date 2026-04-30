@@ -12,6 +12,7 @@ import NumberField from './number';
 import PriceField from './price';
 import ColorField from './color';
 import DateField from './date';
+import CardField from './card';
 import DeckField from './deck';
 import DeckTableField from './deckTable';
 import PasswordField from './password';
@@ -331,6 +332,9 @@ export default class TotalForm {
 
 			case "code":
 				return new CodeField(field,settings);
+
+			case "card":
+				return new CardField(field, settings);
 
 			case "deck":
                 return new DeckField(field, settings);

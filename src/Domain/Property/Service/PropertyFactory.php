@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
@@ -33,6 +34,11 @@ readonly class PropertyFactory
 		// Special handling for deck properties
 		if ($type === 'deck') {
 			return $this->createDeck($definition, $value, $definition->settings);
+		}
+
+		// Special handling for card properties (single-instance deck)
+		if ($type === 'card') {
+			return $this->createCard($definition, $value, $definition->settings);
 		}
 
 		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
@@ -124,6 +130,61 @@ readonly class PropertyFactory
 		} catch (\Exception) {
 			// If deck processing fails, return original data to avoid breaking the system
 			return new DeckData($value, $settings);
+		}
+	}
+
+	/**
+	 * Create a CardData object with properly processed fields.
+	 *
+	 * A card stores a single nested object whose shape is defined by another schema
+	 * (referenced via `schemaref`). Each field is processed through generateProperty
+	 * so defaults, type coercion, and validation behave the same as on a top-level object.
+	 *
+	 * @param mixed $value The raw card data (associative array of field values)
+	 * @param array<string,mixed> $settings The card settings
+	 */
+	public function createCard(PropertyDefinition $definition, mixed $value, array $settings = []): CardData
+	{
+		// If no card data provided, return empty card
+		if (empty($value) || !is_array($value)) {
+			return new CardData([], $settings);
+		}
+
+		$schemaref = $definition->schemaref;
+
+		// If no schema reference, return card data as-is (no processing)
+		if (in_array($schemaref, [null, '', '0'], true)) {
+			return new CardData($value, $settings);
+		}
+
+		try {
+			// Get the card sub-schema
+			$schemaId   = SchemaFetcher::extractSchemaId($schemaref);
+			$cardSchema = $this->schemaFetcher->fetchSchema($schemaId);
+
+			// Validate that the card schema doesn't contain incompatible properties
+			// (file-based fields aren't supported inside cards/decks)
+			$this->validateDeckSchema($cardSchema, $schemaId);
+
+			$processed = [];
+
+			// Iterate over schema properties (like ObjectFactory does for objects)
+			// so all sub-fields are processed with proper defaults and type conversion.
+			// Skip `id` — required on every schema by the SchemaSaver, but meaningless
+			// for a card (which is a single object, not an array of identified items).
+			foreach ($cardSchema->properties as $fieldName => $fieldSchema) {
+				if ($fieldName === 'id') {
+					continue;
+				}
+				$fieldValue            = $value[$fieldName] ?? null;
+				$propertyObject        = $this->generateProperty(PropertyDefinition::fromArray($fieldSchema), $fieldValue);
+				$processed[$fieldName] = $propertyObject->transform();
+			}
+
+			return new CardData($processed, $settings);
+		} catch (\Exception) {
+			// If card processing fails, return original data to avoid breaking the system
+			return new CardData($value, $settings);
 		}
 	}
 
