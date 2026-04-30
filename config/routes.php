@@ -11,6 +11,10 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/admin.php')($app);
 	(require __DIR__ . '/routes/setup.php')($app);
 
+	// Public crawler-facing routes (not under /api so they live at conventional paths)
+	(require __DIR__ . '/routes/sitemap.php')($app);
+	(require __DIR__ . '/routes/feed.php')($app);
+
 	// All API routes under /api prefix
 	$app->group('/api', function (RouteCollectorProxy $api): void {
 		(require __DIR__ . '/routes/access-groups.php')($api);
@@ -32,8 +36,6 @@ return function (App $app): void {
 		(require __DIR__ . '/routes/templates.php')($api);
 		(require __DIR__ . '/routes/designer.php')($api);
 		(require __DIR__ . '/routes/upload.php')($api);
-		(require __DIR__ . '/routes/sitemap.php')($api);
-		(require __DIR__ . '/routes/feed.php')($api);
 		(require __DIR__ . '/routes/playground.php')($api);
 		(require __DIR__ . '/routes/dataviews.php')($api);
 		(require __DIR__ . '/routes/orphan.php')($api);
