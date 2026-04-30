@@ -30,6 +30,7 @@
 		},
 		"maxDownloadSize": {
 			"type"        : "number",
+			"field"       : "number",
 			"label"       : "Max URL Download Size (MB)",
 			"help"        : "The maximum file size in megabytes allowed when downloading files from a URL. This protects your server from downloading excessively large files. Set to 0 for unlimited.",
 			"placeholder" : "2048",

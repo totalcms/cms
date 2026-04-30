@@ -282,6 +282,14 @@ class FormField
 			$this->value = json_encode($this->value);
 		}
 
+		$inputMode = match ($this->inputType) {
+			'number' => ($this->step !== null && $this->step < 1) ? 'decimal' : 'numeric',
+			'tel'    => 'tel',
+			'url'    => 'url',
+			'email'  => 'email',
+			default  => null,
+		};
+
 		$attributes = [
 			'type'             => $this->inputType,
 			'id'               => "field-{$this->uuid}",
@@ -289,6 +297,7 @@ class FormField
 			'required'         => $this->required ? '' : null,
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
+			'inputmode'        => $inputMode,
 			'minlength'        => $this->minlength > 0 ? (string)$this->minlength : null,
 			'maxlength'        => $this->maxlength > 0 ? (string)$this->maxlength : null,
 			'pattern'          => $this->pattern === '' ? null : $this->pattern,

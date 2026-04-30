@@ -19,4 +19,13 @@ class PriceField extends FormField
 		// Set default step if not already set
 		$this->step = 0.01;
 	}
+
+	/** @return array<string,?string> */
+	protected function formFieldAttributes(): array
+	{
+		$attributes = parent::formFieldAttributes();
+		$attributes['inputmode'] = 'decimal';
+
+		return $attributes;
+	}
 }
