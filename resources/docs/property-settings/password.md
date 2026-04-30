@@ -18,13 +18,27 @@ Password fields automatically include a confirmation field and built-in validati
 - Displays "Passwords do not match" error if values differ
 - Both fields must pass validation (e.g., minlength, pattern) individually
 
-## Custom Placeholder for Confirmation Field
+## Settings
 
-Use the `confirmPlaceholder` setting to customize the placeholder text for the confirmation field:
+### `confirmPlaceholder`
+
+Customize the placeholder text for the confirmation field:
 
 ```json
 {
   "confirmPlaceholder" : "Confirm your new password"
+}
+```
+
+If not specified, the confirmation field uses the same placeholder as the main password field.
+
+### `numeric`
+
+Set to `true` to show a numeric keyboard on mobile devices. Useful for PIN-style passwords.
+
+```json
+{
+  "numeric" : true
 }
 ```
 
@@ -43,9 +57,6 @@ Use the `confirmPlaceholder` setting to customize the placeholder text for the c
   }
 }
 ```
-
-**Default behavior:**
-If `confirmPlaceholder` is not specified, the confirmation field will use the same placeholder as the main password field.
 
 ## How Validation Works
 

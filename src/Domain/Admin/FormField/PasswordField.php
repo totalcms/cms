@@ -11,6 +11,18 @@ class PasswordField extends FormField
 	protected string $defaultInputType = 'password';
 	protected string $defaultFieldType = 'password';
 
+	/** @return array<string,?string> */
+	protected function formFieldAttributes(): array
+	{
+		$attributes = parent::formFieldAttributes();
+
+		if (!empty($this->settings['numeric'])) {
+			$attributes['inputmode'] = 'numeric';
+		}
+
+		return $attributes;
+	}
+
 	public function build(): string
 	{
 		// Main Password Input
