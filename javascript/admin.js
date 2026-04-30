@@ -19,6 +19,7 @@ import initDocHighlight from './doc-highlight';
 import PasskeyLogin from './passkey-login';
 import PasskeyManager from './passkeys';
 import tcmsConfirm from './confirm-dialog';
+import QuickNav from './quick-nav';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
@@ -153,4 +154,7 @@ document.addEventListener("DOMContentLoaded", event => {
 	if (passkeyMgr) new PasskeyManager(passkeyMgr);
 
 	initExternalLinks();
+
+	// Quick navigation (Shift+Cmd+O)
+	if (window.TCMS_QUICK_NAV) new QuickNav();
 });

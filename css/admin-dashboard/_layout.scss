@@ -105,6 +105,19 @@ body {
 	.mailer {
 		mask-image : var(--icon-mailer);
 	}
+	.quick-nav-trigger {
+		display          : block;
+		width            : 3rem;
+		height           : 3rem;
+		padding          : 0;
+		border           : none;
+		cursor           : pointer;
+		background-color : oklch(var(--totalform-nearblack));
+		mask-image       : var(--icon-search);
+		mask-size        : 1.5rem;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
 	.extensions {
 		mask-image : var(--icon-extension);
 	}

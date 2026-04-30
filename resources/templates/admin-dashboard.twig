@@ -73,6 +73,9 @@
 							: ['admin-logo-default.twig']
 						, ignore_missing = true) }}
                     </li>
+                    <li class="menu-item">
+                        <button class="quick-nav-trigger" type="button" title="Quick Navigation (&#x21E7;&#x2318;O)"></button>
+                    </li>
                     {% if cms.auth.canAccessCollectionsOperation('read') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
                         <a class="collections" href="collections" title="{{ t('nav.collections') }}">{{ t('nav.collections') }}</a>
@@ -204,6 +207,7 @@
 
     {% endblock %}
 
+	{% include 'admin/quick-nav-index.twig' %}
 	<script>window.TCMS_TRANSLATIONS = {{ cms.locale.jsTranslations()|json_encode|raw }};</script>
 	<script>window.TCMS_CONFIG = {
 		confirmCountdown: {{ cms.config('dashboard', 'confirmCountdown')|json_encode|raw }}
