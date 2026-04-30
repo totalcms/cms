@@ -110,6 +110,81 @@
 .totalform-code-editor-javascript,
 .totalform-code-editor-js {}
 
+//------------------------------
+// Fullscreen toggle button
+//------------------------------
+.code-fullscreen-btn {
+	position         : absolute;
+	bottom           : 8px;
+	right            : 8px;
+	z-index          : 10;
+	width            : 28px;
+	height           : 28px;
+	padding          : 0;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-purewhite));
+	cursor           : pointer;
+	display          : flex;
+	align-items      : center;
+	justify-content  : center;
+	opacity          : 0.6;
+	transition       : opacity 0.2s ease, background-color 0.2s ease;
+
+	&:hover {
+		opacity          : 1;
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+}
+
+.code-fullscreen-icon {
+	display          : block;
+	width            : 16px;
+	height           : 16px;
+	mask-image        : var(--icon-ste-fullscreen);
+	mask-size         : contain;
+	mask-repeat       : no-repeat;
+	mask-position     : center;
+	-webkit-mask-image    : var(--icon-ste-fullscreen);
+	-webkit-mask-size     : contain;
+	-webkit-mask-repeat   : no-repeat;
+	-webkit-mask-position : center;
+	background-color : oklch(var(--totalform-darkgray));
+}
+
+// Position the editor container relative so the button anchors correctly
+.totalform-code-editor {
+	position: relative;
+}
+
+//------------------------------
+// Fullscreen mode
+//------------------------------
+.code-fullscreen {
+	position         : fixed !important;
+	inset            : 0 !important;
+	z-index          : 9999 !important;
+	border-radius    : 0 !important;
+	width            : 100% !important;
+	height           : 100% !important;
+	resize           : none !important;
+	background-color : oklch(var(--totalform-purewhite));
+
+	.cm-editor {
+		height    : 100% !important;
+		font-size : 1rem;
+	}
+
+	.cm-scroller {
+		min-height : 100% !important;
+	}
+
+	.code-fullscreen-btn {
+		bottom : 16px;
+		right  : 16px;
+	}
+}
+
 // Form field container styling
 .totalform .field-container[data-field-type="code"] {
 	flex: 1;

@@ -64,13 +64,57 @@ export default class Code extends TotalField {
         this.editorContainer.classList.add('totalform-code-editor');
         this.editorContainer.classList.add(`totalform-code-editor-${mode}`);
 
-        // Set up auto-resize, auto-save, and form submission
+        // Set up auto-resize, auto-save, form submission, and fullscreen
         this.setupAutoResize();
         this.setupAutoSave();
         this.setupFormSubmission();
+        this.setupFullscreenButton();
 
         // Refresh after initialization
         setTimeout(() => this.editor.refresh(), 150);
+    }
+
+    setupFullscreenButton() {
+        if (!this.editor) return;
+
+        const editorOptions = this.input.dataset.editorOptions ?
+            JSON.parse(this.input.dataset.editorOptions) : {};
+        if (editorOptions.fullscreen === false) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'code-fullscreen-btn';
+        btn.title = 'Fullscreen';
+        btn.setAttribute('aria-label', 'Toggle fullscreen');
+        btn.innerHTML = '<span class="code-fullscreen-icon"></span>';
+        this.editorContainer.appendChild(btn);
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleFullscreen();
+        });
+    }
+
+    toggleFullscreen() {
+        this.editorContainer.classList.toggle('code-fullscreen');
+        const isFullscreen = this.editorContainer.classList.contains('code-fullscreen');
+
+        if (isFullscreen) {
+            this._escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    this.editorContainer.classList.remove('code-fullscreen');
+                    document.removeEventListener('keydown', this._escHandler);
+                    this._escHandler = null;
+                    this.editor.refresh();
+                }
+            };
+            document.addEventListener('keydown', this._escHandler);
+        } else if (this._escHandler) {
+            document.removeEventListener('keydown', this._escHandler);
+            this._escHandler = null;
+        }
+
+        this.editor.refresh();
     }
 
     setupAutoResize() {

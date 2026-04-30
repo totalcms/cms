@@ -50,6 +50,7 @@ class CodeField extends TextareaField
 			'foldGutter'    => $this->settings['foldGutter'] ?? true,
 			'matchBrackets' => $this->settings['matchBrackets'] ?? true,
 			'autoCloseTags' => $this->settings['autoCloseTags'] ?? true,
+			'fullscreen'    => $this->settings['fullscreen'] ?? true,
 		];
 
 		$attributes['data-editor-options'] = json_encode($editorOptions);
