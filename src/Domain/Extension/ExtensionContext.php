@@ -378,13 +378,13 @@ final class ExtensionContext
 			'routes:public'  => 'Public Routes',
 			'routes:admin'   => 'Admin Pages',
 			'cli:commands'   => 'CLI Commands',
-			'admin:nav'      => 'Admin Navigation',
-			'admin:widgets'  => 'Dashboard Widgets',
+			'admin:nav'      => 'Admin Nav',
+			'admin:widgets'  => 'Dash Widgets',
 			'admin:assets'   => 'Admin Assets',
 			'events:listen'  => 'Event Listeners',
 			'fields'         => 'Custom Fields',
 			'schemas'        => 'Schemas',
-			'container'      => 'Container Definitions',
+			'container'      => 'Container Defs',
 		];
 	}
 
