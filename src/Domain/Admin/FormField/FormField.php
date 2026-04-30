@@ -401,13 +401,20 @@ class FormField
 		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
 		$view          = $settings['view'] ?? '';
+		$format        = isset($settings['format']) ? (string)$settings['format'] : '';
 
 		if ($collection === '' && $view === '') {
 			return []; // No data source specified, return empty array
 		}
 
-		// Split label property by spaces to support multiple properties
-		$labelProperties = explode($labelJoin, $labelProperty);
+		// When a format template is provided, derive the property list from {placeholder} tokens.
+		// Otherwise fall back to splitting the label by the join character.
+		if ($format !== '') {
+			preg_match_all('/\{(\w+)\}/', $format, $matches);
+			$labelProperties = array_values(array_unique($matches[1]));
+		} else {
+			$labelProperties = explode($labelJoin, $labelProperty);
+		}
 
 		// Combine label properties with value property for fetching
 		$propertiesToFetch = array_unique(array_merge($labelProperties, [$valueProperty]));
@@ -439,10 +446,16 @@ class FormField
 			return [['value' => '', 'label' => "Error: {$source} returned invalid data for relationalOptions"]];
 		}
 
-		// Build the label from multiple properties if specified
-		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {
-			// If multiple label properties, concatenate them with spaces
-			if (count($labelProperties) > 1) {
+		// Build the label using either a format template or label/join concatenation
+		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin, $format): array {
+			if ($format !== '') {
+				$label = (string)preg_replace_callback(
+					'/\{(\w+)\}/',
+					fn (array $m): string => (string)($o[$m[1]] ?? ''),
+					$format,
+				);
+			} elseif (count($labelProperties) > 1) {
+				// If multiple label properties, concatenate them with the join character
 				$labelParts = array_map(fn (string $prop) => $o[$prop] ?? '', $labelProperties);
 				$label      = implode($labelJoin, array_filter($labelParts)); // Filter out empty values
 			} else {

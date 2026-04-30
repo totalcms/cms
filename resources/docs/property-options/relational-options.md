@@ -32,52 +32,47 @@ Instead of referencing a collection directly, you can populate options from a [D
 }
 ```
 
-All other settings (`label`, `value`, `join`, `include`, `exclude`) work the same way with DataView-backed options.
+All other settings (`label`, `format`, `value`, `include`, `exclude`, `sort`) work the same way with DataView-backed options.
 
-## Multiple Fields in Label
+## Custom Label Format
 
-You can combine multiple fields in the label using the `join` parameter. This allows you to display more descriptive labels by combining multiple properties from the related object.
+Use the `format` setting to build labels from multiple fields with arbitrary surrounding text. Wrap each field reference in `{ }` — anything outside the braces is rendered literally.
 
 ```json
 {
   "relationalOptions" : {
   	"collection" : "authors",
-  	"label"      : "firstName lastName",
-  	"value"      : "id",
-  	"join"       : " "
+  	"format"     : "{firstName} {lastName}",
+  	"value"      : "id"
   }
 }
 ```
 
-In this example, the label will display "John Doe" by combining the `firstName` and `lastName` fields with a space. The `join` parameter defaults to a single space `" "` if not specified.
+This produces labels like `John Doe`. When `format` is set, it replaces the `label` setting — only the properties named inside `{ }` are fetched.
 
-## Advanced Examples
-
-**Combine with separator:**
+**With surrounding punctuation:**
 ```json
 {
   "relationalOptions" : {
-  	"collection" : "products",
-  	"label"      : "name, category",
-  	"value"      : "id",
-  	"join"       : ", "
+  	"collection" : "builder-pages",
+  	"format"     : "{title} ({route})",
+  	"value"      : "id"
   }
 }
 ```
-This will create labels like "Product Name - Category Name".
+Produces labels like `About Us (/about)`.
 
 **Three fields:**
 ```json
 {
   "relationalOptions" : {
   	"collection" : "users",
-  	"label"      : "firstName,lastName,email",
-  	"value"      : "id",
-  	"join"       : ","
+  	"format"     : "{firstName} {lastName} <{email}>",
+  	"value"      : "id"
   }
 }
 ```
-This will create labels like "John | Doe | john@example.com".
+Produces labels like `John Doe <john@example.com>`.
 
 ## Filtering Relational Options
 
