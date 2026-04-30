@@ -32,6 +32,7 @@ import FileField from './file';
 import DepotField from './depot';
 import DepotDropField from './depot-drop';
 import CodeField from './code';
+import SecretField from './secret';
 
 // import Deck from './deck';
 // import MarkdownField from './markdown';
@@ -296,6 +297,9 @@ export default class TotalForm {
 
 			case "password":
 				return new PasswordField(field, settings);
+
+			case "secret":
+				return new SecretField(field, settings);
 
             case "range":
                 return new RangeSlider(field, settings);

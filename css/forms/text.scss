@@ -271,6 +271,20 @@
 }
 
 //------------------------------
+// Secret Field
+//------------------------------
+.secret-field .form-group-icon {
+	&:after {
+		mask-image : var(--icon-secret);
+	}
+}
+.secret-field.secret-visible .form-group-icon {
+	&:after {
+		mask-image : var(--icon-eye);
+	}
+}
+
+//------------------------------
 // ID Field
 //------------------------------
 .form-field.id-field {

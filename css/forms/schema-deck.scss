@@ -373,8 +373,19 @@
 		display : none;
 	}
 }
+.secret-field {
+	--schema-icon : var(--icon-secret);
+
+	&.string-type:after {
+		display : none;
+	}
+}
 .hidden-field {
 	--schema-icon : var(--icon-hidden);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .email-field {
 	--schema-icon : var(--icon-email);
