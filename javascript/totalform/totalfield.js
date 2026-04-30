@@ -48,7 +48,14 @@ export default class TotalField {
         }
 
 		this.dispatcher = new TotalDispatcher(this.container);
-		this.storedValue = this.getValue();
+		// Subclasses (image, gallery, file, depot) override getValue() to read from
+		// properties they set up after super(). Fall back to input.value here; the
+		// subclass's first changed() event will overwrite storedValue with the real value.
+		try {
+			this.storedValue = this.getValue();
+		} catch (e) {
+			this.storedValue = this.input.value;
+		}
 
 		this.changeListener();
 		this.initAutogen();

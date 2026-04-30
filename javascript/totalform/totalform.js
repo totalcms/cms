@@ -220,7 +220,8 @@ export default class TotalForm {
 			try {
 				object = this.generateFieldObject(field);
 			} catch (e) {
-				console.warn(e.message);
+				const inputName = field.querySelector("input,textarea,select")?.name;
+				console.warn(`Failed to process field [${field.dataset.type}] name="${inputName}":`, e, field);
 				return;
 			}
             if (object === null || object.isSubField()) return; // if the object is not set, skip it
