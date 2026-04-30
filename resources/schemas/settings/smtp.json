@@ -5,21 +5,24 @@
 	"type"        : "object",
 	"properties"  : {
 		"host": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "SMTP Host",
 			"help"        : "The hostname or IP address of your SMTP server.",
 			"placeholder" : "127.0.0.1",
 			"default"     : "127.0.0.1"
 		},
 		"port": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "SMTP Port",
 			"help"        : "The port number for your SMTP server. Common ports: 25 (default), 587 (TLS), 465 (SSL).",
 			"placeholder" : "25",
 			"default"     : "25"
 		},
 		"secure": {
-			"type"    : "select",
+			"type"    : "string",
+			"field"   : "select",
 			"label"   : "Encryption",
 			"help"    : "The encryption method to use for SMTP connection.",
 			"default" : "TLS",
@@ -33,31 +36,36 @@
 			}
 		},
 		"username": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "SMTP Username",
 			"help"        : "Username for SMTP authentication (if required).",
 			"placeholder" : "username@example.com"
 		},
 		"password": {
-			"type"        : "password",
+			"type"        : "string",
+			"field"       : "secret",
 			"label"       : "SMTP Password",
 			"help"        : "Password for SMTP authentication (if required).",
 			"placeholder" : "••••••••"
 		},
 		"from": {
-			"type"        : "email",
+			"type"        : "string",
+			"field"       : "email",
 			"label"       : "From Address",
 			"help"        : "The email address that emails will be sent from.",
 			"placeholder" : "from@example.com"
 		},
 		"fromName": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "From Name",
 			"help"        : "The name that will appear as the sender.",
 			"placeholder" : "My Company"
 		},
 		"to": {
-			"type"        : "email",
+			"type"        : "string",
+			"field"       : "email",
 			"label"       : "Default To Address",
 			"help"        : "Default recipient email address for test emails.",
 			"placeholder" : "to@example.com"

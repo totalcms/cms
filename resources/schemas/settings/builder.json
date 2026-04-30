@@ -5,13 +5,15 @@
 	"type"        : "object",
 	"properties"  : {
 		"pagesCollection": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "Pages Collection",
 			"help"        : "The collection used for page metadata. Change this if you use a custom schema that extends <code>builder-page</code>.",
 			"placeholder" : "builder-pages"
 		},
 		"assetsPath": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "Assets Path",
 			"help"        : "Public assets directory relative to docroot. Your build tool should output CSS, JS, and other assets here.",
 			"placeholder" : "assets"

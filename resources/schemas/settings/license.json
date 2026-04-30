@@ -5,7 +5,8 @@
 	"type"        : "object",
 	"properties"  : {
 		"simulateEdition": {
-			"type"        : "select",
+			"type"        : "string",
+			"field"       : "select",
 			"label"       : "Simulate Edition",
 			"help"        : "Test how the CMS behaves with different license editions. Only available for development and trial licenses. Pro disables simulation and uses full features.",
 			"default"     : "pro",

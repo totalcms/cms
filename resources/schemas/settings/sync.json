@@ -5,13 +5,15 @@
 	"type"        : "object",
 	"properties"  : {
 		"url": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "Production Server API",
 			"help"        : "The URL of your production Total CMS installation.",
 			"placeholder" : "https://example.com/tcms"
 		},
 		"key": {
-			"type"        : "password",
+			"type"        : "string",
+			"field"       : "secret",
 			"label"       : "API Key",
 			"help"        : "An API key from the production server with import/export permissions.",
 			"placeholder" : "your-api-key"

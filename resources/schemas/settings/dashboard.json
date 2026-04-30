@@ -5,7 +5,8 @@
 	"type"        : "object",
 	"properties"  : {
 		"title": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "Admin Dashboard Browser Title",
 			"help"        : "The browser title displayed in admin dashboard pages. This appears in the browser tab and bookmarks.",
 			"placeholder" : "Total CMS Admin"
@@ -27,19 +28,22 @@
 			"default"     : 5
 		},
 		"accent": {
-			"type"    : "color",
+			"type"    : "string",
+			"field"   : "color",
 			"label"   : "Dashboard Accent Color",
 			"help"    : "The accent color used throughout the admin dashboard.",
 			"default" : "#4d91e2"
 		},
 		"keepIdOnDuplicate": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Keep ID on Duplicate Object?",
 			"help"    : "When enabled, duplicating an object will keep the original ID (user must change it manually before saving). When disabled (default), the ID field is cleared to allow autogen rules to work.",
 			"default" : false
 		},
 		"fullWidthForms": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Full Width Object Forms",
 			"help"    : "When enabled, forms in the admin dashboard expand to fill the full available width instead of being capped at 800px.",
 			"default" : false

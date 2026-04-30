@@ -5,19 +5,22 @@
 	"type"        : "object",
 	"properties"  : {
 		"sentry": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Share Application Errors with Developer",
 			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
 			"default" : true
 		},
 		"notfound": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "404 - Page Not Found Path",
 			"help"        : "The path to the 404 page that will be used when a page is not found. This is used by the CMS to redirect when an object is not found.",
 			"placeholder" : "/404"
 		},
 		"timezone": {
-			"type"        : "select",
+			"type"        : "string",
+			"field"       : "select",
 			"label"       : "Timezone",
 			"placeholder" : "Select Timezone",
 			"help"        : "The timezone that all dates in the CMS will be saved as. If not set, then the default timezone that the server is configured with will be used.",
@@ -33,7 +36,8 @@
 			"default"     : 2048
 		},
 		"locale": {
-			"type"        : "select",
+			"type"        : "string",
+			"field"       : "select",
 			"label"       : "Locale",
 			"placeholder" : "Select Locale",
 			"help"        : "The locale setting affects how dates, numbers, and currency are formatted. This uses PHP's locale system.",

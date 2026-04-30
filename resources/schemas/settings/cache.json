@@ -5,33 +5,39 @@
 	"type"        : "object",
 	"properties"  : {
 		"apcu": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "APCu Enabled",
 			"default" : true
 		},
 		"redis": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Redis Enabled",
 			"default" : true
 		},
 		"memcached": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Memcached Enabled",
 			"default" : true
 		},
 		"filesystem": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Filesystem Enabled",
 			"default" : true
 		},
 		"redisConfig": {
-			"type"        : "json",
+			"type"        : "string",
+			"field"       : "json",
 			"label"       : "Redis Configuration",
 			"help"        : "Redis cache backend configuration. Options: <code>host</code> (string), <code>port</code> (int), <code>timeout</code> (int), <code>password</code> (string|null), <code>database</code> (int).",
 			"placeholder" : "{\"host\": \"127.0.0.1\", \"port\": 6379, \"timeout\": 1, \"password\": null, \"database\": 0}"
 		},
 		"memcachedConfig": {
-			"type"        : "json",
+			"type"        : "string",
+			"field"       : "json",
 			"label"       : "Memcached Configuration",
 			"help"        : "Memcached cache backend configuration. Options: <code>host</code> (string), <code>port</code> (int).",
 			"placeholder" : "{\"host\": \"127.0.0.1\", \"port\": 11211}"
