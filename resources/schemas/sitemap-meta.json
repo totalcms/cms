@@ -113,7 +113,5 @@
 			}
 		}
 	},
-	"required": [
-		"enabled"
-	]
+	"required": []
 }
