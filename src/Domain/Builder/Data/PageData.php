@@ -16,20 +16,26 @@ readonly class PageData
 	public bool $nav;
 	public int $sort;
 	public string $parent;
+	public bool $sitemap;
+	public string $changeFrequency;
+	public float $priority;
 
 	/** @param array<string,mixed> $data */
 	public function __construct(array $data)
 	{
-		$this->id          = (string)($data['id'] ?? '');
-		$this->title       = (string)($data['title'] ?? '');
-		$this->route       = (string)($data['route'] ?? '');
-		$this->template    = (string)($data['template'] ?? '');
-		$this->layout      = (string)($data['layout'] ?? 'default');
-		$this->description = (string)($data['description'] ?? '');
-		$this->draft       = (bool)($data['draft'] ?? false);
-		$this->nav         = (bool)($data['nav'] ?? true);
-		$this->sort        = (int)($data['sort'] ?? 0);
-		$this->parent      = (string)($data['parent'] ?? '');
+		$this->id              = (string)($data['id'] ?? '');
+		$this->title           = (string)($data['title'] ?? '');
+		$this->route           = (string)($data['route'] ?? '');
+		$this->template        = (string)($data['template'] ?? '');
+		$this->layout          = (string)($data['layout'] ?? 'default');
+		$this->description     = (string)($data['description'] ?? '');
+		$this->draft           = (bool)($data['draft'] ?? false);
+		$this->nav             = (bool)($data['nav'] ?? true);
+		$this->sort            = (int)($data['sort'] ?? 0);
+		$this->parent          = (string)($data['parent'] ?? '');
+		$this->sitemap         = (bool)($data['sitemap'] ?? true);
+		$this->changeFrequency = (string)($data['changeFrequency'] ?? '');
+		$this->priority        = (float)($data['priority'] ?? 0);
 	}
 
 	public function isPublished(): bool
@@ -41,16 +47,19 @@ readonly class PageData
 	public function toArray(): array
 	{
 		return [
-			'id'          => $this->id,
-			'title'       => $this->title,
-			'route'       => $this->route,
-			'template'    => $this->template,
-			'layout'      => $this->layout,
-			'description' => $this->description,
-			'draft'       => $this->draft,
-			'nav'         => $this->nav,
-			'sort'        => $this->sort,
-			'parent'      => $this->parent,
+			'id'              => $this->id,
+			'title'           => $this->title,
+			'route'           => $this->route,
+			'template'        => $this->template,
+			'layout'          => $this->layout,
+			'description'     => $this->description,
+			'draft'           => $this->draft,
+			'nav'             => $this->nav,
+			'sort'            => $this->sort,
+			'parent'          => $this->parent,
+			'sitemap'         => $this->sitemap,
+			'changeFrequency' => $this->changeFrequency,
+			'priority'        => $this->priority,
 		];
 	}
 }

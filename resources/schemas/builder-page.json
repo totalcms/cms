@@ -4,7 +4,7 @@
 	"id": "builder-page",
 	"type": "object",
 	"description": "A schema for a Site Builder page",
-	"formgrid": "draft nav\ntitle title\nid id\nroute template\nlayout parent\nsort sort\ndescription description\nupdated created",
+	"formgrid": "draft .\ntitle title\ndescription description\n---Navigation---\nnav .\nroute .\nsort parent\n---Page Templates---\ntemplate layout\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
 	"properties": {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -25,7 +25,7 @@
 		},
 		"route": {
 			"type"        : "string",
-			"label"       : "Route",
+			"label"       : "URL Path",
 			"help"        : "URL path for this page. Use {param} for dynamic segments (e.g. /products/{id}).",
 			"field"       : "text",
 			"default"     : "",
@@ -33,7 +33,7 @@
 		},
 		"template": {
 			"type"    : "string",
-			"label"   : "Template",
+			"label"   : "Page Template",
 			"help"    : "The page template to render. Multiple pages can share the same template.",
 			"field"   : "text",
 			"default" : "",
@@ -92,11 +92,60 @@
 			"settings"    : {
 				"relationalOptions" : {
 					"collection" : "builder-pages",
-					"label"      : "route: title",
-					"value"      : "id",
-					"join"       : ": "
+					"format"     : "{title} ( {route} )",
+					"value"      : "id"
 				},
 				"sortOptions" : true
+			}
+		},
+		"sitemap": {
+			"type"    : "boolean",
+			"label"   : "Include in Sitemap",
+			"help"    : "Include this page in the generated sitemap.xml",
+			"field"   : "toggle",
+			"default" : true,
+			"factory" : "boolean"
+		},
+		"changeFrequency": {
+			"type"        : "string",
+			"label"       : "Change Frequency",
+			"help"        : "How frequently the page is likely to change. Hint to crawlers — most search engines ignore this.",
+			"field"       : "select",
+			"placeholder" : "Not set",
+			"default"     : "",
+			"options"     : [
+				"always",
+				"hourly",
+				"daily",
+				"weekly",
+				"monthly",
+				"yearly",
+				"never"
+			],
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "sitemap",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"priority": {
+			"type"        : "number",
+			"label"       : "Priority",
+			"help"        : "Priority of this page relative to other pages on the site (0.0 to 1.0). Leave blank to omit.",
+			"field"       : "number",
+			"placeholder" : "0.5",
+			"default"     : 0,
+			"settings"    : {
+				"min"        : 0,
+				"max"        : 1,
+				"step"       : 0.1,
+				"visibility" : {
+					"watch"    : "sitemap",
+					"value"    : "1",
+					"operator" : "=="
+				}
 			}
 		},
 		"updated": {
@@ -138,6 +187,9 @@
 		"nav",
 		"sort",
 		"parent",
+		"sitemap",
+		"changeFrequency",
+		"priority",
 		"updated",
 		"created"
 	]
