@@ -34,6 +34,10 @@ class PasswordField extends FormField
 		$confirmAttributes['name'] .= '-confirm';
 		$confirmAttributes['id'] .= '-confirm';
 
+		if (!empty($this->settings['numeric'])) {
+			$confirmAttributes['inputmode'] = 'numeric';
+		}
+
 		// Use confirmPlaceholder setting if provided, otherwise use same placeholder
 		if (isset($this->settings['confirmPlaceholder']) && $this->settings['confirmPlaceholder'] !== '') {
 			$confirmAttributes['placeholder'] = $this->settings['confirmPlaceholder'];
