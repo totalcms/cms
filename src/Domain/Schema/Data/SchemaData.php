@@ -41,6 +41,7 @@ class SchemaData
 		'builder-page',
 		'playground',
 		'preset-item',
+		'sitemap-meta',
 		'styledtext',
 		'svg',
 		'text',
