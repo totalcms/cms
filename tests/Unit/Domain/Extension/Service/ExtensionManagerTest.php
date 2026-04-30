@@ -30,9 +30,9 @@ function createExtensionManager(
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class));
-	$discovery = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
-	$container = test()->createMock(ContainerInterface::class);
+	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
+	$container         = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
 
 	return new ExtensionManager(

@@ -218,9 +218,9 @@ final class DevModeBasicWorkflowTest extends TestCase
 	public function testConcurrentDevModeAccess(): void
 	{
 		// Simulate concurrent access by creating multiple DevModeManager instances
-		$eventDispatcher = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
-		$manager1 = new DevModeManager($eventDispatcher);
-		$manager2 = new DevModeManager($eventDispatcher);
+		$eventDispatcher = new EventDispatcher(new NullLogger());
+		$manager1        = new DevModeManager($eventDispatcher);
+		$manager2        = new DevModeManager($eventDispatcher);
 
 		// First manager enables dev mode
 		$manager1->enableDevMode();

@@ -7,6 +7,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 function createManifestValidator(): ManifestValidator
 {
 	$editionService = test()->createMock(EditionFeatureService::class);
+
 	return new ManifestValidator($editionService);
 }
 

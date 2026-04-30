@@ -12,10 +12,10 @@ use TotalCMS\Support\Version;
 /**
  * Validates extension manifests for required fields and compatibility.
  */
-final class ManifestValidator
+final readonly class ManifestValidator
 {
 	public function __construct(
-		private readonly EditionFeatureService $editionFeatureService,
+		private EditionFeatureService $editionFeatureService,
 	) {
 	}
 

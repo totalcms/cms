@@ -23,7 +23,7 @@ class PriceField extends FormField
 	/** @return array<string,?string> */
 	protected function formFieldAttributes(): array
 	{
-		$attributes = parent::formFieldAttributes();
+		$attributes              = parent::formFieldAttributes();
 		$attributes['inputmode'] = 'decimal';
 
 		return $attributes;

@@ -166,7 +166,7 @@ readonly class LoginForm implements \Stringable
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
 		$labelEl = HTMLUtils::element('label', $label, ['for' => "field-{$uuid}"]);
-		$help  = HTMLUtils::element('p', $helpText, [
+		$help    = HTMLUtils::element('p', $helpText, [
 			'class' => 'help cms-hide',
 			'id'    => "help-{$uuid}",
 		]);

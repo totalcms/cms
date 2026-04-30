@@ -29,30 +29,30 @@ class StringData extends PropertyData implements \Stringable
 		// Apply text transform if configured (only on non-HTML plain text)
 		$textTransform = (string)($this->settings['textTransform'] ?? '');
 		if ($textTransform !== '' && !$this->containsHTML()) {
-			$this->text = self::applyTextTransform($this->text, $textTransform);
+			$this->text = $this->applyTextTransform($this->text, $textTransform);
 		}
 	}
 
 	/**
 	 * Apply a text transform to a string.
 	 */
-	private static function applyTextTransform(string $text, string $transform): string
+	private function applyTextTransform(string $text, string $transform): string
 	{
 		return match ($transform) {
-			'lowercase'    => mb_strtolower($text),
-			'uppercase'    => mb_strtoupper($text),
-			'titlecase'         => mb_convert_case($text, MB_CASE_TITLE),
-			'sentencecase'      => mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)),
-			'smart-titlecase'   => self::isUniformCase($text) ? mb_convert_case($text, MB_CASE_TITLE) : $text,
-			'smart-sentencecase' => self::isUniformCase($text) ? mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)) : $text,
-			default        => $text,
+			'lowercase'          => mb_strtolower($text),
+			'uppercase'          => mb_strtoupper($text),
+			'titlecase'          => mb_convert_case($text, MB_CASE_TITLE),
+			'sentencecase'       => mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)),
+			'smart-titlecase'    => $this->isUniformCase($text) ? mb_convert_case($text, MB_CASE_TITLE) : $text,
+			'smart-sentencecase' => $this->isUniformCase($text) ? mb_strtoupper(mb_substr($text, 0, 1)) . mb_strtolower(mb_substr($text, 1)) : $text,
+			default              => $text,
 		};
 	}
 
 	/**
 	 * Check if a string is entirely uppercase or entirely lowercase.
 	 */
-	private static function isUniformCase(string $text): bool
+	private function isUniformCase(string $text): bool
 	{
 		return $text === mb_strtoupper($text) || $text === mb_strtolower($text);
 	}
