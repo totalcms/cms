@@ -27,7 +27,8 @@ readonly class LoginForm implements \Stringable
 		private string $submitLabel            = 'Sign in',
 		private string $class                  = '',
 		private ?array $flashMessages          = null,
-		private string $emailLabel             = 'Email',
+		private string $loginWith              = 'both',
+		private string $emailLabel             = '',
 		private string $passwordLabel          = 'Password',
 		private string $rememberLabel          = 'Keep me signed in',
 		private string $forgotPasswordLabel    = 'Forgot Password?',
@@ -142,11 +143,19 @@ readonly class LoginForm implements \Stringable
 	{
 		$uuid = uniqid();
 
+		[$inputType, $placeholder, $helpText, $fieldClass, $defaultLabel] = match ($this->loginWith) {
+			'email' => ['email', 'email@company.com', 'Email address for login', 'email-field', 'Email'],
+			'id'    => ['text', 'username', 'User ID for login', 'text-field', 'Username'],
+			default => ['text', 'email@company.com', 'Email address or user ID', 'text-field', 'Email or Username'],
+		};
+
+		$label = $this->emailLabel !== '' ? $this->emailLabel : $defaultLabel;
+
 		$input = HTMLUtils::inlineElement('input', [
-			'type'             => 'email',
+			'type'             => $inputType,
 			'id'               => "field-{$uuid}",
 			'name'             => 'email',
-			'placeholder'      => 'email@company.com',
+			'placeholder'      => $placeholder,
 			'aria-describedby' => "help-{$uuid}",
 			'required'         => '',
 			'autofocus'        => '',
@@ -156,15 +165,15 @@ readonly class LoginForm implements \Stringable
 		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
-		$label = HTMLUtils::element('label', $this->emailLabel, ['for' => "field-{$uuid}"]);
-		$help  = HTMLUtils::element('p', 'Email address for the login', [
+		$labelEl = HTMLUtils::element('label', $label, ['for' => "field-{$uuid}"]);
+		$help  = HTMLUtils::element('p', $helpText, [
 			'class' => 'help cms-hide',
 			'id'    => "help-{$uuid}",
 		]);
 
-		return HTMLUtils::element('div', $label . $group . $help, [
-			'class'     => 'form-field email-field',
-			'data-type' => 'email',
+		return HTMLUtils::element('div', $labelEl . $group . $help, [
+			'class'     => "form-field {$fieldClass}",
+			'data-type' => $inputType === 'email' ? 'email' : 'text',
 		]);
 	}
 

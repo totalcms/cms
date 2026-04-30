@@ -52,7 +52,7 @@ class LoginService
 		}
 
 		// Normal authentication flow for the requested collection
-		$user   = $this->validator->validateUserByEmail($email, $collection);
+		$user   = $this->validator->validateUser($email, $collection);
 		$userId = $user['id'];
 
 		$this->account = "$collection/$userId";
@@ -88,7 +88,7 @@ class LoginService
 			$defaultCollection = $this->config->auth['collection'];
 
 			// Try to find and validate the user in the default collection
-			$user   = $this->validator->validateUserByEmail($email, $defaultCollection);
+			$user   = $this->validator->validateUser($email, $defaultCollection);
 			$userId = $user['id'];
 
 			// Check if this user is a SuperAdmin

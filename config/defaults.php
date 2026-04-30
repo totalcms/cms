@@ -220,6 +220,7 @@ $settings['imageworks'] = [
 $settings['auth'] = [
 	'enable'                  => true,
 	'usePasskeys'             => true,
+	'loginWith'               => 'both',  // 'email', 'id', or 'both'
 	'collection'              => 'auth',
 	'maxAttempts'             => 10,
 	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads

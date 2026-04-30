@@ -17,6 +17,31 @@ readonly class UserValidationService
 	) {
 	}
 
+	/**
+	 * Find a user by email address or user ID, based on the loginWith setting.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function validateUser(string $idOrEmail, string $collection = ''): array
+	{
+		$loginWith = $this->config->auth['loginWith'] ?? 'both';
+
+		if ($loginWith === 'email') {
+			return $this->validateUserByEmail($idOrEmail, $collection);
+		}
+
+		if ($loginWith === 'id') {
+			return $this->validateUserById($idOrEmail, $collection);
+		}
+
+		// 'both' — use @ to determine which lookup to use
+		if (str_contains($idOrEmail, '@')) {
+			return $this->validateUserByEmail($idOrEmail, $collection);
+		}
+
+		return $this->validateUserById($idOrEmail, $collection);
+	}
+
 	/** @return array<string,mixed> */
 	public function validateUserByEmail(string $email, string $collection = ''): array
 	{
@@ -28,7 +53,7 @@ readonly class UserValidationService
 		$first = $users->first();
 
 		if ($users->isEmpty() || is_null($first)) {
-			throw new \Exception('User not found');
+			throw new \Exception('User not found with email: ' . $email);
 		}
 
 		return $this->validateUserById($first['id'], $collection);
