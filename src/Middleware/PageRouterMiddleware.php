@@ -21,6 +21,24 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
  */
 readonly class PageRouterMiddleware implements MiddlewareInterface
 {
+	/**
+	 * Map of common file extensions to their MIME types.
+	 * Used to auto-detect Content-Type for routes like /robots.txt, /llms.txt, etc.
+	 *
+	 * @var array<string,string>
+	 */
+	private const EXTENSION_CONTENT_TYPES = [
+		'css'  => 'text/css; charset=utf-8',
+		'csv'  => 'text/csv; charset=utf-8',
+		'js'   => 'application/javascript; charset=utf-8',
+		'json' => 'application/json; charset=utf-8',
+		'md'   => 'text/markdown; charset=utf-8',
+		'rss'  => 'application/rss+xml; charset=utf-8',
+		'svg'  => 'image/svg+xml',
+		'txt'  => 'text/plain; charset=utf-8',
+		'xml'  => 'application/xml; charset=utf-8',
+	];
+
 	public function __construct(
 		private PageRouter $pageRouter,
 		private TwigEngine $twigEngine,
@@ -53,15 +71,28 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 				'params' => $match->params,
 			];
 
-			$html = $this->twigEngine->render($match->template, $data);
+			$body = $this->twigEngine->render($match->template, $data);
 
 			$pageResponse = new Response();
-			$pageResponse->getBody()->write($html);
+			$pageResponse->getBody()->write($body);
 
-			return $pageResponse->withHeader('Content-Type', 'text/html; charset=utf-8');
+			return $pageResponse->withHeader('Content-Type', $this->detectContentType($path));
 		} catch (\Throwable) {
 			// Render failed — return the original 404
 			return $response;
 		}
+	}
+
+	/**
+	 * Auto-detect the Content-Type from the route's file extension.
+	 *
+	 * `/robots.txt` → text/plain, `/sitemap.xml` → application/xml, etc.
+	 * Routes without a recognized extension default to HTML.
+	 */
+	private function detectContentType(string $path): string
+	{
+		$extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+		return self::EXTENSION_CONTENT_TYPES[$extension] ?? 'text/html; charset=utf-8';
 	}
 }

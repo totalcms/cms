@@ -158,4 +158,48 @@ final class PageRouterMiddlewareTest extends TestCase
 
 		$this->assertSame(500, $response->getStatusCode());
 	}
+
+	/**
+	 * Content-Type is auto-detected from the route's file extension. A page
+	 * routed at `/robots.txt` serves as text/plain so the rendered output is
+	 * treated as a plain-text file by browsers and crawlers.
+	 *
+	 * @dataProvider contentTypeByExtensionProvider
+	 */
+	public function testContentTypeAutoDetectedFromRouteExtension(string $route, string $expectedContentTypeFragment): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', $route);
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/file.twig',
+			layout: 'default',
+			pageData: ['id' => 'file', 'title' => 'File'],
+			params: [],
+		);
+
+		$this->pageRouter->method('match')->willReturn($match);
+		$this->twigEngine->method('render')->willReturn('rendered');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(200, $response->getStatusCode());
+		$this->assertStringContainsString($expectedContentTypeFragment, $response->getHeaderLine('Content-Type'));
+	}
+
+	/** @return array<string,array{string,string}> */
+	public static function contentTypeByExtensionProvider(): array
+	{
+		return [
+			'plain text (robots.txt)'      => ['/robots.txt', 'text/plain'],
+			'plain text (llms.txt)'        => ['/llms.txt', 'text/plain'],
+			'XML (sitemap.xml)'            => ['/sitemap.xml', 'application/xml'],
+			'JSON'                         => ['/manifest.json', 'application/json'],
+			'CSS'                          => ['/style.css', 'text/css'],
+			'JavaScript'                   => ['/script.js', 'application/javascript'],
+			'Markdown'                     => ['/notes.md', 'text/markdown'],
+			'unknown extension defaults to HTML' => ['/about', 'text/html'],
+			'no extension defaults to HTML'      => ['/blog/post', 'text/html'],
+		];
+	}
 }

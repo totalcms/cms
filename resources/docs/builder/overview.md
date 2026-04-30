@@ -305,6 +305,67 @@ T3 uses the following URL structure:
 
 API routes always take priority over builder pages.
 
+## Serving Non-HTML Files (robots.txt, llms.txt, etc.)
+
+The Site Builder isn't just for HTML pages. Any text-based file the web expects at a specific path — `robots.txt`, `llms.txt`, `ads.txt`, `security.txt`, `humans.txt`, `manifest.json`, custom RSS feeds — can be served as a builder page. Total CMS auto-detects the right `Content-Type` from the route's file extension.
+
+### How It Works
+
+1. Create a builder page with a route like `/robots.txt`
+2. Pick (or write) a template that renders the file's contents
+3. Visit `/robots.txt` — served with the correct `Content-Type` header
+
+The middleware inspects the route's extension and maps it to the appropriate MIME type:
+
+| Extension | Content-Type |
+|-----------|--------------|
+| `.txt` | `text/plain` |
+| `.xml` | `application/xml` |
+| `.rss` | `application/rss+xml` |
+| `.json` | `application/json` |
+| `.md` | `text/markdown` |
+| `.css` | `text/css` |
+| `.js` | `application/javascript` |
+| `.csv` | `text/csv` |
+| `.svg` | `image/svg+xml` |
+| _(none / unknown)_ | `text/html` |
+
+### Example: robots.txt
+
+Create a builder page with route `/robots.txt` and a template like:
+
+```twig
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://{{ cms.config('domain') }}/sitemap.xml
+```
+
+Visit `/robots.txt` and you get plain-text output with `Content-Type: text/plain; charset=utf-8`.
+
+### Example: llms.txt
+
+The [llms.txt](https://llmstxt.org/) standard tells AI crawlers how to navigate your site. Create a builder page with route `/llms.txt` and a template like:
+
+```twig
+# {{ cms.config('domain') }}
+
+> {{ cms.config('description') }}
+
+## Pages
+
+{% for p in cms.builder.nav() %}
+- [{{ p.title }}]({{ p.route }}): {{ p.description }}
+{% endfor %}
+```
+
+### Twig Is Available
+
+Templates for non-HTML files have full Twig support — use `cms.config()`, `cms.builder.nav()`, collection lookups, etc. to make these files dynamic. The CMS doesn't post-process the output; whatever your template emits is what's served. **Make sure your template's output matches the file format** (no stray whitespace in `robots.txt` directives, valid JSON for `.json` routes, etc.).
+
+If your template content includes literal `{{` or `{%` characters that you don't want Twig to evaluate, wrap them in `{% verbatim %}{% endverbatim %}` blocks.
+
 ## Coexistence with Stacks
 
 For Stacks sites where T3 is installed at a subpath, Stacks-published pages are static PHP files that serve directly. Configure your `.htaccess` to route unmatched requests to T3:
