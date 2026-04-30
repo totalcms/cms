@@ -6,6 +6,7 @@ use TotalCMS\Domain\Admin\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -174,25 +175,16 @@ class DeckItem
 	 */
 	protected function generateLabel(): string
 	{
-		// Replace placeholders in the pattern with actual values
-		$label = (string)preg_replace_callback('/\$\{(.*?)\}/', function (array $matches): string {
-			$fieldName = $matches[1];
-
-			// Special handling for 'id' field
+		$label = TemplatePlaceholder::render($this->deckItemLabel, function (string $fieldName): string {
 			if ($fieldName === 'id') {
 				return $this->itemId;
 			}
 
-			// Get value from item data
 			$value = $this->itemData[$fieldName] ?? '';
 
-			// Convert to string and trim
-			$value = is_string($value) ? trim($value) : '';
+			return is_string($value) ? trim($value) : '';
+		});
 
-			return $value;
-		}, $this->deckItemLabel);
-
-		// Trim the final label
 		$label = trim($label);
 
 		// Fall back to the item's id when the pattern resolves to an empty string

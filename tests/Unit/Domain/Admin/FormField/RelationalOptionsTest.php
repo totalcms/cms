@@ -214,7 +214,7 @@ describe('Relational Options', function (): void {
 
 		$result = callBuildRelationalOptions($this->form, [
 			'collection' => 'builder-pages',
-			'format'     => '{title} ({route})',
+			'format'     => '${title} (${route})',
 			'value'      => 'id',
 		]);
 
@@ -235,7 +235,7 @@ describe('Relational Options', function (): void {
 
 		$result = callBuildRelationalOptions($this->form, [
 			'collection' => 'authors',
-			'format'     => '{firstName} {lastName}',
+			'format'     => '${firstName} ${lastName}',
 			'value'      => 'id',
 		]);
 
@@ -252,7 +252,7 @@ describe('Relational Options', function (): void {
 
 		$result = callBuildRelationalOptions($this->form, [
 			'collection' => 'items',
-			'format'     => '{title} - {subtitle}',
+			'format'     => '${title} - ${subtitle}',
 			'value'      => 'id',
 		]);
 
@@ -268,7 +268,7 @@ describe('Relational Options', function (): void {
 		$result = callBuildRelationalOptions($this->form, [
 			'collection' => 'items',
 			'label'      => 'name',
-			'format'     => 'Page: {title}',
+			'format'     => 'Page: ${title}',
 			'value'      => 'id',
 		]);
 
@@ -284,7 +284,7 @@ describe('Relational Options', function (): void {
 
 		$result = callBuildRelationalOptions($this->form, [
 			'collection' => 'items',
-			'format'     => '{title} / {title}',
+			'format'     => '${title} / ${title}',
 			'value'      => 'id',
 		]);
 

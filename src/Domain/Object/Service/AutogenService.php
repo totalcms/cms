@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 
 /**
  * Generic service for generating values using autogen patterns.
@@ -128,9 +129,7 @@ readonly class AutogenService
 	 */
 	private function replacePlaceholders(string $pattern, array $data, string $collection): string
 	{
-		return preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($data, $collection) {
-			$key = $matches[1];
-
+		return TemplatePlaceholder::render($pattern, function (string $key) use ($data, $collection): string {
 			if (preg_match('/^oid-0+$/', $key)) {
 				$zeros         = substr($key, 4);
 				$paddingLength = strlen($zeros);
@@ -139,8 +138,8 @@ readonly class AutogenService
 				return str_pad((string)$oidValue, $paddingLength, '0', STR_PAD_LEFT);
 			}
 
-			return $data[$key] ?? '';
-		}, $pattern) ?? '';
+			return (string)($data[$key] ?? '');
+		});
 	}
 
 	/**
@@ -150,9 +149,7 @@ readonly class AutogenService
 	 */
 	private static function replacePlaceholdersWithOid(string $pattern, array $data, int $oidCount): string
 	{
-		return preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($data, $oidCount) {
-			$key = $matches[1];
-
+		return TemplatePlaceholder::render($pattern, function (string $key) use ($data, $oidCount): string {
 			if (preg_match('/^oid-0+$/', $key)) {
 				$zeros         = substr($key, 4);
 				$paddingLength = strlen($zeros);
@@ -161,8 +158,8 @@ readonly class AutogenService
 				return str_pad((string)$oidValue, $paddingLength, '0', STR_PAD_LEFT);
 			}
 
-			return $data[$key] ?? '';
-		}, $pattern) ?? '';
+			return (string)($data[$key] ?? '');
+		});
 	}
 
 	/**

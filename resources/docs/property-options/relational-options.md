@@ -36,26 +36,26 @@ All other settings (`label`, `format`, `value`, `include`, `exclude`, `sort`) wo
 
 ## Custom Label Format
 
-Use the `format` setting to build labels from multiple fields with arbitrary surrounding text. Wrap each field reference in `{ }` — anything outside the braces is rendered literally.
+Use the `format` setting to build labels from multiple fields with arbitrary surrounding text. Wrap each field reference in `${ }` — anything outside the placeholders is rendered literally. This matches the same template syntax used by [`deckItemLabel`](docs/property-settings/deck) and [`autogen`](docs/property-settings/id).
 
 ```json
 {
   "relationalOptions" : {
   	"collection" : "authors",
-  	"format"     : "{firstName} {lastName}",
+  	"format"     : "${firstName} ${lastName}",
   	"value"      : "id"
   }
 }
 ```
 
-This produces labels like `John Doe`. When `format` is set, it replaces the `label` setting — only the properties named inside `{ }` are fetched.
+This produces labels like `John Doe`. When `format` is set, it replaces the `label` setting — only the properties named inside `${ }` are fetched.
 
 **With surrounding punctuation:**
 ```json
 {
   "relationalOptions" : {
   	"collection" : "builder-pages",
-  	"format"     : "{title} ({route})",
+  	"format"     : "${title} (${route})",
   	"value"      : "id"
   }
 }
@@ -67,7 +67,7 @@ Produces labels like `About Us (/about)`.
 {
   "relationalOptions" : {
   	"collection" : "users",
-  	"format"     : "{firstName} {lastName} <{email}>",
+  	"format"     : "${firstName} ${lastName} <${email}>",
   	"value"      : "id"
   }
 }

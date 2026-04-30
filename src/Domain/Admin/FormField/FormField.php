@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 
 /**
  *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
@@ -411,11 +412,10 @@ class FormField
 			return []; // No data source specified, return empty array
 		}
 
-		// When a format template is provided, derive the property list from {placeholder} tokens.
+		// When a format template is provided, derive the property list from ${placeholder} tokens.
 		// Otherwise fall back to splitting the label by the join character.
 		if ($format !== '') {
-			preg_match_all('/\{(\w+)\}/', $format, $matches);
-			$labelProperties = array_values(array_unique($matches[1]));
+			$labelProperties = TemplatePlaceholder::extractKeys($format);
 		} else {
 			$labelProperties = explode($labelJoin, $labelProperty);
 		}
@@ -453,10 +453,9 @@ class FormField
 		// Build the label using either a format template or label/join concatenation
 		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin, $format): array {
 			if ($format !== '') {
-				$label = (string)preg_replace_callback(
-					'/\{(\w+)\}/',
-					fn (array $m): string => (string)($o[$m[1]] ?? ''),
+				$label = TemplatePlaceholder::render(
 					$format,
+					fn (string $key): string => (string)($o[$key] ?? ''),
 				);
 			} elseif (count($labelProperties) > 1) {
 				// If multiple label properties, concatenate them with the join character

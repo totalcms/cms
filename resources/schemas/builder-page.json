@@ -92,7 +92,7 @@
 			"settings"    : {
 				"relationalOptions" : {
 					"collection" : "builder-pages",
-					"format"     : "{title} ( {route} )",
+					"format"     : "${title} ( ${route} )",
 					"value"      : "id"
 				},
 				"sortOptions" : true
