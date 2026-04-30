@@ -23,7 +23,7 @@ final class PageSitemapBuilderTest extends TestCase
 	private PageSitemapBuilder $builder;
 	private \PHPUnit\Framework\MockObject\MockObject $mockBuilderConfig;
 	private \PHPUnit\Framework\MockObject\MockObject $mockIndexReader;
-	private Config $config;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
 
 	protected function setUp(): void
 	{

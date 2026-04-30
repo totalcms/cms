@@ -29,7 +29,7 @@ class DeckField extends FormField
 
 		// Extract schema reference from settings (accepts schemaref or legacy deckref)
 		$this->schemaref       = PropertyDefinition::extractSchemaRef($this->settings) ?? '';
-		$this->deckItemLabel = $this->settings['deckItemLabel'] ?? '${id}';
+		$this->deckItemLabel   = $this->settings['deckItemLabel'] ?? '${id}';
 
 		// Initialize deck items from value
 		if (is_array($this->value)) {

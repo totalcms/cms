@@ -27,7 +27,7 @@ class DeckTableField extends FormField
 
 		// Extract schema reference from settings (accepts schemaref or legacy deckref)
 		$this->schemaref       = PropertyDefinition::extractSchemaRef($this->settings) ?? '';
-		$this->deckItemLabel = $this->settings['deckItemLabel'] ?? '${id}';
+		$this->deckItemLabel   = $this->settings['deckItemLabel'] ?? '${id}';
 
 		// Add cms-hide class if hide setting is true (check both property-level and settings)
 		if ($this->hide || (isset($this->settings['hide']) && $this->settings['hide'] === true)) {
