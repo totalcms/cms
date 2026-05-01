@@ -10,14 +10,14 @@ use TotalCMS\Support\Config;
 /**
  * Tracks wizard progress through the multi-step setup flow.
  *
- * Steps: environment → data-path → account → license
+ * Steps: environment → data-path → account → license → server-config
  */
 class SetupStateManager
 {
 	private const SESSION_KEY = 'setup_state';
 
 	/** @var list<string> */
-	private const STEPS = ['environment', 'data-path', 'account', 'license'];
+	private const STEPS = ['environment', 'data-path', 'account', 'license', 'server-config'];
 
 	public function __construct(
 		private readonly SessionInterface $session,

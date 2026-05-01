@@ -1,0 +1,171 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.server_title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout setup-server-config">
+	<section class="setup-header">
+		<h1>{{ t('wizard.server_title') }}</h1>
+		<p>{{ t('wizard.server_desc') }}</p>
+	</section>
+
+	<section class="setup-section">
+		<header class="section-head">
+			<h2>{{ t('wizard.server_rewrite_title') }}</h2>
+			<p>{{ t('wizard.server_rewrite_desc') }}</p>
+			{% if detected != 'unknown' %}
+				<p class="detected-note">
+					{{ t('wizard.server_detected', {'{server}': serverHeader})|raw }}
+				</p>
+			{% else %}
+				<p class="detected-note">{{ t('wizard.server_unknown') }}</p>
+			{% endif %}
+		</header>
+
+		<div class="server-tabs" role="tablist">
+			<button type="button" role="tab" class="tab-btn{{ detected == 'apache' or detected == 'unknown' ? ' is-active' : '' }}" data-target="tab-apache">Apache / LiteSpeed</button>
+			<button type="button" role="tab" class="tab-btn{{ detected == 'nginx' ? ' is-active' : '' }}" data-target="tab-nginx">Nginx</button>
+		</div>
+
+		<div class="server-panels">
+			<div id="tab-apache" class="server-panel{{ detected == 'apache' or detected == 'unknown' ? ' is-active' : '' }}">
+				<p class="panel-help">{{ t('wizard.server_apache_help') }}</p>
+				<pre class="config-snippet"><code id="snippet-apache">{{ apacheConfig }}</code></pre>
+				<button type="button" class="cms-clip-button dash-button transparent" data-clip="#snippet-apache">{{ t('btn.copy_snippet') }}</button>
+			</div>
+
+			<div id="tab-nginx" class="server-panel{{ detected == 'nginx' ? ' is-active' : '' }}">
+				<p class="panel-help">{{ t('wizard.server_nginx_help') }}</p>
+				<pre class="config-snippet"><code id="snippet-nginx">{{ nginxConfig }}</code></pre>
+				<button type="button" class="cms-clip-button dash-button transparent" data-clip="#snippet-nginx">{{ t('btn.copy_snippet') }}</button>
+			</div>
+		</div>
+	</section>
+
+	<section class="setup-section">
+		<header class="section-head">
+			<h2>{{ t('wizard.server_cron_title') }}</h2>
+			<p>{{ t('wizard.server_cron_desc') }}</p>
+		</header>
+
+		<pre class="config-snippet"><code id="snippet-cron">{{ cronCommand }}</code></pre>
+		<button type="button" class="cms-clip-button dash-button transparent" data-clip="#snippet-cron">{{ t('btn.copy_command') }}</button>
+		<p class="muted-note">{{ t('wizard.server_cron_note') }}</p>
+	</section>
+
+	<a href="{{ cms.base }}/setup/complete" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+</main>
+
+<style>
+.setup-server-config {
+	max-width: 760px;
+	width: 100%;
+}
+
+.setup-section {
+	margin-block: 2rem;
+}
+
+.setup-section .section-head h2 {
+	font-size: 1.1rem;
+	margin: 0 0 0.25rem;
+}
+
+.setup-section .section-head p {
+	color: oklch(var(--totalform-darkgray));
+	margin: 0 0 0.75rem;
+}
+
+.detected-note {
+	font-size: 0.9em;
+}
+
+.server-tabs {
+	display: flex;
+	gap: 0.25rem;
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+}
+
+.tab-btn {
+	padding: 0.6rem 1rem;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	font-size: 0.95rem;
+	color: oklch(var(--totalform-darkgray));
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+}
+
+.tab-btn.is-active {
+	color: oklch(var(--totalform-text-color));
+	border-bottom-color: oklch(var(--totalform-accent));
+}
+
+.server-panel {
+	display: none;
+	padding-top: 1rem;
+}
+
+.server-panel.is-active {
+	display: block;
+}
+
+.panel-help {
+	font-size: 0.9em;
+	color: oklch(var(--totalform-darkgray));
+	margin-block: 0 0.5rem;
+}
+
+.config-snippet {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: auto;
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1rem;
+	font-size: 0.85em;
+	box-sizing: border-box;
+	margin: 0;
+}
+
+.config-snippet code {
+	display: block;
+	white-space: pre;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.config-snippet + .cms-clip-button {
+	margin-top: 0.5rem;
+}
+
+.muted-note {
+	font-size: 0.85em;
+	color: oklch(var(--totalform-darkgray));
+	margin-top: 0.75rem;
+}
+
+.setup-continue {
+	margin-top: 2rem;
+	display: inline-block;
+}
+</style>
+
+<script>
+(function () {
+	const tabs = document.querySelectorAll('.setup-server-config .tab-btn');
+	const panels = document.querySelectorAll('.setup-server-config .server-panel');
+	tabs.forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			const target = btn.dataset.target;
+			tabs.forEach(function (t) { t.classList.remove('is-active'); });
+			panels.forEach(function (p) { p.classList.remove('is-active'); });
+			btn.classList.add('is-active');
+			const panel = document.getElementById(target);
+			if (panel) { panel.classList.add('is-active'); }
+		});
+	});
+})();
+</script>
+{% endblock %}

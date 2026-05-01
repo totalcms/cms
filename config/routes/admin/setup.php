@@ -27,7 +27,10 @@ return function (App $app): void {
 		// Step 4: License
 		$group->get('/license', Setup\LicenseSetupAction::class)->setName('setup-license');
 
-		// Step 5: Complete
+		// Step 5: Server configuration hints (rewrite rules + cron command)
+		$group->get('/server-config', Setup\ServerConfigAction::class)->setName('setup-server-config');
+
+		// Step 6: Complete
 		$group->get('/complete', Setup\SetupCompleteAction::class)->setName('setup-complete');
 	})->add(SetupLocaleMiddleware::class)->add(NoCacheMiddleware::class);
 };
