@@ -160,9 +160,116 @@ A card that groups sitemap configuration into a single nested object:
 }
 ```
 
+## Reusing a Card Schema
+
+Because a card's shape is defined by a separate schema, the same schema can back **multiple card fields on the same parent**. This is the most common real-world pattern: one reusable building block, dropped in wherever it's needed.
+
+The classic example is an address. An `order` needs both a billing address and a shipping address — same shape, same fields, two distinct values. Define the address shape once, then reference it from both cards.
+
+**Address schema (`address.json`):**
+```json
+{
+	"properties": {
+		"street1": {
+			"type"  : "string",
+			"field" : "input",
+			"label" : "Street Address"
+		},
+		"street2": {
+			"type"  : "string",
+			"field" : "input",
+			"label" : "Apt / Suite"
+		},
+		"city": {
+			"type"  : "string",
+			"field" : "input",
+			"label" : "City"
+		},
+		"state": {
+			"type"  : "string",
+			"field" : "input",
+			"label" : "State / Region"
+		},
+		"zip": {
+			"type"  : "string",
+			"field" : "input",
+			"label" : "Postal Code"
+		},
+		"country": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Country",
+			"options" : ["US", "CA", "GB", "DE", "FR"],
+			"default" : "US"
+		}
+	}
+}
+```
+
+**Order schema — two cards, one referenced shape:**
+```json
+{
+	"id": {
+		"$ref"  : "https://www.totalcms.co/schemas/properties/id.json",
+		"field" : "input",
+		"label" : "Order ID"
+	},
+	"billing_address": {
+		"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+		"field"     : "card",
+		"label"     : "Billing Address",
+		"schemaref" : "https://example.com/schemas/address.json"
+	},
+	"shipping_address": {
+		"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+		"field"     : "card",
+		"label"     : "Shipping Address",
+		"schemaref" : "https://example.com/schemas/address.json"
+	}
+}
+```
+
+**Resulting order object:**
+```json
+{
+	"id": "ord-1042",
+	"billing_address": {
+		"street1" : "123 Main St",
+		"street2" : "Suite 400",
+		"city"    : "Austin",
+		"state"   : "TX",
+		"zip"     : "78701",
+		"country" : "US"
+	},
+	"shipping_address": {
+		"street1" : "456 Oak Ave",
+		"street2" : "",
+		"city"    : "Portland",
+		"state"   : "OR",
+		"zip"     : "97201",
+		"country" : "US"
+	}
+}
+```
+
+**In Twig:**
+```twig
+<h3>Ship to</h3>
+<address>
+	{{ order.shipping_address.street1 }}<br>
+	{% if order.shipping_address.street2 %}
+		{{ order.shipping_address.street2 }}<br>
+	{% endif %}
+	{{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.zip }}<br>
+	{{ order.shipping_address.country }}
+</address>
+```
+
+The same pattern applies anywhere you'd otherwise duplicate field definitions — author bios, contact blocks, geographic coordinates, social-link sets. Define the shape once, reference it as many times as you need.
+
 ## Common Use Cases
 
 - **Grouped settings** — sitemap, SEO, OpenGraph, schema.org metadata
 - **Integration credentials** — paired API keys and endpoints (combine with `secret` fields for the sensitive parts)
 - **Feature toggles** — a single `features` card with checkbox sub-fields
-- **Address blocks** — street, city, state, zip as one nested object
+- **Reusable address blocks** — billing/shipping/mailing addresses sharing one `address` schema (see [Reusing a Card Schema](#reusing-a-card-schema))
