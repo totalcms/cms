@@ -292,6 +292,9 @@
 .date-type {
 	--schema-type-icon : var(--icon-date);
 }
+.card-type {
+	--schema-type-icon : var(--icon-card);
+}
 .deck-type {
 	--schema-type-icon : var(--icon-deck);
 }
@@ -552,6 +555,13 @@
 	--schema-icon : var(--icon-radio);
 
 	&.string-type:after {
+		display : none;
+	}
+}
+.card-field {
+	--schema-icon : var(--icon-card);
+
+	&.card-type:after {
 		display : none;
 	}
 }
