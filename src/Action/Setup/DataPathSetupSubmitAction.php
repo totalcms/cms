@@ -118,9 +118,18 @@ readonly class DataPathSetupSubmitAction
 		if (!is_dir($systemDir)) {
 			@mkdir($systemDir, 0755, true);
 		}
-		file_put_contents($systemDir . '/settings.json', (string)json_encode([
-			'locale' => $locale,
-		], JSON_PRETTY_PRINT));
+		$settingsFile = $systemDir . '/settings.json';
+		$existing     = [];
+		if (is_file($settingsFile)) {
+			$contents = (string)file_get_contents($settingsFile);
+			if ($contents !== '') {
+				$decoded  = json_decode($contents, true);
+				$existing = is_array($decoded) ? $decoded : [];
+			}
+			@copy($settingsFile, $settingsFile . '.bak');
+		}
+		$existing['locale'] = $locale;
+		file_put_contents($settingsFile, (string)json_encode($existing, JSON_PRETTY_PRINT));
 
 		// Clear any stale cache data from previous installations
 		$this->cacheManager->clearAllCaches();

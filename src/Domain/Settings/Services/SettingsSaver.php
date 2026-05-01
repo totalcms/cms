@@ -36,9 +36,16 @@ readonly class SettingsSaver
 		if ($section === 'general') {
 			$settings = self::deepMergeArrays($settings, $sectionData);
 		} elseif ($section === 'presets') {
-			// Presets use deck field - replace entirely rather than deep merge
-			// to ensure deleted items are actually removed
-			$settings[$section] = $sectionData;
+			// Presets use deck field - each submitted top-level key (e.g. presetsettings)
+			// is the full intended state of that deck, so we replace those keys outright
+			// (deep-merge can't represent deletions). Other keys under 'presets' that
+			// weren't submitted are preserved.
+			if (!isset($settings[$section]) || !is_array($settings[$section])) {
+				$settings[$section] = [];
+			}
+			foreach ($sectionData as $key => $value) {
+				$settings[$section][$key] = $value;
+			}
 		} elseif (isset($settings[$section]) && is_array($settings[$section])) {
 			// Deep merge the section data
 			$settings[$section] = self::deepMergeArrays($settings[$section], $sectionData);
