@@ -256,6 +256,12 @@ class TotalCMSEditorView {
 			top: this.view.scrollDOM.scrollTop,
 		};
 	}
+
+	// Natural document height, independent of any container min-height/max-height.
+	// Use this for auto-resize so the wrapper sizing doesn't feed back into the measurement.
+	getContentHeight() {
+		return this.view.contentHeight;
+	}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

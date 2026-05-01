@@ -139,7 +139,6 @@ export default class Code extends TotalField {
             const currentHeight = wrapper.offsetHeight;
             if (lastAutoHeight > 0 && Math.abs(currentHeight - lastAutoHeight) > 2) {
                 userResized = true;
-                this.editor.refresh();
             }
         });
         resizeObserver.observe(wrapper);
@@ -149,14 +148,27 @@ export default class Code extends TotalField {
                 return;
             }
 
-            const scrollInfo = this.editor.getScrollInfo();
-            const contentHeight = scrollInfo.height + 20;
+            // Use CM6's view.contentHeight (natural document height) instead of
+            // contentDOM.scrollHeight — the latter tracks the container size when
+            // CM's flex/min-height styling kicks in, which makes the +20 buffer
+            // feed back into the next measurement and grow the wrapper one
+            // line-height per keystroke. Snap to whole lines for good measure.
+            const naturalHeight = typeof this.editor.getContentHeight === 'function'
+                ? this.editor.getContentHeight()
+                : this.editor.getScrollInfo().height;
+            const visualLines = Math.max(1, Math.ceil(naturalHeight / lineHeight));
+            const contentHeight = (visualLines * lineHeight) + 20;
             let targetHeight = Math.max(contentHeight, minHeight);
             if (maxHeight > 0) {
                 targetHeight = Math.min(targetHeight, maxHeight);
             }
 
             if (userResized && wrapper.offsetHeight > targetHeight) {
+                return;
+            }
+
+            // Same target as last time — skip the DOM write to avoid feedback loops.
+            if (targetHeight === lastAutoHeight) {
                 return;
             }
 
