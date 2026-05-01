@@ -62,6 +62,11 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		// Check if this is an admin route (for redirect behavior)
 		$isAdmin = $this->isAdminRoute($request);
 
+		// License validation only — the downstream handler runs OUTSIDE this try
+		// so we never swallow (and worse: re-dispatch) exceptions from the action
+		// itself. Re-dispatching breaks any action with non-replayable state —
+		// e.g. file uploads throw "Uploaded file already moved" because moveTo
+		// can only be called once per UploadedFile instance.
 		try {
 			// Get license data (uses cache if valid, otherwise validates)
 			$licenseData = $this->licenseValidator->validateLicense();
@@ -107,9 +112,6 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 					return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 				}
 			}
-
-			// License is valid, continue with request
-			return $handler->handle($request);
 		} catch (LicenseException $e) {
 			$this->logger->error('License exception occurred', [
 				'domain' => $this->config->domain,
@@ -124,14 +126,17 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 
 			return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 		} catch (\Exception $e) {
+			// Fail-open on unexpected validator errors (network blip, cache I/O,
+			// etc.) — log and continue rather than blocking every request.
 			$this->logger->error('Unexpected license middleware error', [
 				'domain' => $this->config->domain,
 				'error'  => $e->getMessage(),
 				'trace'  => $e->getTraceAsString(),
 			]);
-
-			return $handler->handle($request);
 		}
+
+		// License is valid (or fail-open path) — let the action run.
+		return $handler->handle($request);
 	}
 
 	/** Check if this is an authentication endpoint that should always be accessible. */

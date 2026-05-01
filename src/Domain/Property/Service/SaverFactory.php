@@ -32,14 +32,28 @@ readonly class SaverFactory
 		string $objectId = '',
 		?string $subpath = null,
 	): FileSaver {
-		// When the upload targets a child of a card (or other nested parent),
-		// resolve the child's type from the parent's schemaref instead of the
-		// parent's own type. The parent (e.g. `card`) has no Saver class —
-		// children (image/file/etc.) do.
+		// When the upload targets a child of a card or deck-item, resolve the
+		// child's type from the parent's schemaref instead of the parent's own
+		// type. The parent (e.g. `card`) has no Saver class — children
+		// (image/file/etc.) do.
+		//
+		// Depot/gallery are the exceptions: those parents own the storage
+		// hierarchy themselves and use `subpath` for folder paths, NOT for
+		// nested-child keys. Their own savers (DepotSaver/GallerySaver) handle
+		// the subpath internally.
 		if ($subpath !== null && $subpath !== '') {
-			$childKey = $this->resolveChildKey($subpath);
-			$type     = $this->resolveNestedChildType($collection, $property, $childKey);
-			$settings = $this->metaResolver->resolveNestedSettings($collection, $property, $childKey);
+			$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+			$parentDef  = $schema->properties[$property] ?? [];
+			$parentType = PropertyDefinition::fromArray($parentDef)->resolveType();
+
+			if (in_array($parentType, ['depot', 'gallery'], true)) {
+				$type     = $parentType;
+				$settings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
+			} else {
+				$childKey = $this->resolveChildKey($subpath);
+				$type     = $this->resolveNestedChildType($collection, $property, $childKey);
+				$settings = $this->metaResolver->resolveNestedSettings($collection, $property, $childKey);
+			}
 		} else {
 			$schema   = $this->schemaFetcher->fetchSchemaForCollection($collection);
 			$type     = PropertyDefinition::fromArray($schema->properties[$property])->resolveType();
