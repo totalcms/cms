@@ -41,15 +41,23 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		// Skip setup check for setup routes and public assets
-		if ($route instanceof \Slim\Interfaces\RouteInterface) {
-			$routeName = $route->getName();
-			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset')) {
-				return $handler->handle($request);
-			}
+		$routeName = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : null;
+
+		// Public assets are always allowed
+		if ($routeName === 'public-asset') {
+			return $handler->handle($request);
 		}
 
-		// If setup is complete (auth collection exists), allow normal flow
+		// Setup routes: only accessible while setup is incomplete
+		if ($routeName !== null && str_starts_with($routeName, 'setup-')) {
+			if ($this->setupComplete()) {
+				return $this->redirectRenderer->redirectFor(new Response(), 'admin-index');
+			}
+
+			return $handler->handle($request);
+		}
+
+		// Non-setup routes: allow when setup is complete
 		if ($this->setupComplete()) {
 			return $handler->handle($request);
 		}
