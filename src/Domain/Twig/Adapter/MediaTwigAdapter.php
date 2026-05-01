@@ -68,7 +68,7 @@ readonly class MediaTwigAdapter
 				return '';
 			}
 
-			return self::buildImageworksAPI($this->config->api . '/api', $id, $image, $imageworks, $options);
+			return self::buildImageworksAPI($this->config->api, $id, $image, $imageworks, $options);
 		}
 
 		$image = $this->fetchData($collection, $idOrObject, $rootProperty);
@@ -82,7 +82,7 @@ readonly class MediaTwigAdapter
 			return '';
 		}
 
-		return self::buildImageworksAPI($this->config->api . '/api', $idOrObject, $image, $imageworks, $options);
+		return self::buildImageworksAPI($this->config->api, $idOrObject, $image, $imageworks, $options);
 	}
 
 	/**
@@ -154,7 +154,7 @@ readonly class MediaTwigAdapter
 
 		$imageName = is_numeric($name) ? (string)($image['name'] ?? '') : $name;
 
-		return self::buildImageworksGalleryAPI($this->config->api . '/api', $id, $imageName, $image, $imageworks, $options);
+		return self::buildImageworksGalleryAPI($this->config->api, $id, $imageName, $image, $imageworks, $options);
 	}
 
 	/**
@@ -258,7 +258,7 @@ readonly class MediaTwigAdapter
 		// the nested file.
 		$propertyPath = str_replace('.', '/', (string)$property);
 
-		$url = "{$this->config->api}/api/download/{$collection}/{$id}/{$propertyPath}";
+		$url = "{$this->config->api}/download/{$collection}/{$id}/{$propertyPath}";
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);
@@ -293,7 +293,7 @@ readonly class MediaTwigAdapter
 			$name     = $pathinfo['basename'];
 		}
 
-		$url = "{$this->config->api}/api/download/{$collection}/{$id}/{$property}/" . urlencode($name);
+		$url = "{$this->config->api}/download/{$collection}/{$id}/{$property}/" . urlencode($name);
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);
@@ -329,7 +329,7 @@ readonly class MediaTwigAdapter
 		// Dotted property → URL segments (see `download()` for the rationale).
 		$propertyPath = str_replace('.', '/', (string)$property);
 
-		$url = "{$this->config->api}/api/stream/{$collection}/{$id}/{$propertyPath}";
+		$url = "{$this->config->api}/stream/{$collection}/{$id}/{$propertyPath}";
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);
@@ -364,7 +364,7 @@ readonly class MediaTwigAdapter
 			$name     = $pathinfo['basename'];
 		}
 
-		$url = "{$this->config->api}/api/stream/{$collection}/{$id}/{$property}/" . urlencode($name);
+		$url = "{$this->config->api}/stream/{$collection}/{$id}/{$property}/" . urlencode($name);
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);

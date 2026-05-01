@@ -70,7 +70,7 @@ export default class FilePreview {
 				event.preventDefault();
 				// Card-nested files live at /download/{coll}/{id}/{cardprop}/{childkey};
 				// top-level at /download/{coll}/{id}/{prop}.
-				const downloadUrl = this.api.buildApiQuery(this.totalfield.buildPropertyApi('/download'));
+				const downloadUrl = this.api.buildPublicQuery(this.totalfield.buildPropertyApi('/download'));
 
 				// If the file is password protected, open the download in a new tab
 				// so the user can enter the password

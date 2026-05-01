@@ -26,7 +26,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 		$result = MediaTwigAdapter::buildImageworksAPI($api, $id, $image, $imageworks, $options);
 
-		expect($result)->toContain('/api/imageworks/photos/test-id/gallery.jpg');
+		expect($result)->toContain('/imageworks/photos/test-id/gallery.jpg');
 		expect($result)->toContain('w=300');
 		expect($result)->toContain('h=200');
 		expect($result)->toContain('cache=');
@@ -59,7 +59,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
 
 		// Should convert to webp extension and remove fm parameter
-		expect($result)->toContain('/api/imageworks/image/test-id/image.webp');
+		expect($result)->toContain('/imageworks/image/test-id/image.webp');
 		expect($result)->not->toContain('fm=webp');
 		expect($result)->toContain('w=300');
 	}
@@ -73,7 +73,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
-		expect($result)->toContain('/api/imageworks/image/test-id/image.jpg');
+		expect($result)->toContain('/imageworks/image/test-id/image.jpg');
 	}
 
 	public function testBuildImageworksAPIPreservesValidExtensions(): void
@@ -88,7 +88,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 			$result = MediaTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
-			expect($result)->toContain("/api/imageworks/image/test-id/image.$ext");
+			expect($result)->toContain("/imageworks/image/test-id/image.$ext");
 		}
 	}
 
@@ -170,7 +170,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			$image  = ['name' => 'chosen.jpg', 'uploadDate' => '2024-01-15T12:30:45Z', 'hash' => 'cafe1234'];
 			$result = MediaTwigAdapter::buildImageworksGalleryAPI('/api', 'gallery-1', $route, $image);
 
-			expect($result)->toContain("/api/imageworks/gallery/gallery-1/gallery/$route");
+			expect($result)->toContain("/imageworks/gallery/gallery-1/gallery/$route");
 			expect($result)->toContain('cache=cafe1234');
 		}
 	}
@@ -197,12 +197,12 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		);
 
 		expect($result)->toContain('cache=deadbeef');
-		expect($result)->toContain('/api/imageworks/gallery/gallery-1/gallery/photo.jpg');
+		expect($result)->toContain('/imageworks/gallery/gallery-1/gallery/photo.jpg');
 	}
 
 	public function testBuildImageworksAPIHandlesExistingQueryParams(): void
 	{
-		$api   = '/api/imageworks/image/test-id/image.jpg?existing=param';
+		$api   = '/imageworks/image/test-id/image.jpg?existing=param';
 		$image = [
 			'name'       => 'test.jpg',
 			'uploadDate' => '2024-01-15T12:30:45Z',
@@ -229,7 +229,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 		$result = MediaTwigAdapter::buildImageworksAPI('/api', 'gallery-123', $image, [], $options);
 
-		expect($result)->toContain('/api/imageworks/portfolio/gallery-123/featured.jpg');
+		expect($result)->toContain('/imageworks/portfolio/gallery-123/featured.jpg');
 	}
 
 	public function testBuildImageworksGalleryAPIStaticMethod(): void
@@ -251,7 +251,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			$options
 		);
 
-		expect($result)->toContain('/api/imageworks/photos/gallery-123/images/photo.jpg');
+		expect($result)->toContain('/imageworks/photos/gallery-123/images/photo.jpg');
 		expect($result)->toContain('w=300');
 		expect($result)->toContain('h=200');
 	}
@@ -271,7 +271,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 				[]
 			);
 
-			expect($result)->toContain("/api/imageworks/gallery/gallery-123/gallery/$route");
+			expect($result)->toContain("/imageworks/gallery/gallery-123/gallery/$route");
 			expect($result)->toContain('w=200');
 		}
 	}
@@ -305,7 +305,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			[]
 		);
 
-		expect($result)->toContain('/api/imageworks/gallery/gallery-123/gallery/photo.webp');
+		expect($result)->toContain('/imageworks/gallery/gallery-123/gallery/photo.webp');
 		expect($result)->not->toContain('fm=webp');
 	}
 
@@ -342,7 +342,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 		$result = $fullAdapter->imagePath($object);
 		expect($result)->toBeString();
-		expect($result)->toContain('/api/imageworks/image/');
+		expect($result)->toContain('/imageworks/image/');
 
 		// Test with zero-size image (should return empty)
 		$zeroSizeObject = [
@@ -403,18 +403,18 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$configProp->setValue($adapter, $config);
 
 		// Test basic download URL
-		expect($adapter->download('test-id'))->toBe('/api/download/file/test-id/file');
+		expect($adapter->download('test-id'))->toBe('/download/file/test-id/file');
 
 		// Test with collection and property options
 		$result = $adapter->download('test-id', [
 			'collection' => 'documents',
 			'property'   => 'attachment',
 		]);
-		expect($result)->toBe('/api/download/documents/test-id/attachment');
+		expect($result)->toBe('/download/documents/test-id/attachment');
 
 		// Test with password (should contain encrypted pwd parameter)
 		$result = $adapter->download('test-id', ['pwd' => 'secret123']);
-		expect($result)->toContain('/api/download/file/test-id/file?pwd=');
+		expect($result)->toContain('/download/file/test-id/file?pwd=');
 		expect($result)->not->toContain('secret123'); // Password should be encrypted
 	}
 
@@ -429,14 +429,14 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$configProp->setValue($adapter, $config);
 
 		// Test basic stream URL
-		expect($adapter->stream('test-id'))->toBe('/api/stream/file/test-id/file');
+		expect($adapter->stream('test-id'))->toBe('/stream/file/test-id/file');
 
 		// Test with collection and property options
 		$result = $adapter->stream('test-id', [
 			'collection' => 'videos',
 			'property'   => 'video',
 		]);
-		expect($result)->toBe('/api/stream/videos/test-id/video');
+		expect($result)->toBe('/stream/videos/test-id/video');
 	}
 
 	public function testDepotUrlParameterHandling(): void
@@ -451,15 +451,15 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 		// Test depot download
 		expect($adapter->depotDownload('depot-id', 'file.pdf'))
-			->toBe('/api/download/depot/depot-id/depot/file.pdf');
+			->toBe('/download/depot/depot-id/depot/file.pdf');
 
 		// Test depot stream
 		expect($adapter->depotStream('depot-id', 'file.mp4'))
-			->toBe('/api/stream/depot/depot-id/depot/file.mp4');
+			->toBe('/stream/depot/depot-id/depot/file.mp4');
 
 		// Test with path in filename
 		$result = $adapter->depotDownload('depot-id', 'subfolder/file.pdf');
-		expect($result)->toContain('/api/download/depot/depot-id/depot/file.pdf');
+		expect($result)->toContain('/download/depot/depot-id/depot/file.pdf');
 		expect($result)->toContain('path=subfolder');
 	}
 

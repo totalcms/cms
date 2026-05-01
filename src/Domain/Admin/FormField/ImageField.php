@@ -25,7 +25,7 @@ class ImageField extends FormField
 	{
 		$imageData = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
 
-		$api        = $this->form->api;
+		$api        = $this->form->baseApi();
 		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT, 'q' => self::PREVIEW_QUALITY];
 		// Dot-notation path: `mycard.image` for a card child, `mydeck.item-3.image`
 		// for a deck child, `image` for top-level. `nestedPath` is the prefix.

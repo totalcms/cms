@@ -229,18 +229,18 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		// Test basic download URL
 		$result = $adapter->download('test-id');
-		expect($result)->toBe('/api/download/file/test-id/file');
+		expect($result)->toBe('/download/file/test-id/file');
 
 		// Test download URL with custom options
 		$result = $adapter->download('test-id', [
 			'collection' => 'documents',
 			'property'   => 'attachment',
 		]);
-		expect($result)->toBe('/api/download/documents/test-id/attachment');
+		expect($result)->toBe('/download/documents/test-id/attachment');
 
 		// Test download URL with password (should be encrypted)
 		$result = $adapter->download('test-id', ['pwd' => 'secret123']);
-		expect($result)->toContain('/api/download/file/test-id/file?pwd=');
+		expect($result)->toContain('/download/file/test-id/file?pwd=');
 		expect($result)->not->toContain('secret123'); // Should be encrypted
 	}
 
@@ -256,14 +256,14 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		// Test basic stream URL
 		$result = $adapter->stream('test-id');
-		expect($result)->toBe('/api/stream/file/test-id/file');
+		expect($result)->toBe('/stream/file/test-id/file');
 
 		// Test stream URL with custom options
 		$result = $adapter->stream('test-id', [
 			'collection' => 'videos',
 			'property'   => 'video',
 		]);
-		expect($result)->toBe('/api/stream/videos/test-id/video');
+		expect($result)->toBe('/stream/videos/test-id/video');
 	}
 
 	public function testDepotDownloadUrlGeneration(): void
@@ -278,11 +278,11 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		// Test basic depot download
 		$result = $adapter->depotDownload('depot-id', 'file.pdf');
-		expect($result)->toBe('/api/download/depot/depot-id/depot/file.pdf');
+		expect($result)->toBe('/download/depot/depot-id/depot/file.pdf');
 
 		// Test depot download with path in filename
 		$result = $adapter->depotDownload('depot-id', 'subfolder/file.pdf');
-		expect($result)->toContain('/api/download/depot/depot-id/depot/file.pdf');
+		expect($result)->toContain('/download/depot/depot-id/depot/file.pdf');
 		expect($result)->toContain('path=subfolder');
 	}
 
@@ -298,11 +298,11 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		// Test basic depot stream
 		$result = $adapter->depotStream('depot-id', 'file.mp4');
-		expect($result)->toBe('/api/stream/depot/depot-id/depot/file.mp4');
+		expect($result)->toBe('/stream/depot/depot-id/depot/file.mp4');
 
 		// Test depot stream with path in filename
 		$result = $adapter->depotStream('depot-id', 'videos/file.mp4');
-		expect($result)->toContain('/api/stream/depot/depot-id/depot/file.mp4');
+		expect($result)->toContain('/stream/depot/depot-id/depot/file.mp4');
 		expect($result)->toContain('path=videos');
 	}
 

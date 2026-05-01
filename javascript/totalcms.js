@@ -283,4 +283,23 @@ export default class TotalCMS {
 		}
 		return url.toString();
 	}
+
+	// Like buildApiQuery, but targets the unprefixed base path (no `/api`).
+	// imageworks, download, and stream serve binary asset bytes whose URLs
+	// get embedded in user-rendered HTML, so they live outside the `/api/...`
+	// surface — use this builder for those endpoints.
+	buildPublicQuery(path, params) {
+		let baseUrl = (this.options.url || '').replace(/\/api$/, '');
+		if (!baseUrl.includes(window.location.origin)) {
+			baseUrl = window.location.origin + baseUrl;
+		}
+		const url = new URL(baseUrl + path);
+		if (typeof params === "object") {
+			const newParams = new URLSearchParams(params);
+			for (const [key, value] of newParams) {
+				url.searchParams.append(key, value);
+			}
+		}
+		return url.toString();
+	}
 }

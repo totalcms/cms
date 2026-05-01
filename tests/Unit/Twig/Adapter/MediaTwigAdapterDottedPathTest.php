@@ -215,7 +215,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->download('post-1', ['collection' => 'blog', 'property' => 'file']);
 
-		$this->assertSame('https://example.com/api/download/blog/post-1/file', $url);
+		$this->assertSame('https://example.com/download/blog/post-1/file', $url);
 	}
 
 	public function testDownloadCardChildEmitsSlashSeparatedSegments(): void
@@ -224,7 +224,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->download('post-1', ['collection' => 'blog', 'property' => 'mycard.file']);
 
-		$this->assertSame('https://example.com/api/download/blog/post-1/mycard/file', $url);
+		$this->assertSame('https://example.com/download/blog/post-1/mycard/file', $url);
 	}
 
 	public function testDownloadDeckChildEmitsThreeSegments(): void
@@ -233,7 +233,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->download('post-1', ['collection' => 'blog', 'property' => 'mydeck.item-3.file']);
 
-		$this->assertSame('https://example.com/api/download/blog/post-1/mydeck/item-3/file', $url);
+		$this->assertSame('https://example.com/download/blog/post-1/mydeck/item-3/file', $url);
 	}
 
 	public function testDownloadAcceptsObjectArrayForId(): void
@@ -242,7 +242,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->download(['id' => 'post-1'], ['property' => 'mycard.file']);
 
-		$this->assertSame('https://example.com/api/download/file/post-1/mycard/file', $url);
+		$this->assertSame('https://example.com/download/file/post-1/mycard/file', $url);
 	}
 
 	public function testDownloadAppendsEncryptedPasswordQueryParam(): void
@@ -251,7 +251,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->download('post-1', ['property' => 'mycard.file', 'pwd' => 'secret']);
 
-		$this->assertStringStartsWith('https://example.com/api/download/file/post-1/mycard/file?pwd=', $url);
+		$this->assertStringStartsWith('https://example.com/download/file/post-1/mycard/file?pwd=', $url);
 		$this->assertStringNotContainsString('pwd=secret', $url, 'Password should be encrypted before URL');
 	}
 
@@ -261,7 +261,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->stream('post-1', ['collection' => 'blog', 'property' => 'video']);
 
-		$this->assertSame('https://example.com/api/stream/blog/post-1/video', $url);
+		$this->assertSame('https://example.com/stream/blog/post-1/video', $url);
 	}
 
 	public function testStreamCardChildEmitsSlashSeparatedSegments(): void
@@ -270,7 +270,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->stream('post-1', ['collection' => 'blog', 'property' => 'mycard.file']);
 
-		$this->assertSame('https://example.com/api/stream/blog/post-1/mycard/file', $url);
+		$this->assertSame('https://example.com/stream/blog/post-1/mycard/file', $url);
 	}
 
 	public function testStreamDeckChildEmitsThreeSegments(): void
@@ -279,6 +279,6 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 		$url = $adapter->stream('post-1', ['collection' => 'blog', 'property' => 'mydeck.item-3.file']);
 
-		$this->assertSame('https://example.com/api/stream/blog/post-1/mydeck/item-3/file', $url);
+		$this->assertSame('https://example.com/stream/blog/post-1/mydeck/item-3/file', $url);
 	}
 }

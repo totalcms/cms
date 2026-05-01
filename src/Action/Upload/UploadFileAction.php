@@ -81,10 +81,13 @@ readonly class UploadFileAction
 			$subpath
 		);
 
-		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';
-		$mime    = $file->getClientMediaType() ?? '';
+		// imageworks/download/stream live at the unprefixed base path (not under
+		// /api) — they're public asset endpoints whose URLs get embedded in
+		// styledtext content and must remain stable.
+		$basePath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+		$mime     = $file->getClientMediaType() ?? '';
 
-		$link = $this->buildLink($apiPath, $path, $mime);
+		$link = $this->buildLink($basePath, $path, $mime);
 
 		$params = $request->getParsedBody();
 		if (!empty($params)) {
@@ -98,17 +101,17 @@ readonly class UploadFileAction
 	 * Build the response link based on MIME type.
 	 * Images use ImageWorks, audio/video use stream (range requests), everything else uses download.
 	 */
-	private function buildLink(string $apiPath, string $path, string $mime): string
+	private function buildLink(string $basePath, string $path, string $mime): string
 	{
 		if ($this->matchesMime($mime, self::IMAGE_MIME_PREFIXES)) {
-			return $apiPath . '/imageworks/upload/' . $path;
+			return $basePath . '/imageworks/upload/' . $path;
 		}
 
 		if ($this->matchesMime($mime, self::MEDIA_MIME_PREFIXES)) {
-			return $apiPath . '/stream/upload/' . $path;
+			return $basePath . '/stream/upload/' . $path;
 		}
 
-		return $apiPath . '/download/upload/' . $path;
+		return $basePath . '/download/upload/' . $path;
 	}
 
 	/**

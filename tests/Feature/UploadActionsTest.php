@@ -72,17 +72,17 @@ describe('Nested upload routes (Phase 1)', function (): void {
 	});
 
 	it('routes a nested imageworks/upload fetch', function (): void {
-		$response = get('/api/imageworks/upload/blog/post-1/mydeck/item-3/styledtext/photo.jpg');
+		$response = get('/imageworks/upload/blog/post-1/mydeck/item-3/styledtext/photo.jpg');
 		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
 	});
 
 	it('routes a nested download/upload fetch', function (): void {
-		$response = get('/api/download/upload/blog/post-1/mydeck/item-3/styledtext/document.pdf');
+		$response = get('/download/upload/blog/post-1/mydeck/item-3/styledtext/document.pdf');
 		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
 	});
 
 	it('routes a nested stream/upload fetch', function (): void {
-		$response = get('/api/stream/upload/blog/post-1/mydeck/item-3/styledtext/video.mp4');
+		$response = get('/stream/upload/blog/post-1/mydeck/item-3/styledtext/video.mp4');
 		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
 	});
 

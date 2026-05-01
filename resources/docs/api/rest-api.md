@@ -754,7 +754,7 @@ GET /api/schemas/{collection}
 Download a file from a specific collection with `Content-Disposition: attachment`.
 
 ```http
-GET /api/download/{collection}/{id}/{property}
+GET /download/{collection}/{id}/{property}
 POST /download/{collection}/{id}/{property}
 ```
 
@@ -784,7 +784,7 @@ curl -O "https://yoursite.com/download/private/secret/file?pwd=ENCRYPTED_PASSWOR
 Download a specific file from a depot (multi-file) property.
 
 ```http
-GET /api/download/{collection}/{id}/{property}/{filename}
+GET /download/{collection}/{id}/{property}/{filename}
 POST /download/{collection}/{id}/{property}/{filename}
 ```
 
@@ -816,7 +816,7 @@ curl -O "https://yoursite.com/download/depot/private/files/secret.zip?pwd=ENCRYP
 Stream a file with `Content-Disposition: inline` and HTTP range request support. Ideal for video/audio files.
 
 ```http
-GET /api/stream/{collection}/{id}/{property}
+GET /stream/{collection}/{id}/{property}
 ```
 
 **Path Parameters:**
@@ -853,7 +853,7 @@ curl "https://yoursite.com/stream/private/secret/video?pwd=ENCRYPTED_PASSWORD"
 Stream a specific file from a depot property.
 
 ```http
-GET /api/stream/{collection}/{id}/{property}/{filename}
+GET /stream/{collection}/{id}/{property}/{filename}
 ```
 
 **Path Parameters:**
@@ -926,7 +926,7 @@ Both download and stream endpoints support password protection:
 ### Basic Image Manipulation
 
 ```http
-GET /api/imageworks/{collection}/{id}/{property}.{format}
+GET /imageworks/{collection}/{id}/{property}.{format}
 ```
 
 **Parameters:**
@@ -965,7 +965,7 @@ curl "https://yoursite.com/imageworks/hero/banner/image.jpg?w=1200&blur=5"
 ### Gallery Images
 
 ```http
-GET /api/imageworks/{collection}/{id}/{property}/{name}.{format}
+GET /imageworks/{collection}/{id}/{property}/{name}.{format}
 ```
 
 Fetch a specific image from a gallery property.
@@ -973,7 +973,7 @@ Fetch a specific image from a gallery property.
 ### Dynamic Gallery Images
 
 ```http
-GET /api/imageworks/{collection}/{id}/{property}/{action}
+GET /imageworks/{collection}/{id}/{property}/{action}
 ```
 
 **Actions:**

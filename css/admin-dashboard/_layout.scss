@@ -416,6 +416,10 @@ body {
 		margin-block-start: 2em;
 	}
 
+	hr {
+		margin-block-start: 4em;
+	}
+
 	&:has(.docs-iframe) {
 		padding : 0;
 	}

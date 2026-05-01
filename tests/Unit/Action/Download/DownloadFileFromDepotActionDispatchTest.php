@@ -67,7 +67,7 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 		// HttpNotFoundException needs a request with a URI for its constructor —
 		// stub the chain getUri()->__toString() so the exception can render.
 		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.test/api/download/blog/post-1/mycard/file');
+		$uri->method('__toString')->willReturn('https://example.test/download/blog/post-1/mycard/file');
 
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getUri')->willReturn($uri);

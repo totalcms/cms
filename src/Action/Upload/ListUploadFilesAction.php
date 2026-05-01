@@ -41,8 +41,12 @@ readonly class ListUploadFilesAction
 			: null;
 		$subpath     = $subpath === '' ? null : $subpath;
 
-		$files   = $this->fetcher->listFiles($collection, $id, $property, $subpath);
-		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';
+		$files = $this->fetcher->listFiles($collection, $id, $property, $subpath);
+
+		// imageworks/download/stream live at the unprefixed base path (not under
+		// /api) — they're public asset endpoints whose URLs get embedded in
+		// styledtext content and must remain stable.
+		$basePath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
 
 		// Filter files by type if requested
 		if (is_string($type) && $type !== '') {
@@ -60,18 +64,18 @@ readonly class ListUploadFilesAction
 			$isAudio = in_array($ext, self::AUDIO_EXTENSIONS, true);
 
 			if ($isImage) {
-				$thumbnail = $apiPath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
-				$url       = $apiPath . '/imageworks/upload/' . $path;
+				$thumbnail = $basePath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
+				$url       = $basePath . '/imageworks/upload/' . $path;
 
 				if (is_string($preset) && $preset !== '') {
 					$url .= '?p=' . urlencode($preset);
 				}
 			} elseif ($isVideo || $isAudio) {
 				$thumbnail = null;
-				$url       = $apiPath . '/stream/upload/' . $path;
+				$url       = $basePath . '/stream/upload/' . $path;
 			} else {
 				$thumbnail = null;
-				$url       = $apiPath . '/download/upload/' . $path;
+				$url       = $basePath . '/download/upload/' . $path;
 			}
 
 			$result[] = [

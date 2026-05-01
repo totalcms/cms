@@ -34,9 +34,9 @@
 		<section>
 			<h4>{{ t('filelinks.download_link') }}</h4>
 			{% if password %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
+				<pre id="link-url">{{cms.base}}/download/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
+				<pre id="link-url">{{cms.base}}/download/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#link-url">{{ t('btn.copy_link') }}</button>
 		</section>
@@ -78,9 +78,9 @@
 		<section>
 			<h4>{{ t('filelinks.stream_url') }}</h4>
 			{% if password %}
-				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
+				<pre id="stream-url">{{cms.base}}/stream/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
-				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
+				<pre id="stream-url">{{cms.base}}/stream/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#stream-url">{{ t('btn.copy_link') }}</button>
 		</section>

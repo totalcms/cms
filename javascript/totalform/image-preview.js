@@ -91,7 +91,7 @@ setupActionBar() {
 				// `.format` is appended to the last path segment (subpath if nested,
 				// property otherwise) — `buildPropertyApi`'s suffix parameter handles
 				// both shapes uniformly.
-				const downloadUrl = this.api.buildApiQuery(this.totalfield.buildPropertyApi('/imageworks', `.${format}`));
+				const downloadUrl = this.api.buildPublicQuery(this.totalfield.buildPropertyApi('/imageworks', `.${format}`));
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;

@@ -63,7 +63,7 @@ Images stored inside a `card` or `deck` field are addressed through the `propert
 {{ cms.media.imagePath(post, {w: 800}, {property: 'mycard.image'}) }}
 ```
 
-The dot-notation maps directly to URL segments — `mycard.image` becomes `/api/imageworks/{coll}/{id}/mycard/image.{format}` — and the image data is resolved by descending the same path on the object (`obj.mycard.image`).
+The dot-notation maps directly to URL segments — `mycard.image` becomes `/imageworks/{coll}/{id}/mycard/image.{format}` — and the image data is resolved by descending the same path on the object (`obj.mycard.image`).
 
 The same syntax works on the corresponding render macro:
 
@@ -140,7 +140,7 @@ Get the download URL for a file property.
 <a href="{{ cms.media.download('post-1', {property: 'mydeck.item-3.file'}) }}">Download</a>
 ```
 
-The dot-notation maps directly to URL segments — `mycard.file` becomes `/api/download/{coll}/{id}/mycard/file` — and the file data is resolved by descending the same path on the object (`obj.mycard.file`). The File Links dialog in the admin form detects nested files and shows the dotted-property macro in its "Copy macro" section.
+The dot-notation maps directly to URL segments — `mycard.file` becomes `/download/{coll}/{id}/mycard/file` — and the file data is resolved by descending the same path on the object (`obj.mycard.file`). The File Links dialog in the admin form detects nested files and shows the dotted-property macro in its "Copy macro" section.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|

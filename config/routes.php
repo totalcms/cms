@@ -9,9 +9,15 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/admin/admin.php')($app);
 	(require __DIR__ . '/routes/admin/setup.php')($app);
 
-	// Public crawler-facing routes (live at conventional paths)
+	// Public crawler-facing routes and public-asset endpoints — these return
+	// non-JSON content (XML, binary file bytes, image bytes) and their URLs
+	// get embedded in user-rendered HTML, so they live at stable, unprefixed
+	// paths rather than under `/api/...` (which is reserved for JSON endpoints).
 	(require __DIR__ . '/routes/public/sitemap.php')($app);
 	(require __DIR__ . '/routes/public/feed.php')($app);
+	(require __DIR__ . '/routes/public/imageworks.php')($app);
+	(require __DIR__ . '/routes/public/download.php')($app);
+	(require __DIR__ . '/routes/public/stream.php')($app);
 
 	// All API routes under /api prefix
 	$app->group('/api', function (RouteCollectorProxy $api): void {
@@ -23,9 +29,6 @@ return function (App $app): void {
 		(require __DIR__ . '/routes/api/emergency.php')($api);
 		(require __DIR__ . '/routes/api/collections.php')($api);
 		(require __DIR__ . '/routes/api/docs.php')($api);
-		(require __DIR__ . '/routes/api/download.php')($api);
-		(require __DIR__ . '/routes/api/stream.php')($api);
-		(require __DIR__ . '/routes/api/imageworks.php')($api);
 		(require __DIR__ . '/routes/api/import.php')($api);
 		(require __DIR__ . '/routes/api/export.php')($api);
 		(require __DIR__ . '/routes/api/report.php')($api);

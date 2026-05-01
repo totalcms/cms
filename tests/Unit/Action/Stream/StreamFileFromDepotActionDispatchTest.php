@@ -51,7 +51,7 @@ final class StreamFileFromDepotActionDispatchTest extends TestCase
 	private function request(): ServerRequestInterface
 	{
 		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.test/api/stream/blog/post-1/mycard/file');
+		$uri->method('__toString')->willReturn('https://example.test/stream/blog/post-1/mycard/file');
 
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getUri')->willReturn($uri);

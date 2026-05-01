@@ -39,24 +39,24 @@ POST /upload/{collection}/{id}/{rootProp}/{path:.+}        (gallery, depot folde
 ### Read-side routes
 
 ```
-GET /api/imageworks/{coll}/{id}/{rootProp}.{format}                 (top-level, unchanged)
-GET /api/imageworks/{coll}/{id}/{rootProp}/{path:.+}.{format}       (everything nested)
+GET /imageworks/{coll}/{id}/{rootProp}.{format}                 (top-level, unchanged)
+GET /imageworks/{coll}/{id}/{rootProp}/{path:.+}.{format}       (everything nested)
 
-GET /api/download/{coll}/{id}/{rootProp}                            (top-level, unchanged)
-GET /api/download/{coll}/{id}/{rootProp}/{path:.+}                  (everything nested)
+GET /download/{coll}/{id}/{rootProp}                            (top-level, unchanged)
+GET /download/{coll}/{id}/{rootProp}/{path:.+}                  (everything nested)
 
-GET /api/stream/{coll}/{id}/{rootProp}                              (top-level, unchanged)
-GET /api/stream/{coll}/{id}/{rootProp}/{path:.+}                    (everything nested)
+GET /stream/{coll}/{id}/{rootProp}                              (top-level, unchanged)
+GET /stream/{coll}/{id}/{rootProp}/{path:.+}                    (everything nested)
 ```
 
 Example URLs:
 
 | Case | URL |
 |---|---|
-| Gallery image (was `/{prop}/{name}.jpg`) | `/api/imageworks/blog/post-1/myGallery/photo.jpg` |
-| Depot file (was `?path=folder/sub`) | `/api/download/blog/post-1/myDepot/folder/sub/file.pdf` |
-| Card child image | `/api/imageworks/blog/post-1/myCard/profilePic.jpg` |
-| Deck item image | `/api/imageworks/blog/post-1/myDeck/item-3/pic.jpg` |
+| Gallery image (was `/{prop}/{name}.jpg`) | `/imageworks/blog/post-1/myGallery/photo.jpg` |
+| Depot file (was `?path=folder/sub`) | `/download/blog/post-1/myDepot/folder/sub/file.pdf` |
+| Card child image | `/imageworks/blog/post-1/myCard/profilePic.jpg` |
+| Deck item image | `/imageworks/blog/post-1/myDeck/item-3/pic.jpg` |
 
 ### Action-side dispatch
 
@@ -154,23 +154,23 @@ Deck item subpath = `deckprop/{itemid}`. Item IDs are not user-editable post-cre
 
 **4.2 ImageWorks**
 
-- `config/routes/api/imageworks.php`:
-  - **Remove** the existing gallery route `/api/imageworks/{coll}/{id}/{property}/{name}.{format}`.
-  - **Add** the unified greedy route `/api/imageworks/{coll}/{id}/{rootProp}/{path:.+}.{format}`.
+- `config/routes/imageworks.php`:
+  - **Remove** the existing gallery route `/imageworks/{coll}/{id}/{property}/{name}.{format}`.
+  - **Add** the unified greedy route `/imageworks/{coll}/{id}/{rootProp}/{path:.+}.{format}`.
   - Top-level route unchanged.
 - `src/Action/ImageWorks/ImageWorksImageFetchAction.php`: read `path` from route args, forward to generator.
 - `src/Domain/ImageWorks/Service/ImageGenerator.php`: thread subpath through; call the extended `PropertyFetcher`.
 
 **4.3 Download**
 
-- `config/routes/api/download.php`:
-  - **Remove** the existing depot route `/api/download/{coll}/{id}/{property}/{name}` (the upload-specific route stays).
-  - **Add** unified `/api/download/{coll}/{id}/{rootProp}/{path:.+}`.
+- `config/routes/download.php`:
+  - **Remove** the existing depot route `/download/{coll}/{id}/{property}/{name}` (the upload-specific route stays).
+  - **Add** unified `/download/{coll}/{id}/{rootProp}/{path:.+}`.
 - `src/Action/Download/DownloadFileAction.php`: drop `?path=` query handling; read path from route args. `DownloadFileFromDepotAction` either merges into `DownloadFileAction` (since dispatch is now in `PropertyFetcher`) or is kept as a thin wrapper — decide during implementation based on what's cleaner.
 
 **4.4 Stream**
 
-- `config/routes/api/stream.php`: same shape change as download.
+- `config/routes/stream.php`: same shape change as download.
 - `src/Action/Stream/StreamFileAction.php`: same as download. `StreamFileFromDepotAction` may merge or stay.
 
 **4.5 URL builders (Twig)**
@@ -184,9 +184,9 @@ Deck item subpath = `deckprop/{itemid}`. Item IDs are not user-editable post-cre
 ## File-by-file change list
 
 **PHP**
-- `config/routes/api/imageworks.php` — replace gallery route with unified greedy-segment route.
-- `config/routes/api/download.php` — replace depot route with unified greedy-segment route.
-- `config/routes/api/stream.php` — same.
+- `config/routes/imageworks.php` — replace gallery route with unified greedy-segment route.
+- `config/routes/download.php` — replace depot route with unified greedy-segment route.
+- `config/routes/stream.php` — same.
 - `config/routes/...upload route file` — add nested upload route alongside top-level.
 - `src/Action/Upload/UploadFileAction.php` — read `path` route arg, pass subpath to saver.
 - `src/Domain/Upload/UploadSaver.php` — accept and forward subpath.

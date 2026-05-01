@@ -62,7 +62,7 @@ export default class DepotField extends TotalField {
             const name = this.getFileAttribute(selected, "name");
             const ext  = name.split(".").pop().toLowerCase();
             const path = this.getPath();
-            const url  = this.api.buildApiQuery(
+            const url  = this.api.buildPublicQuery(
                 `/stream/${this.form.collection}/${this.form.id}/${this.property}/${name}`,
                 path.length > 0 ? { path } : {}
             );
@@ -355,7 +355,7 @@ export default class DepotField extends TotalField {
 
         const options = path.length > 0 ? {path:path} : {};
         const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-        const downloadUrl = this.api.buildApiQuery(downloadApi, options);
+        const downloadUrl = this.api.buildPublicQuery(downloadApi, options);
 
         // If the file is password protected, open the download in a new tab
         // so the user can enter the password

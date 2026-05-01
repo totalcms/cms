@@ -1097,7 +1097,7 @@ class RenderTwigAdapter
 	{
 		$imageworks = $this->media->resolvePresetFormat($imageworks);
 
-		return MediaTwigAdapter::buildImageworksGalleryAPI($this->config->api . '/api', $id, $image['name'] ?? '', $image, $imageworks, $options);
+		return MediaTwigAdapter::buildImageworksGalleryAPI($this->config->api, $id, $image['name'] ?? '', $image, $imageworks, $options);
 	}
 
 	/**
