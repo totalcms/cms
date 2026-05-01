@@ -3,6 +3,7 @@
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middlewares\TrailingSlash;
+use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\Middleware\SessionStartMiddleware;
 use Odan\Session\PhpSession;
@@ -289,8 +290,18 @@ return [
 
 	RouteParserInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getRouteCollector()->getRouteParser(),
 
-	// The logger factory
-	LoggerFactory::class => fn (ContainerInterface $container): LoggerFactory => new LoggerFactory($container->get(Config::class)->logger),
+	// The logger factory.
+	// The admin-controlled appLogLevel overrides the default level baked into
+	// $config['logger']['level'] so scattered addFileHandler('totalcms.log')
+	// callers pick up the user's choice without being individually rewired.
+	LoggerFactory::class => function (ContainerInterface $container): LoggerFactory {
+		$config   = $container->get(Config::class);
+		$settings = $config->logger;
+		$fallback = $settings['level'] instanceof Level ? $settings['level'] : Level::Info;
+		$settings['level'] = LoggerFactory::resolveLevel($config->appLogLevel, $fallback);
+
+		return new LoggerFactory($settings);
+	},
 
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container): StorageFilesystemAdapter {
@@ -1232,8 +1243,9 @@ return [
 	),
 
 	EventDispatcher::class => function (ContainerInterface $container): EventDispatcher {
+		$extLevel   = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
 		$dispatcher = new EventDispatcher(
-			$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('events'),
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('events'),
 		);
 
 		// Register internal listeners with lazy resolution to avoid circular deps.
@@ -1287,21 +1299,29 @@ return [
 		$container->get(StorageFilesystemAdapter::class),
 	),
 
-	ExtensionDiscovery::class => fn (ContainerInterface $container): ExtensionDiscovery => new ExtensionDiscovery(
-		$container->get(Config::class),
-		$container->get(ManifestValidator::class),
-		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('extensions'),
-	),
+	ExtensionDiscovery::class => function (ContainerInterface $container): ExtensionDiscovery {
+		$extLevel = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
 
-	ExtensionManager::class => fn (ContainerInterface $container): ExtensionManager => new ExtensionManager(
-		$container->get(ExtensionDiscovery::class),
-		$container->get(ExtensionStateRepository::class),
-		$container->get(ExtensionDependencySorter::class),
-		$container->get(ExtensionSettingsManager::class),
-		$container,
-		$container->get(LoggerFactory::class)->addFileHandler('extensions.log')->createLogger('extensions'),
-		$container->get(ManifestValidator::class),
-	),
+		return new ExtensionDiscovery(
+			$container->get(Config::class),
+			$container->get(ManifestValidator::class),
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+		);
+	},
+
+	ExtensionManager::class => function (ContainerInterface $container): ExtensionManager {
+		$extLevel = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
+
+		return new ExtensionManager(
+			$container->get(ExtensionDiscovery::class),
+			$container->get(ExtensionStateRepository::class),
+			$container->get(ExtensionDependencySorter::class),
+			$container->get(ExtensionSettingsManager::class),
+			$container,
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+			$container->get(ManifestValidator::class),
+		);
+	},
 
 	TemplateMigrationService::class => fn (ContainerInterface $container): TemplateMigrationService => new TemplateMigrationService(
 		$container->get(StorageAdapterInterface::class),

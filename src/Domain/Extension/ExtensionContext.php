@@ -109,6 +109,22 @@ final class ExtensionContext
 	}
 
 	// -------------------------------------------------------------------------
+	// Logging
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Get the shared extensions logger.
+	 *
+	 * Writes to tcms-data/logs/extensions.log on the 'extensions' channel.
+	 * Prefix messages with the extension id (or your own tag) so multi-extension
+	 * logs remain readable.
+	 */
+	public function logger(): \Psr\Log\LoggerInterface
+	{
+		return $this->logger;
+	}
+
+	// -------------------------------------------------------------------------
 	// Service resolution (boot phase only)
 	// -------------------------------------------------------------------------
 

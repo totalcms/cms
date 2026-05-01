@@ -20,6 +20,8 @@ class Config
 	public int $maxDownloadSize = 2048;
 	public bool $debug          = false;
 	public bool $sentry         = true;
+	public string $appLogLevel        = 'info';
+	public string $extensionsLogLevel = 'info';
 	/** @var array<string,mixed> */
 	public array $cache = [];
 	/** @var array<string,mixed> */
@@ -64,6 +66,8 @@ class Config
 		$this->cache           = $settings['cache'];
 		$this->logger          = $settings['logger'];
 		$this->sentry          = (bool)($settings['sentry'] ?? true);
+		$this->appLogLevel        = (string)($settings['appLogLevel'] ?? 'info');
+		$this->extensionsLogLevel = (string)($settings['extensionsLogLevel'] ?? 'info');
 		$this->error           = $settings['error'];
 		$this->imageworks      = $settings['imageworks'];
 		$this->domain          = $settings['domain'];

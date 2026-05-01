@@ -132,6 +132,12 @@ $settings['logger'] = [
 	'permissions' => 0775,
 ];
 
+// Per-channel log level overrides controlled from /admin/settings (general).
+// Names are PSR-3 strings: debug, info, notice, warning, error, critical, alert, emergency.
+// When set, these override $settings['logger']['level'] for the matching log file.
+$settings['appLogLevel']        = 'info';
+$settings['extensionsLogLevel'] = 'info';
+
 // Session
 $settings['session'] = [
 	// 'name'                   => 'tcms_' . md5($settings['domain']), // Domain-specific session name for isolation

@@ -342,3 +342,29 @@ public function boot(ExtensionContext $context): void
 ```
 
 Only use `$context->get()` in `boot()`, never in `register()`. The container is not fully built during registration.
+
+## Logging
+
+Extensions can write to the shared `extensions.log` file (`tcms-data/logs/extensions.log`) using the same logger Total CMS uses internally. Get it from the context with `$context->logger()` — it returns a `Psr\Log\LoggerInterface`.
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $logger = $context->logger();
+
+    $context->addEventListener('object.created', function (array $payload) use ($logger): void {
+        $logger->info('[acme/starter] object.created', $payload);
+    });
+}
+
+public function boot(ExtensionContext $context): void
+{
+    $context->logger()->debug('[acme/starter] booted');
+}
+```
+
+PSR-3 levels are available: `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Pass a context array as the second argument for structured fields — Monolog appends them to the formatted line.
+
+Logger access is not a separate capability — `$context->logger()` is always available, in both `register()` and `boot()`.
+
+Prefix log messages with your extension id (e.g. `[acme/starter]`) so multi-extension logs stay readable. All extensions share the `extensions` channel and the same rotating log file.

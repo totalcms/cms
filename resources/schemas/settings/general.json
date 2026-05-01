@@ -36,6 +36,40 @@
 			"placeholder" : "2048",
 			"default"     : 2048
 		},
+		"appLogLevel": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "App Log Level",
+			"help"    : "Minimum severity written to <code>logs/totalcms.log</code>. Lower levels are more verbose. PSR-3 levels in ascending severity: debug, info, notice, warning, error, critical, alert, emergency.",
+			"default" : "info",
+			"options" : [
+				{"value": "debug",     "label": "Debug"},
+				{"value": "info",      "label": "Info"},
+				{"value": "notice",    "label": "Notice"},
+				{"value": "warning",   "label": "Warning"},
+				{"value": "error",     "label": "Error"},
+				{"value": "critical",  "label": "Critical"},
+				{"value": "alert",     "label": "Alert"},
+				{"value": "emergency", "label": "Emergency"}
+			]
+		},
+		"extensionsLogLevel": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Extensions Log Level",
+			"help"    : "Minimum severity written to <code>logs/extensions.log</code> for extension events and extension-emitted log messages. Set to <code>debug</code> while developing or troubleshooting an extension.",
+			"default" : "info",
+			"options" : [
+				{"value": "debug",     "label": "Debug"},
+				{"value": "info",      "label": "Info"},
+				{"value": "notice",    "label": "Notice"},
+				{"value": "warning",   "label": "Warning"},
+				{"value": "error",     "label": "Error"},
+				{"value": "critical",  "label": "Critical"},
+				{"value": "alert",     "label": "Alert"},
+				{"value": "emergency", "label": "Emergency"}
+			]
+		},
 		"locale": {
 			"type"        : "string",
 			"field"       : "select",
