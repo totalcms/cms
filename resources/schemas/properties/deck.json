@@ -24,6 +24,8 @@
 				{"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/email.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/empty.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/file.json"},
+				{"$ref": "https://www.totalcms.co/schemas/properties/image.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/list.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/password.json"},
 				{"$ref": "https://www.totalcms.co/schemas/properties/phone.json"},

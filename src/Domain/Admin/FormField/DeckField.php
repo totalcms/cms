@@ -104,6 +104,7 @@ class DeckField extends FormField
 			itemData        : $itemData,
 			schemaref       : $this->schemaref,
 			deckItemLabel   : $this->deckItemLabel,
+			parentProperty  : $this->name,
 		);
 	}
 }

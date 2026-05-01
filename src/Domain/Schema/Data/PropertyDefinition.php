@@ -158,9 +158,14 @@ readonly class PropertyDefinition
 				return $reversed;
 			}
 
-			// Fallback: extract type from $ref basename (e.g. ".../string.json" → "string")
+			// Fallback: extract type from $ref basename — but only trust it when
+			// it names one of the recognized property types. A custom $ref like
+			// `.../my-card.json` (used by card properties whose validation $ref
+			// points at the user's sub-schema) would otherwise yield "my-card",
+			// which isn't a real type and would force the form's type dropdown
+			// to fall through to its first option.
 			$basename = basename($this->ref, '.json');
-			if ($basename !== '') {
+			if ($basename !== '' && in_array($basename, SchemaData::PROPERTY_TYPES, true)) {
 				return $basename;
 			}
 		}

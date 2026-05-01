@@ -54,15 +54,11 @@ class SchemaTransformer
 			// Check if this property uses the simplified deck syntax
 			if ($this->isDeckProperty($property) && $schemaRef !== null) {
 				$transformedSchema['properties'][$propertyName] = $this->expandDeckProperty($property);
-				continue;
 			}
 
-			// Check if this property uses the simplified card syntax. Cards are new,
-			// but the shared `extractSchemaRef` helper accepts the legacy `deckref` alias
-			// for free — no card-specific handling needed.
-			if ($this->isCardProperty($property) && $schemaRef !== null) {
-				$transformedSchema['properties'][$propertyName] = $this->expandCardProperty($property, $schemaRef);
-			}
+			// Card properties don't need expansion — `$ref` stays at the canonical
+			// `properties/card.json`, which validates the nested object's shape.
+			// `schemaref` carries the user's sub-schema for form rendering only.
 		}
 
 		return $transformedSchema;
@@ -77,38 +73,6 @@ class SchemaTransformer
 	{
 		return isset($property['$ref'])
 			   && str_contains((string)$property['$ref'], '/properties/deck.json');
-	}
-
-	/**
-	 * Check if a property is a card type property.
-	 *
-	 * @param array<string,mixed> $property
-	 */
-	private function isCardProperty(array $property): bool
-	{
-		return isset($property['$ref'])
-			   && str_contains((string)$property['$ref'], '/properties/card.json');
-	}
-
-	/**
-	 * Expand a simplified card property to point its `$ref` directly at the
-	 * referenced sub-schema, so JSON Schema validates the nested object against
-	 * the actual card shape rather than the generic card.json wrapper.
-	 *
-	 * Preserves the original schemaref/deckref keys for form building.
-	 *
-	 * @param array<string,mixed> $property
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function expandCardProperty(array $property, string $schemaRef): array
-	{
-		$expanded = $property;
-
-		// Validation against the card sub-schema directly
-		$expanded['$ref'] = $schemaRef;
-
-		return $expanded;
 	}
 
 	/**

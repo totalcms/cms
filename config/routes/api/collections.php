@@ -80,14 +80,17 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');
 		$group->put('/{collection}/{id}/{property}/folder/rename', Property\File\FolderRenameAction::class)->setName('property-folder-rename');
 		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
-		// `{path:.+}` covers gallery file delete AND card-nested property delete.
-		// FileDeleteAction dispatches based on filesystem state.
-		$group->delete('/{collection}/{id}/{property}/{path:.+}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		// `{path:.+}/cache` covers both cases that look identical at the URL level:
 		// (1) gallery file cache (path is a filename — clears `prop/.cache/{name}/`)
-		// (2) card-nested property cache (path is a child key — clears `prop/{key}/.cache/`)
+		// (2) nested property cache (card child or deck-item child — clears `prop/{key}/.cache/`)
 		// PropertyFileClearCacheAction dispatches based on filesystem state.
+		// MUST register before the catch-all `{path:.+}` delete below — FastRoute
+		// chunks routes in registration order and the bare greedy pattern would
+		// otherwise swallow URLs ending in `/cache`.
 		$group->delete('/{collection}/{id}/{property}/{path:.+}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
+		// `{path:.+}` covers gallery file delete AND nested property delete.
+		// FileDeleteAction dispatches based on filesystem state.
+		$group->delete('/{collection}/{id}/{property}/{path:.+}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
 
 		// Nested file save — children of card (and later deck) fields. The

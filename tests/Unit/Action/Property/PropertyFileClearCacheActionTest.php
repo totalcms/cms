@@ -27,15 +27,27 @@ final class PropertyFileClearCacheActionTest extends TestCase
 		$this->request  = $this->createMock(ServerRequestInterface::class);
 		$this->response = $this->createMock(ResponseInterface::class);
 
-		// Default: paths in these tests are filenames, not directories — so the
-		// action's filesystem dispatch falls through to the existing file-cache flow.
-		$this->storage->method('directoryExists')->willReturn(false);
-
 		$this->action = new PropertyFileClearCacheAction($this->renderer, $this->service, $this->storage);
+	}
+
+	private function expectFlatPath(): void
+	{
+		// Path is a gallery filename, not a directory — dispatch falls through
+		// to the existing file-cache flow.
+		$this->storage->method('directoryExists')->willReturn(false);
+	}
+
+	private function expectNestedPath(): void
+	{
+		// Path resolves to an on-disk subdirectory — dispatch routes into the
+		// nested property-cache flow (card child or deck-item child).
+		$this->storage->method('directoryExists')->willReturn(true);
 	}
 
 	public function testClearsFileCacheSuccessfully(): void
 	{
+		$this->expectFlatPath();
+
 		$args = [
 			'collection' => 'products',
 			'id'         => 'product-1',
@@ -60,6 +72,8 @@ final class PropertyFileClearCacheActionTest extends TestCase
 
 	public function testPassesAllArgsToService(): void
 	{
+		$this->expectFlatPath();
+
 		$args = [
 			'collection' => 'blog',
 			'id'         => 'post-5',
@@ -79,6 +93,8 @@ final class PropertyFileClearCacheActionTest extends TestCase
 
 	public function testReturnsJsonWithDeletedStatus(): void
 	{
+		$this->expectFlatPath();
+
 		$args = [
 			'collection' => 'test',
 			'id'         => 'test-1',
@@ -98,6 +114,8 @@ final class PropertyFileClearCacheActionTest extends TestCase
 
 	public function testReturns500WhenDeleteFails(): void
 	{
+		$this->expectFlatPath();
+
 		$args = [
 			'collection' => 'test',
 			'id'         => 'test-1',
@@ -122,5 +140,54 @@ final class PropertyFileClearCacheActionTest extends TestCase
 		$result = ($this->action)($this->request, $this->response, $args);
 
 		$this->assertSame($response500, $result);
+	}
+
+	public function testCardNestedPathRoutesToPropertyCacheClear(): void
+	{
+		$this->expectNestedPath();
+
+		// Card child: `/coll/id/mycard/image/cache` → path = "image".
+		$args = [
+			'collection' => 'pages',
+			'id'         => 'home',
+			'property'   => 'mycard',
+			'path'       => 'image',
+		];
+
+		// Nested branch should call deletePropertyCache (clears `prop/{path}/.cache/`)
+		// rather than deleteFileCache (which clears `prop/.cache/{name}/`).
+		$this->service->expects($this->once())
+			->method('deletePropertyCache')
+			->with('pages', 'home', 'mycard', 'image')
+			->willReturn(true);
+		$this->service->expects($this->never())->method('deleteFileCache');
+
+		$this->renderer->method('json')->willReturn($this->response);
+
+		($this->action)($this->request, $this->response, $args);
+	}
+
+	public function testDeckNestedMultiSegmentPathRoutesToPropertyCacheClear(): void
+	{
+		$this->expectNestedPath();
+
+		// Deck child: `/coll/id/mydeck/one/image/cache` → path = "one/image".
+		// The trait must walk the multi-segment path to the actual on-disk dir.
+		$args = [
+			'collection' => 'pages',
+			'id'         => 'home',
+			'property'   => 'mydeck',
+			'path'       => 'one/image',
+		];
+
+		$this->service->expects($this->once())
+			->method('deletePropertyCache')
+			->with('pages', 'home', 'mydeck', 'one/image')
+			->willReturn(true);
+		$this->service->expects($this->never())->method('deleteFileCache');
+
+		$this->renderer->method('json')->willReturn($this->response);
+
+		($this->action)($this->request, $this->response, $args);
 	}
 }

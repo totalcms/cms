@@ -28,7 +28,9 @@ readonly class ImageWorksGalleryFetchAction
 		$collection  = $args['collection'] ?? 'gallery';
 		$id          = $args['id'];
 		$property    = $args['property'] ?? 'gallery';
-		$name        = $args['name'];
+		// `{path:.+}` may carry multiple segments (deck-nested: `itemId/childKey`).
+		// Falls back to the legacy single-segment `{name}` arg.
+		$path        = $args['path'] ?? $args['name'] ?? '';
 		$queryParams = $request->getQueryParams();
 
 		// Only set fm from URL format if no preset is used (presets may define their own format)
@@ -37,7 +39,7 @@ readonly class ImageWorksGalleryFetchAction
 		}
 
 		try {
-			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $name, $queryParams, $request);
+			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $path, $queryParams, $request);
 		} catch (\Exception $e) {
 			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
 		}

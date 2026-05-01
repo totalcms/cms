@@ -72,22 +72,34 @@ readonly class ObjectUpdater
 	}
 
 	/**
-	 * Replace a property nested inside another property (e.g. `obj[parent][child]`)
-	 * with `$newData`. Used by card-child autosave: PUT replaces the full child
-	 * object, leaving sibling card children untouched.
+	 * Replace a property nested inside another property:
+	 *   - Card child: `obj[$parent][$path]` where `$path` is a single segment.
+	 *   - Deck child: `obj[$parent][$itemId][$child]` where `$path` is `"itemId/child"`.
+	 *
+	 * `$path` is a slash-separated subpath; siblings at every level are preserved
+	 * (only the leaf is replaced).
 	 *
 	 * @param array<string,mixed> $newData
 	 */
-	public function updateNestedProperty(string $collection, string $id, string $parent, string $child, array $newData): ObjectData
+	public function updateNestedProperty(string $collection, string $id, string $parent, string $path, array $newData): ObjectData
 	{
 		$object     = $this->objectFetcher->fetchObject($collection, $id);
 		$objectData = $object->toArray();
 
-		if (!isset($objectData[$parent]) || !is_array($objectData[$parent])) {
-			$objectData[$parent] = [];
+		$segments = $path === '' ? [] : explode('/', $path);
+		$cursor =& $objectData[$parent];
+		if (!is_array($cursor)) {
+			$cursor = [];
+		}
+		$leaf = (string)array_pop($segments);
+		foreach ($segments as $segment) {
+			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
+				$cursor[$segment] = [];
+			}
+			$cursor =& $cursor[$segment];
 		}
 
-		$objectData[$parent][$child] = $newData;
+		$cursor[$leaf] = $newData;
 
 		return $this->updateObject($collection, $id, $objectData);
 	}

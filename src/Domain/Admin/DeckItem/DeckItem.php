@@ -28,6 +28,10 @@ class DeckItem
 		protected array $itemData = [],
 		protected string $schemaref = '',
 		protected string $deckItemLabel = '${id}',
+		// Name of the parent deck property on the object — passed by DeckField.
+		// Used to compose the dotted `nestedPath` for image/file children so
+		// they emit the right URLs (`mydeck.item-3.image`).
+		protected string $parentProperty = '',
 	) {
 		$this->schemaFetcher = $form->getSchemaFetcher();
 		$this->metaResolver  = $form->getMetaResolver();
@@ -129,6 +133,13 @@ class DeckItem
 				'deck_context' => true, // Indicate this field is within a deck item
 				'required'     => in_array($propertyName, $requiredFields, true),
 			];
+
+			// Dotted path for nested children (image/file). Empty itemId means the
+			// JavaScript template — children won't render a real path until the
+			// item is materialized with an id, so leave nestedPath unset.
+			if ($this->parentProperty !== '' && $this->itemId !== '') {
+				$fieldConfig['nestedPath'] = "{$this->parentProperty}.{$this->itemId}";
+			}
 
 			// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
 			// This ensures they're available as constructor parameters for FormField.

@@ -9,11 +9,11 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Schema\Service\SchemaTransformer;
 
 /**
- * Tests for the card-property expansion path of SchemaTransformer.
+ * Tests for the card-property handling in SchemaTransformer.
  *
- * Cards point their `$ref` at the schemaref'd sub-schema directly, so
- * JSON Schema validation runs against the actual card shape rather than
- * the generic card.json wrapper.
+ * Cards keep `$ref` pointed at the canonical `properties/card.json`. The
+ * sub-schema lives in `schemaref`, which is metadata for form rendering;
+ * card.json itself permits the nested object's shape.
  */
 #[CoversClass(SchemaTransformer::class)]
 final class SchemaTransformerCardTest extends TestCase
@@ -25,7 +25,7 @@ final class SchemaTransformerCardTest extends TestCase
 		$this->transformer = new SchemaTransformer();
 	}
 
-	public function testCardWithSchemaRefRewritesRefToSubSchema(): void
+	public function testCardWithSchemaRefLeavesRefUntouched(): void
 	{
 		$schema = [
 			'type'       => 'object',
@@ -40,16 +40,19 @@ final class SchemaTransformerCardTest extends TestCase
 
 		$result = $this->transformer->transformSchema($schema);
 
-		// $ref is rewritten to the sub-schema (so JSON Schema validates against the card's shape)
+		// $ref stays canonical — type info is preserved for the form editor.
 		$this->assertSame(
-			'https://www.totalcms.co/schemas/sitemap-settings.json',
+			'https://www.totalcms.co/schemas/properties/card.json',
 			$result['properties']['sitemap']['$ref']
 		);
-		// schemaref is preserved on the property for form building
-		$this->assertArrayHasKey('schemaref', $result['properties']['sitemap']);
+		// schemaref is preserved on the property for form building.
+		$this->assertSame(
+			'https://www.totalcms.co/schemas/sitemap-settings.json',
+			$result['properties']['sitemap']['schemaref']
+		);
 	}
 
-	public function testCardWithLegacyDeckrefAliasIsAlsoExpanded(): void
+	public function testCardWithLegacyDeckrefAliasIsLeftUntouched(): void
 	{
 		$schema = [
 			'type'       => 'object',
@@ -65,7 +68,7 @@ final class SchemaTransformerCardTest extends TestCase
 		$result = $this->transformer->transformSchema($schema);
 
 		$this->assertSame(
-			'https://www.totalcms.co/schemas/sitemap-settings.json',
+			'https://www.totalcms.co/schemas/properties/card.json',
 			$result['properties']['sitemap']['$ref']
 		);
 	}
@@ -87,7 +90,7 @@ final class SchemaTransformerCardTest extends TestCase
 		$this->assertSame($schema, $result);
 	}
 
-	public function testNonCardPropertyWithSchemaRefIgnoredByCardExpansion(): void
+	public function testNonCardPropertyWithSchemaRefLeftAlone(): void
 	{
 		$schema = [
 			'type'       => 'object',
@@ -102,7 +105,6 @@ final class SchemaTransformerCardTest extends TestCase
 
 		$result = $this->transformer->transformSchema($schema);
 
-		// $ref unchanged — card expansion only applies to card.json properties
 		$this->assertSame(
 			'https://www.totalcms.co/schemas/properties/text.json',
 			$result['properties']['title']['$ref']
@@ -132,9 +134,9 @@ final class SchemaTransformerCardTest extends TestCase
 		// Deck → patternProperties expansion
 		$this->assertArrayHasKey('patternProperties', $result['properties']['features']);
 
-		// Card → $ref rewrite
+		// Card → $ref unchanged
 		$this->assertSame(
-			'https://www.totalcms.co/schemas/sitemap-settings.json',
+			'https://www.totalcms.co/schemas/properties/card.json',
 			$result['properties']['sitemap']['$ref']
 		);
 	}

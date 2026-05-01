@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -70,18 +71,23 @@ class ImageGenerator
 		string $collection,
 		string $id,
 		string $property,
-		string $name,
+		string $path,
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
 		$propertyData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
-		// The gallery route is now also the dispatch point for card-nested image
-		// children, since they share the URL shape `/{prop}/{name}.{format}`.
-		// When the property is a CardData, treat $name as the child key and
-		// serve the nested image from `obj[prop][name]` (disk: `coll/id/prop/name/`).
+		// Same URL shape — `/{prop}/{path:.+}.{format}` — serves three property
+		// types. Dispatch on the resolved data shape:
+		//   - CardData  → `obj[prop][child]`     (path is single segment)
+		//   - DeckData  → `obj[prop][itemId][child]` (path is `itemId/child`)
+		//   - GalleryData → existing gallery image lookup (path is the filename)
 		if ($propertyData instanceof CardData) {
-			return $this->generateCardChildImage($collection, $id, $property, $name, $propertyData, $params, $request);
+			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->card, $params, $request);
+		}
+
+		if ($propertyData instanceof DeckData) {
+			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->deck, $params, $request);
 		}
 
 		if (!$propertyData instanceof GalleryData) {
@@ -93,6 +99,9 @@ class ImageGenerator
 		if ($galleryData->images === []) {
 			throw new \UnexpectedValueException('Gallery has no images');
 		}
+
+		// Gallery uses single-segment `path` as the image name (or special token).
+		$name = $path;
 
 		$imageData = match ($name) {
 			'first'    => array_shift($galleryData->images),
@@ -116,32 +125,43 @@ class ImageGenerator
 	}
 
 	/**
-	 * Serve an image stored as a child of a card field. Disk path is
-	 * `coll/id/property/childKey/<filename>`; the file metadata lives at
-	 * `obj[property][childKey]` inside the parent card.
+	 * Serve an image stored as a child of a card or deck field. The `$path` is
+	 * a slash-separated path through the parent property's nested data:
+	 *   - Card child:   `path = "childKey"`        → `parentRaw[childKey]`
+	 *   - Deck child:   `path = "itemId/childKey"` → `parentRaw[itemId][childKey]`
 	 *
-	 * @param array<string,mixed> $params
+	 * The disk file lives at `coll/id/property/<path>/<filename>`.
+	 *
+	 * @param array<int|string,mixed> $parentRaw
+	 * @param array<string,mixed>     $params
 	 */
-	private function generateCardChildImage(
+	private function generateNestedImage(
 		string $collection,
 		string $id,
 		string $property,
-		string $childKey,
-		CardData $card,
+		string $path,
+		array $parentRaw,
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
-		$childRaw = $card->card[$childKey] ?? null;
-		if (!is_array($childRaw) || empty($childRaw['name'])) {
-			throw new \UnexpectedValueException("Card-nested image '{$childKey}' has no file");
+		$segments = $path === '' ? [] : explode('/', $path);
+		$cursor   = $parentRaw;
+		foreach ($segments as $segment) {
+			if (!is_array($cursor) || !array_key_exists($segment, $cursor)) {
+				throw new \UnexpectedValueException("Nested image '{$path}' not found under '{$property}'");
+			}
+			$cursor = $cursor[$segment];
+		}
+		if (!is_array($cursor) || empty($cursor['name'])) {
+			throw new \UnexpectedValueException("Nested image '{$path}' has no file");
 		}
 
-		$imageData = new ImageData($childRaw);
+		$imageData = new ImageData($cursor);
 
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
-		$this->subpath    = $childKey;
+		$this->subpath    = $path;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);

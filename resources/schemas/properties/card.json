@@ -13,6 +13,8 @@
         {"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/email.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/empty.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/file.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/image.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/list.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/password.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/phone.json"},
@@ -21,7 +23,7 @@
         {"$ref": "https://www.totalcms.co/schemas/properties/time.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/url.json"}
       ],
-      "description": "Card property values must be basic types or supported property schemas (no file-based properties)"
+      "description": "Card property values must be basic types or supported property schemas"
     }
   },
   "additionalProperties": false,

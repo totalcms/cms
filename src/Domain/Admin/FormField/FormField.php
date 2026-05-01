@@ -51,9 +51,11 @@ class FormField
 		protected ?int $max           = null,
 		protected ?float $step        = null,
 		protected bool $hide          = false,
-		// Set when this field is rendered as a child of a card. Used by image/file
-		// fields to emit nested upload+display URLs (`coll/id/cardParent/name/...`).
-		protected ?string $cardParent = null,
+		// Dotted-path prefix when this field is rendered nested in a parent
+		// property. Card child: a single segment (`mycard`). Deck child: two
+		// segments (`mydeck.item-3`). Image/file fields use this to emit the
+		// dotted `property` option to media/render macros and nested URLs.
+		protected ?string $nestedPath = null,
 	) {
 		$this->init();
 	}

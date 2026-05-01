@@ -41,9 +41,14 @@ readonly class ObjectPatcher
 	}
 
 	/**
-	 * Patch a property nested inside another property (e.g. an image field that
-	 * lives inside a card: `obj[$parent][$child]`). Merges `$newData` into the
-	 * existing child object so sibling card children are preserved.
+	 * Patch a property nested inside another property:
+	 *   - Card child: `obj[$parent][$path]` where `$path` is a single segment.
+	 *   - Deck child: `obj[$parent][$itemId][$child]` where `$path` is `"itemId/child"`.
+	 *
+	 * `$path` is a slash-separated subpath; this method walks it from `$parent`
+	 * down to the leaf, creating intermediate associative slots as needed, and
+	 * `array_merge`s `$newData` into the leaf so siblings are preserved at every
+	 * level.
 	 *
 	 * @param array<string,mixed> $newData
 	 */
@@ -51,23 +56,29 @@ readonly class ObjectPatcher
 		string $collection,
 		string $id,
 		string $parent,
-		string $child,
+		string $path,
 		array $newData,
 	): ObjectData {
 		$object     = $this->objectFetcher->fetchObject($collection, $id);
 		$objectData = $object->toArray();
 
-		// Ensure the parent slot exists as an associative array
-		if (!isset($objectData[$parent]) || !is_array($objectData[$parent])) {
-			$objectData[$parent] = [];
+		$segments = $path === '' ? [] : explode('/', $path);
+		// Walk to (but not including) the leaf, creating slots as we go. Then
+		// merge into the leaf so partial updates preserve sibling fields.
+		$cursor =& $objectData[$parent];
+		if (!is_array($cursor)) {
+			$cursor = [];
+		}
+		$leaf = (string)array_pop($segments);
+		foreach ($segments as $segment) {
+			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
+				$cursor[$segment] = [];
+			}
+			$cursor =& $cursor[$segment];
 		}
 
-		$existingChild = $objectData[$parent][$child] ?? [];
-		if (!is_array($existingChild)) {
-			$existingChild = [];
-		}
-
-		$objectData[$parent][$child] = array_merge($existingChild, $newData);
+		$existing = isset($cursor[$leaf]) && is_array($cursor[$leaf]) ? $cursor[$leaf] : [];
+		$cursor[$leaf] = array_merge($existing, $newData);
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);
 	}

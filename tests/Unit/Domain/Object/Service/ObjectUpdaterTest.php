@@ -289,6 +289,57 @@ final class ObjectUpdaterTest extends TestCase
 		$this->updater->updateNestedProperty('posts', 'test-id', 'mycard', 'image', ['name' => 'new.jpg']);
 	}
 
+	public function testUpdateNestedPropertyHandlesMultiSegmentDeckPath(): void
+	{
+		// Phase 3: deck PUT replaces `obj[deckprop][itemId][childKey]` while
+		// preserving sibling deck items and sibling fields within the item.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'title' => 'Item 3 title',
+					'image' => ['name' => 'old.jpg', 'size' => 100],
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'title' => 'Item 3 title',
+					'image' => ['name' => 'new.jpg', 'size' => 9999],
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		];
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty(
+			'posts',
+			'test-id',
+			'mydeck',
+			'item-3/image',
+			['name' => 'new.jpg', 'size' => 9999],
+		);
+	}
+
 	public function testUpdateNestedPropertyReplacesNonArrayParentWithFreshSlot(): void
 	{
 		// Defensive: parent property exists but isn't an array (corrupt state).

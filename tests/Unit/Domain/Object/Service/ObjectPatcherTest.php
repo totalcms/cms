@@ -303,6 +303,88 @@ final class ObjectPatcherTest extends TestCase
 		$this->patcher->patchNestedProperty('posts', 'test-id', 'mycard', 'image', ['featured' => true]);
 	}
 
+	public function testPatchNestedPropertyHandlesMultiSegmentDeckPath(): void
+	{
+		// Phase 3: deck items use a 2-segment path `itemId/childKey` so the
+		// patcher walks `obj[deckprop][itemId][childKey]`.
+		$existingObject = $this->createMockObjectData([
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'image' => ['name' => 'old.jpg'],
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'image' => ['name' => 'new.jpg', 'size' => 4096],
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->patcher->patchNestedProperty(
+			'posts',
+			'test-id',
+			'mydeck',
+			'item-3/image',
+			['name' => 'new.jpg', 'size' => 4096],
+		);
+	}
+
+	public function testPatchNestedPropertyCreatesIntermediateSlotsForDeepPath(): void
+	{
+		// Brand-new deck item: `obj[mydeck]` exists but `[item-9]` doesn't.
+		// Walking the path should create the intermediate slots.
+		$existingObject = $this->createMockObjectData([
+			'id'     => 'test-id',
+			'mydeck' => [],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-9' => [
+					'image' => ['name' => 'fresh.jpg'],
+				],
+			],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher->method('fetchObject')->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->patcher->patchNestedProperty('posts', 'test-id', 'mydeck', 'item-9/image', ['name' => 'fresh.jpg']);
+	}
+
 	public function testPatchNestedPropertyCreatesParentSlotWhenMissing(): void
 	{
 		// First-time write: parent card slot doesn't exist on the object yet.

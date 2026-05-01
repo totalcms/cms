@@ -284,6 +284,77 @@ final class ObjectRemoverTest extends TestCase
 		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
 	}
 
+	public function testDeleteNestedPropertyHandlesMultiSegmentDeckPath(): void
+	{
+		// Phase 3: deck-item child delete clears `obj[deckprop][itemId][childKey]`
+		// to null and removes the matching nested directory on disk.
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return [
+					'id'     => 'test-id',
+					'mydeck' => [
+						'item-3' => [
+							'id'    => 'item-3',
+							'title' => 'Item 3',
+							'image' => ['name' => 'photo.jpg'],
+						],
+						'item-4' => [
+							'id' => 'item-4',
+						],
+					],
+				];
+			}
+		};
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		// Disk delete must scope to the deep nested dir.
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mydeck', null, 'item-3/image');
+
+		// JSON: only obj.mydeck.item-3.image is nulled; siblings preserved.
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'title' => 'Item 3',
+					'image' => null,
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		];
+
+		$updatedObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+		};
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mydeck', 'item-3/image');
+	}
+
 	public function testDeleteNestedPropertyIsSafeWhenParentMissing(): void
 	{
 		// Object exists but has no `mycard` key — delete should be a vacuous no-op
