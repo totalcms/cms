@@ -29,6 +29,8 @@ class IdField extends FormField
 	protected function formFieldAttributes(): array
 	{
 		$attributes                   = parent::formFieldAttributes();
+		$attributes['data-1p-ignore'] = '';
+		$attributes['autocomplete']   = 'off';
 		$attributes['autocapitalize'] = 'off';
 
 		return $attributes;
