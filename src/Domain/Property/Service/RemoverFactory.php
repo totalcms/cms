@@ -46,6 +46,10 @@ readonly class RemoverFactory
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
+		if (!array_key_exists($property, $schema->properties) || !is_array($schema->properties[$property])) {
+			throw new \UnexpectedValueException("Property '{$property}' not found on schema for collection '{$collection}'");
+		}
+
 		return PropertyDefinition::fromArray($schema->properties[$property])->resolveType();
 	}
 }

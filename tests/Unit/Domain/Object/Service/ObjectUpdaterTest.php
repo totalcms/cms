@@ -224,6 +224,98 @@ final class ObjectUpdaterTest extends TestCase
 		expect($result)->toBeInstanceOf(ObjectData::class);
 	}
 
+	public function testUpdateNestedPropertyReplacesChildPreservingSiblings(): void
+	{
+		// Existing card: { id, mycard: { title, image } }. Replace just the image.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
+			'id'     => 'test-id',
+			'mycard' => [
+				'id'    => 'mycard',
+				'title' => 'Existing title',
+				'image' => ['name' => 'old.jpg'],
+			],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => [
+				'id'    => 'mycard',
+				'title' => 'Existing title',
+				'image' => ['name' => 'new.jpg', 'size' => 2048],
+			],
+		];
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty(
+			'posts',
+			'test-id',
+			'mycard',
+			'image',
+			['name' => 'new.jpg', 'size' => 2048],
+		);
+	}
+
+	public function testUpdateNestedPropertyCreatesParentSlotWhenMissing(): void
+	{
+		// Object has no `mycard` property at all yet — first nested write.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', ['id' => 'test-id']);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => ['image' => ['name' => 'new.jpg']],
+		];
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty('posts', 'test-id', 'mycard', 'image', ['name' => 'new.jpg']);
+	}
+
+	public function testUpdateNestedPropertyReplacesNonArrayParentWithFreshSlot(): void
+	{
+		// Defensive: parent property exists but isn't an array (corrupt state).
+		// Should not crash; should overwrite with a fresh `[child => newData]` map.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
+			'id'     => 'test-id',
+			'mycard' => 'corrupt-string-value',
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => ['image' => ['name' => 'new.jpg']],
+		];
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty('posts', 'test-id', 'mycard', 'image', ['name' => 'new.jpg']);
+	}
+
 	public function testUpdateObjectPropertyMetaThrowsExceptionForMissingProperty(): void
 	{
 		// Create object without the requested property
@@ -314,6 +406,24 @@ final class ObjectUpdaterTest extends TestCase
 			public function toArray(): array
 			{
 				return ['id' => $this->id];
+			}
+		};
+	}
+
+	/** @param array<string,mixed> $toArrayResult */
+	private function createMockObjectDataWithToArray(string $id, array $toArrayResult): ObjectData
+	{
+		return new class($id, $toArrayResult) extends ObjectData {
+			/** @param array<string,mixed> $toArrayResult */
+			public function __construct(string $id, private readonly array $toArrayResult)
+			{
+				parent::__construct($id, []);
+			}
+
+			/** @return array<string,mixed> */
+			public function toArray(): array
+			{
+				return $this->toArrayResult;
 			}
 		};
 	}

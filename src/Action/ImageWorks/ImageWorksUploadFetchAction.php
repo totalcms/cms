@@ -6,12 +6,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\Property\Service\UploadFetcher;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 readonly class ImageWorksUploadFetchAction
 {
 	public function __construct(
 		private ImageGenerator $imageGenerator,
+		private UploadFetcher $uploadFetcher,
 	) {
 	}
 
@@ -25,6 +27,13 @@ readonly class ImageWorksUploadFetchAction
 		$id         = $args['id'];
 		$property   = $args['property'];
 		[$name, $subpath] = PathUtils::splitPath($args['path'] ?? $args['name'] ?? '');
+
+		// Short-circuit when the file isn't on disk. ImageGenerator → Glide → Flysystem
+		// would `@fopen()` the missing file and emit a warning before the failure
+		// surfaces — fileExists() lets us 404 cleanly without that noise.
+		if ($name === '' || !$this->uploadFetcher->fileExists($collection, $id, $property, $name, $subpath)) {
+			throw new HttpNotFoundException($request, 'Image not found');
+		}
 
 		$query = $request->getQueryParams();
 

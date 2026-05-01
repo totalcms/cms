@@ -68,7 +68,15 @@ export default class FilePreview {
 		if (downloadButton) {
 			downloadButton.addEventListener("click", event => {
 				event.preventDefault();
-				const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
+				// Card-nested files live at /download/{coll}/{id}/{cardprop}/{childkey};
+				// top-level at /download/{coll}/{id}/{prop}.
+				const ctx = this.totalfield.getUploadContext();
+				const collection = ctx?.collection ?? this.form.collection;
+				const id         = ctx?.id ?? this.form.id ?? '';
+				const property   = ctx?.property ?? this.property;
+				const downloadApi = ctx?.subpath
+					? `/download/${collection}/${id}/${property}/${ctx.subpath}`
+					: `/download/${collection}/${id}/${property}`;
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				// If the file is password protected, open the download in a new tab

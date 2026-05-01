@@ -32,15 +32,21 @@ export default class CardField extends TotalField {
     }
 
     //-------------------------
-    // Locate sub-fields scoped to this card. Sub-fields rendered inside the
-    // card's container are .form-field elements; we collect their TotalField
-    // instances so we can read their values.
+    // Locate sub-fields scoped to this card.
+    //
+    // Only DIRECT card children count — i.e. fields whose nearest .form-field
+    // ancestor is the card itself. Without this filter, composite child fields
+    // (image, file, etc.) leak their internal sub-fields (alt, featured,
+    // focalpoint inputs, palette colors) into the card's value, producing
+    // junk like `{0: ..., 1: ..., palette: ...}` on save.
     //-------------------------
     subFields() {
         const fields = [];
         const containers = this.container.querySelectorAll('.form-field');
         containers.forEach(el => {
             if (el === this.container) return;
+            const parentFormField = el.parentElement?.closest('.form-field');
+            if (parentFormField !== this.container) return; // nested deeper than direct child
             if (el.totalfield) fields.push(el.totalfield);
         });
         return fields;

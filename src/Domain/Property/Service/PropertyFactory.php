@@ -27,18 +27,21 @@ readonly class PropertyFactory
 	 * @throws \DomainException
 	 * @throws \UnexpectedValueException
 	 */
-	public function generateProperty(PropertyDefinition $definition, mixed $value): PropertyData
+	public function generateProperty(PropertyDefinition $definition, mixed $value, string $propertyName = ''): PropertyData
 	{
-		$type = $definition->resolveType();
+		$type  = $definition->resolveType();
+		$field = $definition->field;
 
-		// Special handling for deck properties
-		if ($type === 'deck') {
+		// Special handling for deck/card properties — dispatch on `field` too,
+		// because schemas authored via the form-driven editor set `type: "array"`
+		// for these even though `field: "card"`/`"deck"` is the real shape signal.
+		// Without this, deck/card values fall through to ArrayData which strips
+		// keys via array_values() and corrupts the structure into a list.
+		if ($type === 'deck' || $field === 'deck') {
 			return $this->createDeck($definition, $value, $definition->settings);
 		}
-
-		// Special handling for card properties (single-instance deck)
-		if ($type === 'card') {
-			return $this->createCard($definition, $value, $definition->settings);
+		if ($type === 'card' || $field === 'card') {
+			return $this->createCard($definition, $value, $definition->settings, $propertyName);
 		}
 
 		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
@@ -143,7 +146,7 @@ readonly class PropertyFactory
 	 * @param mixed $value The raw card data (associative array of field values)
 	 * @param array<string,mixed> $settings The card settings
 	 */
-	public function createCard(PropertyDefinition $definition, mixed $value, array $settings = []): CardData
+	public function createCard(PropertyDefinition $definition, mixed $value, array $settings = [], string $propertyName = ''): CardData
 	{
 		// If no card data provided, return empty card
 		if (empty($value) || !is_array($value)) {
@@ -170,10 +173,13 @@ readonly class PropertyFactory
 
 			// Iterate over schema properties (like ObjectFactory does for objects)
 			// so all sub-fields are processed with proper defaults and type conversion.
-			// Skip `id` — required on every schema by the SchemaSaver, but meaningless
-			// for a card (which is a single object, not an array of identified items).
+			// `id` is a special case for cards: it's required by the schema but
+			// meaningless to the user (CardField hides the field). We force it to
+			// the parent property name so the saved data feels intentional and
+			// stable — e.g. `mycard.id = "mycard"`.
 			foreach ($cardSchema->properties as $fieldName => $fieldSchema) {
 				if ($fieldName === 'id') {
+					$processed[$fieldName] = $propertyName !== '' ? $propertyName : 'card';
 					continue;
 				}
 				$fieldValue            = $value[$fieldName] ?? null;

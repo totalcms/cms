@@ -48,6 +48,31 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 
 For available ImageWorks parameters, see the [ImageWorks Reference](docs/twig/imageworks).
 
+### Nested images (cards and decks)
+
+Images stored inside a `card` or `deck` field are addressed through the `property` option using a **dot-notation path**. The first segment is the parent property; subsequent segments walk down to the image.
+
+```twig
+{# Card child — `mycard` is the card field, `image` is the child key #}
+{{ cms.media.imagePath('post-1', {}, {property: 'mycard.image'}) }}
+
+{# Deck child — `mydeck` is the deck field, `item-3` is the deck-item id, `image` is the child key #}
+{{ cms.media.imagePath('post-1', {}, {property: 'mydeck.item-3.image'}) }}
+
+{# Same syntax works when passing the object directly #}
+{{ cms.media.imagePath(post, {w: 800}, {property: 'mycard.image'}) }}
+```
+
+The dot-notation maps directly to URL segments — `mycard.image` becomes `/api/imageworks/{coll}/{id}/mycard/image.{format}` — and the image data is resolved by descending the same path on the object (`obj.mycard.image`).
+
+The same syntax works on the corresponding render macro:
+
+```twig
+{{ cms.render.image('post-1', {w: 800}, {property: 'mycard.image'}) }}
+```
+
+The Image Builder dialog (the imageworks utility opened from the admin form) detects nested images and shows the dotted-property macro in its "Copy macro" section, so you can copy a working snippet directly.
+
 ## Galleries
 
 ### galleryPath()

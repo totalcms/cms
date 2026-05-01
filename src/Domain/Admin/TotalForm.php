@@ -770,6 +770,16 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Base URL with no `/api` suffix — for admin-routed iframes (`/admin/...`)
+	 * and any other URL that lives outside the `/api/...` surface that
+	 * `$this->api` points at. Mirrors the dispatch in TotalFormFactory::totalform().
+	 */
+	public function baseApi(): string
+	{
+		return $this->config->api;
+	}
+
+	/**
 	 * Render a field as a sub-field of a composite property (file, image, depot,
 	 * gallery, deck-table, etc.). Skips parent-object schema inheritance so that
 	 * a sub-field with a name matching a top-level property (e.g. `name`, `alt`,

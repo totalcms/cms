@@ -222,4 +222,98 @@ final class ObjectRemoverTest extends TestCase
 		// Verify
 		expect($result)->toBe($updatedObject);
 	}
+
+	public function testDeleteNestedPropertyClearsChildAndPreservesSiblings(): void
+	{
+		// Existing card with image and title children. Deleting just the image
+		// nulls obj[mycard][image] and removes the disk dir at coll/id/mycard/image/.
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return [
+					'id'     => 'test-id',
+					'mycard' => [
+						'id'    => 'mycard',
+						'title' => 'My card title',
+						'image' => ['name' => 'photo.jpg'],
+					],
+				];
+			}
+		};
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		// Disk-side: must scope the delete to the nested dir (subpath = 'image').
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mycard', null, 'image');
+
+		// JSON-side: image is nulled, title preserved, sibling card metadata intact.
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => [
+				'id'    => 'mycard',
+				'title' => 'My card title',
+				'image' => null,
+			],
+		];
+
+		$updatedObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+		};
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
+	}
+
+	public function testDeleteNestedPropertyIsSafeWhenParentMissing(): void
+	{
+		// Object exists but has no `mycard` key — delete should be a vacuous no-op
+		// at the JSON layer (still call updateObject for consistency) and still
+		// attempt the disk cleanup (in case orphan files exist).
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return ['id' => 'test-id'];
+			}
+		};
+
+		$this->objectFetcher->method('fetchObject')->willReturn($existingObject);
+
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mycard', null, 'image');
+
+		// Object data unchanged (no mycard key was present, none added).
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', ['id' => 'test-id']);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
+	}
 }

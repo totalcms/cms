@@ -504,4 +504,64 @@ class PropertyRepositoryTest extends TestCase
 			unlink($tempImage);
 		}
 	}
+
+	public function testDirectoryExistsTopLevel(): void
+	{
+		$this->mockFilesystem
+			->expects($this->once())
+			->method('directoryExists')
+			->with('test-collection/test-object/test-property')
+			->willReturn(true);
+
+		$this->assertTrue(
+			$this->propertyRepository->directoryExists('test-collection', 'test-object', 'test-property')
+		);
+	}
+
+	public function testDirectoryExistsWithSubpath(): void
+	{
+		$this->mockFilesystem
+			->expects($this->once())
+			->method('directoryExists')
+			->with('test-collection/test-object/mycard/image')
+			->willReturn(true);
+
+		$this->assertTrue(
+			$this->propertyRepository->directoryExists('test-collection', 'test-object', 'mycard', 'image')
+		);
+	}
+
+	public function testDirectoryExistsReturnsFalseWhenMissing(): void
+	{
+		$this->mockFilesystem
+			->method('directoryExists')
+			->willReturn(false);
+
+		$this->assertFalse(
+			$this->propertyRepository->directoryExists('test-collection', 'test-object', 'mycard', 'image')
+		);
+	}
+
+	public function testDeletePropertyCacheWithSubpath(): void
+	{
+		// Card-nested cache lives at coll/id/parent/child/.cache (not parent/.cache).
+		$this->mockFilesystem
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('test-collection/test-object/mycard/image/.cache');
+
+		$this->mockFilesystem
+			->method('fileExists')
+			->with('test-collection/test-object/mycard/image/.cache')
+			->willReturn(false);
+
+		$result = $this->propertyRepository->deletePropertyCache(
+			'test-collection',
+			'test-object',
+			'mycard',
+			'image',
+		);
+
+		$this->assertTrue($result);
+	}
 }

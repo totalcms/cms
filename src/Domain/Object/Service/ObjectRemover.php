@@ -43,4 +43,23 @@ readonly class ObjectRemover
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);
 	}
+
+	/**
+	 * Delete a property nested inside another property (e.g. an image child of
+	 * a card). Clears `obj[$parent][$child]` from the JSON and removes the
+	 * matching nested directory on disk. Sibling card children are preserved.
+	 */
+	public function deleteNestedProperty(string $collection, string $id, string $parent, string $child): ObjectData
+	{
+		$object     = $this->objectFetcher->fetchObject($collection, $id);
+		$objectData = $object->toArray();
+
+		if (isset($objectData[$parent]) && is_array($objectData[$parent])) {
+			$objectData[$parent][$child] = null;
+		}
+
+		$this->propStorage->deleteDirectory($collection, $id, $parent, null, $child);
+
+		return $this->objectUpdater->updateObject($collection, $id, $objectData);
+	}
 }

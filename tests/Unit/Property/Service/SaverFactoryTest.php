@@ -276,4 +276,63 @@ class SaverFactoryTest extends TestCase
 			$this->assertEquals($expectedType, $saver->type);
 		}
 	}
+
+	public function testGenerateSaverServiceWithSubpathResolvesNestedChildType(): void
+	{
+		// Card-nested upload: URL says property=mycard, but the actual saver
+		// type comes from the card's child schema (image, in this case).
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNested')
+			->with('test-collection', 'mycard', 'image')
+			->willReturn(['field' => 'image', 'type' => 'image']);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNestedSettings')
+			->with('test-collection', 'mycard', 'image')
+			->willReturn([]);
+
+		// `fetchSchemaForCollection` should NOT be called when subpath is provided —
+		// the factory takes the nested-resolution path instead.
+		$this->mockSchemaFetcher
+			->expects($this->never())
+			->method('fetchSchemaForCollection');
+
+		$saver = $this->saverFactory->generateSaverService(
+			'test-collection',
+			'mycard',
+			'',
+			'image', // subpath = child key
+		);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\ImageSaver::class, $saver);
+		$this->assertEquals('image', $saver->type);
+	}
+
+	public function testGenerateSaverServiceWithMultiSegmentSubpathUsesLastSegment(): void
+	{
+		// Phase 3 deck-style subpath: `item-3/image`. Factory should resolve the
+		// child type from the LAST segment ("image") — that's the actual field key.
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNested')
+			->with('test-collection', 'mydeck', 'image')
+			->willReturn(['field' => 'file', 'type' => 'file']);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNestedSettings')
+			->willReturn([]);
+
+		$saver = $this->saverFactory->generateSaverService(
+			'test-collection',
+			'mydeck',
+			'',
+			'item-3/image',
+		);
+
+		$this->assertInstanceOf(FileSaver::class, $saver);
+		$this->assertEquals('file', $saver->type);
+	}
 }

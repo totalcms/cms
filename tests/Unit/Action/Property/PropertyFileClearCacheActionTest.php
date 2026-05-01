@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Property\PropertyFileClearCacheAction;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\PropertyCacheCleaner;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -14,6 +15,7 @@ final class PropertyFileClearCacheActionTest extends TestCase
 	private PropertyFileClearCacheAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $service;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -21,10 +23,15 @@ final class PropertyFileClearCacheActionTest extends TestCase
 	{
 		$this->service  = $this->createMock(PropertyCacheCleaner::class);
 		$this->renderer = $this->createMock(JsonRenderer::class);
+		$this->storage  = $this->createMock(PropertyRepository::class);
 		$this->request  = $this->createMock(ServerRequestInterface::class);
 		$this->response = $this->createMock(ResponseInterface::class);
 
-		$this->action = new PropertyFileClearCacheAction($this->renderer, $this->service);
+		// Default: paths in these tests are filenames, not directories — so the
+		// action's filesystem dispatch falls through to the existing file-cache flow.
+		$this->storage->method('directoryExists')->willReturn(false);
+
+		$this->action = new PropertyFileClearCacheAction($this->renderer, $this->service, $this->storage);
 	}
 
 	public function testClearsFileCacheSuccessfully(): void

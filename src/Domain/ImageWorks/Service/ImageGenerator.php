@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -73,11 +74,21 @@ class ImageGenerator
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
-		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
+		$propertyData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
-		if (!$galleryData instanceof GalleryData) {
+		// The gallery route is now also the dispatch point for card-nested image
+		// children, since they share the URL shape `/{prop}/{name}.{format}`.
+		// When the property is a CardData, treat $name as the child key and
+		// serve the nested image from `obj[prop][name]` (disk: `coll/id/prop/name/`).
+		if ($propertyData instanceof CardData) {
+			return $this->generateCardChildImage($collection, $id, $property, $name, $propertyData, $params, $request);
+		}
+
+		if (!$propertyData instanceof GalleryData) {
 			throw new \UnexpectedValueException('Invalid gallery property found');
 		}
+
+		$galleryData = $propertyData;
 
 		if ($galleryData->images === []) {
 			throw new \UnexpectedValueException('Gallery has no images');
@@ -99,6 +110,38 @@ class ImageGenerator
 		$this->id         = $id;
 		$this->property   = $property;
 		$this->subpath    = null;
+		$this->params     = $this->cleanupParams($params, $imageData);
+
+		return $this->responseFromImageData($imageData, $request);
+	}
+
+	/**
+	 * Serve an image stored as a child of a card field. Disk path is
+	 * `coll/id/property/childKey/<filename>`; the file metadata lives at
+	 * `obj[property][childKey]` inside the parent card.
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	private function generateCardChildImage(
+		string $collection,
+		string $id,
+		string $property,
+		string $childKey,
+		CardData $card,
+		array $params,
+		?ServerRequestInterface $request = null,
+	): ResponseInterface {
+		$childRaw = $card->card[$childKey] ?? null;
+		if (!is_array($childRaw) || empty($childRaw['name'])) {
+			throw new \UnexpectedValueException("Card-nested image '{$childKey}' has no file");
+		}
+
+		$imageData = new ImageData($childRaw);
+
+		$this->collection = $collection;
+		$this->id         = $id;
+		$this->property   = $property;
+		$this->subpath    = $childKey;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);

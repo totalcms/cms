@@ -46,6 +46,20 @@ Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and laz
 | `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
 | `options` | array | `[]` | Collection context: `collection`, `property`, `loading` |
 
+#### Nested images (cards and decks)
+
+Images stored inside a `card` or `deck` field are addressed through the `property` option using a **dot-notation path**:
+
+```twig
+{# Card child — first segment is the card field, last segment is the child key #}
+{{ cms.render.image('post-1', {w: 800}, {property: 'mycard.image'}) }}
+
+{# Deck child — first segment is the deck field, then the deck-item id, then the child key #}
+{{ cms.render.image('post-1', {w: 800}, {property: 'mydeck.item-3.image'}) }}
+```
+
+`cms.render.alt()` accepts the same `property: 'parent.child'` syntax. See [cms.media → Nested images](docs/twig/media#nested-images-cards-and-decks) for the underlying URL convention.
+
 ### alt()
 
 Get the alt text for an image. Falls back through alt text, EXIF data, then filename.
@@ -53,6 +67,9 @@ Get the alt text for an image. Falls back through alt text, EXIF data, then file
 ```twig
 {{ cms.render.alt('hero') }}
 {{ cms.render.alt(product, {collection: 'products', property: 'image'}) }}
+
+{# Card child #}
+{{ cms.render.alt('post-1', {property: 'mycard.image'}) }}
 ```
 
 ## Galleries

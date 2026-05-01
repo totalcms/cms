@@ -477,11 +477,18 @@ class RenderTwigAdapter
 			return '';
 		}
 
-		// Performance optimization: Extract image data from object if passed
+		// Resolve image data, descending dotted `property` for card/deck-nested.
+		[$rootProp, $segments] = MediaTwigAdapter::splitDottedProperty((string)$options['property']);
 		if (is_array($idOrObject)) {
-			$image = $idOrObject[$options['property']] ?? [];
+			$image = MediaTwigAdapter::descendDottedPath($idOrObject, $rootProp, $segments) ?? [];
 		} else {
-			$image = $this->data->raw($options['collection'], $idOrObject, $options['property']);
+			$image = $this->data->raw($options['collection'], $idOrObject, $rootProp);
+			foreach ($segments as $segment) {
+				$image = is_array($image) ? ($image[$segment] ?? null) : null;
+			}
+		}
+		if (!is_array($image)) {
+			$image = [];
 		}
 
 		// Calculate dimensions for layout stability (prevents CLS)
@@ -880,11 +887,15 @@ class RenderTwigAdapter
 			'property'   => 'image',
 		], $options);
 
-		// Performance optimization: Extract image data from object if passed
+		// Resolve image data, descending dotted `property` for card/deck-nested.
+		[$rootProp, $segments] = MediaTwigAdapter::splitDottedProperty((string)$options['property']);
 		if (is_array($idOrObject)) {
-			$image = $idOrObject[$options['property']] ?? null;
+			$image = MediaTwigAdapter::descendDottedPath($idOrObject, $rootProp, $segments);
 		} else {
-			$image = $this->data->raw($options['collection'], $idOrObject, $options['property']);
+			$image = $this->data->raw($options['collection'], $idOrObject, $rootProp);
+			foreach ($segments as $segment) {
+				$image = is_array($image) ? ($image[$segment] ?? null) : null;
+			}
 		}
 
 		if (!is_array($image)) {

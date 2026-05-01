@@ -23,18 +23,20 @@ class ImageSaver extends FileSaver
 			$this->createObject($collection, $objectID, $property);
 		}
 
-		// Clean up existing files in the path. Only one file should exist
-		// This also cleans the cache
-		$this->storage->deleteDirectory($collection, $objectID, $property);
+		// Clean up existing files at this exact path (top-level or nested). Without
+		// the $subpath here, a card-nested image save would wipe siblings.
+		$this->storage->deleteDirectory($collection, $objectID, $property, null, $subpath);
 
 		// Update the object with the new file data
-		$imageProp = $this->fetchProperty($collection, $objectID, $property);
+		$imageProp = $this->fetchExistingChildProperty($collection, $objectID, $property, $subpath);
 
 		// Only keep certain existing data, but allow EXIF to populate alt and tags if they're empty
 		$keep         = ['featured', 'link'];
 		$existingData = array_filter($imageProp->transform(), fn ($key): bool => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
 
-		// Keep existing alt and tags only if they have values
+		// Keep existing alt and tags only if they have values. ImageData always
+		// initializes these, so direct access is safe whether $imageProp came
+		// from the object or was freshly built from an empty array.
 		$existingAlt  = trim($imageProp->alt ?? '');
 		$existingTags = $imageProp->tags->list ?? [];
 		if ($existingAlt !== '') {
@@ -44,7 +46,7 @@ class ImageSaver extends FileSaver
 			$existingData['tags'] = $existingTags;
 		}
 
-		$fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+		$fileData = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
 
 		$colorData = ['palette' => []];
 
@@ -80,6 +82,6 @@ class ImageSaver extends FileSaver
 		// Merge data with EXIF taking precedence for alt and tags if they're empty in existing data
 		$newImage = array_merge($fileData, $metaData, $colorData, $existingData);
 
-		return $this->updateObject($collection, $objectID, $property, new ImageData($newImage));
+		return $this->updateObject($collection, $objectID, $property, new ImageData($newImage), $subpath);
 	}
 }

@@ -28,8 +28,17 @@ export default class ImageField extends TotalField {
 	}
 
 	apiUploadImage() {
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		return this.api.buildApiQuery(api);
+		// getUploadContext() (from TotalField) returns nested context for card
+		// children — `property` is the card's name and `subpath` is the child key.
+		// For top-level fields, subpath is empty. Falls back to the form's id when
+		// the context isn't ready (matches the pre-Phase-2 behavior of letting the
+		// upload route fail with the form's current id).
+		const ctx = this.getUploadContext();
+		const collection = ctx?.collection ?? this.form.collection;
+		const id         = ctx?.id ?? this.form.id ?? '';
+		const property   = ctx?.property ?? this.property;
+		const subpath    = ctx?.subpath ? `/${ctx.subpath}` : '';
+		return this.api.buildApiQuery(`/collections/${collection}/${id}/${property}${subpath}`);
     }
 
 	updateAPIUrl() {
@@ -64,7 +73,15 @@ export default class ImageField extends TotalField {
 
 		if (!force && !this.isUnsaved()) return;
 
-		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+		// Top-level: PUT /coll/id/prop. Card-nested: PUT /coll/id/cardprop/childkey
+		// (server dispatches on filesystem state; nested replaces obj[parent][child]).
+		const ctx = this.getUploadContext();
+		const collection = ctx?.collection ?? this.form.collection;
+		const id         = ctx?.id ?? this.form.id ?? '';
+		const property   = ctx?.property ?? this.property;
+		const patchApi   = ctx?.subpath
+			? `/collections/${collection}/${id}/${property}/${ctx.subpath}`
+			: `/collections/${collection}/${id}/${property}`;
 		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
 			console.log("Image Meta Autosaved", response);
 			this.saved();
@@ -103,7 +120,15 @@ export default class ImageField extends TotalField {
 	}
 
 	fileUploaded(file, response) {
-		const image = response.data[this.property];
+		// Top-level: response.data[this.property]. Card-nested: descend to
+		// response.data[cardParent][childKey] where childKey is this.property.
+		const ctx = this.getUploadContext();
+		let image;
+		if (ctx?.subpath) {
+			image = response.data?.[ctx.property]?.[this.property];
+		} else {
+			image = response.data?.[this.property];
+		}
 		this.setupPreview(image);
 	}
 

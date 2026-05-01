@@ -87,7 +87,7 @@ class FileField extends FormField
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = str_contains($this->form->api, '?') ? '&' : '?';
 
-		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/filelinks{$join}{$query}");
+		$iframe = HTMLUtils::iframe("{$this->form->baseApi()}/admin/filelinks{$join}{$query}");
 
 		return HTMLUtils::dialog($iframe, 'file-links-dialog');
 	}

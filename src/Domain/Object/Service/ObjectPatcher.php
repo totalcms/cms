@@ -41,6 +41,38 @@ readonly class ObjectPatcher
 	}
 
 	/**
+	 * Patch a property nested inside another property (e.g. an image field that
+	 * lives inside a card: `obj[$parent][$child]`). Merges `$newData` into the
+	 * existing child object so sibling card children are preserved.
+	 *
+	 * @param array<string,mixed> $newData
+	 */
+	public function patchNestedProperty(
+		string $collection,
+		string $id,
+		string $parent,
+		string $child,
+		array $newData,
+	): ObjectData {
+		$object     = $this->objectFetcher->fetchObject($collection, $id);
+		$objectData = $object->toArray();
+
+		// Ensure the parent slot exists as an associative array
+		if (!isset($objectData[$parent]) || !is_array($objectData[$parent])) {
+			$objectData[$parent] = [];
+		}
+
+		$existingChild = $objectData[$parent][$child] ?? [];
+		if (!is_array($existingChild)) {
+			$existingChild = [];
+		}
+
+		$objectData[$parent][$child] = array_merge($existingChild, $newData);
+
+		return $this->objectUpdater->updateObject($collection, $id, $objectData);
+	}
+
+	/**
 	 * @param array<string,mixed> $newData
 	 */
 	public function patchObjectPropertyMeta(

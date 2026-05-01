@@ -84,11 +84,27 @@ Sub-fields are rendered using the referenced schema's `properties`, `required`, 
 
 Card values must be basic types or simple property schemas. The following are **not** allowed inside a card:
 
-- File-based properties (`file`, `image`, `gallery`, `depot`, `folder`)
-- Code, JSON, and rating properties
+- `gallery`, `depot`, `folder` (plurality models that don't fit the single-value-per-child shape)
 - Other decks (cards inside decks are fine; decks inside cards are not)
 
-Allowed property types include `string`, `number`, `boolean`, `card` (nested), `color`, `date`, `email`, `list`, `password`, `phone`, `slug`, `svg`, `time`, and `url`.
+Allowed property types include `string`, `number`, `boolean`, `card` (nested), `color`, `date`, `email`, **`file`**, **`image`**, `list`, `password`, `phone`, `slug`, `svg`, `time`, and `url`.
+
+### Referencing nested images and files in Twig
+
+Images and files stored inside a card are addressed by **dot-notation** in the `property` option of the standard media/render macros:
+
+```twig
+{# URL only #}
+{{ cms.media.imagePath('post-1', {w: 800}, {property: 'mycard.image'}) }}
+
+{# Full <img> tag #}
+{{ cms.render.image('post-1', {w: 800}, {property: 'mycard.image'}) }}
+
+{# File download URL #}
+{{ cms.media.download('post-1', {property: 'mycard.attachment'}) }}
+```
+
+The first segment is the card field's name on the parent object; subsequent segments walk down into the card. The Image Builder dialog (opened from the admin form) emits the correct dotted-property macro automatically. See [cms.media → Nested images](docs/twig/media#nested-images-cards-and-decks) for full reference.
 
 ## Complete Example
 

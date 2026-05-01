@@ -23,9 +23,9 @@ class PropertyRepository extends StorageRepository
 		}
 	}
 
-	public function deletePropertyCache(string $collection, string $objectID, string $property): bool
+	public function deletePropertyCache(string $collection, string $objectID, string $property, ?string $subpath = null): bool
 	{
-		$path = PathUtils::buildPath($collection, $objectID, $property, '.cache');
+		$path = PathUtils::buildPath($collection, $objectID, $property, '.cache', $subpath);
 
 		try {
 			$this->filesystem->deleteDirectory($path);
@@ -115,6 +115,13 @@ class PropertyRepository extends StorageRepository
 		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		return $this->filesystem->fileExists($path);
+	}
+
+	public function directoryExists(string $collection, string $objectID, string $property, ?string $subpath = null): bool
+	{
+		$path = PathUtils::buildPath($collection, $objectID, $property, null, $subpath);
+
+		return $this->filesystem->directoryExists($path);
 	}
 
 	/** @return resource */

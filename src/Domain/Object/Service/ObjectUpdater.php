@@ -72,6 +72,27 @@ readonly class ObjectUpdater
 	}
 
 	/**
+	 * Replace a property nested inside another property (e.g. `obj[parent][child]`)
+	 * with `$newData`. Used by card-child autosave: PUT replaces the full child
+	 * object, leaving sibling card children untouched.
+	 *
+	 * @param array<string,mixed> $newData
+	 */
+	public function updateNestedProperty(string $collection, string $id, string $parent, string $child, array $newData): ObjectData
+	{
+		$object     = $this->objectFetcher->fetchObject($collection, $id);
+		$objectData = $object->toArray();
+
+		if (!isset($objectData[$parent]) || !is_array($objectData[$parent])) {
+			$objectData[$parent] = [];
+		}
+
+		$objectData[$parent][$child] = $newData;
+
+		return $this->updateObject($collection, $id, $objectData);
+	}
+
+	/**
 	 * @param array<string,mixed> $newData
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")

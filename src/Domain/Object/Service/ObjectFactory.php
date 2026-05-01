@@ -94,7 +94,7 @@ readonly class ObjectFactory
 
 			$value = $objectData[$property];
 
-			$properties[$property] = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
+			$properties[$property] = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value, $property);
 		}
 
 		return $properties;

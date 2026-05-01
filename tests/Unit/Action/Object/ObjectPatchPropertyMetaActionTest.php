@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Object\ObjectPatchPropertyMetaAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class ObjectPatchPropertyMetaActionTest extends TestCase
@@ -15,6 +16,7 @@ final class ObjectPatchPropertyMetaActionTest extends TestCase
 	private ObjectPatchPropertyMetaAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $objectPatcher;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -22,10 +24,15 @@ final class ObjectPatchPropertyMetaActionTest extends TestCase
 	{
 		$this->objectPatcher = $this->createMock(ObjectPatcher::class);
 		$this->renderer      = $this->createMock(JsonRenderer::class);
+		$this->storage       = $this->createMock(PropertyRepository::class);
 		$this->request       = $this->createMock(ServerRequestInterface::class);
 		$this->response      = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ObjectPatchPropertyMetaAction($this->renderer, $this->objectPatcher);
+		// Default: paths in these tests are filenames, not directories — so the
+		// action's filesystem dispatch falls through to the existing meta flow.
+		$this->storage->method('directoryExists')->willReturn(false);
+
+		$this->action = new ObjectPatchPropertyMetaAction($this->renderer, $this->objectPatcher, $this->storage);
 	}
 
 	public function testPatchesPropertyMetaSuccessfully(): void

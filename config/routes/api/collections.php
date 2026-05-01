@@ -64,9 +64,10 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}/increment[/{amount}]', Action\Object\ObjectPropertyIncrementAction::class)->setName('property-increment');
 		$group->post('/{collection}/{id}/{property}/decrement[/{amount}]', Action\Object\ObjectPropertyDecrementAction::class)->setName('property-decrement');
 
-		// Object Property Meta
-		$group->put('/{collection}/{id}/{property}/{name}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
-		$group->patch('/{collection}/{id}/{property}/{name}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
+		// Object Property Meta — `{path:.+}` covers both gallery item meta and
+		// card-nested property updates. The action dispatches on filesystem state.
+		$group->put('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
+		$group->patch('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
 
 		// Deck Items (for deck properties)
 		$group->post('/{collection}/{id}/{property}/deck', Property\Deck\DeckItemCreateAction::class)->setName('deck-item-create');
@@ -79,9 +80,21 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');
 		$group->put('/{collection}/{id}/{property}/folder/rename', Property\File\FolderRenameAction::class)->setName('property-folder-rename');
 		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
-		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
-		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
+		// `{path:.+}` covers gallery file delete AND card-nested property delete.
+		// FileDeleteAction dispatches based on filesystem state.
+		$group->delete('/{collection}/{id}/{property}/{path:.+}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
+		// `{path:.+}/cache` covers both cases that look identical at the URL level:
+		// (1) gallery file cache (path is a filename — clears `prop/.cache/{name}/`)
+		// (2) card-nested property cache (path is a child key — clears `prop/{key}/.cache/`)
+		// PropertyFileClearCacheAction dispatches based on filesystem state.
+		$group->delete('/{collection}/{id}/{property}/{path:.+}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
+
+		// Nested file save — children of card (and later deck) fields. The
+		// `{path:.+}` greedy segment captures one or more child-key/item-id
+		// segments and is dispatched after the literal-prefix routes above
+		// (folder, deck, increment, decrement) which take precedence.
+		$group->post('/{collection}/{id}/{property}/{path:.+}', Property\File\FileSaveAction::class)->setName('property-file-save-nested');
 	})->add(NoCacheMiddleware::class)
 		->add(CollectionEditionMiddleware::class)
 		->add(CollectionAccessMiddleware::class)

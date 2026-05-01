@@ -229,6 +229,110 @@ final class ObjectPatcherTest extends TestCase
 		expect($result)->toBe($updatedObject);
 	}
 
+	public function testPatchNestedPropertyMergesIntoChildPreservingSiblings(): void
+	{
+		// Existing card with two children: a `title` text field and an `image` image field.
+		// Patching only the image child must preserve the title.
+		$existingObject = $this->createMockObjectData([
+			'id'      => 'test-id',
+			'mycard'  => [
+				'title' => 'Existing title',
+				'image' => ['name' => 'old.jpg', 'size' => 1000],
+			],
+		]);
+
+		$newImageData = ['name' => 'new.jpg', 'size' => 2048, 'mime' => 'image/jpeg'];
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => [
+				'title' => 'Existing title',
+				'image' => ['name' => 'new.jpg', 'size' => 2048, 'mime' => 'image/jpeg'],
+			],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$result = $this->patcher->patchNestedProperty('posts', 'test-id', 'mycard', 'image', $newImageData);
+
+		expect($result)->toBe($updatedObject);
+	}
+
+	public function testPatchNestedPropertyMergesPartialUpdateIntoExistingChild(): void
+	{
+		// Updating just the `featured` flag on a card-nested image should preserve
+		// the rest of the file metadata (name, size, etc.).
+		$existingObject = $this->createMockObjectData([
+			'id'     => 'test-id',
+			'mycard' => [
+				'image' => ['name' => 'photo.jpg', 'size' => 5000, 'featured' => false, 'alt' => 'desc'],
+			],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => [
+				'image' => ['name' => 'photo.jpg', 'size' => 5000, 'featured' => true, 'alt' => 'desc'],
+			],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->patcher->patchNestedProperty('posts', 'test-id', 'mycard', 'image', ['featured' => true]);
+	}
+
+	public function testPatchNestedPropertyCreatesParentSlotWhenMissing(): void
+	{
+		// First-time write: parent card slot doesn't exist on the object yet.
+		// Patcher should create it rather than failing.
+		$existingObject = $this->createMockObjectData([
+			'id' => 'test-id',
+		]);
+
+		$newData = ['name' => 'first.jpg'];
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => ['image' => ['name' => 'first.jpg']],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->patcher->patchNestedProperty('posts', 'test-id', 'mycard', 'image', $newData);
+	}
+
 	public function testPatchObjectPropertyMetaThrowsExceptionForMissingProperty(): void
 	{
 		// Create object without the requested property

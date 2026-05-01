@@ -156,6 +156,9 @@ class CardField extends FormField
 				'value'        => $fieldValue,
 				'required'     => in_array($propertyName, $requiredFields, true),
 				'card_context' => true,
+				// Tell the child field which card it lives in. ImageField/FileField
+				// use this to emit nested URLs (`coll/id/cardparent/childkey/...`).
+				'cardParent'   => $this->name,
 			];
 
 			// Promote attribute settings (min, max, step, pattern, rows, etc.) from

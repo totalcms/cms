@@ -51,6 +51,9 @@ class FormField
 		protected ?int $max           = null,
 		protected ?float $step        = null,
 		protected bool $hide          = false,
+		// Set when this field is rendered as a child of a card. Used by image/file
+		// fields to emit nested upload+display URLs (`coll/id/cardParent/name/...`).
+		protected ?string $cardParent = null,
 	) {
 		$this->init();
 	}

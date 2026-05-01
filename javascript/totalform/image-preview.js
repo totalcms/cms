@@ -88,7 +88,16 @@ setupActionBar() {
 				event.preventDefault();
 				const mimeType = this.container.querySelector('.form-field:has([name=mime])').totalfield.getValue();
 				const format = mimeType.split("/")[1];
-				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
+				// For card-nested images, build /imageworks/{coll}/{id}/{cardprop}/{childkey}.{format}.
+				// For top-level, /imageworks/{coll}/{id}/{prop}.{format}. Both shapes are dispatched
+				// by ImageWorksGalleryFetchAction (which now also handles card data).
+				const ctx = this.totalfield.getUploadContext();
+				const collection = ctx?.collection ?? this.form.collection;
+				const id         = ctx?.id ?? this.form.id ?? '';
+				const property   = ctx?.property ?? this.property;
+				const downloadApi = ctx?.subpath
+					? `/imageworks/${collection}/${id}/${property}/${ctx.subpath}.${format}`
+					: `/imageworks/${collection}/${id}/${property}.${format}`;
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				const link = document.createElement('a');
@@ -107,7 +116,16 @@ setupActionBar() {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
 				this.tempToggleFeaturedActionButton();
-				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				// Top-level: PATCH /coll/id/prop. Card-nested: PATCH /coll/id/cardprop/childkey.
+				// The PATCH meta action dispatches on filesystem state and merges into
+				// the right JSON location.
+				const ctx = this.totalfield.getUploadContext();
+				const collection = ctx?.collection ?? this.form.collection;
+				const id         = ctx?.id ?? this.form.id ?? '';
+				const property   = ctx?.property ?? this.property;
+				const featureApi = ctx?.subpath
+					? `/collections/${collection}/${id}/${property}/${ctx.subpath}`
+					: `/collections/${collection}/${id}/${property}`;
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeaturedField();
@@ -124,7 +142,17 @@ setupActionBar() {
 		if (clearButton) {
 			clearButton.addEventListener("click", event => {
 				event.preventDefault();
-				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
+				// Card-nested: /collections/{coll}/{id}/{cardprop}/{childkey}/cache.
+				// Top-level:   /collections/{coll}/{id}/{prop}/cache.
+				// The `{path:.+}/cache` route's action dispatches on filesystem
+				// state to handle both gallery file caches and nested property caches.
+				const ctx = this.totalfield.getUploadContext();
+				const collection = ctx?.collection ?? this.form.collection;
+				const id         = ctx?.id ?? this.form.id ?? '';
+				const property   = ctx?.property ?? this.property;
+				const clearApi = ctx?.subpath
+					? `/collections/${collection}/${id}/${property}/${ctx.subpath}/cache`
+					: `/collections/${collection}/${id}/${property}/cache`;
 				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
@@ -142,7 +170,16 @@ setupActionBar() {
 				event.preventDefault();
 				const ok = await tcmsConfirm({ message: t("confirm.delete_image"), countdown: 0 });
 				if (!ok) return;
-				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				// Top-level: DELETE /coll/id/prop. Card-nested: DELETE /coll/id/cardprop/childkey.
+				// FileDeleteAction dispatches on filesystem state; nested clears
+				// obj[parent][child] and the disk dir.
+				const ctx = this.totalfield.getUploadContext();
+				const collection = ctx?.collection ?? this.form.collection;
+				const id         = ctx?.id ?? this.form.id ?? '';
+				const property   = ctx?.property ?? this.property;
+				const deleteApi  = ctx?.subpath
+					? `/collections/${collection}/${id}/${property}/${ctx.subpath}`
+					: `/collections/${collection}/${id}/${property}`;
 				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 					this.clearValue();
 					this.container.remove();

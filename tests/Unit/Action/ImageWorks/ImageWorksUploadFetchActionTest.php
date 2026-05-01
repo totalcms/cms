@@ -8,21 +8,28 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Action\ImageWorks\ImageWorksUploadFetchAction;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\Property\Service\UploadFetcher;
 
 final class ImageWorksUploadFetchActionTest extends TestCase
 {
 	private ImageWorksUploadFetchAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $imageGenerator;
+	private \PHPUnit\Framework\MockObject\MockObject $uploadFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
 		$this->imageGenerator = $this->createMock(ImageGenerator::class);
+		$this->uploadFetcher  = $this->createMock(UploadFetcher::class);
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 		$this->response       = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ImageWorksUploadFetchAction($this->imageGenerator);
+		// Default: pretend the file exists so generateUploadImage gets called.
+		// Tests that assert the 404-on-missing branch override this in-line.
+		$this->uploadFetcher->method('fileExists')->willReturn(true);
+
+		$this->action = new ImageWorksUploadFetchAction($this->imageGenerator, $this->uploadFetcher);
 	}
 
 	public function testGeneratesUploadImageSuccessfully(): void

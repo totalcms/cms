@@ -35,6 +35,90 @@ class PropertyFactoryTest extends TestCase
 		);
 	}
 
+	public function testGeneratePropertyDispatchesToCardWhenFieldIsCardEvenIfTypeIsArray(): void
+	{
+		// Schemas authored in the admin editor sometimes carry `type: "array"`
+		// alongside `field: "card"`. Without dispatching on `field`, generateProperty
+		// would fall through to ArrayData and strip the children's keys, corrupting
+		// the card's `{image: ..., title: ...}` into `[imgData, text]`.
+		$cardSchema             = new SchemaData();
+		$cardSchema->id         = 'card-schema';
+		$cardSchema->properties = [
+			'image' => ['field' => 'image', 'type' => 'image'],
+			'title' => ['field' => 'text', 'type' => 'string'],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($cardSchema);
+		$this->deckCompatibilityChecker->method('isCompatible')->willReturn(true);
+
+		$definition = PropertyDefinition::fromArray([
+			'type'      => 'array', // legacy/editor-set type
+			'field'     => 'card',  // the real shape signal
+			'schemaref' => 'card-schema',
+		]);
+
+		$value = ['image' => ['name' => 'pic.jpg', 'size' => 100], 'title' => 'card title'];
+
+		$property = $this->propertyFactory->generateProperty($definition, $value);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Data\CardData::class, $property);
+		$transformed = $property->transform();
+		$this->assertFalse(array_is_list($transformed));
+		$this->assertArrayHasKey('image', $transformed);
+		$this->assertArrayHasKey('title', $transformed);
+	}
+
+	public function testCreateCardWithImageChildPreservesObjectShape(): void
+	{
+		// Repro of Phase 2 bug: card with image child being saved as a list `[imgData, text]`
+		// instead of an object `{image: imgData, title: text}`.
+		$cardSchema             = new SchemaData();
+		$cardSchema->id         = 'card-schema';
+		$cardSchema->properties = [
+			'image' => ['field' => 'image', 'type' => 'image'],
+			'title' => ['field' => 'text', 'type' => 'string'],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($cardSchema);
+		$this->deckCompatibilityChecker->method('isCompatible')->willReturn(true);
+
+		// What the JS form sends after `card.getValue()` — an associative object.
+		$value = [
+			'image' => [
+				'alt'        => '',
+				'name'       => '',
+				'palette'    => ['#000000', '#000000', '#000000', '#000000', '#000000'],
+				'focalpoint' => ['x' => 50, 'y' => 50],
+				'tags'       => [],
+				'exif'       => ['nodata' => ''],
+				'size'       => null,
+				'width'      => null,
+				'height'     => null,
+				'mime'       => '',
+				'link'       => '',
+				'featured'   => false,
+				'uploadDate' => '',
+			],
+			'title' => 'test card',
+		];
+
+		$definition = PropertyDefinition::fromArray([
+			'field'     => 'card',
+			'type'      => 'card',
+			'schemaref' => 'card-schema',
+		]);
+
+		$card = $this->propertyFactory->createCard($definition, $value);
+
+		$transformed = $card->transform();
+
+		// Must be an associative array with named keys, never a sequential list.
+		$this->assertFalse(array_is_list($transformed), 'CardData must serialize as object, not array');
+		$this->assertArrayHasKey('image', $transformed);
+		$this->assertArrayHasKey('title', $transformed);
+		$this->assertSame('test card', $transformed['title']);
+	}
+
 	public function testGeneratePropertyWithStringType(): void
 	{
 		$propertySchema = ['type' => 'string'];
