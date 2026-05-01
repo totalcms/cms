@@ -136,13 +136,11 @@ if (renderButton) {
 		const twigTextarea = document.getElementById('twig');
 		if (!snippetTextarea || !twigTextarea) return;
 
-		// Check if CodeMirror is active
-		const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
-		if (cmWrapper && cmWrapper.CodeMirror) {
-			// Get content from CodeMirror editor
-			twigTextarea.value = cmWrapper.CodeMirror.getValue();
+		// Check if CodeMirror is active (CM6 wrapper attaches itself to view.dom._totalcmsEditor)
+		const cmEditor = snippetTextarea.parentElement.querySelector('.cm-editor');
+		if (cmEditor && cmEditor._totalcmsEditor) {
+			twigTextarea.value = cmEditor._totalcmsEditor.getValue();
 		} else {
-			// Fallback to textarea value
 			twigTextarea.value = snippetTextarea.value;
 		}
 	});
@@ -204,19 +202,18 @@ function focusSnippetEditor() {
 	if (!snippetTextarea) return;
 
 	// Try to focus immediately if CodeMirror is already initialized
-	const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
-	if (cmWrapper && cmWrapper.CodeMirror) {
-		cmWrapper.CodeMirror.focus();
+	const cmEditor = snippetTextarea.parentElement.querySelector('.cm-editor');
+	if (cmEditor && cmEditor._totalcmsEditor) {
+		cmEditor._totalcmsEditor.focus();
 		return;
 	}
 
 	// If CodeMirror isn't ready yet, wait for it
 	const checkForCodeMirror = () => {
-		const wrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
-		if (wrapper && wrapper.CodeMirror) {
-			wrapper.CodeMirror.focus();
+		const editor = snippetTextarea.parentElement.querySelector('.cm-editor');
+		if (editor && editor._totalcmsEditor) {
+			editor._totalcmsEditor.focus();
 		} else {
-			// Keep checking until CodeMirror is available
 			setTimeout(checkForCodeMirror, 100);
 		}
 	};

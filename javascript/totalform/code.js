@@ -191,6 +191,11 @@ export default class Code extends TotalField {
         const savedContent = window.TotalCMSCodeMirror?.loadFromStorage(this.localStorageKey);
         if (savedContent && !this.input.value) {
             this.editor.setValue(savedContent);
+            // Mirror restored content into the textarea — setupFormSubmission's change
+            // handler isn't wired up yet, so consumers reading the textarea (e.g. the
+            // playground render button) would otherwise see an empty value until the
+            // user types something.
+            this.input.value = savedContent;
         } else if (!this.input.value || this.input.value.trim() === '') {
             this.editor.setValue('\n\n\n\n\n\n\n\n\n');
             this.editor.setCursor(0, 0);
