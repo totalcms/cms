@@ -132,7 +132,15 @@ Get the download URL for a file property.
 
 {# Password-protected #}
 <a href="{{ cms.media.download('doc', {pwd: 'secret123'}) }}">Download</a>
+
+{# Card child — `mycard` is the card field, `file` is the child key #}
+<a href="{{ cms.media.download('post-1', {property: 'mycard.file'}) }}">Download</a>
+
+{# Deck child — `mydeck` is the deck field, `item-3` is the deck-item id, `file` is the child key #}
+<a href="{{ cms.media.download('post-1', {property: 'mydeck.item-3.file'}) }}">Download</a>
 ```
+
+The dot-notation maps directly to URL segments — `mycard.file` becomes `/api/download/{coll}/{id}/mycard/file` — and the file data is resolved by descending the same path on the object (`obj.mycard.file`). The File Links dialog in the admin form detects nested files and shows the dotted-property macro in its "Copy macro" section.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -185,6 +193,10 @@ Get the stream URL for a file property.
 
 {# Password-protected #}
 {{ cms.media.stream('clip', {pwd: 'secret123'}) }}
+
+{# Card or deck child — same dot-notation as `download()` #}
+{{ cms.media.stream('post-1', {property: 'mycard.file'}) }}
+{{ cms.media.stream('post-1', {property: 'mydeck.item-3.file'}) }}
 ```
 
 | Parameter | Type | Default | Description |

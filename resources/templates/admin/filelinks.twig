@@ -13,6 +13,11 @@
 	{% set path       = getData.path %}
 	{% set password   = postData.password %}
 
+	{# Dotted property (`mycard.file`, `mydeck.one.file`) addresses a nested
+	   file. The URL needs slash segments instead of dots; the macros take the
+	   dotted form unchanged. #}
+	{% set propertyUrl = property | replace({'.': '/'}) %}
+
 	{% if password is not empty and not cms.auth.verifyFilePassword(password, collection, id, property, filename) %}
 		{{ flash.add('error', 'Password is incorrect') }}
 		{% set password = "" %}
@@ -29,9 +34,9 @@
 		<section>
 			<h4>{{ t('filelinks.download_link') }}</h4>
 			{% if password %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#link-url">{{ t('btn.copy_link') }}</button>
 		</section>
@@ -73,9 +78,9 @@
 		<section>
 			<h4>{{ t('filelinks.stream_url') }}</h4>
 			{% if password %}
-				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
+				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% endif %}?{% if path %}path={{path | urlencode}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
-				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
+				<pre id="stream-url">{{cms.api}}/stream/{{collection}}/{{id}}/{{propertyUrl}}{% if filename %}/{{filename | urlencode}}{% if path %}?path={{path | urlencode}}{% endif %}{% endif %}</pre>
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#stream-url">{{ t('btn.copy_link') }}</button>
 		</section>

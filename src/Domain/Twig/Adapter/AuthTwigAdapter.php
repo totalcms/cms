@@ -91,7 +91,14 @@ readonly class AuthTwigAdapter
 
 	public function verifyFilePassword(string $password, string $collection, string $id, string $property, ?string $name = null): bool
 	{
-		if ($name !== null) {
+		// Dotted property (`mycard.file`) means a nested file — split into the
+		// root property + subpath the access manager can walk.
+		if (str_contains($property, '.')) {
+			$parts    = explode('.', $property);
+			$root     = (string)array_shift($parts);
+			$subpath  = implode('/', $parts);
+			$this->fileAccessManager->loadFile($collection, $id, $root, $subpath);
+		} elseif ($name !== null) {
 			$this->fileAccessManager->loadDepotFile($collection, $id, $property);
 		} else {
 			$this->fileAccessManager->loadFile($collection, $id, $property);

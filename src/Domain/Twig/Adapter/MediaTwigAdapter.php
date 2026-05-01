@@ -253,7 +253,12 @@ readonly class MediaTwigAdapter
 			return '';
 		}
 
-		$url = "{$this->config->api}/api/download/{$collection}/{$id}/{$property}";
+		// Dotted property (`mycard.file`, `mydeck.one.file`) becomes slash
+		// segments in the URL — the dispatch action walks the path and serves
+		// the nested file.
+		$propertyPath = str_replace('.', '/', (string)$property);
+
+		$url = "{$this->config->api}/api/download/{$collection}/{$id}/{$propertyPath}";
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);
@@ -321,7 +326,10 @@ readonly class MediaTwigAdapter
 			return '';
 		}
 
-		$url = "{$this->config->api}/api/stream/{$collection}/{$id}/{$property}";
+		// Dotted property → URL segments (see `download()` for the rationale).
+		$propertyPath = str_replace('.', '/', (string)$property);
+
+		$url = "{$this->config->api}/api/stream/{$collection}/{$id}/{$propertyPath}";
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);

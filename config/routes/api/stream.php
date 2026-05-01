@@ -14,7 +14,9 @@ return function (RouteCollectorProxyInterface $app): void {
 		// Stream a file
 		$group->get('/{collection}/{id}/{property}', Stream\StreamFileAction::class)->setName('stream-file');
 
-		// Stream a file from the depot
-		$group->get('/{collection}/{id}/{property}/{name}', Stream\StreamFileFromDepotAction::class)->setName('stream-file-depot');
+		// Depot file OR nested file (card child / deck-item child). The greedy
+		// `{path:.+}` segment captures both shapes — see the matching comment
+		// in download.php for the dispatch rationale.
+		$group->get('/{collection}/{id}/{property}/{path:.+}', Stream\StreamFileFromDepotAction::class)->setName('stream-file-depot');
 	});
 };

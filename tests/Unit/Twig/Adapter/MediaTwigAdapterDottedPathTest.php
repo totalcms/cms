@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
+use TotalCMS\Support\Config;
 
 /**
  * Tests for the dotted-property helpers used by `cms.media.imagePath` and
@@ -183,5 +185,100 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 		$this->assertStringContainsString('w=800', $url);
 		$this->assertStringContainsString('h=600', $url);
 		$this->assertStringContainsString('fit=crop', $url);
+	}
+
+	// ──────────────────────────────────────────────────────────────────────
+	// download() / stream() — URL emission with dotted property
+	//
+	// These macros previously hardcoded `/{collection}/{id}/{property}`,
+	// which 404'd for nested files. Dots → slashes is the same convention
+	// used by buildImageworksAPI above.
+	// ──────────────────────────────────────────────────────────────────────
+
+	private function adapterWithApi(string $api): MediaTwigAdapter
+	{
+		// Bypass the constructor — `download()` and `stream()` only read
+		// `$this->config->api`, so mocking the dependency graph is overkill.
+		$adapter = (new ReflectionClass(MediaTwigAdapter::class))->newInstanceWithoutConstructor();
+		$config  = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+
+		$config->api = $api;
+
+		(new ReflectionClass(MediaTwigAdapter::class))->getProperty('config')->setValue($adapter, $config);
+
+		return $adapter;
+	}
+
+	public function testDownloadTopLevelEmitsSingleSegment(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->download('post-1', ['collection' => 'blog', 'property' => 'file']);
+
+		$this->assertSame('https://example.com/api/download/blog/post-1/file', $url);
+	}
+
+	public function testDownloadCardChildEmitsSlashSeparatedSegments(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->download('post-1', ['collection' => 'blog', 'property' => 'mycard.file']);
+
+		$this->assertSame('https://example.com/api/download/blog/post-1/mycard/file', $url);
+	}
+
+	public function testDownloadDeckChildEmitsThreeSegments(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->download('post-1', ['collection' => 'blog', 'property' => 'mydeck.item-3.file']);
+
+		$this->assertSame('https://example.com/api/download/blog/post-1/mydeck/item-3/file', $url);
+	}
+
+	public function testDownloadAcceptsObjectArrayForId(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->download(['id' => 'post-1'], ['property' => 'mycard.file']);
+
+		$this->assertSame('https://example.com/api/download/file/post-1/mycard/file', $url);
+	}
+
+	public function testDownloadAppendsEncryptedPasswordQueryParam(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->download('post-1', ['property' => 'mycard.file', 'pwd' => 'secret']);
+
+		$this->assertStringStartsWith('https://example.com/api/download/file/post-1/mycard/file?pwd=', $url);
+		$this->assertStringNotContainsString('pwd=secret', $url, 'Password should be encrypted before URL');
+	}
+
+	public function testStreamTopLevelEmitsSingleSegment(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->stream('post-1', ['collection' => 'blog', 'property' => 'video']);
+
+		$this->assertSame('https://example.com/api/stream/blog/post-1/video', $url);
+	}
+
+	public function testStreamCardChildEmitsSlashSeparatedSegments(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->stream('post-1', ['collection' => 'blog', 'property' => 'mycard.file']);
+
+		$this->assertSame('https://example.com/api/stream/blog/post-1/mycard/file', $url);
+	}
+
+	public function testStreamDeckChildEmitsThreeSegments(): void
+	{
+		$adapter = $this->adapterWithApi('https://example.com');
+
+		$url = $adapter->stream('post-1', ['collection' => 'blog', 'property' => 'mydeck.item-3.file']);
+
+		$this->assertSame('https://example.com/api/stream/blog/post-1/mydeck/item-3/file', $url);
 	}
 }

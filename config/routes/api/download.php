@@ -15,8 +15,13 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->get('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file');
 		$group->post('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file-password');
 
-		// Download a file from the depot
-		$group->get('/{collection}/{id}/{property}/{name}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot');
-		$group->post('/{collection}/{id}/{property}/{name}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot-password');
+		// Depot file OR nested file (card child / deck-item child). The greedy
+		// `{path:.+}` segment captures both shapes: depot uses the legacy
+		// single-filename form, nested uses dotted-property segments — for
+		// example `/download/coll/id/mycard/file` (card) or
+		// `/download/coll/id/mydeck/one/file` (deck). The action dispatches on
+		// filesystem state.
+		$group->get('/{collection}/{id}/{property}/{path:.+}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot');
+		$group->post('/{collection}/{id}/{property}/{path:.+}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot-password');
 	});
 };
