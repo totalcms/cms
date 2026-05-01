@@ -28,15 +28,7 @@ export default class FileField extends TotalField {
 	}
 
 	apiUploadFile() {
-		// getUploadContext() (from TotalField) returns nested context for card
-		// children — `property` is the card's name and `subpath` is the child key.
-		// For top-level fields, subpath is empty.
-		const ctx = this.getUploadContext();
-		const collection = ctx?.collection ?? this.form.collection;
-		const id         = ctx?.id ?? this.form.id ?? '';
-		const property   = ctx?.property ?? this.property;
-		const subpath    = ctx?.subpath ? `/${ctx.subpath}` : '';
-		return this.api.buildApiQuery(`/collections/${collection}/${id}/${property}${subpath}`);
+		return this.api.buildApiQuery(this.buildPropertyApi('/collections'));
     }
 
 	updateAPIUrl() {
@@ -73,13 +65,7 @@ export default class FileField extends TotalField {
 		if (!force && !this.isUnsaved()) return;
 
 		// Top-level: PUT /coll/id/prop. Card-nested: PUT /coll/id/cardprop/childkey.
-		const ctx = this.getUploadContext();
-		const collection = ctx?.collection ?? this.form.collection;
-		const id         = ctx?.id ?? this.form.id ?? '';
-		const property   = ctx?.property ?? this.property;
-		const updateApi  = ctx?.subpath
-			? `/collections/${collection}/${id}/${property}/${ctx.subpath}`
-			: `/collections/${collection}/${id}/${property}`;
+		const updateApi = this.buildPropertyApi('/collections');
 		this.form.api.postAPI(updateApi, this.getValue(), "put").then(response => {
 			console.log("File Meta Autosaved", response);
 			this.saved();

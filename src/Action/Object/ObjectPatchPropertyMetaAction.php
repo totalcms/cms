@@ -6,12 +6,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Traits\NestedPathDispatchTrait;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 readonly class ObjectPatchPropertyMetaAction
 {
+	use NestedPathDispatchTrait;
+
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectPatcher $objectPatcher,
@@ -22,7 +24,8 @@ readonly class ObjectPatchPropertyMetaAction
 	/**
 	 * PATCH `/{coll}/{id}/{prop}/{path:.+}`.
 	 *
-	 * Two cases share the URL shape, dispatched by filesystem state:
+	 * Two cases share the URL shape, dispatched by filesystem state via
+	 * {@see NestedPathDispatchTrait}:
 	 *   1. `prop/{path}/` exists as a directory → card-nested property merge.
 	 *   2. Otherwise → gallery/depot item meta merge (existing behavior).
 	 *
@@ -30,12 +33,11 @@ readonly class ObjectPatchPropertyMetaAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data    = (array)$request->getParsedBody();
-		$query   = $request->getQueryParams();
-		$rawPath = $args['path'] ?? $args['name'] ?? '';
-		$path    = PathUtils::sanitizeSubpath($rawPath);
+		$data  = (array)$request->getParsedBody();
+		$query = $request->getQueryParams();
+		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
 
-		if ($path !== '' && $this->storage->directoryExists($args['collection'], $args['id'], $args['property'], $path)) {
+		if ($nested) {
 			$object = $this->objectPatcher->patchNestedProperty(
 				$args['collection'],
 				$args['id'],
@@ -44,10 +46,9 @@ readonly class ObjectPatchPropertyMetaAction
 				$data,
 			);
 		} else {
-			// The greedy `{path:.+}` route also catches URLs whose object/property
-			// doesn't exist or doesn't pass schema validation (route smoke tests
-			// hit these). Map unresolvable resources / validation failures to 404
-			// instead of letting downstream lookups 500.
+			// The greedy `{path:.+}` route catches more URL shapes than are real
+			// meta endpoints. Any failure in the fall-through path means the URL
+			// doesn't address an updatable resource — surface as 404.
 			try {
 				$object = $this->objectPatcher->patchObjectPropertyMeta(
 					$args['collection'],
@@ -58,9 +59,6 @@ readonly class ObjectPatchPropertyMetaAction
 					$query['path'] ?? null, // Optional depot folder path
 				);
 			} catch (\Throwable) {
-				// The greedy route catches more URL shapes than are real meta
-				// endpoints; any failure in the fall-through path means the URL
-				// doesn't address an updatable resource — surface as 404.
 				throw new \Slim\Exception\HttpNotFoundException($request);
 			}
 		}

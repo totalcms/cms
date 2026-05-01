@@ -256,6 +256,26 @@ export default class TotalField {
 		return this.getUploadContext() !== null;
 	}
 
+	/**
+	 * Build a URL path scoped to this field's resolved upload context:
+	 *   `${prefix}/${collection}/${id}/${property}[/${subpath}]${suffix}`
+	 *
+	 * Used by the image/file fields and their previews to keep top-level and
+	 * card-nested URLs consistent — for nested fields the subpath segment is
+	 * inserted between property and suffix; for top-level it isn't.
+	 *
+	 * Falls back to form-level data when getUploadContext() returns null (e.g.
+	 * a brand-new top-level field before the parent ID is set).
+	 */
+	buildPropertyApi(prefix, suffix = '') {
+		const ctx        = this.getUploadContext();
+		const collection = ctx?.collection ?? this.form?.collection ?? '';
+		const id         = ctx?.id ?? this.form?.id ?? '';
+		const property   = ctx?.property ?? this.property;
+		const sub        = ctx?.subpath ? `/${ctx.subpath}` : '';
+		return `${prefix}/${collection}/${id}/${property}${sub}${suffix}`;
+	}
+
     setValue(value) {
         this.input.value = value;
 		this.changed();

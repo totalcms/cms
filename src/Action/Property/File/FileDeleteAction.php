@@ -7,12 +7,14 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\RemoverFactory;
-use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Traits\NestedPathDispatchTrait;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 readonly class FileDeleteAction
 {
+	use NestedPathDispatchTrait;
+
 	public function __construct(
 		private JsonRenderer $renderer,
 		private RemoverFactory $factory,
@@ -24,20 +26,17 @@ readonly class FileDeleteAction
 	/**
 	 * DELETE `/{coll}/{id}/{prop}/{path:.+}`.
 	 *
-	 * Two cases share the URL shape, dispatched by filesystem state:
-	 *   1. `prop/{path}/` exists as a directory → card-nested property delete.
-	 *      Clears `obj[prop][path]` and removes the nested dir.
-	 *   2. Otherwise → existing gallery/depot file delete.
+	 * Two cases share the URL shape, dispatched by filesystem state via
+	 * {@see NestedPathDispatchTrait}.
 	 *
 	 * @param array<string,string> $args
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$query   = $request->getQueryParams();
-		$rawPath = $args['path'] ?? $args['name'] ?? '';
-		$path    = PathUtils::sanitizeSubpath($rawPath);
+		$query = $request->getQueryParams();
+		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
 
-		if ($path !== '' && $this->storage->directoryExists($args['collection'], $args['id'], $args['property'], $path)) {
+		if ($nested) {
 			$object = $this->objectRemover->deleteNestedProperty(
 				$args['collection'],
 				$args['id'],
