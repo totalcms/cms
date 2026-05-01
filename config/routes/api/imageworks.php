@@ -13,6 +13,6 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->get('/{id}/{name}.{format}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch-short');
 		$group->get('/{collection}/{id}/{property}/{action:first|last|random|featured}', ImageWorks\ImageWorksGalleryFetchDynamicAction::class)->setName('gallery-image-fetch-dynamic');
 		$group->get('/{collection}/{id}/{property}/{name}.{format}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch');
-		$group->get('/upload/{collection}/{id}/{property}/{name}', ImageWorks\ImageWorksUploadFetchAction::class)->setName('uploads-image-fetch');
+		$group->get('/upload/{collection}/{id}/{property}/{path:.+}', ImageWorks\ImageWorksUploadFetchAction::class)->setName('uploads-image-fetch');
 	});
 };

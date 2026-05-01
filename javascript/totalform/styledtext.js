@@ -12,8 +12,6 @@ window.DOMPurify = DOMPurify;
 //-----------------------------------------------
 export default class StyledTextField extends TotalField {
 
-	// TODO: if form ID changes, need to update upload URLs
-
 	constructor(container, settings) {
 		super(container, settings);
 
@@ -27,6 +25,30 @@ export default class StyledTextField extends TotalField {
 		this.settings = Object.assign({}, this.defaultConfig(), this.settings);
 
 		this.tiptap = new TiptapEditor(this.input, this.settings);
+
+		// Initial upload-enabled state, then keep it in sync with parent-form ID
+		// (top-level case) and deck-item ID (nested case) as they get filled in.
+		this.tiptap.updateUploadEnabled();
+		this.bindUploadReadyWatchers();
+	}
+
+	bindUploadReadyWatchers() {
+		const refresh = () => this.tiptap?.updateUploadEnabled();
+		const inputs  = new Set();
+
+		// Watch the parent form's top-level ID field — the first `input[name="id"]`
+		// in the form that isn't inside a dialog (deck-item dialogs have their own).
+		const allFormIdInputs = Array.from(this.form?.form?.querySelectorAll('input[name="id"]') || []);
+		const formIdInput = allFormIdInputs.find(input => !input.closest('dialog'));
+		if (formIdInput) inputs.add(formIdInput);
+
+		// Watch the deck-item ID input if we're inside one.
+		if (this.deckItem) {
+			const itemIdInput = this.deckItem.querySelector('dialog input[name="id"]');
+			if (itemIdInput) inputs.add(itemIdInput);
+		}
+
+		inputs.forEach(input => input.addEventListener('input', refresh));
 	}
 
 	setValue(value) {
@@ -54,11 +76,10 @@ export default class StyledTextField extends TotalField {
 	}
 
 	uploadAPI() {
-		if (!this.form) return null;
-		const collection = this.form.collection;
-		const id         = this.form.getId() ?? '';
-		const property   = this.property;
-		return this.api.buildApiQuery(`/upload/${collection}/${id}/${property}`);
+		const ctx = this.getUploadContext();
+		if (!ctx) return null;
+		const path = ctx.subpath ? `/${ctx.subpath}` : '';
+		return this.api.buildApiQuery(`/upload/${ctx.collection}/${ctx.id}/${ctx.property}${path}`);
 	}
 
 	updateUploadURLs() {
@@ -76,15 +97,18 @@ export default class StyledTextField extends TotalField {
 		if (url.startsWith('data:') || url.startsWith('blob:')) return;
 
 		if (await tcmsConfirm({ message: t("confirm.delete_image") })) {
-			const collection = this.form.collection;
-			const id         = this.form.getId();
-			const property   = this.property;
-			const name       = url.split("?")[0].split("/").pop();
+			// The embedded URL is the source of truth for *where* the file lives,
+			// regardless of the field's current upload context (the field could
+			// have been moved across deck items via copy/paste).
+			// URL shape: .../{imageworks|download|stream}/upload/{coll}/{id}/{prop}/{rest}
+			const cleanUrl = url.split("?")[0];
+			const match = cleanUrl.match(/\/(?:imageworks|download|stream)\/upload\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/);
+			if (!match) return;
 
-			// Skip if name is empty or invalid
-			if (!name || name.includes(':')) return;
+			const [, coll, id, prop, rest] = match;
+			if (rest.includes(':')) return;
 
-			const api        = `/upload/${collection}/${id}/${property}/${name}`;
+			const api = `/upload/${coll}/${id}/${prop}/${rest}`;
 			console.log("Deleting file from server", api);
 			this.api.postAPI(api, {}, "DELETE");
 		}

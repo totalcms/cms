@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Download an uploaded file (from styled text uploads) as an attachment.
@@ -36,21 +37,21 @@ readonly class DownloadUploadAction
 		$collection = $args['collection'];
 		$id         = $args['id'];
 		$property   = $args['property'];
-		$name       = $this->decodeFilename($args['name'] ?? '');
+		[$name, $subpath] = PathUtils::splitPath($args['path'] ?? $args['name'] ?? '');
 
-		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name)) {
+		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name, $subpath)) {
 			throw new HttpNotFoundException($request, 'File not found');
 		}
 
 		// Check collection-based protection
 		$this->enforceAccess($request, $collection, $property);
 
-		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name);
+		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name, $subpath);
 
 		return $response
 			->withHeader('Content-Type', $mimeType)
 			->withHeader('Content-Disposition', "attachment; filename=\"{$name}\"")
-			->withBody(Stream::create($this->uploadFetcher->streamFile($collection, $id, $property, $name)));
+			->withBody(Stream::create($this->uploadFetcher->streamFile($collection, $id, $property, $name, $subpath)));
 	}
 
 	private function enforceAccess(ServerRequestInterface $request, string $collection, string $property): void
@@ -85,8 +86,4 @@ readonly class DownloadUploadAction
 		}
 	}
 
-	private function decodeFilename(string $filename): string
-	{
-		return str_replace('+', ' ', urldecode($filename));
-	}
 }

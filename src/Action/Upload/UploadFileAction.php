@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadSaver;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -68,11 +69,16 @@ readonly class UploadFileAction
 			])->withStatus(400);
 		}
 
+		$subpath = isset($args['path']) && $args['path'] !== ''
+			? PathUtils::sanitizeSubpath($args['path'])
+			: null;
+
 		$path = $this->saver->save(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$filepath
+			$filepath,
+			$subpath
 		);
 
 		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';

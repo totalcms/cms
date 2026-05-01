@@ -13,30 +13,30 @@ readonly class UploadFetcher
 	) {
 	}
 
-	public function fileExists(string $collection, string $id, string $property, string $name): bool
+	public function fileExists(string $collection, string $id, string $property, string $name, ?string $subpath = null): bool
 	{
-		return $this->storage->fileExists($collection, $id, $property, $name);
+		return $this->storage->fileExists($collection, $id, $property, $name, $subpath);
 	}
 
-	public function mimeType(string $collection, string $id, string $property, string $name): string
+	public function mimeType(string $collection, string $id, string $property, string $name, ?string $subpath = null): string
 	{
-		return $this->storage->mimeType($collection, $id, $property, $name);
+		return $this->storage->mimeType($collection, $id, $property, $name, $subpath);
 	}
 
 	/** @return resource */
-	public function streamFile(string $collection, string $id, string $property, string $name)
+	public function streamFile(string $collection, string $id, string $property, string $name, ?string $subpath = null)
 	{
-		return $this->storage->streamFile($collection, $id, $property, $name);
+		return $this->storage->streamFile($collection, $id, $property, $name, $subpath);
 	}
 
-	public function fileSize(string $collection, string $id, string $property, string $name): int
+	public function fileSize(string $collection, string $id, string $property, string $name, ?string $subpath = null): int
 	{
-		return $this->storage->fileSize($collection, $id, $property, $name);
+		return $this->storage->fileSize($collection, $id, $property, $name, $subpath);
 	}
 
 	/** @return array<int, array{name: string, path: string}> */
-	public function listFiles(string $collection, string $id, string $property): array
+	public function listFiles(string $collection, string $id, string $property, ?string $subpath = null): array
 	{
-		return $this->storage->listPropertyFiles($collection, $id, $property);
+		return $this->storage->listPropertyFiles($collection, $id, $property, $subpath);
 	}
 }

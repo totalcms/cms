@@ -33,7 +33,7 @@ $settings['timezone'] = 'America/Los_Angeles';
 $settings['debug'] = true;
 
 $settings['cache'] = [
-	'filesystem' => false,
+	'filesystem' => true,
 	'apcu'       => false,
 	'redis'      => false,
 	'memcached'  => false,

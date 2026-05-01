@@ -8,7 +8,7 @@
 import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
-import { getUploadUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
+import { getUploadUrl, getListUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { createImagePopoverPlugin } from './ImagePopover.js';
 import { t } from '../../../i18n';
@@ -160,16 +160,16 @@ function createImageDialog(editor, uploadConfig) {
 		imageEmpty.style.display = 'none';
 		selectedImageUrl = null;
 
-		const listUrl = getUploadUrl(uploadConfig);
-		if (!listUrl) return;
+		const listInfo = getListUrl(uploadConfig);
+		if (!listInfo) return;
 
-		// Append type filter and preset as query params
-		const params = new URLSearchParams();
+		// Append type filter and preset to whatever query params getListUrl returned (e.g., path=).
+		const params = listInfo.params;
 		params.set('type', 'image');
 		if (uploadConfig.imagePreset) {
 			params.set('preset', uploadConfig.imagePreset);
 		}
-		const fetchUrl = `${listUrl}?${params}`;
+		const fetchUrl = `${listInfo.url}?${params}`;
 
 		try {
 			const resp = await fetch(fetchUrl, { method: 'GET' });

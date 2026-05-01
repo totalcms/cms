@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Upload;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -31,12 +32,17 @@ readonly class ListUploadFilesAction
 		$id         = $args['id'];
 		$property   = $args['property'];
 
-		$files   = $this->fetcher->listFiles($collection, $id, $property);
-		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';
-
 		$queryParams = $request->getQueryParams();
 		$preset      = $queryParams['preset'] ?? null;
 		$type        = $queryParams['type'] ?? null;
+		$pathParam   = $queryParams['path'] ?? null;
+		$subpath     = is_string($pathParam) && $pathParam !== ''
+			? PathUtils::sanitizeSubpath($pathParam)
+			: null;
+		$subpath     = $subpath === '' ? null : $subpath;
+
+		$files   = $this->fetcher->listFiles($collection, $id, $property, $subpath);
+		$apiPath = parse_url($this->config->api . '/api', PHP_URL_PATH) ?: $this->config->api . '/api';
 
 		// Filter files by type if requested
 		if (is_string($type) && $type !== '') {

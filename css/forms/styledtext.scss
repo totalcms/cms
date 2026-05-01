@@ -95,6 +95,17 @@
 		color            : oklch(var(--totalform-accent));
 	}
 
+	// When uploads aren't possible yet (parent form or deck item not saved), the
+	// editor container gets `.ste-uploads-disabled` and we dim the buttons that
+	// trigger upload dialogs. Text editing and non-upload commands stay enabled.
+	.ste-uploads-disabled &[data-command="openImageDialog"],
+	.ste-uploads-disabled &[data-command="openFileDialog"],
+	.ste-uploads-disabled &[data-command="openVideoDialog"] {
+		opacity        : 0.4;
+		pointer-events : none;
+		cursor         : not-allowed;
+	}
+
 	&::before {
 		content          : '';
 		display          : block;

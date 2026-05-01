@@ -190,6 +190,72 @@ export default class TotalField {
         return this.input.value;
     }
 
+	/**
+	 * Returns the upload-target context for this field as
+	 * { collection, id, property, subpath }.
+	 *
+	 * For a top-level field, property is the field's own name and subpath is ''.
+	 * For a field inside a card, property is the card's name and subpath is the
+	 * field's own name. For a field inside a deck item, property is the deck's
+	 * name and subpath is `${itemId}/${this.property}`.
+	 *
+	 * Single-level nesting only — card-in-deck (or deeper) returns the outermost
+	 * container's context and is not yet supported.
+	 */
+	getUploadContext() {
+		if (!this.form) return null;
+
+		const collection = this.form.collection;
+		const id         = this.form.getId() ?? '';
+
+		// Parent object must have an ID before any upload can be addressed correctly.
+		if (!id) return null;
+
+		// Deck item ancestry — wins over card detection because deck items can host cards.
+		if (this.deckItem) {
+			const deckEl    = this.deckItem.parentElement?.closest('.form-field[data-type="deck"]');
+			const deckField = deckEl?.totalfield;
+			// Read the item ID directly from the dialog's id input — this is more
+			// robust than going through `this.deckItem.deckitem.getItemId()` because
+			// the DeckItem JS instance may not have been constructed yet when sibling
+			// deck-items recursively trigger field processing during their setup.
+			const itemIdInput = this.deckItem.querySelector('dialog input[name="id"]');
+			const itemId      = itemIdInput?.value ?? '';
+			if (!deckField?.property || !itemId) {
+				// Deck item has no ID typed yet. Returning null prevents the URL from
+				// being built — caller treats it as "not ready to upload."
+				return null;
+			}
+			return {
+				collection,
+				id,
+				property : deckField.property,
+				subpath  : `${itemId}/${this.property}`,
+			};
+		}
+
+		// Card ancestry — child's parent .form-field is the card.
+		const cardEl = this.container.parentElement?.closest('.form-field[data-type="card"]');
+		if (cardEl?.totalfield?.property) {
+			return {
+				collection,
+				id,
+				property : cardEl.totalfield.property,
+				subpath  : this.property,
+			};
+		}
+
+		// Top-level
+		return { collection, id, property: this.property, subpath: '' };
+	}
+
+	/**
+	 * Whether this field has enough context to perform an upload right now.
+	 */
+	isUploadReady() {
+		return this.getUploadContext() !== null;
+	}
+
     setValue(value) {
         this.input.value = value;
 		this.changed();

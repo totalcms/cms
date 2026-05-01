@@ -22,6 +22,7 @@ class ImageGenerator
 	private string $collection;
 	private string $id;
 	private string $property;
+	private ?string $subpath = null;
 	/** @var array<string,mixed> */
 	private array $params;
 	private readonly LoggerInterface $logger;
@@ -57,6 +58,7 @@ class ImageGenerator
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
+		$this->subpath    = null;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
@@ -96,6 +98,7 @@ class ImageGenerator
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
+		$this->subpath    = null;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
@@ -109,6 +112,7 @@ class ImageGenerator
 		string $name,
 		array $params,
 		?ServerRequestInterface $request = null,
+		?string $subpath = null,
 	): ResponseInterface {
 		// Create dummy ImageData object
 		$imageData         = new ImageData();
@@ -119,6 +123,7 @@ class ImageGenerator
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
+		$this->subpath    = $subpath;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
@@ -333,7 +338,7 @@ class ImageGenerator
 	{
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		$imagePath = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name);
+		$imagePath = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
 		$response  = $this->glideFactory->originalImage($imagePath);
 
 		// Generate cache headers
@@ -450,12 +455,12 @@ class ImageGenerator
 		// Create a temporary file for the intermediate result
 		$firstPassImageData = (string)$firstPassResponse->getBody();
 		$tempFileName       = 'temp_' . uniqid() . '.png';
-		$tempPath           = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
+		$tempPath           = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName, $this->subpath);
 		$this->filesystem->write($tempPath, $firstPassImageData);
 
 		// Create second pass server specifically for text watermark
 		$secondServer = $this->glideFactory->create(
-			source        : PathUtils::buildPath($this->collection, $this->id, $this->property),
+			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
 			imageData     : $imageData,
 			watermarkPath : TextWatermarkFactory::WATERMARK_DIR,
 		);
@@ -485,7 +490,7 @@ class ImageGenerator
 		}
 
 		// Generate cache headers for processed images
-		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name);
+		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
 		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request, $this->params);
 
 		// Check if we should return 304 Not Modified
@@ -507,7 +512,7 @@ class ImageGenerator
 		$watermarkPath = $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR;
 
 		$glide = $this->glideFactory->create(
-			source        : PathUtils::buildPath($this->collection, $this->id, $this->property),
+			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
 			imageData     : $imageData,
 			watermarkPath : $watermarkPath,
 		);

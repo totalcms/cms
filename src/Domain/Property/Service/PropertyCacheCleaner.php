@@ -20,8 +20,8 @@ readonly class PropertyCacheCleaner
 		return $this->storage->deletePropertyCache($collection, $objectID, $property);
 	}
 
-	public function deleteFileCache(string $collection, string $objectID, string $property, string $name): bool
+	public function deleteFileCache(string $collection, string $objectID, string $property, string $name, ?string $subpath = null): bool
 	{
-		return $this->storage->deleteFileCache($collection, $objectID, $property, $name);
+		return $this->storage->deleteFileCache($collection, $objectID, $property, $name, $subpath);
 	}
 }
