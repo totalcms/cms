@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -23,6 +24,7 @@ final class FileAccessManagerTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
 
 	protected function setUp(): void
 	{
@@ -31,6 +33,7 @@ final class FileAccessManagerTest extends TestCase
 		$this->loggerFactory      = $this->createMock(LoggerFactory::class);
 		$this->propertyFetcher    = $this->createMock(PropertyFetcher::class);
 		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
+		$this->fileFetcher        = $this->createMock(FileFetcher::class);
 
 		// Mock logger factory chain
 		$logger = $this->createMock(LoggerInterface::class);
@@ -46,7 +49,8 @@ final class FileAccessManagerTest extends TestCase
 			$this->userValidator,
 			$this->loggerFactory,
 			$this->propertyFetcher,
-			$this->collectionFetcher
+			$this->collectionFetcher,
+			$this->fileFetcher,
 		);
 	}
 
