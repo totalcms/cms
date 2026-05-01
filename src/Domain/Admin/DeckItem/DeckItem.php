@@ -32,6 +32,7 @@ class DeckItem
 		// Used to compose the dotted `nestedPath` for image/file children so
 		// they emit the right URLs (`mydeck.item-3.image`).
 		protected string $parentProperty = '',
+		protected string $modalSize = 'small',
 	) {
 		$this->schemaFetcher = $form->getSchemaFetcher();
 		$this->metaResolver  = $form->getMetaResolver();
@@ -67,7 +68,10 @@ class DeckItem
 		$dialogContent  = HTMLUtils::scroller($content);
 		$dialogContent .= HTMLUtils::element('section', $close);
 
-		return HTMLUtils::dialog($dialogContent, 'small');
+		// Medium maps to the default cms-modal sizing — no extra class needed.
+		$sizeClass = $this->modalSize === 'medium' ? '' : $this->modalSize;
+
+		return HTMLUtils::dialog($dialogContent, $sizeClass);
 	}
 
 	protected function buildDialogContent(): string

@@ -19,6 +19,7 @@ class DeckField extends FormField
 
 	protected string $schemaref     = '';
 	protected string $deckItemLabel = '';
+	protected string $modalSize     = 'small';
 
 	public function init(): void
 	{
@@ -30,6 +31,9 @@ class DeckField extends FormField
 		// Extract schema reference from settings (accepts schemaref or legacy deckref)
 		$this->schemaref       = PropertyDefinition::extractSchemaRef($this->settings) ?? '';
 		$this->deckItemLabel   = $this->settings['deckItemLabel'] ?? '${id}';
+
+		$modalSize        = (string)($this->settings['modalSize'] ?? 'small');
+		$this->modalSize  = in_array($modalSize, ['small', 'medium', 'large'], true) ? $modalSize : 'small';
 
 		// Initialize deck items from value
 		if (is_array($this->value)) {
@@ -105,6 +109,7 @@ class DeckField extends FormField
 			schemaref       : $this->schemaref,
 			deckItemLabel   : $this->deckItemLabel,
 			parentProperty  : $this->name,
+			modalSize       : $this->modalSize,
 		);
 	}
 }
