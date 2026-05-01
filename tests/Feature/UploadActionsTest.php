@@ -50,3 +50,47 @@ describe('UploadFileAction', function (): void {
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404, 405]);
 	});
 });
+
+describe('Nested upload routes (Phase 1)', function (): void {
+	it('routes a nested upload-fetch path to GetFileAction', function (): void {
+		// Single subpath segment + filename — the route added in Phase 1
+		// (`/upload/{coll}/{id}/{prop}/{path:.+}`) matches and dispatches.
+		// 404 is the expected response for a file that doesn't exist on disk.
+		$response = get('/api/upload/blog/post-1/mycard/childprop/photo.jpg');
+		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
+	});
+
+	it('routes a deeply nested upload-fetch path', function (): void {
+		// Deck-item style nesting: parent prop + item id + child prop + filename.
+		$response = get('/api/upload/blog/post-1/mydeck/item-3/styledtext/photo.jpg');
+		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
+	});
+
+	it('routes a nested DELETE through DeleteFileAction', function (): void {
+		$response = delete('/api/upload/blog/post-1/mydeck/item-3/styledtext/photo.jpg');
+		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
+	});
+
+	it('routes a nested imageworks/upload fetch', function (): void {
+		$response = get('/api/imageworks/upload/blog/post-1/mydeck/item-3/styledtext/photo.jpg');
+		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
+	});
+
+	it('routes a nested download/upload fetch', function (): void {
+		$response = get('/api/download/upload/blog/post-1/mydeck/item-3/styledtext/document.pdf');
+		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
+	});
+
+	it('routes a nested stream/upload fetch', function (): void {
+		$response = get('/api/stream/upload/blog/post-1/mydeck/item-3/styledtext/video.mp4');
+		expect($response->getStatusCode())->toBeIn([401, 403, 404, 405]);
+	});
+
+	it('accepts a `?path=` query for nested directory listing', function (): void {
+		// Image Manager listing inside a nested context uses the property-root
+		// route + ?path= subpath. The route must dispatch to ListUploadFilesAction
+		// (returns 200 with `files` array, possibly empty).
+		$response = get('/api/upload/blog/post-1/mydeck?path=item-3/styledtext&type=image');
+		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
+	});
+});

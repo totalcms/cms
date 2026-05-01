@@ -1,0 +1,19 @@
+{
+    "id": "test-depot",
+    "schema": "depot",
+    "name": "Test Depot",
+    "description": "A collection of test-depot objects that conform to the depot schema.",
+    "url": "",
+    "category": "",
+    "labelPlural": "Depots",
+    "labelSingular": "Depot",
+    "groups": [],
+    "publicOperations": [],
+    "sortBy": "id",
+    "reverseSort": false,
+    "prettyUrl": false,
+    "queueRebuildOnSave": false,
+    "count": 2,
+    "totalObjects": 1,
+    "lastUpdated": "2026-05-01T05:47:32+00:00"
+}

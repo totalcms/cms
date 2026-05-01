@@ -1,0 +1,8 @@
+{
+    "id": "test-depot-obj",
+    "depot": {
+        "password": "",
+        "protected": true,
+        "files": []
+    }
+}
