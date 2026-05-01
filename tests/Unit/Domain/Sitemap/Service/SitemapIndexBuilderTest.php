@@ -22,7 +22,7 @@ final class SitemapIndexBuilderTest extends TestCase
 	private SitemapIndexBuilder $builder;
 	private \PHPUnit\Framework\MockObject\MockObject $mockCollectionLister;
 	private \PHPUnit\Framework\MockObject\MockObject $mockBuilderConfig;
-	private Config $config;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
 
 	protected function setUp(): void
 	{
@@ -77,8 +77,8 @@ final class SitemapIndexBuilderTest extends TestCase
 	{
 		$this->mockBuilderConfig->method('pagesCollectionExists')->willReturn(false);
 		$this->mockCollectionLister->method('listAllCollections')->willReturn([
-			$this->makeCollection('blog',     ['enabled' => true]),
-			$this->makeCollection('private',  ['enabled' => false]),
+			$this->makeCollection('blog', ['enabled' => true]),
+			$this->makeCollection('private', ['enabled' => false]),
 			$this->makeCollection('untouched', []),
 		]);
 

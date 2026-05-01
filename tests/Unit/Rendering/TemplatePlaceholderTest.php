@@ -51,7 +51,7 @@ describe('TemplatePlaceholder::render', function (): void {
 	});
 
 	test('returns the template unchanged when there are no placeholders', function (): void {
-		$result = TemplatePlaceholder::render('no placeholders here', fn () => 'X');
+		$result = TemplatePlaceholder::render('no placeholders here', fn (): string => 'X');
 		expect($result)->toBe('no placeholders here');
 	});
 

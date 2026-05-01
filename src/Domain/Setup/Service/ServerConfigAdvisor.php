@@ -153,7 +153,7 @@ class ServerConfigAdvisor
 	public function apacheRewrite(): string
 	{
 		$publicPrefix = $this->publicUrlPrefix();
-		$indexUrl     = ($publicPrefix === '' ? '' : $publicPrefix) . '/index.php';
+		$indexUrl     = $publicPrefix . '/index.php';
 		$dataUrl      = $this->tcmsDataUrlPath();
 
 		$lines = ['RewriteEngine On', ''];
@@ -182,7 +182,7 @@ class ServerConfigAdvisor
 	public function nginxConfig(): string
 	{
 		$publicPrefix = $this->publicUrlPrefix();
-		$indexUrl     = ($publicPrefix === '' ? '' : $publicPrefix) . '/index.php';
+		$indexUrl     = $publicPrefix . '/index.php';
 		$dataUrl      = $this->tcmsDataUrlPath();
 
 		$lines = [];

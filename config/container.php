@@ -295,9 +295,9 @@ return [
 	// $config['logger']['level'] so scattered addFileHandler('totalcms.log')
 	// callers pick up the user's choice without being individually rewired.
 	LoggerFactory::class => function (ContainerInterface $container): LoggerFactory {
-		$config   = $container->get(Config::class);
-		$settings = $config->logger;
-		$fallback = $settings['level'] instanceof Level ? $settings['level'] : Level::Info;
+		$config            = $container->get(Config::class);
+		$settings          = $config->logger;
+		$fallback          = $settings['level'] instanceof Level ? $settings['level'] : Level::Info;
 		$settings['level'] = LoggerFactory::resolveLevel($config->appLogLevel, $fallback);
 
 		return new LoggerFactory($settings);

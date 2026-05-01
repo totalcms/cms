@@ -191,13 +191,13 @@ final class PageRouterMiddlewareTest extends TestCase
 	public static function contentTypeByExtensionProvider(): array
 	{
 		return [
-			'plain text (robots.txt)'      => ['/robots.txt', 'text/plain'],
-			'plain text (llms.txt)'        => ['/llms.txt', 'text/plain'],
-			'XML (sitemap.xml)'            => ['/sitemap.xml', 'application/xml'],
-			'JSON'                         => ['/manifest.json', 'application/json'],
-			'CSS'                          => ['/style.css', 'text/css'],
-			'JavaScript'                   => ['/script.js', 'application/javascript'],
-			'Markdown'                     => ['/notes.md', 'text/markdown'],
+			'plain text (robots.txt)'            => ['/robots.txt', 'text/plain'],
+			'plain text (llms.txt)'              => ['/llms.txt', 'text/plain'],
+			'XML (sitemap.xml)'                  => ['/sitemap.xml', 'application/xml'],
+			'JSON'                               => ['/manifest.json', 'application/json'],
+			'CSS'                                => ['/style.css', 'text/css'],
+			'JavaScript'                         => ['/script.js', 'application/javascript'],
+			'Markdown'                           => ['/notes.md', 'text/markdown'],
 			'unknown extension defaults to HTML' => ['/about', 'text/html'],
 			'no extension defaults to HTML'      => ['/blog/post', 'text/html'],
 		];
