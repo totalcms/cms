@@ -6,6 +6,8 @@ use function Nekofar\Slim\Pest\post;
 beforeAll(function (): void {
 	// Clean up before tests
 	recursiveDelete(cmsDataDir());
+	// Setup wizard tests simulate a fresh install — remove auth too
+	recursiveDelete(cmsDataDir() . 'auth', [], true);
 });
 
 beforeEach(function (): void {
@@ -15,6 +17,8 @@ beforeEach(function (): void {
 
 	// Clean data directory for fresh setup tests
 	recursiveDelete(cmsDataDir());
+	// Without removing auth/, SetupCheckMiddleware would redirect /setup/* to /admin
+	recursiveDelete(cmsDataDir() . 'auth', [], true);
 
 	$this->setUpApp(bootstrap());
 });

@@ -62,6 +62,7 @@ final class SetupStateManagerTest extends TestCase
 		$this->manager->completeStep('data-path');
 		$this->manager->completeStep('account');
 		$this->manager->completeStep('license');
+		$this->manager->completeStep('server-config');
 
 		expect($this->manager->getCurrentStep())->toBe('setup-complete');
 	}
@@ -72,6 +73,7 @@ final class SetupStateManagerTest extends TestCase
 		$this->manager->completeStep('data-path');
 		$this->manager->completeStep('account');
 		$this->manager->completeStep('license');
+		$this->manager->completeStep('server-config');
 
 		expect($this->manager->isSetupComplete())->toBeTrue();
 	}

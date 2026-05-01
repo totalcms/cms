@@ -185,6 +185,70 @@ final class SetupCheckMiddlewareTest extends TestCase
 		}
 	}
 
+	public function testRedirectsSetupRouteToAdminWhenSetupComplete(): void
+	{
+		// Auth collection exists → setup is complete → setup routes should bounce
+		$tempDir = sys_get_temp_dir() . '/tcms-test-' . uniqid();
+		$authDir = $tempDir . '/auth';
+		mkdir($authDir, 0755, true);
+
+		try {
+			$this->config->env     = 'prod';
+			$this->config->datadir = $tempDir;
+			$this->config->auth    = ['collection' => 'auth'];
+
+			$request        = $this->createRequestWithRoute('setup-welcome', '/setup');
+			$adminResponse  = $this->createMock(ResponseInterface::class);
+
+			$this->handler->expects($this->never())
+				->method('handle');
+
+			$this->redirectRenderer->expects($this->once())
+				->method('redirectFor')
+				->with($this->anything(), 'admin-index')
+				->willReturn($adminResponse);
+
+			$result = $this->middleware->process($request, $this->handler);
+
+			$this->assertSame($adminResponse, $result);
+		} finally {
+			rmdir($authDir);
+			rmdir($tempDir);
+		}
+	}
+
+	public function testRedirectsServerConfigStepToAdminWhenSetupComplete(): void
+	{
+		// Catches the case where a returning user types /setup/server-config directly
+		$tempDir = sys_get_temp_dir() . '/tcms-test-' . uniqid();
+		$authDir = $tempDir . '/auth';
+		mkdir($authDir, 0755, true);
+
+		try {
+			$this->config->env     = 'prod';
+			$this->config->datadir = $tempDir;
+			$this->config->auth    = ['collection' => 'auth'];
+
+			$request       = $this->createRequestWithRoute('setup-server-config', '/setup/server-config');
+			$adminResponse = $this->createMock(ResponseInterface::class);
+
+			$this->handler->expects($this->never())
+				->method('handle');
+
+			$this->redirectRenderer->expects($this->once())
+				->method('redirectFor')
+				->with($this->anything(), 'admin-index')
+				->willReturn($adminResponse);
+
+			$result = $this->middleware->process($request, $this->handler);
+
+			$this->assertSame($adminResponse, $result);
+		} finally {
+			rmdir($authDir);
+			rmdir($tempDir);
+		}
+	}
+
 	/**
 	 * Create a mock request with route context attributes set.
 	 */
