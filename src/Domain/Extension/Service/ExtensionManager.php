@@ -196,6 +196,7 @@ final class ExtensionManager
 		$extFieldTypes = $this->getAllFieldTypes();
 		if ($extFieldTypes !== []) {
 			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldTypes($extFieldTypes);
+			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldDefaultTypes($this->getAllFieldDefaultTypes());
 		}
 
 		// Wire event listeners from extensions into the EventDispatcher
@@ -580,6 +581,20 @@ final class ExtensionManager
 				continue;
 			}
 			$types = array_merge($types, $context->getRegisteredFieldTypes());
+		}
+
+		return $types;
+	}
+
+	/** @return array<string,string> */
+	public function getAllFieldDefaultTypes(): array
+	{
+		$types = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'fields')) {
+				continue;
+			}
+			$types = array_merge($types, $context->getRegisteredFieldDefaultTypes());
 		}
 
 		return $types;

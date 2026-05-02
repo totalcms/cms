@@ -246,20 +246,24 @@ Register new field types for use in collection schemas.
 ```php
 public function register(ExtensionContext $context): void
 {
-    $context->addFieldType('colorpicker', Acme\Fields\ColorPickerField::class);
+    $context->addFieldType('colorpicker', Acme\Fields\ColorPickerField::class, 'color');
 }
 ```
 
 **Capability:** `fields`
 
-The class must extend `TotalCMS\Domain\Admin\FormField\FormField`. Once registered, the field type can be used in schemas:
+The class must extend `TotalCMS\Domain\Admin\FormField\FormField`. The third
+argument declares the default schema property type used when an author leaves
+the property's `type` blank — should be one of `SchemaData::PROPERTY_TYPES`
+(e.g. `string`, `color`, `array`). Defaults to `string` if omitted.
+
+Once registered, the field type can be used in schemas:
 
 ```json
 {
     "properties": {
         "accentColor": {
-            "type": "colorpicker",
-            "label": "Accent Color"
+            "field": "colorpicker"
         }
     }
 }

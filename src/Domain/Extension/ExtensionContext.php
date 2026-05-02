@@ -56,6 +56,9 @@ final class ExtensionContext
 	/** @var array<string,class-string> */
 	private array $fieldTypes = [];
 
+	/** @var array<string,string> Field name => default schema property type */
+	private array $fieldDefaultTypes = [];
+
 	/** @var list<array{type: string, path: string}> */
 	private array $adminAssets = [];
 
@@ -263,12 +266,16 @@ final class ExtensionContext
 	/**
 	 * Register a custom field type.
 	 *
-	 * @param string $typeName The field type name (used in schemas)
-	 * @param class-string $fqcn Fully qualified class name extending FormField
+	 * @param string $typeName    The field type name (used in schemas)
+	 * @param class-string $fqcn  Fully qualified class name extending FormField
+	 * @param string $defaultType The default schema property type used when a
+	 *                            schema property omits an explicit `type`.
+	 *                            Should be one of SchemaData::PROPERTY_TYPES.
 	 */
-	public function addFieldType(string $typeName, string $fqcn): void
+	public function addFieldType(string $typeName, string $fqcn, string $defaultType = 'string'): void
 	{
-		$this->fieldTypes[$typeName] = $fqcn;
+		$this->fieldTypes[$typeName]        = $fqcn;
+		$this->fieldDefaultTypes[$typeName] = $defaultType;
 	}
 
 	/**
@@ -362,6 +369,12 @@ final class ExtensionContext
 	public function getRegisteredFieldTypes(): array
 	{
 		return $this->fieldTypes;
+	}
+
+	/** @return array<string,string> */
+	public function getRegisteredFieldDefaultTypes(): array
+	{
+		return $this->fieldDefaultTypes;
 	}
 
 	/** @return array<string,list<array{callable, int}>> */

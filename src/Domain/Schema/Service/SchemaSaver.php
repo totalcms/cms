@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
@@ -61,6 +62,7 @@ readonly class SchemaSaver
 			throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
 		}
 
+		$schemaData['properties'] = self::applyDefaultTypes($schemaData['properties']);
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schemaData['properties'] = self::normalizeDefaultValues($schemaData['properties']);
 		$schemaData               = self::sanitizeRequiredAndIndex($schemaData, $this->getInheritedPropertyNames($schemaData));
@@ -123,6 +125,37 @@ readonly class SchemaSaver
 		}
 
 		return $schemaData;
+	}
+
+	/**
+	 * Fill in a default `type` for properties that omit one (or leave it blank),
+	 * resolved from the property's `field` via TotalForm::getDefaultTypeForField().
+	 * An explicit type set by the user is always preserved.
+	 *
+	 * @param array<string,array<string,mixed>> $properties
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public static function applyDefaultTypes(array $properties): array
+	{
+		foreach ($properties as $key => $options) {
+			// Don't touch properties that already have a $ref (legacy/inherited) or a non-empty type.
+			if (isset($options['$ref'])) {
+				continue;
+			}
+			if (isset($options['type']) && $options['type'] !== '') {
+				continue;
+			}
+
+			$field = isset($options['field']) ? (string)$options['field'] : '';
+			if ($field === '') {
+				continue;
+			}
+
+			$properties[$key]['type'] = TotalForm::getDefaultTypeForField($field);
+		}
+
+		return $properties;
 	}
 
 	/**

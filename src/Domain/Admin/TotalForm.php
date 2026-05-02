@@ -92,8 +92,52 @@ class TotalForm implements \Stringable
 		],
 	];
 
+	/**
+	 * Default property type for each built-in field. Used when a schema property
+	 * omits an explicit `type`; the saver fills it in from the chosen `field`.
+	 */
+	public const FIELD_DEFAULT_TYPE = [
+		'card'          => 'card',
+		'checkbox'      => 'boolean',
+		'code'          => 'code',
+		'color'         => 'color',
+		'date'          => 'date',
+		'datetime'      => 'date',
+		'deck'          => 'deck',
+		'deckTable'     => 'deck',
+		'depot'         => 'depot',
+		'email'         => 'email',
+		'file'          => 'file',
+		'gallery'       => 'gallery',
+		'hidden'        => 'string',
+		'id'            => 'slug',
+		'image'         => 'image',
+		'json'          => 'json',
+		'list'          => 'list',
+		'multicheckbox' => 'array',
+		'multiselect'   => 'array',
+		'number'        => 'number',
+		'password'      => 'password',
+		'phone'         => 'phone',
+		'price'         => 'number',
+		'radio'         => 'string',
+		'range'         => 'number',
+		'secret'        => 'string',
+		'select'        => 'string',
+		'styledtext'    => 'string',
+		'svg'           => 'svg',
+		'text'          => 'string',
+		'textarea'      => 'string',
+		'time'          => 'time',
+		'toggle'        => 'boolean',
+		'url'           => 'url',
+	];
+
 	/** @var array<string,class-string> Extension-registered field types: name => FQCN */
 	private static array $extensionFieldTypes = [];
+
+	/** @var array<string,string> Extension-declared default property type per field: name => type */
+	private static array $extensionFieldDefaultTypes = [];
 
 	/**
 	 * Register extension field types for both the form builder and schema property editor.
@@ -106,6 +150,16 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Register extension-declared default property types per field.
+	 *
+	 * @param array<string,string> $types Field name => default schema property type
+	 */
+	public static function registerExtensionFieldDefaultTypes(array $types): void
+	{
+		self::$extensionFieldDefaultTypes = array_merge(self::$extensionFieldDefaultTypes, $types);
+	}
+
+	/**
 	 * Get the extension field type class map.
 	 *
 	 * @return array<string,class-string>
@@ -113,6 +167,18 @@ class TotalForm implements \Stringable
 	public static function getExtensionFieldTypes(): array
 	{
 		return self::$extensionFieldTypes;
+	}
+
+	/**
+	 * Resolve the default schema property type for a given form field name.
+	 * Built-in mappings win; extension-declared types fill in the rest;
+	 * unknown fields fall back to `string`.
+	 */
+	public static function getDefaultTypeForField(string $field): string
+	{
+		return self::FIELD_DEFAULT_TYPE[$field]
+			?? self::$extensionFieldDefaultTypes[$field]
+			?? 'string';
 	}
 
 	/**
