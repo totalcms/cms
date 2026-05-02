@@ -359,6 +359,7 @@ describe('ExtensionContext', function (): void {
 
 		expect($labels)->toHaveKey('twig:functions');
 		expect($labels)->toHaveKey('twig:filters');
+		expect($labels)->toHaveKey('twig:globals');
 		expect($labels)->toHaveKey('routes:api');
 		expect($labels)->toHaveKey('routes:public');
 		expect($labels)->toHaveKey('routes:admin');

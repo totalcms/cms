@@ -8,7 +8,9 @@ since: "3.3.0"
 
 The builder adapter provides navigation helpers and asset management for Site Builder sites. Navigation functions automatically filter out draft pages and pages with `nav` set to false, and sort results by the `sort` field (ascending). Asset functions handle path resolution and cache busting.
 
-## nav()
+## Navigation
+
+### nav()
 
 Get top-level navigation pages (pages with no parent).
 
@@ -25,7 +27,7 @@ Returns a flat array of page objects from the configured pages collection, filte
 - `nav` is `true` (or missing — defaults to `true` for backwards compatibility)
 - `parent` is empty
 
-### Custom Collection
+#### Custom Collection
 
 Pass a collection ID to use a different pages collection:
 
@@ -33,7 +35,7 @@ Pass a collection ID to use a different pages collection:
 {% set pages = cms.builder.nav('my-custom-pages') %}
 ```
 
-### Return Value
+#### Return Value
 
 `array` — Each element is a page object with all indexed fields:
 
@@ -50,9 +52,7 @@ Pass a collection ID to use a different pages collection:
 | `sort` | number | Sort order |
 | `parent` | string | Parent page ID (always empty for `nav()` results) |
 
----
-
-## subnav()
+### subnav()
 
 Get child pages of a specific parent.
 
@@ -63,14 +63,14 @@ Get child pages of a specific parent.
 {% endfor %}
 ```
 
-### Parameters
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `parentId` | string | yes | The `id` of the parent page |
 | `collection` | string | no | Custom collection ID (defaults to configured pages collection) |
 
-### Example: Section Sub-Navigation
+#### Example: Section Sub-Navigation
 
 ```twig
 {# Main nav #}
@@ -91,9 +91,7 @@ Get child pages of a specific parent.
 {% endif %}
 ```
 
----
-
-## navTree()
+### navTree()
 
 Get the full navigation hierarchy as a nested tree.
 
@@ -103,13 +101,13 @@ Get the full navigation hierarchy as a nested tree.
 
 Returns top-level pages with a `children` key containing their child pages, recursively nested.
 
-### Parameters
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `collection` | string | no | Custom collection ID (defaults to configured pages collection) |
 
-### Return Structure
+#### Return Structure
 
 Each page in the tree has all the standard page fields plus a `children` array:
 
@@ -124,7 +122,7 @@ Each page in the tree has all the standard page fields plus a `children` array:
 ]
 ```
 
-### Example: Two-Level Navigation
+#### Example: Two-Level Navigation
 
 ```twig
 <nav>
@@ -141,7 +139,7 @@ Each page in the tree has all the standard page fields plus a `children` array:
 </nav>
 ```
 
-### Example: Recursive Navigation Macro
+#### Example: Recursive Navigation Macro
 
 For deeply nested menus, use a Twig macro:
 
@@ -166,9 +164,9 @@ For deeply nested menus, use a Twig macro:
 </nav>
 ```
 
----
+## Assets
 
-## asset()
+### asset()
 
 Resolve an asset path to a URL with automatic cache busting.
 
@@ -179,21 +177,19 @@ Resolve an asset path to a URL with automatic cache busting.
 
 Use this when you need the raw URL — for background images, `srcset`, custom attributes, or any case where `css()`/`js()` don't fit.
 
-### How Resolution Works
+#### How Resolution Works
 
 1. **Manifest exists** — reads `manifest.json` from the assets directory and resolves hashed filenames (e.g., `style.css` → `style.a1b2c3.css`)
 2. **No manifest, file exists** — appends `?v={mtime}` for cache busting via file modification time
 3. **File not found** — returns the raw path with no cache busting
 
-### Parameters
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `path` | string | yes | Asset path relative to the assets directory |
 
----
-
-## css()
+### css()
 
 Output a `<link rel="stylesheet">` tag for a CSS file.
 
@@ -208,15 +204,13 @@ Output:
 <link rel="stylesheet" href="/assets/vendor/normalize.css?v=1714300000">
 ```
 
-### Parameters
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `path` | string | yes | CSS file path relative to the assets directory |
 
----
-
-## js()
+### js()
 
 Output a `<script>` tag for a JavaScript file.
 
@@ -231,16 +225,14 @@ Output:
 <script type="module" src="/assets/app.js?v=1714300000"></script>
 ```
 
-### Parameters
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `path` | string | yes | JS file path relative to the assets directory |
 | `options` | object | no | Options: `module` (bool) adds `type="module"` attribute |
 
----
-
-## preload()
+### preload()
 
 Output a `<link rel="preload">` tag for preloading assets. Automatically adds the `crossorigin` attribute for fonts (required by browsers).
 
@@ -257,14 +249,12 @@ Output:
 <link rel="preload" href="/assets/app.js?v=1714300000" as="script">
 ```
 
-### Parameters
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `path` | string | yes | Asset path relative to the assets directory |
 | `as` | string | yes | Resource type: `font`, `image`, `script`, `style`, `fetch` |
-
----
 
 ## Asset Configuration
 
@@ -342,8 +332,6 @@ Templates don't change between development and production — the asset function
 </body>
 </html>
 ```
-
----
 
 ## See Also
 

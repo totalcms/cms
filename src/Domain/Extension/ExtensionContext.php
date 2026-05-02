@@ -403,6 +403,7 @@ final class ExtensionContext
 		return [
 			'twig:functions' => 'Twig Functions',
 			'twig:filters'   => 'Twig Filters',
+			'twig:globals'   => 'Twig Globals',
 			'routes:api'     => 'API Routes',
 			'routes:public'  => 'Public Routes',
 			'routes:admin'   => 'Admin Pages',
