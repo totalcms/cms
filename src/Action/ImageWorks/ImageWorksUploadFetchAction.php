@@ -23,9 +23,9 @@ readonly class ImageWorksUploadFetchAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$collection = $args['collection'];
-		$id         = $args['id'];
-		$property   = $args['property'];
+		$collection       = $args['collection'];
+		$id               = $args['id'];
+		$property         = $args['property'];
 		[$name, $subpath] = PathUtils::splitPath($args['path'] ?? $args['name'] ?? '');
 
 		// Short-circuit when the file isn't on disk. ImageGenerator → Glide → Flysystem

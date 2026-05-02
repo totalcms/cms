@@ -25,7 +25,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
  */
 class StreamFileFromDepotAction extends StreamAction
 {
-	private bool $isNested = false;
+	private bool $isNested        = false;
 	private string $nestedSubpath = '';
 
 	public function __construct(
@@ -44,7 +44,7 @@ class StreamFileFromDepotAction extends StreamAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$rawPath  = $args['path'] ?? $args['name'] ?? '';
+		$rawPath   = $args['path'] ?? $args['name'] ?? '';
 		$sanitized = PathUtils::sanitizeSubpath($rawPath);
 
 		$this->isNested = $sanitized !== '' && $this->storage->directoryExists(

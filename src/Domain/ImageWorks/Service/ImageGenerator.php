@@ -128,7 +128,7 @@ class ImageGenerator
 	 * Serve an image stored as a child of a card or deck field. The `$path` is
 	 * a slash-separated path through the parent property's nested data:
 	 *   - Card child:   `path = "childKey"`        → `parentRaw[childKey]`
-	 *   - Deck child:   `path = "itemId/childKey"` → `parentRaw[itemId][childKey]`
+	 *   - Deck child:   `path = "itemId/childKey"` → `parentRaw[itemId][childKey]`.
 	 *
 	 * The disk file lives at `coll/id/property/<path>/<filename>`.
 	 *

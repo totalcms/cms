@@ -22,9 +22,9 @@ readonly class DeleteFileAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$collection = $args['collection'];
-		$id         = $args['id'];
-		$property   = $args['property'];
+		$collection       = $args['collection'];
+		$id               = $args['id'];
+		$property         = $args['property'];
 		[$name, $subpath] = PathUtils::splitPath($args['path'] ?? $args['name'] ?? '');
 
 		$status = $this->uploadRemover->deleteFile($collection, $id, $property, $name, $subpath);

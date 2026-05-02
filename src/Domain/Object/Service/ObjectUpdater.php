@@ -87,7 +87,7 @@ readonly class ObjectUpdater
 		$objectData = $object->toArray();
 
 		$segments = $path === '' ? [] : explode('/', $path);
-		$cursor =& $objectData[$parent];
+		$cursor   =&$objectData[$parent];
 		if (!is_array($cursor)) {
 			$cursor = [];
 		}
@@ -96,7 +96,7 @@ readonly class ObjectUpdater
 			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
 				$cursor[$segment] = [];
 			}
-			$cursor =& $cursor[$segment];
+			$cursor =&$cursor[$segment];
 		}
 
 		$cursor[$leaf] = $newData;

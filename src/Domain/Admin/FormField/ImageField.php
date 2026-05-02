@@ -94,12 +94,12 @@ class ImageField extends FormField
 		// or `mydeck.item-3.image`) so the imageworks utility can resolve the
 		// nested image and the macro builder emits the correct Twig syntax.
 		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
-		$query = http_build_query(array_filter([
+		$query        = http_build_query(array_filter([
 			'id'         => $this->form->id,
 			'collection' => $this->form->collection,
 			'property'   => $propertyPath,
 			'name'       => $name,
-		], fn ($v): bool => $v !== null && $v !== ''));
+		], fn (?string $v): bool => $v !== null && $v !== ''));
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = str_contains($this->form->api, '?') ? '&' : '?';
 

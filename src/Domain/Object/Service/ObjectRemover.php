@@ -59,15 +59,15 @@ readonly class ObjectRemover
 
 		$segments = $path === '' ? [] : explode('/', $path);
 		if ($segments !== [] && isset($objectData[$parent]) && is_array($objectData[$parent])) {
-			$cursor =& $objectData[$parent];
-			$leaf   = (string)array_pop($segments);
+			$cursor =&$objectData[$parent];
+			$leaf   = array_pop($segments);
 			foreach ($segments as $segment) {
 				if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
 					// Nothing to delete — intermediate slot doesn't exist.
 					$cursor = null;
 					break;
 				}
-				$cursor =& $cursor[$segment];
+				$cursor =&$cursor[$segment];
 			}
 			if (is_array($cursor)) {
 				$cursor[$leaf] = null;

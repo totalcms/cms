@@ -65,7 +65,7 @@ readonly class ObjectPatcher
 		$segments = $path === '' ? [] : explode('/', $path);
 		// Walk to (but not including) the leaf, creating slots as we go. Then
 		// merge into the leaf so partial updates preserve sibling fields.
-		$cursor =& $objectData[$parent];
+		$cursor =&$objectData[$parent];
 		if (!is_array($cursor)) {
 			$cursor = [];
 		}
@@ -74,10 +74,10 @@ readonly class ObjectPatcher
 			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
 				$cursor[$segment] = [];
 			}
-			$cursor =& $cursor[$segment];
+			$cursor =&$cursor[$segment];
 		}
 
-		$existing = isset($cursor[$leaf]) && is_array($cursor[$leaf]) ? $cursor[$leaf] : [];
+		$existing      = isset($cursor[$leaf]) && is_array($cursor[$leaf]) ? $cursor[$leaf] : [];
 		$cursor[$leaf] = array_merge($existing, $newData);
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);

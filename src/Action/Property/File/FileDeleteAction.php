@@ -33,7 +33,7 @@ readonly class FileDeleteAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$query = $request->getQueryParams();
+		$query                                 = $request->getQueryParams();
 		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
 
 		if ($nested) {

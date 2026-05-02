@@ -33,8 +33,8 @@ readonly class ObjectPatchPropertyMetaAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data  = (array)$request->getParsedBody();
-		$query = $request->getQueryParams();
+		$data                                  = (array)$request->getParsedBody();
+		$query                                 = $request->getQueryParams();
 		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
 
 		if ($nested) {

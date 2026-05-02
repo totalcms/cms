@@ -95,7 +95,7 @@ readonly class AuthTwigAdapter
 		// root property + subpath the access manager can walk.
 		if (str_contains($property, '.')) {
 			$parts    = explode('.', $property);
-			$root     = (string)array_shift($parts);
+			$root     = array_shift($parts);
 			$subpath  = implode('/', $parts);
 			$this->fileAccessManager->loadFile($collection, $id, $root, $subpath);
 		} elseif ($name !== null) {

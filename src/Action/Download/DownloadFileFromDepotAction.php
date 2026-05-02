@@ -35,7 +35,7 @@ use TotalCMS\Support\Config;
  */
 class DownloadFileFromDepotAction extends DownloadAction
 {
-	private bool $isNested = false;
+	private bool $isNested        = false;
 	private string $nestedSubpath = '';
 
 	public function __construct(
@@ -57,7 +57,7 @@ class DownloadFileFromDepotAction extends DownloadAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$rawPath  = $args['path'] ?? $args['name'] ?? '';
+		$rawPath   = $args['path'] ?? $args['name'] ?? '';
 		$sanitized = PathUtils::sanitizeSubpath($rawPath);
 
 		$this->isNested = $sanitized !== '' && $this->storage->directoryExists(

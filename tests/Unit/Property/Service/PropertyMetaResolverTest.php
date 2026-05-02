@@ -448,8 +448,8 @@ describe('PropertyMetaResolver', function (): void {
 		];
 
 		// Set up a separate child schema fetched by id.
-		$childSchema = new SchemaData();
-		$childSchema->id = 'card-schema';
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
 		$childSchema->properties = [
 			'image'   => ['field' => 'image', 'label' => 'Card Image'],
 			'caption' => ['field' => 'text', 'label' => 'Card Caption'],
@@ -471,8 +471,8 @@ describe('PropertyMetaResolver', function (): void {
 
 		$resolver = createResolver($this);
 
-		expect(fn () => $resolver->resolveNested('test-collection', 'mycard', 'image'))
-			->toThrow(\UnexpectedValueException::class);
+		expect(fn (): array => $resolver->resolveNested('test-collection', 'mycard', 'image'))
+			->toThrow(UnexpectedValueException::class);
 	});
 
 	test('resolveNested throws when child property is not in the referenced schema', function (): void {
@@ -480,16 +480,16 @@ describe('PropertyMetaResolver', function (): void {
 			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
 		];
 
-		$childSchema = new SchemaData();
-		$childSchema->id = 'card-schema';
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
 		$childSchema->properties = ['caption' => ['field' => 'text']];
 
 		$this->schemaFetcher->method('fetchSchema')->willReturn($childSchema);
 
 		$resolver = createResolver($this);
 
-		expect(fn () => $resolver->resolveNested('test-collection', 'mycard', 'nonexistent'))
-			->toThrow(\UnexpectedValueException::class);
+		expect(fn (): array => $resolver->resolveNested('test-collection', 'mycard', 'nonexistent'))
+			->toThrow(UnexpectedValueException::class);
 	});
 
 	test('resolveNestedSettings returns the child settings array', function (): void {
@@ -497,8 +497,8 @@ describe('PropertyMetaResolver', function (): void {
 			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
 		];
 
-		$childSchema = new SchemaData();
-		$childSchema->id = 'card-schema';
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
 		$childSchema->properties = [
 			'image' => ['field' => 'image', 'settings' => ['extractExif' => false]],
 		];
@@ -519,8 +519,8 @@ describe('PropertyMetaResolver', function (): void {
 			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
 		];
 
-		$childSchema = new SchemaData();
-		$childSchema->id = 'card-schema';
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
 		$childSchema->properties = [
 			// Child has no explicit settings — type-default preset applies.
 			'image' => ['field' => 'image'],

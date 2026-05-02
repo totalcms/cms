@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Support\Config;
 
@@ -178,7 +177,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 			'/api',
 			'post-1',
 			$image,
-			['w' => 800, 'h' => 600, 'fit' => 'crop'],
+			['w'          => 800, 'h' => 600, 'fit' => 'crop'],
 			['collection' => 'blog', 'property' => 'mycard.image'],
 		);
 
@@ -199,12 +198,12 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 	{
 		// Bypass the constructor — `download()` and `stream()` only read
 		// `$this->config->api`, so mocking the dependency graph is overkill.
-		$adapter = (new ReflectionClass(MediaTwigAdapter::class))->newInstanceWithoutConstructor();
-		$config  = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$adapter = (new \ReflectionClass(MediaTwigAdapter::class))->newInstanceWithoutConstructor();
+		$config  = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 
 		$config->api = $api;
 
-		(new ReflectionClass(MediaTwigAdapter::class))->getProperty('config')->setValue($adapter, $config);
+		(new \ReflectionClass(MediaTwigAdapter::class))->getProperty('config')->setValue($adapter, $config);
 
 		return $adapter;
 	}

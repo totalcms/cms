@@ -52,7 +52,7 @@ readonly class MediaTwigAdapter
 		//   - card child:   "mycard.image"
 		//   - deck child:   "mydeck.item-3.image"
 		// First segment is the URL/storage root property; the rest is the subpath.
-		$propertyPath  = (string)$options['property'];
+		$propertyPath              = (string)$options['property'];
 		[$rootProperty, $segments] = self::splitDottedProperty($propertyPath);
 
 		$imageworks = $this->resolvePresetFormat($imageworks);
@@ -96,7 +96,7 @@ readonly class MediaTwigAdapter
 			return [$property, []];
 		}
 		$parts = explode('.', $property);
-		$root  = (string)array_shift($parts);
+		$root  = array_shift($parts);
 
 		return [$root, $parts];
 	}
