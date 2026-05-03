@@ -4,6 +4,7 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
@@ -14,28 +15,66 @@ final class BuilderTwigAdapterTest extends TestCase
 	private BuilderTwigAdapter $adapter;
 	private \PHPUnit\Framework\MockObject\MockObject $builderConfig;
 	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
+	private \PHPUnit\Framework\MockObject\MockObject $orderService;
 	private \PHPUnit\Framework\MockObject\MockObject $config;
 
 	protected function setUp(): void
 	{
 		$this->builderConfig = $this->createMock(BuilderConfigService::class);
 		$this->indexReader   = $this->createMock(IndexReader::class);
+		$this->orderService  = $this->createMock(BuilderOrderService::class);
 		$this->config        = $this->createMock(Config::class);
 
 		$this->builderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
 		$this->config->builder = ['assetsPath' => 'assets'];
 		$this->config->docroot = sys_get_temp_dir();
+		$this->config->api     = '';
 
 		$this->adapter = new BuilderTwigAdapter(
 			$this->builderConfig,
 			$this->indexReader,
+			$this->orderService,
 			$this->config,
 		);
 	}
 
+	/**
+	 * Configure both the page index AND the order tree so the adapter has
+	 * everything it needs to build navigation. Pages without an explicit
+	 * parent in the legacy `parent` field land at root in the order tree.
+	 *
+	 * @param list<array<string,mixed>> $pages
+	 */
 	private function setupPages(array $pages): void
 	{
 		$this->indexReader->method('fetchIndex')->willReturn(new IndexData($pages));
+		$this->orderService->method('read')->willReturn($this->buildOrderTreeFromLegacyPages($pages));
+	}
+
+	/**
+	 * @param  list<array<string,mixed>> $pages
+	 * @return list<array{id:string,children:list<array<string,mixed>>}>
+	 */
+	private function buildOrderTreeFromLegacyPages(array $pages): array
+	{
+		// Sort by legacy sort field, then group by parent, then build a tree.
+		usort($pages, static fn (array $a, array $b): int => ((int)($a['sort'] ?? 0)) <=> ((int)($b['sort'] ?? 0)));
+
+		$byParent = [];
+		foreach ($pages as $p) {
+			$byParent[(string)($p['parent'] ?? '')][] = (string)($p['id'] ?? '');
+		}
+
+		$build = static function (string $parentId) use (&$build, $byParent): array {
+			$out = [];
+			foreach ($byParent[$parentId] ?? [] as $id) {
+				$out[] = ['id' => $id, 'children' => $build($id)];
+			}
+
+			return $out;
+		};
+
+		return $build('');
 	}
 
 	private function samplePages(): array
@@ -131,8 +170,12 @@ final class BuilderTwigAdapterTest extends TestCase
 			->method('fetchIndex')
 			->with('custom-pages')
 			->willReturn(new IndexData([
-				['id' => 'page1', 'title' => 'Page 1', 'sort' => 0, 'parent' => '', 'draft' => false, 'nav' => true],
+				['id' => 'page1', 'title' => 'Page 1', 'draft' => false, 'nav' => true],
 			]));
+		$this->orderService->expects($this->once())
+			->method('read')
+			->with('custom-pages')
+			->willReturn([['id' => 'page1', 'children' => []]]);
 
 		$result = $this->adapter->nav('custom-pages');
 
@@ -171,9 +214,12 @@ final class BuilderTwigAdapterTest extends TestCase
 
 	public function testSubnavExcludesDraftChildren(): void
 	{
+		// `root` itself must exist as a page now — the order tree only contains
+		// real pages, so subnav() walks the tree to find the parent.
 		$this->setupPages([
-			['id' => 'child1', 'title' => 'Child 1', 'sort' => 0, 'parent' => 'root', 'draft' => false, 'nav' => true],
-			['id' => 'child2', 'title' => 'Child 2', 'sort' => 1, 'parent' => 'root', 'draft' => true,  'nav' => true],
+			['id' => 'root',   'title' => 'Root',   'sort' => 0, 'parent' => '',     'draft' => false, 'nav' => true],
+			['id' => 'child1', 'title' => 'Child 1', 'sort' => 1, 'parent' => 'root', 'draft' => false, 'nav' => true],
+			['id' => 'child2', 'title' => 'Child 2', 'sort' => 2, 'parent' => 'root', 'draft' => true,  'nav' => true],
 		]);
 
 		$result = $this->adapter->subnav('root');
@@ -185,8 +231,9 @@ final class BuilderTwigAdapterTest extends TestCase
 	public function testSubnavExcludesNavFalseChildren(): void
 	{
 		$this->setupPages([
-			['id' => 'visible', 'title' => 'Visible', 'sort' => 0, 'parent' => 'root', 'draft' => false, 'nav' => true],
-			['id' => 'hidden',  'title' => 'Hidden',  'sort' => 1, 'parent' => 'root', 'draft' => false, 'nav' => false],
+			['id' => 'root',    'title' => 'Root',    'sort' => 0, 'parent' => '',     'draft' => false, 'nav' => true],
+			['id' => 'visible', 'title' => 'Visible', 'sort' => 1, 'parent' => 'root', 'draft' => false, 'nav' => true],
+			['id' => 'hidden',  'title' => 'Hidden',  'sort' => 2, 'parent' => 'root', 'draft' => false, 'nav' => false],
 		]);
 
 		$result = $this->adapter->subnav('root');
@@ -212,8 +259,17 @@ final class BuilderTwigAdapterTest extends TestCase
 			->method('fetchIndex')
 			->with('custom-pages')
 			->willReturn(new IndexData([
-				['id' => 'child', 'title' => 'Child', 'sort' => 0, 'parent' => 'root', 'draft' => false, 'nav' => true],
+				['id' => 'root',  'title' => 'Root',  'draft' => false, 'nav' => true],
+				['id' => 'child', 'title' => 'Child', 'draft' => false, 'nav' => true],
 			]));
+		$this->orderService->expects($this->once())
+			->method('read')
+			->with('custom-pages')
+			->willReturn([
+				['id' => 'root', 'children' => [
+					['id' => 'child', 'children' => []],
+				]],
+			]);
 
 		$result = $this->adapter->subnav('root', 'custom-pages');
 
@@ -305,6 +361,245 @@ final class BuilderTwigAdapterTest extends TestCase
 
 		$this->assertArrayHasKey('children', $tree[0]);
 		$this->assertSame([], $tree[0]['children']);
+	}
+
+	// --- pagesTree() ---
+
+	public function testPagesTreeIncludesDrafts(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$tree = $this->adapter->pagesTree();
+
+		$ids = array_column($tree, 'id');
+		$this->assertContains('drafts', $ids);
+	}
+
+	public function testPagesTreeIncludesNavFalsePages(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$tree = $this->adapter->pagesTree();
+
+		$ids = array_column($tree, 'id');
+		$this->assertContains('privacy', $ids);
+	}
+
+	public function testPagesTreeNestsChildrenUnderParent(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$tree = $this->adapter->pagesTree();
+
+		// Find blog node — blog-post has parent=blog so it should nest there
+		$blog = null;
+		foreach ($tree as $node) {
+			if ($node['id'] === 'blog') {
+				$blog = $node;
+				break;
+			}
+		}
+		$this->assertNotNull($blog);
+		$this->assertCount(1, $blog['children']);
+		$this->assertSame('blog-post', $blog['children'][0]['id']);
+	}
+
+	public function testPagesTreeSortsBySortField(): void
+	{
+		$this->setupPages([
+			['id' => 'c', 'title' => 'C', 'sort' => 2, 'parent' => '', 'draft' => false],
+			['id' => 'a', 'title' => 'A', 'sort' => 0, 'parent' => '', 'draft' => false],
+			['id' => 'b', 'title' => 'B', 'sort' => 1, 'parent' => '', 'draft' => true],
+		]);
+
+		$tree = $this->adapter->pagesTree();
+
+		$ids = array_column($tree, 'id');
+		$this->assertSame(['a', 'b', 'c'], $ids);
+	}
+
+	public function testPagesTreeReturnsEmptyOnIndexFailure(): void
+	{
+		$this->indexReader->method('fetchIndex')->willThrowException(new \Exception('not found'));
+
+		$this->assertSame([], $this->adapter->pagesTree());
+	}
+
+	// --- url() ---
+
+	public function testUrlReturnsRouteForStaticPage(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('/about', $this->adapter->url('about'));
+		$this->assertSame('/contact', $this->adapter->url('contact'));
+	}
+
+	public function testUrlFillsDynamicParam(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('/blog/hello', $this->adapter->url('blog-post', ['id' => 'hello']));
+	}
+
+	public function testUrlReturnsEmptyForMissingPage(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('', $this->adapter->url('nonexistent'));
+	}
+
+	public function testUrlReturnsEmptyForPageWithoutRoute(): void
+	{
+		$this->setupPages([
+			['id' => 'orphan', 'title' => 'Orphan', 'route' => '', 'sort' => 0, 'parent' => '', 'draft' => false, 'nav' => true],
+		]);
+
+		$this->assertSame('', $this->adapter->url('orphan'));
+	}
+
+	public function testUrlLeavesUnfilledPlaceholders(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		// Param missing — placeholder remains visible so the broken reference is obvious
+		$this->assertSame('/blog/{id}', $this->adapter->url('blog-post'));
+	}
+
+	public function testUrlEncodesSpecialCharactersInParams(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('/blog/hello%20world', $this->adapter->url('blog-post', ['id' => 'hello world']));
+	}
+
+	public function testUrlPrefixesWithApiBase(): void
+	{
+		$this->config->api = '/myapp';
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('/myapp/about', $this->adapter->url('about'));
+	}
+
+	public function testUrlReturnsEmptyWhenIndexFetchFails(): void
+	{
+		$this->indexReader->method('fetchIndex')->willThrowException(new \Exception('not found'));
+
+		$this->assertSame('', $this->adapter->url('about'));
+	}
+
+	public function testUrlIgnoresExtraParams(): void
+	{
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('/about', $this->adapter->url('about', ['extra' => 'unused']));
+	}
+
+	// --- stacksPage() ---
+
+	public function testStacksPageReadsHtmlFile(): void
+	{
+		$dir = sys_get_temp_dir() . '/stacks-test-' . uniqid();
+		mkdir($dir, 0755, true);
+		$this->config->docroot = $dir;
+		file_put_contents($dir . '/about.html', '<html><body><h1>About</h1></body></html>');
+
+		$result = $this->adapter->stacksPage('/about.html');
+
+		$this->assertSame('<html><body><h1>About</h1></body></html>', $result);
+
+		@unlink($dir . '/about.html');
+		@rmdir($dir);
+	}
+
+	public function testStacksPageTriesHtmlSuffix(): void
+	{
+		$dir = sys_get_temp_dir() . '/stacks-test-' . uniqid();
+		mkdir($dir, 0755, true);
+		$this->config->docroot = $dir;
+		file_put_contents($dir . '/about.html', 'about content');
+
+		$result = $this->adapter->stacksPage('/about');
+
+		$this->assertSame('about content', $result);
+
+		@unlink($dir . '/about.html');
+		@rmdir($dir);
+	}
+
+	public function testStacksPageTriesIndexHtmlInDirectory(): void
+	{
+		$dir = sys_get_temp_dir() . '/stacks-test-' . uniqid();
+		mkdir($dir . '/blog', 0755, true);
+		$this->config->docroot = $dir;
+		file_put_contents($dir . '/blog/index.html', 'blog index');
+
+		$result = $this->adapter->stacksPage('/blog');
+
+		$this->assertSame('blog index', $result);
+
+		@unlink($dir . '/blog/index.html');
+		@rmdir($dir . '/blog');
+		@rmdir($dir);
+	}
+
+	public function testStacksPageExtractsBodyContent(): void
+	{
+		$dir = sys_get_temp_dir() . '/stacks-test-' . uniqid();
+		mkdir($dir, 0755, true);
+		$this->config->docroot = $dir;
+		file_put_contents(
+			$dir . '/page.html',
+			"<!doctype html><html><head><title>X</title></head><body class=\"foo\">\n<h1>Hello</h1>\n</body></html>",
+		);
+
+		$result = $this->adapter->stacksPage('/page.html', 'body');
+
+		$this->assertSame("\n<h1>Hello</h1>\n", $result);
+
+		@unlink($dir . '/page.html');
+		@rmdir($dir);
+	}
+
+	public function testStacksPageExtractsCustomTag(): void
+	{
+		$dir = sys_get_temp_dir() . '/stacks-test-' . uniqid();
+		mkdir($dir, 0755, true);
+		$this->config->docroot = $dir;
+		file_put_contents(
+			$dir . '/page.html',
+			'<html><body><nav id="primary"><a href="/">Home</a></nav><main>Body</main></body></html>',
+		);
+
+		$result = $this->adapter->stacksPage('/page.html', 'nav');
+
+		$this->assertSame('<a href="/">Home</a>', $result);
+
+		@unlink($dir . '/page.html');
+		@rmdir($dir);
+	}
+
+	public function testStacksPageReturnsEmptyForMissingFile(): void
+	{
+		$dir = sys_get_temp_dir() . '/stacks-test-' . uniqid();
+		mkdir($dir, 0755, true);
+		$this->config->docroot = $dir;
+
+		$this->assertSame('', $this->adapter->stacksPage('/missing'));
+
+		@rmdir($dir);
+	}
+
+	public function testStacksPageBlocksPathTraversal(): void
+	{
+		$this->assertSame('', $this->adapter->stacksPage('../../etc/passwd'));
+		$this->assertSame('', $this->adapter->stacksPage('/legit/../../../secret'));
+	}
+
+	public function testStacksPageBlocksEmptyPath(): void
+	{
+		$this->assertSame('', $this->adapter->stacksPage(''));
+		$this->assertSame('', $this->adapter->stacksPage('/'));
 	}
 
 	// --- asset() ---
@@ -411,6 +706,7 @@ final class BuilderTwigAdapterTest extends TestCase
 		$adapter = new BuilderTwigAdapter(
 			$this->builderConfig,
 			$this->indexReader,
+			$this->orderService,
 			$this->config,
 		);
 

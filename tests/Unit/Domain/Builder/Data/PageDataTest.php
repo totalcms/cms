@@ -16,24 +16,18 @@ final class PageDataTest extends TestCase
 			'title'       => 'About Us',
 			'route'       => '/about',
 			'template'    => 'about',
-			'layout'      => 'wide',
 			'description' => 'About our company',
 			'draft'       => true,
 			'nav'         => false,
-			'sort'        => 5,
-			'parent'      => 'company',
 		]);
 
 		$this->assertSame('about', $page->id);
 		$this->assertSame('About Us', $page->title);
 		$this->assertSame('/about', $page->route);
 		$this->assertSame('about', $page->template);
-		$this->assertSame('wide', $page->layout);
 		$this->assertSame('About our company', $page->description);
 		$this->assertTrue($page->draft);
 		$this->assertFalse($page->nav);
-		$this->assertSame(5, $page->sort);
-		$this->assertSame('company', $page->parent);
 	}
 
 	public function testDefaultValues(): void
@@ -44,12 +38,61 @@ final class PageDataTest extends TestCase
 		$this->assertSame('', $page->title);
 		$this->assertSame('', $page->route);
 		$this->assertSame('', $page->template);
-		$this->assertSame('default', $page->layout);
 		$this->assertSame('', $page->description);
 		$this->assertFalse($page->draft);
 		$this->assertTrue($page->nav);
-		$this->assertSame(0, $page->sort);
-		$this->assertSame('', $page->parent);
+		$this->assertSame(200, $page->status);
+		$this->assertSame([], $page->data);
+	}
+
+	public function testStatusAcceptsCustomValue(): void
+	{
+		$page = new PageData(['status' => 404]);
+
+		$this->assertSame(404, $page->status);
+	}
+
+	public function testStatusClampsOutOfRangeValuesToDefault(): void
+	{
+		$this->assertSame(200, (new PageData(['status' => 99]))->status);
+		$this->assertSame(200, (new PageData(['status' => 600]))->status);
+		$this->assertSame(200, (new PageData(['status' => 0]))->status);
+	}
+
+	public function testStatusCoercesStringNumeric(): void
+	{
+		$page = new PageData(['status' => '503']);
+
+		$this->assertSame(503, $page->status);
+	}
+
+	public function testDataDecodesFromJsonString(): void
+	{
+		$page = new PageData(['data' => '{"hero":"Welcome","cta":{"label":"Sign up","url":"/signup"}}']);
+
+		$this->assertSame('Welcome', $page->data['hero']);
+		$this->assertSame(['label' => 'Sign up', 'url' => '/signup'], $page->data['cta']);
+	}
+
+	public function testDataAcceptsAlreadyDecodedArray(): void
+	{
+		$page = new PageData(['data' => ['hero' => 'Welcome']]);
+
+		$this->assertSame(['hero' => 'Welcome'], $page->data);
+	}
+
+	public function testDataFallsBackToEmptyArrayOnInvalidJson(): void
+	{
+		$page = new PageData(['data' => '{not valid json']);
+
+		$this->assertSame([], $page->data);
+	}
+
+	public function testDataFallsBackToEmptyArrayOnEmptyString(): void
+	{
+		$page = new PageData(['data' => '   ']);
+
+		$this->assertSame([], $page->data);
 	}
 
 	public function testIsPublishedWhenNotDraft(): void
@@ -87,32 +130,45 @@ final class PageDataTest extends TestCase
 			'title'           => 'Home',
 			'route'           => '/',
 			'template'        => 'index',
-			'layout'          => 'default',
 			'description'     => 'Welcome',
+			'image'           => [
+				'name'   => 'hero.jpg',
+				'link'   => 'home/hero.jpg',
+				'width'  => 1920,
+				'height' => 1080,
+			],
 			'draft'           => false,
 			'nav'             => true,
-			'sort'            => 0,
-			'parent'          => '',
 			'sitemap'         => true,
 			'changeFrequency' => 'weekly',
 			'priority'        => 0.8,
+			'status'          => 200,
+			'redirectTo'      => '',
+			'data'            => ['hero' => 'Welcome'],
 		];
 
 		$page = new PageData($data);
+		$out  = $page->toArray();
 
-		$this->assertSame($data, $page->toArray());
+		$this->assertSame('home', $out['id']);
+		$this->assertSame('Home', $out['title']);
+		$this->assertSame(['hero' => 'Welcome'], $out['data']);
+		// Image is wrapped as ImageData and then transformed back — exact array
+		// shape includes all the typed defaults, so just spot-check the inputs.
+		$this->assertSame('hero.jpg', $out['image']['name']);
+		$this->assertSame('home/hero.jpg', $out['image']['link']);
+		$this->assertSame(1920, $out['image']['width']);
+		$this->assertSame(1080, $out['image']['height']);
 	}
 
 	public function testToArrayRoundTrip(): void
 	{
 		$original = new PageData([
-			'id'     => 'test',
-			'title'  => 'Test',
-			'route'  => '/test',
-			'draft'  => true,
-			'nav'    => false,
-			'sort'   => 3,
-			'parent' => 'root',
+			'id'    => 'test',
+			'title' => 'Test',
+			'route' => '/test',
+			'draft' => true,
+			'nav'   => false,
 		]);
 
 		$reconstructed = new PageData($original->toArray());

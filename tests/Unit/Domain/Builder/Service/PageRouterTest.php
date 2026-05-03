@@ -31,6 +31,15 @@ final class PageRouterTest extends TestCase
 		$this->urlBuilder       = $this->createMock(ObjectUrlBuilder::class);
 		$this->objectFetcher    = $this->createMock(ObjectFetcher::class);
 
+		// Default normalizeUrlPattern behavior — returns the URL unchanged
+		// when it already uses Twig syntax, or converts `{name}` to `{{ name }}`.
+		// Tests can override with their own callback if needed.
+		$this->urlBuilder->method('normalizeUrlPattern')
+			->willReturnCallback(static function (string $url): string {
+				if (str_contains($url, '{{')) return $url;
+				return (string)preg_replace('/\{(\w+)\}/', '{{ $1 }}', $url);
+			});
+
 		$this->router = new PageRouter(
 			$this->builderConfig,
 			$this->indexReader,
@@ -60,7 +69,6 @@ final class PageRouterTest extends TestCase
 
 		$this->assertInstanceOf(RouteMatch::class, $match);
 		$this->assertSame('pages/about.twig', $match->template);
-		$this->assertSame('default', $match->layout);
 		$this->assertSame('About', $match->pageData['title']);
 		$this->assertSame([], $match->params);
 		$this->assertNull($match->collection);
@@ -110,6 +118,218 @@ final class PageRouterTest extends TestCase
 
 		$this->assertInstanceOf(RouteMatch::class, $match);
 		$this->assertSame('pages/privacy.twig', $match->template);
+	}
+
+	public function testHydratesDataFromFullObjectOnMatch(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index', 'layout' => 'default'],
+		]);
+
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn([
+			'id'       => 'home',
+			'title'    => 'Home',
+			'route'    => '/',
+			'template' => 'index',
+			'data'     => '{"hero":"Welcome","cta":"Sign up"}',
+		]);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$match = $this->router->match('/');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame(['hero' => 'Welcome', 'cta' => 'Sign up'], $match->pageData['data']);
+	}
+
+	// --- Collection URL syntax variants ---
+
+	public function testCollectionUrlAcceptsSlimStylePlaceholders(): void
+	{
+		// `/blog/{id}` (Slim-style) should behave the same as `/blog/{{ id }}`
+		// (Twig-style) and as bare `/blog`. Without normalization, the router
+		// would treat `{id}` as a literal URL segment.
+		$this->builderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
+		$this->builderConfig->method('pagesCollectionExists')->willReturn(true);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([]));
+
+		$collection            = new CollectionData();
+		$collection->id        = 'blog';
+		$collection->url       = '/blog/{id}';
+		$collection->prettyUrl = true;
+		$this->collectionLister->method('listAllCollections')->willReturn([$collection]);
+
+		// urlBuilder is a mock — stub the bits the template-URL path uses to
+		// behave like the real implementation (normalizeUrlPattern is stubbed
+		// in setUp() so every test gets the same default).
+		$this->urlBuilder->method('isTemplateUrl')
+			->willReturnCallback(static fn (string $url): bool => str_contains($url, '{{'));
+		$this->urlBuilder->method('extractTemplateFields')
+			->willReturnCallback(static function (string $url): array {
+				preg_match_all('/\{\{\s*(\w+)\s*\}\}/', $url, $m);
+
+				return array_values(array_unique($m[1]));
+			});
+
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn([
+			'id'    => 'hello',
+			'title' => 'Hello',
+		]);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$match = $this->router->match('/blog/hello');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('blog', $match->collection);
+		$this->assertSame(['id' => 'hello'], $match->params);
+	}
+
+	// --- Universal 404 fallback ---
+
+	public function testFallback404ReturnsPageWithStatus404(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'home',     'title' => 'Home', 'route' => '/',    'template' => 'index'],
+			['id' => 'not-found', 'title' => '404', 'route' => '/404', 'template' => 'not-found', 'status' => 404],
+		]);
+
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn([
+			'id'       => 'not-found',
+			'title'    => '404',
+			'route'    => '/404',
+			'template' => 'not-found',
+			'status'   => 404,
+		]);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$match = $this->router->fallback404();
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('pages/not-found.twig', $match->template);
+		$this->assertSame(404, $match->status);
+	}
+
+	public function testFallback404ReturnsNullWhenNoPageHasStatus404(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
+		]);
+
+		$this->assertNull($this->router->fallback404());
+	}
+
+	public function testFallback404SkipsDraftPages(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'draft-404', 'title' => '404', 'route' => '/404', 'template' => 'not-found', 'status' => 404, 'draft' => true],
+		]);
+
+		$this->assertNull($this->router->fallback404());
+	}
+
+	// --- Catch-all routes ---
+
+	public function testCatchAllMatchesMultiSegmentPath(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'docs', 'title' => 'Docs', 'route' => '/docs/{slug:.*}', 'template' => 'docs', 'layout' => 'default'],
+		]);
+
+		$match = $this->router->match('/docs/api/v1/intro');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame(['slug' => 'api/v1/intro'], $match->params);
+	}
+
+	public function testCatchAllAtRootMatchesEverything(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'fallback', 'title' => 'Fallback', 'route' => '/{slug:.*}', 'template' => 'fallback', 'layout' => 'default'],
+		]);
+
+		$match = $this->router->match('/anything/here');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame(['slug' => 'anything/here'], $match->params);
+	}
+
+	public function testSpecificRouteWinsOverCatchAll(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'fallback',  'title' => 'Fallback',  'route' => '/{slug:.*}', 'template' => 'fallback',  'layout' => 'default'],
+			['id' => 'blog-post', 'title' => 'Blog Post', 'route' => '/blog/{id}', 'template' => 'blog-post', 'layout' => 'default'],
+		]);
+
+		$match = $this->router->match('/blog/hello');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('pages/blog-post.twig', $match->template);
+		$this->assertSame(['id' => 'hello'], $match->params);
+	}
+
+	public function testStaticRouteWinsOverCatchAll(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'fallback', 'title' => 'Fallback', 'route' => '/{slug:.*}', 'template' => 'fallback', 'layout' => 'default'],
+			['id' => 'about',    'title' => 'About',    'route' => '/about',     'template' => 'about',    'layout' => 'default'],
+		]);
+
+		$match = $this->router->match('/about');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('pages/about.twig', $match->template);
+	}
+
+	public function testStatusFlowsThroughToRouteMatch(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'gone', 'title' => 'Gone', 'route' => '/gone', 'template' => 'gone', 'layout' => 'default', 'status' => 410],
+		]);
+
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn([
+			'id'       => 'gone',
+			'title'    => 'Gone',
+			'route'    => '/gone',
+			'template' => 'gone',
+			'status'   => 410,
+		]);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$match = $this->router->match('/gone');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame(410, $match->status);
+	}
+
+	public function testStatusDefaultsTo200WhenAbsent(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about', 'layout' => 'default'],
+		]);
+
+		$match = $this->router->match('/about');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame(200, $match->status);
+	}
+
+	public function testFallsBackToIndexPageWhenObjectFetchFails(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about', 'layout' => 'default'],
+		]);
+
+		$this->objectFetcher->method('fetchObject')
+			->willThrowException(new \UnexpectedValueException('not found'));
+
+		$match = $this->router->match('/about');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('About', $match->pageData['title']);
+		$this->assertSame([], $match->pageData['data']);
 	}
 
 	public function testSkipsPagesWithEmptyRoute(): void
@@ -259,7 +479,7 @@ final class PageRouterTest extends TestCase
 		$match = $this->router->match('/blog/my-post');
 
 		$this->assertInstanceOf(RouteMatch::class, $match);
-		$this->assertSame('templates/blog.twig', $match->template);
+		$this->assertSame('pages/blog.twig', $match->template);
 		$this->assertSame('blog', $match->collection);
 	}
 

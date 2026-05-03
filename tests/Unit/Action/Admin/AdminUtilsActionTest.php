@@ -9,7 +9,7 @@ use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
-use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\RssImporter;
@@ -31,7 +31,7 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $accessGroupLister;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $builderConfig;
+	private \PHPUnit\Framework\MockObject\MockObject $builderInstaller;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
 	private \PHPUnit\Framework\MockObject\MockObject $rssImporter;
 	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
@@ -50,7 +50,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->accessGroupLister     = $this->createMock(AccessGroupLister::class);
 		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
 		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
-		$this->builderConfig         = $this->createMock(BuilderConfigService::class);
+		$this->builderInstaller      = $this->createMock(BuilderInstaller::class);
 		$this->schemaLister          = $this->createMock(SchemaLister::class);
 		$this->rssImporter           = $this->createMock(RssImporter::class);
 		$this->editionFeatures       = $this->createMock(EditionFeatureService::class);
@@ -68,7 +68,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->accessGroupLister,
 			$this->collectionRepository,
 			$this->collectionFetcher,
-			$this->builderConfig,
+			$this->builderInstaller,
 			$this->schemaLister,
 			$this->rssImporter,
 			$this->editionFeatures,
