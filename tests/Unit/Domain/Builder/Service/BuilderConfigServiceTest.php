@@ -74,4 +74,25 @@ final class BuilderConfigServiceTest extends TestCase
 	{
 		$this->assertSame('/var/www/html', $this->service->getDocroot());
 	}
+
+	// --- getAssetsPath ---
+
+	public function testAssetsPathDefaultsToAssets(): void
+	{
+		$this->assertSame('assets', $this->service->getAssetsPath());
+	}
+
+	public function testCustomAssetsPath(): void
+	{
+		$this->config->builder = ['assetsPath' => 'public-assets'];
+
+		$this->assertSame('public-assets', $this->service->getAssetsPath());
+	}
+
+	public function testEmptyAssetsPathFallsBackToDefault(): void
+	{
+		$this->config->builder = ['assetsPath' => ''];
+
+		$this->assertSame('assets', $this->service->getAssetsPath());
+	}
 }

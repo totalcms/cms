@@ -12,7 +12,6 @@ use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Support\Config;
 
 /**
  * GET /admin/builder[/{section}[/{path:.*}]] — render the Site Builder
@@ -27,7 +26,6 @@ readonly class AdminBuilderAction
 		private TemplateFetcher $templateFetcher,
 		private IndexReader $indexReader,
 		private BuilderAssetScanner $assetScanner,
-		private Config $config,
 	) {
 	}
 
@@ -47,11 +45,7 @@ readonly class AdminBuilderAction
 		$this->builderInstaller->ensurePagesCollection();
 
 		$pagesCollectionId = $this->builderConfig->getPagesCollectionId();
-
-		$assetsPath = (string)($this->config->builder['assetsPath'] ?? 'assets');
-		if ($assetsPath === '') {
-			$assetsPath = 'assets';
-		}
+		$assetsPath        = $this->builderConfig->getAssetsPath();
 
 		$templateData = [
 			'url' => [

@@ -16,6 +16,7 @@ readonly class BuilderConfigService
 {
 	public const DEFAULT_COLLECTION_ID = 'builder-pages';
 	public const DEFAULT_SCHEMA_ID     = 'builder-page';
+	public const DEFAULT_ASSETS_PATH   = 'assets';
 
 	public function __construct(
 		private Config $config,
@@ -44,5 +45,17 @@ readonly class BuilderConfigService
 	public function getDocroot(): string
 	{
 		return $this->config->docroot;
+	}
+
+	/**
+	 * Get the configured assets path (relative to docroot). Defaults to
+	 * `assets` when unset or blank — same fallback the asset scanner and
+	 * `cms.builder.css()` helper apply, kept centralized here.
+	 */
+	public function getAssetsPath(): string
+	{
+		$path = $this->config->builder['assetsPath'] ?? '';
+
+		return is_string($path) && $path !== '' ? $path : self::DEFAULT_ASSETS_PATH;
 	}
 }

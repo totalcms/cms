@@ -87,6 +87,11 @@ readonly class StarterService
 		// Copy template files
 		$copied = $this->copyTemplateFiles($manifest->directory, $force);
 
+		// Copy starter assets (CSS, JS, images) into the docroot's assets dir.
+		// Done separately from template copy because the destination is the
+		// public docroot, not tcms-data/builder/.
+		$assetsCopied = $this->copyAssetFiles($manifest->directory, $force);
+
 		// Create builder-pages collection if it doesn't exist
 		$this->builderInstaller->ensurePagesCollection();
 
@@ -104,13 +109,15 @@ readonly class StarterService
 		$demo = $importDemoData ? $this->importDemoData($manifest) : null;
 
 		$this->logger->info('Starter scaffolded', [
-			'starter'  => $starterName,
-			'files'    => $copied,
-			'pages'    => $pagesCreated,
-			'demoData' => $demo !== null,
+			'starter'      => $starterName,
+			'files'        => $copied,
+			'assetFiles'   => $assetsCopied,
+			'pages'        => $pagesCreated,
+			'demoData'     => $demo !== null,
 		]);
 
-		$message = "Scaffolded '{$manifest->name}' starter: {$copied} files copied, {$pagesCreated} pages created";
+		$assetsNote = $assetsCopied > 0 ? ", {$assetsCopied} asset(s) copied" : '';
+		$message = "Scaffolded '{$manifest->name}' starter: {$copied} files copied{$assetsNote}, {$pagesCreated} pages created";
 		if ($demo !== null) {
 			$message .= $demo['ok']
 				? ', demo data imported'
@@ -118,10 +125,11 @@ readonly class StarterService
 		}
 
 		return OperationResult::success($message, [
-			'starter'      => $starterName,
-			'filesCopied'  => $copied,
-			'pagesCreated' => $pagesCreated,
-			'demoData'     => $demo,
+			'starter'       => $starterName,
+			'filesCopied'   => $copied,
+			'assetsCopied'  => $assetsCopied,
+			'pagesCreated'  => $pagesCreated,
+			'demoData'      => $demo,
 		]);
 	}
 
@@ -165,6 +173,75 @@ readonly class StarterService
 				$category,
 				$force,
 			);
+		}
+
+		return $copied;
+	}
+
+	/**
+	 * Copy a starter's `assets/` directory (CSS, JS, images, fonts) into
+	 * the docroot's assets directory. Mirrors the layout `cms.builder.css()`
+	 * and friends use to reference these files at render time.
+	 *
+	 * Skips when the starter doesn't ship any assets, or when the docroot
+	 * isn't configured. Existing files are skipped unless `$force` is set so
+	 * a re-run doesn't clobber user customizations.
+	 */
+	private function copyAssetFiles(string $starterDir, bool $force): int
+	{
+		$source = $starterDir . '/assets';
+		if (!is_dir($source)) {
+			return 0;
+		}
+
+		$docroot = $this->builderConfig->getDocroot();
+		if ($docroot === '') {
+			$this->logger->warning('Skipping starter asset copy — docroot not configured');
+
+			return 0;
+		}
+
+		$target = rtrim($docroot, '/') . '/' . trim($this->builderConfig->getAssetsPath(), '/');
+		if (!is_dir($target) && !mkdir($target, 0755, true) && !is_dir($target)) {
+			$this->logger->warning('Could not create assets directory', ['path' => $target]);
+
+			return 0;
+		}
+
+		$copied   = 0;
+		$iterator = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::SELF_FIRST,
+		);
+
+		foreach ($iterator as $item) {
+			if (!$item instanceof \SplFileInfo) {
+				continue;
+			}
+
+			$relative = ltrim(str_replace($source, '', $item->getPathname()), DIRECTORY_SEPARATOR);
+			$dest     = $target . DIRECTORY_SEPARATOR . $relative;
+
+			if ($item->isDir()) {
+				if (!is_dir($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
+					$this->logger->warning('Could not create asset subdirectory', ['path' => $dest]);
+				}
+
+				continue;
+			}
+
+			if (!$force && file_exists($dest)) {
+				continue;
+			}
+
+			if (@copy($item->getPathname(), $dest)) {
+				$copied++;
+			} else {
+				$this->logger->warning('Could not copy starter asset', [
+					'source' => $item->getPathname(),
+					'dest'   => $dest,
+				]);
+			}
 		}
 
 		return $copied;

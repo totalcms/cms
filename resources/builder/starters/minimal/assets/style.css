@@ -1,0 +1,21 @@
+/* Minimal starter — your site's stylesheet.
+ * Edit me freely. Cache-busted automatically by cms.builder.css() in your layout.
+ */
+
+*, *::before, *::after {
+	box-sizing : border-box;
+	margin     : 0;
+	padding    : 0;
+}
+
+body {
+	font-family : system-ui, -apple-system, sans-serif;
+	line-height : 1.6;
+	color       : #333;
+}
+
+.container {
+	max-width : 960px;
+	margin    : 0 auto;
+	padding   : 0 1rem;
+}

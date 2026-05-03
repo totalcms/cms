@@ -33,13 +33,16 @@ The simplest starting point — a single homepage with a clean layout.
 
 **Pages:** Home
 
-**Template files created:**
+**Files created:**
 ```
 tcms-data/builder/
   layouts/default.twig
   pages/index.twig
+  pages/readme.twig
   partials/nav.twig
   partials/footer.twig
+public/assets/
+  style.css                  ← edit me
 ```
 
 **Best for:** Starting from scratch with maximum flexibility.
@@ -52,7 +55,7 @@ A professional business website with multiple pages and a card-based layout.
 
 **Pages:** Home, About, Services, Contact
 
-**Template files created:**
+**Files created:**
 ```
 tcms-data/builder/
   layouts/default.twig
@@ -60,8 +63,11 @@ tcms-data/builder/
   pages/about.twig
   pages/services.twig
   pages/contact.twig
+  pages/readme.twig
   partials/nav.twig
   partials/footer.twig
+public/assets/
+  style.css                  ← edit me
 ```
 
 **Features:**
@@ -80,7 +86,7 @@ A blog-focused site with post listing and individual post templates.
 
 **Pages:** Home, Blog, Blog Post, About
 
-**Template files created:**
+**Files created:**
 ```
 tcms-data/builder/
   layouts/default.twig
@@ -88,9 +94,12 @@ tcms-data/builder/
   pages/about.twig
   pages/blog/index.twig
   pages/blog/post.twig
+  pages/readme.twig
   partials/nav.twig
   partials/footer.twig
   partials/post-card.twig
+public/assets/
+  style.css                  ← edit me
 ```
 
 **Features:**
@@ -111,7 +120,7 @@ A portfolio site for showcasing projects with a visual grid layout.
 
 **Pages:** Home, Work, About, Contact
 
-**Template files created:**
+**Files created:**
 ```
 tcms-data/builder/
   layouts/default.twig
@@ -119,8 +128,11 @@ tcms-data/builder/
   pages/work.twig
   pages/about.twig
   pages/contact.twig
+  pages/readme.twig
   partials/nav.twig
   partials/footer.twig
+public/assets/
+  style.css                  ← edit me
 ```
 
 **Features:**
@@ -163,17 +175,25 @@ See [Navigation](docs/builder/overview#navigation) for `subnav()` and `navTree()
 
 A simple footer with dynamic copyright year via `{{ 'now' | date('Y') }}` and the domain name.
 
-### Inline Styles
+### Stylesheet (`public/assets/style.css`)
 
-Starters use inline `<style>` tags in the layout for basic styling. This is intentional — it makes the starter work immediately without a build step. Replace the inline styles with your own CSS approach:
+Each starter ships a real CSS file at `public/assets/style.css` rather than dumping styles inline in the layout. The layout references it with the `cms.builder.css()` Twig helper:
 
-- Plain CSS files in your docroot
+```twig
+{{ cms.builder.css('style.css') }}
+{# → <link rel="stylesheet" href="/assets/style.css?v=1714607400"> #}
+```
+
+The helper resolves the path against your configured assets directory and appends an mtime cache-buster automatically — so when you edit the file, browsers pick up the new version on next load without manual versioning.
+
+This setup is intentional: it works immediately without any build step *and* shows you exactly the pattern you'd use for any other CSS, JS, font, or image asset. When you outgrow plain CSS, swap it for one of:
+
 - Sass/SCSS compiled by your build tool
-- Vite with PostCSS
+- [Vite](docs/builder/frontend) (run `tcms builder:frontend` to scaffold it)
 - Tailwind CSS
-- Any other pipeline
+- Any other pipeline that emits CSS files
 
-T3 does not own your CSS build pipeline.
+T3 does not own your CSS build pipeline — it just helps you reference whatever ends up in `public/assets/`.
 
 ## Demo Data (`--demo`)
 
@@ -218,7 +238,7 @@ Both install the same Vite scaffold to `<projectRoot>/frontend/`. See [`builder:
 
 After running `builder:init`, you own all the template files. Common next steps:
 
-1. **Edit the layout** — replace inline styles with your CSS, add analytics, fonts, etc.
+1. **Edit the stylesheet** — open `public/assets/style.css` and tweak as needed. The layout already loads it via `{{ cms.builder.css('style.css') }}`.
 2. **Edit page templates** — replace placeholder content with `cms.*` calls to your collections
 3. **Add more pages** — create new page objects in the admin under **Site Builder**
 4. **Reorder pages** — use the admin's drag-drop reorder mode to set the navigation order (see [Reordering Pages](docs/builder/admin#reordering-pages))

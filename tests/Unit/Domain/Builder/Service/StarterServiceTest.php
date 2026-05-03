@@ -59,6 +59,11 @@ final class StarterServiceTest extends TestCase
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		$this->config->method('getPagesCollectionId')->willReturn('builder-pages');
+		// docroot points inside the tmp dir so asset copies land where we can
+		// inspect them. assetsPath stays at the default 'assets'.
+		$this->config->method('getDocroot')->willReturn($this->tmpRoot . '/public');
+		$this->config->method('getAssetsPath')->willReturn('assets');
+		mkdir($this->tmpRoot . '/public', 0755, true);
 		// listBuilderTemplates returning [] = "no existing templates" (default).
 		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
 
@@ -448,6 +453,108 @@ final class StarterServiceTest extends TestCase
 		$this->assertStringContainsString('disk full', $result->data['demoData']['error'] ?? '');
 	}
 
+	// --- scaffold: asset copying ---
+
+	public function testCopiesStarterAssetsIntoDocrootAssetsDir(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeAsset('blog', 'style.css', 'body { color: red; }');
+		$this->writeAsset('blog', 'js/app.js', 'console.log("hi");');
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog');
+
+		$this->assertTrue($result->success);
+		$this->assertSame(2, $result->data['assetsCopied'] ?? null);
+		$this->assertFileExists($this->tmpRoot . '/public/assets/style.css');
+		$this->assertFileExists($this->tmpRoot . '/public/assets/js/app.js');
+		$this->assertSame('body { color: red; }', file_get_contents($this->tmpRoot . '/public/assets/style.css'));
+	}
+
+	public function testStarterWithoutAssetsDirIsHandledCleanly(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		// No assets/ dir.
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog');
+
+		$this->assertTrue($result->success);
+		$this->assertSame(0, $result->data['assetsCopied'] ?? null);
+	}
+
+	public function testAssetCopySkipsExistingFilesWithoutForce(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeAsset('blog', 'style.css', 'body { color: red; }');
+
+		mkdir($this->tmpRoot . '/public/assets', 0755, true);
+		file_put_contents($this->tmpRoot . '/public/assets/style.css', '/* customized */');
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog');
+
+		$this->assertTrue($result->success);
+		$this->assertSame(0, $result->data['assetsCopied'] ?? null);
+		// User's customization preserved.
+		$this->assertSame('/* customized */', file_get_contents($this->tmpRoot . '/public/assets/style.css'));
+	}
+
+	public function testForceOverwritesExistingAssets(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeAsset('blog', 'style.css', 'body { color: red; }');
+
+		mkdir($this->tmpRoot . '/public/assets', 0755, true);
+		file_put_contents($this->tmpRoot . '/public/assets/style.css', '/* customized */');
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog', force: true);
+
+		$this->assertTrue($result->success);
+		$this->assertSame(1, $result->data['assetsCopied'] ?? null);
+		$this->assertSame('body { color: red; }', file_get_contents($this->tmpRoot . '/public/assets/style.css'));
+	}
+
+	public function testAssetCopySkippedWhenDocrootIsBlank(): void
+	{
+		// Re-create the service with an empty docroot to cover the
+		// "no docroot configured" branch.
+		$config = $this->createMock(BuilderConfigService::class);
+		$config->method('getPagesCollectionId')->willReturn('builder-pages');
+		$config->method('getDocroot')->willReturn('');
+		$config->method('getAssetsPath')->willReturn('assets');
+
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
+
+		$service = new StarterService(
+			$config,
+			$this->installer,
+			$this->orderService,
+			$this->objectSaver,
+			$this->objectUpdater,
+			$this->templateLister,
+			$this->templateMigration,
+			$this->jumpStart,
+			$loggerFactory,
+		);
+
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeAsset('blog', 'style.css', 'body {}');
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $service->scaffold('blog');
+
+		$this->assertTrue($result->success);
+		$this->assertSame(0, $result->data['assetsCopied'] ?? null);
+	}
+
 	// --- helpers ---
 
 	/** @param array<string,mixed> $data */
@@ -466,6 +573,16 @@ final class StarterServiceTest extends TestCase
 			mkdir($dir, 0755, true);
 		}
 		file_put_contents($dir . '/jumpstart.json', (string)json_encode($data));
+	}
+
+	private function writeAsset(string $starter, string $relative, string $contents): void
+	{
+		$path = $this->tmpRoot . '/resources/builder/starters/' . $starter . '/assets/' . $relative;
+		$dir  = dirname($path);
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		file_put_contents($path, $contents);
 	}
 
 	private function rrmdir(string $dir): void

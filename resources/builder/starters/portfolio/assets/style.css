@@ -1,0 +1,78 @@
+/* Portfolio starter — your site's stylesheet.
+ * Edit me freely. Cache-busted automatically by cms.builder.css() in your layout.
+ */
+
+*, *::before, *::after {
+	box-sizing : border-box;
+	margin     : 0;
+	padding    : 0;
+}
+
+body {
+	font-family : system-ui, -apple-system, sans-serif;
+	line-height : 1.6;
+	color       : #222;
+	background  : #fafafa;
+}
+
+.container {
+	max-width : 1080px;
+	margin    : 0 auto;
+	padding   : 0 1.5rem;
+}
+
+h1, h2, h3 {
+	line-height : 1.2;
+}
+
+h1 {
+	font-size      : 3rem;
+	margin-bottom  : 1rem;
+	letter-spacing : -0.02em;
+}
+
+h2 {
+	font-size     : 1.75rem;
+	margin-bottom : 0.75rem;
+}
+
+p {
+	margin-bottom : 1rem;
+	color         : #555;
+}
+
+a {
+	color : #111;
+}
+
+.section {
+	padding : 4rem 0;
+}
+
+.grid-3 {
+	display               : grid;
+	grid-template-columns : repeat(auto-fill, minmax(300px, 1fr));
+	gap                   : 1.5rem;
+}
+
+.project-card {
+	background    : #fff;
+	border-radius : 8px;
+	overflow      : hidden;
+	box-shadow    : 0 1px 3px rgba(0, 0, 0, 0.08);
+	transition    : transform 0.2s;
+}
+
+.project-card:hover {
+	transform : translateY(-2px);
+}
+
+.project-card-body {
+	padding : 1.25rem;
+}
+
+.project-card-image {
+	width        : 100%;
+	aspect-ratio : 16/10;
+	background   : #e5e7eb;
+}
