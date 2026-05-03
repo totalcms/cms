@@ -81,6 +81,8 @@ class CliApplication
 
 		// Builder commands
 		$app->addCommand(new Command\BuilderInitCommand($totalcms));
+		$app->addCommand(new Command\BuilderRoutesCommand($totalcms));
+		$app->addCommand(new Command\BuilderHistoryCommand($totalcms));
 
 		// Extension management commands
 		$app->addCommand(new Command\Extension\ExtensionListCommand($totalcms));

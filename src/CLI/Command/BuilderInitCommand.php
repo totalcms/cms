@@ -54,9 +54,9 @@ class BuilderInitCommand extends BaseCommand
 			$output->writeln('<info>' . $result->message . '</info>');
 			$output->writeln('');
 			$output->writeln('Next steps:');
-			$output->writeln('  1. Edit your templates in tcms-data/templates/');
-			$output->writeln('  2. Add or edit pages in the admin under Collections > Pages');
-			$output->writeln('  3. Run <comment>tcms builder:generate</comment> to write stubs to your docroot');
+			$output->writeln('  1. Edit your templates in tcms-data/builder/');
+			$output->writeln('  2. Add or edit pages in the admin under Site Builder');
+			$output->writeln('  3. Visit your site — pages are served dynamically (no build step needed)');
 
 			return Command::SUCCESS;
 		}
