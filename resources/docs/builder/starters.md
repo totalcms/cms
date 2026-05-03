@@ -6,7 +6,7 @@ since: "3.3.0"
 
 # Starter Templates
 
-Starters are pre-built site structures that give you a working site out of the box. Each one provides layouts, page templates, partials, a `builder-pages` collection, and page objects — everything needed to generate a working site immediately.
+Starters are pre-built site structures that give you a working site out of the box. Each one provides layouts, page templates, partials, a `builder-pages` collection, and page objects — everything needed for a working site immediately.
 
 ## Quick Start
 
@@ -16,12 +16,9 @@ tcms builder:init --list
 
 # Scaffold a business site
 tcms builder:init business
-
-# Generate stubs to docroot
-tcms builder:generate
 ```
 
-After running these two commands, your docroot has working PHP files that render your site.
+That's it. There's no generation step — the page router serves your routes dynamically from the collection data. Visit your site and pages render immediately.
 
 ## Available Starters
 
@@ -153,7 +150,7 @@ Dynamic navigation using the builder nav function:
 {% endfor %}
 ```
 
-`cms.builder.nav()` returns top-level pages that are published (not draft) and have navigation enabled (`nav: true`), sorted by sort order. Your nav updates automatically when you add, remove, or reorder pages in the admin.
+`cms.builder.nav()` returns top-level pages that are published (not draft) and have navigation enabled (`nav: true`), in the order defined by the order file (`.order.json`). Your nav updates automatically when you add, remove, or reorder pages in the admin.
 
 See [Navigation](docs/builder/overview#navigation) for `subnav()` and `navTree()` functions.
 
@@ -179,9 +176,11 @@ After running `builder:init`, you own all the template files. Common next steps:
 
 1. **Edit the layout** — replace inline styles with your CSS, add analytics, fonts, etc.
 2. **Edit page templates** — replace placeholder content with `cms.*` calls to your collections
-3. **Add more pages** — create new page objects in the admin, create matching template files
-4. **Create partials** — extract repeated patterns into `partials/` templates
-5. **Generate stubs** — run `tcms builder:generate` after any structural changes
+3. **Add more pages** — create new page objects in the admin under **Site Builder**
+4. **Reorder pages** — use the admin's drag-drop reorder mode to set the navigation order (see [Reordering Pages](docs/builder/admin#reordering-pages))
+5. **Create partials** — extract repeated patterns into `partials/` templates
+
+No build or generate step is needed — the page router serves your routes from the live collection.
 
 ## Creating Custom Starters
 
@@ -195,13 +194,26 @@ Starters live in `resources/builder/starters/{name}/`. Each starter needs:
     "description": "A description of what this starter provides",
     "version": "1.0.0",
     "pages": [
-        {"id": "home", "title": "Home", "path": "", "layout": "default", "sort": 0},
-        {"id": "about", "title": "About", "path": "about", "layout": "default", "sort": 1}
+        {"id": "home", "title": "Home", "route": "/", "template": "index"},
+        {"id": "about", "title": "About", "route": "/about", "template": "about", "nav": true},
+        {"id": "blog-post", "title": "Blog Post", "route": "/blog/{id}", "template": "blog/post", "nav": false}
     ]
 }
 ```
 
-The `pages` array defines the page objects that will be created in the `builder-pages` collection. Each entry maps to a `builder-page` schema object.
+Each `pages` entry maps to a `builder-page` schema object. Fields:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Page identifier — used for the page record's id and the `.order.json` reference |
+| `title` | Yes | Page title |
+| `route` | No | URL pattern. Falls back to `/{path}` if you provide a legacy `path` field instead. |
+| `template` | No | Template name from `pages/`. Falls back to the page id if omitted. |
+| `nav` | No | Show in navigation menus. Defaults to `true`. |
+
+Pages are created in the order they appear in the array, and the order file (`.order.json`) is seeded from that same order — so the first page in the manifest becomes the first item in the navigation. Hierarchy is flat in the manifest; users can drag to nest after scaffolding.
+
+The schema also supports `description`, `image`, `data`, `status`, `redirectTo`, `sitemap`, `changeFrequency`, and `priority` fields — the manifest doesn't seed those, but they can be set per page in the admin after scaffolding.
 
 ### Template Files
 
@@ -220,7 +232,7 @@ my-starter/
     footer.twig
 ```
 
-Files are copied directly to `tcms-data/builder/{category}/`.
+Files are copied directly to `tcms-data/builder/{category}/`. Page templates use `{% extends 'layouts/default.twig' %}` directly — there's no `layout` field on pages.
 
 ## See Also
 

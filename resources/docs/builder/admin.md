@@ -1,12 +1,12 @@
 ---
 title: "Builder Admin UI"
-description: "Use the admin interface to manage builder templates, preview pages, and configure page routing."
+description: "Use the admin interface to manage builder templates, preview pages, reorder the page tree, and restore previous template versions."
 since: "3.3.0"
 ---
 
 # Builder Admin UI
 
-The Builder section in the admin provides page management, a template editor, file tree, and live preview — all accessible from the sidebar.
+The Builder section in the admin provides page management, a template editor, file tree, drag-drop reorder, live preview, and snapshot-based version history — all accessible from the sidebar.
 
 ## Accessing the Builder
 
@@ -27,30 +27,38 @@ The overview page shows:
 
 The left sidebar is divided into two sections separated by a divider:
 
-### Pages Section
+### Site Pages Section
 
-Lists all page objects from the `builder-pages` collection. Each page shows its title and links to the page edit form. Click a page to edit its metadata (title, route, template, layout, etc.).
+Lists all page objects from the `builder-pages` collection as a tree. Each page shows its title and links to the page edit form. Click a page to edit its metadata (title, route, template, image, status, page data, etc.).
 
-Pages are sorted by their `sort` field. The page icon (document) visually distinguishes pages from template files (code brackets).
+Pages are displayed in the order defined by the order file (`tcms-data/{collection}/.order.json`) — see [Reordering Pages](#reordering-pages). Visual cues help you scan the tree quickly:
+
+- **Home icon** — the page mapped to `/` (the homepage)
+- **Draft badge** — pages with `draft: true` (excluded from routing)
+- **Hidden-in-nav style** — pages with `nav: false` (routed but not in menus)
+- **Folder chevron** — pages with children, collapsed/expanded by clicking
 
 ### Templates Section
 
 Displays all builder templates organized by category:
 
 - **layouts/** — base HTML structures
-- **pages/** — page content templates
+- **pages/** — page content templates (also used for collection-URL matches: `pages/{collection-id}.twig`)
 - **partials/** — reusable fragments
 - **macros/** — Twig macros
-- **templates/** — general-purpose templates (collection rendering, email, etc.)
 - **whitelabel/** — admin branding overrides
 
-Each category is collapsible. Use the search filter at the top to find pages and templates by name. Click any template to open it in the editor.
+Each category is collapsible. Click any template to open it in the editor.
+
+### Filter
+
+A search filter at the top of the sidebar matches against both **page titles** and **template filenames**. The filter narrows the visible tree as you type — folders with no matching descendants collapse out of view.
 
 ### Footer Buttons
 
 The sidebar footer contains two buttons:
 
-- **+ New Page** — create a new page object (route, template, layout, etc.)
+- **+ New Page** — create a new page object (route, template, image, status, etc.)
 - **+ New Template** — create a new template file
 
 ## Page Management
@@ -61,17 +69,7 @@ Pages are managed directly within the Builder — the `builder-pages` collection
 
 **Route:** `/admin/builder/page/add`
 
-Click **+ New Page** in the sidebar footer. Fill in the page fields:
-
-- **Title** — page title, used in navigation and the title tag
-- **Page ID** — auto-generated from the title
-- **Route** — URL path (e.g., `/about` or `/products/{id}`)
-- **Template** — which page template to render (from `builder/pages/`)
-- **Layout** — which layout template the page extends (from `builder/layouts/`)
-- **Draft** — toggle to exclude the page from routing entirely
-- **Show in Nav** — toggle to include/exclude the page from navigation menus (default: on)
-- **Sort Order** — ordering for navigation (lower numbers first)
-- **Parent Page** — for hierarchical navigation menus
+Click **+ New Page** in the sidebar footer. Fill in the page fields — see [Page Schema Fields](docs/builder/overview#page-schema-fields) for the full list. Required fields are **Title** and **Template**.
 
 After saving, you're redirected to the page edit form.
 
@@ -79,7 +77,46 @@ After saving, you're redirected to the page edit form.
 
 **Route:** `/admin/builder/page/{id}`
 
-Click any page in the sidebar to edit its metadata. Changes are saved via the standard collection API.
+Click any page in the sidebar to edit its metadata. The form is grouped into sections:
+
+- **Basics** — title, description, image
+- **Routing** — route pattern, template, status, redirect
+- **Page Data** — JSON editor for `page.data.*` content
+- **Sitemap** — `sitemap.xml` inclusion + change frequency + priority
+
+Changes are saved via the standard collection API.
+
+## Reordering Pages
+
+Drag-drop reordering is gated behind an explicit **Reorder** mode — the sidebar tree is read-only by default to prevent accidental drags during normal browsing.
+
+### Enabling Reorder Mode
+
+Click the **Reorder** button at the top of the Site Pages section. The sidebar enters a special mode:
+
+- Page rows become draggable handles
+- Drop zones appear between rows when dragging
+- The button toggles to **Done** to exit the mode
+
+### What Drag-Drop Does
+
+While in reorder mode, drag pages to:
+
+- **Reorder** within the same level (drop above/below another page)
+- **Nest** under another page (drop directly onto a page row)
+- **Promote** out of a parent (drop into the root area)
+
+Each drop sends the new tree to `/admin/builder/reorder`. The server reconciles the tree against the page list and writes `tcms-data/{collection}/.order.json` — a single small file write replaces N page-record updates and never triggers an event cascade.
+
+### Why a Separate Order File?
+
+Hierarchy and ordering are stored in `.order.json`, not on the page records themselves. This means:
+
+- A page edit can never silently undo a reorder (the form doesn't carry order data)
+- Reordering 50 pages is one file write instead of 50
+- No event cascade fires on reorder (no index rebuild, no cache invalidation)
+
+See [Page Order](docs/builder/overview#page-order) for the file format and reconciliation rules.
 
 ## Template Editor
 
@@ -93,17 +130,97 @@ A CodeMirror 6 editor with Twig syntax highlighting. The editor loads the full c
 
 ### Save Button
 
-Saves the current editor content back to the template file on disk via the template API.
+Saves the current editor content back to the template file on disk via the template API. Each save automatically captures a snapshot of the previous content — see [Template History](#template-history).
 
-### Preview Button
+### Preview Pane
 
-Renders the current editor content (before saving) against live T3 data. The preview:
+Below the editor, a **Preview Page** button + URL input pair lets you render the current editor content (before saving) against live T3 data.
 
-1. Posts the raw template content to `/admin/builder/preview`
-2. The server renders it via `TwigEngine::renderString()`
-3. The result is displayed in an iframe in the preview pane
+### How Preview Works
 
-This means you can preview changes **before saving** — useful for testing Twig syntax and content rendering.
+The preview posts the in-progress template content (plus an optional URL) to `/admin/builder/preview` and renders the result in an iframe. Two modes depending on whether you supply a preview URL:
+
+#### With a Preview URL
+
+Type a URL (e.g., `/blog/my-post`, `/about`) into the input and click **Preview Page**. The URL is run through the page router so the template renders against the same context the visitor would see:
+
+- **Builder page match** — the template gets `page.*` populated from the matched record
+- **Collection URL match** — the template gets `object.*` populated from the matched object plus `params.*` for any captured placeholders
+- **Catch-all match** — works the same as builder pages (the placeholder values flow through to `params.*`)
+
+This is the only way to preview templates that depend on dynamic data — for example, `pages/blog.twig` (a collection-URL template) needs an `object` to render anything meaningful, and the `previewUrl` provides it.
+
+#### Without a Preview URL
+
+If the URL input is empty, the service falls back to a path-based context:
+
+- For `pages/*.twig`: scans the page index for the first page using this template and renders against that page's record
+- For everything else (layouts/partials/macros): renders with an empty `page` and empty `params`
+
+This works fine for simple page templates that don't need URL-bound data.
+
+### Refresh / Close Buttons
+
+Two icon buttons in the preview header:
+
+- **Refresh** — re-renders the iframe with the current editor content (useful after typing edits)
+- **Close** — hides the preview pane
+
+The preview iframe runs in a `sandbox="allow-same-origin allow-scripts allow-forms"` so dynamic JS in your templates works as it would on the live site.
+
+### Twig Errors in Preview
+
+If the rendered template throws (syntax error, undefined variable, etc.), the preview pane shows a styled error box with the exception message instead of failing silently or breaking the layout.
+
+## Template History
+
+Every save captures a snapshot of the **previous** template content under `tcms-data/builder/.history/{path}/{timestamp}.twig`. The most recent 50 versions per template are retained automatically — older snapshots are pruned on save.
+
+### Use Cases
+
+- Recover from an accidental delete
+- Compare an experimental change against the prior version
+- Roll a template back without needing git
+
+### Restoring via CLI
+
+Use [`tcms builder:history`](docs/builder/cli#builderhistory) to list, view, or restore snapshots:
+
+```bash
+# List versions
+tcms builder:history pages/about
+
+# View a specific snapshot
+tcms builder:history pages/about --show=1714588200
+
+# Restore (the current version is snapshotted first, so restore is reversible)
+tcms builder:history pages/about --restore=1714588200
+```
+
+The restore captures a fresh snapshot of the current content **before** overwriting, so you can always undo a restore by restoring the previous timestamp.
+
+### Storage Layout
+
+Snapshots are organized by template path:
+
+```
+tcms-data/builder/.history/
+├── layouts/
+│   └── default/
+│       ├── 1714501200.twig
+│       └── 1714588200.twig
+├── pages/
+│   ├── about/
+│   │   └── 1714502500.twig
+│   └── blog/
+│       └── post/
+│           └── 1714503600.twig
+└── partials/
+    └── nav/
+        └── 1714604700.twig
+```
+
+Each `.twig` file is the verbatim contents at that point in time. They're small (text-only) and prune automatically — no maintenance required.
 
 ## Settings
 
@@ -112,6 +229,7 @@ Builder settings are available at **Admin > Settings > Builder**:
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | Pages Collection | text | `builder-pages` | The collection used for page metadata |
+| Assets Path | text | `assets` | Path under the docroot where compiled assets land (used by the Asset Browser) |
 
 ## Routes
 
@@ -122,12 +240,15 @@ Builder settings are available at **Admin > Settings > Builder**:
 | GET | `/admin/builder/page/{id}` | Edit page form |
 | GET | `/admin/builder/{category}/{file}` | Template editor |
 | GET | `/admin/builder/new` | New template form |
-| POST | `/admin/builder/preview` | Render template string, return HTML |
+| POST | `/admin/builder/preview` | Render template against live context, return HTML |
+| POST | `/admin/builder/reorder` | Apply a drag-drop reorder, write the order file |
 
 Template CRUD operations go through the standard template API at `/api/templates`. Page CRUD operations go through the standard collection API at `/api/collections/builder-pages`.
 
 ## See Also
 
 - [Site Builder Overview](docs/builder/overview)
-- [Builder CLI Commands](docs/builder/cli)
+- [Page Schema Fields](docs/builder/overview#page-schema-fields)
+- [Page Order](docs/builder/overview#page-order)
+- [Builder CLI Commands](docs/builder/cli) — including `builder:routes` and `builder:history`
 - [Starter Templates](docs/builder/starters)
