@@ -6,6 +6,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\Admin404Action;
 use TotalCMS\Action\Admin\AdminBuilderAction;
+use TotalCMS\Action\Admin\Builder\BuilderPreviewAction;
+use TotalCMS\Action\Admin\Builder\BuilderReorderAction;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
@@ -53,8 +55,9 @@ return function (App $app): void {
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate')->add(SchemaEditionMiddleware::class)->add(SchemaAccessMiddleware::class);
 
 		// Builder (replaces Templates) — available to all editions
+		$group->post('/builder/preview', BuilderPreviewAction::class)->setName('admin-builder-preview')->add(TemplateAccessMiddleware::class);
+		$group->post('/builder/reorder', BuilderReorderAction::class)->setName('admin-builder-reorder')->add(TemplateAccessMiddleware::class);
 		$group->get('/builder[/{section}[/{path:.*}]]', AdminBuilderAction::class)->setName('admin-builder')->add(TemplateAccessMiddleware::class);
-		$group->post('/builder/{section}[/{path:.*}]', AdminBuilderAction::class)->setName('admin-builder-post')->add(TemplateAccessMiddleware::class);
 
 		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);
 		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionEditionMiddleware::class)->add(CollectionMetaAccessMiddleware::class);
