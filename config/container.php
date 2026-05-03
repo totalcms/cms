@@ -35,6 +35,7 @@ use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Cache\CacheManager;
@@ -528,6 +529,7 @@ return [
 	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
 		$container->get(BuilderConfigService::class),
 		$container->get(IndexReader::class),
+		$container->get(\TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
 		$container->get(Config::class),
 	),
 
@@ -1331,6 +1333,11 @@ return [
 	BuilderConfigService::class => fn (ContainerInterface $container): BuilderConfigService => new BuilderConfigService(
 		$container->get(Config::class),
 		$container->get(CollectionFetcher::class),
+	),
+
+	BuilderInstaller::class => fn (ContainerInterface $container): BuilderInstaller => new BuilderInstaller(
+		$container->get(BuilderConfigService::class),
+		$container->get(CollectionFetcher::class),
 		$container->get(CollectionSaver::class),
 		$container->get(TemplateMigrationService::class),
 		$container->get(TemplateFetcher::class),
@@ -1339,7 +1346,10 @@ return [
 
 	StarterService::class => fn (ContainerInterface $container): StarterService => new StarterService(
 		$container->get(BuilderConfigService::class),
+		$container->get(BuilderInstaller::class),
+		$container->get(\TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
 		$container->get(ObjectSaver::class),
+		$container->get(ObjectUpdater::class),
 		$container->get(TemplateLister::class),
 		$container->get(TemplateMigrationService::class),
 		$container->get(LoggerFactory::class),

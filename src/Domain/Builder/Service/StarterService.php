@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Builder\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Data\StarterManifest;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
 use TotalCMS\Factory\LoggerFactory;
@@ -19,7 +20,10 @@ readonly class StarterService
 
 	public function __construct(
 		private BuilderConfigService $builderConfig,
+		private BuilderInstaller $builderInstaller,
+		private BuilderOrderService $orderService,
 		private ObjectSaver $objectSaver,
+		private ObjectUpdater $objectUpdater,
 		private TemplateLister $templateLister,
 		private TemplateMigrationService $templateMigration,
 		LoggerFactory $loggerFactory,
@@ -39,33 +43,20 @@ readonly class StarterService
 			return [];
 		}
 
-		$starters  = [];
-		$entries   = scandir($startersDir);
+		$entries = scandir($startersDir);
 		if ($entries === false) {
 			return [];
 		}
 
+		$starters = [];
 		foreach ($entries as $entry) {
 			if ($entry === '.' || $entry === '..') {
 				continue;
 			}
-
-			$manifestPath = $startersDir . '/' . $entry . '/manifest.json';
-			if (!file_exists($manifestPath)) {
-				continue;
+			$manifest = $this->loadManifest($entry);
+			if ($manifest !== null) {
+				$starters[] = $manifest;
 			}
-
-			$json = file_get_contents($manifestPath);
-			if ($json === false) {
-				continue;
-			}
-
-			$data = json_decode($json, true);
-			if (!is_array($data)) {
-				continue;
-			}
-
-			$starters[] = new StarterManifest($data, $startersDir . '/' . $entry);
 		}
 
 		return $starters;
@@ -76,24 +67,10 @@ readonly class StarterService
 	 */
 	public function scaffold(string $starterName, bool $force = false): OperationResult
 	{
-		$starterDir   = $this->startersDir() . '/' . $starterName;
-		$manifestPath = $starterDir . '/manifest.json';
-
-		if (!file_exists($manifestPath)) {
+		$manifest = $this->loadManifest($starterName);
+		if ($manifest === null) {
 			return OperationResult::failure("Starter '{$starterName}' not found");
 		}
-
-		$json = file_get_contents($manifestPath);
-		if ($json === false) {
-			return OperationResult::failure('Could not read manifest');
-		}
-
-		$data = json_decode($json, true);
-		if (!is_array($data)) {
-			return OperationResult::failure('Invalid manifest JSON');
-		}
-
-		$manifest = new StarterManifest($data, $starterDir);
 
 		// Check if page templates already exist
 		if (!$force && $this->templateLister->listBuilderTemplates('pages') !== []) {
@@ -101,13 +78,19 @@ readonly class StarterService
 		}
 
 		// Copy template files
-		$copied = $this->copyTemplateFiles($starterDir, $force);
+		$copied = $this->copyTemplateFiles($manifest->directory, $force);
 
 		// Create builder-pages collection if it doesn't exist
-		$this->builderConfig->ensurePagesCollection();
+		$this->builderInstaller->ensurePagesCollection();
 
-		// Create page objects from manifest
+		// Create / update page objects from manifest
 		$pagesCreated = $this->createPageObjects($manifest, $force);
+
+		// Always seed the order file from the manifest so the sidebar reflects
+		// the manifest's intended order — including on a forced re-init where
+		// existing pages got updated rather than created. Hierarchy is flat
+		// today; users can drag to nest.
+		$this->seedOrderFile($manifest);
 
 		$this->logger->info('Starter scaffolded', [
 			'starter' => $starterName,
@@ -123,6 +106,32 @@ readonly class StarterService
 				'pagesCreated' => $pagesCreated,
 			],
 		);
+	}
+
+	/**
+	 * Read and parse a starter's manifest.json. Returns null if the starter
+	 * directory or manifest is missing/invalid.
+	 */
+	private function loadManifest(string $starterName): ?StarterManifest
+	{
+		$starterDir   = $this->startersDir() . '/' . $starterName;
+		$manifestPath = $starterDir . '/manifest.json';
+
+		if (!file_exists($manifestPath)) {
+			return null;
+		}
+
+		$json = file_get_contents($manifestPath);
+		if ($json === false) {
+			return null;
+		}
+
+		$data = json_decode($json, true);
+		if (!is_array($data)) {
+			return null;
+		}
+
+		return new StarterManifest($data, $starterDir);
 	}
 
 	/**
@@ -145,35 +154,76 @@ readonly class StarterService
 	}
 
 	/**
-	 * Create page objects from the starter manifest.
+	 * Create page objects from the starter manifest. With $force=true, an
+	 * existing page with the same id is updated instead of skipped, so the
+	 * starter's manifest stays the source of truth on a forced re-init.
+	 *
+	 * Returns the count of pages successfully created OR updated.
 	 */
 	private function createPageObjects(StarterManifest $manifest, bool $force): int
 	{
-		$created = 0;
+		$collectionId = $this->builderConfig->getPagesCollectionId();
+		$processed    = 0;
 
 		foreach ($manifest->pages as $page) {
+			if ($page['id'] === '') {
+				$this->logger->warning('Skipping starter page with empty id', ['title' => $page['title']]);
+
+				continue;
+			}
+
+			$record = [
+				'id'       => $page['id'],
+				'title'    => $page['title'],
+				'route'    => $page['route'],
+				'template' => $page['template'],
+				'draft'    => false,
+				'nav'      => $page['nav'],
+			];
+
 			try {
-				$this->objectSaver->saveObject($this->builderConfig->getPagesCollectionId(), [
-					'id'       => $page['id'],
-					'title'    => $page['title'],
-					'route'    => $page['route'],
-					'template' => $page['template'],
-					'layout'   => $page['layout'],
-					'draft'    => false,
-					'nav'      => $page['nav'],
-					'sort'     => $page['sort'],
-				]);
-				$created++;
+				$this->objectSaver->saveObject($collectionId, $record);
+				$processed++;
 			} catch (\DomainException) {
-				// Object already exists — skip unless force
-				if ($force) {
-					// For force mode, we'd need ObjectUpdater — skip for now
-					$this->logger->debug('Page object already exists, skipping', ['id' => $page['id']]);
+				if (!$force) {
+					continue;
+				}
+				try {
+					$this->objectUpdater->updateObject($collectionId, $page['id'], $record);
+					$processed++;
+				} catch (\Throwable $e) {
+					$this->logger->warning('Failed to update existing starter page', [
+						'id'    => $page['id'],
+						'error' => $e->getMessage(),
+					]);
 				}
 			}
 		}
 
-		return $created;
+		return $processed;
+	}
+
+	/**
+	 * Write the order file from the manifest's page order so the sidebar
+	 * shows pages in the intended sequence on first visit. Pages that
+	 * weren't successfully saved are filtered out by the order service's
+	 * own reconciliation against the page index.
+	 */
+	private function seedOrderFile(StarterManifest $manifest): void
+	{
+		$tree = [];
+		foreach ($manifest->pages as $page) {
+			if ($page['id'] === '') {
+				continue;
+			}
+			$tree[] = ['id' => $page['id'], 'children' => []];
+		}
+
+		if ($tree === []) {
+			return;
+		}
+
+		$this->orderService->write($this->builderConfig->getPagesCollectionId(), $tree);
 	}
 
 	private function startersDir(): string

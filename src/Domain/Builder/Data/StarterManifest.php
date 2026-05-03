@@ -10,7 +10,7 @@ readonly class StarterManifest
 	public string $description;
 	public string $version;
 
-	/** @var list<array{id:string,title:string,route:string,template:string,layout:string,sort:int,nav:bool}> */
+	/** @var list<array{id:string,title:string,route:string,template:string,nav:bool}> */
 	public array $pages;
 
 	/** @param array<string,mixed> $data */
@@ -31,8 +31,6 @@ readonly class StarterManifest
 				'title'    => (string)($page['title'] ?? ''),
 				'route'    => (string)($page['route'] ?? ('/' . ltrim($page['path'] ?? '', '/'))),
 				'template' => (string)($page['template'] ?? $id),
-				'layout'   => (string)($page['layout'] ?? 'default'),
-				'sort'     => (int)($page['sort'] ?? 0),
 				'nav'      => (bool)($page['nav'] ?? true),
 			];
 		}

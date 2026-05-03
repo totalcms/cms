@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Support\Config;
 
@@ -21,6 +22,7 @@ class BuilderTwigAdapter
 	public function __construct(
 		private readonly BuilderConfigService $builderConfig,
 		private readonly IndexReader $indexReader,
+		private readonly BuilderOrderService $orderService,
 		private readonly Config $config,
 	) {
 	}
@@ -30,17 +32,22 @@ class BuilderTwigAdapter
 	// -------------------------
 
 	/**
-	 * Get top-level navigation pages (where parent is empty).
+	 * Get top-level navigation pages (no parent).
 	 *
-	 * Returns published, nav-visible pages sorted by sort order.
+	 * Returns published, nav-visible pages in their stored order.
 	 *
 	 * @return array<array<string,mixed>>
 	 */
 	public function nav(?string $collection = null): array
 	{
-		$pages = $this->fetchNavPages($collection);
+		$tree = $this->navTree($collection);
 
-		return array_values(array_filter($pages, fn (array $page): bool => ($page['parent'] ?? '') === ''));
+		// Strip nested children — nav() returns flat top-level only
+		return array_map(static function (array $node): array {
+			unset($node['children']);
+
+			return $node;
+		}, $tree);
 	}
 
 	/**
@@ -50,21 +57,134 @@ class BuilderTwigAdapter
 	 */
 	public function subnav(string $parentId, ?string $collection = null): array
 	{
-		$pages = $this->fetchNavPages($collection);
+		$node = $this->findNode($this->navTree($collection), $parentId);
+		if ($node === null) {
+			return [];
+		}
 
-		return array_values(array_filter($pages, fn (array $page): bool => ($page['parent'] ?? '') === $parentId));
+		$children = $node['children'] ?? [];
+		if (!is_array($children)) {
+			return [];
+		}
+
+		return array_map(static function (array $child): array {
+			unset($child['children']);
+
+			return $child;
+		}, $children);
 	}
 
 	/**
-	 * Get the full navigation tree with nested children.
-	 *
-	 * Each page gets a `children` key containing its child pages, recursively.
+	 * Get the navigation tree (published, nav-visible pages) with children
+	 * nested under each parent. Each page node carries its full record plus
+	 * a `children` array.
 	 *
 	 * @return array<array<string,mixed>>
 	 */
 	public function navTree(?string $collection = null): array
 	{
-		return $this->buildTree($this->fetchNavPages($collection));
+		return $this->hydrateOrderTree($collection, true);
+	}
+
+	/**
+	 * Get every page as a nested tree — no draft/nav filtering. Intended for
+	 * the admin sidebar where every page must be visible and editable.
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function pagesTree(?string $collection = null): array
+	{
+		return $this->hydrateOrderTree($collection, false);
+	}
+
+	/**
+	 * Reverse-route a builder page by ID, filling in dynamic `{param}` segments.
+	 *
+	 *     {{ cms.builder.url('about') }}                       => /about
+	 *     {{ cms.builder.url('blog-post', { id: 'hello' }) }}  => /blog/hello
+	 *
+	 * Returns an empty string if the page is missing or has no route. Unfilled
+	 * placeholders are left in the URL so the broken reference is visible.
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	public function url(string $pageId, array $params = [], ?string $collection = null): string
+	{
+		$collectionId = $collection ?? $this->builderConfig->getPagesCollectionId();
+
+		try {
+			$index = $this->indexReader->fetchIndex($collectionId);
+		} catch (\Exception) {
+			return '';
+		}
+
+		foreach ($index->objects as $page) {
+			if ((string)($page['id'] ?? '') !== $pageId) {
+				continue;
+			}
+
+			$route = (string)($page['route'] ?? '');
+			if ($route === '') {
+				return '';
+			}
+
+			$filled = preg_replace_callback(
+				'/\{(\w+)\}/',
+				fn (array $m): string => isset($params[$m[1]]) ? rawurlencode((string)$params[$m[1]]) : $m[0],
+				$route,
+			);
+
+			return $this->config->api . ($filled ?? $route);
+		}
+
+		return '';
+	}
+
+	// -------------------------
+	// Stacks coexistence
+	// -------------------------
+
+	/**
+	 * Read a Stacks-published HTML file from docroot. Lets a Builder template
+	 * embed an existing Stacks-rendered page or fragment, sells "incremental
+	 * migration" instead of rewrite-or-stay.
+	 *
+	 *   {{ cms.builder.stacksPage('/about')|raw }}                full HTML
+	 *   {{ cms.builder.stacksPage('/about', 'body')|raw }}        inner <body>
+	 *   {{ cms.builder.stacksPage('/legacy/nav.html', 'nav')|raw }} first <nav>
+	 *
+	 * Resolution tries the path as-is, then with `.html`, then with `/index.html`.
+	 * Path traversal is blocked; missing files return an empty string. The
+	 * second argument extracts the inner content of the first matching tag.
+	 */
+	public function stacksPage(string $path, string $extract = ''): string
+	{
+		$relative = ltrim($path, '/');
+		if (str_contains($relative, '..') || $relative === '') {
+			return '';
+		}
+
+		$candidates = [
+			$relative,
+			$relative . '.html',
+			rtrim($relative, '/') . '/index.html',
+		];
+
+		$contents = '';
+		foreach ($candidates as $candidate) {
+			$full = $this->config->docroot . '/' . $candidate;
+			if (is_file($full)) {
+				$contents = (string)file_get_contents($full);
+
+				break;
+			}
+		}
+
+		if ($contents === '' || $extract === '') {
+			return $contents;
+		}
+
+		return $this->extractTagContent($contents, $extract);
 	}
 
 	// -------------------------
@@ -123,53 +243,113 @@ class BuilderTwigAdapter
 	// -------------------------
 
 	/**
-	 * Fetch all navigation-ready pages: published, nav-visible, sorted.
+	 * Walk the order-file tree and attach each node's full page record from
+	 * the index. When $publicOnly is true, drafts and nav-hidden pages are
+	 * dropped (and any children of dropped pages are dropped too).
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	private function fetchNavPages(?string $collection): array
+	private function hydrateOrderTree(?string $collection, bool $publicOnly): array
 	{
 		$collectionId = $collection ?? $this->builderConfig->getPagesCollectionId();
+		$pageById     = $this->fetchPageRecordsById($collectionId);
 
+		if ($pageById === []) {
+			return [];
+		}
+
+		$tree = $this->orderService->read($collectionId);
+
+		return $this->attachRecords($tree, $pageById, $publicOnly);
+	}
+
+	/**
+	 * @param  list<array{id:string,children:list<array<string,mixed>>}> $tree
+	 * @param  array<string,array<string,mixed>>                          $pageById
+	 * @return list<array<string,mixed>>
+	 */
+	private function attachRecords(array $tree, array $pageById, bool $publicOnly): array
+	{
+		$out = [];
+		foreach ($tree as $node) {
+			$id = $node['id'];
+			if (!isset($pageById[$id])) {
+				continue;
+			}
+			$record = $pageById[$id];
+
+			if ($publicOnly && (!empty($record['draft']) || ($record['nav'] ?? true) !== true)) {
+				continue;
+			}
+
+			$childrenRaw = $node['children'];
+			/** @var list<array{id:string,children:list<array<string,mixed>>}> $childrenRaw */
+			$record['children'] = $this->attachRecords($childrenRaw, $pageById, $publicOnly);
+			$out[]              = $record;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function fetchPageRecordsById(string $collectionId): array
+	{
 		try {
 			$index = $this->indexReader->fetchIndex($collectionId);
 		} catch (\Exception) {
 			return [];
 		}
 
-		return $index->objects
-			->filter(fn (array $page): bool => empty($page['draft']) && ($page['nav'] ?? true) === true)
-			->sortBy('sort')
-			->values()
-			->toArray();
+		$by = [];
+		foreach ($index->objects as $page) {
+			$id = (string)($page['id'] ?? '');
+			if ($id !== '') {
+				$by[$id] = $page;
+			}
+		}
+
+		return $by;
 	}
 
 	/**
-	 * Build a nested tree from a flat list of pages using the parent field.
+	 * Find a node by id anywhere in a tree.
 	 *
-	 * @param array<array<string,mixed>> $pages
-	 *
-	 * @return array<array<string,mixed>>
+	 * @param  array<array<string,mixed>>  $tree
+	 * @return array<string,mixed>|null
 	 */
-	private function buildTree(array $pages): array
+	private function findNode(array $tree, string $id): ?array
 	{
-		$byParent = [];
-		foreach ($pages as $page) {
-			$parent              = (string)($page['parent'] ?? '');
-			$byParent[$parent][] = $page;
+		foreach ($tree as $node) {
+			if ((string)($node['id'] ?? '') === $id) {
+				return $node;
+			}
+			$children = $node['children'] ?? [];
+			if (is_array($children)) {
+				$found = $this->findNode($children, $id);
+				if ($found !== null) {
+					return $found;
+				}
+			}
 		}
 
-		$attach = function (array $page) use (&$attach, $byParent): array {
-			$id               = (string)($page['id'] ?? '');
-			$children         = $byParent[$id] ?? [];
-			$page['children'] = array_map($attach, $children);
+		return null;
+	}
 
-			return $page;
-		};
+	/**
+	 * Extract the inner content of the first occurrence of $tagName from $html.
+	 * Returns the original HTML if the tag isn't found.
+	 */
+	private function extractTagContent(string $html, string $tagName): string
+	{
+		$tag = preg_quote(strtolower($tagName), '/');
+		// Find <tag ...> ... </tag> non-greedy, case-insensitive
+		if (preg_match('/<' . $tag . '\b[^>]*>(.*?)<\/' . $tag . '\s*>/is', $html, $matches) === 1) {
+			return $matches[1];
+		}
 
-		$roots = $byParent[''] ?? [];
-
-		return array_map($attach, $roots);
+		return $html;
 	}
 
 	// -------------------------

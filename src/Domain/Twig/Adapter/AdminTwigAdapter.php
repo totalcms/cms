@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Util\NestedFileTree;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
@@ -306,6 +307,30 @@ readonly class AdminTwigAdapter
 					'path' => $category . '/' . $templatePath,
 				];
 			}
+		}
+
+		return $tree;
+	}
+
+	/**
+	 * Get the builder file tree organized by category, with templates that
+	 * contain forward slashes ("blog/post") nested into folders. Companion
+	 * to {@see builderFileTree()} which returns the same data flat.
+	 *
+	 * Each node is either a folder `{type:'folder', name, children:[...]}`
+	 * or a file `{type:'file', name, id, path}` where `id` is the relative
+	 * template id (e.g. "blog/post") and `path` includes the category prefix
+	 * (e.g. "pages/blog/post"). Folders sort before files; both alphabetical.
+	 *
+	 * @return array<string,list<array<string,mixed>>>
+	 */
+	public function builderNestedFileTree(): array
+	{
+		$tree = [];
+
+		foreach (TemplateRepository::BUILDER_CATEGORIES as $category) {
+			$templates       = $this->templateLister->listBuilderTemplates($category, true);
+			$tree[$category] = NestedFileTree::build(array_values($templates), $category);
 		}
 
 		return $tree;

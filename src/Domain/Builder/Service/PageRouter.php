@@ -41,6 +41,41 @@ readonly class PageRouter
 	}
 
 	/**
+	 * Find a builder page configured as the universal 404 fallback. Any
+	 * published page whose status is 404 is treated as the not-found page —
+	 * the same field that drives the response code also marks the page as the
+	 * fallback target. Renders for any URL that doesn't match a builder page
+	 * or collection route, giving users a styled custom 404 from the admin
+	 * instead of Slim's plain default.
+	 *
+	 * If multiple pages have status 404 (uncommon), the first one wins.
+	 */
+	public function fallback404(): ?RouteMatch
+	{
+		$collectionId = $this->builderConfig->getPagesCollectionId();
+		if (!$this->builderConfig->pagesCollectionExists()) {
+			return null;
+		}
+
+		try {
+			$index = $this->indexReader->fetchIndex($collectionId);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		foreach ($index->objects as $object) {
+			$page = new PageData($object);
+			if ($page->status !== 404 || !$page->isPublished() || $page->template === '') {
+				continue;
+			}
+
+			return $this->buildPageMatch($page);
+		}
+
+		return null;
+	}
+
+	/**
 	 * Match against builder page objects.
 	 * Static routes first (exact match), then dynamic routes (pattern match).
 	 */
@@ -84,8 +119,17 @@ readonly class PageRouter
 			}
 		}
 
-		// Dynamic routes: longest pattern first for specificity
-		usort($dynamicRoutes, fn (PageData $a, PageData $b): int => strlen($b->route) <=> strlen($a->route));
+		// Dynamic routes: catch-all (`{name:.*}`) sorted last so more-specific
+		// patterns win. Within each group, longer patterns first.
+		usort($dynamicRoutes, function (PageData $a, PageData $b): int {
+			$aCatchAll = $this->hasCatchAll($a->route);
+			$bCatchAll = $this->hasCatchAll($b->route);
+			if ($aCatchAll !== $bCatchAll) {
+				return $aCatchAll <=> $bCatchAll;
+			}
+
+			return strlen($b->route) <=> strlen($a->route);
+		});
 
 		foreach ($dynamicRoutes as $page) {
 			$params = $this->matchDynamicRoute($path, $page->route);
@@ -124,7 +168,10 @@ readonly class PageRouter
 	 */
 	private function tryCollectionMatch(string $path, CollectionData $collection): ?RouteMatch
 	{
-		$url = $collection->url;
+		// Accept either Slim-style `{name}` or Twig-style `{{ name }}`
+		// placeholders in the URL field — normalize via the same helper
+		// ObjectUrlBuilder uses, so URL routing and URL building stay in sync.
+		$url = $this->urlBuilder->normalizeUrlPattern($collection->url);
 
 		// Non-pretty URL: query string format (?id=xxx) — handled by the stub, not the router
 		if (!$collection->prettyUrl) {
@@ -133,10 +180,11 @@ readonly class PageRouter
 
 		// Template URL: /blog/{{ category }}/{{ id }}
 		if ($this->urlBuilder->isTemplateUrl($url)) {
-			return $this->matchTemplateUrl($path, $collection);
+			return $this->matchTemplateUrl($path, $collection, $url);
 		}
 
-		// Simple pretty URL: /blog/{id}
+		// Simple pretty URL: bare `/blog` (no placeholders). Router auto-
+		// appends a captured id segment.
 		$baseUrl = rtrim($url, '/');
 		$pattern = '/^' . preg_quote($baseUrl, '/') . '\/([^\/]+)$/';
 
@@ -146,17 +194,18 @@ readonly class PageRouter
 
 		$objectId = $matches[1];
 
-		return $this->buildCollectionMatch($collection, $objectId);
+		// Populate `params.id` so templates reading `params.id` (the natural
+		// way to think about route params) get the captured value, mirroring
+		// how the template-URL path works.
+		return $this->buildCollectionMatch($collection, $objectId, ['id' => $objectId]);
 	}
 
 	/**
 	 * Match a template URL pattern (e.g., /blog/{{ category }}/{{ id }}).
 	 * Reverses the ObjectUrlBuilder logic to create a matching regex.
 	 */
-	private function matchTemplateUrl(string $path, CollectionData $collection): ?RouteMatch
+	private function matchTemplateUrl(string $path, CollectionData $collection, string $url): ?RouteMatch
 	{
-		$url = $collection->url;
-
 		// Auto-append {{ id }} if not present (same as ObjectUrlBuilder)
 		if (!str_contains($url, '{{ id') && !str_contains($url, '{{id')) {
 			$url = rtrim($url, '/') . '/{{ id }}';
@@ -203,11 +252,15 @@ readonly class PageRouter
 		}
 
 		// Use the collection's template (stored in builder/templates/)
-		$templatePath = 'templates/' . $collection->id . '.twig';
+		// Collection-URL matches render `pages/{collection.id}.twig`. Same
+		// folder as builder-page templates — collection objects ARE pages
+		// from a rendering POV, just sourced from a collection rather than a
+		// builder-page record. The `templates/` folder stays for non-page
+		// templates (snippets, includes that aren't full pages).
+		$templatePath = 'pages/' . $collection->id . '.twig';
 
 		return new RouteMatch(
 			template: $templatePath,
-			layout: 'default',
 			pageData: $object->toArray(),
 			params: $params,
 			collection: $collection->id,
@@ -245,45 +298,101 @@ readonly class PageRouter
 	}
 
 	/**
-	 * Convert a route pattern like /products/{category}/{id}
-	 * into a regex like /^\/products\/([^\/]+)\/([^\/]+)$/.
+	 * Convert a route pattern into a regex.
+	 *
+	 *   /products/{id}            → /^\/products\/([^\/]+)$/
+	 *   /products/{cat}/{id}      → /^\/products\/([^\/]+)\/([^\/]+)$/
+	 *   /docs/{slug:.*}           → /^\/docs\/(.*)$/
+	 *
+	 * Default placeholder constraint is `[^\/]+` (single path segment). A
+	 * custom regex after `:` lets a placeholder span slashes (`.*`) or apply
+	 * other patterns. Literal segments are preg_quoted.
 	 */
 	private function routeToRegex(string $route): string
 	{
-		$route   = $this->normalizePath($route);
-		$escaped = preg_quote($route, '/');
-		$regex   = (string)preg_replace('/\\\{[^}]+\\\}/', '([^\/]+)', $escaped);
+		$route = $this->normalizePath($route);
+		$parts = preg_split('/(\{\w+(?::[^}]+)?\})/', $route, -1, PREG_SPLIT_DELIM_CAPTURE);
+		if ($parts === false) {
+			$parts = [$route];
+		}
+
+		$regex = '';
+		foreach ($parts as $part) {
+			if (preg_match('/^\{\w+(?::(.+))?\}$/', $part, $m) === 1) {
+				$constraint = $m[1] ?? '[^\/]+';
+				$regex .= '(' . $constraint . ')';
+			} else {
+				$regex .= preg_quote($part, '/');
+			}
+		}
 
 		return '/^' . $regex . '$/';
 	}
 
 	/**
-	 * Extract parameter names from a route pattern.
+	 * Extract parameter names from a route pattern. Supports both `{name}`
+	 * and `{name:regex}` forms.
 	 *
 	 * @return list<string>
 	 */
 	private function extractParamNames(string $route): array
 	{
-		preg_match_all('/\{(\w+)\}/', $route, $matches);
+		preg_match_all('/\{(\w+)(?::[^}]+)?\}/', $route, $matches);
 
 		return $matches[1];
 	}
 
 	/**
+	 * Whether the route contains a catch-all placeholder (`{name:.*}`).
+	 * Catch-all routes match across slashes and are sorted to lowest priority
+	 * so more-specific patterns get matched first.
+	 */
+	private function hasCatchAll(string $route): bool
+	{
+		return preg_match('/\{\w+:\.\*\}/', $route) === 1;
+	}
+
+	/**
 	 * Build a RouteMatch from a matched PageData.
+	 *
+	 * The index entry doesn't include the `data` JSON blob (it's not indexed
+	 * to keep the index lean), so fetch the full object on match to populate
+	 * `page.data.*` for the template.
 	 *
 	 * @param array<string,string> $params
 	 */
 	private function buildPageMatch(PageData $page, array $params = []): RouteMatch
 	{
 		$templatePath = 'pages/' . $page->template . '.twig';
+		$fullPage     = $this->hydratePage($page);
 
 		return new RouteMatch(
 			template: $templatePath,
-			layout: $page->layout,
-			pageData: $page->toArray(),
+			pageData: $fullPage->toArray(),
 			params: $params,
+			status: $fullPage->status,
+			redirectTo: $fullPage->redirectTo,
 		);
+	}
+
+	/**
+	 * Reload the page from the full object record so non-indexed fields
+	 * (e.g. `data`) are present. Merges the full object on top of the index
+	 * entry so any field missing from the fetch falls back to indexed values,
+	 * and a fetch failure leaves the index-level page intact.
+	 */
+	private function hydratePage(PageData $page): PageData
+	{
+		$collectionId = $this->builderConfig->getPagesCollectionId();
+
+		try {
+			$object = $this->objectFetcher->fetchObject($collectionId, $page->id);
+			$merged = array_merge($page->toArray(), $object->toArray());
+
+			return new PageData($merged);
+		} catch (\Throwable) {
+			return $page;
+		}
 	}
 
 	/**

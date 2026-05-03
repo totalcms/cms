@@ -33,7 +33,10 @@ readonly class ObjectUrlBuilder
 	 */
 	public function buildUrl(CollectionData $collectionData, array $object): string
 	{
-		$url = $collectionData->url;
+		// Accept either Slim-style `{id}` or Twig-style `{{ id }}` placeholders
+		// in the stored URL. Normalize once here so everything downstream sees
+		// the canonical Twig form.
+		$url = $this->normalizeUrlPattern($collectionData->url);
 
 		if ($url === '') {
 			return '';
@@ -60,6 +63,22 @@ readonly class ObjectUrlBuilder
 
 		// Render the template with object data using lightweight renderer
 		return $this->renderUrlTemplate($url, $object);
+	}
+
+	/**
+	 * Convert any Slim-style `{name}` placeholders in a URL pattern to
+	 * Twig-style `{{ name }}`. Lets users type either form in the collection
+	 * URL field; both produce identical URL building and routing.
+	 */
+	public function normalizeUrlPattern(string $url): string
+	{
+		// Skip URLs already using Twig syntax — replacing `{name}` inside
+		// `{{ name }}` would corrupt the pattern.
+		if (str_contains($url, '{{')) {
+			return $url;
+		}
+
+		return (string)preg_replace('/\{(\w+)\}/', '{{ $1 }}', $url);
 	}
 
 	/**

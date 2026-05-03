@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Builder\Service\BuilderAssetScanner;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\TwigRenderer;
@@ -22,6 +23,7 @@ readonly class AdminBuilderAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private BuilderConfigService $builderConfig,
+		private BuilderInstaller $builderInstaller,
 		private TemplateFetcher $templateFetcher,
 		private IndexReader $indexReader,
 		private BuilderAssetScanner $assetScanner,
@@ -40,9 +42,9 @@ readonly class AdminBuilderAction
 		$file    = ($section !== '' && $path !== '') ? $section . '/' . $path : '';
 
 		// First-visit setup
-		$this->builderConfig->migrateFromTemplatesDir();
-		$this->builderConfig->ensureDefaultLayout();
-		$this->builderConfig->ensurePagesCollection();
+		$this->builderInstaller->migrateFromTemplatesDir();
+		$this->builderInstaller->ensureDefaultLayout();
+		$this->builderInstaller->ensurePagesCollection();
 
 		$pagesCollectionId = $this->builderConfig->getPagesCollectionId();
 

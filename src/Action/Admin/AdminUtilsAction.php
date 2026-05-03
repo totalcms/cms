@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
-use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\RssImporter;
@@ -32,7 +32,7 @@ readonly class AdminUtilsAction
 		private AccessGroupLister $accessGroupLister,
 		private CollectionRepository $collectionRepository,
 		private CollectionFetcher $collectionFetcher,
-		private BuilderConfigService $builderConfig,
+		private BuilderInstaller $builderInstaller,
 		private SchemaLister $schemaLister,
 		private RssImporter $rssImporter,
 		private EditionFeatureService $editionFeatures,
@@ -261,7 +261,7 @@ readonly class AdminUtilsAction
 		}
 
 		// Builder pages collection uses a different collection ID than schema ID
-		$this->builderConfig->ensurePagesCollection();
+		$this->builderInstaller->ensurePagesCollection();
 	}
 
 	/**

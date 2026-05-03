@@ -22,6 +22,8 @@ use Twig\Extra\Intl\IntlExtension;
 use Twig\Extra\Markdown\MarkdownExtension;
 use Twig\Extra\Markdown\MarkdownRuntime;
 use Twig\Extra\String\StringExtension;
+use Twig\Loader\ArrayLoader;
+use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 use Twig\TwigFunction;
@@ -148,6 +150,32 @@ readonly class TwigEngine
 			return $twig->render($data);
 		} catch (\Exception $e) {
 			throw $e->getPrevious() ?? $e;
+		}
+	}
+
+	/**
+	 * Render a template with an in-memory content override. The override takes
+	 * priority over the filesystem loader for the given $name; everything else
+	 * (extends, include, import) resolves through the normal loader chain.
+	 *
+	 * Used by the Builder editor to preview unsaved edits without touching disk.
+	 *
+	 * @param array<mixed> $data
+	 */
+	public function renderWithOverride(string $name, string $content, array $data = []): string
+	{
+		$originalLoader = $this->twig->getLoader();
+
+		$preprocessed = $this->designerPreprocessor->preprocess($content, $name);
+		$arrayLoader  = new ArrayLoader([$name => $preprocessed]);
+		$chainLoader  = new ChainLoader([$arrayLoader, $originalLoader]);
+
+		$this->twig->setLoader($chainLoader);
+
+		try {
+			return $this->twig->render($name, $data);
+		} finally {
+			$this->twig->setLoader($originalLoader);
 		}
 	}
 
