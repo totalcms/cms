@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Builder\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Data\StarterManifest;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -26,6 +27,7 @@ readonly class StarterService
 		private ObjectUpdater $objectUpdater,
 		private TemplateLister $templateLister,
 		private TemplateMigrationService $templateMigration,
+		private JumpStartImporter $jumpStartImporter,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->createLogger('builder');
@@ -64,8 +66,13 @@ readonly class StarterService
 
 	/**
 	 * Scaffold a new site from a starter template.
+	 *
+	 * @param bool $importDemoData When true, also imports the starter's
+	 *                             `jumpstart.json` (if present) — schemas,
+	 *                             collections, sample objects. Opt-in so a
+	 *                             clean slate is the default.
 	 */
-	public function scaffold(string $starterName, bool $force = false): OperationResult
+	public function scaffold(string $starterName, bool $force = false, bool $importDemoData = false): OperationResult
 	{
 		$manifest = $this->loadManifest($starterName);
 		if ($manifest === null) {
@@ -92,20 +99,30 @@ readonly class StarterService
 		// today; users can drag to nest.
 		$this->seedOrderFile($manifest);
 
+		// Optional demo data import. Runs after pages are in place so the
+		// imported objects can reference page templates if needed.
+		$demo = $importDemoData ? $this->importDemoData($manifest) : null;
+
 		$this->logger->info('Starter scaffolded', [
-			'starter' => $starterName,
-			'files'   => $copied,
-			'pages'   => $pagesCreated,
+			'starter'  => $starterName,
+			'files'    => $copied,
+			'pages'    => $pagesCreated,
+			'demoData' => $demo !== null,
 		]);
 
-		return OperationResult::success(
-			"Scaffolded '{$manifest->name}' starter: {$copied} files copied, {$pagesCreated} pages created",
-			[
-				'starter'      => $starterName,
-				'filesCopied'  => $copied,
-				'pagesCreated' => $pagesCreated,
-			],
-		);
+		$message = "Scaffolded '{$manifest->name}' starter: {$copied} files copied, {$pagesCreated} pages created";
+		if ($demo !== null) {
+			$message .= $demo['ok']
+				? ', demo data imported'
+				: ', demo data import failed (' . ($demo['error'] ?? 'unknown') . ')';
+		}
+
+		return OperationResult::success($message, [
+			'starter'      => $starterName,
+			'filesCopied'  => $copied,
+			'pagesCreated' => $pagesCreated,
+			'demoData'     => $demo,
+		]);
 	}
 
 	/**
@@ -224,6 +241,47 @@ readonly class StarterService
 		}
 
 		$this->orderService->write($this->builderConfig->getPagesCollectionId(), $tree);
+	}
+
+	/**
+	 * Run the starter's `jumpstart.json` through the JumpStart importer.
+	 * Returns null when the starter doesn't ship demo data; otherwise an
+	 * `{ok: bool, error?: string}` tuple summarizing the import result.
+	 *
+	 * Failure to import demo data does NOT fail the scaffold — the templates
+	 * + page records have already been created and the user can re-import
+	 * the demo data manually via `tcms jumpstart:import`.
+	 *
+	 * @return array{ok:bool,error?:string}|null
+	 */
+	private function importDemoData(StarterManifest $manifest): ?array
+	{
+		$path = $manifest->directory . '/jumpstart.json';
+		if (!file_exists($path)) {
+			return null;
+		}
+
+		try {
+			$result = $this->jumpStartImporter->importFromFile($path);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Starter demo data import threw', [
+				'starter' => $manifest->name,
+				'error'   => $e->getMessage(),
+			]);
+
+			return ['ok' => false, 'error' => $e->getMessage()];
+		}
+
+		if (!$result->success) {
+			$this->logger->warning('Starter demo data import reported errors', [
+				'starter' => $manifest->name,
+				'message' => $result->message,
+			]);
+		}
+
+		return $result->success
+			? ['ok' => true]
+			: ['ok' => false, 'error' => $result->message];
 	}
 
 	private function startersDir(): string

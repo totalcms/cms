@@ -16,9 +16,14 @@ tcms builder:init --list
 
 # Scaffold a business site
 tcms builder:init business
+
+# Scaffold + demo content + Vite frontend in one go
+tcms builder:init business --demo --frontend
 ```
 
 That's it. There's no generation step — the page router serves your routes dynamically from the collection data. Visit your site and pages render immediately.
+
+After scaffolding, every starter ships with a `/readme` page (hidden from navigation by default) that walks you through the next steps in your browser. Delete it whenever you're ready.
 
 ## Available Starters
 
@@ -169,6 +174,45 @@ Starters use inline `<style>` tags in the layout for basic styling. This is inte
 - Any other pipeline
 
 T3 does not own your CSS build pipeline.
+
+## Demo Data (`--demo`)
+
+The `blog` and `business` starters ship with a `jumpstart.json` containing schemas, collections, and sample objects so the templates render real content out of the box. This is **opt-in** because greenfield projects often want a clean slate:
+
+```bash
+tcms builder:init blog --demo
+```
+
+What you get:
+
+| Starter | Demo content |
+|---------|--------------|
+| `blog` | 5 sample blog posts in the built-in `blog` collection — featured + categories + tags populated |
+| `business` | A `service` schema, a `services` collection, and 4 sample services (Strategy, Design, Development, Ongoing Support) |
+
+The `minimal` and `portfolio` starters don't ship demo data today (the templates use placeholder content directly).
+
+If demo import fails for any reason — schema conflict, disk error, etc. — the scaffold itself still succeeds and you can re-import manually:
+
+```bash
+tcms jumpstart:import resources/builder/starters/blog/jumpstart.json
+```
+
+## Frontend Pipeline (`--frontend`)
+
+Every starter ships with inline `<style>` tags so it works without any build step. When you're ready for a proper asset pipeline, add it with one flag during init:
+
+```bash
+tcms builder:init business --frontend
+```
+
+Or after the fact (idempotent):
+
+```bash
+tcms builder:frontend
+```
+
+Both install the same Vite scaffold to `<projectRoot>/frontend/`. See [`builder:frontend`](docs/builder/cli#builderfrontend) for the full reference.
 
 ## Customizing After Scaffolding
 

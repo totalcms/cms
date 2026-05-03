@@ -3,6 +3,7 @@
 	"description": "A minimal starter with a single page and clean layout",
 	"version": "1.0.0",
 	"pages": [
-		{"id": "home", "title": "Home", "route": "/", "template": "index"}
+		{"id": "home",   "title": "Home",            "route": "/",       "template": "index"},
+		{"id": "readme", "title": "Getting Started", "route": "/readme", "template": "readme", "nav": false}
 	]
 }

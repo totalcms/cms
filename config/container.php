@@ -1352,6 +1352,7 @@ return [
 		$container->get(ObjectUpdater::class),
 		$container->get(TemplateLister::class),
 		$container->get(TemplateMigrationService::class),
+		$container->get(\TotalCMS\Domain\JumpStart\Service\JumpStartImporter::class),
 		$container->get(LoggerFactory::class),
 	),
 

@@ -1,0 +1,49 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Getting Started — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<section class="section">
+	<div class="container" style="max-width: 720px;">
+		<h1>You're up and running</h1>
+		<p style="font-size: 1.15rem; color: #666;">
+			This is the <strong>business</strong> starter — a professional site with Home, About,
+			Services, and Contact pages. Replace the placeholder content with your own.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">What you have</h2>
+		<ul style="line-height: 1.8;">
+			<li>Four pages: Home, About, Services, Contact</li>
+			<li>A default layout with a top nav and a footer</li>
+			<li>Service cards in a responsive grid on the homepage</li>
+			<li>This guide at <code>/readme</code></li>
+		</ul>
+
+		<h2 style="margin-top: 2.5rem;">Quick wins</h2>
+		<ol style="line-height: 1.8;">
+			<li><strong>Replace placeholder copy</strong> — edit <code>pages/index.twig</code> and friends in <a href="/admin/builder">Site Builder</a></li>
+			<li><strong>Use Page Data</strong> — open the <em>Home</em> page and put hero text into the <em>Page Data</em> JSON field, then read it as <code>page.data.hero</code> in your template</li>
+			<li><strong>Hook up your contact form</strong> — see <a href="https://docs.totalcms.co/docs/property-settings/email">Mailer docs</a></li>
+			<li><strong>Set up your frontend</strong> (optional) — run <code>tcms builder:frontend</code> to install Vite + Sass scaffolding</li>
+		</ol>
+
+		<h2 style="margin-top: 2.5rem;">Demo data</h2>
+		<p>
+			If you scaffolded with <code>tcms builder:init business --demo</code>, you'll have a few
+			sample <em>Service</em> records pre-loaded. Visit <a href="/services">/services</a> to see
+			them rendered, and edit them under <a href="/admin/collections/services">Collections → Services</a>.
+		</p>
+		<p style="color: #666;">
+			No <code>--demo</code>? You can always import the data later by running
+			<code>tcms jumpstart:import resources/builder/starters/business/jumpstart.json</code>.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">Learn more</h2>
+		<ul style="line-height: 1.8;">
+			<li><a href="https://docs.totalcms.co/docs/builder/overview">Site Builder overview</a></li>
+			<li><a href="https://docs.totalcms.co/docs/builder/admin">Admin UI guide</a></li>
+			<li><a href="https://docs.totalcms.co/docs/twig/builder">Twig functions reference</a></li>
+		</ul>
+	</div>
+</section>
+{% endblock %}

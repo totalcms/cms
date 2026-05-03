@@ -3,9 +3,10 @@
 	"description": "A professional business website with service pages and contact form",
 	"version": "1.0.0",
 	"pages": [
-		{"id": "home",     "title": "Home",     "route": "/",         "template": "index"},
-		{"id": "about",    "title": "About",    "route": "/about",    "template": "about"},
-		{"id": "services", "title": "Services", "route": "/services", "template": "services"},
-		{"id": "contact",  "title": "Contact",  "route": "/contact",  "template": "contact"}
+		{"id": "home",     "title": "Home",            "route": "/",         "template": "index"},
+		{"id": "about",    "title": "About",           "route": "/about",    "template": "about"},
+		{"id": "services", "title": "Services",        "route": "/services", "template": "services"},
+		{"id": "contact",  "title": "Contact",         "route": "/contact",  "template": "contact"},
+		{"id": "readme",   "title": "Getting Started", "route": "/readme",   "template": "readme",  "nav": false}
 	]
 }

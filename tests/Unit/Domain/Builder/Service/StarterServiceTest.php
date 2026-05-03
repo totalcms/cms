@@ -11,10 +11,12 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\StarterService;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\PathResolver;
 
@@ -30,6 +32,7 @@ final class StarterServiceTest extends TestCase
 	private ObjectUpdater&MockObject $objectUpdater;
 	private TemplateLister&MockObject $templateLister;
 	private TemplateMigrationService&MockObject $templateMigration;
+	private JumpStartImporter&MockObject $jumpStart;
 	private StarterService $service;
 
 	protected function setUp(): void
@@ -50,6 +53,7 @@ final class StarterServiceTest extends TestCase
 		$this->objectUpdater     = $this->createMock(ObjectUpdater::class);
 		$this->templateLister    = $this->createMock(TemplateLister::class);
 		$this->templateMigration = $this->createMock(TemplateMigrationService::class);
+		$this->jumpStart         = $this->createMock(JumpStartImporter::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
@@ -66,6 +70,7 @@ final class StarterServiceTest extends TestCase
 			$this->objectUpdater,
 			$this->templateLister,
 			$this->templateMigration,
+			$this->jumpStart,
 			$loggerFactory,
 		);
 	}
@@ -155,6 +160,7 @@ final class StarterServiceTest extends TestCase
 			$this->objectUpdater,
 			$this->templateLister,
 			$this->templateMigration,
+			$this->jumpStart,
 			$loggerFactory,
 		);
 
@@ -352,6 +358,96 @@ final class StarterServiceTest extends TestCase
 		$this->assertSame(2, $result->data['pagesCreated'] ?? null);
 	}
 
+	// --- scaffold: demo data import ---
+
+	public function testDemoDataNotImportedByDefault(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeJumpstart('blog', ['name' => 'Demo']);
+
+		$this->jumpStart->expects($this->never())->method('importFromFile');
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog');
+
+		$this->assertTrue($result->success);
+		$this->assertArrayHasKey('demoData', $result->data);
+		$this->assertNull($result->data['demoData']);
+	}
+
+	public function testDemoDataImportedWhenOptInAndJumpstartFileExists(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeJumpstart('blog', ['name' => 'Demo']);
+
+		$this->jumpStart->expects($this->once())
+			->method('importFromFile')
+			->with($this->stringContains('starters/blog/jumpstart.json'))
+			->willReturn(OperationResult::success('Imported'));
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+
+		$this->assertTrue($result->success);
+		$this->assertSame(['ok' => true], $result->data['demoData'] ?? null);
+		$this->assertStringContainsString('demo data imported', $result->message);
+	}
+
+	public function testDemoDataOptInWithoutJumpstartFileIsNoOp(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		// No jumpstart.json — opt-in is a no-op rather than an error.
+
+		$this->jumpStart->expects($this->never())->method('importFromFile');
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+
+		$this->assertTrue($result->success);
+		$this->assertArrayHasKey('demoData', $result->data);
+		$this->assertNull($result->data['demoData']);
+	}
+
+	public function testDemoDataImporterFailureSurfacesAsWarningButScaffoldStillSucceeds(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeJumpstart('blog', ['name' => 'Demo']);
+
+		// Importer reports an error — scaffold should still succeed (templates
+		// + page records are already in place; the user can re-run jumpstart
+		// manually).
+		$this->jumpStart->method('importFromFile')
+			->willReturn(OperationResult::failure('schema invalid'));
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+
+		$this->assertTrue($result->success, 'Scaffold should succeed even when demo import fails');
+		$this->assertSame(['ok' => false, 'error' => 'schema invalid'], $result->data['demoData'] ?? null);
+		$this->assertStringContainsString('demo data import failed', $result->message);
+	}
+
+	public function testDemoDataImporterThrowingIsCaught(): void
+	{
+		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeJumpstart('blog', ['name' => 'Demo']);
+
+		$this->jumpStart->method('importFromFile')
+			->willThrowException(new \RuntimeException('disk full'));
+
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+
+		$this->assertTrue($result->success);
+		$this->assertFalse($result->data['demoData']['ok'] ?? true);
+		$this->assertStringContainsString('disk full', $result->data['demoData']['error'] ?? '');
+	}
+
 	// --- helpers ---
 
 	/** @param array<string,mixed> $data */
@@ -360,6 +456,16 @@ final class StarterServiceTest extends TestCase
 		$dir = $this->tmpRoot . '/resources/builder/starters/' . $name;
 		mkdir($dir, 0755, true);
 		file_put_contents($dir . '/manifest.json', (string)json_encode($data));
+	}
+
+	/** @param array<string,mixed> $data */
+	private function writeJumpstart(string $name, array $data): void
+	{
+		$dir = $this->tmpRoot . '/resources/builder/starters/' . $name;
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		file_put_contents($dir . '/jumpstart.json', (string)json_encode($data));
 	}
 
 	private function rrmdir(string $dir): void

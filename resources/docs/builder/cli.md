@@ -1,16 +1,17 @@
 ---
 title: "Builder CLI Commands"
-description: "CLI reference for the Site Builder: scaffold sites from starter templates, list registered routes, and manage template version history."
+description: "CLI reference for the Site Builder: scaffold sites from starter templates, install a frontend pipeline, list registered routes, and manage template version history."
 since: "3.3.0"
 ---
 
 # Builder CLI Commands
 
-The Site Builder provides three CLI commands: scaffolding from starters, inspecting registered routes, and managing template version history.
+The Site Builder provides four CLI commands: scaffolding from starters, installing a frontend asset pipeline, inspecting registered routes, and managing template version history.
 
 | Command | Purpose |
 |---------|---------|
 | [`builder:init`](#builderinit) | Scaffold a new site from a starter template |
+| [`builder:frontend`](#builderfrontend) | Install a Vite-based frontend asset pipeline |
 | [`builder:routes`](#builderroutes) | List every route the page router would serve, with conflicts flagged |
 | [`builder:history`](#builderhistory) | List, view, or restore template snapshot versions |
 
@@ -33,6 +34,8 @@ tcms builder:init --json
 2. Creates the `builder-pages` collection with the `builder-page` schema (if it doesn't exist)
 3. Creates page objects from the starter's manifest with routes and templates
 4. Seeds the order file (`.order.json`) so the sidebar shows pages in the manifest's intended order on first visit
+5. (with `--demo`) imports the starter's `jumpstart.json` — schemas, collections, and sample objects
+6. (with `--frontend`) installs the Vite frontend scaffold — same as running `tcms builder:frontend`
 
 ### Arguments
 
@@ -46,7 +49,19 @@ tcms builder:init --json
 |--------|-------------|
 | `--list, -l` | List available starters and exit |
 | `--force, -f` | Overwrite existing template files **and** update existing page records |
+| `--demo` | Import the starter's demo data (sample objects, schemas) — opt-in for a clean slate by default |
+| `--frontend` | Also install the Vite frontend scaffold (equivalent to running `tcms builder:frontend`) |
 | `--json` | Output result as JSON |
+
+### `--demo` Behavior
+
+Each starter that ships demo data includes a `jumpstart.json` alongside its manifest. With `--demo`, that file is imported via the JumpStart importer after the templates and pages are in place. For the **blog** starter that means 5 sample posts; for **business** that means a `service` schema, `services` collection, and 4 sample services.
+
+If demo import fails (e.g., schema validation), the scaffold itself still succeeds — templates and page records are already on disk, and you can re-run the import manually with `tcms jumpstart:import resources/builder/starters/<name>/jumpstart.json`.
+
+### `--frontend` Behavior
+
+Convenience flag for the greenfield happy path. Runs `tcms builder:frontend` immediately after the scaffold completes, installing the Vite scaffold into `<projectRoot>/frontend/`. If you don't pass `--frontend`, you can always add the pipeline later — see [`builder:frontend`](#builderfrontend).
 
 ### `--force` Behavior
 
@@ -80,6 +95,51 @@ tcms builder:init business
 ```
 
 Since the Site Builder uses middleware-based routing, pages are routed dynamically from the collection data. There is no generation or deployment step — pages work immediately after creating them in the admin.
+
+## `builder:frontend`
+
+Install a Vite-based frontend asset pipeline scaffold into your project. Idempotent — safe to re-run, won't overwrite customizations unless you pass `--force`.
+
+```bash
+tcms builder:frontend
+tcms builder:frontend --force
+tcms builder:frontend --json
+```
+
+### What It Does
+
+Copies the contents of `resources/builder/frontend/` into `<projectRoot>/frontend/`:
+
+- `vite.config.js` — emits hashed assets to `../public/assets/` with manifest
+- `package.json` — `dev` / `build` / `watch` scripts; Vite as the only dependency
+- `src/css/style.css` — minimal starter stylesheet
+- `src/js/app.js` — minimal entry point
+- `README.md` — quick reference for the install/build workflow
+- `.gitignore` — excludes `node_modules/`, `dist/`, etc.
+
+After running, `cd frontend && npm install && npm run build` produces compiled assets at `public/assets/` that T3's `cms.builder.css()` and `cms.builder.js()` Twig helpers automatically resolve via the manifest.
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Overwrite existing files in `frontend/` (use with care — any customizations are lost) |
+| `--json` | Output result as JSON |
+
+### Idempotency
+
+The default behavior is **skip files that already exist**, so re-running `builder:frontend` is safe — it only adds missing files. The result tells you what was skipped and reminds you to re-run with `--force` if you want a hard reset.
+
+### When to Use This vs. `--frontend` on `builder:init`
+
+| Scenario | Use |
+|----------|-----|
+| Greenfield project, scaffolding for the first time | `tcms builder:init <starter> --frontend` |
+| Existing project, adding a frontend pipeline now | `tcms builder:frontend` |
+| Pull missing files after the scaffold was edited | `tcms builder:frontend` (skips existing) |
+| Reset the scaffold to upstream defaults | `tcms builder:frontend --force` |
+
+See [Frontend Assets](docs/builder/frontend) for the full asset-pipeline reference (Sass, Tailwind, etc.).
 
 ## `builder:routes`
 
