@@ -4,6 +4,8 @@ import QuickAction from './quickaction';
 import SimpleForm from './totalform/simpleform';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
+import TreeView from './tree-view';
+import initBuilderPageSortable from './builder-page-sortable';
 import AdminTable from './totalform/admin-table';
 import SortableTable from './totalform/sortable-table';
 import ClipButton from './clipboard-button';
@@ -72,7 +74,20 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const dashboardSidebar = Array.from(document.getElementsByClassName("dash-content-sidebar"));
 	dashboardSidebar.forEach(sidebar => {
-		const lists    = Array.from(sidebar.querySelectorAll('.links ul'));
+		const treeRoot = sidebar.querySelector('[data-tree-view]');
+		if (treeRoot) {
+			// Hierarchical sidebar (Builder) — single TreeView handles filter + folders
+			new TreeView(treeRoot, {
+				treeSelector : '.tree-view',
+				filterInput  : sidebar.querySelector('input[type="search"]'),
+				stripes      : false,
+			});
+			// Drag-drop reordering for the Site Pages tree
+			initBuilderPageSortable(sidebar);
+			return;
+		}
+
+		const lists = Array.from(sidebar.querySelectorAll('.links ul'));
 		lists.forEach(list => {
 			const input      = sidebar.querySelector('input[type="search"]');
 			const filterlist = new FilterList(input, list, {

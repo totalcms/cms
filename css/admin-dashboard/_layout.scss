@@ -166,13 +166,14 @@ body {
 		content : "▹ ";
 	}
 	details:not(:first-child) {
-		margin-top : 1.5rem;
+		margin-top : 1rem;
 	}
 	details summary {
 		display : none;
 	}
 	// show summary only if there are unfiltered items
-	details:has(ul li:not(.filtered)) summary {
+	// .filtered = FilterList (flat sidebars); .filtered-out = TreeView (nested sidebars)
+	details:has(ul li:not(.filtered):not(.filtered-out)) summary {
 		display : list-item;
 	}
 	header {
@@ -272,7 +273,7 @@ body {
 			align-items     : center;
 			text-decoration : none;
 			color           : oklch(var(--totalform-text-color));
-			padding         : 0.75rem 1rem;
+			padding         : 0.25rem 0.5rem;
 			border-radius   : var(--totalform-radius);
 			transition      : background-color 200ms ease-in-out;
 

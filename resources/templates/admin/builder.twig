@@ -1,24 +1,77 @@
 {% extends "admin-dashboard.twig" %}
 
+{% macro renderNode(node, urlFile, category) %}
+	{% if node.type == 'folder' %}
+		<li class="builder-folder">
+			<details {% if node.children is not empty %}open{% endif %}>
+				<summary>{{ node.name }}</summary>
+				<ul class="tree-view">
+				{% for child in node.children %}
+					{{ _self.renderNode(child, urlFile, category) }}
+				{% endfor %}
+				</ul>
+			</details>
+		</li>
+	{% else %}
+		<li class="builder-{{ category }}">
+			<a {% if urlFile == node.path %}class="active"{% endif %}
+				href="builder/{{ node.path }}"
+				title="{{ node.id }}">{{ node.name }}</a>
+		</li>
+	{% endif %}
+{% endmacro %}
+
+{% macro renderPageNode(page, activePageId) %}
+	{% set hasChildren = page.children is not empty %}
+	{% set classes = 'builder-page-item' %}
+	{% if hasChildren %}{% set classes = classes ~ ' has-children' %}{% endif %}
+	{% if not page.nav %}{% set classes = classes ~ ' nav-hidden' %}{% endif %}
+	{% if page.draft %}{% set classes = classes ~ ' is-draft' %}{% endif %}
+	{% if page.route == '/' %}{% set classes = classes ~ ' is-home' %}{% endif %}
+	{# Every page renders with the same details/summary/ul structure so every
+	   page has an inner drop target — drop into a leaf's empty ul to promote
+	   it to a parent, no DOM mutation required when has-children flips. #}
+	<li class="{{ classes }}" data-page-id="{{ page.id }}">
+		{# `<details open>` always — leaves need their inner ul in layout so
+		   SortableJS can drop into them. Trade-off: folder collapse isn't
+		   available, but the file-tree sidebar wants everything visible. #}
+		<details open>
+			<summary>
+				<a {% if activePageId == page.id %}class="active"{% endif %}
+					href="builder/page/{{ page.id }}"
+					title="{{ page.route ?: '(no route)' }}">{{ page.title }}</a>
+			</summary>
+			<ul class="tree-view" data-parent="{{ page.id }}">
+			{% for child in page.children %}
+				{{ _self.renderPageNode(child, activePageId) }}
+			{% endfor %}
+			</ul>
+		</details>
+	</li>
+{% endmacro %}
+
 {% block dashcontent %}
 
-<aside class="dash-content-sidebar">
+<aside class="dash-content-sidebar tree">
 	<header>
 		<input type="search" name="filter" class="filter" placeholder="Filter..." autofocus />
 	</header>
 
-	<nav class="links" id="builder-links">
+	<nav class="links" id="builder-links" data-tree-view>
+		{% set pagesTree = cms.builder.pagesTree() %}
+		{% set activePageId = (url.section == 'page') ? url.params.path : '' %}
 		<details id="category-builder-pages" open>
-			<summary>Site Pages</summary>
-			<ul>
-			{% for page in builder.pages %}
-				<li class="builder-page-item">
-					<a {% if url.section == 'page' and url.params.path == page.id %}class="active"{% endif %}
-						href="builder/page/{{ page.id }}"
-						title="{{ page.route ?: '(no route)' }}">{{ page.title }}</a>
-				</li>
+			<summary>
+				<span>Site Pages</span>
+				<button type="button" class="page-order-toggle" data-page-order-toggle aria-pressed="false" title="Toggle reorder mode — drag pages to organize without navigating away">
+					<span class="cms-hide">Reorder</span>
+				</button>
+			</summary>
+			<ul class="tree-view" data-parent="">
+			{% for page in pagesTree %}
+				{{ _self.renderPageNode(page, activePageId) }}
 			{% endfor %}
-			{% if builder.pages is empty %}
+			{% if pagesTree is empty %}
 				<li class="empty">no pages yet</li>
 			{% endif %}
 			</ul>
@@ -26,19 +79,15 @@
 
 		<hr class="sidebar-divider" />
 
-		{% set fileTree = cms.admin.builderFileTree() %}
-		{% for category, templates in fileTree %}
-		<details id="category-{{ category }}" {% if templates is not empty %}open{% endif %}>
+		{% set fileTree = cms.admin.builderNestedFileTree() %}
+		{% for category, nodes in fileTree %}
+		<details id="category-{{ category }}" {% if nodes is not empty %}open{% endif %}>
 			<summary>{{ category }}</summary>
-			<ul>
-			{% for template in templates %}
-				<li class="builder-{{ category }}">
-					<a {% if url.file == template.path %}class="active"{% endif %}
-						href="builder/{{ template.path }}"
-						title="{{ template.id }}">{{ template.id }}</a>
-				</li>
+			<ul class="tree-view">
+			{% for node in nodes %}
+				{{ _self.renderNode(node, url.file, category) }}
 			{% endfor %}
-			{% if templates is empty %}
+			{% if nodes is empty %}
 				<li class="empty">no {{ category }} yet</li>
 			{% endif %}
 			</ul>

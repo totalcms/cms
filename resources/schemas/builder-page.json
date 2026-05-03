@@ -4,7 +4,7 @@
 	"id": "builder-page",
 	"type": "object",
 	"description": "A schema for a Site Builder page",
-	"formgrid": "draft .\ntitle title\ndescription description\n---Navigation---\nnav .\nroute .\nsort parent\n---Page Templates---\ntemplate layout\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
+	"formgrid": "draft .\ntitle title\ndescription description\nimage .\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
 	"properties": {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -32,24 +32,15 @@
 			"placeholder" : "/about"
 		},
 		"template": {
-			"type"    : "string",
-			"label"   : "Page Template",
-			"help"    : "The page template to render. Multiple pages can share the same template.",
-			"field"   : "text",
-			"default" : "",
-			"settings" : {
-				"propertyOptions": "pages"
-			}
-		},
-		"layout": {
-			"type"    : "string",
-			"label"   : "Layout",
-			"help"    : "The layout template this page extends. Create layouts in the Builder under layouts/.",
-			"field"   : "select",
-			"default" : "default",
-			"settings" : {
-				"propertyOptions": "layouts",
-				"sortOptions" : true
+			"type"        : "string",
+			"label"       : "Page Template",
+			"help"        : "The page template to render. Multiple pages can share the same template. Create a template first under Site Builder if none are listed.",
+			"field"       : "select",
+			"default"     : "",
+			"placeholder" : "Select a template...",
+			"settings"    : {
+				"propertyOptions" : "pages",
+				"sortOptions"     : true
 			}
 		},
 		"description": {
@@ -58,6 +49,13 @@
 			"help"    : "SEO meta description for this page",
 			"field"   : "textarea",
 			"factory" : "catchPhrase"
+		},
+		"image": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Page Image",
+			"help"    : "Used for <code>og:image</code> social previews and as a hero image when the template renders one.",
+			"field"   : "image",
+			"factory" : "imageShapes(1920,1080)"
 		},
 		"draft": {
 			"type"    : "boolean",
@@ -75,27 +73,45 @@
 			"default" : true,
 			"factory" : "boolean"
 		},
-		"sort": {
-			"type"    : "number",
-			"label"   : "Sort Order",
-			"help"    : "Ordering for navigation menus. Lower numbers appear first.",
-			"field"   : "number",
-			"default" : 0
-		},
-		"parent": {
+		"data": {
 			"type"        : "string",
-			"label"       : "Parent Page",
-			"help"        : "Parent page ID for hierarchical navigation",
-			"field"       : "select",
-			"placeholder" : "Select a parent...",
-			"default"     : "",
+			"label"       : "Page Data",
+			"help"        : "Optional JSON data exposed to the template as <code>page.data.*</code>. Use this for one-off page content (hero text, CTAs, etc.) without creating a one-row collection.",
+			"field"       : "json",
+			"placeholder" : "{\"hero\": \"Welcome\"}",
 			"settings"    : {
-				"relationalOptions" : {
-					"collection" : "builder-pages",
-					"format"     : "${title} ( ${route} )",
-					"value"      : "id"
-				},
-				"sortOptions" : true
+				"rows" : 12
+			}
+		},
+		"status": {
+			"type"     : "number",
+			"label"    : "HTTP Status Code",
+			"help"     : "HTTP status code returned when this page is served. Set to 404 to designate this as the universal Not Found page (rendered for any URL that doesn't match). Use 410 for permanently removed content, 451 for legal takedowns, 301/302 to redirect.",
+			"field"    : "select",
+			"default"  : "200",
+			"options"  : [
+				{"value": "200", "label": "200 OK (default)"},
+				{"value": "301", "label": "301 Moved Permanently"},
+				{"value": "302", "label": "302 Found (temporary redirect)"},
+				{"value": "404", "label": "404 Not Found"},
+				{"value": "410", "label": "410 Gone"},
+				{"value": "451", "label": "451 Unavailable for Legal Reasons"},
+				{"value": "503", "label": "503 Service Unavailable"}
+			]
+		},
+		"redirectTo": {
+			"type"        : "string",
+			"label"       : "Redirect To",
+			"help"        : "Destination for the redirect. Can be an absolute URL or a path on this site (e.g. <code>/new-page</code>).",
+			"field"       : "text",
+			"default"     : "",
+			"placeholder" : "/new-page",
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "status",
+					"value"    : ["301", "302"],
+					"operator" : "in"
+				}
 			}
 		},
 		"sitemap": {
@@ -174,6 +190,7 @@
 	"required": [
 		"id",
 		"title",
+		"template",
 		"updated",
 		"created"
 	],
@@ -182,11 +199,9 @@
 		"title",
 		"route",
 		"template",
-		"layout",
 		"draft",
 		"nav",
-		"sort",
-		"parent",
+		"status",
 		"sitemap",
 		"changeFrequency",
 		"priority",

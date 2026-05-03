@@ -1,7 +1,24 @@
+{% set isPage = url.file starts with 'pages/' %}
+{% set livePage = null %}
+{% if isPage %}
+	{% set templateName = url.file | slice(6, url.file|length - 11) %}
+	{% for p in builder.pages %}
+		{% if p.template == templateName and not p.draft and p.route is not empty %}
+			{% set livePage = p %}
+		{% endif %}
+	{% endfor %}
+{% endif %}
+
 <header>
 	<h1><a href="builder">builder</a> / <span>{{ url.file }}</span></h1>
+	<div class="builder-editor-actions">
+		{% if livePage %}
+			<a class="dash-button transparent" href="{{ cms.base }}{{ livePage.route }}" target="_blank" rel="noopener" title="Open the live page in a new tab">Open Live</a>
+		{% endif %}
+	</div>
 </header>
 
+<section>
 {% if template %}
 
 {{ cms.form.template({
@@ -23,6 +40,83 @@
 	],
 }) }}
 
+<div class="totalform builder-preview-controls">
+	<div class="form-field text-field">
+		<label for="builder-preview-url">Preview URL</label>
+		<input type="text" id="builder-preview-url"
+			value="{{ livePage ? livePage.route : '' }}"
+			placeholder="/path-to-page">
+	</div>
+	<button type="button" id="builder-preview-btn" class="dash-button" title="Render the current editor content">Preview Page</button>
+</div>
+
+<section id="builder-preview-panel" class="builder-preview-panel cms-hide">
+	<header class="builder-preview-header">
+		<h2>Preview Page</h2>
+		<div>
+			<button type="button" id="builder-preview-refresh" class="builder-preview-iconbtn icon-refresh" title="Re-render with current editor content" aria-label="Refresh preview"></button>
+			<button type="button" id="builder-preview-close" class="builder-preview-iconbtn icon-close" title="Close preview" aria-label="Close preview"></button>
+		</div>
+	</header>
+	<iframe id="builder-preview-frame" class="builder-preview-frame" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+</section>
+
+<script>
+(() => {
+	const path        = {{ url.file | json_encode | raw }};
+	const previewUrl  = {{ (cms.dashboard ~ '/builder/preview') | json_encode | raw }};
+	const livePageId  = {{ (livePage ? livePage.id : '') | json_encode | raw }};
+	const btn         = document.getElementById('builder-preview-btn');
+	const refreshBtn  = document.getElementById('builder-preview-refresh');
+	const closeBtn    = document.getElementById('builder-preview-close');
+	const panel       = document.getElementById('builder-preview-panel');
+	const frame       = document.getElementById('builder-preview-frame');
+	const urlInput    = document.getElementById('builder-preview-url');
+
+	function getEditorContent() {
+		const ta = document.querySelector('textarea[name="template"]');
+		if (!ta) return '';
+		const cm = ta.parentElement && ta.parentElement.querySelector('.cm-editor');
+		if (cm && cm._totalcmsEditor) return cm._totalcmsEditor.getValue();
+		return ta.value;
+	}
+
+	async function renderPreview() {
+		const content = getEditorContent();
+		if (!content.trim()) return;
+
+		const fd = new FormData();
+		fd.append('path', path);
+		fd.append('content', content);
+		if (livePageId) fd.append('pageId', livePageId);
+		if (urlInput && urlInput.value.trim()) fd.append('previewUrl', urlInput.value.trim());
+
+		btn.disabled = true;
+		try {
+			const res  = await fetch(previewUrl, { method: 'POST', body: fd, credentials: 'same-origin' });
+			const html = await res.text();
+			// Reveal the panel BEFORE setting srcdoc — assigning srcdoc on an
+			// iframe inside a display:none parent leaves the iframe's first
+			// paint underpainted (you see the dashboard bg bleed through).
+			// Letting it lay out first then loading content fixes it.
+			panel.classList.remove('cms-hide');
+			requestAnimationFrame(() => { frame.srcdoc = html; });
+		} catch (err) {
+			panel.classList.remove('cms-hide');
+			requestAnimationFrame(() => {
+				frame.srcdoc = '<pre style="color:#b00;padding:1rem">Preview request failed: ' + (err && err.message ? err.message : err) + '</pre>';
+			});
+		} finally {
+			btn.disabled = false;
+		}
+	}
+
+	if (btn)        btn.addEventListener('click', renderPreview);
+	if (refreshBtn) refreshBtn.addEventListener('click', renderPreview);
+	if (closeBtn)   closeBtn.addEventListener('click', () => panel.classList.add('cms-hide'));
+})();
+</script>
+
 {% else %}
 
 <section class="dash-content-section">
@@ -32,3 +126,4 @@
 </section>
 
 {% endif %}
+</section>

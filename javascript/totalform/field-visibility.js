@@ -125,7 +125,10 @@ export default class FieldVisibility {
 			}
 		}
 
-		// Evaluate based on operator
+		// Evaluate based on operator. By the time we reach this switch,
+		// expectedValue is a single (non-array) value — array values were
+		// already split and recursed at the top of this method, so each
+		// recursive call lands here with one value.
 		switch (operator) {
 			case '==':
 				return currentValue == expectedValue;
@@ -140,9 +143,12 @@ export default class FieldVisibility {
 			case '<=':
 				return Number(currentValue) <= Number(expectedValue);
 			case 'in':
-				return Array.isArray(expectedValue) && expectedValue.includes(currentValue);
+				// At this point expectedValue is a single value (the array
+				// case is handled by the early return + recursion above).
+				// `in` should match if the current value equals it.
+				return currentValue == expectedValue;
 			case 'not_in':
-				return Array.isArray(expectedValue) && !expectedValue.includes(currentValue);
+				return currentValue != expectedValue;
 			default:
 				return currentValue == expectedValue;
 		}
