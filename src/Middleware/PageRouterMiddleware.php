@@ -65,8 +65,18 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			return $response;
 		}
 
+		// Don't override admin or API 404s with the public fallback page.
+		// /admin/* has its own Admin404Action; /api/* returns JSON 404s that
+		// should never be replaced with a rendered builder page.
+		$path = $request->getUri()->getPath();
+		if (
+			$path === '/admin' || str_starts_with($path, '/admin/')
+			|| $path === '/api' || str_starts_with($path, '/api/')
+		) {
+			return $response;
+		}
+
 		// Try to match a builder page or collection URL
-		$path  = $request->getUri()->getPath();
 		$match = $this->pageRouter->match($path);
 
 		// Nothing matched — fall back to the page flagged as the universal 404
