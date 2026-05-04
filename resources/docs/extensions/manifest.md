@@ -191,6 +191,7 @@ When an extension is enabled, the system runs a trial registration to discover w
 | `admin:nav` | `$context->addAdminNavItem(...)` | Items in the admin sidebar |
 | `admin:widgets` | `$context->addDashboardWidget(...)` | Dashboard widgets |
 | `admin:assets` | `$context->addAdminAsset(...)` | CSS/JS loaded in the admin |
+| `frontend:assets` | `$context->addFrontendAsset(...)` | CSS/JS loaded on public pages |
 | `events:listen` | `$context->addEventListener(...)` | Content event subscribers |
 | `fields` | `$context->addFieldType(...)` | Custom field types |
 | `schemas` | `schemas/` directory exists in the extension | Read-only schemas (Pro+ only) |

@@ -350,21 +350,61 @@ Once registered, `geo-redirect` shows up in the page form's middleware multisele
 
 See the [Page Middleware section in the Builder overview](docs/builder/overview#page-middleware) for the user-facing perspective.
 
-## Admin Assets
+## Assets (CSS / JS)
 
-Load custom CSS or JavaScript files in the admin interface.
+Extensions can register CSS or JavaScript files for the **admin interface** and/or **public pages**. Each surface has its own registration method and capability:
 
 ```php
 public function register(ExtensionContext $context): void
 {
+    // Admin interface only
     $context->addAdminAsset('css', 'styles/admin.css');
     $context->addAdminAsset('js', 'scripts/admin.js');
+
+    // Public pages only
+    $context->addFrontendAsset('css', 'styles/widget.css');
+    $context->addFrontendAsset('js', 'scripts/widget.js');
 }
 ```
 
-**Capability:** `admin:assets`
+**Capabilities:** `admin:assets`, `frontend:assets`
 
-The path is relative to the extension's `assets/` directory. For example, the CSS file above would be at `tcms-data/extensions/acme/seo-pro/assets/styles/admin.css`.
+Paths are relative to the extension's `assets/` directory. For example, the CSS file above would resolve to `tcms-data/extensions/acme/seo-pro/assets/styles/admin.css` and be served from `/ext/acme/seo-pro/assets/styles/admin.css` with an `mtime`-based cache-busting query string.
+
+### Optional parameters
+
+Both methods accept the same set of options:
+
+```php
+$context->addFrontendAsset(
+    type: 'js',
+    path: 'scripts/widget.js',
+    position: 'body',   // 'head' | 'body' | null — null uses the default
+    module: true,       // load as <script type="module"> (default true)
+    preload: true,      // emit a <link rel="modulepreload"> hint in the head
+    version: null,      // override the cache-bust query string (default: file mtime)
+);
+```
+
+Defaults: CSS goes in the head, JS goes in the body, module scripts emit `type="module"`, no preload, mtime-based cache busting.
+
+### Where they render
+
+Extension assets are merged with Total CMS core assets and emitted by these Twig helpers in your templates:
+
+| Surface | Helper | Typical placement |
+|---|---|---|
+| Public pages | `{{ cms.assetsHead() }}` | inside `<head>` |
+| Public pages | `{{ cms.assetsBody() }}` | just before `</body>` |
+| Admin pages  | `{{ cms.adminAssetsHead() }}` | inside `<head>` (already wired by core admin templates) |
+| Admin pages  | `{{ cms.adminAssetsBody() }}` | just before `</body>` (already wired) |
+
+For the admin interface there's nothing to do — core admin templates already call the helpers. For public pages, your theme template needs to call `cms.assetsHead()` / `cms.assetsBody()` for extension frontend assets to render.
+
+Within each helper, output ordering is:
+1. Stylesheets first.
+2. Preload hints (`<link rel="preload">` / `<link rel="modulepreload">`) — always emitted in the head regardless of the asset's own `position`.
+3. Script tags last.
 
 ## Settings
 
