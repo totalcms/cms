@@ -22,6 +22,10 @@ final readonly class ExtensionManifest
 	 * @param string                                  $license        License identifier
 	 * @param list<array{label: string, url: string}> $links          Card-level links (admin pages, docs, etc.)
 	 * @param string                                  $icon           Relative path to icon image file
+	 * @param bool                                    $bundled        True when shipped with the T3 package (in resources/extensions/)
+	 *                                                                rather than installed by the user. Bundled extensions can be
+	 *                                                                disabled but not removed. Set by ExtensionDiscovery — not declared
+	 *                                                                in the manifest JSON.
 	 */
 	public function __construct(
 		public string $id,
@@ -36,6 +40,7 @@ final readonly class ExtensionManifest
 		public string $license,
 		public array $links = [],
 		public string $icon = '',
+		public bool $bundled = false,
 	) {
 	}
 
@@ -106,6 +111,56 @@ final readonly class ExtensionManifest
 		$extensions = $this->requires['extensions'] ?? [];
 
 		return is_array($extensions) ? $extensions : [];
+	}
+
+	/**
+	 * Return a copy with the bundled flag set. Used by ExtensionDiscovery
+	 * when it finds a manifest under `resources/extensions/` rather than
+	 * the user's `tcms-data/extensions/`. Manifest JSON itself never declares
+	 * `bundled` — it's derived from the discovery path.
+	 */
+	public function withBundled(bool $bundled): self
+	{
+		return new self(
+			id: $this->id,
+			name: $this->name,
+			description: $this->description,
+			version: $this->version,
+			requires: $this->requires,
+			entrypoint: $this->entrypoint,
+			settingsSchema: $this->settingsSchema,
+			minEdition: $this->minEdition,
+			author: $this->author,
+			license: $this->license,
+			links: $this->links,
+			icon: $this->icon,
+			bundled: $bundled,
+		);
+	}
+
+	/**
+	 * Return a copy with the version overridden. Used by ExtensionDiscovery
+	 * to force bundled extensions to report the running T3 version — they
+	 * ship in the package and can never have a different version than core,
+	 * so any per-extension version in the manifest would be a fiction.
+	 */
+	public function withVersion(string $version): self
+	{
+		return new self(
+			id: $this->id,
+			name: $this->name,
+			description: $this->description,
+			version: $version,
+			requires: $this->requires,
+			entrypoint: $this->entrypoint,
+			settingsSchema: $this->settingsSchema,
+			minEdition: $this->minEdition,
+			author: $this->author,
+			license: $this->license,
+			links: $this->links,
+			icon: $this->icon,
+			bundled: $this->bundled,
+		);
 	}
 
 	public function vendor(): string

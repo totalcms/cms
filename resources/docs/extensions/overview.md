@@ -33,6 +33,8 @@ tcms-data/extensions/
             assets/             # CSS, JS, images
 ```
 
+Total CMS also ships **bundled extensions** in `resources/extensions/` — included with every install but disabled by default. They appear in the admin alongside user-installed extensions but cannot be removed (only disabled). See [Bundled Extensions](docs/extensions/bundled).
+
 ## Quick Example
 
 A minimal extension that adds a Twig function:

@@ -884,6 +884,18 @@ final class ExtensionManager
 
 			$extension->register($context);
 
+			// Apply registered container definitions to the running container.
+			// Without this, addContainerDefinition() is a no-op — anything that
+			// depends on container resolution (page middleware that takes
+			// injected services, custom services consumed by Twig functions,
+			// etc.) would silently fail to instantiate. Gated by the `container`
+			// capability so admins can disable it if they want.
+			if ($this->container instanceof \DI\Container && $this->isCapabilityPermitted($id, 'container')) {
+				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
+					$this->container->set($serviceId, $factory);
+				}
+			}
+
 			$this->loadedExtensions[$id] = $extension;
 			$this->contexts[$id]         = $context;
 			$this->stateRepository->clearError($id);

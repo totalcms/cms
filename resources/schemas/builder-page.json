@@ -90,7 +90,8 @@
 			"field"    : "multicheckbox",
 			"settings" : {
 				"propertyOptions" : "pageMiddleware",
-				"sortOptions"     : true
+				"sortOptions"     : true,
+				"fieldColumns"    : "200px"
 			}
 		},
 		"accessGroups": {

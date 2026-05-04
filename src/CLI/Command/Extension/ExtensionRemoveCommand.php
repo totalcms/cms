@@ -38,6 +38,19 @@ class ExtensionRemoveCommand extends BaseCommand
 			return $this->outputError($input, $output, "Extension '{$id}' not found");
 		}
 
+		// Bundled extensions ship with the T3 package and are managed by core
+		// updates. Removing files would be undone on the next composer/zip
+		// install — so we refuse and point the user at the disable path.
+		$manifests = $discovery->discover();
+		$manifest  = $manifests[$id] ?? null;
+		if ($manifest !== null && $manifest->bundled) {
+			return $this->outputError(
+				$input,
+				$output,
+				"Extension '{$id}' is bundled with Total CMS and cannot be removed. Use `tcms extension:disable {$id}` to turn it off.",
+			);
+		}
+
 		if (!$input->getOption('force') && !$this->isJson($input)) {
 			/** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
 			$helper   = $this->getHelper('question');

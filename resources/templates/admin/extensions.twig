@@ -51,7 +51,15 @@
 				</div>
 				{% endif %}
 
-				{% set visibleLinks = ext.links|filter(link => ext.enabled or link.url starts with 'http://' or link.url starts with 'https://') %}
+				{# Hide links to extension-owned routes (/ext/... and /admin/ext/...,
+				   e.g. /admin/ext/acme/starter/dashboard) when the extension is
+				   disabled — those routes only exist while it's enabled, so the
+				   link would 404. T3-provided URLs (/admin/docs, /admin/settings,
+				   etc.) and external URLs always show. #}
+				{% set visibleLinks = ext.links|filter(link =>
+					ext.enabled
+					or not (link.url starts with '/ext/' or link.url starts with '/admin/ext/')
+				) %}
 				{% if visibleLinks|length > 0 %}
 				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
 					<strong>Links:</strong>
