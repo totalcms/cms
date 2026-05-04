@@ -7,6 +7,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -18,21 +19,29 @@ final class PageRouterMiddlewareTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $pageRouter;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
 	private \PHPUnit\Framework\MockObject\MockObject $pageMiddlewareRunner;
+	private \PHPUnit\Framework\MockObject\MockObject $pageInspector;
 
 	protected function setUp(): void
 	{
 		$this->pageRouter           = $this->createMock(PageRouter::class);
 		$this->twigEngine           = $this->createMock(TwigEngine::class);
 		$this->pageMiddlewareRunner = $this->createMock(PageMiddlewareRunner::class);
+		$this->pageInspector        = $this->createMock(PageInspectorRenderer::class);
 
 		// Default: middleware chain is empty / passes through. Individual
 		// tests that care about per-page middleware behavior override this.
 		$this->pageMiddlewareRunner->method('run')->willReturn(null);
 
+		// Default: inspector is a no-op (returns the body unchanged). Tests
+		// that care about injection override this expectation.
+		$this->pageInspector->method('maybeInject')
+			->willReturnCallback(fn (string $body): string => $body);
+
 		$this->middleware = new PageRouterMiddleware(
 			$this->pageRouter,
 			$this->twigEngine,
 			$this->pageMiddlewareRunner,
+			$this->pageInspector,
 		);
 	}
 
@@ -456,6 +465,148 @@ final class PageRouterMiddlewareTest extends TestCase
 
 		$this->assertSame(200, $response->getStatusCode());
 		$this->assertStringContainsString($expectedContentTypeFragment, $response->getHeaderLine('Content-Type'));
+	}
+
+	public function testInjectsInspectorIntoHtmlResponses(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/about');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/about.twig',
+			pageData: ['id' => 'about', 'title' => 'About'],
+			params: [],
+		);
+
+		$this->pageRouter->method('match')->willReturn($match);
+		$this->twigEngine->method('render')->willReturn('<html><body>hi</body></html>');
+
+		// Override the default no-op stub for this test only.
+		$inspector = $this->createMock(PageInspectorRenderer::class);
+		$inspector->expects($this->once())
+			->method('maybeInject')
+			->with('<html><body>hi</body></html>')
+			->willReturn('<html><body>hi<!--inspector--></body></html>');
+
+		$middleware = new PageRouterMiddleware(
+			$this->pageRouter,
+			$this->twigEngine,
+			$this->pageMiddlewareRunner,
+			$inspector,
+		);
+
+		$response = $middleware->process($request, $handler);
+
+		$this->assertStringContainsString('<!--inspector-->', (string)$response->getBody());
+	}
+
+	public function testInjectsInspectorIntoMiddlewareShortCircuitHtmlResponses(): void
+	{
+		// Regression: when a page feature like ab-split variant B short-circuits
+		// the chain with its own Response, the inspector still has to be
+		// injected — otherwise the chip would silently disappear for whichever
+		// variant skipped the normal render branch.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/contact');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/contact.twig',
+			pageData: ['id' => 'contact', 'title' => 'Contact'],
+			params: [],
+		);
+
+		$shortCircuit = (new Response())
+			->withStatus(200)
+			->withHeader('Content-Type', 'text/html; charset=utf-8');
+		$shortCircuit->getBody()->write('<html><body>variant B</body></html>');
+
+		$runner = $this->createMock(PageMiddlewareRunner::class);
+		$runner->method('run')->willReturn($shortCircuit);
+
+		$inspector = $this->createMock(PageInspectorRenderer::class);
+		$inspector->expects($this->once())
+			->method('maybeInject')
+			->with('<html><body>variant B</body></html>')
+			->willReturn('<html><body>variant B<!--inspector--></body></html>');
+
+		$this->pageRouter->method('match')->willReturn($match);
+
+		$middleware = new PageRouterMiddleware(
+			$this->pageRouter,
+			$this->twigEngine,
+			$runner,
+			$inspector,
+		);
+
+		$response = $middleware->process($request, $handler);
+
+		$this->assertStringContainsString('<!--inspector-->', (string)$response->getBody());
+		$this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+	}
+
+	public function testDoesNotInjectInspectorIntoNonHtmlMiddlewareShortCircuitResponses(): void
+	{
+		// A middleware that short-circuits with a redirect or JSON response
+		// must come through verbatim — no inspector injection on those.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/legacy');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/legacy.twig',
+			pageData: ['id' => 'legacy'],
+			params: [],
+		);
+
+		$shortCircuit = (new Response())
+			->withStatus(302)
+			->withHeader('Location', '/new-home');
+
+		$runner = $this->createMock(PageMiddlewareRunner::class);
+		$runner->method('run')->willReturn($shortCircuit);
+
+		$inspector = $this->createMock(PageInspectorRenderer::class);
+		$inspector->expects($this->never())->method('maybeInject');
+
+		$this->pageRouter->method('match')->willReturn($match);
+
+		$middleware = new PageRouterMiddleware(
+			$this->pageRouter,
+			$this->twigEngine,
+			$runner,
+			$inspector,
+		);
+
+		$response = $middleware->process($request, $handler);
+
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertSame('/new-home', $response->getHeaderLine('Location'));
+	}
+
+	public function testSkipsInspectorForNonHtmlContentTypes(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/sitemap.xml');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/sitemap.twig',
+			pageData: ['id' => 'sitemap'],
+			params: [],
+		);
+
+		$this->pageRouter->method('match')->willReturn($match);
+		$this->twigEngine->method('render')->willReturn('<urlset></urlset>');
+
+		$inspector = $this->createMock(PageInspectorRenderer::class);
+		$inspector->expects($this->never())->method('maybeInject');
+
+		$middleware = new PageRouterMiddleware(
+			$this->pageRouter,
+			$this->twigEngine,
+			$this->pageMiddlewareRunner,
+			$inspector,
+		);
+
+		$middleware->process($request, $handler);
 	}
 
 	/** @return array<string,array{string,string}> */

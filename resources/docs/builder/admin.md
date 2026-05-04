@@ -222,6 +222,36 @@ tcms-data/builder/.history/
 
 Each `.twig` file is the verbatim contents at that point in time. They're small (text-only) and prune automatically — no maintenance required.
 
+## Page Inspector Overlay
+
+When you're logged into the admin and visit a public page that's served by the Builder (a builder page or a collection-URL match), Total CMS injects a small floating chip in the bottom-right corner — the **Page Inspector**.
+
+It surfaces what was actually matched and rendered, so you don't have to guess which page record or template a URL resolved to:
+
+- **Match** — whether the URL resolved to a *builder page* or a *collection record* (with the collection name)
+- **Page id** / **Object id** — the record's identifier
+- **Template** — the resolved template path
+- **Route** — the matched route
+- **Status** — the HTTP status the page is configured to return
+- **Params** — any URL params extracted from `{slug}`-style placeholders
+- **Features** — active page features (middleware) for this page, if any
+
+The chip starts collapsed and expands on click. It also includes an **Edit page** / **Edit object** link that drops you straight into the right editor.
+
+### Dismissing
+
+The `×` button in the chip sets the `tcms_inspector_hidden` cookie for 30 days, hiding the inspector across all pages. Clear that cookie (or use a different browser / incognito session) to bring it back.
+
+### Visibility rules
+
+The inspector is only injected when:
+
+1. The visitor has an active admin session
+2. The response is HTML (`text/html`)
+3. The dismiss cookie isn't set
+
+It's injected before the last `</body>` in the response, so it can't be served to logged-out visitors via cached HTML — the cache typically lives upstream of the inspector check.
+
 ## Settings
 
 Builder settings are available at **Admin > Settings > Builder**:
@@ -250,5 +280,6 @@ Template CRUD operations go through the standard template API at `/api/templates
 - [Site Builder Overview](docs/builder/overview)
 - [Page Schema Fields](docs/builder/overview#page-schema-fields)
 - [Page Order](docs/builder/overview#page-order)
+- [Page Inspector Overlay](#page-inspector-overlay)
 - [Builder CLI Commands](docs/builder/cli) — including `builder:routes` and `builder:history`
 - [Starter Templates](docs/builder/starters)

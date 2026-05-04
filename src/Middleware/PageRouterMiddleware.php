@@ -10,6 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -46,6 +47,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		private PageRouter $pageRouter,
 		private TwigEngine $twigEngine,
 		private PageMiddlewareRunner $pageMiddlewareRunner,
+		private PageInspectorRenderer $pageInspector,
 	) {
 	}
 
@@ -98,7 +100,11 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			$page = new PageData($match->pageData);
 			$middlewareResponse = $this->pageMiddlewareRunner->run($request, $page);
 			if ($middlewareResponse !== null) {
-				return $middlewareResponse;
+				// A short-circuiting middleware (e.g. ab-split variant B) may
+				// have rendered HTML at this URL. Inject the inspector into
+				// that HTML too — otherwise the chip would silently disappear
+				// for whichever variant was served via short-circuit.
+				return $this->injectInspectorIfHtml($middlewareResponse, $request, $match);
 			}
 		}
 
@@ -120,14 +126,23 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 				$data['page'] = $match->pageData;
 			}
 
-			$body = $this->twigEngine->render($match->template, $data);
+			$body        = $this->twigEngine->render($match->template, $data);
+			$contentType = $this->detectContentType($path);
+
+			// Inject the admin-only Page Inspector overlay for HTML responses.
+			// Gating (logged-in admin, dismiss cookie) lives in the renderer;
+			// the content-type check is here because the renderer doesn't see
+			// the response object.
+			if (str_starts_with($contentType, 'text/html')) {
+				$body = $this->pageInspector->maybeInject($body, $request, $match);
+			}
 
 			$pageResponse = new Response();
 			$pageResponse->getBody()->write($body);
 
 			return $pageResponse
 				->withStatus($match->status)
-				->withHeader('Content-Type', $this->detectContentType($path));
+				->withHeader('Content-Type', $contentType);
 		} catch (\Throwable) {
 			// Render failed — return the original 404
 			return $response;
@@ -183,6 +198,37 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		return $response
 			->withStatus($match->status)
 			->withHeader('Content-Type', 'application/json; charset=utf-8');
+	}
+
+	/**
+	 * Inject the Page Inspector chip into a Response's body if the response
+	 * is HTML. Used when a page-feature middleware short-circuits the chain
+	 * with its own response (e.g. ab-split variant B) — without this, the
+	 * inspector would silently disappear for whichever variant skipped the
+	 * normal render branch.
+	 *
+	 * Reads the body, runs `maybeInject`, and writes a fresh body back.
+	 * Returns the response unchanged for non-HTML content types.
+	 */
+	private function injectInspectorIfHtml(
+		ResponseInterface $response,
+		ServerRequestInterface $request,
+		\TotalCMS\Domain\Builder\Data\RouteMatch $match,
+	): ResponseInterface {
+		$contentType = strtolower($response->getHeaderLine('Content-Type'));
+		if (!str_starts_with($contentType, 'text/html')) {
+			return $response;
+		}
+
+		$body     = (string)$response->getBody();
+		$injected = $this->pageInspector->maybeInject($body, $request, $match);
+		if ($injected === $body) {
+			return $response;
+		}
+
+		$stream = (new \Nyholm\Psr7\Factory\Psr17Factory())->createStream($injected);
+
+		return $response->withBody($stream);
 	}
 
 	/**
