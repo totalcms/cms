@@ -8,10 +8,8 @@
  *     containing matches
  *   - Re-stripe on folder toggle
  *
- * Used by both the Builder admin sidebar and (eventually) the Depot file
- * browser. The Depot browser currently has its own copy of this logic
- * (javascript/depot-browser.js) which can migrate to this class when the
- * markup has been aligned.
+ * Used by both the Builder admin sidebar and the public Depot file browser
+ * (javascript/depot-browser.js).
  *
  * Expected DOM:
  *   <input type="search" />
@@ -34,6 +32,7 @@ export default class TreeView {
 	 * @param {object}  [options]
 	 * @param {string}  [options.treeSelector=".tree-view"] CSS class on each <ul>
 	 * @param {string[]} [options.searchableExtras=[]] Additional selectors within an <li> whose text content should be matched by the filter
+	 * @param {string|null} [options.ownTextSelector=null] Optional selector (within a leaf <li>) to use as the leaf's match text, instead of falling back to the <li>'s full textContent. Useful when leaves contain ancillary text (file size, action buttons) that shouldn't participate in matching.
 	 * @param {Element|null} [options.filterInput=null] Input element to bind filtering to
 	 * @param {boolean} [options.stripes=true] Whether to apply alternating-row stripes
 	 */
@@ -43,6 +42,7 @@ export default class TreeView {
 		this.container        = container;
 		this.treeSelector     = options.treeSelector || ".tree-view";
 		this.searchableExtras = options.searchableExtras || [];
+		this.ownTextSelector  = options.ownTextSelector || null;
 		this.filterInput      = options.filterInput || null;
 		this.stripes          = options.stripes !== false;
 
@@ -200,6 +200,11 @@ export default class TreeView {
 
 		const directLink = li.querySelector(":scope > a");
 		if (directLink) return directLink.textContent || "";
+
+		if (this.ownTextSelector) {
+			const explicit = li.querySelector(this.ownTextSelector);
+			if (explicit) return explicit.textContent || "";
+		}
 
 		return li.textContent || "";
 	}
