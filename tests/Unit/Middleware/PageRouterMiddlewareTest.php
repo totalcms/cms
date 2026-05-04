@@ -7,6 +7,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Middleware\PageRouterMiddleware;
@@ -16,15 +17,22 @@ final class PageRouterMiddlewareTest extends TestCase
 	private PageRouterMiddleware $middleware;
 	private \PHPUnit\Framework\MockObject\MockObject $pageRouter;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
+	private \PHPUnit\Framework\MockObject\MockObject $pageMiddlewareRunner;
 
 	protected function setUp(): void
 	{
-		$this->pageRouter = $this->createMock(PageRouter::class);
-		$this->twigEngine = $this->createMock(TwigEngine::class);
+		$this->pageRouter           = $this->createMock(PageRouter::class);
+		$this->twigEngine           = $this->createMock(TwigEngine::class);
+		$this->pageMiddlewareRunner = $this->createMock(PageMiddlewareRunner::class);
+
+		// Default: middleware chain is empty / passes through. Individual
+		// tests that care about per-page middleware behavior override this.
+		$this->pageMiddlewareRunner->method('run')->willReturn(null);
 
 		$this->middleware = new PageRouterMiddleware(
 			$this->pageRouter,
 			$this->twigEngine,
+			$this->pageMiddlewareRunner,
 		);
 	}
 
