@@ -286,6 +286,14 @@ export default class TotalField {
 	}
 
 	isUnsaved() {
+		// Hidden fields don't count as unsaved — the visibility cascade
+		// dispatches a synthetic `change` event on a dependent field's
+		// container when visibility flips, which legitimately triggers
+		// `changed()` and adds `.unsaved`. Without this guard, opening a
+		// page form whose visibility rules hide a list/multicheckbox field
+		// would mark the form dirty on first render and trigger the
+		// beforeunload prompt with no real edits.
+		if (this.isHidden()) return false;
 		return this.container.classList.contains("unsaved");
 	}
 
