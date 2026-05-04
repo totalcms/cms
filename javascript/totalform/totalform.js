@@ -102,7 +102,6 @@ export default class TotalForm {
 		if (formIDSet) this.setupEditMode();
 
 		this.processFields();
-		this.droplets = this.fields.filter(field => field.isDroplet());
 		this.setupFieldsForEdit();
 
 		this.dispatcher = new TotalDispatcher(this.form);
@@ -114,6 +113,10 @@ export default class TotalForm {
 
 		// Signal that all fields are initialized and form is ready
 		this.form.dispatchEvent(new CustomEvent('totalform:ready'));
+
+		if (this.isObjectForm() && !this.isEditMode()) {
+			this.focusFirstInput();
+		}
 
 		if (this.form.classList.contains("autosave")) {
 			this.autosave = true;
@@ -193,6 +196,14 @@ export default class TotalForm {
 		}).shift();
 		if (idField) return idField.getValue();
 
+		// Fall back to a direct DOM lookup — this.fields may be empty when
+		// getId() is called during the recursive processFields() bootstrap
+		// (image/file edit dialogs re-enter processFields before the outer
+		// call assigns this.fields).
+		const idInputs    = Array.from(this.form.querySelectorAll('input[name="id"]'));
+		const formIdInput = idInputs.find(input => !input.closest('dialog'));
+		if (formIdInput) return formIdInput.value;
+
 		console.warn("ID field not found");
 		return null;
 	}
@@ -203,34 +214,37 @@ export default class TotalForm {
     processFields() {
 		const fields = Array.from(this.form.getElementsByClassName("form-field"));
 		const fieldObjects = [];
+		const dropletObjects = [];
         fields.forEach(field => {
 			// Skip fields inside <template> elements (e.g., deck templates)
 			if (field.closest('template')) {
 				return;
 			}
 
-			// skip if field is already processed
-			if (field.totalfield) {
-				if (!field.totalfield.isSubField()) {
-					fieldObjects.push(field.totalfield);
+			let totalfield = field.totalfield;
+			if (!totalfield) {
+				try {
+					totalfield = this.generateFieldObject(field);
+				} catch (e) {
+					const inputName = field.querySelector("input,textarea,select")?.name;
+					console.warn(`Failed to process field [${field.dataset.type}] name="${inputName}":`, e, field);
+					return;
 				}
-				return;
+				if (totalfield === null) return;
 			}
 
-			let object;
-			try {
-				object = this.generateFieldObject(field);
-			} catch (e) {
-				const inputName = field.querySelector("input,textarea,select")?.name;
-				console.warn(`Failed to process field [${field.dataset.type}] name="${inputName}":`, e, field);
-				return;
+			if (!totalfield.isSubField()) {
+				fieldObjects.push(totalfield);
 			}
-            if (object === null || object.isSubField()) return; // if the object is not set, skip it
-            fieldObjects.push(object);
-
-			// Mark as dirty
+			// Droplets must bypass the subfield filter so saveDroplets() can flush
+			// queued uploads for image/file fields nested inside cards and deck items
+			// after the parent object's ID is assigned.
+			if (totalfield.isDroplet()) {
+				dropletObjects.push(totalfield);
+			}
         });
         this.fields = fieldObjects;
+        this.droplets = dropletObjects;
     }
 
     registerButtons() {
@@ -509,6 +523,14 @@ export default class TotalForm {
 		if (dialog) {
 			dialog.dialog ? dialog.dialog.close() : dialog.close();
 		}
+	}
+
+	focusFirstInput() {
+		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+		const candidates = Array.from(this.form.querySelectorAll(selector));
+		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
+		const first = candidates.find(input => !input.closest('dialog'));
+		first?.focus();
 	}
 
 	save() {

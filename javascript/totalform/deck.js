@@ -89,20 +89,32 @@ export default class DeckField extends TotalField {
             if (!match) return;
 
             const prefix = match[1];
-            const oldUuid = match[2];
+            let oldUuid = match[2];
+            let suffix = '';
+
+            // PasswordField renders a confirm input with id `field-{uuid}-confirm`.
+            // Map it to the same new uuid as the main input so PasswordField.validate()
+            // can still resolve the confirm via `${input.id}-confirm` after cloning.
+            if (oldUuid.endsWith('-confirm')) {
+                suffix = '-confirm';
+                oldUuid = oldUuid.slice(0, -suffix.length);
+            }
 
             // Reuse the same new UUID for all prefixes sharing the same old UUID
             if (!idMap[oldUuid]) {
                 idMap[oldUuid] = Math.random().toString(36).substring(2, 15);
             }
 
-            el.id = `${prefix}-${idMap[oldUuid]}`;
+            el.id = `${prefix}-${idMap[oldUuid]}${suffix}`;
         });
 
         // Update corresponding for, aria-describedby, and list attributes
         for (const [oldUuid, newUuid] of Object.entries(idMap)) {
             element.querySelectorAll(`[for="field-${oldUuid}"]`).forEach(el => {
                 el.setAttribute('for', `field-${newUuid}`);
+            });
+            element.querySelectorAll(`[for="field-${oldUuid}-confirm"]`).forEach(el => {
+                el.setAttribute('for', `field-${newUuid}-confirm`);
             });
             element.querySelectorAll(`[aria-describedby="help-${oldUuid}"]`).forEach(el => {
                 el.setAttribute('aria-describedby', `help-${newUuid}`);
@@ -138,6 +150,11 @@ export default class DeckField extends TotalField {
         // Get the newly added item (last deck-item before the add button)
         const deckItems = parent.querySelectorAll(`.${this.fieldClass}`);
         const itemElement = deckItems[deckItems.length - 1];
+
+        // Mark as unsaved so nested image/file fields defer uploads until the
+        // parent object has been saved with this deck item's shape.
+        // DeckField.saved() clears `.unsaved` from descendants after save.
+        itemElement.classList.add('unsaved');
 
         // Focus on the edit button to open the dialog
         const editButton = itemElement.querySelector("button.edit");
@@ -200,6 +217,9 @@ export default class DeckField extends TotalField {
         // Clone the item element
         const clone = itemElement.cloneNode(true);
         this.regenerateIds(clone);
+
+        // Same lifecycle as addItem — defer nested uploads until parent saves.
+        clone.classList.add('unsaved');
 
         // Clear the dialog ID field
         const dialogIdInput = clone.querySelector("dialog input[name='id']");

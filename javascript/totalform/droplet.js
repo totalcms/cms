@@ -97,6 +97,16 @@ export default class Droplet {
 		this.container.addEventListener("processing", () => {
 			this.dropzone.options.autoProcessQueue = true;
 		});
+
+		// Refresh the upload URL right before each file is sent. The droplet's
+		// URL is captured at field construction; for fields nested in a card or
+		// a freshly-added deck item, the parent id or deck-item id may not have
+		// existed yet — without this refresh, autoupload posts to the stale URL.
+		this.dropzone.on("processing", () => {
+			if (typeof this.field.updateAPIUrl === "function") {
+				this.field.updateAPIUrl();
+			}
+		});
     }
 
     onQueueComplete(callback) {

@@ -182,6 +182,19 @@ export default class TotalField {
 		return (this.droplet && typeof this.droplet === "object");
 	}
 
+	/**
+	 * Whether this field's parent has been persisted server-side. Used by
+	 * upload-capable fields to decide whether to auto-process the dropzone
+	 * queue or defer until the parent object (and any unsaved deck item) is
+	 * saved by the form. Mirrors the new-object two-phase save: queue first,
+	 * flush in saveDroplets().
+	 */
+	parentIsSaved() {
+		if (!this.form?.isEditMode()) return false;
+		if (this.deckItem && this.deckItem.classList.contains('unsaved')) return false;
+		return true;
+	}
+
 	isTiptap() {
 		return (this.tiptap && typeof this.tiptap === "object");
 	}

@@ -50,7 +50,7 @@ export default class ImageField extends TotalField {
 		this.droplet = new Droplet(this, {
 			paramName        : this.property,
 			apiUrl           : this.apiUploadImage(),
-			autoProcessQueue : this.form.isEditMode(),
+			autoProcessQueue : this.parentIsSaved(),
 			acceptedFiles    : "image/*",
 			rules            : this.settings.rules,
 		});
