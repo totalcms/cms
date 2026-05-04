@@ -243,12 +243,36 @@ export default class DeckField extends TotalField {
 			delete el.dataset.steInitialized;
 		});
 
+		// Unwrap Choices.js-initialized selects so the new ListField can re-init
+		// cleanly. Without this, Choices detects the .choices__input class on the
+		// cloned select, bails with "already initialised", and leaves a broken
+		// instance that crashes on the first setValue/clearValue call.
+		clone.querySelectorAll('.choices').forEach(wrapper => {
+			const select = wrapper.querySelector('select.choices__input');
+			if (!select) return;
+			select.classList.remove('choices__input');
+			select.removeAttribute('data-choice');
+			select.removeAttribute('hidden');
+			select.removeAttribute('aria-hidden');
+			wrapper.parentNode.replaceChild(select, wrapper);
+		});
+
 		// Insert after the original item
         const parent = itemElement.parentNode;
         parent.insertBefore(clone, itemElement.nextSibling);
 
         // Initialize the duplicated item (this will properly initialize all form fields)
         this.newItem(clone);
+
+        // Reset image and file fields — the clone shouldn't carry the original's
+        // uploaded media. Mirrors the delete-button pattern: clear subfield values
+        // and drop the preview element. Dropzone will rebuild a fresh preview from
+        // its template on the next upload.
+        const uploadFields = clone.querySelectorAll('.form-field[data-type="image"], .form-field[data-type="file"]');
+        uploadFields.forEach(field => {
+            field.totalfield?.clearValue?.();
+            field.totalfield?.preview?.container?.remove();
+        });
 
         // Open the dialog to edit the duplicated item
         const editButton = clone.querySelector("button.edit");
