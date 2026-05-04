@@ -576,9 +576,12 @@ class CacheManager
 			$memoryStored = $this->memcachedService->set($domainKey, $arrayData, $ttl);
 		}
 
-		// ALWAYS store in filesystem as persistent backup
-		// This ensures license data survives memory cache eviction or server restarts
-		$filesystemStored = $this->filesystemService->set($domainKey, $arrayData, $ttl);
+		// ALWAYS store in filesystem as persistent backup, even when the user
+		// has disabled filesystem caching in config — license data has to
+		// survive memory eviction or restarts, and disabling caches in dev
+		// otherwise causes API calls on every request and rate-limit cascades.
+		// `setMandatory` bypasses the enabled flag but still respects writability.
+		$filesystemStored = $this->filesystemService->setMandatory($domainKey, $arrayData, $ttl);
 
 		// Success if stored in at least one location
 		return $memoryStored || $filesystemStored;
@@ -609,9 +612,11 @@ class CacheManager
 			$result = $this->memcachedService->get($domainKey);
 		}
 
-		// Filesystem is ALWAYS checked as absolute fallback for license data
+		// Filesystem is ALWAYS checked as absolute fallback for license data,
+		// even when filesystem caching is disabled in config (see comment in
+		// storeLicenseData() for why). `getMandatory` bypasses the enabled flag.
 		if ($result === null) {
-			$result = $this->filesystemService->get($domainKey);
+			$result = $this->filesystemService->getMandatory($domainKey);
 		}
 
 		// Reconstruct LicenseData from cached array
@@ -649,8 +654,9 @@ class CacheManager
 			$success &= $this->memcachedService->delete($domainKey);
 		}
 
-		// Always clear from filesystem
-		$success &= $this->filesystemService->delete($domainKey);
+		// Always clear from filesystem, even when filesystem caching is
+		// disabled — otherwise stale license data could persist on disk.
+		$success &= $this->filesystemService->deleteMandatory($domainKey);
 
 		return (bool)$success;
 	}
