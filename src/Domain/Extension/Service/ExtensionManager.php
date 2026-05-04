@@ -952,6 +952,12 @@ final class ExtensionManager
 
 	/**
 	 * Extract the fully qualified class name from a PHP file.
+	 *
+	 * Uses PHP's tokenizer rather than regex so we correctly skip comments
+	 * (including the word "class" inside docblocks or line comments) and
+	 * `Foo::class` constant expressions. The naive regex version once picked
+	 * up "class string" from a comment and produced a bogus class name —
+	 * extension authors shouldn't have to police their comments.
 	 */
 	private function resolveClassName(string $filePath): ?string
 	{
@@ -960,15 +966,55 @@ final class ExtensionManager
 			return null;
 		}
 
+		$tokens = token_get_all($contents);
+		$count  = count($tokens);
+
 		$namespace = '';
 		$class     = '';
 
-		if (preg_match('/namespace\s+([^;]+);/', $contents, $matches)) {
-			$namespace = trim($matches[1]);
-		}
+		for ($i = 0; $i < $count; $i++) {
+			$token = $tokens[$i];
+			if (!is_array($token)) {
+				continue;
+			}
 
-		if (preg_match('/class\s+(\w+)/', $contents, $matches)) {
-			$class = $matches[1];
+			[$id] = $token;
+
+			if ($id === T_NAMESPACE) {
+				// Collect tokens until `;` or `{` — that's the namespace name.
+				for ($j = $i + 1; $j < $count; $j++) {
+					$next = $tokens[$j];
+					if (is_string($next) && ($next === ';' || $next === '{')) {
+						break;
+					}
+					if (is_array($next) && in_array($next[0], [T_STRING, T_NS_SEPARATOR, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_RELATIVE], true)) {
+						$namespace .= $next[1];
+					}
+				}
+				$namespace = trim($namespace);
+
+				continue;
+			}
+
+			if ($id === T_CLASS) {
+				// Skip `Foo::class` (T_CLASS preceded by `::`).
+				$prev = $i - 1;
+				while ($prev >= 0 && is_array($tokens[$prev]) && in_array($tokens[$prev][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+					$prev--;
+				}
+				if ($prev >= 0 && is_array($tokens[$prev]) && $tokens[$prev][0] === T_DOUBLE_COLON) {
+					continue;
+				}
+
+				// Find the class name — next T_STRING token.
+				for ($j = $i + 1; $j < $count; $j++) {
+					$next = $tokens[$j];
+					if (is_array($next) && $next[0] === T_STRING) {
+						$class = $next[1];
+						break 2;
+					}
+				}
+			}
 		}
 
 		if ($class === '') {

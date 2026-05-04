@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Builder\Service;
 
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
+use TotalCMS\Factory\LoggerFactory;
 
 /**
  * Curated allow-list of per-page middleware names → container service IDs.
@@ -23,8 +26,14 @@ class PageMiddlewareRegistry
 	/** @var array<string,string> name => container service ID */
 	private array $services = [];
 
-	public function __construct(private readonly ContainerInterface $container)
-	{
+	private readonly LoggerInterface $logger;
+
+	public function __construct(
+		private readonly ContainerInterface $container,
+		?LoggerFactory $loggerFactory = null,
+	) {
+		$this->logger = $loggerFactory?->addFileHandler('builder.log')->createLogger('builder')
+			?? new NullLogger();
 	}
 
 	/**
@@ -63,16 +72,37 @@ class PageMiddlewareRegistry
 	{
 		$id = $this->services[$name] ?? null;
 		if ($id === null) {
+			$this->logger->warning('Page middleware name not registered', [
+				'name'      => $name,
+				'available' => array_keys($this->services),
+			]);
+
 			return null;
 		}
 
 		try {
 			$instance = $this->container->get($id);
-		} catch (\Throwable) {
+		} catch (\Throwable $e) {
+			$this->logger->warning('Page middleware container resolution failed', [
+				'name'      => $name,
+				'serviceId' => $id,
+				'error'     => $e->getMessage(),
+			]);
+
 			return null;
 		}
 
-		return $instance instanceof PageMiddlewareInterface ? $instance : null;
+		if (!$instance instanceof PageMiddlewareInterface) {
+			$this->logger->warning('Page middleware service is not a PageMiddlewareInterface', [
+				'name'      => $name,
+				'serviceId' => $id,
+				'actual'    => is_object($instance) ? $instance::class : gettype($instance),
+			]);
+
+			return null;
+		}
+
+		return $instance;
 	}
 
 	/**

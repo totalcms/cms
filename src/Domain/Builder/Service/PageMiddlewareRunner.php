@@ -29,7 +29,7 @@ readonly class PageMiddlewareRunner
 		private PageMiddlewareRegistry $registry,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->createLogger('builder');
+		$this->logger = $loggerFactory->addFileHandler('builder.log')->createLogger('builder');
 	}
 
 	/**

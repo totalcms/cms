@@ -1369,7 +1369,10 @@ return [
 	// mappings; runner consumes the registry. Core middleware are registered
 	// via the registry boot below; extensions register via ExtensionContext.
 	\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class => function (ContainerInterface $container): \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry {
-		$registry = new \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry($container);
+		$registry = new \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry(
+			$container,
+			$container->get(LoggerFactory::class),
+		);
 		// Core middleware. Names are stable contract — once shipped, don't
 		// rename without a deprecation cycle (sites have these in page records).
 		$registry->register('auth', \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class);

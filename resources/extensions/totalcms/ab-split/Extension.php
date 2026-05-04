@@ -8,6 +8,11 @@ use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
+// Bundled extensions don't ship their own composer autoloader. ExtensionManager
+// only require_once's the entrypoint, so any sibling files the extension
+// uses must be loaded explicitly here.
+require_once __DIR__ . '/AbSplitMiddleware.php';
+
 /**
  * A/B Split — bundled with Total CMS.
  *

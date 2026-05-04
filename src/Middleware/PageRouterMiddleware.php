@@ -76,14 +76,10 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			return $response;
 		}
 
-		// Headless mode — return the matched page record as JSON instead of rendering
-		if ($this->wantsJson($request)) {
-			return $this->jsonResponse($match);
-		}
-
 		// Redirect — when the page status is a 3xx and redirectTo is set, send
 		// a Location header instead of rendering. Lets users move/replace URLs
-		// from the admin without writing route files.
+		// from the admin without writing route files. Runs before middleware
+		// because a redirected page has nothing to gate.
 		if ($match->redirectTo !== '' && $match->status >= 300 && $match->status < 400) {
 			return (new Response())
 				->withStatus($match->status)
@@ -94,12 +90,21 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// applies to builder-page matches (collection-URL matches don't
 		// have a per-record middleware concept yet). The runner returns a
 		// Response if any middleware short-circuits; null means proceed.
+		//
+		// Runs BEFORE the headless-JSON shortcut: gating still has to apply
+		// to JSON consumers, otherwise an auth-protected page would happily
+		// hand its data to a logged-out visitor that asks for `?_format=json`.
 		if ($match->collection === null) {
 			$page = new PageData($match->pageData);
 			$middlewareResponse = $this->pageMiddlewareRunner->run($request, $page);
 			if ($middlewareResponse !== null) {
 				return $middlewareResponse;
 			}
+		}
+
+		// Headless mode — return the matched page record as JSON instead of rendering
+		if ($this->wantsJson($request)) {
+			return $this->jsonResponse($match);
 		}
 
 		try {

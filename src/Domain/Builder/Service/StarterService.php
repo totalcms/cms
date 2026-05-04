@@ -30,7 +30,7 @@ readonly class StarterService
 		private JumpStartImporter $jumpStartImporter,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->createLogger('builder');
+		$this->logger = $loggerFactory->addFileHandler('builder.log')->createLogger('builder');
 	}
 
 	/**
