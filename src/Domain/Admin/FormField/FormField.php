@@ -388,6 +388,10 @@ class FormField
 			return $this->form->pageListForBuilder();
 		}
 
+		if ($source === 'pageMiddleware') {
+			return $this->form->pageMiddlewareList();
+		}
+
 		if ($source === 'schemaProperties') {
 			return $this->form->schemaPropertyKeys();
 		}

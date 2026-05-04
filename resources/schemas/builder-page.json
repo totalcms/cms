@@ -4,7 +4,7 @@
 	"id": "builder-page",
 	"type": "object",
 	"description": "A schema for a Site Builder page",
-	"formgrid": "draft .\ntitle title\ndescription description\nimage .\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
+	"formgrid": "draft .\ntitle title\ndescription description\nimage .\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
 	"properties": {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -81,6 +81,32 @@
 			"placeholder" : "{\"hero\": \"Welcome\"}",
 			"settings"    : {
 				"rows" : 12
+			}
+		},
+		"middleware": {
+			"type"     : "array",
+			"label"    : "Features",
+			"help"     : "Optional behaviors to enable on this page — for example, requiring a logged-in visitor (<code>auth</code>). Features run in order; the first one to short-circuit (e.g. redirect to login) stops the rest. Additional features can be added by extensions.",
+			"field"    : "multicheckbox",
+			"settings" : {
+				"propertyOptions" : "pageMiddleware",
+				"sortOptions"     : true
+			}
+		},
+		"accessGroups": {
+			"type"     : "array",
+			"label"    : "Access Groups",
+			"help"     : "Restrict the <code>auth</code> middleware to users in one or more access groups. Leave blank to allow any logged-in user. Logged-in users not in the listed groups get a 403 response (no redirect to login).",
+			"field"    : "list",
+			"settings" : {
+				"accessGroupOptions"    : true,
+				"duplicateItemsAllowed" : false,
+				"addChoices"            : false,
+				"visibility"            : {
+					"watch"    : "middleware",
+					"value"    : "auth",
+					"operator" : "in"
+				}
 			}
 		},
 		"status": {

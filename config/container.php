@@ -430,6 +430,7 @@ return [
 		$container->get(ExtensionManager::class),
 		$container->get(TemplateLister::class),
 		$container->get(DevModeManager::class),
+		$container->get(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -1362,5 +1363,27 @@ return [
 		$container->get(CollectionLister::class),
 		$container->get(ObjectUrlBuilder::class),
 		$container->get(ObjectFetcher::class),
+	),
+
+	// Per-page middleware infrastructure. Registry holds name → service-id
+	// mappings; runner consumes the registry. Core middleware are registered
+	// via the registry boot below; extensions register via ExtensionContext.
+	\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class => function (ContainerInterface $container): \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry {
+		$registry = new \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry($container);
+		// Core middleware. Names are stable contract — once shipped, don't
+		// rename without a deprecation cycle (sites have these in page records).
+		$registry->register('auth', \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class);
+
+		return $registry;
+	},
+
+	\TotalCMS\Domain\Builder\Service\PageMiddlewareRunner::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\Service\PageMiddlewareRunner => new \TotalCMS\Domain\Builder\Service\PageMiddlewareRunner(
+		$container->get(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	\TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware => new \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware(
+		$container->get(\TotalCMS\Domain\Auth\Service\AccessManager::class),
+		$container->get(Config::class),
 	),
 ];

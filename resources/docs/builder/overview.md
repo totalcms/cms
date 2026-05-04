@@ -218,6 +218,72 @@ Set a page's status to `301` (permanent) or `302` (temporary) and fill in **Redi
 
 `Redirect To` accepts an absolute URL (`https://example.com/x`) or a same-site path (`/new-page`).
 
+## Page Features (Middleware)
+
+The **Features** field on a page (stored as `middleware` internally) is an opt-in list of named behaviors that run **before** the template renders. Each one can short-circuit the request — return a 401, a 302 redirect, a 429 rate-limit response — or pass through and let the page render normally.
+
+Features run in the order listed. The first one to return a response wins; subsequent features do not run, and the page does not render.
+
+### Choosing Features in the Admin
+
+The page form's **Features** section is a checklist populated from the registry. Tick the ones you want to run on this page — typos aren't possible because you're picking from a fixed list. Install extensions to make additional features available.
+
+### Built-in Features
+
+| Name | Behavior |
+|------|----------|
+| `auth` | Requires a logged-in visitor. Redirects logged-out browsers to `/admin/login` (with `?redirect=` to bring them back). Returns `401 {"error": "Authentication required"}` for JSON requests (`Accept: application/json` or `?_format=json`). Optionally restricted to specific access groups via the **Access Groups** field — see below. |
+
+Common uses for `auth`: legal documents that need a login, draft preview links, member-only pages.
+
+### Restricting `auth` to Access Groups
+
+When `auth` is enabled, an **Access Groups** field appears on the page form. It's a list picker driven by the configured access groups.
+
+- **Empty (default)**: any logged-in user passes. Same as before access groups existed.
+- **One or more groups**: only users in *any* of those groups pass. SuperAdmins always pass.
+
+Failure responses:
+- Logged-out visitors → 302 to login (same as before)
+- Logged-in users who aren't in any of the listed groups → **403 Forbidden** (no login redirect — they're already logged in; sending them to login would loop)
+- For JSON requests, both states return JSON error bodies (`401` or `403` respectively)
+
+### Registering Middleware from an Extension
+
+```php
+// In an extension's register() method:
+public function register(ExtensionContext $context): void
+{
+    $context->addContainerDefinition(MyGeoRedirect::class, fn ($c) => new MyGeoRedirect(
+        $c->get(GeoIPService::class),
+    ));
+    $context->addPageMiddleware('geo-redirect', MyGeoRedirect::class);
+}
+```
+
+The middleware class must implement `TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface`:
+
+```php
+interface PageMiddlewareInterface
+{
+    /**
+     * Return null to proceed; return a Response to short-circuit.
+     */
+    public function handle(ServerRequestInterface $request, PageData $page): ?ResponseInterface;
+}
+```
+
+Names must be lowercase letters, digits, and hyphens (e.g. `geo-redirect`, `rate-limit`, `auth-staff-only`). The `page-middleware` capability appears in the extension permissions UI so admins can disable it without uninstalling.
+
+### Failure Modes
+
+- **Unknown name in a page's middleware list** (typo, uninstalled extension): the runner logs a warning and skips that name. The chain continues.
+- **Middleware throws an exception**: the runner returns a 500 response. Auth/security middleware throwing has to fail closed — never silently let the page render.
+
+### Scope
+
+Per-page middleware applies only to **builder-page matches**. Collection-URL matches (where the rendered template is `pages/{collection-id}.twig` and the variable is `object.*`) don't currently support per-record middleware. Apply your own auth in the collection's template if you need it.
+
 ## Collection URL Routing
 
 The middleware also matches collection URL patterns. If a collection has a `url` field set (e.g., `/blog` with pretty URLs enabled), visiting `/blog/my-post` automatically:
@@ -305,6 +371,8 @@ Page metadata is stored in the `builder-pages` collection using the `builder-pag
 | `data` | JSON | Free-form JSON exposed as `page.data.*` |
 | `status` | select | HTTP status code returned (200, 301, 302, 404, 410, 451, 503) |
 | `redirectTo` | text | Destination for 301/302 redirects |
+| `middleware` | multicheckbox | Page features (middleware) to run before render (e.g. `auth`) — see [Page Features](#page-features-middleware) |
+| `accessGroups` | list | Restricts the `auth` feature to specific access groups (empty = any login) |
 | `draft` | toggle | Exclude from routing |
 | `nav` | toggle | Include in navigation menus (default: true) |
 | `sitemap` | toggle | Include in `sitemap.xml` (default: true) |

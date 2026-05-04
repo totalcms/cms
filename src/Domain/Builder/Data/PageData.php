@@ -25,6 +25,12 @@ readonly class PageData
 	/** @var array<string,mixed> */
 	public array $data;
 
+	/** @var list<string> Names of page-middleware to run before render */
+	public array $middleware;
+
+	/** @var list<string> Access group ids — restricts the `auth` middleware. Empty = any login. */
+	public array $accessGroups;
+
 	/**
 	 * Page hierarchy and ordering live in the order file (.order.json) — not
 	 * here. PageData carries page CONTENT only.
@@ -47,6 +53,8 @@ readonly class PageData
 		$this->status          = self::parseStatus($data['status'] ?? null);
 		$this->redirectTo      = (string)($data['redirectTo'] ?? '');
 		$this->data            = self::parseData($data['data'] ?? null);
+		$this->middleware      = self::parseStringList($data['middleware'] ?? null);
+		$this->accessGroups    = self::parseStringList($data['accessGroups'] ?? null);
 	}
 
 	/**
@@ -84,6 +92,51 @@ readonly class PageData
 		return is_array($decoded) ? $decoded : [];
 	}
 
+	/**
+	 * Coerce a string-list field (`middleware`, `accessGroups`). Accepts a
+	 * JSON-encoded array (from multicheckbox / list form widgets), a plain
+	 * PHP array, or a comma-separated string fallback. Empty/non-string
+	 * entries are dropped so a malformed value can't inject garbage downstream.
+	 *
+	 * @return list<string>
+	 */
+	private static function parseStringList(mixed $raw): array
+	{
+		if ($raw === null || $raw === '') {
+			return [];
+		}
+
+		// Form widgets serialize to a JSON array; some legacy inputs may
+		// still arrive as a comma-separated string.
+		if (is_string($raw)) {
+			$trimmed = trim($raw);
+			if ($trimmed !== '' && $trimmed[0] === '[') {
+				$decoded = json_decode($trimmed, true);
+				$raw     = is_array($decoded) ? $decoded : [];
+			} else {
+				$raw = array_map(trim(...), explode(',', $trimmed));
+			}
+		}
+
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$names = [];
+		foreach ($raw as $entry) {
+			if (!is_string($entry)) {
+				continue;
+			}
+			$entry = trim($entry);
+			if ($entry !== '') {
+				$names[] = $entry;
+			}
+		}
+
+		return $names;
+	}
+
+
 	public function isPublished(): bool
 	{
 		return !$this->draft;
@@ -107,6 +160,8 @@ readonly class PageData
 			'status'          => $this->status,
 			'redirectTo'      => $this->redirectTo,
 			'data'            => $this->data,
+			'middleware'      => $this->middleware,
+			'accessGroups'    => $this->accessGroups,
 		];
 	}
 }

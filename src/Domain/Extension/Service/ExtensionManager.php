@@ -209,6 +209,24 @@ final class ExtensionManager
 			}
 		}
 
+		// Wire page-middleware registrations from extensions into the registry.
+		if ($this->container->has(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class)) {
+			/** @var \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry $pageMiddlewareRegistry */
+			$pageMiddlewareRegistry = $this->container->get(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class);
+			foreach ($this->contexts as $id => $context) {
+				if (!$this->isCapabilityPermitted($id, 'page-middleware')) {
+					continue;
+				}
+				foreach ($context->getRegisteredPageMiddleware() as $name => $serviceId) {
+					try {
+						$pageMiddlewareRegistry->register($name, $serviceId);
+					} catch (\InvalidArgumentException $e) {
+						$this->logger->warning("Extension '{$id}' page-middleware registration failed: " . $e->getMessage());
+					}
+				}
+			}
+		}
+
 		// Wire Twig items from extensions into the TwigEngine (with collision protection)
 		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
 			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */

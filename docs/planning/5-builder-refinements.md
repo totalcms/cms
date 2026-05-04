@@ -83,7 +83,7 @@ The "wow, this is better than what I had" tier.
 2. ✅ **Proper preview pane** — shipped 2026-05-02 (TwigEngine::renderWithOverride + iframe panel)
 3. **Drag-and-drop file tree leveraging Depot** — partial: nested folders + filter shipped 2026-05-02; drag-to-move, inline rename, right-click new still pending. **Paused per Joe 2026-05-02.**
 4. **Page Inspector overlay + reverse routing helper.** Reverse routing (`cms.builder.url`) shipped 2026-05-02; floating overlay still pending. **Paused per Joe 2026-05-02.**
-5. **Finish the starters story.** Schemas + JumpStart demo data + Vite config + `README.twig` per starter. **Pending.**
+5. ✅ **Finish the starters story** — shipped 2026-05-03 (READMEs + opt-in demo data + opt-in Vite scaffold + per-starter CSS extraction). See "Shipped 2026-05-03" below for details.
 6. **Per-page `status` field** ✅ shipped 2026-05-02. `middleware` field deferred — needs design pass for the registry/extension-registration story.
 7. ✅ **Stale CLI cleanup** — shipped 2026-05-02.
 
@@ -101,23 +101,47 @@ The "wow, this is better than what I had" tier.
 
 ---
 
+### Shipped 2026-05-03
+
+**Starters polish (#5 — completed):**
+- `README.twig` shipped for **all 4 starters** — accessible at `/readme`, hidden from nav, tailored per starter (next steps, demo data hint, customizing pointers, links to docs).
+- `jumpstart.json` for **blog** (5 hand-written sample posts in the built-in `blog` collection) and **business** (a `service` schema, `services` collection with URL `/services`, plus 4 sample services). Imported via opt-in `--demo` flag — fail-soft so a broken demo doesn't fail the scaffold.
+- **Vite frontend scaffold** lives at `resources/builder/frontend/` and is shared across starters (one Vite config, not per-starter). Installed via the new standalone `tcms builder:frontend` command (idempotent, `--force` to overwrite) or via `--frontend` convenience flag on `builder:init`. Lands at `<projectRoot>/frontend/` with `vite.config.js`, `package.json`, `src/css/style.css`, `src/js/app.js`, `README.md`, `.gitignore`.
+- **Per-starter `assets/style.css`** — extracted the inline `<style>` blocks from each layout into real CSS files at `<starter>/assets/style.css`. Layouts now use `{{ cms.builder.css('style.css') }}`. Doubles as a teaching pattern for "where do I put my stylesheet?". Asset copy is wired into scaffold (idempotent, respects `--force`).
+- StarterService: `--force` now actually updates existing pages (was previously a no-op log). Order file always re-seeded from manifest. Empty-id manifest entries skipped with a warning. `loadManifest()` extracted to dedupe.
+- New tests: 22 cases on `StarterServiceTest` (up from 12), 12 on `StarterManifestTest`, 7 on `BuilderFrontendInstallerTest`.
+
+**Architectural polish (not in original plan, taken as the codebase grew):**
+- **`AdminBuilderAction` split.** Old 395-line action handling GET/preview/reorder split into: `AdminBuilderAction` (GET only, ~100 lines), `BuilderPreviewAction` + `BuilderPreviewService`, `BuilderReorderAction` + `BuilderReorderService`. Preview service handles all the context-resolution branching (previewUrl → PageRouter, path-based fallback, layout fallback, error rendering).
+- **`BuilderConfigService` split.** Old class did three things (config getters + first-run setup + legacy migration). Now split into `BuilderConfigService` (pure getters: `getPagesCollectionId`, `getDocroot`, `getAssetsPath`, `pagesCollectionExists`) + `BuilderInstaller` (ensure/migrate methods).
+- **`BuilderOrderService` → `+BuilderOrderRepository`.** Storage I/O extracted to a repo extending `StorageRepository`. Service keeps reconciliation, legacy migration, parent-map walking. Matches the rest of the codebase's repo/service pattern.
+- **`TemplateSnapshotService` → `+TemplateSnapshotRepository`.** Same split: repo owns the file I/O + path validation (throws `InvalidArgumentException` for traversal); service owns the retention policy + ordering + capture sequencing.
+- **`BuilderAssetScanner` extracted** out of `AdminBuilderAction` — file classification + manifest detection now lives in its own service, fully tested.
+- **Test audit + backfill.** 7 new test files covering Builder code that was previously untested or only indirectly covered: `BuilderOrderRepositoryTest` (9), `StarterManifestTest` (12), `BuilderAssetScannerTest` (8), `BuilderReorderServiceTest` (11), `BuilderReorderActionTest` (6), `BuilderPreviewServiceTest` (12), `StarterServiceTest` (initial 12). ~70 new cases. Caught a real subtlety (action 500/422 status mapping for missing `error` field).
+
+**Documentation rewrite:**
+- `overview.md`, `admin.md`, `cli.md`, `starters.md` fully updated for the new architecture. Removed all `layout`/`parent`/`sort` field references. Added: HTTP status codes, custom 404, redirects, `page.data`/`page.image`, order file + drag-drop reorder, preview pane behavior, template snapshot history, `builder:routes`/`builder:history`/`builder:frontend`, `--demo`/`--frontend` flags, Stylesheet section explaining the helper pattern.
+
+**Considered & DROPPED post-implementation (2026-05-03):**
+- **Layout back-references in sidebar.** Built (`BuilderLayoutBackrefs` service + 12 tests + UI panel + SCSS). Then removed: removing the page-level `layout` field killed the original use case. Content editors no longer pick layouts per page (it's a per-template concern now), and devs already have grep/IDE find-references. The two-hop "layout → templates → pages" chain was too clever for an audience that doesn't exist. Not a sunk-cost trap; the deletion was clean.
+
+---
+
 ### Still on the plan
 
-- **#5 Starters** — schemas + JumpStart demo data + Vite config + README.twig per starter (`business`, `blog` first)
 - **#6 Per-page `middleware` field** — deferred, needs design (registry of allowed middleware names, extension registration)
 - **#3 Drag/rename/new in file tree** — paused
 - **#4 Page Inspector overlay** — paused
 - **Theme A** Live-reload preview via SSE — UI-heavy
 - **Theme E** AI template assistant — UI-heavy
 - **Theme E** "Create page for this object" button — UI-heavy
-- **Layout back-references** in sidebar — small UI
 
 ---
 
 ### What's Already Excellent — Don't Touch
 
 - The middleware-based routing is the right architecture; the pivot away from PHP stubs was correct.
-- Pages-as-collection-objects gives every page draft/nav/sort/parent for free.
+- Pages-as-collection-objects gives every page draft/nav/sitemap toggles + status/redirect/data/image fields for free. Hierarchy and order live in the separate `.order.json` file (single small write, no event cascade on reorder).
 - `cms.builder.nav()` / `subnav()` / `navTree()` cover real-world navigation needs cleanly.
 - Non-HTML routes (`robots.txt`, etc.) already work — `EXTENSION_CONTENT_TYPES` auto-detects MIME from URL extension.
 - `/api/` prefix lands the route hierarchy in a sensible place.

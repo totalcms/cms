@@ -24,6 +24,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Support\Config;
 
@@ -544,11 +545,17 @@ class TotalForm implements \Stringable
 		return array_map(fn (CollectionData $c): string => $c->id, $collections);
 	}
 
-	protected ?TemplateLister $templateLister = null;
+	protected ?TemplateLister $templateLister                  = null;
+	protected ?PageMiddlewareRegistry $pageMiddlewareRegistry  = null;
 
 	public function setTemplateLister(TemplateLister $lister): void
 	{
 		$this->templateLister = $lister;
+	}
+
+	public function setPageMiddlewareRegistry(PageMiddlewareRegistry $registry): void
+	{
+		$this->pageMiddlewareRegistry = $registry;
 	}
 
 	/**
@@ -579,6 +586,22 @@ class TotalForm implements \Stringable
 		}
 
 		return $this->templateLister->listBuilderTemplates('pages', true);
+	}
+
+	/**
+	 * Get a list of registered page middleware names.
+	 * Used for propertyOptions: "pageMiddleware" in schema settings —
+	 * the builder-page form's middleware multiselect populates from this.
+	 *
+	 * @return array<string>
+	 */
+	public function pageMiddlewareList(): array
+	{
+		if (!$this->pageMiddlewareRegistry instanceof PageMiddlewareRegistry) {
+			return [];
+		}
+
+		return $this->pageMiddlewareRegistry->availableNames();
 	}
 
 	/**

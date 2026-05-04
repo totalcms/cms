@@ -33,6 +33,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -82,6 +83,7 @@ readonly class TotalFormFactory
 		private ExtensionManager $extensionManager,
 		private TemplateLister $templateLister,
 		private DevModeManager $devModeManager,
+		private PageMiddlewareRegistry $pageMiddlewareRegistry,
 	) {
 		$this->api = $this->config->api . '/api';
 	}
@@ -428,6 +430,7 @@ readonly class TotalFormFactory
 
 		$form = new TemplateForm(...$options);
 		$form->setTemplateLister($this->templateLister);
+		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 
 		return $form->autoBuild();
 	}
@@ -710,6 +713,7 @@ readonly class TotalFormFactory
 
 		$form = new ObjectForm(...$options);
 		$form->setTemplateLister($this->templateLister);
+		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 
 		return $form;
 	}

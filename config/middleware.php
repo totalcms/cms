@@ -27,7 +27,6 @@ return function (App $app): void {
 	$app->add(DevModeMiddleware::class);
 	$app->add(CacheInvalidationMiddleware::class);
 	$app->add(BundleMiddleware::class);
-	$app->add(SessionStartMiddleware::class);
 	$app->add(MaintenanceModeMiddleware::class);
 	$app->add(SetupCheckMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
@@ -45,6 +44,15 @@ return function (App $app): void {
 		$app->add(PreviewRouteMiddleware::class);
 	}
 
-	// Page router wraps everything — catches 404s from Slim and tries builder pages
+	// Page router wraps everything — catches 404s from Slim and tries builder pages.
 	$app->add(PageRouterMiddleware::class);
+
+	// Session must wrap PageRouter so the session is still open when
+	// PageRouter does its post-Slim work (matching builder pages, running
+	// per-page middleware like `auth`, rendering templates that read session
+	// state). If SessionStartMiddleware were registered earlier, save() would
+	// close the session before PageRouter got control back, and auth checks
+	// would see an empty session — which is what caused the /admin → builder
+	// page redirect loop.
+	$app->add(SessionStartMiddleware::class);
 };

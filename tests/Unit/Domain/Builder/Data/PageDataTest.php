@@ -175,4 +175,100 @@ final class PageDataTest extends TestCase
 
 		$this->assertSame($original->toArray(), $reconstructed->toArray());
 	}
+
+	// --- middleware ---
+
+	public function testMiddlewareDefaultsToEmptyList(): void
+	{
+		$page = new PageData([]);
+
+		$this->assertSame([], $page->middleware);
+	}
+
+	public function testMiddlewareAcceptsPlainArray(): void
+	{
+		$page = new PageData(['middleware' => ['auth', 'rate-limit']]);
+
+		$this->assertSame(['auth', 'rate-limit'], $page->middleware);
+	}
+
+	public function testMiddlewareDecodesJsonStringFromMultiselectForm(): void
+	{
+		// The multiselect form widget serializes values as a JSON array string.
+		$page = new PageData(['middleware' => '["auth","rate-limit"]']);
+
+		$this->assertSame(['auth', 'rate-limit'], $page->middleware);
+	}
+
+	public function testMiddlewareAcceptsCommaSeparatedStringFallback(): void
+	{
+		$page = new PageData(['middleware' => 'auth, rate-limit']);
+
+		$this->assertSame(['auth', 'rate-limit'], $page->middleware);
+	}
+
+	public function testMiddlewareDropsEmptyAndNonStringEntries(): void
+	{
+		$page = new PageData(['middleware' => ['auth', '', '  ', null, 42, 'log']]);
+
+		$this->assertSame(['auth', 'log'], $page->middleware);
+	}
+
+	public function testMiddlewareEmptyStringYieldsEmptyList(): void
+	{
+		$page = new PageData(['middleware' => '']);
+
+		$this->assertSame([], $page->middleware);
+	}
+
+	public function testMiddlewareInvalidJsonYieldsEmptyList(): void
+	{
+		// Looks like an array (leading `[`), but isn't valid JSON.
+		$page = new PageData(['middleware' => '[broken']);
+
+		$this->assertSame([], $page->middleware);
+	}
+
+	public function testMiddlewareIncludedInToArray(): void
+	{
+		$page = new PageData(['middleware' => ['auth']]);
+
+		$this->assertSame(['auth'], $page->toArray()['middleware']);
+	}
+
+	// --- accessGroups ---
+
+	public function testAccessGroupsDefaultsToEmptyList(): void
+	{
+		$this->assertSame([], (new PageData([]))->accessGroups);
+	}
+
+	public function testAccessGroupsAcceptsPlainArray(): void
+	{
+		$page = new PageData(['accessGroups' => ['staff', 'editors']]);
+
+		$this->assertSame(['staff', 'editors'], $page->accessGroups);
+	}
+
+	public function testAccessGroupsDecodesJsonStringFromListField(): void
+	{
+		// The list form widget serializes values as a JSON array string.
+		$page = new PageData(['accessGroups' => '["staff","editors"]']);
+
+		$this->assertSame(['staff', 'editors'], $page->accessGroups);
+	}
+
+	public function testAccessGroupsDropsEmptyAndNonStringEntries(): void
+	{
+		$page = new PageData(['accessGroups' => ['staff', '', null, 42, 'editors']]);
+
+		$this->assertSame(['staff', 'editors'], $page->accessGroups);
+	}
+
+	public function testAccessGroupsIncludedInToArray(): void
+	{
+		$page = new PageData(['accessGroups' => ['staff']]);
+
+		$this->assertSame(['staff'], $page->toArray()['accessGroups']);
+	}
 }

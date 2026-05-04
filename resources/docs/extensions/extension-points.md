@@ -301,6 +301,55 @@ public function register(ExtensionContext $context): void
 
 **Capability:** `container`
 
+## Page Middleware
+
+Register middleware that builder pages can opt into via their `middleware` field. Useful for auth gates, rate limits, geo redirects, A/B splits, or anything else that needs to run before a page renders. The middleware can short-circuit (return a response — auth redirect, 429, etc.) or pass through (return null) and let the page render.
+
+```php
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
+
+class GeoRedirect implements PageMiddlewareInterface
+{
+    public function __construct(private readonly GeoIPService $geo) {}
+
+    public function handle(ServerRequestInterface $request, PageData $page): ?ResponseInterface
+    {
+        if ($this->geo->countryFor($request) === 'EU') {
+            return (new \Nyholm\Psr7\Factory\Psr17Factory())
+                ->createResponse(302)
+                ->withHeader('Location', '/eu' . $request->getUri()->getPath());
+        }
+
+        return null;
+    }
+}
+```
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $context->addContainerDefinition(GeoRedirect::class, fn ($c) => new GeoRedirect(
+        $c->get(GeoIPService::class),
+    ));
+    $context->addPageMiddleware('geo-redirect', GeoRedirect::class);
+}
+```
+
+Once registered, `geo-redirect` shows up in the page form's middleware multiselect. Admins choose which pages use it; the runner invokes it in the order listed on each page.
+
+**Naming**: lowercase letters, digits, hyphens (e.g. `geo-redirect`, `staff-only`, `rate-limit`). Names are stable contract — once shipped, a rename will break sites that have it in their page records.
+
+**Failure modes**:
+- An unknown name in a page's middleware list (typo, uninstalled extension) is logged and silently skipped.
+- A middleware that throws causes the runner to return a 500 — fail-closed for security.
+
+**Capability:** `page-middleware`
+
+See the [Page Middleware section in the Builder overview](docs/builder/overview#page-middleware) for the user-facing perspective.
+
 ## Admin Assets
 
 Load custom CSS or JavaScript files in the admin interface.

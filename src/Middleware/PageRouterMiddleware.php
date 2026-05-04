@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
+use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
@@ -43,6 +45,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 	public function __construct(
 		private PageRouter $pageRouter,
 		private TwigEngine $twigEngine,
+		private PageMiddlewareRunner $pageMiddlewareRunner,
 	) {
 	}
 
@@ -85,6 +88,18 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			return (new Response())
 				->withStatus($match->status)
 				->withHeader('Location', $match->redirectTo);
+		}
+
+		// Per-page middleware chain — auth gates, rate limits, etc. Only
+		// applies to builder-page matches (collection-URL matches don't
+		// have a per-record middleware concept yet). The runner returns a
+		// Response if any middleware short-circuits; null means proceed.
+		if ($match->collection === null) {
+			$page = new PageData($match->pageData);
+			$middlewareResponse = $this->pageMiddlewareRunner->run($request, $page);
+			if ($middlewareResponse !== null) {
+				return $middlewareResponse;
+			}
 		}
 
 		try {

@@ -68,6 +68,9 @@ final class ExtensionContext
 	/** @var array<string,callable> */
 	private array $containerDefinitions = [];
 
+	/** @var array<string,string> page-middleware name => container service ID */
+	private array $pageMiddleware = [];
+
 	public function __construct(
 		private readonly ExtensionManifest $manifest,
 		private readonly string $extensionPath,
@@ -301,6 +304,21 @@ final class ExtensionContext
 		$this->containerDefinitions[$id] = $factory;
 	}
 
+	/**
+	 * Register a per-page middleware that builder pages can opt into via
+	 * their `middleware` field. The class must implement
+	 * {@see \TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface}
+	 * and be resolvable from the container — usually via an
+	 * `addContainerDefinition()` call alongside this one.
+	 *
+	 * @param string $name     Lower-case kebab-case name (e.g. `geo-redirect`)
+	 * @param string $serviceId Container service ID — typically the class FQN
+	 */
+	public function addPageMiddleware(string $name, string $serviceId): void
+	{
+		$this->pageMiddleware[$name] = $serviceId;
+	}
+
 	// -------------------------------------------------------------------------
 	// Getters (used by ExtensionManager to collect registrations)
 	// -------------------------------------------------------------------------
@@ -389,6 +407,12 @@ final class ExtensionContext
 		return $this->containerDefinitions;
 	}
 
+	/** @return array<string,string> page-middleware name => container service ID */
+	public function getRegisteredPageMiddleware(): array
+	{
+		return $this->pageMiddleware;
+	}
+
 	// -------------------------------------------------------------------------
 	// Capability detection
 	// -------------------------------------------------------------------------
@@ -415,6 +439,7 @@ final class ExtensionContext
 			'fields'         => 'Custom Fields',
 			'schemas'        => 'Schemas',
 			'container'      => 'Container Defs',
+			'page-middleware' => 'Page Middleware',
 		];
 	}
 
@@ -467,6 +492,9 @@ final class ExtensionContext
 		}
 		if ($this->containerDefinitions !== []) {
 			$caps['container'] = true;
+		}
+		if ($this->pageMiddleware !== []) {
+			$caps['page-middleware'] = true;
 		}
 		if (is_dir($this->extensionPath . '/schemas')) {
 			$caps['schemas'] = true;
