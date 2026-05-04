@@ -143,7 +143,10 @@ export default class DeckField extends TotalField {
         const editButton = itemElement.querySelector("button.edit");
         if (editButton) {
             // Small delay to allow DOM to settle
-            setTimeout(() => editButton.click(), 100);
+            setTimeout(() => {
+                editButton.click();
+                this.focusFirstInput(itemElement);
+            }, 100);
         }
 
         // Initialize the new item
@@ -161,6 +164,15 @@ export default class DeckField extends TotalField {
         this.form?.processFields();
 
 		return newItem;
+    }
+
+    focusFirstInput(itemElement) {
+        const dialog = itemElement.querySelector("dialog");
+        if (!dialog) return;
+
+        const selector = 'input:not([type="hidden"]):not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+        const firstInput = dialog.querySelector(selector);
+        firstInput?.focus();
     }
 
     initActionbar(itemElement) {
@@ -221,7 +233,10 @@ export default class DeckField extends TotalField {
         // Open the dialog to edit the duplicated item
         const editButton = clone.querySelector("button.edit");
         if (editButton) {
-            setTimeout(() => editButton.click(), 100);
+            setTimeout(() => {
+                editButton.click();
+                this.focusFirstInput(clone);
+            }, 100);
         }
 
 		this.changed();
