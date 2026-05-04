@@ -62,11 +62,8 @@ readonly class PageInspectorRenderer
 		}
 
 		$cookies = $request->getCookieParams();
-		if (($cookies[self::DISMISS_COOKIE] ?? '') === '1') {
-			return false;
-		}
 
-		return true;
+		return ($cookies[self::DISMISS_COOKIE] ?? '') !== '1';
 	}
 
 	/**

@@ -16,8 +16,8 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
-use TotalCMS\Support\OperationResult;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
 
 final class StarterServiceTest extends TestCase
@@ -106,7 +106,7 @@ final class StarterServiceTest extends TestCase
 		$starters = $this->service->listStarters();
 
 		$this->assertCount(2, $starters);
-		$names = array_map(static fn ($s) => $s->name, $starters);
+		$names = array_map(static fn (\TotalCMS\Domain\Builder\Data\StarterManifest $s): string => $s->name, $starters);
 		$this->assertContains('Blog', $names);
 		$this->assertContains('Portfolio', $names);
 	}
@@ -235,12 +235,8 @@ final class StarterServiceTest extends TestCase
 		// With --force, both should fall through to updateObject.
 		$this->objectUpdater->expects($this->exactly(2))
 			->method('updateObject')
-			->willReturnCallback(static function (string $col, string $id, array $record) {
-				$mock = (new \ReflectionClass(\TotalCMS\Domain\Object\Data\ObjectData::class))
-					->newInstanceWithoutConstructor();
-
-				return $mock;
-			});
+			->willReturnCallback(static fn (string $col, string $id, array $record): \TotalCMS\Domain\Object\Data\ObjectData => (new \ReflectionClass(\TotalCMS\Domain\Object\Data\ObjectData::class))
+					->newInstanceWithoutConstructor());
 
 		$result = $this->service->scaffold('blog', force: true);
 
@@ -261,7 +257,7 @@ final class StarterServiceTest extends TestCase
 
 		// First page exists, second doesn't.
 		$call = 0;
-		$this->objectSaver->method('saveObject')->willReturnCallback(function () use (&$call) {
+		$this->objectSaver->method('saveObject')->willReturnCallback(function () use (&$call): \TotalCMS\Domain\Object\Data\ObjectData {
 			$call++;
 			if ($call === 1) {
 				throw new \DomainException('Object with id home already exists');
@@ -339,7 +335,7 @@ final class StarterServiceTest extends TestCase
 			'pages' => [
 				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
 				['title' => 'Missing ID'],
-				['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about'],
+				['id'    => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about'],
 			],
 		]);
 

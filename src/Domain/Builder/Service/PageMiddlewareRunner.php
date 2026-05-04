@@ -34,7 +34,7 @@ readonly class PageMiddlewareRunner
 
 	/**
 	 * Run the page's middleware chain. Returns the short-circuit response
-	 * if any middleware produced one, or null to indicate "proceed to render."
+	 * if any middleware produced one, or null to indicate "proceed to render.".
 	 */
 	public function run(ServerRequestInterface $request, PageData $page): ?ResponseInterface
 	{
@@ -44,7 +44,7 @@ readonly class PageMiddlewareRunner
 
 		foreach ($page->middleware as $name) {
 			$middleware = $this->registry->resolve($name);
-			if ($middleware === null) {
+			if (!$middleware instanceof \TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface) {
 				$this->logger->warning('Skipping unknown page middleware', [
 					'name' => $name,
 					'page' => $page->id,
@@ -65,7 +65,7 @@ readonly class PageMiddlewareRunner
 				return $this->failClosed($e->getMessage());
 			}
 
-			if ($response !== null) {
+			if ($response instanceof ResponseInterface) {
 				return $response;
 			}
 		}

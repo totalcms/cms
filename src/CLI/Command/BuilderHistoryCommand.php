@@ -29,7 +29,7 @@ class BuilderHistoryCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$path = (string)$input->getArgument('path');
+		$path          = (string)$input->getArgument('path');
 		[$folder, $id] = TemplateRepository::parsePath($path);
 
 		$container = $this->totalcms->container();
@@ -138,7 +138,7 @@ class BuilderHistoryCommand extends BaseCommand
 				'timestamp' => $timestamp,
 			], JSON_PRETTY_PRINT));
 		} else {
-			$output->writeln("<info>Restored</info> to version " . date('Y-m-d H:i:s', $timestamp));
+			$output->writeln('<info>Restored</info> to version ' . date('Y-m-d H:i:s', $timestamp));
 		}
 
 		return Command::SUCCESS;

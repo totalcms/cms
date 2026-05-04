@@ -29,11 +29,11 @@ class BuilderInitCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$service        = $this->totalcms->container()->get(StarterService::class);
-		$list           = (bool)$input->getOption('list');
-		$starter        = $input->getArgument('starter');
-		$force          = (bool)$input->getOption('force');
-		$demo           = (bool)$input->getOption('demo');
+		$service         = $this->totalcms->container()->get(StarterService::class);
+		$list            = (bool)$input->getOption('list');
+		$starter         = $input->getArgument('starter');
+		$force           = (bool)$input->getOption('force');
+		$demo            = (bool)$input->getOption('demo');
 		$installFrontend = (bool)$input->getOption('frontend');
 
 		// List mode or no argument given

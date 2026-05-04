@@ -84,7 +84,7 @@ readonly class BuilderPreviewService
 	{
 		if ($previewUrl !== '') {
 			$match = $this->pageRouter->match($previewUrl);
-			if ($match !== null) {
+			if ($match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
 				$data = ['params' => $match->params];
 				// Same convention as PageRouterMiddleware: collection-URL
 				// matches expose the record as `object`, builder-page matches

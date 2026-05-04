@@ -44,7 +44,7 @@ class PageMiddlewareRegistry
 	 * Last-write-wins on collisions, matching how core/extension load order
 	 * resolves: core registers first, extensions can override.
 	 *
-	 * @throws \InvalidArgumentException When the name is malformed.
+	 * @throws \InvalidArgumentException when the name is malformed
 	 */
 	public function register(string $name, string $serviceId): void
 	{
@@ -96,7 +96,7 @@ class PageMiddlewareRegistry
 			$this->logger->warning('Page middleware service is not a PageMiddlewareInterface', [
 				'name'      => $name,
 				'serviceId' => $id,
-				'actual'    => is_object($instance) ? $instance::class : gettype($instance),
+				'actual'    => get_debug_type($instance),
 			]);
 
 			return null;
@@ -107,7 +107,7 @@ class PageMiddlewareRegistry
 
 	/**
 	 * @return list<string> sorted alphabetically — drives the schema picker
-	 *                      and any human-readable listing.
+	 *                      and any human-readable listing
 	 */
 	public function availableNames(): array
 	{

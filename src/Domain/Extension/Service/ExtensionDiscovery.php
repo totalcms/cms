@@ -50,7 +50,7 @@ final class ExtensionDiscovery
 		$user    = $this->scanPath($this->getExtensionsDirectory(), bundled: false);
 
 		// User-installed wins on collision. Log so the override is visible.
-		foreach ($user as $id => $manifest) {
+		foreach (array_keys($user) as $id) {
 			if (isset($bundled[$id])) {
 				$this->logger->info(
 					"Extension '{$id}' is bundled with Total CMS but also installed in tcms-data — the user-installed copy will be loaded.",

@@ -67,10 +67,8 @@ final class GeoRedirectLifecycleTest extends TestCase
 				'level' => \Monolog\Level::Debug,
 				'test'  => new NullLogger(),
 			]),
-			PageAuthMiddleware::class     => fn () => $this->createMock(PageAuthMiddleware::class),
-			PageMiddlewareRegistry::class => function (Container $c): PageMiddlewareRegistry {
-				return new PageMiddlewareRegistry($c);
-			},
+			PageAuthMiddleware::class     => fn (): \PHPUnit\Framework\MockObject\MockObject => $this->createMock(PageAuthMiddleware::class),
+			PageMiddlewareRegistry::class => fn (Container $c): PageMiddlewareRegistry => new PageMiddlewareRegistry($c),
 		]);
 		$this->container = $builder->build();
 
@@ -109,9 +107,9 @@ final class GeoRedirectLifecycleTest extends TestCase
 		// The full chain — discovered, entrypoint loaded, sibling
 		// middleware loaded, container def applied, name registered.
 		$this->stateRepo->saveState('totalcms/geo-redirect', new ExtensionState(
-			enabled:     true,
+			enabled: true,
 			installedAt: date('c'),
-			version:     '0.0.0',
+			version: '0.0.0',
 		));
 
 		$this->manager->discoverAndRegister();

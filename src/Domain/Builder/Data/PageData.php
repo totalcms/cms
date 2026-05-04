@@ -50,11 +50,11 @@ readonly class PageData
 		$this->sitemap         = (bool)($data['sitemap'] ?? true);
 		$this->changeFrequency = (string)($data['changeFrequency'] ?? '');
 		$this->priority        = (float)($data['priority'] ?? 0);
-		$this->status          = self::parseStatus($data['status'] ?? null);
+		$this->status          = $this->parseStatus($data['status'] ?? null);
 		$this->redirectTo      = (string)($data['redirectTo'] ?? '');
-		$this->data            = self::parseData($data['data'] ?? null);
-		$this->middleware      = self::parseStringList($data['middleware'] ?? null);
-		$this->accessGroups    = self::parseStringList($data['accessGroups'] ?? null);
+		$this->data            = $this->parseData($data['data'] ?? null);
+		$this->middleware      = $this->parseStringList($data['middleware'] ?? null);
+		$this->accessGroups    = $this->parseStringList($data['accessGroups'] ?? null);
 	}
 
 	/**
@@ -62,7 +62,7 @@ readonly class PageData
 	 * (non-3xx-or-larger) values are clamped to 200 so a malformed record
 	 * cannot make a page silently disappear behind an unknown status.
 	 */
-	private static function parseStatus(mixed $raw): int
+	private function parseStatus(mixed $raw): int
 	{
 		$status = (int)($raw ?? 200);
 
@@ -76,7 +76,7 @@ readonly class PageData
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function parseData(mixed $raw): array
+	private function parseData(mixed $raw): array
 	{
 		if (is_array($raw)) {
 			/** @var array<string,mixed> $raw */
@@ -100,7 +100,7 @@ readonly class PageData
 	 *
 	 * @return list<string>
 	 */
-	private static function parseStringList(mixed $raw): array
+	private function parseStringList(mixed $raw): array
 	{
 		if ($raw === null || $raw === '') {
 			return [];
@@ -135,7 +135,6 @@ readonly class PageData
 
 		return $names;
 	}
-
 
 	public function isPublished(): bool
 	{

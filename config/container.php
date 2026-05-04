@@ -430,7 +430,7 @@ return [
 		$container->get(ExtensionManager::class),
 		$container->get(TemplateLister::class),
 		$container->get(DevModeManager::class),
-		$container->get(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
+		$container->get(TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -530,7 +530,7 @@ return [
 	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
 		$container->get(BuilderConfigService::class),
 		$container->get(IndexReader::class),
-		$container->get(\TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
+		$container->get(TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
 		$container->get(Config::class),
 	),
 
@@ -1282,20 +1282,20 @@ return [
 		$dispatcher->listen('schema.saved', $lazy(CacheInvalidationListener::class, 'onSchemaSaved'), -90);
 
 		// ReloadPulseListener — Builder live-reload
-		$dispatcher->listen('template.saved', $lazy(\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
-		$dispatcher->listen('object.created', $lazy(\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
-		$dispatcher->listen('object.updated', $lazy(\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('template.saved', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
+		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
 
 		return $dispatcher;
 	},
 
-	\TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\Repository\ReloadPulseRepository => new \TotalCMS\Domain\Builder\Repository\ReloadPulseRepository(
-		$container->get(\TotalCMS\Domain\Storage\StorageFilesystemAdapter::class),
+	TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Repository\ReloadPulseRepository => new TotalCMS\Domain\Builder\Repository\ReloadPulseRepository(
+		$container->get(StorageFilesystemAdapter::class),
 	),
 
-	\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new \TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
-		$container->get(\TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class),
-		$container->get(\TotalCMS\Domain\Builder\Service\BuilderConfigService::class),
+	TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
+		$container->get(TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class),
+		$container->get(BuilderConfigService::class),
 	),
 
 	// -------------------------------------------------------------------------
@@ -1362,12 +1362,12 @@ return [
 	StarterService::class => fn (ContainerInterface $container): StarterService => new StarterService(
 		$container->get(BuilderConfigService::class),
 		$container->get(BuilderInstaller::class),
-		$container->get(\TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
+		$container->get(TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
 		$container->get(ObjectSaver::class),
 		$container->get(ObjectUpdater::class),
 		$container->get(TemplateLister::class),
 		$container->get(TemplateMigrationService::class),
-		$container->get(\TotalCMS\Domain\JumpStart\Service\JumpStartImporter::class),
+		$container->get(JumpStartImporter::class),
 		$container->get(LoggerFactory::class),
 	),
 
@@ -1382,25 +1382,25 @@ return [
 	// Per-page middleware infrastructure. Registry holds name → service-id
 	// mappings; runner consumes the registry. Core middleware are registered
 	// via the registry boot below; extensions register via ExtensionContext.
-	\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class => function (ContainerInterface $container): \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry {
-		$registry = new \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry(
+	TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class => function (ContainerInterface $container): TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry {
+		$registry = new TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry(
 			$container,
 			$container->get(LoggerFactory::class),
 		);
 		// Core middleware. Names are stable contract — once shipped, don't
 		// rename without a deprecation cycle (sites have these in page records).
-		$registry->register('auth', \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class);
+		$registry->register('auth', TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class);
 
 		return $registry;
 	},
 
-	\TotalCMS\Domain\Builder\Service\PageMiddlewareRunner::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\Service\PageMiddlewareRunner => new \TotalCMS\Domain\Builder\Service\PageMiddlewareRunner(
-		$container->get(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
+	TotalCMS\Domain\Builder\Service\PageMiddlewareRunner::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Service\PageMiddlewareRunner => new TotalCMS\Domain\Builder\Service\PageMiddlewareRunner(
+		$container->get(TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
 		$container->get(LoggerFactory::class),
 	),
 
-	\TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware => new \TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware(
-		$container->get(\TotalCMS\Domain\Auth\Service\AccessManager::class),
+	TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware => new TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware(
+		$container->get(AccessManager::class),
 		$container->get(Config::class),
 	),
 ];

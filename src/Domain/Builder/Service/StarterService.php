@@ -56,7 +56,7 @@ readonly class StarterService
 				continue;
 			}
 			$manifest = $this->loadManifest($entry);
-			if ($manifest !== null) {
+			if ($manifest instanceof StarterManifest) {
 				$starters[] = $manifest;
 			}
 		}
@@ -75,7 +75,7 @@ readonly class StarterService
 	public function scaffold(string $starterName, bool $force = false, bool $importDemoData = false): OperationResult
 	{
 		$manifest = $this->loadManifest($starterName);
-		if ($manifest === null) {
+		if (!$manifest instanceof StarterManifest) {
 			return OperationResult::failure("Starter '{$starterName}' not found");
 		}
 
@@ -117,7 +117,7 @@ readonly class StarterService
 		]);
 
 		$assetsNote = $assetsCopied > 0 ? ", {$assetsCopied} asset(s) copied" : '';
-		$message = "Scaffolded '{$manifest->name}' starter: {$copied} files copied{$assetsNote}, {$pagesCreated} pages created";
+		$message    = "Scaffolded '{$manifest->name}' starter: {$copied} files copied{$assetsNote}, {$pagesCreated} pages created";
 		if ($demo !== null) {
 			$message .= $demo['ok']
 				? ', demo data imported'

@@ -44,7 +44,7 @@ class BuilderOrderRepository extends StorageRepository
 		}
 
 		/** @var list<array<string,mixed>> $tree */
-		$tree = array_values(array_filter($raw, 'is_array'));
+		$tree = array_values(array_filter($raw, is_array(...)));
 
 		return $tree;
 	}

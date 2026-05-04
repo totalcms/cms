@@ -7,9 +7,6 @@ namespace Tests\Unit\Domain\Builder\Service;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 

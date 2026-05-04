@@ -37,7 +37,7 @@ readonly class TemplateSaver
 		}
 
 		$existing = $this->storage->fetchBuilderTemplate($id, $folder);
-		if ($existing !== null && $existing->contents !== $contents) {
+		if ($existing instanceof TemplateData && $existing->contents !== $contents) {
 			$this->snapshots->capture($id, $folder, $existing->contents);
 		}
 

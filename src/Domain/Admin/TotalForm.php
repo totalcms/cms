@@ -7,6 +7,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -24,7 +25,6 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Support\Config;
 

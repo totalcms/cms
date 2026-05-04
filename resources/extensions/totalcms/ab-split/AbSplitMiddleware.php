@@ -32,8 +32,8 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
  */
 class AbSplitMiddleware implements PageMiddlewareInterface
 {
-	public const COOKIE_PREFIX  = 'tcms_ab_';
-	public const COOKIE_TTL     = 30 * 86400;
+	public const COOKIE_PREFIX   = 'tcms_ab_';
+	public const COOKIE_TTL      = 30 * 86400;
 	public const DEFAULT_PERCENT = 50;
 
 	public function __construct(private readonly TwigEngine $twigEngine)

@@ -40,14 +40,14 @@ readonly class PageReloadInjectorRenderer
 	 */
 	public function maybeInject(string $body, ServerRequestInterface $request): string
 	{
-		if (!$this->shouldInject($request)) {
+		if (!$this->shouldInject()) {
 			return $body;
 		}
 
 		return $this->injectBeforeBodyClose($body, $this->renderSnippet());
 	}
 
-	private function shouldInject(ServerRequestInterface $request): bool
+	private function shouldInject(): bool
 	{
 		if (!$this->accessManager->sessionHasUser()) {
 			return false;

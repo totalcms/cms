@@ -99,9 +99,9 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// to JSON consumers, otherwise an auth-protected page would happily
 		// hand its data to a logged-out visitor that asks for `?_format=json`.
 		if ($match->collection === null) {
-			$page = new PageData($match->pageData);
+			$page               = new PageData($match->pageData);
 			$middlewareResponse = $this->pageMiddlewareRunner->run($request, $page);
-			if ($middlewareResponse !== null) {
+			if ($middlewareResponse instanceof ResponseInterface) {
 				// A short-circuiting middleware (e.g. ab-split variant B) may
 				// have rendered HTML at this URL. Inject the inspector into
 				// that HTML too — otherwise the chip would silently disappear

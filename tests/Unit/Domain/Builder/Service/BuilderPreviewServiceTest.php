@@ -82,11 +82,9 @@ final class BuilderPreviewServiceTest extends TestCase
 			->with(
 				'pages/about.twig',
 				'<h1>{{ page.title }}</h1>',
-				$this->callback(function (array $data) use ($pageData): bool {
-					return ($data['page'] ?? null) === $pageData
+				$this->callback(fn (array $data): bool => ($data['page'] ?? null) === $pageData
 						&& ($data['params'] ?? null) === ['foo' => 'bar']
-						&& !array_key_exists('object', $data);
-				}),
+						&& !array_key_exists('object', $data)),
 			)
 			->willReturn('<h1>About</h1>');
 
@@ -112,11 +110,9 @@ final class BuilderPreviewServiceTest extends TestCase
 			->with(
 				'pages/blog.twig',
 				'<article>{{ object.title }}</article>',
-				$this->callback(function (array $data) use ($objectData): bool {
-					return ($data['object'] ?? null) === $objectData
+				$this->callback(fn (array $data): bool => ($data['object'] ?? null) === $objectData
 						&& ($data['params'] ?? null) === ['id' => 'first-post']
-						&& !array_key_exists('page', $data);
-				}),
+						&& !array_key_exists('page', $data)),
 			)
 			->willReturn('<article>First Post</article>');
 
@@ -226,11 +222,11 @@ final class BuilderPreviewServiceTest extends TestCase
 			->with(
 				'pages/about.twig',
 				'tpl',
-				$this->callback(static function (array $data): bool {
+				$this->callback(
 					// Empty PageData is rendered — page.title is empty string.
-					return isset($data['page']) && ($data['page']['title'] ?? null) === ''
-						&& ($data['params'] ?? null) === [];
-				}),
+					static fn (array $data): bool => isset($data['page']) && ($data['page']['title'] ?? null) === ''
+						&& ($data['params'] ?? null) === []
+				),
 			)
 			->willReturn('rendered');
 
@@ -248,9 +244,7 @@ final class BuilderPreviewServiceTest extends TestCase
 			->with(
 				'layouts/default.twig',
 				'tpl',
-				$this->callback(static function (array $data): bool {
-					return isset($data['page']) && ($data['params'] ?? null) === [];
-				}),
+				$this->callback(static fn (array $data): bool => isset($data['page']) && ($data['params'] ?? null) === []),
 			)
 			->willReturn('rendered');
 

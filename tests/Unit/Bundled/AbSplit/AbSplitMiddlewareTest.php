@@ -227,11 +227,9 @@ final class AbSplitMiddlewareTest extends TestCase
 	{
 		$this->twig->expects($this->once())
 			->method('render')
-			->with('pages/contact-b.twig', $this->callback(function (array $data): bool {
-				return ($data['page']['id'] ?? '') === 'contact'
+			->with('pages/contact-b.twig', $this->callback(fn (array $data): bool => ($data['page']['id'] ?? '') === 'contact'
 					&& ($data['page']['title'] ?? '') === 'Contact'
-					&& ($data['params']['ref'] ?? '') === 'email';
-			}))
+					&& ($data['params']['ref'] ?? '') === 'email'))
 			->willReturn('rendered');
 
 		$request = $this->psr17->createServerRequest('GET', '/contact?ref=email')

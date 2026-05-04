@@ -85,10 +85,8 @@ final class BundledExtensionLifecycleTest extends TestCase
 				'level' => \Monolog\Level::Debug,
 				'test'  => new NullLogger(),
 			]),
-			PageAuthMiddleware::class     => fn () => $this->createMock(PageAuthMiddleware::class),
-			PageMiddlewareRegistry::class => function (Container $c): PageMiddlewareRegistry {
-				return new PageMiddlewareRegistry($c);
-			},
+			PageAuthMiddleware::class     => fn (): \PHPUnit\Framework\MockObject\MockObject => $this->createMock(PageAuthMiddleware::class),
+			PageMiddlewareRegistry::class => fn (Container $c): PageMiddlewareRegistry => new PageMiddlewareRegistry($c),
 		]);
 		$this->container = $builder->build();
 
@@ -206,10 +204,10 @@ final class BundledExtensionLifecycleTest extends TestCase
 		// turned off, the middleware should NOT register even when the
 		// extension itself is enabled.
 		$this->stateRepo->saveState('totalcms/ab-split', new ExtensionState(
-			enabled:      true,
-			installedAt:  date('c'),
-			version:      '0.0.0',
-			permissions:  ['container' => true, 'page-middleware' => false],
+			enabled: true,
+			installedAt: date('c'),
+			version: '0.0.0',
+			permissions: ['container' => true, 'page-middleware' => false],
 		));
 
 		$this->manager->discoverAndRegister();
@@ -222,9 +220,9 @@ final class BundledExtensionLifecycleTest extends TestCase
 	private function enableExtension(string $id): void
 	{
 		$this->stateRepo->saveState($id, new ExtensionState(
-			enabled:     true,
+			enabled: true,
 			installedAt: date('c'),
-			version:     '0.0.0',
+			version: '0.0.0',
 		));
 	}
 

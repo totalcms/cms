@@ -323,11 +323,20 @@ class TemplateRepository extends StorageRepository
 
 			$files = [];
 			foreach ($contents as $item) {
-				if ($item->isFile() && str_ends_with($item->path(), self::FILE_EXT)) {
-					// Remove base path and .twig extension (strip folder prefix, not just BUILDER_DIR)
-					$relativePath = substr($item->path(), strlen($basePath));
-					$files[]      = substr($relativePath, 0, -strlen(self::FILE_EXT));
+				if (!$item->isFile() || !str_ends_with($item->path(), self::FILE_EXT)) {
+					continue;
 				}
+				$relativePath = substr($item->path(), strlen($basePath));
+				// Skip TemplateSnapshotRepository's history snapshots — they're
+				// stored as real .twig files but aren't editable templates,
+				// they're version-history payloads. Surfacing them in admin
+				// sidebars / quick-nav / pickers would be confusing and would
+				// also break the editor since their paths don't round-trip
+				// through `fetchBuilderTemplate()`.
+				if (str_starts_with($relativePath, '.history/')) {
+					continue;
+				}
+				$files[] = substr($relativePath, 0, -strlen(self::FILE_EXT));
 			}
 
 			// Sort alphabetically

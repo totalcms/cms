@@ -61,7 +61,7 @@ final class PageReloadInjectorRendererTest extends TestCase
 		$this->assertStringContainsString('<script', $result);
 		$this->assertStringContainsString('EventSource', $result);
 		$this->assertStringContainsString('https://example.test/admin/builder/events', $result);
-		$this->assertStringContainsString("location.reload()", $result);
+		$this->assertStringContainsString('location.reload()', $result);
 	}
 
 	public function testInjectsBeforeClosingBodyTag(): void

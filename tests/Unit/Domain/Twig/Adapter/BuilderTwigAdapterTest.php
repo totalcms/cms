@@ -53,6 +53,7 @@ final class BuilderTwigAdapterTest extends TestCase
 
 	/**
 	 * @param  list<array<string,mixed>> $pages
+	 *
 	 * @return list<array{id:string,children:list<array<string,mixed>>}>
 	 */
 	private function buildOrderTreeFromLegacyPages(array $pages): array

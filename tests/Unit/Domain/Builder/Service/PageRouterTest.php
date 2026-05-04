@@ -36,7 +36,10 @@ final class PageRouterTest extends TestCase
 		// Tests can override with their own callback if needed.
 		$this->urlBuilder->method('normalizeUrlPattern')
 			->willReturnCallback(static function (string $url): string {
-				if (str_contains($url, '{{')) return $url;
+				if (str_contains($url, '{{')) {
+					return $url;
+				}
+
 				return (string)preg_replace('/\{(\w+)\}/', '{{ $1 }}', $url);
 			});
 

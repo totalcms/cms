@@ -74,7 +74,7 @@ class BuilderRoutesCommand extends BaseCommand
 		foreach ($rows as $i => $row) {
 			$conflictMap[$row['route']][] = $i;
 		}
-		foreach ($rows as $i => &$row) {
+		foreach ($rows as &$row) {
 			$row['conflict'] = count($conflictMap[$row['route']]) > 1;
 		}
 		unset($row);

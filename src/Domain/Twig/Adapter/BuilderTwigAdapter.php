@@ -266,6 +266,7 @@ class BuilderTwigAdapter
 	/**
 	 * @param  list<array{id:string,children:list<array<string,mixed>>}> $tree
 	 * @param  array<string,array<string,mixed>>                          $pageById
+	 *
 	 * @return list<array<string,mixed>>
 	 */
 	private function attachRecords(array $tree, array $pageById, bool $publicOnly): array
@@ -317,6 +318,7 @@ class BuilderTwigAdapter
 	 * Find a node by id anywhere in a tree.
 	 *
 	 * @param  array<array<string,mixed>>  $tree
+	 *
 	 * @return array<string,mixed>|null
 	 */
 	private function findNode(array $tree, string $id): ?array

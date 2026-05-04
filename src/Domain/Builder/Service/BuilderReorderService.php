@@ -24,7 +24,8 @@ readonly class BuilderReorderService
 	/**
 	 * Apply a reorder for the configured pages collection.
 	 *
-	 * @param  array<string,mixed>     $payload  The POST body (raw form fields).
+	 * @param  array<string,mixed>     $payload  the POST body (raw form fields)
+	 *
 	 * @return array{ok:bool,error?:string,count?:int} Result tuple. `ok=false`
 	 *         indicates a client/server error and includes a user-facing
 	 *         `error` message; the action maps it to an HTTP status.
@@ -53,6 +54,7 @@ readonly class BuilderReorderService
 	 * input so the caller can return 422 with a clear message.
 	 *
 	 * @param  array<string,mixed>          $post
+	 *
 	 * @return list<array<string,mixed>>|null
 	 */
 	private function parseTree(array $post): ?array
@@ -68,7 +70,7 @@ readonly class BuilderReorderService
 		}
 
 		/** @var list<array<string,mixed>> $tree */
-		$tree = array_values(array_filter($decoded, 'is_array'));
+		$tree = array_values(array_filter($decoded, is_array(...)));
 
 		return $tree;
 	}

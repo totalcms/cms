@@ -120,11 +120,9 @@ final class BuilderReorderServiceTest extends TestCase
 			->method('write')
 			->with(
 				'builder-pages',
-				$this->callback(function (array $tree): bool {
-					return count($tree) === 2
+				$this->callback(fn (array $tree): bool => count($tree) === 2
 						&& $tree[0]['id'] === 'home'
-						&& $tree[1]['id'] === 'about';
-				}),
+						&& $tree[1]['id'] === 'about'),
 			)
 			->willReturnArgument(1);
 

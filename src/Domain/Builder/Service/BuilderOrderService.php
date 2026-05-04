@@ -74,6 +74,7 @@ readonly class BuilderOrderService
 	 * deduplicates, then writes a clean tree. Returns the cleaned tree.
 	 *
 	 * @param  list<array<string,mixed>> $tree
+	 *
 	 * @return list<array{id:string,children:list<array<string,mixed>>}>
 	 */
 	public function write(string $collectionId, array $tree): array
@@ -119,6 +120,7 @@ readonly class BuilderOrderService
 	 *
 	 * @param  list<array<string,mixed>>|array<int,mixed> $tree
 	 * @param  list<string>                               $existingIds
+	 *
 	 * @return list<array{id:string,children:list<array<string,mixed>>}>
 	 */
 	private function reconcile(array $tree, array $existingIds): array
@@ -142,6 +144,7 @@ readonly class BuilderOrderService
 	 * @param  list<array<string,mixed>>|array<int,mixed> $nodes
 	 * @param  array<string,int>                          $existing  flip of valid ids
 	 * @param  array<string,bool>                         $seen      (out param)
+	 *
 	 * @return list<array{id:string,children:list<array<string,mixed>>}>
 	 */
 	private function cleanNodes(array $nodes, array $existing, array &$seen): array
@@ -218,6 +221,7 @@ readonly class BuilderOrderService
 
 	/**
 	 * @param  array<string,list<array{id:string,sort:int}>> $byParent
+	 *
 	 * @return list<array{id:string,children:list<array<string,mixed>>}>
 	 */
 	private function buildSubtree(string $parentId, array $byParent): array
