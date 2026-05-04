@@ -202,3 +202,7 @@ This will show only in-stock products, sorted alphabetically by name. Sorting wo
 - **Boolean values** - Strict comparison for optimal performance
 
 Multiple filters are comma-separated: `"exclude": "draft:true,private:true"`
+
+## Orphaned Values
+
+Relational options are always strict — if a stored value references an object that has since been deleted (or filtered out by `include`/`exclude`), the orphaned ID is silently dropped from the rendered options rather than shown as a raw, label-less entry. This is the opposite default to [`propertyOptions`](docs/property-options/property-options), which rescues stored values by default; the `mergeStoredValues` toggle does not apply here.

@@ -495,7 +495,18 @@ class FormField
 		if (isset($this->settings['accessGroupOptions']) && $this->settings['accessGroupOptions'] === true) {
 			$this->options = array_merge($this->options, $this->form->accessGroupOptionsForField());
 		}
-		if (is_array($this->value) && $this->value !== [] && !isset($this->settings['relationalOptions'])) {
+		// Stored values are merged into the option list by default so that
+		// orphaned values (e.g. a previously-selected option whose source has
+		// since gone away) remain visible. Setting `mergeStoredValues: false`
+		// strips orphans — useful when option sources are fully owned by code,
+		// e.g. extension-provided pageMiddleware entries that vanish when the
+		// extension is disabled.
+		$mergeStoredValues = $this->settings['mergeStoredValues'] ?? true;
+		if (
+			$mergeStoredValues
+			&& is_array($this->value) && $this->value !== []
+			&& !isset($this->settings['relationalOptions'])
+		) {
 			// Only merge values that aren't already represented in the options
 			// to avoid duplicating predefined options (e.g. multicheckbox fields)
 			$existingValues = [];
