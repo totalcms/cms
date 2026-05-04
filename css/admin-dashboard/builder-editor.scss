@@ -367,7 +367,7 @@
 	flex             : 0 0 auto;
 	display          : flex;
 	align-items      : center;
-	justify-content  : space-between;
+	gap              : 1rem;
 	padding          : 0.5rem 1rem;
 	border-bottom    : 1px solid oklch(var(--totalform-border-color));
 	background-color : oklch(var(--totalform-nearwhite));
@@ -376,18 +376,124 @@
 		margin    : 0;
 		font-size : 1rem;
 		color     : oklch(var(--totalform-darkgray));
-	}
-
-	> div {
-		display : flex;
-		gap     : 0.25rem;
+		flex      : 0 0 auto;
 	}
 }
 
+.builder-preview-presets {
+	flex        : 1 1 auto;
+	display     : flex;
+	align-items : center;
+	gap         : 0.25rem;
+}
+
+.builder-preview-preset {
+	padding          : 0.25rem 0.6rem;
+	font-size        : 0.8rem;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-purewhite));
+	color            : oklch(var(--totalform-darkgray));
+	cursor           : pointer;
+	transition       : background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+
+	&.is-active {
+		background-color : oklch(var(--totalform-accent));
+		border-color     : oklch(var(--totalform-accent));
+		// color            : oklch(var(--totalform-purewhite));
+	}
+}
+
+.builder-preview-width {
+	margin-inline-start : 0.5rem;
+	font-size           : 0.8rem;
+	color               : oklch(var(--totalform-mediumgray));
+	font-variant-numeric: tabular-nums;
+	min-width           : 4.5rem;
+}
+
+.builder-preview-actions {
+	flex    : 0 0 auto;
+	display : flex;
+	gap     : 0.25rem;
+}
+
+// Stage holds the resizable viewport. Background mimics devtools' device frame
+// so a narrow viewport reads as "phone-sized canvas," not as a broken layout.
+.builder-preview-stage {
+	flex        : 1 1 auto;
+	min-height  : 0;
+	display     : flex;
+	align-items : stretch;
+	justify-content: center;
+	overflow    : auto;
+	padding     : 1rem;
+	background  : oklch(var(--totalform-icon-bg));
+}
+
+.builder-preview-viewport {
+	position      : relative;
+	height        : 100%;
+	width         : 100%;
+	max-width     : 100%;
+	background    : oklch(var(--totalform-purewhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	overflow      : hidden;
+	box-shadow    : 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
 .builder-preview-frame {
-	flex       : 1 1 auto;
+	display    : block;
 	width      : 100%;
-	min-height : 0;
+	height     : 100%;
 	border     : 0;
 	background : oklch(var(--totalform-purewhite));
+}
+
+// Right-edge drag handle. Wider hit area than the visible bar so it's easy to
+// grab; the visible affordance is the centered pill.
+.builder-preview-resizer {
+	position    : absolute;
+	top         : 0;
+	right       : -6px;
+	width       : 12px;
+	height      : 100%;
+	cursor      : ew-resize;
+	touch-action: none;
+	z-index     : 2;
+
+	&::before {
+		content       : "";
+		position      : absolute;
+		top           : 50%;
+		left          : 0;
+		translate     : -50% -50%;
+		width         : 6px;
+		height        : 36px;
+		border-radius : 8px;
+		background    : oklch(var(--totalform-mediumgray));
+		opacity       : 0.4;
+		transition    : opacity 150ms ease, background-color 150ms ease;
+	}
+
+	&:hover::before {
+		opacity    : 1;
+		background : oklch(var(--totalform-accent));
+	}
+}
+
+// While dragging, force ew-resize cursor and disable iframe pointer events so
+// the iframe doesn't swallow the mousemove stream.
+body.builder-preview-resizing {
+	cursor      : ew-resize !important;
+	user-select : none;
+
+	.builder-preview-frame {
+		pointer-events : none;
+	}
 }
