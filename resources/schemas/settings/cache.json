@@ -29,14 +29,14 @@
 			"default" : true
 		},
 		"redisConfig": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "Redis Configuration",
 			"help"        : "Redis cache backend configuration. Options: <code>host</code> (string), <code>port</code> (int), <code>timeout</code> (int), <code>password</code> (string|null), <code>database</code> (int).",
 			"placeholder" : "{\"host\": \"127.0.0.1\", \"port\": 6379, \"timeout\": 1, \"password\": null, \"database\": 0}"
 		},
 		"memcachedConfig": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "Memcached Configuration",
 			"help"        : "Memcached cache backend configuration. Options: <code>host</code> (string), <code>port</code> (int).",

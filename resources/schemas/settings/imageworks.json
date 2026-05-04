@@ -28,14 +28,14 @@
 			"default"     : "watermark-fonts"
 		},
 		"defaults": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "ImageWorks Defaults",
 			"help"        : "Default parameters applied to all image generation. Common options include format (fm), quality (q), fit, and more. See ImageWorks documentation for all available parameters.",
 			"placeholder" : "{\"fm\": \"jpg\", \"q\": 92}"
 		},
 		"presets": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "ImageWorks Presets",
 			"help"        : "JSON that defines presets that can be used for image generation. See the ImageWorks documentation for details on all of the parameters that can be used.",

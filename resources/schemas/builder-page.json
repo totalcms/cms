@@ -74,7 +74,7 @@
 			"factory" : "boolean"
 		},
 		"data": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"label"       : "Page Data",
 			"help"        : "Optional JSON data exposed to the template as <code>page.data.*</code>. Use this for one-off page content (hero text, CTAs, etc.) without creating a one-row collection.",
 			"field"       : "json",
@@ -89,13 +89,14 @@
 			"help"     : "Optional behaviors to enable on this page — for example, requiring a logged-in visitor (<code>auth</code>). Features run in order; the first one to short-circuit (e.g. redirect to login) stops the rest. Additional features can be added by extensions.",
 			"field"    : "multicheckbox",
 			"settings" : {
-				"propertyOptions" : "pageMiddleware",
-				"sortOptions"     : true,
-				"fieldColumns"    : "200px"
+				"propertyOptions"   : "pageMiddleware",
+				"mergeStoredValues" : false,
+				"sortOptions"       : true,
+				"fieldColumns"      : "200px"
 			}
 		},
 		"accessGroups": {
-			"type"     : "array",
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"    : "Access Groups",
 			"help"     : "Restrict the <code>auth</code> middleware to users in one or more access groups. Leave blank to allow any logged-in user. Logged-in users not in the listed groups get a 403 response (no redirect to login).",
 			"field"    : "list",

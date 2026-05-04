@@ -850,7 +850,7 @@ readonly class TotalFormFactory
 
 			// Special handling for JSON fields - convert arrays to JSON strings for display
 			if ($fieldType === 'json' && is_array($currentValue)) {
-				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
+				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 			}
 
 			// Build field options
@@ -967,7 +967,7 @@ readonly class TotalFormFactory
 			$currentValue = $settings[$fieldName] ?? $fieldSchema['default'] ?? '';
 
 			if ($fieldType === 'json' && is_array($currentValue)) {
-				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
+				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 			}
 
 			$fieldSettings = [

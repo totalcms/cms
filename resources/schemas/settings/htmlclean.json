@@ -12,21 +12,21 @@
 			"default" : true
 		},
 		"allowed_css_properties": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "Allowed CSS Properties",
 			"help"        : "Array of CSS properties that are allowed in inline styles. Any other CSS properties will be stripped during sanitization.",
 			"placeholder" : "[\"color\", \"background-color\", \"font-size\", \"font-weight\", \"text-align\", \"margin\", \"padding\"]"
 		},
 		"allowed_tags": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "Allowed HTML Tags",
 			"help"        : "Optional: Specify an array of allowed HTML tags. If not set, a default safe list will be used. Example: <code>[\"p\", \"strong\", \"em\", \"a\", \"ul\", \"ol\", \"li\"]</code>",
 			"placeholder" : "[\"p\", \"strong\", \"em\", \"a\"]"
 		},
 		"allowed_iframe_domains": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
 			"field"       : "json",
 			"label"       : "Allowed iFrame Domains",
 			"help"        : "Optional: Specify an array of domains that are allowed for iframe embeds. Example: <code>[\"www.youtube.com\", \"player.vimeo.com\"]</code>",

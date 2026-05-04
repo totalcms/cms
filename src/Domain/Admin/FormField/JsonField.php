@@ -14,7 +14,7 @@ class JsonField extends TextareaField
 		parent::init();
 
 		if (!is_string($this->value)) {
-			$this->value = json_encode($this->value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+			$this->value = json_encode($this->value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 		}
 	}
 }

@@ -7,8 +7,12 @@
 			"description" : "JSON field for structured data. Stores arbitrary key-value objects."
 		},
 		{
+			"type"        : "array",
+			"description" : "JSON field as a list/array."
+		},
+		{
 			"type"        : "string",
-			"description" : "JSON field as a raw JSON string."
+			"description" : "JSON field as a raw JSON string (legacy data shape; new saves write object/array natively)."
 		},
 		{
 			"$ref": "https://www.totalcms.co/schemas/properties/empty.json"

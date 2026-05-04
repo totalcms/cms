@@ -55,7 +55,7 @@ readonly class PropertyFactory
 
 		// Handle array passed to string type (schema/form mismatch)
 		if (is_array($value) && $type === 'string') {
-			$value = json_encode($value);
+			$value = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		}
 
 		// Handle JSON string passed to array types (form sends JSON strings for complex fields)
