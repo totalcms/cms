@@ -15,6 +15,12 @@ export default class CardField extends TotalField {
 
         this.schemaref = container.dataset.schemaref || container.dataset.deckref || '';
 
+        // Sub-field edits propagate up via `subfield-change` (TotalField fires it
+        // from changed() when isSubField() is true). Without this listener the
+        // card itself stays clean even when its children are dirty — same pattern
+        // deck.js, image.js, and file.js use.
+        this.container.addEventListener("subfield-change", () => this.changed());
+
         // Visibility lookups (`watch: enabled`) need to resolve against the card's
         // sub-fields, not the parent form's top-level fields. Defer until the form
         // is ready so all sub-field TotalField instances exist on their containers.

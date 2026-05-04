@@ -144,7 +144,8 @@
 	}
 
 	&:has(.form-field.unsaved),
-	&.new-property {
+	&.new-property,
+	&.unsaved {
 		border-color: oklch(var(--totalform-changed)) !important;
 	}
 	&:has(.form-field.error) {
