@@ -58,4 +58,20 @@ readonly class BuilderConfigService
 
 		return is_string($path) && $path !== '' ? $path : self::DEFAULT_ASSETS_PATH;
 	}
+
+	/**
+	 * Whether the live-reload preview feature is enabled. Drives whether the
+	 * SSE script is injected into HTML responses for admin sessions and
+	 * whether the SSE endpoint accepts connections at all.
+	 *
+	 * Defaults to `true` — admins editing in the Builder almost always want
+	 * the live preview, and the script is fully gated by admin session so
+	 * non-admins never see it.
+	 */
+	public function isLiveReloadEnabled(): bool
+	{
+		$value = $this->config->builder['liveReload'] ?? true;
+
+		return (bool)$value;
+	}
 }

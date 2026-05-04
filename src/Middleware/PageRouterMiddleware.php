@@ -12,6 +12,7 @@ use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
+use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
@@ -48,6 +49,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		private TwigEngine $twigEngine,
 		private PageMiddlewareRunner $pageMiddlewareRunner,
 		private PageInspectorRenderer $pageInspector,
+		private PageReloadInjectorRenderer $pageReloadInjector,
 	) {
 	}
 
@@ -129,12 +131,13 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			$body        = $this->twigEngine->render($match->template, $data);
 			$contentType = $this->detectContentType($path);
 
-			// Inject the admin-only Page Inspector overlay for HTML responses.
-			// Gating (logged-in admin, dismiss cookie) lives in the renderer;
-			// the content-type check is here because the renderer doesn't see
-			// the response object.
+			// Inject the admin-only Page Inspector overlay and live-reload
+			// snippet for HTML responses. Gating (logged-in admin, dismiss
+			// cookie, setting toggle) lives in the renderers; the content-
+			// type check is here because the renderers don't see the response.
 			if (str_starts_with($contentType, 'text/html')) {
 				$body = $this->pageInspector->maybeInject($body, $request, $match);
+				$body = $this->pageReloadInjector->maybeInject($body, $request);
 			}
 
 			$pageResponse = new Response();
@@ -222,6 +225,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 
 		$body     = (string)$response->getBody();
 		$injected = $this->pageInspector->maybeInject($body, $request, $match);
+		$injected = $this->pageReloadInjector->maybeInject($injected, $request);
 		if ($injected === $body) {
 			return $response;
 		}

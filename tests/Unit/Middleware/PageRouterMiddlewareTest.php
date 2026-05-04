@@ -9,6 +9,7 @@ use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
+use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Middleware\PageRouterMiddleware;
@@ -20,6 +21,7 @@ final class PageRouterMiddlewareTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
 	private \PHPUnit\Framework\MockObject\MockObject $pageMiddlewareRunner;
 	private \PHPUnit\Framework\MockObject\MockObject $pageInspector;
+	private \PHPUnit\Framework\MockObject\MockObject $pageReloadInjector;
 
 	protected function setUp(): void
 	{
@@ -27,14 +29,17 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->twigEngine           = $this->createMock(TwigEngine::class);
 		$this->pageMiddlewareRunner = $this->createMock(PageMiddlewareRunner::class);
 		$this->pageInspector        = $this->createMock(PageInspectorRenderer::class);
+		$this->pageReloadInjector   = $this->createMock(PageReloadInjectorRenderer::class);
 
 		// Default: middleware chain is empty / passes through. Individual
 		// tests that care about per-page middleware behavior override this.
 		$this->pageMiddlewareRunner->method('run')->willReturn(null);
 
-		// Default: inspector is a no-op (returns the body unchanged). Tests
-		// that care about injection override this expectation.
+		// Defaults: both injectors are no-ops (return the body unchanged).
+		// Tests that care about injection override these expectations.
 		$this->pageInspector->method('maybeInject')
+			->willReturnCallback(fn (string $body): string => $body);
+		$this->pageReloadInjector->method('maybeInject')
 			->willReturnCallback(fn (string $body): string => $body);
 
 		$this->middleware = new PageRouterMiddleware(
@@ -42,6 +47,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->twigEngine,
 			$this->pageMiddlewareRunner,
 			$this->pageInspector,
+			$this->pageReloadInjector,
 		);
 	}
 
@@ -493,6 +499,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->twigEngine,
 			$this->pageMiddlewareRunner,
 			$inspector,
+			$this->pageReloadInjector,
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -536,6 +543,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->twigEngine,
 			$runner,
 			$inspector,
+			$this->pageReloadInjector,
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -574,6 +582,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->twigEngine,
 			$runner,
 			$inspector,
+			$this->pageReloadInjector,
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -604,6 +613,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->twigEngine,
 			$this->pageMiddlewareRunner,
 			$inspector,
+			$this->pageReloadInjector,
 		);
 
 		$middleware->process($request, $handler);

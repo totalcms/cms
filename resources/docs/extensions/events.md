@@ -164,6 +164,22 @@ $context->addEventListener('schema.deleted', function (array $payload): void {
 });
 ```
 
+### `template.saved`
+
+Fired after a Builder template (`.twig` file) is written via `TemplateSaver`. Powers the Builder live-reload feature internally — extensions can listen too, e.g., to re-warm a template cache or trigger a downstream rebuild.
+
+| Key | Type | Description |
+|---|---|---|
+| `id` | `string` | Template id without folder prefix (e.g., `about`, `partials/header`) |
+| `folder` | `string\|null` | Optional sub-folder (`pages`, `layouts`, etc.) or `null` for root |
+| `path` | `string` | Full path including folder (e.g., `pages/about`) |
+
+```php
+$context->addEventListener('template.saved', function (array $payload): void {
+    // e.g., flush a template-derived cache key
+});
+```
+
 ### `user.login`
 
 Fired after a user successfully logs in.

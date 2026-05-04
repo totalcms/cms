@@ -129,12 +129,36 @@ The "wow, this is better than what I had" tier.
 
 ### Still on the plan
 
-- **#6 Per-page `middleware` field** — deferred, needs design (registry of allowed middleware names, extension registration)
-- **#3 Drag/rename/new in file tree** — paused
-- **#4 Page Inspector overlay** — paused
-- **Theme A** Live-reload preview via SSE — UI-heavy
-- **Theme E** AI template assistant — UI-heavy
-- **Theme E** "Create page for this object" button — UI-heavy
+- **#3 Drag/rename/new in file tree** — explicitly dropped (current sidebar is sufficient)
+- **Theme E** AI template assistant — deferred to MCP server work (3.3 headline feature)
+- **Theme E** "Create page for this object" button — deferred to MCP server work
+- **Theme B** Reverse routing helper — already shipped as `cms.builder.url()`, just needed docs
+- **Theme D** Stacks deck wrapper — already shipped as `cms.builder.stacksPage(path, extract)`, just needed docs
+
+#### Shipped 2026-05-04
+
+- ✅ **#6 Per-page `middleware` field** — full framework shipped: `PageMiddlewareInterface`, `PageMiddlewareRegistry`, `PageMiddlewareRunner`, `accessGroups` field, `ExtensionContext::addPageMiddleware()`, capability detection, schema field with multicheckbox UI, page form section "Features." Also surfaced + fixed five latent bugs in the extension framework (`addContainerDefinition` no-op, `resolveClassName` regex, sibling-class loading, headless-mode bypassing middleware, broken logger setup).
+- ✅ **Bundled extension distribution** — `resources/extensions/` discovery path, user-installed override, automatic version pinning to T3, refusal to remove, capability gating.
+- ✅ **First bundled extensions** — `totalcms/ab-split` (alternate template + sticky cookie) and `totalcms/geo-redirect` (CDN-header country routing).
+- ✅ **#4 Page Inspector overlay** — `PageInspectorRenderer` injects an admin-only floating chip before `</body>` on builder-page and collection-URL renders. Shows match type, page/object id, template, route, status, params, active features, plus an "Edit page" / "Edit object" deep link. Gated on admin session + dismiss cookie (`tcms_inspector_hidden`, 30-day TTL). HTML-only. Also injected into short-circuit responses (e.g. ab-split variant B) so the chip is consistent across variants.
+
+#### Shipped 2026-05-05
+
+- ✅ **Theme A: Live-reload preview via SSE** — `BuilderEventsAction` SSE endpoint at `GET /admin/builder/events` plus `PageReloadInjectorRenderer` that injects an EventSource client into HTML responses for admin sessions. `ReloadPulseRepository` writes a millisecond-precision timestamp to `tcms-data/.system/builder-reload-pulse.json` whenever a template or pages-collection record is saved; `ReloadPulseListener` wires `template.saved`, `object.created`, `object.updated` to the pulse. Connected admin tabs receive a `reload` event and call `location.reload()`. New `template.saved` event added to the dispatcher. New `liveReload` boolean setting (default true). 30-second connection lifetime + EventSource auto-reconnect to recycle workers. `session_write_close()` on entry to avoid blocking other admin requests on the session lock. 16 new unit tests across repo + listener + renderer; PageRouterMiddleware integration covered by existing tests + 2 new injection paths.
+- ✅ **Reverse routing helper documentation** — `cms.builder.url('blog-post', {id: 'foo'})` was already shipped + tested; documented in overview.md.
+- ✅ **Stacks coexistence documentation** — `cms.builder.stacksPage(path, extract)` was already shipped (extracts any tag from a Stacks-rendered HTML file); documented in overview.md.
+
+---
+
+### Project Status: Complete (2026-05-05)
+
+The Site Builder refinements project is closed. Everything that was sized as
+small-and-valuable has shipped. The remaining UI-heavy items (drag/drop file
+tree, AI template assistant, "create page for object") are deliberately deferred:
+the file tree was dropped (current sidebar works), and the AI features fold
+into the upcoming MCP server work where they belong.
+
+Future bundled-extension work — including queued ideas (`password`, `scheduled`, `maintenance`, `ratelimit`) and the deferred middleware-contract extension for header injection — is tracked in [`bundled-extensions-roadmap.md`](bundled-extensions-roadmap.md).
 
 ---
 

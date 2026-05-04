@@ -51,3 +51,4 @@ public/assets
 /tests/tcms-data/.system/extensions.json
 /tests/tcms-data/.system/jobqueue
 /resources/docs/search-index.json
+/tests/tcms-data/.system/builder-reload-pulse.json

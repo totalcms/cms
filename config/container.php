@@ -1281,8 +1281,22 @@ return [
 		$dispatcher->listen('import.completed', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
 		$dispatcher->listen('schema.saved', $lazy(CacheInvalidationListener::class, 'onSchemaSaved'), -90);
 
+		// ReloadPulseListener — Builder live-reload
+		$dispatcher->listen('template.saved', $lazy(\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
+		$dispatcher->listen('object.created', $lazy(\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.updated', $lazy(\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+
 		return $dispatcher;
 	},
+
+	\TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\Repository\ReloadPulseRepository => new \TotalCMS\Domain\Builder\Repository\ReloadPulseRepository(
+		$container->get(\TotalCMS\Domain\Storage\StorageFilesystemAdapter::class),
+	),
+
+	\TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): \TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new \TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
+		$container->get(\TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class),
+		$container->get(\TotalCMS\Domain\Builder\Service\BuilderConfigService::class),
+	),
 
 	// -------------------------------------------------------------------------
 	// Extensions

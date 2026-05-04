@@ -17,6 +17,13 @@
 			"label"       : "Assets Path",
 			"help"        : "Public assets directory relative to docroot. Your build tool should output CSS, JS, and other assets here.",
 			"placeholder" : "assets"
+		},
+		"liveReload": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Live Reload Preview",
+			"help"    : "When you save a Builder template or page, every open admin tab on a Builder page reloads automatically. Only active for logged-in admin sessions; visitors never see it.",
+			"default" : true
 		}
 	}
 }

@@ -455,6 +455,26 @@ All three functions accept an optional collection ID to use a different pages co
 {% set tree = cms.builder.navTree('my-custom-pages') %}
 ```
 
+### Reverse Routing
+
+`cms.builder.url()` resolves a page's URL by id, filling in any dynamic `{param}` placeholders. Use it to link to pages without hard-coding routes — if you rename `/blog/{id}` to `/posts/{id}` later, every link rebuilds itself.
+
+```twig
+{# Static page #}
+<a href="{{ cms.builder.url('about') }}">About</a>
+
+{# Dynamic route — params fill the placeholders #}
+<a href="{{ cms.builder.url('blog-post', { id: post.id }) }}">{{ post.title }}</a>
+```
+
+Behavior:
+
+- Returns the route prefixed with `cms.api` (the site's base URL).
+- Missing pages return an empty string.
+- Unfilled placeholders are left in the URL (e.g. `/blog/{id}`) so the broken reference is visible at render time, not at click time.
+- URL-encodes param values automatically.
+- Optional third argument selects a different pages collection: `cms.builder.url('about', {}, 'my-custom-pages')`.
+
 ### Draft vs Nav
 
 The `draft` and `nav` toggles serve different purposes:
@@ -548,6 +568,23 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ /path/to/tcms [QSA,L]
 ```
+
+### Embedding Stacks Content in Builder Pages
+
+`cms.builder.stacksPage()` reads a Stacks-published HTML file from the docroot so a Builder template can embed it. Use it for incremental migration — keep an existing Stacks page or section in service while you rebuild around it.
+
+```twig
+{# Embed an entire Stacks-rendered page #}
+{{ cms.builder.stacksPage('/about')|raw }}
+
+{# Pull only the inner <body> contents (drop Stacks' html/head wrappers) #}
+{{ cms.builder.stacksPage('/about', 'body')|raw }}
+
+{# Or any other tag — first <main>, first <nav>, etc. #}
+{{ cms.builder.stacksPage('/legacy/header.html', 'nav')|raw }}
+```
+
+Resolution tries the path as-is, then with `.html`, then `/index.html`. Path traversal is blocked, missing files return an empty string. The second argument extracts the inner content of the first matching tag — handy for dropping a Stacks-rendered deck or section into a Builder layout without inheriting the surrounding `<html>`/`<head>` boilerplate.
 
 ## See Also
 

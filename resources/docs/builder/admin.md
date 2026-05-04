@@ -252,6 +252,41 @@ The inspector is only injected when:
 
 It's injected before the last `</body>` in the response, so it can't be served to logged-out visitors via cached HTML — the cache typically lives upstream of the inspector check.
 
+## Live Reload Preview
+
+When you save a Builder template or page record, every open admin tab on a Builder page **automatically reloads** to show the new version. No manual refresh, no Vite/Node dependency, works for any page served by the Builder.
+
+Mechanically: the admin's browser holds an EventSource connection open to `/admin/builder/events`. When `TemplateSaver` writes a file, or any record in the pages collection changes, the server bumps a "pulse" timestamp. The endpoint sees the bump and pushes a `reload` event to every connected tab, which calls `location.reload()`.
+
+### What triggers a reload
+
+- Saving any Builder template (`.twig` file, including layouts/partials/macros)
+- Creating or updating any page record in the Pages collection (route changes, status changes, redirects, the `template` field, etc.)
+
+Asset rebuilds (CSS, JS) do not trigger a reload — Vite already handles that for projects that use it. If you change a CSS file in your editor, refresh manually or rely on Vite's HMR.
+
+### Visibility rules
+
+The script is only injected when:
+
+1. The visitor has an active admin session
+2. The response is HTML (`text/html`)
+3. The Live Reload setting is enabled
+
+Visitors never see the script and never connect to the event stream.
+
+### Disabling
+
+Toggle **Admin > Settings > Builder > Live Reload Preview** off to disable. Useful when:
+
+- You're staging changes and want to review them deliberately rather than as you save
+- You're profiling or recording the front-end and don't want background EventSource connections
+- Your hosting is sensitive to long-lived HTTP connections (each open admin tab holds one for ~30 seconds before reconnecting)
+
+### How long-lived connections behave
+
+Each admin tab opens one connection that lives ~30 seconds before the server closes it; the browser's EventSource auto-reconnects immediately. This caps server worker time without affecting UX. If you're running PHP-FPM with a tight worker pool and many simultaneous admins, that's the metric to watch.
+
 ## Settings
 
 Builder settings are available at **Admin > Settings > Builder**:
@@ -260,6 +295,7 @@ Builder settings are available at **Admin > Settings > Builder**:
 |---------|------|---------|-------------|
 | Pages Collection | text | `builder-pages` | The collection used for page metadata |
 | Assets Path | text | `assets` | Path under the docroot where compiled assets land (used by the Asset Browser) |
+| Live Reload Preview | toggle | on | Auto-reload open admin tabs when a template or page is saved (see above) |
 
 ## Routes
 
@@ -270,6 +306,7 @@ Builder settings are available at **Admin > Settings > Builder**:
 | GET | `/admin/builder/page/{id}` | Edit page form |
 | GET | `/admin/builder/{category}/{file}` | Template editor |
 | GET | `/admin/builder/new` | New template form |
+| GET | `/admin/builder/events` | Live-reload SSE stream (`text/event-stream`) |
 | POST | `/admin/builder/preview` | Render template against live context, return HTML |
 | POST | `/admin/builder/reorder` | Apply a drag-drop reorder, write the order file |
 
@@ -281,5 +318,6 @@ Template CRUD operations go through the standard template API at `/api/templates
 - [Page Schema Fields](docs/builder/overview#page-schema-fields)
 - [Page Order](docs/builder/overview#page-order)
 - [Page Inspector Overlay](#page-inspector-overlay)
+- [Live Reload Preview](#live-reload-preview)
 - [Builder CLI Commands](docs/builder/cli) — including `builder:routes` and `builder:history`
 - [Starter Templates](docs/builder/starters)

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Template\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\TemplateEventPayload;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
@@ -16,6 +18,7 @@ readonly class TemplateSaver
 	public function __construct(
 		private TemplateRepository $storage,
 		private TemplateSnapshotService $snapshots,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -39,6 +42,8 @@ readonly class TemplateSaver
 		}
 
 		$this->storage->saveTemplate($template, $folder);
+
+		$this->eventDispatcher->dispatch('template.saved', new TemplateEventPayload($id, $folder));
 
 		return $template;
 	}
