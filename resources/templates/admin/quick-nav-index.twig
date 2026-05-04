@@ -3,6 +3,17 @@
 	Builds a JSON array of all navigable admin items for the quick-nav dialog.
 	Included in admin-dashboard.twig so it's available on every admin page.
 #}
+{# Recursive macro — flattens the builder pages tree into quick-nav entries.
+   Children get a leading "↳ " so the nesting is visible in the search results
+   without requiring the dialog itself to render the tree. #}
+{% macro builderPageItems(pages, indent) %}
+{% for page in pages %}
+{"label":"{{ (indent ~ (page.title|default(page.id))) | e('js') }}","section":"Builder Pages","path":"builder/page/{{ page.id | e('js') }}","keywords":"builder page {{ page.route|default('') | e('js') }}"},
+{% if page.children is defined and page.children is not empty %}
+{{ _self.builderPageItems(page.children, indent ~ '↳ ') }}
+{% endif %}
+{% endfor %}
+{% endmacro %}
 <script>
 window.TCMS_QUICK_NAV = [
 {# ── Top-level nav items ── #}
@@ -242,6 +253,20 @@ window.TCMS_QUICK_NAV = [
 ] %}
 {% for doc in docMenu %}
 {"label":"{{ doc.title }}","section":"Docs","path":"docs/{{ doc.path }}","keywords":"{{ doc.group }} documentation"},
+{% endfor %}
+{% endif %}
+
+{# ── Builder pages ── #}
+{% if cms.auth.canAccessTemplates() %}
+{{ _self.builderPageItems(cms.builder.pagesTree(), '') }}
+{% endif %}
+
+{# ── Builder templates (layouts, partials, macros, pages, etc.) ── #}
+{% if cms.auth.canAccessTemplates() %}
+{% for folder, templates in cms.admin.templatesByFolder() %}
+{% for tpl in templates %}
+{"label":"{{ tpl.path | e('js') }}","section":"Builder Templates","path":"builder/{{ tpl.path | e('js') }}","keywords":"builder template {{ folder | e('js') }}"},
+{% endfor %}
 {% endfor %}
 {% endif %}
 
