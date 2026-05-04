@@ -11,11 +11,11 @@
 
 	> .form-group {
 		width     : fit-content;
-		min-width : 200px;
+		min-width : 100px;
 	}
 
 	.dz-preview {
-		min-width        : 200px;
+		min-width        : 100px;
 		background-color : oklch(var(--totalform-nearwhite));
 
 		&:hover {
@@ -23,6 +23,10 @@
 				opacity: 0.5;
 			}
 		}
+	}
+
+	>.form-group:has(.not-found) .dz-overlay {
+    	opacity: 1;
 	}
 
 	.total-preview {
@@ -50,6 +54,7 @@
 
 		button {
 			margin : 0;
+			scale  : 0.85;
 		}
 	}
 
