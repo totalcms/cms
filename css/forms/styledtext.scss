@@ -291,14 +291,6 @@
 			height        : auto;
 			border-radius : 4px;
 			margin-bottom : 1rem;
-
-			&.ProseMirror-selectednode {
-				outline : 2px solid oklch(var(--totalform-accent));
-			}
-		}
-
-		figure.ste-figure.ProseMirror-selectednode {
-			outline : 2px solid oklch(var(--totalform-accent));
 		}
 
 		// Placeholder
@@ -308,6 +300,25 @@
 			color          : oklch(var(--totalform-mediumgray));
 			pointer-events : none;
 			height         : 0;
+		}
+
+		// Selection outline for atom nodes (img/figure/video/youtube/table).
+		// Scoped to .ProseMirror-focused so the outline is only visible while
+		// the editor is focused — otherwise ProseMirror's default initial
+		// NodeSelection on a leading atom would show on page load.
+		&.ProseMirror-focused {
+			img.ProseMirror-selectednode,
+			figure.ste-figure.ProseMirror-selectednode,
+			video.ProseMirror-selectednode,
+			div[data-youtube-video].ProseMirror-selectednode,
+			table.ProseMirror-selectednode {
+				outline : 2px solid oklch(var(--totalform-accent));
+			}
+
+			div[data-youtube-video].ProseMirror-selectednode,
+			table.ProseMirror-selectednode {
+				border-radius : 4px;
+			}
 		}
 	}
 }
@@ -358,20 +369,12 @@
 			border   : 0;
 		}
 
-		&.ProseMirror-selectednode {
-			outline       : 2px solid oklch(var(--totalform-accent));
-			border-radius : 4px;
-		}
 	}
 
 	video {
 		max-width     : 100%;
 		height        : auto;
 		border-radius : 4px;
-
-		&.ProseMirror-selectednode {
-			outline: 2px solid oklch(var(--totalform-accent));
-		}
 	}
 }
 
@@ -1090,12 +1093,6 @@ dialog.ste-dialog {
 				border         : 2px solid oklch(var(--totalform-accent));
 			}
 		}
-	}
-
-	// Table selected state
-	table.ProseMirror-selectednode {
-		outline       : 2px solid oklch(var(--totalform-accent));
-		border-radius : 4px;
 	}
 
 	// Column resize handle
