@@ -5,6 +5,8 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Twig\Data\FrontendAsset;
+use TotalCMS\Domain\Twig\Service\AssetRenderer;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\VersionData;
@@ -31,6 +33,12 @@ class TotalCMSTwigAdapter
 	public string $clearcache;
 	public VersionData $version;
 	public string $currentUrl;
+
+	/** @var list<FrontendAsset> */
+	private array $frontendAssetsList = [];
+
+	/** @var list<FrontendAsset> */
+	private array $adminAssetsList = [];
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function __construct(
@@ -235,36 +243,85 @@ class TotalCMSTwigAdapter
 		throw new \BadMethodCallException("Method '{$name}' does not exist on TotalCMSTwigAdapter.");
 	}
 
-	/** @var array{css: list<string>, js: list<string>} */
-	private array $extensionAssetUrls = ['css' => [], 'js' => []];
-
 	/**
-	 * Set extension asset URLs (called by ExtensionManager during boot).
+	 * Append frontend asset records (called by ExtensionManager and
+	 * CoreFrontendAssetRegistrar during boot). Incoming URLs are relative
+	 * (e.g. `/assets/foo.js`); we prepend the API base here so AssetRenderer
+	 * can emit them verbatim.
 	 *
-	 * @param array{css: list<string>, js: list<string>} $assets
+	 * @param list<FrontendAsset> $assets
 	 */
-	public function setExtensionAssets(array $assets): void
+	public function addFrontendAssets(array $assets): void
 	{
-		$this->extensionAssetUrls = $assets;
+		foreach ($assets as $asset) {
+			$this->frontendAssetsList[] = $this->withApiBase($asset);
+		}
 	}
 
 	/**
-	 * Render extension CSS and JS asset tags.
+	 * Append admin asset records (called by ExtensionManager during boot).
 	 *
-	 * Usage in Twig: {{ cms.extensionAssets() }}
+	 * @param list<FrontendAsset> $assets
 	 */
-	public function extensionAssets(): string
+	public function addAdminAssets(array $assets): void
 	{
-		$html = '';
-
-		foreach ($this->extensionAssetUrls['css'] as $css) {
-			$html .= '<link rel="stylesheet" href="' . htmlspecialchars($this->api . $css) . '">' . "\n";
+		foreach ($assets as $asset) {
+			$this->adminAssetsList[] = $this->withApiBase($asset);
 		}
+	}
 
-		foreach ($this->extensionAssetUrls['js'] as $js) {
-			$html .= '<script type="module" src="' . htmlspecialchars($this->api . $js) . '"></script>' . "\n";
-		}
+	/**
+	 * Return a copy of the asset with its URL rewritten to be absolute
+	 * against the current API base.
+	 */
+	private function withApiBase(FrontendAsset $asset): FrontendAsset
+	{
+		return new FrontendAsset(
+			type: $asset->type,
+			url: $this->api . $asset->url,
+			position: $asset->position,
+			module: $asset->module,
+			preload: $asset->preload,
+		);
+	}
 
-		return $html;
+	/**
+	 * Render frontend asset tags for the document head.
+	 *
+	 * Usage in Twig: {{ cms.assetsHead() }}
+	 */
+	public function assetsHead(): string
+	{
+		return AssetRenderer::head($this->frontendAssetsList);
+	}
+
+	/**
+	 * Render frontend asset tags for the document body.
+	 *
+	 * Usage in Twig: {{ cms.assetsBody() }}
+	 */
+	public function assetsBody(): string
+	{
+		return AssetRenderer::body($this->frontendAssetsList);
+	}
+
+	/**
+	 * Render admin asset tags for the document head.
+	 *
+	 * Usage in Twig: {{ cms.adminAssetsHead() }}
+	 */
+	public function adminAssetsHead(): string
+	{
+		return AssetRenderer::head($this->adminAssetsList);
+	}
+
+	/**
+	 * Render admin asset tags for the document body.
+	 *
+	 * Usage in Twig: {{ cms.adminAssetsBody() }}
+	 */
+	public function adminAssetsBody(): string
+	{
+		return AssetRenderer::body($this->adminAssetsList);
 	}
 }

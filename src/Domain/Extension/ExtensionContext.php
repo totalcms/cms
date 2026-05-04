@@ -59,8 +59,11 @@ final class ExtensionContext
 	/** @var array<string,string> Field name => default schema property type */
 	private array $fieldDefaultTypes = [];
 
-	/** @var list<array{type: string, path: string}> */
+	/** @var list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
 	private array $adminAssets = [];
+
+	/** @var list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
+	private array $frontendAssets = [];
 
 	/** @var array<string,list<array{callable, int}>> */
 	private array $eventListeners = [];
@@ -258,12 +261,67 @@ final class ExtensionContext
 	/**
 	 * Register a CSS or JS asset to be loaded in the admin.
 	 *
-	 * @param string $type 'css' or 'js'
-	 * @param string $path Path relative to the extension's assets/ directory
+	 * Defaults: CSS → head, JS → body, JS modules → type="module", preload off,
+	 * cache busting via file mtime.
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @param string             $type     'css' or 'js'
+	 * @param string             $path     Path relative to the extension's assets/ directory
+	 * @param 'head'|'body'|null $position Override default placement (CSS defaults to head, JS to body)
+	 * @param bool               $module   JS only — load as ES module (default true)
+	 * @param bool               $preload  Emit a paired <link rel="preload"> in head (default false)
+	 * @param string|null        $version  Override cache-busting query string (default: file mtime)
 	 */
-	public function addAdminAsset(string $type, string $path): void
-	{
-		$this->adminAssets[] = ['type' => $type, 'path' => $path];
+	public function addAdminAsset(
+		string $type,
+		string $path,
+		?string $position = null,
+		bool    $module   = true,
+		bool    $preload  = false,
+		?string $version  = null,
+	): void {
+		$this->adminAssets[] = [
+			'type'     => $type,
+			'path'     => $path,
+			'position' => $position,
+			'module'   => $module,
+			'preload'  => $preload,
+			'version'  => $version,
+		];
+	}
+
+	/**
+	 * Register a CSS or JS asset to be loaded on public pages.
+	 *
+	 * Defaults: CSS → head, JS → body, JS modules → type="module", preload off,
+	 * cache busting via file mtime.
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @param string             $type     'css' or 'js'
+	 * @param string             $path     Path relative to the extension's assets/ directory
+	 * @param 'head'|'body'|null $position Override default placement (CSS defaults to head, JS to body)
+	 * @param bool               $module   JS only — load as ES module (default true)
+	 * @param bool               $preload  Emit a paired <link rel="preload"> in head (default false)
+	 * @param string|null        $version  Override cache-busting query string (default: file mtime)
+	 */
+	public function addFrontendAsset(
+		string $type,
+		string $path,
+		?string $position = null,
+		bool    $module   = true,
+		bool    $preload  = false,
+		?string $version  = null,
+	): void {
+		$this->frontendAssets[] = [
+			'type'     => $type,
+			'path'     => $path,
+			'position' => $position,
+			'module'   => $module,
+			'preload'  => $preload,
+			'version'  => $version,
+		];
 	}
 
 	/**
@@ -377,10 +435,16 @@ final class ExtensionContext
 		return $this->dashboardWidgets;
 	}
 
-	/** @return list<array{type: string, path: string}> */
+	/** @return list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
 	public function getRegisteredAdminAssets(): array
 	{
 		return $this->adminAssets;
+	}
+
+	/** @return list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
+	public function getRegisteredFrontendAssets(): array
+	{
+		return $this->frontendAssets;
 	}
 
 	/** @return array<string,class-string> */
@@ -435,6 +499,7 @@ final class ExtensionContext
 			'admin:nav'       => 'Admin Nav',
 			'admin:widgets'   => 'Dash Widgets',
 			'admin:assets'    => 'Admin Assets',
+			'frontend:assets' => 'Frontend Assets',
 			'events:listen'   => 'Event Listeners',
 			'fields'          => 'Custom Fields',
 			'schemas'         => 'Schemas',
@@ -483,6 +548,9 @@ final class ExtensionContext
 		}
 		if ($this->adminAssets !== []) {
 			$caps['admin:assets'] = true;
+		}
+		if ($this->frontendAssets !== []) {
+			$caps['frontend:assets'] = true;
 		}
 		if ($this->eventListeners !== []) {
 			$caps['events:listen'] = true;

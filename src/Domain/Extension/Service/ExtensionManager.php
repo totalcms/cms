@@ -19,6 +19,7 @@ use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -253,10 +254,9 @@ final class ExtensionManager
 				}
 			}
 
-			// Pass extension nav items, widgets, and assets to templates as globals
+			// Pass extension nav items and widgets to templates as globals
 			$navItems = $this->getAllAdminNavItems();
 			$widgets  = $this->getAllDashboardWidgets();
-			$assets   = $this->getAllAdminAssets();
 
 			$globals = [];
 			if ($navItems !== []) {
@@ -265,14 +265,25 @@ final class ExtensionManager
 			if ($widgets !== []) {
 				$globals['extensionDashWidgets'] = $widgets;
 			}
-			if ($assets['css'] !== [] || $assets['js'] !== []) {
-				$globals['extensionAssets'] = $assets;
 
-				// Also set on the CMS adapter for {{ cms.extensionAssets() }}
-				if ($this->container->has(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class)) {
-					/** @var \TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter $cmsAdapter */
-					$cmsAdapter = $this->container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
-					$cmsAdapter->setExtensionAssets($assets);
+			// Wire admin + frontend assets through the CMS adapter for the
+			// new cms.adminAssetsHead/Body() and cms.assetsHead/Body() helpers.
+			if ($this->container->has(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class)) {
+				/** @var \TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter $cmsAdapter */
+				$cmsAdapter = $this->container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+
+				// Core T3 assets first so they render before extension assets.
+				(new \TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar())->register($cmsAdapter);
+				(new \TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar())->register($cmsAdapter);
+
+				$adminAssets = $this->getAllAdminAssets();
+				if ($adminAssets !== []) {
+					$cmsAdapter->addAdminAssets($adminAssets);
+				}
+
+				$frontendAssets = $this->getAllFrontendAssets();
+				if ($frontendAssets !== []) {
+					$cmsAdapter->addFrontendAssets($frontendAssets);
 				}
 			}
 
@@ -619,17 +630,42 @@ final class ExtensionManager
 	}
 
 	/**
-	 * Get all admin asset URLs resolved to servable paths.
+	 * Get all admin asset records (URL + position + flags) for extensions
+	 * with the admin:assets capability enabled.
 	 *
-	 * @return array{css: list<string>, js: list<string>}
+	 * @return list<FrontendAsset>
 	 */
-	public function getAllAdminAssets(): array
+	private function getAllAdminAssets(): array
 	{
-		$css = [];
-		$js  = [];
+		return $this->collectAssetRecords('admin:assets', fn (ExtensionContext $context) => $context->getRegisteredAdminAssets());
+	}
+
+	/**
+	 * Get all frontend asset records for extensions with the
+	 * frontend:assets capability enabled.
+	 *
+	 * @return list<FrontendAsset>
+	 */
+	private function getAllFrontendAssets(): array
+	{
+		return $this->collectAssetRecords('frontend:assets', fn (ExtensionContext $context) => $context->getRegisteredFrontendAssets());
+	}
+
+	/**
+	 * Collect asset records from contexts, building servable URLs with
+	 * mtime-based cache busting and applying position defaults.
+	 *
+	 * @param callable(ExtensionContext): list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> $registrationsFor
+	 *
+	 * @return list<FrontendAsset>
+	 */
+	private function collectAssetRecords(string $capability, callable $registrationsFor): array
+	{
+		/** @var list<FrontendAsset> $records */
+		$records = [];
 
 		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'admin:assets')) {
+			if (!$this->isCapabilityPermitted($id, $capability)) {
 				continue;
 			}
 
@@ -638,19 +674,41 @@ final class ExtensionManager
 				continue;
 			}
 
-			$extPath = $manifest->vendor() . '/' . $manifest->shortName();
+			$extPath  = $manifest->vendor() . '/' . $manifest->shortName();
+			$assetDir = $context->extensionPath() . '/assets';
 
-			foreach ($context->getRegisteredAdminAssets() as $asset) {
-				$url = '/ext/' . $extPath . '/assets/' . ltrim($asset['path'], '/');
-				if ($asset['type'] === 'css') {
-					$css[] = $url;
-				} elseif ($asset['type'] === 'js') {
-					$js[] = $url;
+			foreach ($registrationsFor($context) as $asset) {
+				if ($asset['type'] !== 'css' && $asset['type'] !== 'js') {
+					continue;
 				}
+
+				$relPath  = ltrim($asset['path'], '/');
+				$url      = '/ext/' . $extPath . '/assets/' . $relPath;
+				$version  = $asset['version'];
+				if ($version === null) {
+					$mtime   = @filemtime($assetDir . '/' . $relPath);
+					$version = $mtime !== false ? (string)$mtime : null;
+				}
+				if ($version !== null && $version !== '') {
+					$url .= '?v=' . $version;
+				}
+
+				$position = $asset['position'] ?? ($asset['type'] === 'css' ? 'head' : 'body');
+				if ($position !== 'head' && $position !== 'body') {
+					$position = $asset['type'] === 'css' ? 'head' : 'body';
+				}
+
+				$records[] = new FrontendAsset(
+					type: $asset['type'],
+					url: $url,
+					position: $position,
+					module: $asset['module'],
+					preload: $asset['preload'],
+				);
 			}
 		}
 
-		return ['css' => $css, 'js' => $js];
+		return $records;
 	}
 
 	/** @return array<string,list<array{callable, int}>> */
