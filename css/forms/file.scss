@@ -15,7 +15,7 @@
 	}
 
 	.dz-preview {
-		min-width        : 100px;
+		min-width        : 200px;
 		background-color : oklch(var(--totalform-nearwhite));
 
 		&:hover {
@@ -54,7 +54,6 @@
 
 		button {
 			margin : 0;
-			scale  : 0.85;
 		}
 	}
 

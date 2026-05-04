@@ -199,13 +199,19 @@
 .ste-editor-wrapper {
 	overflow-y : auto;
 
+	// Fill the wrapper so clicks anywhere in the editor area focus the editor,
+	// not just on the first line of content.
+	.ste-prosemirror,
+	.ste-prosemirror > .ProseMirror {
+		height : 100%;
+	}
+
 	.ProseMirror {
 		padding     : 1rem;
 		outline     : none;
 		font-size   : 1rem;
 		font-family : inherit;
 		color       : oklch(var(--totalform-text-color));
-		min-height  : 100%;
 
 		> :first-child {
 			margin-top : 0;
