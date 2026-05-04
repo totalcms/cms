@@ -36,10 +36,15 @@ export default class FieldVisibility {
 			const watchedFieldElement = container.querySelector(`[style*="--grid-area: ${watchField}"]`);
 			if (!watchedFieldElement) return;
 
-			// Set up change listener on the watched field
-			watchedFieldElement.addEventListener('change', () => {
-				this.updateScopedVisibility(fieldElement, visibility, fields);
-			});
+			// Re-evaluate when the watched field's value changes (native `change`)
+			// or when its own visibility flips (`visibility-change` from a parent
+			// cascade). The latter must NOT be a `change` event — that would bubble
+			// to TotalField's change listener and falsely mark the field unsaved
+			// (cards and other composite fields whose getValue() returns a fresh
+			// object can't rely on the `===` equality guard in changed()).
+			const reevaluate = () => this.updateScopedVisibility(fieldElement, visibility, fields);
+			watchedFieldElement.addEventListener('change', reevaluate);
+			watchedFieldElement.addEventListener('visibility-change', reevaluate);
 
 			// Initial visibility evaluation
 			this.updateScopedVisibility(fieldElement, visibility, fields);
@@ -83,15 +88,19 @@ export default class FieldVisibility {
 	}
 
 	//-------------------------
-	// Set field visibility and dispatch change event to cascade to dependents
+	// Set field visibility and dispatch a visibility-change event so dependent
+	// fields can re-evaluate. This intentionally does NOT use a `change` event:
+	// `change` bubbles to TotalField listeners and marks the field unsaved
+	// (cards in particular can't disambiguate a synthetic cascade from a real
+	// edit because their getValue() returns a fresh object each call, defeating
+	// the storedValue === getValue() guard).
 	//-------------------------
 	setVisibility(field, isVisible) {
 		const wasVisible = !field.container.classList.contains('cms-hide');
 		isVisible ? field.show() : field.hide();
 
-		// If visibility changed, dispatch a change event so dependent fields re-evaluate
 		if (wasVisible !== isVisible) {
-			field.container.dispatchEvent(new Event('change', { bubbles: true }));
+			field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
 		}
 	}
 
