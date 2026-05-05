@@ -117,6 +117,10 @@ class ObjectImporter
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
 
+		// Combine flat dot-notation card columns (e.g. mycard.title) into nested
+		// arrays before the unknown-property filter strips them.
+		$objectData = $this->unflattenCardProperties($objectData, $schema);
+
 		// Filter out properties that are not in the schema
 		$objectData = array_filter(
 			$objectData,
@@ -137,9 +141,10 @@ class ObjectImporter
 				continue;
 			}
 
-			// Check if the property is a reference to an image, gallery, file, depot, or deck
+			// Check if the property is a reference to a card, image, gallery, file, depot, or deck
 			// and if the data is a valid JSON string, decode it and continue
 			if (in_array($property['$ref'], [
+				SchemaData::PROPERTY_TYPE_TO_REF['card'],
 				SchemaData::PROPERTY_TYPE_TO_REF['image'],
 				SchemaData::PROPERTY_TYPE_TO_REF['gallery'],
 				SchemaData::PROPERTY_TYPE_TO_REF['file'],
@@ -182,6 +187,57 @@ class ObjectImporter
 		json_decode($data);
 
 		return json_last_error() === JSON_ERROR_NONE;
+	}
+
+	/**
+	 * Combine flat dot-notation card columns into nested arrays.
+	 * E.g. ["mycard.title" => "foo", "mycard.name" => "bar"]
+	 *      → ["mycard" => ["title" => "foo", "name" => "bar"]].
+	 *
+	 * Used by CSV import where each card sub-property is its own column. If
+	 * any dotted keys exist for a card, they replace the flat column entirely.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function unflattenCardProperties(array $objectData, SchemaData $schema): array
+	{
+		foreach ($schema->properties as $name => $property) {
+			if (!is_array($property) || ($property['$ref'] ?? null) !== SchemaData::PROPERTY_TYPE_TO_REF['card']) {
+				continue;
+			}
+
+			$prefix    = $name . '.';
+			$cardData  = [];
+			$foundKeys = false;
+
+			foreach (array_keys($objectData) as $key) {
+				$keyStr = (string)$key;
+				if (!str_starts_with($keyStr, $prefix)) {
+					continue;
+				}
+				$subKey = substr($keyStr, strlen($prefix));
+				if ($subKey === '') {
+					continue;
+				}
+				$value = $objectData[$keyStr];
+				// Round-trip nested values that the exporter JSON-encoded
+				// (e.g. an image stored inside a card).
+				if (is_string($value) && $value !== '' && ($value[0] === '{' || $value[0] === '[') && $this->isJson($value)) {
+					$value = json_decode($value, true);
+				}
+				$cardData[$subKey] = $value;
+				unset($objectData[$keyStr]);
+				$foundKeys = true;
+			}
+
+			if ($foundKeys) {
+				$objectData[$name] = $cardData;
+			}
+		}
+
+		return $objectData;
 	}
 
 	private function saveImages(): void
@@ -290,7 +346,11 @@ class ObjectImporter
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function replacePathTemplates(string $path = ''): string
 	{
-		return str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
+		$path = str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
+
+		// Strip shell-style backslash escapes (e.g. "Placeholder\ Images" -> "Placeholder Images")
+		// so paths copy-pasted from a terminal resolve correctly.
+		return (string)preg_replace('/\\\\(\W)/', '$1', $path);
 	}
 
 	/** @return array<string> */
