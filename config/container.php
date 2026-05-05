@@ -67,6 +67,7 @@ use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
 use TotalCMS\Domain\Event\Listener\DataViewListener;
+use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
@@ -113,6 +114,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\DeckFileCleaner;
 use TotalCMS\Domain\Property\Service\DeckItemFactory;
 use TotalCMS\Domain\Property\Service\DeckItemFetcher;
 use TotalCMS\Domain\Property\Service\DeckItemRemover;
@@ -1273,6 +1275,9 @@ return [
 		$dispatcher->listen('object.created', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
 		$dispatcher->listen('object.updated', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
 		$dispatcher->listen('object.deleted', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+
+		// DeckFileCleanupListener — diff-on-save deletion of orphaned deck-item uploads
+		$dispatcher->listen('object.updated', $lazy(DeckFileCleanupListener::class, 'onObjectUpdated'), -100);
 
 		// CacheInvalidationListener
 		$dispatcher->listen('collection.created', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);

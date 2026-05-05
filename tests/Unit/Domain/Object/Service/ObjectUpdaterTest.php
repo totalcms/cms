@@ -134,9 +134,11 @@ final class ObjectUpdaterTest extends TestCase
 
 		$newMetaData = ['description' => 'Updated description'];
 
-		// Set up object fetcher expectation
+		// Set up object fetcher expectation. Two calls: one in updateObjectPropertyMeta
+		// to load the existing object, and one inside updateObject to snapshot the
+		// pre-save state for the object.updated payload.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);
@@ -167,9 +169,11 @@ final class ObjectUpdaterTest extends TestCase
 
 		$newMetaData = ['alt' => 'Image description'];
 
-		// Set up object fetcher expectation
+		// Set up object fetcher expectation. Two calls: one in updateObjectPropertyMeta
+		// to load the existing object, and one inside updateObject to snapshot the
+		// pre-save state for the object.updated payload.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);
@@ -200,9 +204,11 @@ final class ObjectUpdaterTest extends TestCase
 
 		$newMetaData = ['caption' => 'Image caption'];
 
-		// Set up object fetcher expectation
+		// Set up object fetcher expectation. Two calls: one in updateObjectPropertyMeta
+		// to load the existing object, and one inside updateObject to snapshot the
+		// pre-save state for the object.updated payload.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);
@@ -245,8 +251,10 @@ final class ObjectUpdaterTest extends TestCase
 			],
 		];
 
+		// Two calls: one in updateNestedProperty, one inside updateObject for the
+		// pre-save snapshot.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);

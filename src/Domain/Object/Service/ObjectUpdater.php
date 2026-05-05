@@ -37,6 +37,18 @@ readonly class ObjectUpdater
 			throw new \UnexpectedValueException('Invalid Object data provided. Does not match object ID.', 1);
 		}
 
+		// Capture pre-save state for listeners that need to diff (e.g. nested
+		// file orphan cleanup). Skipped on silent updates since they suppress
+		// the event entirely. Failure here is non-fatal — `previous` is optional.
+		$previous = null;
+		if (!$silent) {
+			try {
+				$previous = $this->objectFetcher->fetchObject($collection, $id);
+			} catch (\Throwable) {
+				// First write or missing on disk — no previous state to diff against.
+			}
+		}
+
 		// Run property actions before saving (ex: update date)
 		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
@@ -47,7 +59,7 @@ readonly class ObjectUpdater
 		// bookkeeping writes where no listener legitimately needs to react —
 		// e.g. recording a login timestamp.
 		if (!$silent) {
-			$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object));
+			$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object, $previous));
 		}
 
 		return $object;
