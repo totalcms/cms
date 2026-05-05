@@ -11,6 +11,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -40,7 +41,7 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 		}
 
 		// Parse into folder + name
-		[$folder, $name] = TemplateRepository::parsePath($path);
+		[$folder, $name] = TemplatePath::parse($path);
 
 		// Check if the template exists
 		if (!$this->templateRepository->builderTemplateExists($name, $folder)) {

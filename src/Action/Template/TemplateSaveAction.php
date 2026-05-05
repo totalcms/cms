@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\TemplateMetaTransformer;
@@ -40,7 +40,7 @@ readonly class TemplateSaveAction
 		}
 
 		// Parse the ID to extract folder and template name
-		[$folder, $templateId] = TemplateRepository::parsePath($id);
+		[$folder, $templateId] = TemplatePath::parse($id);
 
 		$templateData = $this->service->saveTemplate($templateId, $template, $folder);
 

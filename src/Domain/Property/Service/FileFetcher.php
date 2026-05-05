@@ -44,6 +44,21 @@ readonly class FileFetcher
 		return $this->storage->fileExists($collection, $id, $property, $file->name, $subpath);
 	}
 
+	/**
+	 * True when `$subpath` resolves to an on-disk directory under the property —
+	 * the dispatch signal that distinguishes a card/deck-nested leaf from a
+	 * legacy flat gallery/depot filename at the same URL shape. An empty or null
+	 * subpath is not nested by definition.
+	 */
+	public function isNestedDirectory(string $collection, string $id, string $property, ?string $subpath): bool
+	{
+		if ($subpath === null || $subpath === '') {
+			return false;
+		}
+
+		return $this->storage->directoryExists($collection, $id, $property, $subpath);
+	}
+
 	public function fileSize(string $collection, string $id, string $property, ?string $subpath = null): int
 	{
 		$file = $this->fetchFile($collection, $id, $property, $subpath);

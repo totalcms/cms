@@ -10,8 +10,8 @@ use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -29,7 +29,7 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $twigLintService;
 	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $accessGroupLister;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $builderInstaller;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
@@ -48,7 +48,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->twigLintService       = $this->createMock(TwigLintService::class);
 		$this->apiKeyFetcher         = $this->createMock(ApiKeyFetcher::class);
 		$this->accessGroupLister     = $this->createMock(AccessGroupLister::class);
-		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
+		$this->collectionLister      = $this->createMock(CollectionLister::class);
 		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
 		$this->builderInstaller      = $this->createMock(BuilderInstaller::class);
 		$this->schemaLister          = $this->createMock(SchemaLister::class);
@@ -66,7 +66,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->twigLintService,
 			$this->apiKeyFetcher,
 			$this->accessGroupLister,
-			$this->collectionRepository,
+			$this->collectionLister,
 			$this->collectionFetcher,
 			$this->builderInstaller,
 			$this->schemaLister,

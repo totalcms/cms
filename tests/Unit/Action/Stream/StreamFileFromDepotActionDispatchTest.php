@@ -14,7 +14,6 @@ use TotalCMS\Action\Stream\StreamFileFromDepotAction;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -28,19 +27,16 @@ final class StreamFileFromDepotActionDispatchTest extends TestCase
 {
 	private \PHPUnit\Framework\MockObject\MockObject $depotFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private StreamFileFromDepotAction $action;
 
 	protected function setUp(): void
 	{
 		$this->depotFetcher = $this->createMock(DepotFileFetcher::class);
 		$this->fileFetcher  = $this->createMock(FileFetcher::class);
-		$this->storage      = $this->createMock(PropertyRepository::class);
 
 		$this->action = new StreamFileFromDepotAction(
 			$this->depotFetcher,
 			$this->fileFetcher,
-			$this->storage,
 			$this->createMock(FileAccessManager::class),
 			$this->createMock(ObjectUpdater::class),
 			new PhpSession(),
@@ -62,8 +58,8 @@ final class StreamFileFromDepotActionDispatchTest extends TestCase
 
 	public function testCardChildPathDispatchesToFileFetcher(): void
 	{
-		$this->storage->expects($this->once())
-			->method('directoryExists')
+		$this->fileFetcher->expects($this->once())
+			->method('isNestedDirectory')
 			->with('blog', 'post-1', 'mycard', 'file')
 			->willReturn(true);
 
@@ -90,7 +86,7 @@ final class StreamFileFromDepotActionDispatchTest extends TestCase
 
 	public function testDeckChildMultiSegmentPathDispatchesToFileFetcher(): void
 	{
-		$this->storage->method('directoryExists')->willReturn(true);
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(true);
 
 		$this->fileFetcher->method('fetchFile')->willReturn(new FileData(['name' => 'deck.mp4']));
 
@@ -112,7 +108,7 @@ final class StreamFileFromDepotActionDispatchTest extends TestCase
 
 	public function testDepotFilePathDispatchesToDepotFetcher(): void
 	{
-		$this->storage->method('directoryExists')->willReturn(false);
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(false);
 
 		$this->depotFetcher->expects($this->once())
 			->method('fileExists')

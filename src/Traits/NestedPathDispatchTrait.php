@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Traits;
 
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
@@ -27,12 +27,12 @@ trait NestedPathDispatchTrait
 	 *
 	 * @return array{path: string, nested: bool}
 	 */
-	protected function classifyDispatchPath(array $args, PropertyRepository $storage): array
+	protected function classifyDispatchPath(array $args, FileFetcher $fileFetcher): array
 	{
 		$raw  = $args['path'] ?? $args['name'] ?? '';
 		$path = PathUtils::sanitizeSubpath($raw);
 
-		$nested = $path !== '' && $storage->directoryExists(
+		$nested = $fileFetcher->isNestedDirectory(
 			$args['collection'],
 			$args['id'],
 			$args['property'],

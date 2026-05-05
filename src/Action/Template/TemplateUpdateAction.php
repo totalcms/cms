@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\JsonRenderer;
@@ -39,7 +39,7 @@ readonly class TemplateUpdateAction
 		$path = $args['path'] ?? '';
 
 		// Parse path from URL to get current location
-		[$folder, $id] = TemplateRepository::parsePath($path);
+		[$folder, $id] = TemplatePath::parse($path);
 
 		// Get updated values from JSON body
 		$newPath     = (string)($data['id'] ?? $path);
@@ -52,7 +52,7 @@ readonly class TemplateUpdateAction
 		}
 
 		// Parse the new path
-		[$newFolder, $newId] = TemplateRepository::parsePath($newPath);
+		[$newFolder, $newId] = TemplatePath::parse($newPath);
 
 		// If the template is being moved/renamed, delete the old one
 		if ($newId !== $id || $newFolder !== $folder) {

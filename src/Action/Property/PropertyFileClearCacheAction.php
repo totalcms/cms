@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Property;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyCacheCleaner;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Traits\NestedPathDispatchTrait;
@@ -16,7 +16,7 @@ readonly class PropertyFileClearCacheAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private PropertyCacheCleaner $service,
-		private PropertyRepository $storage,
+		private FileFetcher $fileFetcher,
 	) {
 	}
 
@@ -33,7 +33,7 @@ readonly class PropertyFileClearCacheAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
+		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->fileFetcher);
 
 		$deleted = $nested
 			? $this->service->deletePropertyCache($args['collection'], $args['id'], $args['property'], $path)

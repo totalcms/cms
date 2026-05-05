@@ -19,6 +19,7 @@ use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
@@ -251,7 +252,7 @@ readonly class AdminTwigAdapter
 
 		foreach ($templates as $path) {
 			// Parse path to get folder and template name
-			[$folder, $templateId] = TemplateRepository::parsePath($path);
+			[$folder, $templateId] = TemplatePath::parse($path);
 
 			// Determine group name
 			$groupName = 'Templates';

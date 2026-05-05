@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Twig\Designer;
 
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -76,7 +76,7 @@ class TemplateDesignerSync
 	private function syncLocal(string $templatePath, string $content, string &$error): string
 	{
 		try {
-			[$folder, $name] = TemplateRepository::parsePath($templatePath);
+			[$folder, $name] = TemplatePath::parse($templatePath);
 			$this->templateSaver->saveTemplate($name, $content, $folder);
 
 			return 'ok';

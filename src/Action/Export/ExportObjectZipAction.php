@@ -6,13 +6,13 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Export\Service\ObjectZipper;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
 readonly class ExportObjectZipAction
 {
 	public function __construct(
 		private ObjectZipper $objectZipper,
-		private ObjectRepository $objectRepository,
+		private ObjectFetcher $objectFetcher,
 	) {
 	}
 
@@ -26,7 +26,7 @@ readonly class ExportObjectZipAction
 		$id         = $args['id'];
 
 		// Verify object exists
-		if (!$this->objectRepository->existsObject($collection, $id)) {
+		if (!$this->objectFetcher->existsObject($collection, $id)) {
 			$response = $response->withStatus(404);
 			$response->getBody()->write('Object not found');
 

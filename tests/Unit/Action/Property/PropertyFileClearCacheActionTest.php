@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Property\PropertyFileClearCacheAction;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyCacheCleaner;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -15,33 +15,33 @@ final class PropertyFileClearCacheActionTest extends TestCase
 	private PropertyFileClearCacheAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $service;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
+	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->service  = $this->createMock(PropertyCacheCleaner::class);
-		$this->renderer = $this->createMock(JsonRenderer::class);
-		$this->storage  = $this->createMock(PropertyRepository::class);
-		$this->request  = $this->createMock(ServerRequestInterface::class);
-		$this->response = $this->createMock(ResponseInterface::class);
+		$this->service     = $this->createMock(PropertyCacheCleaner::class);
+		$this->renderer    = $this->createMock(JsonRenderer::class);
+		$this->fileFetcher = $this->createMock(FileFetcher::class);
+		$this->request     = $this->createMock(ServerRequestInterface::class);
+		$this->response    = $this->createMock(ResponseInterface::class);
 
-		$this->action = new PropertyFileClearCacheAction($this->renderer, $this->service, $this->storage);
+		$this->action = new PropertyFileClearCacheAction($this->renderer, $this->service, $this->fileFetcher);
 	}
 
 	private function expectFlatPath(): void
 	{
 		// Path is a gallery filename, not a directory — dispatch falls through
 		// to the existing file-cache flow.
-		$this->storage->method('directoryExists')->willReturn(false);
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(false);
 	}
 
 	private function expectNestedPath(): void
 	{
 		// Path resolves to an on-disk subdirectory — dispatch routes into the
 		// nested property-cache flow (card child or deck-item child).
-		$this->storage->method('directoryExists')->willReturn(true);
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(true);
 	}
 
 	public function testClearsFileCacheSuccessfully(): void

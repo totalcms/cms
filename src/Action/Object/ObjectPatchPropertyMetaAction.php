@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Object;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Traits\NestedPathDispatchTrait;
 use TotalCMS\Transformer\ObjectMetaTransformer;
@@ -17,7 +17,7 @@ readonly class ObjectPatchPropertyMetaAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectPatcher $objectPatcher,
-		private PropertyRepository $storage,
+		private FileFetcher $fileFetcher,
 	) {
 	}
 
@@ -35,7 +35,7 @@ readonly class ObjectPatchPropertyMetaAction
 	{
 		$data                                  = (array)$request->getParsedBody();
 		$query                                 = $request->getQueryParams();
-		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
+		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->fileFetcher);
 
 		if ($nested) {
 			$object = $this->objectPatcher->patchNestedProperty(

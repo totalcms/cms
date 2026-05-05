@@ -11,7 +11,6 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\FileFetcher;
@@ -41,7 +40,6 @@ class DownloadFileFromDepotAction extends DownloadAction
 	public function __construct(
 		private readonly DepotFileFetcher $depotFetcher,
 		private readonly FileFetcher $fileFetcher,
-		private readonly PropertyRepository $storage,
 		protected TwigRenderer $twigRenderer,
 		protected FileAccessManager $accessManager,
 		protected ObjectUpdater $objectUpdater,
@@ -60,7 +58,7 @@ class DownloadFileFromDepotAction extends DownloadAction
 		$rawPath   = $args['path'] ?? $args['name'] ?? '';
 		$sanitized = PathUtils::sanitizeSubpath($rawPath);
 
-		$this->isNested = $sanitized !== '' && $this->storage->directoryExists(
+		$this->isNested = $this->fileFetcher->isNestedDirectory(
 			$args['collection'],
 			$args['id'],
 			$args['property'],

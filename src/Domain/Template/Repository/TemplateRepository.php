@@ -43,27 +43,6 @@ class TemplateRepository extends StorageRepository
 	private array $requestCache = [];
 
 	/**
-	 * Parse path into folder and template name.
-	 *
-	 * @return array{0: string|null, 1: string}
-	 */
-	public static function parsePath(string $path): array
-	{
-		$lastSlash = strrpos($path, '/');
-
-		if ($lastSlash === false) {
-			// No folder, just template name
-			return [null, $path];
-		}
-
-		// Split into folder and template
-		$folder   = substr($path, 0, $lastSlash);
-		$template = substr($path, $lastSlash + 1);
-
-		return [$folder, $template];
-	}
-
-	/**
 	 * generate a custom template path.
 	 */
 	public function customPath(string $template, ?string $folder = null): string

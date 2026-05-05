@@ -8,8 +8,8 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -30,7 +30,7 @@ readonly class AdminUtilsAction
 		private TwigLintService $twigLintService,
 		private ApiKeyFetcher $apiKeyFetcher,
 		private AccessGroupLister $accessGroupLister,
-		private CollectionRepository $collectionRepository,
+		private CollectionLister $collectionLister,
 		private CollectionFetcher $collectionFetcher,
 		private BuilderInstaller $builderInstaller,
 		private SchemaLister $schemaLister,
@@ -189,7 +189,7 @@ readonly class AdminUtilsAction
 			'lintResults'            => $lintResults,
 			'rssAnalysis'            => $rssAnalysis,
 			'rssError'               => $rssError,
-			'rssCollections'         => $rssAnalysis !== null ? $this->collectionRepository->listAllCollections() : null,
+			'rssCollections'         => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
 			'updateInfo'             => $updateInfo,
 			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'               => $syncData,
@@ -239,7 +239,7 @@ readonly class AdminUtilsAction
 
 		return [
 			'groups'      => $this->accessGroupLister->listAll(),
-			'collections' => $this->collectionRepository->listAllCollections(),
+			'collections' => $this->collectionLister->listAllCollections(),
 			'schemas'     => $this->schemaLister->listAllSchemas(),
 			'group'       => $isEdit ? $this->accessGroupLister->findById($action) : '',
 			'isEdit'      => $isEdit,

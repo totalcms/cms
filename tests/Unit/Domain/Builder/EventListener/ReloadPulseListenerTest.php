@@ -7,8 +7,8 @@ namespace Tests\Unit\Domain\Builder\EventListener;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\EventListener\ReloadPulseListener;
-use TotalCMS\Domain\Builder\Repository\ReloadPulseRepository;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderReloadPulseService;
 
 /**
  * Tests the listener wires up the right pulses for template + page events,
@@ -16,13 +16,13 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
  */
 final class ReloadPulseListenerTest extends TestCase
 {
-	private ReloadPulseRepository&MockObject $pulse;
+	private BuilderReloadPulseService&MockObject $pulse;
 	private BuilderConfigService&MockObject $builderConfig;
 	private ReloadPulseListener $listener;
 
 	protected function setUp(): void
 	{
-		$this->pulse         = $this->createMock(ReloadPulseRepository::class);
+		$this->pulse         = $this->createMock(BuilderReloadPulseService::class);
 		$this->builderConfig = $this->createMock(BuilderConfigService::class);
 		$this->builderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
 		$this->listener = new ReloadPulseListener($this->pulse, $this->builderConfig);

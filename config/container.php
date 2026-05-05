@@ -1298,8 +1298,12 @@ return [
 		$container->get(StorageFilesystemAdapter::class),
 	),
 
-	TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
+	TotalCMS\Domain\Builder\Service\BuilderReloadPulseService::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Service\BuilderReloadPulseService => new TotalCMS\Domain\Builder\Service\BuilderReloadPulseService(
 		$container->get(TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class),
+	),
+
+	TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
+		$container->get(TotalCMS\Domain\Builder\Service\BuilderReloadPulseService::class),
 		$container->get(BuilderConfigService::class),
 	),
 

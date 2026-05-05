@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Template\Service\TemplateSnapshotService;
 
@@ -30,7 +30,7 @@ class BuilderHistoryCommand extends BaseCommand
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
 		$path          = (string)$input->getArgument('path');
-		[$folder, $id] = TemplateRepository::parsePath($path);
+		[$folder, $id] = TemplatePath::parse($path);
 
 		$container = $this->totalcms->container();
 		$snapshots = $container->get(TemplateSnapshotService::class);

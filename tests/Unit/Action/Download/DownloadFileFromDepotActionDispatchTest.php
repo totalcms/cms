@@ -14,7 +14,6 @@ use TotalCMS\Action\Download\DownloadFileFromDepotAction;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -36,14 +35,12 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 {
 	private \PHPUnit\Framework\MockObject\MockObject $depotFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private DownloadFileFromDepotAction $action;
 
 	protected function setUp(): void
 	{
 		$this->depotFetcher = $this->createMock(DepotFileFetcher::class);
 		$this->fileFetcher  = $this->createMock(FileFetcher::class);
-		$this->storage      = $this->createMock(PropertyRepository::class);
 
 		// PhpSession is `final` (can't be mocked). Instantiate without options;
 		// the action's session calls (getFlash/set/get/delete/save) all resolve
@@ -51,7 +48,6 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 		$this->action = new DownloadFileFromDepotAction(
 			$this->depotFetcher,
 			$this->fileFetcher,
-			$this->storage,
 			$this->createMock(TwigRenderer::class),
 			$this->createMock(FileAccessManager::class),
 			$this->createMock(ObjectUpdater::class),
@@ -79,8 +75,8 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 	public function testCardChildPathDispatchesToFileFetcher(): void
 	{
 		// Path resolves to a directory under the parent → nested file.
-		$this->storage->expects($this->once())
-			->method('directoryExists')
+		$this->fileFetcher->expects($this->once())
+			->method('isNestedDirectory')
 			->with('blog', 'post-1', 'mycard', 'file')
 			->willReturn(true);
 
@@ -112,7 +108,7 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 
 	public function testDeckChildMultiSegmentPathDispatchesToFileFetcher(): void
 	{
-		$this->storage->method('directoryExists')
+		$this->fileFetcher->method('isNestedDirectory')
 			->with('blog', 'post-1', 'mydeck', 'item-3/file')
 			->willReturn(true);
 
@@ -140,7 +136,7 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 	{
 		// `report.pdf` is a filename in the depot — no directory under the
 		// property exists at that path → dispatch falls through to depot.
-		$this->storage->method('directoryExists')->willReturn(false);
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(false);
 
 		$this->depotFetcher->expects($this->once())
 			->method('fileExists')
@@ -163,9 +159,9 @@ final class DownloadFileFromDepotActionDispatchTest extends TestCase
 
 	public function testEmptyPathDispatchesToDepotFetcher(): void
 	{
-		// No path at all — dispatch must never call directoryExists with empty
-		// path, and must fall through to the depot branch.
-		$this->storage->expects($this->never())->method('directoryExists');
+		// No path at all — isNestedDirectory absorbs the empty-subpath guard
+		// and returns false, so dispatch falls through to the depot branch.
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(false);
 
 		$this->depotFetcher->expects($this->once())
 			->method('fileExists')

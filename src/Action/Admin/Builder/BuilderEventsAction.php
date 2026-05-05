@@ -8,7 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Stream;
 use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Builder\Repository\ReloadPulseRepository;
+use TotalCMS\Domain\Builder\Service\BuilderReloadPulseService;
 
 /**
  * `GET /admin/builder/events` — Server-Sent Events stream powering the
@@ -40,7 +40,7 @@ final readonly class BuilderEventsAction
 	private const MAX_LIFETIME_SEC = 30;
 
 	public function __construct(
-		private ReloadPulseRepository $pulse,
+		private BuilderReloadPulseService $pulse,
 		private AccessManager $accessManager,
 	) {
 	}
@@ -79,7 +79,7 @@ final readonly class BuilderEventsAction
 		header('Connection: keep-alive');
 		header('X-Accel-Buffering: no');
 
-		$lastSeenTs = $this->pulse->currentTs();
+		$lastSeenTs = $this->pulse->currentTimestamp();
 		$startedAt  = time();
 
 		// Initial comment + retry hint. The retry value tells the browser how

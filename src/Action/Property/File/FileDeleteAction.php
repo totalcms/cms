@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Property\File;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\RemoverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Traits\NestedPathDispatchTrait;
@@ -18,7 +18,7 @@ readonly class FileDeleteAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private RemoverFactory $factory,
-		private PropertyRepository $storage,
+		private FileFetcher $fileFetcher,
 		private ObjectRemover $objectRemover,
 	) {
 	}
@@ -34,7 +34,7 @@ readonly class FileDeleteAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$query                                 = $request->getQueryParams();
-		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->storage);
+		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->fileFetcher);
 
 		if ($nested) {
 			$object = $this->objectRemover->deleteNestedProperty(

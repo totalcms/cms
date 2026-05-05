@@ -16,6 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Template\Data\TemplateData;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
 use TotalCMS\Support\Config;
@@ -131,7 +132,7 @@ class TemplateForm extends TotalForm
 
 		// Editing existing template
 		if ($this->path !== '') {
-			[$folder, $templateId] = TemplateRepository::parsePath($this->path);
+			[$folder, $templateId] = TemplatePath::parse($this->path);
 
 			$this->route  = '/templates/' . $this->path;
 			$this->method = 'PUT';

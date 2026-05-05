@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Object\ObjectUpdatePropertyMetaAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class ObjectUpdatePropertyMetaActionTest extends TestCase
@@ -16,7 +16,7 @@ final class ObjectUpdatePropertyMetaActionTest extends TestCase
 	private ObjectUpdatePropertyMetaAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
+	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -24,15 +24,15 @@ final class ObjectUpdatePropertyMetaActionTest extends TestCase
 	{
 		$this->objectUpdater = $this->createMock(ObjectUpdater::class);
 		$this->renderer      = $this->createMock(JsonRenderer::class);
-		$this->storage       = $this->createMock(PropertyRepository::class);
+		$this->fileFetcher   = $this->createMock(FileFetcher::class);
 		$this->request       = $this->createMock(ServerRequestInterface::class);
 		$this->response      = $this->createMock(ResponseInterface::class);
 
 		// Default: paths in these tests are filenames, not directories — so the
 		// action's filesystem dispatch falls through to the existing meta flow.
-		$this->storage->method('directoryExists')->willReturn(false);
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(false);
 
-		$this->action = new ObjectUpdatePropertyMetaAction($this->renderer, $this->objectUpdater, $this->storage);
+		$this->action = new ObjectUpdatePropertyMetaAction($this->renderer, $this->objectUpdater, $this->fileFetcher);
 	}
 
 	public function testUpdatesPropertyMetaSuccessfully(): void

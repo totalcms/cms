@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\EventListener;
 
-use TotalCMS\Domain\Builder\Repository\ReloadPulseRepository;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderReloadPulseService;
 
 /**
  * Bumps the reload pulse whenever a Builder template or page record is saved,
@@ -27,7 +27,7 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 final readonly class ReloadPulseListener
 {
 	public function __construct(
-		private ReloadPulseRepository $pulse,
+		private BuilderReloadPulseService $pulse,
 		private BuilderConfigService $builderConfig,
 	) {
 	}
