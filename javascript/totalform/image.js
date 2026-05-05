@@ -104,14 +104,17 @@ export default class ImageField extends TotalField {
 	}
 
 	fileUploaded(file, response) {
-		// Top-level: response.data[this.property]. Card-nested: descend to
-		// response.data[cardParent][childKey] where childKey is this.property.
+		// Top-level: response.data[this.property]. Nested: walk
+		// [ctx.property, ...subpath segments] — card subpath is `childKey` (one
+		// segment), deck subpath is `itemId/childKey` (two segments).
 		const ctx = this.getUploadContext();
-		let image;
+		let image = response.data;
 		if (ctx?.subpath) {
-			image = response.data?.[ctx.property]?.[this.property];
+			for (const seg of [ctx.property, ...ctx.subpath.split('/')]) {
+				image = image?.[seg];
+			}
 		} else {
-			image = response.data?.[this.property];
+			image = image?.[this.property];
 		}
 		this.setupPreview(image);
 	}
