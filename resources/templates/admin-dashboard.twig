@@ -37,15 +37,16 @@
 	<meta name="csrf-token" content="{{ csrf_token() }}">
     <base href="{{ cms.dashboard }}/">
 
+	{% block head %}{% endblock %}
+	{{ cms.adminAssetsHead() }}
+
+	{% if cms.edition.can('whitelabel_pro') %}
+		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
+	{% endif %}
+
 	{% set accentColor = cms.config('dashboard', 'accent') %}
 	{% if accentColor %}
 	<style>:root{--totalform-accent:{{ accentColor | hexToColor | oklch(100, false) }};}</style>
-	{% endif %}
-
-	{% block head %}{% endblock %}
-	{{ cms.adminAssetsHead() }}
-	{% if cms.edition.can('whitelabel_pro') %}
-		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
 </head>
 <body{% if cms.config('dashboard', 'fullWidthForms') %} class="full-width-forms"{% endif %}>
