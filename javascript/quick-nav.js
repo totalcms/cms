@@ -214,15 +214,30 @@ function escapeRegex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function iconKeyFor(item) {
+const SECTION_PRIORITY = {
+	'collections' : 10,
+	'schemas'     : 9,
+	'dataviews'   : 8,
+	'builder'     : 7,
+	'extensions'  : 6,
+	'mailer'      : 5,
+	'playground'  : 4,
+	'utils'       : 3,
+	'settings'    : 2,
+	'docs'        : 1,
+};
+
+function categoryFor(item) {
 	const sectionMap = {
-		'Collections' : 'collections',
-		'Schemas'     : 'schemas',
-		'Data Views'  : 'dataviews',
-		'Utilities'   : 'utils',
-		'Settings'    : 'settings',
-		'Docs'        : 'docs',
-		'Extensions'  : 'extensions',
+		'Collections'       : 'collections',
+		'Schemas'           : 'schemas',
+		'Data Views'        : 'dataviews',
+		'Builder Pages'     : 'builder',
+		'Builder Templates' : 'builder',
+		'Utilities'         : 'utils',
+		'Settings'          : 'settings',
+		'Docs'              : 'docs',
+		'Extensions'        : 'extensions',
 	};
 	if (sectionMap[item.section]) return sectionMap[item.section];
 
@@ -233,14 +248,18 @@ function iconKeyFor(item) {
 		'schemas'     : 'schemas',
 		'dataviews'   : 'dataviews',
 		'builder'     : 'builder',
+		'extensions'  : 'extensions',
 		'mailer'      : 'mailer',
 		'playground'  : 'playground',
 		'utils'       : 'utils',
-		'extensions'  : 'extensions',
 		'settings'    : 'settings',
 		'docs'        : 'docs',
 	};
 	return navMap[first] || 'utils';
+}
+
+function iconKeyFor(item) {
+	return categoryFor(item);
 }
 
 function scoreItem(item, terms) {
@@ -254,7 +273,7 @@ function scoreItem(item, terms) {
 		if (s === 0) return 0;
 		total += s;
 	}
-	return total;
+	return total + (SECTION_PRIORITY[categoryFor(item)] || 0);
 }
 
 function scoreTerm(term, label, section, keywords) {
