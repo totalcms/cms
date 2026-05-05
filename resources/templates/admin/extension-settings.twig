@@ -4,10 +4,50 @@
 
 <main class="dash-main-content" style="max-width:100%;">
 	<header>
-		<h1><a href="extensions">{{ t('nav.extensions') }}</a> / <span>{{ extensionName }}</span> / Settings</h1>
+		<h1><a href="{{ cms.dashboard }}/extensions">{{ t('nav.extensions') }}</a> / <span>{{ extensionName }}</span></h1>
 	</header>
 
 	<section class="dash-content-section">
+		<article class="dash-card ext-info-card{% if extension.enabled %} accent{% endif %}" style="max-width:800px;">
+			<header>
+				{% if extension.icon %}
+				<img src="{{ extension.icon }}" alt="" class="ext-icon">
+				{% endif %}
+				<div>
+					<h3>{{ extension.name }}</h3>
+					{% if extension.description %}
+					<p style="margin:0.25rem 0 0; color:oklch(var(--totalform-darkgray)); font-size:0.9rem;">{{ extension.description }}</p>
+					{% endif %}
+				</div>
+			</header>
+
+			<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; font-size:0.85rem; color:oklch(var(--totalform-darkgray));">
+				<span>
+					{% if extension.author.name is defined and extension.author.name %}
+						By {% if extension.author.url is defined and extension.author.url %}<a href="{{ extension.author.url }}" target="_blank" rel="noopener noreferrer">{{ extension.author.name }}</a>{% else %}{{ extension.author.name }}{% endif %}
+					{% endif %}
+					{% if extension.license %} &middot; {{ extension.license }}{% endif %}
+				</span>
+				<span class="dash-badge muted sm">v{{ extension.version }}</span>
+			</div>
+
+			{% set visibleLinks = extension.links|filter(link =>
+				extension.enabled
+				or not (link.url starts with '/ext/' or link.url starts with '/admin/ext/')
+			) %}
+			{% if visibleLinks|length > 0 %}
+			<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
+				<strong>Links:</strong>
+				<div class="dash-badge-group">
+					{% for link in visibleLinks %}
+					{% set external = link.url starts with 'http://' or link.url starts with 'https://' %}
+					<a class="dash-badge" href="{{ link.url }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}</a>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+		</article>
+
 		{{ cms.form.extensionSettings(extensionId) }}
 	</section>
 </main>

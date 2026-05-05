@@ -469,32 +469,7 @@ final class ExtensionManager
 
 		$extensions = [];
 		foreach ($manifests as $id => $manifest) {
-			$state       = $states[$id] ?? null;
-			$enabled     = $state !== null && $state->enabled;
-			$permissions = $state !== null ? $state->permissions : [];
-
-			$capabilities = [];
-			foreach ($permissions as $cap => $capEnabled) {
-				if ($capEnabled) {
-					$capabilities[] = $capabilityLabels[$cap] ?? $cap;
-				}
-			}
-
-			$extensions[] = [
-				'id'              => $id,
-				'name'            => $manifest->name,
-				'description'     => $manifest->description,
-				'version'         => $manifest->version,
-				'author'          => $manifest->author,
-				'license'         => $manifest->license,
-				'capabilities'    => $capabilities,
-				'enabled'         => $enabled,
-				'error'           => $state?->error,
-				'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
-				'links'           => $manifest->links,
-				'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
-				'icon'            => $this->resolveIcon($id, $manifest),
-			];
+			$extensions[] = $this->buildExtensionInfo($id, $manifest, $states[$id] ?? null, $capabilityLabels);
 		}
 
 		// Sort: enabled first, then alphabetical by name
@@ -507,6 +482,61 @@ final class ExtensionManager
 		});
 
 		return $extensions;
+	}
+
+	/**
+	 * Look up the same array shape `listExtensions()` returns for a single extension.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function getExtension(string $extensionId): ?array
+	{
+		$manifest = $this->discovery->discover()[$extensionId] ?? null;
+		if ($manifest === null) {
+			return null;
+		}
+
+		$state = $this->stateRepository->loadAll()[$extensionId] ?? null;
+
+		return $this->buildExtensionInfo($extensionId, $manifest, $state, ExtensionContext::capabilityLabels());
+	}
+
+	/**
+	 * @param array<string,string> $capabilityLabels
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function buildExtensionInfo(
+		string $id,
+		ExtensionManifest $manifest,
+		?ExtensionState $state,
+		array $capabilityLabels,
+	): array {
+		$enabled     = $state !== null && $state->enabled;
+		$permissions = $state !== null ? $state->permissions : [];
+
+		$capabilities = [];
+		foreach ($permissions as $cap => $capEnabled) {
+			if ($capEnabled) {
+				$capabilities[] = $capabilityLabels[$cap] ?? $cap;
+			}
+		}
+
+		return [
+			'id'              => $id,
+			'name'            => $manifest->name,
+			'description'     => $manifest->description,
+			'version'         => $manifest->version,
+			'author'          => $manifest->author,
+			'license'         => $manifest->license,
+			'capabilities'    => $capabilities,
+			'enabled'         => $enabled,
+			'error'           => $state?->error,
+			'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
+			'links'           => $manifest->links,
+			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
+			'icon'            => $this->resolveIcon($id, $manifest),
+		];
 	}
 
 	// -------------------------------------------------------------------------

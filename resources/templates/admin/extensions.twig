@@ -2,114 +2,177 @@
 
 {% block dashcontent %}
 
+{% set enabledExts = extensions|filter(e => e.enabled) %}
+{% set disabledExts = extensions|filter(e => not e.enabled) %}
+
 <main class="dash-main-content" style="max-width:100%;">
 	<header>
 		<h1>{{ t('nav.extensions') }}</h1>
 	</header>
 
-	<section class="dash-content-section">
+	<section class="dash-content-section ext-section">
 		{% if extensions is empty %}
 		<div class="dash-empty-state">
 			<p>No extensions installed.</p>
 			<p>Place extensions in <code>tcms-data/extensions/vendor/name/</code></p>
 		</div>
 		{% else %}
+
+		{% if enabledExts|length > 0 %}
+		<h2 class="ext-group-heading">Enabled <span class="dash-badge muted sm">{{ enabledExts|length }}</span></h2>
 		<div class="dash-card-grid">
-			{% for ext in extensions %}
-			<article class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}">
-				<header>
-					{% if ext.icon %}
-					<img src="{{ ext.icon }}" alt="" class="ext-icon">
-					{% endif %}
-					<div>
-						<h3>{{ ext.name }}</h3>
-						{% if ext.description %}
-						<p style="margin:0.25rem 0 0; color:oklch(var(--totalform-darkgray)); font-size:0.85rem;">{{ ext.description }}</p>
-						{% endif %}
-					</div>
-					<span class="dash-badge muted sm">v{{ ext.version }}</span>
-				</header>
-
-				{% if ext.author.name is defined and ext.author.name %}
-				<p style="margin:0; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">By {{ ext.author.name }}</p>
-				{% endif %}
-
-				{% if ext.error %}
-				<div style="background:oklch(var(--totalform-danger) / 0.1); color:oklch(var(--totalform-danger)); border:1px solid oklch(var(--totalform-danger) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
-					{{ ext.error }}
-				</div>
-				{% endif %}
-
-				{% if ext.incompatibility %}
-				<div style="background:oklch(var(--totalform-warning) / 0.1); color:oklch(var(--totalform-warning)); border:1px solid oklch(var(--totalform-warning) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
-					<strong>Cannot be enabled:</strong>
-					<ul style="margin:0.25rem 0 0 1rem; padding:0;">
-						{% for reason in ext.incompatibility %}
-						<li>{{ reason }}</li>
-						{% endfor %}
-					</ul>
-				</div>
-				{% endif %}
-
-				{# Hide links to extension-owned routes (/ext/... and /admin/ext/...,
-				   e.g. /admin/ext/acme/starter/dashboard) when the extension is
-				   disabled — those routes only exist while it's enabled, so the
-				   link would 404. T3-provided URLs (/admin/docs, /admin/settings,
-				   etc.) and external URLs always show. #}
-				{% set visibleLinks = ext.links|filter(link =>
-					ext.enabled
-					or not (link.url starts with '/ext/' or link.url starts with '/admin/ext/')
-				) %}
-				{% if visibleLinks|length > 0 %}
-				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
-					<strong>Links:</strong>
-					<div class="dash-badge-group">
-						{% for link in visibleLinks %}
-						{% set external = link.url starts with 'http://' or link.url starts with 'https://' %}
-						<a class="dash-badge" href="{{ link.url }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}</a>
-						{% endfor %}
-					</div>
-				</div>
-				{% endif %}
-
-				{% if ext.capabilities %}
-				<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
-					<strong>Capabilities:</strong>
-					<div class="dash-badge-group">
-						{% for cap in ext.capabilities %}
-						<span class="dash-badge">{{ cap }}</span>
-						{% endfor %}
-					</div>
-				</div>
-				{% endif %}
-
-				<footer>
-					{% if ext.enabled %}
-					<span class="dash-status enabled">Enabled</span>
-					<div style="display:flex; gap:0.5rem; align-items:center;">
-						{% if ext.hasSettings %}
-						<a href="extensions/{{ ext.id }}/settings" class="dash-card-action edit" title="Settings" style="--icon-edit: var(--icon-cog);"></a>
-						{% endif %}
-						<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/disable" style="margin:0;">
-							<button type="submit" class="btn btn-sm">Disable</button>
-						</form>
-					</div>
-					{% else %}
-					<span class="dash-status disabled">Disabled</span>
-					{% if ext.incompatibility %}
-					<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ') }}">Enable</button>
-					{% else %}
-					<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
-						<button type="submit" class="btn btn-sm btn-primary">Enable</button>
-					</form>
-					{% endif %}
-					{% endif %}
-				</footer>
-			</article>
+			{% for ext in enabledExts %}
+				{{ _self.extensionCard(ext, cms) }}
 			{% endfor %}
 		</div>
+		{% endif %}
+
+		{% if disabledExts|length > 0 %}
+		<h2 class="ext-group-heading">Disabled <span class="dash-badge muted sm">{{ disabledExts|length }}</span></h2>
+		<div class="dash-card-grid">
+			{% for ext in disabledExts %}
+				{{ _self.extensionCard(ext, cms) }}
+			{% endfor %}
+		</div>
+		{% endif %}
 		{% endif %}
 	</section>
 </main>
 
+<style>
+	.ext-group-heading {
+		display     : flex;
+		gap         : 0.5rem;
+		align-items : center;
+		margin      : 1.5rem 0 0;
+		font-size   : 1.1rem;
+		font-weight : 600;
+		color       : oklch(var(--totalform-darkgray));
+	}
+	.ext-group-heading:first-of-type {
+		margin-top : 0.5rem;
+	}
+	.ext-section {
+		--ext-description-lines : 3;
+		--ext-description-font  : 0.85rem;
+		--ext-description-lh    : 1.4;
+	}
+	.ext-section .dash-card-grid {
+		gap : 1rem;
+	}
+	.ext-section .dash-card {
+		padding : 1rem;
+		gap     : 0.75rem;
+	}
+	.ext-section .dash-card > header {
+		padding-bottom : 0.75rem;
+	}
+	.ext-header-link {
+		display         : contents;
+		color           : inherit;
+		text-decoration : none;
+	}
+	.ext-header-link:hover h3 {
+		color : oklch(var(--totalform-accent));
+	}
+	.ext-description {
+		margin             : 0.25rem 0 0;
+		color              : oklch(var(--totalform-darkgray));
+		font-size          : var(--ext-description-font);
+		line-height        : var(--ext-description-lh);
+		display            : -webkit-box;
+		-webkit-line-clamp : var(--ext-description-lines);
+		line-clamp         : var(--ext-description-lines);
+		-webkit-box-orient : vertical;
+		overflow           : hidden;
+		min-height         : calc(var(--ext-description-font) * var(--ext-description-lh) * var(--ext-description-lines));
+	}
+</style>
+
 {% endblock %}
+
+{% macro extensionCard(ext, cms) %}
+<article class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}">
+	<header>
+		{% if ext.hasSettings %}
+		<a href="{{ cms.dashboard }}/extensions/{{ ext.id }}/settings" class="ext-header-link">
+		{% endif %}
+			{% if ext.icon %}
+			<img src="{{ ext.icon }}" alt="" class="ext-icon">
+			{% endif %}
+			<div>
+				<h3>{{ ext.name }}</h3>
+				<p class="ext-description">{{ ext.description }}</p>
+			</div>
+		{% if ext.hasSettings %}
+		</a>
+		{% endif %}
+	</header>
+
+	<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">
+		<span>{% if ext.author.name is defined and ext.author.name %}By {{ ext.author.name }}{% endif %}</span>
+		<span class="dash-badge muted sm">v{{ ext.version }}</span>
+	</div>
+
+	{% if ext.error %}
+	<div style="background:oklch(var(--totalform-danger) / 0.1); color:oklch(var(--totalform-danger)); border:1px solid oklch(var(--totalform-danger) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
+		{{ ext.error }}
+	</div>
+	{% endif %}
+
+	{% if ext.incompatibility %}
+	<div style="background:oklch(var(--totalform-warning) / 0.1); color:oklch(var(--totalform-warning)); border:1px solid oklch(var(--totalform-warning) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
+		<strong>Cannot be enabled:</strong>
+		<ul style="margin:0.25rem 0 0 1rem; padding:0;">
+			{% for reason in ext.incompatibility %}
+			<li>{{ reason }}</li>
+			{% endfor %}
+		</ul>
+	</div>
+	{% endif %}
+
+	{# Hide links to extension-owned routes (/ext/... and /admin/ext/...,
+	   e.g. /admin/ext/acme/starter/dashboard) when the extension is
+	   disabled — those routes only exist while it's enabled, so the
+	   link would 404. T3-provided URLs (/admin/docs, /admin/settings,
+	   etc.) and external URLs always show. #}
+	{% set visibleLinks = ext.links|filter(link =>
+		ext.enabled
+		or not (link.url starts with '/ext/' or link.url starts with '/admin/ext/')
+	) %}
+	{% if visibleLinks|length > 0 %}
+	<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
+		<strong>Links:</strong>
+		<div class="dash-badge-group">
+			{% for link in visibleLinks %}
+			{% set external = link.url starts with 'http://' or link.url starts with 'https://' %}
+			<a class="dash-badge" href="{{ link.url }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}</a>
+			{% endfor %}
+		</div>
+	</div>
+	{% endif %}
+
+	<footer>
+		{% if ext.enabled %}
+		<span class="dash-status enabled">Enabled</span>
+		<div style="display:flex; gap:0.5rem; align-items:center;">
+			{% if ext.hasSettings %}
+			<a href="extensions/{{ ext.id }}/settings" class="dash-card-action edit" title="Settings" style="--icon-edit: var(--icon-cog);"></a>
+			{% endif %}
+			<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/disable" style="margin:0;">
+				<button type="submit" class="btn btn-sm">Disable</button>
+			</form>
+		</div>
+		{% else %}
+		<span class="dash-status disabled">Disabled</span>
+		{% if ext.incompatibility %}
+		<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ') }}">Enable</button>
+		{% else %}
+		<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
+			<button type="submit" class="btn btn-sm btn-primary">Enable</button>
+		</form>
+		{% endif %}
+		{% endif %}
+	</footer>
+</article>
+{% endmacro %}

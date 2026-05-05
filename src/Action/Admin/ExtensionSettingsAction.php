@@ -6,7 +6,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -16,7 +16,7 @@ readonly class ExtensionSettingsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
-		private ExtensionDiscovery $discovery,
+		private ExtensionManager $manager,
 	) {
 	}
 
@@ -29,11 +29,9 @@ readonly class ExtensionSettingsAction
 		array $args,
 	): ResponseInterface {
 		$extensionId = $args['extension'] ?? '';
+		$extension   = $this->manager->getExtension($extensionId);
 
-		$manifests = $this->discovery->discover();
-		$manifest  = $manifests[$extensionId] ?? null;
-
-		if ($manifest === null) {
+		if ($extension === null) {
 			return $response->withStatus(404);
 		}
 
@@ -45,7 +43,8 @@ readonly class ExtensionSettingsAction
 				'page'   => 'extensions',
 			],
 			'extensionId'   => $extensionId,
-			'extensionName' => $manifest->name,
+			'extensionName' => $extension['name'],
+			'extension'     => $extension,
 		]);
 	}
 }
