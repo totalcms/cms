@@ -139,10 +139,11 @@ Customize the welcome message at the top of the admin dashboard:
 **With Personalized Greeting:**
 
 ```twig
+{% set user = cms.auth.userData %}
 <div class="dashboard-welcome">
 	<h1>
-		{% if cms.user %}
-			Hello {{ cms.user.name }}, welcome back!
+		{% if user %}
+			Hello {{ user.name }}, welcome back!
 		{% else %}
 			Welcome to Your Custom CMS!
 		{% endif %}
