@@ -39,7 +39,7 @@
 			<summary>
 				<a {% if activePageId == page.id %}class="active"{% endif %}
 					href="builder/page/{{ page.id }}"
-					title="{{ page.route ?: '(no route)' }}">{{ page.title }}</a>
+					title="{{ page.route ?: t('builder.sidebar.no_route') }}">{{ page.title }}</a>
 			</summary>
 			<ul class="tree-view" data-parent="{{ page.id }}">
 			{% for child in page.children %}
@@ -54,7 +54,7 @@
 
 <aside class="dash-content-sidebar tree">
 	<header>
-		<input type="search" name="filter" class="filter" placeholder="Filter..." autofocus />
+		<input type="search" name="filter" class="filter" placeholder="{{ t('builder.sidebar.filter_placeholder') }}" autofocus />
 	</header>
 
 	<nav class="links" id="builder-links" data-tree-view>
@@ -62,9 +62,9 @@
 		{% set activePageId = (url.section == 'page') ? url.params.path : '' %}
 		<details id="category-builder-pages" open>
 			<summary>
-				<span>Site Pages</span>
-				<button type="button" class="page-order-toggle" data-page-order-toggle aria-pressed="false" title="Toggle reorder mode — drag pages to organize without navigating away">
-					<span class="cms-hide">Reorder</span>
+				<span>{{ t('builder.sidebar.site_pages') }}</span>
+				<button type="button" class="page-order-toggle" data-page-order-toggle aria-pressed="false" title="{{ t('builder.sidebar.reorder_title') }}">
+					<span class="cms-hide">{{ t('builder.sidebar.reorder') }}</span>
 				</button>
 			</summary>
 			<ul class="tree-view" data-parent="">
@@ -72,7 +72,7 @@
 				{{ _self.renderPageNode(page, activePageId) }}
 			{% endfor %}
 			{% if pagesTree is empty %}
-				<li class="empty">no pages yet</li>
+				<li class="empty">{{ t('builder.sidebar.no_pages') }}</li>
 			{% endif %}
 			</ul>
 		</details>
@@ -88,7 +88,7 @@
 				{{ _self.renderNode(node, url.file, category) }}
 			{% endfor %}
 			{% if nodes is empty %}
-				<li class="empty">no {{ category }} yet</li>
+				<li class="empty">{{ t('builder.sidebar.no_category_yet', {category: category}) }}</li>
 			{% endif %}
 			</ul>
 		</details>
@@ -96,8 +96,8 @@
 	</nav>
 
 	<footer>
-		<a class="dash-button full transparent" href="builder/page/add" title="Create a new page">+ New Page</a>
-		<a class="dash-button full transparent" href="builder/new" title="Create a new template">+ New Template</a>
+		<a class="dash-button full transparent" href="builder/page/add" title="{{ t('builder.sidebar.new_page_title') }}">{{ t('builder.sidebar.new_page') }}</a>
+		<a class="dash-button full transparent" href="builder/new" title="{{ t('builder.sidebar.new_template_title') }}">{{ t('builder.sidebar.new_template') }}</a>
 	</footer>
 </aside>
 {% include "admin/sidebar-details.twig" %}

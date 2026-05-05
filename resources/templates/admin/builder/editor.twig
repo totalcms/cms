@@ -10,10 +10,10 @@
 {% endif %}
 
 <header>
-	<h1><a href="builder">builder</a> / <span>{{ url.file }}</span></h1>
+	<h1><a href="builder">{{ t('builder.crumb') }}</a> / <span>{{ url.file }}</span></h1>
 	<div class="builder-editor-actions">
 		{% if livePage %}
-			<a class="dash-button transparent" href="{{ cms.base }}{{ livePage.route }}" target="_blank" rel="noopener" title="Open the live page in a new tab">Open Live</a>
+			<a class="dash-button transparent" href="{{ cms.base }}{{ livePage.route }}" target="_blank" rel="noopener" title="{{ t('builder.editor.open_live_title') }}">{{ t('builder.editor.open_live') }}</a>
 		{% endif %}
 	</div>
 </header>
@@ -42,32 +42,32 @@
 
 <div class="totalform builder-preview-controls">
 	<div class="form-field text-field">
-		<label for="builder-preview-url">Preview URL</label>
+		<label for="builder-preview-url">{{ t('builder.editor.preview_url') }}</label>
 		<input type="text" id="builder-preview-url"
 			value="{{ livePage ? livePage.route : '' }}"
-			placeholder="/path-to-page">
+			placeholder="{{ t('builder.editor.preview_url_placeholder') }}">
 	</div>
-	<button type="button" id="builder-preview-btn" class="dash-button" title="Render the current editor content">Preview Page</button>
+	<button type="button" id="builder-preview-btn" class="dash-button" title="{{ t('builder.editor.preview_btn_title') }}">{{ t('builder.editor.preview_btn') }}</button>
 </div>
 
 <section id="builder-preview-panel" class="builder-preview-panel cms-hide">
 	<header class="builder-preview-header">
-		<h2>Preview Page</h2>
-		<div class="builder-preview-presets" role="group" aria-label="Preview width presets">
-			<button type="button" class="builder-preview-preset" data-preset-width="375" title="Mobile (375px)">Mobile</button>
-			<button type="button" class="builder-preview-preset" data-preset-width="768" title="Tablet (768px)">Tablet</button>
-			<button type="button" class="builder-preview-preset is-active" data-preset-width="full" title="Fill available width">Full</button>
+		<h2>{{ t('builder.editor.preview_title') }}</h2>
+		<div class="builder-preview-presets" role="group" aria-label="{{ t('builder.editor.presets_label') }}">
+			<button type="button" class="builder-preview-preset" data-preset-width="375" title="{{ t('builder.editor.preset_mobile_title') }}">{{ t('builder.editor.preset_mobile') }}</button>
+			<button type="button" class="builder-preview-preset" data-preset-width="768" title="{{ t('builder.editor.preset_tablet_title') }}">{{ t('builder.editor.preset_tablet') }}</button>
+			<button type="button" class="builder-preview-preset is-active" data-preset-width="full" title="{{ t('builder.editor.preset_full_title') }}">{{ t('builder.editor.preset_full') }}</button>
 			<span id="builder-preview-width" class="builder-preview-width" aria-live="polite">— px</span>
 		</div>
 		<div class="builder-preview-actions">
-			<button type="button" id="builder-preview-refresh" class="builder-preview-iconbtn icon-refresh" title="Re-render with current editor content" aria-label="Refresh preview"></button>
-			<button type="button" id="builder-preview-close" class="builder-preview-iconbtn icon-close" title="Close preview" aria-label="Close preview"></button>
+			<button type="button" id="builder-preview-refresh" class="builder-preview-iconbtn icon-refresh" title="{{ t('builder.editor.refresh_title') }}" aria-label="{{ t('builder.editor.refresh_aria') }}"></button>
+			<button type="button" id="builder-preview-close" class="builder-preview-iconbtn icon-close" title="{{ t('builder.editor.close_title') }}" aria-label="{{ t('builder.editor.close_aria') }}"></button>
 		</div>
 	</header>
 	<div id="builder-preview-stage" class="builder-preview-stage">
 		<div id="builder-preview-viewport" class="builder-preview-viewport" data-mode="full">
 			<iframe id="builder-preview-frame" class="builder-preview-frame" sandbox="allow-scripts allow-forms"></iframe>
-			<div id="builder-preview-resizer" class="builder-preview-resizer" role="separator" aria-orientation="vertical" aria-label="Drag to resize preview"></div>
+			<div id="builder-preview-resizer" class="builder-preview-resizer" role="separator" aria-orientation="vertical" aria-label="{{ t('builder.editor.resizer_aria') }}"></div>
 		</div>
 	</div>
 </section>
@@ -197,8 +197,9 @@
 			requestAnimationFrame(() => { frame.srcdoc = html; updateWidthLabel(); });
 		} catch (err) {
 			panel.classList.remove('cms-hide');
+			const failLabel = {{ t('builder.editor.preview_failed') | json_encode | raw }};
 			requestAnimationFrame(() => {
-				frame.srcdoc = '<pre style="color:#b00;padding:1rem">Preview request failed: ' + (err && err.message ? err.message : err) + '</pre>';
+				frame.srcdoc = '<pre style="color:#b00;padding:1rem">' + failLabel + ' ' + (err && err.message ? err.message : err) + '</pre>';
 			});
 		} finally {
 			btn.disabled = false;
@@ -215,7 +216,7 @@
 
 <section class="dash-content-section">
 	<div class="cms-notice cms-notice-error">
-		<strong>Template not found:</strong> {{ url.file }}
+		<strong>{{ t('builder.editor.template_not_found') }}</strong> {{ url.file }}
 	</div>
 </section>
 

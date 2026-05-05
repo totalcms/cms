@@ -1,5 +1,5 @@
 <header>
-	<h1><a href="builder">builder</a> / <span>new page</span></h1>
+	<h1><a href="builder">{{ t('builder.crumb') }}</a> / <span>{{ t('builder.crumb_new_page') }}</span></h1>
 </header>
 
 {% set canSave = cms.auth.canAccessCollection(builder.pagesCollection, 'create') %}

@@ -1,12 +1,12 @@
 <header>
-	<h1>Site Builder</h1>
+	<h1>{{ t('builder.title') }}</h1>
 </header>
 
 <section class="dash-content-section">
 
 	<section>
-	<h2>What is Site Builder?</h2>
-	<p>Build your website using Twig templates with automatic URL routing. Create pages in the sidebar, define routes and templates, and your site is live immediately &mdash; no generation step needed.</p>
+	<h2>{{ t('builder.what_title') }}</h2>
+	<p>{{ t('builder.what_desc') }}</p>
 	</section>
 
 	<section>
@@ -14,43 +14,43 @@
 		<div class="stat-grid">
 			<div class="stat-item">
 				<span class="stat-number">{{ builder.pages|length }}</span>
-				<span class="stat-label">Pages</span>
+				<span class="stat-label">{{ t('builder.stat_pages') }}</span>
 			</div>
 			<div class="stat-item">
 				<span class="stat-number">{{ fileTree.layouts|length }}</span>
-				<span class="stat-label">Layouts</span>
+				<span class="stat-label">{{ t('builder.stat_layouts') }}</span>
 			</div>
 			<div class="stat-item">
 				<span class="stat-number">{{ fileTree.pages|length }}</span>
-				<span class="stat-label">Templates</span>
+				<span class="stat-label">{{ t('builder.stat_templates') }}</span>
 			</div>
 			<div class="stat-item">
 				<span class="stat-number">{{ fileTree.partials|length }}</span>
-				<span class="stat-label">Partials</span>
+				<span class="stat-label">{{ t('builder.stat_partials') }}</span>
 			</div>
 			<div class="stat-item">
 				<span class="stat-number">{{ fileTree.macros|length }}</span>
-				<span class="stat-label">Macros</span>
+				<span class="stat-label">{{ t('builder.stat_macros') }}</span>
 			</div>
 		</div>
 	</div>
 	</section>
 
 	<section class="builder-info">
-		<h3>Configuration</h3>
+		<h3>{{ t('builder.config_title') }}</h3>
 		<table class="admin-table">
 			{% if builder.docroot %}
 			<tr>
-				<td>Docroot</td>
+				<td>{{ t('builder.config_docroot') }}</td>
 				<td><code>{{ builder.docroot }}</code></td>
 			</tr>
 			{% endif %}
 			<tr>
-				<td>Assets Path</td>
+				<td>{{ t('builder.config_assets_path') }}</td>
 				<td><code>{{ builder.assetsPath }}</code></td>
 			</tr>
 			<tr>
-				<td>Pages Collection</td>
+				<td>{{ t('builder.config_pages_collection') }}</td>
 				<td><code>{{ builder.pagesCollection }}</code></td>
 			</tr>
 		</table>
@@ -59,18 +59,18 @@
 	{% set assets = builder.assets %}
 	{% set totalAssets = assets.css|length + assets.js|length + assets.fonts|length + assets.images|length + assets.other|length %}
 	<section>
-		<h3>Frontend Assets</h3>
+		<h3>{{ t('builder.assets_title') }}</h3>
 		{% if totalAssets > 0 %}
-		<p>Files in <code>{{ builder.assetsPath }}/</code> available via <code>cms.builder.css()</code>, <code>cms.builder.js()</code>, and <code>cms.builder.asset()</code>.</p>
+		<p>{{ t('builder.assets_desc', {path: builder.assetsPath}) }}</p>
 
 		{% if assets.hasManifest %}
-		<p><strong>Manifest detected</strong> &mdash; hashed filenames will be resolved automatically.</p>
+		<p>{{ t('builder.assets_manifest') }}</p>
 		{% endif %}
 
 		<table class="admin-table">
 			{% if assets.css is not empty %}
 			<tr>
-				<td>CSS</td>
+				<td>{{ t('builder.assets_css') }}</td>
 				<td>
 					{% for file in assets.css %}
 						<code>{{ file }}</code>{% if not loop.last %}, {% endif %}
@@ -80,7 +80,7 @@
 			{% endif %}
 			{% if assets.js is not empty %}
 			<tr>
-				<td>JavaScript</td>
+				<td>{{ t('builder.assets_js') }}</td>
 				<td>
 					{% for file in assets.js %}
 						<code>{{ file }}</code>{% if not loop.last %}, {% endif %}
@@ -90,7 +90,7 @@
 			{% endif %}
 			{% if assets.fonts is not empty %}
 			<tr>
-				<td>Fonts</td>
+				<td>{{ t('builder.assets_fonts') }}</td>
 				<td>
 					{% for file in assets.fonts %}
 						<code>{{ file }}</code>{% if not loop.last %}, {% endif %}
@@ -100,30 +100,30 @@
 			{% endif %}
 			{% if assets.images is not empty %}
 			<tr>
-				<td>Images</td>
-				<td>{{ assets.images|length }} file{{ assets.images|length > 1 ? 's' : '' }}</td>
+				<td>{{ t('builder.assets_images') }}</td>
+				<td>{{ assets.images|length }} {{ assets.images|length > 1 ? t('builder.assets_files') : t('builder.assets_file') }}</td>
 			</tr>
 			{% endif %}
 			{% if assets.other is not empty %}
 			<tr>
-				<td>Other</td>
-				<td>{{ assets.other|length }} file{{ assets.other|length > 1 ? 's' : '' }}</td>
+				<td>{{ t('builder.assets_other') }}</td>
+				<td>{{ assets.other|length }} {{ assets.other|length > 1 ? t('builder.assets_files') : t('builder.assets_file') }}</td>
 			</tr>
 			{% endif %}
 		</table>
 		{% else %}
-		<p>No assets found in <code>{{ builder.assetsPath }}/</code>. Place your CSS, JavaScript, fonts, and images there to reference them in templates with <code>cms.builder.css()</code> and <code>cms.builder.js()</code>.</p>
+		<p>{{ t('builder.assets_empty', {path: builder.assetsPath}) }}</p>
 		{% endif %}
 	</section>
 
 	<section>
-	<h3>Getting Started</h3>
+	<h3>{{ t('builder.start_title') }}</h3>
 	<ol>
-		<li>Create a <strong>layout</strong> in <code>layouts/</code> with your base HTML structure</li>
-		<li>Create <strong>page templates</strong> in <code>pages/</code> that extend your layout</li>
-		<li>Click <strong>+ New Page</strong> to add pages with routes, templates, and metadata</li>
-		<li>Use <code>cms.builder.nav()</code> in your nav partial to generate navigation</li>
-		<li>Add CSS and JS to <code>{{ builder.assetsPath }}/</code> and load them with <code>cms.builder.css()</code> and <code>cms.builder.js()</code></li>
+		<li>{{ t('builder.start_step1') }}</li>
+		<li>{{ t('builder.start_step2') }}</li>
+		<li>{{ t('builder.start_step3') }}</li>
+		<li>{{ t('builder.start_step4') }}</li>
+		<li>{{ t('builder.start_step5', {path: builder.assetsPath}) }}</li>
 	</ol>
 	</section>
 
