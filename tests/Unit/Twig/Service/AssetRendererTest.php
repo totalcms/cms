@@ -91,9 +91,9 @@ test('head emits script type=module for module js in head', function (): void {
 
 test('head orders output: stylesheets, then preloads, then head scripts', function (): void {
 	$assets = [
-		new FrontendAsset(type: 'js',  url: '/api/m.js',  position: 'body', module: true,  preload: true),
+		new FrontendAsset(type: 'js', url: '/api/m.js', position: 'body', module: true, preload: true),
 		new FrontendAsset(type: 'css', url: '/api/a.css', position: 'head'),
-		new FrontendAsset(type: 'js',  url: '/api/h.js',  position: 'head'),
+		new FrontendAsset(type: 'js', url: '/api/h.js', position: 'head'),
 	];
 
 	$html = AssetRenderer::head($assets);
@@ -141,7 +141,7 @@ test('body emits stylesheet for body-positioned css', function (): void {
 test('body skips head-positioned assets', function (): void {
 	$assets = [
 		new FrontendAsset(type: 'css', url: '/api/h.css', position: 'head'),
-		new FrontendAsset(type: 'js',  url: '/api/h.js',  position: 'head'),
+		new FrontendAsset(type: 'js', url: '/api/h.js', position: 'head'),
 	];
 
 	expect(AssetRenderer::body($assets))->toBe('');
@@ -149,7 +149,7 @@ test('body skips head-positioned assets', function (): void {
 
 test('body orders css before js', function (): void {
 	$assets = [
-		new FrontendAsset(type: 'js',  url: '/api/app.js',  position: 'body'),
+		new FrontendAsset(type: 'js', url: '/api/app.js', position: 'body'),
 		new FrontendAsset(type: 'css', url: '/api/late.css', position: 'body'),
 	];
 

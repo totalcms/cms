@@ -147,10 +147,10 @@ readonly class ObjectExporter
 	 */
 	private function buildCsvExport(string $collection, array $objectIds): array
 	{
-		$schema                       = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$schema                                                  = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		['headers' => $headers, 'cardSubProps' => $cardSubProps] = $this->buildCsvHeaders($schema);
-		$objects                      = [$headers];
-		$errors                       = [];
+		$objects                                                 = [$headers];
+		$errors                                                  = [];
 
 		foreach ($objectIds as $id) {
 			try {

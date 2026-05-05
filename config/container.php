@@ -114,7 +114,6 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Domain\Property\Service\DeckFileCleaner;
 use TotalCMS\Domain\Property\Service\DeckItemFactory;
 use TotalCMS\Domain\Property\Service\DeckItemFetcher;
 use TotalCMS\Domain\Property\Service\DeckItemRemover;

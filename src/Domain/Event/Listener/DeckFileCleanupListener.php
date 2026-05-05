@@ -25,7 +25,7 @@ readonly class DeckFileCleanupListener
 	public function onObjectUpdated(array $payload): void
 	{
 		$previous = $payload['previous'] ?? null;
-		$current  = $payload['object']   ?? null;
+		$current  = $payload['object'] ?? null;
 
 		if (!$previous instanceof ObjectData || !$current instanceof ObjectData) {
 			return;

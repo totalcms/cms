@@ -18,9 +18,9 @@ final class DeckFileCleanerTest extends TestCase
 {
 	private DeckFileCleaner $cleaner;
 	/** @var SchemaFetcher&MockObject */
-	private SchemaFetcher $schemaFetcher;
+	private MockObject $schemaFetcher;
 	/** @var PropertyRepository&MockObject */
-	private PropertyRepository $repository;
+	private MockObject $repository;
 
 	protected function setUp(): void
 	{

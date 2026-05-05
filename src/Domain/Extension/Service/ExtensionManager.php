@@ -478,7 +478,7 @@ final class ExtensionManager
 				return $b['enabled'] <=> $a['enabled'];
 			}
 
-			return strcasecmp($a['name'], $b['name']);
+			return strcasecmp((string)$a['name'], (string)$b['name']);
 		});
 
 		return $extensions;
@@ -512,8 +512,8 @@ final class ExtensionManager
 		?ExtensionState $state,
 		array $capabilityLabels,
 	): array {
-		$enabled     = $state !== null && $state->enabled;
-		$permissions = $state !== null ? $state->permissions : [];
+		$enabled     = $state instanceof ExtensionState && $state->enabled;
+		$permissions = $state instanceof ExtensionState ? $state->permissions : [];
 
 		$capabilities = [];
 		foreach ($permissions as $cap => $capEnabled) {
@@ -667,7 +667,7 @@ final class ExtensionManager
 	 */
 	private function getAllAdminAssets(): array
 	{
-		return $this->collectAssetRecords('admin:assets', fn (ExtensionContext $context) => $context->getRegisteredAdminAssets());
+		return $this->collectAssetRecords('admin:assets', fn (ExtensionContext $context): array => $context->getRegisteredAdminAssets());
 	}
 
 	/**
@@ -678,7 +678,7 @@ final class ExtensionManager
 	 */
 	private function getAllFrontendAssets(): array
 	{
-		return $this->collectAssetRecords('frontend:assets', fn (ExtensionContext $context) => $context->getRegisteredFrontendAssets());
+		return $this->collectAssetRecords('frontend:assets', fn (ExtensionContext $context): array => $context->getRegisteredFrontendAssets());
 	}
 
 	/**

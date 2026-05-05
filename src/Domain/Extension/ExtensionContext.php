@@ -277,8 +277,8 @@ final class ExtensionContext
 		string $type,
 		string $path,
 		?string $position = null,
-		bool    $module   = true,
-		bool    $preload  = false,
+		bool $module   = true,
+		bool $preload  = false,
 		?string $version  = null,
 	): void {
 		$this->adminAssets[] = [
@@ -310,8 +310,8 @@ final class ExtensionContext
 		string $type,
 		string $path,
 		?string $position = null,
-		bool    $module   = true,
-		bool    $preload  = false,
+		bool $module   = true,
+		bool $preload  = false,
 		?string $version  = null,
 	): void {
 		$this->frontendAssets[] = [

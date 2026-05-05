@@ -30,5 +30,5 @@ test('module and preload default to false', function (): void {
 test('properties are readonly', function (): void {
 	$asset = new FrontendAsset(type: 'css', url: '/x', position: 'head');
 
-	expect(fn () => $asset->url = '/y')->toThrow(Error::class);
+	expect(fn (): string => $asset->url = '/y')->toThrow(Error::class);
 });
