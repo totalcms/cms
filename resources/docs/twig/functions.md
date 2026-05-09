@@ -553,6 +553,38 @@ Decodes JSON strings to arrays. Alias for `json_decode`.
 {% endif %}
 ```
 
+## Date Functions
+
+### `parseDate(mixed $date): Chronos`
+Parses a date string (or passes through an existing Chronos instance) and returns a [CakePHP Chronos](https://github.com/cakephp/chronos) instance in the configured timezone. Use this when the curated `date*` filters don't cover what you need — `parseDate()` is the escape hatch that exposes the full Chronos API to templates.
+
+```twig
+{# Compute someone's age from a stored birthday #}
+{{ parseDate(person.birthday).age }}
+{# Output: 35 #}
+
+{# Day of the week #}
+{{ parseDate(event.date).dayName }}
+{# Output: Saturday #}
+
+{# Difference in months between two dates #}
+{% set months = parseDate(start).diffInMonths(parseDate(end)) %}
+
+{# Chain Chronos modifiers #}
+{{ parseDate(post.published).addWeeks(2).format('F j, Y') }}
+
+{# Boolean checks #}
+{% if parseDate(member.joined).diffInYears(parseDate('now')) >= 5 %}
+    <span class="badge">Veteran member</span>
+{% endif %}
+```
+
+Common Chronos properties: `age`, `year`, `month`, `day`, `hour`, `minute`, `dayOfWeek`, `dayOfYear`, `daysInMonth`, `dayName`, `monthName`, `quarter`.
+
+Common Chronos methods: `format()`, `diffInYears()`, `diffInMonths()`, `diffInDays()`, `addDays()`, `subWeeks()`, `startOfMonth()`, `isPast()`, `isFuture()`, `isWeekend()`.
+
+For everyday formatting, prefer the `dateFormat`, `dateRelative`, `dateAdd`, and related filters in [Twig Filters](docs/twig/filters) — they're safer (string in, string out) and match the rest of the date toolkit. Reach for `parseDate()` only when you need a Chronos property or method that isn't already wrapped.
+
 ## File System Functions
 
 ### `imageExists(image): bool`
