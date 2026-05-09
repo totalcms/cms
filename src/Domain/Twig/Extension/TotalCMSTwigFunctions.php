@@ -2,7 +2,9 @@
 
 namespace TotalCMS\Domain\Twig\Extension;
 
+use Cake\Chronos\Chronos;
 use TotalCMS\Domain\Rendering\Utilities\EmbedBuilder;
+use TotalCMS\Support\Config;
 use Twig\TwigFunction;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
@@ -63,6 +65,7 @@ class TotalCMSTwigFunctions
 		'buildQuery',
 		'parseJson',
 		'typeof',
+		'parseDate',
 	];
 
 	/** @return array<TwigFunction> */
@@ -332,6 +335,29 @@ class TotalCMSTwigFunctions
 	public static function typeof(mixed $variable): string
 	{
 		return gettype($variable);
+	}
+
+	// -------------------------
+	// Date Functions
+	// -------------------------
+
+	/**
+	 * Parse a date string (or pass-through a Chronos instance) and return a Chronos
+	 * instance in the configured timezone. Exposes the full Chronos API to templates
+	 * for cases the curated `date*` filters don't cover.
+	 *
+	 * Example: {{ parseDate(person.birthday).age }}
+	 */
+	public static function parseDate(mixed $date): Chronos
+	{
+		$config   = Config::init();
+		$timezone = new \DateTimeZone($config->timezone);
+
+		if ($date instanceof Chronos) {
+			return $date->setTimezone($timezone);
+		}
+
+		return Chronos::parse((string)$date, $timezone);
 	}
 
 	// -------------------------
