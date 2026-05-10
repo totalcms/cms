@@ -1,0 +1,10 @@
+{
+    "completed_steps": [
+        "environment",
+        "data-path",
+        "account",
+        "license",
+        "server-config"
+    ],
+    "completed_at": "2026-05-10T04:46:00+00:00"
+}

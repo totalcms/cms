@@ -4,10 +4,13 @@ use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\post;
 
 beforeAll(function (): void {
-	// Clean up before tests
-	recursiveDelete(cmsDataDir());
-	// Setup wizard tests simulate a fresh install — remove auth too
-	recursiveDelete(cmsDataDir() . 'auth', [], true);
+	// Setup wizard tests simulate a fresh install — wipe EVERYTHING under
+	// tcms-data, including auth/ and .system/ which the default
+	// recursiveDelete preserves. auth/ would make SetupCheckMiddleware
+	// think setup is complete via the backward-compat path; .system/ may
+	// hold a stale setup-state.json with completed_at from an earlier
+	// non-setup test run.
+	recursiveDelete(cmsDataDir(), [], true);
 });
 
 beforeEach(function (): void {
@@ -15,10 +18,9 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 
-	// Clean data directory for fresh setup tests
-	recursiveDelete(cmsDataDir());
-	// Without removing auth/, SetupCheckMiddleware would redirect /setup/* to /admin
-	recursiveDelete(cmsDataDir() . 'auth', [], true);
+	// Wipe everything (auth + .system included) so each test starts from
+	// a true pre-setup state.
+	recursiveDelete(cmsDataDir(), [], true);
 
 	$this->setUpApp(bootstrap());
 });

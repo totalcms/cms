@@ -28,12 +28,17 @@ return function (App $app): void {
 	$app->add(CacheInvalidationMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(MaintenanceModeMiddleware::class);
-	$app->add(SetupCheckMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
 	$app->add(LicenseValidationMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
 	$app->add(NoCacheErrorMiddleware::class);
 	$app->addRoutingMiddleware();
+	// SetupCheckMiddleware sits OUTSIDE RoutingMiddleware so it can intercept
+	// requests for unrouted paths (e.g. `/`) — otherwise Slim would throw a
+	// 404 before this middleware ever ran, and a fresh install would never
+	// see the setup wizard. The middleware uses URL-prefix checks because
+	// the route context isn't populated at this point in the chain.
+	$app->add(SetupCheckMiddleware::class);
 	$app->add(BasePathMiddleware::class);
 	$app->add(SentryMiddleware::class);
 	$app->add(ErrorMiddleware::class);

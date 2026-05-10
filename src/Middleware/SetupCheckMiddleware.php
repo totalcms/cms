@@ -9,7 +9,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
@@ -18,7 +17,10 @@ use TotalCMS\Support\Config;
  * Middleware to check if Total CMS has been set up.
  * If not, redirect to the appropriate setup wizard step.
  *
- * This middleware runs BEFORE authentication to allow initial setup without auth.
+ * This middleware runs BEFORE Slim's RoutingMiddleware so it can intercept
+ * requests for unrouted paths (like `/`) — otherwise Slim would throw 404
+ * before this check ever ran. URL prefixes are used instead of route names
+ * because the route context isn't populated yet at this point in the chain.
  */
 readonly class SetupCheckMiddleware implements MiddlewareInterface
 {
@@ -38,27 +40,35 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$routeContext = RouteContext::fromRequest($request);
-		$route        = $routeContext->getRoute();
+		$path = $request->getUri()->getPath();
 
-		$routeName = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : null;
-
-		// Public assets are always allowed
-		if ($routeName === 'public-asset') {
+		// Public assets are always allowed (admin CSS/JS, vendor assets, etc.)
+		if (str_starts_with($path, '/api/assets/')) {
 			return $handler->handle($request);
 		}
 
-		// Setup routes: only accessible while setup is incomplete
-		if ($routeName !== null && str_starts_with($routeName, 'setup-')) {
-			if ($this->setupComplete()) {
+		// Setup wizard paths: only accessible while setup is incomplete
+		if ($path === '/setup' || str_starts_with($path, '/setup/')) {
+			if ($this->setupState->isSetupComplete()) {
 				return $this->redirectRenderer->redirectFor(new Response(), 'admin-index');
 			}
 
 			return $handler->handle($request);
 		}
 
-		// Non-setup routes: allow when setup is complete
-		if ($this->setupComplete()) {
+		// Anything else: allow through when setup is complete
+		if ($this->setupState->isSetupComplete()) {
+			return $handler->handle($request);
+		}
+
+		// Pre-setup, non-wizard request. Only redirect to the wizard for
+		// requests that look like page navigation — let asset-like and
+		// API requests fall through to routing so they 404 (or 401)
+		// naturally. Without this, every unrouted request — `/css/foo.css`,
+		// `/api/whatever`, a typo'd image URL — would 302 to the wizard,
+		// which breaks browser asset loading and confuses API clients.
+		$ext = pathinfo($path, PATHINFO_EXTENSION);
+		if ($ext !== '' || str_starts_with($path, '/api/')) {
 			return $handler->handle($request);
 		}
 
@@ -71,21 +81,5 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 		}
 
 		return $this->redirectRenderer->redirectFor(new Response(), $currentStep);
-	}
-
-	/**
-	 * Setup is considered complete when the auth collection exists.
-	 * This is the definitive check — once an admin user is created, setup is done.
-	 */
-	private function setupComplete(): bool
-	{
-		if ($this->config->datadir === '' || !is_dir($this->config->datadir)) {
-			return false;
-		}
-
-		$authCollection = $this->config->auth['collection'] ?? 'auth';
-		$authPath       = $this->config->datadir . '/' . $authCollection;
-
-		return is_dir($authPath);
 	}
 }

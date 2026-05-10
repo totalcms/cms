@@ -69,8 +69,22 @@ if ($settings['docroot'] !== '' && PHP_SAPI !== 'cli' && !file_exists($docrootFi
 	}
 }
 
-$settings['api'] = str_replace($settings['docroot'], '', $settings['root']);
-$settings['api'] = $settings['api'] === '' ? '/' : $settings['api'];
+// URL prefix where the front controller is mounted. For the typical
+// install ("public/" is the doc root), this is empty. For subpath
+// installs (e.g. https://example.com/cms/), this is the subpath
+// ("/cms"). Derived from SCRIPT_NAME — must NOT be derived from
+// filesystem paths because the project root is not necessarily a
+// subdirectory of the document root.
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+if ($scriptName === '' || !str_starts_with($scriptName, '/')) {
+	// CLI, cli-server (after the bootstrap workaround rewrites
+	// SCRIPT_NAME to a basename), or other unusual SAPIs.
+	$settings['api'] = '';
+} else {
+	// dirname('/index.php')      === '/'    -> '' after rtrim
+	// dirname('/cms/index.php')  === '/cms' -> '/cms'
+	$settings['api'] = rtrim(dirname($scriptName), '/');
+}
 
 $settings['debug'] = false; // Set to true for development
 
