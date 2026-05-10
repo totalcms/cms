@@ -243,7 +243,7 @@ class ObjectImporter
 	private function saveImages(): void
 	{
 		foreach ($this->images as $property => $path) {
-			if (file_exists($path)) {
+			if (file_exists($path) && is_file($path)) {
 				$this->imageSaver->save($this->collection, $this->objectID, $property, $path);
 
 				// Check for alt text file and update the image item if found
@@ -279,7 +279,7 @@ class ObjectImporter
 	private function saveFiles(): void
 	{
 		foreach ($this->files as $property => $path) {
-			if (file_exists($path)) {
+			if (file_exists($path) && is_file($path)) {
 				$this->fileSaver->save($this->collection, $this->objectID, $property, $path);
 			}
 		}
