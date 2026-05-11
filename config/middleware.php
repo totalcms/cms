@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Middlewares\TrailingSlash;
 use Odan\Session\Middleware\SessionStartMiddleware;
-use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
+use TotalCMS\Middleware\BasePathMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;

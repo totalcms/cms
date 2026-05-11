@@ -69,6 +69,19 @@ if ($settings['docroot'] !== '' && PHP_SAPI !== 'cli' && !file_exists($docrootFi
 	}
 }
 
+// Last-resort fallback for CLI runs that happen before any web request
+// has populated $docrootFile (the post-install hook is the canonical
+// case — `composer create-project` runs `vendor/bin/tcms builder:init`
+// before the operator has loaded the site once). Assume the standard
+// Composer layout where the docroot is `<project>/public`. If that's
+// wrong for a given install, the operator can override `datadir` (and
+// other path-dependent settings) explicitly in `config/tcms.php`, OR
+// the first web request will overwrite this on disk.
+if ($settings['docroot'] === '') {
+	$settings['docroot']      = $settings['root'] . '/public';
+	$_SERVER['DOCUMENT_ROOT'] = $settings['docroot'];
+}
+
 // URL prefix where the front controller is mounted. For the typical
 // install ("public/" is the doc root), this is empty. For subpath
 // installs (e.g. https://example.com/cms/), this is the subpath
