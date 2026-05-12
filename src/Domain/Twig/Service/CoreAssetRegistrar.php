@@ -31,8 +31,9 @@ abstract class CoreAssetRegistrar
 
 		$records = [];
 		foreach (static::ASSETS as $asset) {
-			$mtime = @filemtime($assetsDir . '/' . $asset['path']);
-			$query = $mtime !== false ? '?v=' . $mtime : '';
+			$assetPath = $assetsDir . '/' . $asset['path'];
+			$mtime     = is_file($assetPath) ? filemtime($assetPath) : false;
+			$query     = $mtime !== false ? '?v=' . $mtime : '';
 
 			$records[] = new FrontendAsset(
 				type: $asset['type'],

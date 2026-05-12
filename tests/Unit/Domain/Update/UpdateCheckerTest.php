@@ -46,11 +46,11 @@ final class UpdateCheckerTest extends TestCase
 
 		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available'   => true,
-			'version'     => '3.3.0',
+			'version'     => '9.9.0',
 			'releaseDate' => '2026-04-10',
 			'severity'    => 'minor',
 			'changelog'   => 'New features',
-			'downloadUrl' => '/version/download/3.3.0',
+			'downloadUrl' => '/version/download/9.9.0',
 		])));
 
 		$this->cacheManager->expects($this->once())->method('storeComputedData');
@@ -58,7 +58,7 @@ final class UpdateCheckerTest extends TestCase
 		$result = $this->checker->checkForUpdate();
 
 		expect($result->available)->toBeTrue();
-		expect($result->version)->toBe('3.3.0');
+		expect($result->version)->toBe('9.9.0');
 		expect($result->severity)->toBe('minor');
 	}
 
@@ -84,7 +84,7 @@ final class UpdateCheckerTest extends TestCase
 		$this->cacheManager->method('getComputedData')->willReturn(['available' => false]);
 
 		$this->httpClient->expects($this->once())->method('request')->willReturn(
-			new HttpResponse(200, (string)json_encode(['available' => true, 'version' => '3.3.0']))
+			new HttpResponse(200, (string)json_encode(['available' => true, 'version' => '9.9.0']))
 		);
 
 		$result = $this->checker->checkForUpdate(forceRefresh: true);
@@ -163,7 +163,7 @@ final class UpdateCheckerTest extends TestCase
 		$this->cacheManager->method('getComputedData')->willReturn(null);
 		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available' => true,
-			'version'   => '3.3.0',
+			'version'   => '9.9.0',
 			'severity'  => 'minor',
 		])));
 
