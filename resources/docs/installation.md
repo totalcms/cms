@@ -56,7 +56,7 @@ You only need one caching extension. APCu is recommended for single-server deplo
 Install with Composer:
 
 ```bash
-composer create-project totalcms/totalcms --stability=beta my-site
+composer create-project totalcms/totalcms my-site --stability=beta
 ```
 
 > **Note:** `--stability=beta` is required while 3.5.0 is in beta. Once 3.5.0 stable ships, you can drop the flag.
