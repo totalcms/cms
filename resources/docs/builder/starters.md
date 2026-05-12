@@ -1,7 +1,7 @@
 ---
 title: "Starter Templates"
 description: "Scaffold a complete working site in seconds with bundled starter templates for business, blog, portfolio, and minimal sites."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Starter Templates

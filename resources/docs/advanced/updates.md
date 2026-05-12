@@ -1,7 +1,7 @@
 ---
 title: "Updates"
 description: "Keep Total CMS up to date with one-click dashboard updates, CLI commands, or manual upgrades. Includes rollback and maintenance mode details."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Updates
@@ -110,7 +110,7 @@ php tcms/resources/bin/tcms cache:clear
 Updates are classified by severity:
 
 - **Patch** (e.g., 3.2.1 → 3.2.2) — Bug fixes and minor improvements. Safe to apply immediately.
-- **Minor** (e.g., 3.2.x → 3.3.0) — New features and enhancements. Review the changelog before applying.
+- **Minor** (e.g., 3.2.x → 3.5.0) — New features and enhancements. Review the changelog before applying.
 - **Major** (e.g., 3.x → 4.0) — Significant changes that may require attention. Read the upgrade guide.
 
 ## Troubleshooting

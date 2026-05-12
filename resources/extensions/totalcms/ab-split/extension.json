@@ -4,7 +4,7 @@
     "description": "Render an alternate template at the same URL for a percentage of visitors. Useful for testing layout, copy, or CTA variations without changing the page URL.",
     "icon": "icon.png",
     "requires": {
-        "totalcms": ">=3.3.0-beta",
+        "totalcms": ">=3.5.0-beta",
         "php": ">=8.2"
     },
     "entrypoint": "Extension.php",

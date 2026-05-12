@@ -1,7 +1,7 @@
 ---
 title: "Builder Admin UI"
 description: "Use the admin interface to manage builder templates, preview pages, reorder the page tree, and restore previous template versions."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Builder Admin UI

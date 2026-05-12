@@ -147,9 +147,9 @@ For zero-downtime updates with instant rollback, you can use versioned directori
 
 ```
 /var/www/example.com/
-├── tcms -> tcms-3.3.0/          # symlink to active version
+├── tcms -> tcms-3.5.0/          # symlink to active version
 ├── tcms-3.2.2/                  # previous version (kept for rollback)
-├── tcms-3.3.0/                  # current version
+├── tcms-3.5.0/                  # current version
 ├── tcms-data/                   # shared data (never changes between versions)
 └── public/
     └── index.php                # references tcms/ (follows symlink)
@@ -159,11 +159,11 @@ For zero-downtime updates with instant rollback, you can use versioned directori
 
 ```bash
 # Upload or extract the new version
-unzip totalcms-3.3.0.zip -d /var/www/example.com/tcms-3.3.0
+unzip totalcms-3.5.0.zip -d /var/www/example.com/tcms-3.5.0
 
 # Switch the symlink (atomic operation)
 cd /var/www/example.com
-ln -sfn tcms-3.3.0 tcms
+ln -sfn tcms-3.5.0 tcms
 
 # Clear cache
 php tcms/resources/bin/tcms cache:clear

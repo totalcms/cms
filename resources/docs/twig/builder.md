@@ -1,7 +1,7 @@
 ---
 title: "Twig Builder Reference"
 description: "Reference for the cms.builder namespace providing navigation helpers and asset management for Site Builder pages."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # cms.builder

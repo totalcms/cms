@@ -1,7 +1,7 @@
 ---
 title: "Extension Manifest Reference"
 description: "Complete reference for the extension.json manifest file that every Total CMS extension requires."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Extension Manifest Reference
@@ -18,7 +18,7 @@ Every extension requires an `extension.json` manifest file in its root directory
     "version": "1.2.0",
     "icon": "icon.svg",
     "requires": {
-        "totalcms": ">=3.3.0",
+        "totalcms": ">=3.5.0",
         "php": ">=8.2",
         "extensions": {
             "acme/analytics": ">=1.0.0"
@@ -79,7 +79,7 @@ Version constraints for Total CMS, PHP, and other extensions.
 
 ```json
 "requires": {
-    "totalcms": ">=3.3.0",
+    "totalcms": ">=3.5.0",
     "php": ">=8.2",
     "extensions": {
         "acme/analytics": ">=1.0.0"

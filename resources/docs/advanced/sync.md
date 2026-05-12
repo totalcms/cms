@@ -1,7 +1,7 @@
 ---
 title: "Sync"
 description: "Push and pull schemas and templates between local development and production Total CMS instances using the CLI or admin dashboard."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Sync

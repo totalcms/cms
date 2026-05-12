@@ -1,7 +1,7 @@
 ---
 title: "Bundled Extensions"
 description: "Bundled extensions ship with Total CMS — installed by default, managed through the same UI as user-installed extensions, but cannot be removed."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Bundled Extensions

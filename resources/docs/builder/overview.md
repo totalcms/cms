@@ -1,7 +1,7 @@
 ---
 title: "Site Builder"
 description: "Build complete websites within Total CMS using Twig templates, page routes, and automatic URL routing — no external tools required."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Site Builder

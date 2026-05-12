@@ -1,7 +1,7 @@
 ---
 title: "Frontend Assets"
 description: "Set up Vite (or any build tool) to compile CSS and JavaScript for your Site Builder site."
-since: "3.3.0"
+since: "3.5.0"
 ---
 
 # Frontend Assets
