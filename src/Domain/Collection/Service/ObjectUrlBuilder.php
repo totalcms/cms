@@ -23,8 +23,13 @@ readonly class ObjectUrlBuilder
 	/**
 	 * Build the URL for an object, supporting template syntax.
 	 *
-	 * Template URLs require prettyUrl to be enabled. If prettyUrl is disabled,
-	 * the template syntax is ignored and query string format (?id=xxx) is used.
+	 * Templated URLs (containing `{id}` / `{{ id }}` placeholders) are always
+	 * rendered as pretty URLs — the `prettyUrl` flag is ignored for them. A
+	 * `?id=` form can't meaningfully embed placeholders, so writing a template
+	 * and leaving the flag off would silently produce broken URLs.
+	 *
+	 * For non-templated URLs (plain prefixes like `/blog`), the `prettyUrl`
+	 * flag still chooses between `/blog/{id}` (true) and `/blog?id={id}` (false).
 	 *
 	 * @param CollectionData $collectionData The collection configuration
 	 * @param array<string,mixed> $object The object data (must include 'id')
@@ -44,25 +49,26 @@ readonly class ObjectUrlBuilder
 
 		$id = (string)($object['id'] ?? '');
 
-		// If prettyUrl is disabled, always use query string format (ignore template syntax)
+		// Templated URLs are implicitly pretty — the presence of placeholders is
+		// the user's declaration of intent. Render the template regardless of
+		// the `prettyUrl` flag.
+		if ($this->isTemplateUrl($url)) {
+			// Auto-append {{ id }} if not present in template
+			if (!$this->containsIdTemplate($url)) {
+				$url = rtrim($url, '/') . '/{{ id }}';
+			}
+
+			return $this->renderUrlTemplate($url, $object);
+		}
+
+		// Non-templated URL — respect the `prettyUrl` flag.
 		if (!$collectionData->prettyUrl) {
 			return sprintf('%s?id=%s', $url, $id);
 		}
 
-		// If no template syntax, use simple pretty URL format
-		if (!$this->isTemplateUrl($url)) {
-			$url = rtrim($url, '/');
+		$url = rtrim($url, '/');
 
-			return sprintf('%s/%s', $url, $id);
-		}
-
-		// Auto-append {{ id }} if not present in template
-		if (!$this->containsIdTemplate($url)) {
-			$url = rtrim($url, '/') . '/{{ id }}';
-		}
-
-		// Render the template with object data using lightweight renderer
-		return $this->renderUrlTemplate($url, $object);
+		return sprintf('%s/%s', $url, $id);
 	}
 
 	/**
