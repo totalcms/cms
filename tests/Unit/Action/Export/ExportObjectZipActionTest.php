@@ -10,24 +10,24 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Export\ExportObjectZipAction;
 use TotalCMS\Domain\Export\Service\ObjectZipper;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
 final class ExportObjectZipActionTest extends TestCase
 {
 	private ExportObjectZipAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $objectZipper;
-	private \PHPUnit\Framework\MockObject\MockObject $objectRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->objectZipper     = $this->createMock(ObjectZipper::class);
-		$this->objectRepository = $this->createMock(ObjectRepository::class);
-		$this->request          = $this->createMock(ServerRequestInterface::class);
-		$this->response         = $this->createMock(ResponseInterface::class);
+		$this->objectZipper  = $this->createMock(ObjectZipper::class);
+		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
+		$this->request       = $this->createMock(ServerRequestInterface::class);
+		$this->response      = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ExportObjectZipAction($this->objectZipper, $this->objectRepository);
+		$this->action = new ExportObjectZipAction($this->objectZipper, $this->objectFetcher);
 	}
 
 	public function testExportsObjectZipSuccessfully(): void
@@ -35,7 +35,7 @@ final class ExportObjectZipActionTest extends TestCase
 		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test zip content');
 
-		$this->objectRepository->expects($this->once())
+		$this->objectFetcher->expects($this->once())
 			->method('existsObject')
 			->with('blog', 'my-post')
 			->willReturn(true);
@@ -65,7 +65,7 @@ final class ExportObjectZipActionTest extends TestCase
 
 	public function testReturns404WhenObjectNotFound(): void
 	{
-		$this->objectRepository->expects($this->once())
+		$this->objectFetcher->expects($this->once())
 			->method('existsObject')
 			->with('blog', 'nonexistent')
 			->willReturn(false);
@@ -93,7 +93,7 @@ final class ExportObjectZipActionTest extends TestCase
 		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test');
 
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')->willReturn($zipPath);
 		$this->objectZipper->method('getZipFilename')->willReturn('test.zip');
 
@@ -110,7 +110,7 @@ final class ExportObjectZipActionTest extends TestCase
 		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test');
 
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')->willReturn($zipPath);
 		$this->objectZipper->method('getZipFilename')->willReturn('blog--my-post.zip');
 
@@ -136,7 +136,7 @@ final class ExportObjectZipActionTest extends TestCase
 		$content = 'test zip content with some data';
 		file_put_contents($zipPath, $content);
 
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')->willReturn($zipPath);
 		$this->objectZipper->method('getZipFilename')->willReturn('test.zip');
 
@@ -157,7 +157,7 @@ final class ExportObjectZipActionTest extends TestCase
 
 	public function testReturns500WhenZipFileNotFound(): void
 	{
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')->willReturn('/nonexistent/file.zip');
 		$this->objectZipper->method('getZipFilename')->willReturn('test.zip');
 
@@ -181,7 +181,7 @@ final class ExportObjectZipActionTest extends TestCase
 
 	public function testHandlesRuntimeException(): void
 	{
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')
 			->willThrowException(new \RuntimeException('Zip creation failed'));
 
@@ -208,7 +208,7 @@ final class ExportObjectZipActionTest extends TestCase
 		$zipPath = sys_get_temp_dir() . '/test-cleanup-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test content');
 
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')->willReturn($zipPath);
 		$this->objectZipper->method('getZipFilename')->willReturn('test.zip');
 
@@ -226,7 +226,7 @@ final class ExportObjectZipActionTest extends TestCase
 		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'zip content');
 
-		$this->objectRepository->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectZipper->method('createObjectZip')->willReturn($zipPath);
 		$this->objectZipper->method('getZipFilename')->willReturn('test.zip');
 

@@ -13,6 +13,7 @@ class CollectionData
 {
 	// Reserved names that cannot be used for collections
 	public const RESERVED_NAMES = [
+		'extensions',
 		'templates',
 		'logs',
 		'.schemas',
@@ -54,6 +55,9 @@ class CollectionData
 
 	/** @var array<string,array<string>> */
 	public array $manualSort = [];  // Manual sort orders keyed by property name
+
+	/** @var array<string,mixed> */
+	public array $sitemap = [];  // Sitemap card settings (enabled, date, frequency, priority, include, exclude)
 
 	public function __construct()
 	{
@@ -112,6 +116,10 @@ class CollectionData
 			$collection['manualSort'] = $this->manualSort;
 		}
 
+		if ($this->sitemap !== []) {
+			$collection['sitemap'] = $this->sitemap;
+		}
+
 		return $collection;
 	}
 
@@ -163,25 +171,26 @@ class CollectionData
 	public static function getDefaultLabelsForSchema(string $schemaId): array
 	{
 		$defaults = [
-			'auth'       => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
-			'blog'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
-			'code'       => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
-			'playground' => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
-			'mailer'     => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
-			'color'      => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
-			'date'       => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
-			'depot'      => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],
-			'email'      => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
-			'feed'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
-			'file'       => ['labelPlural' => 'Files', 'labelSingular' => 'File'],
-			'gallery'    => ['labelPlural' => 'Galleries', 'labelSingular' => 'Gallery'],
-			'image'      => ['labelPlural' => 'Images', 'labelSingular' => 'Image'],
-			'number'     => ['labelPlural' => 'Numbers', 'labelSingular' => 'Number'],
-			'styledtext' => ['labelPlural' => 'Content', 'labelSingular' => 'Styled Text'],
-			'svg'        => ['labelPlural' => 'SVGs', 'labelSingular' => 'SVG'],
-			'text'       => ['labelPlural' => 'Content', 'labelSingular' => 'Text'],
-			'toggle'     => ['labelPlural' => 'Toggles', 'labelSingular' => 'Toggle'],
-			'url'        => ['labelPlural' => 'URLs', 'labelSingular' => 'URL'],
+			'auth'         => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
+			'blog'         => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'code'         => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
+			'playground'   => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
+			'mailer'       => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
+			'color'        => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
+			'date'         => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
+			'depot'        => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],
+			'email'        => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
+			'feed'         => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'file'         => ['labelPlural' => 'Files', 'labelSingular' => 'File'],
+			'gallery'      => ['labelPlural' => 'Galleries', 'labelSingular' => 'Gallery'],
+			'image'        => ['labelPlural' => 'Images', 'labelSingular' => 'Image'],
+			'number'       => ['labelPlural' => 'Numbers', 'labelSingular' => 'Number'],
+			'builder-page' => ['labelPlural' => 'Pages', 'labelSingular' => 'Page'],
+			'styledtext'   => ['labelPlural' => 'Content', 'labelSingular' => 'Styled Text'],
+			'svg'          => ['labelPlural' => 'SVGs', 'labelSingular' => 'SVG'],
+			'text'         => ['labelPlural' => 'Content', 'labelSingular' => 'Text'],
+			'toggle'       => ['labelPlural' => 'Toggles', 'labelSingular' => 'Toggle'],
+			'url'          => ['labelPlural' => 'URLs', 'labelSingular' => 'URL'],
 		];
 
 		return $defaults[$schemaId] ?? ['labelPlural' => '', 'labelSingular' => ''];

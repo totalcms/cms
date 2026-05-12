@@ -30,7 +30,7 @@ class SessionKeysTest extends TestCase
 		$allKeys = SessionKeys::getAllKeys();
 
 		$this->assertIsArray($allKeys);
-		$this->assertCount(11, $allKeys);
+		$this->assertCount(12, $allKeys);
 
 		// Ensure all expected keys are present
 		$this->assertContains(SessionKeys::AUTH_USER, $allKeys);
@@ -86,11 +86,12 @@ class SessionKeysTest extends TestCase
 		$activityKeys = SessionKeys::getActivityKeys();
 
 		$this->assertIsArray($activityKeys);
-		$this->assertCount(4, $activityKeys);
+		$this->assertCount(5, $activityKeys);
 		$this->assertContains(SessionKeys::LAST_ACTIVITY, $activityKeys);
 		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $activityKeys);
 		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $activityKeys);
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $activityKeys);
+		$this->assertContains(SessionKeys::LICENSE_CHECK_DUE, $activityKeys);
 	}
 
 	public function testAllKeysUseCorrectNamespace(): void

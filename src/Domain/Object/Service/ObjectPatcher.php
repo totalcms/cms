@@ -15,14 +15,18 @@ readonly class ObjectPatcher
 	) {
 	}
 
-	/** @param array<string,mixed> $newData */
-	public function patchObject(string $collection, string $id, array $newData): ObjectData
+	/**
+	 * @param array<string,mixed> $newData
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function patchObject(string $collection, string $id, array $newData, bool $silent = false): ObjectData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
 		$mergedObject = array_merge($object->toArray(), $newData);
 
-		return $this->objectUpdater->updateObject($collection, $id, $mergedObject);
+		return $this->objectUpdater->updateObject($collection, $id, $mergedObject, $silent);
 	}
 
 	/** @param array<string,mixed> $newData */
@@ -32,6 +36,49 @@ readonly class ObjectPatcher
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = array_merge($objectData[$property], $newData);
+
+		return $this->objectUpdater->updateObject($collection, $id, $objectData);
+	}
+
+	/**
+	 * Patch a property nested inside another property:
+	 *   - Card child: `obj[$parent][$path]` where `$path` is a single segment.
+	 *   - Deck child: `obj[$parent][$itemId][$child]` where `$path` is `"itemId/child"`.
+	 *
+	 * `$path` is a slash-separated subpath; this method walks it from `$parent`
+	 * down to the leaf, creating intermediate associative slots as needed, and
+	 * `array_merge`s `$newData` into the leaf so siblings are preserved at every
+	 * level.
+	 *
+	 * @param array<string,mixed> $newData
+	 */
+	public function patchNestedProperty(
+		string $collection,
+		string $id,
+		string $parent,
+		string $path,
+		array $newData,
+	): ObjectData {
+		$object     = $this->objectFetcher->fetchObject($collection, $id);
+		$objectData = $object->toArray();
+
+		$segments = $path === '' ? [] : explode('/', $path);
+		// Walk to (but not including) the leaf, creating slots as we go. Then
+		// merge into the leaf so partial updates preserve sibling fields.
+		$cursor =&$objectData[$parent];
+		if (!is_array($cursor)) {
+			$cursor = [];
+		}
+		$leaf = (string)array_pop($segments);
+		foreach ($segments as $segment) {
+			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
+				$cursor[$segment] = [];
+			}
+			$cursor =&$cursor[$segment];
+		}
+
+		$existing      = isset($cursor[$leaf]) && is_array($cursor[$leaf]) ? $cursor[$leaf] : [];
+		$cursor[$leaf] = array_merge($existing, $newData);
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);
 	}

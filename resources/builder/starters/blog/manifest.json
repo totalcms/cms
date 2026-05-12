@@ -1,0 +1,5 @@
+{
+	"name": "Blog",
+	"description": "A blog-focused site with post listing, single post, and about page",
+	"version": "1.0.0"
+}

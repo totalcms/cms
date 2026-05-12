@@ -9,13 +9,17 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Repository.
  */
 class SchemaRepository extends StorageRepository
 {
-	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../resources/schemas/';
+	public static function defaultSchemaDir(): string
+	{
+		return PathResolver::packageRoot() . '/resources/schemas/';
+	}
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
 	/**
@@ -23,6 +27,9 @@ class SchemaRepository extends StorageRepository
 	 *
 	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
 	 */
+	/** @var list<string> Absolute paths to extension schema directories */
+	private array $extensionSchemaDirs = [];
+
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly SchemaFactory $factory,
@@ -30,6 +37,17 @@ class SchemaRepository extends StorageRepository
 		private readonly Config $config,
 	) {
 		parent::__construct($filesystem);
+	}
+
+	/**
+	 * Register an extension's schema directory.
+	 * Schemas in this directory are read-only and managed by the extension.
+	 */
+	public function registerExtensionSchemaDir(string $absolutePath): void
+	{
+		if (is_dir($absolutePath)) {
+			$this->extensionSchemaDirs[] = $absolutePath;
+		}
 	}
 
 	public function getCustomSchemaDir(): string
@@ -110,7 +128,12 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function reservedSchemasIds(): array
 	{
-		return SchemaData::RESERVED_SCHEMAS;
+		$extensionIds = array_map(
+			fn (SchemaData $s): string => $s->id,
+			$this->listExtensionSchemas(),
+		);
+
+		return array_merge(SchemaData::RESERVED_SCHEMAS, $extensionIds);
 	}
 
 	/**
@@ -131,7 +154,7 @@ class SchemaRepository extends StorageRepository
 		}
 
 		// Cache miss - load from filesystem
-		$schemaFile = self::DEFAULT_SCHEMA_DIR . $id . self::FILE_EXT;
+		$schemaFile = self::defaultSchemaDir() . $id . self::FILE_EXT;
 		$contents   = null;
 
 		// Cannot use flysystem here because
@@ -182,11 +205,78 @@ class SchemaRepository extends StorageRepository
 	}
 
 	/**
+	 * Fetch a schema from extension directories (read-only, managed by extensions).
+	 */
+	public function fetchExtensionSchema(string $id): ?SchemaData
+	{
+		foreach ($this->extensionSchemaDirs as $dir) {
+			$file = $dir . '/' . $id . '.json';
+			if (is_file($file)) {
+				$json = file_get_contents($file);
+				if ($json === false) {
+					continue;
+				}
+				$data = json_decode($json, true);
+				if (!is_array($data)) {
+					continue;
+				}
+
+				try {
+					return $this->factory->generateSchema($data);
+				} catch (\Exception) {
+					continue;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * List all schemas provided by extensions.
+	 *
+	 * @return array<SchemaData>
+	 */
+	public function listExtensionSchemas(): array
+	{
+		$schemas = [];
+
+		foreach ($this->extensionSchemaDirs as $dir) {
+			$files = glob($dir . '/*.json');
+			if ($files === false) {
+				continue;
+			}
+			foreach ($files as $file) {
+				$json = file_get_contents($file);
+				if ($json === false) {
+					continue;
+				}
+				$data = json_decode($json, true);
+				if (!is_array($data)) {
+					continue;
+				}
+
+				try {
+					$schemas[] = $this->factory->generateSchema($data);
+				} catch (\Exception) {
+					// Skip invalid schemas
+				}
+			}
+		}
+
+		return $schemas;
+	}
+
+	/**
 	 * fetch a schema for one of the default schema types.
 	 */
 	public function getSchema(string $id): SchemaData
 	{
 		$schema = $this->fetchDefaultSchema($id);
+
+		if (!$schema instanceof SchemaData) {
+			$schema = $this->fetchExtensionSchema($id);
+		}
 
 		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);
@@ -202,6 +292,10 @@ class SchemaRepository extends StorageRepository
 	public function schemaExists(string $id): bool
 	{
 		$schema = $this->fetchDefaultSchema($id);
+
+		if (!$schema instanceof SchemaData) {
+			$schema = $this->fetchExtensionSchema($id);
+		}
 
 		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);

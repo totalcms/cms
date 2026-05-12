@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Template\Service;
 
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
@@ -30,9 +32,9 @@ readonly class TemplateLister
 	 *
 	 * @return array<string>
 	 */
-	public function listCustomTemplates(?string $folder = null, bool $recursive = false): array
+	public function listBuilderTemplates(?string $folder = null, bool $recursive = false): array
 	{
-		return $this->storage->listCustomTemplates($folder, $recursive);
+		return $this->storage->listBuilderTemplates($folder, $recursive);
 	}
 
 	/**
@@ -44,6 +46,6 @@ readonly class TemplateLister
 	 */
 	public function listAllTemplates(?string $folder = null, bool $recursive = false): array
 	{
-		return array_merge($this->listReservedTemplates(), $this->listCustomTemplates($folder, $recursive));
+		return array_merge($this->listReservedTemplates(), $this->listBuilderTemplates($folder, $recursive));
 	}
 }

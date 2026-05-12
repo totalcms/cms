@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Media\Service\ImageMetaReader;

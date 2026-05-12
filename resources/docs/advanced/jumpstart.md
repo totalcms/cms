@@ -54,6 +54,30 @@ A JumpStart definition is a JSON file containing:
 }
 ```
 
+### Reserved Collection Overrides
+
+`reserved` entries can be either a plain string id (creates the collection with defaults) or an object with overrides. The object form keeps the built-in schema binding but lets you customise the URL, sorting, name, and other collection settings:
+
+```json
+{
+  "collections": {
+    "reserved": [
+      "gallery",
+      { "id": "blog", "url": "/blog/{id}", "sortBy": "date:desc" }
+    ]
+  }
+}
+```
+
+Common overrides:
+
+| Field | Purpose |
+|-------|---------|
+| `url` | Public URL pattern. Supports template placeholders (e.g. `/blog/{id}`); templated URLs are automatically pretty. |
+| `prettyUrl` | Toggle pretty URLs for non-templated URL prefixes (ignored when `url` contains placeholders). |
+| `sortBy` | Default sort (e.g. `date:desc`, `title:asc`). |
+| `name` | Display name shown in the admin sidebar. |
+
 ## Export Behavior
 
 When you export your current CMS data to JumpStart format:

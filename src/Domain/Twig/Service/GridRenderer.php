@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

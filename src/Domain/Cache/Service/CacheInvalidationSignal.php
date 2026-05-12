@@ -32,6 +32,7 @@ class CacheInvalidationSignal
 	 */
 	public function signal(string $key): void
 	{
+		$this->ensureDirectory();
 		file_put_contents($this->signalFile, $key . "\n", FILE_APPEND | LOCK_EX);
 	}
 
@@ -40,6 +41,7 @@ class CacheInvalidationSignal
 	 */
 	public function signalPattern(string $pattern): void
 	{
+		$this->ensureDirectory();
 		file_put_contents($this->signalFile, 'pattern:' . $pattern . "\n", FILE_APPEND | LOCK_EX);
 	}
 
@@ -48,6 +50,7 @@ class CacheInvalidationSignal
 	 */
 	public function signalFull(): void
 	{
+		$this->ensureDirectory();
 		file_put_contents($this->signalFile, "full\n", FILE_APPEND | LOCK_EX);
 	}
 
@@ -88,5 +91,13 @@ class CacheInvalidationSignal
 		}
 
 		return array_values($lines);
+	}
+
+	private function ensureDirectory(): void
+	{
+		$dir = dirname($this->signalFile);
+		if (!is_dir($dir)) {
+			@mkdir($dir, 0755, true);
+		}
 	}
 }

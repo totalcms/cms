@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;

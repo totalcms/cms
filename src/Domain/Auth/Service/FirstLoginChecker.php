@@ -44,6 +44,9 @@ readonly class FirstLoginChecker
 
 	public function createFirstUser(string $email, string $password): void
 	{
+		// Ensure auth collection exists
+		$this->collectionFetcher->fetchOrCreateReserved($this->collection);
+
 		// Create default access groups before creating first user
 		$this->accessGroupManager->createDefaultGroups();
 

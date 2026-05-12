@@ -14,6 +14,10 @@ export default class RadioField extends TotalField {
 
         // Keep first radio as main input for compatibility
         this.input = this.radioInputs[0];
+
+        // Re-capture stored value now that radioInputs is available
+        // (parent constructor calls getValue() before radioInputs is set)
+        this.storedValue = this.getValue();
     }
 
     changeListener() {
@@ -29,6 +33,8 @@ export default class RadioField extends TotalField {
     getValue() {
         // Find the checked radio button and return its value
         // Only one can be checked in a radio group
+        // Guard: radioInputs may not be set yet when called from parent constructor
+        if (!this.radioInputs) return '';
         for (const radioInput of this.radioInputs) {
             if (radioInput.checked) {
                 return radioInput.value;

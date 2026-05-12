@@ -128,9 +128,31 @@ function createTablePopoverPlugin(editor) {
 
 		const tableRect = tableNode.getBoundingClientRect();
 		const wrapperRect = wrapper.getBoundingClientRect();
+		const popoverHeight = popoverEl.offsetHeight;
+		const gap = 4;
 
-		// Position below the table, centered
-		const top = tableRect.bottom - wrapperRect.top + wrapper.scrollTop + 4;
+		// Visible portion of the table inside the wrapper's scroll viewport
+		const visibleTop = Math.max(tableRect.top, wrapperRect.top);
+		const visibleBottom = Math.min(tableRect.bottom, wrapperRect.bottom);
+		const spaceAbove = visibleTop - wrapperRect.top;
+		const spaceBelow = wrapperRect.bottom - visibleBottom;
+
+		const visibleTopContent = visibleTop - wrapperRect.top + wrapper.scrollTop;
+		const visibleBottomContent = visibleBottom - wrapperRect.top + wrapper.scrollTop;
+
+		let top;
+		if (spaceBelow >= popoverHeight + gap) {
+			// Preferred: below the table (or its visible bottom edge)
+			top = visibleBottomContent + gap;
+		} else if (spaceAbove >= popoverHeight + gap) {
+			// Fallback: above the table (or its visible top edge)
+			top = visibleTopContent - popoverHeight - gap;
+		} else {
+			// Table fills the viewport — overlay near the visible bottom
+			// so the popover is always discoverable
+			top = visibleBottomContent - popoverHeight - gap;
+		}
+
 		let left = (tableRect.left + tableRect.width / 2) - wrapperRect.left;
 
 		popoverEl.style.top = `${top}px`;

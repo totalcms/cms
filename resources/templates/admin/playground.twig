@@ -136,13 +136,11 @@ if (renderButton) {
 		const twigTextarea = document.getElementById('twig');
 		if (!snippetTextarea || !twigTextarea) return;
 
-		// Check if CodeMirror is active
-		const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
-		if (cmWrapper && cmWrapper.CodeMirror) {
-			// Get content from CodeMirror editor
-			twigTextarea.value = cmWrapper.CodeMirror.getValue();
+		// Check if CodeMirror is active (CM6 wrapper attaches itself to view.dom._totalcmsEditor)
+		const cmEditor = snippetTextarea.parentElement.querySelector('.cm-editor');
+		if (cmEditor && cmEditor._totalcmsEditor) {
+			twigTextarea.value = cmEditor._totalcmsEditor.getValue();
 		} else {
-			// Fallback to textarea value
 			twigTextarea.value = snippetTextarea.value;
 		}
 	});
@@ -164,41 +162,28 @@ function setupHtmlOutput() {
 
 	// Replace the textarea with a div for the editor
 	const outputContainer = document.createElement('div');
-	outputContainer.className = 'html-output-container';
+	outputContainer.className = 'html-output-container html-output-editor';
 	htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
 
-	// Create HTML output editor using CodeMirror
-	const outputEditor = window.CodeMirror(outputContainer, {
+	// Create HTML output editor
+	const outputEditor = window.TotalCMSCodeMirror.createHtmlEditor(outputContainer, {
 		value: formattedHtml,
-		mode: 'htmlmixed',
-		theme: 'elegant',
-		lineNumbers: true,
-		lineWrapping: true,
 		readOnly: true,
-		foldGutter: true,
-		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-		matchBrackets: true,
-		autoCloseTags: true
 	});
-
-	// Add custom classes
-	outputContainer.classList.add('html-output-editor');
-	outputEditor.getWrapperElement().classList.add('html-output-editor');
 
 	// Set reasonable height with scrolling for long content
 	const lineHeight = outputEditor.defaultTextHeight();
 	const lineCount = outputEditor.lineCount();
 	const calculatedHeight = (lineCount * lineHeight) + 40;
-	const maxHeight = 500; // Max height before scrolling
-	const minHeight = 200; // Minimum height
+	const maxHeight = 500;
+	const minHeight = 200;
 
 	const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
-	outputEditor.setSize(null, finalHeight);
+	outputContainer.style.height = finalHeight + 'px';
 
 	// Enable scrolling if content exceeds max height
 	if (calculatedHeight > maxHeight) {
-		outputEditor.getWrapperElement().style.maxHeight = maxHeight + 'px';
-		outputEditor.getScrollerElement().style.maxHeight = maxHeight + 'px';
+		outputContainer.style.maxHeight = maxHeight + 'px';
 	}
 
 	// Force refresh after a moment
@@ -217,19 +202,18 @@ function focusSnippetEditor() {
 	if (!snippetTextarea) return;
 
 	// Try to focus immediately if CodeMirror is already initialized
-	const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
-	if (cmWrapper && cmWrapper.CodeMirror) {
-		cmWrapper.CodeMirror.focus();
+	const cmEditor = snippetTextarea.parentElement.querySelector('.cm-editor');
+	if (cmEditor && cmEditor._totalcmsEditor) {
+		cmEditor._totalcmsEditor.focus();
 		return;
 	}
 
 	// If CodeMirror isn't ready yet, wait for it
 	const checkForCodeMirror = () => {
-		const wrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
-		if (wrapper && wrapper.CodeMirror) {
-			wrapper.CodeMirror.focus();
+		const editor = snippetTextarea.parentElement.querySelector('.cm-editor');
+		if (editor && editor._totalcmsEditor) {
+			editor._totalcmsEditor.focus();
 		} else {
-			// Keep checking until CodeMirror is available
 			setTimeout(checkForCodeMirror, 100);
 		}
 	};

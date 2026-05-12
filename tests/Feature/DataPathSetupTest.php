@@ -4,8 +4,13 @@ use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\post;
 
 beforeAll(function (): void {
-	// Clean up before tests
-	recursiveDelete(cmsDataDir());
+	// Setup wizard tests simulate a fresh install — wipe EVERYTHING under
+	// tcms-data, including auth/ and .system/ which the default
+	// recursiveDelete preserves. auth/ would make SetupCheckMiddleware
+	// think setup is complete via the backward-compat path; .system/ may
+	// hold a stale setup-state.json with completed_at from an earlier
+	// non-setup test run.
+	recursiveDelete(cmsDataDir(), [], true);
 });
 
 beforeEach(function (): void {
@@ -13,8 +18,9 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 
-	// Clean data directory for fresh setup tests
-	recursiveDelete(cmsDataDir());
+	// Wipe everything (auth + .system included) so each test starts from
+	// a true pre-setup state.
+	recursiveDelete(cmsDataDir(), [], true);
 
 	$this->setUpApp(bootstrap());
 });
@@ -44,10 +50,9 @@ describe('Data Path Setup Feature', function (): void {
 		expect($response->getStatusCode())->toBe(200);
 
 		$body = (string)$response->getBody();
-		expect($body)->toContain('Welcome to Total CMS');
 		expect($body)->toContain('Data Path Configuration');
-		expect($body)->toContain('Document Root (Default)');
-		expect($body)->toContain('Above Document Root (Recommended)');
+		expect($body)->toContain('Document Root');
+		expect($body)->toContain('Above Document Root');
 		expect($body)->toContain('Custom Path');
 	});
 

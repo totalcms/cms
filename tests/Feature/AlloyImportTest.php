@@ -9,19 +9,19 @@ beforeEach(function (): void {
 
 describe('Alloy Import API Validation', function (): void {
 	test('alloy analyze endpoint exists and handles requests', function (): void {
-		$response = postJson('/import/alloy-analyze', []);
+		$response = postJson('/api/import/alloy-analyze', []);
 		expect($response->getStatusCode())->toBeIn([200, 400, 404, 405, 500]);
 	});
 
 	test('alloy import endpoint exists and handles requests', function (): void {
-		$response = postJson('/import/alloy', []);
+		$response = postJson('/api/import/alloy', []);
 		expect($response->getStatusCode())->toBeIn([200, 400, 404, 405, 500]);
 	});
 });
 
 describe('Alloy Import Data Processing', function (): void {
 	test('alloy analyze endpoint with test data', function (): void {
-		$response = postJson('/import/alloy-analyze', [
+		$response = postJson('/api/import/alloy-analyze', [
 			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
 			'embeds'        => 'tests/test-data/alloy/embeds',
@@ -40,7 +40,7 @@ describe('Alloy Import Data Processing', function (): void {
 	});
 
 	test('alloy analyze handles blog metadata parsing', function (): void {
-		$response = postJson('/import/alloy-analyze', [
+		$response = postJson('/api/import/alloy-analyze', [
 			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
 			'embeds'        => 'tests/test-data/alloy/embeds',
@@ -51,7 +51,7 @@ describe('Alloy Import Data Processing', function (): void {
 	});
 
 	test('alloy analyze handles different droplet types', function (): void {
-		$response = postJson('/import/alloy-analyze', [
+		$response = postJson('/api/import/alloy-analyze', [
 			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
 			'embeds'        => 'tests/test-data/alloy/embeds',
@@ -62,7 +62,7 @@ describe('Alloy Import Data Processing', function (): void {
 	});
 
 	test('alloy import endpoint with test data', function (): void {
-		$response = postJson('/import/alloy', [
+		$response = postJson('/api/import/alloy', [
 			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
 			'embeds'        => 'tests/test-data/alloy/embeds',
@@ -75,7 +75,7 @@ describe('Alloy Import Data Processing', function (): void {
 
 describe('Alloy Import Error Handling', function (): void {
 	test('alloy import handles missing directories gracefully', function (): void {
-		$response = postJson('/import/alloy-analyze', [
+		$response = postJson('/api/import/alloy-analyze', [
 			'blog'          => 'nonexistent/posts',
 			'image_uploads' => 'nonexistent/images',
 			'embeds'        => 'nonexistent/embeds',
@@ -86,7 +86,7 @@ describe('Alloy Import Error Handling', function (): void {
 	});
 
 	test('alloy import handles partial directory structure', function (): void {
-		$response = postJson('/import/alloy-analyze', [
+		$response = postJson('/api/import/alloy-analyze', [
 			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
 			'embeds'        => 'nonexistent/embeds',

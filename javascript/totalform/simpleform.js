@@ -101,6 +101,12 @@ export default class SimpleForm {
 					input.setCustomValidity("");
 				}
 				container.classList.remove("error");
+			},
+
+			// Matches TotalField.isVisible() so FieldVisibility can treat
+			// SimpleForm wrappers and full TotalField instances interchangeably.
+			isVisible() {
+				return !container.classList.contains('field-hidden');
 			}
 		};
 	}

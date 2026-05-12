@@ -30,26 +30,43 @@ readonly class FileSaveAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$files = $request->getUploadedFiles();
-		$file  = $files[$args['property']] ?? null;
 		$body  = (array)$request->getParsedBody();
 		$query = $request->getQueryParams();
+
+		// For nested uploads (`/{prop}/{path:.+}`), the JS Droplet sends the file
+		// under the child field's name (e.g. `image`), not the parent property
+		// name (`mycard`) that's in the URL. The form-data key for the upload is
+		// the last subpath segment when nested; otherwise it's the property.
+		$rawPath    = $args['path'] ?? null;
+		$paramName  = $args['property'];
+		if (is_string($rawPath) && $rawPath !== '') {
+			$pos       = strrpos($rawPath, '/');
+			$paramName = $pos === false ? $rawPath : substr($rawPath, $pos + 1);
+		}
+
+		$file = $files[$paramName] ?? $files[$args['property']] ?? null;
 
 		$finalFilePath = '';
 
 		if ($file === null) {
 			// Check if a URL was provided instead of a file upload
-			if (isset($body[$args['property']]) && is_string($body[$args['property']])) {
-				$fileUrl = trim($body[$args['property']]);
+			$bodyKey = isset($body[$paramName]) ? $paramName : $args['property'];
+			if (isset($body[$bodyKey]) && is_string($body[$bodyKey])) {
+				$fileUrl = trim($body[$bodyKey]);
 
 				// Validate that it's a valid URL and not empty
 				if ($fileUrl === '' || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
-					throw new \RuntimeException('Invalid URL provided for property: ' . $args['property']);
+					throw new \RuntimeException('Invalid URL provided for property: ' . $bodyKey);
 				}
 
 				// Download the file from the URL
 				$finalFilePath = $this->downloadFileFromUrl($fileUrl);
 			} else {
-				throw new \RuntimeException('No file found in request for property: ' . $args['property']);
+				// No file and no URL — this isn't a save request. The greedy
+				// nested-upload route catches more URL shapes than just card/deck
+				// children, so signal "no such resource" rather than 500ing on a
+				// URL that simply doesn't represent a file upload.
+				throw new \Slim\Exception\HttpNotFoundException($request, 'No file found in request for property: ' . $paramName);
 			}
 		} else {
 			// Handle normal file upload with chunking
@@ -66,21 +83,30 @@ readonly class FileSaveAction
 		// Convert HEIC to JPEG if applicable (for image properties only)
 		if ($this->heicConverter->isHeicFile($finalFilePath)) {
 			$conversionResult = $this->heicConverter->convertAndReplace($finalFilePath);
-			if ($conversionResult['success']) {
-				$finalFilePath = $conversionResult['path'];
+			if ($conversionResult->success) {
+				$finalFilePath = (string)$conversionResult->data['path'];
 			}
 			// If conversion fails, continue with original HEIC file
 			// The file will be saved as-is and conversion can be attempted again later
 		}
 
+		// Resolve subpath. Prefer the route arg (`/{prop}/{path:.+}` for nested
+		// uploads on card children) and fall back to the legacy `?path=` query
+		// (used by depot folder uploads).
+		$rawPath = $args['path'] ?? $query['path'] ?? null;
+		$subpath = is_string($rawPath) && $rawPath !== ''
+			? \TotalCMS\Infrastructure\Filesystem\PathUtils::sanitizeSubpath($rawPath)
+			: '';
+		$subpath = $subpath === '' ? null : $subpath;
+
 		// Save the file (whether uploaded or downloaded)
-		$saver  = $this->factory->generateSaverService($args['collection'], $args['property'], $args['id']);
+		$saver  = $this->factory->generateSaverService($args['collection'], $args['property'], $args['id'], $subpath);
 		$object = $saver->save(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
 			$finalFilePath,
-			$query['path'] ?? null, // Optional path URL parameter
+			$subpath,
 		);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

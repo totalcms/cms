@@ -1,0 +1,18 @@
+<header>
+	<h1><a href="builder">{{ t('builder.crumb') }}</a> / <span>{{ t('builder.crumb_new_page') }}</span></h1>
+</header>
+
+{% set canSave = cms.auth.canAccessCollection(builder.pagesCollection, 'create') %}
+
+{% set form = cms.form.builder(builder.pagesCollection, {
+	save        : canSave ? "Save" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	newActions : [
+		{
+			"action" : "redirect-object",
+			"link"   : "builder/page/{id}"
+		}
+	],
+}) %}
+{{ form.autoBuild() }}

@@ -138,3 +138,59 @@ Ensure the web server user has write access to:
 ```bash
 chown -R www-data:www-data tcms-data tcms/cache tcms/logs tcms/tmp
 ```
+
+## Symlink Versioned Deployments
+
+For zero-downtime updates with instant rollback, you can use versioned directories with a symlink. This is the same pattern used by Capistrano, Laravel Envoyer, and similar deployment tools.
+
+### Directory Structure
+
+```
+/var/www/example.com/
+├── tcms -> tcms-3.5.0/          # symlink to active version
+├── tcms-3.2.2/                  # previous version (kept for rollback)
+├── tcms-3.5.0/                  # current version
+├── tcms-data/                   # shared data (never changes between versions)
+└── public/
+    └── index.php                # references tcms/ (follows symlink)
+```
+
+### Deploying a New Version
+
+```bash
+# Upload or extract the new version
+unzip totalcms-3.5.0.zip -d /var/www/example.com/tcms-3.5.0
+
+# Switch the symlink (atomic operation)
+cd /var/www/example.com
+ln -sfn tcms-3.5.0 tcms
+
+# Clear cache
+php tcms/resources/bin/tcms cache:clear
+```
+
+The `ln -sfn` command atomically replaces the symlink. There is no moment where the application is unavailable — requests in progress continue using the old version, and new requests use the new one.
+
+### Rolling Back
+
+```bash
+cd /var/www/example.com
+ln -sfn tcms-3.2.2 tcms
+php tcms/resources/bin/tcms cache:clear
+```
+
+### Cleanup
+
+Keep one or two previous versions for rollback, then remove older ones:
+
+```bash
+# Remove old versions (keep current and one previous)
+rm -rf tcms-3.2.1/
+```
+
+### Notes
+
+- `tcms-data/` is shared across all versions — it sits outside the versioned directories and is never touched during deployments
+- The `cache/`, `logs/`, and `tmp/` directories inside each version can be symlinked to shared directories if needed, or left as-is (they're recreated automatically)
+- This approach works well with CI/CD pipelines — your build step creates the versioned directory, and the deploy step switches the symlink
+- The built-in one-click updater in the admin dashboard uses a simpler backup-and-swap approach. The symlink pattern is for teams that manage their own deployment process

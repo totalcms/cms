@@ -61,6 +61,20 @@ class TranslationService
 		return $messages;
 	}
 
+	/**
+	 * Switch locale at runtime. Loads translations for the new locale if not already loaded.
+	 */
+	public function setLocale(string $locale): void
+	{
+		$this->loadTranslations($locale);
+		$this->translator->setLocale($locale);
+	}
+
+	public function getLocale(): string
+	{
+		return $this->translator->getLocale();
+	}
+
 	public function getTranslator(): Translator
 	{
 		return $this->translator;

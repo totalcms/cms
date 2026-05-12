@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\ImageWorks\Data;
 
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;

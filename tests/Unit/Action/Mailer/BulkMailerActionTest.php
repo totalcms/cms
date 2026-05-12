@@ -11,6 +11,7 @@ use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Mailer\BulkMailerAction;
 use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Renderer\RawRenderer;
+use TotalCMS\Support\OperationResult;
 
 final class BulkMailerActionTest extends TestCase
 {
@@ -56,12 +57,10 @@ final class BulkMailerActionTest extends TestCase
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
 			->with('test-mailer', 'subscribers', 'active:true', 'draft:true', '2026-03-01 12:00:00', 'override@example.com', null)
-			->willReturn([
-				'success' => true,
+			->willReturn(OperationResult::success('Queued 5 emails for sending', [
 				'batchId' => 'bulk_123',
 				'count'   => 5,
-				'message' => 'Queued 5 emails for sending',
-			]);
+			]));
 
 		($this->action)($request, $response);
 	}
@@ -77,12 +76,10 @@ final class BulkMailerActionTest extends TestCase
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
 			->with('test-mailer', '', '', '', null, null, ['obj-1', 'obj-2'])
-			->willReturn([
-				'success' => true,
+			->willReturn(OperationResult::success('Queued 2 emails for sending', [
 				'batchId' => 'bulk_123',
 				'count'   => 2,
-				'message' => 'Queued 2 emails for sending',
-			]);
+			]));
 
 		($this->action)($request, $response);
 	}
@@ -98,12 +95,10 @@ final class BulkMailerActionTest extends TestCase
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
 			->with('test-mailer', '', '', '', null, null, ['obj-1', 'obj-2'])
-			->willReturn([
-				'success' => true,
+			->willReturn(OperationResult::success('Queued 2 emails for sending', [
 				'batchId' => 'bulk_123',
 				'count'   => 2,
-				'message' => 'Queued 2 emails for sending',
-			]);
+			]));
 
 		($this->action)($request, $response);
 	}
@@ -119,10 +114,7 @@ final class BulkMailerActionTest extends TestCase
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
 			->with('test-mailer', '', '', '', null, null, null)
-			->willReturn([
-				'success' => false,
-				'message' => 'Error',
-			]);
+			->willReturn(OperationResult::failure('Error'));
 
 		($this->action)($request, $response);
 	}
@@ -138,10 +130,7 @@ final class BulkMailerActionTest extends TestCase
 		$this->bulkMailerService->expects($this->once())
 			->method('queueBulkSend')
 			->with('test-mailer', '', '', '', null, null, null)
-			->willReturn([
-				'success' => false,
-				'message' => 'Error',
-			]);
+			->willReturn(OperationResult::failure('Error'));
 
 		($this->action)($request, $response);
 	}
@@ -152,12 +141,10 @@ final class BulkMailerActionTest extends TestCase
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('queueBulkSend')
-			->willReturn([
-				'success' => true,
+			->willReturn(OperationResult::success('Queued 3 emails for sending', [
 				'batchId' => 'bulk_abc',
 				'count'   => 3,
-				'message' => 'Queued 3 emails for sending',
-			]);
+			]));
 
 		$result = ($this->action)($request, $response);
 
@@ -173,10 +160,7 @@ final class BulkMailerActionTest extends TestCase
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('queueBulkSend')
-			->willReturn([
-				'success' => false,
-				'message' => 'Mailer template not found',
-			]);
+			->willReturn(OperationResult::failure('Mailer template not found'));
 
 		$result = ($this->action)($request, $response);
 
@@ -191,7 +175,7 @@ final class BulkMailerActionTest extends TestCase
 		$response = $this->createResponse();
 
 		$this->bulkMailerService->method('queueBulkSend')
-			->willReturn(['success' => false, 'message' => 'Error']);
+			->willReturn(OperationResult::failure('Error'));
 
 		$result = ($this->action)($request, $response);
 

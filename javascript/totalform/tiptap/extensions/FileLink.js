@@ -4,7 +4,7 @@
  * Includes Files tab for managing previously uploaded files.
  */
 
-import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
+import { getUploadUrl, getListUrl, uploadFileWithProgress } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
 
@@ -137,10 +137,11 @@ function createFileDialog(editor, uploadConfig) {
 		selectedFileUrl = null;
 		selectedFileName = null;
 
-		const listUrl = getUploadUrl(uploadConfig);
-		if (!listUrl) return;
+		const listInfo = getListUrl(uploadConfig);
+		if (!listInfo) return;
 
-		const fetchUrl = `${listUrl}?type=file`;
+		listInfo.params.set('type', 'file');
+		const fetchUrl = `${listInfo.url}?${listInfo.params}`;
 
 		try {
 			const resp = await fetch(fetchUrl, { method: 'GET' });

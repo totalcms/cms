@@ -106,13 +106,13 @@
 	</form>
 
 	{% set query = http_build_query(postData | filter((v, k) => k != "type")) %}
-	{% if str_starts_with(cms.api, "http") %}
-		{% set api = cms.api %}
+	{% if str_starts_with(cms.base, "http") %}
+		{% set base = cms.base %}
 	{% else %}
-		{% set api = "https://" ~ cms.domain ~ cms.api %}
+		{% set base = "https://" ~ cms.domain ~ cms.base %}
 	{% endif %}
 
-	{% set rssurl = api ~ "/feed/rss/" ~ url.collection %}
+	{% set rssurl = base ~ "/feed/rss/" ~ url.collection %}
 	{% if query is not empty %}
 		{% set rssurl = rssurl ~ "?" ~ query %}
 	{% endif %}

@@ -68,14 +68,14 @@ readonly class ForgotPasswordSubmitAction
 		// Create reset token
 		$result = $this->passwordResetService->createResetToken($email, $collection);
 
-		if (!$result['success'] || !isset($result['token'])) {
+		if (!$result->success || !isset($result->data['token'])) {
 			// Still show success message to prevent user enumeration
 			$flash->add('success', $this->translator->trans('flash.forgot_password_sent'));
 
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
-		$token = $result['token'];
+		$token = $result->data['token'];
 
 		// Send reset email
 		$this->sendResetEmail($email, $token, $collection);
@@ -89,17 +89,15 @@ readonly class ForgotPasswordSubmitAction
 
 	/**
 	 * Send password reset email to user.
-	 *
-	 * @return array{success:bool,message:string}
 	 */
-	private function sendResetEmail(string $email, string $token, string $collection): array
+	private function sendResetEmail(string $email, string $token, string $collection): \TotalCMS\Support\OperationResult
 	{
 		// Fetch user to get their name
 		$user     = $this->findUserByEmail($email, $collection);
 		$userName = $user?->toArray()['name'] ?? '';
 
 		// Build reset URL
-		$resetUrl = $this->config->url . $this->config->api . '/reset-password/' . $token;
+		$resetUrl = $this->config->url . $this->config->api . '/admin/reset-password/' . $token;
 
 		// Get expiry minutes from config
 		$expiryMinutes = (int)($this->config->auth['resetTokenExpiry'] ?? 30);
@@ -125,10 +123,8 @@ readonly class ForgotPasswordSubmitAction
 
 	/**
 	 * Send default password reset email using built-in template.
-	 *
-	 * @return array{success:bool,message:string}
 	 */
-	private function sendDefaultResetEmail(string $email, string $name, string $resetUrl, int $expiryMinutes): array
+	private function sendDefaultResetEmail(string $email, string $name, string $resetUrl, int $expiryMinutes): \TotalCMS\Support\OperationResult
 	{
 		try {
 			// Render email template
@@ -146,10 +142,7 @@ readonly class ForgotPasswordSubmitAction
 				'bodyHtml'  => $htmlBody,
 			]);
 		} catch (\Exception $e) {
-			return [
-				'success' => false,
-				'message' => 'Failed to send password reset email: ' . $e->getMessage(),
-			];
+			return \TotalCMS\Support\OperationResult::failure('Failed to send password reset email: ' . $e->getMessage());
 		}
 	}
 

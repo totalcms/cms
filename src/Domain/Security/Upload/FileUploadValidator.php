@@ -106,7 +106,7 @@ class FileUploadValidator
 		if ($file->getSize() > $maxSize) {
 			$errors[] = sprintf(
 				'File size (%s) exceeds maximum allowed size (%s)',
-				$this->formatBytes($file->getSize() ?: 0),
+				$this->formatBytes($file->getSize()),
 				$this->formatBytes($maxSize)
 			);
 		}

@@ -6,6 +6,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Repository.
@@ -14,10 +15,25 @@ use TotalCMS\Domain\Template\Service\TemplateFactory;
  */
 class TemplateRepository extends StorageRepository
 {
-	public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../resources/templates/';
-	public const FILE_EXT                 = '.twig';
-	public const DESIGNER_META_EXT        = '.designer.json';
-	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
+	public const FILE_EXT            = '.twig';
+	public const DESIGNER_META_EXT   = '.designer.json';
+	public const BUILDER_DIR         = 'builder/';
+	private const CACHE_KEY_BUILDER  = 'builder:';
+	private const CACHE_KEY_RESERVED = 'reserved:';
+
+	public const BUILDER_CATEGORIES = [
+		'layouts',
+		'pages',
+		'partials',
+		'macros',
+		'templates',
+		'whitelabel',
+	];
+
+	public static function reservedTemplateDir(): string
+	{
+		return PathResolver::packageRoot() . '/resources/templates/';
+	}
 
 	/**
 	 * Request-level cache for templates.
@@ -27,32 +43,11 @@ class TemplateRepository extends StorageRepository
 	private array $requestCache = [];
 
 	/**
-	 * Parse path into folder and template name.
-	 *
-	 * @return array{0: string|null, 1: string}
-	 */
-	public static function parsePath(string $path): array
-	{
-		$lastSlash = strrpos($path, '/');
-
-		if ($lastSlash === false) {
-			// No folder, just template name
-			return [null, $path];
-		}
-
-		// Split into folder and template
-		$folder   = substr($path, 0, $lastSlash);
-		$template = substr($path, $lastSlash + 1);
-
-		return [$folder, $template];
-	}
-
-	/**
 	 * generate a custom template path.
 	 */
 	public function customPath(string $template, ?string $folder = null): string
 	{
-		$basePath = self::CUSTOM_TEMPLATE_DIR;
+		$basePath = self::BUILDER_DIR;
 
 		if ($folder !== null && $folder !== '') {
 			// Sanitize folder path to prevent directory traversal
@@ -69,7 +64,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function designerMetaPath(string $template, ?string $folder = null): string
 	{
-		$basePath = self::CUSTOM_TEMPLATE_DIR;
+		$basePath = self::BUILDER_DIR;
 
 		if ($folder !== null && $folder !== '') {
 			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
@@ -130,7 +125,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function reservedPath(string $template): string
 	{
-		return self::RESERVED_TEMPLATE_DIR . $template . self::FILE_EXT;
+		return self::reservedTemplateDir() . $template . self::FILE_EXT;
 	}
 
 	/**
@@ -140,7 +135,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function templateExists(string $template): bool
 	{
-		return $this->reservedTemplateExists($template) || $this->customTemplateExists($template);
+		return $this->reservedTemplateExists($template) || $this->builderTemplateExists($template);
 	}
 
 	/**
@@ -148,7 +143,7 @@ class TemplateRepository extends StorageRepository
 	 *
 	 * @throws \DomainException
 	 */
-	public function customTemplateExists(string $template, ?string $folder = null): bool
+	public function builderTemplateExists(string $template, ?string $folder = null): bool
 	{
 		return $this->filesystem->fileExists($this->customPath($template, $folder));
 	}
@@ -171,7 +166,7 @@ class TemplateRepository extends StorageRepository
 	public function fetchTemplate(string $template, ?string $folder = null): TemplateData
 	{
 		// Custom template takes precedence
-		$templateData = $this->fetchCustomTemplate($template, $folder) ?? $this->fetchReservedTemplate($template);
+		$templateData = $this->fetchBuilderTemplate($template, $folder) ?? $this->fetchReservedTemplate($template);
 
 		if (!$templateData instanceof TemplateData) {
 			throw new \DomainException(sprintf('Template "%s" not found', $template));
@@ -185,7 +180,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function fetchReservedTemplate(string $template): ?TemplateData
 	{
-		$cacheKey = 'reserved:' . $template;
+		$cacheKey = self::CACHE_KEY_RESERVED . $template;
 
 		if (array_key_exists($cacheKey, $this->requestCache)) {
 			return $this->requestCache[$cacheKey];
@@ -216,9 +211,9 @@ class TemplateRepository extends StorageRepository
 	/**
 	 * fetch a custom template.
 	 */
-	public function fetchCustomTemplate(string $template, ?string $folder = null): ?TemplateData
+	public function fetchBuilderTemplate(string $template, ?string $folder = null): ?TemplateData
 	{
-		$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template;
+		$cacheKey = self::CACHE_KEY_BUILDER . ($folder ?? '') . ':' . $template;
 
 		if (array_key_exists($cacheKey, $this->requestCache)) {
 			return $this->requestCache[$cacheKey];
@@ -258,7 +253,7 @@ class TemplateRepository extends StorageRepository
 		$this->filesystem->write($templateFile, $template->contents);
 
 		// Invalidate cache for this template
-		$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template->id;
+		$cacheKey = self::CACHE_KEY_BUILDER . ($folder ?? '') . ':' . $template->id;
 		unset($this->requestCache[$cacheKey]);
 	}
 
@@ -273,7 +268,7 @@ class TemplateRepository extends StorageRepository
 
 		// Invalidate cache for this template
 		if ($deleted) {
-			$cacheKey = 'custom:' . ($folder ?? '') . ':' . $template;
+			$cacheKey = self::CACHE_KEY_BUILDER . ($folder ?? '') . ':' . $template;
 			unset($this->requestCache[$cacheKey]);
 
 			// Also delete companion designer metadata file
@@ -290,9 +285,9 @@ class TemplateRepository extends StorageRepository
 	 *
 	 * @return array<string>
 	 */
-	public function listCustomTemplates(?string $folder = null, bool $recursive = false): array
+	public function listBuilderTemplates(?string $folder = null, bool $recursive = false): array
 	{
-		$basePath = self::CUSTOM_TEMPLATE_DIR;
+		$basePath = self::BUILDER_DIR;
 
 		if ($folder !== null && $folder !== '') {
 			// Sanitize folder path to prevent directory traversal
@@ -307,11 +302,20 @@ class TemplateRepository extends StorageRepository
 
 			$files = [];
 			foreach ($contents as $item) {
-				if ($item->isFile() && str_ends_with($item->path(), self::FILE_EXT)) {
-					// Remove base path and .twig extension
-					$relativePath = str_replace(self::CUSTOM_TEMPLATE_DIR, '', $item->path());
-					$files[]      = substr($relativePath, 0, -strlen(self::FILE_EXT));
+				if (!$item->isFile() || !str_ends_with($item->path(), self::FILE_EXT)) {
+					continue;
 				}
+				$relativePath = substr($item->path(), strlen($basePath));
+				// Skip TemplateSnapshotRepository's history snapshots — they're
+				// stored as real .twig files but aren't editable templates,
+				// they're version-history payloads. Surfacing them in admin
+				// sidebars / quick-nav / pickers would be confusing and would
+				// also break the editor since their paths don't round-trip
+				// through `fetchBuilderTemplate()`.
+				if (str_starts_with($relativePath, '.history/')) {
+					continue;
+				}
+				$files[] = substr($relativePath, 0, -strlen(self::FILE_EXT));
 			}
 
 			// Sort alphabetically
@@ -332,7 +336,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function listReservedTemplates(): array
 	{
-		$files = glob(self::RESERVED_TEMPLATE_DIR . '*' . self::FILE_EXT);
+		$files = glob(self::reservedTemplateDir() . '*' . self::FILE_EXT);
 
 		if ($files === false) {
 			throw new \RuntimeException('Failed to list reserved templates');

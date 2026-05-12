@@ -89,12 +89,14 @@ table.admin-table thead th.sortable {
 	}
 
 	&[data-sort-dir="asc"] .sort-indicator {
-		opacity: 0.5;
+		opacity          : 1;
+		background-color : oklch(var(--totalform-accent));
 		clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
 	}
 
 	&[data-sort-dir="desc"] .sort-indicator {
-		opacity: 0.5;
+		opacity          : 1;
+		background-color : oklch(var(--totalform-accent));
 		clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
 	}
 

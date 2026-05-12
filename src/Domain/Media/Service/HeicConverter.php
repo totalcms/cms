@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Media\Service;
 
+use TotalCMS\Support\OperationResult;
+
 /**
  * Service for converting HEIC/HEIF images to JPEG for web compatibility.
  *
@@ -31,25 +33,17 @@ class HeicConverter
 	 * @param string $sourcePath Path to the source HEIC file
 	 * @param string $destinationPath Path where the JPEG should be saved (optional)
 	 * @param int $quality JPEG quality (1-100, default 92)
-	 *
-	 * @return array<string,mixed> Result with 'success' boolean, 'path' string, and optional 'error' string
 	 */
-	public function convertToJpeg(string $sourcePath, ?string $destinationPath = null, int $quality = 92): array
+	public function convertToJpeg(string $sourcePath, ?string $destinationPath = null, int $quality = 92): OperationResult
 	{
 		// Verify source file exists
 		if (!file_exists($sourcePath)) {
-			return [
-				'success' => false,
-				'error'   => 'Source file does not exist',
-			];
+			return OperationResult::failure('Source file does not exist');
 		}
 
 		// Verify it's a HEIC file
 		if (!$this->isHeicFile($sourcePath)) {
-			return [
-				'success' => false,
-				'error'   => 'File is not a HEIC/HEIF image',
-			];
+			return OperationResult::failure('File is not a HEIC/HEIF image');
 		}
 
 		// If no destination provided, use same name with .jpg extension
@@ -72,10 +66,7 @@ class HeicConverter
 			return $this->convertWithImageMagickCli($sourcePath, $destinationPath, $quality);
 		}
 
-		return [
-			'success' => false,
-			'error'   => 'ImageMagick is not available on this server (neither Imagick extension nor CLI)',
-		];
+		return OperationResult::failure('ImageMagick is not available on this server (neither Imagick extension nor CLI)');
 	}
 
 	/**
@@ -123,10 +114,8 @@ class HeicConverter
 	 * @param string $sourcePath Source HEIC file
 	 * @param string $destinationPath Destination JPEG file
 	 * @param int $quality JPEG quality (1-100)
-	 *
-	 * @return array<string,mixed>
 	 */
-	private function convertWithImagickExtension(string $sourcePath, string $destinationPath, int $quality): array
+	private function convertWithImagickExtension(string $sourcePath, string $destinationPath, int $quality): OperationResult
 	{
 		try {
 			$imagick = new \Imagick($sourcePath);
@@ -142,24 +131,17 @@ class HeicConverter
 
 			// Verify the output file was created
 			if (!file_exists($destinationPath)) {
-				return [
-					'success' => false,
-					'error'   => 'Conversion completed but output file was not created',
-				];
+				return OperationResult::failure('Conversion completed but output file was not created');
 			}
 
-			return [
-				'success'      => true,
+			return OperationResult::success('', [
 				'path'         => $destinationPath,
 				'original'     => $sourcePath,
 				'size'         => filesize($destinationPath),
 				'size_reduced' => filesize($sourcePath) - filesize($destinationPath),
-			];
+			]);
 		} catch (\ImagickException $e) {
-			return [
-				'success' => false,
-				'error'   => 'Failed to convert HEIC to JPEG: ' . $e->getMessage(),
-			];
+			return OperationResult::failure('Failed to convert HEIC to JPEG: ' . $e->getMessage());
 		}
 	}
 
@@ -169,10 +151,8 @@ class HeicConverter
 	 * @param string $sourcePath Source HEIC file
 	 * @param string $destinationPath Destination JPEG file
 	 * @param int $quality JPEG quality (1-100)
-	 *
-	 * @return array<string,mixed>
 	 */
-	private function convertWithImageMagickCli(string $sourcePath, string $destinationPath, int $quality): array
+	private function convertWithImageMagickCli(string $sourcePath, string $destinationPath, int $quality): OperationResult
 	{
 		// Escape paths for shell command
 		$source      = escapeshellarg($sourcePath);
@@ -190,27 +170,20 @@ class HeicConverter
 		}
 
 		if ($returnVar !== 0) {
-			return [
-				'success' => false,
-				'error'   => 'Failed to convert HEIC to JPEG: ' . implode("\n", $output),
-			];
+			return OperationResult::failure('Failed to convert HEIC to JPEG: ' . implode("\n", $output));
 		}
 
 		// Verify the output file was created
 		if (!file_exists($destinationPath)) {
-			return [
-				'success' => false,
-				'error'   => 'Conversion completed but output file was not created',
-			];
+			return OperationResult::failure('Conversion completed but output file was not created');
 		}
 
-		return [
-			'success'      => true,
+		return OperationResult::success('', [
 			'path'         => $destinationPath,
 			'original'     => $sourcePath,
 			'size'         => filesize($destinationPath),
 			'size_reduced' => filesize($sourcePath) - filesize($destinationPath),
-		];
+		]);
 	}
 
 	/**
@@ -218,14 +191,12 @@ class HeicConverter
 	 *
 	 * @param string $sourcePath Path to the source HEIC file
 	 * @param int $quality JPEG quality (1-100, default 92)
-	 *
-	 * @return array<string,mixed> Result with 'success' boolean, 'path' string, and optional 'error' string
 	 */
-	public function convertAndReplace(string $sourcePath, int $quality = 92): array
+	public function convertAndReplace(string $sourcePath, int $quality = 92): OperationResult
 	{
 		$result = $this->convertToJpeg($sourcePath, null, $quality);
 
-		if ($result['success']) {
+		if ($result->success) {
 			// Delete the original HEIC file
 			unlink($sourcePath);
 		}

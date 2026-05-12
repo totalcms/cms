@@ -26,7 +26,7 @@ class Version
 			return self::$data;
 		}
 
-		$jsonFile = __DIR__ . '/../../version.json';
+		$jsonFile = PathResolver::packageRoot() . '/version.json';
 
 		if (file_exists($jsonFile)) {
 			$content = file_get_contents($jsonFile);

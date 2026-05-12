@@ -16,7 +16,7 @@ beforeEach(function (): void {
 
 describe('AuthLogoutAction Feature Tests', function (): void {
 	it('handles GET logout request', function (): void {
-		$response = get('/logout');
+		$response = get('/admin/logout');
 
 		// Should redirect to home page
 		expect($response->getStatusCode())->toBe(302);
@@ -24,7 +24,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	});
 
 	it('handles POST logout request', function (): void {
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		// Should redirect to home page
 		expect($response->getStatusCode())->toBe(302);
@@ -34,8 +34,8 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn (): Nekofar\Slim\Test\TestResponse => get('/logout'),
-			fn (): Nekofar\Slim\Test\TestResponse => post('/logout'),
+			fn (): Nekofar\Slim\Test\TestResponse => get('/admin/logout'),
+			fn (): Nekofar\Slim\Test\TestResponse => post('/admin/logout'),
 		];
 
 		foreach ($methods as $methodCall) {
@@ -47,7 +47,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	});
 
 	it('redirects to home page after logout', function (): void {
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		expect($response->getStatusCode())->toBe(302);
 
@@ -63,7 +63,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 			session_destroy();
 		}
 
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		// Should still work and redirect even without active session
 		expect($response->getStatusCode())->toBe(302);
@@ -72,11 +72,11 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 
 	it('handles logout when already logged out', function (): void {
 		// First logout
-		$response1 = post('/logout');
+		$response1 = post('/admin/logout');
 		expect($response1->getStatusCode())->toBe(302);
 
 		// Second logout attempt - should still work
-		$response2 = post('/logout');
+		$response2 = post('/admin/logout');
 		expect($response2->getStatusCode())->toBe(302);
 		expect($response2->getHeaderLine('Location'))->toBe('/');
 	});
@@ -85,7 +85,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 		// This test verifies the session clearing behavior by testing the logout endpoint
 		// We don't manually start sessions since the framework handles that
 
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		expect($response->getStatusCode())->toBe(302);
 		expect($response->getHeaderLine('Location'))->toBe('/');
@@ -98,7 +98,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 		// Test that multiple logout requests don't cause issues
 		$responses = [];
 		for ($i = 0; $i < 3; $i++) {
-			$responses[] = post('/logout');
+			$responses[] = post('/admin/logout');
 		}
 
 		foreach ($responses as $response) {
@@ -108,14 +108,14 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	});
 
 	it('does not return error status codes', function (): void {
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		expect($response->getStatusCode())->toBe(302); // Redirect
 		expect($response->getStatusCode())->not->toBeIn([400, 401, 403, 404, 500]);
 	});
 
 	it('sets proper redirect response', function (): void {
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		// Should be a proper redirect response
 		expect($response->getStatusCode())->toBe(302);
@@ -127,7 +127,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	});
 
 	it('handles logout with query parameters', function (): void {
-		$response = post('/logout?redirect=admin');
+		$response = post('/admin/logout?redirect=admin');
 
 		// Should redirect to the specified redirect param
 		expect($response->getStatusCode())->toBe(302);
@@ -145,7 +145,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 		foreach (array_keys($headers) as $header) {
 			$this->setUpApp(bootstrap());
 
-			$response = post('/logout', [], $headers);
+			$response = post('/admin/logout', [], $headers);
 
 			expect($response->getStatusCode())->toBe(302);
 			expect($response->getHeaderLine('Location'))->toBe('/');
@@ -153,7 +153,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	});
 
 	it('maintains proper HTTP semantics', function (): void {
-		$response = post('/logout');
+		$response = post('/admin/logout');
 
 		// Should be a redirect
 		expect($response->getStatusCode())->toBe(302);

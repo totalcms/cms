@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 
 /**
  *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
@@ -50,6 +51,11 @@ class FormField
 		protected ?int $max           = null,
 		protected ?float $step        = null,
 		protected bool $hide          = false,
+		// Dotted-path prefix when this field is rendered nested in a parent
+		// property. Card child: a single segment (`mycard`). Deck child: two
+		// segments (`mydeck.item-3`). Image/file fields use this to emit the
+		// dotted `property` option to media/render macros and nested URLs.
+		protected ?string $nestedPath = null,
 	) {
 		$this->init();
 	}
@@ -282,6 +288,14 @@ class FormField
 			$this->value = json_encode($this->value);
 		}
 
+		$inputMode = match ($this->inputType) {
+			'number' => ($this->step !== null && $this->step < 1) ? 'decimal' : 'numeric',
+			'tel'    => 'tel',
+			'url'    => 'url',
+			'email'  => 'email',
+			default  => null,
+		};
+
 		$attributes = [
 			'type'             => $this->inputType,
 			'id'               => "field-{$this->uuid}",
@@ -289,6 +303,7 @@ class FormField
 			'required'         => $this->required ? '' : null,
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
+			'inputmode'        => $inputMode,
 			'minlength'        => $this->minlength > 0 ? (string)$this->minlength : null,
 			'maxlength'        => $this->maxlength > 0 ? (string)$this->maxlength : null,
 			'pattern'          => $this->pattern === '' ? null : $this->pattern,
@@ -365,6 +380,22 @@ class FormField
 			return $this->form->collectionIdList();
 		}
 
+		if ($source === 'layouts') {
+			return $this->form->layoutListForBuilder();
+		}
+
+		if ($source === 'pages') {
+			return $this->form->pageListForBuilder();
+		}
+
+		if ($source === 'pageMiddleware') {
+			return $this->form->pageMiddlewareList();
+		}
+
+		if ($source === 'schemaProperties') {
+			return $this->form->schemaPropertyKeys();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}
@@ -384,13 +415,19 @@ class FormField
 		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
 		$view          = $settings['view'] ?? '';
+		$format        = isset($settings['format']) ? (string)$settings['format'] : '';
 
 		if ($collection === '' && $view === '') {
 			return []; // No data source specified, return empty array
 		}
 
-		// Split label property by spaces to support multiple properties
-		$labelProperties = explode($labelJoin, $labelProperty);
+		// When a format template is provided, derive the property list from ${placeholder} tokens.
+		// Otherwise fall back to splitting the label by the join character.
+		if ($format !== '') {
+			$labelProperties = TemplatePlaceholder::extractKeys($format);
+		} else {
+			$labelProperties = explode($labelJoin, $labelProperty);
+		}
 
 		// Combine label properties with value property for fetching
 		$propertiesToFetch = array_unique(array_merge($labelProperties, [$valueProperty]));
@@ -422,10 +459,15 @@ class FormField
 			return [['value' => '', 'label' => "Error: {$source} returned invalid data for relationalOptions"]];
 		}
 
-		// Build the label from multiple properties if specified
-		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {
-			// If multiple label properties, concatenate them with spaces
-			if (count($labelProperties) > 1) {
+		// Build the label using either a format template or label/join concatenation
+		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin, $format): array {
+			if ($format !== '') {
+				$label = TemplatePlaceholder::render(
+					$format,
+					fn (string $key): string => (string)($o[$key] ?? ''),
+				);
+			} elseif (count($labelProperties) > 1) {
+				// If multiple label properties, concatenate them with the join character
 				$labelParts = array_map(fn (string $prop) => $o[$prop] ?? '', $labelProperties);
 				$label      = implode($labelJoin, array_filter($labelParts)); // Filter out empty values
 			} else {
@@ -453,7 +495,18 @@ class FormField
 		if (isset($this->settings['accessGroupOptions']) && $this->settings['accessGroupOptions'] === true) {
 			$this->options = array_merge($this->options, $this->form->accessGroupOptionsForField());
 		}
-		if (is_array($this->value) && $this->value !== [] && !isset($this->settings['relationalOptions'])) {
+		// Stored values are merged into the option list by default so that
+		// orphaned values (e.g. a previously-selected option whose source has
+		// since gone away) remain visible. Setting `mergeStoredValues: false`
+		// strips orphans — useful when option sources are fully owned by code,
+		// e.g. extension-provided pageMiddleware entries that vanish when the
+		// extension is disabled.
+		$mergeStoredValues = $this->settings['mergeStoredValues'] ?? true;
+		if (
+			$mergeStoredValues
+			&& is_array($this->value) && $this->value !== []
+			&& !isset($this->settings['relationalOptions'])
+		) {
 			// Only merge values that aren't already represented in the options
 			// to avoid duplicating predefined options (e.g. multicheckbox fields)
 			$existingValues = [];
@@ -480,10 +533,8 @@ class FormField
 			}
 		}
 
-		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
-			// Ensure that duplicate options are not created
-			// array_unique will not work with multi-dimensional arrays
-			$this->options = array_unique($this->options);
+		if ($this->options !== []) {
+			$this->options = self::deduplicateOptionsByValue($this->options);
 		}
 
 		if (($this->settings['sortOptions'] ?? false) === true) {
@@ -505,6 +556,49 @@ class FormField
 		}
 
 		return false; // The array is not multidimensional
+	}
+
+	/**
+	 * Remove duplicate options by their value, keeping the first occurrence.
+	 * Works across mixed shapes (plain strings, {value,label} arrays) so that
+	 * static options and derived options (propertyOptions, relationalOptions)
+	 * don't produce duplicates when merged.
+	 *
+	 * Grouped options (string key => array of options) are passed through
+	 * untouched since they represent <optgroup> structures.
+	 *
+	 * @param  array<mixed> $options
+	 *
+	 * @return array<mixed>
+	 */
+	protected static function deduplicateOptionsByValue(array $options): array
+	{
+		$seen   = [];
+		$result = [];
+		foreach ($options as $key => $option) {
+			// Grouped options: preserve the group key and its children as-is
+			if (is_string($key) && is_array($option) && !isset($option['value'])) {
+				$result[$key] = $option;
+				continue;
+			}
+
+			if (is_array($option) && isset($option['value'])) {
+				$value = (string)$option['value'];
+			} elseif (is_string($option) || is_numeric($option)) {
+				$value = (string)$option;
+			} else {
+				$result[] = $option;
+				continue;
+			}
+
+			if (in_array($value, $seen, true)) {
+				continue;
+			}
+			$seen[]   = $value;
+			$result[] = $option;
+		}
+
+		return $result;
 	}
 
 	protected function buildDatalist(): string

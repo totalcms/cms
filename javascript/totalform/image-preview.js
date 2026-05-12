@@ -88,8 +88,10 @@ setupActionBar() {
 				event.preventDefault();
 				const mimeType = this.container.querySelector('.form-field:has([name=mime])').totalfield.getValue();
 				const format = mimeType.split("/")[1];
-				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
-				const downloadUrl = this.api.buildApiQuery(downloadApi);
+				// `.format` is appended to the last path segment (subpath if nested,
+				// property otherwise) — `buildPropertyApi`'s suffix parameter handles
+				// both shapes uniformly.
+				const downloadUrl = this.api.buildPublicQuery(this.totalfield.buildPropertyApi('/imageworks', `.${format}`));
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;
@@ -107,7 +109,9 @@ setupActionBar() {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
 				this.tempToggleFeaturedActionButton();
-				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				// Top-level: PATCH /coll/id/prop. Card-nested: PATCH /coll/id/cardprop/childkey.
+				// The PATCH meta action dispatches on filesystem state.
+				const featureApi = this.totalfield.buildPropertyApi('/collections');
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeaturedField();
@@ -124,7 +128,11 @@ setupActionBar() {
 		if (clearButton) {
 			clearButton.addEventListener("click", event => {
 				event.preventDefault();
-				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
+				// Top-level: /collections/{coll}/{id}/{prop}/cache.
+				// Card-nested: /collections/{coll}/{id}/{cardprop}/{childkey}/cache.
+				// The `{path:.+}/cache` route's action dispatches on filesystem
+				// state to handle both gallery file caches and nested property caches.
+				const clearApi = this.totalfield.buildPropertyApi('/collections', '/cache');
 				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
@@ -142,7 +150,10 @@ setupActionBar() {
 				event.preventDefault();
 				const ok = await tcmsConfirm({ message: t("confirm.delete_image"), countdown: 0 });
 				if (!ok) return;
-				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				// Top-level: DELETE /coll/id/prop. Card-nested: DELETE /coll/id/cardprop/childkey.
+				// FileDeleteAction dispatches on filesystem state; nested clears
+				// obj[parent][child] and the disk dir.
+				const deleteApi = this.totalfield.buildPropertyApi('/collections');
 				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 					this.clearValue();
 					this.container.remove();

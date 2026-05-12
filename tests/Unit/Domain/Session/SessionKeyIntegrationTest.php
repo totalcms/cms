@@ -72,7 +72,8 @@ class SessionKeyIntegrationTest extends TestCase
 		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $activityKeys);
 		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $activityKeys);
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $activityKeys);
-		$this->assertCount(4, $activityKeys);
+		$this->assertContains(SessionKeys::LICENSE_CHECK_DUE, $activityKeys);
+		$this->assertCount(5, $activityKeys);
 
 		$webauthnKeys = SessionKeys::getWebAuthnKeys();
 		$this->assertContains(SessionKeys::WEBAUTHN_REGISTER_OPTIONS, $webauthnKeys);

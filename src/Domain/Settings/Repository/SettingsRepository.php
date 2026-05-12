@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Settings\Repository;
 
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -10,6 +12,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
 class SettingsRepository extends StorageRepository
 {
 	private const SETTINGS_FILE = '.system/settings.json';
+	private const BACKUP_FILE   = '.system/settings.json.bak';
 
 	/**
 	 * Request-level cache for settings.
@@ -65,6 +68,11 @@ class SettingsRepository extends StorageRepository
 		$json = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		if ($json === false) {
 			throw new \RuntimeException('Failed to encode settings to JSON: ' . json_last_error_msg());
+		}
+
+		// Snapshot the previous file so an unexpected clobber is one rename away from recovery.
+		if ($this->filesystem->fileExists(self::SETTINGS_FILE)) {
+			$this->filesystem->write(self::BACKUP_FILE, $this->filesystem->read(self::SETTINGS_FILE));
 		}
 
 		$this->filesystem->write(self::SETTINGS_FILE, $json);

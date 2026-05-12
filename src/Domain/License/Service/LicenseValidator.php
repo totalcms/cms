@@ -272,9 +272,7 @@ class LicenseValidator
 	 */
 	private function getApiBaseUrl(): string
 	{
-		return $this->config->env === 'dev'
-			? 'https://license.totalcms.test'
-			: 'https://license.totalcms.co';
+		return Config::LICENSE_API_URL;
 	}
 
 	/**
@@ -306,8 +304,8 @@ class LicenseValidator
 					'Content-Type: application/json',
 					'User-Agent: Total CMS/' . $this->getCurrentVersion(),
 				],
-				'timeout'           => 30,
-				'connect_timeout'   => 10,
+				'timeout'           => 5,
+				'connect_timeout'   => 2,
 				'follow_redirects'  => 3,
 				'verify_ssl'        => true,
 				'user_agent'        => 'Total CMS/' . $this->getCurrentVersion(),

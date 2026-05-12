@@ -10,14 +10,12 @@ export default class Code extends TotalField {
 
         this.editor = null;
         this.localStorageKey = `totalcms-code-${this.property}`;
-        this.autoSaveEnabled = false; // Track if auto-save is enabled
+        this.autoSaveEnabled = false;
 
-        // Initialize CodeMirror when available
         this.initializeCodeEditor();
     }
 
     initializeCodeEditor() {
-        // Wait for TotalCMSCodeMirror to be available
         if (!window.TotalCMSCodeMirror) {
             console.warn('TotalCMSCodeMirror not loaded yet, retrying...');
             setTimeout(() => this.initializeCodeEditor(), 100);
@@ -25,142 +23,152 @@ export default class Code extends TotalField {
         }
 
         const mode = this.input.dataset.mode || 'twig';
-        const theme = this.input.dataset.theme || 'elegant';
         const editorOptions = this.input.dataset.editorOptions ?
             JSON.parse(this.input.dataset.editorOptions) : {};
 
-        // Default editor configuration
         const config = {
-            theme          : theme,
+            value          : this.input.value || '',
             indentUnit     : editorOptions.indentUnit || 2,
             tabSize        : editorOptions.tabSize || 2,
             lineNumbers    : editorOptions.lineNumbers !== false,
             lineWrapping   : editorOptions.lineWrapping !== false,
             foldGutter     : editorOptions.foldGutter !== false,
             matchBrackets  : editorOptions.matchBrackets !== false,
-            autoCloseTags  : editorOptions.autoCloseTags !== false ? {
-                whenClosing: true,     // Auto-close when typing </
-                whenOpening: true,     // Auto-close when completing opening tag with >
-                indentTags: ['__none__']  // Non-existent tag = no tags get auto-indented
-            } : false,
-            gutters        : ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            autoCloseBrackets : editorOptions.autoCloseTags !== false,
             ...editorOptions
         };
 
-        // Prevent CodeMirror from stealing page scroll during initialization.
-        // Override both focus() and scrollIntoView() so that nothing during
-        // editor creation can scroll the page.
-        const origFocus = HTMLElement.prototype.focus;
-        HTMLElement.prototype.focus = function(opts) {
-            origFocus.call(this, { preventScroll: true, ...opts });
-        };
-        const origScrollIntoView = Element.prototype.scrollIntoView;
-        Element.prototype.scrollIntoView = function() {};
+        // Hide the textarea and create a container for CM6
+        this.input.style.display = 'none';
+        this.editorContainer = document.createElement('div');
+        this.editorContainer.className = 'totalform-code-editor-container';
+        this.input.parentNode.insertBefore(this.editorContainer, this.input.nextSibling);
 
         // Create the appropriate editor based on mode
         if (mode === 'twig') {
-            this.editor = window.TotalCMSCodeMirror.createTwigEditor(this.input, config);
+            this.editor = window.TotalCMSCodeMirror.createTwigEditor(this.editorContainer, config);
         } else if (mode === 'html' || mode === 'htmlmixed') {
-            this.editor = window.TotalCMSCodeMirror.createHtmlEditor(this.input, config);
+            this.editor = window.TotalCMSCodeMirror.createHtmlEditor(this.editorContainer, config);
         } else if (mode === 'css') {
-            this.editor = window.TotalCMSCodeMirror.createCssEditor(this.input, config);
+            this.editor = window.TotalCMSCodeMirror.createCssEditor(this.editorContainer, config);
         } else if (mode === 'javascript' || mode === 'js') {
-            this.editor = window.TotalCMSCodeMirror.createJsEditor(this.input, config);
+            this.editor = window.TotalCMSCodeMirror.createJsEditor(this.editorContainer, config);
         } else {
-            // Fallback to generic editor
-            this.editor = window.CodeMirror.fromTextArea(this.input, {
-                mode : mode,
+            this.editor = window.TotalCMSCodeMirror.createEditor(this.editorContainer, {
+                mode: mode,
                 ...config
             });
         }
 
-        // Add custom CSS class for styling
-        this.editor.getWrapperElement().classList.add('totalform-code-editor');
-        this.editor.getWrapperElement().classList.add(`totalform-code-editor-${mode}`);
+        // Add custom CSS classes for styling
+        this.editorContainer.classList.add('totalform-code-editor');
+        this.editorContainer.classList.add(`totalform-code-editor-${mode}`);
 
-        // Override autoCloseTags after initialization to ensure config is applied
-        if (editorOptions.autoCloseTags !== false) {
-            this.editor.setOption('autoCloseTags', {
-                whenClosing: true,
-                whenOpening: true,
-                indentTags: ['__none__']  // Non-existent tag name to disable indenting
-            });
+        // Set up auto-resize, auto-save, form submission, and fullscreen
+        this.setupAutoResize();
+        this.setupAutoSave();
+        this.setupFormSubmission();
+        this.setupFullscreenButton();
+
+        // Refresh after initialization
+        setTimeout(() => this.editor.refresh(), 150);
+    }
+
+    setupFullscreenButton() {
+        if (!this.editor) return;
+
+        const editorOptions = this.input.dataset.editorOptions ?
+            JSON.parse(this.input.dataset.editorOptions) : {};
+        if (editorOptions.fullscreen === false) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'code-fullscreen-btn';
+        btn.title = 'Fullscreen';
+        btn.setAttribute('aria-label', 'Toggle fullscreen');
+        btn.innerHTML = '<span class="code-fullscreen-icon"></span>';
+        this.editorContainer.appendChild(btn);
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleFullscreen();
+        });
+    }
+
+    toggleFullscreen() {
+        this.editorContainer.classList.toggle('code-fullscreen');
+        const isFullscreen = this.editorContainer.classList.contains('code-fullscreen');
+
+        if (isFullscreen) {
+            this._escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    this.editorContainer.classList.remove('code-fullscreen');
+                    document.removeEventListener('keydown', this._escHandler);
+                    this._escHandler = null;
+                    this.editor.refresh();
+                }
+            };
+            document.addEventListener('keydown', this._escHandler);
+        } else if (this._escHandler) {
+            document.removeEventListener('keydown', this._escHandler);
+            this._escHandler = null;
         }
 
-        // Set up auto-resize functionality
-        this.setupAutoResize();
-
-        // Set up auto-save (localStorage persistence)
-        this.setupAutoSave();
-
-        // Set up form submission handling
-        this.setupFormSubmission();
-
-        // Restore original prototypes after all synchronous setup is complete
-        HTMLElement.prototype.focus = origFocus;
-        Element.prototype.scrollIntoView = origScrollIntoView;
-
-        // Force a refresh after initialization to ensure proper gutter calculations
-        setTimeout(() => {
-            this.editor.refresh();
-            // Force gutter width to prevent content overlap
-            this.forceGutterWidth();
-        }, 150);
+        this.editor.refresh();
     }
 
     setupAutoResize() {
         if (!this.editor) return;
 
-        // Calculate height from rows attribute (like JSON field)
+        // Calculate height from rows attribute
         const rows = parseInt(this.input.getAttribute('rows')) || 10;
         const lineHeight = this.editor.defaultTextHeight() || 20;
         const rowsHeight = rows * lineHeight + 20;
 
-        // Read minHeight/maxHeight from data attributes (in pixels)
-        // maxHeight only caps auto-grow, not manual drag resize
         const minHeight = parseInt(this.input.dataset.minHeight) || rowsHeight;
         const maxHeight = parseInt(this.input.dataset.maxHeight) || 0;
 
-        const wrapper = this.editor.getWrapperElement();
+        const wrapper = this.editorContainer;
         wrapper.style.minHeight = minHeight + 'px';
-        // Note: no CSS max-height on wrapper so drag resize is unconstrained
-
-        // Set the editor to fill its wrapper
-        this.editor.setSize(null, '100%');
 
         // Track whether the user has manually dragged to resize
         let userResized = false;
         let lastAutoHeight = 0;
 
-        // Detect manual drag resize via ResizeObserver.
-        // Only refresh on real user drags — our own setHeight writes match
-        // lastAutoHeight and must not trigger a refresh, or every keystroke
-        // pays a full editor re-layout.
         const resizeObserver = new ResizeObserver(() => {
             const currentHeight = wrapper.offsetHeight;
             if (lastAutoHeight > 0 && Math.abs(currentHeight - lastAutoHeight) > 2) {
                 userResized = true;
-                this.editor.refresh();
             }
         });
         resizeObserver.observe(wrapper);
 
-        // Auto-size wrapper height based on content, clamped to min/max
         const setHeight = () => {
-            // Don't auto-shrink if user has manually resized larger
             if (userResized && wrapper.offsetHeight > (maxHeight || Infinity)) {
                 return;
             }
 
-            const scrollInfo = this.editor.getScrollInfo();
-            const contentHeight = scrollInfo.height + 20;
+            // Use CM6's view.contentHeight (natural document height) instead of
+            // contentDOM.scrollHeight — the latter tracks the container size when
+            // CM's flex/min-height styling kicks in, which makes the +20 buffer
+            // feed back into the next measurement and grow the wrapper one
+            // line-height per keystroke. Snap to whole lines for good measure.
+            const naturalHeight = typeof this.editor.getContentHeight === 'function'
+                ? this.editor.getContentHeight()
+                : this.editor.getScrollInfo().height;
+            const visualLines = Math.max(1, Math.ceil(naturalHeight / lineHeight));
+            const contentHeight = (visualLines * lineHeight) + 20;
             let targetHeight = Math.max(contentHeight, minHeight);
             if (maxHeight > 0) {
                 targetHeight = Math.min(targetHeight, maxHeight);
             }
 
-            // If user dragged larger than our target, don't shrink back
             if (userResized && wrapper.offsetHeight > targetHeight) {
+                return;
+            }
+
+            // Same target as last time — skip the DOM write to avoid feedback loops.
+            if (targetHeight === lastAutoHeight) {
                 return;
             }
 
@@ -169,14 +177,8 @@ export default class Code extends TotalField {
             wrapper.style.height = targetHeight + 'px';
         };
 
-        // Initial sizing
-        setTimeout(() => {
-            setHeight();
-        }, 100);
+        setTimeout(() => setHeight(), 100);
 
-        // Debounced resize on content changes. setHeight reads getScrollInfo()
-        // which forces layout; doing that plus editor.refresh() on every
-        // keystroke makes typing in large documents unusable.
         let setHeightTimer = null;
         this.editor.on('changes', () => {
             clearTimeout(setHeightTimer);
@@ -187,36 +189,32 @@ export default class Code extends TotalField {
     setupAutoSave() {
         if (!this.editor || !this.localStorageKey) return;
 
-        // Check if form is in edit mode using TotalField's form reference
-        if (this.form && this.form.isEditMode()) {
-            // Clear any existing storage data for edit mode
-            if (window.TotalCMSCodeMirror?.clearStorage) {
-                window.TotalCMSCodeMirror.clearStorage(this.localStorageKey);
-            } else if (window.localStorage) {
+        const isEditing = this.form && (this.form.isEditMode() || this.form.isTemplateEditMode());
+        if (isEditing) {
+            if (window.localStorage) {
                 window.localStorage.removeItem(this.localStorageKey);
             }
-            // Don't set up auto-save in edit mode
             this.autoSaveEnabled = false;
             return;
         }
 
-        // Enable auto-save for create mode
         this.autoSaveEnabled = true;
 
-        // Only load saved content in create mode
         const savedContent = window.TotalCMSCodeMirror?.loadFromStorage(this.localStorageKey);
         if (savedContent && !this.input.value) {
             this.editor.setValue(savedContent);
+            // Mirror restored content into the textarea — setupFormSubmission's change
+            // handler isn't wired up yet, so consumers reading the textarea (e.g. the
+            // playground render button) would otherwise see an empty value until the
+            // user types something.
+            this.input.value = savedContent;
         } else if (!this.input.value || this.input.value.trim() === '') {
-            // If empty, add some empty lines to show line numbers
             this.editor.setValue('\n\n\n\n\n\n\n\n\n');
             this.editor.setCursor(0, 0);
         }
 
-        // Save content to localStorage on changes (only in create mode)
         this.editor.on('change', () => {
-            // Double-check we're still not in edit mode before saving
-            if (!this.form || !this.form.isEditMode()) {
+            if (!this.form || (!this.form.isEditMode() && !this.form.isTemplateEditMode())) {
                 if (window.TotalCMSCodeMirror?.saveToStorage) {
                     window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue().replace(/\n+$/, ''));
                 }
@@ -227,62 +225,29 @@ export default class Code extends TotalField {
     setupFormSubmission() {
         if (!this.editor) return;
 
-        // Find the closest form
         const form = this.container.closest('form');
         if (form) {
-            form.addEventListener('submit', (e) => {
-                // Update the textarea value before form submission with trimmed content
+            form.addEventListener('submit', () => {
                 this.input.value = this.getValue();
             });
         }
 
-        // Also update on any change for real-time updates
         this.editor.on('change', () => {
             this.input.value = this.getValue();
-            // Remove required attribute if value is not empty to prevent validation issues
             if (this.input.value.trim()) {
                 this.input.removeAttribute('required');
             } else if (this.input.hasAttribute('data-required')) {
                 this.input.setAttribute('required', '');
             }
 
-            // Only trigger change event if auto-save is not enabled
-            // This prevents "unsaved changes" warnings when auto-save is active
             if (!this.autoSaveEnabled) {
-                this.changed(); // Trigger TotalField change event
+                this.changed();
             }
         });
 
-        // Store the original required state
         if (this.input.hasAttribute('required')) {
             this.input.setAttribute('data-required', 'true');
         }
-    }
-
-    forceGutterWidth() {
-        if (!this.editor) return;
-
-        // Force proper gutter widths to prevent content overlap
-        const wrapper = this.editor.getWrapperElement();
-        const gutters = wrapper.querySelector('.CodeMirror-gutters');
-        const lineNumbers = wrapper.querySelector('.CodeMirror-linenumber');
-        const foldGutter = wrapper.querySelector('.CodeMirror-foldgutter');
-
-        if (gutters) {
-            gutters.style.width = '56px';
-        }
-        if (lineNumbers) {
-            lineNumbers.style.width = '40px';
-            lineNumbers.style.minWidth = '40px';
-        }
-        if (foldGutter) {
-            foldGutter.style.width = '16px';
-        }
-
-        // Force a refresh to apply the changes
-        setTimeout(() => {
-            this.editor.refresh();
-        }, 10);
     }
 
     setValue(value) {
@@ -318,12 +283,9 @@ export default class Code extends TotalField {
     }
 
     validate() {
-        // Ensure the textarea has the latest value from CodeMirror with trimmed content
         if (this.editor) {
             this.input.value = this.getValue();
         }
-
-        // Call parent validate method
         return super.validate();
     }
 }

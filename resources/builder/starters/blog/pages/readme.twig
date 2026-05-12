@@ -1,0 +1,60 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Getting Started — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<section class="section">
+	<div class="container" style="max-width: 720px;">
+		<h1>You're up and running</h1>
+		<p style="font-size: 1.15rem; color: #666;">
+			This is the <strong>blog</strong> starter — a content-focused site with a homepage, blog
+			index, post detail page, and an About page.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">How the blog routes work</h2>
+		<p>
+			The site uses two patterns side-by-side:
+		</p>
+		<ul style="line-height: 1.8;">
+			<li><code>/blog</code> — listing page (builder page, template <code>pages/blog/index.twig</code>)</li>
+			<li><code>/blog/{id}</code> — single-post page (builder page, template <code>pages/blog/post.twig</code>)</li>
+		</ul>
+		<p>
+			Each post lives as an object in the <code>blog</code> collection. Visiting
+			<code>/blog/my-post</code> matches the <code>/blog/{id}</code> route and your post template
+			loads the matching object via <code>{% verbatim %}{% set post = cms.data.raw('blog', params.id) %}{% endverbatim %}</code>.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">Add your first post</h2>
+		<ol style="line-height: 1.8;">
+			<li>Go to <a target="_blank" rel="noopener" href="/admin/collections/blog">Collections → Blog</a></li>
+			<li>Click <em>+ New Object</em></li>
+			<li>Fill in title, summary, and content</li>
+			<li>Save — your post appears at <code>/blog/{id}</code> immediately, no rebuild needed</li>
+		</ol>
+
+		<h2 style="margin-top: 2.5rem;">Sample posts</h2>
+		<p>
+			The starter ships a handful of pre-loaded posts so the listing and detail pages have
+			something to render. Browse them at <a target="_blank" rel="noopener" href="/blog">/blog</a> or edit them at
+			<a target="_blank" rel="noopener" href="/admin/collections/blog">Collections → Blog</a>. Delete them whenever you're
+			ready to publish your own.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">Customizing</h2>
+		<ul style="line-height: 1.8;">
+			<li><strong>Layout</strong> — <code>tcms-data/builder/layouts/default.twig</code></li>
+			<li><strong>Listing page</strong> — <code>tcms-data/builder/pages/blog/index.twig</code></li>
+			<li><strong>Post page</strong> — <code>tcms-data/builder/pages/blog/post.twig</code></li>
+			<li><strong>Post card</strong> — <code>tcms-data/builder/partials/post-card.twig</code></li>
+		</ul>
+
+		<h2 style="margin-top: 2.5rem;">Learn more</h2>
+		<ul style="line-height: 1.8;">
+			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/overview">Site Builder overview</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/twig/object-linking">Object linking + URL templates</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/admin">Admin UI guide</a></li>
+		</ul>
+	</div>
+</section>
+{% endblock %}

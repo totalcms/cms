@@ -23,11 +23,11 @@ readonly class FilesystemService implements CacheInterface
 
 	public function isAvailable(): bool
 	{
-		if (!$this->enabled || $this->cacheDir === '') {
+		if (!$this->enabled) {
 			return false;
 		}
 
-		return $this->createCacheDir();
+		return $this->isWritable();
 	}
 
 	public function isInstalled(): bool
@@ -39,6 +39,21 @@ readonly class FilesystemService implements CacheInterface
 	public function isActive(): bool
 	{
 		return $this->enabled && $this->isAvailable();
+	}
+
+	/**
+	 * Whether the cache directory exists and is writable, irrespective of
+	 * the `cache.filesystem` enabled flag. Used by mandatory cache paths
+	 * (e.g. license caching) that must continue working even when the user
+	 * has explicitly disabled filesystem caching.
+	 */
+	private function isWritable(): bool
+	{
+		if ($this->cacheDir === '') {
+			return false;
+		}
+
+		return $this->createCacheDir();
 	}
 
 	private function createCacheDir(): bool
@@ -72,6 +87,50 @@ readonly class FilesystemService implements CacheInterface
 			return null;
 		}
 
+		return $this->readEntry($key);
+	}
+
+	public function set(string $key, mixed $value, int $ttl = 0): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		return $this->writeEntry($key, $value, $ttl);
+	}
+
+	/**
+	 * Read a cache entry while bypassing the `cache.filesystem` enabled flag.
+	 *
+	 * Used for mandatory cache paths (license validation) that must keep
+	 * working even when filesystem caching is disabled — without this,
+	 * disabling all cache backends in dev would cause license calls to hit
+	 * the API on every request and trip the upstream rate limiter.
+	 */
+	public function getMandatory(string $key): mixed
+	{
+		if (!$this->isWritable()) {
+			return null;
+		}
+
+		return $this->readEntry($key);
+	}
+
+	/**
+	 * Counterpart to {@see getMandatory()} — write a cache entry while
+	 * bypassing the `cache.filesystem` enabled flag.
+	 */
+	public function setMandatory(string $key, mixed $value, int $ttl = 0): bool
+	{
+		if (!$this->isWritable()) {
+			return false;
+		}
+
+		return $this->writeEntry($key, $value, $ttl);
+	}
+
+	private function readEntry(string $key): mixed
+	{
 		$filePath = $this->getFilePath($key);
 		if (!file_exists($filePath)) {
 			return null;
@@ -105,12 +164,8 @@ readonly class FilesystemService implements CacheInterface
 		return $data['value'];
 	}
 
-	public function set(string $key, mixed $value, int $ttl = 0): bool
+	private function writeEntry(string $key, mixed $value, int $ttl): bool
 	{
-		if (!$this->isAvailable()) {
-			return false;
-		}
-
 		$filePath = $this->getFilePath($key);
 		$expires  = $ttl > 0 ? time() + $ttl : 0;
 
@@ -133,6 +188,26 @@ readonly class FilesystemService implements CacheInterface
 			return false;
 		}
 
+		return $this->deleteEntry($key);
+	}
+
+	/**
+	 * Counterpart to {@see getMandatory()} / {@see setMandatory()} — delete a
+	 * cache entry while bypassing the `cache.filesystem` enabled flag.
+	 * Without this, clearing license data while filesystem caching is
+	 * disabled would silently fail and leave a stale entry on disk.
+	 */
+	public function deleteMandatory(string $key): bool
+	{
+		if (!$this->isWritable()) {
+			return false;
+		}
+
+		return $this->deleteEntry($key);
+	}
+
+	private function deleteEntry(string $key): bool
+	{
 		$filePath = $this->getFilePath($key);
 		if (!file_exists($filePath)) {
 			return true;

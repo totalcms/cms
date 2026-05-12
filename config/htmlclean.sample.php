@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * HTML Cleaning Configuration Sample.
  *

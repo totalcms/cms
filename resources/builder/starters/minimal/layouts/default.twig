@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
+	<meta name="description" content="{% block description %}{% endblock %}">
+	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
+	{{ cms.builder.css('style.css') }}
+	{% block head %}{% endblock %}
+</head>
+<body>
+	{% include 'partials/nav.twig' %}
+
+	<main class="container">
+		{% block content %}{% endblock %}
+	</main>
+
+	{% include 'partials/footer.twig' %}
+</body>
+</html>

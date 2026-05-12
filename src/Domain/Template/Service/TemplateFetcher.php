@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Template\Service;
 
 use TotalCMS\Domain\Template\Data\TemplateData;
@@ -29,6 +31,6 @@ readonly class TemplateFetcher
 	 */
 	public function templateExists(string $id, ?string $folder = null): bool
 	{
-		return $this->storage->customTemplateExists($id, $folder) || $this->storage->reservedTemplateExists($id);
+		return $this->storage->builderTemplateExists($id, $folder) || $this->storage->reservedTemplateExists($id);
 	}
 }

@@ -101,7 +101,7 @@ export default class GalleryPreview {
 				const mimeType = data ? data.mime : 'image/jpeg';
 				const format = mimeType.split("/")[1];
 				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-				const downloadUrl = this.api.buildApiQuery(downloadApi);
+				const downloadUrl = this.api.buildPublicQuery(downloadApi);
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;

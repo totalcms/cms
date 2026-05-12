@@ -9,11 +9,14 @@ use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Renderer\TwigRenderer;
@@ -26,11 +29,15 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $twigLintService;
 	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $accessGroupLister;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $builderInstaller;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
 	private \PHPUnit\Framework\MockObject\MockObject $rssImporter;
 	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
+	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
+	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -41,11 +48,15 @@ final class AdminUtilsActionTest extends TestCase
 		$this->twigLintService       = $this->createMock(TwigLintService::class);
 		$this->apiKeyFetcher         = $this->createMock(ApiKeyFetcher::class);
 		$this->accessGroupLister     = $this->createMock(AccessGroupLister::class);
-		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
+		$this->collectionLister      = $this->createMock(CollectionLister::class);
 		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
+		$this->builderInstaller      = $this->createMock(BuilderInstaller::class);
 		$this->schemaLister          = $this->createMock(SchemaLister::class);
 		$this->rssImporter           = $this->createMock(RssImporter::class);
 		$this->editionFeatures       = $this->createMock(EditionFeatureService::class);
+		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
+		$this->templateLister        = $this->createMock(TemplateLister::class);
+		$this->updateChecker         = $this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class);
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 
@@ -55,11 +66,15 @@ final class AdminUtilsActionTest extends TestCase
 			$this->twigLintService,
 			$this->apiKeyFetcher,
 			$this->accessGroupLister,
-			$this->collectionRepository,
+			$this->collectionLister,
 			$this->collectionFetcher,
+			$this->builderInstaller,
 			$this->schemaLister,
 			$this->rssImporter,
-			$this->editionFeatures
+			$this->editionFeatures,
+			$this->settingsFetcher,
+			$this->templateLister,
+			$this->updateChecker,
 		);
 	}
 

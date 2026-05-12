@@ -1,0 +1,41 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Home — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+{% set readmeUrl = cms.builder.url('readme') %}
+{% if readmeUrl %}
+<aside class="container" style="background: #eef6ff; border-left: 4px solid #3b82f6; padding: 0.85rem 1.25rem; margin: 1rem auto; font-size: 0.95em;">
+	New here? Check out the <a href="{{ readmeUrl }}" style="font-weight: 600;">Getting Started guide</a> to learn how this starter works.
+</aside>
+{% endif %}
+
+<section class="section" style="text-align: center; padding: 6rem 0;">
+	<div class="container">
+		<h1>Welcome to {{ cms.config('domain') }}</h1>
+		<p style="font-size: 1.25rem; color: #666; max-width: 600px; margin: 0 auto;">
+			We help businesses grow with modern solutions. Learn more about what we do.
+		</p>
+	</div>
+</section>
+
+<section class="section section-alt">
+	<div class="container">
+		<h2 style="text-align: center;">What We Do</h2>
+		<div class="grid-2" style="margin-top: 2rem;">
+			<div class="card">
+				<h3>Strategy</h3>
+				<p>We work with you to define clear goals and a roadmap to achieve them.</p>
+			</div>
+			<div class="card">
+				<h3>Design</h3>
+				<p>Beautiful, functional designs that reflect your brand and engage your audience.</p>
+			</div>
+			<div class="card">
+				<h3>Development</h3>
+				<p>Custom-built solutions using modern technologies for performance and reliability.</p>
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock %}

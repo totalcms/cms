@@ -20,7 +20,8 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
   "tabSize"       : 2,
   "foldGutter"    : true,
   "matchBrackets" : true,
-  "autoCloseTags" : true
+  "autoCloseTags" : true,
+  "fullscreen"    : true
 }
 ```
 
@@ -50,6 +51,8 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
 - **matchBrackets** - Highlight matching brackets. Default: `true`
 
 - **autoCloseTags** - Auto-close HTML/XML tags. Default: `true`
+
+- **fullscreen** - Show a fullscreen toggle button in the bottom-right corner of the editor. Press `Esc` to exit fullscreen. Default: `true`
 
 ### Editor Size
 

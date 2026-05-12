@@ -1,0 +1,499 @@
+// Site Builder editor — preview panel + header actions
+// Plus nested file tree styles for the sidebar
+
+.builder-editor-actions {
+	display     : flex;
+	gap         : 0.5rem;
+	align-items : center;
+}
+
+// Preview controls row — sits below the template form. URL input uses the
+// standard `.totalform` text-input styling; just need to lay out the input
+// and the Preview button on one row.
+.builder-preview-controls {
+	display       : flex;
+	align-items   : flex-end;
+	gap           : 0.75rem;
+	margin-top    : 6rem!important; // override .totalform spacing above
+	padding       : 0.75rem 1rem;
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	max-width     : 800px;
+
+	.form-field {
+		flex   : 1 1 auto;
+		margin : 0;
+	}
+
+	.dash-button {
+		flex-shrink: 0;
+	}
+}
+
+// Icon-only buttons inside the preview header
+.builder-preview-iconbtn {
+	display          : inline-flex;
+	align-items      : center;
+	justify-content  : center;
+	width            : 2rem;
+	height           : 2rem;
+	padding          : 0;
+	border           : 1px solid transparent;
+	border-radius    : var(--totalform-radius);
+	background-color : transparent;
+	cursor           : pointer;
+	color            : oklch(var(--totalform-mediumgray));
+	transition       : background-color 150ms ease, color 150ms ease;
+
+	&::before {
+		content          : "";
+		display          : block;
+		width            : 1.25rem;
+		height           : 1.25rem;
+		background-color : currentColor;
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-lightgray) / 0.4);
+		color            : oklch(var(--totalform-text-color));
+	}
+
+	&.icon-refresh::before {
+		mask-image : var(--icon-refresh);
+	}
+
+	&.icon-close::before {
+		mask-image : var(--icon-close);
+	}
+}
+
+// Drag-drop visuals for the Site Pages tree (TotalSortable / SortableJS)
+.page-drag-ghost {
+	opacity          : 0.4;
+	background-color : oklch(var(--totalform-accent) / 0.1);
+	outline          : 2px dashed oklch(var(--totalform-accent));
+	outline-offset   : -2px;
+}
+
+.page-drag-chosen {
+	cursor : grabbing;
+}
+
+.page-drag-active {
+	background-color : oklch(var(--totalform-purewhite));
+	box-shadow       : 0 4px 12px oklch(var(--totalform-shadow));
+	border-radius    : var(--totalform-radius);
+}
+
+// Reorder-mode toggle — a small button in the Site Pages summary that
+// flips the sidebar into a dedicated organize-pages mode.
+.dash-content-sidebar.tree #category-builder-pages > summary {
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	gap             : 0.5rem;
+}
+
+.page-order-toggle {
+	display          : inline-flex;
+	align-items      : center;
+	justify-content  : center;
+	width            : 1.75rem;
+	height           : 1.75rem;
+	padding          : 0;
+	border           : 1px solid transparent;
+	border-radius    : var(--totalform-radius);
+	background-color : transparent;
+	cursor           : pointer;
+	color            : oklch(var(--totalform-mediumgray));
+	transition       : background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+
+	&::before {
+		content          : "";
+		display          : block;
+		width            : 1rem;
+		height           : 1rem;
+		background-color : currentColor;
+		mask-image       : var(--icon-sort);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-lightgray) / 0.4);
+		color            : oklch(var(--totalform-text-color));
+	}
+
+	&[aria-pressed="true"] {
+		background-color : oklch(var(--totalform-accent) / 0.15);
+		border-color     : oklch(var(--totalform-accent) / 0.5);
+		color            : oklch(var(--totalform-accent));
+	}
+}
+
+// In order mode the Site Pages section becomes a dedicated organize surface:
+// drop zones are always visible, the cursor changes to "grab", and clicks on
+// page links are intercepted so reordering doesn't accidentally navigate away.
+.dash-content-sidebar.tree.order-mode {
+	#category-builder-pages {
+		background    : oklch(var(--totalform-accent) / 0.04);
+		border-radius : var(--totalform-radius);
+		padding       : 0.25rem 0;
+	}
+
+	li.builder-page-item {
+		cursor : grab;
+
+		&:active {
+			cursor : grabbing;
+		}
+
+		// Always-visible drop zone for every leaf during order mode
+		&:not(.has-children) > details > ul.tree-view {
+			min-height    : 1rem;
+			margin        : 0.0625rem 0 0.0625rem 1.25rem;
+			background    : oklch(var(--totalform-accent) / 0.08);
+			border-left   : 2px solid oklch(var(--totalform-accent) / 0.3);
+			border-radius : 0 var(--totalform-radius) var(--totalform-radius) 0;
+			transition    : min-height 120ms ease, background-color 120ms ease;
+		}
+
+		// Folder's children area gets the same accent guide — visually
+		// delimits "what's inside this folder" from sibling rows below, so
+		// users can tell at a glance whether dropping here will nest or
+		// reorder.
+		&.has-children > details > ul.tree-view {
+			border-left   : 2px solid oklch(var(--totalform-accent) / 0.2);
+			margin-left   : 1.25rem;
+			padding-left  : 0.25rem;
+			border-radius : 0 var(--totalform-radius) var(--totalform-radius) 0;
+		}
+
+		// Active drop target: more emphatic
+		&:not(.has-children) > details > ul.tree-view.drop-target-active {
+			min-height  : 1.5rem;
+			background  : oklch(var(--totalform-accent) / 0.18);
+			border-left : 2px solid oklch(var(--totalform-accent));
+		}
+
+		// Pulse the icon of the row whose drop zone is currently targeted
+		&:has(> details > ul.tree-view.drop-target-active) > details > summary > a {
+			background-color : oklch(var(--totalform-accent) / 0.1);
+
+			&::before {
+				background-color : oklch(var(--totalform-accent));
+			}
+		}
+	}
+}
+
+// `.tree` variant of `.dash-content-sidebar` — a denser, browseable
+// file-tree layout (e.g. the Site Builder sidebar) instead of the loose
+// nav-item layout that other admin sidebars use. Apply this class to any
+// sidebar that's primarily a hierarchy of files/pages.
+//
+// Top-level category summaries (layouts, pages, partials, etc.) keep their
+// bold/1.2rem styling from _layout.scss; nested folder summaries use plain
+// text matching the leaf-link weight.
+.dash-content-sidebar.tree {
+
+	// Site Pages — every page renders as <li><details><summary><a/></summary>
+	// <ul/></details></li>. Leaves have an empty inner ul (acts as drop zone
+	// during drag); has-children pages get a folder icon instead of file-text.
+	//
+	// The summary contains a real <a> link so clicking the page name navigates
+	// to edit. Default disclosure marker is hidden — the folder icon (or its
+	// absence) is the only state cue.
+	li.builder-page-item {
+		> details > summary {
+			display     : block;
+			cursor      : pointer;
+			user-select : none;
+			margin      : 0;
+			margin-inline-start : 0;
+			font-size   : 1rem;
+			font-weight : normal;
+			color       : oklch(var(--totalform-text-color));
+			list-style  : none;
+
+			&::marker,
+			&::-webkit-details-marker {
+				content : '';
+				display : none;
+			}
+		}
+
+		// Empty (leaf) inner ul collapses to zero height when not dragging —
+		// invisible visually but still hit-testable for SortableJS.
+		> details > ul.tree-view {
+			list-style : none;
+			padding    : 0;
+			margin     : 0;
+		}
+
+		// Has-children: folder icon, indented children. Details is always
+		// `open` so we always show the open-folder icon.
+		&.has-children {
+			--collection-icon : var(--icon-folder-open);
+
+			> details > ul.tree-view {
+				padding-inline-start : 1rem;
+			}
+		}
+
+		// Pages excluded from public navigation read as inactive. Each
+		// nav-hidden page dims independently — `color` (with `currentColor`
+		// for the icon mask) doesn't compound on nested nav-hidden rows the
+		// way `opacity` would, and it leaves children at full visibility
+		// (which matches T3's per-page nav model — a child's nav state is
+		// independent of its parent's).
+		&.nav-hidden > details > summary > a {
+			color : oklch(var(--totalform-text-color) / 0.5);
+
+			&::before {
+				background-color : currentColor;
+			}
+		}
+
+		// Draft pages — italic + dim. Reads as "this isn't live yet" without
+		// disappearing entirely from the sidebar.
+		&.is-draft > details > summary > a {
+			font-style : italic;
+			color      : oklch(var(--totalform-text-color) / 0.55);
+
+			&::before {
+				background-color : currentColor;
+			}
+		}
+
+		// Home page (route `/`) gets a house icon instead of the default
+		// file-text icon. Makes the root of the site instantly recognizable.
+		&.is-home {
+			--collection-icon : var(--icon-house);
+		}
+	}
+
+	// Drop-zone visuals live under `.order-mode` only (above) — outside of
+	// reorder mode, drag-drop is still possible but doesn't show extra hints,
+	// since clicking a page in normal mode is meant to navigate.
+
+	li.builder-folder {
+
+		// Folder summary mimics the leaf-link layout from _layout.scss so the
+		// folder name aligns with sibling files. Without this the summary sits
+		// flush left while leaf <a> links get padding + icon.
+		//
+		// Setting --collection-icon on the summary (rather than the li) bumps
+		// specificity above _layout.scss's `li[class*="builder-"]` rule, which
+		// would otherwise paint the closed folder with the file-code icon.
+		> details > summary {
+			--collection-icon : var(--icon-folder);
+
+			display         : flex;
+			align-items     : center;
+			padding         : 0.25rem 0.5rem;
+			margin          : 0;
+			margin-inline-start : 0;
+			border-radius   : var(--totalform-radius);
+			cursor          : pointer;
+			user-select     : none;
+			color           : oklch(var(--totalform-text-color));
+			font-size       : 1rem;
+			font-weight     : normal;
+			text-decoration : none;
+			list-style      : none;
+
+			&::marker,
+			&::-webkit-details-marker {
+				content : '';
+				display : none;
+			}
+
+			&:hover {
+				background-color : oklch(var(--totalform-lightgray) / 0.4);
+			}
+
+			&::before {
+				content          : " ";
+				display          : inline-block;
+				width            : 1rem;
+				height           : 1rem;
+				background-color : oklch(var(--totalform-text-color));
+				mask-image       : var(--collection-icon);
+				margin-right     : 0.5rem;
+				mask-size        : 0.8rem;
+				mask-repeat      : no-repeat;
+				mask-position    : center;
+			}
+		}
+
+		// Folder icon flips to "open" when expanded
+		> details[open] > summary {
+			--collection-icon : var(--icon-folder-open);
+		}
+
+		// Indent items inside this folder so hierarchy reads visually
+		> details > ul.tree-view {
+			list-style           : none;
+			padding              : 0;
+			margin               : 0;
+			padding-inline-start : 1rem;
+		}
+	}
+}
+
+.builder-preview-panel {
+	display        : flex;
+	flex-direction : column;
+	margin-top     : 1.5rem;
+	height         : 75vh;
+	min-height     : 500px;
+	border         : 1px solid oklch(var(--totalform-border-color));
+	border-radius  : var(--totalform-radius);
+	overflow       : hidden;
+	background     : oklch(var(--totalform-purewhite));
+
+	&.cms-hide {
+		display : none;
+	}
+}
+
+.builder-preview-header {
+	flex             : 0 0 auto;
+	display          : flex;
+	align-items      : center;
+	gap              : 1rem;
+	padding          : 0.5rem 1rem;
+	border-bottom    : 1px solid oklch(var(--totalform-border-color));
+	background-color : oklch(var(--totalform-nearwhite));
+
+	h2 {
+		margin    : 0;
+		font-size : 1rem;
+		color     : oklch(var(--totalform-darkgray));
+		flex      : 0 0 auto;
+	}
+}
+
+.builder-preview-presets {
+	flex        : 1 1 auto;
+	display     : flex;
+	align-items : center;
+	gap         : 0.25rem;
+}
+
+.builder-preview-preset {
+	padding          : 0.25rem 0.6rem;
+	font-size        : 0.8rem;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-purewhite));
+	color            : oklch(var(--totalform-darkgray));
+	cursor           : pointer;
+	transition       : background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+
+	&.is-active {
+		background-color : oklch(var(--totalform-accent));
+		border-color     : oklch(var(--totalform-accent));
+		// color            : oklch(var(--totalform-purewhite));
+	}
+}
+
+.builder-preview-width {
+	margin-inline-start : 0.5rem;
+	font-size           : 0.8rem;
+	color               : oklch(var(--totalform-mediumgray));
+	font-variant-numeric: tabular-nums;
+	min-width           : 4.5rem;
+}
+
+.builder-preview-actions {
+	flex    : 0 0 auto;
+	display : flex;
+	gap     : 0.25rem;
+}
+
+// Stage holds the resizable viewport. Background mimics devtools' device frame
+// so a narrow viewport reads as "phone-sized canvas," not as a broken layout.
+.builder-preview-stage {
+	flex        : 1 1 auto;
+	min-height  : 0;
+	display     : flex;
+	align-items : stretch;
+	justify-content: center;
+	overflow    : auto;
+	padding     : 1rem;
+	background  : oklch(var(--totalform-icon-bg));
+}
+
+.builder-preview-viewport {
+	position      : relative;
+	height        : 100%;
+	width         : 100%;
+	max-width     : 100%;
+	background    : oklch(var(--totalform-purewhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	overflow      : hidden;
+	box-shadow    : 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.builder-preview-frame {
+	display    : block;
+	width      : 100%;
+	height     : 100%;
+	border     : 0;
+	background : oklch(var(--totalform-purewhite));
+}
+
+// Right-edge drag handle. Wider hit area than the visible bar so it's easy to
+// grab; the visible affordance is the centered pill.
+.builder-preview-resizer {
+	position    : absolute;
+	top         : 0;
+	right       : -6px;
+	width       : 12px;
+	height      : 100%;
+	cursor      : ew-resize;
+	touch-action: none;
+	z-index     : 2;
+
+	&::before {
+		content       : "";
+		position      : absolute;
+		top           : 50%;
+		left          : 0;
+		translate     : -50% -50%;
+		width         : 6px;
+		height        : 36px;
+		border-radius : 8px;
+		background    : oklch(var(--totalform-mediumgray));
+		opacity       : 0.4;
+		transition    : opacity 150ms ease, background-color 150ms ease;
+	}
+
+	&:hover::before {
+		opacity    : 1;
+		background : oklch(var(--totalform-accent));
+	}
+}
+
+// While dragging, force ew-resize cursor and disable iframe pointer events so
+// the iframe doesn't swallow the mousemove stream.
+body.builder-preview-resizing {
+	cursor      : ew-resize !important;
+	user-select : none;
+
+	.builder-preview-frame {
+		pointer-events : none;
+	}
+}

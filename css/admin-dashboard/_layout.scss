@@ -18,6 +18,16 @@ body {
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
 	grid-template-rows : auto 1fr auto;
 	overflow-y         : auto;
+	// background         : linear-gradient(180deg,
+	// 	oklch(var(--totalform-accent) / 0.45) 0%,
+	// 	oklch(var(--totalform-accent) / 0.20) 45%,
+	// 	transparent 85%
+	// );
+	background: linear-gradient(180deg,
+		transparent 15%,
+		oklch(var(--totalform-accent)/.2) 55%,
+		oklch(var(--totalform-accent)/.45) 100%
+	);
 
 	.menu {
 		display         : grid;
@@ -28,17 +38,18 @@ body {
 		list-style      : none;
 
 		.menu-item {
-			background-color : transparent;
-			transition       : background-color 200ms ease-in-out;
+			background-color : oklch(var(--totalform-nearwhite) / 0);
+			transition       : background-color 200ms ease;
 			border-radius    : calc(var(--totalform-radius) * 2);
 			border           : 2px solid transparent;
+			will-change      : background-color;
 
 			&:hover {
-				background-color: oklch(var(--totalform-nearwhite));
+				background-color: oklch(var(--totalform-nearwhite) / 0.25);
 			}
 			&.active {
 				background-color : transparent;
-				border-color     : oklch(var(--totalform-nearblack));
+				border-color     : oklch(var(--totalform-nearblack) / 0.5);
 			}
 		}
 		a {
@@ -67,8 +78,8 @@ body {
 	.home {
 		mask-image : var(--icon-logo);
 	}
-	.templates {
-		mask-image : var(--icon-puzzle);
+	.builder {
+		mask-image : var(--icon-templates);
 	}
 	.schemas {
 		mask-image : var(--icon-schema);
@@ -93,6 +104,25 @@ body {
 	}
 	.mailer {
 		mask-image : var(--icon-mailer);
+	}
+	.quick-nav-trigger {
+		display          : block;
+		width            : 3rem;
+		height           : 3rem;
+		padding          : 0;
+		border           : none;
+		cursor           : pointer;
+		background-color : oklch(var(--totalform-nearblack));
+		mask-image       : var(--icon-search);
+		mask-size        : 1.5rem;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+	.extensions {
+		mask-image : var(--icon-extension);
+	}
+	.ext-nav {
+		mask-image : var(--ext-icon, var(--icon-puzzle));
 	}
 }
 
@@ -136,13 +166,14 @@ body {
 		content : "▹ ";
 	}
 	details:not(:first-child) {
-		margin-top : 1.5rem;
+		margin-top : 1rem;
 	}
 	details summary {
 		display : none;
 	}
 	// show summary only if there are unfiltered items
-	details:has(ul li:not(.filtered)) summary {
+	// .filtered = FilterList (flat sidebars); .filtered-out = TreeView (nested sidebars)
+	details:has(ul li:not(.filtered):not(.filtered-out)) summary {
 		display : list-item;
 	}
 	header {
@@ -152,7 +183,7 @@ body {
 
 	nav {
 		overflow : auto;
-		padding  : 0 1rem;
+		padding  : 0 1.2rem;
 
 		.no-schemas {
 			padding    : 0.75rem 1rem;
@@ -172,6 +203,11 @@ body {
 			--collection-icon : var(--icon-data-views);
 		}
 		li {
+			&.empty {
+				opacity   : 0.5;
+				font-size : 0.8em;
+			}
+
 			--collection-icon : var(--icon-collections);
 
 			&[class*="schema-"] {
@@ -180,8 +216,11 @@ body {
 			&[class*="settings-"] {
 				--collection-icon : var(--icon-cog);
 			}
-			&[class*="template-"] {
+			&[class*="builder-"] {
 				--collection-icon : var(--icon-file-code);
+			}
+			&.builder-page-item {
+				--collection-icon : var(--icon-file-text);
 			}
 			&[class*="mailer-"] {
 				--collection-icon : var(--icon-plane);
@@ -226,13 +265,15 @@ body {
 			&.import-rss { --collection-icon : var(--icon-rss) }
 			&.import-wordpress { --collection-icon : var(--icon-wordpress) }
 			&.import-totalcms-one { --collection-icon : var(--icon-logo-fill) }
+			&.update { --collection-icon : var(--icon-update) }
+			&.sync { --collection-icon : var(--icon-refresh) }
 		}
 		a {
 			display         : flex;
 			align-items     : center;
 			text-decoration : none;
 			color           : oklch(var(--totalform-text-color));
-			padding         : 0.75rem 1rem;
+			padding         : 0.25rem 0.5rem;
 			border-radius   : var(--totalform-radius);
 			transition      : background-color 200ms ease-in-out;
 
@@ -260,12 +301,19 @@ body {
 		grid-template-rows: min-content 1fr min-content;
 	}
 
+	.sidebar-divider {
+		border     : none;
+		border-top : 1px solid oklch(var(--totalform-lightgray));
+		margin     : 2rem 1rem;
+	}
+
 	footer {
 		display : none;
 
 		&:has(.dash-button) {
-			display : block;
+			display : grid;
 			padding : 1rem;
+			gap     : 1rem;
 		}
 	}
 }
@@ -312,6 +360,10 @@ body {
 	}
 	form {
 		max-width : 800px;
+	}
+	body.full-width-forms & form[data-form="template"],
+	body.full-width-forms & form[data-collection] {
+		max-width : none;
 	}
 	header {
 		display   : flex;
@@ -363,6 +415,10 @@ body {
 
 	h1,h2,h3 {
 		margin-block-start: 2em;
+	}
+
+	hr {
+		margin-block-start: 4em;
 	}
 
 	&:has(.docs-iframe) {
@@ -825,6 +881,44 @@ pre {
 
 		.dash-button {
 			margin-top : 0.5rem;
+		}
+	}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Extension permissions fieldset
+// ─────────────────────────────────────────────────────────────────────────────
+.ext-permissions {
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.25rem;
+	margin        : 0;
+
+	legend {
+		font-weight : 600;
+		font-size   : 0.95rem;
+		padding     : 0 0.5rem;
+	}
+
+	.ext-permissions-grid {
+		display               : grid;
+		grid-template-columns : repeat(auto-fill, minmax(200px, 1fr));
+		gap                   : 0.75rem;
+
+		// Compact toggle style inside the grid
+		.field-wrapper {
+			margin  : 0;
+			padding : 0.5rem 0.75rem;
+			background    : oklch(var(--totalform-nearwhite) / 0.5);
+			border-radius : var(--totalform-radius);
+
+			label {
+				font-size : 0.85rem;
+			}
+
+			.help {
+				display : none;
+			}
 		}
 	}
 }

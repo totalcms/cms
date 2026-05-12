@@ -1,0 +1,17 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Home — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+{% set readmeUrl = cms.builder.url('readme') %}
+{% if readmeUrl %}
+<aside style="background: #eef6ff; border-left: 4px solid #3b82f6; padding: 0.85rem 1.25rem; margin: 1rem auto; max-width: 720px; font-size: 0.95em;">
+	New here? Check out the <a href="{{ readmeUrl }}" style="font-weight: 600;">Getting Started guide</a> to learn how this starter works.
+</aside>
+{% endif %}
+
+<section style="padding: 4rem 0; text-align: center;">
+	<h1>Welcome</h1>
+	<p>Your site is ready. Edit this template to get started.</p>
+</section>
+{% endblock %}

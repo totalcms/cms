@@ -112,6 +112,28 @@ class LoggerFactory
 	}
 
 	/**
+	 * Resolve a PSR-3 level name (e.g. 'info', 'warning') to a Monolog Level.
+	 *
+	 * Used for admin-supplied levels from settings.json. Falls back to the
+	 * provided default when the name is null/empty/unrecognized — admin input
+	 * should never crash the logger.
+	 */
+	public static function resolveLevel(?string $name, Level $fallback): Level
+	{
+		return match (strtolower((string)$name)) {
+			'debug'     => Level::Debug,
+			'info'      => Level::Info,
+			'notice'    => Level::Notice,
+			'warning'   => Level::Warning,
+			'error'     => Level::Error,
+			'critical'  => Level::Critical,
+			'alert'     => Level::Alert,
+			'emergency' => Level::Emergency,
+			default     => $fallback,
+		};
+	}
+
+	/**
 	 * Add a console logger.
 	 *
 	 * @param Level|null $level The level (optional)

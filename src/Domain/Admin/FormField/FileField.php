@@ -77,17 +77,22 @@ class FileField extends FormField
 	{
 		// Depot passes the name of the file
 		// The name should be null for an file field
+		//
+		// For nested files, `property` is a dot-notation path (e.g. `mycard.file`
+		// or `mydeck.one.file`) so the filelinks tool can resolve the nested
+		// file and emit the correct macro and URL.
+		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
 
 		$query = http_build_query([
 			'id'         => $this->form->id,
 			'collection' => $this->form->collection,
-			'property'   => $this->name,
+			'property'   => $propertyPath,
 			// 'name'       => $filename,
 		]);
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = str_contains($this->form->api, '?') ? '&' : '?';
 
-		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/filelinks{$join}{$query}");
+		$iframe = HTMLUtils::iframe("{$this->form->baseApi()}/admin/filelinks{$join}{$query}");
 
 		return HTMLUtils::dialog($iframe, 'file-links-dialog');
 	}

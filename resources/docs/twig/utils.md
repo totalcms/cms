@@ -3,17 +3,19 @@ title: "Utilities"
 description: "Utility functions for Total CMS including URL-based filtering that converts query parameters into include, exclude, sort, and search options."
 ---
 
-# Utilities
+# cms.utils
 
 The `cms.utils` namespace provides helper functions for common tasks in Total CMS templates.
 
-## urlFilters
+## URL Helpers
+
+### urlFilters()
 
 Reads URL query parameters and converts them into `include`, `exclude`, `sort`, and `search` options compatible with `loadMore`, `loadMoreButton`, `loadMoreDataView`, and any other function that accepts these filter options.
 
 This allows visitors to filter, sort, and search collection content using clean, shareable URLs without any JavaScript.
 
-### Basic Usage
+#### Basic Usage
 
 ```twig
 {% set filters = cms.utils.urlFilters() %}
@@ -26,7 +28,7 @@ This allows visitors to filter, sort, and search collection content using clean,
 }) }}
 ```
 
-### URL Format
+#### URL Format
 
 Property filters use the parameter name as the field name and the value as the filter value.
 
@@ -46,7 +48,7 @@ The `-` prefix on a value means **exclude** instead of include:
 → exclude: "draft:true"
 ```
 
-### Complete Example
+#### Complete Example
 
 Given this URL:
 
@@ -65,7 +67,7 @@ https://example.com/blog?category=travel&tag=-beach&sort=-date&search=adventure
 }
 ```
 
-### Array Values
+#### Array Values
 
 Use bracket syntax for multiple values on the same field:
 
@@ -82,7 +84,7 @@ You can mix include and exclude within the same field:
 → exclude: "tags:beach"
 ```
 
-### Custom Parameter Names
+#### Custom Parameter Names
 
 By default, `sort` and `search` are the reserved parameter names. You can customize these to match your URL scheme or localize them:
 
@@ -102,7 +104,7 @@ When you rename a reserved parameter, the default name becomes available as a pr
 → With {sort: 'orderby'}: sort="-date", include="sort:asc"
 ```
 
-### Ignoring Parameters
+#### Ignoring Parameters
 
 Some URL parameters aren't filters — like pagination or tracking IDs. Use `ignore` to skip them:
 
@@ -114,7 +116,7 @@ Some URL parameters aren't filters — like pagination or tracking IDs. Use `ign
 
 Now `?page=2&id=abc&category=travel` only produces `include: "category:travel"`.
 
-### Options Reference
+#### Options Reference
 
 | Option | Default | Description |
 |---|---|---|
@@ -122,7 +124,7 @@ Now `?page=2&id=abc&category=travel` only produces `include: "category:travel"`.
 | `search` | `"search"` | URL parameter name for search |
 | `ignore` | `""` | Comma-separated parameter names to skip |
 
-### Combining with Hardcoded Filters
+#### Combining with Hardcoded Filters
 
 You can merge URL-based filters with hardcoded defaults using Twig's `~` operator for strings:
 
@@ -142,7 +144,7 @@ You can merge URL-based filters with hardcoded defaults using Twig's `~` operato
 
 This ensures `published:true` is always applied, while visitors can add additional filters via URL.
 
-### Building Filter Links
+#### Building Filter Links
 
 Create navigation links that set URL parameters for filtering:
 
@@ -162,7 +164,7 @@ Or combine filters:
 <a href="?category=travel&sort=-date">Latest Travel Posts</a>
 ```
 
-### Search Form
+#### Search Form
 
 Build a simple search form that sets the URL parameter:
 
@@ -173,7 +175,7 @@ Build a simple search form that sets the URL parameter:
 </form>
 ```
 
-### Use with Other Functions
+#### Use with Other Functions
 
 `urlFilters` works anywhere include/exclude/sort are accepted, not just with loadMore:
 

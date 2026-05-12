@@ -7,6 +7,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -24,6 +25,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Support\Config;
 
 /**
@@ -50,6 +52,7 @@ class TotalForm implements \Stringable
 			'json',
 			'phone',
 			'radio',
+			'secret',
 			'select',
 			'styledtext',
 			'svg',
@@ -77,6 +80,7 @@ class TotalForm implements \Stringable
 			'multiselect',
 		],
 		'Special Fields' => [
+			'card',
 			'color',
 			'deck',
 			'deckTable',
@@ -88,6 +92,111 @@ class TotalForm implements \Stringable
 			'password',
 		],
 	];
+
+	/**
+	 * Default property type for each built-in field. Used when a schema property
+	 * omits an explicit `type`; the saver fills it in from the chosen `field`.
+	 */
+	public const FIELD_DEFAULT_TYPE = [
+		'card'          => 'card',
+		'checkbox'      => 'boolean',
+		'code'          => 'code',
+		'color'         => 'color',
+		'date'          => 'date',
+		'datetime'      => 'date',
+		'deck'          => 'deck',
+		'deckTable'     => 'deck',
+		'depot'         => 'depot',
+		'email'         => 'email',
+		'file'          => 'file',
+		'gallery'       => 'gallery',
+		'hidden'        => 'string',
+		'id'            => 'slug',
+		'image'         => 'image',
+		'json'          => 'json',
+		'list'          => 'list',
+		'multicheckbox' => 'array',
+		'multiselect'   => 'array',
+		'number'        => 'number',
+		'password'      => 'password',
+		'phone'         => 'phone',
+		'price'         => 'number',
+		'radio'         => 'string',
+		'range'         => 'number',
+		'secret'        => 'string',
+		'select'        => 'string',
+		'styledtext'    => 'string',
+		'svg'           => 'svg',
+		'text'          => 'string',
+		'textarea'      => 'string',
+		'time'          => 'time',
+		'toggle'        => 'boolean',
+		'url'           => 'url',
+	];
+
+	/** @var array<string,class-string> Extension-registered field types: name => FQCN */
+	private static array $extensionFieldTypes = [];
+
+	/** @var array<string,string> Extension-declared default property type per field: name => type */
+	private static array $extensionFieldDefaultTypes = [];
+
+	/**
+	 * Register extension field types for both the form builder and schema property editor.
+	 *
+	 * @param array<string,class-string> $types Field name => fully qualified class name
+	 */
+	public static function registerExtensionFieldTypes(array $types): void
+	{
+		self::$extensionFieldTypes = array_merge(self::$extensionFieldTypes, $types);
+	}
+
+	/**
+	 * Register extension-declared default property types per field.
+	 *
+	 * @param array<string,string> $types Field name => default schema property type
+	 */
+	public static function registerExtensionFieldDefaultTypes(array $types): void
+	{
+		self::$extensionFieldDefaultTypes = array_merge(self::$extensionFieldDefaultTypes, $types);
+	}
+
+	/**
+	 * Get the extension field type class map.
+	 *
+	 * @return array<string,class-string>
+	 */
+	public static function getExtensionFieldTypes(): array
+	{
+		return self::$extensionFieldTypes;
+	}
+
+	/**
+	 * Resolve the default schema property type for a given form field name.
+	 * Built-in mappings win; extension-declared types fill in the rest;
+	 * unknown fields fall back to `string`.
+	 */
+	public static function getDefaultTypeForField(string $field): string
+	{
+		return self::FIELD_DEFAULT_TYPE[$field]
+			?? self::$extensionFieldDefaultTypes[$field]
+			?? 'string';
+	}
+
+	/**
+	 * Get all field types grouped by category, including extension types.
+	 *
+	 * @return array<string,list<string>>
+	 */
+	public static function getFieldsByType(): array
+	{
+		$fields = self::FIELDS_BY_TYPE;
+
+		if (self::$extensionFieldTypes !== []) {
+			$fields['Extension Fields'] = array_values(array_unique(array_keys(self::$extensionFieldTypes)));
+		}
+
+		return $fields;
+	}
 
 	public const FIELDS = [
 		'checkbox',
@@ -114,6 +223,7 @@ class TotalForm implements \Stringable
 		'price',
 		'radio',
 		'range',
+		'secret',
 		'select',
 		'styledtext',
 		'svg',
@@ -133,6 +243,12 @@ class TotalForm implements \Stringable
 		'placeholder',
 		'settings',
 		'options',
+		// Schema-reference keys for card / deck / deckTable fields.
+		// These flow through buildFieldOptions and get moved into `settings`
+		// before the field is constructed.
+		'schemaref',
+		'deckref',
+		'deckItemLabel',
 	];
 
 	// These are settings that can get passed to the FormField class
@@ -196,6 +312,12 @@ class TotalForm implements \Stringable
 		protected bool $hideID                   = false,
 		protected bool $useFormGrid              = true,
 		protected bool $addOnly                  = false,
+		// Public-registration form mode. When true, the form's action is
+		// retargeted to POST /admin/register/{collection} — the
+		// allow-listed registration endpoint that creates the user AND
+		// auto-logs them in. Implies `addOnly` because the registration
+		// route only handles POST (no PUT/edit path exists).
+		protected bool $register                 = false,
 	) {
 		$this->init();
 		$this->initClass();
@@ -273,6 +395,11 @@ class TotalForm implements \Stringable
 		return strtoupper($this->method) !== 'POST' && $this->id !== '';
 	}
 
+	public function getFormType(): string
+	{
+		return $this->formType;
+	}
+
 	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();
@@ -294,10 +421,17 @@ class TotalForm implements \Stringable
 		$formId       = null;
 		$formStyleTag = '';
 
-		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
+		if ($this->schemaData instanceof SchemaData && $this->useFormGrid) {
+			$formgrid = $this->schemaData->formgrid;
+
+			// Generate a default formgrid from field names if none defined
+			if ($formgrid === '') {
+				$formgrid = implode("\n", array_keys($this->fields));
+			}
+
 			$this->class .= ' formgrid';
 			$formId       = 'form-' . bin2hex(random_bytes(8));
-			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
+			$gridBuilder  = new FormGridBuilder($formgrid);
 			$gridBuilder->ensureFieldsIncluded(array_keys($this->fields));
 			$formStyleTag = $gridBuilder->toStyleTag($formId);
 		}
@@ -415,6 +549,107 @@ class TotalForm implements \Stringable
 		$collections = $this->collectionLister->listAllCollections();
 
 		return array_map(fn (CollectionData $c): string => $c->id, $collections);
+	}
+
+	protected ?TemplateLister $templateLister                  = null;
+	protected ?PageMiddlewareRegistry $pageMiddlewareRegistry  = null;
+
+	public function setTemplateLister(TemplateLister $lister): void
+	{
+		$this->templateLister = $lister;
+	}
+
+	public function setPageMiddlewareRegistry(PageMiddlewareRegistry $registry): void
+	{
+		$this->pageMiddlewareRegistry = $registry;
+	}
+
+	/**
+	 * Get a list of available layout templates from the builder/layouts/ directory.
+	 * Used for propertyOptions: "layouts" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function layoutListForBuilder(): array
+	{
+		if (!$this->templateLister instanceof TemplateLister) {
+			return [];
+		}
+
+		return $this->templateLister->listBuilderTemplates('layouts', true);
+	}
+
+	/**
+	 * Get a list of available page templates from the builder/pages/ directory.
+	 * Used for propertyOptions: "pages" in schema settings.
+	 *
+	 * @return array<string>
+	 */
+	public function pageListForBuilder(): array
+	{
+		if (!$this->templateLister instanceof TemplateLister) {
+			return [];
+		}
+
+		return $this->templateLister->listBuilderTemplates('pages', true);
+	}
+
+	/**
+	 * Get a list of registered page middleware names.
+	 * Used for propertyOptions: "pageMiddleware" in schema settings —
+	 * the builder-page form's middleware multiselect populates from this.
+	 *
+	 * @return array<string>
+	 */
+	public function pageMiddlewareList(): array
+	{
+		if (!$this->pageMiddlewareRegistry instanceof PageMiddlewareRegistry) {
+			return [];
+		}
+
+		return $this->pageMiddlewareRegistry->availableNames();
+	}
+
+	/**
+	 * Get the property names defined on the current collection's object schema.
+	 * Used for propertyOptions: "schemaProperties" in schema settings — useful
+	 * when a field needs to reference a property of the collection being edited
+	 * (e.g. picking the date property for a sitemap).
+	 *
+	 * Resolution order: explicit `$collection` arg → loaded `collectionData->schema`
+	 * (works for CollectionForm where the collection name lives in $this->id) →
+	 * `$this->collection` (works for ObjectForm). Returns an empty list when no
+	 * source is available or the schema can't be loaded.
+	 *
+	 * @return array<string>
+	 */
+	public function schemaPropertyKeys(string $collection = ''): array
+	{
+		try {
+			if ($collection !== '') {
+				$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+
+				return array_keys($schema->properties);
+			}
+
+			// CollectionForm path: schema name lives on the loaded CollectionData
+			if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
+				$schema = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+
+				return array_keys($schema->properties);
+			}
+
+			// ObjectForm path: collection name on the form itself
+			if ($this->collection !== '') {
+				$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
+
+				return array_keys($schema->properties);
+			}
+		} catch (\Throwable) {
+			return [];
+		}
+
+		return [];
 	}
 
 	/**
@@ -630,6 +865,16 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Base URL with no `/api` suffix — for admin-routed iframes (`/admin/...`)
+	 * and any other URL that lives outside the `/api/...` surface that
+	 * `$this->api` points at. Mirrors the dispatch in TotalFormFactory::totalform().
+	 */
+	public function baseApi(): string
+	{
+		return $this->config->api;
+	}
+
+	/**
 	 * Render a field as a sub-field of a composite property (file, image, depot,
 	 * gallery, deck-table, etc.). Skips parent-object schema inheritance so that
 	 * a sub-field with a name matching a top-level property (e.g. `name`, `alt`,
@@ -655,7 +900,12 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 		unset($options['subfield']);
 
-		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
+		$fieldType    = $options['field'] ?? '';
+		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
+		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+			? $builtInClass
+			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
+
 		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {
 			$typeClass = FormField::class;
 		}

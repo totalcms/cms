@@ -64,7 +64,7 @@ final class UserValidationServiceTest extends TestCase
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
-		$result = $service->validateUserByEmail('john@example.com');
+		$result = $service->validateUser('john@example.com');
 
 		expect($result)->toBe([
 			'id'     => 'john-doe',
@@ -94,7 +94,7 @@ final class UserValidationServiceTest extends TestCase
 		$this->expectException(\Exception::class);
 		$this->expectExceptionMessage('User not found');
 
-		$service->validateUserByEmail('notfound@example.com');
+		$service->validateUser('notfound@example.com');
 	}
 
 	public function testValidateUserByIdSuccessfully(): void

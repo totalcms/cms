@@ -276,4 +276,110 @@ class SaverFactoryTest extends TestCase
 			$this->assertEquals($expectedType, $saver->type);
 		}
 	}
+
+	public function testGenerateSaverServiceWithSubpathResolvesNestedChildType(): void
+	{
+		// Card-nested upload: URL says property=mycard, but the actual saver
+		// type comes from the card's child schema (image, in this case).
+		// SaverFactory still consults the parent schema to confirm the parent
+		// isn't a depot/gallery (those own their own subpath semantics).
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = ['mycard' => ['field' => 'card', '$ref' => 'https://www.totalcms.co/schemas/properties/card.json']];
+		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNested')
+			->with('test-collection', 'mycard', 'image')
+			->willReturn(['field' => 'image', 'type' => 'image']);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNestedSettings')
+			->with('test-collection', 'mycard', 'image')
+			->willReturn([]);
+
+		$saver = $this->saverFactory->generateSaverService(
+			'test-collection',
+			'mycard',
+			'',
+			'image', // subpath = child key
+		);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\ImageSaver::class, $saver);
+		$this->assertEquals('image', $saver->type);
+	}
+
+	public function testGenerateSaverServiceWithMultiSegmentSubpathUsesLastSegment(): void
+	{
+		// Phase 3 deck-style subpath: `item-3/image`. Factory should resolve the
+		// child type from the LAST segment ("image") — that's the actual field key.
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = ['mydeck' => ['field' => 'deck', '$ref' => 'https://www.totalcms.co/schemas/properties/deck.json']];
+		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNested')
+			->with('test-collection', 'mydeck', 'image')
+			->willReturn(['field' => 'file', 'type' => 'file']);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNestedSettings')
+			->willReturn([]);
+
+		$saver = $this->saverFactory->generateSaverService(
+			'test-collection',
+			'mydeck',
+			'',
+			'item-3/image',
+		);
+
+		$this->assertInstanceOf(FileSaver::class, $saver);
+		$this->assertEquals('file', $saver->type);
+	}
+
+	public function testGenerateSaverServiceWithSubpathOnDepotKeepsDepotSaver(): void
+	{
+		// Depot owns its `subpath` semantics — uploads to `?path=subfolder` should
+		// not be treated as nested-child resolution. The DepotSaver receives the
+		// subpath unchanged. Regression: this used to fall into the nested branch
+		// and throw `Parent property has no schemaref` for every depot-folder upload.
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = ['depot' => ['field' => 'depot', '$ref' => 'https://www.totalcms.co/schemas/properties/depot.json']];
+		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->mockMetaResolver->expects($this->never())->method('resolveNested');
+		$this->mockMetaResolver->expects($this->never())->method('resolveNestedSettings');
+
+		$saver = $this->saverFactory->generateSaverService(
+			'test-collection',
+			'depot',
+			'',
+			'subfolder',
+		);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\DepotSaver::class, $saver);
+		$this->assertEquals('depot', $saver->type);
+	}
+
+	public function testGenerateSaverServiceWithSubpathOnGalleryKeepsGallerySaver(): void
+	{
+		// Same exception as depot — gallery owns its own folder subpath.
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = ['photos' => ['field' => 'gallery', '$ref' => 'https://www.totalcms.co/schemas/properties/gallery.json']];
+		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->mockMetaResolver->expects($this->never())->method('resolveNested');
+
+		$saver = $this->saverFactory->generateSaverService(
+			'test-collection',
+			'photos',
+			'',
+			'2024/spring',
+		);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\GallerySaver::class, $saver);
+	}
 }

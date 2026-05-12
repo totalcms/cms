@@ -3,6 +3,7 @@
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middlewares\TrailingSlash;
+use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\Middleware\SessionStartMiddleware;
 use Odan\Session\PhpSession;
@@ -13,7 +14,6 @@ use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
-use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Encoder\JsonEncoder;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Selective\Validation\Transformer\ErrorDetailsResultTransformer;
@@ -33,6 +33,10 @@ use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Builder\Service\PageRouter;
+use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
@@ -58,6 +62,18 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\DataView\Service\DataViewRemover;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
+use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
+use TotalCMS\Domain\Event\Listener\DataViewListener;
+use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
+use TotalCMS\Domain\Event\Listener\IndexBuildListener;
+use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
+use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -127,16 +143,19 @@ use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Template\Service\TemplateMigrationService;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
@@ -157,6 +176,7 @@ use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
@@ -173,6 +193,7 @@ use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\BasePathMiddleware;
 use TotalCMS\Middleware\CacheInvalidationMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
@@ -196,6 +217,7 @@ use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\PathResolver;
 
 return [
 	// Application settings
@@ -270,8 +292,18 @@ return [
 
 	RouteParserInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getRouteCollector()->getRouteParser(),
 
-	// The logger factory
-	LoggerFactory::class => fn (ContainerInterface $container): LoggerFactory => new LoggerFactory($container->get(Config::class)->logger),
+	// The logger factory.
+	// The admin-controlled appLogLevel overrides the default level baked into
+	// $config['logger']['level'] so scattered addFileHandler('totalcms.log')
+	// callers pick up the user's choice without being individually rewired.
+	LoggerFactory::class => function (ContainerInterface $container): LoggerFactory {
+		$config            = $container->get(Config::class);
+		$settings          = $config->logger;
+		$fallback          = $settings['level'] instanceof Level ? $settings['level'] : Level::Info;
+		$settings['level'] = LoggerFactory::resolveLevel($config->appLogLevel, $fallback);
+
+		return new LoggerFactory($settings);
+	},
 
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container): StorageFilesystemAdapter {
@@ -394,6 +426,12 @@ return [
 		$container->get(PropertyMetaResolver::class),
 		$container->get(DataViewFilter::class),
 		$container->get(TranslationService::class),
+		$container->get(ExtensionDiscovery::class),
+		$container->get(ExtensionSettingsManager::class),
+		$container->get(ExtensionManager::class),
+		$container->get(TemplateLister::class),
+		$container->get(DevModeManager::class),
+		$container->get(TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -485,11 +523,21 @@ return [
 		$container->get(LogAnalyzer::class),
 		$container->get(ImageCacheService::class),
 		$container->get(CacheSizingAdvisor::class),
+		$container->get(UpdateChecker::class),
+		$container->get(BuilderConfigService::class),
+		$container->get(CollectionFetcher::class),
+	),
+
+	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
+		$container->get(BuilderConfigService::class),
+		$container->get(IndexReader::class),
+		$container->get(TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
+		$container->get(Config::class),
 	),
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
 		$container->get(Config::class),
-		dirname(__DIR__) . '/resources/translations',
+		PathResolver::packageRoot() . '/resources/translations',
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
@@ -506,6 +554,7 @@ return [
 		$container->get(MediaTwigAdapter::class),
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
+		$container->get(BuilderTwigAdapter::class),
 		new LocaleTwigAdapter($container->get(TranslationService::class)),
 		new UtilsTwigAdapter(),
 	),
@@ -724,6 +773,7 @@ return [
 		$container->get(Config::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(RedirectRenderer::class),
+		$container->get(PhpSession::class),
 		$container->get(LoggerFactory::class),
 	),
 
@@ -731,7 +781,6 @@ return [
 		$container->get(Config::class),
 		$container->get(TotalCMSTwigExtension::class),
 		$container->get(DevModeManager::class),
-		$container->get(EditionFeatureService::class),
 		$container->get(TemplateDesignerPreprocessor::class),
 		$container->get(TemplateDesignerSync::class),
 	),
@@ -803,6 +852,7 @@ return [
 		$container->get(WatermarkCleanupService::class),
 		$container->get(DevModeManager::class),
 		$container->get(CacheInvalidationSignal::class),
+		$container->get(EventDispatcher::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class)
 	),
@@ -816,7 +866,9 @@ return [
 		$container->get(CacheManager::class),
 	),
 
-	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),
+	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(
+		$container->get(EventDispatcher::class),
+	),
 
 	SchemaRepository::class => fn (ContainerInterface $container): SchemaRepository => new SchemaRepository(
 		$container->get(StorageAdapterInterface::class),
@@ -858,6 +910,7 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(LoggerFactory::class),
 		$container->get(PersistentLoginService::class),
+		$container->get(EventDispatcher::class),
 	),
 
 	// License Services
@@ -1190,5 +1243,169 @@ return [
 	SetupCheckMiddleware::class => fn (ContainerInterface $container): SetupCheckMiddleware => new SetupCheckMiddleware(
 		$container->get(Config::class),
 		$container->get(RedirectRenderer::class),
+		$container->get(SetupStateManager::class),
+	),
+
+	EventDispatcher::class => function (ContainerInterface $container): EventDispatcher {
+		$extLevel   = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
+		$dispatcher = new EventDispatcher(
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('events'),
+		);
+
+		// Register internal listeners with lazy resolution to avoid circular deps.
+		// Listeners are resolved from the container on first event dispatch, not at registration time.
+		$lazy = fn (string $class, string $method): Closure => function (array $payload) use ($container, $class, $method): void {
+			$container->get($class)->$method($payload);
+		};
+
+		// CollectionMetadataListener (priority -100 = before extensions)
+		$dispatcher->listen('object.created', $lazy(CollectionMetadataListener::class, 'onObjectCreated'), -100);
+		$dispatcher->listen('object.updated', $lazy(CollectionMetadataListener::class, 'onObjectUpdated'), -100);
+		$dispatcher->listen('object.deleted', $lazy(CollectionMetadataListener::class, 'onObjectDeleted'), -100);
+
+		// IndexBuildListener
+		$dispatcher->listen('object.created', $lazy(IndexBuildListener::class, 'onObjectCreated'), -100);
+		$dispatcher->listen('object.updated', $lazy(IndexBuildListener::class, 'onObjectUpdated'), -100);
+		$dispatcher->listen('object.deleted', $lazy(IndexBuildListener::class, 'onObjectDeleted'), -100);
+		$dispatcher->listen('schema.saved', $lazy(IndexBuildListener::class, 'onSchemaSaved'), -100);
+		$dispatcher->listen('import.completed', $lazy(IndexBuildListener::class, 'onImportCompleted'), -100);
+
+		// DataViewListener
+		$dispatcher->listen('object.created', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('object.updated', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('object.deleted', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+
+		// DeckFileCleanupListener — diff-on-save deletion of orphaned deck-item uploads
+		$dispatcher->listen('object.updated', $lazy(DeckFileCleanupListener::class, 'onObjectUpdated'), -100);
+
+		// CacheInvalidationListener
+		$dispatcher->listen('collection.created', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('collection.updated', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('collection.deleted', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('import.completed', $lazy(CacheInvalidationListener::class, 'onCollectionChanged'), -90);
+		$dispatcher->listen('schema.saved', $lazy(CacheInvalidationListener::class, 'onSchemaSaved'), -90);
+
+		// ReloadPulseListener — Builder live-reload
+		$dispatcher->listen('template.saved', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
+		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+
+		return $dispatcher;
+	},
+
+	TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Repository\ReloadPulseRepository => new TotalCMS\Domain\Builder\Repository\ReloadPulseRepository(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	TotalCMS\Domain\Builder\Service\BuilderReloadPulseService::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Service\BuilderReloadPulseService => new TotalCMS\Domain\Builder\Service\BuilderReloadPulseService(
+		$container->get(TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class),
+	),
+
+	TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
+		$container->get(TotalCMS\Domain\Builder\Service\BuilderReloadPulseService::class),
+		$container->get(BuilderConfigService::class),
+	),
+
+	// -------------------------------------------------------------------------
+	// Extensions
+	// -------------------------------------------------------------------------
+
+	ManifestValidator::class => fn (ContainerInterface $container): ManifestValidator => new ManifestValidator(
+		$container->get(EditionFeatureService::class),
+	),
+
+	ExtensionDependencySorter::class => fn (): ExtensionDependencySorter => new ExtensionDependencySorter(),
+
+	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	ExtensionStateRepository::class => fn (ContainerInterface $container): ExtensionStateRepository => new ExtensionStateRepository(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	ExtensionDiscovery::class => function (ContainerInterface $container): ExtensionDiscovery {
+		$extLevel = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
+
+		return new ExtensionDiscovery(
+			$container->get(Config::class),
+			$container->get(ManifestValidator::class),
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+		);
+	},
+
+	ExtensionManager::class => function (ContainerInterface $container): ExtensionManager {
+		$extLevel = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
+
+		return new ExtensionManager(
+			$container->get(ExtensionDiscovery::class),
+			$container->get(ExtensionStateRepository::class),
+			$container->get(ExtensionDependencySorter::class),
+			$container->get(ExtensionSettingsManager::class),
+			$container,
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+			$container->get(ManifestValidator::class),
+		);
+	},
+
+	TemplateMigrationService::class => fn (ContainerInterface $container): TemplateMigrationService => new TemplateMigrationService(
+		$container->get(StorageAdapterInterface::class),
+	),
+
+	// Builder
+	BuilderConfigService::class => fn (ContainerInterface $container): BuilderConfigService => new BuilderConfigService(
+		$container->get(Config::class),
+		$container->get(CollectionFetcher::class),
+	),
+
+	BuilderInstaller::class => fn (ContainerInterface $container): BuilderInstaller => new BuilderInstaller(
+		$container->get(BuilderConfigService::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionSaver::class),
+		$container->get(TemplateMigrationService::class),
+		$container->get(TemplateFetcher::class),
+		$container->get(TemplateSaver::class),
+	),
+
+	StarterService::class => fn (ContainerInterface $container): StarterService => new StarterService(
+		$container->get(BuilderConfigService::class),
+		$container->get(BuilderInstaller::class),
+		$container->get(TemplateLister::class),
+		$container->get(TemplateMigrationService::class),
+		$container->get(JumpStartImporter::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	PageRouter::class => fn (ContainerInterface $container): PageRouter => new PageRouter(
+		$container->get(BuilderConfigService::class),
+		$container->get(IndexReader::class),
+		$container->get(CollectionLister::class),
+		$container->get(ObjectUrlBuilder::class),
+		$container->get(ObjectFetcher::class),
+	),
+
+	// Per-page middleware infrastructure. Registry holds name → service-id
+	// mappings; runner consumes the registry. Core middleware are registered
+	// via the registry boot below; extensions register via ExtensionContext.
+	TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class => function (ContainerInterface $container): TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry {
+		$registry = new TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry(
+			$container,
+			$container->get(LoggerFactory::class),
+		);
+		// Core middleware. Names are stable contract — once shipped, don't
+		// rename without a deprecation cycle (sites have these in page records).
+		$registry->register('auth', TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class);
+
+		return $registry;
+	},
+
+	TotalCMS\Domain\Builder\Service\PageMiddlewareRunner::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Service\PageMiddlewareRunner => new TotalCMS\Domain\Builder\Service\PageMiddlewareRunner(
+		$container->get(TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware => new TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware(
+		$container->get(AccessManager::class),
+		$container->get(Config::class),
 	),
 ];

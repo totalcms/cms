@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // Development Environment
 // echo "DEV Environment\n";
 
@@ -31,7 +33,7 @@ $settings['timezone'] = 'America/Los_Angeles';
 $settings['debug'] = true;
 
 $settings['cache'] = [
-	'filesystem' => false,
+	'filesystem' => true,
 	'apcu'       => false,
 	'redis'      => false,
 	'memcached'  => false,

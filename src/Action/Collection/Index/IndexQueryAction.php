@@ -37,7 +37,7 @@ readonly class IndexQueryAction
 		$params     = $request->getQueryParams();
 		$format     = $params['format'] ?? 'json';
 		$result     = $this->queryService->query($collection, $params);
-		$baseUrl    = $this->config->api . '/collections/' . $collection . '/query';
+		$baseUrl    = $this->config->api . '/api/collections/' . $collection . '/query';
 
 		// Pass collection name for table format rendering
 		$params['_collection'] = $collection;

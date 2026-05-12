@@ -2,12 +2,17 @@
 
 namespace TotalCMS\Domain\Settings\Services;
 
+use TotalCMS\Support\PathResolver;
+
 /**
  * Fetches settings schemas for form building.
  */
 class SettingsSchemaFetcher
 {
-	private const SCHEMAS_PATH = __DIR__ . '/../../../../resources/schemas';
+	private function schemasPath(): string
+	{
+		return PathResolver::packageRoot() . '/resources/schemas';
+	}
 
 	/**
 	 * Request-level cache for schemas.
@@ -27,7 +32,7 @@ class SettingsSchemaFetcher
 			return $this->requestCache[$section];
 		}
 
-		$schemaPath = self::SCHEMAS_PATH . '/settings/' . $section . '.json';
+		$schemaPath = $this->schemasPath() . '/settings/' . $section . '.json';
 
 		if (!file_exists($schemaPath)) {
 			$this->requestCache[$section] = null;
@@ -71,7 +76,7 @@ class SettingsSchemaFetcher
 	 */
 	public function schemaExists(string $section): bool
 	{
-		$schemaPath = self::SCHEMAS_PATH . '/settings/' . $section . '.json';
+		$schemaPath = $this->schemasPath() . '/settings/' . $section . '.json';
 
 		return file_exists($schemaPath);
 	}

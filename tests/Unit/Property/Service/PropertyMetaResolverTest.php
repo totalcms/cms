@@ -438,4 +438,100 @@ describe('PropertyMetaResolver', function (): void {
 		expect($result['height'])->toBe(400);
 		expect($result['theme'])->toBe('dark');
 	});
+
+	// ==================== resolveNested() ====================
+
+	test('resolveNested returns child meta from parent schemaref', function (): void {
+		// Parent card field references a child schema by id.
+		$this->schemaData->properties = [
+			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
+		];
+
+		// Set up a separate child schema fetched by id.
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
+		$childSchema->properties = [
+			'image'   => ['field' => 'image', 'label' => 'Card Image'],
+			'caption' => ['field' => 'text', 'label' => 'Card Caption'],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($childSchema);
+
+		$resolver = createResolver($this);
+		$result   = $resolver->resolveNested('test-collection', 'mycard', 'image');
+
+		expect($result['field'])->toBe('image');
+		expect($result['label'])->toBe('Card Image');
+	});
+
+	test('resolveNested throws when parent has no schemaref', function (): void {
+		$this->schemaData->properties = [
+			'mycard' => ['field' => 'card'], // missing schemaref
+		];
+
+		$resolver = createResolver($this);
+
+		expect(fn (): array => $resolver->resolveNested('test-collection', 'mycard', 'image'))
+			->toThrow(UnexpectedValueException::class);
+	});
+
+	test('resolveNested throws when child property is not in the referenced schema', function (): void {
+		$this->schemaData->properties = [
+			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
+		];
+
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
+		$childSchema->properties = ['caption' => ['field' => 'text']];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($childSchema);
+
+		$resolver = createResolver($this);
+
+		expect(fn (): array => $resolver->resolveNested('test-collection', 'mycard', 'nonexistent'))
+			->toThrow(UnexpectedValueException::class);
+	});
+
+	test('resolveNestedSettings returns the child settings array', function (): void {
+		$this->schemaData->properties = [
+			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
+		];
+
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
+		$childSchema->properties = [
+			'image' => ['field' => 'image', 'settings' => ['extractExif' => false]],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($childSchema);
+
+		$resolver = createResolver($this);
+		$result   = $resolver->resolveNestedSettings('test-collection', 'mycard', 'image');
+
+		expect($result['extractExif'])->toBe(false);
+	});
+
+	test('resolveNested applies type-default preset to child settings', function (): void {
+		$this->config->presets = [
+			'image' => ['extractPalette' => true, 'extractExif' => true],
+		];
+		$this->schemaData->properties = [
+			'mycard' => ['field' => 'card', 'schemaref' => 'card-schema'],
+		];
+
+		$childSchema             = new SchemaData();
+		$childSchema->id         = 'card-schema';
+		$childSchema->properties = [
+			// Child has no explicit settings — type-default preset applies.
+			'image' => ['field' => 'image'],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($childSchema);
+
+		$resolver = createResolver($this);
+		$result   = $resolver->resolveNestedSettings('test-collection', 'mycard', 'image');
+
+		expect($result['extractPalette'])->toBe(true);
+		expect($result['extractExif'])->toBe(true);
+	});
 });

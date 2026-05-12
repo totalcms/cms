@@ -32,7 +32,7 @@ final class APCuIntegrationTest extends TestCase
 		$opcacheService    = new OPcacheService();
 		$redisService      = new RedisService($this->config);
 		$memcachedService  = new MemcachedService($this->config);
-		$devModeManager    = new DevModeManager();
+		$devModeManager    = new DevModeManager(new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()));
 
 		// Create WatermarkCleanupService for cache cleanup testing
 		$mockStorage                = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
@@ -50,6 +50,7 @@ final class APCuIntegrationTest extends TestCase
 			$watermarkCleanupService,
 			$devModeManager,
 			$invalidationSignal,
+			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
 			$this->config,
 			$mockLoggerFactoryForCache
 		);

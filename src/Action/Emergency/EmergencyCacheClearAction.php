@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Emergency;
 
 use Psr\Http\Message\ResponseInterface;

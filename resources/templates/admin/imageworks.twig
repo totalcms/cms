@@ -48,6 +48,8 @@
 
 	{% set id         = getData.id  %}
 	{% set collection = getData.collection | default("image") %}
+	{# `property` is a dot-notation path: `image` (top-level), `mycard.image`
+	   (card child), `mydeck.item-3.image` (deck child). #}
 	{% set property   = getData.property | default("image") %}
 	{% set name       = getData.name %}
 	{% set values     = getData %}
@@ -127,8 +129,17 @@
 					{% set imagePath = cms.media.galleryPath(gallery, name, values, {collection: collection, property: property}) %}
 					{% set imageData = cms.media.galleryImageData(gallery, name, {collection: collection, property: property}) %}
 				{% else %}
+					{# `property` is a dot-notation path; cms.media.imagePath descends
+					   accordingly. For nested data lookup, walk the same path on the
+					   object (Twig `attribute()` lets us read keys with hyphens). #}
 					{% set imagePath = cms.media.imagePath(id, values, {collection: collection, property: property}) %}
-					{% set imageData = cms.data.raw(collection, id, property) %}
+					{% set imageData = cms.collection.object(collection, id) %}
+					{% for segment in property | split('.') %}
+						{% set imageData = imageData ? attribute(imageData, segment) : null %}
+					{% endfor %}
+					{% if imageData is null %}
+						{% set imageData = {} %}
+					{% endif %}
 				{% endif %}
 
 				<img src="{{ imagePath }}"
@@ -142,6 +153,8 @@
 
 						{% if name %}
 						<pre id="twig-macro">&#123;&#123; cms.media.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
+						{% elseif '.' in property %}
+						<pre id="twig-macro">&#123;&#123; cms.media.imagePath("{{id}}", {}, {property: "{{property}}"}) &#125;&#125;</pre>
 						{% else %}
 						<pre id="twig-macro">&#123;&#123; cms.media.imagePath("{{id}}") &#125;&#125;</pre>
 						{% endif %}
@@ -149,6 +162,8 @@
 
 						{% if name %}
 						<pre id="twig-render-macro">&#123;&#123; cms.render.galleryImage("{{id}}", "{{name}}") &#125;&#125;</pre>
+						{% elseif '.' in property %}
+						<pre id="twig-render-macro">&#123;&#123; cms.render.image("{{id}}", {}, {property: "{{property}}"}) &#125;&#125;</pre>
 						{% else %}
 						<pre id="twig-render-macro">&#123;&#123; cms.render.image("{{id}}") &#125;&#125;</pre>
 						{% endif %}

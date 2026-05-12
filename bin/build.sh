@@ -40,47 +40,47 @@ if [ $? -ne 0 ]; then
 fi
 
 # remove imagine libs that are not required and take up too much space
-find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -not -name '*.xsl' -type f -delete
-find vendor -name "*phpstorm*" -delete
-find vendor -empty -type d -delete
-find vendor -name bin -type d | xargs rm -rf
-find vendor -name test -type d | xargs rm -rf
+# find vendor -not -name '*.php' -not -name '*.pem' -not -name '*.json' -not -name '*.xsl' -type f -delete
+# find vendor -name "*phpstorm*" -delete
+# find vendor -empty -type d -delete
+# find vendor -name bin -type d | xargs rm -rf
+# find vendor -name test -type d | xargs rm -rf
 
 # Enhanced cleanup for smaller distribution
-echo "Performing enhanced vendor cleanup..."
-find vendor -name "tests" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "Tests" -type d -exec rm -rf {} + 2>/dev/null
-# Only remove PHPUnit test files, not core library classes
-find vendor -path "*/tests/*" -name "*.php" -type f -delete 2>/dev/null
-find vendor -path "*/Tests/*" -name "*.php" -type f -delete 2>/dev/null
-find vendor -name "phpunit*" -type f -delete
-find vendor -name "docs" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "doc" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "examples" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "demo" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name "samples" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name ".php-cs-fixer*" -delete
-find vendor -name ".cs.php" -delete
-find vendor -name "phpcs.xml*" -delete
-find vendor -name "phpunit.xml*" -delete
-find vendor -name "rector.php" -delete
-find vendor -name "psalm.xml*" -delete
-find vendor -name "phpstan.neon*" -delete
-find vendor -name ".github" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name ".circleci" -type d -exec rm -rf {} + 2>/dev/null
-find vendor -name ".travis.yml" -delete
-find vendor -name ".scrutinizer.yml" -delete
-find vendor -name "CHANGELOG*" -delete
-find vendor -name "CHANGES*" -delete
-find vendor -name "UPGRADE*" -delete
-find vendor -name "HISTORY*" -delete
-find vendor -name "NEWS*" -delete
-find vendor -name "composer.lock" -delete
-find vendor -name "composer.json" -delete
-find vendor -name ".gitignore" -delete
-find vendor -name ".gitattributes" -delete
-find vendor -name ".editorconfig" -delete
-find vendor -empty -type d -delete 2>/dev/null
+# echo "Performing enhanced vendor cleanup..."
+# find vendor -name "tests" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "Tests" -type d -exec rm -rf {} + 2>/dev/null
+# # Only remove PHPUnit test files, not core library classes
+# find vendor -path "*/tests/*" -name "*.php" -type f -delete 2>/dev/null
+# find vendor -path "*/Tests/*" -name "*.php" -type f -delete 2>/dev/null
+# find vendor -name "phpunit*" -type f -delete
+# find vendor -name "docs" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "doc" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "examples" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "demo" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name "samples" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name ".php-cs-fixer*" -delete
+# find vendor -name ".cs.php" -delete
+# find vendor -name "phpcs.xml*" -delete
+# find vendor -name "phpunit.xml*" -delete
+# find vendor -name "rector.php" -delete
+# find vendor -name "psalm.xml*" -delete
+# find vendor -name "phpstan.neon*" -delete
+# find vendor -name ".github" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name ".circleci" -type d -exec rm -rf {} + 2>/dev/null
+# find vendor -name ".travis.yml" -delete
+# find vendor -name ".scrutinizer.yml" -delete
+# find vendor -name "CHANGELOG*" -delete
+# find vendor -name "CHANGES*" -delete
+# find vendor -name "UPGRADE*" -delete
+# find vendor -name "HISTORY*" -delete
+# find vendor -name "NEWS*" -delete
+# find vendor -name "composer.lock" -delete
+# find vendor -name "composer.json" -delete
+# find vendor -name ".gitignore" -delete
+# find vendor -name ".gitattributes" -delete
+# find vendor -name ".editorconfig" -delete
+# find vendor -empty -type d -delete 2>/dev/null
 
 # Trim symfony/intl locale data to supported locales only
 # Only keep exact base locales and specific sub-locales from settings/general.json
@@ -122,9 +122,6 @@ rm -rf vendor/ssnepenthe/color-utils
 echo "Building documentation search index..."
 php bin/build-docs-index.php
 
-# generate bundle to verify installation
-php bin/make-bundle.php
-
 # move required files to dist
 echo "Moving required files to dist..."
 rm -rf dist
@@ -142,13 +139,20 @@ rm -rf dist/public/false
 echo "Installing all required composer packages back for dev environment..."
 composer install --quiet
 
-# remove write permissions from all files
-find dist/resources -type f -exec chmod 444 {} +
-
-# Ensure this does not get shipped
+# Ensure these do not get shipped
 rm -f dist/resources/.bundle
 rm -f dist/resources/jobqueue
 rm -f dist/resources/bin/.processJobs
+rm -f dist/config/local.dev.php
+rm -f dist/config/local.test.php
+
+# Generate bundle hash against the final dist (after all cleanup)
+echo "Generating bundle integrity hash..."
+php bin/make-bundle.php dist
+
+# remove write permissions from all files
+find dist/resources -type f -exec chmod 444 {} +
+chmod +x dist/resources/bin/tcms
 
 # Handle version.json
 if [ $RELEASE -eq 1 ]; then
@@ -177,7 +181,10 @@ else
         COMMITS="0"
         BUILD=$(git rev-parse --short HEAD)
     fi
-    php bin/generate-version.php "$VERSION" "$BUILD" version.json "$COMMITS"
+    if ! php bin/generate-version.php "$VERSION" "$BUILD" version.json "$COMMITS"; then
+        echo "ERROR: Failed to generate version.json"
+        exit 1
+    fi
     cp version.json dist
     echo "Beta build for v$VERSION ($BUILD) is complete."
 fi

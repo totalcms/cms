@@ -294,13 +294,16 @@ class FileSaverTest extends TestCase
 		$this->assertInstanceOf(ObjectData::class, $result);
 	}
 
-	public function testSaveIgnoresSubpathParameter(): void
+	public function testSaveWithSubpathPassesItThroughToStorageAndDeepPatchesObject(): void
 	{
+		// Phase 2: card-nested file save. FileSaver must now thread the subpath
+		// through disk operations (so siblings aren't wiped) AND deep-patch the
+		// JSON via patchNestedProperty (so siblings aren't overwritten).
 		$collection = 'test-collection';
 		$objectID   = 'test-object';
-		$property   = 'document';
+		$property   = 'mycard';
+		$childKey   = 'mydoc';
 		$filePath   = '/tmp/test.pdf';
-		$subpath    = 'some/path'; // Should be ignored for FileSaver
 
 		$this->mockObjectFetcher->expects($this->once())
 			->method('existsObject')
@@ -310,19 +313,20 @@ class FileSaverTest extends TestCase
 			->method('saveObject');
 
 		$this->mockStorage->expects($this->once())
-			->method('deleteDirectory');
+			->method('deleteDirectory')
+			->with($collection, $objectID, $property, null, $childKey);
 
-		// Save file should be called without subpath (only 4 parameters)
 		$this->mockStorage->expects($this->once())
 			->method('saveFile')
-			->with($collection, $objectID, $property, $filePath)
+			->with($collection, $objectID, $property, $filePath, $childKey)
 			->willReturn(['name' => 'test.pdf']);
 
 		$this->mockObjectPatcher->expects($this->once())
-			->method('patchObject')
+			->method('patchNestedProperty')
+			->with($collection, $objectID, $property, $childKey, $this->isType('array'))
 			->willReturn(new ObjectData($objectID, []));
 
-		$result = $this->fileSaver->save($collection, $objectID, $property, $filePath, $subpath);
+		$result = $this->fileSaver->save($collection, $objectID, $property, $filePath, $childKey);
 		$this->assertInstanceOf(ObjectData::class, $result);
 	}
 }

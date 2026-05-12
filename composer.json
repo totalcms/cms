@@ -1,6 +1,6 @@
 {
-  "name": "joeworkman/totalcms",
-  "type": "project",
+  "name": "totalcms/cms",
+  "type": "library",
   "description": "Total CMS",
   "keywords": [
     "total-cms",
@@ -60,6 +60,7 @@
     "slim/psr7": "^1.5",
     "slim/slim": "^4",
     "slim/twig-view": "^3.3",
+    "symfony/console": "^7.4",
     "symfony/polyfill-uuid": "^1.23",
     "symfony/property-access": "^7.1",
     "symfony/serializer": "^7.1",
@@ -105,6 +106,7 @@
       "php": "8.2.0"
     }
   },
+  "bin": ["resources/bin/tcms"],
   "autoload": {
     "psr-4": {
       "TotalCMS\\": "src/"

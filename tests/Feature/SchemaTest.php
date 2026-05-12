@@ -21,7 +21,7 @@ function schemaTestData(): array
 it('saves a new schema', function (): void {
 	$schema = schemaTestData();
 	$id     = $schema['id'];
-	postJson('/schemas', $schema)
+	postJson('/api/schemas', $schema)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -38,7 +38,7 @@ it('cannot save a reserved schema', function (): void {
 	expect($reservedSchemas)->toBeArray()->not->toBeEmpty();
 	foreach ($reservedSchemas as $schema) {
 		$json     = file_get_contents($schema);
-		$response = postJson('/schemas', json_decode($json, true));
+		$response = postJson('/api/schemas', json_decode($json, true));
 
 		// Debug output
 		if ($response->getStatusCode() !== 400) {
@@ -55,7 +55,7 @@ it('cannot save a reserved schema', function (): void {
 it('fetches a schema', function (): void {
 	$schema = schemaTestData();
 	$id     = $schema['id'];
-	get("/schemas/$id")
+	get("/api/schemas/$id")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -66,19 +66,19 @@ it('fetches a schema', function (): void {
 });
 
 it('gets all available schemas', function (): void {
-	get('/schemas')
+	get('/api/schemas')
 		->assertOk()
 		->assertJson();
 });
 
 it('gets all reserved schemas', function (): void {
-	get('/schemas?filter=reserved')
+	get('/api/schemas?filter=reserved')
 		->assertOk()
 		->assertJson();
 });
 
 it('gets all custom schemas', function (): void {
-	get('/schemas?filter=custom')
+	get('/api/schemas?filter=custom')
 		->assertOk()
 		->assertJson();
 });
@@ -87,7 +87,7 @@ it('can delete custom schemas', function (): void {
 	$schema = schemaTestData();
 	$id     = $schema['id'];
 
-	delete("/schemas/$id")
+	delete("/api/schemas/$id")
 		->assertOk();
 
 	$this->assertFileDoesNotExist(schemaPath($id));
@@ -134,7 +134,7 @@ it('converts string boolean defaults to actual booleans when saving schema', fun
 		'index'       => [],
 	];
 
-	postJson('/schemas', $schema)->assertOk()->assertJson();
+	postJson('/api/schemas', $schema)->assertOk()->assertJson();
 
 	// Read the saved schema file to verify boolean conversion
 	$savedFile    = schemaPath($schema['id']);
@@ -165,5 +165,5 @@ it('converts string boolean defaults to actual booleans when saving schema', fun
 	expect($savedContent['properties']['numericZero']['default'])->toBeFalse();
 
 	// Clean up
-	delete("/schemas/{$schema['id']}")->assertOk();
+	delete("/api/schemas/{$schema['id']}")->assertOk();
 });

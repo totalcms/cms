@@ -509,6 +509,20 @@ export default class TiptapEditor {
 		return config;
 	}
 
+	/**
+	 * Toggle the upload-disabled state on the editor container based on whether
+	 * the upload URL resolves to a valid value right now. When disabled, CSS
+	 * dims the image/file/video toolbar buttons so the user knows uploads are
+	 * not available until the form (or deck item) is saved.
+	 */
+	updateUploadEnabled() {
+		if (!this.container) return;
+		const url = typeof this.options.uploadUrl === 'function'
+			? this.options.uploadUrl()
+			: this.options.uploadUrl;
+		this.container.classList.toggle('ste-uploads-disabled', !url);
+	}
+
 	destroy() {
 		if (this._escHandler) {
 			document.removeEventListener('keydown', this._escHandler);

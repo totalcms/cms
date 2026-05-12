@@ -118,4 +118,38 @@ final class SchemaDataTransformationTest extends TestCase
 			$array['properties']['updates']['patternProperties']['^[a-zA-Z]\\w*$']['$ref']
 		);
 	}
+
+	/**
+	 * Canonical-path coverage: same transform behavior when properties use the new
+	 * `schemaref` key. Verifies that a freshly authored schema works without depending
+	 * on the legacy alias.
+	 */
+	public function testSchemaDataTransformsDeckSyntaxUsingSchemaRef(): void
+	{
+		$properties = [
+			'features' => [
+				'field'     => 'deck',
+				'schemaref' => 'https://www.totalcms.co/schemas/custom/features.json',
+				'$ref'      => 'https://www.totalcms.co/schemas/properties/deck.json',
+			],
+		];
+
+		$schema              = new SchemaData();
+		$schema->id          = 'testschema';
+		$schema->description = 'Schema with canonical schemaref';
+		$schema->properties  = $properties;
+		$schema->required    = [];
+		$schema->index       = [];
+
+		$array = $schema->toArray();
+
+		$featuresProperty = $array['properties']['features'];
+
+		$this->assertArrayHasKey('patternProperties', $featuresProperty);
+		$this->assertArrayHasKey('schemaref', $featuresProperty);
+		$this->assertEquals(
+			'https://www.totalcms.co/schemas/custom/features.json',
+			$featuresProperty['patternProperties']['^[a-zA-Z]\\w*$']['$ref']
+		);
+	}
 }

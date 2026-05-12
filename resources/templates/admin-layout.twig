@@ -34,7 +34,7 @@
 
 	{% include 'partials/sentry.twig' %}
 
-    <base href="{{ cms.api }}/admin/">
+    {% if url.page is defined and url.page != 'setup' %}<base href="{{ cms.dashboard }}/">{% endif %}
 	<link rel="modulepreload" href="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/icons.css?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css?v={{ cms.version }}"/>
@@ -47,17 +47,17 @@
 	{% endif %}
 
 	{% block head %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
 </head>
-<body>
+<body{% if cms.config('dashboard', 'fullWidthForms') %} class="full-width-forms"{% endif %}>
     {% block content %}{% endblock %}
 
 	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 
 	{% block bodyBelow %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 	{% endif %}
 </body>

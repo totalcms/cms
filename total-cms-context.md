@@ -344,9 +344,9 @@ JSON-based RESTful API for headless CMS use.
 - `GET /api/schemas/{name}` — schema definition
 
 ### File Access
-- `/api/download/{collection}/{id}/{property}` — force download
-- `/api/stream/{collection}/{id}/{property}` — inline streaming
-- `/api/imageworks/{collection}/{id}/{property}.{format}` — processed images
+- `/download/{collection}/{id}/{property}` — force download
+- `/stream/{collection}/{id}/{property}` — inline streaming
+- `/imageworks/{collection}/{id}/{property}.{format}` — processed images
 
 ### Features
 - Rate limiting with headers

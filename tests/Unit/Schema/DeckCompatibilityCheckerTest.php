@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Schema;
 
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -50,18 +52,20 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$this->assertEmpty($this->checker->getIncompatibleProperties($schema));
 	}
 
-	public function testIncompatibleSchemaWithImageType(): void
+	public function testCompatibleSchemaWithImageType(): void
 	{
+		// Phase 2 added nested-upload support for `image` inside cards (and Phase 3
+		// extends to decks), so `image` is now allowed in deck/card schemas.
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
-				'photo' => ['type' => 'image'], // Incompatible
+				'photo' => ['type' => 'image'],
 			],
 		];
 
-		$this->assertFalse($this->checker->isCompatible($schema));
-		$this->assertSame(['photo'], $this->checker->getIncompatibleProperties($schema));
+		$this->assertTrue($this->checker->isCompatible($schema));
+		$this->assertEmpty($this->checker->getIncompatibleProperties($schema));
 	}
 
 	public function testIncompatibleSchemaWithGalleryType(): void
@@ -78,18 +82,19 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$this->assertSame(['photos'], $this->checker->getIncompatibleProperties($schema));
 	}
 
-	public function testIncompatibleSchemaWithFileType(): void
+	public function testCompatibleSchemaWithFileType(): void
 	{
+		// Same as image — Phase 2 added nested-upload support for `file`.
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
 				'title'      => ['type' => 'string'],
-				'attachment' => ['type' => 'file'], // Incompatible
+				'attachment' => ['type' => 'file'],
 			],
 		];
 
-		$this->assertFalse($this->checker->isCompatible($schema));
-		$this->assertSame(['attachment'], $this->checker->getIncompatibleProperties($schema));
+		$this->assertTrue($this->checker->isCompatible($schema));
+		$this->assertEmpty($this->checker->getIncompatibleProperties($schema));
 	}
 
 	public function testIncompatibleSchemaWithDepotType(): void
@@ -106,18 +111,18 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$this->assertSame(['document'], $this->checker->getIncompatibleProperties($schema));
 	}
 
-	public function testIncompatibleSchemaWithImageRef(): void
+	public function testCompatibleSchemaWithImageRef(): void
 	{
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
-				'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'], // Incompatible
+				'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
 			],
 		];
 
-		$this->assertFalse($this->checker->isCompatible($schema));
-		$this->assertSame(['photo'], $this->checker->getIncompatibleProperties($schema));
+		$this->assertTrue($this->checker->isCompatible($schema));
+		$this->assertEmpty($this->checker->getIncompatibleProperties($schema));
 	}
 
 	public function testIncompatibleSchemaWithGalleryRef(): void
@@ -134,18 +139,18 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$this->assertSame(['photos'], $this->checker->getIncompatibleProperties($schema));
 	}
 
-	public function testIncompatibleSchemaWithFileRef(): void
+	public function testCompatibleSchemaWithFileRef(): void
 	{
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
 				'title'      => ['type' => 'string'],
-				'attachment' => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json'], // Incompatible
+				'attachment' => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json'],
 			],
 		];
 
-		$this->assertFalse($this->checker->isCompatible($schema));
-		$this->assertSame(['attachment'], $this->checker->getIncompatibleProperties($schema));
+		$this->assertTrue($this->checker->isCompatible($schema));
+		$this->assertEmpty($this->checker->getIncompatibleProperties($schema));
 	}
 
 	public function testIncompatibleSchemaWithDepotRef(): void
@@ -196,18 +201,20 @@ final class DeckCompatibilityCheckerTest extends TestCase
 			'type'       => 'object',
 			'properties' => [
 				'title'       => ['type' => 'string'],
-				'photo'       => ['type' => 'image'], // Incompatible
+				'photo'       => ['type' => 'image'], // Compatible (Phase 2)
 				'gallery'     => ['type' => 'gallery'], // Incompatible
-				'document'    => ['type' => 'file'], // Incompatible
+				'document'    => ['type' => 'file'], // Compatible (Phase 2)
+				'archive'     => ['type' => 'depot'], // Incompatible
 				'description' => ['type' => 'string'], // Compatible
 			],
 		];
 
 		$this->assertFalse($this->checker->isCompatible($schema));
 		$incompatible = $this->checker->getIncompatibleProperties($schema);
-		$this->assertContains('photo', $incompatible);
 		$this->assertContains('gallery', $incompatible);
-		$this->assertContains('document', $incompatible);
+		$this->assertContains('archive', $incompatible);
+		$this->assertNotContains('photo', $incompatible);
+		$this->assertNotContains('document', $incompatible);
 		$this->assertNotContains('title', $incompatible);
 		$this->assertNotContains('description', $incompatible);
 	}
@@ -221,8 +228,8 @@ final class DeckCompatibilityCheckerTest extends TestCase
 				'metadata' => [
 					'type'       => 'object',
 					'properties' => [
-						'name'  => ['type' => 'string'],
-						'photo' => ['type' => 'image'], // Incompatible nested property
+						'name'    => ['type' => 'string'],
+						'gallery' => ['type' => 'gallery'], // Incompatible nested property
 					],
 				],
 			],
@@ -237,16 +244,16 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
-				'title'  => ['type' => 'string'],
-				'photos' => [
+				'title'    => ['type' => 'string'],
+				'archives' => [
 					'type'  => 'array',
-					'items' => ['type' => 'image'], // Incompatible array items
+					'items' => ['type' => 'depot'], // Incompatible array items
 				],
 			],
 		];
 
 		$this->assertFalse($this->checker->isCompatible($schema));
-		$this->assertSame(['photos'], $this->checker->getIncompatibleProperties($schema));
+		$this->assertSame(['archives'], $this->checker->getIncompatibleProperties($schema));
 	}
 
 	public function testComplexCompatibleSchema(): void
@@ -280,7 +287,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testGetIncompatibleTypes(): void
 	{
 		$types    = $this->checker->getIncompatibleTypes();
-		$expected = ['image', 'gallery', 'file', 'depot', 'deck'];
+		$expected = ['gallery', 'depot', 'deck'];
 
 		$this->assertSame($expected, $types);
 	}
@@ -358,14 +365,16 @@ final class DeckCompatibilityCheckerTest extends TestCase
 			'type'       => 'object',
 			'properties' => [
 				'title'   => ['type' => 'string'],
-				'photo'   => ['type' => 'image'],
-				'gallery' => ['type' => 'gallery'],
+				'photo'   => ['type' => 'image'],   // compatible
+				'gallery' => ['type' => 'gallery'], // incompatible
+				'archive' => ['type' => 'depot'],   // incompatible
 			],
 		];
 
 		$incompatibleTypes = $this->checker->getSchemaIncompatibleTypes($schema);
-		$this->assertContains('image', $incompatibleTypes);
 		$this->assertContains('gallery', $incompatibleTypes);
+		$this->assertContains('depot', $incompatibleTypes);
+		$this->assertNotContains('image', $incompatibleTypes);
 		$this->assertCount(2, $incompatibleTypes);
 	}
 
@@ -374,15 +383,17 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
-				'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
-				'files' => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json'],
+				'title'   => ['type' => 'string'],
+				'photo'   => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],   // compatible
+				'gallery' => ['$ref' => 'https://www.totalcms.co/schemas/properties/gallery.json'], // incompatible
+				'archive' => ['$ref' => 'https://www.totalcms.co/schemas/properties/depot.json'],   // incompatible
 			],
 		];
 
 		$incompatibleTypes = $this->checker->getSchemaIncompatibleTypes($schema);
-		$this->assertContains('image', $incompatibleTypes);
-		$this->assertContains('file', $incompatibleTypes);
+		$this->assertContains('gallery', $incompatibleTypes);
+		$this->assertContains('depot', $incompatibleTypes);
+		$this->assertNotContains('image', $incompatibleTypes);
 		$this->assertCount(2, $incompatibleTypes);
 	}
 
@@ -403,14 +414,14 @@ final class DeckCompatibilityCheckerTest extends TestCase
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
-				'photo1' => ['type' => 'image'],
-				'photo2' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
-				'photo3' => ['type' => 'image'], // Duplicate type
+				'gallery1' => ['type' => 'gallery'],
+				'gallery2' => ['$ref' => 'https://www.totalcms.co/schemas/properties/gallery.json'],
+				'gallery3' => ['type' => 'gallery'], // Duplicate type
 			],
 		];
 
 		$incompatibleTypes = $this->checker->getSchemaIncompatibleTypes($schema);
-		$this->assertSame(['image'], $incompatibleTypes);
+		$this->assertSame(['gallery'], $incompatibleTypes);
 		$this->assertCount(1, $incompatibleTypes);
 	}
 }

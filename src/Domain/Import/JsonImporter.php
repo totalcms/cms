@@ -5,7 +5,9 @@ namespace TotalCMS\Domain\Import;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Listener\IndexBuildListener;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -21,7 +23,8 @@ class JsonImporter
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectImporter $objectImporter,
-		private readonly IndexBuilder $indexBuilder,
+		private readonly IndexBuildListener $indexBuildListener,
+		private readonly EventDispatcher $eventDispatcher,
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -51,7 +54,12 @@ class JsonImporter
 			throw new \InvalidArgumentException($error);
 		}
 
+		// Suspend per-object index rebuilds during batch import
+		$this->indexBuildListener->suspendForCollection($collection);
+
 		$importCount = 0;
+		$createdIds  = [];
+		$updatedIds  = [];
 
 		foreach ($records as $offset => $record) {
 			try {
@@ -59,7 +67,13 @@ class JsonImporter
 					$this->updateObject($record) :
 					$this->importNewObject($record);
 
-				if ($imported) {
+				if ($imported && isset($record['id'])) {
+					$id = (string)$record['id'];
+					if ($updateObject) {
+						$updatedIds[] = $id;
+					} else {
+						$createdIds[] = $id;
+					}
 					$importCount++;
 				}
 			} catch (\Exception $exception) {
@@ -69,8 +83,8 @@ class JsonImporter
 			}
 		}
 
-		// Rebuild index
-		$this->indexBuilder->buildIndex($collection);
+		// Single index rebuild at end of import
+		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
 
 		return $importCount;
 	}

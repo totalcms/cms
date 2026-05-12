@@ -7,15 +7,19 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Renderer\TwigRenderer;
 
 readonly class AdminUtilsAction
@@ -26,11 +30,15 @@ readonly class AdminUtilsAction
 		private TwigLintService $twigLintService,
 		private ApiKeyFetcher $apiKeyFetcher,
 		private AccessGroupLister $accessGroupLister,
-		private CollectionRepository $collectionRepository,
+		private CollectionLister $collectionLister,
 		private CollectionFetcher $collectionFetcher,
+		private BuilderInstaller $builderInstaller,
 		private SchemaLister $schemaLister,
 		private RssImporter $rssImporter,
 		private EditionFeatureService $editionFeatures,
+		private SettingsFetcher $settingsFetcher,
+		private TemplateLister $templateLister,
+		private UpdateChecker $updateChecker,
 	) {
 	}
 
@@ -125,6 +133,27 @@ readonly class AdminUtilsAction
 			}
 		}
 
+		// Update utility data
+		$updateInfo = null;
+		if ($page === 'update') {
+			$forceCheck = ($query['check'] ?? '') === '1';
+			try {
+				$updateInfo = $this->updateChecker->checkForUpdate($forceCheck);
+			} catch (\Throwable) {
+				// Silently fail — update check is not critical
+			}
+		}
+
+		// Sync utility data
+		$syncData = null;
+		if ($page === 'sync') {
+			$syncData = [
+				'settings'  => $this->settingsFetcher->loadSection('sync'),
+				'schemas'   => $this->schemaLister->listCustomSchemas(),
+				'templates' => $this->templateLister->listBuilderTemplates(null, true),
+			];
+		}
+
 		// Handle twig-debugger page
 		$lintResults = null;
 		if ($page === 'twig-debugger') {
@@ -160,7 +189,10 @@ readonly class AdminUtilsAction
 			'lintResults'            => $lintResults,
 			'rssAnalysis'            => $rssAnalysis,
 			'rssError'               => $rssError,
-			'rssCollections'         => $rssAnalysis !== null ? $this->collectionRepository->listAllCollections() : null,
+			'rssCollections'         => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
+			'updateInfo'             => $updateInfo,
+			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
+			'syncData'               => $syncData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
@@ -207,7 +239,7 @@ readonly class AdminUtilsAction
 
 		return [
 			'groups'      => $this->accessGroupLister->listAll(),
-			'collections' => $this->collectionRepository->listAllCollections(),
+			'collections' => $this->collectionLister->listAllCollections(),
 			'schemas'     => $this->schemaLister->listAllSchemas(),
 			'group'       => $isEdit ? $this->accessGroupLister->findById($action) : '',
 			'isEdit'      => $isEdit,
@@ -221,12 +253,15 @@ readonly class AdminUtilsAction
 	private function createDefaultCollections(): void
 	{
 		foreach (SchemaData::RESERVED_SCHEMAS as $schemaId) {
-			// Skip blog-legacy schema
-			if ($schemaId === 'blog-legacy') {
+			// Skip schemas that don't map 1:1 to a collection
+			if ($schemaId === 'blog-legacy' || $schemaId === 'builder-page') {
 				continue;
 			}
 			$this->collectionFetcher->fetchOrCreateReserved($schemaId);
 		}
+
+		// Builder pages collection uses a different collection ID than schema ID
+		$this->builderInstaller->ensurePagesCollection();
 	}
 
 	/**
@@ -234,7 +269,7 @@ readonly class AdminUtilsAction
 	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
-	 * @return array{success: bool, error?: array{message: string, line: int, context: string}, file: string}
+	 * @return array<string,mixed>
 	 */
 	private function lintTwigFile(string $relativePath): array
 	{
@@ -274,6 +309,6 @@ readonly class AdminUtilsAction
 			];
 		}
 
-		return $this->twigLintService->lintFile($realPath);
+		return $this->twigLintService->lintFile($realPath)->toArray();
 	}
 }

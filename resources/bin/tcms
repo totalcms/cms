@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+ini_set('memory_limit', '512M');
+
+// Prefer the autoload path Composer's bin proxy hands us — it points at
+// the consuming project's vendor/, which matters for two cases:
+//   1. Standard Composer installs: vendor/bin/tcms wraps this script and
+//      sets _composer_autoload_path to <project>/vendor/autoload.php.
+//   2. Path-repo / symlinked dev installs: __DIR__ resolves THROUGH the
+//      symlink to the source repo, so __DIR__/../../vendor/autoload.php
+//      points at the source repo's vendor instead of the project's. The
+//      proxy global is the only reliable signal of where we actually are.
+// Falls back to the relative path for direct invocation in the source
+// repo (e.g. running bin/tcms during dev).
+$autoloadPath = $GLOBALS['_composer_autoload_path'] ?? __DIR__ . '/../../vendor/autoload.php';
+require $autoloadPath;
+
+// PathResolver needs TCMS_PROJECT_ROOT to find writable dirs (cache/,
+// tmp/, logs/, tcms-data/). Without it, the CLI would write to the
+// package root — which for a symlinked install is the source repo, not
+// the consuming project. Derive it from autoload.php's parent: the
+// autoload always lives at <root>/vendor/autoload.php.
+if (!defined('TCMS_PROJECT_ROOT')) {
+	// realpath() collapses any `..` segments — Composer's bin proxy sets
+	// _composer_autoload_path to `<bindir>/../autoload.php`, which dirname
+	// alone won't normalize (so TCMS_PROJECT_ROOT would end up at
+	// `<project>/vendor/bin` instead of `<project>`).
+	$resolvedAutoload = realpath($autoloadPath);
+	define('TCMS_PROJECT_ROOT', dirname($resolvedAutoload !== false ? $resolvedAutoload : $autoloadPath, 2));
+}
+
+\TotalCMS\CLI\CliApplication::run();

@@ -5,10 +5,19 @@ use TotalCMS\Domain\Settings\Services\SettingsSaver;
 // Defaults
 $settings = require __DIR__ . '/defaults.php';
 
-// This is used to keep stacks integration working
-// Make sure this always comes before the env settings though or Stacks preview may break
-if (file_exists(__DIR__ . '/tcms.php')) {
-	require __DIR__ . '/tcms.php';
+// Load configuration overrides
+// For Composer installs: project-level config/tcms.php
+// For zip installs: package-level config/tcms.php (Stacks integration)
+$projectTcms = TotalCMS\Support\PathResolver::projectRoot() . '/config/tcms.php';
+$packageTcms = __DIR__ . '/tcms.php';
+
+if (TotalCMS\Support\PathResolver::isComposerInstall() && file_exists($projectTcms)) {
+	$installationSettings = require $projectTcms;
+	if (is_array($installationSettings)) {
+		$settings = array_replace_recursive($settings, $installationSettings);
+	}
+} elseif (file_exists($packageTcms)) {
+	require $packageTcms;
 }
 
 // Unit-test and integration environment (Travis CI)

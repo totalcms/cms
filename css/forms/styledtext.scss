@@ -95,6 +95,17 @@
 		color            : oklch(var(--totalform-accent));
 	}
 
+	// When uploads aren't possible yet (parent form or deck item not saved), the
+	// editor container gets `.ste-uploads-disabled` and we dim the buttons that
+	// trigger upload dialogs. Text editing and non-upload commands stay enabled.
+	.ste-uploads-disabled &[data-command="openImageDialog"],
+	.ste-uploads-disabled &[data-command="openFileDialog"],
+	.ste-uploads-disabled &[data-command="openVideoDialog"] {
+		opacity        : 0.4;
+		pointer-events : none;
+		cursor         : not-allowed;
+	}
+
 	&::before {
 		content          : '';
 		display          : block;
@@ -188,13 +199,19 @@
 .ste-editor-wrapper {
 	overflow-y : auto;
 
+	// Fill the wrapper so clicks anywhere in the editor area focus the editor,
+	// not just on the first line of content.
+	.ste-prosemirror,
+	.ste-prosemirror > .ProseMirror {
+		height : 100%;
+	}
+
 	.ProseMirror {
 		padding     : 1rem;
 		outline     : none;
 		font-size   : 1rem;
 		font-family : inherit;
 		color       : oklch(var(--totalform-text-color));
-		min-height  : 100%;
 
 		> :first-child {
 			margin-top : 0;
@@ -274,14 +291,6 @@
 			height        : auto;
 			border-radius : 4px;
 			margin-bottom : 1rem;
-
-			&.ProseMirror-selectednode {
-				outline : 2px solid oklch(var(--totalform-accent));
-			}
-		}
-
-		figure.ste-figure.ProseMirror-selectednode {
-			outline : 2px solid oklch(var(--totalform-accent));
 		}
 
 		// Placeholder
@@ -292,6 +301,25 @@
 			pointer-events : none;
 			height         : 0;
 		}
+
+		// Selection outline for atom nodes (img/figure/video/youtube/table).
+		// Scoped to .ProseMirror-focused so the outline is only visible while
+		// the editor is focused — otherwise ProseMirror's default initial
+		// NodeSelection on a leading atom would show on page load.
+		&.ProseMirror-focused {
+			img.ProseMirror-selectednode,
+			figure.ste-figure.ProseMirror-selectednode,
+			video.ProseMirror-selectednode,
+			div[data-youtube-video].ProseMirror-selectednode,
+			table.ProseMirror-selectednode {
+				outline : 2px solid oklch(var(--totalform-accent));
+			}
+
+			div[data-youtube-video].ProseMirror-selectednode,
+			table.ProseMirror-selectednode {
+				border-radius : 4px;
+			}
+		}
 	}
 }
 
@@ -301,12 +329,13 @@
 	width            : 100%;
 	box-sizing       : border-box;
 	min-height       : 200px;
-	padding          : 1rem;
-	border           : none;
+	padding          : 0;
 	resize           : vertical;
 	font-family      : monospace;
 	font-size        : 1rem;
 	line-height      : 1.5;
+	border           : none;
+	border-top       : 1px solid oklch(var(--totalform-border-color));
 	color            : oklch(var(--totalform-text-color));
 	background-color : oklch(var(--totalform-white));
 	tab-size         : 2;
@@ -317,7 +346,7 @@
 }
 
 // CodeMirror inside code view
-.ste-editor-container .CodeMirror {
+.ste-editor-container .cm-editor {
 	border    : none;
 	font-size : 1rem;
 }
@@ -340,20 +369,12 @@
 			border   : 0;
 		}
 
-		&.ProseMirror-selectednode {
-			outline       : 2px solid oklch(var(--totalform-accent));
-			border-radius : 4px;
-		}
 	}
 
 	video {
 		max-width     : 100%;
 		height        : auto;
 		border-radius : 4px;
-
-		&.ProseMirror-selectednode {
-			outline: 2px solid oklch(var(--totalform-accent));
-		}
 	}
 }
 
@@ -1072,12 +1093,6 @@ dialog.ste-dialog {
 				border         : 2px solid oklch(var(--totalform-accent));
 			}
 		}
-	}
-
-	// Table selected state
-	table.ProseMirror-selectednode {
-		outline       : 2px solid oklch(var(--totalform-accent));
-		border-radius : 4px;
 	}
 
 	// Column resize handle

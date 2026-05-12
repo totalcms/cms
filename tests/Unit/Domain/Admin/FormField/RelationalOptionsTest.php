@@ -201,4 +201,93 @@ describe('Relational Options', function (): void {
 			['value' => '2', 'label' => 'Jane Smith'],
 		]);
 	});
+
+	// --- Format template (new behavior) ---
+
+	test('format template renders with literal text around placeholders', function (): void {
+		$this->form->method('propertiesForCollection')
+			->with(['title', 'route', 'id'], 'builder-pages', [])
+			->willReturn([
+				['id' => 'about', 'title' => 'About Us', 'route' => '/about'],
+				['id' => 'home',  'title' => 'Home',     'route' => '/'],
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'builder-pages',
+			'format'     => '${title} (${route})',
+			'value'      => 'id',
+		]);
+
+		expect($result)->toBe([
+			['value' => 'about', 'label' => 'About Us (/about)'],
+			['value' => 'home',  'label' => 'Home (/)'],
+		]);
+	});
+
+	test('format template fetches only properties referenced in placeholders', function (): void {
+		// Only 'firstName', 'lastName', and the value 'id' should be requested.
+		$this->form->expects($this->once())
+			->method('propertiesForCollection')
+			->with(['firstName', 'lastName', 'id'], 'authors', [])
+			->willReturn([
+				['id' => '1', 'firstName' => 'John', 'lastName' => 'Doe'],
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'authors',
+			'format'     => '${firstName} ${lastName}',
+			'value'      => 'id',
+		]);
+
+		expect($result)->toBe([
+			['value' => '1', 'label' => 'John Doe'],
+		]);
+	});
+
+	test('format template substitutes empty string for missing fields', function (): void {
+		$this->form->method('propertiesForCollection')
+			->willReturn([
+				['id' => '1', 'title' => 'Has Title'], // no 'subtitle'
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'items',
+			'format'     => '${title} - ${subtitle}',
+			'value'      => 'id',
+		]);
+
+		expect($result[0]['label'])->toBe('Has Title - ');
+	});
+
+	test('format template wins over label when both are set', function (): void {
+		$this->form->method('propertiesForCollection')
+			->willReturn([
+				['id' => '1', 'title' => 'T', 'name' => 'N'],
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'items',
+			'label'      => 'name',
+			'format'     => 'Page: ${title}',
+			'value'      => 'id',
+		]);
+
+		expect($result[0]['label'])->toBe('Page: T');
+	});
+
+	test('format template supports the same placeholder used multiple times', function (): void {
+		$this->form->method('propertiesForCollection')
+			->with(['title', 'id'], 'items', [])
+			->willReturn([
+				['id' => '1', 'title' => 'Hello'],
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'items',
+			'format'     => '${title} / ${title}',
+			'value'      => 'id',
+		]);
+
+		expect($result[0]['label'])->toBe('Hello / Hello');
+	});
 });

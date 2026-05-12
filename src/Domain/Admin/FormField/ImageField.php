@@ -25,10 +25,13 @@ class ImageField extends FormField
 	{
 		$imageData = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
 
-		$api        = $this->form->api;
+		$api        = $this->form->baseApi();
 		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT, 'q' => self::PREVIEW_QUALITY];
-		$options    = ['collection' => $this->form->collection, 'property' => $this->name];
-		$id         = $this->form->id;
+		// Dot-notation path: `mycard.image` for a card child, `mydeck.item-3.image`
+		// for a deck child, `image` for top-level. `nestedPath` is the prefix.
+		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
+		$options      = ['collection' => $this->form->collection, 'property' => $propertyPath];
+		$id           = $this->form->id;
 
 		$imagePath = MediaTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
 
@@ -86,17 +89,21 @@ class ImageField extends FormField
 	{
 		// Gallery passes the name of the image
 		// The name should be null for an image field
-
-		$query = http_build_query([
+		//
+		// For nested images, `property` is a dot-notation path (e.g. `mycard.image`
+		// or `mydeck.item-3.image`) so the imageworks utility can resolve the
+		// nested image and the macro builder emits the correct Twig syntax.
+		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
+		$query        = http_build_query(array_filter([
 			'id'         => $this->form->id,
 			'collection' => $this->form->collection,
-			'property'   => $this->name,
+			'property'   => $propertyPath,
 			'name'       => $name,
-		]);
+		], fn (?string $v): bool => $v !== null && $v !== ''));
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = str_contains($this->form->api, '?') ? '&' : '?';
 
-		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/imageworks{$join}{$query}");
+		$iframe = HTMLUtils::iframe("{$this->form->baseApi()}/admin/imageworks{$join}{$query}");
 
 		return HTMLUtils::dialog($iframe, 'image-link-dialog');
 	}

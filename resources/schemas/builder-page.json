@@ -1,0 +1,239 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/builder-page.json",
+	"id": "builder-page",
+	"type": "object",
+	"description": "A schema for a Site Builder page",
+	"formgrid": "draft .\ntitle title\ndescription description\nimage .\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
+	"properties": {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Page ID",
+			"help"     : "Unique identifier for this page.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"autogen": "${title}"
+			}
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Page Title",
+			"help"    : "The page title, used in the title tag and navigation",
+			"field"   : "text",
+			"factory" : "catchPhrase"
+		},
+		"route": {
+			"type"        : "string",
+			"label"       : "URL Path",
+			"help"        : "URL path for this page. Use {param} for dynamic segments (e.g. /products/{id}).",
+			"field"       : "text",
+			"default"     : "",
+			"placeholder" : "/about"
+		},
+		"template": {
+			"type"        : "string",
+			"label"       : "Page Template",
+			"help"        : "The page template to render. Multiple pages can share the same template. Create a template first under Site Builder if none are listed.",
+			"field"       : "select",
+			"default"     : "",
+			"placeholder" : "Select a template...",
+			"settings"    : {
+				"propertyOptions" : "pages",
+				"sortOptions"     : true
+			}
+		},
+		"description": {
+			"type"    : "string",
+			"label"   : "Meta Description",
+			"help"    : "SEO meta description for this page",
+			"field"   : "textarea",
+			"factory" : "catchPhrase"
+		},
+		"image": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Page Image",
+			"help"    : "Used for <code>og:image</code> social previews and as a hero image when the template renders one.",
+			"field"   : "image",
+			"factory" : "imageShapes(1920,1080)"
+		},
+		"draft": {
+			"type"    : "boolean",
+			"label"   : "Draft",
+			"help"    : "Draft pages are excluded from routing",
+			"field"   : "toggle",
+			"default" : false,
+			"factory" : "boolean"
+		},
+		"nav": {
+			"type"    : "boolean",
+			"label"   : "Show in Nav",
+			"help"    : "Include this page in navigation menus",
+			"field"   : "toggle",
+			"default" : true,
+			"factory" : "boolean"
+		},
+		"data": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
+			"label"       : "Page Data",
+			"help"        : "Optional JSON data exposed to the template as <code>page.data.*</code>. Use this for one-off page content (hero text, CTAs, etc.) without creating a one-row collection.",
+			"field"       : "json",
+			"placeholder" : "{\"hero\": \"Welcome\"}",
+			"settings"    : {
+				"rows" : 12
+			}
+		},
+		"middleware": {
+			"type"     : "array",
+			"label"    : "Features",
+			"help"     : "Optional behaviors to enable on this page — for example, requiring a logged-in visitor (<code>auth</code>). Features run in order; the first one to short-circuit (e.g. redirect to login) stops the rest. Additional features can be added by extensions.",
+			"field"    : "multicheckbox",
+			"settings" : {
+				"propertyOptions"   : "pageMiddleware",
+				"mergeStoredValues" : false,
+				"sortOptions"       : true,
+				"fieldColumns"      : "200px"
+			}
+		},
+		"accessGroups": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Access Groups",
+			"help"     : "Restrict the <code>auth</code> middleware to users in one or more access groups. Leave blank to allow any logged-in user. Logged-in users not in the listed groups get a 403 response (no redirect to login).",
+			"field"    : "list",
+			"settings" : {
+				"accessGroupOptions"    : true,
+				"duplicateItemsAllowed" : false,
+				"addChoices"            : false,
+				"visibility"            : {
+					"watch"    : "middleware",
+					"value"    : "auth",
+					"operator" : "in"
+				}
+			}
+		},
+		"status": {
+			"type"     : "number",
+			"label"    : "HTTP Status Code",
+			"help"     : "HTTP status code returned when this page is served. Set to 404 to designate this as the universal Not Found page (rendered for any URL that doesn't match). Use 410 for permanently removed content, 451 for legal takedowns, 301/302 to redirect.",
+			"field"    : "select",
+			"default"  : "200",
+			"options"  : [
+				{"value": "200", "label": "200 OK (default)"},
+				{"value": "301", "label": "301 Moved Permanently"},
+				{"value": "302", "label": "302 Found (temporary redirect)"},
+				{"value": "404", "label": "404 Not Found"},
+				{"value": "410", "label": "410 Gone"},
+				{"value": "451", "label": "451 Unavailable for Legal Reasons"},
+				{"value": "503", "label": "503 Service Unavailable"}
+			]
+		},
+		"redirectTo": {
+			"type"        : "string",
+			"label"       : "Redirect To",
+			"help"        : "Destination for the redirect. Can be an absolute URL or a path on this site (e.g. <code>/new-page</code>).",
+			"field"       : "text",
+			"default"     : "",
+			"placeholder" : "/new-page",
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "status",
+					"value"    : ["301", "302"],
+					"operator" : "in"
+				}
+			}
+		},
+		"sitemap": {
+			"type"    : "boolean",
+			"label"   : "Include in Sitemap",
+			"help"    : "Include this page in the generated sitemap.xml",
+			"field"   : "toggle",
+			"default" : true,
+			"factory" : "boolean"
+		},
+		"changeFrequency": {
+			"type"        : "string",
+			"label"       : "Change Frequency",
+			"help"        : "How frequently the page is likely to change. Hint to crawlers — most search engines ignore this.",
+			"field"       : "select",
+			"placeholder" : "Not set",
+			"default"     : "",
+			"options"     : [
+				"always",
+				"hourly",
+				"daily",
+				"weekly",
+				"monthly",
+				"yearly",
+				"never"
+			],
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "sitemap",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"priority": {
+			"type"        : "number",
+			"label"       : "Priority",
+			"help"        : "Priority of this page relative to other pages on the site (0.0 to 1.0). Leave blank to omit.",
+			"field"       : "number",
+			"placeholder" : "0.5",
+			"default"     : 0,
+			"settings"    : {
+				"min"        : 0,
+				"max"        : 1,
+				"step"       : 0.1,
+				"visibility" : {
+					"watch"    : "sitemap",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated Date",
+			"help"     : "Last modified date",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
+		},
+		"created": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Creation Date",
+			"help"     : "Page creation date",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"onCreate": true,
+				"readonly": true
+			}
+		}
+	},
+	"required": [
+		"id",
+		"title",
+		"template",
+		"updated",
+		"created"
+	],
+	"index": [
+		"id",
+		"title",
+		"route",
+		"template",
+		"draft",
+		"nav",
+		"status",
+		"sitemap",
+		"changeFrequency",
+		"priority",
+		"updated",
+		"created"
+	]
+}

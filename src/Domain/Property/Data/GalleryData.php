@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Property\Data;
 
 class GalleryData extends PropertyData implements \Stringable

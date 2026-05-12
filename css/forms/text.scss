@@ -168,8 +168,8 @@
 	}
 }
 
-// JSON CodeMirror editor (dark theme)
-.totalform-json-editor {
+// JSON editor container
+.totalform-json-editor-container {
 	border        : 1px solid oklch(var(--totalform-border-color));
 	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius) !important;
 	overflow      : hidden;
@@ -179,58 +179,45 @@
 	min-width     : 0;
 	resize        : vertical;
 
-	&.CodeMirror {
-		height           : auto;
+	.cm-editor {
+		height           : 100%;
 		min-height       : 100px;
-		font-family      : 'Fira Code', 'Consolas', 'Monaco', monospace;
-		font-size        : 14px;
 		line-height      : 1.5;
 		background       : oklch(var(--totalform-nearwhite));
 		color            : oklch(var(--totalform-nearblack));
 		padding          : 0.25rem 0;
+		outline          : none !important;
 	}
 
-	.CodeMirror-scroll {
+	.cm-scroller {
 		overflow-y : auto !important;
 		overflow-x : auto !important;
 	}
 
-	.CodeMirror-placeholder {
+	.cm-placeholder {
 		color   : oklch(var(--totalform-mediumgray)) !important;
 		opacity : 0.6;
 	}
 
-	.CodeMirror-scrollbar-filler {
-		display : none;
-	}
-
-	// Syntax colors
-	.cm-string            { color : oklch(var(--totalform-green));  } // string values
-	.cm-string.cm-property { color : oklch(var(--totalform-blue));  } // keys (string + property)
-	.cm-number    { color : oklch(var(--totalform-orange)); } // numbers
-	.cm-atom      { color : oklch(var(--totalform-yellow)); } // true, false, null
-	.cm-bracket   { color : oklch(var(--totalform-mediumgray)); } // brackets
-	.cm-error     { color : oklch(var(--totalform-red));    } // errors
-
-	.CodeMirror-selected {
+	.cm-selectionBackground {
 		background-color : oklch(var(--totalform-darkgray)) !important;
 	}
 
-	.CodeMirror-focused .CodeMirror-selected {
+	.cm-focused .cm-selectionBackground {
 		background-color : oklch(var(--totalform-gray)) !important;
 	}
 
-	.CodeMirror-cursor {
+	.cm-cursor {
 		border-left : 2px solid oklch(var(--totalform-nearblack));
 	}
 
-	.CodeMirror-matchingbracket {
+	.cm-matchingBracket {
 		color            : oklch(var(--totalform-yellow)) !important;
 		outline          : 1px solid oklch(var(--totalform-yellow)) !important;
 		background-color : oklch(var(--totalform-darkgray)) !important;
 	}
 
-	.CodeMirror-nonmatchingbracket {
+	.cm-nonmatchingBracket {
 		color            : oklch(var(--totalform-red)) !important;
 		outline          : 1px solid oklch(var(--totalform-red)) !important;
 		background-color : oklch(var(--totalform-darkgray)) !important;
@@ -280,6 +267,20 @@
 [type="password"] + .form-group-icon {
 	&:after {
 		mask-image : var(--icon-lock);
+	}
+}
+
+//------------------------------
+// Secret Field
+//------------------------------
+.secret-field .form-group-icon {
+	&:after {
+		mask-image : var(--icon-secret);
+	}
+}
+.secret-field.secret-visible .form-group-icon {
+	&:after {
+		mask-image : var(--icon-eye);
 	}
 }
 

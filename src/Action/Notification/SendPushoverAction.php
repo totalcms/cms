@@ -76,10 +76,10 @@ readonly class SendPushoverAction
 			group     : $group,
 		);
 
-		if (!$result['success']) {
+		if (!$result->success) {
 			$response = $response->withStatus(500);
 		}
 
-		return $this->renderer->json($response, $result);
+		return $this->renderer->json($response, $result->toArray());
 	}
 }

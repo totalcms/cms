@@ -2,8 +2,10 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
@@ -13,9 +15,8 @@ readonly class SchemaSaver
 		private SchemaRepository $storage,
 		private SchemaFactory $factory,
 		private SchemaValidator $validator,
-		private IndexBuilder $indexBuilder,
-		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -32,11 +33,8 @@ readonly class SchemaSaver
 
 		// Make sure the schema exists
 		$this->storage->getSchema($schemaId);
-		$schema = $this->saveSchema($schemaData);
 
-		$this->rebuildIndexforCollectionsWithSchema($schema->id);
-
-		return $schema;
+		return $this->saveSchema($schemaData);
 	}
 
 	/**
@@ -59,10 +57,12 @@ readonly class SchemaSaver
 		}
 
 		// Check for reserved schema names early, before processing
-		if (isset($schemaData['id']) && (in_array($schemaData['id'], SchemaData::RESERVED_SCHEMAS) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
+		$reservedIds = $this->storage->reservedSchemasIds();
+		if (isset($schemaData['id']) && (in_array($schemaData['id'], $reservedIds) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
 			throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
 		}
 
+		$schemaData['properties'] = self::applyDefaultTypes($schemaData['properties']);
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schemaData['properties'] = self::normalizeDefaultValues($schemaData['properties']);
 		$schemaData               = self::sanitizeRequiredAndIndex($schemaData, $this->getInheritedPropertyNames($schemaData));
@@ -86,6 +86,8 @@ readonly class SchemaSaver
 		}
 
 		$this->storage->saveSchema($schema);
+
+		$this->eventDispatcher->dispatch('schema.saved', new SchemaEventPayload($schema->id));
 
 		return $schema;
 	}
@@ -123,6 +125,37 @@ readonly class SchemaSaver
 		}
 
 		return $schemaData;
+	}
+
+	/**
+	 * Fill in a default `type` for properties that omit one (or leave it blank),
+	 * resolved from the property's `field` via TotalForm::getDefaultTypeForField().
+	 * An explicit type set by the user is always preserved.
+	 *
+	 * @param array<string,array<string,mixed>> $properties
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public static function applyDefaultTypes(array $properties): array
+	{
+		foreach ($properties as $key => $options) {
+			// Don't touch properties that already have a $ref (legacy/inherited) or a non-empty type.
+			if (isset($options['$ref'])) {
+				continue;
+			}
+			if (isset($options['type']) && $options['type'] !== '') {
+				continue;
+			}
+
+			$field = isset($options['field']) ? (string)$options['field'] : '';
+			if ($field === '') {
+				continue;
+			}
+
+			$properties[$key]['type'] = TotalForm::getDefaultTypeForField($field);
+		}
+
+		return $properties;
 	}
 
 	/**
@@ -187,28 +220,13 @@ readonly class SchemaSaver
 
 	/**
 	 * Extract property type from a property definition.
-	 * Uses the reverse of PROPERTY_TYPE_TO_REF mapping.
+	 * Delegates to PropertyDefinition::resolveType().
 	 *
 	 * @param array<string,mixed> $propertyDef
 	 */
 	public static function extractPropertyType(array $propertyDef): string
 	{
-		// Try to extract from $ref by doing reverse lookup
-		if (isset($propertyDef['$ref']) && is_string($propertyDef['$ref'])) {
-			// Reverse lookup in PROPERTY_TYPE_TO_REF
-			$type = array_search($propertyDef['$ref'], SchemaData::PROPERTY_TYPE_TO_REF, true);
-			if ($type !== false) {
-				return $type;
-			}
-		}
-
-		// Fall back to type field
-		if (isset($propertyDef['type']) && is_string($propertyDef['type'])) {
-			return $propertyDef['type'];
-		}
-
-		// Final fallback to field type
-		return $propertyDef['field'] ?? 'text';
+		return PropertyDefinition::fromArray($propertyDef)->resolveType();
 	}
 
 	/**
@@ -238,16 +256,5 @@ readonly class SchemaSaver
 		}
 
 		return array_unique($inherited);
-	}
-
-	private function rebuildIndexforCollectionsWithSchema(string $schemaId): void
-	{
-		$collections = $this->collectionLister->listAllCollections();
-
-		foreach ($collections as $collection) {
-			if ($collection->schema === $schemaId) {
-				$this->indexBuilder->smartBuildIndex($collection->id);
-			}
-		}
 	}
 }

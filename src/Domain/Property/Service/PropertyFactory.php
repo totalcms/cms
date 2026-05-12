@@ -2,12 +2,13 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Storage\StorageRepository;
 
 /**
  * Service.
@@ -21,36 +22,40 @@ readonly class PropertyFactory
 	}
 
 	/**
-	 * create a property object.
-	 *
-	 * @param array<string,mixed>  $propertySchema
+	 * Create a property object from a schema definition and value.
 	 *
 	 * @throws \DomainException
 	 * @throws \UnexpectedValueException
 	 */
-	public function generateProperty(array $propertySchema, mixed $value): PropertyData
+	public function generateProperty(PropertyDefinition $definition, mixed $value, string $propertyName = ''): PropertyData
 	{
-		$type = $propertySchema['type'] ?? basename($propertySchema['$ref'] ?? '', StorageRepository::FILE_EXT);
+		$type  = $definition->resolveType();
+		$field = $definition->field;
 
-		// Special handling for deck properties
-		if ($type === 'deck') {
-			$settings = $propertySchema['settings'] ?? [];
-
-			return $this->createDeck($propertySchema, $value, $settings);
+		// Special handling for deck/card properties — dispatch on `field` too,
+		// because schemas authored via the form-driven editor set `type: "array"`
+		// for these even though `field: "card"`/`"deck"` is the real shape signal.
+		// Without this, deck/card values fall through to ArrayData which strips
+		// keys via array_values() and corrupts the structure into a list.
+		if ($type === 'deck' || $field === 'deck') {
+			return $this->createDeck($definition, $value, $definition->settings);
+		}
+		if ($type === 'card' || $field === 'card') {
+			return $this->createCard($definition, $value, $definition->settings, $propertyName);
 		}
 
-		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst((string)$type) . 'Data';
+		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
 		if (!class_exists($className)) {
 			throw new \UnexpectedValueException('Unknown property type for object.');
 		}
 
-		if (isset($propertySchema['default'])) {
-			$value = $className::defaultValue($value, $propertySchema['default']);
+		if ($definition->default !== null) {
+			$value = $className::defaultValue($value, $definition->default);
 		}
 
 		// Handle array passed to string type (schema/form mismatch)
 		if (is_array($value) && $type === 'string') {
-			$value = json_encode($value);
+			$value = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		}
 
 		// Handle JSON string passed to array types (form sends JSON strings for complex fields)
@@ -65,9 +70,7 @@ readonly class PropertyFactory
 			}
 		}
 
-		$settings = $propertySchema['settings'] ?? [];
-
-		$property = null === $value ? new $className(settings: $settings) : new $className($value, $settings);
+		$property = null === $value ? new $className(settings: $definition->settings) : new $className($value, $definition->settings);
 
 		if (!$property instanceof PropertyData) {
 			throw new \DomainException('Error creating property for object.');
@@ -79,28 +82,26 @@ readonly class PropertyFactory
 	/**
 	 * Create a DeckData object with properly processed items.
 	 *
-	 * @param array<string,mixed> $propertySchema The deck property schema
 	 * @param mixed $value The raw deck data
 	 * @param array<string,mixed> $settings The deck settings
 	 */
-	public function createDeck(array $propertySchema, mixed $value, array $settings = []): DeckData
+	public function createDeck(PropertyDefinition $definition, mixed $value, array $settings = []): DeckData
 	{
 		// If no deck data provided, return empty deck
 		if (empty($value) || !is_array($value)) {
 			return new DeckData([], $settings);
 		}
 
-		// Get deckref from property schema (can be in settings or directly in property)
-		$deckref = $propertySchema['deckref'] ?? $propertySchema['settings']['deckref'] ?? $settings['deckref'] ?? null;
+		$schemaref = $definition->schemaref;
 
-		// If no deckref, return deck as-is (no processing)
-		if (empty($deckref)) {
+		// If no schema reference, return deck as-is (no processing)
+		if (in_array($schemaref, [null, '', '0'], true)) {
 			return new DeckData($value, $settings);
 		}
 
 		try {
 			// Get the deck item schema
-			$schemaId   = SchemaFetcher::extractSchemaId($deckref);
+			$schemaId   = SchemaFetcher::extractSchemaId($schemaref);
 			$deckSchema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			// Validate that the deck schema doesn't contain incompatible properties
@@ -121,7 +122,7 @@ readonly class PropertyFactory
 				foreach ($deckSchema->properties as $fieldName => $fieldSchema) {
 					$fieldValue = $itemData[$fieldName] ?? null;
 					// Use generateProperty for proper data conversion and default handling
-					$propertyObject                = $this->generateProperty($fieldSchema, $fieldValue);
+					$propertyObject                = $this->generateProperty(PropertyDefinition::fromArray($fieldSchema), $fieldValue);
 					$processedItemData[$fieldName] = $propertyObject->transform();
 				}
 
@@ -132,6 +133,64 @@ readonly class PropertyFactory
 		} catch (\Exception) {
 			// If deck processing fails, return original data to avoid breaking the system
 			return new DeckData($value, $settings);
+		}
+	}
+
+	/**
+	 * Create a CardData object with properly processed fields.
+	 *
+	 * A card stores a single nested object whose shape is defined by another schema
+	 * (referenced via `schemaref`). Each field is processed through generateProperty
+	 * so defaults, type coercion, and validation behave the same as on a top-level object.
+	 *
+	 * @param mixed $value The raw card data (associative array of field values)
+	 * @param array<string,mixed> $settings The card settings
+	 */
+	public function createCard(PropertyDefinition $definition, mixed $value, array $settings = [], string $propertyName = ''): CardData
+	{
+		// If no card data provided, return empty card
+		if (empty($value) || !is_array($value)) {
+			return new CardData([], $settings);
+		}
+
+		$schemaref = $definition->schemaref;
+
+		// If no schema reference, return card data as-is (no processing)
+		if (in_array($schemaref, [null, '', '0'], true)) {
+			return new CardData($value, $settings);
+		}
+
+		try {
+			// Get the card sub-schema
+			$schemaId   = SchemaFetcher::extractSchemaId($schemaref);
+			$cardSchema = $this->schemaFetcher->fetchSchema($schemaId);
+
+			// Validate that the card schema doesn't contain incompatible properties
+			// (file-based fields aren't supported inside cards/decks)
+			$this->validateDeckSchema($cardSchema, $schemaId);
+
+			$processed = [];
+
+			// Iterate over schema properties (like ObjectFactory does for objects)
+			// so all sub-fields are processed with proper defaults and type conversion.
+			// `id` is a special case for cards: it's required by the schema but
+			// meaningless to the user (CardField hides the field). We force it to
+			// the parent property name so the saved data feels intentional and
+			// stable — e.g. `mycard.id = "mycard"`.
+			foreach ($cardSchema->properties as $fieldName => $fieldSchema) {
+				if ($fieldName === 'id') {
+					$processed[$fieldName] = $propertyName !== '' ? $propertyName : 'card';
+					continue;
+				}
+				$fieldValue            = $value[$fieldName] ?? null;
+				$propertyObject        = $this->generateProperty(PropertyDefinition::fromArray($fieldSchema), $fieldValue);
+				$processed[$fieldName] = $propertyObject->transform();
+			}
+
+			return new CardData($processed, $settings);
+		} catch (\Exception) {
+			// If card processing fails, return original data to avoid breaking the system
+			return new CardData($value, $settings);
 		}
 	}
 
@@ -155,16 +214,7 @@ readonly class PropertyFactory
 			return $itemData; // No property config found, return as-is
 		}
 
-		// Create a simulated deck with just this one item to process it through deck processing
-		$deckPropertySchema = [
-			'type'     => 'deck',
-			'settings' => $propertyConfig['settings'] ?? [],
-		];
-
-		// Add deckref from property config if it exists
-		if (isset($propertyConfig['deckref'])) {
-			$deckPropertySchema['deckref'] = $propertyConfig['deckref'];
-		}
+		$deckDefinition = PropertyDefinition::fromArray($propertyConfig);
 
 		$singleItemDeck = [
 			$itemData['id'] => $itemData,
@@ -172,7 +222,7 @@ readonly class PropertyFactory
 
 		try {
 			// Use deck processing to process the single-item deck
-			$processedDeckData = $this->createDeck($deckPropertySchema, $singleItemDeck);
+			$processedDeckData = $this->createDeck($deckDefinition, $singleItemDeck);
 			$processedDeck     = $processedDeckData->transform();
 
 			return $processedDeck[$itemData['id']] ?? $itemData;

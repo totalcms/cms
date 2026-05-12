@@ -28,8 +28,7 @@ export default class ImageField extends TotalField {
 	}
 
 	apiUploadImage() {
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		return this.api.buildApiQuery(api);
+		return this.api.buildApiQuery(this.buildPropertyApi('/collections'));
     }
 
 	updateAPIUrl() {
@@ -51,7 +50,7 @@ export default class ImageField extends TotalField {
 		this.droplet = new Droplet(this, {
 			paramName        : this.property,
 			apiUrl           : this.apiUploadImage(),
-			autoProcessQueue : this.form.isEditMode(),
+			autoProcessQueue : this.parentIsSaved(),
 			acceptedFiles    : "image/*",
 			rules            : this.settings.rules,
 		});
@@ -64,7 +63,9 @@ export default class ImageField extends TotalField {
 
 		if (!force && !this.isUnsaved()) return;
 
-		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+		// Top-level: PUT /coll/id/prop. Card-nested: PUT /coll/id/cardprop/childkey
+		// (server dispatches on filesystem state; nested replaces obj[parent][child]).
+		const patchApi = this.buildPropertyApi('/collections');
 		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
 			console.log("Image Meta Autosaved", response);
 			this.saved();
@@ -103,7 +104,18 @@ export default class ImageField extends TotalField {
 	}
 
 	fileUploaded(file, response) {
-		const image = response.data[this.property];
+		// Top-level: response.data[this.property]. Nested: walk
+		// [ctx.property, ...subpath segments] — card subpath is `childKey` (one
+		// segment), deck subpath is `itemId/childKey` (two segments).
+		const ctx = this.getUploadContext();
+		let image = response.data;
+		if (ctx?.subpath) {
+			for (const seg of [ctx.property, ...ctx.subpath.split('/')]) {
+				image = image?.[seg];
+			}
+		} else {
+			image = image?.[this.property];
+		}
 		this.setupPreview(image);
 	}
 

@@ -1,0 +1,132 @@
+{% extends "admin-dashboard.twig" %}
+
+{% macro renderNode(node, urlFile, category) %}
+	{% if node.type == 'folder' %}
+		<li class="builder-folder">
+			<details {% if node.children is not empty %}open{% endif %}>
+				<summary>{{ node.name }}</summary>
+				<ul class="tree-view">
+				{% for child in node.children %}
+					{{ _self.renderNode(child, urlFile, category) }}
+				{% endfor %}
+				</ul>
+			</details>
+		</li>
+	{% else %}
+		<li class="builder-{{ category }}">
+			<a {% if urlFile == node.path %}class="active"{% endif %}
+				href="builder/{{ node.path }}"
+				title="{{ node.id }}">{{ node.name }}</a>
+		</li>
+	{% endif %}
+{% endmacro %}
+
+{% macro renderPageNode(page, activePageId) %}
+	{% set hasChildren = page.children is not empty %}
+	{% set classes = 'builder-page-item' %}
+	{% if hasChildren %}{% set classes = classes ~ ' has-children' %}{% endif %}
+	{% if not page.nav %}{% set classes = classes ~ ' nav-hidden' %}{% endif %}
+	{% if page.draft %}{% set classes = classes ~ ' is-draft' %}{% endif %}
+	{% if page.route == '/' %}{% set classes = classes ~ ' is-home' %}{% endif %}
+	{# Every page renders with the same details/summary/ul structure so every
+	   page has an inner drop target — drop into a leaf's empty ul to promote
+	   it to a parent, no DOM mutation required when has-children flips. #}
+	<li class="{{ classes }}" data-page-id="{{ page.id }}">
+		{# `<details open>` always — leaves need their inner ul in layout so
+		   SortableJS can drop into them. Trade-off: folder collapse isn't
+		   available, but the file-tree sidebar wants everything visible. #}
+		<details open>
+			<summary>
+				<a {% if activePageId == page.id %}class="active"{% endif %}
+					href="builder/page/{{ page.id }}"
+					title="{{ page.route ?: t('builder.sidebar.no_route') }}">{{ page.title }}</a>
+			</summary>
+			<ul class="tree-view" data-parent="{{ page.id }}">
+			{% for child in page.children %}
+				{{ _self.renderPageNode(child, activePageId) }}
+			{% endfor %}
+			</ul>
+		</details>
+	</li>
+{% endmacro %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar tree">
+	<header>
+		<input type="search" name="filter" class="filter" placeholder="{{ t('builder.sidebar.filter_placeholder') }}" autofocus />
+	</header>
+
+	<nav class="links" id="builder-links" data-tree-view>
+		{% set pagesTree = cms.builder.pagesTree() %}
+		{% set activePageId = (url.section == 'page') ? url.params.path : '' %}
+		<details id="category-builder-pages" open>
+			<summary>
+				<span>{{ t('builder.sidebar.site_pages') }}</span>
+				<button type="button" class="page-order-toggle" data-page-order-toggle aria-pressed="false" title="{{ t('builder.sidebar.reorder_title') }}">
+					<span class="cms-hide">{{ t('builder.sidebar.reorder') }}</span>
+				</button>
+			</summary>
+			<ul class="tree-view" data-parent="">
+			{% for page in pagesTree %}
+				{{ _self.renderPageNode(page, activePageId) }}
+			{% endfor %}
+			{% if pagesTree is empty %}
+				<li class="empty">{{ t('builder.sidebar.no_pages') }}</li>
+			{% endif %}
+			</ul>
+		</details>
+
+		<hr class="sidebar-divider" />
+
+		{% set fileTree = cms.admin.builderNestedFileTree() %}
+		{% for category, nodes in fileTree %}
+		<details id="category-{{ category }}" {% if nodes is not empty %}open{% endif %}>
+			<summary>{{ category }}</summary>
+			<ul class="tree-view">
+			{% for node in nodes %}
+				{{ _self.renderNode(node, url.file, category) }}
+			{% endfor %}
+			{% if nodes is empty %}
+				<li class="empty">{{ t('builder.sidebar.no_category_yet', {category: category}) }}</li>
+			{% endif %}
+			</ul>
+		</details>
+		{% endfor %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="builder/page/add" title="{{ t('builder.sidebar.new_page_title') }}">{{ t('builder.sidebar.new_page') }}</a>
+		<a class="dash-button full transparent" href="builder/new" title="{{ t('builder.sidebar.new_template_title') }}">{{ t('builder.sidebar.new_template') }}</a>
+	</footer>
+</aside>
+{% include "admin/sidebar-details.twig" %}
+
+<main class="dash-main-content">
+
+	{% if url.section == 'page' and url.params.path == 'add' %}
+
+		{% include "admin/builder/page-add.twig" %}
+
+	{% elseif url.section == 'page' and url.params.path is not empty %}
+
+		{% include "admin/builder/page.twig" %}
+
+	{% elseif url.section == 'new' %}
+
+		{% include "admin/builder/new.twig" %}
+
+	{% elseif url.file is not empty %}
+
+		{% include "admin/builder/editor.twig" %}
+
+	{% else %}
+
+		{% include "admin/builder/overview.twig" %}
+
+	{% endif %}
+
+	<section id="builder-notices"></section>
+</main>
+
+{% endblock %}

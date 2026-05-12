@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Playground\Service;
 
 use TotalCMS\Domain\Object\Service\ObjectRemover;

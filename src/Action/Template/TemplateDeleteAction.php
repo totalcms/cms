@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -32,7 +32,7 @@ readonly class TemplateDeleteAction
 		$path = $args['path'] ?? $args['template'] ?? '';
 
 		// Parse path into folder and template name
-		[$folder, $name] = TemplateRepository::parsePath($path);
+		[$folder, $name] = TemplatePath::parse($path);
 
 		$deleted = $this->service->deleteTemplate($name, $folder);
 

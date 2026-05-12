@@ -17,7 +17,7 @@ beforeEach(function (): void {
 
 describe('Passkey Login Endpoints (no auth required)', function (): void {
 	it('can get login options', function (): void {
-		$response = get('/passkeys/login/options');
+		$response = get('/api/passkeys/login/options');
 		expect($response->getStatusCode())->toBeIn([200, 404, 405]);
 
 		if ($response->getStatusCode() === 200) {
@@ -29,7 +29,7 @@ describe('Passkey Login Endpoints (no auth required)', function (): void {
 	});
 
 	it('rejects login without valid assertion', function (): void {
-		$response = postJson('/passkeys/login', [
+		$response = postJson('/api/passkeys/login', [
 			'id'       => 'fake-credential',
 			'rawId'    => 'ZmFrZS1jcmVkZW50aWFs',
 			'type'     => 'public-key',
@@ -43,27 +43,27 @@ describe('Passkey Login Endpoints (no auth required)', function (): void {
 	});
 
 	it('rejects login with empty body', function (): void {
-		$response = postJson('/passkeys/login', []);
+		$response = postJson('/api/passkeys/login', []);
 		expect($response->getStatusCode())->toBeIn([400, 401, 404, 405, 500]);
 	});
 });
 
 describe('Passkey Management Endpoints (auth required)', function (): void {
 	it('blocks register options when not authenticated', function (): void {
-		$response = get('/passkeys/register/options');
+		$response = get('/api/passkeys/register/options');
 		// Should not succeed — redirect, auth error, or bad request are all valid
 		expect($response->getStatusCode())->not->toBe(200);
 		expect($response->getStatusCode())->not->toBeIn([500, 503]);
 	});
 
 	it('blocks list when not authenticated', function (): void {
-		$response = get('/passkeys/list');
+		$response = get('/api/passkeys/list');
 		expect($response->getStatusCode())->not->toBe(200);
 		expect($response->getStatusCode())->not->toBeIn([500, 503]);
 	});
 
 	it('blocks register when not authenticated', function (): void {
-		$response = postJson('/passkeys/register', [
+		$response = postJson('/api/passkeys/register', [
 			'name'       => 'Test Passkey',
 			'credential' => [],
 		]);
@@ -72,7 +72,7 @@ describe('Passkey Management Endpoints (auth required)', function (): void {
 	});
 
 	it('blocks delete when not authenticated', function (): void {
-		$response = delete('/passkeys/test-credential-id');
+		$response = delete('/api/passkeys/test-credential-id');
 		expect($response->getStatusCode())->not->toBe(200);
 		expect($response->getStatusCode())->not->toBeIn([500, 503]);
 	});
@@ -80,7 +80,7 @@ describe('Passkey Management Endpoints (auth required)', function (): void {
 
 describe('Passkey Login Options Response Format', function (): void {
 	it('returns proper WebAuthn challenge format', function (): void {
-		$response = get('/passkeys/login/options');
+		$response = get('/api/passkeys/login/options');
 
 		if ($response->getStatusCode() !== 200) {
 			$this->markTestSkipped('Passkey endpoint not available in test environment');
@@ -102,7 +102,7 @@ describe('Passkey Login Options Response Format', function (): void {
 	});
 
 	it('returns empty allowCredentials for discoverable flow', function (): void {
-		$response = get('/passkeys/login/options');
+		$response = get('/api/passkeys/login/options');
 
 		if ($response->getStatusCode() !== 200) {
 			$this->markTestSkipped('Passkey endpoint not available in test environment');
@@ -118,8 +118,8 @@ describe('Passkey Login Options Response Format', function (): void {
 	});
 
 	it('returns different challenge on each request', function (): void {
-		$response1 = get('/passkeys/login/options');
-		$response2 = get('/passkeys/login/options');
+		$response1 = get('/api/passkeys/login/options');
+		$response2 = get('/api/passkeys/login/options');
 
 		if ($response1->getStatusCode() !== 200 || $response2->getStatusCode() !== 200) {
 			$this->markTestSkipped('Passkey endpoint not available in test environment');

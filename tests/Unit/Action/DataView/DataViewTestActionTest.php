@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\DataView\DataViewTestAction;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\OperationResult;
 
 final class DataViewTestActionTest extends TestCase
 {
@@ -56,12 +57,10 @@ final class DataViewTestActionTest extends TestCase
 	public function testReturnsTestResultFromBuilderOnSuccess(): void
 	{
 		$definition = '{% set data = {"key": "value"} %}';
-		$testResult = [
-			'success' => true,
-			'data'    => ['key' => 'value'],
-			'output'  => '',
-			'error'   => null,
-		];
+		$testResult = OperationResult::success('', [
+			'data'   => ['key' => 'value'],
+			'output' => '',
+		]);
 
 		$this->request->method('getParsedBody')
 			->willReturn(['definition' => $definition]);
@@ -73,7 +72,7 @@ final class DataViewTestActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $testResult)
+			->with($this->response, $testResult->toArray())
 			->willReturn($this->response);
 
 		$result = ($this->action)($this->request, $this->response);

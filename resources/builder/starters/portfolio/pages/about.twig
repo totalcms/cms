@@ -1,0 +1,25 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}About — {{ cms.config('domain') }}{% endblock %}
+{% block description %}Learn more about me and my background.{% endblock %}
+
+{% block content %}
+<section class="section">
+	<div class="container" style="max-width: 720px;">
+		<h1>About Me</h1>
+		<p style="font-size: 1.125rem;">I am a designer and developer with a passion for creating digital experiences that are both beautiful and functional. With years of experience across web, mobile, and brand design, I bring a holistic approach to every project.</p>
+
+		<h2 style="margin-top: 2.5rem;">Experience</h2>
+		<p>Over the years, I have worked with startups, agencies, and established brands to deliver solutions that drive results. My process is collaborative, iterative, and focused on outcomes.</p>
+
+		<h2 style="margin-top: 2.5rem;">Skills</h2>
+		<ul style="list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+			<li style="background: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.9rem;">UI/UX Design</li>
+			<li style="background: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.9rem;">Web Development</li>
+			<li style="background: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.9rem;">Brand Identity</li>
+			<li style="background: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.9rem;">Prototyping</li>
+			<li style="background: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.9rem;">Motion Design</li>
+		</ul>
+	</div>
+</section>
+{% endblock %}

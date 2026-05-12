@@ -14,6 +14,7 @@ use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 final class EmailServiceTest extends TestCase
 {
@@ -65,11 +66,11 @@ final class EmailServiceTest extends TestCase
 
 		$this->emailSender->expects($this->once())
 			->method('send')
-			->willReturn(['success' => true, 'message' => 'Email sent']);
+			->willReturn(OperationResult::success('Email sent'));
 
 		$result = $this->service->sendEmail('welcome-email', ['name' => 'John']);
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testReturnsFailureWhenMailerInactive(): void
@@ -84,8 +85,8 @@ final class EmailServiceTest extends TestCase
 
 		$result = $this->service->sendEmail('inactive-mailer');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not active', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not active', $result->message);
 	}
 
 	public function testProcessesTwigInEmailFields(): void
@@ -119,7 +120,7 @@ final class EmailServiceTest extends TestCase
 			->with($this->callback(fn ($email): bool => $email['to'] === 'user@example.com'
 					&& str_contains((string)$email['subject'], 'John')
 					&& str_contains((string)$email['bodyHtml'], 'John')))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer', ['name' => 'John', 'email' => 'user@example.com']);
 	}
@@ -143,11 +144,11 @@ final class EmailServiceTest extends TestCase
 
 		// Should still attempt to send with original template
 		$this->emailSender->method('send')
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$result = $this->service->sendEmail('test-mailer');
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testProcessesEmailList(): void
@@ -168,7 +169,7 @@ final class EmailServiceTest extends TestCase
 					&& in_array('manager@example.com', $email['cc'])
 					&& count($email['bcc']) === 1
 					&& in_array('log@example.com', $email['bcc'])))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -187,8 +188,8 @@ final class EmailServiceTest extends TestCase
 
 		$result = $this->service->sendEmail('test-mailer');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('whitelist', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('whitelist', $result->message);
 	}
 
 	public function testAllowsEmailWhenWhitelistMatches(): void
@@ -202,11 +203,11 @@ final class EmailServiceTest extends TestCase
 
 		$this->emailSender->expects($this->once())
 			->method('send')
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$result = $this->service->sendEmail('test-mailer');
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testWhitelistDisabledWhenEmpty(): void
@@ -220,11 +221,11 @@ final class EmailServiceTest extends TestCase
 
 		$this->emailSender->expects($this->once())
 			->method('send')
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$result = $this->service->sendEmail('test-mailer');
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testHandlesExceptionGracefully(): void
@@ -234,9 +235,9 @@ final class EmailServiceTest extends TestCase
 
 		$result = $this->service->sendEmail('nonexistent');
 
-		$this->assertFalse($result['success']);
-		$this->assertArrayHasKey('error', $result);
-		$this->assertStringContainsString('Mailer not found', $result['error']);
+		$this->assertFalse($result->success);
+		$this->assertNotNull($result->error);
+		$this->assertStringContainsString('Mailer not found', $result->error);
 	}
 
 	public function testLogsSuccessfulEmail(): void
@@ -248,7 +249,7 @@ final class EmailServiceTest extends TestCase
 		$this->config->mailer = ['whitelist' => []];
 
 		$this->emailSender->method('send')
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->logger->expects($this->once())
 			->method('info')
@@ -314,7 +315,7 @@ final class EmailServiceTest extends TestCase
 					&& $email['fromName'] === ''
 					&& $email['replyTo'] === ''
 					&& $email['bodyText'] === ''))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -335,7 +336,7 @@ final class EmailServiceTest extends TestCase
 			->willReturnArgument(0);
 
 		$this->config->mailer = ['whitelist' => []];
-		$this->emailSender->method('send')->willReturn(['success' => true, 'message' => 'Sent']);
+		$this->emailSender->method('send')->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer', ['orderId' => '12345']);
 	}
@@ -365,7 +366,7 @@ final class EmailServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -390,7 +391,7 @@ final class EmailServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -415,7 +416,7 @@ final class EmailServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -437,7 +438,7 @@ final class EmailServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -457,7 +458,7 @@ final class EmailServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer');
 	}
@@ -486,7 +487,7 @@ final class EmailServiceTest extends TestCase
 
 				return true;
 			}))
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer', ['name' => 'Alice']);
 	}

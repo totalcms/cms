@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Util\NestedFileTree;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -15,11 +19,14 @@ use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Twig sub-adapter for admin dashboard and management operations.
@@ -48,6 +55,9 @@ readonly class AdminTwigAdapter
 		public LogAnalyzer $logAnalyzer,
 		public ImageCacheService $imageCacheService,
 		public CacheSizingAdvisor $cacheSizingAdvisor,
+		private UpdateChecker $updateChecker,
+		private BuilderConfigService $builderConfig,
+		private CollectionFetcher $collectionFetcher,
 	) {
 	}
 
@@ -66,7 +76,7 @@ readonly class AdminTwigAdapter
 		$redirect = (string)($options['redirect'] ?? '');
 		$class    = (string)($options['class'] ?? '');
 
-		$url = rtrim($this->config->api, '/') . '/' . ltrim($route, '/');
+		$url = rtrim($this->config->api . '/api', '/') . '/' . ltrim($route, '/');
 		$on  = ['error' => 'QuickAction.error(this, event)'];
 
 		if ($redirect !== '') {
@@ -91,24 +101,21 @@ readonly class AdminTwigAdapter
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function processJobQueueCommand(): string
 	{
-		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
+		// php <install_dir>/resources/bin/tcms jobs:process
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
-		$installDir = realpath(__DIR__ . '/../../../..');
-		$docroot    = rtrim((string)$_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
-		$command    = $installDir . '/resources/bin/processJobs.php';
+		$installDir = PathResolver::packageRoot();
+		$command    = $installDir . '/resources/bin/tcms';
 
-		// Quote paths that contain spaces
+		// Quote path if it contains spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
-		$quotedDocroot = str_contains($docroot, ' ') ? '"' . $docroot . '"' : $docroot;
 
 		$envPrefix = $this->config->env === 'dev' ? 'APP_ENV=dev ' : '';
 
 		return sprintf(
-			'%s%s %s --docroot=%s',
+			'%s%s %s jobs:process',
 			$envPrefix,
 			$phpPath,
 			$quotedCommand,
-			$quotedDocroot,
 		);
 	}
 
@@ -239,13 +246,13 @@ readonly class AdminTwigAdapter
 	public function templatesByFolder(): array
 	{
 		// Get all templates recursively
-		$templates = $this->templateLister->listCustomTemplates(null, true);
+		$templates = $this->templateLister->listBuilderTemplates(null, true);
 
 		$folders = [];
 
 		foreach ($templates as $path) {
 			// Parse path to get folder and template name
-			[$folder, $templateId] = TemplateRepository::parsePath($path);
+			[$folder, $templateId] = TemplatePath::parse($path);
 
 			// Determine group name
 			$groupName = 'Templates';
@@ -282,6 +289,54 @@ readonly class AdminTwigAdapter
 		return $folders;
 	}
 
+	/**
+	 * Get the builder file tree organized by category.
+	 *
+	 * @return array<string,list<array{id:string,path:string}>>
+	 */
+	public function builderFileTree(): array
+	{
+		$tree       = [];
+		$categories = TemplateRepository::BUILDER_CATEGORIES;
+
+		foreach ($categories as $category) {
+			$templates       = $this->templateLister->listBuilderTemplates($category, true);
+			$tree[$category] = [];
+			foreach ($templates as $templatePath) {
+				$tree[$category][] = [
+					'id'   => $templatePath,
+					'path' => $category . '/' . $templatePath,
+				];
+			}
+		}
+
+		return $tree;
+	}
+
+	/**
+	 * Get the builder file tree organized by category, with templates that
+	 * contain forward slashes ("blog/post") nested into folders. Companion
+	 * to {@see builderFileTree()} which returns the same data flat.
+	 *
+	 * Each node is either a folder `{type:'folder', name, children:[...]}`
+	 * or a file `{type:'file', name, id, path}` where `id` is the relative
+	 * template id (e.g. "blog/post") and `path` includes the category prefix
+	 * (e.g. "pages/blog/post"). Folders sort before files; both alphabetical.
+	 *
+	 * @return array<string,list<array<string,mixed>>>
+	 */
+	public function builderNestedFileTree(): array
+	{
+		$tree = [];
+
+		foreach (TemplateRepository::BUILDER_CATEGORIES as $category) {
+			$templates       = $this->templateLister->listBuilderTemplates($category, true);
+			$tree[$category] = NestedFileTree::build(array_values($templates), $category);
+		}
+
+		return $tree;
+	}
+
 	// -------------------------
 	// Dashboard Data Methods
 	// -------------------------
@@ -295,7 +350,7 @@ readonly class AdminTwigAdapter
 	{
 		$collections = $this->collectionLister->listAllCollections();
 		$schemas     = $this->schemaLister->listCustomSchemas();
-		$templates   = $this->templateLister->listCustomTemplates();
+		$templates   = $this->templateLister->listBuilderTemplates();
 
 		// Sum totalObjects from all collections (much faster than counting index objects)
 		$totalObjects = 0;
@@ -417,6 +472,19 @@ readonly class AdminTwigAdapter
 
 		$licenseStatus = $this->licenseStatus->getSidebarStatus();
 
+		$updateInfo = null;
+		try {
+			$update = $this->updateChecker->checkForUpdate();
+			if ($update->available) {
+				$updateInfo = [
+					'version'  => $update->version,
+					'severity' => $update->severity,
+				];
+			}
+		} catch (\Throwable) {
+			// Update check is non-critical
+		}
+
 		return [
 			'phpVersion'       => PHP_VERSION,
 			'totalcmsVersion'  => $this->config->version ?? '3.0',
@@ -429,6 +497,7 @@ readonly class AdminTwigAdapter
 				'message'       => $licenseStatus->tooltip,
 				'daysRemaining' => $licenseStatus->daysRemaining,
 			],
+			'update'           => $updateInfo,
 		];
 	}
 
@@ -522,6 +591,120 @@ NGINX;
 		}
 
 		return ltrim($start, '/');
+	}
+
+	// -------------------------
+	// Builder Route Detection
+	// -------------------------
+
+	/**
+	 * Check if a builder page route covers a collection's URL pattern.
+	 *
+	 * Returns the matching builder page data, or null if no match.
+	 *
+	 * @return array{id:string,title:string,route:string}|null
+	 */
+	public function builderRouteForCollection(string $collectionId): ?array
+	{
+		$collection = $this->collectionFetcher->fetchCollection($collectionId);
+		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData || $collection->url === '' || !$collection->prettyUrl) {
+			return null;
+		}
+
+		// Convert collection URL pattern to builder route format
+		$expectedRoute = $this->collectionUrlToBuilderRoute($collection->url);
+
+		// Fetch builder pages
+		$pagesCollectionId = $this->builderConfig->getPagesCollectionId();
+		if (!$this->builderConfig->pagesCollectionExists()) {
+			return null;
+		}
+
+		try {
+			$index = $this->indexReader->fetchIndex($pagesCollectionId);
+		} catch (\Exception) {
+			return null;
+		}
+
+		foreach ($index->objects as $object) {
+			$page = new PageData($object);
+			if (!$page->isPublished() || $page->route === '') {
+				continue;
+			}
+
+			if ($this->routeMatchesPattern($page->route, $expectedRoute)) {
+				return ['id' => $page->id, 'title' => $page->title, 'route' => $page->route];
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Convert a collection URL template to a builder route pattern.
+	 *
+	 * /blog                         → /blog/{id}
+	 * /blog/{{ category }}/{{ id }} → /blog/{category}/{id}
+	 */
+	private function collectionUrlToBuilderRoute(string $url): string
+	{
+		// Strip query string
+		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path = rtrim($path, '/');
+
+		// Replace {{ field }} or {{ field | filter }} with {field}
+		$route = (string)preg_replace('/\{\{\s*(\w+)(?:\s*\|[^}]*)?\s*\}\}/', '{$1}', $path);
+
+		// If no {param} tokens, it's a simple pretty URL — append {id}
+		if (!str_contains($route, '{')) {
+			// Strip .php extension if present
+			if (str_ends_with($route, '.php')) {
+				$route = dirname($route);
+			}
+			$route = rtrim($route, '/') . '/{id}';
+		}
+
+		return $route;
+	}
+
+	/**
+	 * Check if a builder page route matches the expected pattern.
+	 *
+	 * Normalizes both routes and compares structure (same number of segments,
+	 * static segments match, dynamic segments align).
+	 */
+	private function routeMatchesPattern(string $pageRoute, string $expectedRoute): bool
+	{
+		$pageRoute     = rtrim($pageRoute, '/');
+		$expectedRoute = rtrim($expectedRoute, '/');
+
+		$pageSegments     = explode('/', ltrim($pageRoute, '/'));
+		$expectedSegments = explode('/', ltrim($expectedRoute, '/'));
+
+		if (count($pageSegments) !== count($expectedSegments)) {
+			return false;
+		}
+
+		foreach ($pageSegments as $i => $segment) {
+			$expected          = $expectedSegments[$i];
+			$segIsDynamic      = str_starts_with($segment, '{') && str_ends_with($segment, '}');
+			$expectedIsDynamic = str_starts_with($expected, '{') && str_ends_with($expected, '}');
+
+			// Both dynamic — match
+			if ($segIsDynamic && $expectedIsDynamic) {
+				continue;
+			}
+
+			// Both static — must be equal
+			if (!$segIsDynamic && !$expectedIsDynamic && $segment === $expected) {
+				continue;
+			}
+
+			// One dynamic, one static — no match
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

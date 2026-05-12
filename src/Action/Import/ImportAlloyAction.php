@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Import;
 
 use Psr\Http\Message\ResponseInterface;

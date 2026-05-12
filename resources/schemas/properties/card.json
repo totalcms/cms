@@ -1,0 +1,38 @@
+{
+  "$id"     : "https://www.totalcms.co/schemas/properties/card.json",
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type"    : "object",
+  "patternProperties": {
+    "^[0-9a-zA-Z_]+$": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/card.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/color.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/email.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/empty.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/file.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/image.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/list.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/password.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/phone.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/slug.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/svg.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/time.json"},
+        {"$ref": "https://www.totalcms.co/schemas/properties/url.json"}
+      ],
+      "description": "Card property values must be basic types or supported property schemas"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A card is a single named object with schema-defined properties (a single-instance Deck)",
+  "examples": [
+    {
+      "enabled"   : true,
+      "frequency" : "weekly",
+      "priority"  : 0.7
+    }
+  ]
+}

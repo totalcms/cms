@@ -31,11 +31,11 @@ readonly class DataViewTestHtmlAction
 
 		$result = $this->viewBuilder->testView($definition);
 
-		if ($result['success']) {
-			$json = htmlspecialchars(json_encode($result['data'], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+		if ($result->success) {
+			$json = htmlspecialchars(json_encode($result->data['data'], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 			$html = HTMLUtils::element('pre', $json, ['class' => 'test-success']);
 		} else {
-			$html = HTMLUtils::element('div', htmlspecialchars((string)($result['error'] ?? 'Unknown error')), ['class' => 'test-error']);
+			$html = HTMLUtils::element('div', htmlspecialchars($result->error ?? 'Unknown error'), ['class' => 'test-error']);
 		}
 
 		return $this->renderer->render($response, $html);

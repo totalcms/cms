@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Service;
 
+use TotalCMS\Support\OperationResult;
 use Twig\Environment as TwigEnvironment;
 use Twig\Error\SyntaxError;
 use Twig\Loader\ArrayLoader;
@@ -33,35 +34,31 @@ readonly class TwigLintService
 	 *
 	 * @param string $filePath The absolute path to the file to lint
 	 * @param int    $contextLines Number of lines to show before/after error
-	 *
-	 * @return array{success: bool, error?: array{message: string, line: int, context: string}, file: string}
 	 */
-	public function lintFile(string $filePath, int $contextLines = 5): array
+	public function lintFile(string $filePath, int $contextLines = 5): OperationResult
 	{
 		if (!file_exists($filePath)) {
-			return [
-				'success' => false,
-				'error'   => [
+			return OperationResult::failure("File not found: {$filePath}", null, [
+				'error' => [
 					'message' => "File not found: {$filePath}",
 					'line'    => 0,
 					'context' => '',
 				],
-				'file'    => $filePath,
-			];
+				'file' => $filePath,
+			]);
 		}
 
 		$content = file_get_contents($filePath);
 
 		if ($content === false) {
-			return [
-				'success' => false,
-				'error'   => [
+			return OperationResult::failure("Unable to read file: {$filePath}", null, [
+				'error' => [
 					'message' => "Unable to read file: {$filePath}",
 					'line'    => 0,
 					'context' => '',
 				],
-				'file'    => $filePath,
-			];
+				'file' => $filePath,
+			]);
 		}
 
 		return $this->lintContent($content, $filePath, $contextLines);
@@ -73,10 +70,8 @@ readonly class TwigLintService
 	 * @param string $content       The Twig content to lint
 	 * @param string $filename      The filename for error reporting
 	 * @param int    $contextLines  Number of lines to show before/after error
-	 *
-	 * @return array{success: bool, error?: array{message: string, line: int, context: string}, file: string}
 	 */
-	public function lintContent(string $content, string $filename = 'input', int $contextLines = 5): array
+	public function lintContent(string $content, string $filename = 'input', int $contextLines = 5): OperationResult
 	{
 		try {
 			$source = new Source($content, $filename);
@@ -87,35 +82,32 @@ readonly class TwigLintService
 			// Parse the tokens into an AST
 			$this->twig->parse($tokenStream);
 
-			return [
-				'success' => true,
-				'file'    => $filename,
-			];
+			return OperationResult::success('', [
+				'file' => $filename,
+			]);
 		} catch (SyntaxError $e) {
 			$errorLine  = $e->getTemplateLine();
 			$context    = $this->getErrorContext($content, $errorLine, $contextLines);
 			$totalLines = count(explode("\n", str_replace(["\r\n", "\r"], "\n", $content)));
 
-			return [
-				'success' => false,
-				'error'   => [
+			return OperationResult::failure($this->cleanErrorMessage($e->getMessage()), null, [
+				'error' => [
 					'message' => $this->cleanErrorMessage($e->getMessage()),
 					'line'    => $errorLine,
 					'context' => $context,
 				],
 				'file'       => $filename,
 				'totalLines' => $totalLines,
-			];
+			]);
 		} catch (\Exception $e) {
-			return [
-				'success' => false,
-				'error'   => [
+			return OperationResult::failure($e->getMessage(), null, [
+				'error' => [
 					'message' => $e->getMessage(),
 					'line'    => 0,
 					'context' => '',
 				],
-				'file'    => $filename,
-			];
+				'file' => $filename,
+			]);
 		}
 	}
 

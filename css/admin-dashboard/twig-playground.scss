@@ -65,7 +65,7 @@
 	border-radius    : var(--totalform-radius);
 }
 
-.html-output-editor .CodeMirror {
+.html-output-editor .cm-editor {
 	height: auto;
 	min-height: 200px;
 	max-height: 500px;
@@ -73,12 +73,7 @@
 	border-radius: var(--totalform-radius);
 }
 
-.html-output-editor .CodeMirror-scroll {
+.html-output-editor .cm-scroller {
 	overflow: auto !important;
 	max-height: 500px;
-}
-
-.html-output-editor .CodeMirror-scrollbar-filler,
-.html-output-editor .CodeMirror-gutter-filler {
-	display: none;
 }

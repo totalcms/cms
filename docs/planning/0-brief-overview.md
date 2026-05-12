@@ -7,7 +7,7 @@
 
 ## The Strategic Shift
 
-T3 today is excellent but ecosystem-dependent. Nearly 100% of current users come through the Stacks/RapidWeaver world. The platform expansion is designed to change that by giving T3 everything it needs to stand on its own:
+T3 today is excellent but ecosystem-dependent. Nearly 100% of current users come through the Stacks world. The platform expansion is designed to change that by giving T3 everything it needs to stand on its own:
 
 - An AI-native developer experience from day one
 - A frictionless install path for anyone, not just Stacks users
@@ -263,7 +263,7 @@ Project 7: API MCP Extension
 
 ## What This Looks Like When Complete
 
-A developer who has never heard of RapidWeaver or Stacks can:
+A developer who has never heard of Stacks can:
 
 1. Configure the T3 Docs MCP server in their AI agent once — accurate T3 answers from that point forward
 2. Find T3 at `totalcms.co`, download a zip or run a Composer command

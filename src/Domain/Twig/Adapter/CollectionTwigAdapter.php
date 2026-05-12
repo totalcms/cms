@@ -140,8 +140,15 @@ readonly class CollectionTwigAdapter
 			return $this->objectUrlBuilder->buildUrl($collectionData, $idOrObject);
 		}
 
+		// Normalize before checking — `isTemplateUrl` only matches Twig-style
+		// `{{ }}` syntax, but users commonly write Slim-style `{id}` (the form
+		// even uses that format). Without normalising first, those URLs slip
+		// past this check and fall through to the legacy path that ignores the
+		// template entirely.
+		$normalizedUrl = $this->objectUrlBuilder->normalizeUrlPattern($collectionData->url);
+
 		// If template URL but only ID provided, we need the full object
-		if ($this->objectUrlBuilder->isTemplateUrl($collectionData->url)) {
+		if ($this->objectUrlBuilder->isTemplateUrl($normalizedUrl)) {
 			try {
 				$object = $this->objectFetcher->fetchObject($collectionId, $idOrObject);
 

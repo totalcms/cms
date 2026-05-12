@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Schema\Service;
+
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 
 /**
  * Service to transform schemas with simplified deck syntax into full JSON Schema format.
@@ -8,7 +12,7 @@ namespace TotalCMS\Domain\Schema\Service;
  * This allows users to write:
  * "features": {
  *     "field": "deck",
- *     "deckref": "https://www.totalcms.co/schemas/custom/features.json",
+ *     "schemaref": "https://www.totalcms.co/schemas/custom/features.json",
  *     "$ref": "https://www.totalcms.co/schemas/properties/deck.json"
  * }
  *
@@ -20,6 +24,8 @@ namespace TotalCMS\Domain\Schema\Service;
  *     },
  *     "$ref": "https://www.totalcms.co/schemas/properties/deck.json"
  * }
+ *
+ * The legacy `deckref` key is still accepted as an alias for `schemaref`.
  */
 class SchemaTransformer
 {
@@ -43,10 +49,16 @@ class SchemaTransformer
 				continue;
 			}
 
+			$schemaRef = PropertyDefinition::extractSchemaRef($property);
+
 			// Check if this property uses the simplified deck syntax
-			if ($this->isDeckProperty($property) && isset($property['deckref'])) {
+			if ($this->isDeckProperty($property) && $schemaRef !== null) {
 				$transformedSchema['properties'][$propertyName] = $this->expandDeckProperty($property);
 			}
+
+			// Card properties don't need expansion — `$ref` stays at the canonical
+			// `properties/card.json`, which validates the nested object's shape.
+			// `schemaref` carries the user's sub-schema for form rendering only.
 		}
 
 		return $transformedSchema;
@@ -65,7 +77,8 @@ class SchemaTransformer
 
 	/**
 	 * Expand a simplified deck property into full patternProperties format.
-	 * Preserves the original deckref for form building while adding patternProperties for validation.
+	 * Preserves the original schemaref/deckref for form building while adding
+	 * patternProperties for validation.
 	 *
 	 * @param array<string,mixed> $property
 	 *
@@ -73,12 +86,10 @@ class SchemaTransformer
 	 */
 	private function expandDeckProperty(array $property): array
 	{
-		$expanded = $property;
+		$expanded      = $property;
+		$deckSchemaRef = PropertyDefinition::extractSchemaRef($property);
 
-		// If deckref property exists, convert it to patternProperties
-		if (isset($property['deckref'])) {
-			$deckSchemaRef = $property['deckref'];
-
+		if ($deckSchemaRef !== null) {
 			// Create the patternProperties structure
 			$expanded['patternProperties'] = [
 				'^[a-zA-Z]\\w*$' => [
@@ -86,9 +97,9 @@ class SchemaTransformer
 				],
 			];
 
-			// Keep the deckref property for form building - don't remove it
+			// Keep the schemaref/deckref property for form building - don't remove it
 			// This allows both JSON Schema validation (via patternProperties)
-			// and form generation (via deckref) to work
+			// and form generation (via the reference) to work
 		}
 
 		return $expanded;

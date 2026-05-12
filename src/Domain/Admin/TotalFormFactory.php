@@ -7,12 +7,17 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\Extension\ExtensionContext;
+use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
@@ -21,6 +26,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -28,8 +34,10 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Total Form Builder.
@@ -70,8 +78,14 @@ readonly class TotalFormFactory
 		private PropertyMetaResolver $metaResolver,
 		private DataViewFilter $dataViewFilter,
 		private TranslationService $translationService,
+		private ExtensionDiscovery $extensionDiscovery,
+		private ExtensionSettingsManager $extensionSettingsManager,
+		private ExtensionManager $extensionManager,
+		private TemplateLister $templateLister,
+		private DevModeManager $devModeManager,
+		private PageMiddlewareRegistry $pageMiddlewareRegistry,
 	) {
-		$this->api = $this->config->api;
+		$this->api = $this->config->api . '/api';
 	}
 
 	/**
@@ -117,9 +131,11 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
+		// Admin routes (/admin/...) don't have the /api prefix
+		$api     = str_starts_with($route, '/admin') ? $this->config->api : $this->api;
 		$options = array_merge($options, [
 			'route'                    => $route,
-			'api'                      => $this->api,
+			'api'                      => $api,
 			'objectFetcher'            => $this->objectFetcher,
 			'collectionFetcher'        => $this->collectionFetcher,
 			'collectionLister'         => $this->collectionLister,
@@ -160,9 +176,10 @@ readonly class TotalFormFactory
 	 */
 	public function loginForm(array $options = []): string
 	{
-		$options['api']          = $this->api;
+		$options['api']          = $this->config->api;
 		$options['session']      = $this->session;
 		$options['csrfManager']  = $this->csrfManager;
+		$options['loginWith'] ??= $this->config->auth['loginWith'] ?? 'both';
 		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)
 			&& ($this->config->auth['usePasskeys'] ?? true);
 
@@ -233,8 +250,7 @@ readonly class TotalFormFactory
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 			foreach ($schema->properties as $propName => $propConfig) {
-				$deckref = $propConfig['deckref'] ?? $propConfig['settings']['deckref'] ?? null;
-				if (!empty($deckref)) {
+				if (PropertyDefinition::extractSchemaRef($propConfig) !== null) {
 					$deckProperties[] = ['value' => $propName, 'label' => $propName];
 				}
 			}
@@ -320,8 +336,7 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function devmode(array $options = []): string
 	{
-		$devModeManager = new DevModeManager();
-		$devModeStatus  = $devModeManager->getDevModeStatus();
+		$devModeStatus = $this->devModeManager->getDevModeStatus();
 
 		$options = array_merge([
 			'form'  => $this->dummyForm(),
@@ -414,6 +429,8 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new TemplateForm(...$options);
+		$form->setTemplateLister($this->templateLister);
+		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 
 		return $form->autoBuild();
 	}
@@ -694,7 +711,11 @@ readonly class TotalFormFactory
 			'metaResolver'             => $this->metaResolver,
 		]);
 
-		return new ObjectForm(...$options);
+		$form = new ObjectForm(...$options);
+		$form->setTemplateLister($this->templateLister);
+		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
+
+		return $form;
 	}
 
 	/**
@@ -799,7 +820,7 @@ readonly class TotalFormFactory
 		// Load schema and data using injected services
 		$schema      = $this->settingsSchemaFetcher->getSchema($section);
 		$sectionData = $this->settingsFetcher->loadSection($section);
-		$defaults    = require __DIR__ . '/../../../config/defaults.php';
+		$defaults    = require PathResolver::packageRoot() . '/config/defaults.php';
 		$timezones   = $options['timezones'] ?? timezone_identifiers_list();
 
 		if ($schema === null || !isset($schema['properties']) || !is_array($schema['properties'])) {
@@ -829,7 +850,7 @@ readonly class TotalFormFactory
 
 			// Special handling for JSON fields - convert arrays to JSON strings for display
 			if ($fieldType === 'json' && is_array($currentValue)) {
-				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
+				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 			}
 
 			// Build field options
@@ -845,10 +866,11 @@ readonly class TotalFormFactory
 				'settings'    => $fieldSchema['settings'] ?? [],
 			];
 
-			// Merge deck-specific schema keys into settings
-			if ($fieldType === 'deck' || $fieldType === 'deckTable') {
-				if (isset($fieldSchema['deckref'])) {
-					$fieldSettings['settings']['deckref'] = $fieldSchema['deckref'];
+			// Merge schema-reference keys into settings for fields that hydrate from another schema
+			if (in_array($fieldType, ['deck', 'deckTable', 'card'], true)) {
+				$schemaref = PropertyDefinition::extractSchemaRef($fieldSchema);
+				if ($schemaref !== null) {
+					$fieldSettings['settings']['schemaref'] = $schemaref;
 				}
 				if (isset($fieldSchema['deckItemLabel'])) {
 					$fieldSettings['settings']['deckItemLabel'] = $fieldSchema['deckItemLabel'];
@@ -877,6 +899,134 @@ readonly class TotalFormFactory
 			'save'        => 'Save Settings',
 			'class'       => 'help-on-hover help-box',
 		]);
+	}
+
+	/**
+	 * Generate a settings form for an extension.
+	 *
+	 * Includes auto-generated permission toggles for each detected capability,
+	 * followed by the extension's custom settings (if a settings schema exists).
+	 */
+	public function extensionSettings(string $extensionId): string
+	{
+		$formfields  = $this->buildPermissionToggles($extensionId);
+		$formfields .= $this->buildExtensionSettingsFields($extensionId, $formfields !== '');
+
+		if ($formfields === '') {
+			return '<p>This extension has no configurable settings.</p>';
+		}
+
+		return $this->totalform('/admin/extensions/' . $extensionId . '/settings', $formfields, [
+			'method' => 'POST',
+			'save'   => 'Save Settings',
+			'class'  => 'help-on-hover help-box',
+		]);
+	}
+
+	private function buildPermissionToggles(string $extensionId): string
+	{
+		$permissions      = $this->extensionManager->getPermissions($extensionId);
+		$capabilityLabels = ExtensionContext::capabilityLabels();
+
+		if ($permissions === []) {
+			return '';
+		}
+
+		$toggles = '';
+		foreach ($permissions as $capability => $enabled) {
+			$label    = $capabilityLabels[$capability] ?? $capability;
+			$toggles .= $this->field('toggle', 'perm_' . str_replace(':', '_', $capability), [
+				'field' => 'toggle',
+				'label' => $label,
+				'value' => $enabled,
+			]);
+		}
+
+		return '<fieldset class="ext-permissions">'
+			. '<legend>Permissions</legend>'
+			. '<div class="ext-permissions-grid">' . $toggles . '</div>'
+			. '</fieldset>';
+	}
+
+	private function buildExtensionSettingsFields(string $extensionId, bool $hasPermissions): string
+	{
+		$schema = $this->loadExtensionSettingsSchema($extensionId);
+		if ($schema === null) {
+			return '';
+		}
+
+		$settings   = $this->extensionSettingsManager->getSettings($extensionId);
+		$formfields = '';
+
+		if ($hasPermissions) {
+			$formfields .= '<h3 style="margin:2rem 0 0.5rem;">Settings</h3>';
+		}
+
+		foreach ($schema as $fieldName => $fieldSchema) {
+			$fieldType    = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
+			$currentValue = $settings[$fieldName] ?? $fieldSchema['default'] ?? '';
+
+			if ($fieldType === 'json' && is_array($currentValue)) {
+				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+			}
+
+			$fieldSettings = [
+				'field'       => $fieldType,
+				'label'       => $fieldSchema['label'] ?? '',
+				'help'        => $fieldSchema['help'] ?? '',
+				'placeholder' => $fieldSchema['placeholder'] ?? '',
+				'value'       => $currentValue,
+				'required'    => $fieldSchema['required'] ?? false,
+				'min'         => $fieldSchema['min'] ?? null,
+				'max'         => $fieldSchema['max'] ?? null,
+				'settings'    => $fieldSchema['settings'] ?? [],
+			];
+
+			if (isset($fieldSchema['options'])) {
+				$fieldSettings['options'] = $fieldSchema['options'];
+			}
+
+			$formfields .= $this->field($fieldType, $fieldName, $fieldSettings);
+		}
+
+		return $formfields;
+	}
+
+	/**
+	 * Load and validate the settings schema properties for an extension.
+	 *
+	 * @return array<string,array<string,mixed>>|null
+	 */
+	private function loadExtensionSettingsSchema(string $extensionId): ?array
+	{
+		$manifests = $this->extensionDiscovery->discover();
+		$manifest  = $manifests[$extensionId] ?? null;
+
+		if ($manifest === null || $manifest->settingsSchema === null) {
+			return null;
+		}
+
+		$extPath = $this->extensionDiscovery->getExtensionPath($extensionId);
+		if ($extPath === null) {
+			return null;
+		}
+
+		$schemaFile = $extPath . '/' . $manifest->settingsSchema;
+		if (!is_file($schemaFile)) {
+			return null;
+		}
+
+		$schemaJson = file_get_contents($schemaFile);
+		if ($schemaJson === false) {
+			return null;
+		}
+
+		$schema = json_decode($schemaJson, true);
+		if (!is_array($schema) || !isset($schema['properties']) || !is_array($schema['properties'])) {
+			return null;
+		}
+
+		return $schema['properties'];
 	}
 
 	/**
@@ -1254,7 +1404,12 @@ readonly class TotalFormFactory
 			'name' => $name,
 		], $options);
 
-		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
+		// Check built-in field types first, then extension-registered types
+		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
+		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+			? $builtInClass
+			: (TotalForm::getExtensionFieldTypes()[$type] ?? $builtInClass);
+
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			$field = new $typeClass(...$options);
 		} else {

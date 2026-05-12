@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Property\Data;
 
 use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;

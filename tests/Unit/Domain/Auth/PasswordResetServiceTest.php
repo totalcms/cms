@@ -114,10 +114,10 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->createResetToken($email, $collection);
 
-		$this->assertTrue($result['success']);
-		$this->assertArrayHasKey('token', $result);
-		$this->assertSame(64, strlen($result['token']));
-		$this->assertStringContainsString('created successfully', $result['message']);
+		$this->assertTrue($result->success);
+		$this->assertArrayHasKey('token', $result->data);
+		$this->assertSame(64, strlen((string)$result->data['token']));
+		$this->assertStringContainsString('created successfully', $result->message);
 	}
 
 	public function testCreateResetTokenHandlesNonExistentUserSafely(): void
@@ -141,9 +141,9 @@ final class PasswordResetServiceTest extends TestCase
 		$result = $this->service->createResetToken($email, $collection);
 
 		// Still returns success to prevent user enumeration
-		$this->assertTrue($result['success']);
-		$this->assertArrayNotHasKey('token', $result);
-		$this->assertStringContainsString('If an account exists', $result['message']);
+		$this->assertTrue($result->success);
+		$this->assertArrayNotHasKey('token', $result->data);
+		$this->assertStringContainsString('If an account exists', $result->message);
 	}
 
 	public function testCreateResetTokenInvalidatesPreviousToken(): void
@@ -181,7 +181,7 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->createResetToken($email, $collection);
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testCreateResetTokenHandlesStorageFailure(): void
@@ -212,8 +212,8 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->createResetToken($email, $collection);
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Unable to create', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Unable to create', $result->message);
 	}
 
 	public function testCreateResetTokenUsesConfiguredExpiry(): void
@@ -249,7 +249,7 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->createResetToken($email, $collection);
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testValidateTokenSucceedsForValidToken(): void
@@ -270,10 +270,10 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->validateToken($token);
 
-		$this->assertTrue($result['valid']);
-		$this->assertSame('user@example.com', $result['email']);
-		$this->assertSame('users', $result['collection']);
-		$this->assertStringContainsString('valid', $result['message']);
+		$this->assertTrue($result->success);
+		$this->assertSame('user@example.com', $result->data['email']);
+		$this->assertSame('users', $result->data['collection']);
+		$this->assertStringContainsString('valid', $result->message);
 	}
 
 	public function testValidateTokenFailsForInvalidToken(): void
@@ -287,10 +287,10 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->validateToken($token);
 
-		$this->assertFalse($result['valid']);
-		$this->assertArrayNotHasKey('email', $result);
-		$this->assertArrayNotHasKey('collection', $result);
-		$this->assertStringContainsString('Invalid or expired', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertArrayNotHasKey('email', $result->data);
+		$this->assertArrayNotHasKey('collection', $result->data);
+		$this->assertStringContainsString('Invalid or expired', $result->message);
 	}
 
 	public function testValidateTokenFailsForExpiredToken(): void
@@ -315,8 +315,8 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->validateToken($token);
 
-		$this->assertFalse($result['valid']);
-		$this->assertStringContainsString('expired', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('expired', $result->message);
 	}
 
 	public function testResetPasswordSucceedsWithValidToken(): void
@@ -367,8 +367,8 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->resetPassword($token, $newPassword);
 
-		$this->assertTrue($result['success']);
-		$this->assertStringContainsString('successful', $result['message']);
+		$this->assertTrue($result->success);
+		$this->assertStringContainsString('successful', $result->message);
 	}
 
 	public function testResetPasswordFailsWithInvalidToken(): void
@@ -387,8 +387,8 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->resetPassword($token, $newPassword);
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Invalid or expired', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Invalid or expired', $result->message);
 	}
 
 	public function testResetPasswordFailsWhenUserNotFound(): void
@@ -417,8 +417,8 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->resetPassword($token, $newPassword);
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not found', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not found', $result->message);
 	}
 
 	public function testResetPasswordHandlesUpdateException(): void
@@ -459,7 +459,7 @@ final class PasswordResetServiceTest extends TestCase
 
 		$result = $this->service->resetPassword($token, $newPassword);
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Failed to update', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Failed to update', $result->message);
 	}
 }

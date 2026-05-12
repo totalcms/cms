@@ -14,6 +14,28 @@ export function getUploadUrl(uploadConfig) {
 }
 
 /**
+ * Get the directory-listing URL + ?path= query for a given upload URL.
+ *
+ * The upload URL may include a nested subpath (`/upload/coll/id/prop/sub/path`),
+ * but the listing endpoint always lives at `/upload/coll/id/prop` with the
+ * subpath passed via `?path=` query, so we strip and rewrite here.
+ *
+ * @returns { url: string, params: URLSearchParams } or null if no upload URL.
+ */
+export function getListUrl(uploadConfig) {
+	const url = getUploadUrl(uploadConfig);
+	if (!url) return null;
+
+	const match = url.match(/^(.*\/upload\/[^/]+\/[^/]+\/[^/]+)(?:\/(.+))?$/);
+	if (!match) return { url, params: new URLSearchParams() };
+
+	const [, baseUrl, subpath] = match;
+	const params = new URLSearchParams();
+	if (subpath) params.set('path', subpath);
+	return { url: baseUrl, params };
+}
+
+/**
  * Load image dimensions from a File object.
  * Returns { width, height } or { width: 0, height: 0 } on error.
  */
@@ -79,7 +101,7 @@ function buildFormData(file, uploadConfig) {
 export function uploadFile(file, url, uploadConfig) {
 	return new Promise((resolve, reject) => {
 		if (!url) {
-			reject(new Error('No upload URL configured'));
+			reject(new Error('Save the form before uploading.'));
 			return;
 		}
 
@@ -109,7 +131,7 @@ export function uploadFile(file, url, uploadConfig) {
  */
 export function uploadFileWithProgress(file, url, uploadConfig, { onProgress, onSuccess, onError }) {
 	if (!url) {
-		onError?.('No upload URL configured');
+		onError?.('Save the form before uploading.');
 		return;
 	}
 

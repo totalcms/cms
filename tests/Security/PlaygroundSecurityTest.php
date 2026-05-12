@@ -34,7 +34,7 @@ describe('Playground Security', function (): void {
 		];
 
 		foreach ($pathTraversalIds as $maliciousId) {
-			get("/playground/{$maliciousId}")
+			get("/api/playground/{$maliciousId}")
 				->assertNotFound(); // Should not find system files
 		}
 	});
@@ -50,7 +50,7 @@ describe('Playground Security', function (): void {
 			'snippet'  => '{{ "test" }}',
 		];
 
-		$response = postJson('/playground', $snippet);
+		$response = postJson('/api/playground', $snippet);
 
 		// Either succeeds with proper token handling or fails with CSRF protection
 		expect($response->getStatusCode())->toBeIn([200, 403, 419, 500]);

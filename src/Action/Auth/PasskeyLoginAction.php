@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\LastLoginUpdateService;
 use TotalCMS\Domain\Auth\Service\PasskeyService;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -19,6 +21,7 @@ readonly class PasskeyLoginAction
 		private PhpSession $session,
 		private LastLoginUpdateService $lastLoginUpdateService,
 		private JsonRenderer $jsonRenderer,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -41,6 +44,10 @@ readonly class PasskeyLoginAction
 			// Update last login
 			$this->lastLoginUpdateService->updateLoginDate($collection, (string)$user['id']);
 
+			// Mirror LoginService: dispatch user.login so listeners (audit, webhooks,
+			// extensions) see passkey logins the same as password logins.
+			$this->eventDispatcher->dispatch('user.login', new UserEventPayload((string)$user['id']));
+
 			// Set up session (mirrors AuthLoginSubmitAction)
 			$this->session->destroy();
 			$this->session->start();
@@ -49,6 +56,7 @@ readonly class PasskeyLoginAction
 			$this->session->set(SessionKeys::AUTH_COLLECTION, $collection);
 			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, false);
 			$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
+			$this->session->set(SessionKeys::LICENSE_CHECK_DUE, true);
 
 			return $this->jsonRenderer->json($response, [
 				'success'  => true,

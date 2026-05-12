@@ -1,42 +1,42 @@
-<h1>Orphan Scanner</h1>
+<h1>{{ t('orphan.title') }}</h1>
 
 <section class="dash-content-section">
 
-	<p>Scan your collections for orphaned relational references &mdash; IDs that point to objects that no longer exist.</p>
+	<p>{{ t('orphan.desc') }}</p>
 
 	<div class="orphan-controls">
-		<button class="dash-button" id="orphan-scan-btn" type="button">Scan Now</button>
+		<button class="dash-button" id="orphan-scan-btn" type="button">{{ t('orphan.scan_btn') }}</button>
 	</div>
 
 	<div id="orphan-loading" class="orphan-loading" style="display:none">
-		<p>Scanning collections&hellip;</p>
+		<p>{{ t('orphan.scanning') }}</p>
 	</div>
 
 	<div id="orphan-summary" class="orphan-summary" style="display:none">
-		<h2>Scan Results</h2>
+		<h2>{{ t('orphan.results_title') }}</h2>
 		<ul class="orphan-stats">
-			<li>Collections scanned: <strong id="stat-collections">0</strong></li>
-			<li>Objects scanned: <strong id="stat-objects">0</strong></li>
-			<li>Relational properties: <strong id="stat-properties">0</strong></li>
-			<li>Orphaned references: <strong id="stat-orphans">0</strong></li>
+			<li>{{ t('orphan.stat_collections') }}: <strong id="stat-collections">0</strong></li>
+			<li>{{ t('orphan.stat_objects') }}: <strong id="stat-objects">0</strong></li>
+			<li>{{ t('orphan.stat_properties') }}: <strong id="stat-properties">0</strong></li>
+			<li>{{ t('orphan.stat_orphans') }}: <strong id="stat-orphans">0</strong></li>
 		</ul>
 	</div>
 
 	<div id="orphan-empty" class="orphan-empty" style="display:none">
-		<p>No orphaned references found. All relational data is valid.</p>
+		<p>{{ t('orphan.empty') }}</p>
 	</div>
 
 	<div id="orphan-results" style="display:none">
 		<div class="orphan-actions">
-			<button class="dash-button" id="orphan-clean-all-btn" type="button">Clean All</button>
+			<button class="dash-button" id="orphan-clean-all-btn" type="button">{{ t('orphan.clean_all_btn') }}</button>
 		</div>
 
 		<div id="orphan-groups"></div>
 	</div>
 
 	<div id="orphan-cleanup-result" class="orphan-cleanup-result" style="display:none">
-		<h3>Cleanup Results</h3>
-		<p>Cleaned: <strong id="cleanup-cleaned">0</strong> | Failed: <strong id="cleanup-failed">0</strong></p>
+		<h3>{{ t('orphan.cleanup_results_title') }}</h3>
+		<p>{{ t('orphan.cleanup_cleaned') }}: <strong id="cleanup-cleaned">0</strong> | {{ t('orphan.cleanup_failed_label') }}: <strong id="cleanup-failed">0</strong></p>
 		<ul id="cleanup-errors"></ul>
 	</div>
 
@@ -234,6 +234,27 @@
 	const cleanAllBtn = document.getElementById('orphan-clean-all-btn');
 	const PAGE_SIZE = 50;
 
+	const T = {
+		scanFailed:        {{ t('orphan.scan_failed', {message: '__MSG__'}) | json_encode | raw }},
+		cleanupFailed:     {{ t('orphan.cleanup_failed_msg', {message: '__MSG__'}) | json_encode | raw }},
+		confirmCleanAll:   {{ t('orphan.confirm_clean_all') | json_encode | raw }},
+		confirmCleanGroup: {{ t('orphan.confirm_clean_group', {target: '__TARGET__'}) | json_encode | raw }},
+		confirmCleanRow:   {{ t('orphan.confirm_clean_row', {target: '__TARGET__'}) | json_encode | raw }},
+		objectsOrphans:    {{ t('orphan.objects_orphans', {objects: '__OBJ__', orphans: '__ORPH__'}) | json_encode | raw }},
+		array:             {{ t('orphan.array') | json_encode | raw }},
+		scalar:            {{ t('orphan.scalar') | json_encode | raw }},
+		cleanGroup:        {{ t('orphan.clean_group') | json_encode | raw }},
+		colObjectId:       {{ t('orphan.col_object_id') | json_encode | raw }},
+		colOrphanedIds:    {{ t('orphan.col_orphaned_ids') | json_encode | raw }},
+		colActions:        {{ t('orphan.col_actions') | json_encode | raw }},
+		clean:             {{ t('orphan.clean') | json_encode | raw }},
+		edit:              {{ t('orphan.edit') | json_encode | raw }},
+		pageOf:            {{ t('orphan.page_of', {page: '__PAGE__', total: '__TOTAL__', entries: '__ENTRIES__'}) | json_encode | raw }},
+		prev:              {{ t('orphan.prev') | json_encode | raw }},
+		next:              {{ t('orphan.next') | json_encode | raw }},
+	};
+	const fmt = (tpl, params) => Object.entries(params).reduce((s, [k, v]) => s.replace('__' + k + '__', v), tpl);
+
 	let lastScanData = null;
 
 	scanBtn.addEventListener('click', async function() {
@@ -249,7 +270,7 @@
 			lastScanData = data;
 			displayResults(data);
 		} catch (err) {
-			alert('Scan failed: ' + err.message);
+			alert(fmt(T.scanFailed, {MSG: err.message}));
 		} finally {
 			scanBtn.disabled = false;
 			hide('orphan-loading');
@@ -257,7 +278,7 @@
 	});
 
 	cleanAllBtn.addEventListener('click', async function() {
-		if (!confirm('Clean ALL orphaned references? This cannot be undone.')) return;
+		if (!confirm(T.confirmCleanAll)) return;
 		await performCleanup({ mode: 'all' });
 	});
 
@@ -281,7 +302,7 @@
 				scanBtn.click();
 			}
 		} catch (err) {
-			alert('Cleanup failed: ' + err.message);
+			alert(fmt(T.cleanupFailed, {MSG: err.message}));
 		} finally {
 			cleanAllBtn.disabled = false;
 		}
@@ -342,9 +363,9 @@
 					' &rarr; ' + escapeHtml(group.targetCollection) +
 				'</div>' +
 				'<div class="orphan-group-meta">' +
-					'<span>' + group.entries.length + ' objects, ' + totalOrphans + ' orphans</span>' +
-					'<span>(' + (group.isArray ? 'array' : 'scalar') + ')</span>' +
-					'<button class="dash-button orphan-clean-group" type="button">Clean Group</button>' +
+					'<span>' + escapeHtml(fmt(T.objectsOrphans, {OBJ: group.entries.length, ORPH: totalOrphans})) + '</span>' +
+					'<span>(' + (group.isArray ? T.array : T.scalar) + ')</span>' +
+					'<button class="dash-button orphan-clean-group" type="button">' + escapeHtml(T.cleanGroup) + '</button>' +
 				'</div>';
 
 			header.addEventListener('click', function(e) {
@@ -354,7 +375,7 @@
 
 			header.querySelector('.orphan-clean-group').addEventListener('click', async function(e) {
 				e.stopPropagation();
-				if (!confirm('Clean all orphaned references in ' + group.collection + '.' + group.property + '? This cannot be undone.')) return;
+				if (!confirm(fmt(T.confirmCleanGroup, {TARGET: group.collection + '.' + group.property}))) return;
 				await performCleanup({ mode: 'property', collection: group.collection, property: group.property });
 			});
 
@@ -377,9 +398,9 @@
 		const totalPages = Math.ceil(group.entries.length / PAGE_SIZE);
 
 		let html = '<table><thead><tr>' +
-			'<th>Object ID</th>' +
-			'<th>Orphaned IDs</th>' +
-			'<th>Actions</th>' +
+			'<th>' + escapeHtml(T.colObjectId) + '</th>' +
+			'<th>' + escapeHtml(T.colOrphanedIds) + '</th>' +
+			'<th>' + escapeHtml(T.colActions) + '</th>' +
 			'</tr></thead><tbody>';
 
 		pageEntries.forEach(function(entry, i) {
@@ -389,8 +410,8 @@
 				'<td><code>' + escapeHtml(entry.objectId) + '</code></td>' +
 				'<td><div class="orphan-id-list">' + ids + '</div></td>' +
 				'<td class="orphan-actions-cell">' +
-					'<button class="dash-button small orphan-clean-row" type="button" data-group-idx="' + (start + i) + '">Clean</button>' +
-					'<a href="' + editUrl + '" target="_blank" class="dash-button small transparent orphan-edit-btn">Edit &#8599;</a>' +
+					'<button class="dash-button small orphan-clean-row" type="button" data-group-idx="' + (start + i) + '">' + escapeHtml(T.clean) + '</button>' +
+					'<a href="' + editUrl + '" target="_blank" class="dash-button small transparent orphan-edit-btn">' + escapeHtml(T.edit) + ' &#8599;</a>' +
 				'</td>' +
 				'</tr>';
 		});
@@ -399,10 +420,10 @@
 
 		if (totalPages > 1) {
 			html += '<div class="orphan-page-controls">' +
-				'<span>Page ' + (group.page + 1) + ' of ' + totalPages + ' (' + group.entries.length + ' entries)</span>' +
+				'<span>' + escapeHtml(fmt(T.pageOf, {PAGE: group.page + 1, TOTAL: totalPages, ENTRIES: group.entries.length})) + '</span>' +
 				'<div>' +
-					'<button class="dash-button orphan-page-prev"' + (group.page === 0 ? ' disabled' : '') + ' type="button">Prev</button> ' +
-					'<button class="dash-button orphan-page-next"' + (group.page >= totalPages - 1 ? ' disabled' : '') + ' type="button">Next</button>' +
+					'<button class="dash-button orphan-page-prev"' + (group.page === 0 ? ' disabled' : '') + ' type="button">' + escapeHtml(T.prev) + '</button> ' +
+					'<button class="dash-button orphan-page-next"' + (group.page >= totalPages - 1 ? ' disabled' : '') + ' type="button">' + escapeHtml(T.next) + '</button>' +
 				'</div>' +
 				'</div>';
 		}
@@ -414,7 +435,7 @@
 			btn.addEventListener('click', async function() {
 				const idx = parseInt(this.dataset.groupIdx);
 				const entry = group.entries[idx];
-				if (!confirm('Clean orphaned references from ' + entry.collection + '/' + entry.objectId + '.' + entry.property + '?')) return;
+				if (!confirm(fmt(T.confirmCleanRow, {TARGET: entry.collection + '/' + entry.objectId + '.' + entry.property}))) return;
 				const rowBtn = this;
 				rowBtn.disabled = true;
 				rowBtn.textContent = '...';
@@ -434,7 +455,7 @@
 						// Update the group header count
 						const header = body.closest('.orphan-group').querySelector('.orphan-group-meta span');
 						const totalOrphans = group.entries.reduce(function(sum, e) { return sum + e.orphanedIds.length; }, 0);
-						if (header) header.textContent = group.entries.length + ' objects, ' + totalOrphans + ' orphans';
+						if (header) header.textContent = fmt(T.objectsOrphans, {OBJ: group.entries.length, ORPH: totalOrphans});
 					}
 				});
 			});

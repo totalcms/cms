@@ -9,7 +9,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
-use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -24,9 +24,9 @@ readonly class AuthLoginSubmitAction
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
+		private SessionLogin $sessionLogin,
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
-		private LicenseValidator $licenseValidator,
 		private TranslationService $translator,
 	) {
 	}
@@ -72,14 +72,17 @@ readonly class AuthLoginSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
-		$email           = $data['email'];
+		// The form field is always named `email` for backwards compatibility,
+		// but the value may be an ID instead of an email depending on the
+		// `auth.loginWith` config. UserValidationService dispatches transparently.
+		$idOrEmail       = $data['email'];
 		$password        = $data['password'];
 		$persistentLogin = !empty($data['persistent_login']);
 		$collection      = $args['collection'] ?? '';
 
 		$user = null;
 		try {
-			$user = $this->loginService->authenticate($email, $password, $collection);
+			$user = $this->loginService->authenticate($idOrEmail, $password, $collection);
 		} catch (\Exception $e) {
 			// throw new HttpUnauthorizedException($request, $e->getMessage());
 			$flash->add('error', $e->getMessage());
@@ -104,17 +107,6 @@ readonly class AuthLoginSubmitAction
 		$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
 		$url         = $redirectUrl;
 
-		// If license is invalid, redirect to license manager instead
-		try {
-			$licenseData = $this->licenseValidator->validateLicense();
-			if (!$licenseData->valid) {
-				$url = $router->urlFor('admin-utils', ['page' => 'license-manager']);
-			}
-		} catch (\Exception) {
-			// If license validation fails, redirect to license manager
-			$url = $router->urlFor('admin-utils', ['page' => 'license-manager']);
-		}
-
 		$this->session->destroy();
 		$this->session->start();
 		$this->session->regenerateId();
@@ -122,10 +114,7 @@ readonly class AuthLoginSubmitAction
 		// For SuperAdmin cross-collection authentication, use the collection they were authenticated against
 		$sessionCollection = $user['_authenticated_collection'] ?? $collection;
 
-		// Set session data
-		$this->session->set(SessionKeys::AUTH_USER, $user['id']);
-		$this->session->set(SessionKeys::AUTH_COLLECTION, $sessionCollection);
-		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
+		$this->sessionLogin->establish((string)$user['id'], (string)$sessionCollection, $persistentLogin);
 		$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 
 		// If persistent login is checked, create persistent token

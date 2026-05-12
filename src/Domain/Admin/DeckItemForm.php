@@ -13,6 +13,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -25,7 +26,7 @@ use TotalCMS\Support\Config;
  */
 class DeckItemForm extends TotalForm
 {
-	protected string $deckref = '';
+	protected string $schemaref = '';
 
 	/** @var array<string,mixed> */
 	protected array $itemData = [];
@@ -128,12 +129,12 @@ class DeckItemForm extends TotalForm
 		// Initialize collection data to get schema
 		$this->initCollectionData();
 
-		// Auto-detect deckref from schema
+		// Auto-detect the schema reference from the property schema
 		$this->detectDeckref();
 
 		// Replace schemaData with deck schema for all form operations
-		if ($this->deckref !== '') {
-			$this->schemaData = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
+		if ($this->schemaref !== '') {
+			$this->schemaData = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
 		}
 
 		if ($this->id === '' && isset($_GET['id'])) {
@@ -218,7 +219,7 @@ class DeckItemForm extends TotalForm
 	 */
 	protected function fieldAttributeSettings(string $property): array
 	{
-		if ($this->deckref === '' || !$this->schemaData instanceof SchemaData) {
+		if ($this->schemaref === '' || !$this->schemaData instanceof SchemaData) {
 			return [];
 		}
 
@@ -235,7 +236,7 @@ class DeckItemForm extends TotalForm
 	 */
 	private function deckFieldDefaults(string $property): array
 	{
-		if ($this->deckref === '' || !$this->schemaData instanceof SchemaData) {
+		if ($this->schemaref === '' || !$this->schemaData instanceof SchemaData) {
 			return [];
 		}
 
@@ -276,7 +277,7 @@ class DeckItemForm extends TotalForm
 	 */
 	private function isDeckFieldRequired(string $property): bool
 	{
-		if ($this->deckref === '' || !$this->schemaData instanceof SchemaData) {
+		if ($this->schemaref === '' || !$this->schemaData instanceof SchemaData) {
 			return false;
 		}
 
@@ -284,7 +285,7 @@ class DeckItemForm extends TotalForm
 	}
 
 	/**
-	 * Auto-detect deckref from the property schema.
+	 * Auto-detect the schema reference from the property schema.
 	 */
 	private function detectDeckref(): void
 	{
@@ -292,14 +293,11 @@ class DeckItemForm extends TotalForm
 			return;
 		}
 
-		// Check schema properties for deckref
+		// Check schema properties for the schema reference (accepts schemaref or legacy deckref)
 		$propertySchema = $this->schemaData->properties[$this->property] ?? [];
 
-		// Check for deckref in top-level or settings
-		$this->deckref = $propertySchema['deckref']
-			?? $propertySchema['settings']['deckref']
-			?? $this->collectionData->properties[$this->property]['deckref']
-			?? $this->collectionData->properties[$this->property]['settings']['deckref']
+		$this->schemaref = PropertyDefinition::extractSchemaRef($propertySchema)
+			?? PropertyDefinition::extractSchemaRef($this->collectionData->properties[$this->property] ?? [])
 			?? '';
 	}
 
@@ -361,15 +359,15 @@ class DeckItemForm extends TotalForm
 	 */
 	protected function addFieldsFromSchema(): void
 	{
-		if ($this->deckref === '') {
-			$this->buildError = "No deckref found for property '{$this->property}'";
+		if ($this->schemaref === '') {
+			$this->buildError = "No schemaref found for property '{$this->property}'";
 
 			return;
 		}
 
 		$schemaData = $this->schemaData;
 		if (!$schemaData instanceof SchemaData) {
-			$this->buildError = "Deck schema not found: {$this->deckref}";
+			$this->buildError = "Deck schema not found: {$this->schemaref}";
 
 			return;
 		}

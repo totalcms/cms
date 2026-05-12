@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // Stacks Preview Environment
 // echo "Stacks Preview Environment\n";
 

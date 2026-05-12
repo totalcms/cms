@@ -30,7 +30,7 @@ it('saves a new collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
 
-	postJson('/collections', $collection)
+	postJson('/api/collections', $collection)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($collection);
@@ -40,7 +40,7 @@ it('saves a new collection', function (): void {
 
 it('does not save an existing collection', function (): void {
 	$collection = collectionTestData();
-	postJson('/collections', $collection)
+	postJson('/api/collections', $collection)
 		->assertBadRequest()
 		->assertJson()
 		->assertSee('already exists');
@@ -51,7 +51,7 @@ it('updates a collection', function (): void {
 	$id                        = $collection['id'];
 	$update                    = 'Updated description';
 	$collection['description'] = $update;
-	putJson('/collections/' . $id, $collection)
+	putJson('/api/collections/' . $id, $collection)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -64,7 +64,7 @@ it('updates a collection fragment', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
 	$patch      = ['description' => 'Patched description'];
-	patchJson('/collections/' . $id, $patch)
+	patchJson('/api/collections/' . $id, $patch)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -76,7 +76,7 @@ it('updates a collection fragment', function (): void {
 it('can fetch a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	get("/collections/$id")
+	get("/api/collections/$id")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -89,7 +89,7 @@ it('can list all collections', function (): void {
 	$id         = $collection['id'];
 
 	// Ensure at least one collection exists
-	$createResponse = postJson('/collections', $collection);
+	$createResponse = postJson('/api/collections', $collection);
 	if ($createResponse->getStatusCode() === 400) {
 		// Collection already exists, which is fine
 	} else {
@@ -97,7 +97,7 @@ it('can list all collections', function (): void {
 	}
 
 	// Fetch the list
-	get('/collections')
+	get('/api/collections')
 		->assertOk()
 		->assertJson()
 		->assertSee($id); // Simple check - just verify our collection ID appears in the JSON response
@@ -108,7 +108,7 @@ it('checks if a collection exists', function (): void {
 	$id         = $collection['id'];
 
 	// Ensure the collection exists
-	$createResponse = postJson('/collections', $collection);
+	$createResponse = postJson('/api/collections', $collection);
 	if ($createResponse->getStatusCode() === 400) {
 		// Collection already exists, which is fine
 	} else {
@@ -116,10 +116,10 @@ it('checks if a collection exists', function (): void {
 	}
 
 	// HEAD request should return 200 for existing collection
-	head("/collections/$id")->assertOk();
+	head("/api/collections/$id")->assertOk();
 
 	// HEAD request should return 404 for non-existent collection
-	head('/collections/does-not-exist-collection')->assertNotFound();
+	head('/api/collections/does-not-exist-collection')->assertNotFound();
 });
 
 it('can fetch a schema for a collection', function (): void {
@@ -128,7 +128,7 @@ it('can fetch a schema for a collection', function (): void {
 	$schema     = $collection['schema'];
 
 	// Create the collection if it doesn't exist (it might exist from previous tests)
-	$createResponse = postJson('/collections', $collection);
+	$createResponse = postJson('/api/collections', $collection);
 	if ($createResponse->getStatusCode() === 400) {
 		// Collection already exists, which is fine
 	} else {
@@ -136,7 +136,7 @@ it('can fetch a schema for a collection', function (): void {
 	}
 
 	// Then fetch its schema
-	get("/collections/{$id}/schema")
+	get("/api/collections/{$id}/schema")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
@@ -149,6 +149,6 @@ it('can delete a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
 
-	delete("/collections/$id")->assertOk();
+	delete("/api/collections/$id")->assertOk();
 	$this->assertFileDoesNotExist(metaPath($id));
 });

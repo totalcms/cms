@@ -38,8 +38,10 @@ class SchemaData
 		'image',
 		'mailer',
 		'number',
+		'builder-page',
 		'playground',
 		'preset-item',
+		'sitemap-meta',
 		'styledtext',
 		'svg',
 		'text',
@@ -49,6 +51,7 @@ class SchemaData
 	public const PROPERTY_TYPES = [
 		'array',
 		'boolean',
+		'card',
 		'code',
 		'color',
 		'date',
@@ -58,6 +61,7 @@ class SchemaData
 		'file',
 		'gallery',
 		'image',
+		'json',
 		'list',
 		'number',
 		'password',
@@ -69,6 +73,7 @@ class SchemaData
 		'url',
 	];
 	public const PROPERTY_TYPE_TO_REF = [
+		'card'     => 'https://www.totalcms.co/schemas/properties/card.json',
 		'code'     => 'https://www.totalcms.co/schemas/properties/code.json',
 		'color'    => 'https://www.totalcms.co/schemas/properties/color.json',
 		'date'     => 'https://www.totalcms.co/schemas/properties/date.json',
@@ -78,6 +83,7 @@ class SchemaData
 		'file'     => 'https://www.totalcms.co/schemas/properties/file.json',
 		'gallery'  => 'https://www.totalcms.co/schemas/properties/gallery.json',
 		'image'    => 'https://www.totalcms.co/schemas/properties/image.json',
+		'json'     => 'https://www.totalcms.co/schemas/properties/json.json',
 		'list'     => 'https://www.totalcms.co/schemas/properties/list.json',
 		'password' => 'https://www.totalcms.co/schemas/properties/password.json',
 		'phone'    => 'https://www.totalcms.co/schemas/properties/phone.json',

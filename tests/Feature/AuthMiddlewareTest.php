@@ -16,18 +16,18 @@ beforeEach(function (): void {
 
 describe('AuthMiddleware - Session Authentication', function (): void {
 	it('allows access to public login page', function (): void {
-		$response = get('/login');
+		$response = get('/admin/login');
 		expect($response->getStatusCode())->toBe(200);
 	});
 
 	it('allows access to public logout page', function (): void {
-		$response = get('/logout');
+		$response = get('/admin/logout');
 		// Should redirect to login
 		expect($response->getStatusCode())->toBe(302);
 	});
 
 	it('allows access to forgot password page', function (): void {
-		$response = get('/forgot-password');
+		$response = get('/admin/forgot-password');
 		expect($response->getStatusCode())->toBe(200);
 	});
 
@@ -45,7 +45,7 @@ describe('AuthMiddleware - Session Authentication', function (): void {
 
 describe('DualAuthMiddleware - API Key Authentication', function (): void {
 	it('returns 401 for invalid API key', function (): void {
-		$response = get('/collections', [
+		$response = get('/api/collections', [
 			'Authorization' => 'Bearer invalid-api-key',
 		]);
 		// Should return 401 for invalid API key
@@ -53,13 +53,13 @@ describe('DualAuthMiddleware - API Key Authentication', function (): void {
 	});
 
 	it('returns 401 for missing API key on API routes', function (): void {
-		$response = get('/collections/blog/objects');
+		$response = get('/api/collections/blog/objects');
 		// Should either allow (if auth disabled) or return error
 		expect($response->getStatusCode())->toBeIn([200, 401, 404]);
 	});
 
 	it('handles X-API-Key header', function (): void {
-		$response = get('/collections', [
+		$response = get('/api/collections', [
 			'X-API-Key' => 'tcms_invalid_key',
 		]);
 		expect($response->getStatusCode())->toBeIn([200, 401]);
@@ -68,7 +68,7 @@ describe('DualAuthMiddleware - API Key Authentication', function (): void {
 	it('allows HEAD requests', function (): void {
 		// HEAD requests are typically allowed for checking resource existence
 		// We use get() here but the middleware handles HEAD differently
-		$response = get('/collections');
+		$response = get('/api/collections');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403]);
 	});
 });
@@ -76,24 +76,24 @@ describe('DualAuthMiddleware - API Key Authentication', function (): void {
 describe('DualAuthMiddleware - Public Operations', function (): void {
 	it('handles public collection read operations', function (): void {
 		// Public operations should be allowed without auth if configured
-		$response = get('/collections/blog');
+		$response = get('/api/collections/blog');
 		expect($response->getStatusCode())->toBeIn([200, 401, 404]);
 	});
 
 	it('handles public object list operations', function (): void {
-		$response = get('/collections/blog/objects');
+		$response = get('/api/collections/blog/objects');
 		expect($response->getStatusCode())->toBeIn([200, 401, 404]);
 	});
 
 	it('handles public object fetch operations', function (): void {
-		$response = get('/collections/blog/objects/test-id');
+		$response = get('/api/collections/blog/objects/test-id');
 		expect($response->getStatusCode())->toBeIn([200, 401, 404, 405]);
 	});
 });
 
 describe('DualAuthMiddleware - JSON Responses for API', function (): void {
 	it('returns JSON error for unauthenticated API requests', function (): void {
-		$response = postJson('/collections', [
+		$response = postJson('/api/collections', [
 			'id'   => 'test',
 			'type' => 'blog',
 		]);
@@ -104,7 +104,7 @@ describe('DualAuthMiddleware - JSON Responses for API', function (): void {
 	});
 
 	it('returns proper status code for failed auth', function (): void {
-		$response = postJson('/collections/nonexistent/objects', [
+		$response = postJson('/api/collections/nonexistent/objects', [
 			'title' => 'Test',
 		]);
 		// Should return 401 (unauthorized) or 403 (forbidden) or 400/404/405 (bad request/not found/method not allowed)
@@ -125,7 +125,7 @@ describe('AuthMiddleware - Session Tracking', function (): void {
 
 	it('handles multiple sequential requests', function (): void {
 		for ($i = 0; $i < 3; $i++) {
-			$response = get('/login');
+			$response = get('/admin/login');
 			expect($response->getStatusCode())->toBe(200);
 		}
 	});

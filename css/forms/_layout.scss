@@ -63,6 +63,12 @@
 	> .form-field {
 		grid-area : var(--grid-area);
 	}
+
+	// Push buttons to the end of the grid when using explicit grid-template-areas
+	> .form-inline-fields {
+		grid-column : 1 / -1;
+		grid-row    : -1;
+	}
 }
 
 .totalform:not(.edit-mode) {
@@ -141,7 +147,9 @@
 		transition       : scale 200ms ease-in-out;
 
 		&:hover {
-			scale : 1.03;
+			scale            : 1.03;
+			background-color : oklch(var(--totalform-accent) / 0.85);
+			border-color     : oklch(var(--totalform-accent) / 0.85);
 		}
 		&:active {
 			scale : 0.97;
@@ -310,6 +318,7 @@ button.cms-add {
 	justify-content : flex-start;
 	gap             : 1.5rem;
 	margin-top      : 1rem;
+	grid-column     : 1/-1;
 
 	& > .form-field {
 		margin : 0;
@@ -322,9 +331,13 @@ button.cms-add {
 	margin        : 3rem 0 1rem 0;
 	padding       : 1rem;
 	font-size     : 1.4rem;
-	// border-bottom : 1px solid oklch(var(--totalform-lightgray) / 70%);
 	color            : oklch(var(--totalform-label-color));
-	background-image : linear-gradient(70deg, oklch(var(--totalform-nearwhite)), transparent 80%);
+	// background-image : linear-gradient(70deg, oklch(var(--totalform-nearwhite)), transparent 80%);
+	background-image: linear-gradient( 70deg,
+		oklch(var(--totalform-accent) / 0.45) 0%,
+		oklch(var(--totalform-accent) / 0.20) 45%,
+		transparent 85%
+  	);
 	border-radius    : var(--totalform-radius);
 }
 

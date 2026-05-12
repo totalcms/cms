@@ -68,8 +68,9 @@ export default class FilePreview {
 		if (downloadButton) {
 			downloadButton.addEventListener("click", event => {
 				event.preventDefault();
-				const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
-				const downloadUrl = this.api.buildApiQuery(downloadApi);
+				// Card-nested files live at /download/{coll}/{id}/{cardprop}/{childkey};
+				// top-level at /download/{coll}/{id}/{prop}.
+				const downloadUrl = this.api.buildPublicQuery(this.totalfield.buildPropertyApi('/download'));
 
 				// If the file is password protected, open the download in a new tab
 				// so the user can enter the password
@@ -103,7 +104,9 @@ export default class FilePreview {
 				event.preventDefault();
 				const ok = await tcmsConfirm({ message: t("confirm.delete_file"), countdown: 0 });
 				if (!ok) return;
-				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				// Top-level: DELETE /coll/id/prop. Card/deck-nested: DELETE /coll/id/parent/.../child.
+				// FileDeleteAction dispatches on filesystem state.
+				const deleteApi = this.totalfield.buildPropertyApi('/collections');
 				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 					// Clear values before removing the container
 					this.clearValue();

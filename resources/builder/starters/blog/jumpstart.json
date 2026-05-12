@@ -1,0 +1,157 @@
+{
+	"name": "Blog Starter",
+	"description": "Pages plus the blog reserved collection and sample blog posts to demonstrate the listing + detail pages.",
+	"version": "1.0.0",
+	"collections": {
+		"reserved": [
+			{ "id": "blog", "url": "/blog/{id}" }
+		]
+	},
+	"objects": [
+		{
+			"collection": "builder-pages",
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "blog",
+			"data": {
+				"id": "blog",
+				"title": "Blog",
+				"route": "/blog",
+				"template": "blog/index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "blog-post",
+			"data": {
+				"id": "blog-post",
+				"title": "Blog Post",
+				"route": "/blog/{id}",
+				"template": "blog/post",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "about",
+			"data": {
+				"id": "about",
+				"title": "About",
+				"route": "/about",
+				"template": "about",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
+		},
+		{
+			"collection": "blog",
+			"id": "welcome-to-total-cms",
+			"data": {
+				"title": "Welcome to Total CMS",
+				"date": "2026-01-15T09:00:00+00:00",
+				"author": "Joe Workman",
+				"summary": "A quick tour of what makes Total CMS different — flat-file storage, dynamic routing, and the Site Builder.",
+				"content": "<p>Welcome! This is your first sample post — feel free to edit, delete, or duplicate it as you build out your blog. Posts are stored as JSON objects in the <code>blog</code> collection, and the Site Builder's page router handles all the URL routing for you.</p><p>To add your own post, head to <a href=\"/admin/collections/blog\">Collections → Blog</a> and click <em>+ New Object</em>. Your post will be available at <code>/blog/{id}</code> immediately — no rebuild step.</p>",
+				"image": "imageBlur",
+				"categories": "tutorials",
+				"tags": "getting-started,welcome",
+				"draft": false,
+				"featured": true
+			}
+		},
+		{
+			"collection": "blog",
+			"id": "writing-with-twig",
+			"data": {
+				"title": "Writing Templates with Twig",
+				"date": "2026-01-22T10:30:00+00:00",
+				"author": "Joe Workman",
+				"summary": "How to use Twig in your page templates — variables, filters, includes, and the cms global.",
+				"content": "<p>Total CMS uses <a href=\"https://twig.symfony.com\">Twig</a> for templating. Inside any builder template, you have access to the <code>cms</code> global — your gateway to collections, configuration, and dynamic content.</p><h3>Common patterns</h3><ul><li><code>cms.collection.objects('blog')</code> — fetch all blog posts</li><li><code>cms.data.raw('blog', params.id)</code> — fetch a single post</li><li><code>cms.config('domain')</code> — read a config value</li></ul><p>The <a href=\"/admin/utils/twig-playground\">Twig Playground</a> lets you experiment with templates without committing changes.</p>",
+				"image": "imageBlur",
+				"categories": "tutorials",
+				"tags": "twig,templates,tutorial",
+				"draft": false,
+				"featured": false
+			}
+		},
+		{
+			"collection": "blog",
+			"id": "publishing-workflow",
+			"data": {
+				"title": "A Sane Publishing Workflow",
+				"date": "2026-02-04T14:00:00+00:00",
+				"author": "Joe Workman",
+				"summary": "Drafts, publish toggles, scheduled posts — the patterns I use to keep a blog organized.",
+				"content": "<p>Every blog post in Total CMS has a <code>draft</code> toggle. Draft posts won't appear in your listing or be reachable at their URL. Flip it off when you're ready to publish.</p><p>For scheduled publishing, set a future <code>date</code> field and filter by date in your listing template:</p><pre><code>{% verbatim %}{% set posts = cms.collection.objects('blog')\n    | filter(p =&gt; not p.draft and p.date &lt;= 'now' | date('c'))\n    | sortCollectionByString('date:desc') %}{% endverbatim %}</code></pre><p>That's it — no plugins needed.</p>",
+				"image": "imageBlur",
+				"categories": "workflow",
+				"tags": "publishing,drafts",
+				"draft": false,
+				"featured": false
+			}
+		},
+		{
+			"collection": "blog",
+			"id": "seo-essentials",
+			"data": {
+				"title": "SEO Essentials for Builder Pages",
+				"date": "2026-02-18T11:15:00+00:00",
+				"author": "Joe Workman",
+				"summary": "Meta descriptions, og:image, sitemaps, and the small details that make a difference.",
+				"content": "<p>The <code>builder-page</code> schema includes everything you need for solid SEO out of the box: <code>title</code>, <code>description</code>, <code>image</code> (used as <code>og:image</code>), and a <code>sitemap</code> toggle.</p><p>Total CMS auto-generates <code>/sitemap.xml</code> from your pages and any indexed collections. Visit <a href=\"/sitemap.xml\">/sitemap.xml</a> to see it. To exclude a page, toggle off <em>Include in Sitemap</em> in the page form.</p>",
+				"image": "imageBlur",
+				"categories": "seo",
+				"tags": "seo,meta,sitemap",
+				"draft": false,
+				"featured": false
+			}
+		},
+		{
+			"collection": "blog",
+			"id": "styling-without-a-build",
+			"data": {
+				"title": "Styling Your Site Without a Build Step",
+				"date": "2026-03-02T08:45:00+00:00",
+				"author": "Joe Workman",
+				"summary": "You don't need npm, Vite, or webpack to ship a beautiful site. Here's how the inline-styles approach holds up.",
+				"content": "<p>The starter ships with inline <code>&lt;style&gt;</code> tags in the layout — and that's deliberate. Plain CSS still works fine, modern browsers ship excellent layout primitives, and one HTTP round-trip beats a build pipeline for many sites.</p><p>When you do want a frontend pipeline, run <code>tcms builder:frontend</code> and you'll get a Vite scaffold ready to go. Until then: edit the <code>&lt;style&gt;</code> block in <code>layouts/default.twig</code>.</p>",
+				"image": "imageBlur",
+				"categories": "design",
+				"tags": "css,design,no-build",
+				"draft": false,
+				"featured": false
+			}
+		}
+	]
+}

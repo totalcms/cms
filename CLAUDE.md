@@ -4,12 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites running Total CMS 3.
+Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites. Current development is on 3.5 which adds the CLI, extension system, event system, Composer distribution, Site Builder, public registration, and platform-installation flow.
 
 ### Related Projects
-- **Total CMS License API** (`/Users/joeworkman/Websites/license.totalcms.co`): License validation and trial management with similar Slim 4 architecture
-- **Total CMS 3 Stacks** (`/Users/joeworkman/Developer/stacks/TotalCMS3`): Stacks plugin (claude project root: `/Users/joeworkman/Developer/stacks`)
-- **Documentation Site** (`/Users/joeworkman/Websites/docs.totalcms.co`): Public docs at docs.totalcms.co. Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
+- **Total CMS License API** ([totalcms/license.totalcms.co](https://github.com/totalcms/license.totalcms.co)): License validation and trial management with similar Slim 4 architecture
+- **Total CMS 3 Stacks**: Stacks plugin for the Stacks platform
+- **Documentation Site** ([totalcms/docs.totalcms.co](https://github.com/totalcms/docs.totalcms.co)): Public docs at docs.totalcms.co. Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
+- **Extension Starter** ([totalcms/extension-starter](https://github.com/totalcms/extension-starter)): Template repo for building T3 extensions, demonstrates every extension point
+- **MCP Docs Server** ([totalcms/mcp.totalcms.co](https://github.com/totalcms/mcp.totalcms.co)): MCP server that serves T3 documentation to AI agents
+- **Project Repo** ([totalcms/totalcms-project](https://github.com/totalcms/totalcms-project)): Composer project template for installing T3 via `composer create-project`
 
 ## Technology Stack
 
@@ -55,23 +58,28 @@ composer run test:all
 ## Architecture Overview
 
 ### Directory Structure
-- **`/src/Action/`** - HTTP action handlers organized by domain (Admin, Auth, Collection, Upload, etc.)
+- **`/src/Action/`** - HTTP action handlers organized by domain (Admin, Auth, Collection, Extension, Upload, etc.)
 - **`/src/Domain/`** - Business logic layer with services, repositories, and data objects
+  - **`/src/Domain/Extension/`** - Extension system: discovery, lifecycle, permissions, settings, route collection
+  - **`/src/Domain/Event/`** - Core event dispatcher (used by extensions and internal services)
   - **`/src/Domain/JumpStart/`** - JumpStart data import/export system
   - **`/src/Domain/Import/`** - CMS import systems (Alloy, Total CMS 1, Wordpress, CSV, JSON, RSS, URL)
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
   - **`/src/Domain/ImageWorks/`** - Image processing with watermarking, font management, and caching
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
+- **`/src/CLI/`** - Symfony Console CLI application and commands
 - **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, validation
 - **`/src/Renderer/`** - Response rendering (JSON, XML, Twig, Raw)
 - **`/src/Utils/`** - Utility classes for file handling, image processing, QR codes
 - **`/config/`** - Hierarchical PHP configuration and route definitions
 - **`/tcms-data/`** - JSON-based flat-file storage for collections
+- **`/tcms-data/extensions/`** - Third-party extensions installed as `{vendor}/{name}/`
 - **`/resources/schemas/`** - JSON schemas for data validation
 - **`/resources/templates/`** - Twig templates for admin interface
 - **`/resources/docs/`** - Documentation files (source of truth for docs.totalcms.co)
 - **`/resources/fonts/`** - Centralized font storage (default: RobotoRegular.ttf)
 - **`/tests/test-data/`** - Test datasets for integration testing
+- **`/tests/fixtures/extensions/`** - Test extension fixtures (must be committed to git)
 
 ### Design Patterns
 - **Domain-Driven Design**: Clear separation between Actions, Domain services, and Data layers
@@ -82,19 +90,26 @@ composer run test:all
 
 ## Key Features
 
-- **Collection System**: 13 built-in collection types (blog, image, gallery, etc.) stored as JSON files
+- **Collection System**: 24 reserved schemas (`SchemaData::RESERVED_SCHEMAS` — blog, image, gallery, builder-page, etc.) plus user-defined custom schemas, all stored as JSON files
 - **Collection Reports**: Reporting API and admin utility for collection data
+- **Site Builder**: Dynamic page router serving `builder-pages` collection objects at configurable URL patterns, with starter scaffolding, template designer, and optional Vite frontend pipeline
+- **Setup Wizard**: First-run web wizard (welcome → environment → data-path → account → license → server-config → complete) for operator onboarding, with auto-login on account creation
+- **Public Registration**: `/admin/register/{collection}` endpoint with opt-in allow-list for self-signup forms; auto-logs the new user in via `SessionLogin`
 - **Load More System**: Frontend pagination with `loadMoreButton` for progressive content loading
 - **Template Designer**: `{% templatedesigner %}` Twig tag for inline template definition synced to local + production servers (complements Load More)
 - **Twig Playground**: Admin tool for testing and prototyping Twig templates with autosave
 - **RSS & Sitemap Builders**: User-facing utilities for generating RSS feeds and sitemaps from collections
-- **JumpStart System**: Data import/export with streaming support for large datasets
+- **JumpStart System**: Data import/export with streaming support for large datasets; also powers starter-kit content seeding
 - **Import Systems**: Migration from other platforms (Total CMS 1, Alloy CMS, Wordpress, CSV, JSON, RSS, URL) via job queue
 - **ImageWorks System**: Image processing with text/image watermarking, custom font support, EXIF metadata
 - **Twig Integration**: Custom filters/functions, `{% cmsgrid %}` tag, markdown processing, barcode extension
 - **Admin Interface**: Form builder with 20+ field types, JavaScript components
 - **Passkey Authentication**: WebAuthn passkey support for passwordless admin login
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
+- **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, and extension management
+- **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
+- **Event System**: Synchronous event dispatcher with 15 core events (object/collection/schema/template/user CRUD, extension lifecycle, devmode, cache.cleared)
+- **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/totalcms`
 - **Build System**: ESBuild with code splitting
 
 ## Important Notes
@@ -102,7 +117,9 @@ composer run test:all
 - **Storage**: Flat-file JSON storage (no traditional database)
 - **Caching**: Multi-backend Twig caching with APCu-first priority (APCu, Redis, Memcached, filesystem, OPcache)
 - **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features with PHP 8.4 compatibility
-- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements at `/Users/joeworkman/Developer/forks/couleur`
+- **Distribution**: Public Packagist via `totalcms/cms` (the library). Installed with `composer create-project totalcms/totalcms` (the project skeleton)
+- **Extensions**: Third-party extensions in `tcms-data/extensions/{vendor}/{name}/` with auto-detected capability permissions
+- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements ([joeworkman-forks/couleur](https://github.com/joeworkman-forks/couleur))
 - **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
 - **Emergency Cache**: `/emergency/cache/clear` endpoint for customer self-service cache clearing
 
@@ -197,6 +214,58 @@ These are non-obvious details that are important when working in these areas:
 - **Schema**: `designerEnabled` (toggle) + `designerToken` (UUID, readonly)
 - **Metadata**: Companion `.designer.json` files alongside `.twig` files
 
+### Site Builder
+- **Concept**: Dynamic page system where `builder-pages` collection objects are routed at request time by `PageRouterMiddleware`. No build/generate step — add a page in the admin, it's live.
+- **Page records**: Objects in the `builder-pages` collection (schema: `builder-page`). Fields: `id`, `title`, `route` (template URL with `{id}` style placeholders), `template`, `draft`, `nav`, `data` (free-form JSON exposed as `page.data.*`), `status` (HTTP), `redirectTo`, `sitemap`, `middleware`, `accessGroups`
+- **Templates**: Live at `tcms-data/builder/{layouts,pages,partials,macros}/*.twig`. `BuilderTwigAdapter` provides `cms.builder.nav()`, `cms.builder.url(pageId, params)`, `cms.builder.css/js/asset()` with mtime cache-busting
+- **Page router**: `src/Middleware/PageRouterMiddleware.php` matches request paths against page routes, dispatches templated routes through `ObjectUrlBuilder`. Templated URLs (containing `{...}` placeholders) are implicitly pretty — the `prettyUrl` flag only applies to non-templated URL prefixes.
+- **Starters**: `tcms builder:init <starter>` scaffolds from `resources/builder/starters/{name}/` — copies templates, ensures the `builder-pages` collection, runs the starter's `jumpstart.json` to seed pages + demo content. Bundled: `minimal`, `blog`, `business`, `portfolio`
+- **JumpStart-driven**: Starter pages live in `jumpstart.json` as `builder-pages` objects (NOT in `manifest.json` — manifest is metadata only). Reserved-collection entries support overrides (e.g. `{"id": "blog", "url": "/blog/{id}"}`) to set the URL/sortBy alongside the schema-bound default.
+- **Frontend pipeline**: Optional Vite scaffold via `tcms builder:frontend` (or `--frontend` flag on `builder:init`) — drops a customer-editable `frontend/` directory with `vite.config.js`, compiles to `public/assets/`
+- **Key files**: `PageRouterMiddleware`, `BuilderTwigAdapter`, `BuilderInstaller`, `StarterService`, `BuilderOrderService` (sidebar ordering via `.order.json`)
+
+### Setup Wizard
+- **Flow**: First-run web wizard — `welcome` → `environment` → `data-path` → `account` → `license` → `server-config` → `complete`. State persisted in `<datadir>/.system/setup-state.json` (HMAC-signed elsewhere; here it's just step tracking)
+- **Middleware**: `SetupCheckMiddleware` runs BEFORE Slim's RoutingMiddleware so it can intercept unrouted requests (like `/`). When setup is incomplete it redirects page navigation to the current wizard step; asset/API requests fall through to normal 404 handling.
+- **Account step**: `AccountSetupSubmitAction` creates the first admin user via `FirstLoginChecker`, stashes the email in session (`setup_admin_email`) so it pre-fills the form on validation-failure redirects AND displays on the complete page. After successful save it auto-logs the operator in via `SessionLogin::establish()` so they don't have to retype credentials at the end of the wizard.
+- **Server-config step**: Renders rewrite-rule snippets for Apache + Nginx. Detects whether `public/.htaccess` already ships (Composer install) and switches the Apache panel between "rules already in place" and "paste this in" messaging.
+- **Subpath layout**: `bin/post-install.php` in the project skeleton supports a `subpath` layout option that moves `public/index.php` and `public/.htaccess` into `public/tcms/` and bumps the `TCMS_PROJECT_ROOT` dirname depth.
+- **Key files**: `src/Domain/Setup/`, `src/Action/Setup/`, `SetupCheckMiddleware`, `DataPathInstaller`
+
+### Auth: SessionLogin + Public Registration
+- **`SessionLogin`** (`src/Domain/Auth/Service/SessionLogin.php`): Single source of truth for "log this user in." Writes the four session keys (`AUTH_USER`, `AUTH_COLLECTION`, `AUTH_PERSISTENT_LOGIN`, `LICENSE_CHECK_DUE`) in the same order across every entry point. Used by `AuthLoginSubmitAction`, `AccountSetupSubmitAction`, and `AuthRegisterSubmitAction`. Does NOT authenticate — caller verifies the user first.
+- **Public registration endpoint**: `POST /admin/register/{collection}` (`AuthRegisterSubmitAction`). Creates a user via `ObjectSaver`, calls `LoginService::authenticate()` for verification, then `SessionLogin::establish()`. Returns JSON in the same shape as `ObjectSaveAction` so the form builder can chain deferred uploads + actions.
+- **Allow-list**: `$config->auth['publicRegistration']` is an opt-in list of collection IDs. Empty by default — the default `auth` collection (operator-only) is never exposed. Endpoint throws `HttpForbiddenException` for collections not in the list.
+- **Form builder integration**: `cms.form.builder('members', {register: true})` retargets the form at `/admin/register/{collection}`, forces `addOnly: true` (the endpoint has no PUT route), and rewrites `data-api` to drop the `/api` prefix
+- **`auth.loginWith` config**: `'email'`, `'id'`, or `'both'`. `UserValidationService::validateUser($idOrEmail, $collection)` dispatches transparently; for `'both'` it picks based on `@` in the input. The login form's identifier field is always POSTed as `email` for backwards-compat — the variable name is misleading.
+- **Security caveats the operator owns** (documented in `auth.publicRegistration` config block + `wizard.account` flow): registrants are auto-logged in, so any unprotected form on a site with gated content exposes that content to bots. Gate with CAPTCHA / rate limit / email verification when the access group new users land in reaches sensitive content.
+
+### Extension System
+- **Lifecycle**: Two-phase — `register()` during container build, `boot()` after routes are loaded
+- **API Surface**: `ExtensionContext` provides curated methods; extensions never touch the raw container directly
+- **Extension Points**: Twig functions/filters, CLI commands, routes (API/public/admin), admin nav items, dashboard widgets, custom field types, event listeners, admin assets, container definitions, schemas
+- **Capability Detection**: After `register()`, the system detects what the extension actually registered (not self-declared). Capabilities become toggleable permissions in the admin UI.
+- **Permissions**: Stored in `tcms-data/.system/extensions.json` per-extension. Admins can disable individual capabilities without uninstalling. All `getAll*()` accessors filter by permission state.
+- **Settings**: Per-extension custom settings in `tcms-data/.system/extension-settings/{vendor}/{name}.json`. Settings schemas use the same `type` + `field` format as collection/settings schemas.
+- **Routes**: Extensions register routes via `RouteCollector` (not Slim directly). Three static route handlers dispatch at runtime: `ExtensionRouteAction` (API), `ExtensionAdminRouteAction` (admin), `ExtensionAssetAction` (static assets).
+- **Admin UI**: Extension management page with enable/disable, auto-generated permission toggles, and custom settings forms via `TotalFormFactory::extensionSettings()`.
+- **Twig Collision Protection**: `TwigExtensionRegistrar` blocks extensions from overriding core Twig functions/filters and warns on extension-to-extension collisions.
+- **Fault Isolation**: Every `register()` and `boot()` call is wrapped in try/catch. Failures are logged, recorded in state, and the extension is skipped.
+- **Key Files**: `ExtensionManager` (orchestrator), `ExtensionContext` (public API), `ExtensionDiscovery` (filesystem scanner), `ExtensionState` (runtime state with permissions)
+
+### CLI System (`tcms`)
+- **Framework**: Symfony Console via `CliApplication`
+- **Entry Point**: `resources/bin/tcms` (shipped), `bin/tcms` (dev symlink)
+- **Commands**: `collection:list`, `collection:get`, `collection:export`, `collection:import`, `collection:query`, `object:list`, `object:get`, `object:export`, `schema:list`, `schema:get`, `schema:export`, `schema:import`, `jumpstart:export`, `jumpstart:import`, `builder:init`, `builder:frontend`, `builder:routes`, `builder:history`, `extension:list`, `extension:enable`, `extension:disable`, `extension:remove`, `update:check`, `update:apply`, `update:rollback`, `cache:clear`, `info`, `pull`, `push`, `deck:import`, `jobs:process`
+- **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
+- **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
+
+### Event System
+- **Dispatcher**: `src/Domain/Event/EventDispatcher.php` — synchronous, priority-ordered
+- **Core Events** (15): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
+- **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager
+- **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
+
 ### Configuration System
 - **Deep Merge**: Override specific nested settings without replacing entire arrays
 - **Usage**: Return array from tcms.php for deep merging
@@ -206,3 +275,4 @@ These are non-obvious details that are important when working in these areas:
 - **Validation Flow**: Middleware -> Service -> API call -> JWT validation -> Cache
 - **Data Structure**: 8 essential fields (valid, trial, domain, edition, message, validationToken, updatesValid, trialDaysRemaining)
 - **Cache Integration**: Multi-backend with 24-hour TTL
+- **Version Authorization**: License API validates the running T3 version is authorized for the license. Unauthorized versions show a dashboard warning.

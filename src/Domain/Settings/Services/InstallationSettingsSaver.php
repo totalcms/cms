@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Settings\Services;
 
 use TotalCMS\Domain\Cache\CacheManager;

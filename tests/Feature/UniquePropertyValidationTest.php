@@ -45,7 +45,7 @@ describe('Unique Property Validation', function (): void {
 			'index'       => ['id', 'name', 'email'],
 		];
 
-		postJson('/schemas', $schema)->assertOk();
+		postJson('/api/schemas', $schema)->assertOk();
 
 		// Create collection using this schema
 		$collection = [
@@ -70,7 +70,7 @@ describe('Unique Property Validation', function (): void {
 			],
 		];
 
-		postJson('/collections', $collection)->assertOk();
+		postJson('/api/collections', $collection)->assertOk();
 	});
 
 	afterEach(function (): void {
@@ -95,14 +95,14 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'john@example.com',
 		];
 
-		postJson('/collections/test-unique', $member1)
+		postJson('/api/collections/test-unique', $member1)
 			->assertOk()
 			->assertJsonFragment(['email' => 'john@example.com']);
 	});
 
 	test('it rejects duplicate email with proper error message', function (): void {
 		// Save first member
-		postJson('/collections/test-unique', [
+		postJson('/api/collections/test-unique', [
 			'id'    => 'member-1',
 			'name'  => 'John Doe',
 			'email' => 'john@example.com',
@@ -115,7 +115,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'john@example.com', // Duplicate
 		];
 
-		postJson('/collections/test-unique', $member2)
+		postJson('/api/collections/test-unique', $member2)
 			->assertBadRequest()
 			->assertSee('Email must be unique')
 			->assertSee('john@example.com')
@@ -124,7 +124,7 @@ describe('Unique Property Validation', function (): void {
 
 	test('it allows updating object keeping same email', function (): void {
 		// Save initial object
-		postJson('/collections/test-unique', [
+		postJson('/api/collections/test-unique', [
 			'id'    => 'member-1',
 			'name'  => 'John Doe',
 			'email' => 'john@example.com',
@@ -137,14 +137,14 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'john@example.com', // Same email
 		];
 
-		putJson('/collections/test-unique/member-1', $updated)
+		putJson('/api/collections/test-unique/member-1', $updated)
 			->assertOk()
 			->assertJsonFragment(['name' => 'John Updated']);
 	});
 
 	test('it allows updating object to new unique email', function (): void {
 		// Save initial object
-		postJson('/collections/test-unique', [
+		postJson('/api/collections/test-unique', [
 			'id'    => 'member-1',
 			'name'  => 'John Doe',
 			'email' => 'john@example.com',
@@ -157,14 +157,14 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'john.doe@example.com',
 		];
 
-		putJson('/collections/test-unique/member-1', $updated)
+		putJson('/api/collections/test-unique/member-1', $updated)
 			->assertOk()
 			->assertJsonFragment(['email' => 'john.doe@example.com']);
 	});
 
 	test('it rejects updating object to duplicate email', function (): void {
 		// Create first member
-		postJson('/collections/test-unique', [
+		postJson('/api/collections/test-unique', [
 			'id'    => 'member-1',
 			'name'  => 'John Doe',
 			'email' => 'john@example.com',
@@ -177,7 +177,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'bob@example.com',
 		];
 
-		postJson('/collections/test-unique', $member2)->assertOk();
+		postJson('/api/collections/test-unique', $member2)->assertOk();
 
 		// Try to update member-2 to john's email (duplicate)
 		$updated = [
@@ -186,7 +186,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'john@example.com', // Duplicate
 		];
 
-		putJson('/collections/test-unique/member-2', $updated)
+		putJson('/api/collections/test-unique/member-2', $updated)
 			->assertBadRequest()
 			->assertSee('Email must be unique')
 			->assertSee('john@example.com');
@@ -200,7 +200,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => '',
 		];
 
-		postJson('/collections/test-unique', $member1)->assertOk();
+		postJson('/api/collections/test-unique', $member1)->assertOk();
 
 		// Create another member without email (should be allowed)
 		$member2 = [
@@ -209,11 +209,11 @@ describe('Unique Property Validation', function (): void {
 			'email' => '',
 		];
 
-		postJson('/collections/test-unique', $member2)->assertOk();
+		postJson('/api/collections/test-unique', $member2)->assertOk();
 
 		// Verify both exist
-		get('/collections/test-unique/member-1')->assertOk();
-		get('/collections/test-unique/member-2')->assertOk();
+		get('/api/collections/test-unique/member-1')->assertOk();
+		get('/api/collections/test-unique/member-2')->assertOk();
 	});
 
 	test('it provides helpful error when unique property not in index', function (): void {
@@ -235,7 +235,7 @@ describe('Unique Property Validation', function (): void {
 			'index'       => ['id'], // username not in index!
 		];
 
-		postJson('/schemas', $schema)->assertOk();
+		postJson('/api/schemas', $schema)->assertOk();
 
 		// Create collection using this schema
 		$collection = [
@@ -250,7 +250,7 @@ describe('Unique Property Validation', function (): void {
 			],
 		];
 
-		postJson('/collections', $collection)->assertOk();
+		postJson('/api/collections', $collection)->assertOk();
 
 		// Try to save object
 		$object = [
@@ -258,7 +258,7 @@ describe('Unique Property Validation', function (): void {
 			'username' => 'testuser',
 		];
 
-		postJson('/collections/test-unique-index', $object)
+		postJson('/api/collections/test-unique-index', $object)
 			->assertBadRequest()
 			->assertSee('unique')
 			->assertSee('index');
@@ -284,7 +284,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'test@example.com',
 		];
 
-		postJson('/collections/test-unique', $member1)->assertOk();
+		postJson('/api/collections/test-unique', $member1)->assertOk();
 
 		// Try exact duplicate (should be rejected)
 		$member2 = [
@@ -293,7 +293,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'test@example.com', // Exact duplicate
 		];
 
-		postJson('/collections/test-unique', $member2)
+		postJson('/api/collections/test-unique', $member2)
 			->assertBadRequest()
 			->assertSee('Email must be unique');
 
@@ -306,19 +306,19 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'TEST@example.com',
 		];
 
-		postJson('/collections/test-unique', $member3)->assertOk();
+		postJson('/api/collections/test-unique', $member3)->assertOk();
 	});
 
 	test('it handles unique validation after deleting objects', function (): void {
 		// Create initial member
-		postJson('/collections/test-unique', [
+		postJson('/api/collections/test-unique', [
 			'id'    => 'member-1',
 			'name'  => 'John Doe',
 			'email' => 'john@example.com',
 		])->assertOk();
 
 		// Delete member-1
-		deleteJson('/collections/test-unique/member-1')->assertOk();
+		deleteJson('/api/collections/test-unique/member-1')->assertOk();
 
 		// Should now be able to reuse the email
 		$member2 = [
@@ -327,7 +327,7 @@ describe('Unique Property Validation', function (): void {
 			'email' => 'john@example.com',
 		];
 
-		postJson('/collections/test-unique', $member2)->assertOk();
+		postJson('/api/collections/test-unique', $member2)->assertOk();
 	});
 
 	test('it validates multiple unique properties independently', function (): void {
@@ -355,7 +355,7 @@ describe('Unique Property Validation', function (): void {
 			'index'       => ['id', 'email', 'username'],
 		];
 
-		postJson('/schemas', $schema)->assertOk();
+		postJson('/api/schemas', $schema)->assertOk();
 
 		// Create collection using this schema
 		$collection = [
@@ -371,7 +371,7 @@ describe('Unique Property Validation', function (): void {
 			],
 		];
 
-		postJson('/collections', $collection)->assertOk();
+		postJson('/api/collections', $collection)->assertOk();
 
 		// Save first object
 		$obj1 = [
@@ -380,7 +380,7 @@ describe('Unique Property Validation', function (): void {
 			'username' => 'user1',
 		];
 
-		postJson('/collections/test-multi-unique', $obj1)->assertOk();
+		postJson('/api/collections/test-multi-unique', $obj1)->assertOk();
 
 		// Try duplicate email (should fail)
 		$obj2 = [
@@ -389,7 +389,7 @@ describe('Unique Property Validation', function (): void {
 			'username' => 'user2', // Unique
 		];
 
-		postJson('/collections/test-multi-unique', $obj2)
+		postJson('/api/collections/test-multi-unique', $obj2)
 			->assertBadRequest()
 			->assertSee('Email');
 
@@ -400,7 +400,7 @@ describe('Unique Property Validation', function (): void {
 			'username' => 'user1', // Duplicate
 		];
 
-		postJson('/collections/test-multi-unique', $obj3)
+		postJson('/api/collections/test-multi-unique', $obj3)
 			->assertBadRequest()
 			->assertSee('Username');
 
@@ -411,7 +411,7 @@ describe('Unique Property Validation', function (): void {
 			'username' => 'user2',
 		];
 
-		postJson('/collections/test-multi-unique', $obj4)->assertOk();
+		postJson('/api/collections/test-multi-unique', $obj4)->assertOk();
 
 		// Cleanup
 		if (file_exists(collectionPath('test-multi-unique') . '.meta.json')) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
@@ -133,7 +135,7 @@ readonly class BarcodeTwigAdapter
 		$length = strlen($data);
 
 		return match ($length) {
-			7, 8 => $this->generator->ean8($data, $options),
+			7, 8    => $this->generator->ean8($data, $options),
 			11      => $this->generator->upca($data, $options),
 			12      => $this->generator->upca($data, $options),
 			13      => $this->generator->ean13($data, $options),

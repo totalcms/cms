@@ -9,6 +9,16 @@ The media adapter provides URL generation for images (with ImageWorks transforma
 
 ## Images
 
+Image functions take **three separate arguments**: the object, image transform options, and collection context. These are separate objects — do not merge them.
+
+```twig
+cms.media.imagePath(object, {transforms}, {context})
+                     │         │              │
+                     │         │              └── collection, property
+                     │         └── w, h, fit, fm, etc.
+                     └── object ID or full object
+```
+
 ### imagePath()
 
 Get the ImageWorks API URL for an image. Use this when you need just the URL (not a full `<img>` tag).
@@ -23,7 +33,7 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 {# WebP format #}
 <div style="background-image: url('{{ cms.media.imagePath('bg', {w: 1920, fm: 'webp'}) }}')"></div>
 
-{# Custom collection and property #}
+{# Custom collection and property — note: separate argument from transforms #}
 {{ cms.media.imagePath('widget', {w: 400}, {collection: 'products', property: 'photo'}) }}
 
 {# Pass object directly (avoids re-fetching) #}
@@ -33,10 +43,35 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `idOrObject` | string\|array\|null | required | Object ID or full object data |
-| `imageworks` | array | `[]` | ImageWorks transformation parameters |
-| `options` | array | `[]` | Options: `collection`, `property` |
+| `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
+| `options` | array | `[]` | Collection context: `collection`, `property` |
 
 For available ImageWorks parameters, see the [ImageWorks Reference](docs/twig/imageworks).
+
+### Nested images (cards and decks)
+
+Images stored inside a `card` or `deck` field are addressed through the `property` option using a **dot-notation path**. The first segment is the parent property; subsequent segments walk down to the image.
+
+```twig
+{# Card child — `mycard` is the card field, `image` is the child key #}
+{{ cms.media.imagePath('post-1', {}, {property: 'mycard.image'}) }}
+
+{# Deck child — `mydeck` is the deck field, `item-3` is the deck-item id, `image` is the child key #}
+{{ cms.media.imagePath('post-1', {}, {property: 'mydeck.item-3.image'}) }}
+
+{# Same syntax works when passing the object directly #}
+{{ cms.media.imagePath(post, {w: 800}, {property: 'mycard.image'}) }}
+```
+
+The dot-notation maps directly to URL segments — `mycard.image` becomes `/imageworks/{coll}/{id}/mycard/image.{format}` — and the image data is resolved by descending the same path on the object (`obj.mycard.image`).
+
+The same syntax works on the corresponding render macro:
+
+```twig
+{{ cms.render.image('post-1', {w: 800}, {property: 'mycard.image'}) }}
+```
+
+The Image Builder dialog (the imageworks utility opened from the admin form) detects nested images and shows the dotted-property macro in its "Copy macro" section, so you can copy a working snippet directly.
 
 ## Galleries
 
@@ -97,7 +132,15 @@ Get the download URL for a file property.
 
 {# Password-protected #}
 <a href="{{ cms.media.download('doc', {pwd: 'secret123'}) }}">Download</a>
+
+{# Card child — `mycard` is the card field, `file` is the child key #}
+<a href="{{ cms.media.download('post-1', {property: 'mycard.file'}) }}">Download</a>
+
+{# Deck child — `mydeck` is the deck field, `item-3` is the deck-item id, `file` is the child key #}
+<a href="{{ cms.media.download('post-1', {property: 'mydeck.item-3.file'}) }}">Download</a>
 ```
+
+The dot-notation maps directly to URL segments — `mycard.file` becomes `/download/{coll}/{id}/mycard/file` — and the file data is resolved by descending the same path on the object (`obj.mycard.file`). The File Links dialog in the admin form detects nested files and shows the dotted-property macro in its "Copy macro" section.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -150,6 +193,10 @@ Get the stream URL for a file property.
 
 {# Password-protected #}
 {{ cms.media.stream('clip', {pwd: 'secret123'}) }}
+
+{# Card or deck child — same dot-notation as `download()` #}
+{{ cms.media.stream('post-1', {property: 'mycard.file'}) }}
+{{ cms.media.stream('post-1', {property: 'mydeck.item-3.file'}) }}
 ```
 
 | Parameter | Type | Default | Description |

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Admin\FormField;
 
 class PriceField extends FormField
@@ -16,5 +18,14 @@ class PriceField extends FormField
 
 		// Set default step if not already set
 		$this->step = 0.01;
+	}
+
+	/** @return array<string,?string> */
+	protected function formFieldAttributes(): array
+	{
+		$attributes              = parent::formFieldAttributes();
+		$attributes['inputmode'] = 'decimal';
+
+		return $attributes;
 	}
 }

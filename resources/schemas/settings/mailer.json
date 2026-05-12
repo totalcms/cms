@@ -5,7 +5,8 @@
 	"type"        : "object",
 	"properties"  : {
 		"whitelist": {
-			"type"        : "json",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
+			"field"       : "json",
 			"label"       : "Email Domain Whitelist",
 			"help"        : "Array of allowed email domains (e.g., [\"@yourcompany.com\", \"@trustedclient.com\"]). Leave empty to disable whitelist.",
 			"placeholder" : "[\"@yourcompany.com\", \"@trustedclient.com\"]"

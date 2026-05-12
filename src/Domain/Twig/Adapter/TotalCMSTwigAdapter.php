@@ -5,6 +5,8 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Twig\Data\FrontendAsset;
+use TotalCMS\Domain\Twig\Service\AssetRenderer;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\VersionData;
@@ -22,6 +24,7 @@ class TotalCMSTwigAdapter
 	private readonly LoggerInterface $logger;
 
 	public string $env;
+	public string $base;
 	public string $api;
 	public string $dashboard;
 	public string $login;
@@ -30,6 +33,12 @@ class TotalCMSTwigAdapter
 	public string $clearcache;
 	public VersionData $version;
 	public string $currentUrl;
+
+	/** @var list<FrontendAsset> */
+	private array $frontendAssetsList = [];
+
+	/** @var list<FrontendAsset> */
+	private array $adminAssetsList = [];
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function __construct(
@@ -46,14 +55,16 @@ class TotalCMSTwigAdapter
 		public MediaTwigAdapter $media,
 		public CollectionTwigAdapter $collection,
 		public AdminTwigAdapter $admin,
+		public BuilderTwigAdapter $builder,
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
 	) {
 		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 		$this->env        = $this->config->env;
-		$this->api        = $this->config->api;
+		$this->base       = $this->config->api;
+		$this->api        = $this->base . '/api';
 		$this->clearcache = $this->api . '/emergency/cache/clear';
-		$this->dashboard  = $this->api . '/admin';
+		$this->dashboard  = $this->base . '/admin';
 		$this->domain     = $this->config->domain;
 		$this->currentUrl = $_SERVER['REQUEST_URI'] ?? '';
 		$this->version    = new VersionData();
@@ -230,5 +241,87 @@ class TotalCMSTwigAdapter
 		}
 
 		throw new \BadMethodCallException("Method '{$name}' does not exist on TotalCMSTwigAdapter.");
+	}
+
+	/**
+	 * Append frontend asset records (called by ExtensionManager and
+	 * CoreFrontendAssetRegistrar during boot). Incoming URLs are relative
+	 * (e.g. `/assets/foo.js`); we prepend the API base here so AssetRenderer
+	 * can emit them verbatim.
+	 *
+	 * @param list<FrontendAsset> $assets
+	 */
+	public function addFrontendAssets(array $assets): void
+	{
+		foreach ($assets as $asset) {
+			$this->frontendAssetsList[] = $this->withApiBase($asset);
+		}
+	}
+
+	/**
+	 * Append admin asset records (called by ExtensionManager during boot).
+	 *
+	 * @param list<FrontendAsset> $assets
+	 */
+	public function addAdminAssets(array $assets): void
+	{
+		foreach ($assets as $asset) {
+			$this->adminAssetsList[] = $this->withApiBase($asset);
+		}
+	}
+
+	/**
+	 * Return a copy of the asset with its URL rewritten to be absolute
+	 * against the current API base.
+	 */
+	private function withApiBase(FrontendAsset $asset): FrontendAsset
+	{
+		return new FrontendAsset(
+			type: $asset->type,
+			url: $this->api . $asset->url,
+			position: $asset->position,
+			module: $asset->module,
+			preload: $asset->preload,
+		);
+	}
+
+	/**
+	 * Render frontend asset tags for the document head.
+	 *
+	 * Usage in Twig: {{ cms.assetsHead() }}
+	 */
+	public function assetsHead(): string
+	{
+		return AssetRenderer::head($this->frontendAssetsList);
+	}
+
+	/**
+	 * Render frontend asset tags for the document body.
+	 *
+	 * Usage in Twig: {{ cms.assetsBody() }}
+	 */
+	public function assetsBody(): string
+	{
+		return AssetRenderer::body($this->frontendAssetsList);
+	}
+
+	/**
+	 * Render admin asset tags for the document head.
+	 *
+	 * Usage in Twig: {{ cms.adminAssetsHead() }}
+	 */
+	public function adminAssetsHead(): string
+	{
+		return AssetRenderer::head($this->adminAssetsList);
+	}
+
+	/**
+	 * Render admin asset tags for the document body.
+	 *
+	 * Usage in Twig: {{ cms.adminAssetsBody() }}
+	 */
+	public function adminAssetsBody(): string
+	{
+		return AssetRenderer::body($this->adminAssetsList);
 	}
 }

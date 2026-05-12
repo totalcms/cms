@@ -1,0 +1,72 @@
+{
+	"name": "Portfolio Starter",
+	"description": "Pages for the portfolio starter — Home, Work, About, Contact, and a Getting Started reference page.",
+	"version": "1.0.0",
+	"objects": [
+		{
+			"collection": "builder-pages",
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "work",
+			"data": {
+				"id": "work",
+				"title": "Work",
+				"route": "/work",
+				"template": "work",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "about",
+			"data": {
+				"id": "about",
+				"title": "About",
+				"route": "/about",
+				"template": "about",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "contact",
+			"data": {
+				"id": "contact",
+				"title": "Contact",
+				"route": "/contact",
+				"template": "contact",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
+		}
+	]
+}

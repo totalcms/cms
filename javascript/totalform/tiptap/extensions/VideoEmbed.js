@@ -5,7 +5,7 @@
  */
 
 import Youtube from '@tiptap/extension-youtube';
-import { getUploadUrl, uploadFileWithProgress } from '../upload.js';
+import { getUploadUrl, getListUrl, uploadFileWithProgress } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
 
@@ -152,10 +152,11 @@ function createVideoDialog(editor, uploadConfig) {
 		fileEmpty.style.display = 'none';
 		selectedFileUrl = null;
 
-		const listUrl = getUploadUrl(uploadConfig);
-		if (!listUrl) return;
+		const listInfo = getListUrl(uploadConfig);
+		if (!listInfo) return;
 
-		const fetchUrl = `${listUrl}?type=media`;
+		listInfo.params.set('type', 'media');
+		const fetchUrl = `${listInfo.url}?${listInfo.params}`;
 
 		try {
 			const resp = await fetch(fetchUrl, { method: 'GET' });

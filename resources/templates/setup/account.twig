@@ -1,0 +1,44 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.account_title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="setup-header">
+		<h1>{{ t('wizard.account_title') }}</h1>
+		<p>{{ t('wizard.account_desc') }}</p>
+	</section>
+
+	{% for message in flash.get('error') %}
+		<div class="cms-error" role="alert">
+			{{ message }}
+		</div>
+	{% endfor %}
+
+	{% set formFields %}
+		{{ cms.form.field("email", "email", {
+			label       : t('wizard.account_email'),
+			required    : true,
+			placeholder : "admin@example.com",
+			value       : sessionData.setup_admin_email|default(''),
+		}) }}
+
+		{{ cms.form.field("password", "password", {
+			label       : t('wizard.account_password'),
+			required    : true,
+			placeholder : t('wizard.account_pass_min'),
+			settings    : {
+				minlength          : 8,
+				confirmPlaceholder : t('wizard.account_confirm'),
+    		}
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple(cms.base ~ '/setup/account', formFields, {
+		class  : "setup-form",
+		method : "POST",
+		label  : t('wizard.account_btn'),
+		ajax   : false,
+	}) }}
+</main>
+{% endblock %}

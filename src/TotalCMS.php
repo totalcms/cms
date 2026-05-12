@@ -13,10 +13,21 @@ use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Export\Service\CollectionZipper;
+use TotalCMS\Domain\Export\Service\ObjectZipper;
+use TotalCMS\Domain\Import\CsvImporter;
+use TotalCMS\Domain\Import\DeckCsvImporter;
+use TotalCMS\Domain\Import\DeckJsonImporter;
+use TotalCMS\Domain\Import\JsonImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
+use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectCloner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -34,10 +45,16 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
+use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Update\Service\UpdateApplier;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Domain\Update\Service\UpdateDownloader;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Entry point for Total CMS PHP API.
@@ -60,7 +77,7 @@ class TotalCMS
 	public function __construct(bool $autoStartBuffer = true)
 	{
 		// Build PHP-DI Container instance
-		$this->container = new Container(require __DIR__ . '/../config/container.php');
+		$this->container = new Container(require PathResolver::packageRoot() . '/config/container.php');
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
@@ -98,6 +115,18 @@ class TotalCMS
 			$this->twigEngine = $this->container->get(TwigEngine::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
+		}
+
+		// Discover and boot extensions so their Twig functions/filters/globals,
+		// schemas, field types, and event listeners are available on the public API
+		// (Stacks frontend). The Slim admin app and CLI run their own bootstrap;
+		// the manager guards against double-init.
+		try {
+			$extensionManager = $this->container->get(Domain\Extension\Service\ExtensionManager::class);
+			$extensionManager->discoverAndRegister();
+			$extensionManager->bootAll();
+		} catch (\Throwable $th) {
+			$this->logger->error('Extension bootstrap failed: ' . $th->getMessage(), ['exception' => $th]);
 		}
 
 		// Start session if it wasn't started during preservation
@@ -165,6 +194,11 @@ class TotalCMS
 	// ---------------------------------------------------------------------------------
 	// Public methods to access Total CMS services
 	// ---------------------------------------------------------------------------------
+	public function container(): Container
+	{
+		return $this->container;
+	}
+
 	public function collectionLister(): CollectionLister
 	{
 		return $this->container->get(CollectionLister::class);
@@ -364,6 +398,91 @@ class TotalCMS
 	public function imageSaver(): ImageSaver
 	{
 		return $this->container->get(ImageSaver::class);
+	}
+
+	public function cacheManager(): CacheManager
+	{
+		return $this->cacheManager;
+	}
+
+	public function licenseValidator(): LicenseValidator
+	{
+		return $this->container->get(LicenseValidator::class);
+	}
+
+	public function editionFeatures(): EditionFeatureService
+	{
+		return $this->container->get(EditionFeatureService::class);
+	}
+
+	public function jumpStartExporter(): JumpStartExporter
+	{
+		return $this->container->get(JumpStartExporter::class);
+	}
+
+	public function jumpStartImporter(): JumpStartImporter
+	{
+		return $this->container->get(JumpStartImporter::class);
+	}
+
+	public function syncService(): SyncService
+	{
+		return $this->container->get(SyncService::class);
+	}
+
+	public function updateChecker(): UpdateChecker
+	{
+		return $this->container->get(UpdateChecker::class);
+	}
+
+	public function updateDownloader(): UpdateDownloader
+	{
+		return $this->container->get(UpdateDownloader::class);
+	}
+
+	public function updateApplier(): UpdateApplier
+	{
+		return $this->container->get(UpdateApplier::class);
+	}
+
+	public function collectionZipper(): CollectionZipper
+	{
+		return $this->container->get(CollectionZipper::class);
+	}
+
+	public function objectZipper(): ObjectZipper
+	{
+		return $this->container->get(ObjectZipper::class);
+	}
+
+	public function jsonImporter(): JsonImporter
+	{
+		return $this->container->get(JsonImporter::class);
+	}
+
+	public function csvImporter(): CsvImporter
+	{
+		return $this->container->get(CsvImporter::class);
+	}
+
+	public function deckJsonImporter(): DeckJsonImporter
+	{
+		return $this->container->get(DeckJsonImporter::class);
+	}
+
+	public function deckCsvImporter(): DeckCsvImporter
+	{
+		return $this->container->get(DeckCsvImporter::class);
+	}
+
+	public function schemaSaver(): SchemaSaver
+	{
+		return $this->container->get(SchemaSaver::class);
+	}
+
+	public function indexQueryService(): IndexQueryService
+	{
+		return $this->container->get(IndexQueryService::class);
 	}
 
 	/**

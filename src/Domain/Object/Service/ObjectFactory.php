@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -93,7 +94,7 @@ readonly class ObjectFactory
 
 			$value = $objectData[$property];
 
-			$properties[$property] = $this->propertyFactory->generateProperty($propertySchema, $value);
+			$properties[$property] = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value, $property);
 		}
 
 		return $properties;
@@ -171,8 +172,8 @@ readonly class ObjectFactory
 	private function applyDeckItemCalcFields(array $objectData, SchemaData $schema): array
 	{
 		foreach ($schema->properties as $property => $propertySchema) {
-			$deckref = $propertySchema['deckref'] ?? $propertySchema['settings']['deckref'] ?? null;
-			if (empty($deckref)) {
+			$schemaref = PropertyDefinition::extractSchemaRef($propertySchema);
+			if ($schemaref === null) {
 				continue;
 			}
 
@@ -182,7 +183,7 @@ readonly class ObjectFactory
 			}
 
 			// Fetch the deck schema to find calc fields
-			$deckSchemaId = SchemaFetcher::extractSchemaId($deckref);
+			$deckSchemaId = SchemaFetcher::extractSchemaId($schemaref);
 
 			try {
 				$deckSchema = $this->schemaFetcher->fetchSchema($deckSchemaId);

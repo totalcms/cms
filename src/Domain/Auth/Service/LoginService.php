@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -19,16 +21,25 @@ class LoginService
 		private readonly FirstLoginChecker $firstLoginChecker,
 		private readonly LoggerFactory $loggerFactory,
 		private readonly Config $config,
+		private readonly EventDispatcher $eventDispatcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger('login');
 	}
 
-	/** @return array<string,mixed> */
-	public function authenticate(string $email, string $password, string $collection = ''): array
+	/**
+	 * Authenticate a user against the configured auth collection. The first
+	 * argument is whatever the user typed into the login form's identifier
+	 * field — an email address, a user ID, or either, per the `auth.loginWith`
+	 * config. UserValidationService::validateUser() dispatches between the
+	 * two lookup strategies transparently.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function authenticate(string $idOrEmail, string $password, string $collection = ''): array
 	{
 		if ($this->firstLoginChecker->isNewInstallation()) {
 			$this->logger->info('First login detected, creating first user');
-			$this->firstLoginChecker->createFirstUser($email, $password);
+			$this->firstLoginChecker->createFirstUser($idOrEmail, $password);
 			// for first login, force the user to login to the default auth collection
 			$collection = $this->config->auth['collection'];
 		}
@@ -38,7 +49,7 @@ class LoginService
 		// SuperAdmin Authentication: Check if this user is a SuperAdmin in the default collection
 		// If they are, authenticate them against the default collection regardless of the requested collection
 		if ($collection !== $defaultCollection) {
-			$superAdminUser = $this->tryAuthenticateSuperAdmin($email, $password);
+			$superAdminUser = $this->tryAuthenticateSuperAdmin($idOrEmail, $password);
 			if ($superAdminUser !== null) {
 				return $superAdminUser;
 			}
@@ -49,7 +60,7 @@ class LoginService
 		}
 
 		// Normal authentication flow for the requested collection
-		$user   = $this->validator->validateUserByEmail($email, $collection);
+		$user   = $this->validator->validateUser($idOrEmail, $collection);
 		$userId = $user['id'];
 
 		$this->account = "$collection/$userId";
@@ -69,6 +80,8 @@ class LoginService
 
 		$this->logger->info("User {$this->account} logged in");
 
+		$this->eventDispatcher->dispatch('user.login', new UserEventPayload($user['id'] ?? $this->account));
+
 		return $user;
 	}
 
@@ -77,13 +90,13 @@ class LoginService
 	 *
 	 * @return array<string,mixed>|null User data if SuperAdmin authentication succeeds, null otherwise
 	 */
-	private function tryAuthenticateSuperAdmin(string $email, string $password): ?array
+	private function tryAuthenticateSuperAdmin(string $idOrEmail, string $password): ?array
 	{
 		try {
 			$defaultCollection = $this->config->auth['collection'];
 
 			// Try to find and validate the user in the default collection
-			$user   = $this->validator->validateUserByEmail($email, $defaultCollection);
+			$user   = $this->validator->validateUser($idOrEmail, $defaultCollection);
 			$userId = $user['id'];
 
 			// Check if this user is a SuperAdmin

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Renderer;
 
 use Psr\Http\Message\ResponseInterface;

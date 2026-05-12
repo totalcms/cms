@@ -46,8 +46,8 @@ readonly class ResetPasswordAction
 		// Validate token
 		$validation = $this->passwordResetService->validateToken($token);
 
-		if (!$validation['valid']) {
-			$this->session->getFlash()->add('error', $validation['message']);
+		if (!$validation->success) {
+			$this->session->getFlash()->add('error', $validation->message);
 
 			// Redirect to forgot password page
 			$router = RouteContext::fromRequest($request)->getRouteParser();
@@ -61,8 +61,8 @@ readonly class ResetPasswordAction
 
 		return $this->twigRenderer->template($response, 'admin/reset-password.twig', [
 			'token'      => $token,
-			'email'      => $validation['email'] ?? '',
-			'collection' => $validation['collection'] ?? '',
+			'email'      => $validation->data['email'] ?? '',
+			'collection' => $validation->data['collection'] ?? '',
 			'redirect'   => $queryParams['redirect'] ?? '',
 		]);
 	}
