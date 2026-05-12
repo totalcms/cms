@@ -187,10 +187,19 @@ else
 fi
 print_info "Current version: $CURRENT_VERSION"
 
-read -p "Enter new version number (or press Enter to keep current): " NEW_VERSION
-if [ -z "$NEW_VERSION" ]; then
-    NEW_VERSION=$CURRENT_VERSION
-fi
+while true; do
+    read -p "Enter new version number (or press Enter to keep current): " NEW_VERSION
+    if [ -z "$NEW_VERSION" ]; then
+        NEW_VERSION=$CURRENT_VERSION
+        break
+    fi
+    # Semver: MAJOR.MINOR.PATCH with optional -prerelease (e.g. 3.5.0, 3.5.0-beta.2)
+    if [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+        break
+    fi
+    print_error "Invalid version format: '$NEW_VERSION'"
+    print_info "Expected: MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-prerelease (e.g. 3.5.0, 3.5.0-beta.2)"
+done
 
 # Check git status
 print_info "Checking git status..."
