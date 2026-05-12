@@ -19,7 +19,7 @@
 {% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}
 
 
-{% if stats.collections <= 2 %}
+{% if stats.collections <= 3 %}
 	{# Show new user welcome if no user collections exist (accounts for system collections: auth, mailer) #}
 	{{ dashboard.newUserWelcome() }}
 {% else %}
