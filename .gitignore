@@ -50,5 +50,6 @@ public/assets
 /tests/tcms-data/.system/.cache_invalidate
 /tests/tcms-data/.system/extensions.json
 /tests/tcms-data/.system/jobqueue
+/tests/tcms-data/.system/setup-state.json
 /resources/docs/search-index.json
 /tests/tcms-data/.system/builder-reload-pulse.json
