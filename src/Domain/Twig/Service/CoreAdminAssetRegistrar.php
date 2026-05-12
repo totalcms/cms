@@ -18,8 +18,11 @@ use TotalCMS\Domain\Twig\Data\FrontendAsset;
  *
  * Module scripts in body with preload hints (modulepreload in head)
  * mirror the previous admin-dashboard.twig hardcoded layout but as
- * deferred modules — htmx loads first so admin-table.js can call
- * window.htmx.* in subsequent modules.
+ * deferred modules. htmx is the exception: the bundled UMD build sets
+ * `window.htmx` as a top-level side effect, which only reaches `window`
+ * when loaded as a classic script — `type="module"` would put the binding
+ * in module scope and leave the global undefined, breaking
+ * `htmx.ajax(...)` calls in admin-table.js and elsewhere.
  */
 final class CoreAdminAssetRegistrar extends CoreAssetRegistrar
 {
@@ -28,7 +31,7 @@ final class CoreAdminAssetRegistrar extends CoreAssetRegistrar
 		['path' => 'icons.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['path' => 'admin.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['path' => 'dashboard.css',       'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'htmx.min.js',         'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
+		['path' => 'htmx.min.js',         'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
 		['path' => 'content.js',          'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		['path' => 'admin.js',            'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 	];

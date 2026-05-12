@@ -26,7 +26,12 @@ final class CoreFrontendAssetRegistrar extends CoreAssetRegistrar
 		['path' => 'pagination.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['path' => 'content.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		['path' => 'gallery.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
-		['path' => 'htmx.min.js',    'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
+		// htmx is the bundled UMD build — it must load as a classic script so
+		// the top-level `window.htmx` side effect actually reaches `window`.
+		// Loading it as `type="module"` puts the binding in module scope and
+		// leaves the global undefined, breaking any code that calls htmx as a
+		// global (e.g. `htmx.ajax(...)` in admin-table.js).
+		['path' => 'htmx.min.js',    'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
 	];
 
 	/**
