@@ -794,8 +794,10 @@ export default class TotalForm {
 
 		// The ID cannot be changed in edit form
 		const idField = this.fields.filter(field => field.property === "id").shift();
-		// if ID field is hidden, these may not exist
-		if (idField.disable) {
+		// idField may be undefined when the schema has no `id` property,
+		// or when the field was filtered out before reaching us — optional
+		// chaining keeps a missing field from blowing up the form init.
+		if (idField?.disable) {
 			idField.disable();
 			idField.lock();
 		}
