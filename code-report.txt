@@ -20,10 +20,10 @@ Code Line Counts:
 	json    : 10165
 	twig    : 10046
 	html    : 3403
-	sh      : 619
+	sh      : 646
 	md      : 25639
 
-Total Lines of Code: 227249
+Total Lines of Code: 227276
 
 Distribution Stats:
-	Dist Files:     7533
+	Dist Files:     7534

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../javascript/i18n.js"],
+  "sourcesContent": ["/**\n * Translation helper for Total CMS admin JavaScript.\n *\n * Reads from window.TCMS_TRANSLATIONS (injected by admin-dashboard.twig).\n * Supports simple {param} replacement for parameterized strings.\n *\n * @param {string} key - Translation key (e.g., 'confirm.delete_image')\n * @param {Object<string, string|number>} [params] - Optional parameters for replacement\n * @returns {string} Translated string, or the key itself if not found\n */\nexport function t(key, params = {}) {\n\tconst translations = window.TCMS_TRANSLATIONS || {};\n\tlet text = translations[key] || key;\n\n\tfor (const [param, value] of Object.entries(params)) {\n\t\ttext = text.replace(`{${param}}`, String(value));\n\t}\n\n\treturn text;\n}\n"],
+  "mappings": "wCAUO,SAASA,EAAEC,EAAKC,EAAS,CAAC,EAAG,CAEnC,IAAIC,GADiB,OAAO,mBAAqB,CAAC,GAC1BF,CAAG,GAAKA,EAEhC,OAAW,CAACG,EAAOC,CAAK,IAAK,OAAO,QAAQH,CAAM,EACjDC,EAAOA,EAAK,QAAQ,IAAIC,KAAU,OAAOC,CAAK,CAAC,EAGhD,OAAOF,CACR,CATgBG,EAAAN,EAAA",
+  "names": ["t", "key", "params", "text", "param", "value", "__name"]
+}

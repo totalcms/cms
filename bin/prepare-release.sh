@@ -209,9 +209,34 @@ fi
 print_info "Pulling latest changes from remote..."
 git pull || print_warning "Failed to pull latest changes"
 
+# Start the git flow release branch.
+#
+# All subsequent commits in this script (cs:fix fixups, built assets) need
+# to land on release/$NEW_VERSION so they're carried forward by `git flow
+# release finish`. We only start the branch here — `finish` stays manual
+# so the operator can review the diff and handle any merge conflicts
+# before tagging.
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$CURRENT_BRANCH" == release/* ]]; then
+    print_info "Already on $CURRENT_BRANCH — skipping git flow release start"
+elif ! git flow version >/dev/null 2>&1; then
+    print_warning "git-flow not installed — skipping release branch creation"
+    print_info "Install with: brew install git-flow-avh"
+else
+    print_info "Starting git flow release branch for $NEW_VERSION..."
+    if git flow release start "$NEW_VERSION"; then
+        print_success "Switched to release/$NEW_VERSION"
+    else
+        print_error "Failed to start release branch. Does release/$NEW_VERSION already exist?"
+        print_info "Resume by checking it out manually: git checkout release/$NEW_VERSION"
+        exit 1
+    fi
+fi
+
 # Clean build artifacts
 print_info "Cleaning build artifacts..."
-rm -rf vendor/ node_modules/ public/assets/
+rm -rf vendor/ node_modules/
+
 print_success "Build artifacts cleaned"
 
 # Install dependencies
@@ -278,6 +303,8 @@ print_success "PHP dependencies installed"
 
 # Build assets
 print_info "Building production assets..."
+# Clenup old assets to ensure a clean slate (also keeps git status clean since assets are gitignored)
+rm -rf public/assets
 composer run build
 print_success "Assets built"
 
@@ -323,6 +350,27 @@ print_success "File permissions set"
 print_info "Generating file checksums..."
 find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.css" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./cache/*" -not -path "./tmp/*" -exec sha256sum {} \; > checksums.txt
 print_success "Checksums generated"
+
+# Commit release artifacts so Packagist ships them.
+#
+# Bundles four things into one commit on the release branch:
+#   - public/assets/      built CSS/JS (gitignored — needs -f)
+#   - version.json        regenerated above with NEW_VERSION + GIT_HASH
+#   - code-report.txt     phploc-style stats for this release
+#   - checksums.txt       sha256s of php/js/css for the update system
+#
+# public/assets/ stays gitignored after this commit, so ongoing dev
+# rebuilds on develop won't drift the diff — the committed snapshot just
+# sits frozen until the next release supersedes it.
+print_info "Committing release artifacts..."
+git add -f public/assets/
+git add version.json code-report.txt checksums.txt
+if git diff --cached --quiet; then
+    print_info "No artifact changes to commit"
+else
+    git commit -m "Build assets for $NEW_VERSION"
+    print_success "Release artifacts committed"
+fi
 
 # Sync docs to docs site
 DOCS_SYNC="$HOME/Websites/docs.totalcms.co/bin/sync-from-totalcms.sh"
@@ -486,11 +534,12 @@ echo "  ✓ Distribution zip created: $DIST_ZIP"
 echo "  ✓ Version registered with license API"
 echo
 echo "Next steps:"
-echo "  1. Review the changes one more time"
+echo "  1. Review the changes on release/$NEW_VERSION"
 echo "  2. Test the production build locally"
-echo "  3. Finish the release via git flow (creates + pushes the tag):"
+echo "  3. Finish the release via git flow (creates the tag, merges to main + develop):"
 echo "       git flow release finish $NEW_VERSION"
+echo "  4. Push branches and tags:"
 echo "       git push github --all && git push github --tags"
-echo "  4. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
-echo "  5. Create a GitHub release for $NEW_VERSION with changelog notes"
+echo "  5. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
+echo "  6. Create a GitHub release for $NEW_VERSION with changelog notes"
 echo
