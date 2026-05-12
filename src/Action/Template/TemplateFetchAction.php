@@ -20,9 +20,9 @@ readonly class TemplateFetchAction
 	 *
 	 * @param array<string,string> $args The routing arguments
 	 *
-	 * @return ResponseInterface the response
-	 *
 	 * @throws HttpNotFoundException
+	 *
+	 * @return ResponseInterface the response
 	 */
 	public function __invoke(
 		ServerRequestInterface $request,

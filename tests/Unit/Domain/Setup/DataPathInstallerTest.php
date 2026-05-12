@@ -23,10 +23,10 @@ final class DataPathInstallerTest extends TestCase
 	private DataPathInstaller $installer;
 
 	/** @var \PHPUnit\Framework\MockObject\MockObject&InstallationSettingsSaver */
-	private $settingsSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $settingsSaver;
 
 	/** @var \PHPUnit\Framework\MockObject\MockObject&CacheManager */
-	private $cacheManager;
+	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
 
 	protected function setUp(): void
 	{

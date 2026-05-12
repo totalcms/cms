@@ -60,7 +60,7 @@ final readonly class BasePathMiddleware implements MiddlewareInterface
 
 		// dirname returns '/', '.', or '\\' for top-level scripts — all map
 		// to "no base path" for routing purposes.
-		if ($basePath === '/' || $basePath === '.' || $basePath === '\\') {
+		if (in_array($basePath, ['/', '.', '\\'], true)) {
 			return '';
 		}
 

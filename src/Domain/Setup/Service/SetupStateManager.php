@@ -110,7 +110,7 @@ class SetupStateManager
 	public function isSetupComplete(): bool
 	{
 		$state = $this->stateRepository->read();
-		if ($state !== null && $state->isComplete()) {
+		if ($state instanceof SetupState && $state->isComplete()) {
 			return true;
 		}
 
@@ -119,7 +119,7 @@ class SetupStateManager
 		// present-but-incomplete file means a wizard is in progress and
 		// shouldn't be auto-completed just because the user has reached
 		// the account step.
-		if ($state === null && $this->authCollectionHasUsers()) {
+		if (!$state instanceof SetupState && $this->authCollectionHasUsers()) {
 			$this->stateRepository->write(
 				(new SetupState(self::STEPS))->markComplete(),
 			);
@@ -161,7 +161,7 @@ class SetupStateManager
 		$sessionSteps = $this->getSessionSteps();
 
 		$state     = $this->stateRepository->read();
-		$fileSteps = $state !== null ? $state->completedSteps : [];
+		$fileSteps = $state instanceof SetupState ? $state->completedSteps : [];
 
 		return array_values(array_unique([...$fileSteps, ...$sessionSteps]));
 	}
