@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../css/pagination.scss"],
+  "sourcesContent": [".cms-pagination {\n\tdisplay         : flex;\n\tjustify-content : end;\n\talign-items     : center;\n\n\t--active-color: oklch(0 0 0 / 5%);\n\n\ta {\n\t\tcolor           : inherit;\n\t\ttext-decoration : none;\n\t\tborder-radius   : 3px;\n\t\ttransition: background-color 0.2s ease-in-out;\n\n\t\t&:hover {\n\t\t\tbackground-color: var(--active-color);\n\t\t}\n\t}\n\n\t> * {\n\t\tpadding: 0.25rem 0.75rem;\n\t}\n\n\t.pagination-pages {\n\t\tlist-style      : none;\n\t\tmargin          : 0;\n\t\tdisplay         : flex;\n\t\talign-items     : center;\n\t\tgap             : 0.25rem;\n\t\toverflow        : auto;\n\t\tscrollbar-width : none;     // Firefox\n\n\t\t&::-webkit-scrollbar {\n\t\t\tdisplay : none;  // Safari and Chrome\n\t\t}\n\n\t\ta {\n\t\t\tpadding: 0.25rem;\n\t\t}\n\n\t\t.active a {\n\t\t\tbackground-color: var(--active-color);\n\t\t}\n\t}\n\n\t&.full {\n\t\tdisplay               : grid;\n\t\tgrid-template-columns : min-content auto min-content;\n\t}\n}\n"],
+  "mappings": "AAAA,gBACC,aACA,oBACA,mBAEA,kCAEA,kBACC,cACA,qBATF,kBAWE,4CAEA,wBACC,qCAIF,kBAlBD,sBAsBC,kCACC,gBAvBF,SAyBE,aACA,mBACA,WACA,cACA,qBAEA,qDACC,aAGD,oCAnCF,eAuCE,4CACC,qCAIF,qBACC,aACA",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../javascript/filelinks.js"],
+  "sourcesContent": ["import MacroBuilder from \"./macro-builder\";\n\nif (window.self !== window.top) {\n\t// The page is in an iframe\n\tdocument.body.classList.add('in-iframe');\n}\n\nconst macroContent = document.getElementById(\"twig-macro\");\nif (macroContent) {\n\tconst urlParams = new URLSearchParams(window.location.search);\n\tconst data = {};\n\tfor (const [key, value] of urlParams.entries()) {\n\t\tdata[key] = value;\n\t}\n\tif (macroContent.dataset.pwd) {\n\t\tdata.pwd = macroContent.dataset.pwd;\n\t}\n\tmacroContent.textContent = data.name ? MacroBuilder.depotDownload({...data}) : MacroBuilder.download({...data});\n}\n\n\n"],
+  "mappings": "+DAEI,OAAO,OAAS,OAAO,KAE1B,SAAS,KAAK,UAAU,IAAI,WAAW,EAGxC,IAAMA,EAAe,SAAS,eAAe,YAAY,EACzD,GAAIA,EAAc,CACjB,IAAMC,EAAY,IAAI,gBAAgB,OAAO,SAAS,MAAM,EACtDC,EAAO,CAAC,EACd,OAAW,CAACC,EAAKC,CAAK,IAAKH,EAAU,QAAQ,EAC5CC,EAAKC,CAAG,EAAIC,EAETJ,EAAa,QAAQ,MACxBE,EAAK,IAAMF,EAAa,QAAQ,KAEjCA,EAAa,YAAcE,EAAK,KAAOG,EAAa,cAAc,CAAC,GAAGH,CAAI,CAAC,EAAIG,EAAa,SAAS,CAAC,GAAGH,CAAI,CAAC,CAC/G",
+  "names": ["macroContent", "urlParams", "data", "key", "value", "MacroBuilder"]
+}
