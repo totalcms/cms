@@ -429,6 +429,66 @@ else
     print_warning "Failed to upload dist zip to S3"
 fi
 
+# Project skeleton constraint check
+#
+# The Composer project skeleton (totalcms/totalcms) declares a major.minor
+# constraint on totalcms/cms (e.g. "^3.5"). Patch releases resolve cleanly
+# under the existing constraint; minor/major releases need the skeleton's
+# constraint to be bumped to match, otherwise `composer create-project`
+# can't resolve the new version.
+#
+# We don't touch the skeleton repo automatically — cross-repo commits from
+# a release script are too easy to get wrong. The check just surfaces the
+# gap with the exact commands to run.
+PROJECT_SKEL_PATH="${TOTALCMS_PROJECT_PATH:-$HOME/Developer/totalcms-project}"
+if [ -f "$PROJECT_SKEL_PATH/composer.json" ]; then
+    SKEL_CONSTRAINT=$(php -r "\$c = json_decode(file_get_contents('$PROJECT_SKEL_PATH/composer.json'), true); echo \$c['require']['totalcms/cms'] ?? '';" 2>/dev/null)
+    NEW_MAJOR_MINOR=$(echo "$NEW_VERSION" | cut -d. -f1-2)
+    if [ -n "$SKEL_CONSTRAINT" ] && [[ "$SKEL_CONSTRAINT" != *"$NEW_MAJOR_MINOR"* ]]; then
+        echo
+        print_warning "Project skeleton constraint is out of sync."
+        print_info "  Skeleton requires: $SKEL_CONSTRAINT"
+        print_info "  New cms version:   $NEW_VERSION"
+        echo
+        print_info "Update + tag the skeleton with:"
+        echo "  cd \"$PROJECT_SKEL_PATH\""
+        echo "  # change 'totalcms/cms' to \"^$NEW_MAJOR_MINOR\" in composer.json"
+        echo "  git add composer.json && git commit -m \"Require totalcms/cms ^$NEW_MAJOR_MINOR\""
+        echo "  git tag $NEW_VERSION && git push origin HEAD && git push origin $NEW_VERSION"
+        echo
+    fi
+fi
+
+# Optional: tag + push the cms repo
+#
+# Gated by a confirmation prompt because pushing a tag is one-way. After a
+# 5-minute release run, the operator gets one last "yes, ship it" moment to
+# eyeball things before the tag goes public and Packagist mirrors it.
+TAG_AND_PUSHED=0
+echo
+read -p "Tag $NEW_VERSION and push to github now? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if git tag "$NEW_VERSION"; then
+        print_success "Created tag $NEW_VERSION"
+        if git push github "$BRANCH" && git push github "$NEW_VERSION"; then
+            print_success "Pushed $BRANCH + tag $NEW_VERSION to github"
+            print_info "Packagist webhook will mirror within ~60s. Verify at: https://packagist.org/packages/totalcms/cms"
+            TAG_AND_PUSHED=1
+        else
+            print_warning "Push failed — fix the issue and run: git push github $BRANCH && git push github $NEW_VERSION"
+        fi
+    else
+        print_warning "Tag creation failed — does $NEW_VERSION already exist?"
+    fi
+else
+    print_info "Skipped — tag and push manually when ready:"
+    echo "  git tag $NEW_VERSION"
+    echo "  git push github \$(git rev-parse --abbrev-ref HEAD)"
+    echo "  git push github $NEW_VERSION"
+fi
+
 # Summary
 echo
 print_success "Release preparation complete!"
@@ -449,12 +509,20 @@ echo "  ✓ Source maps uploaded to Sentry"
 echo "  ✓ Sentry release notified"
 echo "  ✓ Distribution zip created: $DIST_ZIP"
 echo "  ✓ Version registered with license API"
+if [ "$TAG_AND_PUSHED" -eq 1 ]; then
+    echo "  ✓ Tag $NEW_VERSION pushed to github (Packagist mirror in flight)"
+fi
 echo
 echo "Next steps:"
 echo "  1. Review the changes one more time"
 echo "  2. Test the production build locally"
-echo "  3. Create git tag: git tag -a v$NEW_VERSION -m 'Release version $NEW_VERSION'"
-echo "  4. Push to repository: git push && git push --tags"
-echo "  5. Create release on GitHub with changelog"
-echo "  6. Packagist auto-updates from the git tag (via webhook)"
+if [ "$TAG_AND_PUSHED" -eq 1 ]; then
+    echo "  3. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
+    echo "  4. Create a GitHub release for $NEW_VERSION with changelog notes"
+else
+    echo "  3. Create git tag: git tag $NEW_VERSION"
+    echo "  4. Push to repository: git push github HEAD && git push github $NEW_VERSION"
+    echo "  5. Create a GitHub release for $NEW_VERSION with changelog notes"
+    echo "  6. Packagist will auto-mirror the new tag (via webhook)"
+fi
 echo
