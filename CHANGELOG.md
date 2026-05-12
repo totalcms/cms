@@ -2,6 +2,12 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.2] - 2026-05-12
+
+- Resolved config issues with getting T3 installed via `composer create-project totalcms/totalcms`
+- Fixed schema and template not found issues found in Sentry
+
+
 ## [3.5.0-beta.1] - 2026-05-12
 
 This is a major release that turns Total CMS into a platform. New top-level subsystems (Site Builder, Extensions, CLI, Composer distribution, Setup Wizard, Event system) sit alongside the existing collections/templates engine. The version jump from 3.2 to 3.5 reflects the scope.
