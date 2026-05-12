@@ -2,6 +2,10 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.3] - 2026-05-12
+
+- Deployment updates
+
 ## [3.5.0-beta.2] - 2026-05-12
 
 - Resolved config issues with getting T3 installed via `composer create-project totalcms/totalcms`
