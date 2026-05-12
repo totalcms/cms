@@ -1,72 +1,26 @@
 ---
 title: "Installation"
-description: "Install Total CMS on any PHP 8.2+ server with the step-by-step setup wizard. Covers requirements, data path configuration, and first admin account creation."
+description: "Install Total CMS with a single Composer command. The setup wizard walks you through data path, admin account, and license activation in under 5 minutes."
 ---
 
 # Installation
 
-Total CMS can be installed on any server running PHP 8.2 or higher. The setup wizard guides you through the process in under 5 minutes.
-
-## System Requirements
-
-### PHP Requirements
-
-- **PHP 8.2 or higher** (PHP 8.3 and 8.4 supported)
-- Required PHP extensions:
-  - `curl` - HTTP requests (license validation, embeds)
-  - `exif` - Image metadata extraction
-  - `fileinfo` - File type detection
-  - `gd` (with FreeType) - Image processing and text rendering
-  - `json` - JSON parsing
-  - `mbstring` - Multibyte string handling
-  - `openssl` - HTTPS and encryption
-
-### Recommended PHP Extensions
-
-These extensions enhance performance and enable additional features:
-
-- `intl` - Internationalization and locale support
-- `imagick` - Advanced image processing
-- `opcache` - PHP bytecode caching (strongly recommended)
-- `apcu` - High-performance in-memory caching
-- `redis` - Redis caching support
-- `memcached` - Memcached caching support
-
-You only need one caching extension. APCu is recommended for single-server deployments.
-
-### Web Server
-
-- **Apache 2.4+** with `mod_rewrite` enabled
-- **Nginx** with PHP-FPM (see [Nginx Configuration](/advanced/nginx/))
-- **LiteSpeed** or other PHP-compatible servers
-
-### File System
-
-- Write access to the data directory
-- Recommended: 100MB+ free disk space (varies by content volume)
-
-### Browser Support (Admin Dashboard)
-
-- Chrome/Edge (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-
-## Quick Start
-
-Install with Composer:
+Install Total CMS with Composer:
 
 ```bash
 composer create-project totalcms/totalcms my-site --stability=beta
 ```
 
-> **Note:** `--stability=beta` is required while 3.5.0 is in beta. Once 3.5.0 stable ships, you can drop the flag.
+**Note:** `--stability=beta` is required while 3.5.0 is in beta. Once 3.5.0 stable ships, you can drop the flag.
 
 Then:
 
 1. Point your web server's document root to `my-site/public/`
 2. Visit your site in a browser — the setup wizard starts automatically
 
-### Alternative: zip download
+Before installing, make sure your server meets the [System Requirements](/requirements/).
+
+## Alternative: zip download
 
 If you can't use Composer on the target server (shared hosting, restricted environments), download the Total CMS zip from [totalcms.co](https://totalcms.co), extract it to your server, and point your document root at the extracted `public/` directory. The setup wizard works the same way.
 
@@ -168,7 +122,7 @@ See the [CLI Commands](/advanced/cli/) reference for the full list.
 
 **Permission denied errors** — The web server user (e.g., `www-data`) needs write access to `tcms-data/`, `tcms/cache/`, `tcms/logs/`, and `tcms/tmp/`.
 
-**Required extension missing** — Install the missing PHP extension and restart your web server. On Ubuntu: `apt install php8.2-{extension}`.
+**Required extension missing** — Install the missing PHP extension and restart your web server. On Ubuntu: `apt install php8.2-{extension}`. See the [System Requirements](/requirements/) for the full list.
 
 **Blank page or 500 error** — Check `tcms/logs/` for error logs. Verify PHP version is 8.2+ and all required extensions are installed.
 

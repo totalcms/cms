@@ -40,10 +40,11 @@ Learn Total CMS through our comprehensive video series. These tutorials cover ev
 
 Get started with these essential guides:
 
-1. **[Installation](docs/installation)** - System requirements and installation steps
-2. **[Dashboard Overview](docs/admin/dashboard)** - Learn your way around the admin interface
-3. **[Configuration](docs/advanced/configuration)** - Set up your system correctly
-4. **[Twig Overview](docs/twig/overview)** - Master the templating system
+1. **[Requirements](docs/requirements)** - Server, PHP, and browser requirements
+2. **[Installation](docs/installation)** - Install with Composer in under 5 minutes
+3. **[Dashboard Overview](docs/admin/dashboard)** - Learn your way around the admin interface
+4. **[Configuration](docs/advanced/configuration)** - Set up your system correctly
+5. **[Twig Overview](docs/twig/overview)** - Master the templating system
 
 ## Next Steps
 
