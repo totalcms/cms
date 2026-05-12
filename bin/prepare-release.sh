@@ -353,18 +353,19 @@ print_success "Checksums generated"
 
 # Commit release artifacts so Packagist ships them.
 #
-# Bundles four things into one commit on the release branch:
+# Bundles five things into one commit on the release branch:
 #   - public/assets/      built CSS/JS (gitignored — needs -f)
+#   - resources/bundle    runtime integrity manifest (gitignored — needs -f)
 #   - version.json        regenerated above with NEW_VERSION + GIT_HASH
 #   - code-report.txt     phploc-style stats for this release
 #   - checksums.txt       sha256s of php/js/css for the update system
 #
-# public/assets/ stays gitignored after this commit, so ongoing dev
-# rebuilds on develop won't drift the diff — the committed snapshot just
-# sits frozen until the next release supersedes it.
+# public/assets/ and resources/bundle stay gitignored after this commit,
+# so ongoing dev rebuilds on develop won't drift the diff — the committed
+# snapshots just sit frozen until the next release supersedes them.
 print_info "Committing release artifacts..."
 git add -f public/assets/
-git add version.json code-report.txt checksums.txt
+git add version.json code-report.txt checksums.txt resources/bundle
 if git diff --cached --quiet; then
     print_info "No artifact changes to commit"
 else
