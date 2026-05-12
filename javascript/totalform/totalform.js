@@ -247,6 +247,20 @@ export default class TotalForm {
         this.droplets = dropletObjects;
     }
 
+	// Re-scan the form for field nodes after the caller has mutated the DOM
+	// (e.g. swapping a text input for a select when a country changes).
+	// processFields() preserves existing TotalField instances via the
+	// field.totalfield check, so only newly-added .form-field nodes get fresh
+	// objects and removed ones drop out of this.fields.
+	refreshFields() {
+		this.processFields();
+		this.droplets = this.fields.filter(field => field.isDroplet());
+		this.setupFieldsForEdit();
+		this.visibility.fields = this.fields;
+		this.visibility.initialize();
+		this.form.dispatchEvent(new CustomEvent('totalform:refresh'));
+	}
+
     registerButtons() {
 		// Save button action is handled by the TotalFormManager
 
@@ -534,6 +548,13 @@ export default class TotalForm {
 	}
 
 	save() {
+		// Defensive prune: drop any fields whose container was detached from the
+		// DOM. refreshFields() handles the normal case, but external mutations
+		// (e.g. show/hide plugins that fire their event before the actual node
+		// removal) can leave stale references in this.fields and crash validate()
+		// or generateData() on dead nodes.
+		this.fields = this.fields.filter(field => this.form.contains(field.container));
+
 		if (!this.validate()) {
 			this.validated = false;
 			this.error('Please fix validation errors before saving.');

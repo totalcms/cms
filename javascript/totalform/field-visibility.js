@@ -7,21 +7,29 @@ export default class FieldVisibility {
 	constructor(formElement, fields) {
 		this.form = formElement;
 		this.fields = fields;
+		this.controller = null;
 	}
 
 	//-------------------------
 	// Initialize Visibility
+	//
+	// Abort + recreate the controller so re-calling initialize() (e.g. from
+	// TotalForm.refreshFields() after a DOM swap) does not stack duplicate
+	// listeners on watched fields.
 	//-------------------------
 	initialize() {
-		this.initializeScope(this.form, this.fields);
+		this.controller?.abort();
+		this.controller = new AbortController();
+		this.initializeScope(this.form, this.fields, this.controller.signal);
 	}
 
 	//-------------------------
 	// Initialize Scoped Visibility
 	// Works within a specific container and field set (e.g., deck item dialogs)
 	//-------------------------
-	initializeScope(container, fields) {
+	initializeScope(container, fields, signal = undefined) {
 		const fieldsWithSettings = Array.from(container.querySelectorAll('[data-settings]'));
+		const listenerOpts = signal ? { signal } : undefined;
 
 		fieldsWithSettings.forEach(fieldElement => {
 			const settings = JSON.parse(fieldElement.dataset.settings || '{}');
@@ -43,8 +51,8 @@ export default class FieldVisibility {
 			// (cards and other composite fields whose getValue() returns a fresh
 			// object can't rely on the `===` equality guard in changed()).
 			const reevaluate = () => this.updateScopedVisibility(fieldElement, visibility, fields);
-			watchedFieldElement.addEventListener('change', reevaluate);
-			watchedFieldElement.addEventListener('visibility-change', reevaluate);
+			watchedFieldElement.addEventListener('change', reevaluate, listenerOpts);
+			watchedFieldElement.addEventListener('visibility-change', reevaluate, listenerOpts);
 
 			// Initial visibility evaluation
 			this.updateScopedVisibility(fieldElement, visibility, fields);
