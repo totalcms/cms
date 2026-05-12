@@ -31,13 +31,14 @@ readonly class ServerConfigAction
 				'path' => $request->getUri()->getPath(),
 				'page' => 'setup',
 			],
-			'detected'      => $this->advisor->detectServer(),
-			'serverHeader'  => $this->advisor->serverSoftware(),
-			'publicPrefix'  => $this->advisor->publicUrlPrefix(),
-			'installPrefix' => $this->advisor->installUrlPrefix(),
-			'apacheConfig'  => $this->advisor->apacheRewrite(),
-			'nginxConfig'   => $this->advisor->nginxConfig(),
-			'cronCommand'   => $this->advisor->cronCommand(),
+			'detected'         => $this->advisor->detectServer(),
+			'serverHeader'     => $this->advisor->serverSoftware(),
+			'publicPrefix'     => $this->advisor->publicUrlPrefix(),
+			'installPrefix'    => $this->advisor->installUrlPrefix(),
+			'apacheConfig'     => $this->advisor->apacheRewrite(),
+			'hasApacheConfig'  => $this->advisor->hasApacheHtaccess(),
+			'nginxConfig'      => $this->advisor->nginxConfig(),
+			'cronCommand'      => $this->advisor->cronCommand(),
 		]);
 	}
 }

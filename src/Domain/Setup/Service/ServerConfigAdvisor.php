@@ -148,6 +148,25 @@ class ServerConfigAdvisor
 	}
 
 	/**
+	 * Whether the project ships a working `public/.htaccess`. The Composer
+	 * skeleton includes one out of the box; zip installs and bespoke setups
+	 * don't. The wizard uses this to switch the Apache panel between
+	 * "rules already in place" and "paste this in" messaging — so Composer
+	 * users aren't nudged to do work that's already done for them.
+	 *
+	 * Conservative on purpose: only returns true when the file is at the
+	 * canonical project location (`<projectRoot>/public/.htaccess`) AND has
+	 * non-empty contents. Custom docroots or empty placeholder files fall
+	 * through to the "paste this in" path.
+	 */
+	public function hasApacheHtaccess(): bool
+	{
+		$path = PathResolver::projectRoot() . '/public/.htaccess';
+
+		return is_file($path) && filesize($path) > 0;
+	}
+
+	/**
 	 * Apache .htaccess rules. Place in the document root .htaccess.
 	 */
 	public function apacheRewrite(): string

@@ -29,13 +29,18 @@
 
 		<div class="server-panels">
 			<div id="tab-apache" class="server-panel{{ detected == 'apache' or detected == 'unknown' ? ' is-active' : '' }}">
-				<p class="panel-help">{{ t('wizard.server_apache_help') }}</p>
+				{% if hasApacheConfig %}
+					<p class="panel-help success-note">{{ t('wizard.server_apache_existing')|raw }}</p>
+				{% else %}
+					<p class="panel-help">{{ t('wizard.server_apache_help')|raw }}</p>
+				{% endif %}
 				<pre class="config-snippet"><code id="snippet-apache">{{ apacheConfig }}</code></pre>
 				<button type="button" class="cms-clip-button dash-button transparent" data-clip="#snippet-apache">{{ t('btn.copy_snippet') }}</button>
 			</div>
 
 			<div id="tab-nginx" class="server-panel{{ detected == 'nginx' ? ' is-active' : '' }}">
-				<p class="panel-help">{{ t('wizard.server_nginx_help') }}</p>
+				<p class="panel-help">{{ t('wizard.server_nginx_help')|raw }}</p>
+				<p class="muted-note">{{ t('wizard.server_nginx_managed')|raw }}</p>
 				<pre class="config-snippet"><code id="snippet-nginx">{{ nginxConfig }}</code></pre>
 				<button type="button" class="cms-clip-button dash-button transparent" data-clip="#snippet-nginx">{{ t('btn.copy_snippet') }}</button>
 			</div>
@@ -115,6 +120,10 @@
 	font-size: 0.9em;
 	color: oklch(var(--totalform-darkgray));
 	margin-block: 0 0.5rem;
+}
+
+.panel-help.success-note {
+	color: oklch(var(--totalform-success));
 }
 
 .config-snippet {
