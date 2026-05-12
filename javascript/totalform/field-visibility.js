@@ -104,7 +104,10 @@ export default class FieldVisibility {
 	// the storedValue === getValue() guard).
 	//-------------------------
 	setVisibility(field, isVisible) {
-		const wasVisible = !field.container.classList.contains('cms-hide');
+		// Ask the field directly — both TotalField and SimpleForm wrappers
+		// toggle `field-hidden` (the legacy `cms-hide` class was never set by
+		// either path, so the previous read here always returned `true`).
+		const wasVisible = field.isVisible();
 		isVisible ? field.show() : field.hide();
 
 		if (wasVisible !== isVisible) {
