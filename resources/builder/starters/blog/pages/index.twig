@@ -3,6 +3,13 @@
 {% block title %}Home — {{ cms.config('domain') }}{% endblock %}
 
 {% block content %}
+{% set readmeUrl = cms.builder.url('readme') %}
+{% if readmeUrl %}
+<aside style="background: #eef6ff; border-left: 4px solid #3b82f6; padding: 0.85rem 1.25rem; margin: 1rem 0; font-size: 0.95em;">
+	New here? Check out the <a href="{{ readmeUrl }}" style="font-weight: 600;">Getting Started guide</a> to learn how this starter works.
+</aside>
+{% endif %}
+
 <section class="section">
 	<h1>Latest Posts</h1>
 

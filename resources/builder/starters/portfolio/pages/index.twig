@@ -3,6 +3,13 @@
 {% block title %}{{ cms.config('domain') }} — Portfolio{% endblock %}
 
 {% block content %}
+{% set readmeUrl = cms.builder.url('readme') %}
+{% if readmeUrl %}
+<aside class="container" style="background: #eef6ff; border-left: 4px solid #3b82f6; padding: 0.85rem 1.25rem; margin: 1rem auto; font-size: 0.95em;">
+	New here? Check out the <a href="{{ readmeUrl }}" style="font-weight: 600;">Getting Started guide</a> to learn how this starter works.
+</aside>
+{% endif %}
+
 <section class="section" style="padding: 6rem 0;">
 	<div class="container">
 		<h1>Hello, I'm a designer<br>and developer.</h1>
