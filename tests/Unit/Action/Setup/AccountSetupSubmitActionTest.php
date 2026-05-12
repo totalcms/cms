@@ -11,28 +11,39 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Setup\AccountSetupSubmitAction;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
+use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\RedirectRenderer;
+use TotalCMS\Support\Config;
 
 final class AccountSetupSubmitActionTest extends TestCase
 {
 	private AccountSetupSubmitAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $firstLoginChecker;
+	private \PHPUnit\Framework\MockObject\MockObject $loginService;
 	private \PHPUnit\Framework\MockObject\MockObject $setupState;
 	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
 	private \PHPUnit\Framework\MockObject\MockObject $translator;
 	private \PHPUnit\Framework\MockObject\MockObject $flash;
+	private Config $config;
 
 	protected function setUp(): void
 	{
 		$this->firstLoginChecker = $this->createMock(FirstLoginChecker::class);
+		$this->loginService      = $this->createMock(LoginService::class);
 		$this->setupState        = $this->createMock(SetupStateManager::class);
 		$this->session           = $this->createMock(SessionInterface::class);
 		$this->redirectRenderer  = $this->createMock(RedirectRenderer::class);
 		$this->translator        = $this->createMock(TranslationService::class);
 		$this->flash             = $this->createMock(FlashInterface::class);
+
+		// Config is a plain data class; instantiate without ctor and set the
+		// `auth.collection` value the action reads when establishing a session.
+		$this->config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->auth = ['collection' => 'admin'];
 
 		$this->session->method('getFlash')->willReturn($this->flash);
 		$this->translator->method('trans')->willReturnArgument(0);
@@ -42,10 +53,12 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->action = new AccountSetupSubmitAction(
 			$this->firstLoginChecker,
+			$this->loginService,
 			$this->setupState,
 			$this->session,
 			$this->redirectRenderer,
 			$this->translator,
+			$this->config,
 		);
 	}
 
@@ -97,7 +110,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'different']), $this->createMock(ResponseInterface::class));
 	}
 
-	public function testCreatesUserAndRedirectsToLicense(): void
+	public function testCreatesUserAutoLoginsAndRedirectsToLicense(): void
 	{
 		$this->firstLoginChecker->expects($this->once())
 			->method('createFirstUser')
@@ -107,15 +120,35 @@ final class AccountSetupSubmitActionTest extends TestCase
 			->method('completeStep')
 			->with('account');
 
-		$this->session->expects($this->once())
-			->method('set')
-			->with('setup_admin_email', 'admin@example.com');
+		// authenticate is called with the just-typed credentials and returns
+		// the freshly-created user record.
+		$this->loginService->expects($this->once())
+			->method('authenticate')
+			->with('admin@example.com', 'password123')
+			->willReturn(['id' => 'admin']);
+
+		// One set() for the admin email (display on complete page) plus four
+		// session keys that establish the logged-in session.
+		$expected = [
+			'setup_admin_email'                  => 'admin@example.com',
+			SessionKeys::AUTH_USER               => 'admin',
+			SessionKeys::AUTH_COLLECTION         => 'admin',
+			SessionKeys::AUTH_PERSISTENT_LOGIN   => false,
+			SessionKeys::LICENSE_CHECK_DUE       => true,
+		];
+		$captured = [];
+		$this->session->method('set')
+			->willReturnCallback(static function (string $key, mixed $value) use (&$captured): void {
+				$captured[$key] = $value;
+			});
 
 		$this->redirectRenderer->expects($this->once())
 			->method('redirectFor')
 			->with($this->anything(), 'setup-license');
 
 		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
+
+		$this->assertSame($expected, $captured);
 	}
 
 	public function testHandlesUserCreationFailure(): void
@@ -125,6 +158,28 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->flash->expects($this->once())->method('add')->with('error', $this->anything());
 		$this->setupState->expects($this->never())->method('completeStep');
+		$this->loginService->expects($this->never())->method('authenticate');
+
+		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
+	}
+
+	public function testAutoLoginFailureIsNonFatal(): void
+	{
+		// User creation succeeds, but the follow-up auto-login throws. The
+		// account still exists on disk and the wizard should continue to the
+		// license step — the operator can sign in manually if needed.
+		$this->firstLoginChecker->expects($this->once())->method('createFirstUser');
+		$this->setupState->expects($this->once())->method('completeStep')->with('account');
+
+		$this->loginService->method('authenticate')
+			->willThrowException(new \RuntimeException('Auth backend unreachable'));
+
+		// No error flash for auto-login failures — it's silent on purpose.
+		$this->flash->expects($this->never())->method('add');
+
+		$this->redirectRenderer->expects($this->once())
+			->method('redirectFor')
+			->with($this->anything(), 'setup-license');
 
 		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
 	}
