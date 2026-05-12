@@ -46,10 +46,9 @@ public/assets
 /tests/tcms-data/text
 /tests/tcms-data/toggle
 /tests/tcms-data/url
-/tests/tcms-data/.system/.bundle
-/tests/tcms-data/.system/.cache_invalidate
-/tests/tcms-data/.system/extensions.json
-/tests/tcms-data/.system/jobqueue
-/tests/tcms-data/.system/setup-state.json
+# Test-data .system/ scratch space — generated/mutated by test runs.
+# Only access-groups.json is a checked-in fixture other tests rely on.
+/tests/tcms-data/.system/*
+!/tests/tcms-data/.system/access-groups.json
+
 /resources/docs/search-index.json
-/tests/tcms-data/.system/builder-reload-pulse.json
