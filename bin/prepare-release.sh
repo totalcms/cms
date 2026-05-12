@@ -281,6 +281,22 @@ print_info "Building production assets..."
 composer run build
 print_success "Assets built"
 
+# Commit built assets so Packagist ships them.
+#
+# public/assets/ is gitignored to keep dev diffs clean, but the Composer
+# distribution needs the built artifacts in git — customers don't run
+# `yarn build` after `composer create-project`. Force-add bypasses the
+# gitignore for this one commit; the next dev commit on develop won't
+# drift because the gitignore still hides ongoing rebuilds.
+print_info "Committing built assets..."
+git add -f public/assets/
+if git diff --cached --quiet; then
+    print_info "No asset changes to commit"
+else
+    git commit -m "Build assets for $NEW_VERSION"
+    print_success "Built assets committed"
+fi
+
 bin/code-report.sh > code-report.txt
 
 # Get current git commit hash (needed for version and Sentry)
