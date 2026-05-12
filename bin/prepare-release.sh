@@ -235,7 +235,8 @@ fi
 
 # Clean build artifacts
 print_info "Cleaning build artifacts..."
-rm -rf vendor/ node_modules/ public/assets/
+rm -rf vendor/ node_modules/
+
 print_success "Build artifacts cleaned"
 
 # Install dependencies
@@ -302,6 +303,8 @@ print_success "PHP dependencies installed"
 
 # Build assets
 print_info "Building production assets..."
+# Clenup old assets to ensure a clean slate (also keeps git status clean since assets are gitignored)
+rm -rf public/assets
 composer run build
 print_success "Assets built"
 
@@ -348,20 +351,25 @@ print_info "Generating file checksums..."
 find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.css" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./cache/*" -not -path "./tmp/*" -exec sha256sum {} \; > checksums.txt
 print_success "Checksums generated"
 
-# Commit built assets so Packagist ships them.
+# Commit release artifacts so Packagist ships them.
 #
-# public/assets/ is gitignored to keep dev diffs clean, but the Composer
-# distribution needs the built artifacts in git — customers don't run
-# `yarn build` after `composer create-project`. Force-add bypasses the
-# gitignore for this one commit; the next dev commit on develop won't
-# drift because the gitignore still hides ongoing rebuilds.
-print_info "Committing built assets..."
+# Bundles four things into one commit on the release branch:
+#   - public/assets/      built CSS/JS (gitignored — needs -f)
+#   - version.json        regenerated above with NEW_VERSION + GIT_HASH
+#   - code-report.txt     phploc-style stats for this release
+#   - checksums.txt       sha256s of php/js/css for the update system
+#
+# public/assets/ stays gitignored after this commit, so ongoing dev
+# rebuilds on develop won't drift the diff — the committed snapshot just
+# sits frozen until the next release supersedes it.
+print_info "Committing release artifacts..."
 git add -f public/assets/
+git add version.json code-report.txt checksums.txt
 if git diff --cached --quiet; then
-    print_info "No asset changes to commit"
+    print_info "No artifact changes to commit"
 else
     git commit -m "Build assets for $NEW_VERSION"
-    print_success "Built assets committed"
+    print_success "Release artifacts committed"
 fi
 
 # Sync docs to docs site
