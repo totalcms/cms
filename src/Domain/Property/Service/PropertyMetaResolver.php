@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
@@ -63,6 +64,64 @@ readonly class PropertyMetaResolver
 	public function resolveSettings(string $collection, string $property, string $objectId = ''): array
 	{
 		$result = $this->resolve($collection, $property, $objectId);
+
+		$settings = $result['settings'] ?? [];
+
+		return is_array($settings) ? $settings : [];
+	}
+
+	/**
+	 * Resolve the meta props for a child property nested inside a parent
+	 * (currently used for card child fields). Looks up the parent's `schemaref`,
+	 * fetches that schema, and returns the child's property definition.
+	 *
+	 * Per-collection and per-object overrides for nested children are not
+	 * supported — the child meta is resolved purely from the referenced schema.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function resolveNested(string $collection, string $parentProperty, string $childProperty): array
+	{
+		$parentMeta      = $this->resolve($collection, $parentProperty);
+		$parentSchemaRef = PropertyDefinition::extractSchemaRef($parentMeta);
+
+		if ($parentSchemaRef === null) {
+			throw new \UnexpectedValueException(
+				"Parent property '{$parentProperty}' has no schemaref; cannot resolve child '{$childProperty}'"
+			);
+		}
+
+		$childSchema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($parentSchemaRef));
+		$childMeta   = $childSchema->properties[$childProperty] ?? null;
+
+		if (!is_array($childMeta)) {
+			throw new \UnexpectedValueException(
+				"Child property '{$childProperty}' not found in schema for '{$parentProperty}'"
+			);
+		}
+
+		// Re-run the settings/preset resolution on the child's settings so named
+		// presets and type-default presets apply identically to top-level fields.
+		$rawSettings = is_array($childMeta['settings'] ?? null) ? $childMeta['settings'] : [];
+
+		$childMeta['settings'] = $this->resolveFieldSettings(
+			$rawSettings,
+			[],
+			[],
+			(string)($childMeta['field'] ?? ''),
+		);
+
+		return $childMeta;
+	}
+
+	/**
+	 * Convenience — returns just the resolved `settings` array for a nested child.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function resolveNestedSettings(string $collection, string $parentProperty, string $childProperty): array
+	{
+		$result = $this->resolveNested($collection, $parentProperty, $childProperty);
 
 		$settings = $result['settings'] ?? [];
 

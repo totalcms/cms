@@ -16,19 +16,19 @@ beforeEach(function (): void {
 
 describe('AuthDeniedAction Feature Tests', function (): void {
 	it('returns 403 status code for GET request', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 	});
 
 	it('returns 403 status code for POST request', function (): void {
-		$response = post('/denied');
+		$response = post('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 	});
 
 	it('renders access denied template', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -46,8 +46,8 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn (): Nekofar\Slim\Test\TestResponse => get('/denied'),
-			fn (): Nekofar\Slim\Test\TestResponse => post('/denied'),
+			fn (): Nekofar\Slim\Test\TestResponse => get('/admin/denied'),
+			fn (): Nekofar\Slim\Test\TestResponse => post('/admin/denied'),
 		];
 
 		foreach ($methods as $methodCall) {
@@ -58,7 +58,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	});
 
 	it('renders denied template with empty args', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -70,7 +70,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	});
 
 	it('contains proper HTML structure', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -86,7 +86,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	});
 
 	it('handles request with query parameters', function (): void {
-		$response = get('/denied?reason=insufficient_permissions');
+		$response = get('/admin/denied?reason=insufficient_permissions');
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -101,7 +101,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 			'X-Requested-With' => 'XMLHttpRequest',
 		];
 
-		$response = get('/denied', $headers);
+		$response = get('/admin/denied', $headers);
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -112,13 +112,13 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	it('maintains consistent 403 status across requests', function (): void {
 		// Multiple requests should all return 403
 		for ($i = 0; $i < 3; $i++) {
-			$response = get('/denied');
+			$response = get('/admin/denied');
 			expect($response->getStatusCode())->toBe(403);
 		}
 	});
 
 	it('returns HTML content type when set', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -132,7 +132,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	it('handles concurrent denied requests', function (): void {
 		$responses = [];
 		for ($i = 0; $i < 3; $i++) {
-			$responses[] = get('/denied');
+			$responses[] = get('/admin/denied');
 		}
 
 		foreach ($responses as $response) {
@@ -145,14 +145,14 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 
 	it('responds consistently regardless of session state', function (): void {
 		// Test without session
-		$response1 = get('/denied');
+		$response1 = get('/admin/denied');
 		expect($response1->getStatusCode())->toBe(403);
 
 		// Test with session (if one gets started)
 		session_start();
 		$_SESSION['test'] = 'value';
 
-		$response2 = get('/denied');
+		$response2 = get('/admin/denied');
 		expect($response2->getStatusCode())->toBe(403);
 
 		if (session_status() === PHP_SESSION_ACTIVE) {
@@ -161,7 +161,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	});
 
 	it('provides meaningful error response', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -180,7 +180,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 			'password' => 'testpass',
 		];
 
-		$response = post('/denied', $postData);
+		$response = post('/admin/denied', $postData);
 
 		expect($response->getStatusCode())->toBe(403);
 
@@ -189,7 +189,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	});
 
 	it('serves as proper HTTP 403 endpoint', function (): void {
-		$response = get('/denied');
+		$response = get('/admin/denied');
 
 		// Should be a proper 403 Forbidden response
 		expect($response->getStatusCode())->toBe(403);

@@ -40,7 +40,6 @@ readonly class DateFieldResetter
 
 		foreach ($fields as $fieldName) {
 			if ($object->properties->has($fieldName) && $object->properties->get($fieldName) instanceof DateData) {
-				/** @var DateData $dateProperty */
 				$dateProperty       = $object->properties->get($fieldName);
 				$dateProperty->date = $currentDate;
 			}

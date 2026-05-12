@@ -47,7 +47,13 @@ readonly class MediaTwigAdapter
 		}
 
 		$collection = $options['collection'];
-		$property   = $options['property'];
+		// `property` can be a dot-notation path for nested images:
+		//   - top-level:    "image"
+		//   - card child:   "mycard.image"
+		//   - deck child:   "mydeck.item-3.image"
+		// First segment is the URL/storage root property; the rest is the subpath.
+		$propertyPath              = (string)$options['property'];
+		[$rootProperty, $segments] = self::splitDottedProperty($propertyPath);
 
 		$imageworks = $this->resolvePresetFormat($imageworks);
 
@@ -57,7 +63,7 @@ readonly class MediaTwigAdapter
 				return '';
 			}
 
-			$image = $idOrObject[$property] ?? null;
+			$image = self::descendDottedPath($idOrObject, $rootProperty, $segments);
 			if (!is_array($image) || !array_key_exists('size', $image) || $image['size'] === 0) {
 				return '';
 			}
@@ -65,12 +71,54 @@ readonly class MediaTwigAdapter
 			return self::buildImageworksAPI($this->config->api, $id, $image, $imageworks, $options);
 		}
 
-		$image = $this->fetchData($collection, $idOrObject, $property);
+		$image = $this->fetchData($collection, $idOrObject, $rootProperty);
+		foreach ($segments as $segment) {
+			if (!is_array($image)) {
+				return '';
+			}
+			$image = $image[$segment] ?? null;
+		}
 		if (!is_array($image) || !array_key_exists('size', $image) || $image['size'] === 0) {
 			return '';
 		}
 
 		return self::buildImageworksAPI($this->config->api, $idOrObject, $image, $imageworks, $options);
+	}
+
+	/**
+	 * Split a dotted property path into [rootProperty, ...subsegments].
+	 *
+	 * @return array{0: string, 1: array<int, string>}
+	 */
+	public static function splitDottedProperty(string $property): array
+	{
+		if (!str_contains($property, '.')) {
+			return [$property, []];
+		}
+		$parts = explode('.', $property);
+		$root  = array_shift($parts);
+
+		return [$root, $parts];
+	}
+
+	/**
+	 * Descend through `$data[$root][$segments[0]][$segments[1]]...` and return
+	 * the final value (or null if any step misses).
+	 *
+	 * @param array<string,mixed> $data
+	 * @param array<int,string>   $segments
+	 */
+	public static function descendDottedPath(array $data, string $root, array $segments): mixed
+	{
+		$cursor = $data[$root] ?? null;
+		foreach ($segments as $segment) {
+			if (!is_array($cursor)) {
+				return null;
+			}
+			$cursor = $cursor[$segment] ?? null;
+		}
+
+		return $cursor;
 	}
 
 	/**
@@ -205,7 +253,12 @@ readonly class MediaTwigAdapter
 			return '';
 		}
 
-		$url = "{$this->config->api}/download/{$collection}/{$id}/{$property}";
+		// Dotted property (`mycard.file`, `mydeck.one.file`) becomes slash
+		// segments in the URL — the dispatch action walks the path and serves
+		// the nested file.
+		$propertyPath = str_replace('.', '/', (string)$property);
+
+		$url = "{$this->config->api}/download/{$collection}/{$id}/{$propertyPath}";
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);
@@ -273,7 +326,10 @@ readonly class MediaTwigAdapter
 			return '';
 		}
 
-		$url = "{$this->config->api}/stream/{$collection}/{$id}/{$property}";
+		// Dotted property → URL segments (see `download()` for the rationale).
+		$propertyPath = str_replace('.', '/', (string)$property);
+
+		$url = "{$this->config->api}/stream/{$collection}/{$id}/{$propertyPath}";
 
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
 			$password = Cipher::encrypt($password);
@@ -386,7 +442,11 @@ readonly class MediaTwigAdapter
 		], $options);
 
 		$collection = $options['collection'];
-		$property   = $options['property'];
+		// `property` can be a dot-notation path for nested images. Dots become
+		// URL slashes so `mycard.image` → `/coll/id/mycard/image.jpg` and
+		// `mydeck.item-3.image` → `/coll/id/mydeck/item-3/image.jpg`. The
+		// imageworks fetch route dispatches on data shape at the root property.
+		$propertyPath = str_replace('.', '/', (string)$options['property']);
 
 		if ($image === [] || !array_key_exists('name', $image) || $image['name'] === '') {
 			return '';
@@ -399,7 +459,7 @@ readonly class MediaTwigAdapter
 		}
 		$type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
 
-		$api .= "/imageworks/$collection/$id/$property.$type";
+		$api .= "/imageworks/$collection/$id/$propertyPath.$type";
 
 		$imageworks['cache'] = self::resolveCacheToken($image);
 

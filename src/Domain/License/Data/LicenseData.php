@@ -20,8 +20,11 @@ readonly class LicenseData
 		public string $message,
 		public ?string $validationToken,
 		public bool $updatesValid,
-		public ?int $trialDaysRemaining,
+		public ?string $updatesExpireDate = null,
+		public ?int $trialDaysRemaining = null,
 		public bool $dnsVerified = false,
+		public bool $versionAuthorized = true,
+		public ?string $allowedVersion = null,
 		public int $timestamp = 0,
 	) {
 	}
@@ -41,6 +44,8 @@ readonly class LicenseData
 			updatesValid       : true,
 			trialDaysRemaining : null,
 			dnsVerified        : true,
+			versionAuthorized  : true,
+			allowedVersion     : null,
 			timestamp          : time(),
 		);
 	}
@@ -60,8 +65,11 @@ readonly class LicenseData
 			message             : $response['message'] ?? '',
 			validationToken     : $response['validationToken'] ?? null,
 			updatesValid        : $response['updatesValid'] ?? false,
+			updatesExpireDate   : $response['updatesExpireDate'] ?? null,
 			trialDaysRemaining  : $response['trialDaysRemaining'] ?? null,
 			dnsVerified         : $response['dnsVerified'] ?? false,
+			versionAuthorized   : $response['versionAuthorized'] ?? true,
+			allowedVersion      : $response['allowedVersion'] ?? null,
 			timestamp           : time(),
 		);
 	}
@@ -81,8 +89,11 @@ readonly class LicenseData
 			message            : (string)($data['message'] ?? ''),
 			validationToken    : $data['validationToken'] ?? null,
 			updatesValid       : (bool)($data['updatesValid'] ?? false),
+			updatesExpireDate  : $data['updatesExpireDate'] ?? null,
 			trialDaysRemaining : $data['trialDaysRemaining'] ?? null,
 			dnsVerified        : (bool)($data['dnsVerified'] ?? false),
+			versionAuthorized  : (bool)($data['versionAuthorized'] ?? true),
+			allowedVersion     : $data['allowedVersion'] ?? null,
 			timestamp          : (int)($data['timestamp'] ?? 0),
 		);
 	}
@@ -110,8 +121,11 @@ readonly class LicenseData
 			'message'            => $this->message,
 			'validationToken'    => $this->validationToken,
 			'updatesValid'       => $this->updatesValid,
+			'updatesExpireDate'  => $this->updatesExpireDate,
 			'trialDaysRemaining' => $this->trialDaysRemaining,
 			'dnsVerified'        => $this->dnsVerified,
+			'versionAuthorized'  => $this->versionAuthorized,
+			'allowedVersion'     => $this->allowedVersion,
 			'timestamp'          => $this->timestamp,
 		];
 	}

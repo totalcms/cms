@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Domain\License\Data;
 
 use PHPUnit\Framework\TestCase;
@@ -63,9 +65,14 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame('Templates', EditionFeature::TEMPLATES->label());
 	}
 
-	public function testWhitelabelTemplatesLabel(): void
+	public function testWhitelabelProLabel(): void
 	{
-		$this->assertSame('Whitelabel Templates', EditionFeature::WHITELABEL_TEMPLATES->label());
+		$this->assertSame('Whitelabel Pro', EditionFeature::WHITELABEL_PRO->label());
+	}
+
+	public function testWhitelabelStandardLabel(): void
+	{
+		$this->assertSame('Whitelabel Standard', EditionFeature::WHITELABEL_STANDARD->label());
 	}
 
 	public function testAccessGroupsLabel(): void
@@ -78,6 +85,11 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame('API Keys', EditionFeature::API_KEYS->label());
 	}
 
+	public function testLiteFeatureRequirements(): void
+	{
+		$this->assertSame(Edition::LITE, EditionFeature::TEMPLATES->requiredEdition());
+	}
+
 	public function testStandardFeatureRequirements(): void
 	{
 		$this->assertSame(Edition::STANDARD, EditionFeature::BLOG_SCHEMA->requiredEdition());
@@ -85,7 +97,7 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame(Edition::STANDARD, EditionFeature::IMAGE_WATERMARKS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::MAILER_ACTIONS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::QR_CODES->requiredEdition());
-		$this->assertSame(Edition::STANDARD, EditionFeature::TEMPLATES->requiredEdition());
+		$this->assertSame(Edition::STANDARD, EditionFeature::WHITELABEL_STANDARD->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::ACCESS_GROUPS->requiredEdition());
 	}
 
@@ -96,7 +108,7 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame(Edition::PRO, EditionFeature::WEBHOOK_ACTIONS->requiredEdition());
 		$this->assertSame(Edition::PRO, EditionFeature::EXTERNAL_REST_API->requiredEdition());
 		$this->assertSame(Edition::PRO, EditionFeature::BARCODES->requiredEdition());
-		$this->assertSame(Edition::PRO, EditionFeature::WHITELABEL_TEMPLATES->requiredEdition());
+		$this->assertSame(Edition::PRO, EditionFeature::WHITELABEL_PRO->requiredEdition());
 		$this->assertSame(Edition::PRO, EditionFeature::API_KEYS->requiredEdition());
 	}
 
@@ -128,7 +140,8 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame('qr_codes', EditionFeature::QR_CODES->value);
 		$this->assertSame('barcodes', EditionFeature::BARCODES->value);
 		$this->assertSame('templates', EditionFeature::TEMPLATES->value);
-		$this->assertSame('whitelabel_templates', EditionFeature::WHITELABEL_TEMPLATES->value);
+		$this->assertSame('whitelabel_standard', EditionFeature::WHITELABEL_STANDARD->value);
+		$this->assertSame('whitelabel_pro', EditionFeature::WHITELABEL_PRO->value);
 		$this->assertSame('access_groups', EditionFeature::ACCESS_GROUPS->value);
 		$this->assertSame('api_keys', EditionFeature::API_KEYS->value);
 	}

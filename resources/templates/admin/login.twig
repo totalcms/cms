@@ -6,10 +6,8 @@
 <main class="login-layout admin-layout">
 
 	<section class="login-above">
-		{{ include(cms.edition.can('whitelabel_templates')
-			? ['whitelabel/login-above.twig', 'login-above.twig', 'login-above-default.twig']
-			: cms.edition.can('templates')
-			? ['login-above.twig', 'login-above-default.twig']
+		{{ include(cms.edition.can('whitelabel_standard')
+			? ['whitelabel/login-above.twig', 'login-above-default.twig']
 			: ['login-above-default.twig']
 		, ignore_missing = true) }}
 	</section>
@@ -33,11 +31,8 @@
 		showPasskeys  : authCollection is not empty and cms.config('auth', 'usePasskeys') != false
 	} %}
 
-	{% if cms.edition.can('templates') %}
-		{% set json = include(cms.edition.can('whitelabel_templates')
-			? ['whitelabel/login-options.twig', 'login-options.twig']
-			: ['login-options.twig']
-		, ignore_missing = true) %}
+	{% if cms.edition.can('whitelabel_standard') %}
+		{% set json = include('whitelabel/login-options.twig', ignore_missing = true) %}
 		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
 		{% set formSettings = formSettings|merge(decoded) %}
 	{% endif %}
@@ -45,7 +40,7 @@
 	{{ cms.form.loginForm(formSettings) }}
 
 	<section class="login-below">
-		{% if cms.edition.can('whitelabel_templates') %}
+		{% if cms.edition.can('whitelabel_pro') %}
 			{{ include('whitelabel/login-below.twig', ignore_missing = true) }}
 		{% endif %}
 	</section>

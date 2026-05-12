@@ -1,0 +1,71 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.license_title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="setup-header">
+		<h1>{{ t('wizard.license_title') }}</h1>
+		<p>{{ t('wizard.license_desc') }}</p>
+	</section>
+
+	{% if error %}
+		<div class="cms-error" role="alert">
+			{{ t('wizard.license_error', {'{error}': error}) }}
+		</div>
+		<p>{{ t('wizard.license_skip') }}</p>
+	{% elseif license %}
+		<table class="license-table">
+			<tr>
+				<td><strong>{{ t('wizard.license_domain') }}</strong></td>
+				<td>{{ license.domain }}</td>
+			</tr>
+			<tr>
+				<td><strong>{{ t('wizard.license_edition') }}</strong></td>
+				<td>{{ license.edition|capitalize }}</td>
+			</tr>
+			<tr>
+				<td><strong>{{ t('wizard.license_status') }}</strong></td>
+				<td>
+					{% if license.trial %}
+						{{ t('wizard.license_trial') }}
+						{# Development Editions show 999999 days. I don't want to show that #}
+						{% if license.trialDaysRemaining is not null and license.trialDaysRemaining < 100 %}
+							({{ t('wizard.license_days', {'{days}': license.trialDaysRemaining}) }})
+						{% endif %}
+					{% elseif license.valid %}
+						{{ t('wizard.license_active') }}
+					{% else %}
+						{{ t('wizard.license_invalid') }}
+					{% endif %}
+				</td>
+			</tr>
+		</table>
+	{% endif %}
+
+	<a href="{{ cms.base }}/setup/server-config" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+</main>
+
+<style>
+.license-table {
+	width: 100%;
+	max-width: 400px;
+	border-collapse: collapse;
+	margin-block: 1.5rem;
+}
+
+.license-table td {
+	padding: 0.6rem 0.75rem;
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+}
+
+.license-table td:first-child {
+	width: 120px;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.setup-continue {
+	margin-top: 1rem;
+}
+</style>
+{% endblock %}

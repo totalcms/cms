@@ -1,0 +1,46 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Getting Started — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<section class="section">
+	<div class="container" style="max-width: 720px;">
+		<h1>You're up and running</h1>
+		<p style="font-size: 1.15rem; color: #666;">
+			This is the <strong>business</strong> starter — a professional site with Home, About,
+			Services, and Contact pages. Replace the placeholder content with your own.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">What you have</h2>
+		<ul style="line-height: 1.8;">
+			<li>Four pages: Home, About, Services, Contact</li>
+			<li>A default layout with a top nav and a footer</li>
+			<li>Service cards in a responsive grid on the homepage</li>
+			<li>This guide at <code>/readme</code></li>
+		</ul>
+
+		<h2 style="margin-top: 2.5rem;">Quick wins</h2>
+		<ol style="line-height: 1.8;">
+			<li><strong>Replace placeholder copy</strong> — edit <code>pages/index.twig</code> and friends in <a target="_blank" rel="noopener" href="/admin/builder">Site Builder</a></li>
+			<li><strong>Use Page Data</strong> — open the <em>Home</em> page and put hero text into the <em>Page Data</em> JSON field, then read it as <code>page.data.hero</code> in your template</li>
+			<li><strong>Hook up your contact form</strong> — see <a target="_blank" rel="noopener" href="/admin/docs/twig/forms/overview">Forms docs</a></li>
+			<li><strong>Set up your frontend</strong> (optional) — run <code>tcms builder:frontend</code> to install Vite + Sass scaffolding</li>
+		</ol>
+
+		<h2 style="margin-top: 2.5rem;">Sample services</h2>
+		<p>
+			The starter ships with a <code>service</code> schema, a <code>services</code> collection,
+			and a few pre-loaded service records so the <a target="_blank" rel="noopener" href="/services">/services</a> page renders
+			real content. Edit or replace them under
+			<a target="_blank" rel="noopener" href="/admin/collections/services">Collections → Services</a>.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">Learn more</h2>
+		<ul style="line-height: 1.8;">
+			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/overview">Site Builder overview</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/admin">Admin UI guide</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/twig/builder">Twig functions reference</a></li>
+		</ul>
+	</div>
+</section>
+{% endblock %}

@@ -15,22 +15,22 @@ beforeEach(function (): void {
 describe('Dashboard Data Methods', function (): void {
 	it('dashboard stats uses totalObjects field from collections', function (): void {
 		// Create collections
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'blog',
 			'name'   => 'Blog',
 			'schema' => 'blog',
 		])->assertOk();
 
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'pages',
 			'name'   => 'Pages',
 			'schema' => 'blog', // Use blog schema for simplicity
 		])->assertOk();
 
 		// Add objects only to blog
-		postJson('/collections/blog', ['title' => 'Post 1', 'content' => 'Content 1'])->assertOk();
-		postJson('/collections/blog', ['title' => 'Post 2', 'content' => 'Content 2'])->assertOk();
-		postJson('/collections/blog', ['title' => 'Post 3', 'content' => 'Content 3'])->assertOk();
+		postJson('/api/collections/blog', ['title' => 'Post 1', 'content' => 'Content 1'])->assertOk();
+		postJson('/api/collections/blog', ['title' => 'Post 2', 'content' => 'Content 2'])->assertOk();
+		postJson('/api/collections/blog', ['title' => 'Post 3', 'content' => 'Content 3'])->assertOk();
 
 		// Get TotalCMSTwigAdapter from container
 		$container = $this->app->getContainer();
@@ -48,7 +48,7 @@ describe('Dashboard Data Methods', function (): void {
 
 	it('dashboard collections returns all collections sorted by lastUpdated', function (): void {
 		// Create collections
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'old-blog',
 			'name'   => 'Old Blog',
 			'schema' => 'blog',
@@ -56,7 +56,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		sleep(1); // Ensure different timestamps
 
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'new-pages',
 			'name'   => 'New Pages',
 			'schema' => 'page',
@@ -64,7 +64,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		sleep(1);
 
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'newest-gallery',
 			'name'   => 'Newest Gallery',
 			'schema' => 'gallery',
@@ -96,7 +96,7 @@ describe('Dashboard Data Methods', function (): void {
 	it('dashboard collections limits to top 10', function (): void {
 		// Create 12 collections
 		for ($i = 1; $i <= 12; $i++) {
-			postJson('/collections', [
+			postJson('/api/collections', [
 				'id'     => "collection-{$i}",
 				'name'   => "Collection {$i}",
 				'schema' => 'blog',
@@ -126,7 +126,7 @@ describe('Dashboard Data Methods', function (): void {
 
 	it('dashboard collections uses totalObjects field', function (): void {
 		// Create collection with objects
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'test-blog',
 			'name'   => 'Test Blog',
 			'schema' => 'blog',
@@ -134,7 +134,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Add 7 objects
 		for ($i = 1; $i <= 7; $i++) {
-			postJson('/collections/test-blog', [
+			postJson('/api/collections/test-blog', [
 				'title'   => "Post {$i}",
 				'content' => "Content {$i}",
 			])->assertOk();
@@ -155,26 +155,26 @@ describe('Dashboard Data Methods', function (): void {
 
 	it('dashboard empty collections uses totalObjects field', function (): void {
 		// Create mix of empty and non-empty collections
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'full-blog',
 			'name'   => 'Full Blog',
 			'schema' => 'blog',
 		])->assertOk();
 
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'empty-pages',
 			'name'   => 'Empty Pages',
 			'schema' => 'page',
 		])->assertOk();
 
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'empty-gallery',
 			'name'   => 'Empty Gallery',
 			'schema' => 'gallery',
 		])->assertOk();
 
 		// Add objects to full-blog
-		postJson('/collections/full-blog', ['title' => 'Post 1', 'content' => 'Content 1'])->assertOk();
+		postJson('/api/collections/full-blog', ['title' => 'Post 1', 'content' => 'Content 1'])->assertOk();
 
 		// Get adapter
 		$container = $this->app->getContainer();
@@ -195,21 +195,21 @@ describe('Dashboard Data Methods', function (): void {
 
 	it('dashboard empty collections returns empty array when all have objects', function (): void {
 		// Create collections with objects
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'blog1',
 			'name'   => 'Blog 1',
 			'schema' => 'blog',
 		])->assertOk();
 
-		postJson('/collections', [
+		postJson('/api/collections', [
 			'id'     => 'blog2',
 			'name'   => 'Blog 2',
 			'schema' => 'blog',
 		])->assertOk();
 
 		// Add objects to both
-		postJson('/collections/blog1', ['title' => 'Post 1', 'content' => 'Content 1'])->assertOk();
-		postJson('/collections/blog2', ['title' => 'Post 2', 'content' => 'Content 2'])->assertOk();
+		postJson('/api/collections/blog1', ['title' => 'Post 1', 'content' => 'Content 1'])->assertOk();
+		postJson('/api/collections/blog2', ['title' => 'Post 2', 'content' => 'Content 2'])->assertOk();
 
 		// Get adapter
 		$container = $this->app->getContainer();

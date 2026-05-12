@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Download;
 
 use Odan\Session\PhpSession;
@@ -42,7 +44,7 @@ class DownloadFileAction extends DownloadAction
 	protected function incrementCount(FileData $file): void
 	{
 		$file->count++;
-		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform());
+		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform(), silent: true);
 	}
 
 	protected function streamFile()

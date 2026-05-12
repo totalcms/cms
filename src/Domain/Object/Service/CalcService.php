@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
+
 /**
  * Safe math expression evaluator for calc fields.
  * Evaluates expressions like "${price} * ${quantity} - ${discount}"
@@ -51,13 +53,14 @@ class CalcService
 			return $values !== [] ? implode(', ', $values) : '0';
 		}, $expression);
 
-		// Then replace simple field references with their numeric values
-		$expr = (string)preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($objectData): string {
-			$key   = $matches[1];
+		// Then replace simple field references with their numeric values.
+		// The deck-dot-notation pass above has already consumed any ${prop.field} forms,
+		// so anything remaining is a single-key reference.
+		$expr = TemplatePlaceholder::render($expr, function (string $key) use ($objectData): string {
 			$value = $objectData[$key] ?? 0;
 
 			return is_numeric($value) ? (string)(float)$value : '0';
-		}, $expr);
+		});
 
 		return $this->parse($expr);
 	}

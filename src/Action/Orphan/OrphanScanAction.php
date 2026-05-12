@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Orphan;
 
 use Psr\Http\Message\ResponseInterface;

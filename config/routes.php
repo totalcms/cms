@@ -1,37 +1,46 @@
 <?php
 
 use Slim\App;
-use TotalCMS\Action\PreflightAction;
+use Slim\Routing\RouteCollectorProxy;
 
 return function (App $app): void {
-	$app->options('/', PreflightAction::class);
+	// Admin UI, auth, and setup (auth must load before admin catch-all)
+	(require __DIR__ . '/routes/admin/auth.php')($app);
+	(require __DIR__ . '/routes/admin/admin.php')($app);
+	(require __DIR__ . '/routes/admin/setup.php')($app);
 
-	(require __DIR__ . '/routes/admin.php')($app);
-	(require __DIR__ . '/routes/setup.php')($app);
-	(require __DIR__ . '/routes/access-groups.php')($app);
-	(require __DIR__ . '/routes/apikey.php')($app);
-	(require __DIR__ . '/routes/assets.php')($app);
-	(require __DIR__ . '/routes/auth.php')($app);
-	(require __DIR__ . '/routes/passkeys.php')($app);
-	(require __DIR__ . '/routes/cache.php')($app);
-	(require __DIR__ . '/routes/emergency.php')($app);
-	(require __DIR__ . '/routes/collections.php')($app);
-	(require __DIR__ . '/routes/docs.php')($app);
-	(require __DIR__ . '/routes/download.php')($app);
-	(require __DIR__ . '/routes/stream.php')($app);
-	(require __DIR__ . '/routes/imageworks.php')($app);
-	(require __DIR__ . '/routes/import.php')($app);
-	(require __DIR__ . '/routes/export.php')($app);
-	(require __DIR__ . '/routes/report.php')($app);
-	(require __DIR__ . '/routes/jobqueue.php')($app);
-	(require __DIR__ . '/routes/schemas.php')($app);
-	(require __DIR__ . '/routes/templates.php')($app);
-	(require __DIR__ . '/routes/designer.php')($app);
-	(require __DIR__ . '/routes/upload.php')($app);
-	(require __DIR__ . '/routes/sitemap.php')($app);
-	(require __DIR__ . '/routes/feed.php')($app);
-	(require __DIR__ . '/routes/playground.php')($app);
-	(require __DIR__ . '/routes/dataviews.php')($app);
-	(require __DIR__ . '/routes/orphan.php')($app);
-	(require __DIR__ . '/routes/action.php')($app);
+	// Public crawler-facing routes and public-asset endpoints — these return
+	// non-JSON content (XML, binary file bytes, image bytes) and their URLs
+	// get embedded in user-rendered HTML, so they live at stable, unprefixed
+	// paths rather than under `/api/...` (which is reserved for JSON endpoints).
+	(require __DIR__ . '/routes/public/sitemap.php')($app);
+	(require __DIR__ . '/routes/public/feed.php')($app);
+	(require __DIR__ . '/routes/public/imageworks.php')($app);
+	(require __DIR__ . '/routes/public/download.php')($app);
+	(require __DIR__ . '/routes/public/stream.php')($app);
+
+	// All API routes under /api prefix
+	$app->group('/api', function (RouteCollectorProxy $api): void {
+		(require __DIR__ . '/routes/api/access-groups.php')($api);
+		(require __DIR__ . '/routes/api/apikey.php')($api);
+		(require __DIR__ . '/routes/api/assets.php')($api);
+		(require __DIR__ . '/routes/api/passkeys.php')($api);
+		(require __DIR__ . '/routes/api/cache.php')($api);
+		(require __DIR__ . '/routes/api/emergency.php')($api);
+		(require __DIR__ . '/routes/api/collections.php')($api);
+		(require __DIR__ . '/routes/api/docs.php')($api);
+		(require __DIR__ . '/routes/api/import.php')($api);
+		(require __DIR__ . '/routes/api/export.php')($api);
+		(require __DIR__ . '/routes/api/report.php')($api);
+		(require __DIR__ . '/routes/api/jobqueue.php')($api);
+		(require __DIR__ . '/routes/api/schemas.php')($api);
+		(require __DIR__ . '/routes/api/templates.php')($api);
+		(require __DIR__ . '/routes/api/designer.php')($api);
+		(require __DIR__ . '/routes/api/upload.php')($api);
+		(require __DIR__ . '/routes/api/playground.php')($api);
+		(require __DIR__ . '/routes/api/dataviews.php')($api);
+		(require __DIR__ . '/routes/api/orphan.php')($api);
+		(require __DIR__ . '/routes/api/ext.php')($api);
+		(require __DIR__ . '/routes/api/action.php')($api);
+	});
 };

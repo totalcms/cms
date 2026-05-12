@@ -8,6 +8,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -27,6 +28,7 @@ class FileAccessManager
 		private readonly LoggerFactory $loggerFactory,
 		private readonly PropertyFetcher $propertyFetcher,
 		private readonly CollectionFetcher $collectionFetcher,
+		private readonly FileFetcher $fileFetcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger('fileaccess');
 	}
@@ -44,9 +46,15 @@ class FileAccessManager
 		$this->collection = $collection;
 	}
 
-	public function loadFile(string $collection, string $object, string $property): void
+	public function loadFile(string $collection, string $object, string $property, ?string $subpath = null): void
 	{
-		$file       = $this->propertyFetcher->fetchProperty($collection, $object, $property);
+		// Nested files (card child / deck-item child) live inside the parent
+		// property's data — fetch via FileFetcher which walks the subpath.
+		// Top-level files come back from the property fetcher directly.
+		$file = $subpath === null || $subpath === ''
+			? $this->propertyFetcher->fetchProperty($collection, $object, $property)
+			: $this->fileFetcher->fetchFile($collection, $object, $property, $subpath);
+
 		$collection = $this->collectionFetcher->fetchCollection($collection);
 
 		if (!$file instanceof FileData || !$collection instanceof CollectionData) {
@@ -59,7 +67,7 @@ class FileAccessManager
 
 	public function sessionHasUser(): bool
 	{
-		return $this->session->has('user') && $this->session->has('collection');
+		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
 	}
 
 	public function isProtectedByGroups(): bool

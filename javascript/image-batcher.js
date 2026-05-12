@@ -263,13 +263,14 @@ class ImageBatcher {
 
 		const extension = imageworksParams.get('fm') || image.name.split('.').pop();
 
-		// Build the base URL for this specific image
-		let baseUrl = `${this.batchData.apiUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}.${extension}`;
+		// Build the base URL for this specific image. imageworks lives at the
+		// unprefixed base path (not under /api), so use batchData.baseUrl.
+		let baseUrl = `${this.batchData.baseUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}.${extension}`;
 		const params = new URLSearchParams();
 
 		if (image.type === 'gallery') {
 			const basename = image.name.split('.').slice(0, -1).join('.');
-			baseUrl = `${this.batchData.apiUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}/${basename}.${extension}`;
+			baseUrl = `${this.batchData.baseUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}/${basename}.${extension}`;
 		}
 
 		// First, copy ALL ImageWorks parameters from the example URL

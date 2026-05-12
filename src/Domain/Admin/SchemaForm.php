@@ -163,10 +163,7 @@ class SchemaForm extends TotalForm
 
 	private function isReservedSchema(string $id): bool
 	{
-		$schemas = $this->schemaLister->listReservedSchemas();
-		$schemas = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
-
-		return in_array($id, $schemas);
+		return $this->schemaLister->isReservedSchema($id);
 	}
 
 	/**

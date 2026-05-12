@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
@@ -33,13 +34,13 @@ readonly class DeckItemValidator
 			return; // No property config, skip validation
 		}
 
-		$deckref = $propertyConfig['deckref'] ?? $propertyConfig['settings']['deckref'] ?? null;
+		$schemaref = PropertyDefinition::extractSchemaRef($propertyConfig);
 
-		if (empty($deckref)) {
-			return; // No deckref, skip validation
+		if ($schemaref === null) {
+			return; // No schema reference, skip validation
 		}
 
-		$deckSchemaId = SchemaFetcher::extractSchemaId($deckref);
+		$deckSchemaId = SchemaFetcher::extractSchemaId($schemaref);
 
 		try {
 			$this->schemaValidator->validateSchema($itemData, $deckSchemaId);

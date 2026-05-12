@@ -1,0 +1,10 @@
+<footer style="background: #111; color: #999; padding: 3rem 0; margin-top: 4rem;">
+	<div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+		<p>&copy; {{ 'now' | date('Y') }} {{ cms.config('domain') }}. All rights reserved.</p>
+		<ul style="list-style: none; display: flex; gap: 1.5rem;">
+			{% for p in cms.builder.nav() %}
+				<li><a href="{{ p.route }}" style="color: #ccc; text-decoration: none;">{{ p.title }}</a></li>
+			{% endfor %}
+		</ul>
+	</div>
+</footer>

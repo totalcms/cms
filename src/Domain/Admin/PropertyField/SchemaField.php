@@ -13,7 +13,7 @@ class SchemaField extends PropertyField
 {
 	public const SCHEMA_PROPERTY_FIELDS = [
 		'default',
-		'deckref',
+		'schemaref',
 		'factory',
 		'field',
 		'help',
@@ -35,32 +35,17 @@ class SchemaField extends PropertyField
 		protected TotalForm $form,
 		protected string $property,
 		protected string $field       = 'text',
-		protected string $type        = 'string',
+		protected string $type        = '',
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
 		protected string $factory     = '',
 		protected string $default     = '',
-		protected string $deckref     = '',
+		protected string $schemaref   = '',
 		protected array $options      = [],
 		protected array $settings     = [],
 		protected array $extra        = [],
 	) {
-	}
-
-	protected function topFieldInfo(): string
-	{
-		$content = $this->form->field('type', [
-			'field'       => 'select',
-			'label'       => 'Type of Data',
-			'placeholder' => 'Select a data type',
-			'help'        => 'The data type of the property will store in the CMS',
-			'value'       => $this->type,
-			'options'     => SchemaData::PROPERTY_TYPES,
-			'settings'    => ['clearValue' => false],
-		]);
-
-		return $content . parent::topFieldInfo();
 	}
 
 	protected function buildFormInfo(): string
@@ -100,7 +85,15 @@ class SchemaField extends PropertyField
 
 	protected function buildPropertyInfo(): string
 	{
-		$content = $this->form->field('factory', [
+		$content = $this->form->field('type', [
+			'field'       => 'select',
+			'label'       => 'Type of Data',
+			'placeholder' => 'Auto (based on field type)',
+			'help'        => 'Override the data type stored for this property. Leave blank to use the default for the chosen field.',
+			'value'       => $this->type,
+			'options'     => SchemaData::PROPERTY_TYPES,
+		]);
+		$content .= $this->form->field('factory', [
 			'field'       => 'text',
 			'label'       => 'Factory',
 			'placeholder' => 'text(300)',
@@ -109,12 +102,11 @@ class SchemaField extends PropertyField
 			'settings'    => ['datalistOptions' => true],
 			'options'     => FakerExamples::FAKER_EXAMPLES,
 		]);
-		$content .= $this->form->field('deckref', [
+		$content .= $this->form->field('schemaref', [
 			'field'       => 'select',
-			'label'       => 'Deck Schema Reference',
-			// 'placeholder' => 'Select a schema compatible with deck',
-			'help'        => 'The schema reference for deck items. Only compatible schemas are shown.',
-			'value'       => $this->deckref,
+			'label'       => 'Schema Reference',
+			'help'        => 'The schema reference for deck or card items. Only compatible schemas are shown.',
+			'value'       => $this->schemaref,
 			'options'     => $this->getDeckCompatibleSchemaOptions(),
 		]);
 		$content .= $this->form->field('extra', [
@@ -177,8 +169,10 @@ class SchemaField extends PropertyField
 			$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$this->property} property"]);
 		}
 
+		$effectiveType = $this->type !== '' ? $this->type : TotalForm::getDefaultTypeForField($this->field);
+
 		return HTMLUtils::element('div', $input . $buttons . $dialog, [
-			'class' => "schema-field {$this->field}-field {$this->type}-type",
+			'class' => "schema-field {$this->field}-field {$effectiveType}-type",
 		]);
 	}
 

@@ -1,0 +1,200 @@
+<h1>{{ t('update.title') }}</h1>
+
+<section class="update-utility">
+
+	<div class="update-current">
+		<h3>{{ t('update.current_version') }}</h3>
+		<p class="version-number">{{ cms.version }}</p>
+	</div>
+
+	{% if updateInfo %}
+	<div class="update-license-info">
+		{% if updateInfo.updatesExpireDate %}
+			<p>{{ t('update.expires') }}: <strong>{{ updateInfo.updatesExpireDate }}</strong></p>
+		{% endif %}
+		{% if not updateInfo.updatesValid %}
+			<p class="update-expired-notice">{{ t('update.expired_notice') }} <a href="utils/license-manager">{{ t('update.renew_link') }}</a></p>
+		{% endif %}
+	</div>
+	{% endif %}
+
+	{% if updateInfo and updateInfo.available %}
+	<div class="update-available">
+		<h3>{{ t('update.available') }}</h3>
+		<div class="update-details">
+			<p class="version-number new-version">{{ updateInfo.version }}</p>
+			<span class="severity-badge severity-{{ updateInfo.severity }}">{{ updateInfo.severity }}</span>
+			<p class="release-date">{{ t('update.released') }}: {{ updateInfo.releaseDate }}</p>
+		</div>
+
+		{% if updateInfo.changelog %}
+		<div class="update-changelog">
+			{{ updateInfo.changelog|markdown }}
+		</div>
+		{% endif %}
+
+		<div class="update-actions">
+			{% if composerInstall %}
+			<div class="update-composer-notice">
+				<p>This installation is managed by Composer. Run <code>composer update totalcms/cms</code> to update.</p>
+			</div>
+			{% elseif updateInfo.updatesValid %}
+			<button type="button" class="dash-button" id="update-btn">
+				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
+			</button>
+			{% else %}
+			<div class="update-renew-notice">
+				<p>{{ t('update.renew_required') }} <a href="utils/license-manager">{{ t('update.renew_link') }}</a></p>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+	{% else %}
+	<div class="update-current-notice">
+		<p>{{ t('update.up_to_date') }}</p>
+	</div>
+	<div class="update-check-action">
+		<a href="utils/update?check=1" class="dash-button transparent">{{ t('update.check_btn') }}</a>
+	</div>
+	{% endif %}
+
+	<div id="update-results"></div>
+
+</section>
+
+<style>
+.update-utility {
+	display: grid;
+	align-content: start;
+	gap: 1.5rem;
+	max-width: 700px;
+}
+
+.update-current .version-number {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.update-license-info {
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+}
+
+.update-expired-notice {
+	color: oklch(var(--totalform-error));
+	font-weight: 500;
+}
+
+.update-renew-notice {
+	color: oklch(var(--totalform-error));
+}
+
+.update-composer-notice {
+	color: oklch(var(--totalform-darkgray));
+}
+
+.update-composer-notice code {
+	background: oklch(var(--totalform-nearwhite));
+	padding: 0.15rem 0.4rem;
+	border-radius: 3px;
+	font-size: 0.9em;
+}
+
+.update-available {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+}
+
+.update-available h3 {
+	margin-top: 0;
+}
+
+.new-version {
+	font-size: 1.3rem;
+	font-weight: 600;
+	display: inline;
+	margin-right: 0.75rem;
+}
+
+.severity-badge {
+	display: inline-block;
+	padding: 0.15rem 0.6rem;
+	border-radius: 1rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	vertical-align: middle;
+}
+
+.severity-patch { background: oklch(var(--totalform-accent) / 0.15); color: oklch(var(--totalform-accent)); }
+.severity-minor { background: oklch(0.8 0.15 85 / 0.2); color: oklch(0.5 0.15 85); }
+.severity-major { background: oklch(var(--totalform-error) / 0.15); color: oklch(var(--totalform-error)); }
+
+.release-date {
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+	margin-top: 0.5rem;
+}
+
+.update-changelog {
+	margin-top: 1.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid oklch(var(--totalform-border-color));
+	display: grid;
+	gap: 1rem;
+	font-size: 0.9em;
+}
+
+.update-changelog > * {
+	margin : 0!important;
+}
+
+.update-actions {
+	margin-top: 1.5rem;
+}
+
+.update-current-notice {
+	color: oklch(var(--totalform-success));
+	font-weight: 500;
+}
+
+.update-installing {
+	text-align: center;
+	padding: 2rem 1rem;
+}
+
+.update-installing.success h3 {
+	color: oklch(var(--totalform-success));
+}
+
+.update-installing.error h3 {
+	color: oklch(var(--totalform-error));
+}
+</style>
+
+<script>
+document.getElementById('update-btn')?.addEventListener('click', async () => {
+	if (!confirm('{{ t('update.confirm') }}')) return;
+
+	const available = document.querySelector('.update-available');
+	const results = document.getElementById('update-results');
+
+	available.innerHTML = '<div class="update-installing"><h3>Installing Update&hellip;</h3><p>Please wait while the update is being applied. Do not close this page.</p></div>';
+	results.innerHTML = '';
+
+	try {
+		const res = await fetch('utils/update/apply', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+		const data = await res.json();
+		if (data.success) {
+			available.innerHTML = `<div class="update-installing success"><h3>${data.message}</h3></div>`;
+			setTimeout(() => location.reload(), 2000);
+		} else {
+			available.innerHTML = `<div class="update-installing error"><h3>Update Failed</h3><p>${data.error}</p></div>`;
+		}
+	} catch (err) {
+		available.innerHTML = `<div class="update-installing error"><h3>Update Failed</h3><p>Unexpected error. Check the server logs.</p></div>`;
+	}
+});
+</script>

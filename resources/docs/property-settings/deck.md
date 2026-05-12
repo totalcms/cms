@@ -1,6 +1,6 @@
 ---
 title: "Deck Item Label"
-description: "Customize deck item labels in the Total CMS admin using template syntax with field references, minItems, and maxItems constraints."
+description: "Customize deck item labels in the Total CMS admin using template syntax with field references, minItems, maxItems, and modalSize settings."
 ---
 
 # Deck Item Label
@@ -87,5 +87,25 @@ The add and duplicate buttons will be disabled once 3 items exist. Removing an i
 {
 	"minItems": 3,
 	"maxItems": 3
+}
+```
+
+---
+
+# Modal Size
+
+The `modalSize` setting controls how large the deck item edit modal opens in the admin.
+
+| Value | Description |
+|-------|-------------|
+| `small` *(default)* | Narrow modal (max width ~75ch). Best for simple item schemas with a few short fields. |
+| `medium` | Standard `cms-modal` sizing — 90% width up to 1000px, 85vh tall up to 1000px. |
+| `large` | Roomy modal — up to 1400px wide and 1400px tall. Useful when deck items contain rich-text or many fields. |
+
+### Basic Usage
+
+```json
+{
+	"modalSize": "medium"
 }
 ```

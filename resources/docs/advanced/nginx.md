@@ -52,7 +52,7 @@ server {
 }
 ```
 
-## Subdirectory Installation (RapidWeaver / Stacks)
+## Subdirectory Installation (Stacks)
 
 When Total CMS is installed inside a subdirectory such as `/rw_common/plugins/stacks/tcms/`, the configuration needs to account for the path prefix:
 

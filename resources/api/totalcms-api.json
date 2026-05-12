@@ -65,6 +65,10 @@
       "description": "RSS and feed generation"
     },
     {
+      "name": "reports",
+      "description": "Collection data export and reporting"
+    },
+    {
       "name": "system",
       "description": "System operations and utilities"
     }
@@ -2889,6 +2893,678 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/report/collections/{collection}/fields": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Collection identifier"
+        }
+      ],
+      "get": {
+        "summary": "Get Report Fields",
+        "description": "Returns available report fields for a collection",
+        "tags": [
+          "reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "html"
+              ],
+              "default": "html"
+            },
+            "description": "Response format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available report fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/report/collections/{collection}/csv": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Collection identifier"
+        }
+      ],
+      "get": {
+        "summary": "Export Collection as CSV",
+        "description": "Export collection data as a CSV file download",
+        "tags": [
+          "reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of fields to include in the export"
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Include filter — comma-separated field:value pairs with AND logic"
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exclude filter — comma-separated field:value pairs with OR logic"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/report/collections/{collection}/json": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Collection identifier"
+        }
+      ],
+      "get": {
+        "summary": "Export Collection as JSON",
+        "description": "Export collection data as a JSON file download",
+        "tags": [
+          "reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of fields to include in the export"
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Include filter — comma-separated field:value pairs with AND logic"
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exclude filter — comma-separated field:value pairs with OR logic"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON file download",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/imageworks/{collection}/{id}/{property}/{name}.{format}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Gallery image filename"
+        },
+        {
+          "name": "format",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "jpg",
+              "jpeg",
+              "png",
+              "webp",
+              "avif"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "summary": "Get Processed Gallery Image",
+        "description": "Fetch a specific gallery image with processing parameters applied",
+        "tags": [
+          "imageworks"
+        ],
+        "parameters": [
+          {
+            "name": "w",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Width in pixels"
+          },
+          {
+            "name": "h",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Height in pixels"
+          },
+          {
+            "name": "fit",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "crop",
+                "contain",
+                "cover",
+                "fill",
+                "inside",
+                "outside"
+              ]
+            },
+            "description": "Resize mode"
+          },
+          {
+            "name": "quality",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "JPEG quality"
+          },
+          {
+            "name": "blur",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Blur amount"
+          },
+          {
+            "name": "brightness",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "description": "Brightness adjustment"
+          },
+          {
+            "name": "contrast",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "description": "Contrast adjustment"
+          },
+          {
+            "name": "gamma",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 3.0
+            },
+            "description": "Gamma correction"
+          },
+          {
+            "name": "sharpen",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Sharpen amount"
+          },
+          {
+            "name": "grayscale",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Convert to grayscale"
+          },
+          {
+            "name": "sepia",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Apply sepia effect"
+          },
+          {
+            "name": "watermark",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Watermark image ID"
+          },
+          {
+            "name": "position",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "topleft",
+                "topright",
+                "bottomleft",
+                "bottomright",
+                "center"
+              ]
+            },
+            "description": "Watermark position"
+          },
+          {
+            "name": "opacity",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "description": "Watermark opacity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Processed image",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/imageworks/{collection}/{id}/{property}/{action}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "action",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "first",
+              "last",
+              "random",
+              "featured"
+            ]
+          },
+          "description": "Dynamic gallery image selection action"
+        }
+      ],
+      "get": {
+        "summary": "Get Dynamic Gallery Image",
+        "description": "Get a dynamically selected gallery image (first, last, random, or featured) with processing parameters",
+        "tags": [
+          "imageworks"
+        ],
+        "parameters": [
+          {
+            "name": "w",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Width in pixels"
+          },
+          {
+            "name": "h",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Height in pixels"
+          },
+          {
+            "name": "fit",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "crop",
+                "contain",
+                "cover",
+                "fill",
+                "inside",
+                "outside"
+              ]
+            },
+            "description": "Resize mode"
+          },
+          {
+            "name": "quality",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "JPEG quality"
+          },
+          {
+            "name": "blur",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Blur amount"
+          },
+          {
+            "name": "brightness",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "description": "Brightness adjustment"
+          },
+          {
+            "name": "contrast",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "description": "Contrast adjustment"
+          },
+          {
+            "name": "gamma",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 3.0
+            },
+            "description": "Gamma correction"
+          },
+          {
+            "name": "sharpen",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Sharpen amount"
+          },
+          {
+            "name": "grayscale",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Convert to grayscale"
+          },
+          {
+            "name": "sepia",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Apply sepia effect"
+          },
+          {
+            "name": "watermark",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Watermark image ID"
+          },
+          {
+            "name": "position",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "topleft",
+                "topright",
+                "bottomleft",
+                "bottomright",
+                "center"
+              ]
+            },
+            "description": "Watermark position"
+          },
+          {
+            "name": "opacity",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "description": "Watermark opacity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Processed image",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }

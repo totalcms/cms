@@ -6,6 +6,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -46,24 +47,24 @@ class FileSaver
 		string $filePath,
 		?string $subpath = null,
 	): ObjectData {
-		// $subpath argument is only supported in DepotSaver at this time
-
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);
 		}
 
-		// Clean up existing files in the path. Only one file should exist
-		$this->storage->deleteDirectory($collection, $objectID, $property);
+		// Clean up existing files at this exact path (top-level or nested). Without
+		// $subpath, this would wipe the whole property dir — including sibling
+		// card children — which would be a data-loss bug.
+		$this->storage->deleteDirectory($collection, $objectID, $property, null, $subpath);
 
-		// Update the object with the new file data
-		$fileInfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+		// Save new file at the same nested location.
+		$fileInfo = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
 
 		$newData = $fileInfo;
 
 		if ($objectExists) {
-			// If the object existed before, we will keep the existing data
-			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
+			// Merge with existing user-set fields if present
+			$fileProperty = $this->fetchExistingChildProperty($collection, $objectID, $property, $subpath);
 			$keep         = ['download', 'comments', 'tags', 'protected', 'password'];
 			$existingData = array_filter($fileProperty->transform(), fn ($key): bool => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
 			if (!empty($existingData['download'])) {
@@ -78,14 +79,9 @@ class FileSaver
 			$newData = array_merge($fileProperty->transform(), $fileInfo, $existingData);
 		}
 
-		// if ($objectExists) {
-		// 	// If the object existed before, we will keep the existing data
-		// 	$newImage = array_merge($newData, $existingData);
-		// }
-
 		$fileData = new FileData($newData);
 
-		return $this->updateObject($collection, $objectID, $property, $fileData);
+		return $this->updateObject($collection, $objectID, $property, $fileData, $subpath);
 	}
 
 	protected function createObject(string $collection, string $objectID, string $property): void
@@ -131,8 +127,84 @@ class FileSaver
 		return $fileProperty;
 	}
 
-	protected function updateObject(string $collection, string $objectID, string $property, PropertyData $data): ObjectData
+	/**
+	 * Fetch the existing PropertyData for the field that's actually being saved —
+	 * either the top-level property or, when $subpath is set, the child stored at
+	 * `obj[$property][$subpath]` inside a CardData parent.
+	 */
+	protected function fetchExistingChildProperty(
+		string $collection,
+		string $objectID,
+		string $property,
+		?string $subpath,
+	): PropertyData {
+		if ($subpath === null || $subpath === '') {
+			return $this->fetchProperty($collection, $objectID, $property);
+		}
+
+		try {
+			$parent = $this->propFetcher->fetchProperty($collection, $objectID, $property);
+		} catch (\UnexpectedValueException) {
+			return $this->createPropertyObject($collection, $property);
+		}
+
+		// Card-nested case: parent is a CardData, child lives in `$parent->card[$subpath]`.
+		// (Phase 2 only handles single-segment subpath = card child key. Deeper nesting
+		// for deck items lands in Phase 3.)
+		if ($parent instanceof CardData) {
+			$childRaw = $parent->card[$subpath] ?? null;
+			if (!is_array($childRaw)) {
+				return $this->createPropertyObject($collection, $property);
+			}
+
+			return $this->buildPropertyDataFromArray($childRaw);
+		}
+
+		// Other parent types (e.g. DepotData) handle subpath in their own savers.
+		return $this->createPropertyObject($collection, $property);
+	}
+
+	/**
+	 * Build a typed PropertyData from a raw child array using this saver's
+	 * configured `$type`. Each subclass (FileSaver, ImageSaver) inherits this.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	protected function buildPropertyDataFromArray(array $data): PropertyData
 	{
+		$type  = ucfirst($this->type);
+		$class = "TotalCMS\\Domain\\Property\\Data\\{$type}Data";
+		if (!class_exists($class)) {
+			throw new \UnexpectedValueException("Invalid file type {$type} for nested property data");
+		}
+
+		$instance = new $class($data);
+		if (!$instance instanceof PropertyData) {
+			throw new \DomainException('Constructed nested property data is not PropertyData');
+		}
+
+		return $instance;
+	}
+
+	protected function updateObject(
+		string $collection,
+		string $objectID,
+		string $property,
+		PropertyData $data,
+		?string $subpath = null,
+	): ObjectData {
+		if ($subpath !== null && $subpath !== '') {
+			// Nested write — patch into `obj[$property][$subpath]` so card siblings
+			// are preserved.
+			return $this->objectPatcher->patchNestedProperty(
+				$collection,
+				$objectID,
+				$property,
+				$subpath,
+				$data->transform(),
+			);
+		}
+
 		$propertyData = [$property => $data->transform()];
 
 		return $this->objectPatcher->patchObject($collection, $objectID, $propertyData);

@@ -72,18 +72,18 @@ readonly class ResetPasswordSubmitAction
 
 		// Validate token first to get collection info (before it gets deleted)
 		$validation = $this->passwordResetService->validateToken($token);
-		if (!$validation['valid']) {
-			$flash->add('error', $validation['message']);
+		if (!$validation->success) {
+			$flash->add('error', $validation->message);
 
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
-		$collection = $validation['collection'] ?? $this->config->auth['collection'] ?? 'auth';
+		$collection = $validation->data['collection'] ?? $this->config->auth['collection'] ?? 'auth';
 
 		// Reset password (this will delete the token)
 		$result = $this->passwordResetService->resetPassword($token, $newPassword);
 
-		if (!$result['success']) {
-			$flash->add('error', $result['message']);
+		if (!$result->success) {
+			$flash->add('error', $result->message);
 
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}

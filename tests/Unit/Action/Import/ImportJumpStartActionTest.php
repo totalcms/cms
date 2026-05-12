@@ -11,6 +11,7 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Action\Import\ImportJumpStartAction;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\OperationResult;
 
 final class ImportJumpStartActionTest extends TestCase
 {
@@ -32,17 +33,20 @@ final class ImportJumpStartActionTest extends TestCase
 
 	public function testImportsDemoDefinition(): void
 	{
-		$demoData = ['collections' => [], 'schemas' => []];
+		$demoResult = OperationResult::success('Import completed successfully', [
+			'collections' => [],
+			'schemas'     => [],
+		]);
 
 		$this->request->method('getQueryParams')->willReturn(['demo' => 'true']);
 
 		$this->jumpStartImporter->expects($this->once())
 			->method('importDemoDefinition')
-			->willReturn($demoData);
+			->willReturn($demoResult);
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $demoData)
+			->with($this->response, $demoResult->toArray())
 			->willReturn($this->response);
 
 		$result = ($this->action)($this->request, $this->response);
@@ -65,7 +69,7 @@ final class ImportJumpStartActionTest extends TestCase
 		$this->request->method('getQueryParams')->willReturn([]);
 		$this->request->method('getUploadedFiles')->willReturn(['jumpstart' => $file]);
 
-		$result = ['success' => true, 'collections' => 5];
+		$result = OperationResult::success('Import completed successfully', ['collections' => 5]);
 
 		$this->jumpStartImporter->expects($this->once())
 			->method('importFromDefinition')
@@ -74,7 +78,7 @@ final class ImportJumpStartActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $result)
+			->with($this->response, $result->toArray())
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);
@@ -147,7 +151,7 @@ final class ImportJumpStartActionTest extends TestCase
 
 		$this->jumpStartImporter->expects($this->once())
 			->method('importDemoDefinition')
-			->willReturn([]);
+			->willReturn(OperationResult::success());
 
 		$this->jumpStartImporter->expects($this->never())
 			->method('importFromDefinition');

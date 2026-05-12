@@ -16,6 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Template\Data\TemplateData;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
 use TotalCMS\Support\Config;
@@ -70,7 +71,7 @@ class TemplateForm extends TotalForm
 		protected array $newActions    = [
 			[
 				'action' => 'redirect-object',
-				'link'   => 'templates/',
+				'link'   => 'builder/',
 			],
 		],
 		protected array $editActions   = [],
@@ -131,7 +132,7 @@ class TemplateForm extends TotalForm
 
 		// Editing existing template
 		if ($this->path !== '') {
-			[$folder, $templateId] = TemplateRepository::parsePath($this->path);
+			[$folder, $templateId] = TemplatePath::parse($this->path);
 
 			$this->route  = '/templates/' . $this->path;
 			$this->method = 'PUT';
@@ -174,10 +175,25 @@ class TemplateForm extends TotalForm
 		$options['form'] = $this;
 
 		// Set values from template data
+		if ($name === 'category') {
+			// Extract category from path when editing
+			if ($this->path !== '') {
+				$parts            = explode('/', $this->path);
+				$options['value'] = $parts[0];
+			}
+
+			return $options;
+		}
+
 		if (isset($this->templateData)) {
 			if ($name === 'id') {
-				// For editing, use the full path; for new/duplicate, use just the ID
-				$options['value'] = $this->path !== '' ? $this->path : $this->templateData->id;
+				if ($this->path !== '') {
+					// Strip the category prefix (e.g., "templates/test" → "test")
+					$parts            = explode('/', $this->path, 2);
+					$options['value'] = $parts[1] ?? $this->path;
+				} else {
+					$options['value'] = $this->templateData->id;
+				}
 			} elseif ($name === 'template') {
 				$options['value'] = $this->templateData->contents;
 			} elseif (in_array($name, ['designerEnabled', 'designerToken'], true)

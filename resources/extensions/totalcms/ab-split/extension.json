@@ -1,0 +1,22 @@
+{
+    "id": "totalcms/ab-split",
+    "name": "A/B Split",
+    "description": "Render an alternate template at the same URL for a percentage of visitors. Useful for testing layout, copy, or CTA variations without changing the page URL.",
+    "icon": "icon.png",
+    "requires": {
+        "totalcms": ">=3.5.0-beta",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "author": {
+        "name": "Total CMS",
+        "url": "https://totalcms.co"
+    },
+    "license": "proprietary",
+    "links": [
+        {
+            "label": "Documentation",
+            "url": "docs/extensions/bundled/ab-split"
+        }
+    ]
+}

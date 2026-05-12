@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Upload;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -31,12 +32,21 @@ readonly class ListUploadFilesAction
 		$id         = $args['id'];
 		$property   = $args['property'];
 
-		$files   = $this->fetcher->listFiles($collection, $id, $property);
-		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
-
 		$queryParams = $request->getQueryParams();
 		$preset      = $queryParams['preset'] ?? null;
 		$type        = $queryParams['type'] ?? null;
+		$pathParam   = $queryParams['path'] ?? null;
+		$subpath     = is_string($pathParam) && $pathParam !== ''
+			? PathUtils::sanitizeSubpath($pathParam)
+			: null;
+		$subpath     = $subpath === '' ? null : $subpath;
+
+		$files = $this->fetcher->listFiles($collection, $id, $property, $subpath);
+
+		// imageworks/download/stream live at the unprefixed base path (not under
+		// /api) — they're public asset endpoints whose URLs get embedded in
+		// styledtext content and must remain stable.
+		$basePath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
 
 		// Filter files by type if requested
 		if (is_string($type) && $type !== '') {
@@ -54,18 +64,18 @@ readonly class ListUploadFilesAction
 			$isAudio = in_array($ext, self::AUDIO_EXTENSIONS, true);
 
 			if ($isImage) {
-				$thumbnail = $apiPath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
-				$url       = $apiPath . '/imageworks/upload/' . $path;
+				$thumbnail = $basePath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
+				$url       = $basePath . '/imageworks/upload/' . $path;
 
 				if (is_string($preset) && $preset !== '') {
 					$url .= '?p=' . urlencode($preset);
 				}
 			} elseif ($isVideo || $isAudio) {
 				$thumbnail = null;
-				$url       = $apiPath . '/stream/upload/' . $path;
+				$url       = $basePath . '/stream/upload/' . $path;
 			} else {
 				$thumbnail = null;
-				$url       = $apiPath . '/download/upload/' . $path;
+				$url       = $basePath . '/download/upload/' . $path;
 			}
 
 			$result[] = [

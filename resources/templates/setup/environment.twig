@@ -1,0 +1,112 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.env_title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="setup-header">
+		<h1>{{ t('wizard.env_title') }}</h1>
+		<p>{{ t('wizard.env_desc') }}</p>
+	</section>
+
+	<section class="setup-checks">
+		<h2>{{ t('wizard.env_required') }}</h2>
+		<table class="check-table">
+			{% for name, passed in required %}
+			<tr class="{{ passed ? 'check-pass' : 'check-fail' }}">
+				<td class="check-icon">{{ passed ? '&#10004;' : '&#10008;' }}</td>
+				<td>{{ name }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+
+		{% if optional|length > 0 %}
+		<h2>{{ t('wizard.env_optional') }}</h2>
+		<table class="check-table">
+			{% for name, passed in optional %}
+			<tr class="{{ passed ? 'check-pass' : 'check-info' }}">
+				<td class="check-icon">{{ passed ? '&#10004;' : '&#9679;' }}</td>
+				<td>
+					{{ name }}
+					{% if not passed and optionalDetails[name] is defined %}
+						<span class="check-detail">{{ optionalDetails[name].recommendation|default('') }}</span>
+					{% endif %}
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		{% endif %}
+	</section>
+
+	{% if allRequiredPassed %}
+		<a href="{{ cms.base }}/setup/data-path" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+	{% else %}
+		<div class="cms-error" role="alert">
+			{{ t('wizard.env_failed') }}
+		</div>
+	{% endif %}
+</main>
+
+<style>
+.setup-checks {
+	width: 100%;
+	max-width: 600px;
+}
+
+.setup-checks h2 {
+	font-size: 1.1rem;
+	margin-block: 1.5rem 0.75rem;
+}
+
+.setup-checks h2:first-child {
+	margin-top: 0;
+}
+
+.check-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.check-table tr {
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+}
+
+.check-table td {
+	padding: 0.6rem 0.75rem;
+}
+
+.check-icon {
+	width: 2rem;
+	text-align: center;
+	font-size: 1.1rem;
+}
+
+.check-pass .check-icon {
+	color: oklch(var(--totalform-success));
+}
+
+.check-fail .check-icon {
+	color: oklch(var(--totalform-error));
+}
+
+.check-fail {
+	background: oklch(var(--totalform-error) / 0.05);
+}
+
+.check-info .check-icon {
+	color: oklch(var(--totalform-darkgray));
+}
+
+.check-detail {
+	display: block;
+	font-size: 0.85em;
+	color: oklch(var(--totalform-darkgray));
+	margin-top: 0.15rem;
+}
+
+.setup-continue {
+	margin-top: 2rem;
+	display: inline-block;
+}
+</style>
+{% endblock %}

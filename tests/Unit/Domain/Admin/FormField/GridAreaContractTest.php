@@ -27,11 +27,11 @@ describe('FormField grid-area contract', function (): void {
 	});
 
 	dataset('fieldFactories', [
-		'FormField'          => [fn ($form) => new FormField($form, 'foo')],
-		'CheckboxField'      => [fn ($form) => new CheckboxField($form, 'foo')],
-		'ToggleField'        => [fn ($form) => new ToggleField($form, 'foo')],
-		'RadioField'         => [fn ($form) => new RadioField($form, 'foo', options: ['A'])],
-		'MulticheckboxField' => [fn ($form) => new MulticheckboxField($form, 'foo', options: ['A'])],
+		'FormField'          => [fn ($form): FormField => new FormField($form, 'foo')],
+		'CheckboxField'      => [fn ($form): CheckboxField => new CheckboxField($form, 'foo')],
+		'ToggleField'        => [fn ($form): ToggleField => new ToggleField($form, 'foo')],
+		'RadioField'         => [fn ($form): RadioField => new RadioField($form, 'foo', options: ['A'])],
+		'MulticheckboxField' => [fn ($form): MulticheckboxField => new MulticheckboxField($form, 'foo', options: ['A'])],
 	]);
 
 	test('emits --grid-area CSS variable, never a bare grid-area declaration', function (Closure $factory): void {

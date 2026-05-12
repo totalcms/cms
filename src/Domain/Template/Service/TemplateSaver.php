@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Template\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\TemplateEventPayload;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
@@ -11,12 +15,16 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
  */
 readonly class TemplateSaver
 {
-	public function __construct(private TemplateRepository $storage)
-	{
+	public function __construct(
+		private TemplateRepository $storage,
+		private TemplateSnapshotService $snapshots,
+		private EventDispatcher $eventDispatcher,
+	) {
 	}
 
 	/**
-	 * Save a Template.
+	 * Save a Template. Captures a snapshot of the prior contents (if any)
+	 * before overwriting, so users can restore from history.
 	 *
 	 * @throws \DomainException
 	 */
@@ -28,7 +36,14 @@ readonly class TemplateSaver
 			throw new \DomainException("Cannot override a built-in template with the name $id.");
 		}
 
+		$existing = $this->storage->fetchBuilderTemplate($id, $folder);
+		if ($existing instanceof TemplateData && $existing->contents !== $contents) {
+			$this->snapshots->capture($id, $folder, $existing->contents);
+		}
+
 		$this->storage->saveTemplate($template, $folder);
+
+		$this->eventDispatcher->dispatch('template.saved', new TemplateEventPayload($id, $folder));
 
 		return $template;
 	}

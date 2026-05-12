@@ -29,9 +29,9 @@ $outputFile = $argv[3] ?? __DIR__ . '/../version.json';
 $commits    = (int)($argv[4] ?? 0);
 $date       = date('Y-m-d');
 
-// Validate version format
-if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-	echo "Error: Invalid version format. Expected X.Y.Z (e.g., 3.1.3)\n";
+// Validate version format (SemVer: X.Y.Z with optional prerelease suffix like -beta.1, -rc1)
+if (!preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/', $version)) {
+	echo "Error: Invalid version format. Expected X.Y.Z or X.Y.Z-prerelease (e.g., 3.1.3, 3.3.0-beta.1)\n";
 	exit(1);
 }
 
@@ -47,10 +47,14 @@ $signature = Version::generateSignature($version, $date);
 $data = [
 	'version'   => $version,
 	'build'     => $build,
-	'commits'   => $commits,
-	'date'      => $date,
-	'signature' => $signature,
 ];
+
+if ($commits > 0) {
+	$data['commits'] = $commits;
+}
+
+$data['date']      = $date;
+$data['signature'] = $signature;
 
 $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
 

@@ -5,19 +5,22 @@
 	"type"        : "object",
 	"properties"  : {
 		"sentry": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Share Application Errors with Developer",
 			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
 			"default" : true
 		},
 		"notfound": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "404 - Page Not Found Path",
 			"help"        : "The path to the 404 page that will be used when a page is not found. This is used by the CMS to redirect when an object is not found.",
 			"placeholder" : "/404"
 		},
 		"timezone": {
-			"type"        : "select",
+			"type"        : "string",
+			"field"       : "select",
 			"label"       : "Timezone",
 			"placeholder" : "Select Timezone",
 			"help"        : "The timezone that all dates in the CMS will be saved as. If not set, then the default timezone that the server is configured with will be used.",
@@ -27,13 +30,49 @@
 		},
 		"maxDownloadSize": {
 			"type"        : "number",
+			"field"       : "number",
 			"label"       : "Max URL Download Size (MB)",
 			"help"        : "The maximum file size in megabytes allowed when downloading files from a URL. This protects your server from downloading excessively large files. Set to 0 for unlimited.",
 			"placeholder" : "2048",
 			"default"     : 2048
 		},
+		"appLogLevel": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "App Log Level",
+			"help"    : "Minimum severity written to <code>logs/totalcms.log</code>. Lower levels are more verbose. PSR-3 levels in ascending severity: debug, info, notice, warning, error, critical, alert, emergency.",
+			"default" : "info",
+			"options" : [
+				{"value": "debug",     "label": "Debug"},
+				{"value": "info",      "label": "Info"},
+				{"value": "notice",    "label": "Notice"},
+				{"value": "warning",   "label": "Warning"},
+				{"value": "error",     "label": "Error"},
+				{"value": "critical",  "label": "Critical"},
+				{"value": "alert",     "label": "Alert"},
+				{"value": "emergency", "label": "Emergency"}
+			]
+		},
+		"extensionsLogLevel": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Extensions Log Level",
+			"help"    : "Minimum severity written to <code>logs/extensions.log</code> for extension events and extension-emitted log messages. Set to <code>debug</code> while developing or troubleshooting an extension.",
+			"default" : "info",
+			"options" : [
+				{"value": "debug",     "label": "Debug"},
+				{"value": "info",      "label": "Info"},
+				{"value": "notice",    "label": "Notice"},
+				{"value": "warning",   "label": "Warning"},
+				{"value": "error",     "label": "Error"},
+				{"value": "critical",  "label": "Critical"},
+				{"value": "alert",     "label": "Alert"},
+				{"value": "emergency", "label": "Emergency"}
+			]
+		},
 		"locale": {
-			"type"        : "select",
+			"type"        : "string",
+			"field"       : "select",
 			"label"       : "Locale",
 			"placeholder" : "Select Locale",
 			"help"        : "The locale setting affects how dates, numbers, and currency are formatted. This uses PHP's locale system.",

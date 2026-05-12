@@ -49,7 +49,7 @@ class ObjectData
 
 	public function toJson(): string
 	{
-		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES]);
 	}
 
 	/** @return array<string> */

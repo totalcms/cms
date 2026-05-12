@@ -38,7 +38,7 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 		expect($cached->domain)->toBe('test.example.com');
 
 		// Call emergency license cache clear endpoint
-		$request  = $this->createRequest('GET', '/emergency/cache/clear-license');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear-license');
 		$response = $this->app->handle($request);
 
 		// Should respond with success
@@ -65,7 +65,7 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 		$cacheManager->clearLicenseData(LicenseData::CACHE_KEY);
 
 		// Call emergency license cache clear endpoint
-		$request  = $this->createRequest('GET', '/emergency/cache/clear-license');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear-license');
 		$response = $this->app->handle($request);
 
 		// Should still respond with success (clearing empty cache is fine)
@@ -82,7 +82,7 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 		// Emergency license cache clear should be accessible without authentication
 		// for debugging and support scenarios
 
-		$request  = $this->createRequest('GET', '/emergency/cache/clear-license');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear-license');
 		$response = $this->app->handle($request);
 
 		// Should not return 401 or 403 (authentication/authorization errors)
@@ -92,7 +92,7 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 	});
 
 	it('provides helpful next step information', function (): void {
-		$request  = $this->createRequest('GET', '/emergency/cache/clear-license');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear-license');
 		$response = $this->app->handle($request);
 
 		$responseBody = (string)$response->getBody();
@@ -128,7 +128,7 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 		$cacheManager->storeLicenseData(LicenseData::CACHE_KEY, $testLicenseData, LicenseData::CACHE_STORAGE_TTL);
 
 		// Clear only license cache
-		$request  = $this->createRequest('GET', '/emergency/cache/clear-license');
+		$request  = $this->createRequest('GET', '/api/emergency/cache/clear-license');
 		$response = $this->app->handle($request);
 
 		expect($response->getStatusCode())->toBe(200);
@@ -147,8 +147,8 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 
 	it('handles concurrent license cache clear requests', function (): void {
 		// Test that multiple simultaneous cache clear requests don't cause issues
-		$request1 = $this->createRequest('GET', '/emergency/cache/clear-license');
-		$request2 = $this->createRequest('GET', '/emergency/cache/clear-license');
+		$request1 = $this->createRequest('GET', '/api/emergency/cache/clear-license');
+		$request2 = $this->createRequest('GET', '/api/emergency/cache/clear-license');
 
 		$response1 = $this->app->handle($request1);
 		$response2 = $this->app->handle($request2);

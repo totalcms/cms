@@ -26,7 +26,7 @@ describe('File Operations', function (): void {
 			'schema' => 'gallery',
 		];
 
-		postJson('/collections', $collection);
+		postJson('/api/collections', $collection);
 
 		// Create test object
 		$object = [
@@ -34,7 +34,7 @@ describe('File Operations', function (): void {
 			'title' => 'Test File Object',
 		];
 
-		postJson('/collections/file-test', $object);
+		postJson('/api/collections/file-test', $object);
 	});
 
 	it('can upload a file', function (): void {

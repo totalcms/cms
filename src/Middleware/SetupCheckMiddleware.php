@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
@@ -7,21 +9,25 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
 
 /**
- * Middleware to check if Total CMS has been set up (tcms-data folder exists).
- * If not, redirect to the setup page.
+ * Middleware to check if Total CMS has been set up.
+ * If not, redirect to the appropriate setup wizard step.
  *
- * This middleware runs BEFORE authentication to allow initial setup without auth.
+ * This middleware runs BEFORE Slim's RoutingMiddleware so it can intercept
+ * requests for unrouted paths (like `/`) — otherwise Slim would throw 404
+ * before this check ever ran. URL prefixes are used instead of route names
+ * because the route context isn't populated yet at this point in the chain.
  */
 readonly class SetupCheckMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private Config $config,
 		private RedirectRenderer $redirectRenderer,
+		private SetupStateManager $setupState,
 	) {
 	}
 
@@ -30,70 +36,50 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
 		// Skip setup check entirely in preview environment
-		// Preview uses pre-configured datadir and doesn't need setup workflow
 		if ($this->config->env === 'preview') {
 			return $handler->handle($request);
 		}
 
-		// Get the matched route
-		$routeContext = RouteContext::fromRequest($request);
-		$route        = $routeContext->getRoute();
+		$path = $request->getUri()->getPath();
 
-		// Skip setup check for setup routes and public assets
-		if ($route instanceof \Slim\Interfaces\RouteInterface) {
-			$routeName = $route->getName();
-			if ($routeName !== null && (str_starts_with($routeName, 'setup-') || $routeName === 'public-asset')) {
-				return $handler->handle($request);
-			}
-
-			// Allow login routes if data directory exists (for first user creation)
-			// even if auth collection doesn't exist yet
-			// Check route path pattern since POST login route may not have a name
-			if ($this->dataDirBasicExists()) {
-				$routePattern = $route->getPattern();
-				if ($routeName === 'login' || $routePattern === '/login[/{collection}]') {
-					return $handler->handle($request);
-				}
-			}
-		}
-
-		// Check if tcms-data exists in any of the expected locations
-		if ($this->dataDirExists()) {
-			// Data directory exists, continue normal flow
+		// Public assets are always allowed (admin CSS/JS, vendor assets, etc.)
+		if (str_starts_with($path, '/api/assets/')) {
 			return $handler->handle($request);
 		}
 
-		// Data directory doesn't exist, redirect to setup page
-		return $this->redirectRenderer->redirectFor(new Response(), 'setup-data-path');
-	}
+		// Setup wizard paths: only accessible while setup is incomplete
+		if ($path === '/setup' || str_starts_with($path, '/setup/')) {
+			if ($this->setupState->isSetupComplete()) {
+				return $this->redirectRenderer->redirectFor(new Response(), 'admin-index');
+			}
 
-	/**
-	 * Check if tcms-data directory exists (basic check).
-	 *
-	 * Used to allow login page access for first user creation.
-	 */
-	private function dataDirBasicExists(): bool
-	{
-		return $this->config->datadir !== '' && is_dir($this->config->datadir);
-	}
-
-	/**
-	 * Check if tcms-data directory is properly set up.
-	 *
-	 * A directory is considered "set up" if it contains an auth collection,
-	 * which indicates that the user has completed setup and created their first account.
-	 * System files like .system/access-groups.json are auto-created and don't count.
-	 */
-	private function dataDirExists(): bool
-	{
-		if (!$this->dataDirBasicExists()) {
-			return false;
+			return $handler->handle($request);
 		}
 
-		// Check if auth collection exists (indicates setup is complete)
-		$authCollection = $this->config->auth['collection'] ?? 'auth';
-		$authPath       = $this->config->datadir . '/' . $authCollection;
+		// Anything else: allow through when setup is complete
+		if ($this->setupState->isSetupComplete()) {
+			return $handler->handle($request);
+		}
 
-		return is_dir($authPath);
+		// Pre-setup, non-wizard request. Only redirect to the wizard for
+		// requests that look like page navigation — let asset-like and
+		// API requests fall through to routing so they 404 (or 401)
+		// naturally. Without this, every unrouted request — `/css/foo.css`,
+		// `/api/whatever`, a typo'd image URL — would 302 to the wizard,
+		// which breaks browser asset loading and confuses API clients.
+		$ext = pathinfo($path, PATHINFO_EXTENSION);
+		if ($ext !== '' || str_starts_with($path, '/api/')) {
+			return $handler->handle($request);
+		}
+
+		// Setup not complete — redirect to welcome or current wizard step
+		$currentStep = $this->setupState->getCurrentStep();
+
+		// If on the very first step, show the welcome page instead
+		if ($currentStep === 'setup-environment' && !$this->setupState->isStepComplete('environment')) {
+			return $this->redirectRenderer->redirectFor(new Response(), 'setup-welcome');
+		}
+
+		return $this->redirectRenderer->redirectFor(new Response(), $currentStep);
 	}
 }

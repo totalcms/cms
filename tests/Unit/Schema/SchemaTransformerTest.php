@@ -153,12 +153,44 @@ final class SchemaTransformerTest extends TestCase
 					'field' => 'deck',
 					'label' => 'Product Features',
 					'$ref'  => 'https://www.totalcms.co/schemas/properties/deck.json',
-					// No 'deckref' key - should use existing patternProperties if any
+					// No 'deckref' or 'schemaref' key - should use existing patternProperties if any
 				],
 			],
 		];
 
 		$result = $this->transformer->transformSchema($schema);
 		$this->assertSame($schema, $result);
+	}
+
+	/**
+	 * Canonical-path coverage: same expansion behavior when the schema uses the new
+	 * `schemaref` key instead of the legacy `deckref`.
+	 */
+	public function testTransformsDeckPropertyUsingCanonicalSchemaRef(): void
+	{
+		$schema = [
+			'type'       => 'object',
+			'properties' => [
+				'features' => [
+					'field'     => 'deck',
+					'schemaref' => 'https://www.totalcms.co/schemas/custom/features.json',
+					'$ref'      => 'https://www.totalcms.co/schemas/properties/deck.json',
+				],
+			],
+		];
+
+		$result = $this->transformer->transformSchema($schema);
+
+		$this->assertArrayHasKey('patternProperties', $result['properties']['features']);
+		$this->assertSame(
+			'https://www.totalcms.co/schemas/custom/features.json',
+			$result['properties']['features']['patternProperties']['^[a-zA-Z]\\w*$']['$ref'],
+		);
+		// schemaref should be preserved on the property for form building
+		$this->assertArrayHasKey('schemaref', $result['properties']['features']);
+		$this->assertSame(
+			'https://www.totalcms.co/schemas/custom/features.json',
+			$result['properties']['features']['schemaref'],
+		);
 	}
 }

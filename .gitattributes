@@ -1,2 +1,47 @@
 dist/* linguist-generated
 legacy/* linguist-generated
+
+# Exclude dev files from Composer dist archives (--prefer-dist)
+/.claude             export-ignore
+/.github             export-ignore
+/.vscode             export-ignore
+/bin                 export-ignore
+/build               export-ignore
+/cache               export-ignore
+/css                 export-ignore
+/demo                export-ignore
+/dist                export-ignore
+/docs                export-ignore
+/javascript          export-ignore
+/logs                export-ignore
+/node_modules        export-ignore
+/tcms-data           export-ignore
+/tests               export-ignore
+/tmp                 export-ignore
+/vendor-locales      export-ignore
+
+.editorconfig        export-ignore
+.env                 export-ignore
+.eslintrc.json       export-ignore
+.gitattributes       export-ignore
+.gitignore-dist      export-ignore
+.gitmodules          export-ignore
+.php-cs-fixer.php    export-ignore
+.phpunit.result.cache export-ignore
+checksums.txt        export-ignore
+code-report.txt      export-ignore
+CLAUDE.md            export-ignore
+esbuild.config.js    export-ignore
+nginx.sample.conf    export-ignore
+package.json         export-ignore
+php-test.ini         export-ignore
+phpcbf.xml           export-ignore
+phpcs.xml            export-ignore
+phpdoc.xml           export-ignore
+phpDocumentor.phar   export-ignore
+phpmd.xml            export-ignore
+phpstan.neon         export-ignore
+phpunit.xml          export-ignore
+rector.php           export-ignore
+total-cms-context.md export-ignore
+yarn.lock            export-ignore

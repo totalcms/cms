@@ -5,24 +5,26 @@ description: "Create and edit individual items within deck properties using deck
 
 # Deck Forms
 
-Deck forms allow you to create and edit individual items within a deck property. Deck properties contain multiple sub-items, each following a schema referenced by `deckref`.
+Deck forms allow you to create and edit individual items within a deck property. Deck properties contain multiple sub-items, each following a schema referenced by `schemaref`.
 
 ## Understanding Deck Properties
 
-A deck property is a special property type that contains multiple sub-items. Each item has its own ID and follows a schema defined by the deck's `deckref`:
+A deck property is a special property type that contains multiple sub-items. Each item has its own ID and follows a schema defined by the deck's `schemaref`:
 
 ```json
 {
 	"features": {
 		"type": "deck",
 		"label": "Product Features",
-		"deckref": "https://www.totalcms.co/schemas/custom/feature-item.json",
+		"schemaref": "https://www.totalcms.co/schemas/custom/feature-item.json",
 		"settings": {
 			"help": "Add individual feature items for this product"
 		}
 	}
 }
 ```
+
+> **Legacy alias:** the `deckref` key is still accepted as an alias for `schemaref` and will continue to work indefinitely. New schemas should use `schemaref`. When a schema is saved, the canonical `schemaref` form is written; if both keys are present in the input, the duplicate `deckref` is dropped on save.
 
 The referenced schema (`feature-item.json`) defines the structure of each deck item:
 
@@ -112,7 +114,7 @@ All standard form options are supported, plus deck-specific options:
 
 ## How Deck Forms Work
 
-1. **Auto-detection**: The form automatically detects the `deckref` from the property's schema
+1. **Auto-detection**: The form automatically detects the `schemaref` (or legacy `deckref`) from the property's schema
 2. **Schema Loading**: Loads the deck schema (e.g., `feature-item.json`) for field definitions
 3. **Data Loading**: If `itemId` is provided, loads existing deck item data
 4. **API Routes**: Automatically sets correct routes:

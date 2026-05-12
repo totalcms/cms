@@ -23,7 +23,7 @@ it('saves a new template', function (): void {
 	$id       = 'new-template';
 	$verify   = 'Test Template';
 
-	postJson('/templates', ['id' => $id, 'template' => $template])
+	postJson('/api/templates', ['id' => $id, 'template' => $template])
 		->assertOk()
 		->assertSee($verify);
 
@@ -33,7 +33,7 @@ it('saves a new template', function (): void {
 it('cannot save a built-in template', function (): void {
 	$id = 'admin-layout';
 
-	postJson('/templates', ['id' => $id, 'template' => 'dummy data'])->assertBadRequest();
+	postJson('/api/templates', ['id' => $id, 'template' => 'dummy data'])->assertBadRequest();
 
 	$this->assertFileDoesNotExist(templatePath($id));
 });
@@ -42,7 +42,7 @@ it('fetches a template', function (): void {
 	$id     = 'new-template';
 	$verify = 'Test Template';
 
-	get("/templates/{$id}")
+	get("/api/templates/{$id}")
 		->assertOk()
 		->assertSee($verify);
 });
@@ -53,19 +53,19 @@ it('fetches a built-in template', function (): void {
 	foreach ($files as $file) {
 		$id     = basename($file, '.twig');
 		$verify = file_get_contents($file);
-		get("/templates/{$id}")
+		get("/api/templates/{$id}")
 			->assertOk()
 			->assertSee($verify);
 	}
 });
 
 it('checks if a template exists', function (): void {
-	head('/templates/new-template')->assertOk();
-	head('/templates/does-not-exist')->assertNotFound();
+	head('/api/templates/new-template')->assertOk();
+	head('/api/templates/does-not-exist')->assertNotFound();
 });
 
 it('fetches a list of all templates', function (): void {
-	$test = get('/templates')
+	$test = get('/api/templates')
 		->assertOk()
 		->assertJson()
 		->assertSee('new-template');
@@ -77,7 +77,7 @@ it('fetches a list of all templates', function (): void {
 });
 
 it('fetches a list of reserved templates', function (): void {
-	$test = get('/templates?filter=reserved')
+	$test = get('/api/templates?filter=reserved')
 		->assertOk()
 		->assertJson()
 		->assertDontSee('new-template');
@@ -89,7 +89,7 @@ it('fetches a list of reserved templates', function (): void {
 });
 
 it('fetches a list of custom templates', function (): void {
-	$test = get('/templates?filter=custom')
+	$test = get('/api/templates?filter=custom')
 		->assertOk()
 		->assertJson()
 		->assertSee('new-template');
@@ -103,11 +103,11 @@ it('fetches a list of custom templates', function (): void {
 it('fetches a recursive list of all templates including folders', function (): void {
 	// First create some templates in folders
 	$template = templateTestData();
-	postJson('/templates', ['id' => 'custom-grids/grid-template', 'template' => $template])->assertOk();
-	postJson('/templates', ['id' => 'level1/level2/nested-template', 'template' => $template])->assertOk();
+	postJson('/api/templates', ['id' => 'custom-grids/grid-template', 'template' => $template])->assertOk();
+	postJson('/api/templates', ['id' => 'level1/level2/nested-template', 'template' => $template])->assertOk();
 
 	// Get recursive list
-	$response = get('/templates?filter=custom')
+	$response = get('/api/templates?filter=custom')
 		->assertOk()
 		->assertJson();
 
@@ -123,8 +123,8 @@ it('fetches a recursive list of all templates including folders', function (): v
 	expect($templates)->toContain('level1/level2/nested-template');
 
 	// Clean up
-	delete('/templates/custom-grids/grid-template')->assertOk();
-	delete('/templates/level1/level2/nested-template')->assertOk();
+	delete('/api/templates/custom-grids/grid-template')->assertOk();
+	delete('/api/templates/level1/level2/nested-template')->assertOk();
 });
 
 it('can delete a template', function (): void {
@@ -132,7 +132,7 @@ it('can delete a template', function (): void {
 
 	$this->assertFileExists(templatePath($id));
 
-	delete("/templates/{$id}")->assertOk();
+	delete("/api/templates/{$id}")->assertOk();
 
 	$this->assertFileDoesNotExist(templatePath($id));
 });
@@ -144,7 +144,7 @@ it('saves a new template to a folder', function (): void {
 	$folder   = 'custom-grids';
 	$verify   = 'Test Template';
 
-	postJson('/templates', ['id' => "{$folder}/{$id}", 'template' => $template])
+	postJson('/api/templates', ['id' => "{$folder}/{$id}", 'template' => $template])
 		->assertOk()
 		->assertSee($verify);
 
@@ -156,7 +156,7 @@ it('fetches a template from a folder', function (): void {
 	$folder = 'custom-grids';
 	$verify = 'Test Template';
 
-	get("/templates/{$folder}/{$id}")
+	get("/api/templates/{$folder}/{$id}")
 		->assertOk()
 		->assertSee($verify);
 });
@@ -164,14 +164,14 @@ it('fetches a template from a folder', function (): void {
 it('checks if a template exists in a folder', function (): void {
 	$folder = 'custom-grids';
 
-	head("/templates/{$folder}/folder-template")->assertOk();
-	head("/templates/{$folder}/does-not-exist")->assertNotFound();
+	head("/api/templates/{$folder}/folder-template")->assertOk();
+	head("/api/templates/{$folder}/does-not-exist")->assertNotFound();
 });
 
 it('fetches a list of templates in a folder', function (): void {
 	$folder = 'custom-grids';
 
-	get("/templates/_list/{$folder}?filter=custom")
+	get("/api/templates/_list/{$folder}?filter=custom")
 		->assertOk()
 		->assertJson()
 		->assertSee('folder-template');
@@ -183,7 +183,7 @@ it('can delete a template from a folder', function (): void {
 
 	$this->assertFileExists(templatePath($id, $folder));
 
-	delete("/templates/{$folder}/{$id}")->assertOk();
+	delete("/api/templates/{$folder}/{$id}")->assertOk();
 
 	$this->assertFileDoesNotExist(templatePath($id, $folder));
 });
@@ -194,14 +194,14 @@ it('saves templates to nested folders', function (): void {
 	$folder   = 'level1/level2';
 	$verify   = 'Test Template';
 
-	postJson('/templates', ['id' => "{$folder}/{$id}", 'template' => $template])
+	postJson('/api/templates', ['id' => "{$folder}/{$id}", 'template' => $template])
 		->assertOk()
 		->assertSee($verify);
 
 	$this->assertFileExists(templatePath($id, $folder));
 
 	// Clean up
-	delete("/templates/{$folder}/{$id}")->assertOk();
+	delete("/api/templates/{$folder}/{$id}")->assertOk();
 });
 
 // Template duplication tests
@@ -210,13 +210,13 @@ it('handles POST request for template duplication', function (): void {
 	$sourceTemplate = templateTestData();
 	$sourceId       = 'source-template';
 
-	postJson('/templates', ['id' => $sourceId, 'template' => $sourceTemplate])
+	postJson('/api/templates', ['id' => $sourceId, 'template' => $sourceTemplate])
 		->assertOk();
 
 	$this->assertFileExists(templatePath($sourceId));
 
 	// Clean up source template
-	delete("/templates/{$sourceId}")->assertOk();
+	delete("/api/templates/{$sourceId}")->assertOk();
 });
 
 it('removes ID from duplicate data when duplicating template', function (): void {
@@ -227,7 +227,7 @@ it('removes ID from duplicate data when duplicating template', function (): void
 	$sourceTemplate = templateTestData();
 	$sourceId       = 'template-to-duplicate';
 
-	postJson('/templates', ['id' => $sourceId, 'template' => $sourceTemplate])
+	postJson('/api/templates', ['id' => $sourceId, 'template' => $sourceTemplate])
 		->assertOk();
 
 	// Note: The actual duplication happens in the admin UI with POST to /admin/templates/new
@@ -235,7 +235,7 @@ it('removes ID from duplicate data when duplicating template', function (): void
 	// This ensures the user must provide a new ID for the duplicate
 
 	// Clean up
-	delete("/templates/{$sourceId}")->assertOk();
+	delete("/api/templates/{$sourceId}")->assertOk();
 });
 
 it('sets template path to new when duplicating', function (): void {
@@ -249,13 +249,13 @@ it('sets template path to new when duplicating', function (): void {
 	$sourceTemplate = templateTestData();
 	$sourceId       = 'duplicate-source';
 
-	postJson('/templates', ['id' => $sourceId, 'template' => $sourceTemplate])
+	postJson('/api/templates', ['id' => $sourceId, 'template' => $sourceTemplate])
 		->assertOk();
 
 	$this->assertFileExists(templatePath($sourceId));
 
 	// Clean up
-	delete("/templates/{$sourceId}")->assertOk();
+	delete("/api/templates/{$sourceId}")->assertOk();
 });
 
 it('duplicates template with modified content', function (): void {
@@ -263,14 +263,14 @@ it('duplicates template with modified content', function (): void {
 	$originalTemplate = '{% extends "base.twig" %}{% block content %}Original Content{% endblock %}';
 	$originalId       = 'original-for-duplication';
 
-	postJson('/templates', ['id' => $originalId, 'template' => $originalTemplate])
+	postJson('/api/templates', ['id' => $originalId, 'template' => $originalTemplate])
 		->assertOk();
 
 	// Create duplicate with new ID and modified content
 	$duplicateTemplate = '{% extends "base.twig" %}{% block content %}Duplicated Content{% endblock %}';
 	$duplicateId       = 'duplicated-template';
 
-	postJson('/templates', ['id' => $duplicateId, 'template' => $duplicateTemplate])
+	postJson('/api/templates', ['id' => $duplicateId, 'template' => $duplicateTemplate])
 		->assertOk();
 
 	// Verify both templates exist and have different content
@@ -284,8 +284,8 @@ it('duplicates template with modified content', function (): void {
 	expect($duplicateContent)->toContain('Duplicated Content');
 
 	// Clean up
-	delete("/templates/{$originalId}")->assertOk();
-	delete("/templates/{$duplicateId}")->assertOk();
+	delete("/api/templates/{$originalId}")->assertOk();
+	delete("/api/templates/{$duplicateId}")->assertOk();
 });
 
 it('can duplicate template to different folder', function (): void {
@@ -293,13 +293,13 @@ it('can duplicate template to different folder', function (): void {
 	$originalTemplate = templateTestData();
 	$originalId       = 'root-template';
 
-	postJson('/templates', ['id' => $originalId, 'template' => $originalTemplate])
+	postJson('/api/templates', ['id' => $originalId, 'template' => $originalTemplate])
 		->assertOk();
 
 	// Duplicate to folder
 	$duplicateId = 'custom-grids/duplicated-in-folder';
 
-	postJson('/templates', ['id' => $duplicateId, 'template' => $originalTemplate])
+	postJson('/api/templates', ['id' => $duplicateId, 'template' => $originalTemplate])
 		->assertOk();
 
 	// Verify both exist
@@ -307,6 +307,6 @@ it('can duplicate template to different folder', function (): void {
 	$this->assertFileExists(templatePath('duplicated-in-folder', 'custom-grids'));
 
 	// Clean up
-	delete("/templates/{$originalId}")->assertOk();
-	delete("/templates/{$duplicateId}")->assertOk();
+	delete("/api/templates/{$originalId}")->assertOk();
+	delete("/api/templates/{$duplicateId}")->assertOk();
 });

@@ -21,11 +21,6 @@ class SentryMiddleware implements MiddlewareInterface
 {
 	public const SALT = 's3ntryR0cks';
 
-	/** Domains to completely ignore (corrupted/problematic installations) */
-	private const IGNORED_DOMAINS = [
-		'komiksdiner',
-	];
-
 	/** @var array<string,mixed> */
 	private const DEFAULT_OPTIONS = [
 		'dsn'                  => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
@@ -47,6 +42,7 @@ class SentryMiddleware implements MiddlewareInterface
 			\ArgumentCountError::class, // Constructor mismatch - stale deployment or corrupted installation
 			\DI\DependencyException::class, // Corrupted installation - missing classes or version mismatch
 			\DI\NotFoundException::class,
+			\DI\Definition\Exception\InvalidDefinition::class, // Partial install — container.php and class files out of sync (different uploaded versions)
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
@@ -103,17 +99,43 @@ class SentryMiddleware implements MiddlewareInterface
 			// Server configuration errors
 			'Class "finfo" not found',
 			'No space left on device',
+			// Filesystem-level locking conflict — typically when the install
+			// lives on iCloud Drive / Dropbox / OneDrive where the sync daemon
+			// holds locks that conflict with PHP's file writes (EDEADLK).
+			'Resource deadlock avoided',
 			// Corrupted installation - missing class/function files or DI wiring mismatch
 			'Callable TotalCMS\\',
 			'" not found',
 			'must be of type',
 			'Failed opening required',
+			// Free-function from a vendor namespace undefined — only happens
+			// when Composer's `files` autoload didn't load (incomplete upload,
+			// corrupted autoload_files.php, vendor package missing entirely).
+			// T3 code doesn't call vendor namespaced free functions directly,
+			// so realistic sources of this in production are all broken installs.
+			'Call to undefined function',
+			// Method exists in one file but not its declaring class on disk —
+			// caused by partial uploads where the caller got the new version
+			// but the callee is still the old version. PHPStan catches real
+			// missing-method bugs in T3 CI before merge, so by the time this
+			// reaches production Sentry it's overwhelmingly install drift.
+			'Call to undefined method',
 			// License API rate limiting (not a bug, user/bot issue)
 			'Rate limit exceeded',
 			// License API unreachable (server network issue, not a bug)
 			'License validation failed and no cached data available',
 			// Bot/scanner probing for non-existent collections
 			'Collection not found',
+			// Built-in or user schema missing from the install — either the
+			// operator deleted a schema in production, the install is corrupted,
+			// or the data dir lives on a sync-managed filesystem (iCloud,
+			// Dropbox, etc.) where the schema cache has been evicted.
+			'Schema type does not exist',
+			// File-save endpoint hit on a property whose schema type isn't a
+			// file-class (image/file/depot/gallery). Schema misconfiguration
+			// on the customer's side — the system is correctly rejecting an
+			// invalid request, not a T3 bug.
+			'Unknown saver service type for object',
 			// User schema misconfiguration
 			'is marked as unique but is not included in the schema index',
 			// User Twig template passing null to adapter methods
@@ -184,20 +206,22 @@ class SentryMiddleware implements MiddlewareInterface
 	 */
 	private static function filterEvent(Event $event, ?EventHint $hint): ?Event
 	{
-		// Check if this domain should be completely ignored
-		$host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
-		foreach (self::IGNORED_DOMAINS as $domain) {
-			if (stripos((string)$host, $domain) !== false) {
-				return null;
-			}
-		}
-
 		if (!$hint instanceof EventHint || $hint->exception === null) {
 			return $event;
 		}
 
 		$exception = $hint->exception;
 		$config    = self::$filterConfig;
+
+		// Drop exceptions thrown from third-party extension code. Extensions
+		// live at `tcms-data/extensions/{vendor}/{name}/` and are owned by
+		// their authors — T3 can't fix bugs in their code, so reporting them
+		// in T3's Sentry just adds noise. Match on the canonical Unix path
+		// segment plus the Windows variant for cross-platform installs.
+		$file = (string)$exception->getFile();
+		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
+			return null;
+		}
 
 		// Check if this exception class should be filtered as a user error
 		$userErrorExceptions = $config['user_error_exceptions'] ?? [];

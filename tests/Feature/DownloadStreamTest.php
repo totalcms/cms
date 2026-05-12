@@ -23,7 +23,7 @@ describe('Download and Stream API', function (): void {
 			'name'   => 'Test Files',
 			'schema' => 'file',
 		];
-		postJson('/collections', $collection);
+		postJson('/api/collections', $collection);
 
 		// Create test depot collection
 		$depotCollection = [
@@ -31,20 +31,20 @@ describe('Download and Stream API', function (): void {
 			'name'   => 'Test Depot',
 			'schema' => 'depot',
 		];
-		postJson('/collections', $depotCollection);
+		postJson('/api/collections', $depotCollection);
 
 		// Create test objects
 		$fileObject = [
 			'id'    => 'test-file',
 			'title' => 'Test File Object',
 		];
-		postJson('/collections/test-files', $fileObject);
+		postJson('/api/collections/test-files', $fileObject);
 
 		$depotObject = [
 			'id'    => 'test-depot-obj',
 			'title' => 'Test Depot Object',
 		];
-		postJson('/collections/test-depot', $depotObject);
+		postJson('/api/collections/test-depot', $depotObject);
 	});
 
 	describe('Download API (/download/)', function (): void {

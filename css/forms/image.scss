@@ -67,7 +67,10 @@ dialog.image-link-dialog {
 	max-height : none;
 }
 
-.cms-modal {
+// Scoped to the image-edit dialog only — every `HTMLUtils::dialog()` carries
+// `cms-modal`, so a bare `.cms-modal .image-preview` rule would also frame
+// empty image fields rendered inside unrelated dialogs (e.g. deck items).
+.image-edit-dialog {
 	.image-preview {
 		border     : 10px solid oklch(var(--totalform-purewhite));
 		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
@@ -136,7 +139,7 @@ dialog.image-link-dialog {
 		}
 	}
 
-	&.image-edit-dialog hr {
+	hr {
 		opacity       : 0.2;
 		margin        : 1.25rem;
 		margin-bottom : 0;

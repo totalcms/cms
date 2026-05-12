@@ -2,6 +2,164 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.1] - 2026-05-12
+
+This is a major release that turns Total CMS into a platform. New top-level subsystems (Site Builder, Extensions, CLI, Composer distribution, Setup Wizard, Event system) sit alongside the existing collections/templates engine. The version jump from 3.2 to 3.5 reflects the scope.
+
+### Added — Site Builder
+
+- **Dynamic page router**: New `PageRouterMiddleware` matches request paths against the `builder-pages` collection at request time. Add a page in the admin, it's live — no build, no generate step. Templated URLs like `/blog/{id}` route to the matching object automatically
+- **builder-pages schema**: Reserved `builder-page` schema with fields for routes, templates, draft/nav flags, free-form per-page `data` JSON, HTTP status (for 404/410/redirects), sitemap inclusion, page middleware, and access groups
+- **Builder admin UI**: Dedicated `/admin/builder` view with drag-and-drop page ordering, hierarchical sidebar, live reload for pages and templates, and a page-inspector overlay for debugging routes
+- **Starter kits**: `tcms builder:init <starter>` scaffolds from bundled starters (`minimal`, `blog`, `business`, `portfolio`). Each starter ships templates, assets, and a `jumpstart.json` that seeds pages and demo content via the JumpStart importer
+- **Frontend asset pipeline**: Optional Vite scaffold via `tcms builder:frontend` (or `--frontend` flag on `builder:init`) drops a customer-editable `frontend/` directory compiling to `public/assets/`
+- **Template Designer**: `{% templatedesigner %}` Twig tag for inline template definition with public token-gated sync API. Companion `.designer.json` files alongside `.twig` files
+- **Twig helpers**: `cms.builder.nav()`, `cms.builder.subnav()`, `cms.builder.navTree()`, `cms.builder.url(pageId, params)`, `cms.builder.css/js/asset()` with mtime cache-busting
+- **Order management**: Sidebar order persisted in `.order.json` alongside the collection — separate from the page records so a reorder is one small file write
+- **Builder CLI commands**: `builder:init`, `builder:frontend`, `builder:routes` (audit page+collection routes with conflict detection), `builder:history` (template version snapshots)
+- **Page middleware**: Extensible per-page middleware system with built-in `auth` middleware for gating pages behind login + access groups
+
+### Added — Extension System
+
+- **Three-phase architecture**: Discovery → Register → Boot lifecycle. Extensions live at `tcms-data/extensions/{vendor}/{name}/` and integrate via a curated `ExtensionContext` API (never touch the raw container directly)
+- **Extension points**: Twig functions/filters, CLI commands, routes (API/public/admin), admin nav items, dashboard widgets, custom field types, event listeners, admin assets, container definitions, schemas
+- **Capability detection**: After `register()`, the system detects what the extension actually registered (not self-declared). Capabilities become toggleable permissions in the admin UI
+- **Per-extension settings**: Custom settings schemas at `tcms-data/.system/extension-settings/{vendor}/{name}.json` using the same `type` + `field` format as collection schemas. Auto-generated settings forms via `TotalFormFactory::extensionSettings()`
+- **Admin management UI**: Enable/disable, auto-generated permission toggles, custom settings forms, edition checker for license-gated extensions
+- **Extension CLI**: `extension:list`, `extension:enable`, `extension:disable`, `extension:remove` with collision protection (extensions cannot shadow built-in command names)
+- **Twig collision protection**: `TwigExtensionRegistrar` blocks extensions from overriding core Twig functions/filters and warns on extension-to-extension collisions
+- **Fault isolation**: Every `register()` and `boot()` call is wrapped in try/catch. Failures are logged, recorded in state, and the extension is skipped without affecting core
+- **Bundled extensions**: `geo-redirect` (region-based URL redirects) and `ab-split` (A/B testing)
+- **Extension Starter repo**: Template repo demonstrating every extension point (`totalcms/extension-starter`)
+
+### Added — CLI Tool (`tcms`)
+
+- **Symfony Console application** at `vendor/bin/tcms` (Composer install) or `resources/bin/tcms` (zip install) with human-readable tables by default and `--json` flag for machine-readable output
+- **Collection commands**: `collection:list`, `collection:get`, `collection:export`, `collection:import`, `collection:query`
+- **Object commands**: `object:list`, `object:get`, `object:export`
+- **Schema commands**: `schema:list`, `schema:get`, `schema:export`, `schema:import`
+- **JumpStart commands**: `jumpstart:export`, `jumpstart:import` — full data import/export with streaming support for large datasets
+- **Sync commands**: `pull` and `push` for syncing collections/objects/schemas between environments
+- **Update commands**: `update:check`, `update:apply`, `update:rollback` for self-service version updates with markdown release notes and expire-date validation
+- **Utility commands**: `cache:clear`, `info`, `deck:import`, `jobs:process` (for cron-driven job queue processing)
+
+### Added — Composer Distribution
+
+- **Public Packagist**: `totalcms/cms` (the library) and `totalcms/totalcms` (the project skeleton) — install via `composer create-project totalcms/totalcms mysite`
+- **Project template**: New `totalcms-project` repo with `composer.json`, `public/index.php`, `public/.htaccess`, and a `bin/post-install.php` interactive setup script (Layout: root or subpath; Starter pack; Frontend pipeline)
+- **`PathResolver`**: Distinguishes package root (where `src/` lives — vendor for Composer installs) from project root (where `cache/`, `tmp/`, `logs/`, `tcms-data/` live)
+- **`BasePathMiddleware`**: Replaces selective/basepath. Correctly handles subpath installs where T3 lives at `/tcms/` instead of the docroot
+- **Self-destructing installer**: `bin/post-install.php` removes itself after a successful interactive run; every prompted decision has a direct CLI equivalent (`tcms builder:init`, `tcms builder:frontend`) so there's no second-run case
+
+### Added — Setup Wizard
+
+- **First-run web wizard**: `welcome` → `environment` → `data-path` → `account` → `license` → `server-config` → `complete`. `SetupCheckMiddleware` intercepts unrouted page requests and redirects to the current step until setup completes
+- **Account auto-login**: On successful first-user creation, the operator is signed in via `SessionLogin::establish()` so they don't have to retype credentials at the end of the wizard
+- **Email retention**: Submitted email is stashed in session before validation, so password errors don't wipe the email field on redirect. Also displayed on the complete page
+- **Server-config detection**: The server-config step detects whether `public/.htaccess` already ships (Composer install) and switches the Apache panel between "rules already in place" and "paste this in" messaging. New "managed-host" note on the Nginx panel
+- **Subpath layout**: `post-install.php` supports a subpath option that moves `public/index.php` and `public/.htaccess` into `public/tcms/` and bumps `TCMS_PROJECT_ROOT` dirname depth
+
+### Added — Auth: Public Registration & SessionLogin
+
+- **`SessionLogin` service**: Single source of truth for "log this user in." Writes the four canonical auth session keys in the same order across every entry point (regular login, setup wizard, public registration). Does not authenticate — caller verifies the user first
+- **Public registration endpoint**: `POST /admin/register/{collection}` with opt-in allow-list (`auth.publicRegistration` in config). Creates the user via `ObjectSaver`, calls `LoginService::authenticate()` for verification, then `SessionLogin::establish()`. Returns JSON matching `ObjectSaveAction`'s shape so the form builder can chain deferred uploads + actions
+- **Form-builder integration**: `cms.form.builder('members', {register: true})` retargets the form at `/admin/register/{collection}`, forces `addOnly: true`, and rewrites `data-api` to drop the `/api` prefix
+- **Login with email OR ID**: New `auth.loginWith` config (`'email'`, `'id'`, or `'both'`) — `UserValidationService::validateUser($idOrEmail, $collection)` dispatches transparently
+- **Login performance**: Shaved 4-5 seconds off the login response time by delaying license validation to the next admin request (via `LICENSE_CHECK_DUE` flag picked up by middleware)
+
+### Added — Event System
+
+- **Centralized `EventDispatcher`**: Synchronous, priority-ordered event system at `src/Domain/Event/EventDispatcher.php`. Replaces ad-hoc hooks scattered across services
+- **15 core events**: `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
+- **Standardized payloads**: Each event carries a typed payload class (`ObjectEventPayload`, `UserEventPayload`, etc.) for safe consumer access
+- **Extension listeners**: Extensions register listeners via `$context->addEventListener()` — wrapped in try/catch so a broken listener cannot affect core operations
+- **Import events**: `import.completed` event includes updated/created IDs for downstream consumers
+
+### Added — Fields & Forms
+
+- **Card field**: New composite field type letting a schema define a nested object structure inline (file/image/text children in one parent)
+- **Secret field**: New field type for storing API keys, tokens, etc. — masked in the UI, full value preserved in storage
+- **File field in cards and decks**: Upload files to nested properties inside card and deck-item contexts. Unified segment-based URLs for nested uploads
+- **Image field in deck**: Image uploads work inside deck items with the same dropzone behavior as top-level fields
+- **Styled text in deck items**: File uploads from styled text now correctly target the deck item's owning property
+- **`mergeStoredValues` setting**: New setting for `propertyOptions` that merges stored values into the dropdown options (useful when stored data references options no longer in the schema)
+- **`fullScreen` code editor**: Toggle button to expand the code editor to fullscreen for long templates
+- **Password field `numeric` setting**: Configures the input mode for numeric-only PINs
+- **`fieldColumns` improvements**: Refinements to the multi-column radio and multicheckbox layout
+
+### Added — Other
+
+- **Sitemap auto-generation per collection**: New `sitemap-meta` reserved schema with auto-built sitemaps for collections that opt in. Sitemap index for sites with many collections
+- **`cms.parseData()` Twig function**: New helper for parsing structured data from strings
+- **Reserved `sitemap-meta` schema**: For per-object sitemap metadata (change frequency, priority, etc.)
+- **Page inspector overlay**: Dev-mode admin overlay showing which page record + template is rendering the current view
+- **Quicknav redesign**: Better scoring, new icons, hidden legacy schemas (`blog-legacy`)
+- **Dashboard welcome state**: New installs show a welcome message until the operator has 3+ collections
+- **Dashboard update notifications**: Available updates surface on the admin dashboard
+- **Emergency cache clear endpoint**: `/emergency/cache/clear` for customer self-service when the admin is unreachable
+- **`OperationResult` class**: Standardized success/failure return type for services that need richer error info than booleans
+
+### Enhanced
+
+- **CodeMirror upgrade**: Upgraded from CodeMirror 5 to CodeMirror 6 across the admin (code editor, styled text code view, template editor, JSON field)
+- **HTMX 4 upgrade**: From HTMX 4.0.0-alpha7 to 4.0.0-beta3 with corresponding `htmx:confirm` handler updates and module-loading fix (HTMX must load as a classic script, not a module, so `window.htmx` is set as a side effect)
+- **Templated URLs implicitly pretty**: Collections with templated URLs (containing `{id}`-style placeholders) are now rendered as pretty URLs regardless of the `prettyUrl` flag. The flag only applies to non-templated URL prefixes — writing a template URL with the flag off used to silently produce broken URLs
+- **Frontend asset registrar**: Unified `cms.assetsHead/Body` (core T3 + extension CSS/JS) with mtime cache-busting and module/preload control. Extensions register assets through the same registrar that ships core assets
+- **License data caching**: Better multi-backend caching with 24-hour TTL reduces license-API round-trips
+- **Settings system**: New deep-merge configuration system. Override specific nested settings via `config/tcms.php` without replacing entire arrays. Type safety on all array properties
+- **JumpStart importer**: Reserved-collection entries now support overrides — `{"id": "blog", "url": "/blog/{id}"}` creates the collection with the bundled schema but sets a custom URL/sortBy
+- **`postJson()` test helper**: Test framework gained `postJson()` for cleaner JSON-endpoint testing patterns
+- **Admin layouts**: Refreshed extensions UI, dashboard accent colors, sidebar padding, schema/extension icons, button styles
+- **Extension schemas as reserved**: Extension-registered schemas now classify as reserved (cannot be edited from the admin schema editor)
+- **Sentry filtering**: Many additions over the release — see commits for the full set. Notably: third-party extension origin filter (drops events from `tcms-data/extensions/`), better SyntaxError catch via `event.exception.values[0].type` fallback, partial-install patterns (Call to undefined function/method, missing classes, invalid DI definitions), iCloud-on-flat-file deadlock pattern, schema-type-missing pattern
+- **Build system**: Various improvements for release zipping, version validation, permission fixes, dynamic dist `composer.json` generation
+- **Login form**: Now supports username OR email per the `auth.loginWith` config, with adaptive field labels and input types
+- **Dev mode + cache events**: Devmode toggle and cache clear now dispatch events so listeners can react
+- **Job queue cron**: Updated to use the `tcms jobs:process` CLI command instead of a custom PHP entry point
+- **Schema docs**: Type field is now optional (inferred from field type when omitted)
+
+### Fixed
+
+- **HTMX module loading**: `htmx.min.js` now loads as a classic script — loading it as `type="module"` left `window.htmx` undefined and broke every htmx global reference (admin-table sorting, inline `<script>` blocks in templates)
+- **TotalForm idField null guard**: `setupFieldsForEdit` no longer crashes when the schema has no `id` field
+- **HTMX confirm handler**: Updated for HTMX 4's event detail shape (`e.target` + `e.detail.ctx.confirm` instead of the removed `e.detail.elt`)
+- **Field visibility race**: Visibility-change events now fire correctly in both directions (the previous check used a class that was never set)
+- **SimpleForm field wrappers**: Lightweight field wrappers now implement `isVisible()` so they work with the shared `FieldVisibility` controller
+- **Form field initialization race**: Resolved form fields being added after page load
+- **Card cloning files/images**: Cloning a deck item with file/image fields no longer carries over the original's file references
+- **Deck workflow improvements**: Various fixes for file/image uploads, save state, cloning, autofocus on new deck items
+- **Image preview resizing**: Preview window now resizes correctly with the image
+- **Login route conflicts**: Fixed missed login route updates after the initial routing refactor
+- **404 from page router**: Page router 404s no longer affect admin and API requests
+- **Visibility + isUnsaved conflict**: Resolved a conflict where toggling visibility marked fields as unsaved
+- **1Password autofill on ID fields**: 1Password no longer offers to autofill internal ID inputs
+- **Deck modalSize setting**: Deck item dialogs honor the configured modal size
+- **Depot subfolder downloads**: Downloads and links now work correctly for files in depot subfolders
+- **Code box height on type**: Fixed code editor jumping when typing
+- **Playground localStorage**: Persistent autosave fix for the Twig Playground
+- **Form field settings save**: Fixed settings not persisting in some edge cases
+- **Styled text popover positioning**: Various positioning fixes for dialogs and popovers
+- **Slug escaping**: JSON output no longer escapes slashes
+- **Code field height bug**: Resolved on-type expansion bug
+- **API key form visibility**: Fixed visibility logic breaking the API key form
+- **CacheInvalidationSignal directory creation**: Fixed race in directory creation
+- **Imports validation**: File and image imports now check that paths are files, not directories
+- **Many small bug fixes** across deck, card, styled text, dataviews, and form rendering
+
+### Documentation
+
+- **New doc pages**: Site Builder (overview, CLI, admin, starters, frontend, twig functions), Extensions (overview, manifest, extension-points, schemas, events, bundled extensions, ab-split), CLI (full reference), Setup Wizard, Deployment, Updates, Sync, Card field, Secret field, Form options (with new `register` flag), JumpStart (reserved-collection overrides), Sitemap
+- **Updated docs**: Auth (loginWith, public registration), Routes (page router precedence, /api prefix), Twig (collection-filtering with new pretty-URL behavior), Forms overview
+- **Doc tags**: All `since: "3.5.0"` frontmatter tags added for new features
+- **MCP docs server**: Companion `mcp.totalcms.co` repo for serving T3 docs to AI agents
+
+### Breaking / Migration Notes
+
+- **Composer install path**: Default new installs are Composer-based. Zip installs still supported but the project structure differs (docroot → `public/`, writable dirs → project root). Existing zip installs continue to work
+- **`/api` prefix**: API routes now live under `/api/` (previously routes were at the root). Existing customer code calling T3 APIs from outside the admin needs to add the prefix. Server-side templating + Twig adapters are unaffected
+- **Template include paths**: The templates root is now namespaced. Update Twig `include` / `extends` / `embed` references to prefix the path with `templates/` — e.g. `{% include 'header.twig' %}` becomes `{% include 'templates/header.twig' %}`. Same applies anywhere a template path appears (partial references in admin forms, custom Twig functions, etc.)
+- **Whitelabel template location**: Whitelabel templates must now live under the `Whitelabel/` folder. If you have whitelabel customizations saved elsewhere, open each template in the admin and re-save it — the save flow will place it under `Whitelabel/`. Templates outside that folder will no longer be picked up by the whitelabel system
+
 ## [3.2.5] - 2026-04-21
 
 ### Enhanced

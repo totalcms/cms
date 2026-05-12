@@ -10,6 +10,7 @@ use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -34,12 +35,96 @@ class PropertyFactoryTest extends TestCase
 		);
 	}
 
+	public function testGeneratePropertyDispatchesToCardWhenFieldIsCardEvenIfTypeIsArray(): void
+	{
+		// Schemas authored in the admin editor sometimes carry `type: "array"`
+		// alongside `field: "card"`. Without dispatching on `field`, generateProperty
+		// would fall through to ArrayData and strip the children's keys, corrupting
+		// the card's `{image: ..., title: ...}` into `[imgData, text]`.
+		$cardSchema             = new SchemaData();
+		$cardSchema->id         = 'card-schema';
+		$cardSchema->properties = [
+			'image' => ['field' => 'image', 'type' => 'image'],
+			'title' => ['field' => 'text', 'type' => 'string'],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($cardSchema);
+		$this->deckCompatibilityChecker->method('isCompatible')->willReturn(true);
+
+		$definition = PropertyDefinition::fromArray([
+			'type'      => 'array', // legacy/editor-set type
+			'field'     => 'card',  // the real shape signal
+			'schemaref' => 'card-schema',
+		]);
+
+		$value = ['image' => ['name' => 'pic.jpg', 'size' => 100], 'title' => 'card title'];
+
+		$property = $this->propertyFactory->generateProperty($definition, $value);
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Data\CardData::class, $property);
+		$transformed = $property->transform();
+		$this->assertFalse(array_is_list($transformed));
+		$this->assertArrayHasKey('image', $transformed);
+		$this->assertArrayHasKey('title', $transformed);
+	}
+
+	public function testCreateCardWithImageChildPreservesObjectShape(): void
+	{
+		// Repro of Phase 2 bug: card with image child being saved as a list `[imgData, text]`
+		// instead of an object `{image: imgData, title: text}`.
+		$cardSchema             = new SchemaData();
+		$cardSchema->id         = 'card-schema';
+		$cardSchema->properties = [
+			'image' => ['field' => 'image', 'type' => 'image'],
+			'title' => ['field' => 'text', 'type' => 'string'],
+		];
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($cardSchema);
+		$this->deckCompatibilityChecker->method('isCompatible')->willReturn(true);
+
+		// What the JS form sends after `card.getValue()` — an associative object.
+		$value = [
+			'image' => [
+				'alt'        => '',
+				'name'       => '',
+				'palette'    => ['#000000', '#000000', '#000000', '#000000', '#000000'],
+				'focalpoint' => ['x' => 50, 'y' => 50],
+				'tags'       => [],
+				'exif'       => ['nodata' => ''],
+				'size'       => null,
+				'width'      => null,
+				'height'     => null,
+				'mime'       => '',
+				'link'       => '',
+				'featured'   => false,
+				'uploadDate' => '',
+			],
+			'title' => 'test card',
+		];
+
+		$definition = PropertyDefinition::fromArray([
+			'field'     => 'card',
+			'type'      => 'card',
+			'schemaref' => 'card-schema',
+		]);
+
+		$card = $this->propertyFactory->createCard($definition, $value);
+
+		$transformed = $card->transform();
+
+		// Must be an associative array with named keys, never a sequential list.
+		$this->assertFalse(array_is_list($transformed), 'CardData must serialize as object, not array');
+		$this->assertArrayHasKey('image', $transformed);
+		$this->assertArrayHasKey('title', $transformed);
+		$this->assertSame('test card', $transformed['title']);
+	}
+
 	public function testGeneratePropertyWithStringType(): void
 	{
 		$propertySchema = ['type' => 'string'];
 		$value          = 'Hello World';
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(StringData::class, $property);
 		$this->assertEquals('Hello World', $property->transform());
@@ -50,7 +135,7 @@ class PropertyFactoryTest extends TestCase
 		$propertySchema = ['type' => 'date'];
 		$value          = '2024-01-15';
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(DateData::class, $property);
 	}
@@ -60,7 +145,7 @@ class PropertyFactoryTest extends TestCase
 		$propertySchema = ['type' => 'color'];
 		$value          = '#ff0000';
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(ColorData::class, $property);
 	}
@@ -70,7 +155,7 @@ class PropertyFactoryTest extends TestCase
 		$propertySchema = ['$ref' => 'https://example.com/schemas/string.json'];
 		$value          = 'Test Value';
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(StringData::class, $property);
 		$this->assertEquals('Test Value', $property->transform());
@@ -84,7 +169,7 @@ class PropertyFactoryTest extends TestCase
 		];
 		$value = null;
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(StringData::class, $property);
 		$this->assertEquals('Default Value', $property->transform());
@@ -98,7 +183,7 @@ class PropertyFactoryTest extends TestCase
 		];
 		$value = 'Test';
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(StringData::class, $property);
 		$this->assertEquals(['maxLength' => 100], $property->settings);
@@ -109,7 +194,7 @@ class PropertyFactoryTest extends TestCase
 		$propertySchema = ['type' => 'string'];
 		$value          = null;
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(StringData::class, $property);
 	}
@@ -122,7 +207,7 @@ class PropertyFactoryTest extends TestCase
 		$this->expectException(\UnexpectedValueException::class);
 		$this->expectExceptionMessage('Unknown property type for object.');
 
-		$this->propertyFactory->generateProperty($propertySchema, $value);
+		$this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 	}
 
 	public function testCreateDeckWithEmptyValue(): void
@@ -131,7 +216,7 @@ class PropertyFactoryTest extends TestCase
 		$value          = [];
 		$settings       = ['deckref' => 'test-schema'];
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
 		$this->assertSame([], $deck->transform());
@@ -143,7 +228,7 @@ class PropertyFactoryTest extends TestCase
 		$value          = null;
 		$settings       = [];
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
 		$this->assertSame([], $deck->transform());
@@ -155,7 +240,7 @@ class PropertyFactoryTest extends TestCase
 		$value          = 'not an array';
 		$settings       = [];
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
 		$this->assertSame([], $deck->transform());
@@ -169,7 +254,7 @@ class PropertyFactoryTest extends TestCase
 		];
 		$settings = [];
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value, $settings);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
 		$deckArray = $deck->transform();
@@ -217,7 +302,7 @@ class PropertyFactoryTest extends TestCase
 			->method('isCompatible')
 			->willReturn(true);
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
 		$deckArray = $deck->transform();
@@ -266,7 +351,7 @@ class PropertyFactoryTest extends TestCase
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage("Deck schema 'incompatible' contains incompatible properties: gallery, depot");
 
-		$this->propertyFactory->createDeck($propertySchema, $value);
+		$this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value);
 	}
 
 	public function testCreateDeckWithSchemaExceptionFallsBackToOriginalData(): void
@@ -285,7 +370,7 @@ class PropertyFactoryTest extends TestCase
 			->with('error')
 			->willThrowException(new \Exception('Schema not found'));
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(DeckData::class, $deck);
 		$deckArray = $deck->transform();
@@ -322,7 +407,7 @@ class PropertyFactoryTest extends TestCase
 			->method('isCompatible')
 			->willReturn(true);
 
-		$deck = $this->propertyFactory->createDeck($propertySchema, $value);
+		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$deckArray = $deck->transform();
 		$this->assertArrayHasKey('item1', $deckArray);
@@ -464,7 +549,7 @@ class PropertyFactoryTest extends TestCase
 			'item1' => ['title' => 'Test Item'],
 		];
 
-		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
+		$property = $this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
 
 		$this->assertInstanceOf(DeckData::class, $property);
 		$this->assertEquals(['maxItems' => 5], $property->settings);
@@ -502,8 +587,45 @@ class PropertyFactoryTest extends TestCase
 			->method('isCompatible')
 			->willReturn(true);
 
-		$deck1 = $this->propertyFactory->createDeck($propertySchema1, $value);
-		$deck2 = $this->propertyFactory->createDeck($propertySchema2, $value);
+		$deck1 = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema1), $value);
+		$deck2 = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema2), $value);
+
+		$this->assertInstanceOf(DeckData::class, $deck1);
+		$this->assertInstanceOf(DeckData::class, $deck2);
+	}
+
+	/**
+	 * Canonical-path coverage: createDeck resolves the schema via the new `schemaref`
+	 * key (top-level and inside settings).
+	 */
+	public function testSchemaRefFromDifferentSchemaLocations(): void
+	{
+		$propertySchema1 = [
+			'type'      => 'deck',
+			'schemaref' => 'root-schemaref',
+		];
+		$propertySchema2 = [
+			'type'     => 'deck',
+			'settings' => ['schemaref' => 'settings-schemaref'],
+		];
+
+		$value = ['item1' => ['title' => 'Test']];
+
+		$mockSchema = new SchemaData([
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
+			'properties' => ['title' => ['type' => 'string']],
+		]);
+		$this->schemaFetcher->expects($this->exactly(2))
+			->method('fetchSchema')
+			->willReturn($mockSchema);
+
+		$this->deckCompatibilityChecker->expects($this->exactly(2))
+			->method('isCompatible')
+			->willReturn(true);
+
+		$deck1 = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema1), $value);
+		$deck2 = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema2), $value);
 
 		$this->assertInstanceOf(DeckData::class, $deck1);
 		$this->assertInstanceOf(DeckData::class, $deck2);

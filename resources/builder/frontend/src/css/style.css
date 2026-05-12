@@ -1,0 +1,35 @@
+/* Your site's stylesheet. Import partials, define variables, write rules.
+ *
+ * Compiled to ../public/assets/style.<hash>.css by Vite.
+ * Reference in your Twig layout with: {{ cms.builder.css('src/css/style.css') }}
+ */
+
+:root {
+	--color-text: #1a1a1a;
+	--color-bg: #ffffff;
+	--color-accent: #2563eb;
+	--font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+	--max-width: 72rem;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-body);
+	color: var(--color-text);
+	background: var(--color-bg);
+	line-height: 1.6;
+}
+
+a {
+	color: var(--color-accent);
+}
+
+.container {
+	max-width: var(--max-width);
+	margin: 0 auto;
+	padding: 0 1.5rem;
+}

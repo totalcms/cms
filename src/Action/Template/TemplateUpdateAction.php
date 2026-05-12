@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\JsonRenderer;
@@ -39,14 +39,20 @@ readonly class TemplateUpdateAction
 		$path = $args['path'] ?? '';
 
 		// Parse path from URL to get current location
-		[$folder, $id] = TemplateRepository::parsePath($path);
+		[$folder, $id] = TemplatePath::parse($path);
 
-		// Get updated values from JSON body (ID now contains the full path)
+		// Get updated values from JSON body
 		$newPath     = (string)($data['id'] ?? $path);
 		$template    = (string)($data['template'] ?? '');
+		$category    = (string)($data['category'] ?? '');
+
+		// Prepend category to ID if the form sent them separately
+		if ($category !== '' && !str_starts_with($newPath, $category . '/')) {
+			$newPath = $category . '/' . $newPath;
+		}
 
 		// Parse the new path
-		[$newFolder, $newId] = TemplateRepository::parsePath($newPath);
+		[$newFolder, $newId] = TemplatePath::parse($newPath);
 
 		// If the template is being moved/renamed, delete the old one
 		if ($newId !== $id || $newFolder !== $folder) {
@@ -56,8 +62,9 @@ readonly class TemplateUpdateAction
 		// Save the template (with new name/folder if changed)
 		$templateData = $this->saver->saveTemplate($newId, $template, $newFolder);
 
-		// Save designer metadata if provided
-		if (isset($data['designerEnabled']) || isset($data['designerToken'])) {
+		// Save designer metadata only for templates (not layouts, pages, partials, etc.)
+		$category = (string)($data['category'] ?? '');
+		if ($category === 'templates' && (isset($data['designerEnabled']) || isset($data['designerToken']))) {
 			$meta                  = new DesignerMetadata();
 			$meta->designerEnabled = (bool)($data['designerEnabled'] ?? false);
 			$meta->designerToken   = (string)($data['designerToken'] ?? '');

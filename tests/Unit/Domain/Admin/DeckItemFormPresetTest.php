@@ -92,10 +92,10 @@ describe('DeckItemForm preset resolution', function (): void {
 			itemId                  : 'c-1',
 		);
 
-		// Force the swapped-in deck schema and deckref so we can test in isolation.
+		// Force the swapped-in deck schema and schemaref so we can test in isolation.
 		$ref = new ReflectionClass($form);
 		$ref->getProperty('schemaData')->setValue($form, $ctx->deckSchema);
-		$ref->getProperty('deckref')->setValue($form, 'https://www.totalcms.co/schemas/deck/comment.json');
+		$ref->getProperty('schemaref')->setValue($form, 'https://www.totalcms.co/schemas/deck/comment.json');
 
 		return $form;
 	}

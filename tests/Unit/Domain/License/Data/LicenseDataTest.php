@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\License\Data\LicenseData;
 
 describe('LicenseData', function (): void {
@@ -25,6 +27,35 @@ describe('LicenseData', function (): void {
 		expect($licenseData->validationToken)->toBe('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...');
 		expect($licenseData->updatesValid)->toBe(true);
 		expect($licenseData->trialDaysRemaining)->toBe(null);
+		expect($licenseData->versionAuthorized)->toBe(true);
+		expect($licenseData->allowedVersion)->toBe(null);
+	});
+
+	test('creates from API response with versionAuthorized and allowedVersion', function (): void {
+		$response = [
+			'valid'              => true,
+			'trial'              => false,
+			'domain'             => 'example.com',
+			'edition'            => 'pro',
+			'message'            => 'License valid',
+			'validationToken'    => 'token',
+			'updatesValid'       => false,
+			'versionAuthorized'  => false,
+			'allowedVersion'     => '3.2.3',
+		];
+
+		$licenseData = LicenseData::fromApiResponse($response);
+
+		expect($licenseData->versionAuthorized)->toBe(false);
+		expect($licenseData->allowedVersion)->toBe('3.2.3');
+	});
+
+	test('versionAuthorized defaults to true when missing from response', function (): void {
+		$response    = ['valid' => true, 'edition' => 'pro'];
+		$licenseData = LicenseData::fromApiResponse($response);
+
+		expect($licenseData->versionAuthorized)->toBe(true);
+		expect($licenseData->allowedVersion)->toBeNull();
 	});
 
 	test('creates from API response with trial', function (): void {
@@ -66,6 +97,53 @@ describe('LicenseData', function (): void {
 		expect($licenseData->trialDaysRemaining)->toBe(null);
 	});
 
+	test('creates from API response with updatesExpireDate', function (): void {
+		$response = [
+			'valid'              => true,
+			'trial'              => false,
+			'domain'             => 'example.com',
+			'edition'            => 'pro',
+			'message'            => 'License valid',
+			'validationToken'    => 'token',
+			'updatesValid'       => true,
+			'updatesExpireDate'  => '2027-04-09',
+			'trialDaysRemaining' => null,
+		];
+
+		$licenseData = LicenseData::fromApiResponse($response);
+
+		expect($licenseData->updatesExpireDate)->toBe('2027-04-09');
+		expect($licenseData->updatesValid)->toBe(true);
+	});
+
+	test('creates from cached array with updatesExpireDate', function (): void {
+		$data = [
+			'valid'              => true,
+			'trial'              => false,
+			'domain'             => 'example.com',
+			'edition'            => 'pro',
+			'message'            => 'License valid',
+			'validationToken'    => 'token',
+			'updatesValid'       => false,
+			'updatesExpireDate'  => '2025-01-01',
+			'trialDaysRemaining' => null,
+			'dnsVerified'        => true,
+			'timestamp'          => 1234567890,
+		];
+
+		$licenseData = LicenseData::fromArray($data);
+
+		expect($licenseData->updatesExpireDate)->toBe('2025-01-01');
+		expect($licenseData->updatesValid)->toBe(false);
+	});
+
+	test('updatesExpireDate defaults to null', function (): void {
+		$response    = ['valid' => true, 'edition' => 'pro'];
+		$licenseData = LicenseData::fromApiResponse($response);
+
+		expect($licenseData->updatesExpireDate)->toBeNull();
+	});
+
 	test('validates cache properly', function (): void {
 		$response    = ['valid' => true, 'edition' => 'pro'];
 		$licenseData = LicenseData::fromApiResponse($response);
@@ -99,8 +177,11 @@ describe('LicenseData', function (): void {
 			message: 'Trial active',
 			validationToken: 'token123',
 			updatesValid: false,
+			updatesExpireDate: '2026-12-31',
 			trialDaysRemaining: 15,
 			dnsVerified: true,
+			versionAuthorized: false,
+			allowedVersion: '3.1.0',
 			timestamp: 1234567890
 		);
 
@@ -114,8 +195,11 @@ describe('LicenseData', function (): void {
 			'message'            => 'Trial active',
 			'validationToken'    => 'token123',
 			'updatesValid'       => false,
+			'updatesExpireDate'  => '2026-12-31',
 			'trialDaysRemaining' => 15,
 			'dnsVerified'        => true,
+			'versionAuthorized'  => false,
+			'allowedVersion'     => '3.1.0',
 			'timestamp'          => 1234567890,
 		]);
 	});

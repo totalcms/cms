@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
 it('defines the correct collection ID constant', function (): void {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Collection\Utilities;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

@@ -56,10 +56,10 @@ readonly class SendEmailAction
 		$result   = $this->emailService->sendEmail($mailerId, $emailData, user: $userData);
 
 		// Set appropriate HTTP status code
-		if (!$result['success']) {
+		if (!$result->success) {
 			$response = $response->withStatus(500);
 		}
 
-		return $this->renderer->json($response, $result);
+		return $this->renderer->json($response, $result->toArray());
 	}
 }

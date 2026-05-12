@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Stream an uploaded file (from styled text uploads) with range request support.
@@ -33,26 +34,35 @@ readonly class StreamUploadAction
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$collection = $args['collection'];
-		$id         = $args['id'];
-		$property   = $args['property'];
-		$name       = $this->decodeFilename($args['name'] ?? '');
+		$collection       = $args['collection'];
+		$id               = $args['id'];
+		$property         = $args['property'];
+		[$name, $subpath] = PathUtils::splitPath($args['path'] ?? $args['name'] ?? '');
 
-		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name)) {
+		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name, $subpath)) {
 			throw new HttpNotFoundException($request, 'File not found');
 		}
 
 		// Check collection-based protection
 		$this->enforceAccess($request, $collection, $property);
 
-		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name);
-		$fileSize = $this->uploadFetcher->fileSize($collection, $id, $property, $name);
+		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name, $subpath);
+		$fileSize = $this->uploadFetcher->fileSize($collection, $id, $property, $name, $subpath);
+
+		// Close session before streaming to release file locks
+		$this->session->save();
+
+		// Clean any output buffers to prevent memory bloat on shared hosting
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
 
 		$response = $response
 			->withHeader('Content-Type', $mimeType)
 			->withHeader('Content-Disposition', "inline; filename=\"{$name}\"")
 			->withHeader('Accept-Ranges', 'bytes')
-			->withHeader('Cache-Control', 'no-cache');
+			->withHeader('Cache-Control', 'no-cache')
+			->withHeader('X-Accel-Buffering', 'no');
 
 		// Handle range requests for video seeking
 		$rangeHeader = $request->getHeaderLine('Range');
@@ -67,7 +77,7 @@ readonly class StreamUploadAction
 			}
 
 			$contentLength = $end - $start + 1;
-			$fileStream    = $this->uploadFetcher->streamFile($collection, $id, $property, $name);
+			$fileStream    = $this->uploadFetcher->streamFile($collection, $id, $property, $name, $subpath);
 			$rangeContent  = '';
 
 			if (is_resource($fileStream) && $contentLength > 0) {
@@ -87,7 +97,7 @@ readonly class StreamUploadAction
 		// Full file response
 		return $response
 			->withHeader('Content-Length', (string)$fileSize)
-			->withBody(Stream::create($this->uploadFetcher->streamFile($collection, $id, $property, $name)));
+			->withBody(Stream::create($this->uploadFetcher->streamFile($collection, $id, $property, $name, $subpath)));
 	}
 
 	private function enforceAccess(ServerRequestInterface $request, string $collection, string $property): void
@@ -106,7 +116,7 @@ readonly class StreamUploadAction
 		}
 
 		// Protection is enabled — require authenticated user in collection groups
-		if (!$this->session->has('user') || !$this->session->has('collection')) {
+		if (!$this->session->has(SessionKeys::AUTH_USER) || !$this->session->has(SessionKeys::AUTH_COLLECTION)) {
 			throw new HttpForbiddenException($request, 'Authentication required');
 		}
 
@@ -120,10 +130,5 @@ readonly class StreamUploadAction
 		if (!$this->userValidator->validateUserInGroups($userID, $collectionData->groups, $userCollection)) {
 			throw new HttpForbiddenException($request, 'Access denied');
 		}
-	}
-
-	private function decodeFilename(string $filename): string
-	{
-		return str_replace('+', ' ', urldecode($filename));
 	}
 }

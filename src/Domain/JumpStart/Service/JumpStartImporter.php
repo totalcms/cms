@@ -14,11 +14,16 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\OperationResult;
+use TotalCMS\Support\PathResolver;
 
 /** @SuppressWarnings("PHPMD.ExcessiveClassComplexity") */
 class JumpStartImporter
 {
-	private const DEMO_JUMPSTART_FILE = __DIR__ . '/../../../../resources/jumpstart/demo.json';
+	private function demoJumpstartFile(): string
+	{
+		return PathResolver::packageRoot() . '/resources/jumpstart/demo.json';
+	}
 
 	private readonly LoggerInterface $logger;
 
@@ -55,10 +60,8 @@ class JumpStartImporter
 
 	/**
 	 * @param string $filePath Path to the jumpstart JSON file
-	 *
-	 * @return array{success:bool,results:array<int,string>,errors:array<int,string>,summary:array<string,int>}
 	 */
-	public function importFromFile(string $filePath): array
+	public function importFromFile(string $filePath): OperationResult
 	{
 		if (!file_exists($filePath)) {
 			throw new \Exception("Jumpstart file not found: {$filePath}");
@@ -77,20 +80,15 @@ class JumpStartImporter
 		return $this->importFromDefinition($definition);
 	}
 
-	/**
-	 * @return array{success:bool,results:array<int,string>,errors:array<int,string>,summary:array<string,int>}
-	 */
-	public function importDemoDefinition(): array
+	public function importDemoDefinition(): OperationResult
 	{
-		return $this->importFromFile(self::DEMO_JUMPSTART_FILE);
+		return $this->importFromFile($this->demoJumpstartFile());
 	}
 
 	/**
 	 * @param array<string, mixed> $definition
-	 *
-	 * @return array{success:bool,results:array<int,string>,errors:array<int,string>,summary:array<string,int>}
 	 */
-	public function importFromDefinition(array $definition): array
+	public function importFromDefinition(array $definition): OperationResult
 	{
 		$this->results = [];
 		$this->errors  = [];
@@ -120,12 +118,17 @@ class JumpStartImporter
 			$this->processFactory($definition['factory']);
 		}
 
-		return [
-			'success' => $this->errors === [],
+		$data = [
 			'results' => $this->results,
 			'errors'  => $this->errors,
 			'summary' => $this->generateSummary(),
 		];
+
+		if ($this->errors !== []) {
+			return OperationResult::failure('Import completed with errors', null, $data);
+		}
+
+		return OperationResult::success('Import completed successfully', $data);
 	}
 
 	/**
@@ -173,24 +176,47 @@ class JumpStartImporter
 			}
 		}
 
-		// Process reserved collections
+		// Process reserved collections. Entries can be either:
+		//   - a string id ("blog")               -> create with defaults
+		//   - an object with id + overrides      -> create, then patch
+		// The object form lets starters set things like `url`, `prettyUrl`,
+		// `sortBy`, `name`, etc. on a reserved collection without losing the
+		// built-in schema binding.
 		if (isset($collections['reserved'])) {
-			foreach ($collections['reserved'] as $collectionType) {
+			foreach ($collections['reserved'] as $entry) {
+				$id = is_string($entry) ? $entry : (string)($entry['id'] ?? 'unknown');
 				try {
-					$this->createReservedCollection($collectionType);
+					$this->createReservedCollection($entry);
 				} catch (\Exception $e) {
-					$this->addError(sprintf('Collection %s: %s', $collectionType, $e->getMessage()));
+					$this->addError(sprintf('Collection %s: %s', $id, $e->getMessage()));
 				}
 			}
 		}
 	}
 
-	private function createReservedCollection(string $collectionType): void
+	/** @param string|array<string,mixed> $entry */
+	private function createReservedCollection(string|array $entry): void
 	{
-		$collection = $this->collectionFetcher->fetchOrCreateReserved($collectionType);
-		if (!$collection instanceof CollectionData) {
-			throw new \Exception("Error creating Reserved Collection: {$collectionType}");
+		$id = is_string($entry) ? $entry : (string)($entry['id'] ?? '');
+		if ($id === '') {
+			throw new \Exception('Reserved collection entry missing id');
 		}
+
+		$collection = $this->collectionFetcher->fetchOrCreateReserved($id);
+		if (!$collection instanceof CollectionData) {
+			throw new \Exception("Error creating Reserved Collection: {$id}");
+		}
+
+		// Apply optional overrides (url, prettyUrl, sortBy, etc.) without
+		// touching the underlying schema binding.
+		if (is_array($entry)) {
+			$overrides = $entry;
+			unset($overrides['id']);
+			if ($overrides !== []) {
+				$this->collectionSaver->patchCollection($id, $overrides);
+			}
+		}
+
 		$this->addResult(sprintf('Collection %s: created', $collection->id));
 	}
 

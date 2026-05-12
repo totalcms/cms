@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Sitemap;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Sitemap\Exception\SitemapDisabledException;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Renderer\XmlRenderer;
 
@@ -30,7 +31,13 @@ readonly class SitemapFactoryAction
 			unset($params['filter']);
 		}
 
-		$xml = $this->sitemapBuilder->buildSitemap($collection, $params);
+		try {
+			$xml = $this->sitemapBuilder->buildSitemap($collection, $params);
+		} catch (SitemapDisabledException) {
+			// Don't leak whether a disabled sitemap exists — return 404 like any
+			// missing resource.
+			return $response->withStatus(404);
+		}
 
 		return $this->xmlRenderer->xml($response, $xml);
 	}

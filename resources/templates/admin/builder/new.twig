@@ -1,0 +1,15 @@
+<header>
+	<h1><a href="builder">{{ t('builder.crumb') }}</a> / <span>{{ t('builder.crumb_new_template') }}</span></h1>
+</header>
+
+{{ cms.form.template({
+	save        : cms.auth.canAccessTemplates() ? "Save" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	newActions : [
+		{
+			"action" : "redirect-object",
+			"link"   : "builder/"
+		}
+	],
+}) }}

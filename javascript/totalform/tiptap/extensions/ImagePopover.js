@@ -225,11 +225,31 @@ class ImagePopoverManager {
 		const popoverWidth = this.popover.offsetWidth;
 		const popoverHeight = this.popover.offsetHeight;
 		const wrapperWidth = editorWrapper.clientWidth;
+		const gap = 8;
 
-		// Vertical: prefer above the image, fall back to below
-		let top = domRect.top - wrapperRect.top + editorWrapper.scrollTop - popoverHeight - 8;
-		if (top < 0) {
-			top = domRect.bottom - wrapperRect.top + editorWrapper.scrollTop + 8;
+		// The visible portion of the image inside the wrapper's scroll viewport.
+		// This handles tall images that extend past the top or bottom of the viewport.
+		const visibleTop = Math.max(domRect.top, wrapperRect.top);
+		const visibleBottom = Math.min(domRect.bottom, wrapperRect.bottom);
+		const spaceAbove = visibleTop - wrapperRect.top;
+		const spaceBelow = wrapperRect.bottom - visibleBottom;
+
+		// Convert visible edges from viewport coords to wrapper-content coords
+		// (the popover is position:absolute inside the wrapper)
+		const visibleTopContent = visibleTop - wrapperRect.top + editorWrapper.scrollTop;
+		const visibleBottomContent = visibleBottom - wrapperRect.top + editorWrapper.scrollTop;
+
+		let top;
+		if (spaceAbove >= popoverHeight + gap) {
+			// Preferred: above the image (or its visible top edge)
+			top = visibleTopContent - popoverHeight - gap;
+		} else if (spaceBelow >= popoverHeight + gap) {
+			// Fallback: below the image (or its visible bottom edge)
+			top = visibleBottomContent + gap;
+		} else {
+			// Image fills the viewport — overlay on the visible top of the image
+			// so the popover is always discoverable
+			top = visibleTopContent + gap;
 		}
 
 		// Horizontal: center on the image, then clamp to wrapper bounds

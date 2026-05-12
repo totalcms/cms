@@ -152,16 +152,24 @@ EOD;
 		$updatesValidUntil = $decoded->updatesValidUntil ?? null;
 		$updatesValid      = $this->checkUpdatesValid($updatesValidUntil);
 
+		// Check if current version is authorized (from JWT or fall back to updatesValid)
+		$allowedVersion    = $decoded->allowedVersion ?? null;
+		$versionAuthorized = $allowedVersion !== null
+			? version_compare(Version::get(), $allowedVersion, '<=')
+			: $updatesValid;
+
 		return new LicenseData(
 			valid              : true,
 			trial              : false,
 			domain             : $decoded->domain,
 			edition            : $edition,
 			message            : $this->getStatusMessage($updatesValid, $updatesValidUntil),
-			validationToken    : null, // Offline licenses don't need validation tokens
+			validationToken    : null,
 			updatesValid       : $updatesValid,
 			trialDaysRemaining : null,
-			dnsVerified        : true, // Offline licenses are inherently verified
+			dnsVerified        : true,
+			versionAuthorized  : $versionAuthorized,
+			allowedVersion     : $allowedVersion,
 			timestamp          : time(),
 		);
 	}
@@ -276,6 +284,7 @@ EOD;
 				'licenseKey'        => $decoded->licenseKey ?? 'unknown',
 				'updatesValidUntil' => $updatesValidUntil,
 				'updatesValid'      => $updatesValid,
+				'allowedVersion'    => $decoded->allowedVersion ?? null,
 				'issuedAt'          => $decoded->issuedAt ?? null,
 				'type'              => $decoded->type ?? 'unknown',
 			];

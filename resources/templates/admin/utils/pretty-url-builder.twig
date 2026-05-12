@@ -6,7 +6,7 @@
 
 	<form id="pretty-url-builder"
 		class="totalform"
-		action="{{ cms.api }}/admin/utils/pretty-url-builder"
+		action="{{ cms.dashboard }}/utils/pretty-url-builder"
 		method="POST"
 		data-disabled>
 		<div>
@@ -15,16 +15,41 @@
 				<option value="">{{ t('pretty_url.select_collection') }}</option>
 				{% for collection in sortByKey(cms.collection.list(), "id") %}
 					<option value="{{ collection.id }}"
+						data-url="{{ collection.url }}"
 						{% if postData.collection == collection.id %}selected{% endif %}>
 						{{ collection.name }}
 					</option>
 				{% endfor %}
 			</select>
 			<label for="path" style="margin-top:1rem">{{ t('pretty_url.path_label') }}</label>
-			<input type="text" name="path" value="{{ postData.path }}" placeholder="{{ t('pretty_url.path_ph') }}"/>
+			<input type="text" name="path" id="path" value="{{ postData.path }}" placeholder="{{ t('pretty_url.path_ph') }}"/>
 		</div>
 		<button class="cms-button" type="submit">{{ t('pretty_url.generate_btn') }}</button>
 	</form>
+
+	<script>
+	document.getElementById('collection')?.addEventListener('change', function() {
+		const option = this.options[this.selectedIndex];
+		const url    = option?.dataset.url || '';
+		const input  = document.getElementById('path');
+		if (input) {
+			input.value = url;
+		}
+	});
+	</script>
+
+	{% if postData.collection %}
+		{% set builderPage = cms.admin.builderRouteForCollection(postData.collection) %}
+		{% if builderPage %}
+			<div class="warning-box">
+				<div>
+					<strong>Site Builder handles this collection's URLs.</strong>
+					The builder page "{{ builderPage.title }}" has route <code>{{ builderPage.route }}</code> which matches this collection's URL pattern.
+					No rewrite rules are needed when using Site Builder.
+				</div>
+			</div>
+		{% endif %}
+	{% endif %}
 
 	{% if postData.path and postData.collection %}
 
@@ -34,16 +59,30 @@
 
 				<h2>{{ t('pretty_url.rules_title', {'{collection}': collectionData.name}) }}</h2>
 
+				{% set prettyUrl = cms.collection.prettyUrl(postData.path) %}
 				<section>
 				<h3>{{ t('pretty_url.save_path', {'{collection}': collectionData.name}) }}</h3>
-				<p>{{ t('pretty_url.edit_desc') }}
-				<a href="collections/{{ postData.collection }}/edit" target="_blank">{{ t('pretty_url.edit_now') }} ↗</a></p>
-				<pre></code>{{ cms.collection.prettyUrl(postData.path) }}</code></pre>
-				</section>
-
-				{% if collectionData.url is empty %}
-				<p class="cms-error">{{ t('pretty_url.no_url_saved') }}</p>
+				<p>Save <code>{{ prettyUrl }}</code> as the URL for {{ collectionData.name }} and enable pretty URLs.</p>
+				{% if collectionData.url == prettyUrl and collectionData.prettyUrl %}
+					<p class="cms-success" style="padding: 0.4rem 0.75rem;">Already saved</p>
+				{% else %}
+					<form class="simple-form totalform"
+						data-route="/collections/{{ postData.collection }}"
+						data-method="PATCH"
+						data-api="{{ cms.api }}"
+						data-ajax="true"
+						data-refresh="false">
+						<input type="hidden" name="url" value="{{ prettyUrl }}" />
+						<input type="checkbox" name="prettyUrl" checked hidden />
+						<div class="form-inline-fields">
+							<button type="submit" class="dash-button">Save to Collection</button>
+						</div>
+						{% if collectionData.url is not empty and collectionData.url != prettyUrl %}
+							<p style="font-size: 0.85rem; color: oklch(var(--totalform-warning));">Current URL: <code>{{ collectionData.url }}</code> — this will be overwritten</p>
+						{% endif %}
+					</form>
 				{% endif %}
+				</section>
 
 				<section>
 				<h3>{{ t('pretty_url.apache_title') }}</h3>

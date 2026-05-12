@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Property\Data;
 
 use TotalCMS\Domain\Property\Data\TimeData;

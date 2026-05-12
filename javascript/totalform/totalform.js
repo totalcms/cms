@@ -12,6 +12,7 @@ import NumberField from './number';
 import PriceField from './price';
 import ColorField from './color';
 import DateField from './date';
+import CardField from './card';
 import DeckField from './deck';
 import DeckTableField from './deckTable';
 import PasswordField from './password';
@@ -32,6 +33,7 @@ import FileField from './file';
 import DepotField from './depot';
 import DepotDropField from './depot-drop';
 import CodeField from './code';
+import SecretField from './secret';
 
 // import Deck from './deck';
 // import MarkdownField from './markdown';
@@ -100,7 +102,6 @@ export default class TotalForm {
 		if (formIDSet) this.setupEditMode();
 
 		this.processFields();
-		this.droplets = this.fields.filter(field => field.isDroplet());
 		this.setupFieldsForEdit();
 
 		this.dispatcher = new TotalDispatcher(this.form);
@@ -109,6 +110,13 @@ export default class TotalForm {
         this.eventListeners();
         this.registerButtons();
 		this.visibility.initialize();
+
+		// Signal that all fields are initialized and form is ready
+		this.form.dispatchEvent(new CustomEvent('totalform:ready'));
+
+		if (this.isObjectForm() && !this.isEditMode()) {
+			this.focusFirstInput();
+		}
 
 		if (this.form.classList.contains("autosave")) {
 			this.autosave = true;
@@ -153,6 +161,9 @@ export default class TotalForm {
 	isTemplateForm() {
 		return this.type === "template";
 	}
+	isTemplateEditMode() {
+		return this.isTemplateForm() && this.method.toUpperCase() === "PUT";
+	}
     // Check to see if the object is a HTML node.
     isDomNode(node){
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
@@ -185,6 +196,14 @@ export default class TotalForm {
 		}).shift();
 		if (idField) return idField.getValue();
 
+		// Fall back to a direct DOM lookup — this.fields may be empty when
+		// getId() is called during the recursive processFields() bootstrap
+		// (image/file edit dialogs re-enter processFields before the outer
+		// call assigns this.fields).
+		const idInputs    = Array.from(this.form.querySelectorAll('input[name="id"]'));
+		const formIdInput = idInputs.find(input => !input.closest('dialog'));
+		if (formIdInput) return formIdInput.value;
+
 		console.warn("ID field not found");
 		return null;
 	}
@@ -195,34 +214,52 @@ export default class TotalForm {
     processFields() {
 		const fields = Array.from(this.form.getElementsByClassName("form-field"));
 		const fieldObjects = [];
+		const dropletObjects = [];
         fields.forEach(field => {
 			// Skip fields inside <template> elements (e.g., deck templates)
 			if (field.closest('template')) {
 				return;
 			}
 
-			// skip if field is already processed
-			if (field.totalfield) {
-				if (!field.totalfield.isSubField()) {
-					fieldObjects.push(field.totalfield);
+			let totalfield = field.totalfield;
+			if (!totalfield) {
+				try {
+					totalfield = this.generateFieldObject(field);
+				} catch (e) {
+					const inputName = field.querySelector("input,textarea,select")?.name;
+					console.warn(`Failed to process field [${field.dataset.type}] name="${inputName}":`, e, field);
+					return;
 				}
-				return;
+				if (totalfield === null) return;
 			}
 
-			let object;
-			try {
-				object = this.generateFieldObject(field);
-			} catch (e) {
-				console.warn(e.message);
-				return;
+			if (!totalfield.isSubField()) {
+				fieldObjects.push(totalfield);
 			}
-            if (object === null || object.isSubField()) return; // if the object is not set, skip it
-            fieldObjects.push(object);
-
-			// Mark as dirty
+			// Droplets must bypass the subfield filter so saveDroplets() can flush
+			// queued uploads for image/file fields nested inside cards and deck items
+			// after the parent object's ID is assigned.
+			if (totalfield.isDroplet()) {
+				dropletObjects.push(totalfield);
+			}
         });
         this.fields = fieldObjects;
+        this.droplets = dropletObjects;
     }
+
+	// Re-scan the form for field nodes after the caller has mutated the DOM
+	// (e.g. swapping a text input for a select when a country changes).
+	// processFields() preserves existing TotalField instances via the
+	// field.totalfield check, so only newly-added .form-field nodes get fresh
+	// objects and removed ones drop out of this.fields.
+	refreshFields() {
+		this.processFields();
+		this.droplets = this.fields.filter(field => field.isDroplet());
+		this.setupFieldsForEdit();
+		this.visibility.fields = this.fields;
+		this.visibility.initialize();
+		this.form.dispatchEvent(new CustomEvent('totalform:refresh'));
+	}
 
     registerButtons() {
 		// Save button action is handled by the TotalFormManager
@@ -291,6 +328,9 @@ export default class TotalForm {
 			case "password":
 				return new PasswordField(field, settings);
 
+			case "secret":
+				return new SecretField(field, settings);
+
             case "range":
                 return new RangeSlider(field, settings);
 
@@ -320,6 +360,9 @@ export default class TotalForm {
 
 			case "code":
 				return new CodeField(field,settings);
+
+			case "card":
+				return new CardField(field, settings);
 
 			case "deck":
                 return new DeckField(field, settings);
@@ -496,7 +539,22 @@ export default class TotalForm {
 		}
 	}
 
+	focusFirstInput() {
+		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+		const candidates = Array.from(this.form.querySelectorAll(selector));
+		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
+		const first = candidates.find(input => !input.closest('dialog'));
+		first?.focus();
+	}
+
 	save() {
+		// Defensive prune: drop any fields whose container was detached from the
+		// DOM. refreshFields() handles the normal case, but external mutations
+		// (e.g. show/hide plugins that fire their event before the actual node
+		// removal) can leave stale references in this.fields and crash validate()
+		// or generateData() on dead nodes.
+		this.fields = this.fields.filter(field => this.form.contains(field.container));
+
 		if (!this.validate()) {
 			this.validated = false;
 			this.error('Please fix validation errors before saving.');
@@ -515,8 +573,8 @@ export default class TotalForm {
     }
 
     async delete() {
-        // Only delete if editing object
-        if (!this.isEditMode()) return;
+        // Only delete if editing object (templates always allow delete since they skip edit mode)
+        if (!this.isEditMode() && !this.isTemplateForm()) return;
 
         if (await tcmsConfirm({ message: t("confirm.delete_item") })) {
             this.validated = true;
@@ -554,7 +612,8 @@ export default class TotalForm {
     }
 
     afterSaveAction(response) {
-		const runEditActions = this.isEditMode();
+		// Templates skip edit mode but still need to run edit actions when updating
+		const runEditActions = this.isEditMode() || this.isTemplateEditMode();
 
 		// Extract ID from response for new objects (needed for actions like redirect-object)
 		if (response && response.id && (!this.id || this.id.length === 0)) {
@@ -697,6 +756,10 @@ export default class TotalForm {
     // Form States
     //-------------------------
 	isEditMode() {
+		// Template forms support rename/move — PHP sets the route and method,
+		// so skip edit mode to keep the ID field editable
+		if (this.isTemplateForm()) return false;
+
 		return (["PUT", "PATCH"].includes(this.method.toUpperCase()) && this.form.classList.contains("edit-mode"));
     }
 
@@ -731,8 +794,10 @@ export default class TotalForm {
 
 		// The ID cannot be changed in edit form
 		const idField = this.fields.filter(field => field.property === "id").shift();
-		// if ID field is hidden, these may not exist
-		if (idField.disable) {
+		// idField may be undefined when the schema has no `id` property,
+		// or when the field was filtered out before reaching us — optional
+		// chaining keeps a missing field from blowing up the form init.
+		if (idField?.disable) {
 			idField.disable();
 			idField.lock();
 		}

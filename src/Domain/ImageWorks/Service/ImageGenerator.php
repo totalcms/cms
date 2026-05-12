@@ -8,6 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
+use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -22,6 +24,7 @@ class ImageGenerator
 	private string $collection;
 	private string $id;
 	private string $property;
+	private ?string $subpath = null;
 	/** @var array<string,mixed> */
 	private array $params;
 	private readonly LoggerInterface $logger;
@@ -57,6 +60,7 @@ class ImageGenerator
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
+		$this->subpath    = null;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
@@ -67,19 +71,37 @@ class ImageGenerator
 		string $collection,
 		string $id,
 		string $property,
-		string $name,
+		string $path,
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
-		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
+		$propertyData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
-		if (!$galleryData instanceof GalleryData) {
+		// Same URL shape — `/{prop}/{path:.+}.{format}` — serves three property
+		// types. Dispatch on the resolved data shape:
+		//   - CardData  → `obj[prop][child]`     (path is single segment)
+		//   - DeckData  → `obj[prop][itemId][child]` (path is `itemId/child`)
+		//   - GalleryData → existing gallery image lookup (path is the filename)
+		if ($propertyData instanceof CardData) {
+			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->card, $params, $request);
+		}
+
+		if ($propertyData instanceof DeckData) {
+			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->deck, $params, $request);
+		}
+
+		if (!$propertyData instanceof GalleryData) {
 			throw new \UnexpectedValueException('Invalid gallery property found');
 		}
+
+		$galleryData = $propertyData;
 
 		if ($galleryData->images === []) {
 			throw new \UnexpectedValueException('Gallery has no images');
 		}
+
+		// Gallery uses single-segment `path` as the image name (or special token).
+		$name = $path;
 
 		$imageData = match ($name) {
 			'first'    => array_shift($galleryData->images),
@@ -96,6 +118,50 @@ class ImageGenerator
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
+		$this->subpath    = null;
+		$this->params     = $this->cleanupParams($params, $imageData);
+
+		return $this->responseFromImageData($imageData, $request);
+	}
+
+	/**
+	 * Serve an image stored as a child of a card or deck field. The `$path` is
+	 * a slash-separated path through the parent property's nested data:
+	 *   - Card child:   `path = "childKey"`        → `parentRaw[childKey]`
+	 *   - Deck child:   `path = "itemId/childKey"` → `parentRaw[itemId][childKey]`.
+	 *
+	 * The disk file lives at `coll/id/property/<path>/<filename>`.
+	 *
+	 * @param array<int|string,mixed> $parentRaw
+	 * @param array<string,mixed>     $params
+	 */
+	private function generateNestedImage(
+		string $collection,
+		string $id,
+		string $property,
+		string $path,
+		array $parentRaw,
+		array $params,
+		?ServerRequestInterface $request = null,
+	): ResponseInterface {
+		$segments = $path === '' ? [] : explode('/', $path);
+		$cursor   = $parentRaw;
+		foreach ($segments as $segment) {
+			if (!is_array($cursor) || !array_key_exists($segment, $cursor)) {
+				throw new \UnexpectedValueException("Nested image '{$path}' not found under '{$property}'");
+			}
+			$cursor = $cursor[$segment];
+		}
+		if (!is_array($cursor) || empty($cursor['name'])) {
+			throw new \UnexpectedValueException("Nested image '{$path}' has no file");
+		}
+
+		$imageData = new ImageData($cursor);
+
+		$this->collection = $collection;
+		$this->id         = $id;
+		$this->property   = $property;
+		$this->subpath    = $path;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
@@ -109,6 +175,7 @@ class ImageGenerator
 		string $name,
 		array $params,
 		?ServerRequestInterface $request = null,
+		?string $subpath = null,
 	): ResponseInterface {
 		// Create dummy ImageData object
 		$imageData         = new ImageData();
@@ -119,6 +186,7 @@ class ImageGenerator
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
+		$this->subpath    = $subpath;
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
@@ -333,7 +401,7 @@ class ImageGenerator
 	{
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		$imagePath = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name);
+		$imagePath = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
 		$response  = $this->glideFactory->originalImage($imagePath);
 
 		// Generate cache headers
@@ -450,12 +518,12 @@ class ImageGenerator
 		// Create a temporary file for the intermediate result
 		$firstPassImageData = (string)$firstPassResponse->getBody();
 		$tempFileName       = 'temp_' . uniqid() . '.png';
-		$tempPath           = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
+		$tempPath           = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName, $this->subpath);
 		$this->filesystem->write($tempPath, $firstPassImageData);
 
 		// Create second pass server specifically for text watermark
 		$secondServer = $this->glideFactory->create(
-			source        : PathUtils::buildPath($this->collection, $this->id, $this->property),
+			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
 			imageData     : $imageData,
 			watermarkPath : TextWatermarkFactory::WATERMARK_DIR,
 		);
@@ -485,7 +553,7 @@ class ImageGenerator
 		}
 
 		// Generate cache headers for processed images
-		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name);
+		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
 		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request, $this->params);
 
 		// Check if we should return 304 Not Modified
@@ -507,7 +575,7 @@ class ImageGenerator
 		$watermarkPath = $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR;
 
 		$glide = $this->glideFactory->create(
-			source        : PathUtils::buildPath($this->collection, $this->id, $this->property),
+			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
 			imageData     : $imageData,
 			watermarkPath : $watermarkPath,
 		);

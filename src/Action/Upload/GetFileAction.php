@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 readonly class GetFileAction
 {
@@ -18,19 +19,19 @@ readonly class GetFileAction
 	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$collection = $args['collection'];
-		$id         = $args['id'];
-		$property   = $args['property'];
-		$name       = $args['name'];
+		$collection       = $args['collection'];
+		$id               = $args['id'];
+		$property         = $args['property'];
+		[$name, $subpath] = PathUtils::splitPath($args['path'] ?? $args['name'] ?? '');
 
-		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name)) {
+		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name, $subpath)) {
 			throw new HttpNotFoundException($request, 'File not found');
 		}
 
-		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name);
+		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name, $subpath);
 		$response = $response->withHeader('Content-Type', $mimeType);
 
-		$stream = $this->uploadFetcher->streamFile($collection, $id, $property, $name);
+		$stream = $this->uploadFetcher->streamFile($collection, $id, $property, $name, $subpath);
 
 		return $response->withBody(Stream::create($stream));
 	}

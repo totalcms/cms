@@ -1,0 +1,57 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Getting Started — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<section class="section">
+	<div class="container" style="max-width: 720px;">
+		<h1>You're up and running</h1>
+		<p style="font-size: 1.15rem; color: #666;">
+			This is the <strong>portfolio</strong> starter — a visual showcase site with a homepage,
+			work gallery, about page, and contact page.
+		</p>
+
+		<h2 style="margin-top: 2.5rem;">What you have</h2>
+		<ul style="line-height: 1.8;">
+			<li>Four pages: Home, Work, About, Contact</li>
+			<li>A featured-projects grid on the homepage</li>
+			<li>A full project gallery on the Work page</li>
+			<li>Skills tags on the About page</li>
+			<li>This guide at <code>/readme</code></li>
+		</ul>
+
+		<h2 style="margin-top: 2.5rem;">Adding projects</h2>
+		<p>
+			The starter ships with hardcoded sample projects in the page templates so you can see
+			the layout immediately. To make project management dynamic:
+		</p>
+		<ol style="line-height: 1.8;">
+			<li>Create a <em>projects</em> collection — see the <a target="_blank" rel="noopener" href="/admin/docs/advanced/data-model">Data Model</a> docs</li>
+			<li>Add an image, title, summary, and link/description per project</li>
+			<li>Edit <code>pages/work.twig</code> to loop over <code>cms.collection.objects('projects')</code> instead of the hardcoded list</li>
+		</ol>
+
+		<h2 style="margin-top: 2.5rem;">Quick wins</h2>
+		<ol style="line-height: 1.8;">
+			<li><strong>Replace hero copy</strong> — open the <em>Home</em> page in <a target="_blank" rel="noopener" href="/admin/builder">Site Builder</a> and put your tagline in the <em>Page Data</em> JSON field as <code>hero</code></li>
+			<li><strong>Set your social image</strong> — upload a 1200×630 image to the <em>Page Image</em> field on each page (used for <code>og:image</code>)</li>
+			<li><strong>Add a frontend pipeline</strong> (optional) — run <code>tcms builder:frontend</code> to install Vite + Sass scaffolding</li>
+		</ol>
+
+		<h2 style="margin-top: 2.5rem;">Customizing</h2>
+		<ul style="line-height: 1.8;">
+			<li><strong>Layout</strong> — <code>tcms-data/builder/layouts/default.twig</code></li>
+			<li><strong>Homepage</strong> — <code>tcms-data/builder/pages/index.twig</code></li>
+			<li><strong>Work page</strong> — <code>tcms-data/builder/pages/work.twig</code></li>
+			<li><strong>About page</strong> — <code>tcms-data/builder/pages/about.twig</code></li>
+		</ul>
+
+		<h2 style="margin-top: 2.5rem;">Learn more</h2>
+		<ul style="line-height: 1.8;">
+			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/overview">Site Builder overview</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/admin">Admin UI guide</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/twig/builder">Twig functions reference</a></li>
+		</ul>
+	</div>
+</section>
+{% endblock %}

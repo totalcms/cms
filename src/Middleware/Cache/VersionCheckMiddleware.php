@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Middleware\Cache;
 
 use Psr\Http\Message\ResponseInterface;

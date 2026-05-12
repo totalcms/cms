@@ -281,7 +281,7 @@ readonly class CollectionTable
 		}
 
 		$deleteRoute = implode('/', ['collections', $this->collectionData->id, $id]);
-		$deleteUrl   = rtrim($this->config->api, '/') . '/' . ltrim($deleteRoute, '/');
+		$deleteUrl   = rtrim($this->config->api . '/api', '/') . '/' . ltrim($deleteRoute, '/');
 		$deleteAttrs = HTMLUtils::htmxAttributes($deleteUrl, 'delete', [
 			'confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
 			'on'      => [
@@ -305,7 +305,7 @@ readonly class CollectionTable
 
 		$download = HTMLUtils::element('a', 'Download Zip', [
 			'href' => implode('/', [
-				$this->config->api,
+				$this->config->api . '/api',
 				'export',
 				'collections',
 				$this->collectionData->id,

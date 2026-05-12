@@ -50,6 +50,7 @@ class CodeField extends TextareaField
 			'foldGutter'    => $this->settings['foldGutter'] ?? true,
 			'matchBrackets' => $this->settings['matchBrackets'] ?? true,
 			'autoCloseTags' => $this->settings['autoCloseTags'] ?? true,
+			'fullscreen'    => $this->settings['fullscreen'] ?? true,
 		];
 
 		$attributes['data-editor-options'] = json_encode($editorOptions);
@@ -64,6 +65,7 @@ class CodeField extends TextareaField
 		// Add the code editor class for styling
 		$attributes['class'] = 'code-editor-field';
 
-		return HTMLUtils::element('textarea', strval($this->value), $attributes);
+		// Escape content to prevent </textarea> in template code from breaking the HTML
+		return HTMLUtils::element('textarea', htmlspecialchars(strval($this->value), ENT_NOQUOTES), $attributes);
 	}
 }

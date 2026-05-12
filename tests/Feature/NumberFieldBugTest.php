@@ -55,8 +55,8 @@ it('reproduces the zero value bug in number fields', function (): void {
 	$collection = numberTestCollection();
 
 	// Create the schema and collection
-	postJson('/schemas', $schema)->assertOk();
-	postJson('/collections', $collection)->assertOk();
+	postJson('/api/schemas', $schema)->assertOk();
+	postJson('/api/collections', $collection)->assertOk();
 
 	try {
 		// Test object with zero values
@@ -68,7 +68,7 @@ it('reproduces the zero value bug in number fields', function (): void {
 		];
 
 		// Save the object
-		$response = postJson('/collections/numberbug', $objectWithZeros);
+		$response = postJson('/api/collections/numberbug', $objectWithZeros);
 		$response->assertOk();
 
 		$savedObject = json_decode($response->getBody()->getContents(), true);
@@ -97,8 +97,8 @@ it('tests that non-zero values work correctly', function (): void {
 	$collection = numberTestCollection();
 
 	// Create the schema and collection
-	postJson('/schemas', $schema)->assertOk();
-	postJson('/collections', $collection)->assertOk();
+	postJson('/api/schemas', $schema)->assertOk();
+	postJson('/api/collections', $collection)->assertOk();
 
 	try {
 		// Test object with non-zero values
@@ -110,7 +110,7 @@ it('tests that non-zero values work correctly', function (): void {
 		];
 
 		// Save the object
-		$response    = postJson('/collections/numberbug', $objectWithValues)->assertOk();
+		$response    = postJson('/api/collections/numberbug', $objectWithValues)->assertOk();
 		$savedObject = json_decode($response->getBody()->getContents(), true);
 
 		// Check values were preserved (data is wrapped in Fractal transformer)

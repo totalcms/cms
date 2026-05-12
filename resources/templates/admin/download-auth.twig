@@ -6,17 +6,14 @@
 <main class="login-layout admin-layout">
 
 	<section class="download-auth-above">
-		{% if cms.edition.can('whitelabel_templates') %}
+		{% if cms.edition.can('whitelabel_standard') %}
 			{{ include('whitelabel/download-auth-above.twig', ignore_missing = true) }}
 		{% endif %}
 	</section>
 
 	{% set formSettings = {} %}
-	{% if cms.edition.can('templates') %}
-		{% set json = include(cms.edition.can('whitelabel_templates')
-			? ['whitelabel/download-auth-options.twig', 'download-auth-options.twig']
-			: ['download-auth-options.twig']
-		, ignore_missing = true) %}
+	{% if cms.edition.can('whitelabel_standard') %}
+		{% set json = include('whitelabel/download-auth-options.twig', ignore_missing = true) %}
 		{% set decoded = (json|trim|length ? json_decode(json, true) : {}) %}
 		{% set formSettings = formSettings|merge(decoded) %}
 	{% endif %}
@@ -43,7 +40,7 @@
 	</section>
 
 	<section class="download-auth-below">
-		{% if cms.edition.can('whitelabel_templates') %}
+		{% if cms.edition.can('whitelabel_pro') %}
 			{{ include('whitelabel/download-auth-below.twig', ignore_missing = true) }}
 		{% endif %}
 	</section>

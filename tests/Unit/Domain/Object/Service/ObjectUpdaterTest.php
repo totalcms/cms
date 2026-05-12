@@ -6,9 +6,6 @@ namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
@@ -24,29 +21,30 @@ final class ObjectUpdaterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $repository;
 	private \PHPUnit\Framework\MockObject\MockObject $factory;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
+	private \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher;
+
+	/** @var array<string,mixed>|null */
+	private ?array $dispatchedPayload = null;
 
 	protected function setUp(): void
 	{
-		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
-		$this->repository            = $this->createMock(ObjectRepository::class);
-		$this->factory               = $this->createMock(ObjectFactory::class);
-		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
-		$this->propertyProcessor     = $this->createMock(PropertyDataProcessorInterface::class);
-		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
-		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
+		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
+		$this->repository        = $this->createMock(ObjectRepository::class);
+		$this->factory           = $this->createMock(ObjectFactory::class);
+		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
+		$this->eventDispatcher   = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
+
+		$this->eventDispatcher->listen('object.updated', function (array $payload): void {
+			$this->dispatchedPayload = $payload;
+		});
 
 		$this->updater = new ObjectUpdater(
 			$this->objectFetcher,
 			$this->repository,
 			$this->factory,
-			$this->indexBuilder,
 			$this->propertyProcessor,
-			$this->collectionSaver,
-			$this->viewUpdateScheduler,
+			$this->eventDispatcher,
 		);
 	}
 
@@ -69,12 +67,6 @@ final class ObjectUpdaterTest extends TestCase
 		$this->repository
 			->expects($this->once())
 			->method('saveObject')
-			->with('posts', $objectData);
-
-		// Set up index builder expectation
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
 			->with('posts', $objectData);
 
 		// Execute
@@ -113,12 +105,6 @@ final class ObjectUpdaterTest extends TestCase
 			->method('saveObject')
 			->with('posts', $generatedObject);
 
-		// Set up index builder expectation
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts', $generatedObject);
-
 		// Execute
 		$result = $this->updater->updateObject('posts', 'test-id', $arrayData);
 
@@ -148,16 +134,17 @@ final class ObjectUpdaterTest extends TestCase
 
 		$newMetaData = ['description' => 'Updated description'];
 
-		// Set up object fetcher expectation
+		// Set up object fetcher expectation. Two calls: one in updateObjectPropertyMeta
+		// to load the existing object, and one inside updateObject to snapshot the
+		// pre-save state for the object.updated payload.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);
 
 		// Set up expectations for final update
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute
 		$result = $this->updater->updateObjectPropertyMeta(
@@ -182,16 +169,17 @@ final class ObjectUpdaterTest extends TestCase
 
 		$newMetaData = ['alt' => 'Image description'];
 
-		// Set up object fetcher expectation
+		// Set up object fetcher expectation. Two calls: one in updateObjectPropertyMeta
+		// to load the existing object, and one inside updateObject to snapshot the
+		// pre-save state for the object.updated payload.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);
 
 		// Set up expectations for final update
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute
 		$result = $this->updater->updateObjectPropertyMeta(
@@ -216,16 +204,17 @@ final class ObjectUpdaterTest extends TestCase
 
 		$newMetaData = ['caption' => 'Image caption'];
 
-		// Set up object fetcher expectation
+		// Set up object fetcher expectation. Two calls: one in updateObjectPropertyMeta
+		// to load the existing object, and one inside updateObject to snapshot the
+		// pre-save state for the object.updated payload.
 		$this->objectFetcher
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fetchObject')
 			->with('posts', 'test-id')
 			->willReturn($existingObject);
 
 		// Set up expectations for final update
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute with subpath
 		$result = $this->updater->updateObjectPropertyMeta(
@@ -239,6 +228,151 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Verify
 		expect($result)->toBeInstanceOf(ObjectData::class);
+	}
+
+	public function testUpdateNestedPropertyReplacesChildPreservingSiblings(): void
+	{
+		// Existing card: { id, mycard: { title, image } }. Replace just the image.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
+			'id'     => 'test-id',
+			'mycard' => [
+				'id'    => 'mycard',
+				'title' => 'Existing title',
+				'image' => ['name' => 'old.jpg'],
+			],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => [
+				'id'    => 'mycard',
+				'title' => 'Existing title',
+				'image' => ['name' => 'new.jpg', 'size' => 2048],
+			],
+		];
+
+		// Two calls: one in updateNestedProperty, one inside updateObject for the
+		// pre-save snapshot.
+		$this->objectFetcher
+			->expects($this->exactly(2))
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty(
+			'posts',
+			'test-id',
+			'mycard',
+			'image',
+			['name' => 'new.jpg', 'size' => 2048],
+		);
+	}
+
+	public function testUpdateNestedPropertyCreatesParentSlotWhenMissing(): void
+	{
+		// Object has no `mycard` property at all yet — first nested write.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', ['id' => 'test-id']);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => ['image' => ['name' => 'new.jpg']],
+		];
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty('posts', 'test-id', 'mycard', 'image', ['name' => 'new.jpg']);
+	}
+
+	public function testUpdateNestedPropertyHandlesMultiSegmentDeckPath(): void
+	{
+		// Phase 3: deck PUT replaces `obj[deckprop][itemId][childKey]` while
+		// preserving sibling deck items and sibling fields within the item.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'title' => 'Item 3 title',
+					'image' => ['name' => 'old.jpg', 'size' => 100],
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'title' => 'Item 3 title',
+					'image' => ['name' => 'new.jpg', 'size' => 9999],
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		];
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty(
+			'posts',
+			'test-id',
+			'mydeck',
+			'item-3/image',
+			['name' => 'new.jpg', 'size' => 9999],
+		);
+	}
+
+	public function testUpdateNestedPropertyReplacesNonArrayParentWithFreshSlot(): void
+	{
+		// Defensive: parent property exists but isn't an array (corrupt state).
+		// Should not crash; should overwrite with a fresh `[child => newData]` map.
+		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
+			'id'     => 'test-id',
+			'mycard' => 'corrupt-string-value',
+		]);
+
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => ['image' => ['name' => 'new.jpg']],
+		];
+
+		$this->objectFetcher
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->factory
+			->expects($this->once())
+			->method('generateObject')
+			->with('posts', $expectedObjectData)
+			->willReturn($this->createMockObjectData('test-id', []));
+
+		$this->updater->updateNestedProperty('posts', 'test-id', 'mycard', 'image', ['name' => 'new.jpg']);
 	}
 
 	public function testUpdateObjectPropertyMetaThrowsExceptionForMissingProperty(): void
@@ -283,13 +417,39 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Set up other expectations
 		$this->repository->expects($this->once())->method('saveObject');
-		$this->indexBuilder->expects($this->once())->method('smartBuildIndex');
 
 		// Execute
 		$result = $this->updater->updateObject('posts', 'test-id', $objectData);
 
 		// Verify
 		expect($result)->toBe($objectData);
+	}
+
+	public function testUpdateObjectDispatchesUpdatedEvent(): void
+	{
+		$objectData = $this->createMockObjectData('test-id', []);
+
+		$this->propertyProcessor->method('processBeforeSave')->willReturnArgument(0);
+
+		$result = $this->updater->updateObject('posts', 'test-id', $objectData);
+
+		expect($this->dispatchedPayload)->not->toBeNull();
+		expect($this->dispatchedPayload['collection'])->toBe('posts');
+		expect($this->dispatchedPayload['id'])->toBe('test-id');
+		expect($this->dispatchedPayload['object'])->toBe($result);
+	}
+
+	public function testUpdateObjectEventNotDispatchedOnIdMismatch(): void
+	{
+		$objectData = $this->createMockObjectData('wrong-id', []);
+
+		try {
+			$this->updater->updateObject('posts', 'test-id', $objectData);
+		} catch (\UnexpectedValueException) {
+			// Expected
+		}
+
+		expect($this->dispatchedPayload)->toBeNull();
 	}
 
 	private function createMockObjectData(string $id, array $properties): ObjectData
@@ -305,6 +465,24 @@ final class ObjectUpdaterTest extends TestCase
 			public function toArray(): array
 			{
 				return ['id' => $this->id];
+			}
+		};
+	}
+
+	/** @param array<string,mixed> $toArrayResult */
+	private function createMockObjectDataWithToArray(string $id, array $toArrayResult): ObjectData
+	{
+		return new class($id, $toArrayResult) extends ObjectData {
+			/** @param array<string,mixed> $toArrayResult */
+			public function __construct(string $id, private readonly array $toArrayResult)
+			{
+				parent::__construct($id, []);
+			}
+
+			/** @return array<string,mixed> */
+			public function toArray(): array
+			{
+				return $this->toArrayResult;
 			}
 		};
 	}

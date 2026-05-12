@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Settings\Services;
 
 /**
@@ -89,38 +91,104 @@ HTACCESS;
 	}
 
 	/**
-	 * Check if directory is empty (only contains . and ..).
+	 * Migrate an auto-created tcms-data directory to the user's chosen
+	 * location. Preserves any bootstrap state that was written during the
+	 * wizard flow (extension discovery, etc.) — preferable to deleting it
+	 * and having every consumer rebuild on the next request.
+	 *
+	 * Returns true on a successful move, false otherwise. Caller is
+	 * responsible for falling back to createDirectory() if no candidate
+	 * source could be moved.
+	 *
+	 * Skipped (returns false) when:
+	 *   - $from doesn't exist
+	 *   - $from === $to
+	 *   - $to exists and contains real user data (a top-level entry other
+	 *     than `.htaccess` or `.system/` — preserves that data, caller
+	 *     should bail or warn)
+	 *   - The parent of $to doesn't exist (validation should catch this
+	 *     earlier; defensive check here)
+	 *   - The underlying rename() fails (cross-device, permissions, etc.)
+	 *
+	 * If $to exists and contains only bootstrap junk, that junk is removed
+	 * before the rename so the rename has a clean destination.
 	 */
-	public function isDirectoryEmpty(string $path): bool
+	public function moveDataDirectory(string $from, string $to): bool
 	{
-		if (!is_dir($path)) {
-			return true;
+		if ($from === $to) {
+			return false;
 		}
 
-		$files = @scandir($path);
+		if (!is_dir($from)) {
+			return false;
+		}
 
-		return $files !== false && count($files) === 2;
+		if (is_dir($to)) {
+			if ($this->containsUserData($to)) {
+				return false;
+			}
+			$this->removeBootstrapDirectory($to);
+		}
+
+		$parent = dirname($to);
+		if (!is_dir($parent)) {
+			return false;
+		}
+
+		return @rename($from, $to);
 	}
 
 	/**
-	 * Clean up empty default directory if user chose a different path.
+	 * True if the directory contains anything beyond auto-generated
+	 * bootstrap junk (the security `.htaccess` and `.system/`).
 	 */
-	public function cleanupEmptyDefaultDirectory(string $defaultPath, string $chosenPath): void
+	private function containsUserData(string $path): bool
 	{
-		// Don't delete if paths are the same
-		if ($defaultPath === $chosenPath) {
+		$entries = @scandir($path);
+		if ($entries === false) {
+			return true;
+		}
+
+		foreach ($entries as $entry) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+			if ($entry === '.htaccess' || $entry === '.system') {
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Recursively remove a bootstrap-only data directory. Caller must have
+	 * already verified via containsUserData() that no real content lives
+	 * here — this helper does no further checks.
+	 */
+	private function removeBootstrapDirectory(string $path): void
+	{
+		$entries = @scandir($path);
+		if ($entries === false) {
 			return;
 		}
 
-		// Don't delete if directory doesn't exist
-		if (!is_dir($defaultPath)) {
-			return;
+		foreach ($entries as $entry) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+
+			$child = $path . '/' . $entry;
+			if (is_dir($child) && !is_link($child)) {
+				$this->removeBootstrapDirectory($child);
+			} else {
+				@unlink($child);
+			}
 		}
 
-		// Only delete if empty
-		if ($this->isDirectoryEmpty($defaultPath)) {
-			@rmdir($defaultPath);
-		}
+		@rmdir($path);
 	}
 
 	/**

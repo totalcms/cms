@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 
@@ -11,9 +11,8 @@ readonly class ObjectCloner
 {
 	public function __construct(
 		private ObjectRepository $storage,
-		private IndexBuilder $indexBuilder,
-		private CollectionSaver $collectionSaver,
 		private DateFieldResetter $dateFieldResetter,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -42,14 +41,7 @@ readonly class ObjectCloner
 
 		$this->storage->copyObjectFiles($from['collection'], $from['id'], $to['collection'], $to['id']);
 
-		// Increment the collection count since we've added a new object
-		$this->collectionSaver->incrementCount($to['collection']);
-
-		// Increment totalObjects and update lastUpdated
-		$this->collectionSaver->incrementTotalObjects($to['collection']);
-
-		// Pass the cloned object for immediate index append when queueRebuildOnSave is enabled
-		$this->indexBuilder->smartBuildIndex($to['collection'], $object);
+		$this->eventDispatcher->dispatch('object.created', new ObjectEventPayload($to['collection'], $object->id, $object));
 
 		return $object;
 	}

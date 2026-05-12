@@ -1,0 +1,165 @@
+// ─────────────────────────────────────────────
+// Quick Navigation Dialog (Shift+Cmd+O)
+// ─────────────────────────────────────────────
+
+dialog.quick-nav {
+	border           : 1px solid oklch(var(--totalform-accent) / 0.5);
+	box-shadow       : rgb(0 0 0 / 0.3) 0 12px 40px, rgb(0 0 0 / 0.1) 0 0 0 1px;
+	border-radius    : 12px;
+	padding          : 0;
+	z-index          : 10;
+	position         : fixed;
+	top              : 40%;
+	left             : 50%;
+	transform        : translate(-50%, -50%);
+	margin           : 0;
+	overflow         : hidden;
+	background-color : oklch(var(--totalform-white));
+
+	width      : 90%;
+	max-width  : 600px;
+	height     : fit-content;
+	max-height : 400px;
+
+	&::backdrop {
+		background-color : oklch(25% 0 0 / 0.5);
+		backdrop-filter  : blur(4px);
+	}
+
+	&[open] {
+		display        : flex;
+		flex-direction : column;
+	}
+
+	// ── Search input ──
+	.quick-nav-search {
+		padding    : 1rem 1.25rem;
+		border     : none;
+		font-size  : 1.25rem;
+		font-weight: 300;
+		outline    : none;
+		background : transparent;
+		color      : oklch(var(--totalform-text-color));
+		width      : 100%;
+		box-sizing : border-box;
+
+		&::placeholder {
+			color : oklch(var(--totalform-darkgray) / 0.4);
+		}
+	}
+
+	// ── Results list ──
+	.quick-nav-results {
+		list-style  : none;
+		margin      : 0;
+		padding     : 0.5rem 0;
+		overflow-y  : auto;
+		overscroll-behavior : contain;
+		border-top  : 1px solid oklch(var(--totalform-border-color) / 0.5);
+
+		&:empty {
+			display : none;
+		}
+
+		// Scrollbar styling
+		&::-webkit-scrollbar {
+			width : 6px;
+		}
+		&::-webkit-scrollbar-thumb {
+			border-radius : 6px;
+			background    : oklch(var(--totalform-border-color));
+		}
+		&::-webkit-scrollbar-track {
+			background : transparent;
+		}
+	}
+
+	// ── Individual result item ──
+	.quick-nav-item {
+		padding       : 0.6rem 1.25rem;
+		cursor        : pointer;
+		display       : flex;
+		align-items   : center;
+		gap           : 0.75rem;
+
+		&.active {
+			background-color : oklch(var(--totalform-accent) / 0.12);
+		}
+
+		&:hover:not(.active) {
+			background-color : oklch(var(--totalform-nearwhite));
+		}
+	}
+
+	// ── Section icon (reuses sidebar nav icon variables) ──
+	.quick-nav-icon {
+		flex-shrink      : 0;
+		width            : 1.25rem;
+		height           : 1.25rem;
+		background-color : oklch(var(--totalform-darkgray) / 0.7);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+
+		&[data-icon="collections"] { mask-image : var(--icon-collections); }
+		&[data-icon="schemas"]     { mask-image : var(--icon-schema); }
+		&[data-icon="dataviews"]   { mask-image : var(--icon-data-views); }
+		&[data-icon="builder"]     { mask-image : var(--icon-templates); }
+		&[data-icon="mailer"]      { mask-image : var(--icon-mailer); }
+		&[data-icon="playground"]  { mask-image : var(--icon-twig-playground); }
+		&[data-icon="utils"]       { mask-image : var(--icon-tools); }
+		&[data-icon="settings"]    { mask-image : var(--icon-cog); }
+		&[data-icon="docs"]        { mask-image : var(--icon-docs); }
+		&[data-icon="extensions"]  { mask-image : var(--icon-extension); }
+	}
+
+	.quick-nav-item.active .quick-nav-icon {
+		background-color : oklch(var(--totalform-accent));
+	}
+
+	.quick-nav-section {
+		font-size    : 0.8rem;
+		color        : oklch(var(--totalform-darkgray) / 0.6);
+		flex-shrink  : 0;
+		min-width    : 6em;
+	}
+
+	.quick-nav-label {
+		font-size : 1.05rem;
+		color     : oklch(var(--totalform-text-color));
+
+		mark {
+			background-color : oklch(var(--totalform-accent) / 0.2);
+			color            : inherit;
+			border-radius    : 2px;
+			padding          : 0 2px;
+		}
+	}
+
+	// ── Empty state ──
+	.quick-nav-empty {
+		padding    : 2rem 1.25rem;
+		text-align : center;
+		color      : oklch(var(--totalform-darkgray) / 0.5);
+		font-size  : 1rem;
+	}
+
+	// ── Hint bar ──
+	.quick-nav-hint {
+		padding         : 0.5rem 1.25rem;
+		font-size       : 0.75rem;
+		color           : oklch(var(--totalform-darkgray) / 0.4);
+		display         : flex;
+		gap             : 1rem;
+		justify-content : center;
+
+		kbd {
+			font-family      : inherit;
+			font-size        : 0.7rem;
+			padding          : 0.1em 0.4em;
+			border           : 1px solid oklch(var(--totalform-border-color) / 0.5);
+			border-radius    : 3px;
+			background-color : oklch(var(--totalform-nearwhite));
+		}
+	}
+}

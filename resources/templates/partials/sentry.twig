@@ -14,6 +14,20 @@
 					|| (event.exception && event.exception.values && event.exception.values[0] && event.exception.values[0].value)
 					|| '';
 
+				// Get the error type — `originalException` is often null for uncaught
+				// errors caught via the global onerror handler (e.g. SyntaxErrors
+				// during inline-script parse), so fall back to event.exception.
+				const errorName = (error && error.name)
+					|| (event.exception && event.exception.values && event.exception.values[0] && event.exception.values[0].type)
+					|| '';
+
+				// Drop errors originating from third-party extension admin views.
+				// /admin/ext/{vendor}/{name}/... is the extension admin route —
+				// any JS error rendered into one of those pages is the extension
+				// author's responsibility, not T3's. Mirrors the PHP-side filter
+				// for tcms-data/extensions/ in SentryMiddleware::filterEvent.
+				if (window.location && window.location.pathname && window.location.pathname.includes('/admin/ext/')) return null;
+
 				// Ignore errors from known corrupted installations
 				const ignoredDomains = ['komiksdiner'];
 				if (ignoredDomains.some(domain => window.location.hostname.includes(domain))) return null;
@@ -41,7 +55,7 @@
 				}
 
 				// Ignore JSON parse errors (user input issues)
-				if (error && error.name === 'SyntaxError' && (
+				if (errorName === 'SyntaxError' && (
 					message.includes('JSON') ||
 					message.includes('Unexpected token') ||
 					message.includes('Expected') ||
@@ -65,10 +79,10 @@
 
 				// Ignore race condition errors when elements are removed during async operations
 				// (e.g., image onload firing after element was removed from DOM)
-				if (error && error.name === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;
+				if (errorName === 'TypeError' && message.includes("Cannot read properties of null (reading 'classList')")) return null;
 
 				// Ignore SyntaxError (corrupted files or unsupported browsers)
-				if (error && error.name === 'SyntaxError') return null;
+				if (errorName === 'SyntaxError') return null;
 
 				// Ignore "not found" errors from third-party feature/plugin systems
 				if (message.includes('was not found')) return null;

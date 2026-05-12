@@ -6,8 +6,6 @@ use Cake\Chronos\Chronos;
 use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Designer\DesignerAwareLoader;
 use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
@@ -24,6 +22,8 @@ use Twig\Extra\Intl\IntlExtension;
 use Twig\Extra\Markdown\MarkdownExtension;
 use Twig\Extra\Markdown\MarkdownRuntime;
 use Twig\Extra\String\StringExtension;
+use Twig\Loader\ArrayLoader;
+use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 use Twig\TwigFunction;
@@ -36,25 +36,25 @@ use Twig\TwigFunction;
 readonly class TwigEngine
 {
 	private TwigEnvironment $twig;
+	private TwigFilesystemLoader $filesystemLoader;
 
 	public function __construct(
 		Config $config,
 		TotalCMSTwigExtension $extension,
 		DevModeManager $devModeManager,
-		EditionFeatureService $editionFeatures,
 		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 	) {
-		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
+		$internalTemplates = TemplateRepository::reservedTemplateDir();
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
 		}
 		$paths = [$internalTemplates];
 
-		// Only add custom templates path if edition allows templates feature
-		$customTemplates = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
-		if (file_exists($customTemplates) && $editionFeatures->can(EditionFeature::TEMPLATES)) {
-			$paths[] = $customTemplates;
+		// Add builder templates path (available to all editions)
+		$builderDir = $config->datadir . '/' . TemplateRepository::BUILDER_DIR;
+		if (file_exists($builderDir)) {
+			$paths[] = $builderDir;
 		}
 
 		// Twig requires filesystem caching for compiled templates (can't use APCu/Redis)
@@ -65,9 +65,9 @@ readonly class TwigEngine
 		$devModeActive  = $devModeManager->isDevModeActive();
 		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
-		$filesystemLoader = new TwigFilesystemLoader($paths);
-		$loader           = new DesignerAwareLoader($filesystemLoader, $this->designerPreprocessor);
-		$this->twig       = new TwigEnvironment($loader, [
+		$this->filesystemLoader = new TwigFilesystemLoader($paths);
+		$loader                 = new DesignerAwareLoader($this->filesystemLoader, $this->designerPreprocessor);
+		$this->twig             = new TwigEnvironment($loader, [
 			'cache'            => $cacheEnabled ? $cacheDir : false,
 			'debug'            => $config->debug || $devModeActive,
 			'auto_reload'      => $config->debug || $devModeActive,   // Auto-reload in dev or devmode
@@ -151,5 +151,61 @@ readonly class TwigEngine
 		} catch (\Exception $e) {
 			throw $e->getPrevious() ?? $e;
 		}
+	}
+
+	/**
+	 * Render a template with an in-memory content override. The override takes
+	 * priority over the filesystem loader for the given $name; everything else
+	 * (extends, include, import) resolves through the normal loader chain.
+	 *
+	 * Used by the Builder editor to preview unsaved edits without touching disk.
+	 *
+	 * @param array<mixed> $data
+	 */
+	public function renderWithOverride(string $name, string $content, array $data = []): string
+	{
+		$originalLoader = $this->twig->getLoader();
+
+		$preprocessed = $this->designerPreprocessor->preprocess($content, $name);
+		$arrayLoader  = new ArrayLoader([$name => $preprocessed]);
+		$chainLoader  = new ChainLoader([$arrayLoader, $originalLoader]);
+
+		$this->twig->setLoader($chainLoader);
+
+		try {
+			return $this->twig->render($name, $data);
+		} finally {
+			$this->twig->setLoader($originalLoader);
+		}
+	}
+
+	/**
+	 * Register Twig functions, filters, and globals from extensions.
+	 *
+	 * @param list<TwigFunction> $functions
+	 * @param list<\Twig\TwigFilter>   $filters
+	 * @param array<string,mixed>      $globals
+	 */
+	public function registerExtensionItems(array $functions, array $filters, array $globals): void
+	{
+		foreach ($functions as $fn) {
+			$this->twig->addFunction($fn);
+		}
+		foreach ($filters as $filter) {
+			$this->twig->addFilter($filter);
+		}
+		foreach ($globals as $name => $value) {
+			$this->twig->addGlobal($name, $value);
+		}
+	}
+
+	/**
+	 * Register an extension's template directory as a namespaced Twig path.
+	 *
+	 * Templates are then accessible as @vendor-name/template.twig
+	 */
+	public function addExtensionTemplatePath(string $path, string $namespace): void
+	{
+		$this->filesystemLoader->addPath($path, $namespace);
 	}
 }

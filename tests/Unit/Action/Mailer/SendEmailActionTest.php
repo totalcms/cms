@@ -11,6 +11,7 @@ use TotalCMS\Action\Mailer\SendEmailAction;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\OperationResult;
 
 final class SendEmailActionTest extends TestCase
 {
@@ -42,15 +43,17 @@ final class SendEmailActionTest extends TestCase
 
 		$this->request->method('getParsedBody')->willReturn($postData);
 
+		$opResult = OperationResult::success('Email sent');
+
 		$this->emailService->expects($this->once())
 			->method('sendEmail')
 			->with('welcome-email', ['name' => 'John Doe'])
-			->willReturn(['success' => true, 'message' => 'Email sent']);
+			->willReturn($opResult);
 
 		$jsonResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, ['success' => true, 'message' => 'Email sent'])
+			->with($this->response, $opResult->toArray())
 			->willReturn($jsonResponse);
 
 		$result = ($this->action)($this->request, $this->response);
@@ -105,7 +108,7 @@ final class SendEmailActionTest extends TestCase
 		$this->emailService->expects($this->once())
 			->method('sendEmail')
 			->with('test-email', [])
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->renderer->method('json')->willReturn($this->response);
 
@@ -121,7 +124,7 @@ final class SendEmailActionTest extends TestCase
 		$this->emailService->expects($this->once())
 			->method('sendEmail')
 			->with('test-email', [])
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->renderer->method('json')->willReturn($this->response);
 
@@ -140,7 +143,7 @@ final class SendEmailActionTest extends TestCase
 		$this->emailService->expects($this->once())
 			->method('sendEmail')
 			->with('test-email', ['name' => 'Jane', 'email' => 'jane@example.com'])
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->renderer->method('json')->willReturn($this->response);
 
@@ -178,8 +181,10 @@ final class SendEmailActionTest extends TestCase
 
 		$this->request->method('getParsedBody')->willReturn($postData);
 
+		$opResult = OperationResult::failure('Email failed');
+
 		$this->emailService->method('sendEmail')
-			->willReturn(['success' => false, 'message' => 'Email failed']);
+			->willReturn($opResult);
 
 		$response500 = $this->createMock(ResponseInterface::class);
 		$this->response->expects($this->once())
@@ -190,7 +195,7 @@ final class SendEmailActionTest extends TestCase
 		$jsonResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($response500, ['success' => false, 'message' => 'Email failed'])
+			->with($response500, $opResult->toArray())
 			->willReturn($jsonResponse);
 
 		$result = ($this->action)($this->request, $this->response);
@@ -217,7 +222,7 @@ final class SendEmailActionTest extends TestCase
 				'order-confirmation',
 				$this->equalTo($postData['data'])
 			)
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$this->renderer->method('json')->willReturn($this->response);
 
@@ -231,7 +236,7 @@ final class SendEmailActionTest extends TestCase
 		$this->request->method('getParsedBody')->willReturn($postData);
 
 		$this->emailService->method('sendEmail')
-			->willReturn(['success' => true, 'message' => 'Sent']);
+			->willReturn(OperationResult::success('Sent'));
 
 		$jsonResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->method('json')->willReturn($jsonResponse);

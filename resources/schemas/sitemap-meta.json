@@ -1,0 +1,117 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/sitemap-meta.json",
+	"id"          : "sitemap-meta",
+	"type"        : "object",
+	"description" : "Sitemap settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
+	"formgrid"    : "enabled .\npriority priority\nfrequency date\nexclude include",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "ID",
+			"help"     : "Reserved — required by the schema system but unused for cards.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"readonly" : true
+			}
+		},
+		"enabled": {
+			"type"    : "boolean",
+			"label"   : "Include in Sitemap",
+			"help"    : "Generate a sitemap for this collection and list it in the sitemap index. When disabled, /sitemap/{collection} returns 404.",
+			"field"   : "toggle",
+			"default" : false
+		},
+		"date": {
+			"type"        : "string",
+			"label"       : "Date Property",
+			"help"        : "Object property used for the lastmod timestamp. Choose any property from the collection's schema.",
+			"field"       : "select",
+			"placeholder" : "updated",
+			"default"     : "updated",
+			"settings"    : {
+				"propertyOptions" : "schemaProperties",
+				"sortOptions"     : true,
+				"visibility"      : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"frequency": {
+			"type"        : "string",
+			"label"       : "Change Frequency",
+			"help"        : "Hint to crawlers about how often objects change. Most search engines treat this as advisory.",
+			"field"       : "select",
+			"placeholder" : "Not set",
+			"default"     : "",
+			"options"     : [
+				"always",
+				"hourly",
+				"daily",
+				"weekly",
+				"monthly",
+				"yearly",
+				"never"
+			],
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"priority": {
+			"type"        : "number",
+			"label"       : "Priority",
+			"help"        : "Default crawl priority for objects in this collection (0.0 to 1.0). Leave at 0 to omit.",
+			"field"       : "range",
+			"placeholder" : "0.5",
+			"default"     : 0,
+			"settings"    : {
+				"min"        : 0,
+				"max"        : 1,
+				"step"       : 0.1,
+				"visibility" : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"include": {
+			"type"        : "string",
+			"label"       : "Include Filter",
+			"help"        : "Only include objects matching this filter expression. Example: published:true",
+			"field"       : "text",
+			"placeholder" : "published:true",
+			"default"     : "",
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"exclude": {
+			"type"        : "string",
+			"label"       : "Exclude Filter",
+			"help"        : "Skip objects matching this filter expression. Example: draft:true",
+			"field"       : "text",
+			"placeholder" : "draft:true",
+			"default"     : "",
+			"settings"    : {
+				"visibility" : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		}
+	},
+	"required": []
+}

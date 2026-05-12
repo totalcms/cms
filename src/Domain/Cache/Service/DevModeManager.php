@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Cache\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\SystemEventPayload;
+
 /**
  * Manages temporary development mode state.
  */
@@ -12,8 +15,9 @@ class DevModeManager
 	private readonly string $devModeFile;
 	private int $devModeDuration = 10800; // 3 hours in seconds
 
-	public function __construct()
-	{
+	public function __construct(
+		private readonly EventDispatcher $eventDispatcher,
+	) {
 		$this->devModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
 	}
 
@@ -32,6 +36,10 @@ class DevModeManager
 			$this->devModeFile,
 			json_encode($devModeData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)
 		);
+
+		$this->eventDispatcher->dispatch('devmode.enabled', new SystemEventPayload([
+			'duration' => $this->devModeDuration,
+		]));
 	}
 
 	/**
@@ -42,6 +50,8 @@ class DevModeManager
 		if (file_exists($this->devModeFile)) {
 			unlink($this->devModeFile);
 		}
+
+		$this->eventDispatcher->dispatch('devmode.disabled', new SystemEventPayload());
 	}
 
 	/**

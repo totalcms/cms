@@ -49,9 +49,9 @@ readonly class BulkMailerAction
 
 		$result = $this->bulkMailerService->queueBulkSend($mailerId, $collection, $include, $exclude, $scheduledAt, $overrideTo, $objectIds);
 
-		if ($result['success']) {
-			$message = htmlspecialchars($result['message']);
-			$batchId = htmlspecialchars((string)($result['batchId'] ?? ''));
+		if ($result->success) {
+			$message = htmlspecialchars($result->message);
+			$batchId = htmlspecialchars((string)($result->data['batchId'] ?? ''));
 
 			$html = '<div class="cms-success"><strong>Queued!</strong> ' . $message .
 				'<br>Batch ID: <code>' . $batchId . '</code></div>';
@@ -59,7 +59,7 @@ readonly class BulkMailerAction
 			return $this->htmlResponse($response, $html);
 		}
 
-		$message = htmlspecialchars($result['message']);
+		$message = htmlspecialchars($result->message);
 
 		return $this->htmlResponse($response, '<div class="cms-error"><strong>Error:</strong> ' . $message . '</div>');
 	}

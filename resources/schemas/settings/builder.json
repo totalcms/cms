@@ -1,0 +1,29 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Site Builder Settings",
+	"description" : "Configure the Site Builder feature",
+	"type"        : "object",
+	"properties"  : {
+		"pagesCollection": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Pages Collection",
+			"help"        : "The collection used for page metadata. Change this if you use a custom schema that extends <code>builder-page</code>.",
+			"placeholder" : "builder-pages"
+		},
+		"assetsPath": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Assets Path",
+			"help"        : "Public assets directory relative to docroot. Your build tool should output CSS, JS, and other assets here.",
+			"placeholder" : "assets"
+		},
+		"liveReload": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Live Reload Preview",
+			"help"    : "When you save a Builder template or page, every open admin tab on a Builder page reloads automatically. Only active for logged-in admin sessions; visitors never see it.",
+			"default" : true
+		}
+	}
+}

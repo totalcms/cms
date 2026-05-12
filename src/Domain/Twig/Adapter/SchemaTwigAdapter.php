@@ -95,13 +95,39 @@ readonly class SchemaTwigAdapter
 		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
+	/**
+	 * Get all accessible extension-provided schemas (Pro edition only).
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function extension(): array
+	{
+		$schemas = $this->schemaLister->listExtensionSchemas();
+
+		$schemas = array_filter(
+			$schemas,
+			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
+		);
+
+		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
+	}
+
 	/** @return array<string,array<array<string,mixed>>> */
 	public function byCategory(): array
 	{
-		$customSchemas   = $this->custom();
-		$reservedSchemas = $this->reserved();
+		$customSchemas    = $this->custom();
+		$extensionSchemas = $this->extension();
+		$reservedSchemas  = $this->reserved();
 
 		$categories = [];
+
+		foreach ($extensionSchemas as $schema) {
+			$category = empty($schema['category']) ? 'Extension Schemas' : trim(strval($schema['category']));
+			if (!array_key_exists($category, $categories)) {
+				$categories[$category] = [];
+			}
+			$categories[$category][] = $schema;
+		}
 
 		foreach ($customSchemas as $schema) {
 			$category = empty($schema['category']) ? 'Custom Schemas' : trim(strval($schema['category']));
@@ -113,18 +139,14 @@ readonly class SchemaTwigAdapter
 
 		$categories['Built-in Schemas'] = $reservedSchemas;
 
+		// Sort order: custom categories → Extension Schemas → Built-in Schemas
 		uksort($categories, function ($a, $b): int {
-			if ($a === 'Built-in Schemas') {
-				return 1;
-			}
-			if ($b === 'Built-in Schemas') {
-				return -1;
-			}
-			if ($a === 'Custom Schemas') {
-				return 1;
-			}
-			if ($b === 'Custom Schemas') {
-				return -1;
+			$order  = ['Built-in Schemas' => 3, 'Extension Schemas' => 2, 'Custom Schemas' => 1];
+			$aOrder = $order[$a] ?? 0;
+			$bOrder = $order[$b] ?? 0;
+
+			if ($aOrder !== $bOrder) {
+				return $aOrder <=> $bOrder;
 			}
 
 			return strcmp($a, $b);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Domain\Settings\Services;
 
 use PHPUnit\Framework\TestCase;
@@ -45,7 +47,7 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(12, $sections);
+		$this->assertCount(13, $sections);
 		$this->assertContains('installation', $sections);
 		$this->assertContains('general', $sections);
 		$this->assertContains('dashboard', $sections);
@@ -58,6 +60,7 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertContains('pushnotif', $sections);
 		$this->assertContains('presets', $sections);
 		$this->assertContains('license', $sections);
+		$this->assertContains('sync', $sections);
 	}
 
 	// ==================== Dashboard Section ====================

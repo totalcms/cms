@@ -110,7 +110,7 @@ class RenderTwigAdapter
 			return $this->loadItems($collection, $template, $limit, $options);
 		}
 
-		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+		$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 
 		return $this->buildTrigger($baseUrl, $options);
 	}
@@ -154,7 +154,7 @@ class RenderTwigAdapter
 			return $this->loadDataViewItems($viewId, $template, $limit, $options);
 		}
 
-		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+		$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 
 		return $this->buildTrigger($baseUrl, $options);
 	}
@@ -180,7 +180,7 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMoreButton: "target" option is required -->';
 		}
 
-		$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+		$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 
 		return $this->buildButtonTrigger($baseUrl, $options);
 	}
@@ -203,7 +203,7 @@ class RenderTwigAdapter
 			return '<!-- cms.render.loadMoreDataViewButton: "target" option is required -->';
 		}
 
-		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+		$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 
 		return $this->buildButtonTrigger($baseUrl, $options);
 	}
@@ -278,7 +278,7 @@ class RenderTwigAdapter
 		$html = $this->renderItems($result->items, $template, $collection);
 
 		if ($result->hasMore()) {
-			$baseUrl = $this->config->api . '/collections/' . $collection . '/query';
+			$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 			$html .= $this->buildTrigger($baseUrl, $options);
 		}
 
@@ -300,7 +300,7 @@ class RenderTwigAdapter
 		$html = $this->renderItems($result->items, $template);
 
 		if ($result->hasMore()) {
-			$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+			$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 			$html .= $this->buildTrigger($baseUrl, $options);
 		}
 
@@ -477,11 +477,18 @@ class RenderTwigAdapter
 			return '';
 		}
 
-		// Performance optimization: Extract image data from object if passed
+		// Resolve image data, descending dotted `property` for card/deck-nested.
+		[$rootProp, $segments] = MediaTwigAdapter::splitDottedProperty((string)$options['property']);
 		if (is_array($idOrObject)) {
-			$image = $idOrObject[$options['property']] ?? [];
+			$image = MediaTwigAdapter::descendDottedPath($idOrObject, $rootProp, $segments) ?? [];
 		} else {
-			$image = $this->data->raw($options['collection'], $idOrObject, $options['property']);
+			$image = $this->data->raw($options['collection'], $idOrObject, $rootProp);
+			foreach ($segments as $segment) {
+				$image = is_array($image) ? ($image[$segment] ?? null) : null;
+			}
+		}
+		if (!is_array($image)) {
+			$image = [];
 		}
 
 		// Calculate dimensions for layout stability (prevents CLS)
@@ -880,11 +887,15 @@ class RenderTwigAdapter
 			'property'   => 'image',
 		], $options);
 
-		// Performance optimization: Extract image data from object if passed
+		// Resolve image data, descending dotted `property` for card/deck-nested.
+		[$rootProp, $segments] = MediaTwigAdapter::splitDottedProperty((string)$options['property']);
 		if (is_array($idOrObject)) {
-			$image = $idOrObject[$options['property']] ?? null;
+			$image = MediaTwigAdapter::descendDottedPath($idOrObject, $rootProp, $segments);
 		} else {
-			$image = $this->data->raw($options['collection'], $idOrObject, $options['property']);
+			$image = $this->data->raw($options['collection'], $idOrObject, $rootProp);
+			foreach ($segments as $segment) {
+				$image = is_array($image) ? ($image[$segment] ?? null) : null;
+			}
 		}
 
 		if (!is_array($image)) {
@@ -1062,7 +1073,7 @@ class RenderTwigAdapter
 		$idField = HTMLUtils::element('div', $label . $input);
 
 		$form = new \TotalCMS\Domain\Admin\SimpleForm(
-			api     : $this->config->api,
+			api     : $this->config->api . '/api',
 			route   : '',
 			method  : 'POST',
 			label   : 'Clone ' . $labelSingular,

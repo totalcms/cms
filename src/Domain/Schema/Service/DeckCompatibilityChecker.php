@@ -6,10 +6,12 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
- * Service to check if a schema is compatible with deck usage.
+ * Service to check if a schema is compatible with deck or card usage.
  *
- * Deck-compatible schemas must only contain properties that don't require file uploads
- * or complex data structures that aren't supported in the deck format.
+ * `image` and `file` are compatible (Phase 2 added nested-upload support for them
+ * inside cards; Phase 3 extends this to decks). `gallery`, `depot`, and `deck`
+ * remain incompatible — they have plurality models that don't fit the
+ * single-value-per-child shape that nested-property storage assumes.
  */
 readonly class DeckCompatibilityChecker
 {
@@ -24,24 +26,19 @@ readonly class DeckCompatibilityChecker
 			: null;
 	}
 	/**
-	 * Property types that are NOT compatible with deck usage.
-	 * These types involve file handling or complex structures.
+	 * Property types that are NOT compatible with deck/card usage.
 	 */
 	private const INCOMPATIBLE_TYPES = [
-		'image',
 		'gallery',
-		'file',
 		'depot',
 		'deck',
 	];
 
 	/**
-	 * Property references that are NOT compatible with deck usage.
+	 * Property references that are NOT compatible with deck/card usage.
 	 */
 	private const INCOMPATIBLE_REFS = [
-		'https://www.totalcms.co/schemas/properties/image.json',
 		'https://www.totalcms.co/schemas/properties/gallery.json',
-		'https://www.totalcms.co/schemas/properties/file.json',
 		'https://www.totalcms.co/schemas/properties/depot.json',
 		'https://www.totalcms.co/schemas/properties/deck.json',
 	];

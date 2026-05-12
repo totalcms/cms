@@ -5,11 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Object\Service;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -24,164 +19,76 @@ final class ObjectRemoverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $viewUpdateScheduler;
+	private \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher;
+
+	/** @var array<string,mixed>|null */
+	private ?array $dispatchedPayload = null;
 
 	protected function setUp(): void
 	{
-		$this->propStorage           = $this->createMock(PropertyRepository::class);
-		$this->storage               = $this->createMock(ObjectRepository::class);
-		$this->objectFetcher         = $this->createMock(ObjectFetcher::class);
-		$this->objectUpdater         = $this->createMock(ObjectUpdater::class);
-		$this->indexBuilder          = $this->createMock(IndexBuilder::class);
-		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
-		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
-		$this->viewUpdateScheduler   = $this->createMock(DataViewUpdateScheduler::class);
+		$this->propStorage     = $this->createMock(PropertyRepository::class);
+		$this->storage         = $this->createMock(ObjectRepository::class);
+		$this->objectFetcher   = $this->createMock(ObjectFetcher::class);
+		$this->objectUpdater   = $this->createMock(ObjectUpdater::class);
+		$this->eventDispatcher = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
+
+		$this->eventDispatcher->listen('object.deleted', function (array $payload): void {
+			$this->dispatchedPayload = $payload;
+		});
 
 		$this->remover = new ObjectRemover(
 			$this->propStorage,
 			$this->storage,
 			$this->objectFetcher,
 			$this->objectUpdater,
-			$this->indexBuilder,
-			$this->collectionFetcher,
-			$this->collectionSaver,
-			$this->viewUpdateScheduler,
+			$this->eventDispatcher,
 		);
 	}
 
 	public function testDeleteObjectSuccessfully(): void
 	{
-		// Mock collection that doesn't require queueing
-		$mockCollection = $this->createMock(CollectionData::class);
-
-		// Set up storage to return success
 		$this->storage
 			->expects($this->once())
 			->method('deleteObject')
 			->with('posts', 'test-id')
 			->willReturn(true);
 
-		// Set up collection fetcher
-		$this->collectionFetcher
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('posts')
-			->willReturn($mockCollection);
-
-		// Set up index builder expectation for full rebuild
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts');
-
-		// Execute
 		$result = $this->remover->deleteObject('posts', 'test-id');
 
-		// Verify
-		expect($result)->toBeTrue();
-	}
-
-	public function testDeleteObjectWithQueueRebuildOnSave(): void
-	{
-		// Mock collection with queueRebuildOnSave enabled
-		$mockCollection                     = $this->createMock(CollectionData::class);
-		$mockCollection->queueRebuildOnSave = true;
-
-		// Set up storage to return success
-		$this->storage
-			->expects($this->once())
-			->method('deleteObject')
-			->with('posts', 'test-id')
-			->willReturn(true);
-
-		// Set up collection fetcher
-		$this->collectionFetcher
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('posts')
-			->willReturn($mockCollection);
-
-		// Set up index builder expectations - should call both methods
-		$this->indexBuilder
-			->expects($this->once())
-			->method('removeObjectFromIndex')
-			->with('posts', 'test-id');
-
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts');
-
-		// Execute
-		$result = $this->remover->deleteObject('posts', 'test-id');
-
-		// Verify
 		expect($result)->toBeTrue();
 	}
 
 	public function testDeleteObjectFailure(): void
 	{
-		// Set up storage to return failure
 		$this->storage
 			->expects($this->once())
 			->method('deleteObject')
 			->with('posts', 'test-id')
 			->willReturn(false);
 
-		// Collection fetcher and index builder should not be called on failure
-		$this->collectionFetcher
-			->expects($this->never())
-			->method('fetchCollection');
-
-		$this->indexBuilder
-			->expects($this->never())
-			->method('smartBuildIndex');
-
-		$this->indexBuilder
-			->expects($this->never())
-			->method('removeObjectFromIndex');
-
-		// Execute
 		$result = $this->remover->deleteObject('posts', 'test-id');
 
-		// Verify
 		expect($result)->toBeFalse();
 	}
 
-	public function testDeleteObjectWithNonCollectionDataResponse(): void
+	public function testDeleteObjectDispatchesDeletedEvent(): void
 	{
-		// Set up storage to return success
-		$this->storage
-			->expects($this->once())
-			->method('deleteObject')
-			->with('posts', 'test-id')
-			->willReturn(true);
+		$this->storage->method('deleteObject')->willReturn(true);
 
-		// Collection fetcher returns non-CollectionData (null)
-		$this->collectionFetcher
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('posts')
-			->willReturn(null);
+		$this->remover->deleteObject('posts', 'test-id');
 
-		// Should still call smartBuildIndex but not removeObjectFromIndex
-		$this->indexBuilder
-			->expects($this->once())
-			->method('smartBuildIndex')
-			->with('posts');
+		expect($this->dispatchedPayload)->not->toBeNull();
+		expect($this->dispatchedPayload['collection'])->toBe('posts');
+		expect($this->dispatchedPayload['id'])->toBe('test-id');
+	}
 
-		$this->indexBuilder
-			->expects($this->never())
-			->method('removeObjectFromIndex');
+	public function testDeleteObjectDoesNotDispatchEventOnFailure(): void
+	{
+		$this->storage->method('deleteObject')->willReturn(false);
 
-		// Execute
-		$result = $this->remover->deleteObject('posts', 'test-id');
+		$this->remover->deleteObject('posts', 'test-id');
 
-		// Verify
-		expect($result)->toBeTrue();
+		expect($this->dispatchedPayload)->toBeNull();
 	}
 
 	public function testDeleteObjectPropertySetsPropertyToNull(): void
@@ -314,5 +221,170 @@ final class ObjectRemoverTest extends TestCase
 
 		// Verify
 		expect($result)->toBe($updatedObject);
+	}
+
+	public function testDeleteNestedPropertyClearsChildAndPreservesSiblings(): void
+	{
+		// Existing card with image and title children. Deleting just the image
+		// nulls obj[mycard][image] and removes the disk dir at coll/id/mycard/image/.
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return [
+					'id'     => 'test-id',
+					'mycard' => [
+						'id'    => 'mycard',
+						'title' => 'My card title',
+						'image' => ['name' => 'photo.jpg'],
+					],
+				];
+			}
+		};
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		// Disk-side: must scope the delete to the nested dir (subpath = 'image').
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mycard', null, 'image');
+
+		// JSON-side: image is nulled, title preserved, sibling card metadata intact.
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mycard' => [
+				'id'    => 'mycard',
+				'title' => 'My card title',
+				'image' => null,
+			],
+		];
+
+		$updatedObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+		};
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
+	}
+
+	public function testDeleteNestedPropertyHandlesMultiSegmentDeckPath(): void
+	{
+		// Phase 3: deck-item child delete clears `obj[deckprop][itemId][childKey]`
+		// to null and removes the matching nested directory on disk.
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return [
+					'id'     => 'test-id',
+					'mydeck' => [
+						'item-3' => [
+							'id'    => 'item-3',
+							'title' => 'Item 3',
+							'image' => ['name' => 'photo.jpg'],
+						],
+						'item-4' => [
+							'id' => 'item-4',
+						],
+					],
+				];
+			}
+		};
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		// Disk delete must scope to the deep nested dir.
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mydeck', null, 'item-3/image');
+
+		// JSON: only obj.mydeck.item-3.image is nulled; siblings preserved.
+		$expectedObjectData = [
+			'id'     => 'test-id',
+			'mydeck' => [
+				'item-3' => [
+					'id'    => 'item-3',
+					'title' => 'Item 3',
+					'image' => null,
+				],
+				'item-4' => [
+					'id' => 'item-4',
+				],
+			],
+		];
+
+		$updatedObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+		};
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mydeck', 'item-3/image');
+	}
+
+	public function testDeleteNestedPropertyIsSafeWhenParentMissing(): void
+	{
+		// Object exists but has no `mycard` key — delete should be a vacuous no-op
+		// at the JSON layer (still call updateObject for consistency) and still
+		// attempt the disk cleanup (in case orphan files exist).
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return ['id' => 'test-id'];
+			}
+		};
+
+		$this->objectFetcher->method('fetchObject')->willReturn($existingObject);
+
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mycard', null, 'image');
+
+		// Object data unchanged (no mycard key was present, none added).
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', ['id' => 'test-id']);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
 	}
 }

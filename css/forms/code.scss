@@ -17,42 +17,29 @@
 .totalform-code-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius)!important;
-	overflow: hidden; // Clip horizontal overflow
-	flex: 1; // Allow it to grow in flex containers
-	width: 100%; // Ensure full width
-	max-width: 100%; // Never exceed container width
-	min-width: 0; // Prevent flex shrinking below content size
-	resize: vertical; // Allow manual resizing
+	overflow: hidden;
+	flex: 1;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	resize: vertical;
 
-	// Auto-resize functionality for editors
-	.CodeMirror-scroll {
-		overflow-y: auto !important; // Scroll when content exceeds height
-		overflow-x: auto !important; // Enable horizontal scrolling
+	.cm-scroller {
+		overflow-y: auto !important;
+		overflow-x: auto !important;
 	}
 
-	.CodeMirror-scrollbar-filler {
-		display: none;
+	// Fill container and suppress CM6 default focus outline
+	.cm-editor {
+		height: 100%;
+		width: 100%;
+		max-width: 100%;
+		outline: none !important;
+		border : none !important;
 	}
 
-	// Show horizontal scrollbar gutter
-	.CodeMirror-gutter-filler {
-		background-color: oklch(var(--totalform-nearwhite));
-	}
-
-	// Ensure proper height and auto-resize
-	.CodeMirror {
-		height: 100%; // Fill the wrapper (wrapper controls sizing)
-		width: 100%; // Ensure CodeMirror takes full width
-		max-width: 100%; // Never exceed wrapper width
-		font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-		font-size: 14px;
-		line-height: 1.4;
-	}
-
-	// Style the horizontal scrollbar
-	.CodeMirror-hscrollbar {
-		height: 8px;
-
+	// Style the scrollbar
+	.cm-scroller {
 		&::-webkit-scrollbar {
 			height: 8px;
 		}
@@ -72,71 +59,134 @@
 	}
 
 	// Line numbers styling
-	.CodeMirror-linenumber {
+	.cm-lineNumbers .cm-gutterElement {
 		color: oklch(var(--totalform-mediumgray));
 		padding-right: 8px;
-		width: 40px !important; // Override CodeMirror's inline width calculation
-		min-width: 40px !important; // Ensure minimum width
-		text-align: right !important; // Force right alignment
-		box-sizing: border-box !important; // Include padding in width calculation
+		width: 40px !important;
+		min-width: 40px !important;
+		text-align: right !important;
+		box-sizing: border-box !important;
 	}
 
 	// Fold gutter
-	.CodeMirror-foldgutter {
+	.cm-foldGutter {
 		width: 16px !important;
 	}
 
-	// Gutter styling - account for both line numbers and fold gutter
-	.CodeMirror-gutters {
-		width: 56px !important; // Line numbers (40px) + fold gutter (16px)
+	// Gutter styling
+	.cm-gutters {
+		width: 56px !important;
 		border-right: 1px solid oklch(var(--totalform-lightgray));
 		background-color: oklch(var(--totalform-nearwhite));
 	}
 
 	// Active line highlighting
-	.CodeMirror-activeline-background {
+	.cm-activeLine {
 		background-color: oklch(var(--totalform-nearwhite) / 0.5);
 	}
 
 	// Selection styling
-	.CodeMirror-selected {
+	.cm-selectionBackground {
 		background-color: oklch(var(--totalform-accent) / 0.2);
 	}
 
 	// Cursor styling
-	.CodeMirror-cursor {
+	.cm-cursor {
 		border-left: 2px solid oklch(var(--totalform-nearblack));
 	}
 
 	// Focus state
-	&.CodeMirror-focused {
-		.CodeMirror-cursor {
+	&.cm-focused {
+		.cm-cursor {
 			border-left-color: oklch(var(--totalform-accent));
 		}
 	}
 }
 
 // Mode-specific styling
-.totalform-code-editor-twig {
-	// Twig-specific enhancements could go here
-}
-
-.totalform-code-editor-html {
-	// HTML-specific enhancements could go here
-}
-
-.totalform-code-editor-css {
-	// CSS-specific enhancements could go here
-}
-
+.totalform-code-editor-twig {}
+.totalform-code-editor-html {}
+.totalform-code-editor-css {}
 .totalform-code-editor-javascript,
-.totalform-code-editor-js {
-	// JavaScript-specific enhancements could go here
+.totalform-code-editor-js {}
+
+//------------------------------
+// Fullscreen toggle button
+//------------------------------
+.code-fullscreen-btn {
+	position         : absolute;
+	bottom           : 8px;
+	right            : 8px;
+	z-index          : 10;
+	width            : 28px;
+	height           : 28px;
+	padding          : 0;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-purewhite));
+	cursor           : pointer;
+	display          : flex;
+	align-items      : center;
+	justify-content  : center;
+	opacity          : 0.6;
+	transition       : opacity 0.2s ease, background-color 0.2s ease;
+
+	&:hover {
+		opacity          : 1;
+		background-color : oklch(var(--totalform-nearwhite));
+	}
+}
+
+.code-fullscreen-icon {
+	display          : block;
+	width            : 16px;
+	height           : 16px;
+	mask-image        : var(--icon-ste-fullscreen);
+	mask-size         : contain;
+	mask-repeat       : no-repeat;
+	mask-position     : center;
+	-webkit-mask-image    : var(--icon-ste-fullscreen);
+	-webkit-mask-size     : contain;
+	-webkit-mask-repeat   : no-repeat;
+	-webkit-mask-position : center;
+	background-color : oklch(var(--totalform-darkgray));
+}
+
+// Position the editor container relative so the button anchors correctly
+.totalform-code-editor {
+	position: relative;
+}
+
+//------------------------------
+// Fullscreen mode
+//------------------------------
+.code-fullscreen {
+	position         : fixed !important;
+	inset            : 0 !important;
+	z-index          : 9999 !important;
+	border-radius    : 0 !important;
+	width            : 100% !important;
+	height           : 100% !important;
+	resize           : none !important;
+	background-color : oklch(var(--totalform-purewhite));
+
+	.cm-editor {
+		height    : 100% !important;
+		font-size : 1rem;
+	}
+
+	.cm-scroller {
+		min-height : 100% !important;
+	}
+
+	.code-fullscreen-btn {
+		bottom : 16px;
+		right  : 16px;
+	}
 }
 
 // Form field container styling
 .totalform .field-container[data-field-type="code"] {
-	// Ensure the field container takes full width in flex layouts
 	flex: 1;
 	width: 100%;
 	min-width: 0;
@@ -151,7 +201,6 @@
 		color: oklch(var(--totalform-mediumgray));
 	}
 
-	// If the field container itself is a flex container (form-group)
 	&.form-group {
 		flex-direction: column;
 
@@ -160,14 +209,12 @@
 		}
 	}
 
-	// Error state styling
 	&.has-error {
 		.totalform-code-editor {
 			border-color: oklch(var(--totalform-error));
 		}
 	}
 
-	// Disabled state styling
 	&.is-disabled {
 		.totalform-code-editor {
 			opacity: 0.6;
@@ -175,23 +222,13 @@
 		}
 	}
 
-	// Readonly state styling
 	&.is-readonly {
 		.totalform-code-editor {
 			background-color: oklch(var(--totalform-nearwhite));
 
-			.CodeMirror {
+			.cm-editor {
 				background-color: oklch(var(--totalform-nearwhite));
 			}
-		}
-	}
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-	.totalform-code-editor {
-		.CodeMirror {
-			font-size: 12px;
 		}
 	}
 }

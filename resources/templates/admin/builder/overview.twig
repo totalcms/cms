@@ -1,0 +1,130 @@
+<header>
+	<h1>{{ t('builder.title') }}</h1>
+</header>
+
+<section class="dash-content-section">
+
+	<section>
+	<h2>{{ t('builder.what_title') }}</h2>
+	<p>{{ t('builder.what_desc') }}</p>
+	</section>
+
+	<section>
+	<div class="builder-stats">
+		<div class="stat-grid">
+			<div class="stat-item">
+				<span class="stat-number">{{ builder.pages|length }}</span>
+				<span class="stat-label">{{ t('builder.stat_pages') }}</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.layouts|length }}</span>
+				<span class="stat-label">{{ t('builder.stat_layouts') }}</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.pages|length }}</span>
+				<span class="stat-label">{{ t('builder.stat_templates') }}</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.partials|length }}</span>
+				<span class="stat-label">{{ t('builder.stat_partials') }}</span>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">{{ fileTree.macros|length }}</span>
+				<span class="stat-label">{{ t('builder.stat_macros') }}</span>
+			</div>
+		</div>
+	</div>
+	</section>
+
+	<section class="builder-info">
+		<h3>{{ t('builder.config_title') }}</h3>
+		<table class="admin-table">
+			{% if builder.docroot %}
+			<tr>
+				<td>{{ t('builder.config_docroot') }}</td>
+				<td><code>{{ builder.docroot }}</code></td>
+			</tr>
+			{% endif %}
+			<tr>
+				<td>{{ t('builder.config_assets_path') }}</td>
+				<td><code>{{ builder.assetsPath }}</code></td>
+			</tr>
+			<tr>
+				<td>{{ t('builder.config_pages_collection') }}</td>
+				<td><code>{{ builder.pagesCollection }}</code></td>
+			</tr>
+		</table>
+	</section>
+
+	{% set assets = builder.assets %}
+	{% set totalAssets = assets.css|length + assets.js|length + assets.fonts|length + assets.images|length + assets.other|length %}
+	<section>
+		<h3>{{ t('builder.assets_title') }}</h3>
+		{% if totalAssets > 0 %}
+		<p>{{ t('builder.assets_desc', {path: builder.assetsPath}) }}</p>
+
+		{% if assets.hasManifest %}
+		<p>{{ t('builder.assets_manifest') }}</p>
+		{% endif %}
+
+		<table class="admin-table">
+			{% if assets.css is not empty %}
+			<tr>
+				<td>{{ t('builder.assets_css') }}</td>
+				<td>
+					{% for file in assets.css %}
+						<code>{{ file }}</code>{% if not loop.last %}, {% endif %}
+					{% endfor %}
+				</td>
+			</tr>
+			{% endif %}
+			{% if assets.js is not empty %}
+			<tr>
+				<td>{{ t('builder.assets_js') }}</td>
+				<td>
+					{% for file in assets.js %}
+						<code>{{ file }}</code>{% if not loop.last %}, {% endif %}
+					{% endfor %}
+				</td>
+			</tr>
+			{% endif %}
+			{% if assets.fonts is not empty %}
+			<tr>
+				<td>{{ t('builder.assets_fonts') }}</td>
+				<td>
+					{% for file in assets.fonts %}
+						<code>{{ file }}</code>{% if not loop.last %}, {% endif %}
+					{% endfor %}
+				</td>
+			</tr>
+			{% endif %}
+			{% if assets.images is not empty %}
+			<tr>
+				<td>{{ t('builder.assets_images') }}</td>
+				<td>{{ assets.images|length }} {{ assets.images|length > 1 ? t('builder.assets_files') : t('builder.assets_file') }}</td>
+			</tr>
+			{% endif %}
+			{% if assets.other is not empty %}
+			<tr>
+				<td>{{ t('builder.assets_other') }}</td>
+				<td>{{ assets.other|length }} {{ assets.other|length > 1 ? t('builder.assets_files') : t('builder.assets_file') }}</td>
+			</tr>
+			{% endif %}
+		</table>
+		{% else %}
+		<p>{{ t('builder.assets_empty', {path: builder.assetsPath}) }}</p>
+		{% endif %}
+	</section>
+
+	<section>
+	<h3>{{ t('builder.start_title') }}</h3>
+	<ol>
+		<li>{{ t('builder.start_step1') }}</li>
+		<li>{{ t('builder.start_step2') }}</li>
+		<li>{{ t('builder.start_step3') }}</li>
+		<li>{{ t('builder.start_step4') }}</li>
+		<li>{{ t('builder.start_step5', {path: builder.assetsPath}) }}</li>
+	</ol>
+	</section>
+
+</section>

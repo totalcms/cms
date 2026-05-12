@@ -18,6 +18,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 describe('SchemaFetcher', function (): void {
 	beforeEach(function (): void {
 		$this->storage           = $this->createMock(SchemaRepository::class);
+		$this->storage->method('reservedSchemasIds')->willReturn(SchemaData::RESERVED_SCHEMAS);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->cacheManager      = $this->createMock(CacheManager::class);
 

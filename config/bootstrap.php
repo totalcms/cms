@@ -14,11 +14,13 @@ if (php_sapi_name() == 'cli-server') {
 	}
 }
 
-require_once __DIR__ . '/../vendor/autoload.php';
+if (!class_exists(TotalCMS\Support\PathResolver::class, false)) {
+	require_once __DIR__ . '/../vendor/autoload.php';
+}
 
 // Define ROOT for CakePHP I18n translations (resources/locales/)
 if (!defined('ROOT')) {
-	define('ROOT', dirname(__DIR__));
+	define('ROOT', TotalCMS\Support\PathResolver::packageRoot());
 }
 
 $container = new Container(require __DIR__ . '/container.php');
@@ -32,10 +34,17 @@ if ($sentryEnabled === true) {
 // Create App instance
 $app = $container->get(App::class);
 
+// Discover and register extensions (before middleware/routes so extensions can add container definitions)
+$extensionManager = $container->get(TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+$extensionManager->discoverAndRegister();
+
 // Register middleware
 (require __DIR__ . '/middleware.php')($app);
 
 // Register routes
 (require __DIR__ . '/routes.php')($app);
+
+// Boot extensions (register Twig items, schemas, events, etc.)
+$extensionManager->bootAll();
 
 return $app;

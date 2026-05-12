@@ -62,7 +62,7 @@ export default class DepotField extends TotalField {
             const name = this.getFileAttribute(selected, "name");
             const ext  = name.split(".").pop().toLowerCase();
             const path = this.getPath();
-            const url  = this.api.buildApiQuery(
+            const url  = this.api.buildPublicQuery(
                 `/stream/${this.form.collection}/${this.form.id}/${this.property}/${name}`,
                 path.length > 0 ? { path } : {}
             );
@@ -355,7 +355,7 @@ export default class DepotField extends TotalField {
 
         const options = path.length > 0 ? {path:path} : {};
         const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-        const downloadUrl = this.api.buildApiQuery(downloadApi, options);
+        const downloadUrl = this.api.buildPublicQuery(downloadApi, options);
 
         // If the file is password protected, open the download in a new tab
         // so the user can enter the password
@@ -747,6 +747,8 @@ export default class DepotField extends TotalField {
 
             const name = this.getFileAttribute(item, "name");
             contents.appendChild(item);
+            // Keep the filelinks iframe pointed at the new folder.
+            this.updateFileLinksFrame(item, { path: destPath });
 
             if (this.form.isEditMode()) {
                 this.moveFileAPI(name, sourcePath, destPath);
@@ -768,6 +770,8 @@ export default class DepotField extends TotalField {
 
             const name = this.getFileAttribute(item, "name");
             this.browser.appendChild(item);
+            // Move to root → drop the path query so the iframe targets the root.
+            this.updateFileLinksFrame(item, { path: "" });
 
             if (this.form.isEditMode()) {
                 this.moveFileAPI(name, sourcePath, "");
@@ -900,9 +904,32 @@ export default class DepotField extends TotalField {
     }
 
     setFileLinksUrl(file, data) {
+        // The file-template iframe has no `path` query (it's built once at
+        // server render time with no folder context). For files uploaded into
+        // a subfolder, propagate the current folder so the filelinks utility
+        // emits the right URLs and the `{path: …}` macro option.
+        this.updateFileLinksFrame(file, { name: data.name, path: this.getPath() });
+    }
+
+    /**
+     * Sync a file row's filelinks iframe with the current `name` and `path`.
+     * Used after upload (sets path from current folder) and after drag-drop
+     * moves (sets path to the destination folder so the macros stay correct).
+     */
+    updateFileLinksFrame(file, { name, path } = {}) {
         const frame = file.querySelector(".file-links-dialog iframe");
+        if (!frame) return;
         const url = new URL(frame.dataset.src, window.location.origin);
-        url.searchParams.set("name", data.name);
+        if (typeof name === "string") {
+            url.searchParams.set("name", name);
+        }
+        if (typeof path === "string") {
+            if (path) {
+                url.searchParams.set("path", path);
+            } else {
+                url.searchParams.delete("path");
+            }
+        }
         frame.dataset.src = url.pathname + url.search;
     }
 

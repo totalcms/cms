@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 

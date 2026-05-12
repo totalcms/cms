@@ -32,4 +32,16 @@ describe('UploadSaver', function (): void {
 
 		expect($result)->toBe('c/o/p/numeric-123');
 	});
+
+	test('save with subpath stores file at nested path and returns nested path', function (): void {
+		$this->storage
+			->expects($this->once())
+			->method('saveFile')
+			->with('blog', 'post-1', 'mydeck', '/tmp/photo.jpg', 'item-3/pic')
+			->willReturn(['name' => 'photo.jpg']);
+
+		$result = $this->saver->save('blog', 'post-1', 'mydeck', '/tmp/photo.jpg', 'item-3/pic');
+
+		expect($result)->toBe('blog/post-1/mydeck/item-3/pic/photo.jpg');
+	});
 });

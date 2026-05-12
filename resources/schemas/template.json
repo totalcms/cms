@@ -5,7 +5,23 @@
 	"description" : "A Twig template for rendering content",
 	"id"          : "template",
 	"type"        : "object",
+	"formgrid"    : "category id\ntemplate template\ndesignerEnabled designerToken",
 	"properties"  : {
+		"category": {
+			"type"    : "string",
+			"label"   : "Type",
+			"help"    : "The category determines where the template file is stored.",
+			"field"   : "select",
+			"default" : "templates",
+			"options" : [
+				{"value": "layouts",   "label": "Layout"},
+				{"value": "pages",     "label": "Page"},
+				{"value": "partials",  "label": "Partial"},
+				{"value": "macros",    "label": "Macro"},
+				{"value": "templates", "label": "Template"},
+				{"value": "whitelabel", "label": "White Label"}
+			]
+		},
 		"id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"       : "ID",
@@ -39,7 +55,14 @@
 			"label"   : "Template Designer",
 			"help"    : "Enable the Template Designer to allow remote template updates from development tools like Stacks.",
 			"field"   : "toggle",
-			"default" : false
+			"default" : false,
+			"settings" : {
+				"visibility" : {
+					"watch"    : "category",
+					"value"    : "templates",
+					"operator" : "=="
+				}
+			}
 		},
 		"designerToken": {
 			"type"     : "string",

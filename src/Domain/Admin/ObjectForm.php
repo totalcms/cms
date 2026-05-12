@@ -15,9 +15,24 @@ class ObjectForm extends TotalForm
 
 	protected function init(): void
 	{
+		// Public-registration mode forces add-only before parent::init() runs,
+		// so the parent's $_GET['id'] auto-load path doesn't fire either.
+		if ($this->register) {
+			$this->addOnly = true;
+		}
+
 		parent::init();
 
 		$this->route = "/collections/{$this->collection}";
+
+		// Retarget the form at the public registration endpoint. `data-api`
+		// drops the `/api` prefix because `/admin/register` lives at the
+		// config base, not under the API prefix — same convention as the
+		// admin-routed forms in TotalFormFactory::totalform().
+		if ($this->register) {
+			$this->api   = $this->config->api;
+			$this->route = "/admin/register/{$this->collection}";
+		}
 
 		$objectExists = $this->objectFetcher->existsObject($this->collection, $this->id);
 
@@ -124,10 +139,15 @@ class ObjectForm extends TotalForm
 	{
 		$defaults = $this->metaResolver->resolve($this->collection, $property, $this->id);
 
-		// Handle deckref for deck fields - move it to settings after resolve
-		// This is a form-specific concern, not part of general resolution
+		// Handle schema reference for deck/card fields — move to settings after resolve
+		// This is a form-specific concern, not part of general resolution.
+		// Accept both the canonical `schemaref` and the legacy `deckref` alias.
+		if (isset($defaults['schemaref'])) {
+			$defaults['settings']['schemaref'] = $defaults['schemaref'];
+			unset($defaults['schemaref']);
+		}
 		if (isset($defaults['deckref'])) {
-			$defaults['settings']['deckref'] = $defaults['deckref'];
+			$defaults['settings']['schemaref'] ??= $defaults['deckref'];
 			unset($defaults['deckref']);
 		}
 		if (isset($defaults['deckItemLabel'])) {

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Event\EventDispatcher;
 
 /**
  * Basic integration tests for DevModeManager without mocking dependencies.
@@ -17,7 +19,7 @@ final class DevModeBasicWorkflowTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->devModeManager  = new DevModeManager();
+		$this->devModeManager  = new DevModeManager(new EventDispatcher(new NullLogger()));
 		$this->testDevModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
 		$this->cleanupDevModeFile();
 	}
@@ -216,8 +218,9 @@ final class DevModeBasicWorkflowTest extends TestCase
 	public function testConcurrentDevModeAccess(): void
 	{
 		// Simulate concurrent access by creating multiple DevModeManager instances
-		$manager1 = new DevModeManager();
-		$manager2 = new DevModeManager();
+		$eventDispatcher = new EventDispatcher(new NullLogger());
+		$manager1        = new DevModeManager($eventDispatcher);
+		$manager2        = new DevModeManager($eventDispatcher);
 
 		// First manager enables dev mode
 		$manager1->enableDevMode();

@@ -28,6 +28,6 @@ readonly class DataViewTestAction
 
 		$result = $this->viewBuilder->testView($definition);
 
-		return $this->renderer->json($response, $result);
+		return $this->renderer->json($response, $result->toArray());
 	}
 }

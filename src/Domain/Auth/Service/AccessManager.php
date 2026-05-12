@@ -165,7 +165,7 @@ class AccessManager
 
 	private function redirectToLogin(string $collection = '', ?string $customLoginUrl = null): void
 	{
-		$loginUrl = $this->config->api . '/login';
+		$loginUrl = $this->config->api . '/admin/login';
 		if ($collection !== '') {
 			$loginUrl .= "/$collection";
 		}
@@ -186,7 +186,7 @@ class AccessManager
 
 	private function redirectToAccessDenied(): void
 	{
-		$deniedUrl = $this->config->api . '/denied';
+		$deniedUrl = $this->config->api . '/admin/denied';
 		header("Location: $deniedUrl");
 	}
 }

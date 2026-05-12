@@ -7,21 +7,29 @@ export default class FieldVisibility {
 	constructor(formElement, fields) {
 		this.form = formElement;
 		this.fields = fields;
+		this.controller = null;
 	}
 
 	//-------------------------
 	// Initialize Visibility
+	//
+	// Abort + recreate the controller so re-calling initialize() (e.g. from
+	// TotalForm.refreshFields() after a DOM swap) does not stack duplicate
+	// listeners on watched fields.
 	//-------------------------
 	initialize() {
-		this.initializeScope(this.form, this.fields);
+		this.controller?.abort();
+		this.controller = new AbortController();
+		this.initializeScope(this.form, this.fields, this.controller.signal);
 	}
 
 	//-------------------------
 	// Initialize Scoped Visibility
 	// Works within a specific container and field set (e.g., deck item dialogs)
 	//-------------------------
-	initializeScope(container, fields) {
+	initializeScope(container, fields, signal = undefined) {
 		const fieldsWithSettings = Array.from(container.querySelectorAll('[data-settings]'));
+		const listenerOpts = signal ? { signal } : undefined;
 
 		fieldsWithSettings.forEach(fieldElement => {
 			const settings = JSON.parse(fieldElement.dataset.settings || '{}');
@@ -36,10 +44,15 @@ export default class FieldVisibility {
 			const watchedFieldElement = container.querySelector(`[style*="--grid-area: ${watchField}"]`);
 			if (!watchedFieldElement) return;
 
-			// Set up change listener on the watched field
-			watchedFieldElement.addEventListener('change', () => {
-				this.updateScopedVisibility(fieldElement, visibility, fields);
-			});
+			// Re-evaluate when the watched field's value changes (native `change`)
+			// or when its own visibility flips (`visibility-change` from a parent
+			// cascade). The latter must NOT be a `change` event — that would bubble
+			// to TotalField's change listener and falsely mark the field unsaved
+			// (cards and other composite fields whose getValue() returns a fresh
+			// object can't rely on the `===` equality guard in changed()).
+			const reevaluate = () => this.updateScopedVisibility(fieldElement, visibility, fields);
+			watchedFieldElement.addEventListener('change', reevaluate, listenerOpts);
+			watchedFieldElement.addEventListener('visibility-change', reevaluate, listenerOpts);
 
 			// Initial visibility evaluation
 			this.updateScopedVisibility(fieldElement, visibility, fields);
@@ -59,7 +72,14 @@ export default class FieldVisibility {
 		if (!watchedField) {
 			// If watched field not found, hide by default
 			const field = fields.find(f => f.container === fieldElement);
-			if (field) field.hide();
+			if (field) this.setVisibility(field, false);
+			return;
+		}
+
+		// If the watched field is hidden, this field should also be hidden
+		if (!watchedField.isVisible()) {
+			const field = fields.find(f => f.container === fieldElement);
+			if (field) this.setVisibility(field, false);
 			return;
 		}
 
@@ -71,7 +91,27 @@ export default class FieldVisibility {
 		// Get the field object and toggle visibility
 		const field = fields.find(f => f.container === fieldElement);
 		if (field) {
-			isVisible ? field.show() : field.hide();
+			this.setVisibility(field, isVisible);
+		}
+	}
+
+	//-------------------------
+	// Set field visibility and dispatch a visibility-change event so dependent
+	// fields can re-evaluate. This intentionally does NOT use a `change` event:
+	// `change` bubbles to TotalField listeners and marks the field unsaved
+	// (cards in particular can't disambiguate a synthetic cascade from a real
+	// edit because their getValue() returns a fresh object each call, defeating
+	// the storedValue === getValue() guard).
+	//-------------------------
+	setVisibility(field, isVisible) {
+		// Ask the field directly — both TotalField and SimpleForm wrappers
+		// toggle `field-hidden` (the legacy `cms-hide` class was never set by
+		// either path, so the previous read here always returned `true`).
+		const wasVisible = field.isVisible();
+		isVisible ? field.show() : field.hide();
+
+		if (wasVisible !== isVisible) {
+			field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
 		}
 	}
 
@@ -105,7 +145,10 @@ export default class FieldVisibility {
 			}
 		}
 
-		// Evaluate based on operator
+		// Evaluate based on operator. By the time we reach this switch,
+		// expectedValue is a single (non-array) value — array values were
+		// already split and recursed at the top of this method, so each
+		// recursive call lands here with one value.
 		switch (operator) {
 			case '==':
 				return currentValue == expectedValue;
@@ -120,9 +163,12 @@ export default class FieldVisibility {
 			case '<=':
 				return Number(currentValue) <= Number(expectedValue);
 			case 'in':
-				return Array.isArray(expectedValue) && expectedValue.includes(currentValue);
+				// At this point expectedValue is a single value (the array
+				// case is handled by the early return + recursion above).
+				// `in` should match if the current value equals it.
+				return currentValue == expectedValue;
 			case 'not_in':
-				return Array.isArray(expectedValue) && !expectedValue.includes(currentValue);
+				return currentValue != expectedValue;
 			default:
 				return currentValue == expectedValue;
 		}

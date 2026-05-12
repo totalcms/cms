@@ -1,0 +1,227 @@
+{
+	"name": "Business Starter",
+	"description": "Pages plus a service schema, services collection, and sample service records so the business starter's Services page renders content out of the box.",
+	"version": "1.0.0",
+	"schemas": [
+		{
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"$id": "https://www.totalcms.co/schemas/service.json",
+			"id": "service",
+			"type": "object",
+			"description": "A service offering for the business starter",
+			"formgrid": "id title\nicon order\nsummary summary\ndescription description\nimage image\nupdated created",
+			"properties": {
+				"id": {
+					"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+					"label": "Service ID",
+					"help": "Unique identifier — used in URLs.",
+					"field": "id",
+					"factory": "slug",
+					"settings": {
+						"autogen": "${title}"
+					}
+				},
+				"title": {
+					"type": "string",
+					"label": "Title",
+					"help": "Service name as it appears on the page.",
+					"field": "text",
+					"factory": "catchPhrase"
+				},
+				"icon": {
+					"type": "string",
+					"label": "Icon",
+					"help": "Optional emoji or icon shorthand shown next to the service title.",
+					"field": "text",
+					"placeholder": "🚀",
+					"default": ""
+				},
+				"order": {
+					"type": "number",
+					"label": "Display Order",
+					"help": "Lower numbers appear first.",
+					"field": "number",
+					"default": 0
+				},
+				"summary": {
+					"type": "string",
+					"label": "Summary",
+					"help": "Short pitch — one sentence shown on the services grid.",
+					"field": "textarea",
+					"factory": "catchPhrase"
+				},
+				"description": {
+					"type": "string",
+					"label": "Description",
+					"help": "Long-form description shown on the service detail view.",
+					"field": "styledtext"
+				},
+				"image": {
+					"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+					"label": "Hero Image",
+					"help": "Optional image used on the service detail view.",
+					"field": "image",
+					"factory": "imageShapes(1280,720)"
+				},
+				"updated": {
+					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+					"label": "Updated",
+					"field": "datetime",
+					"factory": "iso8601",
+					"settings": {
+						"onUpdate": true,
+						"readonly": true
+					}
+				},
+				"created": {
+					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+					"label": "Created",
+					"field": "datetime",
+					"factory": "iso8601",
+					"settings": {
+						"onCreate": true,
+						"readonly": true
+					}
+				}
+			},
+			"required": [
+				"id",
+				"title",
+				"summary",
+				"updated",
+				"created"
+			],
+			"index": [
+				"id",
+				"title",
+				"icon",
+				"order",
+				"summary",
+				"updated",
+				"created"
+			]
+		}
+	],
+	"collections": {
+		"custom": [
+			{
+				"id": "services",
+				"schema": "service",
+				"name": "Services",
+				"sortBy": "order",
+				"url": "/services"
+			}
+		]
+	},
+	"objects": [
+		{
+			"collection": "builder-pages",
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "about",
+			"data": {
+				"id": "about",
+				"title": "About",
+				"route": "/about",
+				"template": "about",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "services",
+			"data": {
+				"id": "services",
+				"title": "Services",
+				"route": "/services",
+				"template": "services",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "contact",
+			"data": {
+				"id": "contact",
+				"title": "Contact",
+				"route": "/contact",
+				"template": "contact",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
+		},
+		{
+			"collection": "services",
+			"id": "strategy",
+			"data": {
+				"title": "Strategy",
+				"icon": "🎯",
+				"order": 1,
+				"summary": "We work with you to define clear goals and a roadmap to get there.",
+				"description": "<p>Every project starts with strategy. We sit down with you to map your business goals to concrete, measurable outcomes — then build the roadmap that gets you there. No vague deliverables, no jargon.</p><p>Engagements typically run 2–4 weeks and produce a written strategy document plus weekly check-ins.</p>"
+			}
+		},
+		{
+			"collection": "services",
+			"id": "design",
+			"data": {
+				"title": "Design",
+				"icon": "🎨",
+				"order": 2,
+				"summary": "Beautiful, functional designs that reflect your brand and engage your audience.",
+				"description": "<p>Visual design that speaks to your customers and reflects who you are as a business. We work in Figma, hand off production-ready assets, and iterate based on real user feedback.</p><p>Includes brand identity, web design, and component systems for ongoing growth.</p>"
+			}
+		},
+		{
+			"collection": "services",
+			"id": "development",
+			"data": {
+				"title": "Development",
+				"icon": "🛠️",
+				"order": 3,
+				"summary": "Custom-built solutions using modern technologies for performance and reliability.",
+				"description": "<p>Web apps, internal tools, and integrations built to last. We favor proven, boring technology choices that you can maintain in-house — and we document everything we build.</p><p>Stack: PHP 8.4, Twig, modern JS, PostgreSQL or flat-file storage depending on the use case.</p>"
+			}
+		},
+		{
+			"collection": "services",
+			"id": "support",
+			"data": {
+				"title": "Ongoing Support",
+				"icon": "💬",
+				"order": 4,
+				"summary": "Monthly retainers for security updates, content help, and feature work.",
+				"description": "<p>Once your site is live, we stay on as your technical partner. Monthly retainers cover security patches, dependency updates, content additions, and small feature work.</p><p>Tiered packages from a few hours per month for maintenance up to half-time embedded engineering.</p>"
+			}
+		}
+	]
+}

@@ -41,16 +41,63 @@ $settings['notfound']        = '/404';
 $settings['maxDownloadSize'] = 2048;
 
 // Path settings
-$settings['root']     = dirname(__DIR__);
+$settings['root']     = TotalCMS\Support\PathResolver::projectRoot();
 $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
-$settings['template'] = $settings['root'] . '/resources/templates';
-$settings['schemas']  = $settings['root'] . '/resources/schemas';
-$settings['docroot']  = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
+$settings['template'] = TotalCMS\Support\PathResolver::packageRoot() . '/resources/templates';
+$settings['schemas']  = TotalCMS\Support\PathResolver::packageRoot() . '/resources/schemas';
 
-$settings['api'] = str_replace($settings['docroot'], '', $settings['root']);
-$settings['api'] = $settings['api'] === '' ? '/' : $settings['api'];
+// Resolve DOCUMENT_ROOT: use server value if available, otherwise read from stored file.
+// Web requests persist the docroot so CLI tools can discover it automatically.
+$docrootFile         = $settings['cachedir'] . '/.docroot';
+$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
+
+if (!is_dir($settings['cachedir'])) {
+	@mkdir($settings['cachedir'], 0755, true);
+}
+
+if ($settings['docroot'] !== '' && PHP_SAPI !== 'cli' && !file_exists($docrootFile)) {
+	// Web request — persist for CLI tools (write once)
+	@file_put_contents($docrootFile, $settings['docroot']);
+} elseif ($settings['docroot'] === '' && file_exists($docrootFile)) {
+	// CLI without DOCUMENT_ROOT — read stored value
+	$storedDocroot = file_get_contents($docrootFile);
+	if ($storedDocroot !== false && $storedDocroot !== '') {
+		$settings['docroot']      = rtrim($storedDocroot, DIRECTORY_SEPARATOR);
+		$_SERVER['DOCUMENT_ROOT'] = $settings['docroot'];
+	}
+}
+
+// Last-resort fallback for CLI runs that happen before any web request
+// has populated $docrootFile (the post-install hook is the canonical
+// case — `composer create-project` runs `vendor/bin/tcms builder:init`
+// before the operator has loaded the site once). Assume the standard
+// Composer layout where the docroot is `<project>/public`. If that's
+// wrong for a given install, the operator can override `datadir` (and
+// other path-dependent settings) explicitly in `config/tcms.php`, OR
+// the first web request will overwrite this on disk.
+if ($settings['docroot'] === '') {
+	$settings['docroot']      = $settings['root'] . '/public';
+	$_SERVER['DOCUMENT_ROOT'] = $settings['docroot'];
+}
+
+// URL prefix where the front controller is mounted. For the typical
+// install ("public/" is the doc root), this is empty. For subpath
+// installs (e.g. https://example.com/cms/), this is the subpath
+// ("/cms"). Derived from SCRIPT_NAME — must NOT be derived from
+// filesystem paths because the project root is not necessarily a
+// subdirectory of the document root.
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+if ($scriptName === '' || !str_starts_with($scriptName, '/')) {
+	// CLI, cli-server (after the bootstrap workaround rewrites
+	// SCRIPT_NAME to a basename), or other unusual SAPIs.
+	$settings['api'] = '';
+} else {
+	// dirname('/index.php')      === '/'    -> '' after rtrim
+	// dirname('/cms/index.php')  === '/cms' -> '/cms'
+	$settings['api'] = rtrim(dirname($scriptName), '/');
+}
 
 $settings['debug'] = false; // Set to true for development
 
@@ -105,12 +152,18 @@ $settings['error'] = [
 // Logger settings
 $settings['logger'] = [
 	'name'        => 'totalcms',
-	'path'        => __DIR__ . '/../logs',
+	'path'        => TotalCMS\Support\PathResolver::projectRoot() . '/logs',
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
 	'maxFiles'    => 10,
 	'permissions' => 0775,
 ];
+
+// Per-channel log level overrides controlled from /admin/settings (general).
+// Names are PSR-3 strings: debug, info, notice, warning, error, critical, alert, emergency.
+// When set, these override $settings['logger']['level'] for the matching log file.
+$settings['appLogLevel']        = 'info';
+$settings['extensionsLogLevel'] = 'info';
 
 // Session
 $settings['session'] = [
@@ -200,6 +253,7 @@ $settings['imageworks'] = [
 $settings['auth'] = [
 	'enable'                  => true,
 	'usePasskeys'             => true,
+	'loginWith'               => 'both',  // 'email', 'id', or 'both'
 	'collection'              => 'auth',
 	'maxAttempts'             => 10,
 	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads
@@ -208,6 +262,15 @@ $settings['auth'] = [
 	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
 	'forgotPasswordMailerId'  => '',  // Optional custom mailer ID for password reset emails (leave empty for default template)
 	'resetTokenExpiry'        => 30,  // Minutes before password reset token expires
+	// Allow-list of collection IDs that accept public (unauthenticated) user
+	// registration via POST /admin/register/{collection}. Empty by default
+	// because the default auth collection is operator-only — opt your member /
+	// customer collections in explicitly. Bot abuse note: registrants are
+	// auto-logged in after signup, so any visitor (or bot) that fills the form
+	// gets a logged-in session in whatever default access group new users land
+	// in. Gate this with a CAPTCHA, email verification, or manual approval if
+	// the registered users will reach content that isn't safe to expose.
+	'publicRegistration'      => [],
 ];
 
 $settings['htmlclean'] = [
@@ -251,7 +314,7 @@ $settings['presets'] = [
 $settings['dashboard'] = [
 	'pagination'        => 50, // Default pagination for dashboard tables
 	'title'             => 'Total CMS Admin', // Browser title for admin dashboard pages
-	'confirmCountdown'  => 5, // Seconds the confirm button stays disabled in destructive dialogs (0 = no countdown)
+	'confirmCountdown'  => 3, // Seconds the confirm button stays disabled in destructive dialogs (0 = no countdown)
 	// 'accent'            => '#4d91e2', // Dashboard accent color
 	// 'keepIdOnDuplicate' => false, // Keep ID when duplicating objects (default: false - ID is cleared)
 ];
@@ -260,6 +323,12 @@ $settings['dashboard'] = [
 // Only applicable for development and trial editions
 $settings['license'] = [
 	'simulateEdition' => null, // Set to 'lite', 'standard', or 'pro' to test edition restrictions
+];
+
+// Site Builder
+$settings['builder'] = [
+	'pagesCollection' => 'builder-pages', // Collection ID for page metadata
+	'assetsPath'      => 'assets',        // Public assets directory relative to docroot
 ];
 
 // https://www.php.net/manual/en/timezones.php

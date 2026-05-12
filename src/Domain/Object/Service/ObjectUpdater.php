@@ -2,9 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -18,15 +17,17 @@ readonly class ObjectUpdater
 		private ObjectFetcher $objectFetcher,
 		private ObjectRepository $storage,
 		private ObjectFactory $factory,
-		private IndexBuilder $indexBuilder,
 		private PropertyDataProcessorInterface $propertyProcessor,
-		private CollectionSaver $collectionSaver,
-		private DataViewUpdateScheduler $viewUpdateScheduler,
+		private EventDispatcher $eventDispatcher,
 	) {
 	}
 
-	/** @param ObjectData|array<string,mixed> $object */
-	public function updateObject(string $collection, string $id, ObjectData|array $object): ObjectData
+	/**
+	 * @param ObjectData|array<string,mixed> $object
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function updateObject(string $collection, string $id, ObjectData|array $object, bool $silent = false): ObjectData
 	{
 		if (!$object instanceof ObjectData) {
 			$object = $this->factory->generateObject($collection, $object);
@@ -36,24 +37,40 @@ readonly class ObjectUpdater
 			throw new \UnexpectedValueException('Invalid Object data provided. Does not match object ID.', 1);
 		}
 
+		// Capture pre-save state for listeners that need to diff (e.g. nested
+		// file orphan cleanup). Skipped on silent updates since they suppress
+		// the event entirely. Failure here is non-fatal — `previous` is optional.
+		$previous = null;
+		if (!$silent) {
+			try {
+				$previous = $this->objectFetcher->fetchObject($collection, $id);
+			} catch (\Throwable) {
+				// First write or missing on disk — no previous state to diff against.
+			}
+		}
+
 		// Run property actions before saving (ex: update date)
 		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
 
-		// Update lastUpdated timestamp
-		$this->collectionSaver->updateLastUpdated($collection);
-
-		// Pass the updated object for immediate index update when queueRebuildOnSave is enabled
-		$this->indexBuilder->smartBuildIndex($collection, $object);
-
-		$this->viewUpdateScheduler->scheduleUpdatesForCollection($collection);
+		// Silent updates skip the object.updated cascade (collection metadata,
+		// index rebuild, dataviews, cache invalidation). Use only for internal
+		// bookkeeping writes where no listener legitimately needs to react —
+		// e.g. recording a login timestamp.
+		if (!$silent) {
+			$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object, $previous));
+		}
 
 		return $object;
 	}
 
-	/** @param array<string,mixed> $newData */
-	public function updateObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
+	/**
+	 * @param array<string,mixed> $newData
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function updateObjectProperty(string $collection, string $id, string $property, array $newData, bool $silent = false): ObjectData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
@@ -63,10 +80,47 @@ readonly class ObjectUpdater
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;
 
+		return $this->updateObject($collection, $id, $objectData, $silent);
+	}
+
+	/**
+	 * Replace a property nested inside another property:
+	 *   - Card child: `obj[$parent][$path]` where `$path` is a single segment.
+	 *   - Deck child: `obj[$parent][$itemId][$child]` where `$path` is `"itemId/child"`.
+	 *
+	 * `$path` is a slash-separated subpath; siblings at every level are preserved
+	 * (only the leaf is replaced).
+	 *
+	 * @param array<string,mixed> $newData
+	 */
+	public function updateNestedProperty(string $collection, string $id, string $parent, string $path, array $newData): ObjectData
+	{
+		$object     = $this->objectFetcher->fetchObject($collection, $id);
+		$objectData = $object->toArray();
+
+		$segments = $path === '' ? [] : explode('/', $path);
+		$cursor   =&$objectData[$parent];
+		if (!is_array($cursor)) {
+			$cursor = [];
+		}
+		$leaf = (string)array_pop($segments);
+		foreach ($segments as $segment) {
+			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
+				$cursor[$segment] = [];
+			}
+			$cursor =&$cursor[$segment];
+		}
+
+		$cursor[$leaf] = $newData;
+
 		return $this->updateObject($collection, $id, $objectData);
 	}
 
-	/** @param array<string,mixed> $newData */
+	/**
+	 * @param array<string,mixed> $newData
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
 	public function updateObjectPropertyMeta(
 		string $collection,
 		string $id,
@@ -74,6 +128,7 @@ readonly class ObjectUpdater
 		string $name,
 		array $newData,
 		?string $subpath = null,
+		bool $silent = false,
 	): ObjectData {
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
@@ -98,6 +153,6 @@ readonly class ObjectUpdater
 			return $item;
 		});
 
-		return $this->updateObject($collection, $id, $object);
+		return $this->updateObject($collection, $id, $object, $silent);
 	}
 }

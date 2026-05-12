@@ -33,7 +33,7 @@ final class RenderTwigAdapterTest extends TestCase
 		$this->dataViewQueryService = $this->createMock(DataViewQueryService::class);
 
 		$config      = $this->createMock(Config::class);
-		$config->api = '/api';
+		$config->api = '';
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -331,7 +331,7 @@ final class RenderTwigAdapterTest extends TestCase
 		MockObject&TwigEngine $twigEngine,
 	): RenderTwigAdapter {
 		$config      = $this->createMock(Config::class);
-		$config->api = '/api';
+		$config->api = '';
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();

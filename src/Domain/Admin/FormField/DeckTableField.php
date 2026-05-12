@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
@@ -14,7 +15,7 @@ class DeckTableField extends FormField
 	protected string $defaultInputType = 'deck';
 	protected string $defaultFieldType = 'deckTable';
 
-	protected string $deckref       = '';
+	protected string $schemaref     = '';
 	protected string $deckItemLabel = '';
 
 	public function init(): void
@@ -24,9 +25,9 @@ class DeckTableField extends FormField
 		$this->inputType = $this->defaultInputType;
 		$this->icon      = false;
 
-		// Extract deckref from settings if available
-		$this->deckref       = $this->settings['deckref'] ?? '';
-		$this->deckItemLabel = $this->settings['deckItemLabel'] ?? '${id}';
+		// Extract schema reference from settings (accepts schemaref or legacy deckref)
+		$this->schemaref       = PropertyDefinition::extractSchemaRef($this->settings) ?? '';
+		$this->deckItemLabel   = $this->settings['deckItemLabel'] ?? '${id}';
 
 		// Add cms-hide class if hide setting is true (check both property-level and settings)
 		if ($this->hide || (isset($this->settings['hide']) && $this->settings['hide'] === true)) {
@@ -60,7 +61,7 @@ class DeckTableField extends FormField
 		$table .= HTMLUtils::element('div', $body, ['class' => 'deck-table-body']);
 
 		// Add template for new rows
-		if ($this->deckref !== '') {
+		if ($this->schemaref !== '') {
 			$templateRow = $this->buildRow('', []);
 			$table .= HTMLUtils::element('template', $templateRow, ['class' => 'deck-table-template']);
 		}
@@ -77,7 +78,7 @@ class DeckTableField extends FormField
 
 		try {
 			$schemaFetcher = $this->form->getSchemaFetcher();
-			$schema        = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
+			$schema        = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
 
 			foreach ($schema->properties as $propertyName => $propertySchema) {
 				$settings = $propertySchema['settings'] ?? [];
@@ -113,7 +114,7 @@ class DeckTableField extends FormField
 		$cells = '';
 		try {
 			$schemaFetcher  = $this->form->getSchemaFetcher();
-			$schema         = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
+			$schema         = $schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
 			$requiredFields = $schema->required;
 
 			$metaResolver = $this->form->getMetaResolver();
@@ -186,9 +187,9 @@ class DeckTableField extends FormField
 	{
 		$attributes = parent::formFieldAttributes();
 
-		// Add deckref as a data attribute
-		if ($this->deckref !== '') {
-			$attributes['data-deckref'] = $this->deckref;
+		// Add schemaref as a data attribute
+		if ($this->schemaref !== '') {
+			$attributes['data-schemaref'] = $this->schemaref;
 		}
 
 		// Add deck item label pattern as a data attribute

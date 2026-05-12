@@ -12,6 +12,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\OperationResult;
 
 readonly class DataViewBuilder
 {
@@ -69,27 +70,21 @@ readonly class DataViewBuilder
 
 	/**
 	 * Execute a definition and return parsed result without saving.
-	 *
-	 * @return array{success: bool, data: array<mixed>|null, output: string, error: string|null}
 	 */
-	public function testView(string $definition): array
+	public function testView(string $definition): OperationResult
 	{
 		try {
 			$jsonData = $this->executeDefinition($definition);
 
-			return [
-				'success' => true,
-				'data'    => $jsonData,
-				'output'  => '',
-				'error'   => null,
-			];
+			return OperationResult::success('', [
+				'data'   => $jsonData,
+				'output' => '',
+			]);
 		} catch (\Throwable $e) {
-			return [
-				'success' => false,
-				'data'    => null,
-				'output'  => '',
-				'error'   => $e->getMessage(),
-			];
+			return OperationResult::failure($e->getMessage(), $e->getMessage(), [
+				'data'   => null,
+				'output' => '',
+			]);
 		}
 	}
 

@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadSaver;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -68,17 +69,25 @@ readonly class UploadFileAction
 			])->withStatus(400);
 		}
 
+		$subpath = isset($args['path']) && $args['path'] !== ''
+			? PathUtils::sanitizeSubpath($args['path'])
+			: null;
+
 		$path = $this->saver->save(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$filepath
+			$filepath,
+			$subpath
 		);
 
-		$apiPath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
-		$mime    = $file->getClientMediaType() ?? '';
+		// imageworks/download/stream live at the unprefixed base path (not under
+		// /api) — they're public asset endpoints whose URLs get embedded in
+		// styledtext content and must remain stable.
+		$basePath = parse_url($this->config->api, PHP_URL_PATH) ?: $this->config->api;
+		$mime     = $file->getClientMediaType() ?? '';
 
-		$link = $this->buildLink($apiPath, $path, $mime);
+		$link = $this->buildLink($basePath, $path, $mime);
 
 		$params = $request->getParsedBody();
 		if (!empty($params)) {
@@ -92,17 +101,17 @@ readonly class UploadFileAction
 	 * Build the response link based on MIME type.
 	 * Images use ImageWorks, audio/video use stream (range requests), everything else uses download.
 	 */
-	private function buildLink(string $apiPath, string $path, string $mime): string
+	private function buildLink(string $basePath, string $path, string $mime): string
 	{
 		if ($this->matchesMime($mime, self::IMAGE_MIME_PREFIXES)) {
-			return $apiPath . '/imageworks/upload/' . $path;
+			return $basePath . '/imageworks/upload/' . $path;
 		}
 
 		if ($this->matchesMime($mime, self::MEDIA_MIME_PREFIXES)) {
-			return $apiPath . '/stream/upload/' . $path;
+			return $basePath . '/stream/upload/' . $path;
 		}
 
-		return $apiPath . '/download/upload/' . $path;
+		return $basePath . '/download/upload/' . $path;
 	}
 
 	/**

@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Admin\PropertyField\SchemaField;
 use TotalCMS\Domain\Admin\SchemaForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 
 class SchemaPropertiesField extends PropertiesField
 {
@@ -50,17 +51,27 @@ class SchemaPropertiesField extends PropertiesField
 	protected function createPropertyField(string $property, array $options): SchemaField
 	{
 		if (isset($options['$ref'])) {
-			$options['type'] = basename((string)$options['$ref'], '.json');
+			// Resolve through PropertyDefinition so a custom card $ref (which points
+			// at the user's sub-schema, e.g. `.../my-card.json`) still resolves to
+			// the canonical type via `field` rather than the meaningless basename.
+			$options['type'] = PropertyDefinition::fromArray($options)->resolveType();
 			unset($options['$ref']);
+		}
+
+		// Coalesce legacy `deckref` input into the canonical `schemaref` before filtering,
+		// so it's preserved as a schema property rather than being treated as extra.
+		if (isset($options['deckref'])) {
+			$options['schemaref'] ??= $options['deckref'];
+			unset($options['deckref']);
 		}
 
 		$extra   = SchemaField::filterExtraProperties($options);
 		$options = SchemaField::filterSchemaProperties($options);
 
-		// Check if this is a transformed deck property and extract deckref
+		// Check if this is a transformed deck property and reconstruct schemaref
 		if (isset($extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'])) {
-			$options['deckref'] = $extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'];
-			// Remove the patternProperties from extra since we've extracted the deckref
+			$options['schemaref'] = $extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'];
+			// Remove the patternProperties from extra since we've extracted the schemaref
 			unset($extra['patternProperties']);
 			if ($extra === []) {
 				$extra = [];

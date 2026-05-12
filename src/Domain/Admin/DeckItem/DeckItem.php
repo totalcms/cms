@@ -6,6 +6,7 @@ use TotalCMS\Domain\Admin\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -25,8 +26,13 @@ class DeckItem
 		protected TotalForm $form,
 		protected string $itemId,
 		protected array $itemData = [],
-		protected string $deckref = '',
+		protected string $schemaref = '',
 		protected string $deckItemLabel = '${id}',
+		// Name of the parent deck property on the object — passed by DeckField.
+		// Used to compose the dotted `nestedPath` for image/file children so
+		// they emit the right URLs (`mydeck.item-3.image`).
+		protected string $parentProperty = '',
+		protected string $modalSize = 'small',
 	) {
 		$this->schemaFetcher = $form->getSchemaFetcher();
 		$this->metaResolver  = $form->getMetaResolver();
@@ -62,15 +68,18 @@ class DeckItem
 		$dialogContent  = HTMLUtils::scroller($content);
 		$dialogContent .= HTMLUtils::element('section', $close);
 
-		return HTMLUtils::dialog($dialogContent, 'small');
+		// Medium maps to the default cms-modal sizing — no extra class needed.
+		$sizeClass = $this->modalSize === 'medium' ? '' : $this->modalSize;
+
+		return HTMLUtils::dialog($dialogContent, $sizeClass);
 	}
 
 	protected function buildDialogContent(): string
 	{
 		$content = '';
 
-		// Generate form fields based on deckref schema
-		if ($this->deckref !== '') {
+		// Generate form fields based on the referenced schema
+		if ($this->schemaref !== '') {
 			$content .= $this->buildSchemaBasedFields();
 		}
 
@@ -80,7 +89,7 @@ class DeckItem
 	protected function buildSchemaBasedFields(): string
 	{
 		try {
-			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
+			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
 		} catch (\Exception $e) {
 			return HTMLUtils::element(
 				'p',
@@ -129,8 +138,16 @@ class DeckItem
 				'required'     => in_array($propertyName, $requiredFields, true),
 			];
 
+			// Dotted path for nested children (image/file). Empty itemId means the
+			// JavaScript template — children won't render a real path until the
+			// item is materialized with an id, so leave nestedPath unset.
+			if ($this->parentProperty !== '' && $this->itemId !== '') {
+				$fieldConfig['nestedPath'] = "{$this->parentProperty}.{$this->itemId}";
+			}
+
 			// Extract attribute settings (min, max, pattern, etc.) from settings and merge at top level
-			// This ensures they're available as constructor parameters for FormField
+			// This ensures they're available as constructor parameters for FormField.
+			// Mirror of CardField::buildSubFields — keep the two in sync.
 			$filteredAttributes = TotalForm::filterFieldAttributes($resolvedSettings);
 			$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
 
@@ -173,25 +190,16 @@ class DeckItem
 	 */
 	protected function generateLabel(): string
 	{
-		// Replace placeholders in the pattern with actual values
-		$label = (string)preg_replace_callback('/\$\{(.*?)\}/', function (array $matches): string {
-			$fieldName = $matches[1];
-
-			// Special handling for 'id' field
+		$label = TemplatePlaceholder::render($this->deckItemLabel, function (string $fieldName): string {
 			if ($fieldName === 'id') {
 				return $this->itemId;
 			}
 
-			// Get value from item data
 			$value = $this->itemData[$fieldName] ?? '';
 
-			// Convert to string and trim
-			$value = is_string($value) ? trim($value) : '';
+			return is_string($value) ? trim($value) : '';
+		});
 
-			return $value;
-		}, $this->deckItemLabel);
-
-		// Trim the final label
 		$label = trim($label);
 
 		// Fall back to the item's id when the pattern resolves to an empty string

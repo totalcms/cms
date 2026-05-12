@@ -7,6 +7,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Property\File\FileDeleteAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectRemover;
+use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\FileRemover;
 use TotalCMS\Domain\Property\Service\RemoverFactory;
 use TotalCMS\Renderer\JsonRenderer;
@@ -16,17 +18,30 @@ final class FileDeleteActionTest extends TestCase
 	private FileDeleteAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $factory;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectRemover;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->factory  = $this->createMock(RemoverFactory::class);
-		$this->renderer = $this->createMock(JsonRenderer::class);
-		$this->request  = $this->createMock(ServerRequestInterface::class);
-		$this->response = $this->createMock(ResponseInterface::class);
+		$this->factory       = $this->createMock(RemoverFactory::class);
+		$this->renderer      = $this->createMock(JsonRenderer::class);
+		$this->fileFetcher   = $this->createMock(FileFetcher::class);
+		$this->objectRemover = $this->createMock(ObjectRemover::class);
+		$this->request       = $this->createMock(ServerRequestInterface::class);
+		$this->response      = $this->createMock(ResponseInterface::class);
 
-		$this->action = new FileDeleteAction($this->renderer, $this->factory);
+		// Default: paths in these tests are filenames, not directories — so the
+		// action's filesystem dispatch falls through to the existing file delete.
+		$this->fileFetcher->method('isNestedDirectory')->willReturn(false);
+
+		$this->action = new FileDeleteAction(
+			$this->renderer,
+			$this->factory,
+			$this->fileFetcher,
+			$this->objectRemover,
+		);
 	}
 
 	public function testDeletesFileSuccessfully(): void

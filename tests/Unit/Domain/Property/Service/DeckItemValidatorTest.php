@@ -23,6 +23,10 @@ describe('DeckItemValidator', function (): void {
 				'field'   => 'deck',
 				'deckref' => 'https://www.totalcms.co/schemas/deck/comment.json',
 			],
+			'reviews' => [
+				'field'     => 'deck',
+				'schemaref' => 'https://www.totalcms.co/schemas/deck/review.json',
+			],
 			'legacyDeck' => [
 				'field'    => 'deck',
 				'settings' => ['deckref' => 'https://www.totalcms.co/schemas/deck/legacy.json'],
@@ -60,6 +64,15 @@ describe('DeckItemValidator', function (): void {
 		$this->schemaValidator->expects($this->never())->method('validateSchema');
 
 		$this->validator->validate('blog', 'notADeck', ['body' => 'hi']);
+	});
+
+	test('validate reads schemaref (canonical) from the top-level property config', function (): void {
+		$this->schemaValidator
+			->expects($this->once())
+			->method('validateSchema')
+			->with(['body' => 'hi'], 'review');
+
+		$this->validator->validate('blog', 'reviews', ['body' => 'hi']);
 	});
 
 	test('validate re-throws DomainException as InvalidArgumentException', function (): void {

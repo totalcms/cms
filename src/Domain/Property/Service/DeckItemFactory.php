@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Object\Service\CalcService;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -151,12 +152,12 @@ readonly class DeckItemFactory
 			return null;
 		}
 
-		$deckref = $propertyConfig['deckref'] ?? $propertyConfig['settings']['deckref'] ?? null;
-		if (empty($deckref)) {
+		$schemaref = PropertyDefinition::extractSchemaRef($propertyConfig);
+		if ($schemaref === null) {
 			return null;
 		}
 
-		$deckSchemaId = SchemaFetcher::extractSchemaId($deckref);
+		$deckSchemaId = SchemaFetcher::extractSchemaId($schemaref);
 
 		return $this->schemaFetcher->fetchSchema($deckSchemaId);
 	}

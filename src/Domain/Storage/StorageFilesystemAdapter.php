@@ -132,12 +132,23 @@ readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	/**
 	 * Import a file into the filesystem.
 	 *
+	 * Read-only fopen ('r') is correct here: import only consumes the source
+	 * stream. Using 'r+' was a long-standing bug — it required write
+	 * permission on the source, which silently broke CSV image imports
+	 * whenever the referenced files weren't owned by the web server user
+	 * (almost always, in practice). With 'r+' fopen returned false and
+	 * writeStream got a non-resource, leading to confusing errors logged
+	 * to importer.log without any clear cause.
+	 *
 	 * @param string $import Path to the file to import
 	 * @param string $dest Path to put the file
 	 */
 	public function import(string $import, string $dest): bool
 	{
-		$stream = fopen($import, 'r+');
+		$stream = @fopen($import, 'r');
+		if ($stream === false) {
+			throw new \RuntimeException("Unable to read source file for import: {$import}");
+		}
 
 		try {
 			$this->filesystem->writeStream($dest, $stream);

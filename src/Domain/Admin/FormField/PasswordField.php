@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -8,6 +10,18 @@ class PasswordField extends FormField
 {
 	protected string $defaultInputType = 'password';
 	protected string $defaultFieldType = 'password';
+
+	/** @return array<string,?string> */
+	protected function formFieldAttributes(): array
+	{
+		$attributes = parent::formFieldAttributes();
+
+		if (!empty($this->settings['numeric'])) {
+			$attributes['inputmode'] = 'numeric';
+		}
+
+		return $attributes;
+	}
 
 	public function build(): string
 	{
@@ -19,6 +33,10 @@ class PasswordField extends FormField
 		$confirmAttributes = $attributes;
 		$confirmAttributes['name'] .= '-confirm';
 		$confirmAttributes['id'] .= '-confirm';
+
+		if (!empty($this->settings['numeric'])) {
+			$confirmAttributes['inputmode'] = 'numeric';
+		}
 
 		// Use confirmPlaceholder setting if provided, otherwise use same placeholder
 		if (isset($this->settings['confirmPlaceholder']) && $this->settings['confirmPlaceholder'] !== '') {

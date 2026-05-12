@@ -37,7 +37,7 @@ readonly class DataViewQueryAction
 		$params  = $request->getQueryParams();
 		$format  = $params['format'] ?? 'json';
 		$result  = $this->queryService->query($viewId, $params);
-		$baseUrl = $this->config->api . '/dataviews/' . $viewId . '/query';
+		$baseUrl = $this->config->api . '/api/dataviews/' . $viewId . '/query';
 
 		return $this->renderer->render($request, $response, $result, $params, $format, $baseUrl, 'dataview-' . $viewId);
 	}

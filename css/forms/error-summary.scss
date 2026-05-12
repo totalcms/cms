@@ -1,12 +1,13 @@
 .tcms-error-summary {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.75rem;
-	margin: 1rem 0;
-	padding: 1rem;
-	background: oklch(from oklch(var(--totalform-error)) l c h / 0.1);
-	border: 1px solid oklch(var(--totalform-error));
-	border-radius: var(--totalform-radius);
+	display       : flex;
+	align-items   : flex-start;
+	gap           : 0.75rem;
+	margin        : 1rem 0;
+	padding       : 1rem;
+	background    : oklch(from oklch(var(--totalform-error)) l c h / 0.1);
+	border        : 1px solid oklch(var(--totalform-error));
+	border-radius : var(--totalform-radius);
+	grid-column   : 1/-1;
 
 	&:empty {
 		display: none;

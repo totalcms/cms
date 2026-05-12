@@ -83,8 +83,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Pro edition', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Pro edition', $result->message);
 	}
 
 	public function testReturnsErrorWhenMailerNotFound(): void
@@ -94,8 +94,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('nonexistent', 'subscribers');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not found', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not found', $result->message);
 	}
 
 	public function testReturnsErrorWhenMailerIsInactive(): void
@@ -105,8 +105,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not active', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not active', $result->message);
 	}
 
 	public function testReturnsErrorWhenBulkCollectionIsEmpty(): void
@@ -116,8 +116,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', '');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('collection is required', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('collection is required', $result->message);
 	}
 
 	public function testReturnsErrorWhenNoMatchingObjectsFound(): void
@@ -128,8 +128,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('No matching objects', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('No matching objects', $result->message);
 	}
 
 	public function testQueuesJobsForEachMatchingObject(): void
@@ -150,9 +150,9 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(3, $result['count']);
-		$this->assertArrayHasKey('batchId', $result);
+		$this->assertTrue($result->success);
+		$this->assertSame(3, $result->data['count']);
+		$this->assertArrayHasKey('batchId', $result->data);
 	}
 
 	public function testPassesOverrideToThroughToJobData(): void
@@ -225,8 +225,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(1, $result['count']);
+		$this->assertTrue($result->success);
+		$this->assertSame(1, $result->data['count']);
 	}
 
 	public function testReturnsCorrectSuccessStructure(): void
@@ -240,11 +240,11 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertTrue($result['success']);
-		$this->assertArrayHasKey('batchId', $result);
-		$this->assertStringStartsWith('bulk_', $result['batchId']);
-		$this->assertSame(1, $result['count']);
-		$this->assertStringContainsString('1 emails', $result['message']);
+		$this->assertTrue($result->success);
+		$this->assertArrayHasKey('batchId', $result->data);
+		$this->assertStringStartsWith('bulk_', $result->data['batchId']);
+		$this->assertSame(1, $result->data['count']);
+		$this->assertStringContainsString('1 emails', $result->message);
 	}
 
 	public function testUsesObjectIdsInsteadOfFiltersWhenProvided(): void
@@ -262,8 +262,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, null, ['obj-1', 'obj-2']);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(2, $result['count']);
+		$this->assertTrue($result->success);
+		$this->assertSame(2, $result->data['count']);
 	}
 
 	public function testObjectIdsPassedAsJobData(): void
@@ -299,8 +299,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, null, []);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(1, $result['count']);
+		$this->assertTrue($result->success);
+		$this->assertSame(1, $result->data['count']);
 	}
 
 	public function testNullObjectIdsFallsBackToFilters(): void
@@ -317,7 +317,7 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue($result->success);
 	}
 
 	public function testEmptyOverrideToIsNormalisedToNull(): void
@@ -347,8 +347,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->previewEmail('nonexistent', 'obj-1', 'subscribers');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('not found', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('not found', $result->message);
 	}
 
 	public function testPreviewReturnsRenderedHtml(): void
@@ -377,11 +377,11 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->previewEmail('test-mailer', 'obj-1', 'subscribers');
 
-		$this->assertTrue($result['success']);
-		$this->assertArrayHasKey('html', $result);
-		$this->assertArrayHasKey('subject', $result);
-		$this->assertArrayHasKey('to', $result);
-		$this->assertSame('john@example.com', $result['to']);
+		$this->assertTrue($result->success);
+		$this->assertArrayHasKey('html', $result->data);
+		$this->assertArrayHasKey('subject', $result->data);
+		$this->assertArrayHasKey('to', $result->data);
+		$this->assertSame('john@example.com', $result->data['to']);
 	}
 
 	public function testPreviewReturnsErrorOnObjectFetchFailure(): void
@@ -394,8 +394,8 @@ final class BulkMailerServiceTest extends TestCase
 
 		$result = $this->service->previewEmail('test-mailer', 'obj-1', 'subscribers');
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Preview error', $result['message']);
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Preview error', $result->message);
 	}
 
 	public function testPreviewPassesObjectPropertiesAsTwigData(): void

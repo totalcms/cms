@@ -5,19 +5,22 @@
 	"type"        : "object",
 	"properties"  : {
 		"pushoverAppToken": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "secret",
 			"label"       : "Pushover Application Token",
 			"help"        : "Your Pushover application API token. Create one at pushover.net/apps/build",
 			"placeholder" : "azGDORePK8gMaC0QOYAMyEEuzJnyUi"
 		},
 		"pushoverUserKey": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "secret",
 			"label"       : "Pushover User Key",
 			"help"        : "Your Pushover user key. Found on your dashboard at pushover.net/dashboard",
 			"placeholder" : "uQiRzpo4DXghDmr9QzzfQu27cmVRsG"
 		},
 		"pushoverGroupKey": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "secret",
 			"label"       : "Pushover Group Key",
 			"help"        : "Optional delivery group key to broadcast notifications to multiple users. Create groups at pushover.net/apps/groups",
 			"placeholder" : "gznej3rKEVAvPUxu9vvNnqpmZpokzF"

@@ -24,6 +24,11 @@ dialog.cms-modal {
 		max-width : 75ch;
 	}
 
+	&.large {
+		max-width  : 1400px;
+		max-height : 1400px;
+	}
+
 	&[open] {
 		display               : grid;
 		align-items           : start;

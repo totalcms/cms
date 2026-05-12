@@ -56,15 +56,29 @@ final class ObjectUrlBuilderTest extends TestCase
 		expect($result)->toBe('/news/?id=my-post');
 	}
 
-	public function testBuildUrlIgnoresTemplateWhenPrettyUrlDisabled(): void
+	public function testBuildUrlRendersTemplateEvenWhenPrettyUrlFlagDisabled(): void
 	{
-		// Even with template syntax, should use query string when prettyUrl is disabled
+		// Templated URLs are implicitly pretty — the `prettyUrl` flag is
+		// ignored when placeholders are present. Writing a template and
+		// leaving the flag off can't produce a useful `?id=` URL anyway.
 		$collection = $this->createCollection('/news/{{ category }}/{{ id }}', false);
 		$object     = ['id' => 'my-post', 'category' => 'tech'];
 
 		$result = $this->builder->buildUrl($collection, $object);
 
-		expect($result)->toBe('/news/{{ category }}/{{ id }}?id=my-post');
+		expect($result)->toBe('/news/tech/my-post');
+	}
+
+	public function testBuildUrlRendersSlimStyleTemplateEvenWhenPrettyUrlFlagDisabled(): void
+	{
+		// Slim-style `{id}` placeholders are normalized to Twig-style and
+		// rendered the same way — same implicit-pretty behaviour.
+		$collection = $this->createCollection('/blog/{id}', false);
+		$object     = ['id' => 'welcome'];
+
+		$result = $this->builder->buildUrl($collection, $object);
+
+		expect($result)->toBe('/blog/welcome');
 	}
 
 	public function testBuildUrlUsesSimplePrettyUrlWithoutTemplate(): void

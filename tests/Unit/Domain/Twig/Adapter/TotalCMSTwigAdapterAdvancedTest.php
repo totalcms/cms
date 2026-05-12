@@ -59,7 +59,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$options
 		);
 
-		expect($result)->toContain('/api/imageworks/photos/gallery-123/images/first');
+		expect($result)->toContain('/imageworks/photos/gallery-123/images/first');
 		expect($result)->toContain('w=300');
 		expect($result)->toContain('h=200');
 		expect($result)->toContain('cache=');
@@ -83,7 +83,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$options
 		);
 
-		expect($result)->toContain('/api/imageworks/gallery/gallery-123/gallery/photo.jpg');
+		expect($result)->toContain('/imageworks/gallery/gallery-123/gallery/photo.jpg');
 		expect($result)->toContain('w=300');
 		expect($result)->toContain('cache=');
 	}
@@ -128,7 +128,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			$options
 		);
 
-		expect($result)->toContain('/api/imageworks/gallery/gallery-123/gallery/photo.webp');
+		expect($result)->toContain('/imageworks/gallery/gallery-123/gallery/photo.webp');
 		expect($result)->toContain('w=300');
 		expect($result)->not->toContain('fm=webp'); // fm should be removed after processing
 	}

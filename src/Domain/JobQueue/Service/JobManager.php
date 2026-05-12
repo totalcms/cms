@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\JobQueue\Service;
 
 use TotalCMS\Domain\JobQueue\Data\JobData;

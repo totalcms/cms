@@ -15,22 +15,22 @@ beforeEach(function (): void {
 
 describe('AuthLoginSubmitAction', function (): void {
 	it('redirects when email and password are missing', function (): void {
-		$response = post('/login', []);
+		$response = post('/admin/login', []);
 		expect($response->getStatusCode())->toBe(302);
 	});
 
 	it('redirects when only email is provided', function (): void {
-		$response = post('/login', ['email' => 'test@example.com']);
+		$response = post('/admin/login', ['email' => 'test@example.com']);
 		expect($response->getStatusCode())->toBe(302);
 	});
 
 	it('redirects when only password is provided', function (): void {
-		$response = post('/login', ['password' => 'secret']);
+		$response = post('/admin/login', ['password' => 'secret']);
 		expect($response->getStatusCode())->toBe(302);
 	});
 
 	it('redirects on invalid credentials', function (): void {
-		$response = post('/login', [
+		$response = post('/admin/login', [
 			'email'    => 'nonexistent@example.com',
 			'password' => 'wrongpassword',
 		]);
@@ -38,7 +38,7 @@ describe('AuthLoginSubmitAction', function (): void {
 	});
 
 	it('handles collection-specific login', function (): void {
-		$response = post('/login/users', [
+		$response = post('/admin/login/users', [
 			'email'    => 'test@example.com',
 			'password' => 'password',
 		]);
@@ -46,7 +46,7 @@ describe('AuthLoginSubmitAction', function (): void {
 	});
 
 	it('handles persistent login checkbox', function (): void {
-		$response = post('/login', [
+		$response = post('/admin/login', [
 			'email'            => 'test@example.com',
 			'password'         => 'password',
 			'persistent_login' => '1',
@@ -55,7 +55,7 @@ describe('AuthLoginSubmitAction', function (): void {
 	});
 
 	it('handles redirect parameter in POST data', function (): void {
-		$response = post('/login', [
+		$response = post('/admin/login', [
 			'email'    => 'test@example.com',
 			'password' => 'password',
 			'redirect' => '/admin/collections',
@@ -64,7 +64,7 @@ describe('AuthLoginSubmitAction', function (): void {
 	});
 
 	it('handles redirect parameter in query string', function (): void {
-		$response = post('/login?redirect=/admin/settings', [
+		$response = post('/admin/login?redirect=/admin/settings', [
 			'email'    => 'test@example.com',
 			'password' => 'password',
 		]);

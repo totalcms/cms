@@ -1,0 +1,224 @@
+{% set isPage = url.file starts with 'pages/' %}
+{% set livePage = null %}
+{% if isPage %}
+	{% set templateName = url.file | slice(6, url.file|length - 11) %}
+	{% for p in builder.pages %}
+		{% if p.template == templateName and not p.draft and p.route is not empty %}
+			{% set livePage = p %}
+		{% endif %}
+	{% endfor %}
+{% endif %}
+
+<header>
+	<h1><a href="builder">{{ t('builder.crumb') }}</a> / <span>{{ url.file }}</span></h1>
+	<div class="builder-editor-actions">
+		{% if livePage %}
+			<a class="dash-button transparent" href="{{ cms.base }}{{ livePage.route }}" target="_blank" rel="noopener" title="{{ t('builder.editor.open_live_title') }}">{{ t('builder.editor.open_live') }}</a>
+		{% endif %}
+	</div>
+</header>
+
+<section>
+{% if template %}
+
+{{ cms.form.template({
+	path        : url.file,
+	save        : cms.auth.canAccessTemplates() ? "Save" : false,
+	delete      : cms.auth.canAccessTemplates() ? "Delete" : false,
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "builder"
+		}
+	],
+	editActions : [
+		{
+			"action" : "refresh",
+		}
+	],
+}) }}
+
+<div class="totalform builder-preview-controls">
+	<div class="form-field text-field">
+		<label for="builder-preview-url">{{ t('builder.editor.preview_url') }}</label>
+		<input type="text" id="builder-preview-url"
+			value="{{ livePage ? livePage.route : '' }}"
+			placeholder="{{ t('builder.editor.preview_url_placeholder') }}">
+	</div>
+	<button type="button" id="builder-preview-btn" class="dash-button" title="{{ t('builder.editor.preview_btn_title') }}">{{ t('builder.editor.preview_btn') }}</button>
+</div>
+
+<section id="builder-preview-panel" class="builder-preview-panel cms-hide">
+	<header class="builder-preview-header">
+		<h2>{{ t('builder.editor.preview_title') }}</h2>
+		<div class="builder-preview-presets" role="group" aria-label="{{ t('builder.editor.presets_label') }}">
+			<button type="button" class="builder-preview-preset" data-preset-width="375" title="{{ t('builder.editor.preset_mobile_title') }}">{{ t('builder.editor.preset_mobile') }}</button>
+			<button type="button" class="builder-preview-preset" data-preset-width="768" title="{{ t('builder.editor.preset_tablet_title') }}">{{ t('builder.editor.preset_tablet') }}</button>
+			<button type="button" class="builder-preview-preset is-active" data-preset-width="full" title="{{ t('builder.editor.preset_full_title') }}">{{ t('builder.editor.preset_full') }}</button>
+			<span id="builder-preview-width" class="builder-preview-width" aria-live="polite">— px</span>
+		</div>
+		<div class="builder-preview-actions">
+			<button type="button" id="builder-preview-refresh" class="builder-preview-iconbtn icon-refresh" title="{{ t('builder.editor.refresh_title') }}" aria-label="{{ t('builder.editor.refresh_aria') }}"></button>
+			<button type="button" id="builder-preview-close" class="builder-preview-iconbtn icon-close" title="{{ t('builder.editor.close_title') }}" aria-label="{{ t('builder.editor.close_aria') }}"></button>
+		</div>
+	</header>
+	<div id="builder-preview-stage" class="builder-preview-stage">
+		<div id="builder-preview-viewport" class="builder-preview-viewport" data-mode="full">
+			<iframe id="builder-preview-frame" class="builder-preview-frame" sandbox="allow-scripts allow-forms"></iframe>
+			<div id="builder-preview-resizer" class="builder-preview-resizer" role="separator" aria-orientation="vertical" aria-label="{{ t('builder.editor.resizer_aria') }}"></div>
+		</div>
+	</div>
+</section>
+
+<script>
+(() => {
+	const path        = {{ url.file | json_encode | raw }};
+	const previewUrl  = {{ (cms.dashboard ~ '/builder/preview') | json_encode | raw }};
+	const livePageId  = {{ (livePage ? livePage.id : '') | json_encode | raw }};
+	const btn         = document.getElementById('builder-preview-btn');
+	const refreshBtn  = document.getElementById('builder-preview-refresh');
+	const closeBtn    = document.getElementById('builder-preview-close');
+	const panel       = document.getElementById('builder-preview-panel');
+	const frame       = document.getElementById('builder-preview-frame');
+	const urlInput    = document.getElementById('builder-preview-url');
+	const stage       = document.getElementById('builder-preview-stage');
+	const viewport    = document.getElementById('builder-preview-viewport');
+	const resizer     = document.getElementById('builder-preview-resizer');
+	const widthLabel  = document.getElementById('builder-preview-width');
+	const presetBtns  = document.querySelectorAll('.builder-preview-preset');
+
+	function updateWidthLabel() {
+		if (!widthLabel || !viewport) return;
+		widthLabel.textContent = Math.round(viewport.getBoundingClientRect().width) + ' px';
+	}
+
+	function setActivePreset(value) {
+		presetBtns.forEach(b => {
+			b.classList.toggle('is-active', b.dataset.presetWidth === value);
+		});
+	}
+
+	function setViewportWidth(px) {
+		if (!viewport || !stage) return;
+		if (px === null) {
+			viewport.style.width = '';
+			viewport.dataset.mode = 'full';
+			setActivePreset('full');
+		} else {
+			const max = stage.clientWidth;
+			const w   = Math.max(240, Math.min(max, px));
+			viewport.style.width = w + 'px';
+			viewport.dataset.mode = 'fixed';
+			setActivePreset(null);
+		}
+		updateWidthLabel();
+	}
+
+	presetBtns.forEach(b => {
+		b.addEventListener('click', () => {
+			const v = b.dataset.presetWidth;
+			if (v === 'full') {
+				setViewportWidth(null);
+			} else {
+				setViewportWidth(parseInt(v, 10));
+				// keep the clicked preset highlighted (setViewportWidth cleared it)
+				setActivePreset(v);
+			}
+		});
+	});
+
+	let drag = null;
+	if (resizer) {
+		resizer.addEventListener('pointerdown', e => {
+			e.preventDefault();
+			drag = { startX: e.clientX, startW: viewport.getBoundingClientRect().width };
+			resizer.setPointerCapture(e.pointerId);
+			document.body.classList.add('builder-preview-resizing');
+		});
+		resizer.addEventListener('pointermove', e => {
+			if (!drag) return;
+			const dx = e.clientX - drag.startX;
+			// viewport is centered, so each pixel of handle motion = 2px of width
+			setViewportWidth(drag.startW + dx * 2);
+		});
+		const endDrag = e => {
+			if (!drag) return;
+			drag = null;
+			document.body.classList.remove('builder-preview-resizing');
+			if (e && e.pointerId !== undefined && resizer.hasPointerCapture(e.pointerId)) {
+				resizer.releasePointerCapture(e.pointerId);
+			}
+		};
+		resizer.addEventListener('pointerup', endDrag);
+		resizer.addEventListener('pointercancel', endDrag);
+	}
+
+	if (window.ResizeObserver && viewport) {
+		new ResizeObserver(updateWidthLabel).observe(viewport);
+	}
+	window.addEventListener('resize', () => {
+		// in full mode the viewport tracks the stage; in fixed mode clamp to new max
+		if (viewport && viewport.dataset.mode === 'fixed' && stage) {
+			const cur = viewport.getBoundingClientRect().width;
+			if (cur > stage.clientWidth) setViewportWidth(stage.clientWidth);
+		}
+		updateWidthLabel();
+	});
+
+	function getEditorContent() {
+		const ta = document.querySelector('textarea[name="template"]');
+		if (!ta) return '';
+		const cm = ta.parentElement && ta.parentElement.querySelector('.cm-editor');
+		if (cm && cm._totalcmsEditor) return cm._totalcmsEditor.getValue();
+		return ta.value;
+	}
+
+	async function renderPreview() {
+		const content = getEditorContent();
+		if (!content.trim()) return;
+
+		const fd = new FormData();
+		fd.append('path', path);
+		fd.append('content', content);
+		if (livePageId) fd.append('pageId', livePageId);
+		if (urlInput && urlInput.value.trim()) fd.append('previewUrl', urlInput.value.trim());
+
+		btn.disabled = true;
+		try {
+			const res  = await fetch(previewUrl, { method: 'POST', body: fd, credentials: 'same-origin' });
+			const html = await res.text();
+			// Reveal the panel BEFORE setting srcdoc — assigning srcdoc on an
+			// iframe inside a display:none parent leaves the iframe's first
+			// paint underpainted (you see the dashboard bg bleed through).
+			// Letting it lay out first then loading content fixes it.
+			panel.classList.remove('cms-hide');
+			requestAnimationFrame(() => { frame.srcdoc = html; updateWidthLabel(); });
+		} catch (err) {
+			panel.classList.remove('cms-hide');
+			const failLabel = {{ t('builder.editor.preview_failed') | json_encode | raw }};
+			requestAnimationFrame(() => {
+				frame.srcdoc = '<pre style="color:#b00;padding:1rem">' + failLabel + ' ' + (err && err.message ? err.message : err) + '</pre>';
+			});
+		} finally {
+			btn.disabled = false;
+		}
+	}
+
+	if (btn)        btn.addEventListener('click', renderPreview);
+	if (refreshBtn) refreshBtn.addEventListener('click', renderPreview);
+	if (closeBtn)   closeBtn.addEventListener('click', () => panel.classList.add('cms-hide'));
+})();
+</script>
+
+{% else %}
+
+<section class="dash-content-section">
+	<div class="cms-notice cms-notice-error">
+		<strong>{{ t('builder.editor.template_not_found') }}</strong> {{ url.file }}
+	</div>
+</section>
+
+{% endif %}
+</section>

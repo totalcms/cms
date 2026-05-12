@@ -5,33 +5,38 @@
 	"type"        : "object",
 	"properties"  : {
 		"gatherLocation": {
-			"type"    : "toggle",
+			"type"    : "boolean",
+			"field"   : "toggle",
 			"label"   : "Gather Image Location Data",
 			"help"    : "Extract GPS coordinates and location metadata (latitude, longitude, altitude, country, state, city, sublocation) from uploaded images. Non-location EXIF data (camera, lens, exposure, author, copyright, date) is always preserved. Disable for GDPR compliance and privacy protection.",
 			"default" : true
 		},
 		"watermarksGallery": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "Watermark Gallery",
 			"help"        : "The ID of the gallery where watermarks should be uploaded to. If not set, the default <code>watermarks</code> ID will be used.",
 			"placeholder" : "watermarks",
 			"default"     : "watermarks"
 		},
 		"watermarkFontsDepot": {
-			"type"        : "text",
+			"type"        : "string",
+			"field"       : "text",
 			"label"       : "Watermark Fonts Depot",
 			"help"        : "The ID of the depot where TTF font files for text watermarks should be uploaded to. If not set, the default <code>watermark-fonts</code> ID will be used.",
 			"placeholder" : "watermark-fonts",
 			"default"     : "watermark-fonts"
 		},
 		"defaults": {
-			"type"        : "json",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
+			"field"       : "json",
 			"label"       : "ImageWorks Defaults",
 			"help"        : "Default parameters applied to all image generation. Common options include format (fm), quality (q), fit, and more. See ImageWorks documentation for all available parameters.",
 			"placeholder" : "{\"fm\": \"jpg\", \"q\": 92}"
 		},
 		"presets": {
-			"type"        : "json",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/json.json",
+			"field"       : "json",
 			"label"       : "ImageWorks Presets",
 			"help"        : "JSON that defines presets that can be used for image generation. See the ImageWorks documentation for details on all of the parameters that can be used.",
 			"placeholder" : "{\"small\": {\"w\": 300, \"h\": 200}, \"medium\": {\"w\": 600, \"h\": 400}}",

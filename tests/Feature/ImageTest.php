@@ -26,7 +26,7 @@ describe('Image Operations', function (): void {
 			'schema' => 'gallery',
 		];
 
-		postJson('/collections', $collection);
+		postJson('/api/collections', $collection);
 
 		// Create test object
 		$object = [
@@ -34,7 +34,7 @@ describe('Image Operations', function (): void {
 			'title' => 'Test Image Object',
 		];
 
-		postJson('/collections/image-test', $object);
+		postJson('/api/collections/image-test', $object);
 	});
 
 	it('can update info for an image', function (): void {

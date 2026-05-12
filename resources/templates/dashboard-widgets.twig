@@ -31,7 +31,7 @@
 	</div>
 
 	<div class="stat-card">
-		<div class="stat-icon icon-puzzle"></div>
+		<div class="stat-icon icon-templates"></div>
 		<div class="stat-content">
 			<div class="stat-value">{{ stats.templates }}</div>
 			<div class="stat-label">{{ t('dashboard.stat_templates') }}</div>
@@ -64,7 +64,7 @@
 		</a>
 
 		<a href="templates/new" class="action-button">
-			<span class="action-icon icon-puzzle"></span>
+			<span class="action-icon icon-templates"></span>
 			<span class="action-text">{{ t('dashboard.new_template') }}</span>
 		</a>
 
@@ -218,6 +218,17 @@
 				<span class="status-label">{{ t('dashboard.version') }}</span>
 				<span class="status-value">{{ cms.version }}{% if cms.version.date %} <span class="version-date">({{ cms.version.date }})</span>{% endif %}</span>
 			</div>
+
+			{% if status.update %}
+			<div class="status-item">
+				<span class="status-label"></span>
+				<span class="status-value">
+					<a href="utils/update" style="color: oklch(var(--totalform-accent)); font-weight: 500; text-decoration: none;">
+						{{ t('update.available') }}: {{ status.update.version }} ({{ status.update.severity }}) &rarr;
+					</a>
+				</span>
+			</div>
+			{% endif %}
 
 			<div class="status-item">
 				<span class="status-label">{{ t('dashboard.php_version') }}</span>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -23,6 +25,7 @@ readonly class SchemaLister
 	{
 		return array_merge(
 			$this->listReservedSchemas(),
+			$this->listExtensionSchemas(),
 			$this->listCustomSchemas()
 		);
 	}
@@ -38,6 +41,16 @@ readonly class SchemaLister
 	}
 
 	/**
+	 * List extension-provided Schemas.
+	 *
+	 * @return array<SchemaData>
+	 */
+	public function listExtensionSchemas(): array
+	{
+		return $this->storage->listExtensionSchemas();
+	}
+
+	/**
 	 * List custom Schemas.
 	 *
 	 * @return array<SchemaData>
@@ -45,6 +58,14 @@ readonly class SchemaLister
 	public function listCustomSchemas(): array
 	{
 		return $this->storage->listCustomSchemas();
+	}
+
+	/**
+	 * Check if a schema ID is reserved (built-in or extension-provided).
+	 */
+	public function isReservedSchema(string $id): bool
+	{
+		return in_array($id, $this->storage->reservedSchemasIds(), true);
 	}
 
 	/**

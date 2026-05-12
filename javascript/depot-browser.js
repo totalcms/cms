@@ -2,6 +2,8 @@
  * Public Depot Browser - file browser component for content pages
  */
 
+import TreeView from './tree-view.js';
+
 const previewTypes = {
 	image: new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']),
 	video: new Set(['mp4', 'webm', 'ogg']),
@@ -44,101 +46,19 @@ function createPreviewElement(ext, url, name) {
 	return null;
 }
 
-function applyStripes(container) {
-	const tree = container.querySelector(".depot-browser-tree");
-	if (!tree) return;
-
-	let index = 0;
-	const walk = (ul) => {
-		for (const li of ul.children) {
-			if (li.tagName !== "LI") continue;
-			if (li.classList.contains("filtered-out")) {
-				li.classList.remove("stripe");
-				continue;
-			}
-			li.classList.toggle("stripe", index % 2 === 1);
-			index++;
-
-			// Only walk into open folder contents
-			const details = li.querySelector(":scope > details");
-			if (details?.open) {
-				const nested = details.querySelector(":scope > .depot-browser-tree");
-				if (nested) walk(nested);
-			}
-		}
-	};
-	walk(tree);
-}
-
-function filterBrowser(container, input) {
-	const query = input.value.toLowerCase();
-	const tree  = container.querySelector(".depot-browser-tree");
-	const allLi = tree.querySelectorAll("li");
-
-	if (query.length === 0) {
-		allLi.forEach(li => li.classList.remove("filtered-out"));
-		applyStripes(container);
-		return;
-	}
-
-	// First pass: filter file items by name, comments, and tags
-	allLi.forEach(li => {
-		if (li.querySelector("details")) return; // folder
-		const fileEl = li.querySelector(".file");
-		if (!fileEl) return;
-
-		let text = fileEl.textContent;
-		const comments = li.querySelector(".file-comments");
-		if (comments) text += ' ' + comments.textContent;
-		const tags = li.querySelector(".file-tags");
-		if (tags) text += ' ' + tags.textContent;
-
-		const match = text.toLowerCase().includes(query);
-		li.classList.toggle("filtered-out", !match);
-	});
-
-	// Second pass: filter folders based on visible children
-	const filterFolders = (ul) => {
-		for (const li of ul.children) {
-			if (li.tagName !== "LI" || !li.querySelector("details")) continue;
-			const contents = li.querySelector(".depot-browser-tree");
-			if (contents) filterFolders(contents);
-
-			const hasVisible = contents && Array.from(contents.children).some(
-				child => child.tagName === "LI" && !child.classList.contains("filtered-out")
-			);
-			li.classList.toggle("filtered-out", !hasVisible);
-			if (hasVisible) {
-				li.querySelector("details")?.setAttribute("open", "");
-			}
-		}
-	};
-	filterFolders(tree);
-	applyStripes(container);
-}
-
 function initBrowser(container) {
 	const options     = JSON.parse(container.dataset.settings || "{}");
 	const filterInput = container.querySelector(".depot-browser-filter input");
 	const dialog      = container.querySelector(".depot-browser-preview");
 	const preview     = dialog?.querySelector(".preview-content");
 
-	// Alternating row stripes
-	applyStripes(container);
-
-	// Re-stripe when folders are toggled
-	container.querySelectorAll("details").forEach(details => {
-		details.addEventListener("toggle", () => applyStripes(container));
+	new TreeView(container, {
+		treeSelector     : ".depot-browser-tree",
+		ownTextSelector  : ".file",
+		searchableExtras : [".file-comments", ".file-tags"],
+		filterInput,
 	});
 
-	// Filter — "input" for typing, "search" for native clear button
-	if (filterInput) {
-		const onFilter = () => filterBrowser(container, filterInput);
-		filterInput.addEventListener("input", onFilter);
-		filterInput.addEventListener("search", onFilter);
-	}
-
-	// Preview
 	if (options.preview && dialog) {
 		container.querySelectorAll(".action-preview").forEach(btn => {
 			const item = btn.closest(".depot-browser-item");

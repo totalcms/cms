@@ -184,6 +184,10 @@ export default class TiptapEditor {
 				openOnClick: false,
 				autolink: true,
 				defaultProtocol: 'https',
+				HTMLAttributes: {
+					target: null,
+					rel: null,
+				},
 			}),
 			ImageUpload.configure({
 				inline: false,
@@ -238,6 +242,16 @@ export default class TiptapEditor {
 
 	buildEditorProps() {
 		const props = {};
+
+		// Click on a link opens the link editing dialog
+		props.handleClick = (view, pos, event) => {
+			const link = event.target.closest('a');
+			if (!link) return false;
+
+			// Small delay so the editor selection updates to the link position first
+			setTimeout(() => this.openLinkDialog(), 0);
+			return true;
+		};
 
 		// Paste as plain text: strip HTML formatting from pasted content
 		if (this.options.pasteAsPlainText !== false) {
@@ -493,6 +507,20 @@ export default class TiptapEditor {
 			config.imagePreset = this.options.imagePreset;
 		}
 		return config;
+	}
+
+	/**
+	 * Toggle the upload-disabled state on the editor container based on whether
+	 * the upload URL resolves to a valid value right now. When disabled, CSS
+	 * dims the image/file/video toolbar buttons so the user knows uploads are
+	 * not available until the form (or deck item) is saved.
+	 */
+	updateUploadEnabled() {
+		if (!this.container) return;
+		const url = typeof this.options.uploadUrl === 'function'
+			? this.options.uploadUrl()
+			: this.options.uploadUrl;
+		this.container.classList.toggle('ste-uploads-disabled', !url);
 	}
 
 	destroy() {

@@ -39,7 +39,7 @@ describe('AccessGroupsEditionMiddleware', function (): void {
 
 describe('TemplatesEditionMiddleware', function (): void {
 	it('handles templates list request', function (): void {
-		$response = get('/templates');
+		$response = get('/api/templates');
 		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404, 405]);
 	});
 });

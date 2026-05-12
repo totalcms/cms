@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Support\HttpResponse;
 
 describe('HttpResponse', function (): void {

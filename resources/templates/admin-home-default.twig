@@ -19,15 +19,13 @@
 {% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}
 
 
-{% if stats.collections <= 2 %}
+{% if stats.collections <= 3 %}
 	{# Show new user welcome if no user collections exist (accounts for system collections: auth, mailer) #}
 	{{ dashboard.newUserWelcome() }}
 {% else %}
 	{# Display welcome message #}
-	{{ include(cms.edition.can('whitelabel_templates')
-		? ['whitelabel/admin-welcome.twig', 'admin-welcome.twig', 'admin-welcome-message.twig']
-		: cms.edition.can('templates')
-		? ['admin-welcome.twig', 'admin-welcome-message.twig']
+	{{ include(cms.edition.can('whitelabel_standard')
+		? ['whitelabel/admin-welcome.twig', 'admin-welcome-message.twig']
 		: ['admin-welcome-message.twig']
 	, ignore_missing = true) }}
 
@@ -48,6 +46,15 @@
 
 			{# Empty collections alert #}
 			{{ dashboard.emptyCollectionsAlert(emptyCollections) }}
+
+			{# Extension widgets (main area) #}
+			{% if extensionDashWidgets is defined %}
+				{% for widget in extensionDashWidgets %}
+					{% if widget.position == 'main' %}
+						{% include widget.template ignore missing %}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
 		</div>
 
 		<div class="dashboard-sidebar">
@@ -62,6 +69,15 @@
 			{# System status #}
 			{% if cms.auth.isAdmin() %}
 				{{ dashboard.systemStatus(systemStatus) }}
+			{% endif %}
+
+			{# Extension widgets (sidebar) #}
+			{% if extensionDashWidgets is defined %}
+				{% for widget in extensionDashWidgets %}
+					{% if widget.position == 'sidebar' %}
+						{% include widget.template ignore missing %}
+					{% endif %}
+				{% endfor %}
 			{% endif %}
 		</div>
 	</div>

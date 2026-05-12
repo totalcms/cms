@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Report\Service;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -12,7 +13,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * Resolves available fields for report export from a collection's schema.
  *
  * Identifies scalar properties and deck properties with their sub-fields
- * by following deckref references to deck item schemas.
+ * by following schemaref references to deck item schemas.
  */
 readonly class ReportFieldResolver
 {
@@ -132,7 +133,7 @@ readonly class ReportFieldResolver
 	}
 
 	/**
-	 * Resolve deck sub-fields by following the deckref to its schema.
+	 * Resolve deck sub-fields by following the schema reference to its schema.
 	 *
 	 * @param array<string,mixed> $definition
 	 *
@@ -140,12 +141,12 @@ readonly class ReportFieldResolver
 	 */
 	private function resolveDeckFields(array $definition): array
 	{
-		$deckref = $definition['deckref'] ?? '';
-		if ($deckref === '') {
+		$schemaref = PropertyDefinition::extractSchemaRef($definition);
+		if ($schemaref === null) {
 			return [];
 		}
 
-		$schemaId = SchemaFetcher::extractSchemaId($deckref);
+		$schemaId = SchemaFetcher::extractSchemaId($schemaref);
 
 		try {
 			$deckSchema = $this->schemaFetcher->fetchSchema($schemaId);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -35,6 +37,11 @@ readonly class DepotFileFetcher
 	public function fileExists(string $collection, string $id, string $property, string $name, ?string $subpath = null): bool
 	{
 		return $this->storage->fileExists($collection, $id, $property, $name, $subpath);
+	}
+
+	public function fileSize(string $collection, string $id, string $property, string $name, ?string $subpath = null): int
+	{
+		return $this->storage->fileSize($collection, $id, $property, $name, $subpath);
 	}
 
 	/** @return resource */

@@ -76,13 +76,13 @@
 	</form>
 
 	{% set query = http_build_query(postData) %}
-	{% if str_starts_with(cms.api, "http") %}
-		{% set api = cms.api %}
+	{% if str_starts_with(cms.base, "http") %}
+		{% set base = cms.base %}
 	{% else %}
-		{% set api = "https://" ~ cms.domain ~ cms.api %}
+		{% set base = "https://" ~ cms.domain ~ cms.base %}
 	{% endif %}
 
-	{% set sitemapurl = api ~ "/sitemap/" ~ url.collection %}
+	{% set sitemapurl = base ~ "/sitemap/" ~ url.collection %}
 	{% if query is not empty %}
 		{% set sitemapurl = sitemapurl ~ "?" ~ query %}
 	{% endif %}

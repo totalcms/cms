@@ -9,7 +9,7 @@ export default class DeckTableField extends TotalField {
     constructor(container, settings) {
         super(container, settings);
 
-        this.deckref = container.dataset.deckref || '';
+        this.schemaref = container.dataset.schemaref || container.dataset.deckref || '';
         this.minItems = parseInt(this.settings.minItems) || 0;
         this.maxItems = parseInt(this.settings.maxItems) || -1;
 
@@ -337,7 +337,7 @@ export default class DeckTableField extends TotalField {
         return {
             type: "deck",
             fieldset: this.type,
-            deckref: this.deckref
+            schemaref: this.schemaref
         };
     }
 }

@@ -48,6 +48,29 @@ readonly class JumpStartExporter
 	}
 
 	/**
+	 * Export only schemas and templates (for push/pull sync).
+	 *
+	 * @param list<string>|null $schemaFilter  Only export these schema IDs (null = all)
+	 * @param list<string>|null $templateFilter Only export these template IDs (null = all)
+	 */
+	public function exportSyncData(?array $schemaFilter = null, ?array $templateFilter = null): JumpStartData
+	{
+		$this->logger->info('Starting sync data export');
+
+		$this->cacheManager->clearAllCaches();
+
+		$this->exportCustomSchemas($schemaFilter);
+		$this->exportTemplates($templateFilter);
+
+		$this->logger->info('Completed sync data export', [
+			'schemas'   => count($this->jumpstart->schemas),
+			'templates' => count($this->jumpstart->templates),
+		]);
+
+		return $this->jumpstart;
+	}
+
+	/**
 	 * Export current CMS data to jumpstart definition.
 	 */
 	public function exportCurrentData(): JumpStartData
@@ -73,11 +96,15 @@ readonly class JumpStartExporter
 		return $this->jumpstart;
 	}
 
-	private function exportCustomSchemas(): void
+	/** @param list<string>|null $filter */
+	private function exportCustomSchemas(?array $filter = null): void
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
 		foreach ($schemas as $schema) {
+			if ($filter !== null && !in_array($schema->id, $filter, true)) {
+				continue;
+			}
 			$this->jumpstart->addSchema($schema->toArray());
 		}
 	}
@@ -163,16 +190,21 @@ readonly class JumpStartExporter
 		return $processedData;
 	}
 
-	private function exportTemplates(): void
+	/** @param list<string>|null $filter */
+	private function exportTemplates(?array $filter = null): void
 	{
 		$this->logger->info('Exporting templates');
 
 		// Export custom templates only (not reserved templates)
-		$templates = $this->templateLister->listCustomTemplates(null, true);
+		$templates = $this->templateLister->listBuilderTemplates(null, true);
 
 		foreach ($templates as $templatePath) {
 			try {
 				$template = $this->templateFetcher->fetchTemplate($templatePath);
+
+				if ($filter !== null && !in_array($template->id, $filter, true)) {
+					continue;
+				}
 
 				$this->jumpstart->addTemplate([
 					'id'       => $template->id,

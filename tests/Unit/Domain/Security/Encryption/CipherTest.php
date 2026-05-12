@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use TotalCMS\Domain\Security\Encryption\Cipher;
 
 describe('Cipher', function (): void {

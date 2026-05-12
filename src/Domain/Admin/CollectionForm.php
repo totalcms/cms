@@ -231,6 +231,21 @@ class CollectionForm extends TotalForm
 
 		$options  = array_merge($defaults, $options);
 
+		// Move schema-reference keys into settings so card/deck fields can read them.
+		// Accept both the canonical `schemaref` and the legacy `deckref` alias.
+		if (isset($options['schemaref'])) {
+			$options['settings']['schemaref'] = $options['schemaref'];
+			unset($options['schemaref']);
+		}
+		if (isset($options['deckref'])) {
+			$options['settings']['schemaref'] ??= $options['deckref'];
+			unset($options['deckref']);
+		}
+		if (isset($options['deckItemLabel'])) {
+			$options['settings']['deckItemLabel'] = $options['deckItemLabel'];
+			unset($options['deckItemLabel']);
+		}
+
 		// Set the name of the field
 		$options['name'] = $name;
 

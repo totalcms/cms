@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Stream;
 
 use Odan\Session\PhpSession;
@@ -36,7 +38,12 @@ class StreamFileAction extends StreamAction
 	protected function incrementCount(FileData $file): void
 	{
 		$file->count++;
-		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform());
+		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform(), silent: true);
+	}
+
+	protected function actualFileSize(): int
+	{
+		return $this->fileFetcher->fileSize($this->collection, $this->id, $this->property);
 	}
 
 	protected function streamFile()

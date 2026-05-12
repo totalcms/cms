@@ -149,81 +149,86 @@ describe('DataDirectoryManager', function (): void {
 		}
 	});
 
-	it('detects empty directory correctly', function (): void {
-		mkdir($this->testDir, 0755, true);
+	it('moves auto-created bootstrap directory to chosen location when destination does not exist', function (): void {
+		$from = sys_get_temp_dir() . '/from-' . uniqid();
+		$to   = sys_get_temp_dir() . '/to-' . uniqid();
 
-		expect($this->manager->isDirectoryEmpty($this->testDir))->toBeTrue();
+		mkdir($from . '/.system', 0755, true);
+		file_put_contents($from . '/.htaccess', "Require all denied\n");
+		file_put_contents($from . '/.system/extensions.json', '{"discovered":[]}');
+
+		$result = $this->manager->moveDataDirectory($from, $to);
+
+		expect($result)->toBeTrue();
+		expect(is_dir($from))->toBeFalse();
+		expect(is_dir($to))->toBeTrue();
+		expect(file_exists($to . '/.htaccess'))->toBeTrue();
+		expect(file_get_contents($to . '/.system/extensions.json'))->toBe('{"discovered":[]}');
+
+		recursiveDelete($to);
 	});
 
-	it('detects non-empty directory correctly', function (): void {
-		mkdir($this->testDir, 0755, true);
-		file_put_contents($this->testDir . '/test.txt', 'test');
+	it('moves into a destination that contains only bootstrap junk', function (): void {
+		// Both source and destination got bootstrap-touched somehow — destination
+		// gets wiped and source moves in cleanly, preserving the source's state.
+		$from = sys_get_temp_dir() . '/from-' . uniqid();
+		$to   = sys_get_temp_dir() . '/to-' . uniqid();
 
-		expect($this->manager->isDirectoryEmpty($this->testDir))->toBeFalse();
+		mkdir($from . '/.system', 0755, true);
+		file_put_contents($from . '/.system/extensions.json', '{"source":true}');
+
+		mkdir($to . '/.system', 0755, true);
+		file_put_contents($to . '/.htaccess', "Require all denied\n");
+		file_put_contents($to . '/.system/extensions.json', '{"dest":true}');
+
+		$result = $this->manager->moveDataDirectory($from, $to);
+
+		expect($result)->toBeTrue();
+		expect(is_dir($from))->toBeFalse();
+		expect(file_get_contents($to . '/.system/extensions.json'))->toBe('{"source":true}');
+
+		recursiveDelete($to);
 	});
 
-	it('treats non-existent directory as empty', function (): void {
-		expect($this->manager->isDirectoryEmpty('/nonexistent/path'))->toBeTrue();
+	it('refuses to move when destination contains user data', function (): void {
+		$from = sys_get_temp_dir() . '/from-' . uniqid();
+		$to   = sys_get_temp_dir() . '/to-' . uniqid();
+
+		mkdir($from . '/.system', 0755, true);
+		file_put_contents($from . '/.system/extensions.json', '{}');
+
+		mkdir($to . '/auth', 0755, true);
+		file_put_contents($to . '/auth/admin.json', '{}');
+
+		$result = $this->manager->moveDataDirectory($from, $to);
+
+		expect($result)->toBeFalse();
+		expect(is_dir($from))->toBeTrue();
+		expect(file_exists($to . '/auth/admin.json'))->toBeTrue();
+
+		recursiveDelete($from);
+		recursiveDelete($to);
 	});
 
-	it('cleans up empty default directory', function (): void {
-		$defaultPath = sys_get_temp_dir() . '/default-' . uniqid();
-		$chosenPath  = sys_get_temp_dir() . '/chosen-' . uniqid();
+	it('returns false when source does not exist', function (): void {
+		$from = '/nonexistent/source-' . uniqid();
+		$to   = sys_get_temp_dir() . '/to-' . uniqid();
 
-		mkdir($defaultPath, 0755, true);
-		mkdir($chosenPath, 0755, true);
+		$result = $this->manager->moveDataDirectory($from, $to);
 
-		$this->manager->cleanupEmptyDefaultDirectory($defaultPath, $chosenPath);
-
-		expect(is_dir($defaultPath))->toBeFalse();
-		expect(is_dir($chosenPath))->toBeTrue();
-
-		// Clean up
-		rmdir($chosenPath);
+		expect($result)->toBeFalse();
+		expect(is_dir($to))->toBeFalse();
 	});
 
-	it('does not remove default directory if it contains files', function (): void {
-		$defaultPath = sys_get_temp_dir() . '/default-' . uniqid();
-		$chosenPath  = sys_get_temp_dir() . '/chosen-' . uniqid();
-
-		mkdir($defaultPath, 0755, true);
-		mkdir($chosenPath, 0755, true);
-		file_put_contents($defaultPath . '/test.txt', 'test');
-
-		$this->manager->cleanupEmptyDefaultDirectory($defaultPath, $chosenPath);
-
-		expect(is_dir($defaultPath))->toBeTrue();
-		expect(file_exists($defaultPath . '/test.txt'))->toBeTrue();
-
-		// Clean up
-		recursiveDelete($defaultPath);
-		rmdir($chosenPath);
-	});
-
-	it('does not remove directory if paths are the same', function (): void {
+	it('returns false when source and destination are the same path', function (): void {
 		$path = sys_get_temp_dir() . '/same-' . uniqid();
 		mkdir($path, 0755, true);
 
-		$this->manager->cleanupEmptyDefaultDirectory($path, $path);
+		$result = $this->manager->moveDataDirectory($path, $path);
 
+		expect($result)->toBeFalse();
 		expect(is_dir($path))->toBeTrue();
 
-		// Clean up
 		rmdir($path);
-	});
-
-	it('handles non-existent default directory gracefully', function (): void {
-		$defaultPath = '/nonexistent/default';
-		$chosenPath  = sys_get_temp_dir() . '/chosen-' . uniqid();
-
-		mkdir($chosenPath, 0755, true);
-
-		// Should not throw exception
-		$this->manager->cleanupEmptyDefaultDirectory($defaultPath, $chosenPath);
-
-		expect(is_dir($chosenPath))->toBeTrue();
-
-		// Clean up
-		rmdir($chosenPath);
 	});
 });

@@ -122,7 +122,7 @@
 .deck-item,
 .property-field,
 .schema-field {
-	--schema-icon      : var(--icon-question);
+	--schema-icon      : var(--icon-extension);
 	--schema-type-icon : var(--icon-question);
 
 	display               : inline-grid;
@@ -144,7 +144,8 @@
 	}
 
 	&:has(.form-field.unsaved),
-	&.new-property {
+	&.new-property,
+	&.unsaved {
 		border-color: oklch(var(--totalform-changed)) !important;
 	}
 	&:has(.form-field.error) {
@@ -282,7 +283,9 @@
 		display : none;
 	}
 }
-
+.-type:after {
+	display : none;
+}
 .boolean-type {
 	--schema-type-icon : var(--icon-checkbox);
 }
@@ -291,6 +294,9 @@
 }
 .date-type {
 	--schema-type-icon : var(--icon-date);
+}
+.card-type {
+	--schema-type-icon : var(--icon-card);
 }
 .deck-type {
 	--schema-type-icon : var(--icon-deck);
@@ -373,8 +379,19 @@
 		display : none;
 	}
 }
+.secret-field {
+	--schema-icon : var(--icon-secret);
+
+	&.string-type:after {
+		display : none;
+	}
+}
 .hidden-field {
 	--schema-icon : var(--icon-hidden);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .email-field {
 	--schema-icon : var(--icon-email);
@@ -541,6 +558,13 @@
 	--schema-icon : var(--icon-radio);
 
 	&.string-type:after {
+		display : none;
+	}
+}
+.card-field {
+	--schema-icon : var(--icon-card);
+
+	&.card-type:after {
 		display : none;
 	}
 }

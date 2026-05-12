@@ -33,7 +33,7 @@ readonly class TemplateListAction
 
 		$templates = match ($filter) {
 			'reserved' => $this->templateLister->listReservedTemplates(),
-			'custom'   => $this->templateLister->listCustomTemplates($folder, $recursive),
+			'custom'   => $this->templateLister->listBuilderTemplates($folder, $recursive),
 			default    => $this->templateLister->listAllTemplates($folder, $recursive),
 		};
 

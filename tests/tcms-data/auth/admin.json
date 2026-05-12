@@ -35,7 +35,7 @@
         "width": 960
     },
     "name": "Joe",
-    "email": "joe@workmanmail.com",
+    "email": "admin@test.com",
     "password": "$2y$12$82qI5iWdb.0ICaGKw7flNOpSfJrZ44uYKjb.1LvH9FKFaVINuW0pq",
     "groups": [
         "admin"

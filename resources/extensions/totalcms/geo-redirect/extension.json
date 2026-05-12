@@ -1,0 +1,22 @@
+{
+    "id": "totalcms/geo-redirect",
+    "name": "Geo Redirect",
+    "description": "Redirect visitors based on their country. Reads the country from CDN-injected headers (Cloudflare, Vercel, etc.) and 302s to a configured URL. Useful for compliance redirects, regional landing pages, and locale routing.",
+    "icon": "icon.png",
+    "requires": {
+        "totalcms": ">=3.5.0-beta",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "author": {
+        "name": "Total CMS",
+        "url": "https://totalcms.co"
+    },
+    "license": "proprietary",
+    "links": [
+        {
+            "label": "Documentation",
+            "url": "docs/extensions/bundled/geo-redirect"
+        }
+    ]
+}

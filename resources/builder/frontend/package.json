@@ -1,0 +1,16 @@
+{
+	"name": "totalcms-frontend",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Frontend asset pipeline for a Total CMS Site Builder project.",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"watch": "vite build --watch",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"vite": "^5.0.0"
+	}
+}

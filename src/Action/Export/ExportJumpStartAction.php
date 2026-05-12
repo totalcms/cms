@@ -14,6 +14,7 @@ readonly class ExportJumpStartAction
 	) {
 	}
 
+	/** @SuppressWarnings("PHPMD.ErrorControlOperator") */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$queryParams = $request->getQueryParams();
@@ -22,8 +23,12 @@ readonly class ExportJumpStartAction
 
 		$this->jumpStartExporter->setMetadata($name, $description);
 
-		// Export current CMS data to jumpstart format
-		$jumpStartData = $this->jumpStartExporter->exportCurrentData();
+		// Selective export mode for CLI push/pull
+		$mode = $queryParams['mode'] ?? 'full';
+
+		$jumpStartData = $mode === 'sync'
+			? $this->jumpStartExporter->exportSyncData()
+			: $this->jumpStartExporter->exportCurrentData();
 
 		$date = date('Ymd-His');
 

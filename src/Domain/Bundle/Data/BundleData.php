@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Bundle\Data;
 
 use Symfony\Component\Serializer\Encoder\JsonEncoder;

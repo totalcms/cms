@@ -12,7 +12,7 @@ export default class DeckField extends TotalField {
         super(container, settings);
 
         this.fieldClass = "deck-item";
-        this.deckref = container.dataset.deckref || '';
+        this.schemaref = container.dataset.schemaref || container.dataset.deckref || '';
         this.minItems = parseInt(this.settings.minItems) || 0;
         this.maxItems = parseInt(this.settings.maxItems) || -1;
 
@@ -89,20 +89,32 @@ export default class DeckField extends TotalField {
             if (!match) return;
 
             const prefix = match[1];
-            const oldUuid = match[2];
+            let oldUuid = match[2];
+            let suffix = '';
+
+            // PasswordField renders a confirm input with id `field-{uuid}-confirm`.
+            // Map it to the same new uuid as the main input so PasswordField.validate()
+            // can still resolve the confirm via `${input.id}-confirm` after cloning.
+            if (oldUuid.endsWith('-confirm')) {
+                suffix = '-confirm';
+                oldUuid = oldUuid.slice(0, -suffix.length);
+            }
 
             // Reuse the same new UUID for all prefixes sharing the same old UUID
             if (!idMap[oldUuid]) {
                 idMap[oldUuid] = Math.random().toString(36).substring(2, 15);
             }
 
-            el.id = `${prefix}-${idMap[oldUuid]}`;
+            el.id = `${prefix}-${idMap[oldUuid]}${suffix}`;
         });
 
         // Update corresponding for, aria-describedby, and list attributes
         for (const [oldUuid, newUuid] of Object.entries(idMap)) {
             element.querySelectorAll(`[for="field-${oldUuid}"]`).forEach(el => {
                 el.setAttribute('for', `field-${newUuid}`);
+            });
+            element.querySelectorAll(`[for="field-${oldUuid}-confirm"]`).forEach(el => {
+                el.setAttribute('for', `field-${newUuid}-confirm`);
             });
             element.querySelectorAll(`[aria-describedby="help-${oldUuid}"]`).forEach(el => {
                 el.setAttribute('aria-describedby', `help-${newUuid}`);
@@ -139,11 +151,19 @@ export default class DeckField extends TotalField {
         const deckItems = parent.querySelectorAll(`.${this.fieldClass}`);
         const itemElement = deckItems[deckItems.length - 1];
 
+        // Mark as unsaved so nested image/file fields defer uploads until the
+        // parent object has been saved with this deck item's shape.
+        // DeckField.saved() clears `.unsaved` from descendants after save.
+        itemElement.classList.add('unsaved');
+
         // Focus on the edit button to open the dialog
         const editButton = itemElement.querySelector("button.edit");
         if (editButton) {
             // Small delay to allow DOM to settle
-            setTimeout(() => editButton.click(), 100);
+            setTimeout(() => {
+                editButton.click();
+                this.focusFirstInput(itemElement);
+            }, 100);
         }
 
         // Initialize the new item
@@ -161,6 +181,15 @@ export default class DeckField extends TotalField {
         this.form?.processFields();
 
 		return newItem;
+    }
+
+    focusFirstInput(itemElement) {
+        const dialog = itemElement.querySelector("dialog");
+        if (!dialog) return;
+
+        const selector = 'input:not([type="hidden"]):not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+        const firstInput = dialog.querySelector(selector);
+        firstInput?.focus();
     }
 
     initActionbar(itemElement) {
@@ -189,6 +218,9 @@ export default class DeckField extends TotalField {
         const clone = itemElement.cloneNode(true);
         this.regenerateIds(clone);
 
+        // Same lifecycle as addItem — defer nested uploads until parent saves.
+        clone.classList.add('unsaved');
+
         // Clear the dialog ID field
         const dialogIdInput = clone.querySelector("dialog input[name='id']");
         if (dialogIdInput) {
@@ -211,6 +243,20 @@ export default class DeckField extends TotalField {
 			delete el.dataset.steInitialized;
 		});
 
+		// Unwrap Choices.js-initialized selects so the new ListField can re-init
+		// cleanly. Without this, Choices detects the .choices__input class on the
+		// cloned select, bails with "already initialised", and leaves a broken
+		// instance that crashes on the first setValue/clearValue call.
+		clone.querySelectorAll('.choices').forEach(wrapper => {
+			const select = wrapper.querySelector('select.choices__input');
+			if (!select) return;
+			select.classList.remove('choices__input');
+			select.removeAttribute('data-choice');
+			select.removeAttribute('hidden');
+			select.removeAttribute('aria-hidden');
+			wrapper.parentNode.replaceChild(select, wrapper);
+		});
+
 		// Insert after the original item
         const parent = itemElement.parentNode;
         parent.insertBefore(clone, itemElement.nextSibling);
@@ -218,10 +264,23 @@ export default class DeckField extends TotalField {
         // Initialize the duplicated item (this will properly initialize all form fields)
         this.newItem(clone);
 
+        // Reset image and file fields — the clone shouldn't carry the original's
+        // uploaded media. Mirrors the delete-button pattern: clear subfield values
+        // and drop the preview element. Dropzone will rebuild a fresh preview from
+        // its template on the next upload.
+        const uploadFields = clone.querySelectorAll('.form-field[data-type="image"], .form-field[data-type="file"]');
+        uploadFields.forEach(field => {
+            field.totalfield?.clearValue?.();
+            field.totalfield?.preview?.container?.remove();
+        });
+
         // Open the dialog to edit the duplicated item
         const editButton = clone.querySelector("button.edit");
         if (editButton) {
-            setTimeout(() => editButton.click(), 100);
+            setTimeout(() => {
+                editButton.click();
+                this.focusFirstInput(clone);
+            }, 100);
         }
 
 		this.changed();
@@ -354,7 +413,7 @@ export default class DeckField extends TotalField {
         return {
             type: "deck",
             fieldset: this.type,
-            deckref: this.deckref
+            schemaref: this.schemaref
         };
     }
 }

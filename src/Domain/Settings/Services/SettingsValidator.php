@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Settings\Services;
 
 /**
@@ -29,6 +31,7 @@ readonly class SettingsValidator
 			'pushnotif',
 			'presets',
 			'license',
+			'sync',
 		];
 	}
 
@@ -72,6 +75,7 @@ readonly class SettingsValidator
 			'auth'         => $this->processAuth($data),
 			'htmlclean'    => $this->processHtmlClean($data),
 			'presets'      => $this->processPresets($data),
+			'sync'         => $this->processSync($data),
 			default        => $data,
 		};
 	}
@@ -305,5 +309,18 @@ readonly class SettingsValidator
 		}
 
 		return $data;
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function processSync(array $data): array
+	{
+		return [
+			'url' => trim((string)($data['url'] ?? '')),
+			'key' => trim((string)($data['key'] ?? '')),
+		];
 	}
 }

@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/hello-world",
+    "name": "Hello World",
+    "description": "Test extension for verifying the extension pipeline",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

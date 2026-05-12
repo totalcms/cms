@@ -1,0 +1,282 @@
+{#
+	Quick Navigation Index
+	Builds a JSON array of all navigable admin items for the quick-nav dialog.
+	Included in admin-dashboard.twig so it's available on every admin page.
+#}
+{# Recursive macro — flattens the builder pages tree into quick-nav entries.
+   Children get a leading "↳ " so the nesting is visible in the search results
+   without requiring the dialog itself to render the tree. #}
+{% macro builderPageItems(pages, indent) %}
+{% for page in pages %}
+{"label":"{{ (indent ~ (page.title|default(page.id))) | e('js') }}","section":"Builder Pages","path":"builder/page/{{ page.id | e('js') }}","keywords":"builder page {{ page.route|default('') | e('js') }}"},
+{% if page.children is defined and page.children is not empty %}
+{{ _self.builderPageItems(page.children, indent ~ '↳ ') }}
+{% endif %}
+{% endfor %}
+{% endmacro %}
+<script>
+window.TCMS_QUICK_NAV = [
+{# ── Top-level nav items ── #}
+{% if cms.auth.canAccessCollectionsOperation('read') %}
+{"label":"{{ t('nav.collections') }}","section":"Navigation","path":"collections","keywords":"nav"},
+{% endif %}
+{% if cms.auth.canAccessSchemasOperation('read') %}
+{"label":"{{ t('nav.schemas') }}","section":"Navigation","path":"schemas","keywords":"nav"},
+{% endif %}
+{% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
+{"label":"{{ t('nav.dataviews') }}","section":"Navigation","path":"dataviews","keywords":"nav"},
+{% endif %}
+{"label":"Builder","section":"Navigation","path":"builder","keywords":"nav site pages templates"},
+{% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
+{"label":"{{ t('nav.mailer') }}","section":"Navigation","path":"mailer","keywords":"nav email"},
+{% endif %}
+{% if cms.auth.canAccessPlayground() %}
+{"label":"{{ t('nav.playground') }}","section":"Navigation","path":"playground","keywords":"nav twig test"},
+{% endif %}
+{% if cms.auth.canAccessUtils() %}
+{"label":"{{ t('nav.utils') }}","section":"Navigation","path":"utils","keywords":"nav utilities tools"},
+{% endif %}
+{% if cms.auth.isAdmin() %}
+{"label":"{{ t('nav.extensions') }}","section":"Navigation","path":"extensions","keywords":"nav plugins"},
+{"label":"{{ t('nav.settings') }}","section":"Navigation","path":"settings","keywords":"nav config configuration"},
+{% endif %}
+{% if cms.auth.canAccessDocs() %}
+{"label":"{{ t('nav.docs') }}","section":"Navigation","path":"docs","keywords":"nav documentation help"},
+{% endif %}
+
+{# ── Individual collections ── #}
+{% if cms.auth.canAccessCollectionsOperation('read') %}
+{% for category, collections in cms.collection.byCategory() %}
+{% for c in collections %}
+{% if c.id not in ['playground', 'mailer', 'dataviews', 'builder-pages'] and cms.auth.canAccessCollection(c.id, 'read') %}
+{"label":"{{ c.name | e('js') }}","section":"Collections","path":"collections/{{ c.id | e('js') }}","keywords":"{{ category | e('js') }} {{ c.schema | e('js') }}"},
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{# ── Individual data views ── #}
+{% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
+{% for view in cms.view.list() %}
+{"label":"{{ view.name | default(view.id) | e('js') }}","section":"Data Views","path":"dataviews/{{ view.id | e('js') }}","keywords":"view {{ view.id | e('js') }}"},
+{% endfor %}
+{% endif %}
+
+{# ── Individual schemas ── #}
+{% if cms.auth.canAccessSchemasOperation('read') %}
+{% for category, schemas in cms.schema.byCategory() %}
+{% for s in schemas %}
+{% if s.id != 'blog-legacy' and cms.auth.canAccessSchema(s.id, 'read') %}
+{"label":"{{ s.id | e('js') }}","section":"Schemas","path":"schemas/{{ s.id | e('js') }}","keywords":"{{ category | e('js') }} {{ s.description | e('js') }}"},
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{# ── Utilities ── #}
+{% if cms.auth.canAccessUtils() %}
+{% set utilItems = [
+	{"title":"Project Setup","path":"project-setup","group":"Setup"},
+	{"title":"JumpStart Data","path":"jumpstart","group":"Setup"},
+	{"title":"Cache Manager","path":"cache-manager","group":"Cache"},
+	{"title":"Cache Sizing Advisor","path":"cache-sizing","group":"Cache"},
+	{"title":"Image Batcher","path":"image-batcher","group":"Cache"},
+	{"title":"Image Cache","path":"image-cache","group":"Cache"},
+	{"title":"Import Alloy","path":"import-alloy","group":"Import"},
+	{"title":"Import Total CMS 1","path":"import-totalcms-one","group":"Import"},
+	{"title":"Collection Report","path":"collection-report","group":"System"},
+	{"title":"Job Queue Manager","path":"jobqueue","group":"System"},
+	{"title":"License Manager","path":"license-manager","group":"System"},
+	{"title":"Log Analyzer","path":"logs","group":"System"},
+	{"title":"Orphan Scanner","path":"orphan-scanner","group":"System"},
+	{"title":"Pretty URL Builder","path":"pretty-url-builder","group":"System"},
+	{"title":"Server Checker","path":"server-checker","group":"System"},
+	{"title":"Sync Manager","path":"sync","group":"System"},
+	{"title":"Twig Debugger","path":"twig-debugger","group":"System"},
+	{"title":"Update Manager","path":"update","group":"System"}
+] %}
+{% for item in utilItems %}
+{% if cms.auth.canAccessUtil(item.path, 'read') %}
+{"label":"{{ item.title }}","section":"Utilities","path":"utils/{{ item.path }}","keywords":"{{ item.group }}"},
+{% endif %}
+{% endfor %}
+{% if cms.auth.isAdmin() and cms.edition.can('access_groups') %}
+{% if cms.auth.canAccessUtil('access-groups', 'read') %}
+{"label":"Access Groups","section":"Utilities","path":"utils/access-groups","keywords":"Authentication"},
+{% endif %}
+{% endif %}
+{% if cms.auth.isAdmin() and cms.edition.can('api_keys') %}
+{% if cms.auth.canAccessUtil('api-keys', 'read') %}
+{"label":"API Keys","section":"Utilities","path":"utils/api-keys","keywords":"Authentication"},
+{% endif %}
+{% endif %}
+{% if cms.auth.isAdmin() and cms.edition.can('rss_import') %}
+{% if cms.auth.canAccessUtil('import-rss', 'read') %}
+{"label":"Import RSS Feed","section":"Utilities","path":"utils/import-rss","keywords":"Import"},
+{% endif %}
+{% if cms.auth.canAccessUtil('import-wordpress', 'read') %}
+{"label":"Import WordPress","section":"Utilities","path":"utils/import-wordpress","keywords":"Import"},
+{% endif %}
+{% endif %}
+{% endif %}
+
+{# ── Settings ── #}
+{% if cms.auth.isAdmin() %}
+{"label":"{{ t('settings.installation') | e('js') }}","section":"Settings","path":"settings/installation","keywords":""},
+{"label":"{{ t('settings.general') | e('js') }}","section":"Settings","path":"settings/general","keywords":""},
+{"label":"{{ t('settings.authentication') | e('js') }}","section":"Settings","path":"settings/auth","keywords":"login password"},
+{"label":"{{ t('settings.cache') | e('js') }}","section":"Settings","path":"settings/cache","keywords":""},
+{"label":"{{ t('settings.dashboard') | e('js') }}","section":"Settings","path":"settings/dashboard","keywords":"admin"},
+{"label":"{{ t('settings.html_sanitization') | e('js') }}","section":"Settings","path":"settings/htmlclean","keywords":"sanitize xss"},
+{"label":"{{ t('settings.imageworks') | e('js') }}","section":"Settings","path":"settings/imageworks","keywords":"image watermark"},
+{"label":"{{ t('settings.mailer') | e('js') }}","section":"Settings","path":"settings/mailer","keywords":"email"},
+{"label":"{{ t('settings.pushnotif') | e('js') }}","section":"Settings","path":"settings/pushnotif","keywords":"push notification pushover"},
+{"label":"{{ t('settings.presets') | e('js') }}","section":"Settings","path":"settings/presets","keywords":"field defaults"},
+{"label":"{{ t('settings.smtp') | e('js') }}","section":"Settings","path":"settings/smtp","keywords":"email mail server"},
+{"label":"{{ t('settings.sync') | e('js') }}","section":"Settings","path":"settings/sync","keywords":"remote"},
+{"label":"Builder","section":"Settings","path":"settings/builder","keywords":"site pages"},
+{% if cms.license.canSimulateEdition() %}
+{"label":"{{ t('settings.license_simulator') | e('js') }}","section":"Settings","path":"settings/license","keywords":"edition"},
+{% endif %}
+{% endif %}
+
+{# ── Docs ── #}
+{% if cms.auth.canAccessDocs() %}
+{% set docMenu = [
+	{"group":"Start Here","title":"Getting Started","path":"getting-started"},
+	{"group":"Start Here","title":"Installation","path":"installation"},
+	{"group":"Dashboard","title":"Dashboard Overview","path":"admin/dashboard"},
+	{"group":"Dashboard","title":"White Label","path":"admin/whitelabel"},
+	{"group":"Collections","title":"Collection Settings","path":"collections/settings"},
+	{"group":"Collections","title":"Form Settings","path":"collections/form-settings"},
+	{"group":"Collections","title":"Pushover Notifications","path":"notifications/pushover"},
+	{"group":"Collections","title":"Importing Data","path":"collections/import"},
+	{"group":"Collections","title":"Exporting Data","path":"collections/export"},
+	{"group":"Collections","title":"Sitemap Builder","path":"advanced/sitemap-builder"},
+	{"group":"Collections","title":"Data Views","path":"collections/data-views"},
+	{"group":"Property Settings","title":"All Fields","path":"property-settings/all-fields"},
+	{"group":"Property Settings","title":"Code","path":"property-settings/code-editor"},
+	{"group":"Property Settings","title":"Date","path":"property-settings/date"},
+	{"group":"Property Settings","title":"Deck","path":"property-settings/deck"},
+	{"group":"Property Settings","title":"File & Depot","path":"property-settings/file-depot"},
+	{"group":"Property Settings","title":"ID","path":"property-settings/id"},
+	{"group":"Property Settings","title":"Image & Gallery","path":"property-settings/image-gallery"},
+	{"group":"Property Settings","title":"Lists","path":"property-settings/lists"},
+	{"group":"Property Settings","title":"Number & Range","path":"property-settings/number-range"},
+	{"group":"Property Settings","title":"Password","path":"property-settings/password"},
+	{"group":"Property Settings","title":"Price","path":"property-settings/price"},
+	{"group":"Property Settings","title":"Radio & Multicheckbox","path":"property-settings/radio-multicheckbox"},
+	{"group":"Property Settings","title":"Select","path":"property-settings/select"},
+	{"group":"Property Settings","title":"Styled Text","path":"property-settings/styled-text"},
+	{"group":"Property Settings","title":"SVG","path":"property-settings/svg"},
+	{"group":"Property Settings","title":"Text & Textarea","path":"property-settings/text-inputs"},
+	{"group":"Property Options","title":"Static Options","path":"property-options/static-options"},
+	{"group":"Property Options","title":"Property Options","path":"property-options/property-options"},
+	{"group":"Property Options","title":"Relational Options","path":"property-options/relational-options"},
+	{"group":"Property Options","title":"Sorting Options","path":"property-options/sorting-options"},
+	{"group":"Property Options","title":"Access Group Options","path":"property-options/access-group-options"},
+	{"group":"Schemas","title":"Schema Reference","path":"schemas/reference"},
+	{"group":"Schemas","title":"Form Grid Layout","path":"schemas/formgrid"},
+	{"group":"Schemas","title":"Schema Validation","path":"schemas/validation"},
+	{"group":"Twig Language","title":"Twig Overview","path":"twig/overview"},
+	{"group":"Twig Language","title":"Twig Filters","path":"twig/filters"},
+	{"group":"Twig Language","title":"Twig Functions","path":"twig/functions"},
+	{"group":"Twig Language","title":"Twig Variables","path":"twig/variables"},
+	{"group":"Twig Language","title":"Conditionals","path":"twig/conditionals"},
+	{"group":"Twig Language","title":"Markdown","path":"twig/markdown"},
+	{"group":"Twig Language","title":"Factory","path":"twig/factory"},
+	{"group":"Twig Language","title":"Templates","path":"twig/templates"},
+	{"group":"CMS Content","title":"CMS Content","path":"twig/totalcms"},
+	{"group":"CMS Content","title":"Collections","path":"twig/collections"},
+	{"group":"CMS Content","title":"Collection Filtering","path":"twig/collection-filtering"},
+	{"group":"CMS Content","title":"Data","path":"twig/data"},
+	{"group":"CMS Content","title":"Media","path":"twig/media"},
+	{"group":"CMS Content","title":"ImageWorks","path":"twig/imageworks"},
+	{"group":"CMS Content","title":"Render","path":"twig/render"},
+	{"group":"CMS Content","title":"CMS Grid Tag","path":"twig/cmsgrid-tag"},
+	{"group":"CMS Content","title":"Load More","path":"twig/load-more"},
+	{"group":"CMS Content","title":"Object Linking","path":"twig/object-linking"},
+	{"group":"CMS Content","title":"Locale","path":"twig/locale"},
+	{"group":"CMS Content","title":"Localization","path":"twig/localization"},
+	{"group":"CMS Content","title":"Views","path":"twig/views"},
+	{"group":"CMS Content","title":"QR Codes","path":"twig/qrcodes"},
+	{"group":"CMS Content","title":"Bar Codes","path":"twig/barcodes"},
+	{"group":"CMS Content","title":"Twig Utilities","path":"twig/utils"},
+	{"group":"CMS Admin","title":"Admin","path":"twig/admin"},
+	{"group":"CMS Admin","title":"Auth","path":"twig/auth"},
+	{"group":"CMS Admin","title":"Edition","path":"twig/edition"},
+	{"group":"CMS Admin","title":"Schemas","path":"twig/schemas"},
+	{"group":"CMS Admin","title":"Forms Overview","path":"twig/forms/overview"},
+	{"group":"CMS Admin","title":"Form Builder","path":"twig/forms/builder"},
+	{"group":"CMS Admin","title":"Deck Forms","path":"twig/forms/deck"},
+	{"group":"CMS Admin","title":"Form Options","path":"twig/forms/options"},
+	{"group":"CMS Admin","title":"Field Settings","path":"twig/forms/fields"},
+	{"group":"CMS Admin","title":"Select & List Options","path":"twig/forms/select-options"},
+	{"group":"CMS Admin","title":"Validation Patterns","path":"twig/forms/patterns"},
+	{"group":"CMS Admin","title":"Report Form","path":"twig/forms/report"},
+	{"group":"CMS Admin","title":"Specialized Forms","path":"twig/forms/specialized"},
+	{"group":"Authentication","title":"Authentication","path":"auth/auth"},
+	{"group":"Authentication","title":"Access Groups","path":"auth/access-groups"},
+	{"group":"Authentication","title":"Password Reset","path":"auth/password-reset"},
+	{"group":"API","title":"REST API","path":"api/rest-api"},
+	{"group":"API","title":"API Keys","path":"api/api-keys"},
+	{"group":"API","title":"Index Filter","path":"api/index-filter"},
+	{"group":"API","title":"OpenAPI Docs","path":"api/openapi"},
+	{"group":"API","title":"PHP API","path":"api/php-api"},
+	{"group":"API","title":"Download","path":"api/download"},
+	{"group":"Site Builder","title":"Builder Overview","path":"builder/overview"},
+	{"group":"Site Builder","title":"Frontend Assets","path":"builder/frontend"},
+	{"group":"Site Builder","title":"Twig Reference","path":"twig/builder"},
+	{"group":"Site Builder","title":"CLI Commands","path":"builder/cli"},
+	{"group":"Site Builder","title":"Admin UI","path":"builder/admin"},
+	{"group":"Site Builder","title":"Starter Templates","path":"builder/starters"},
+	{"group":"Extensions","title":"Extensions Overview","path":"extensions/overview"},
+	{"group":"Extensions","title":"Extension Manifest","path":"extensions/manifest"},
+	{"group":"Extensions","title":"Extension Points","path":"extensions/extension-points"},
+	{"group":"Extensions","title":"Extension Events","path":"extensions/events"},
+	{"group":"Extensions","title":"Extension Schemas","path":"extensions/schemas"},
+	{"group":"Behind the Scenes","title":"AI Integration","path":"advanced/ai-integration"},
+	{"group":"Behind the Scenes","title":"CLI","path":"advanced/cli"},
+	{"group":"Behind the Scenes","title":"Configuration","path":"advanced/configuration"},
+	{"group":"Behind the Scenes","title":"Data Model","path":"advanced/data-model"},
+	{"group":"Behind the Scenes","title":"Deployment","path":"advanced/deployment"},
+	{"group":"Behind the Scenes","title":"Filesystem","path":"advanced/filesystem"},
+	{"group":"Behind the Scenes","title":"JumpStart","path":"advanced/jumpstart"},
+	{"group":"Behind the Scenes","title":"Licenses","path":"advanced/licenses"},
+	{"group":"Behind the Scenes","title":"Migration from v1","path":"advanced/migration-total-cms-one"},
+	{"group":"Behind the Scenes","title":"Nginx","path":"advanced/nginx"},
+	{"group":"Behind the Scenes","title":"Search","path":"advanced/search"},
+	{"group":"Behind the Scenes","title":"Security","path":"advanced/security"},
+	{"group":"Behind the Scenes","title":"Server Sizing","path":"advanced/server-sizing"},
+	{"group":"Behind the Scenes","title":"Sync","path":"advanced/sync"},
+	{"group":"Behind the Scenes","title":"Updates","path":"advanced/updates"}
+] %}
+{% for doc in docMenu %}
+{"label":"{{ doc.title }}","section":"Docs","path":"docs/{{ doc.path }}","keywords":"{{ doc.group }} documentation"},
+{% endfor %}
+{% endif %}
+
+{# ── Builder pages ── #}
+{% if cms.auth.canAccessTemplates() %}
+{{ _self.builderPageItems(cms.builder.pagesTree(), '') }}
+{% endif %}
+
+{# ── Builder templates (layouts, partials, macros, pages, etc.) ── #}
+{% if cms.auth.canAccessTemplates() %}
+{% for folder, templates in cms.admin.templatesByFolder() %}
+{% for tpl in templates %}
+{"label":"{{ tpl.path | e('js') }}","section":"Builder Templates","path":"builder/{{ tpl.path | e('js') }}","keywords":"builder template {{ folder | e('js') }}"},
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{# ── Extension nav items ── #}
+{% if extensionNavItems is defined and extensionNavItems is iterable %}
+{% for item in extensionNavItems %}
+{% if item.permission == 'any' or (item.permission == 'admin' and cms.auth.isAdmin()) %}
+{"label":"{{ item.label | e('js') }}","section":"Extensions","path":"{{ item.url | e('js') }}","keywords":"extension plugin"},
+{% endif %}
+{% endfor %}
+{% endif %}
+];
+</script>

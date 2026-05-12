@@ -1,0 +1,32 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Services — {{ cms.config('domain') }}{% endblock %}
+{% block description %}Explore the services we offer.{% endblock %}
+
+{% block content %}
+<section class="section">
+	<div class="container">
+		<h1>Our Services</h1>
+		<p>We offer a range of services to help your business grow.</p>
+
+		<div class="grid-2" style="margin-top: 2rem;">
+			<div class="card">
+				<h3>Consulting</h3>
+				<p>Expert guidance to help you make the right decisions for your business.</p>
+			</div>
+			<div class="card">
+				<h3>Web Design</h3>
+				<p>Modern, responsive websites that look great on every device.</p>
+			</div>
+			<div class="card">
+				<h3>Development</h3>
+				<p>Custom applications built to solve your specific challenges.</p>
+			</div>
+			<div class="card">
+				<h3>Support</h3>
+				<p>Ongoing maintenance and support to keep everything running smoothly.</p>
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock %}

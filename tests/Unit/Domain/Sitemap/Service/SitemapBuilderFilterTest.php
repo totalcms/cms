@@ -274,12 +274,14 @@ final class SitemapBuilderFilterTest extends TestCase
 			->method('fetchIndex')
 			->willReturn($indexData);
 
-		// Mock CollectionData
-		$collectionData         = new CollectionData();
-		$collectionData->id     = 'blog';
-		$collectionData->name   = 'Blog';
-		$collectionData->schema = 'blog';
-		$collectionData->url    = '/blog';
+		// Mock CollectionData with sitemap enabled (these tests focus on filtering,
+		// not on the enabled/disabled gate — that's covered separately).
+		$collectionData          = new CollectionData();
+		$collectionData->id      = 'blog';
+		$collectionData->name    = 'Blog';
+		$collectionData->schema  = 'blog';
+		$collectionData->url     = '/blog';
+		$collectionData->sitemap = ['enabled' => true];
 
 		$this->mockCollectionFetcher
 			->method('fetchCollection')

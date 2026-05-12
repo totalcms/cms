@@ -34,28 +34,22 @@
 
 	{% include 'partials/sentry.twig' %}
 
-	<script src="{{ cms.api }}/assets/htmx.min.js?v={{ cms.version }}"></script>
 	<meta name="csrf-token" content="{{ csrf_token() }}">
+    <base href="{{ cms.dashboard }}/">
 
-    <base href="{{ cms.api }}/admin/">
-	<link rel="modulepreload" href="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"/>
-	<link rel="modulepreload" href="{{ cms.api }}/assets/content.js?v={{ cms.version }}"/>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/content-bundled.css?v={{ cms.version }}"/>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/icons.css?v={{ cms.version }}"/>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css?v={{ cms.version }}"/>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css?v={{ cms.version }}"/>
+	{% block head %}{% endblock %}
+	{{ cms.adminAssetsHead() }}
+
+	{% if cms.edition.can('whitelabel_pro') %}
+		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
+	{% endif %}
 
 	{% set accentColor = cms.config('dashboard', 'accent') %}
 	{% if accentColor %}
 	<style>:root{--totalform-accent:{{ accentColor | hexToColor | oklch(100, false) }};}</style>
 	{% endif %}
-
-	{% block head %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
-		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
-	{% endif %}
 </head>
-<body>
+<body{% if cms.config('dashboard', 'fullWidthForms') %} class="full-width-forms"{% endif %}>
 
     {% block content %}
 
@@ -67,10 +61,13 @@
             <nav>
                 <ul class="menu">
                     <li class="menu-item">
-						{{ include(cms.edition.can('whitelabel_templates')
+						{{ include(cms.edition.can('whitelabel_pro')
 							? ['whitelabel/admin-logo.twig', 'admin-logo-default.twig']
 							: ['admin-logo-default.twig']
 						, ignore_missing = true) }}
+                    </li>
+                    <li class="menu-item">
+                        <button class="quick-nav-trigger" type="button" title="Quick Navigation (&#x21E7;&#x2318;O)"></button>
                     </li>
                     {% if cms.auth.canAccessCollectionsOperation('read') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
@@ -82,25 +79,34 @@
                         <a class="schemas" href="schemas" title="{{ t('nav.schemas') }}">{{ t('nav.schemas') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.auth.canAccessPlayground() %}
-                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
-                        <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>
+                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
+                    <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
+                        <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
                     </li>
                     {% endif %}
+                    <li class="menu-item{% if url.page == 'builder' %} active{% endif %}">
+                        <a class="builder" href="builder" title="Builder">Builder</a>
+                    </li>
                     {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
                     <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
                         <a class="mailer" href="mailer" title="{{ t('nav.mailer') }}">{{ t('nav.mailer') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.auth.canAccessTemplates() and cms.edition.can('templates') %}
-                    <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
-                        <a class="templates" href="templates" title="{{ t('nav.templates') }}">{{ t('nav.templates') }}</a>
+                    {% if cms.auth.canAccessPlayground() %}
+                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
+                        <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>
                     </li>
                     {% endif %}
-                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
-                    <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
-                        <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
-                    </li>
+                    {% if extensionNavItems is defined and extensionNavItems is iterable %}
+						{% for item in extensionNavItems %}
+							{% if item.permission == 'any' or (item.permission == 'admin' and cms.auth.isAdmin()) %}
+							<li class="menu-item{% if url.path ends with item.slug %} active{% endif %}">
+								<a class="ext-nav" href="{{ item.url }}" title="{{ item.label }}"
+									{% if item.icon %} style="--ext-icon: url('data:image/svg+xml,{{ item.icon|url_encode }}')"{% endif %}
+								>{{ item.label }}</a>
+							</li>
+							{% endif %}
+						{% endfor %}
                     {% endif %}
                     {% if cms.auth.canAccessUtils() %}
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
@@ -108,6 +114,9 @@
                     </li>
                     {% endif %}
                     {% if cms.auth.isAdmin() %}
+                    <li class="menu-item{% if url.page == 'extensions' %} active{% endif %}">
+                        <a class="extensions" href="extensions" title="{{ t('nav.extensions') }}">{{ t('nav.extensions') }}</a>
+                    </li>
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="{{ t('nav.settings') }}">{{ t('nav.settings') }}</a>
                     </li>
@@ -152,7 +161,7 @@
                         </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
                         <li class="edit"><a href="profile">{{ t('user.edit_profile') }}</a></li>
-                        <li class="logout"><a href="../logout">{{ t('user.logout') }}</a></li>
+                        <li class="logout"><a href="{{cms.dashboard }}/logout">{{ t('user.logout') }}</a></li>
                     </ul>
                 </nav>
                 {% elseif cms.env == 'dev' %}
@@ -176,7 +185,7 @@
                         </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ t('user.dev_user') }}</a></li>
                         <li class="edit"><a href="profile">{{ t('user.edit_profile') }}</a></li>
-                        <li class="logout"><a href="../logout">{{ t('user.logout') }}</a></li>
+                        <li class="logout"><a href="{{cms.dashboard }}/logout">{{ t('user.logout') }}</a></li>
                     </ul>
                 </nav>
                 {% endif %}
@@ -191,15 +200,15 @@
 
     {% endblock %}
 
+	{% include 'admin/quick-nav-index.twig' %}
 	<script>window.TCMS_TRANSLATIONS = {{ cms.locale.jsTranslations()|json_encode|raw }};</script>
 	<script>window.TCMS_CONFIG = {
 		confirmCountdown: {{ cms.config('dashboard', 'confirmCountdown')|json_encode|raw }}
 	};</script>
-	<script type="module" src="{{ cms.api }}/assets/content.js?v={{ cms.version }}"></script>
-	<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
+	{{ cms.adminAssetsBody() }}
 
 	{% block bodyBelow %}{% endblock %}
-	{% if cms.edition.can('whitelabel_templates') %}
+	{% if cms.edition.can('whitelabel_pro') %}
 		{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 	{% endif %}
 </body>

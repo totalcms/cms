@@ -49,7 +49,8 @@ final class CollectionSaverTest extends TestCase
 			$this->factory,
 			$this->indexRepository,
 			$this->collectionFetcher,
-			$this->editionFeatures
+			$this->editionFeatures,
+			new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger()),
 		);
 	}
 

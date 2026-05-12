@@ -12,6 +12,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 /**
  * Service for handling password reset functionality.
@@ -62,10 +63,8 @@ readonly class PasswordResetService
 	/**
 	 * Create a password reset token and store it in cache.
 	 * Invalidates any previous tokens for the same email/collection.
-	 *
-	 * @return array{success:bool,token?:string,message:string}
 	 */
-	public function createResetToken(string $email, string $collection): array
+	public function createResetToken(string $email, string $collection): OperationResult
 	{
 		// Check if user exists
 		$user = $this->findUserByEmail($email, $collection);
@@ -77,10 +76,8 @@ readonly class PasswordResetService
 				'collection' => $collection,
 			]);
 
-			return [
-				'success' => true, // Still return success to prevent user enumeration
-				'message' => 'If an account exists with that email, you will receive a password reset link.',
-			];
+			// Still return success to prevent user enumeration
+			return OperationResult::success('If an account exists with that email, you will receive a password reset link.');
 		}
 
 		// Invalidate any previous token for this user
@@ -109,10 +106,7 @@ readonly class PasswordResetService
 				'collection' => $collection,
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'Unable to create password reset token. Please try again.',
-			];
+			return OperationResult::failure('Unable to create password reset token. Please try again.');
 		}
 
 		// Store reference to latest token for this user
@@ -125,11 +119,7 @@ readonly class PasswordResetService
 			'expiresIn'  => $expiryMinutes . ' minutes',
 		]);
 
-		return [
-			'success' => true,
-			'token'   => $token,
-			'message' => 'Password reset token created successfully.',
-		];
+		return OperationResult::success('Password reset token created successfully.', ['token' => $token]);
 	}
 
 	/**
@@ -152,10 +142,8 @@ readonly class PasswordResetService
 
 	/**
 	 * Validate a reset token and return user data if valid.
-	 *
-	 * @return array{valid:bool,email?:string,collection?:string,message:string}
 	 */
-	public function validateToken(string $token): array
+	public function validateToken(string $token): OperationResult
 	{
 		$tokenData = $this->cacheManager->getPasswordResetData("token:{$token}");
 
@@ -164,10 +152,7 @@ readonly class PasswordResetService
 				'token' => substr($token, 0, 8) . '...', // Log only first 8 chars for security
 			]);
 
-			return [
-				'valid'   => false,
-				'message' => 'Invalid or expired reset token.',
-			];
+			return OperationResult::failure('Invalid or expired reset token.');
 		}
 
 		// Check if token has expired (double-check even though cache should handle TTL)
@@ -180,47 +165,34 @@ readonly class PasswordResetService
 			// Clean up expired token
 			$this->cacheManager->clearPasswordResetData("token:{$token}");
 
-			return [
-				'valid'   => false,
-				'message' => 'This reset token has expired. Please request a new one.',
-			];
+			return OperationResult::failure('This reset token has expired. Please request a new one.');
 		}
 
-		return [
-			'valid'      => true,
+		return OperationResult::success('Token is valid.', [
 			'email'      => $tokenData['email'],
 			'collection' => $tokenData['collection'],
-			'message'    => 'Token is valid.',
-		];
+		]);
 	}
 
 	/**
 	 * Reset user password using a valid token.
-	 *
-	 * @return array{success:bool,message:string}
 	 */
-	public function resetPassword(string $token, string $newPassword): array
+	public function resetPassword(string $token, string $newPassword): OperationResult
 	{
 		// Validate token
 		$validation = $this->validateToken($token);
 
-		if (!$validation['valid']) {
-			return [
-				'success' => false,
-				'message' => $validation['message'],
-			];
+		if (!$validation->success) {
+			return OperationResult::failure($validation->message);
 		}
 
-		// Extract email and collection (guaranteed to exist when valid is true)
-		$email      = $validation['email'] ?? '';
-		$collection = $validation['collection'] ?? '';
+		// Extract email and collection (guaranteed to exist when success is true)
+		$email      = (string)($validation->data['email'] ?? '');
+		$collection = (string)($validation->data['collection'] ?? '');
 
 		// Double-check these values exist (should never happen, but satisfies PHPStan)
 		if ($email === '' || $collection === '') {
-			return [
-				'success' => false,
-				'message' => 'Invalid token data.',
-			];
+			return OperationResult::failure('Invalid token data.');
 		}
 
 		// Fetch user object
@@ -232,10 +204,7 @@ readonly class PasswordResetService
 				'collection' => $collection,
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'User account not found.',
-			];
+			return OperationResult::failure('User account not found.');
 		}
 
 		// Hash the new password
@@ -257,10 +226,7 @@ readonly class PasswordResetService
 				'collection' => $collection,
 			]);
 
-			return [
-				'success' => true,
-				'message' => 'Password reset successful! You can now log in with your new password.',
-			];
+			return OperationResult::success('Password reset successful! You can now log in with your new password.');
 		} catch (\Exception $e) {
 			$this->logger->error('Failed to update password', [
 				'email'      => $email,
@@ -268,10 +234,7 @@ readonly class PasswordResetService
 				'error'      => $e->getMessage(),
 			]);
 
-			return [
-				'success' => false,
-				'message' => 'Failed to update password. Please try again.',
-			];
+			return OperationResult::failure('Failed to update password. Please try again.');
 		}
 	}
 }

@@ -11,7 +11,6 @@ use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\Encryption\Cipher;
-use TotalCMS\Support\Config;
 use Twig\TwigFilter;
 
 /**
@@ -89,6 +88,7 @@ class TotalCMSTwigFilters
 		'markdown',
 		'markdownInline',
 		'dateRelative',
+		'parseDate',
 		'dateFormat',
 		'dateAdd',
 		'dateSubtract',
@@ -1058,34 +1058,19 @@ class TotalCMSTwigFilters
 	// -------------------------
 
 	/**
-	 * Parse a date and return a Chronos instance with timezone support.
-	 */
-	private static function parseDate(mixed $date): Chronos
-	{
-		$config   = Config::init();
-		$timezone = new \DateTimeZone($config->timezone);
-
-		if ($date instanceof Chronos) {
-			return $date->setTimezone($timezone);
-		}
-
-		return Chronos::parse((string)$date, $timezone);
-	}
-
-	/**
 	 * Get relative date string (e.g., "2 days ago", "in 3 weeks").
 	 * Uses Chronos with RelativeTimeFormatter for locale-aware output.
 	 */
 	public static function dateRelative(mixed $date): string
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->diffForHumans();
 		} catch (\Throwable) {
 			// Fallback when intl extension is missing or date parsing fails
 			try {
-				$chronos = self::parseDate($date);
+				$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 				return $chronos->format('M j, Y');
 			} catch (\Throwable) {
@@ -1100,7 +1085,7 @@ class TotalCMSTwigFilters
 	public static function dateFormat(mixed $date, string $format = 'Y-m-d H:i:s'): string
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->format($format);
 		} catch (\Exception) {
@@ -1114,7 +1099,7 @@ class TotalCMSTwigFilters
 	public static function dateAdd(mixed $date, string $interval): string
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->modify($interval)->format('c');
 		} catch (\Exception) {
@@ -1128,7 +1113,7 @@ class TotalCMSTwigFilters
 	public static function dateSubtract(mixed $date, string $interval): string
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 			// If interval doesn't start with -, add it
 			if (!str_starts_with($interval, '-')) {
 				$interval = '-' . $interval;
@@ -1146,8 +1131,8 @@ class TotalCMSTwigFilters
 	public static function dateDiff(mixed $date1, mixed $date2): string
 	{
 		try {
-			$chronos1 = self::parseDate($date1);
-			$chronos2 = self::parseDate($date2);
+			$chronos1 = TotalCMSTwigFunctions::parseDate($date1);
+			$chronos2 = TotalCMSTwigFunctions::parseDate($date2);
 
 			return $chronos1->diffForHumans($chronos2);
 		} catch (\Exception) {
@@ -1161,7 +1146,7 @@ class TotalCMSTwigFilters
 	public static function dateStartOf(mixed $date, string $unit = 'day'): string
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return match ($unit) {
 				'day'   => $chronos->startOfDay()->format('c'),
@@ -1181,7 +1166,7 @@ class TotalCMSTwigFilters
 	public static function dateEndOf(mixed $date, string $unit = 'day'): string
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return match ($unit) {
 				'day'   => $chronos->endOfDay()->format('c'),
@@ -1201,7 +1186,7 @@ class TotalCMSTwigFilters
 	public static function dateIsWeekend(mixed $date): bool
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->isWeekend();
 		} catch (\Exception) {
@@ -1215,7 +1200,7 @@ class TotalCMSTwigFilters
 	public static function dateIsWeekday(mixed $date): bool
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return !$chronos->isWeekend();
 		} catch (\Exception) {
@@ -1229,7 +1214,7 @@ class TotalCMSTwigFilters
 	public static function dateIsPast(mixed $date): bool
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->isPast();
 		} catch (\Exception) {
@@ -1243,7 +1228,7 @@ class TotalCMSTwigFilters
 	public static function dateIsFuture(mixed $date): bool
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->isFuture();
 		} catch (\Exception) {
@@ -1257,7 +1242,7 @@ class TotalCMSTwigFilters
 	public static function dateIsToday(mixed $date): bool
 	{
 		try {
-			$chronos = self::parseDate($date);
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
 
 			return $chronos->isToday();
 		} catch (\Exception) {
@@ -1279,8 +1264,8 @@ class TotalCMSTwigFilters
 	public static function recurringMonthDate(mixed $date, mixed $targetDate = null): string
 	{
 		try {
-			$chronos = self::parseDate($date);
-			$target  = $targetDate !== null ? self::parseDate($targetDate) : Chronos::now();
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
+			$target  = $targetDate !== null ? TotalCMSTwigFunctions::parseDate($targetDate) : Chronos::now();
 
 			$originalDay       = $chronos->day;
 			$daysInTargetMonth = $target->daysInMonth;
@@ -1304,8 +1289,8 @@ class TotalCMSTwigFilters
 	public static function dateIsRecurringDate(mixed $date, mixed $compareDate = null): bool
 	{
 		try {
-			$chronos = self::parseDate($date);
-			$compare = $compareDate !== null ? self::parseDate($compareDate) : Chronos::now();
+			$chronos = TotalCMSTwigFunctions::parseDate($date);
+			$compare = $compareDate !== null ? TotalCMSTwigFunctions::parseDate($compareDate) : Chronos::now();
 
 			$originalDay        = $chronos->day;
 			$daysInCompareMonth = $compare->daysInMonth;
