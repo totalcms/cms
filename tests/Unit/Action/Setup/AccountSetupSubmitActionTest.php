@@ -101,6 +101,23 @@ final class AccountSetupSubmitActionTest extends TestCase
 		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'short', 'password-confirm' => 'short']), $this->createMock(ResponseInterface::class));
 	}
 
+	public function testEmailIsStashedEvenWhenValidationFails(): void
+	{
+		// Validation fails (short password) but the form should still remember
+		// the email so the operator doesn't have to re-type it on the redirect.
+		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
+
+		$captured = [];
+		$this->session->method('set')
+			->willReturnCallback(static function (string $key, mixed $value) use (&$captured): void {
+				$captured[$key] = $value;
+			});
+
+		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'short', 'password-confirm' => 'short']), $this->createMock(ResponseInterface::class));
+
+		$this->assertSame('admin@example.com', $captured['setup_admin_email'] ?? null);
+	}
+
 	public function testRedirectsOnPasswordMismatch(): void
 	{
 		$this->flash->expects($this->once())->method('add')->with('error', $this->anything());
@@ -127,8 +144,9 @@ final class AccountSetupSubmitActionTest extends TestCase
 			->with('admin@example.com', 'password123')
 			->willReturn(['id' => 'admin']);
 
-		// One set() for the admin email (display on complete page) plus four
-		// session keys that establish the logged-in session.
+		// Email is stashed at the top of the handler (so the form can repopulate
+		// it on validation failure, and the complete page can display it),
+		// followed by the four session keys that establish the logged-in session.
 		$expected = [
 			'setup_admin_email'                  => 'admin@example.com',
 			SessionKeys::AUTH_USER               => 'admin',

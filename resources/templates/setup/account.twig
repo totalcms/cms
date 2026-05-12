@@ -20,6 +20,7 @@
 			label       : t('wizard.account_email'),
 			required    : true,
 			placeholder : "admin@example.com",
+			value       : sessionData.setup_admin_email|default(''),
 		}) }}
 
 		{{ cms.form.field("password", "password", {

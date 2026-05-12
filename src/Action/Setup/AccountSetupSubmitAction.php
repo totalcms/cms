@@ -42,6 +42,11 @@ readonly class AccountSetupSubmitAction
 		$password        = (string)($data['password'] ?? '');
 		$confirmPassword = (string)($data['password-confirm'] ?? '');
 
+		// Stash the submitted email so the form can repopulate it on every
+		// validation-failure redirect (passwords are NEVER stashed). Also reused
+		// by the complete page to display "logged in as".
+		$this->session->set('setup_admin_email', $email);
+
 		// Validate
 		if ($email === '') {
 			$flash->add('error', $this->translator->trans('wizard.account_email_req'));
@@ -82,9 +87,6 @@ readonly class AccountSetupSubmitAction
 		}
 
 		$this->setupState->completeStep('account');
-
-		// Store email in session for display on the complete page
-		$this->session->set('setup_admin_email', $email);
 
 		// Auto-login: the operator just typed these credentials, so signing them
 		// in here removes the "create account → log in with the same password"
