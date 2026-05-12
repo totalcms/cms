@@ -12,7 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Setup\AccountSetupSubmitAction;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
 use TotalCMS\Domain\Auth\Service\LoginService;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\RedirectRenderer;
@@ -23,6 +23,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 	private AccountSetupSubmitAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $firstLoginChecker;
 	private \PHPUnit\Framework\MockObject\MockObject $loginService;
+	private \PHPUnit\Framework\MockObject\MockObject $sessionLogin;
 	private \PHPUnit\Framework\MockObject\MockObject $setupState;
 	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
@@ -34,6 +35,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 	{
 		$this->firstLoginChecker = $this->createMock(FirstLoginChecker::class);
 		$this->loginService      = $this->createMock(LoginService::class);
+		$this->sessionLogin      = $this->createMock(SessionLogin::class);
 		$this->setupState        = $this->createMock(SetupStateManager::class);
 		$this->session           = $this->createMock(SessionInterface::class);
 		$this->redirectRenderer  = $this->createMock(RedirectRenderer::class);
@@ -54,6 +56,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 		$this->action = new AccountSetupSubmitAction(
 			$this->firstLoginChecker,
 			$this->loginService,
+			$this->sessionLogin,
 			$this->setupState,
 			$this->session,
 			$this->redirectRenderer,
@@ -144,16 +147,15 @@ final class AccountSetupSubmitActionTest extends TestCase
 			->with('admin@example.com', 'password123')
 			->willReturn(['id' => 'admin']);
 
-		// Email is stashed at the top of the handler (so the form can repopulate
-		// it on validation failure, and the complete page can display it),
-		// followed by the four session keys that establish the logged-in session.
-		$expected = [
-			'setup_admin_email'                  => 'admin@example.com',
-			SessionKeys::AUTH_USER               => 'admin',
-			SessionKeys::AUTH_COLLECTION         => 'admin',
-			SessionKeys::AUTH_PERSISTENT_LOGIN   => false,
-			SessionKeys::LICENSE_CHECK_DUE       => true,
-		];
+		// SessionLogin handles the actual session-key writes (covered by its own
+		// tests); here we just verify the action delegates with the right args.
+		$this->sessionLogin->expects($this->once())
+			->method('establish')
+			->with('admin', 'admin');
+
+		// Only the email is stashed directly on the session by this action — so
+		// the form can repopulate it on validation failure and the complete
+		// page can display "logged in as".
 		$captured = [];
 		$this->session->method('set')
 			->willReturnCallback(static function (string $key, mixed $value) use (&$captured): void {
@@ -166,7 +168,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
 
-		$this->assertSame($expected, $captured);
+		$this->assertSame(['setup_admin_email' => 'admin@example.com'], $captured);
 	}
 
 	public function testHandlesUserCreationFailure(): void
@@ -191,6 +193,9 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->loginService->method('authenticate')
 			->willThrowException(new \RuntimeException('Auth backend unreachable'));
+
+		// Auto-login failure means we never get as far as establishing a session.
+		$this->sessionLogin->expects($this->never())->method('establish');
 
 		// No error flash for auto-login failures — it's silent on purpose.
 		$this->flash->expects($this->never())->method('add');

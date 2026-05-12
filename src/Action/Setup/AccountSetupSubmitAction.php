@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
 use TotalCMS\Domain\Auth\Service\LoginService;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\RedirectRenderer;
@@ -25,6 +25,7 @@ readonly class AccountSetupSubmitAction
 	public function __construct(
 		private FirstLoginChecker $firstLoginChecker,
 		private LoginService $loginService,
+		private SessionLogin $sessionLogin,
 		private SetupStateManager $setupState,
 		private SessionInterface $session,
 		private RedirectRenderer $redirectRenderer,
@@ -98,12 +99,7 @@ readonly class AccountSetupSubmitAction
 		// so there's no pre-existing fixation/hijack vector to invalidate.
 		try {
 			$user = $this->loginService->authenticate($email, $password);
-			$this->session->set(SessionKeys::AUTH_USER, $user['id']);
-			$this->session->set(SessionKeys::AUTH_COLLECTION, $this->config->auth['collection']);
-			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, false);
-			// License is validated lazily by LicenseValidationMiddleware on the
-			// next admin request — same pattern as the regular login action.
-			$this->session->set(SessionKeys::LICENSE_CHECK_DUE, true);
+			$this->sessionLogin->establish((string)$user['id'], (string)$this->config->auth['collection']);
 		} catch (\Throwable) {
 			// Account exists; user can log in manually if auto-login can't establish a session.
 		}

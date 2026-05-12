@@ -262,6 +262,15 @@ $settings['auth'] = [
 	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
 	'forgotPasswordMailerId'  => '',  // Optional custom mailer ID for password reset emails (leave empty for default template)
 	'resetTokenExpiry'        => 30,  // Minutes before password reset token expires
+	// Allow-list of collection IDs that accept public (unauthenticated) user
+	// registration via POST /admin/register/{collection}. Empty by default
+	// because the default auth collection is operator-only — opt your member /
+	// customer collections in explicitly. Bot abuse note: registrants are
+	// auto-logged in after signup, so any visitor (or bot) that fills the form
+	// gets a logged-in session in whatever default access group new users land
+	// in. Gate this with a CAPTCHA, email verification, or manual approval if
+	// the registered users will reach content that isn't safe to expose.
+	'publicRegistration'      => [],
 ];
 
 $settings['htmlclean'] = [

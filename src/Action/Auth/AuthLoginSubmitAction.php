@@ -9,6 +9,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -23,6 +24,7 @@ readonly class AuthLoginSubmitAction
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
+		private SessionLogin $sessionLogin,
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
 		private TranslationService $translator,
@@ -70,14 +72,17 @@ readonly class AuthLoginSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
-		$email           = $data['email'];
+		// The form field is always named `email` for backwards compatibility,
+		// but the value may be an ID instead of an email depending on the
+		// `auth.loginWith` config. UserValidationService dispatches transparently.
+		$idOrEmail       = $data['email'];
 		$password        = $data['password'];
 		$persistentLogin = !empty($data['persistent_login']);
 		$collection      = $args['collection'] ?? '';
 
 		$user = null;
 		try {
-			$user = $this->loginService->authenticate($email, $password, $collection);
+			$user = $this->loginService->authenticate($idOrEmail, $password, $collection);
 		} catch (\Exception $e) {
 			// throw new HttpUnauthorizedException($request, $e->getMessage());
 			$flash->add('error', $e->getMessage());
@@ -109,17 +114,8 @@ readonly class AuthLoginSubmitAction
 		// For SuperAdmin cross-collection authentication, use the collection they were authenticated against
 		$sessionCollection = $user['_authenticated_collection'] ?? $collection;
 
-		// Set session data
-		$this->session->set(SessionKeys::AUTH_USER, $user['id']);
-		$this->session->set(SessionKeys::AUTH_COLLECTION, $sessionCollection);
-		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
+		$this->sessionLogin->establish((string)$user['id'], (string)$sessionCollection, $persistentLogin);
 		$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
-
-		// Defer license validation to the next request so login isn't blocked
-		// by a network round-trip. LicenseValidationMiddleware picks up this flag
-		// and validates (with redirect to license-manager on failure) on the
-		// next admin request, regardless of method.
-		$this->session->set(SessionKeys::LICENSE_CHECK_DUE, true);
 
 		// If persistent login is checked, create persistent token
 		if ($persistentLogin) {

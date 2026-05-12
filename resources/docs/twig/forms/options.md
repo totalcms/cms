@@ -35,6 +35,7 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
     helpOnFocus: false,            # Show help on focus (bool, default: false)
     hideID: false,                 # Hide the ID field (bool, default: false)
     addOnly: true,                 # Security: Only allow creating new objects, never editing (bool, default: false)
+    register: true,                # Retarget the form at /admin/register/{collection} so the new user is also auto-logged-in (bool, default: false)
 }) }}
 ```
 
@@ -43,22 +44,65 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
 Use `addOnly: true` for forms on the public side of your website to prevent users from editing existing objects by manipulating URL parameters:
 
 ```twig
-{# Public registration form - secure against ID manipulation #}
-{{ cms.form.builder('users', {
+{# Public form - secure against ID manipulation #}
+{{ cms.form.builder('inquiries', {
     addOnly: true,
     newActions: [
         {
-            action: 'redirect',
-            link: '/login'
+            action: 'message',
+            text: 'Thanks — we\'ll be in touch.'
         }
     ]
-}).addField('name').addField('email').addField('password', {field: 'password'}).build() }}
+}).addField('name').addField('email').addField('message', {field: 'textarea'}).build() }}
 ```
 
 **Security Note:** When `addOnly` is enabled:
 - Any ID parameter in the URL or form is ignored
 - The form will always create a new object, never update existing ones
 - Protects against malicious users passing `?id=123` to edit other users' data
+
+## Public Registration Forms
+
+For user-registration forms specifically, prefer `register: true` over plain `addOnly`. It retargets the form at the public registration endpoint (`POST /admin/register/{collection}`), which creates the user record AND auto-logs them in as part of the same request — so the visitor doesn't have to immediately type the credentials they just submitted.
+
+```twig
+{# Public sign-up form - creates the user and signs them in #}
+{{ cms.form.builder('members', {
+    register: true,
+    newActions: [
+        {
+            action: 'redirect',
+            link: '/welcome'
+        }
+    ]
+}).addField('name').addField('email').addField('password', {field: 'password'}).build() }}
+```
+
+**Behaviour:**
+- Form posts to `/admin/register/{collection}` instead of `/api/collections/{collection}`
+- The new user is authenticated and signed in before the response returns
+- `addOnly` is implied — the register endpoint only handles POST, no edit/update path exists
+- Image and file fields work the same way they do on any add-only form: uploads are deferred client-side until the parent save completes, then uploaded against the freshly-created user record
+
+**Required server-side opt-in:**
+
+The target collection must appear in `config.auth.publicRegistration` in `config/tcms.php`, otherwise the endpoint returns a `403 Forbidden`:
+
+```php
+return [
+    'auth' => [
+        'publicRegistration' => ['members'],
+    ],
+];
+```
+
+The allow-list is empty by default so the operator-only `auth` collection isn't accidentally exposed to public signups. Opt in your member / customer collections explicitly.
+
+**Security caveats the operator owns:**
+
+- Anyone who reaches this endpoint can create a user record. Add a CAPTCHA, rate limit, or email-verification gate before exposing it on a site where the resulting account grants meaningful access.
+- New users land in whatever default access group the auth collection's schema assigns. If that group reaches gated content, every signup (including bot signups) gains that access.
+- Password validation (minimum length etc.) is the schema's responsibility, not the endpoint's.
 
 ## Actions
 

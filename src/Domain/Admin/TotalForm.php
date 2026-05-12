@@ -312,6 +312,12 @@ class TotalForm implements \Stringable
 		protected bool $hideID                   = false,
 		protected bool $useFormGrid              = true,
 		protected bool $addOnly                  = false,
+		// Public-registration form mode. When true, the form's action is
+		// retargeted to POST /admin/register/{collection} — the
+		// allow-listed registration endpoint that creates the user AND
+		// auto-logs them in. Implies `addOnly` because the registration
+		// route only handles POST (no PUT/edit path exists).
+		protected bool $register                 = false,
 	) {
 		$this->init();
 		$this->initClass();
