@@ -1,0 +1,2 @@
+import{a}from"./chunk-WLM3Q6HQ.js";import"./chunk-B4JUHIHW.js";window.self!==window.top&&document.body.classList.add("in-iframe");var t=document.getElementById("twig-macro");if(t){let e=new URLSearchParams(window.location.search),o={};for(let[n,d]of e.entries())o[n]=d;t.dataset.pwd&&(o.pwd=t.dataset.pwd),t.textContent=o.name?a.depotDownload({...o}):a.download({...o})}
+//# sourceMappingURL=filelinks.js.map

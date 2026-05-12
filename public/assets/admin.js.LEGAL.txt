@@ -1,0 +1,15 @@
+Bundled license information:
+
+sortablejs/modular/sortable.esm.js:
+  /**!
+   * Sortable 1.15.7
+   * @author	RubaXa   <trash@rubaxa.org>
+   * @author	owenm    <owen23355@gmail.com>
+   * @license MIT
+   */
+
+choices.js/public/assets/scripts/choices.mjs:
+  /*! choices.js v11.0.4 | © 2025 Josh Johnson | https://github.com/jshjohnson/Choices#readme */
+
+dompurify/dist/purify.es.mjs:
+  /*! @license DOMPurify 3.4.2 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.4.2/LICENSE */

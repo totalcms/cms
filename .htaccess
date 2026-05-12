@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Don't rewrite if "public/" is already in the path
+RewriteCond %{REQUEST_URI} !public/
+RewriteRule ^$ public/ [L]
+
+RewriteCond %{REQUEST_URI} !public/
+RewriteRule ^(.*)$ public/$1 [L]

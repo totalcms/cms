@@ -1,0 +1,7 @@
+Bundled license information:
+
+swagger-ui-dist/swagger-ui-standalone-preset.js:
+  /*! For license information please see swagger-ui-standalone-preset.js.LICENSE.txt */
+
+swagger-ui-dist/swagger-ui-bundle.js:
+  /*! For license information please see swagger-ui-bundle.js.LICENSE.txt */
