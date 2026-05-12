@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\RawRenderer;
@@ -19,6 +20,8 @@ readonly class TemplateFetchAction
 	 *
 	 * @param array<string,string> $args The routing arguments
 	 *
+	 * @throws HttpNotFoundException
+	 *
 	 * @return ResponseInterface the response
 	 */
 	public function __invoke(
@@ -31,7 +34,11 @@ readonly class TemplateFetchAction
 		// Parse path into folder and template name
 		[$folder, $name] = TemplatePath::parse($path);
 
-		$template = $this->templateFetcher->fetchTemplate($name, $folder);
+		try {
+			$template = $this->templateFetcher->fetchTemplate($name, $folder);
+		} catch (\DomainException $e) {
+			throw new HttpNotFoundException($request, $e->getMessage());
+		}
 
 		return $this->renderer->render($response, $template->contents);
 	}

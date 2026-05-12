@@ -218,7 +218,7 @@ class SentryMiddleware implements MiddlewareInterface
 		// their authors — T3 can't fix bugs in their code, so reporting them
 		// in T3's Sentry just adds noise. Match on the canonical Unix path
 		// segment plus the Windows variant for cross-platform installs.
-		$file = (string)$exception->getFile();
+		$file = $exception->getFile();
 		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
 			return null;
 		}

@@ -89,14 +89,14 @@ if ($settings['docroot'] === '') {
 // filesystem paths because the project root is not necessarily a
 // subdirectory of the document root.
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-if ($scriptName === '' || !str_starts_with($scriptName, '/')) {
+if ($scriptName === '' || !str_starts_with((string)$scriptName, '/')) {
 	// CLI, cli-server (after the bootstrap workaround rewrites
 	// SCRIPT_NAME to a basename), or other unusual SAPIs.
 	$settings['api'] = '';
 } else {
 	// dirname('/index.php')      === '/'    -> '' after rtrim
 	// dirname('/cms/index.php')  === '/cms' -> '/cms'
-	$settings['api'] = rtrim(dirname($scriptName), '/');
+	$settings['api'] = rtrim(dirname((string)$scriptName), '/');
 }
 
 $settings['debug'] = false; // Set to true for development

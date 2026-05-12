@@ -53,10 +53,22 @@ You only need one caching extension. APCu is recommended for single-server deplo
 
 ## Quick Start
 
-1. Download the Total CMS zip from [totalcms.co](https://totalcms.co)
-2. Extract to your server (e.g., `/var/www/example.com/tcms/`)
-3. Point your web server's document root to the `public/` directory
-4. Visit your site in a browser — the setup wizard starts automatically
+Install with Composer:
+
+```bash
+composer create-project totalcms/totalcms --stability=beta my-site
+```
+
+> **Note:** `--stability=beta` is required while 3.5.0 is in beta. Once 3.5.0 stable ships, you can drop the flag.
+
+Then:
+
+1. Point your web server's document root to `my-site/public/`
+2. Visit your site in a browser — the setup wizard starts automatically
+
+### Alternative: zip download
+
+If you can't use Composer on the target server (shared hosting, restricted environments), download the Total CMS zip from [totalcms.co](https://totalcms.co), extract it to your server, and point your document root at the extracted `public/` directory. The setup wizard works the same way.
 
 ## Setup Wizard
 

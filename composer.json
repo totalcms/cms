@@ -112,7 +112,7 @@
       "TotalCMS\\": "src/"
     },
     "files": [
-      "vendor/cakephp/i18n/functions_global.php"
+      "src/i18n-globals.php"
     ]
   },
   "autoload-dev": {

@@ -19,7 +19,7 @@ be5519a4039a579d27439a873714ac9affd184ee314a8a0e63bc82ad3e5930a0  ./dist/config/
 ca23a97caf5725221e8735219b2959abbddb46f6cac4119c9de9621feb96a99f  ./dist/config/bootstrap.php
 68755615e1e08e6742cad502c202e3808a1920d3922075df1a8c0197ff601c1d  ./dist/config/tcms-sample.php
 c3d56963f0f2537d1f795cdf58434a84e6eb602aa840005b62aefd42ee3742ca  ./dist/config/routes.php
-5868d19a84cd7cb943fe933779f296370ff42f6c694fdf1e6bf3098a6fd9e60c  ./dist/config/defaults.php
+04db3cea304a933d9decb7cb5ed30ceb81f288f312399d053d23871d53d4be7d  ./dist/config/defaults.php
 bf58aa199ce03c576ef99422cc12d1eec4d95ed3fb39fa93aada8ed7c60334c3  ./dist/config/middleware.php
 80577ea05d8a6fbd48619130c278a8aee5527585164350c9319c7fc023653c69  ./dist/config/routes/admin/auth.php
 d0a0893f0b2dabbc8cbee65ded62b499c72df3c130578510d13c2b9c70dd1e94  ./dist/config/routes/admin/setup.php
@@ -1416,11 +1416,11 @@ fba835c2798995adb6cdd52541a48780dd2526de871b811cca192c3fe53cafa5  ./dist/vendor/
 4a8ed934866e424d172883c0644f33b0daf922d72d2049ac92466ac115a21c96  ./dist/vendor/composer/autoload_psr4.php
 b1900fdaefd15303b89b247dd8e8a3c059070c870654837969ce20792cbcb479  ./dist/vendor/composer/autoload_classmap.php
 d9d67386b623922c4821f6a1a25980950a0d7815c0eb909759e79c4bab12474e  ./dist/vendor/composer/platform_check.php
-9cd1614aff43164cb5ab7981793ce4167d6b7a7618958788f7482504239640c9  ./dist/vendor/composer/autoload_static.php
+11c557bb872ec2ba0f096bc40db595991897e9ff072ac4b434572269e7ff66a8  ./dist/vendor/composer/autoload_static.php
 db2fa70597938871d10c3afab9d1c605ae1549ea5aba7e03998264a74e534554  ./dist/vendor/composer/autoload_real.php
-3cc67b2213d823650d86f544cc45a3a029ca73f6c50a117e7c5d7d12537d4f5d  ./dist/vendor/composer/autoload_files.php
+317d82a46472b0960e1ac20a1dd698f7cddb00beab25ddbf4c76a4ef06c15d57  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-3367e0946dbdc03bd40ecc4444313b5c48593e78c6551e04535a49566d102f56  ./dist/vendor/composer/installed.php
+be13d06ed2a888b7b1435632ceec98eab24f729a415f7eac7f59627bddb961ef  ./dist/vendor/composer/installed.php
 fec395a82f06c0eb9b09bc8583d3a7f36ac111448acd3f1513eea4a62764bd75  ./dist/vendor/phpdocumentor/reflection-common/src/Element.php
 29f7a07e25f56e9071c997cb101c8296399ecb5fd7fdd1fc00925d10b44c5cb9  ./dist/vendor/phpdocumentor/reflection-common/src/ProjectFactory.php
 26839d4f4a439b3543212ce7631d3a56cf367a50c3aebc7229ca789feaa8ea98  ./dist/vendor/phpdocumentor/reflection-common/src/File.php
@@ -5637,9 +5637,9 @@ c4b872666b537f9109eb6bc18c52a16b5bd1833ffbad75eae54d91548746c913  ./dist/src/Mid
 afff3b13439036d23abb9d86c47509b0fd8c9aa7ea8adfe753fdf0234ea5a9cf  ./dist/src/Middleware/Auth/DualAuthMiddleware.php
 b1ba7ad3cc1f0c81c7f193db1e900d1d9987304fe6260d0f0b2b2356b78c66e4  ./dist/src/Middleware/Auth/AuthMiddleware.php
 d36c8c8d1336e771743d74d182fb789e8687c4db5687629df26a77ad07414502  ./dist/src/Middleware/Auth/ApiKeyAuthMiddleware.php
-77186518a7fda1e3a874a09ac92685f70b5b477271b87dee09fec77864d1480a  ./dist/src/Middleware/Development/SentryMiddleware.php
+7ba6812592b715c59ee60774e67a9a316cadc36f4545ad636697ab17c79d91f4  ./dist/src/Middleware/Development/SentryMiddleware.php
 3be99aafd88a4ffa101d49c0959bc4eae0118341880fa6689d3a7f0791de5f68  ./dist/src/Middleware/Development/DevModeMiddleware.php
-2fb2ead269cc5ee1aaaf1f355060c5a77f97fca4f98bcedd55dbb0c746fda750  ./dist/src/Middleware/BasePathMiddleware.php
+85737de4be50fe7db410e605fb230f5b0181542897b8c6905419f315f3bd2f7e  ./dist/src/Middleware/BasePathMiddleware.php
 1f4d13d0e717266440b08b5638687d2ba5e60d96f113e085c389188eea04be23  ./dist/src/Middleware/MaintenanceModeMiddleware.php
 48597a0b139a618276e5867ad402b6691b25a1a3832f82dcbc61cd27929de043  ./dist/src/Middleware/PageRouterMiddleware.php
 231175e358555a04925b0be834a4b8e09f14b5c7d35ac78576080735d3576c02  ./dist/src/Middleware/SetupCheckMiddleware.php
@@ -5769,7 +5769,7 @@ f8be6bf3ab80528a9a64a2b281e136da0163ee4c339756b99634894e3797a2a0  ./dist/src/Act
 30c63d2540df778f1dcc452c1d8459f0ede32c89c8de63c0b00d090255ce026f  ./dist/src/Action/Template/TemplateUpdateAction.php
 623b0b5b86b6b5436775577ce2e34e80b58659f64dbcb79b80bb6a32f35ed807  ./dist/src/Action/Template/TemplateExistsAction.php
 2b8ae1b7ed9a324b7b4e60188ba63a432ed160b21e70e61e14a60cb126bfe89e  ./dist/src/Action/Template/TemplateDeleteAction.php
-22552a9628af038d7ed6c1f4c37bebd546a733083d28ecf37e5a5427c0082dd1  ./dist/src/Action/Template/TemplateFetchAction.php
+ac972d1215e1bdc01b3dba7644679554105d556eb3acebb6e4fe3873d12c63a9  ./dist/src/Action/Template/TemplateFetchAction.php
 a5461da1124c7c134b0cd133456098a9379337824980d8e3c1dd8fedc8c3dc6d  ./dist/src/Action/Template/TemplateListAction.php
 3cc39632414a21f55c4a18472f49d862dc3f9c3e354f030cdbad68a69fb4a636  ./dist/src/Action/Template/TemplateSaveAction.php
 1c7d574ec278b23266728744ae6b64586e382d000740baf7c13239acca555516  ./dist/src/Action/Admin/AdminTemplateAction.php
@@ -5815,7 +5815,7 @@ f1f5d123cc0872907b5f2d52e0a5ebeea88a813ffaa968839dc2244954fb69bd  ./dist/src/Act
 cc1977d9f02fa32dc52ee317bf516d11ce8a5a8401e0e8401dc0a7a81687e583  ./dist/src/Action/OpenApi/DocRedirectAction.php
 e2e3057f42d27a8a66709832151b1aa49633e8eb200c6d85ff1edc6110432c47  ./dist/src/Action/OpenApi/DocVersion3Action.php
 f1bda8e440b44a6ffc0ef68e19063b75a3a2b702155f37e7c71a89ede5b9e5fb  ./dist/src/Action/Schema/SchemaListAction.php
-3c0dd50b7b853cf531f6a83bbf744e0131894913533217d6335af58088bbf053  ./dist/src/Action/Schema/SchemaFetchAction.php
+8c72a4eb17460589a65eef8261ce514e7a91d37264f9bd6179a67c33d20e4a38  ./dist/src/Action/Schema/SchemaFetchAction.php
 bd84b71f3a55b76f380a9302f9aae8b2ef8a7e7405ea86b2a0230a987d9a7f90  ./dist/src/Action/Schema/SchemaExistsAction.php
 6cbd8a172f570f08997cb912159274fabdc209b7c666eb2cf25858b40d0aa7b0  ./dist/src/Action/Schema/SchemaSaveAction.php
 98dad11a0b0e954a9cb41fa1b43e88473194991a1d80b159cfb9b976f3031cf4  ./dist/src/Action/Schema/SchemaUpdateAction.php
@@ -5900,6 +5900,7 @@ d0a49ed9e53245b05593af7b1c97bf7ba610a9159e77e473aad71c473f487f39  ./dist/src/Inf
 cbbd65fc455cf9523b204657e2c85f945f8d600f603175b62f76d64efc3b5c3d  ./dist/src/Infrastructure/Filesystem/MimeLookup.php
 ae8fedc1da0004537d7d7af8823b7530c45219b76ba9d68a384cca85aceb2276  ./dist/src/Infrastructure/Diagnostics/ServerChecker.php
 23b8b55d7f14639675861a9ad6dfcaa2413e444d4ebc64a1724693a3621bd371  ./dist/src/Infrastructure/Diagnostics/LogAnalyzer.php
+dfd32f248fd93402609c52a8305572406c5f360d0159a27a14e783637fe818e6  ./dist/src/i18n-globals.php
 3aaf1e9c9654ba245cec4e25c48a58be15c512e0258775d19c8cfef4d0a25001  ./dist/src/Domain/Settings/Repository/SettingsRepository.php
 e02bbb3b2ea46583ad197c73bade2ce438431b9ef6bc45e8beea4064c7b15258  ./dist/src/Domain/Settings/Repository/InstallationRepository.php
 bbe6d201a31ed6d104dcca992098dd6ed1e739faf053f65559e8442a2d8797cc  ./dist/src/Domain/Settings/Services/SettingsFetcher.php
@@ -6067,7 +6068,7 @@ b57a940e7ed1e0ae78088a144e66399831917921c7698c31eef4c4dfe62c552d  ./dist/src/Dom
 52fec5477c9ee7aca78be7a7933076178acd239f951aae75ed0269cd9dd8dbc3  ./dist/src/Domain/DataView/Service/DataViewFilter.php
 a15feaea4df7b59799b18699f0370ef141ae8bdcd83e4783afcb4ba69412a2a3  ./dist/src/Domain/DataView/Data/DataViewData.php
 efea598c483121b53a7cbc13167d56a0e3956a3c2cab7a8df5b29b9132202c6e  ./dist/src/Domain/Setup/Repository/SetupStateRepository.php
-345c995ca01004b18fd3006062b205410f6b61e8ecc2dc60dc8e3804e5328ff3  ./dist/src/Domain/Setup/Service/SetupStateManager.php
+bd6fd3f3729c67b78afb23466615d6d1089b65026f99b2f407c1d60f30cd1fe9  ./dist/src/Domain/Setup/Service/SetupStateManager.php
 a296d2beca156d3b3848ee284ea409bc6bdf9ec02cbdc9a47044dc2ac7f3cbf9  ./dist/src/Domain/Setup/Service/DataPathInstaller.php
 32b9d39f2c19d217a29e61a91e42678ed846516dcf6db7a6c13e9d495602968a  ./dist/src/Domain/Setup/Service/ServerConfigAdvisor.php
 9bdd38f0f31188433b297211664be8c4ce51185d8750bf009bfaec0a60c1013d  ./dist/src/Domain/Setup/Data/SetupState.php
@@ -6353,7 +6354,7 @@ ca23a97caf5725221e8735219b2959abbddb46f6cac4119c9de9621feb96a99f  ./config/boots
 68755615e1e08e6742cad502c202e3808a1920d3922075df1a8c0197ff601c1d  ./config/tcms-sample.php
 c3d56963f0f2537d1f795cdf58434a84e6eb602aa840005b62aefd42ee3742ca  ./config/routes.php
 c47d6832d8cf36e48a82501061275a51a696b76629cf71fcfde61fc5e5655e3b  ./config/local.dev.php
-5868d19a84cd7cb943fe933779f296370ff42f6c694fdf1e6bf3098a6fd9e60c  ./config/defaults.php
+04db3cea304a933d9decb7cb5ed30ceb81f288f312399d053d23871d53d4be7d  ./config/defaults.php
 bf58aa199ce03c576ef99422cc12d1eec4d95ed3fb39fa93aada8ed7c60334c3  ./config/middleware.php
 80577ea05d8a6fbd48619130c278a8aee5527585164350c9319c7fc023653c69  ./config/routes/admin/auth.php
 d0a0893f0b2dabbc8cbee65ded62b499c72df3c130578510d13c2b9c70dd1e94  ./config/routes/admin/setup.php
@@ -6802,7 +6803,7 @@ e427aa141275e6437fbb005d008d268d5bf3afede834e10368c20294b3faf975  ./tests/Unit/D
 211c8e3ba6b152b3a1c414c1857ffc4d87584b2765caeb970ccb9d00a3db8648  ./tests/Unit/Domain/DataView/Service/DataViewFilterTest.php
 148136c1a5c6b8d8298f32496331488e7bf50ec213ea53e8cb9ee686bdd37358  ./tests/Unit/Domain/DataView/Data/DataViewDataTest.php
 6aad356ab5d59ecba906386d7ee67b5baa15a6969ce6dbc6146783decda69a19  ./tests/Unit/Domain/Setup/SetupStateManagerTest.php
-0a597375bff0e8264a7f9dc2f080849b0876f8695f02f7e717aab4e9add93bc9  ./tests/Unit/Domain/Setup/DataPathInstallerTest.php
+7643fc690ea9c3ace8b27a050f9b2565b125923abbebf5275117756c96552bda  ./tests/Unit/Domain/Setup/DataPathInstallerTest.php
 cd4f7ff04e1bf206bd261510d9ca704aea6d6c89e44166ffa2d93b4687d1ef99  ./tests/Unit/Domain/Template/Repository/TemplateRepositoryTest.php
 8eb3bc800abc593d12b27286926d36dad7ac8cb71fb0648601273273daf76438  ./tests/Unit/Domain/Template/Service/TemplateFactoryTest.php
 06bb6f8a93ce594310302c2acfa8116c0b57d9af5e444de64ea26f73ed212f85  ./tests/Unit/Domain/Template/Service/TemplateRemoverTest.php
@@ -7231,9 +7232,9 @@ c4b872666b537f9109eb6bc18c52a16b5bd1833ffbad75eae54d91548746c913  ./src/Middlewa
 afff3b13439036d23abb9d86c47509b0fd8c9aa7ea8adfe753fdf0234ea5a9cf  ./src/Middleware/Auth/DualAuthMiddleware.php
 b1ba7ad3cc1f0c81c7f193db1e900d1d9987304fe6260d0f0b2b2356b78c66e4  ./src/Middleware/Auth/AuthMiddleware.php
 d36c8c8d1336e771743d74d182fb789e8687c4db5687629df26a77ad07414502  ./src/Middleware/Auth/ApiKeyAuthMiddleware.php
-77186518a7fda1e3a874a09ac92685f70b5b477271b87dee09fec77864d1480a  ./src/Middleware/Development/SentryMiddleware.php
+7ba6812592b715c59ee60774e67a9a316cadc36f4545ad636697ab17c79d91f4  ./src/Middleware/Development/SentryMiddleware.php
 3be99aafd88a4ffa101d49c0959bc4eae0118341880fa6689d3a7f0791de5f68  ./src/Middleware/Development/DevModeMiddleware.php
-2fb2ead269cc5ee1aaaf1f355060c5a77f97fca4f98bcedd55dbb0c746fda750  ./src/Middleware/BasePathMiddleware.php
+85737de4be50fe7db410e605fb230f5b0181542897b8c6905419f315f3bd2f7e  ./src/Middleware/BasePathMiddleware.php
 1f4d13d0e717266440b08b5638687d2ba5e60d96f113e085c389188eea04be23  ./src/Middleware/MaintenanceModeMiddleware.php
 48597a0b139a618276e5867ad402b6691b25a1a3832f82dcbc61cd27929de043  ./src/Middleware/PageRouterMiddleware.php
 231175e358555a04925b0be834a4b8e09f14b5c7d35ac78576080735d3576c02  ./src/Middleware/SetupCheckMiddleware.php
@@ -7363,7 +7364,7 @@ f8be6bf3ab80528a9a64a2b281e136da0163ee4c339756b99634894e3797a2a0  ./src/Action/S
 30c63d2540df778f1dcc452c1d8459f0ede32c89c8de63c0b00d090255ce026f  ./src/Action/Template/TemplateUpdateAction.php
 623b0b5b86b6b5436775577ce2e34e80b58659f64dbcb79b80bb6a32f35ed807  ./src/Action/Template/TemplateExistsAction.php
 2b8ae1b7ed9a324b7b4e60188ba63a432ed160b21e70e61e14a60cb126bfe89e  ./src/Action/Template/TemplateDeleteAction.php
-22552a9628af038d7ed6c1f4c37bebd546a733083d28ecf37e5a5427c0082dd1  ./src/Action/Template/TemplateFetchAction.php
+ac972d1215e1bdc01b3dba7644679554105d556eb3acebb6e4fe3873d12c63a9  ./src/Action/Template/TemplateFetchAction.php
 a5461da1124c7c134b0cd133456098a9379337824980d8e3c1dd8fedc8c3dc6d  ./src/Action/Template/TemplateListAction.php
 3cc39632414a21f55c4a18472f49d862dc3f9c3e354f030cdbad68a69fb4a636  ./src/Action/Template/TemplateSaveAction.php
 1c7d574ec278b23266728744ae6b64586e382d000740baf7c13239acca555516  ./src/Action/Admin/AdminTemplateAction.php
@@ -7409,7 +7410,7 @@ f1f5d123cc0872907b5f2d52e0a5ebeea88a813ffaa968839dc2244954fb69bd  ./src/Action/M
 cc1977d9f02fa32dc52ee317bf516d11ce8a5a8401e0e8401dc0a7a81687e583  ./src/Action/OpenApi/DocRedirectAction.php
 e2e3057f42d27a8a66709832151b1aa49633e8eb200c6d85ff1edc6110432c47  ./src/Action/OpenApi/DocVersion3Action.php
 f1bda8e440b44a6ffc0ef68e19063b75a3a2b702155f37e7c71a89ede5b9e5fb  ./src/Action/Schema/SchemaListAction.php
-3c0dd50b7b853cf531f6a83bbf744e0131894913533217d6335af58088bbf053  ./src/Action/Schema/SchemaFetchAction.php
+8c72a4eb17460589a65eef8261ce514e7a91d37264f9bd6179a67c33d20e4a38  ./src/Action/Schema/SchemaFetchAction.php
 bd84b71f3a55b76f380a9302f9aae8b2ef8a7e7405ea86b2a0230a987d9a7f90  ./src/Action/Schema/SchemaExistsAction.php
 6cbd8a172f570f08997cb912159274fabdc209b7c666eb2cf25858b40d0aa7b0  ./src/Action/Schema/SchemaSaveAction.php
 98dad11a0b0e954a9cb41fa1b43e88473194991a1d80b159cfb9b976f3031cf4  ./src/Action/Schema/SchemaUpdateAction.php
@@ -7494,6 +7495,7 @@ d0a49ed9e53245b05593af7b1c97bf7ba610a9159e77e473aad71c473f487f39  ./src/Infrastr
 cbbd65fc455cf9523b204657e2c85f945f8d600f603175b62f76d64efc3b5c3d  ./src/Infrastructure/Filesystem/MimeLookup.php
 ae8fedc1da0004537d7d7af8823b7530c45219b76ba9d68a384cca85aceb2276  ./src/Infrastructure/Diagnostics/ServerChecker.php
 23b8b55d7f14639675861a9ad6dfcaa2413e444d4ebc64a1724693a3621bd371  ./src/Infrastructure/Diagnostics/LogAnalyzer.php
+dfd32f248fd93402609c52a8305572406c5f360d0159a27a14e783637fe818e6  ./src/i18n-globals.php
 3aaf1e9c9654ba245cec4e25c48a58be15c512e0258775d19c8cfef4d0a25001  ./src/Domain/Settings/Repository/SettingsRepository.php
 e02bbb3b2ea46583ad197c73bade2ce438431b9ef6bc45e8beea4064c7b15258  ./src/Domain/Settings/Repository/InstallationRepository.php
 bbe6d201a31ed6d104dcca992098dd6ed1e739faf053f65559e8442a2d8797cc  ./src/Domain/Settings/Services/SettingsFetcher.php
@@ -7661,7 +7663,7 @@ b57a940e7ed1e0ae78088a144e66399831917921c7698c31eef4c4dfe62c552d  ./src/Domain/D
 52fec5477c9ee7aca78be7a7933076178acd239f951aae75ed0269cd9dd8dbc3  ./src/Domain/DataView/Service/DataViewFilter.php
 a15feaea4df7b59799b18699f0370ef141ae8bdcd83e4783afcb4ba69412a2a3  ./src/Domain/DataView/Data/DataViewData.php
 efea598c483121b53a7cbc13167d56a0e3956a3c2cab7a8df5b29b9132202c6e  ./src/Domain/Setup/Repository/SetupStateRepository.php
-345c995ca01004b18fd3006062b205410f6b61e8ecc2dc60dc8e3804e5328ff3  ./src/Domain/Setup/Service/SetupStateManager.php
+bd6fd3f3729c67b78afb23466615d6d1089b65026f99b2f407c1d60f30cd1fe9  ./src/Domain/Setup/Service/SetupStateManager.php
 a296d2beca156d3b3848ee284ea409bc6bdf9ec02cbdc9a47044dc2ac7f3cbf9  ./src/Domain/Setup/Service/DataPathInstaller.php
 32b9d39f2c19d217a29e61a91e42678ed846516dcf6db7a6c13e9d495602968a  ./src/Domain/Setup/Service/ServerConfigAdvisor.php
 9bdd38f0f31188433b297211664be8c4ce51185d8750bf009bfaec0a60c1013d  ./src/Domain/Setup/Data/SetupState.php
