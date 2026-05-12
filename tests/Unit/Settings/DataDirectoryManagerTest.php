@@ -231,5 +231,4 @@ describe('DataDirectoryManager', function (): void {
 
 		rmdir($path);
 	});
-
 });

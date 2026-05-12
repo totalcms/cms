@@ -42,12 +42,12 @@ readonly class DataPathInstaller
 	 * @param string $docroot Document root (typically $_SERVER['DOCUMENT_ROOT'])
 	 * @param string $locale Wizard's selected locale, written to settings.json
 	 *
-	 * @return string The resolved absolute data path.
+	 * @throws \InvalidArgumentException when the location is empty or a
+	 *                                   custom path fails validation
+	 * @throws \RuntimeException         when directory creation, validation,
+	 *                                   or settings persistence fails
 	 *
-	 * @throws \InvalidArgumentException When the location is empty or a
-	 *                                   custom path fails validation.
-	 * @throws \RuntimeException         When directory creation, validation,
-	 *                                   or settings persistence fails.
+	 * @return string the resolved absolute data path
 	 */
 	public function install(string $location, string $customPath, string $docroot, string $locale): string
 	{
