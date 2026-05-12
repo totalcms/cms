@@ -1,0 +1,17 @@
+{
+	"name": "Minimal Starter",
+	"description": "Pages for the minimal starter — Home plus a Getting Started reference page.",
+	"version": "1.0.0",
+	"objects": [
+		{
+			"collection": "builder-pages",
+			"id":         "home",
+			"data":       { "id": "home",   "title": "Home",            "route": "/",       "template": "index",  "draft": false, "nav": true,  "data": {} }
+		},
+		{
+			"collection": "builder-pages",
+			"id":         "readme",
+			"data":       { "id": "readme", "title": "Getting Started", "route": "/readme", "template": "readme", "draft": false, "nav": false, "data": {} }
+		}
+	]
+}

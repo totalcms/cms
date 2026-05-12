@@ -1,12 +1,5 @@
 {
 	"name": "Blog",
 	"description": "A blog-focused site with post listing, single post, and about page",
-	"version": "1.0.0",
-	"pages": [
-		{"id": "home",      "title": "Home",            "route": "/",          "template": "index"},
-		{"id": "blog",      "title": "Blog",            "route": "/blog",      "template": "blog/index"},
-		{"id": "blog-post", "title": "Blog Post",       "route": "/blog/{id}", "template": "blog/post", "nav": false},
-		{"id": "about",     "title": "About",           "route": "/about",     "template": "about"},
-		{"id": "readme",    "title": "Getting Started", "route": "/readme",    "template": "readme",    "nav": false}
-	]
+	"version": "1.0.0"
 }

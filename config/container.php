@@ -1370,9 +1370,6 @@ return [
 	StarterService::class => fn (ContainerInterface $container): StarterService => new StarterService(
 		$container->get(BuilderConfigService::class),
 		$container->get(BuilderInstaller::class),
-		$container->get(TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
-		$container->get(ObjectSaver::class),
-		$container->get(ObjectUpdater::class),
 		$container->get(TemplateLister::class),
 		$container->get(TemplateMigrationService::class),
 		$container->get(JumpStartImporter::class),

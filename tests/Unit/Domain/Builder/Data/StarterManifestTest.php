@@ -23,7 +23,7 @@ final class StarterManifestTest extends TestCase
 		$this->assertSame('/starters/blog', $m->directory);
 	}
 
-	public function testNameDefaultsToUnknownWhenMissing(): void
+	public function testDefaultsForMissingFields(): void
 	{
 		$m = new StarterManifest([], '/starters/x');
 
@@ -32,128 +32,37 @@ final class StarterManifestTest extends TestCase
 		$this->assertSame('1.0.0', $m->version);
 	}
 
-	public function testParsesPagesWithExplicitFields(): void
+	public function testNonNumericVersionCoercesToString(): void
 	{
-		$m = new StarterManifest([
-			'pages' => [
-				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index', 'nav' => true],
-				['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about', 'nav' => false],
-			],
-		], '/starters/x');
+		$m = new StarterManifest(['version' => 42], '/starters/x');
 
-		$this->assertCount(2, $m->pages);
-		$this->assertSame('home', $m->pages[0]['id']);
-		$this->assertSame('Home', $m->pages[0]['title']);
-		$this->assertSame('/', $m->pages[0]['route']);
-		$this->assertSame('index', $m->pages[0]['template']);
-		$this->assertTrue($m->pages[0]['nav']);
-		$this->assertFalse($m->pages[1]['nav']);
+		$this->assertSame('42', $m->version);
 	}
 
-	public function testRouteFallsBackToPathFieldWithLeadingSlash(): void
-	{
-		$m = new StarterManifest([
-			'pages' => [
-				['id' => 'about', 'title' => 'About', 'path' => 'about'],
-			],
-		], '/starters/x');
-
-		$this->assertSame('/about', $m->pages[0]['route']);
-	}
-
-	public function testRouteFallsBackToEmptyWhenNeitherRouteNorPath(): void
-	{
-		$m = new StarterManifest([
-			'pages' => [
-				['id' => 'home', 'title' => 'Home'],
-			],
-		], '/starters/x');
-
-		$this->assertSame('/', $m->pages[0]['route']);
-	}
-
-	public function testTemplateFallsBackToId(): void
-	{
-		$m = new StarterManifest([
-			'pages' => [
-				['id' => 'about', 'title' => 'About', 'route' => '/about'],
-			],
-		], '/starters/x');
-
-		$this->assertSame('about', $m->pages[0]['template']);
-	}
-
-	public function testNavDefaultsToTrue(): void
-	{
-		$m = new StarterManifest([
-			'pages' => [
-				['id' => 'home', 'title' => 'Home'],
-			],
-		], '/starters/x');
-
-		$this->assertTrue($m->pages[0]['nav']);
-	}
-
-	public function testNonArrayPageEntriesAreFiltered(): void
-	{
-		$m = new StarterManifest([
-			'pages' => [
-				['id' => 'home', 'title' => 'Home'],
-				'not-an-array',
-				42,
-				['id' => 'about', 'title' => 'About'],
-			],
-		], '/starters/x');
-
-		$this->assertCount(2, $m->pages);
-		$this->assertSame('home', $m->pages[0]['id']);
-		$this->assertSame('about', $m->pages[1]['id']);
-	}
-
-	public function testEmptyIdEntryIsKeptAsEmptyString(): void
-	{
-		// The manifest layer doesn't validate id presence — that's the
-		// service's job. The cast just ensures we hand a string downstream.
-		$m = new StarterManifest([
-			'pages' => [
-				['title' => 'Mysterious'],
-			],
-		], '/starters/x');
-
-		$this->assertSame('', $m->pages[0]['id']);
-	}
-
-	public function testToArraySummary(): void
+	public function testToArrayReturnsAllFields(): void
 	{
 		$m = new StarterManifest([
 			'name'        => 'Blog',
 			'description' => 'desc',
 			'version'     => '1.2.3',
-			'pages'       => [
-				['id' => 'home', 'title' => 'Home'],
-				['id' => 'about', 'title' => 'About'],
-			],
 		], '/starters/blog');
 
 		$this->assertSame([
 			'name'        => 'Blog',
 			'description' => 'desc',
 			'version'     => '1.2.3',
-			'pages'       => 2,
 		], $m->toArray());
 	}
 
-	public function testEmptyPagesProducesEmptyList(): void
+	public function testExtraManifestFieldsAreIgnored(): void
 	{
-		$m = new StarterManifest(['name' => 'X'], '/starters/x');
+		// Old-format manifests still on disk (with a `pages` key) should not
+		// trip up the parser — extra fields are just dropped.
+		$m = new StarterManifest([
+			'name'  => 'Blog',
+			'pages' => [['id' => 'home', 'title' => 'Home']],
+		], '/starters/blog');
 
-		$this->assertSame([], $m->pages);
-	}
-
-	public function testNonNumericVersionStillCoercesToString(): void
-	{
-		$m = new StarterManifest(['version' => 42], '/starters/x');
-
-		$this->assertSame('42', $m->version);
+		$this->assertSame('Blog', $m->name);
 	}
 }

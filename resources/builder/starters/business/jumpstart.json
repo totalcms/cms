@@ -1,6 +1,6 @@
 {
-	"name": "Business Starter Demo Data",
-	"description": "Sample service records and the matching schema/collection so the business starter's Services page renders content out of the box.",
+	"name": "Business Starter",
+	"description": "Pages plus a service schema, services collection, and sample service records so the business starter's Services page renders content out of the box.",
 	"version": "1.0.0",
 	"schemas": [
 		{
@@ -92,6 +92,31 @@
 		]
 	},
 	"objects": [
+		{
+			"collection": "builder-pages",
+			"id":         "home",
+			"data":       { "id": "home",     "title": "Home",            "route": "/",         "template": "index",    "draft": false, "nav": true,  "data": {} }
+		},
+		{
+			"collection": "builder-pages",
+			"id":         "about",
+			"data":       { "id": "about",    "title": "About",           "route": "/about",    "template": "about",    "draft": false, "nav": true,  "data": {} }
+		},
+		{
+			"collection": "builder-pages",
+			"id":         "services",
+			"data":       { "id": "services", "title": "Services",        "route": "/services", "template": "services", "draft": false, "nav": true,  "data": {} }
+		},
+		{
+			"collection": "builder-pages",
+			"id":         "contact",
+			"data":       { "id": "contact",  "title": "Contact",         "route": "/contact",  "template": "contact",  "draft": false, "nav": true,  "data": {} }
+		},
+		{
+			"collection": "builder-pages",
+			"id":         "readme",
+			"data":       { "id": "readme",   "title": "Getting Started", "route": "/readme",   "template": "readme",   "draft": false, "nav": false, "data": {} }
+		},
 		{
 			"collection": "services",
 			"id": "strategy",

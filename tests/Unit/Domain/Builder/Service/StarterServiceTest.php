@@ -9,11 +9,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
-use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
 use TotalCMS\Factory\LoggerFactory;
@@ -27,9 +24,6 @@ final class StarterServiceTest extends TestCase
 
 	private BuilderConfigService&MockObject $config;
 	private BuilderInstaller&MockObject $installer;
-	private BuilderOrderService&MockObject $orderService;
-	private ObjectSaver&MockObject $objectSaver;
-	private ObjectUpdater&MockObject $objectUpdater;
 	private TemplateLister&MockObject $templateLister;
 	private TemplateMigrationService&MockObject $templateMigration;
 	private JumpStartImporter&MockObject $jumpStart;
@@ -48,9 +42,6 @@ final class StarterServiceTest extends TestCase
 
 		$this->config            = $this->createMock(BuilderConfigService::class);
 		$this->installer         = $this->createMock(BuilderInstaller::class);
-		$this->orderService      = $this->createMock(BuilderOrderService::class);
-		$this->objectSaver       = $this->createMock(ObjectSaver::class);
-		$this->objectUpdater     = $this->createMock(ObjectUpdater::class);
 		$this->templateLister    = $this->createMock(TemplateLister::class);
 		$this->templateMigration = $this->createMock(TemplateMigrationService::class);
 		$this->jumpStart         = $this->createMock(JumpStartImporter::class);
@@ -58,7 +49,6 @@ final class StarterServiceTest extends TestCase
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
-		$this->config->method('getPagesCollectionId')->willReturn('builder-pages');
 		// docroot points inside the tmp dir so asset copies land where we can
 		// inspect them. assetsPath stays at the default 'assets'.
 		$this->config->method('getDocroot')->willReturn($this->tmpRoot . '/public');
@@ -70,9 +60,6 @@ final class StarterServiceTest extends TestCase
 		$this->service = new StarterService(
 			$this->config,
 			$this->installer,
-			$this->orderService,
-			$this->objectSaver,
-			$this->objectUpdater,
 			$this->templateLister,
 			$this->templateMigration,
 			$this->jumpStart,
@@ -82,7 +69,6 @@ final class StarterServiceTest extends TestCase
 
 	protected function tearDown(): void
 	{
-		// Restore PathResolver state so other tests aren't affected.
 		(new \ReflectionProperty(PathResolver::class, 'packageRoot'))
 			->setValue(null, $this->originalPackageRoot);
 
@@ -148,22 +134,19 @@ final class StarterServiceTest extends TestCase
 	public function testScaffoldFailsWhenTemplatesAlreadyExistAndNotForced(): void
 	{
 		$this->writeManifest('blog', ['name' => 'Blog']);
-		$this->templateLister = $this->createMock(TemplateLister::class);
-		$this->templateLister->method('listBuilderTemplates')
+
+		$lister = $this->createMock(TemplateLister::class);
+		$lister->method('listBuilderTemplates')
 			->with('pages')
 			->willReturn(['existing']);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
-		// Rebuild service with the new lister.
 		$service = new StarterService(
 			$this->config,
 			$this->installer,
-			$this->orderService,
-			$this->objectSaver,
-			$this->objectUpdater,
-			$this->templateLister,
+			$lister,
 			$this->templateMigration,
 			$this->jumpStart,
 			$loggerFactory,
@@ -177,15 +160,9 @@ final class StarterServiceTest extends TestCase
 
 	// --- scaffold: happy path ---
 
-	public function testScaffoldCopiesTemplatesAndCreatesPages(): void
+	public function testScaffoldCopiesTemplatesAndEnsuresCollection(): void
 	{
-		$this->writeManifest('blog', [
-			'name'  => 'Blog',
-			'pages' => [
-				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
-				['id' => 'post', 'title' => 'Post', 'route' => '/blog/{id}', 'template' => 'blog/post'],
-			],
-		]);
+		$this->writeManifest('blog', ['name' => 'Blog']);
 
 		// Each category gets imported.
 		$this->templateMigration->expects($this->exactly(4))
@@ -194,193 +171,23 @@ final class StarterServiceTest extends TestCase
 
 		$this->installer->expects($this->once())->method('ensurePagesCollection');
 
-		$this->objectSaver->expects($this->exactly(2))->method('saveObject');
-		$this->objectUpdater->expects($this->never())->method('updateObject');
-
-		$this->orderService->expects($this->once())
-			->method('write')
-			->with(
-				'builder-pages',
-				[
-					['id' => 'home', 'children' => []],
-					['id' => 'post', 'children' => []],
-				],
-			);
+		// No jumpstart.json on disk → importer should not be called.
+		$this->jumpStart->expects($this->never())->method('importFromFile');
 
 		$result = $this->service->scaffold('blog');
 
 		$this->assertTrue($result->success);
 		$this->assertSame(8, $result->data['filesCopied'] ?? null);
-		$this->assertSame(2, $result->data['pagesCreated'] ?? null);
+		$this->assertArrayHasKey('jumpStart', $result->data);
+		$this->assertNull($result->data['jumpStart']);
 	}
 
-	// --- scaffold: --force update path ---
+	// --- scaffold: jumpstart import ---
 
-	public function testForceUpdatesPagesThatAlreadyExist(): void
+	public function testJumpStartImportedWhenFileExists(): void
 	{
-		$this->writeManifest('blog', [
-			'name'  => 'Blog',
-			'pages' => [
-				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
-				['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about'],
-			],
-		]);
-
-		$this->templateMigration->method('importDirectory')->willReturn(0);
-
-		// Both pages already exist — saveObject throws DomainException.
-		$this->objectSaver->method('saveObject')
-			->willThrowException(new \DomainException('Object with id home already exists in builder-pages'));
-
-		// With --force, both should fall through to updateObject.
-		$this->objectUpdater->expects($this->exactly(2))
-			->method('updateObject')
-			->willReturnCallback(static fn (string $col, string $id, array $record): \TotalCMS\Domain\Object\Data\ObjectData => (new \ReflectionClass(\TotalCMS\Domain\Object\Data\ObjectData::class))
-					->newInstanceWithoutConstructor());
-
-		$result = $this->service->scaffold('blog', force: true);
-
-		$this->assertTrue($result->success);
-		$this->assertSame(2, $result->data['pagesCreated'] ?? null);
-	}
-
-	public function testWithoutForceDuplicatesAreSilentlySkipped(): void
-	{
-		$this->writeManifest('blog', [
-			'pages' => [
-				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
-				['id' => 'new', 'title' => 'New', 'route' => '/new', 'template' => 'new'],
-			],
-		]);
-
-		$this->templateMigration->method('importDirectory')->willReturn(0);
-
-		// First page exists, second doesn't.
-		$call = 0;
-		$this->objectSaver->method('saveObject')->willReturnCallback(function () use (&$call): \TotalCMS\Domain\Object\Data\ObjectData {
-			$call++;
-			if ($call === 1) {
-				throw new \DomainException('Object with id home already exists');
-			}
-
-			return (new \ReflectionClass(\TotalCMS\Domain\Object\Data\ObjectData::class))
-				->newInstanceWithoutConstructor();
-		});
-
-		// Without --force, no updateObject calls.
-		$this->objectUpdater->expects($this->never())->method('updateObject');
-
-		$result = $this->service->scaffold('blog');
-
-		$this->assertTrue($result->success);
-		$this->assertSame(1, $result->data['pagesCreated'] ?? null);
-	}
-
-	// --- scaffold: order seeding ---
-
-	public function testOrderFileSeededEvenWhenNoPagesWereCreated(): void
-	{
-		// All pages already exist + no --force = nothing gets created. The
-		// order file should still be written so the sidebar reflects the
-		// manifest's order.
-		$this->writeManifest('blog', [
-			'pages' => [
-				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
-				['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about'],
-			],
-		]);
-
-		$this->templateMigration->method('importDirectory')->willReturn(0);
-		$this->objectSaver->method('saveObject')
-			->willThrowException(new \DomainException('exists'));
-
-		$this->orderService->expects($this->once())
-			->method('write')
-			->with(
-				'builder-pages',
-				[
-					['id' => 'home', 'children' => []],
-					['id' => 'about', 'children' => []],
-				],
-			);
-
-		$this->service->scaffold('blog');
-	}
-
-	public function testOrderFileNotWrittenWhenAllManifestPagesHaveEmptyIds(): void
-	{
-		// Empty-id pages get skipped from BOTH createPageObjects and
-		// seedOrderFile — when nothing is left, write isn't called.
-		$this->writeManifest('blog', [
-			'pages' => [
-				['title' => 'No ID 1'],
-				['title' => 'No ID 2'],
-			],
-		]);
-
-		$this->templateMigration->method('importDirectory')->willReturn(0);
-		$this->orderService->expects($this->never())->method('write');
-
-		$result = $this->service->scaffold('blog');
-
-		$this->assertTrue($result->success);
-		$this->assertSame(0, $result->data['pagesCreated'] ?? null);
-	}
-
-	// --- scaffold: empty IDs skipped ---
-
-	public function testEmptyPageIdsSkippedFromCreation(): void
-	{
-		$this->writeManifest('blog', [
-			'pages' => [
-				['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index'],
-				['title' => 'Missing ID'],
-				['id'    => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'about'],
-			],
-		]);
-
-		$this->templateMigration->method('importDirectory')->willReturn(0);
-
-		// Only home and about saved; the empty-id one is skipped.
-		$this->objectSaver->expects($this->exactly(2))->method('saveObject');
-
-		$this->orderService->expects($this->once())
-			->method('write')
-			->with(
-				'builder-pages',
-				[
-					['id' => 'home', 'children' => []],
-					['id' => 'about', 'children' => []],
-				],
-			);
-
-		$result = $this->service->scaffold('blog');
-
-		$this->assertSame(2, $result->data['pagesCreated'] ?? null);
-	}
-
-	// --- scaffold: demo data import ---
-
-	public function testDemoDataNotImportedByDefault(): void
-	{
-		$this->writeManifest('blog', ['pages' => []]);
-		$this->writeJumpstart('blog', ['name' => 'Demo']);
-
-		$this->jumpStart->expects($this->never())->method('importFromFile');
-
-		$this->templateMigration->method('importDirectory')->willReturn(0);
-
-		$result = $this->service->scaffold('blog');
-
-		$this->assertTrue($result->success);
-		$this->assertArrayHasKey('demoData', $result->data);
-		$this->assertNull($result->data['demoData']);
-	}
-
-	public function testDemoDataImportedWhenOptInAndJumpstartFileExists(): void
-	{
-		$this->writeManifest('blog', ['pages' => []]);
-		$this->writeJumpstart('blog', ['name' => 'Demo']);
+		$this->writeManifest('blog', []);
+		$this->writeJumpstart('blog', ['name' => 'Blog']);
 
 		$this->jumpStart->expects($this->once())
 			->method('importFromFile')
@@ -389,71 +196,70 @@ final class StarterServiceTest extends TestCase
 
 		$this->templateMigration->method('importDirectory')->willReturn(0);
 
-		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+		$result = $this->service->scaffold('blog');
 
 		$this->assertTrue($result->success);
-		$this->assertSame(['ok' => true], $result->data['demoData'] ?? null);
-		$this->assertStringContainsString('demo data imported', $result->message);
+		$this->assertSame(['ok' => true], $result->data['jumpStart'] ?? null);
+		$this->assertStringContainsString('jumpstart imported', $result->message);
 	}
 
-	public function testDemoDataOptInWithoutJumpstartFileIsNoOp(): void
+	public function testJumpStartSkippedWhenFileMissing(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
-		// No jumpstart.json — opt-in is a no-op rather than an error.
+		$this->writeManifest('blog', []);
+		// No jumpstart.json — importer should not be called.
 
 		$this->jumpStart->expects($this->never())->method('importFromFile');
 
 		$this->templateMigration->method('importDirectory')->willReturn(0);
 
-		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+		$result = $this->service->scaffold('blog');
 
 		$this->assertTrue($result->success);
-		$this->assertArrayHasKey('demoData', $result->data);
-		$this->assertNull($result->data['demoData']);
+		$this->assertArrayHasKey('jumpStart', $result->data);
+		$this->assertNull($result->data['jumpStart']);
 	}
 
-	public function testDemoDataImporterFailureSurfacesAsWarningButScaffoldStillSucceeds(): void
+	public function testJumpStartImporterFailureSurfacesAsWarningButScaffoldStillSucceeds(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
-		$this->writeJumpstart('blog', ['name' => 'Demo']);
+		$this->writeManifest('blog', []);
+		$this->writeJumpstart('blog', ['name' => 'Blog']);
 
 		// Importer reports an error — scaffold should still succeed (templates
-		// + page records are already in place; the user can re-run jumpstart
-		// manually).
+		// are already on disk; the user can re-run jumpstart manually).
 		$this->jumpStart->method('importFromFile')
 			->willReturn(OperationResult::failure('schema invalid'));
 
 		$this->templateMigration->method('importDirectory')->willReturn(0);
 
-		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+		$result = $this->service->scaffold('blog');
 
-		$this->assertTrue($result->success, 'Scaffold should succeed even when demo import fails');
-		$this->assertSame(['ok' => false, 'error' => 'schema invalid'], $result->data['demoData'] ?? null);
-		$this->assertStringContainsString('demo data import failed', $result->message);
+		$this->assertTrue($result->success, 'Scaffold should succeed even when jumpstart import fails');
+		$this->assertSame(['ok' => false, 'error' => 'schema invalid'], $result->data['jumpStart'] ?? null);
+		$this->assertStringContainsString('jumpstart import failed', $result->message);
 	}
 
-	public function testDemoDataImporterThrowingIsCaught(): void
+	public function testJumpStartImporterThrowingIsCaught(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
-		$this->writeJumpstart('blog', ['name' => 'Demo']);
+		$this->writeManifest('blog', []);
+		$this->writeJumpstart('blog', ['name' => 'Blog']);
 
 		$this->jumpStart->method('importFromFile')
 			->willThrowException(new \RuntimeException('disk full'));
 
 		$this->templateMigration->method('importDirectory')->willReturn(0);
 
-		$result = $this->service->scaffold('blog', force: false, importDemoData: true);
+		$result = $this->service->scaffold('blog');
 
 		$this->assertTrue($result->success);
-		$this->assertFalse($result->data['demoData']['ok'] ?? true);
-		$this->assertStringContainsString('disk full', $result->data['demoData']['error'] ?? '');
+		$this->assertFalse($result->data['jumpStart']['ok'] ?? true);
+		$this->assertStringContainsString('disk full', $result->data['jumpStart']['error'] ?? '');
 	}
 
 	// --- scaffold: asset copying ---
 
 	public function testCopiesStarterAssetsIntoDocrootAssetsDir(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeManifest('blog', []);
 		$this->writeAsset('blog', 'style.css', 'body { color: red; }');
 		$this->writeAsset('blog', 'js/app.js', 'console.log("hi");');
 
@@ -470,8 +276,7 @@ final class StarterServiceTest extends TestCase
 
 	public function testStarterWithoutAssetsDirIsHandledCleanly(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
-		// No assets/ dir.
+		$this->writeManifest('blog', []);
 
 		$this->templateMigration->method('importDirectory')->willReturn(0);
 
@@ -483,7 +288,7 @@ final class StarterServiceTest extends TestCase
 
 	public function testAssetCopySkipsExistingFilesWithoutForce(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeManifest('blog', []);
 		$this->writeAsset('blog', 'style.css', 'body { color: red; }');
 
 		mkdir($this->tmpRoot . '/public/assets', 0755, true);
@@ -495,13 +300,12 @@ final class StarterServiceTest extends TestCase
 
 		$this->assertTrue($result->success);
 		$this->assertSame(0, $result->data['assetsCopied'] ?? null);
-		// User's customization preserved.
 		$this->assertSame('/* customized */', file_get_contents($this->tmpRoot . '/public/assets/style.css'));
 	}
 
 	public function testForceOverwritesExistingAssets(): void
 	{
-		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeManifest('blog', []);
 		$this->writeAsset('blog', 'style.css', 'body { color: red; }');
 
 		mkdir($this->tmpRoot . '/public/assets', 0755, true);
@@ -518,10 +322,7 @@ final class StarterServiceTest extends TestCase
 
 	public function testAssetCopySkippedWhenDocrootIsBlank(): void
 	{
-		// Re-create the service with an empty docroot to cover the
-		// "no docroot configured" branch.
 		$config = $this->createMock(BuilderConfigService::class);
-		$config->method('getPagesCollectionId')->willReturn('builder-pages');
 		$config->method('getDocroot')->willReturn('');
 		$config->method('getAssetsPath')->willReturn('assets');
 
@@ -531,16 +332,13 @@ final class StarterServiceTest extends TestCase
 		$service = new StarterService(
 			$config,
 			$this->installer,
-			$this->orderService,
-			$this->objectSaver,
-			$this->objectUpdater,
 			$this->templateLister,
 			$this->templateMigration,
 			$this->jumpStart,
 			$loggerFactory,
 		);
 
-		$this->writeManifest('blog', ['pages' => []]);
+		$this->writeManifest('blog', []);
 		$this->writeAsset('blog', 'style.css', 'body {}');
 
 		$this->templateMigration->method('importDirectory')->willReturn(0);

@@ -1,12 +1,5 @@
 {
 	"name": "Portfolio",
 	"description": "A portfolio site to showcase your work with project pages and contact info",
-	"version": "1.0.0",
-	"pages": [
-		{"id": "home",    "title": "Home",            "route": "/",         "template": "index"},
-		{"id": "work",    "title": "Work",            "route": "/work",     "template": "work"},
-		{"id": "about",   "title": "About",           "route": "/about",    "template": "about"},
-		{"id": "contact", "title": "Contact",         "route": "/contact",  "template": "contact"},
-		{"id": "readme",  "title": "Getting Started", "route": "/readme",   "template": "readme", "nav": false}
-	]
+	"version": "1.0.0"
 }

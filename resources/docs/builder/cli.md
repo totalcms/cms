@@ -32,10 +32,8 @@ tcms builder:init --json
 
 1. Copies template files (layouts, pages, partials) from the starter into `tcms-data/builder/`
 2. Creates the `builder-pages` collection with the `builder-page` schema (if it doesn't exist)
-3. Creates page objects from the starter's manifest with routes and templates
-4. Seeds the order file (`.order.json`) so the sidebar shows pages in the manifest's intended order on first visit
-5. (with `--demo`) imports the starter's `jumpstart.json` — schemas, collections, and sample objects
-6. (with `--frontend`) installs the Vite frontend scaffold — same as running `tcms builder:frontend`
+3. Imports the starter's `jumpstart.json` — pages, plus any supporting schemas, collections, and sample objects
+4. (with `--frontend`) installs the Vite frontend scaffold — same as running `tcms builder:frontend`
 
 ### Arguments
 
@@ -48,16 +46,15 @@ tcms builder:init --json
 | Option | Description |
 |--------|-------------|
 | `--list, -l` | List available starters and exit |
-| `--force, -f` | Overwrite existing template files **and** update existing page records |
-| `--demo` | Import the starter's demo data (sample objects, schemas) — opt-in for a clean slate by default |
+| `--force, -f` | Overwrite existing template files (existing page records in the collection are left alone — JumpStart skips objects that already exist) |
 | `--frontend` | Also install the Vite frontend scaffold (equivalent to running `tcms builder:frontend`) |
 | `--json` | Output result as JSON |
 
-### `--demo` Behavior
+### Starter Data
 
-Each starter that ships demo data includes a `jumpstart.json` alongside its manifest. With `--demo`, that file is imported via the JumpStart importer after the templates and pages are in place. For the **blog** starter that means 5 sample posts; for **business** that means a `service` schema, `services` collection, and 4 sample services.
+Every starter includes a `jumpstart.json` next to its `manifest.json`. The CLI runs it through the JumpStart importer after templates are copied so pages and any seed content land in the right places. For the **blog** starter that means 5 pages + 5 sample posts; for **business** that means 5 pages + a `service` schema + a `services` collection + 4 sample services.
 
-If demo import fails (e.g., schema validation), the scaffold itself still succeeds — templates and page records are already on disk, and you can re-run the import manually with `tcms jumpstart:import resources/builder/starters/<name>/jumpstart.json`.
+If the import fails (e.g., schema validation), the scaffold itself still succeeds — templates are already on disk, and you can re-run the import manually with `tcms jumpstart:import resources/builder/starters/<name>/jumpstart.json`.
 
 ### `--frontend` Behavior
 
@@ -68,10 +65,11 @@ Convenience flag for the greenfield happy path. Runs `tcms builder:frontend` imm
 By default, scaffolding aborts if any page templates already exist. With `--force`:
 
 - **Template files** are overwritten (existing files replaced with the starter's versions)
-- **Page records** are updated in place (existing pages are not skipped — they receive the starter's title/route/template)
-- **Order file** is re-seeded from the manifest, so reordering done in the admin is overwritten
+- **Asset files** in the docroot are overwritten as well
 
-`--force` is destructive — back up your project first if you've made customizations.
+Page records and the order file are left alone — the JumpStart importer skips objects that already exist, so a re-init won't clobber edits made in the admin. To reset a page, delete it first then re-run, or import the page directly with `tcms jumpstart:import`.
+
+`--force` is destructive against template files — back up your project first if you've made customizations.
 
 ### Available Starters
 

@@ -23,7 +23,6 @@ class BuilderInitCommand extends BaseCommand
 			->addArgument('starter', InputArgument::OPTIONAL, 'Starter template name (e.g., business, blog, portfolio, minimal)')
 			->addOption('list', 'l', InputOption::VALUE_NONE, 'List available starters')
 			->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite existing templates')
-			->addOption('demo', null, InputOption::VALUE_NONE, "Import the starter's demo data (sample objects, schemas)")
 			->addOption('frontend', null, InputOption::VALUE_NONE, 'Also install the Vite frontend scaffold (equivalent to running tcms builder:frontend)');
 	}
 
@@ -33,7 +32,6 @@ class BuilderInitCommand extends BaseCommand
 		$list            = (bool)$input->getOption('list');
 		$starter         = $input->getArgument('starter');
 		$force           = (bool)$input->getOption('force');
-		$demo            = (bool)$input->getOption('demo');
 		$installFrontend = (bool)$input->getOption('frontend');
 
 		// List mode or no argument given
@@ -47,7 +45,7 @@ class BuilderInitCommand extends BaseCommand
 			$output->writeln('');
 		}
 
-		$result          = $service->scaffold($starter, $force, $demo);
+		$result          = $service->scaffold($starter, $force);
 		$frontendResult  = null;
 
 		// Optional: chain the frontend installer for the greenfield happy path.

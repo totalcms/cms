@@ -14,11 +14,11 @@ Starters are pre-built site structures that give you a working site out of the b
 # List available starters
 tcms builder:init --list
 
-# Scaffold a business site
+# Scaffold a business site (templates + pages + demo content)
 tcms builder:init business
 
-# Scaffold + demo content + Vite frontend in one go
-tcms builder:init business --demo --frontend
+# Scaffold + Vite frontend in one go
+tcms builder:init business --frontend
 ```
 
 That's it. There's no generation step — the page router serves your routes dynamically from the collection data. Visit your site and pages render immediately.
@@ -195,24 +195,18 @@ This setup is intentional: it works immediately without any build step *and* sho
 
 T3 does not own your CSS build pipeline — it just helps you reference whatever ends up in `public/assets/`.
 
-## Demo Data (`--demo`)
+## Starter Data (`jumpstart.json`)
 
-The `blog` and `business` starters ship with a `jumpstart.json` containing schemas, collections, and sample objects so the templates render real content out of the box. This is **opt-in** because greenfield projects often want a clean slate:
+Every starter ships a `jumpstart.json` alongside its `manifest.json`. It is the single source of truth for everything the scaffold installs into your data store: page records, supporting schemas, supporting collections, and any sample objects.
 
-```bash
-tcms builder:init blog --demo
-```
+| Starter | What jumpstart.json installs |
+|---------|------------------------------|
+| `minimal` | 2 pages (Home + Getting Started) |
+| `portfolio` | 5 pages (Home, Work, About, Contact, Getting Started) |
+| `blog` | 5 pages + the reserved `blog` collection + 5 sample posts (featured + categories + tags populated) |
+| `business` | 5 pages + a `service` schema + a `services` collection + 4 sample services (Strategy, Design, Development, Ongoing Support) |
 
-What you get:
-
-| Starter | Demo content |
-|---------|--------------|
-| `blog` | 5 sample blog posts in the built-in `blog` collection — featured + categories + tags populated |
-| `business` | A `service` schema, a `services` collection, and 4 sample services (Strategy, Design, Development, Ongoing Support) |
-
-The `minimal` and `portfolio` starters don't ship demo data today (the templates use placeholder content directly).
-
-If demo import fails for any reason — schema conflict, disk error, etc. — the scaffold itself still succeeds and you can re-import manually:
+The import runs automatically as part of `tcms builder:init`. If it fails for any reason — schema conflict, disk error, etc. — the scaffold itself still succeeds (templates have already been copied) and you can re-run manually:
 
 ```bash
 tcms jumpstart:import resources/builder/starters/blog/jumpstart.json
@@ -252,32 +246,45 @@ Starters live in `resources/builder/starters/{name}/`. Each starter needs:
 
 ### `manifest.json`
 
+The manifest describes the starter for the picker UI — name, description, version. That's it:
+
 ```json
 {
     "name": "My Starter",
     "description": "A description of what this starter provides",
+    "version": "1.0.0"
+}
+```
+
+### `jumpstart.json`
+
+The starter's pages and any seed content live in `jumpstart.json`, in the standard [JumpStart](docs/cli/jumpstart) format. List the page records first, in the order you want them to appear in the navigation:
+
+```json
+{
+    "name": "My Starter Data",
+    "description": "Pages + sample content for the starter",
     "version": "1.0.0",
-    "pages": [
-        {"id": "home", "title": "Home", "route": "/", "template": "index"},
-        {"id": "about", "title": "About", "route": "/about", "template": "about", "nav": true},
-        {"id": "blog-post", "title": "Blog Post", "route": "/blog/{id}", "template": "blog/post", "nav": false}
+    "objects": [
+        {
+            "collection": "builder-pages",
+            "id":         "home",
+            "data":       { "id": "home",  "title": "Home",  "route": "/",      "template": "index", "draft": false, "nav": true, "data": {} }
+        },
+        {
+            "collection": "builder-pages",
+            "id":         "about",
+            "data":       { "id": "about", "title": "About", "route": "/about", "template": "about", "draft": false, "nav": true, "data": {} }
+        }
     ]
 }
 ```
 
-Each `pages` entry maps to a `builder-page` schema object. Fields:
+Each page object maps to a `builder-page` schema record. Required fields inside `data`: `id`, `title`, `template`. Useful optional fields: `route`, `draft`, `nav`. The inner `data: {}` is the page's free-form JSON data field (exposed at render time as `page.data.*`) — pass an empty object to satisfy schema validation, or fill it with per-page hero text / CTAs / etc. The schema also supports `description`, `image`, `status`, `redirectTo`, `sitemap`, `changeFrequency`, and `priority` — set them per page in the jumpstart if you want them pre-populated.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Page identifier — used for the page record's id and the `.order.json` reference |
-| `title` | Yes | Page title |
-| `route` | No | URL pattern. Falls back to `/{path}` if you provide a legacy `path` field instead. |
-| `template` | No | Template name from `pages/`. Falls back to the page id if omitted. |
-| `nav` | No | Show in navigation menus. Defaults to `true`. |
+Page order in the admin sidebar follows the order of `objects` in `jumpstart.json` (the page router preserves insertion order in the collection index).
 
-Pages are created in the order they appear in the array, and the order file (`.order.json`) is seeded from that same order — so the first page in the manifest becomes the first item in the navigation. Hierarchy is flat in the manifest; users can drag to nest after scaffolding.
-
-The schema also supports `description`, `image`, `data`, `status`, `redirectTo`, `sitemap`, `changeFrequency`, and `priority` fields — the manifest doesn't seed those, but they can be set per page in the admin after scaffolding.
+To install supporting schemas, collections, or other objects (e.g. a `services` collection alongside the pages), use the standard JumpStart sections — `schemas`, `collections`, and additional `objects` for non-page records. See the `business` starter for a worked example.
 
 ### Template Files
 
@@ -286,6 +293,7 @@ Organize templates in the standard directory structure:
 ```
 my-starter/
   manifest.json
+  jumpstart.json
   layouts/
     default.twig
   pages/
