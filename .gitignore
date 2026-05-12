@@ -24,7 +24,6 @@ config/env.php
 public/assets
 /resources/.bundle
 /resources/beta
-/resources/bundle
 /resources/jobqueue
 .cache_version
 /tests/test-data/alloy/image-uploads
