@@ -459,35 +459,10 @@ if [ -f "$PROJECT_SKEL_PATH/composer.json" ]; then
     fi
 fi
 
-# Optional: tag + push the cms repo
-#
-# Gated by a confirmation prompt because pushing a tag is one-way. After a
-# 5-minute release run, the operator gets one last "yes, ship it" moment to
-# eyeball things before the tag goes public and Packagist mirrors it.
-TAG_AND_PUSHED=0
-echo
-read -p "Tag $NEW_VERSION and push to github now? (y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if git tag "$NEW_VERSION"; then
-        print_success "Created tag $NEW_VERSION"
-        if git push github "$BRANCH" && git push github "$NEW_VERSION"; then
-            print_success "Pushed $BRANCH + tag $NEW_VERSION to github"
-            print_info "Packagist webhook will mirror within ~60s. Verify at: https://packagist.org/packages/totalcms/cms"
-            TAG_AND_PUSHED=1
-        else
-            print_warning "Push failed — fix the issue and run: git push github $BRANCH && git push github $NEW_VERSION"
-        fi
-    else
-        print_warning "Tag creation failed — does $NEW_VERSION already exist?"
-    fi
-else
-    print_info "Skipped — tag and push manually when ready:"
-    echo "  git tag $NEW_VERSION"
-    echo "  git push github \$(git rev-parse --abbrev-ref HEAD)"
-    echo "  git push github $NEW_VERSION"
-fi
+# Tag + push are handled by `git flow release finish`, not this script.
+# This script runs on the release branch BEFORE finish, so all artifacts
+# (version.json, dist zip, Sentry release, license API registration) are
+# in place when git flow creates the tag and merges into main/develop.
 
 # Summary
 echo
@@ -509,20 +484,13 @@ echo "  ✓ Source maps uploaded to Sentry"
 echo "  ✓ Sentry release notified"
 echo "  ✓ Distribution zip created: $DIST_ZIP"
 echo "  ✓ Version registered with license API"
-if [ "$TAG_AND_PUSHED" -eq 1 ]; then
-    echo "  ✓ Tag $NEW_VERSION pushed to github (Packagist mirror in flight)"
-fi
 echo
 echo "Next steps:"
 echo "  1. Review the changes one more time"
 echo "  2. Test the production build locally"
-if [ "$TAG_AND_PUSHED" -eq 1 ]; then
-    echo "  3. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
-    echo "  4. Create a GitHub release for $NEW_VERSION with changelog notes"
-else
-    echo "  3. Create git tag: git tag $NEW_VERSION"
-    echo "  4. Push to repository: git push github HEAD && git push github $NEW_VERSION"
-    echo "  5. Create a GitHub release for $NEW_VERSION with changelog notes"
-    echo "  6. Packagist will auto-mirror the new tag (via webhook)"
-fi
+echo "  3. Finish the release via git flow (creates + pushes the tag):"
+echo "       git flow release finish $NEW_VERSION"
+echo "       git push github --all && git push github --tags"
+echo "  4. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
+echo "  5. Create a GitHub release for $NEW_VERSION with changelog notes"
 echo
