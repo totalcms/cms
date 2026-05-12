@@ -176,24 +176,47 @@ class JumpStartImporter
 			}
 		}
 
-		// Process reserved collections
+		// Process reserved collections. Entries can be either:
+		//   - a string id ("blog")               -> create with defaults
+		//   - an object with id + overrides      -> create, then patch
+		// The object form lets starters set things like `url`, `prettyUrl`,
+		// `sortBy`, `name`, etc. on a reserved collection without losing the
+		// built-in schema binding.
 		if (isset($collections['reserved'])) {
-			foreach ($collections['reserved'] as $collectionType) {
+			foreach ($collections['reserved'] as $entry) {
+				$id = is_string($entry) ? $entry : (string)($entry['id'] ?? 'unknown');
 				try {
-					$this->createReservedCollection($collectionType);
+					$this->createReservedCollection($entry);
 				} catch (\Exception $e) {
-					$this->addError(sprintf('Collection %s: %s', $collectionType, $e->getMessage()));
+					$this->addError(sprintf('Collection %s: %s', $id, $e->getMessage()));
 				}
 			}
 		}
 	}
 
-	private function createReservedCollection(string $collectionType): void
+	/** @param string|array<string,mixed> $entry */
+	private function createReservedCollection(string|array $entry): void
 	{
-		$collection = $this->collectionFetcher->fetchOrCreateReserved($collectionType);
-		if (!$collection instanceof CollectionData) {
-			throw new \Exception("Error creating Reserved Collection: {$collectionType}");
+		$id = is_string($entry) ? $entry : (string)($entry['id'] ?? '');
+		if ($id === '') {
+			throw new \Exception('Reserved collection entry missing id');
 		}
+
+		$collection = $this->collectionFetcher->fetchOrCreateReserved($id);
+		if (!$collection instanceof CollectionData) {
+			throw new \Exception("Error creating Reserved Collection: {$id}");
+		}
+
+		// Apply optional overrides (url, prettyUrl, sortBy, etc.) without
+		// touching the underlying schema binding.
+		if (is_array($entry)) {
+			$overrides = $entry;
+			unset($overrides['id']);
+			if ($overrides !== []) {
+				$this->collectionSaver->patchCollection($id, $overrides);
+			}
+		}
+
 		$this->addResult(sprintf('Collection %s: created', $collection->id));
 	}
 

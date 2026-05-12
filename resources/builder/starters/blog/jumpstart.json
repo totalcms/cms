@@ -3,33 +3,75 @@
 	"description": "Pages plus the blog reserved collection and sample blog posts to demonstrate the listing + detail pages.",
 	"version": "1.0.0",
 	"collections": {
-		"reserved": ["blog"]
+		"reserved": [
+			{ "id": "blog", "url": "/blog/{id}" }
+		]
 	},
 	"objects": [
 		{
 			"collection": "builder-pages",
-			"id":         "home",
-			"data":       { "id": "home",      "title": "Home",            "route": "/",          "template": "index",      "draft": false, "nav": true,  "data": {} }
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "blog",
-			"data":       { "id": "blog",      "title": "Blog",            "route": "/blog",      "template": "blog/index", "draft": false, "nav": true,  "data": {} }
+			"id": "blog",
+			"data": {
+				"id": "blog",
+				"title": "Blog",
+				"route": "/blog",
+				"template": "blog/index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "blog-post",
-			"data":       { "id": "blog-post", "title": "Blog Post",       "route": "/blog/{id}", "template": "blog/post",  "draft": false, "nav": false, "data": {} }
+			"id": "blog-post",
+			"data": {
+				"id": "blog-post",
+				"title": "Blog Post",
+				"route": "/blog/{id}",
+				"template": "blog/post",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "about",
-			"data":       { "id": "about",     "title": "About",           "route": "/about",     "template": "about",      "draft": false, "nav": true,  "data": {} }
+			"id": "about",
+			"data": {
+				"id": "about",
+				"title": "About",
+				"route": "/about",
+				"template": "about",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "readme",
-			"data":       { "id": "readme",    "title": "Getting Started", "route": "/readme",    "template": "readme",     "draft": false, "nav": false, "data": {} }
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
 		},
 		{
 			"collection": "blog",

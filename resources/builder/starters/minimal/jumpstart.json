@@ -5,13 +5,29 @@
 	"objects": [
 		{
 			"collection": "builder-pages",
-			"id":         "home",
-			"data":       { "id": "home",   "title": "Home",            "route": "/",       "template": "index",  "draft": false, "nav": true,  "data": {} }
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "readme",
-			"data":       { "id": "readme", "title": "Getting Started", "route": "/readme", "template": "readme", "draft": false, "nav": false, "data": {} }
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
 		}
 	]
 }

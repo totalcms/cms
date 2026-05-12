@@ -12,110 +12,172 @@
 			"formgrid": "id title\nicon order\nsummary summary\ndescription description\nimage image\nupdated created",
 			"properties": {
 				"id": {
-					"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
-					"label"   : "Service ID",
-					"help"    : "Unique identifier — used in URLs.",
-					"field"   : "id",
-					"factory" : "slug",
-					"settings": { "autogen": "${title}" }
+					"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+					"label": "Service ID",
+					"help": "Unique identifier — used in URLs.",
+					"field": "id",
+					"factory": "slug",
+					"settings": {
+						"autogen": "${title}"
+					}
 				},
 				"title": {
-					"type"    : "string",
-					"label"   : "Title",
-					"help"    : "Service name as it appears on the page.",
-					"field"   : "text",
-					"factory" : "catchPhrase"
+					"type": "string",
+					"label": "Title",
+					"help": "Service name as it appears on the page.",
+					"field": "text",
+					"factory": "catchPhrase"
 				},
 				"icon": {
-					"type"        : "string",
-					"label"       : "Icon",
-					"help"        : "Optional emoji or icon shorthand shown next to the service title.",
-					"field"       : "text",
-					"placeholder" : "🚀",
-					"default"     : ""
+					"type": "string",
+					"label": "Icon",
+					"help": "Optional emoji or icon shorthand shown next to the service title.",
+					"field": "text",
+					"placeholder": "🚀",
+					"default": ""
 				},
 				"order": {
-					"type"        : "number",
-					"label"       : "Display Order",
-					"help"        : "Lower numbers appear first.",
-					"field"       : "number",
-					"default"     : 0
+					"type": "number",
+					"label": "Display Order",
+					"help": "Lower numbers appear first.",
+					"field": "number",
+					"default": 0
 				},
 				"summary": {
-					"type"    : "string",
-					"label"   : "Summary",
-					"help"    : "Short pitch — one sentence shown on the services grid.",
-					"field"   : "textarea",
-					"factory" : "catchPhrase"
+					"type": "string",
+					"label": "Summary",
+					"help": "Short pitch — one sentence shown on the services grid.",
+					"field": "textarea",
+					"factory": "catchPhrase"
 				},
 				"description": {
-					"type"    : "string",
-					"label"   : "Description",
-					"help"    : "Long-form description shown on the service detail view.",
-					"field"   : "styledtext"
+					"type": "string",
+					"label": "Description",
+					"help": "Long-form description shown on the service detail view.",
+					"field": "styledtext"
 				},
 				"image": {
-					"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
-					"label"   : "Hero Image",
-					"help"    : "Optional image used on the service detail view.",
-					"field"   : "image",
-					"factory" : "imageShapes(1280,720)"
+					"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+					"label": "Hero Image",
+					"help": "Optional image used on the service detail view.",
+					"field": "image",
+					"factory": "imageShapes(1280,720)"
 				},
 				"updated": {
-					"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-					"label"    : "Updated",
-					"field"    : "datetime",
-					"factory"  : "iso8601",
-					"settings" : { "onUpdate": true, "readonly": true }
+					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+					"label": "Updated",
+					"field": "datetime",
+					"factory": "iso8601",
+					"settings": {
+						"onUpdate": true,
+						"readonly": true
+					}
 				},
 				"created": {
-					"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-					"label"    : "Created",
-					"field"    : "datetime",
-					"factory"  : "iso8601",
-					"settings" : { "onCreate": true, "readonly": true }
+					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+					"label": "Created",
+					"field": "datetime",
+					"factory": "iso8601",
+					"settings": {
+						"onCreate": true,
+						"readonly": true
+					}
 				}
 			},
-			"required": ["id", "title", "summary", "updated", "created"],
-			"index":    ["id", "title", "icon", "order", "summary", "updated", "created"]
+			"required": [
+				"id",
+				"title",
+				"summary",
+				"updated",
+				"created"
+			],
+			"index": [
+				"id",
+				"title",
+				"icon",
+				"order",
+				"summary",
+				"updated",
+				"created"
+			]
 		}
 	],
 	"collections": {
 		"custom": [
 			{
-				"id":     "services",
+				"id": "services",
 				"schema": "service",
-				"name":   "Services",
+				"name": "Services",
 				"sortBy": "order",
-				"url":    "/services"
+				"url": "/services"
 			}
 		]
 	},
 	"objects": [
 		{
 			"collection": "builder-pages",
-			"id":         "home",
-			"data":       { "id": "home",     "title": "Home",            "route": "/",         "template": "index",    "draft": false, "nav": true,  "data": {} }
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "about",
-			"data":       { "id": "about",    "title": "About",           "route": "/about",    "template": "about",    "draft": false, "nav": true,  "data": {} }
+			"id": "about",
+			"data": {
+				"id": "about",
+				"title": "About",
+				"route": "/about",
+				"template": "about",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "services",
-			"data":       { "id": "services", "title": "Services",        "route": "/services", "template": "services", "draft": false, "nav": true,  "data": {} }
+			"id": "services",
+			"data": {
+				"id": "services",
+				"title": "Services",
+				"route": "/services",
+				"template": "services",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "contact",
-			"data":       { "id": "contact",  "title": "Contact",         "route": "/contact",  "template": "contact",  "draft": false, "nav": true,  "data": {} }
+			"id": "contact",
+			"data": {
+				"id": "contact",
+				"title": "Contact",
+				"route": "/contact",
+				"template": "contact",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
 		},
 		{
 			"collection": "builder-pages",
-			"id":         "readme",
-			"data":       { "id": "readme",   "title": "Getting Started", "route": "/readme",   "template": "readme",   "draft": false, "nav": false, "data": {} }
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
 		},
 		{
 			"collection": "services",
