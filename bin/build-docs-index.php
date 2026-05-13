@@ -13,6 +13,26 @@
 $docsDir    = __DIR__ . '/../resources/docs';
 $outputFile = $docsDir . '/search-index.json';
 
+// Build path → group lookup from the shared menu config so search results carry
+// the section label that matches the in-admin sidebar grouping.
+$menu        = require $docsDir . '/menu.php';
+$groupLookup = [];
+foreach ($menu as $topGroup) {
+	$title = $topGroup['title'] ?? '';
+	foreach ($topGroup['sub'] ?? [] as $leaf) {
+		if (isset($leaf['path'])) {
+			$groupLookup[$leaf['path']] = $title;
+		}
+	}
+	foreach ($topGroup['groups'] ?? [] as $subGroup) {
+		foreach ($subGroup['sub'] ?? [] as $leaf) {
+			if (isset($leaf['path'])) {
+				$groupLookup[$leaf['path']] = $title;
+			}
+		}
+	}
+}
+
 // Get all markdown files (including nested subdirectories)
 $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docsDir));
 $files    = [];
@@ -79,6 +99,7 @@ foreach ($files as $file) {
 	$index[] = [
 		'path'     => $path,
 		'title'    => $title,
+		'group'    => $groupLookup[$path] ?? '',
 		'sections' => $sections,
 		'excerpt'  => $excerpt,
 		'content'  => strtolower($searchContent),

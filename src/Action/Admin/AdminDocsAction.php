@@ -94,8 +94,44 @@ readonly class AdminDocsAction
 			'params' => $args,
 			'page'   => 'docs',
 		];
+		$data['menu'] = $this->loadMenu();
 
 		return $this->twigRenderer->template($response, 'admin/docs.twig', $data);
+	}
+
+	/**
+	 * Load the docs menu structure from resources/docs/menu.php.
+	 * The same file is consumed by bin/build-docs-index.php so search results
+	 * carry the correct group label.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private function loadMenu(): array
+	{
+		$menuFile = __DIR__ . '/../../../resources/docs/menu.php';
+		if (!file_exists($menuFile)) {
+			return [];
+		}
+		$menu = require $menuFile;
+		if (!is_array($menu)) {
+			return [];
+		}
+
+		$normalized = [];
+		foreach ($menu as $group) {
+			if (!is_array($group)) {
+				continue;
+			}
+			$entry = [];
+			foreach ($group as $key => $value) {
+				if (is_string($key)) {
+					$entry[$key] = $value;
+				}
+			}
+			$normalized[] = $entry;
+		}
+
+		return $normalized;
 	}
 
 	/**
