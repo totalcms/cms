@@ -53,6 +53,14 @@ readonly class TemplateSaveAction
 			$templateData->designer = $meta;
 		}
 
+		// Return the full path in `id` so the form's redirect-object handler builds
+		// a URL like `builder/pages/posts` instead of `builder/posts`. Internally
+		// TemplateData stores the bare templateId; only the API response carries
+		// the folder-prefixed form.
+		if ($folder !== null && $folder !== '') {
+			$templateData->id = $folder . '/' . $templateData->id;
+		}
+
 		return $this->renderer->jsonItem($response, $templateData, new TemplateMetaTransformer());
 	}
 }

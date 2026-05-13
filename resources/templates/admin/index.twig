@@ -2,12 +2,11 @@
 
 {% block dashcontent %}
 
-{# style tag here is temp hack until the style structure can be rethought #}
-<main class="dash-main-content doc-content" style="width:100%">
-		{{ include(cms.edition.can('whitelabel_pro')
-			? ['whitelabel/admin-home.twig', 'admin-home-default.twig']
-			: ['admin-home-default.twig']
-		, ignore_missing = true) }}
+<main class="dash-main-content">
+	{{ include(cms.edition.can('whitelabel_pro')
+		? ['whitelabel/admin-home.twig', 'admin-home-default.twig']
+		: ['admin-home-default.twig']
+	, ignore_missing = true) }}
 </main>
 
 {% endblock %}

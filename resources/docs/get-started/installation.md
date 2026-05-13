@@ -1,101 +1,217 @@
 ---
 title: "Installation"
-description: "Install Total CMS with a single Composer command. The setup wizard walks you through data path, admin account, and license activation in under 5 minutes."
+description: "Install Total CMS with Composer or zip download. The setup wizard walks you through the rest in under 5 minutes."
+related:
+  - get-started/requirements
+  - get-started/your-first-site
+  - operations/deployment
+  - operations/nginx
 ---
 
 # Installation
 
-Install Total CMS with Composer:
+You'll be up and running in under 5 minutes. The setup wizard handles everything after the initial command.
+
+## Composer install (recommended)
 
 ```bash
 composer create-project totalcms/totalcms my-site --stability=beta
 ```
 
-**Note:** `--stability=beta` is required while 3.5.0 is in beta. Once 3.5.0 stable ships, you can drop the flag.
+> **Beta note:** The `--stability=beta` flag is required while 3.5 is in beta. Drop it once 3.5 stable ships.
 
-Then:
+This downloads Total CMS into `my-site/`, then runs a short post-install script that asks you a few setup questions. Make sure your server meets the [System Requirements](docs/get-started/requirements) before installing.
+
+### What the install asks
+
+After Composer finishes downloading, you'll be prompted with up to three questions.
+
+#### 1. Layout
+
+Where T3 lives in your URL space.
+
+| Choice | What it does | Pick this if… |
+|---|---|---|
+| **root** (default) | T3 owns the whole domain. Front controller at `public/index.php`; requests go to T3 by default | T3 is your whole site |
+| **subpath** | T3 lives at `/tcms/`. `public/` is free for your own frontend build | You're using T3 as a headless CMS alongside a separate frontend (Next.js, Astro, static, etc.) |
+
+Picking `subpath` moves `public/index.php` and `public/.htaccess` into `public/tcms/` automatically.
+
+#### 2. Starter pack *(root layout only)*
+
+A starter pre-seeds your install with sample pages and content so you have something to look at right away. Bundled starters:
+
+| Starter | What you get |
+|---|---|
+| minimal | A blank canvas. Empty page tree, no demo content |
+| blog | Blog homepage, post layout, sample posts |
+| business | Homepage with sections, about page, contact form |
+| portfolio | Project gallery layout with sample entries |
+
+Pick `none` if you want a fully empty install. You can run `tcms builder:init <starter>` later to apply one.
+
+#### 3. Frontend pipeline *(root layout only)*
+
+A Vite-based bundle for compiling your site's CSS and JS, drops a `frontend/` directory at the project root that you can `npm install` into. Builder layouts can reference compiled assets via `{{ cms.builder.css(...) }}`.
+
+Default: **no**. You can add it later with `tcms builder:frontend`.
+
+### After the install
 
 1. Point your web server's document root to `my-site/public/`
-2. Visit your site in a browser — the setup wizard starts automatically
+2. Visit your site in a browser:
+   - Root layout: visit `/`
+   - Subpath layout: visit `/tcms/`
 
-Before installing, make sure your server meets the [System Requirements](/requirements/).
+The setup wizard starts automatically.
+
+### Non-interactive installs
+
+For CI or scripted installs, set environment variables and the prompts use those instead of asking:
+
+| Variable | Values | Default |
+|---|---|---|
+| `TCMS_LAYOUT` | root &#124; subpath | `root` |
+| `TCMS_STARTER` | none &#124; minimal &#124; blog &#124; business &#124; portfolio | `none` |
+| `TCMS_FRONTEND` | 0 &#124; 1 | `0` |
+
+```bash
+TCMS_LAYOUT=root TCMS_STARTER=blog TCMS_FRONTEND=1 \
+  composer create-project totalcms/totalcms my-site --stability=beta --no-interaction
+```
 
 ## Alternative: zip download
 
-If you can't use Composer on the target server (shared hosting, restricted environments), download the Total CMS zip from [totalcms.co](https://totalcms.co), extract it to your server, and point your document root at the extracted `public/` directory. The setup wizard works the same way.
+If Composer isn't available — shared hosting, restricted environments, or you just prefer file uploads — install from a zip:
 
-## Setup Wizard
+1. Download the Total CMS zip from [totalcms.co](https://totalcms.co)
+2. Extract it to your server
+3. Point your web server's document root at the extracted `public/` directory
+4. Visit your site — the setup wizard starts automatically
 
-The wizard walks you through the installation:
+The zip workflow is otherwise identical to Composer: same wizard, same admin, same update flow.
 
-### Welcome
+## Setup wizard
 
-Choose your preferred language for the admin interface. Currently supported: English, English (UK), Deutsch, Español, Nederlands.
+When you first visit your install URL, the wizard runs through these screens.
 
-### Environment Check
+### 1. Welcome
 
-The wizard verifies your server meets the requirements. All required checks must pass before you can continue. Optional checks are shown as recommendations.
+Choose your preferred language for the admin interface:
 
-### Data Path
+| Code | Language |
+|---|---|
+| `en_US` | English (US) |
+| `en_GB` | English (UK) |
+| `de_DE` | Deutsch |
+| `es_ES` | Español |
+| `nl_NL` | Nederlands |
 
-Choose where Total CMS stores its data:
+> This setting only affects the admin. Your public-facing site uses its own translations.
 
-- **Document Root** — `<docroot>/tcms-data` (simplest, works everywhere)
-- **Above Document Root** (recommended) — `<parent>/tcms-data` (more secure, not web-accessible)
-- **Custom Path** — any absolute path on the server
+![Setup Wizard — Welcome screen](docs/get-started/images/wizard-welcome.jpg)
 
-The data directory is created with an `.htaccess` file that blocks direct web access.
+### 2. Environment check
 
-### Admin Account
+The wizard verifies your server meets the [System Requirements](docs/get-started/requirements). All required PHP extensions must pass; recommended ones show as suggestions.
 
-Create your first administrator account with an email address and password.
+If something's missing, you'll see exactly what to install. Fix it, refresh, and the check re-runs automatically.
 
-### License
+![Setup Wizard — Environment check](docs/get-started/images/wizard-environment.jpg)
 
-Your license is automatically validated. New installations start with a free trial. If you've already purchased a license for your domain, it will be detected automatically.
+### 3. Data path
 
-## Directory Structure
+Choose where Total CMS stores your content. This directory is **separate from the application** — updates never touch your content.
+
+| Option | Path | When to choose |
+|---|---|---|
+| Document Root | `<docroot>/tcms-data` | Simplest. Works on every host |
+| Above Document Root | `<parent>/tcms-data` | Recommended for production — keeps content outside the web tree |
+| Custom Path | Any absolute path | When the defaults don't fit your hosting setup |
+
+If the data directory ends up inside your docroot, T3 drops an `.htaccess` in it that blocks direct web access.
+
+![Setup Wizard — Data path](docs/get-started/images/wizard-data-path.jpg)
+
+### 4. Admin account
+
+Create your first administrator account. You'll log in with these credentials every time.
+
+This account has full privileges, including installing extensions and modifying schemas — pick a strong password.
+
+![Setup Wizard — Admin account](docs/get-started/images/wizard-account.jpg)
+
+### 5. License
+
+Your license is validated automatically. New installations start with a free trial; if you've already purchased a license for this domain, it's detected on first run.
+
+You can change the license later from **Settings → License Manager** in the admin.
+
+![Setup Wizard — License](docs/get-started/images/wizard-license.jpg)
+
+### 6. Server config
+
+The wizard renders the exact rewrite-rule snippets you need for your server. For Composer installs, the Apache rules ship in `.htaccess` automatically — the wizard tells you everything's already in place. For other servers (Nginx, Caddy), copy the snippet into your server config and reload.
+
+![Setup Wizard — Server config](docs/get-started/images/wizard-server-config.jpg)
+
+## You're done
+
+After the wizard completes, you land in the admin dashboard. From here:
+
+- Follow the [Your First Site](docs/get-started/your-first-site) tutorial to add content and render it on a public page (about 10 minutes)
+- Or take the [Dashboard tour](docs/admin/dashboard) for an overview of the admin
+
+![Admin Dashboard](docs/get-started/images/wizard-dash.jpg)
+
+## Directory structure
 
 After installation:
 
 ```
 /var/www/example.com/
-├── tcms/                    # Total CMS application
-│   ├── config/              # Configuration files
-│   ├── public/              # Web root (point your server here)
-│   │   ├── index.php        # Entry point
-│   │   └── assets/          # CSS, JS, images
-│   ├── resources/           # Templates, schemas, translations, docs
-│   ├── src/                 # PHP source code
-│   ├── vendor/              # Dependencies
-│   └── version.json         # Version info
-├── tcms-data/               # Your content (separate from app)
-│   ├── .schemas/            # Custom schema definitions
-│   ├── .system/             # System files (settings, API keys)
-│   ├── templates/           # Custom Twig templates
-│   └── [collections]/       # Collection data
+├── my-site/                  # Application
+│   ├── config/               # Configuration files
+│   ├── public/               # Web root — point your server here
+│   │   ├── index.php         # Entry point
+│   │   └── assets/           # CSS, JS, images
+│   ├── resources/            # Templates, schemas, translations, docs
+│   ├── src/                  # PHP source
+│   ├── vendor/               # Composer dependencies
+│   └── version.json          # Version info
+└── tcms-data/                # Your content (separate from the app)
+    ├── .schemas/             # Custom schema definitions
+    ├── .system/              # Settings, API keys
+    ├── builder/              # Site Builder templates
+    ├── templates/            # Custom Twig templates
+    └── [collections]/        # Collection data (blog, gallery, etc.)
 ```
 
-The key principle: `tcms/` contains the application and `tcms-data/` contains your content. Updates only touch `tcms/` — your content is never affected.
+The application (`my-site/`) and your content (`tcms-data/`) are deliberately separate.
 
-## Web Server Configuration
+> **Updates only touch the application.** Your content is never affected.
+
+## Web server configuration
+
+Most servers work out of the box. Reference configs below.
 
 ### Apache
 
-Total CMS includes `.htaccess` files for URL rewriting. Ensure `mod_rewrite` is enabled:
+T3 ships an `.htaccess` for URL rewriting. Just ensure `mod_rewrite` is enabled:
 
 ```bash
-a2enmod rewrite
+sudo a2enmod rewrite
+sudo systemctl reload apache2
 ```
 
-Your virtual host should point to the `public/` directory:
+A minimal virtual host:
 
 ```apache
 <VirtualHost *:80>
     ServerName example.com
-    DocumentRoot /var/www/example.com/tcms/public
+    DocumentRoot /var/www/example.com/my-site/public
 
-    <Directory /var/www/example.com/tcms/public>
+    <Directory /var/www/example.com/my-site/public>
         AllowOverride All
         Require all granted
     </Directory>
@@ -104,34 +220,81 @@ Your virtual host should point to the `public/` directory:
 
 ### Nginx
 
-See the [Nginx Configuration](/advanced/nginx/) guide for detailed setup.
+Nginx needs a full server block with explicit rewriting and PHP-FPM proxying. See [Nginx Configuration](docs/operations/nginx) for the complete reference.
+
+### Caddy and FrankenPHP
+
+Both work like Nginx via PHP-FPM (or FrankenPHP's classic mode). Point them at `public/index.php` with a standard PHP fastcgi proxy and a `try_files`-style fallback for routing.
+
+### LiteSpeed
+
+Works out of the box using the bundled `.htaccess`. No extra config needed.
 
 ## CLI
 
-After installation, Total CMS includes a CLI tool:
+T3 ships with a CLI tool for routine operations — collection management, JumpStart imports, cache clearing, and more:
 
 ```bash
-php tcms/resources/bin/tcms info
+php my-site/resources/bin/tcms info
 ```
 
-See the [CLI Commands](/advanced/cli/) reference for the full list.
+See [CLI Commands](docs/extensions/cli) for the full reference.
 
 ## Troubleshooting
 
-**Setup wizard doesn't appear** — Ensure your web server points to `tcms/public/`, not the `tcms/` folder itself.
+### Setup wizard doesn't appear
 
-**Permission denied errors** — The web server user (e.g., `www-data`) needs write access to `tcms-data/`, `tcms/cache/`, `tcms/logs/`, and `tcms/tmp/`.
+Your web server is pointing at the wrong directory. T3's web root is `my-site/public/`, not `my-site/`. Update your virtual host's `DocumentRoot` and reload.
 
-**Required extension missing** — Install the missing PHP extension and restart your web server. On Ubuntu: `apt install php8.2-{extension}`. See the [System Requirements](/requirements/) for the full list.
+### Permission denied errors
 
-**Blank page or 500 error** — Check `tcms/logs/` for error logs. Verify PHP version is 8.2+ and all required extensions are installed.
+The web server user (`www-data` on Debian/Ubuntu, `apache` on RHEL/CentOS) needs write access to:
 
-**404 errors on all pages** — Verify `mod_rewrite` is enabled (Apache) or check your Nginx `try_files` directive.
+- `tcms-data/`
+- `my-site/cache/`
+- `my-site/logs/`
+- `my-site/tmp/`
 
-**License validation fails** — Verify `curl` is installed, firewall allows outbound HTTPS, and domain matches your license.
+```bash
+sudo chown -R www-data:www-data tcms-data my-site/{cache,logs,tmp}
+```
 
-### Getting Help
+### Required extension missing
 
-1. Check the [Community Forum](https://community.weavers.space/total-cms)
-2. Review the [Configuration](/advanced/configuration/) guide
-3. Check PHP error logs for specific error messages
+The wizard tells you which one. On Debian/Ubuntu:
+
+```bash
+sudo apt install php8.2-{extension}
+sudo systemctl reload apache2   # or php8.2-fpm
+```
+
+Refresh the wizard — the check re-runs automatically.
+
+### Blank page or 500 error
+
+Check `my-site/logs/` for specific error messages. Common causes:
+
+- PHP version below 8.2
+- A required extension didn't reload after install
+- File permissions on `tcms-data/` or `my-site/cache/`
+
+### 404 on every page
+
+URL rewriting isn't working.
+
+- **Apache:** verify `mod_rewrite` is enabled and the virtual host has `AllowOverride All`
+- **Nginx / Caddy / FrankenPHP:** check the `try_files` directive — see [Nginx Configuration](docs/operations/nginx)
+
+### License validation fails
+
+- Verify `curl` is installed (`php -m | grep curl`)
+- Confirm outbound HTTPS from the server isn't blocked by a firewall
+- Make sure the domain you're installing on matches your license
+
+## Getting help
+
+If something's still not working:
+
+1. Check `my-site/logs/` for specific error messages
+2. Search the [Community Forum](https://community.weavers.space/total-cms)
+3. Review the [Deployment Guide](docs/operations/deployment) for production-specific issues

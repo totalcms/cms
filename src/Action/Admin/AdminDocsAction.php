@@ -38,8 +38,10 @@ readonly class AdminDocsAction
 			$page = 'index';
 		}
 
-		// Allow alphanumeric, hyphens, underscores, and forward slashes
-		if ($page !== '' && !preg_match('#^[a-zA-Z0-9_/-]+$#', $page)) {
+		// Allow alphanumeric, hyphens, underscores, forward slashes, and dots
+		// (dots are needed for image filenames like `wizard.png` — path traversal
+		// via `..` was already rejected above).
+		if ($page !== '' && !preg_match('#^[a-zA-Z0-9_/.-]+$#', $page)) {
 			$page = 'index';
 		}
 
@@ -55,6 +57,34 @@ readonly class AdminDocsAction
 			$response->getBody()->write($jsonContents !== false ? $jsonContents : '{}');
 
 			return $response->withHeader('Content-Type', 'application/json');
+		}
+
+		// Serve image files co-located with docs (e.g., screenshots in
+		// get-started/images/). The page param carries the full filename
+		// including extension when an image is requested.
+		$imageMimes = [
+			'png'  => 'image/png',
+			'jpg'  => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'gif'  => 'image/gif',
+			'svg'  => 'image/svg+xml',
+			'webp' => 'image/webp',
+		];
+		$pageExt = strtolower(pathinfo($page, PATHINFO_EXTENSION));
+		if (isset($imageMimes[$pageExt])) {
+			$imageFile = "{$docsDir}/{$page}";
+			if (file_exists($imageFile)) {
+				$contents = file_get_contents($imageFile);
+				$response->getBody()->write($contents !== false ? $contents : '');
+
+				return $response
+					->withHeader('Content-Type', $imageMimes[$pageExt])
+					->withHeader('Cache-Control', 'public, max-age=3600');
+			}
+			// Image not found — fall through to 404 below
+			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+			]);
 		}
 
 		// If neither file exists, return 404

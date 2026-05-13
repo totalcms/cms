@@ -24,10 +24,10 @@ return [
 	[
 		'title' => 'Get Started',
 		'sub'   => [
-			['title' => 'Getting Started', 'path' => 'get-started/getting-started'],
+			['title' => 'Welcome',         'path' => 'get-started/welcome'],
 			['title' => 'Requirements',    'path' => 'get-started/requirements'],
 			['title' => 'Installation',    'path' => 'get-started/installation'],
-			['title' => 'Core Concepts',   'path' => 'get-started/core-concepts'],
+			['title' => 'Your First Site', 'path' => 'get-started/your-first-site'],
 		],
 	],
 	[

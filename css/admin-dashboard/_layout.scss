@@ -395,6 +395,9 @@ body {
 		max-width  : 65ch;
 		margin-top : 1rem;
 	}
+	table, blockquote {
+		margin-top : 1rem;
+	}
 	p:not(.help):first-of-type {
 		margin-top: 0;
 	}
@@ -437,16 +440,60 @@ body {
 		max-width : 65ch;
 	}
 
+	// Inline code (single backticks). Block code lives in `pre` and is styled
+	// globally — this rule only targets `code` that is NOT inside a `pre`.
+	:not(pre) > code {
+		background    : oklch(var(--totalform-nearwhite));
+		border        : 1px solid oklch(var(--totalform-border-color));
+		padding       : 0.05em 0.4em;
+		border-radius : 4px;
+		font-size     : 0.875em;
+		font-family   : 'Fira Code', 'Source Code Pro', monospace;
+		color         : oklch(var(--totalform-accent));
+	}
+
 	table {
 		border-collapse : collapse;
+		border          : 1px solid oklch(var(--totalform-border-color));
+		border-radius   : var(--totalform-radius);
+		overflow        : hidden;
 
 		th, td {
-			padding    : 0.4rem 0.75rem;
+			padding    : 0.5rem 0.85rem;
 			text-align : left;
+			border     : 1px solid oklch(var(--totalform-border-color));
+		}
+
+		th {
+			background  : oklch(var(--totalform-nearwhite));
+			font-weight : 600;
+		}
+
+		tbody tr:nth-child(even) td {
+			background : oklch(var(--totalform-nearwhite) / 0.4);
 		}
 	}
 
-	h1,h2,h3,h4,h5,h6,p,ul,ol,pre,iframe,.dash-button {
+	// Blockquotes act as callouts in docs — boxed with accent left border.
+	// The common "**Title:**" leading pattern picks up the accent color.
+	blockquote {
+		margin        : 1.5rem 0;
+		padding       : 1rem 1.25rem;
+		background    : oklch(var(--totalform-accent) / 0.08);
+		border-left   : 4px solid oklch(var(--totalform-accent));
+		border-radius : var(--totalform-radius);
+		color         : oklch(var(--totalform-text-color));
+		font-style    : normal;
+
+		p:first-child { margin-top    : 0; }
+		p:last-child  { margin-bottom : 0; }
+
+		p:first-child > strong:first-child {
+			color : oklch(var(--totalform-accent));
+		}
+	}
+
+	h1,h2,h3,h4,h5,h6,p,ul,ol,pre,iframe,blockquote,.dash-button {
 		margin-block-start: 1em;
 
 		&:first-child {
@@ -454,7 +501,10 @@ body {
 		}
 	}
 
-	h1,h2,h3 {
+	h2 {
+		margin-block-start: 3em;
+	}
+	h3 {
 		margin-block-start: 2em;
 	}
 
@@ -464,6 +514,10 @@ body {
 
 	hr {
 		margin-block-start: 4em;
+	}
+
+	img {
+		border-radius: var(--totalform-radius);
 	}
 
 	&:has(.docs-iframe) {
@@ -694,11 +748,15 @@ body {
 pre {
 	background-color : oklch(var(--totalform-nearwhite));
 	padding          : 1rem;
-	border-radius    : 5px;
+	border-radius    : var(--totalform-radius);
+	border           : 1px solid oklch(var(--totalform-border-color));
 	overflow-x       : auto;
+	font-size        : 0.875rem;
+	line-height      : 1.55;
 
 	code {
 		font-family : 'Fira Code', 'Source Code Pro', monospace;
+		color       : oklch(var(--totalform-text-color));
 	}
 
 	// Override highlight.js background to use our theme colors
