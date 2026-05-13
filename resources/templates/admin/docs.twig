@@ -88,7 +88,9 @@
 					<div class="docs-subgroups">
 						{% for grp in item.groups %}
 							{% set subOpen = page in grp.sub|column('path') %}
-							<details class="docs-subgroup" data-server-open="{{ subOpen ? 'true' : 'false' }}"{% if subOpen %} open{% endif %}>
+							<details class="docs-subgroup"
+								id="subcategory-{{ item.title | slug }}-{{ grp.title | slug }}"
+								data-server-open="{{ subOpen ? 'true' : 'false' }}"{% if subOpen %} open{% endif %}>
 								<summary>{{ grp.title }}</summary>
 								<ul>
 									{% for sub in grp.sub %}
@@ -109,13 +111,35 @@
 	<footer>
 	</footer>
 	<script>
-		// Force <details> open state to match server-rendered intent.
-		// Without this, Chrome/Firefox may restore prior open state from history,
-		// leaving multiple groups expanded after navigation. Runs once on load;
-		// user can still manually expand additional groups afterward.
-		document.querySelectorAll('.dash-content-sidebar nav.docs details[data-server-open]').forEach(d => {
-			d.open = d.dataset.serverOpen === 'true';
-		});
+		// Sidebar group state: persist user toggles across navigations, override
+		// browser auto-restore, but always open whichever group(s) the server
+		// marked open for the current page.
+		(function() {
+			const KEY     = 'tcms-docs-open-groups';
+			const all     = document.querySelectorAll('.dash-content-sidebar nav.docs details[id]');
+			const load    = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch { return new Set(); } };
+			const save    = (s) => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
+			const opened  = load();
+
+			// Set initial state: server-open OR user-opened (from storage). Chrome
+			// auto-restore of stale state gets overridden because we set explicitly.
+			all.forEach(d => {
+				const serverOpen = d.dataset.serverOpen === 'true';
+				d.open = serverOpen || opened.has(d.id);
+			});
+
+			// Persist user toggles. Defer listener attachment so the initial
+			// programmatic open-state changes above don't get recorded.
+			setTimeout(() => {
+				all.forEach(d => {
+					d.addEventListener('toggle', () => {
+						if (d.open) opened.add(d.id);
+						else opened.delete(d.id);
+						save(opened);
+					});
+				});
+			}, 0);
+		})();
 		document.querySelector('.docs a.active')?.scrollIntoView({ block: 'center' });
 	</script>
 </aside>

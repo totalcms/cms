@@ -188,6 +188,7 @@ body {
 
 		> summary {
 			font-size     : 0.95rem;
+			color         : oklch(var(--totalform-darkgray));
 			margin-bottom : 0;
 
 			&::marker {
@@ -227,10 +228,15 @@ body {
 			padding    : 0;
 			margin     : 0;
 		}
-		&.docs li {
-			--collection-icon : var(--icon-bookmark);
-			a::before {
-				display : none;
+		&.docs {
+			padding-bottom : 4rem;
+
+			li {
+				--collection-icon : var(--icon-bookmark);
+
+				a::before {
+					display : none;
+				}
 			}
 		}
 		&#dataview-links li {

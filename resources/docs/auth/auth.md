@@ -4,7 +4,7 @@ description: "Protect pages and content sections with Total CMS authentication u
 related:
   - auth/access-groups
   - auth/password-reset
-  - twig/auth
+  - auth/twig
 ---
 
 ## Page Lock

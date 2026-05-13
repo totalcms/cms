@@ -13,16 +13,21 @@
  *
  * Top-level groups can also carry both `sub` and `groups`; `sub` entries render
  * before the subgroup disclosures.
+ *
+ * Folder convention: every doc page's path begins with the kebab-cased name of
+ * its top-level group folder (get-started/, collections/, fields/, etc.).
+ * Subgroups (e.g. Fields > Field Types) exist only in the menu — the files
+ * themselves are flat within the group folder.
  */
 
 return [
 	[
 		'title' => 'Get Started',
 		'sub'   => [
-			['title' => 'Getting Started', 'path' => 'getting-started'],
-			['title' => 'Requirements',    'path' => 'requirements'],
-			['title' => 'Installation',    'path' => 'installation'],
-			['title' => 'Core Concepts',   'path' => 'advanced/data-model'],
+			['title' => 'Getting Started', 'path' => 'get-started/getting-started'],
+			['title' => 'Requirements',    'path' => 'get-started/requirements'],
+			['title' => 'Installation',    'path' => 'get-started/installation'],
+			['title' => 'Core Concepts',   'path' => 'get-started/core-concepts'],
 		],
 	],
 	[
@@ -33,7 +38,7 @@ return [
 			['title' => 'Data Views',          'path' => 'collections/data-views'],
 			['title' => 'Importing Data',      'path' => 'collections/import'],
 			['title' => 'Exporting Data',      'path' => 'collections/export'],
-			['title' => 'Sitemap Builder',     'path' => 'advanced/sitemap-builder'],
+			['title' => 'Sitemap Builder',     'path' => 'collections/sitemap-builder'],
 		],
 	],
 	[
@@ -42,7 +47,7 @@ return [
 			['title' => 'Schema Reference',  'path' => 'schemas/reference'],
 			['title' => 'Schema Validation', 'path' => 'schemas/validation'],
 			['title' => 'Form Grid Layout',  'path' => 'schemas/formgrid'],
-			['title' => 'Schemas in Twig',   'path' => 'twig/schemas'],
+			['title' => 'Schemas in Twig',   'path' => 'schemas/twig'],
 		],
 	],
 	[
@@ -51,34 +56,34 @@ return [
 			[
 				'title' => 'Field Types',
 				'sub'   => [
-					['title' => 'All Fields',            'path' => 'property-settings/all-fields'],
-					['title' => 'Card',                  'path' => 'property-settings/card'],
-					['title' => 'Code Editor',           'path' => 'property-settings/code-editor'],
-					['title' => 'Date',                  'path' => 'property-settings/date'],
-					['title' => 'Deck',                  'path' => 'property-settings/deck'],
-					['title' => 'File & Depot',          'path' => 'property-settings/file-depot'],
-					['title' => 'ID',                    'path' => 'property-settings/id'],
-					['title' => 'Image & Gallery',       'path' => 'property-settings/image-gallery'],
-					['title' => 'Lists',                 'path' => 'property-settings/lists'],
-					['title' => 'Number & Range',        'path' => 'property-settings/number-range'],
-					['title' => 'Password',              'path' => 'property-settings/password'],
-					['title' => 'Price',                 'path' => 'property-settings/price'],
-					['title' => 'Radio & Multicheckbox', 'path' => 'property-settings/radio-multicheckbox'],
-					['title' => 'Secret',                'path' => 'property-settings/secret'],
-					['title' => 'Select',                'path' => 'property-settings/select'],
-					['title' => 'Styled Text',           'path' => 'property-settings/styled-text'],
-					['title' => 'SVG',                   'path' => 'property-settings/svg'],
-					['title' => 'Text Inputs',           'path' => 'property-settings/text-inputs'],
+					['title' => 'All Fields',            'path' => 'fields/all-fields'],
+					['title' => 'Card',                  'path' => 'fields/card'],
+					['title' => 'Code Editor',           'path' => 'fields/code-editor'],
+					['title' => 'Date',                  'path' => 'fields/date'],
+					['title' => 'Deck',                  'path' => 'fields/deck'],
+					['title' => 'File & Depot',          'path' => 'fields/file-depot'],
+					['title' => 'ID',                    'path' => 'fields/id'],
+					['title' => 'Image & Gallery',       'path' => 'fields/image-gallery'],
+					['title' => 'Lists',                 'path' => 'fields/lists'],
+					['title' => 'Number & Range',        'path' => 'fields/number-range'],
+					['title' => 'Password',              'path' => 'fields/password'],
+					['title' => 'Price',                 'path' => 'fields/price'],
+					['title' => 'Radio & Multicheckbox', 'path' => 'fields/radio-multicheckbox'],
+					['title' => 'Secret',                'path' => 'fields/secret'],
+					['title' => 'Select',                'path' => 'fields/select'],
+					['title' => 'Styled Text',           'path' => 'fields/styled-text'],
+					['title' => 'SVG',                   'path' => 'fields/svg'],
+					['title' => 'Text Inputs',           'path' => 'fields/text-inputs'],
 				],
 			],
 			[
 				'title' => 'Field Options',
 				'sub'   => [
-					['title' => 'Static Options',       'path' => 'property-options/static-options'],
-					['title' => 'Property Options',     'path' => 'property-options/property-options'],
-					['title' => 'Relational Options',   'path' => 'property-options/relational-options'],
-					['title' => 'Sorting Options',      'path' => 'property-options/sorting-options'],
-					['title' => 'Access Group Options', 'path' => 'property-options/access-group-options'],
+					['title' => 'Static Options',       'path' => 'fields/static-options'],
+					['title' => 'Property Options',     'path' => 'fields/property-options'],
+					['title' => 'Relational Options',   'path' => 'fields/relational-options'],
+					['title' => 'Sorting Options',      'path' => 'fields/sorting-options'],
+					['title' => 'Access Group Options', 'path' => 'fields/access-group-options'],
 				],
 			],
 		],
@@ -86,12 +91,12 @@ return [
 	[
 		'title' => 'Site Builder',
 		'sub'   => [
-			['title' => 'Site Builder Overview',  'path' => 'builder/overview'],
-			['title' => 'Builder CLI',            'path' => 'builder/cli'],
-			['title' => 'Builder Admin UI',       'path' => 'builder/admin'],
-			['title' => 'Starter Templates',     'path' => 'builder/starters'],
-			['title' => 'Frontend Assets',       'path' => 'builder/frontend'],
-			['title' => 'Builder Twig Reference', 'path' => 'twig/builder'],
+			['title' => 'Site Builder Overview',  'path' => 'site-builder/overview'],
+			['title' => 'Builder CLI',            'path' => 'site-builder/cli'],
+			['title' => 'Builder Admin UI',       'path' => 'site-builder/admin'],
+			['title' => 'Starter Templates',     'path' => 'site-builder/starters'],
+			['title' => 'Frontend Assets',       'path' => 'site-builder/frontend'],
+			['title' => 'Builder Twig Reference', 'path' => 'site-builder/twig'],
 		],
 	],
 	[
@@ -147,14 +152,14 @@ return [
 	[
 		'title' => 'Forms',
 		'sub'   => [
-			['title' => 'Forms Overview',      'path' => 'twig/forms/overview'],
-			['title' => 'Form Builder',        'path' => 'twig/forms/builder'],
-			['title' => 'Deck Forms',          'path' => 'twig/forms/deck'],
-			['title' => 'Field Settings',      'path' => 'twig/forms/fields'],
-			['title' => 'Form Options',        'path' => 'twig/forms/options'],
-			['title' => 'Validation Patterns', 'path' => 'twig/forms/patterns'],
-			['title' => 'Report Form',         'path' => 'twig/forms/report'],
-			['title' => 'Specialized Forms',   'path' => 'twig/forms/specialized'],
+			['title' => 'Forms Overview',      'path' => 'forms/overview'],
+			['title' => 'Form Builder',        'path' => 'forms/builder'],
+			['title' => 'Deck Forms',          'path' => 'forms/deck'],
+			['title' => 'Field Settings',      'path' => 'forms/fields'],
+			['title' => 'Form Options',        'path' => 'forms/options'],
+			['title' => 'Validation Patterns', 'path' => 'forms/patterns'],
+			['title' => 'Report Form',         'path' => 'forms/report'],
+			['title' => 'Specialized Forms',   'path' => 'forms/specialized'],
 		],
 	],
 	[
@@ -162,7 +167,7 @@ return [
 		'sub'   => [
 			['title' => 'Dashboard',   'path' => 'admin/dashboard'],
 			['title' => 'White Label', 'path' => 'admin/whitelabel'],
-			['title' => 'Admin Twig',  'path' => 'twig/admin'],
+			['title' => 'Admin Twig',  'path' => 'admin/twig'],
 		],
 	],
 	[
@@ -178,17 +183,17 @@ return [
 			['title' => 'Authentication', 'path' => 'auth/auth'],
 			['title' => 'Access Groups',  'path' => 'auth/access-groups'],
 			['title' => 'Password Reset', 'path' => 'auth/password-reset'],
-			['title' => 'Auth Twig',      'path' => 'twig/auth'],
+			['title' => 'Auth Twig',      'path' => 'auth/twig'],
 		],
 	],
 	[
 		'title' => 'APIs',
 		'sub'   => [
-			['title' => 'REST API',     'path' => 'api/rest-api'],
-			['title' => 'PHP API',      'path' => 'api/php-api'],
-			['title' => 'API Keys',     'path' => 'api/api-keys'],
-			['title' => 'Index Filter', 'path' => 'api/index-filter'],
-			['title' => 'OpenAPI Docs', 'path' => 'api/openapi'],
+			['title' => 'REST API',     'path' => 'apis/rest-api'],
+			['title' => 'PHP API',      'path' => 'apis/php-api'],
+			['title' => 'API Keys',     'path' => 'apis/api-keys'],
+			['title' => 'Index Filter', 'path' => 'apis/index-filter'],
+			['title' => 'OpenAPI Docs', 'path' => 'apis/openapi'],
 		],
 	],
 	[
@@ -199,16 +204,16 @@ return [
 			['title' => 'Extension Points',    'path' => 'extensions/extension-points'],
 			['title' => 'Events',              'path' => 'extensions/events'],
 			['title' => 'Schemas',             'path' => 'extensions/schemas'],
-			['title' => 'CLI',                 'path' => 'advanced/cli'],
-			['title' => 'AI Integration',      'path' => 'advanced/ai-integration'],
+			['title' => 'CLI',                 'path' => 'extensions/cli'],
+			['title' => 'AI Integration',      'path' => 'extensions/ai-integration'],
 		],
 		'groups' => [
 			[
 				'title' => 'Bundled Extensions',
 				'sub'   => [
 					['title' => 'Bundled Overview', 'path' => 'extensions/bundled'],
-					['title' => 'A/B Split',        'path' => 'extensions/bundled/ab-split'],
-					['title' => 'Geo Redirect',     'path' => 'extensions/bundled/geo-redirect'],
+					['title' => 'A/B Split',        'path' => 'extensions/ab-split'],
+					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
 				],
 			],
 		],
@@ -216,18 +221,18 @@ return [
 	[
 		'title' => 'Operations',
 		'sub'   => [
-			['title' => 'Deployment',        'path' => 'advanced/deployment'],
-			['title' => 'Nginx',             'path' => 'advanced/nginx'],
-			['title' => 'Security',          'path' => 'advanced/security'],
-			['title' => 'Server Sizing',     'path' => 'advanced/server-sizing'],
-			['title' => 'Filesystem',        'path' => 'advanced/filesystem'],
-			['title' => 'Sync',              'path' => 'advanced/sync'],
-			['title' => 'Updates',           'path' => 'advanced/updates'],
-			['title' => 'JumpStart',         'path' => 'advanced/jumpstart'],
-			['title' => 'Search Backends',   'path' => 'advanced/search'],
-			['title' => 'Licenses',          'path' => 'advanced/licenses'],
-			['title' => 'Migration from v1', 'path' => 'advanced/migration-total-cms-one'],
-			['title' => 'Configuration',     'path' => 'advanced/configuration'],
+			['title' => 'Deployment',        'path' => 'operations/deployment'],
+			['title' => 'Nginx',             'path' => 'operations/nginx'],
+			['title' => 'Security',          'path' => 'operations/security'],
+			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],
+			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
+			['title' => 'Sync',              'path' => 'operations/sync'],
+			['title' => 'Updates',           'path' => 'operations/updates'],
+			['title' => 'JumpStart',         'path' => 'operations/jumpstart'],
+			['title' => 'Search Backends',   'path' => 'operations/search'],
+			['title' => 'Licenses',          'path' => 'operations/licenses'],
+			['title' => 'Migration from v1', 'path' => 'operations/migration-total-cms-one'],
+			['title' => 'Configuration',     'path' => 'operations/configuration'],
 		],
 	],
 ];
