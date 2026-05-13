@@ -1,6 +1,10 @@
 ---
 title: "Data Model"
 description: "Understand the Total CMS flat-file data model with 13 collection types, 16 property types, and JSON-based object storage without a database."
+related:
+  - schemas/reference
+  - schemas/validation
+  - twig/collections
 ---
 
 # Data Model

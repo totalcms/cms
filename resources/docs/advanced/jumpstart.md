@@ -1,6 +1,10 @@
 ---
 title: "JumpStart"
 description: "Bootstrap new Total CMS projects with JumpStart data import and export for collections, schemas, objects, and Faker-based factory test data."
+related:
+  - collections/import
+  - collections/export
+  - twig/factory
 ---
 
 # JumpStart

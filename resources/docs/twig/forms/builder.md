@@ -1,6 +1,11 @@
 ---
 title: "Form Builder"
 description: "Create custom forms with the form builder, simple forms, and standalone buttons."
+related:
+  - twig/forms/fields
+  - twig/forms/options
+  - twig/forms/patterns
+  - twig/forms/specialized
 ---
 
 # Form Builder

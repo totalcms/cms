@@ -1,6 +1,10 @@
 ---
 title: "REST API Documentation"
 description: "Complete Total CMS REST API reference for CRUD operations on collections, objects, images, files, and schemas with authentication and error handling."
+related:
+  - api/api-keys
+  - api/index-filter
+  - api/php-api
 ---
 
 # REST API Documentation

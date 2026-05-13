@@ -1,6 +1,10 @@
 ---
 title: "Page Lock"
 description: "Protect pages and content sections with Total CMS authentication using page locks, section locks, and user data access in Twig templates."
+related:
+  - auth/access-groups
+  - auth/password-reset
+  - twig/auth
 ---
 
 ## Page Lock

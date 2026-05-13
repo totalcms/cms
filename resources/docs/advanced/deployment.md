@@ -1,6 +1,10 @@
 ---
 title: "Deployment Guide"
 description: "Deploy Total CMS to production with Git configuration, cache clearing scripts, CI/CD integration for GitHub Actions and GitLab, and troubleshooting."
+related:
+  - advanced/nginx
+  - advanced/security
+  - advanced/updates
 ---
 
 # Deployment Guide

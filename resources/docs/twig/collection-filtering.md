@@ -1,6 +1,10 @@
 ---
 title: "Collection Filtering and Sorting"
 description: "Filter and sort Total CMS collections in Twig using filterCollection and sortCollection with comparison operators, date ranges, and manual ordering."
+related:
+  - twig/collections
+  - twig/data
+  - twig/load-more
 ---
 
 # Collection Filtering and Sorting
