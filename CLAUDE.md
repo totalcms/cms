@@ -279,8 +279,9 @@ These are non-obvious details that are important when working in these areas:
 
 ### Documentation (`resources/docs/`)
 - **Source of truth**: `resources/docs/*.md` is mirrored to docs.totalcms.co. Template changes to `resources/templates/admin/docs.twig` only affect the in-admin viewer — the public site has its own template that needs parallel changes.
-- **Sidebar menu** lives in the `menu` array at the top of `docs.twig`. 9 groups: Start Here, Core Concepts, Building Pages, Managing Content, Auth & Access, APIs & Integrations, Extending T3, Reference, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group.
-- **Navigation primitives**: breadcrumbs, prev/next, and the related-pages footer are all derived from the menu array — no extra config needed. Breadcrumb group label = whichever menu group the page lives in.
+- **Sidebar menu** lives in `resources/docs/menu.php` (shared by `AdminDocsAction` and `bin/build-docs-index.php`). 12 top-level groups: Get Started, Concepts, Admin, Collections & Schemas, Fields, Forms, Site Builder, Templates (Twig), Auth, APIs, Extensions & CLI, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group. Fields and Templates use nested subgroups; everything else is flat.
+- **Navigation primitives**: breadcrumbs, prev/next, and the related-pages footer are all derived from the menu — no extra config needed. Breadcrumb group label = whichever menu group the page lives in.
+- **No synthetic landing pages**: each group's first sub-entry is its natural overview (e.g. `builder/overview` for Site Builder, `extensions/overview` for Extensions). Avoid adding "Overview" entries that point to fabricated section landings — keep the natural intro page first instead.
 - **Frontmatter conventions** (all optional):
   - `title:` — H1 fallback, displayed in breadcrumbs and search results
   - `description:` — used by search

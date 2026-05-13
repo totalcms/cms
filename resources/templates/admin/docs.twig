@@ -69,7 +69,7 @@
 				{% endif %}
 			{% endfor %}
 
-			<details id="category-{{ item.title | slug }}"{% if groupOpen %} open{% endif %}>
+			<details id="category-{{ item.title | slug }}" data-server-open="{{ groupOpen ? 'true' : 'false' }}"{% if groupOpen %} open{% endif %}>
 				<summary>{{ item.title }}</summary>
 
 				{# Top-level leaves render first (used for "Overview" entries on nested groups) #}
@@ -88,7 +88,7 @@
 					<div class="docs-subgroups">
 						{% for grp in item.groups %}
 							{% set subOpen = page in grp.sub|column('path') %}
-							<details class="docs-subgroup"{% if subOpen %} open{% endif %}>
+							<details class="docs-subgroup" data-server-open="{{ subOpen ? 'true' : 'false' }}"{% if subOpen %} open{% endif %}>
 								<summary>{{ grp.title }}</summary>
 								<ul>
 									{% for sub in grp.sub %}
@@ -108,7 +108,16 @@
 
 	<footer>
 	</footer>
-	<script>document.querySelector('.docs a.active')?.scrollIntoView({ block: 'center' });</script>
+	<script>
+		// Force <details> open state to match server-rendered intent.
+		// Without this, Chrome/Firefox may restore prior open state from history,
+		// leaving multiple groups expanded after navigation. Runs once on load;
+		// user can still manually expand additional groups afterward.
+		document.querySelectorAll('.dash-content-sidebar nav.docs details[data-server-open]').forEach(d => {
+			d.open = d.dataset.serverOpen === 'true';
+		});
+		document.querySelector('.docs a.active')?.scrollIntoView({ block: 'center' });
+	</script>
 </aside>
 {% include "admin/sidebar-details.twig" %}
 

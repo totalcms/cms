@@ -151,11 +151,13 @@
 	}
 }
 
-// Highlight navigation UI
+// Highlight navigation UI — anchored to the top-right of .doc-content
 .doc-highlight-nav {
 	position         : fixed;
-	top              : 1rem;
-	right            : 1rem;
+	position-anchor  : --doc-content;
+	top              : anchor(top);
+	right            : anchor(right);
+	margin           : 1rem;
 	display          : flex;
 	align-items      : center;
 	gap              : 0.5rem;
