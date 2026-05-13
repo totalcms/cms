@@ -33,13 +33,13 @@ return [
 	[
 		'title' => 'Admin',
 		'sub'   => [
-			['title' => 'Dashboard',             'path' => 'admin/dashboard'],
-			['title' => 'White Label',           'path' => 'admin/whitelabel'],
-			['title' => 'Pushover Notifications','path' => 'notifications/pushover'],
+			['title' => 'Dashboard',   'path' => 'admin/dashboard'],
+			['title' => 'White Label', 'path' => 'admin/whitelabel'],
+			['title' => 'Admin Twig',  'path' => 'twig/admin'],
 		],
 	],
 	[
-		'title' => 'Collections & Schemas',
+		'title' => 'Collections',
 		'sub'   => [
 			['title' => 'Collection Settings', 'path' => 'collections/settings'],
 			['title' => 'Form Settings',       'path' => 'collections/form-settings'],
@@ -47,10 +47,15 @@ return [
 			['title' => 'Importing Data',      'path' => 'collections/import'],
 			['title' => 'Exporting Data',      'path' => 'collections/export'],
 			['title' => 'Sitemap Builder',     'path' => 'advanced/sitemap-builder'],
-			['title' => 'Schema Reference',    'path' => 'schemas/reference'],
-			['title' => 'Schema Validation',   'path' => 'schemas/validation'],
-			['title' => 'Form Grid Layout',    'path' => 'schemas/formgrid'],
-			['title' => 'Schemas in Twig',     'path' => 'twig/schemas'],
+		],
+	],
+	[
+		'title' => 'Schemas',
+		'sub'   => [
+			['title' => 'Schema Reference',  'path' => 'schemas/reference'],
+			['title' => 'Schema Validation', 'path' => 'schemas/validation'],
+			['title' => 'Form Grid Layout',  'path' => 'schemas/formgrid'],
+			['title' => 'Schemas in Twig',   'path' => 'twig/schemas'],
 		],
 	],
 	[
@@ -94,16 +99,20 @@ return [
 	[
 		'title' => 'Forms',
 		'sub'   => [
-			['title' => 'Forms Overview',        'path' => 'twig/forms/overview'],
-			['title' => 'Form Builder',          'path' => 'twig/forms/builder'],
-			['title' => 'Deck Forms',            'path' => 'twig/forms/deck'],
-			['title' => 'Field Settings',        'path' => 'twig/forms/fields'],
-			['title' => 'Form Options',          'path' => 'twig/forms/options'],
-			['title' => 'Select & List Options', 'path' => 'twig/forms/select-options'],
-			['title' => 'Validation Patterns',   'path' => 'twig/forms/patterns'],
-			['title' => 'Report Form',           'path' => 'twig/forms/report'],
-			['title' => 'Specialized Forms',     'path' => 'twig/forms/specialized'],
-			['title' => 'Forms Reference',       'path' => 'twig/forms'],
+			['title' => 'Forms Overview',      'path' => 'twig/forms/overview'],
+			['title' => 'Form Builder',        'path' => 'twig/forms/builder'],
+			['title' => 'Deck Forms',          'path' => 'twig/forms/deck'],
+			['title' => 'Field Settings',      'path' => 'twig/forms/fields'],
+			['title' => 'Form Options',        'path' => 'twig/forms/options'],
+			['title' => 'Validation Patterns', 'path' => 'twig/forms/patterns'],
+			['title' => 'Report Form',         'path' => 'twig/forms/report'],
+			['title' => 'Specialized Forms',   'path' => 'twig/forms/specialized'],
+		],
+	],
+	[
+		'title' => 'Notifications',
+		'sub'   => [
+			['title' => 'Pushover', 'path' => 'notifications/pushover'],
 		],
 	],
 	[
@@ -143,11 +152,12 @@ return [
 			[
 				'title' => 'Filters & Functions',
 				'sub'   => [
-					['title' => 'Twig Filters',   'path' => 'twig/filters'],
-					['title' => 'Twig Functions', 'path' => 'twig/functions'],
-					['title' => 'Utilities',      'path' => 'twig/utils'],
-					['title' => 'Barcodes',       'path' => 'twig/barcodes'],
-					['title' => 'QR Codes',       'path' => 'twig/qrcodes'],
+					['title' => 'Twig Filters',    'path' => 'twig/filters'],
+					['title' => 'Twig Functions',  'path' => 'twig/functions'],
+					['title' => 'Utilities',       'path' => 'twig/utils'],
+					['title' => 'Edition Helpers', 'path' => 'twig/edition'],
+					['title' => 'Barcodes',        'path' => 'twig/barcodes'],
+					['title' => 'QR Codes',        'path' => 'twig/qrcodes'],
 				],
 			],
 			[
@@ -162,13 +172,6 @@ return [
 				'sub'   => [
 					['title' => 'Locale',       'path' => 'twig/locale'],
 					['title' => 'Localization', 'path' => 'twig/localization'],
-				],
-			],
-			[
-				'title' => 'Admin Twig',
-				'sub'   => [
-					['title' => 'Admin Twig',       'path' => 'twig/admin'],
-					['title' => 'Edition Helpers',  'path' => 'twig/edition'],
 				],
 			],
 		],
@@ -189,23 +192,29 @@ return [
 			['title' => 'PHP API',      'path' => 'api/php-api'],
 			['title' => 'API Keys',     'path' => 'api/api-keys'],
 			['title' => 'Index Filter', 'path' => 'api/index-filter'],
-			['title' => 'Download API', 'path' => 'api/download'],
 			['title' => 'OpenAPI Docs', 'path' => 'api/openapi'],
 		],
 	],
 	[
-		'title' => 'Extensions & CLI',
-		'sub'   => [
+		'title'  => 'Extensions & CLI',
+		'sub'    => [
 			['title' => 'Extensions Overview', 'path' => 'extensions/overview'],
 			['title' => 'Manifest',            'path' => 'extensions/manifest'],
 			['title' => 'Extension Points',    'path' => 'extensions/extension-points'],
 			['title' => 'Events',              'path' => 'extensions/events'],
 			['title' => 'Schemas',             'path' => 'extensions/schemas'],
-			['title' => 'Bundled Extensions',  'path' => 'extensions/bundled'],
-			['title' => '— A/B Split',         'path' => 'extensions/bundled/ab-split'],
-			['title' => '— Geo Redirect',      'path' => 'extensions/bundled/geo-redirect'],
 			['title' => 'CLI',                 'path' => 'advanced/cli'],
 			['title' => 'AI Integration',      'path' => 'advanced/ai-integration'],
+		],
+		'groups' => [
+			[
+				'title' => 'Bundled Extensions',
+				'sub'   => [
+					['title' => 'Bundled Overview', 'path' => 'extensions/bundled'],
+					['title' => 'A/B Split',        'path' => 'extensions/bundled/ab-split'],
+					['title' => 'Geo Redirect',     'path' => 'extensions/bundled/geo-redirect'],
+				],
+			],
 		],
 	],
 	[
