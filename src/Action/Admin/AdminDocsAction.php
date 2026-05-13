@@ -76,8 +76,12 @@ readonly class AdminDocsAction
 			$frontMatter = FrontMatterChain::create();
 			$document    = $frontMatter->parse($contents);
 
-			$data            = $document->getData();
-			$data['content'] = $parsedown->text($document->getContent());
+			$data    = $document->getData();
+			$html    = $parsedown->text($document->getContent());
+			[$html, $toc] = $this->injectHeadingAnchorsAndBuildToc($html);
+
+			$data['content'] = $html;
+			$data['toc']     = $toc;
 		} elseif (file_exists($htmlFile)) {
 			$htmlContents    = file_get_contents($htmlFile);
 			$data['content'] = $htmlContents !== false ? $htmlContents : 'Unable to read page';
@@ -92,5 +96,54 @@ readonly class AdminDocsAction
 		];
 
 		return $this->twigRenderer->template($response, 'admin/docs.twig', $data);
+	}
+
+	/**
+	 * Inject id attributes on h2/h3 elements and return a flat TOC array.
+	 * Skips headings that already carry an id (e.g. ParsedownExtra {#custom-id} syntax).
+	 *
+	 * @return array{0:string,1:list<array{level:int,id:string,text:string}>}
+	 */
+	private function injectHeadingAnchorsAndBuildToc(string $html): array
+	{
+		$toc      = [];
+		$usedIds  = [];
+		$pattern  = '/<h([23])(\s[^>]*)?>(.*?)<\/h\1>/i';
+		$replaced = preg_replace_callback($pattern, function (array $m) use (&$toc, &$usedIds): string {
+			$level   = (int)$m[1];
+			$attrs   = $m[2];
+			$inner   = $m[3];
+			$text    = trim(html_entity_decode(strip_tags($inner), ENT_QUOTES | ENT_HTML5));
+
+			if (preg_match('/\bid\s*=\s*["\']([^"\']+)["\']/i', $attrs, $idMatch)) {
+				$id = $idMatch[1];
+			} else {
+				$id = $this->slugify($text);
+				if ($id === '') {
+					return $m[0];
+				}
+				$base = $id;
+				$n    = 2;
+				while (in_array($id, $usedIds, true)) {
+					$id = $base . '-' . $n++;
+				}
+				$attrs = ' id="' . htmlspecialchars($id, ENT_QUOTES) . '"' . $attrs;
+			}
+
+			$usedIds[] = $id;
+			$toc[]     = ['level' => $level, 'id' => $id, 'text' => $text];
+
+			return '<h' . $level . $attrs . '>' . $inner . '</h' . $level . '>';
+		}, $html);
+
+		return [(string)$replaced, $toc];
+	}
+
+	private function slugify(string $text): string
+	{
+		$text = strtolower($text);
+		$text = (string)preg_replace('/[^a-z0-9]+/', '-', $text);
+
+		return trim($text, '-');
 	}
 }
