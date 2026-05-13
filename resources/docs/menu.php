@@ -27,6 +27,7 @@ return [
 	[
 		'title' => 'Core Concepts',
 		'sub'   => [
+			['title' => 'Overview',         'path' => 'sections/core-concepts'],
 			['title' => 'Data Model',       'path' => 'advanced/data-model'],
 			['title' => 'Schema Reference', 'path' => 'schemas/reference'],
 			['title' => 'Twig Overview',    'path' => 'twig/overview'],
@@ -37,6 +38,7 @@ return [
 	[
 		'title' => 'Building Pages',
 		'sub'   => [
+			['title' => 'Overview',               'path' => 'sections/building-pages'],
 			['title' => 'Site Builder Overview',  'path' => 'builder/overview'],
 			['title' => 'Builder CLI',            'path' => 'builder/cli'],
 			['title' => 'Builder Admin UI',       'path' => 'builder/admin'],
@@ -58,6 +60,9 @@ return [
 	],
 	[
 		'title'  => 'Managing Content',
+		'sub'    => [
+			['title' => 'Overview', 'path' => 'sections/managing-content'],
+		],
 		'groups' => [
 			[
 				'title' => 'Admin',
@@ -140,6 +145,7 @@ return [
 	[
 		'title' => 'Auth & Access',
 		'sub'   => [
+			['title' => 'Overview',       'path' => 'sections/auth-access'],
 			['title' => 'Authentication', 'path' => 'auth/auth'],
 			['title' => 'Access Groups',  'path' => 'auth/access-groups'],
 			['title' => 'Password Reset', 'path' => 'auth/password-reset'],
@@ -149,6 +155,7 @@ return [
 	[
 		'title' => 'APIs & Integrations',
 		'sub'   => [
+			['title' => 'Overview',     'path' => 'sections/apis'],
 			['title' => 'REST API',     'path' => 'api/rest-api'],
 			['title' => 'PHP API',      'path' => 'api/php-api'],
 			['title' => 'API Keys',     'path' => 'api/api-keys'],
@@ -160,6 +167,7 @@ return [
 	[
 		'title' => 'Extending T3',
 		'sub'   => [
+			['title' => 'Overview',            'path' => 'sections/extending'],
 			['title' => 'Extensions Overview', 'path' => 'extensions/overview'],
 			['title' => 'Manifest',            'path' => 'extensions/manifest'],
 			['title' => 'Extension Points',    'path' => 'extensions/extension-points'],
@@ -176,6 +184,7 @@ return [
 	[
 		'title' => 'Reference',
 		'sub'   => [
+			['title' => 'Overview',       'path' => 'sections/reference'],
 			['title' => 'Twig Filters',   'path' => 'twig/filters'],
 			['title' => 'Twig Functions', 'path' => 'twig/functions'],
 			['title' => 'Conditionals',   'path' => 'twig/conditionals'],
@@ -192,6 +201,7 @@ return [
 	[
 		'title' => 'Operations',
 		'sub'   => [
+			['title' => 'Overview',          'path' => 'sections/operations'],
 			['title' => 'Deployment',        'path' => 'advanced/deployment'],
 			['title' => 'Nginx',             'path' => 'advanced/nginx'],
 			['title' => 'Security',          'path' => 'advanced/security'],

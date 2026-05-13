@@ -72,6 +72,18 @@
 			<details id="category-{{ item.title | slug }}"{% if groupOpen %} open{% endif %}>
 				<summary>{{ item.title }}</summary>
 
+				{# Top-level leaves render first (used for "Overview" entries on nested groups) #}
+				{% if item.sub is defined and item.sub|length > 0 %}
+					<ul>
+						{% for sub in item.sub %}
+						<li><a {% if page == sub.path %}class="active"{% endif %}
+								href="docs/{{ sub.path }}"
+								{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
+							>{{ sub.title }}</a></li>
+						{% endfor %}
+					</ul>
+				{% endif %}
+
 				{% if item.groups is defined %}
 					<div class="docs-subgroups">
 						{% for grp in item.groups %}
@@ -89,15 +101,6 @@
 							</details>
 						{% endfor %}
 					</div>
-				{% else %}
-					<ul>
-						{% for sub in item.sub %}
-						<li><a {% if page == sub.path %}class="active"{% endif %}
-								href="docs/{{ sub.path }}"
-								{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
-							>{{ sub.title }}</a></li>
-						{% endfor %}
-					</ul>
 				{% endif %}
 			</details>
 		{% endfor %}
