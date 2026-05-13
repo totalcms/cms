@@ -79,6 +79,7 @@
 			"help"        : "Optional JSON data exposed to the template as <code>page.data.*</code>. Use this for one-off page content (hero text, CTAs, etc.) without creating a one-row collection.",
 			"field"       : "json",
 			"placeholder" : "{\"hero\": \"Welcome\"}",
+			"default"     : {},
 			"settings"    : {
 				"rows" : 12
 			}
