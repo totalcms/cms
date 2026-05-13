@@ -22,20 +22,7 @@ return [
 			['title' => 'Getting Started', 'path' => 'getting-started'],
 			['title' => 'Requirements',    'path' => 'requirements'],
 			['title' => 'Installation',    'path' => 'installation'],
-		],
-	],
-	[
-		'title' => 'Concepts',
-		'sub'   => [
-			['title' => 'Data Model', 'path' => 'advanced/data-model'],
-		],
-	],
-	[
-		'title' => 'Admin',
-		'sub'   => [
-			['title' => 'Dashboard',   'path' => 'admin/dashboard'],
-			['title' => 'White Label', 'path' => 'admin/whitelabel'],
-			['title' => 'Admin Twig',  'path' => 'twig/admin'],
+			['title' => 'Core Concepts',   'path' => 'advanced/data-model'],
 		],
 	],
 	[
@@ -97,25 +84,6 @@ return [
 		],
 	],
 	[
-		'title' => 'Forms',
-		'sub'   => [
-			['title' => 'Forms Overview',      'path' => 'twig/forms/overview'],
-			['title' => 'Form Builder',        'path' => 'twig/forms/builder'],
-			['title' => 'Deck Forms',          'path' => 'twig/forms/deck'],
-			['title' => 'Field Settings',      'path' => 'twig/forms/fields'],
-			['title' => 'Form Options',        'path' => 'twig/forms/options'],
-			['title' => 'Validation Patterns', 'path' => 'twig/forms/patterns'],
-			['title' => 'Report Form',         'path' => 'twig/forms/report'],
-			['title' => 'Specialized Forms',   'path' => 'twig/forms/specialized'],
-		],
-	],
-	[
-		'title' => 'Notifications',
-		'sub'   => [
-			['title' => 'Pushover', 'path' => 'notifications/pushover'],
-		],
-	],
-	[
 		'title' => 'Site Builder',
 		'sub'   => [
 			['title' => 'Site Builder Overview',  'path' => 'builder/overview'],
@@ -123,11 +91,11 @@ return [
 			['title' => 'Builder Admin UI',       'path' => 'builder/admin'],
 			['title' => 'Starter Templates',     'path' => 'builder/starters'],
 			['title' => 'Frontend Assets',       'path' => 'builder/frontend'],
-			['title' => 'Builder Twig Reference','path' => 'twig/builder'],
+			['title' => 'Builder Twig Reference', 'path' => 'twig/builder'],
 		],
 	],
 	[
-		'title'  => 'Templates (Twig)',
+		'title'  => 'Twig',
 		'groups' => [
 			[
 				'title' => 'Twig Basics',
@@ -174,6 +142,34 @@ return [
 					['title' => 'Localization', 'path' => 'twig/localization'],
 				],
 			],
+		],
+	],
+	[
+		'title' => 'Forms',
+		'sub'   => [
+			['title' => 'Forms Overview',      'path' => 'twig/forms/overview'],
+			['title' => 'Form Builder',        'path' => 'twig/forms/builder'],
+			['title' => 'Deck Forms',          'path' => 'twig/forms/deck'],
+			['title' => 'Field Settings',      'path' => 'twig/forms/fields'],
+			['title' => 'Form Options',        'path' => 'twig/forms/options'],
+			['title' => 'Validation Patterns', 'path' => 'twig/forms/patterns'],
+			['title' => 'Report Form',         'path' => 'twig/forms/report'],
+			['title' => 'Specialized Forms',   'path' => 'twig/forms/specialized'],
+		],
+	],
+	[
+		'title' => 'Admin',
+		'sub'   => [
+			['title' => 'Dashboard',   'path' => 'admin/dashboard'],
+			['title' => 'White Label', 'path' => 'admin/whitelabel'],
+			['title' => 'Admin Twig',  'path' => 'twig/admin'],
+		],
+	],
+	[
+		'title' => 'Notifications',
+		'sub'   => [
+			['title' => 'Mailer',   'path' => 'notifications/mailer'],
+			['title' => 'Pushover', 'path' => 'notifications/pushover'],
 		],
 	],
 	[
