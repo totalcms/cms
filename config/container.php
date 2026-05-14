@@ -1098,6 +1098,7 @@ return [
 		$container->get(SchemaSaver::class),
 		$container->get(TemplateSaver::class),
 		$container->get(FactoryImporter::class),
+		$container->get(EventDispatcher::class),
 		$container->get(LoggerFactory::class),
 	),
 
