@@ -49,7 +49,10 @@ readonly class PageReloadInjectorRenderer
 
 	private function shouldInject(): bool
 	{
-		if (!$this->accessManager->sessionHasUser()) {
+		// Dev installs typically run with auth off, so there's no session user
+		// to gate against — but devs still need live reload. Treat env=dev as
+		// "trusted operator" the same way AdminOnlyMiddleware does.
+		if (!$this->accessManager->sessionHasUser() && $this->config->env !== 'dev') {
 			return false;
 		}
 

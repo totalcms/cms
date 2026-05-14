@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Stream;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Builder\Service\BuilderReloadPulseService;
+use TotalCMS\Support\Config;
 
 /**
  * `GET /admin/builder/events` — Server-Sent Events stream powering the
@@ -42,6 +43,7 @@ final readonly class BuilderEventsAction
 	public function __construct(
 		private BuilderReloadPulseService $pulse,
 		private AccessManager $accessManager,
+		private Config $config,
 	) {
 	}
 
@@ -52,7 +54,9 @@ final readonly class BuilderEventsAction
 		// Defense in depth: the route is gated by AdminOnlyMiddleware, but a
 		// stream that bypasses auth would be a nasty leak if the route is ever
 		// reconfigured. Cheap to check, refuses unauthenticated readers cleanly.
-		if (!$this->accessManager->sessionHasUser()) {
+		// Dev installs run with auth off and no session user — let them stream
+		// the same way AdminOnlyMiddleware lets dev pass without auth.
+		if (!$this->accessManager->sessionHasUser() && $this->config->env !== 'dev') {
 			return $response->withStatus(401);
 		}
 
