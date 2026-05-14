@@ -5,6 +5,7 @@ related:
   - get-started/requirements
   - get-started/installation
   - get-started/your-first-site
+  - extensions/ai-integration
 ---
 
 # Welcome to Total CMS
@@ -57,6 +58,12 @@ If you'd rather skip the tutorial and go straight to setup:
 |---|---|
 | [System Requirements](docs/get-started/requirements) | Server, PHP, and extension checks |
 | [Installation](docs/get-started/installation) | Composer command, setup wizard, layout options |
+
+## Using AI coding assistants
+
+If you use Claude Code, Cursor, Windsurf, or GitHub Copilot, point them at the Total CMS MCP server at `https://mcp.totalcms.co/`. Your assistant can then look up exact Twig signatures, field configurations, REST endpoints, and CLI commands on demand — no more guessing at function names from stale training data.
+
+One JSON snippet in your editor's config gets it working across every Total CMS project. See [Using Total CMS with AI](docs/extensions/ai-integration) for the per-tool setup and the full list of MCP tools (`docs_search`, `docs_twig_function`, `docs_field_type`, and more).
 
 ## Community & support
 
