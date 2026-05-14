@@ -81,6 +81,7 @@ readonly class AdminDocsAction
 					->withHeader('Content-Type', $imageMimes[$pageExt])
 					->withHeader('Cache-Control', 'public, max-age=3600');
 			}
+
 			// Image not found — fall through to 404 below
 			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
 				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
@@ -106,8 +107,8 @@ readonly class AdminDocsAction
 			$frontMatter = FrontMatterChain::create();
 			$document    = $frontMatter->parse($contents);
 
-			$data    = $document->getData();
-			$html    = $parsedown->text($document->getContent());
+			$data         = $document->getData();
+			$html         = $parsedown->text($document->getContent());
 			[$html, $toc] = $this->injectHeadingAnchorsAndBuildToc($html);
 
 			$data['content'] = $html;

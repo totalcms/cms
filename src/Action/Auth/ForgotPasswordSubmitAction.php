@@ -142,5 +142,4 @@ readonly class ForgotPasswordSubmitAction
 			return \TotalCMS\Support\OperationResult::failure('Failed to send password reset email: ' . $e->getMessage());
 		}
 	}
-
 }

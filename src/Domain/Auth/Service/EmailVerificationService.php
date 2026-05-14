@@ -215,5 +215,4 @@ readonly class EmailVerificationService
 			return OperationResult::failure('Failed to activate account. Please try again.');
 		}
 	}
-
 }
