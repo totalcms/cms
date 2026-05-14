@@ -12,7 +12,7 @@ since: "3.5.0"
 
 - **Compliance redirects.** Send EU visitors to `/eu/` for GDPR-compliant landing pages, US visitors elsewhere.
 - **Regional pricing pages.** Same product, different page per region, automatic routing.
-- **Localization sibling.** Pair with [i18n](docs/internationalization) once it ships in 3.4 to redirect German-IP visitors to `/de/...` URLs. (Currently i18n is roadmapped for 3.4 — geo-redirect ships standalone in 3.3.)
+- **Localization sibling.** Pair with i18n once it ships in 3.4 to redirect German-IP visitors to `/de/...` URLs. (Currently i18n is roadmapped for 3.4 — geo-redirect ships standalone in 3.3.)
 - **Country-specific landing pages.** Same campaign, different conversion flow per country.
 
 ## Enabling
@@ -160,4 +160,4 @@ Source: `resources/extensions/totalcms/geo-redirect/`
 
 - [Page Features (Builder)](docs/site-builder/overview#page-features-middleware) — the middleware framework this plugs into
 - [Bundled Extensions](docs/extensions/bundled) — concept and list of all bundled extensions
-- [A/B Split](docs/extensions/bundled/ab-split) — sibling bundled extension for variant testing
+- [A/B Split](docs/extensions/ab-split) — sibling bundled extension for variant testing

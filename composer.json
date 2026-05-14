@@ -169,6 +169,7 @@
     "test:updatesnaps": "pest --update-snapshots",
     "bundle": "php bin/make-bundle.php",
     "docs:api": "open API_DOCUMENTATION.md",
+    "docs:validate": "php bin/validate-docs.php",
     "md": [
       "@md:src",
       "@md:config",
@@ -180,10 +181,12 @@
     ],
     "test:all": [
       "@stan",
+      "@docs:validate",
       "@test"
     ],
     "test:build": [
       "@stan",
+      "@docs:validate",
       "@test"
     ],
     "quality": [
