@@ -20,7 +20,6 @@ use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
-use TotalCMS\Action\Admin\Builder\BuilderEventsAction;
 use TotalCMS\Action\Admin\Builder\BuilderPreviewAction;
 use TotalCMS\Action\Admin\Builder\BuilderReorderAction;
 use TotalCMS\Action\Admin\ExtensionToggleAction;
@@ -58,9 +57,6 @@ return function (App $app): void {
 		// Builder (replaces Templates) — available to all editions
 		$group->post('/builder/preview', BuilderPreviewAction::class)->setName('admin-builder-preview')->add(TemplateAccessMiddleware::class);
 		$group->post('/builder/reorder', BuilderReorderAction::class)->setName('admin-builder-reorder')->add(TemplateAccessMiddleware::class);
-		// Live-reload SSE stream — admin-gated, must come BEFORE the catch-all
-		// `/builder[...]` route or Slim will swallow it into AdminBuilderAction.
-		$group->get('/builder/events', BuilderEventsAction::class)->setName('admin-builder-events')->add(TemplateAccessMiddleware::class);
 		$group->get('/builder[/{section}[/{path:.*}]]', AdminBuilderAction::class)->setName('admin-builder')->add(TemplateAccessMiddleware::class);
 
 		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);

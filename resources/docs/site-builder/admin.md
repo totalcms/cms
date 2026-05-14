@@ -254,38 +254,31 @@ It's injected before the last `</body>` in the response, so it can't be served t
 
 ## Live Reload Preview
 
-When you save a Builder template or page record, every open admin tab on a Builder page **automatically reloads** to show the new version. No manual refresh, no Vite/Node dependency, works for any page served by the Builder.
+When Dev Mode is on, any page rendered by the Builder automatically reloads in every connected browser whenever you save a Builder template or page record. No manual refresh, no Vite/Node dependency, works for any page served by the Builder — and broadcast to every visitor, not just the admin who's editing, so the developer + client demo case works out of the box.
 
-Mechanically: the admin's browser holds an EventSource connection open to `/admin/builder/events`. When `TemplateSaver` writes a file, or any record in the pages collection changes, the server bumps a "pulse" timestamp. The endpoint sees the bump and pushes a `reload` event to every connected tab, which calls `location.reload()`.
+Mechanically: the page holds an EventSource connection open to `/livereload/events`. When `TemplateSaver` writes a file, or any record in the pages collection changes, the server bumps a "pulse" timestamp. The endpoint sees the bump and pushes a `reload` event to every connected client, which calls `location.reload()`.
 
 ### What triggers a reload
 
 - Saving any Builder template (`.twig` file, including layouts/partials/macros)
 - Creating or updating any page record in the Pages collection (route changes, status changes, redirects, the `template` field, etc.)
+- Turning **Dev Mode off** — connected clients get one final reload so they end up on a page that no longer carries the live-reload script, instead of looping retries against a 403
 
 Asset rebuilds (CSS, JS) do not trigger a reload — Vite already handles that for projects that use it. If you change a CSS file in your editor, refresh manually or rely on Vite's HMR.
 
+### Why Dev Mode is the gate
+
+Twig caches its rendered output by default. Without Dev Mode, reloading the browser would just show the same stale page — the feature only does useful work when caching is bypassed. Tying it to Dev Mode also means there's a single switch (`Admin > Cache > Dev Mode`) for "I'm actively developing right now" instead of two overlapping toggles.
+
+With Dev Mode off, the script is not injected, the SSE endpoint returns 403, and the feature is fully dormant.
+
 ### Visibility rules
 
-The script is only injected when:
-
-1. The visitor has an active admin session
-2. The response is HTML (`text/html`)
-3. The Live Reload setting is enabled
-
-Visitors never see the script and never connect to the event stream.
-
-### Disabling
-
-Toggle **Admin > Settings > Builder > Live Reload Preview** off to disable. Useful when:
-
-- You're staging changes and want to review them deliberately rather than as you save
-- You're profiling or recording the front-end and don't want background EventSource connections
-- Your hosting is sensitive to long-lived HTTP connections (each open admin tab holds one for ~30 seconds before reconnecting)
+The script is injected on every Builder-rendered HTML response when Dev Mode is active. There's no admin-session gate — visitors get the script too. That's intentional: Dev Mode bypasses caching for everyone anyway, and broadcasting reloads makes the "show a client a change live" scenario work without any setup.
 
 ### How long-lived connections behave
 
-Each admin tab opens one connection that lives ~30 seconds before the server closes it; the browser's EventSource auto-reconnects immediately. This caps server worker time without affecting UX. If you're running PHP-FPM with a tight worker pool and many simultaneous admins, that's the metric to watch.
+Each tab opens one connection that lives ~30 seconds before the server closes it; the browser's EventSource auto-reconnects immediately. This caps server worker time without affecting UX. The feature is dev-mode-only, so production traffic never sees these connections.
 
 ## Settings
 
@@ -295,7 +288,6 @@ Builder settings are available at **Admin > Settings > Builder**:
 |---------|------|---------|-------------|
 | Pages Collection | text | `builder-pages` | The collection used for page metadata |
 | Assets Path | text | `assets` | Path under the docroot where compiled assets land (used by the Asset Browser) |
-| Live Reload Preview | toggle | on | Auto-reload open admin tabs when a template or page is saved (see above) |
 
 ## Routes
 
@@ -306,7 +298,7 @@ Builder settings are available at **Admin > Settings > Builder**:
 | GET | `/admin/builder/page/{id}` | Edit page form |
 | GET | `/admin/builder/{category}/{file}` | Template editor |
 | GET | `/admin/builder/new` | New template form |
-| GET | `/admin/builder/events` | Live-reload SSE stream (`text/event-stream`) |
+| GET | `/livereload/events` | Live-reload SSE stream (`text/event-stream`, dev mode only, public) |
 | POST | `/admin/builder/preview` | Render template against live context, return HTML |
 | POST | `/admin/builder/reorder` | Apply a drag-drop reorder, write the order file |
 

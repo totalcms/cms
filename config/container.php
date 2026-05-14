@@ -1304,6 +1304,7 @@ return [
 		$dispatcher->listen('template.saved', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
 		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('devmode.disabled', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onDevModeDisabled'), -50);
 
 		return $dispatcher;
 	},

@@ -5,21 +5,20 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Builder\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Support\Config;
 
 /**
- * Injects the live-reload `<script>` snippet into rendered HTML for admin
- * sessions when the `liveReload` Builder setting is enabled.
- *
- * Companion to {@see PageInspectorRenderer} — same gating model, separate
- * concern. The snippet opens an `EventSource` to `/admin/builder/events` and
+ * Injects the live-reload `<script>` snippet into rendered HTML when Dev Mode
+ * is active. The snippet opens an `EventSource` to `/livereload/events` and
  * calls `location.reload()` on each `reload` event.
  *
- * Visibility rules:
- *   - Admin session only (`AccessManager::sessionHasUser()`)
- *   - HTML response (caller checks Content-Type)
- *   - `liveReload` setting enabled
+ * Dev Mode is the sole gate. Without it, Twig serves cached output, so
+ * reloading the browser would show the same stale page — the feature only
+ * does useful work when caching is bypassed. Dev Mode being on also signals
+ * "this is a development context, broadcast freely" — the snippet is injected
+ * for every visitor (not just admins), which is what makes the demo case work
+ * (developer + client both watching, both reload on save).
  *
  * The script is small (no dependencies, no globals beyond the EventSource
  * itself) and self-contained — keeps it from interacting with anything the
@@ -28,35 +27,22 @@ use TotalCMS\Support\Config;
 readonly class PageReloadInjectorRenderer
 {
 	public function __construct(
-		private AccessManager $accessManager,
-		private BuilderConfigService $builderConfig,
+		private DevModeManager $devModeManager,
 		private Config $config,
 	) {
 	}
 
 	/**
 	 * Inject the snippet into the rendered HTML body, or return the body
-	 * unchanged if injection conditions aren't met.
+	 * unchanged if Dev Mode is off.
 	 */
 	public function maybeInject(string $body, ServerRequestInterface $request): string
 	{
-		if (!$this->shouldInject()) {
+		if (!$this->devModeManager->isDevModeActive()) {
 			return $body;
 		}
 
 		return $this->injectBeforeBodyClose($body, $this->renderSnippet());
-	}
-
-	private function shouldInject(): bool
-	{
-		// Dev installs typically run with auth off, so there's no session user
-		// to gate against — but devs still need live reload. Treat env=dev as
-		// "trusted operator" the same way AdminOnlyMiddleware does.
-		if (!$this->accessManager->sessionHasUser() && $this->config->env !== 'dev') {
-			return false;
-		}
-
-		return $this->builderConfig->isLiveReloadEnabled();
 	}
 
 	/**
@@ -77,7 +63,7 @@ readonly class PageReloadInjectorRenderer
 	private function renderSnippet(): string
 	{
 		$base = rtrim($this->config->api, '/');
-		$url  = $base . '/admin/builder/events';
+		$url  = $base . '/livereload/events';
 
 		// Inline JS — no external assets, no module loading, no globals
 		// beyond the EventSource instance held by the IIFE closure.

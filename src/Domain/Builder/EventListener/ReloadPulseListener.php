@@ -9,13 +9,17 @@ use TotalCMS\Domain\Builder\Service\BuilderReloadPulseService;
 
 /**
  * Bumps the reload pulse whenever a Builder template or page record is saved,
- * so connected admin tabs reload via the SSE endpoint.
+ * so connected pages reload via the SSE endpoint.
  *
- * Wired into `EventDispatcher` in `config/container.php` for three events:
+ * Wired into `EventDispatcher` in `config/container.php` for four events:
  *
- *   - `template.saved`            — any builder template change
- *   - `object.created`            — filtered to the pages collection
- *   - `object.updated`            — filtered to the pages collection
+ *   - `template.saved`   — any builder template change
+ *   - `object.created`   — filtered to the pages collection
+ *   - `object.updated`   — filtered to the pages collection
+ *   - `devmode.disabled` — pulses once so already-connected browsers reload
+ *                          cleanly into a page that no longer carries the
+ *                          live-reload script (rather than reconnect-looping
+ *                          against a 403)
  *
  * Object filtering keeps the pulse from firing on every collection save in
  * the system — only the collection that backs Builder pages should trigger
@@ -49,5 +53,11 @@ final readonly class ReloadPulseListener
 
 		$id = (string)($payload['id'] ?? '');
 		$this->pulse->pulse($collection . '/' . $id);
+	}
+
+	/** @param array<string,mixed> $payload */
+	public function onDevModeDisabled(array $payload): void
+	{
+		$this->pulse->pulse('devmode-disabled');
 	}
 }
