@@ -80,7 +80,7 @@ The property definitions that make up this schema. Each key is a property name, 
 }
 ```
 
-See [Schema Validation](docs/schemas/validation) for validation options and [Field Settings](docs/property-settings/all-fields) for field configuration.
+See [Schema Validation](docs/schemas/validation) for validation options and [Field Settings](docs/fields/all-fields) for field configuration.
 
 
 

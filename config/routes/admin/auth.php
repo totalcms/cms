@@ -18,5 +18,8 @@ return function (App $app): void {
 		$group->post('/forgot-password[/{collection}]', Auth\ForgotPasswordSubmitAction::class);
 		$group->get('/reset-password/{token}', Auth\ResetPasswordAction::class)->setName('reset-password');
 		$group->post('/reset-password/{token}', Auth\ResetPasswordSubmitAction::class);
+		$group->get('/verify-email/{token}', Auth\AuthVerifyEmailAction::class)->setName('verify-email');
+		$group->get('/resend-verification[/{collection}]', Auth\ResendVerificationAction::class)->setName('resend-verification');
+		$group->post('/resend-verification[/{collection}]', Auth\ResendVerificationSubmitAction::class);
 	})->add(NoCacheMiddleware::class);
 };

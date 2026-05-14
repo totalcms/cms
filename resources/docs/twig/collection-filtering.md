@@ -1,6 +1,10 @@
 ---
 title: "Collection Filtering and Sorting"
 description: "Filter and sort Total CMS collections in Twig using filterCollection and sortCollection with comparison operators, date ranges, and manual ordering."
+related:
+  - twig/collections
+  - twig/data
+  - twig/load-more
 ---
 
 # Collection Filtering and Sorting
@@ -817,5 +821,5 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 ## See Also
 
 - [Twig Filters Reference](docs/twig/filters) - All available Twig filters
-- [Index Filtering](docs/api/index-filter) - Server-side filtering for APIs
+- [Index Filtering](docs/apis/index-filter) - Server-side filtering for APIs
 - [CMS Grid Tag](docs/twig/cmsgrid-tag) - Display filtered collections

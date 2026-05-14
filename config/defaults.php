@@ -262,14 +262,19 @@ $settings['auth'] = [
 	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
 	'forgotPasswordMailerId'  => '',  // Optional custom mailer ID for password reset emails (leave empty for default template)
 	'resetTokenExpiry'        => 30,  // Minutes before password reset token expires
+	'verificationMailerId'    => '',  // Optional custom mailer ID for email verification (leave empty for default template)
+	'verificationTokenExpiry' => 1440,  // Minutes before email verification token expires (default: 24 hours)
 	// Allow-list of collection IDs that accept public (unauthenticated) user
 	// registration via POST /admin/register/{collection}. Empty by default
 	// because the default auth collection is operator-only — opt your member /
-	// customer collections in explicitly. Bot abuse note: registrants are
-	// auto-logged in after signup, so any visitor (or bot) that fills the form
-	// gets a logged-in session in whatever default access group new users land
-	// in. Gate this with a CAPTCHA, email verification, or manual approval if
-	// the registered users will reach content that isn't safe to expose.
+	// customer collections in explicitly. Whether new users are auto-logged in
+	// or sent a verification email is controlled per-collection via the
+	// "Require Email Verification" toggle on the collection's settings page.
+	// Bot abuse note: with auto-login enabled, any visitor (or bot) that fills
+	// the form gets a logged-in session in whatever default access group new
+	// users land in. With verification required, the account is created
+	// inactive — bots can still fill the table with junk records, so gate
+	// this with a CAPTCHA or rate limit even when verification is on.
 	'publicRegistration'      => [],
 ];
 

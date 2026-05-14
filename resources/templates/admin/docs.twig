@@ -5,176 +5,49 @@
 <script type="module" src="{{ cms.api }}/assets/docs-highlight.js?v={{ cms.version }}"></script>
 {% endblock %}
 
-{% set menu = [ {
-	"title": "Start Here",
-	"sub": [
-		{ "title": "Getting Started", "path": "getting-started" },
-		{ "title": "Requirements", "path": "requirements" },
-		{ "title": "Installation", "path": "installation" },
-	]
-},{
-	"title": "Dashboard",
-	"sub": [
-		{ "title": "Overview", "path": "admin/dashboard" },
-		{ "title": "White Label", "path": "admin/whitelabel" },
-	]
-},{
-	"title": "Collections",
-	"sub": [
-		{ "title": "Collection Settings", "path": "collections/settings" },
-		{ "title": "Form Settings", "path": "collections/form-settings" },
-		{ "title": "Pushover Notifications", "path": "notifications/pushover" },
-		{ "title": "Importing Data", "path": "collections/import" },
-		{ "title": "Exporting Data", "path": "collections/export" },
-		{ "title": "Sitemap Builder",  "path": "advanced/sitemap-builder" },
-		{ "title": "Data Views",       "path": "collections/data-views" },
-	]
-},{
-	"title": "Property Settings",
-	"sub": [
-		{ "title": "All Fields",           "path": "property-settings/all-fields" },
-		{ "title": "Card",                 "path": "property-settings/card" },
-		{ "title": "Code",                 "path": "property-settings/code-editor" },
-		{ "title": "Date",                 "path": "property-settings/date" },
-		{ "title": "Deck",                 "path": "property-settings/deck" },
-		{ "title": "File & Depot",         "path": "property-settings/file-depot" },
-		{ "title": "ID",                   "path": "property-settings/id" },
-		{ "title": "Image & Gallery",      "path": "property-settings/image-gallery" },
-		{ "title": "Lists",                "path": "property-settings/lists" },
-		{ "title": "Number & Range",       "path": "property-settings/number-range" },
-		{ "title": "Password",             "path": "property-settings/password" },
-		{ "title": "Price",                "path": "property-settings/price" },
-		{ "title": "Radio & Multicheckbox","path": "property-settings/radio-multicheckbox" },
-		{ "title": "Secret",               "path": "property-settings/secret" },
-		{ "title": "Select",               "path": "property-settings/select" },
-		{ "title": "Styled Text",          "path": "property-settings/styled-text" },
-		{ "title": "SVG",                  "path": "property-settings/svg" },
-		{ "title": "Text & Textarea",      "path": "property-settings/text-inputs" },
-	]
-},{
-	"title": "Property Options",
-	"sub": [
-		{ "title": "Static Options",     	"path": "property-options/static-options" },
-		{ "title": "Property Options",   	"path": "property-options/property-options" },
-		{ "title": "Relational Options", 	"path": "property-options/relational-options" },
-		{ "title": "Sorting Options",    	"path": "property-options/sorting-options" },
-		{ "title": "Access Group Options", "path": "property-options/access-group-options" },
-	]
-},{
-	"title": "Schemas",
-	"sub": [
-		{ "title": "Schema Reference",  "path": "schemas/reference" },
-		{ "title": "Form Grid Layout",  "path": "schemas/formgrid" },
-		{ "title": "Schema Validation", "path": "schemas/validation" },
-	]
-},{
-	"title": "Twig Language",
-	"sub": [
-		{ "title": "Overview",             "path": "twig/overview" },
-		{ "title": "Filters",              "path": "twig/filters" },
-		{ "title": "Functions",            "path": "twig/functions" },
-		{ "title": "Variables",            "path": "twig/variables" },
-		{ "title": "Conditionals",         "path": "twig/conditionals" },
-		{ "title": "Markdown",             "path": "twig/markdown" },
-		{ "title": "Factory",              "path": "twig/factory" },
-		{ "title": "Templates",            "path": "twig/templates" },
-	]
-},{
-	"title": "CMS Content",
-	"sub": [
-		{ "title": "CMS Content",          "path": "twig/totalcms" },
-		{ "title": "Collections",          "path": "twig/collections" },
-		{ "title": "Collection Filtering", "path": "twig/collection-filtering" },
-		{ "title": "Data",                 "path": "twig/data" },
-		{ "title": "Media",                "path": "twig/media" },
-		{ "title": "ImageWorks",           "path": "twig/imageworks" },
-		{ "title": "Render",               "path": "twig/render" },
-		{ "title": "CMS Grid Tag",         "path": "twig/cmsgrid-tag" },
-		{ "title": "Load More",            "path": "twig/load-more" },
-		{ "title": "Object Linking",       "path": "twig/object-linking" },
-		{ "title": "Locale",               "path": "twig/locale" },
-		{ "title": "Localization",         "path": "twig/localization" },
-		{ "title": "Views",                "path": "twig/views" },
-		{ "title": "QR Codes",             "path": "twig/qrcodes" },
-		{ "title": "Bar Codes",            "path": "twig/barcodes" },
-		{ "title": "Utilities",            "path": "twig/utils" },
-	]
-},{
-	"title": "CMS Admin",
-	"sub": [
-		{ "title": "Admin",                "path": "twig/admin" },
-		{ "title": "Auth",                 "path": "twig/auth" },
-		{ "title": "Edition",              "path": "twig/edition" },
-		{ "title": "Schemas",              "path": "twig/schemas" },
-		{ "title": "Forms Overview",       "path": "twig/forms/overview" },
-		{ "title": "Form Builder",         "path": "twig/forms/builder" },
-		{ "title": "Deck Forms",           "path": "twig/forms/deck" },
-		{ "title": "Form Options",         "path": "twig/forms/options" },
-		{ "title": "Field Settings",       "path": "twig/forms/fields" },
-		{ "title": "Select & List Options","path": "twig/forms/select-options" },
-		{ "title": "Validation Patterns",  "path": "twig/forms/patterns" },
-		{ "title": "Report Form",          "path": "twig/forms/report" },
-		{ "title": "Specialized Forms",    "path": "twig/forms/specialized" },
-	]
-},{
-	"title": "Authentication",
-	"sub": [
-		{ "title": "Authentication",   "path": "auth/auth" },
-		{ "title": "Access Groups",    "path": "auth/access-groups" },
-		{ "title": "Password Reset",   "path": "auth/password-reset" },
-	]
-},{
-	"title": "API",
-	"sub": [
-		{ "title": "REST API",      "path": "api/rest-api" },
-		{ "title": "API Keys",      "path": "api/api-keys" },
-		{ "title": "Index Filter",  "path": "api/index-filter" },
-		{ "title": "OpenAPI Docs",  "path": "api/openapi" },
-		{ "title": "PHP API",       "path": "api/php-api" },
-		{ "title": "Download",      "path": "api/download" },
-	]
-},{
-	"title": "Site Builder",
-	"sub": [
-		{ "title": "Overview",           "path": "builder/overview" },
-		{ "title": "Frontend Assets",    "path": "builder/frontend" },
-		{ "title": "Twig Reference",     "path": "twig/builder" },
-		{ "title": "CLI Commands",       "path": "builder/cli" },
-		{ "title": "Admin UI",           "path": "builder/admin" },
-		{ "title": "Starter Templates",  "path": "builder/starters" },
-	]
-},{
-	"title": "Extensions",
-	"sub": [
-		{ "title": "Overview",            "path": "extensions/overview" },
-		{ "title": "Manifest",            "path": "extensions/manifest" },
-		{ "title": "Extension Points",    "path": "extensions/extension-points" },
-		{ "title": "Bundled Extensions",  "path": "extensions/bundled" },
-		{ "title": "— A/B Split",         "path": "extensions/bundled/ab-split" },
-		{ "title": "— Geo Redirect",      "path": "extensions/bundled/geo-redirect" },
-		{ "title": "Events",              "path": "extensions/events" },
-		{ "title": "Schemas",             "path": "extensions/schemas" },
-	]
-},{
-	"title": "Behind the Scenes",
-	"sub": [
-		{ "title": "AI Integration",   "path": "advanced/ai-integration" },
-		{ "title": "CLI",              "path": "advanced/cli" },
-		{ "title": "Configuration",    "path": "advanced/configuration" },
-		{ "title": "Data Model",       "path": "advanced/data-model" },
-		{ "title": "Deployment",       "path": "advanced/deployment" },
-		{ "title": "Filesystem",       "path": "advanced/filesystem" },
-		{ "title": "JumpStart",        "path": "advanced/jumpstart" },
-		{ "title": "Licenses",         "path": "advanced/licenses" },
-		{ "title": "Migration from v1","path": "advanced/migration-total-cms-one" },
-		{ "title": "Nginx",            "path": "advanced/nginx" },
-		{ "title": "Search",           "path": "advanced/search" },
-		{ "title": "Security",         "path": "advanced/security" },
-		{ "title": "Server Sizing",    "path": "advanced/server-sizing" },
-		{ "title": "Sync",             "path": "advanced/sync" },
-		{ "title": "Updates",          "path": "advanced/updates" },
-	]
-}] %}
+{# Menu is loaded by AdminDocsAction from resources/docs/menu.php and supplied
+   as the `menu` template variable. Two shapes per top-level group:
+     - Flat:   { title, sub: [{title, path}, ...] }
+     - Nested: { title, groups: [{title, sub: [{title, path}, ...]}, ...] }
+   See resources/docs/menu.php for the source data. #}
+
+{# Flatten menu into an ordered list of leaf pages for prev/next + related lookups #}
+{% set flatPages = [] %}
+{% for item in menu %}
+	{% for sub in (item.sub ?? []) %}
+		{% set flatPages = flatPages|merge([sub]) %}
+	{% endfor %}
+	{% for grp in (item.groups ?? []) %}
+		{% for sub in grp.sub %}
+			{% set flatPages = flatPages|merge([sub]) %}
+		{% endfor %}
+	{% endfor %}
+{% endfor %}
+
+{# Find which top-level group + subgroup contain the current page #}
+{% set currentGroupTitle = null %}
+{% set currentSubgroupTitle = null %}
+{% for item in menu %}
+	{% if item.sub is defined and page in item.sub|column('path') %}
+		{% set currentGroupTitle = item.title %}
+	{% endif %}
+	{% for grp in (item.groups ?? []) %}
+		{% if page in grp.sub|column('path') %}
+			{% set currentGroupTitle = item.title %}
+			{% set currentSubgroupTitle = grp.title %}
+		{% endif %}
+	{% endfor %}
+{% endfor %}
+
+{# Find current index in flatPages and the leaf title (for prev/next + breadcrumb) #}
+{% set currentIndex = -1 %}
+{% set currentTitle = title ?? page %}
+{% for p in flatPages %}
+	{% if p.path == page %}
+		{% set currentIndex = loop.index0 %}
+		{% set currentTitle = p.title %}
+	{% endif %}
+{% endfor %}
 
 {% block dashcontent %}
 
@@ -185,28 +58,187 @@
 
 	<nav class="links docs">
 		{% for item in menu %}
-		<details id="category-{{ item.title | slug }}"{% if page in item.sub|column('path') %} open{% endif %}>
-			<summary>{{ item.title }}</summary>
-			<ul>
-				{% for sub in item.sub %}
-				<li><a {% if page == sub.path %}class="active"{% endif %}
-						href="docs/{{ sub.path }}"
-						{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
-					>{{ sub.title }}</a></li>
-				{% endfor %}
-			</ul>
-		</details>
+			{# Determine whether this top-level group should be open #}
+			{% set groupOpen = false %}
+			{% if item.sub is defined and page in item.sub|column('path') %}
+				{% set groupOpen = true %}
+			{% endif %}
+			{% for grp in (item.groups ?? []) %}
+				{% if page in grp.sub|column('path') %}
+					{% set groupOpen = true %}
+				{% endif %}
+			{% endfor %}
+
+			<details id="category-{{ item.title | slug }}" data-server-open="{{ groupOpen ? 'true' : 'false' }}"{% if groupOpen %} open{% endif %}>
+				<summary>{{ item.title }}</summary>
+
+				{# Top-level leaves render first (used for "Overview" entries on nested groups) #}
+				{% if item.sub is defined and item.sub|length > 0 %}
+					<ul>
+						{% for sub in item.sub %}
+						<li><a {% if page == sub.path %}class="active"{% endif %}
+								href="docs/{{ sub.path }}"
+								{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
+							>{{ sub.title }}</a></li>
+						{% endfor %}
+					</ul>
+				{% endif %}
+
+				{% if item.groups is defined %}
+					<div class="docs-subgroups">
+						{% for grp in item.groups %}
+							{% set subOpen = page in grp.sub|column('path') %}
+							<details class="docs-subgroup"
+								id="subcategory-{{ item.title | slug }}-{{ grp.title | slug }}"
+								data-server-open="{{ subOpen ? 'true' : 'false' }}"{% if subOpen %} open{% endif %}>
+								<summary>{{ grp.title }}</summary>
+								<ul>
+									{% for sub in grp.sub %}
+									<li><a {% if page == sub.path %}class="active"{% endif %}
+											href="docs/{{ sub.path }}"
+											{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
+										>{{ sub.title }}</a></li>
+									{% endfor %}
+								</ul>
+							</details>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</details>
 		{% endfor %}
 	</nav>
 
 	<footer>
 	</footer>
-	<script>document.querySelector('.docs a.active')?.scrollIntoView({ block: 'center' });</script>
+	<script>
+		// Sidebar group state: persist user toggles across navigations, override
+		// browser auto-restore, but always open whichever group(s) the server
+		// marked open for the current page.
+		(function() {
+			const KEY     = 'tcms-docs-open-groups';
+			const all     = document.querySelectorAll('.dash-content-sidebar nav.docs details[id]');
+			const load    = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch { return new Set(); } };
+			const save    = (s) => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
+			const opened  = load();
+
+			// Set initial state: server-open OR user-opened (from storage). Chrome
+			// auto-restore of stale state gets overridden because we set explicitly.
+			all.forEach(d => {
+				const serverOpen = d.dataset.serverOpen === 'true';
+				d.open = serverOpen || opened.has(d.id);
+			});
+
+			// Persist user toggles. Defer listener attachment so the initial
+			// programmatic open-state changes above don't get recorded.
+			setTimeout(() => {
+				all.forEach(d => {
+					d.addEventListener('toggle', () => {
+						if (d.open) opened.add(d.id);
+						else opened.delete(d.id);
+						save(opened);
+					});
+				});
+			}, 0);
+		})();
+		document.querySelector('.docs a.active')?.scrollIntoView({ block: 'center' });
+	</script>
 </aside>
 {% include "admin/sidebar-details.twig" %}
 
 <main class="dash-main-content doc-content">
+
+	{% if page != 'index' and currentGroupTitle %}
+	<nav class="doc-breadcrumb" aria-label="Breadcrumb">
+		<a href="docs">Docs</a>
+		<span class="doc-breadcrumb-sep">›</span>
+		<span>{{ currentGroupTitle }}</span>
+		{% if currentSubgroupTitle %}
+		<span class="doc-breadcrumb-sep">›</span>
+		<span>{{ currentSubgroupTitle }}</span>
+		{% endif %}
+		<span class="doc-breadcrumb-sep">›</span>
+		<span class="doc-breadcrumb-current">{{ currentTitle }}</span>
+	</nav>
+	{% endif %}
+
 	{{ content }}
+
+	{% if related is defined and related is iterable and related|length > 0 %}
+	<aside class="doc-related" aria-labelledby="doc-related-heading">
+		<h3 id="doc-related-heading">Related pages</h3>
+		<ul>
+			{% for relPath in related %}
+				{% set relMatch = flatPages|filter(p => p.path == relPath)|first %}
+				{% set relTitle = relMatch.title ?? relPath %}
+				{% set relGroup = null %}
+				{% for item in menu %}
+					{% if item.sub is defined and relPath in item.sub|column('path') %}
+						{% set relGroup = item.title %}
+					{% endif %}
+					{% for grp in (item.groups ?? []) %}
+						{% if relPath in grp.sub|column('path') %}
+							{% set relGroup = item.title %}
+						{% endif %}
+					{% endfor %}
+				{% endfor %}
+				<li>
+					<a href="docs/{{ relPath }}">{{ relTitle }}</a>
+					{% if relGroup %}<span class="doc-related-group">— {{ relGroup }}</span>{% endif %}
+				</li>
+			{% endfor %}
+		</ul>
+	</aside>
+	{% endif %}
+
+	{% if currentIndex >= 0 %}
+	<nav class="doc-prev-next" aria-label="Page navigation">
+		{% if currentIndex > 0 %}
+			{% set prev = flatPages[currentIndex - 1] %}
+			<a href="docs/{{ prev.path }}" class="doc-prev">
+				<span class="doc-prev-next-label">← Previous</span>
+				<span class="doc-prev-next-title">{{ prev.title }}</span>
+			</a>
+		{% else %}
+			<span class="doc-prev-next-spacer"></span>
+		{% endif %}
+		{% if currentIndex < flatPages|length - 1 %}
+			{% set next = flatPages[currentIndex + 1] %}
+			<a href="docs/{{ next.path }}" class="doc-next">
+				<span class="doc-prev-next-label">Next →</span>
+				<span class="doc-prev-next-title">{{ next.title }}</span>
+			</a>
+		{% else %}
+			<span class="doc-prev-next-spacer"></span>
+		{% endif %}
+	</nav>
+	{% endif %}
+
+	{% if page != 'index' %}
+	<footer class="doc-footer">
+		{% if updated is defined %}
+		<span class="doc-updated">Last updated: {{ updated }}</span>
+		{% endif %}
+		<a class="doc-edit-link"
+		   href="https://github.com/totalcms/totalcms/edit/develop/resources/docs/{{ page }}.md"
+		   target="_blank" rel="noopener">Edit this page on GitHub</a>
+	</footer>
+	{% endif %}
+
 </main>
+
+{% if toc is defined and toc|length > 1 %}
+<aside class="doc-toc" aria-label="On this page">
+	<div class="doc-toc-inner">
+		<h4>On this page</h4>
+		<ul>
+			{% for h in toc %}
+			<li class="doc-toc-h{{ h.level }}">
+				<a href="#{{ h.id }}" data-toc-target="{{ h.id }}">{{ h.text }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+</aside>
+{% endif %}
 
 {% endblock %}

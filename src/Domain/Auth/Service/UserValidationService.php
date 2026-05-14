@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
 
@@ -57,6 +58,33 @@ readonly class UserValidationService
 		}
 
 		return $this->validateUserById($first['id'], $collection);
+	}
+
+	/**
+	 * Find a user by email — returns the ObjectData or null if not found.
+	 * Use this when callers must NOT reveal whether a user exists
+	 * (password reset, email verification, resend verification — anti-enumeration).
+	 * Contrast with {@see validateUserByEmail()} which throws on miss for the
+	 * login path where presence is a precondition.
+	 */
+	public function findUserByEmail(string $email, string $collection = ''): ?ObjectData
+	{
+		if ($collection === '') {
+			$collection = (string)($this->config->auth['collection'] ?? '');
+		}
+
+		try {
+			$users = $this->searcher->searchByProperty($collection, 'email', $email);
+			$first = $users->first();
+
+			if ($users->isEmpty() || is_null($first)) {
+				return null;
+			}
+
+			return $this->objectFetcher->fetchObject($collection, $first['id']);
+		} catch (\Exception) {
+			return null;
+		}
 	}
 
 	/** @return array<string,mixed> */

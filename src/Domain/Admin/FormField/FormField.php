@@ -87,6 +87,12 @@ class FormField
 			$this->disabled = true;
 		}
 
+		// Allow required to be set via the field settings. This makes the form field required but
+		// it may not be enforced at the schema level. This can be useful when a field using visibility.
+		if (isset($this->settings['required']) && $this->settings['required'] === true) {
+			$this->required = true;
+		}
+
 		// Add cms-hide class if hide setting is true (check both property-level and settings)
 		if ($this->hide || (isset($this->settings['hide']) && $this->settings['hide'] === true)) {
 			$this->class = trim($this->class . ' cms-hide');

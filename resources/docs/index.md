@@ -8,16 +8,18 @@
 <div id="doc-search-container"></div>
 
 <div class="doc-quick-links">
-<h3>Popular Topics</h3>
-<a href="docs/getting-started">Getting Started</a>
-<a href="docs/requirements">Requirements</a>
-<a href="docs/installation">Installation</a>
-<a href="docs/advanced/configuration">Configuration</a>
-<a href="docs/admin/dashboard">Dashboard Overview</a>
+<h3>Popular topics</h3>
+<a href="docs/get-started/welcome">Welcome</a>
+<a href="docs/get-started/installation">Installation</a>
+<a href="docs/get-started/your-first-site">Your First Site</a>
 <a href="docs/twig/overview">Twig Templates</a>
 <a href="docs/twig/collection-filtering">Collection Filtering</a>
-<a href="docs/api/rest-api">REST API</a>
-<a href="docs/twig/forms">Forms</a>
+<a href="docs/forms/builder">Form Builder</a>
+<a href="docs/site-builder/overview">Site Builder</a>
+<a href="docs/auth/auth">Authentication</a>
+<a href="docs/apis/rest-api">REST API</a>
+<a href="docs/extensions/overview">Extensions</a>
+<a href="docs/operations/deployment">Deployment</a>
 </div>
 
 </div>

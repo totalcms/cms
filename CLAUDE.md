@@ -108,7 +108,7 @@ composer run test:all
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
 - **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, and extension management
 - **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
-- **Event System**: Synchronous event dispatcher with 15 core events (object/collection/schema/template/user CRUD, extension lifecycle, devmode, cache.cleared)
+- **Event System**: Synchronous event dispatcher with 17 core events (object/collection/schema/template/user CRUD, import.created/updated/completed, extension lifecycle, devmode, cache.cleared)
 - **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/totalcms`
 - **Build System**: ESBuild with code splitting
 
@@ -262,9 +262,10 @@ These are non-obvious details that are important when working in these areas:
 
 ### Event System
 - **Dispatcher**: `src/Domain/Event/EventDispatcher.php` — synchronous, priority-ordered
-- **Core Events** (15): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
-- **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager
+- **Core Events** (17): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `import.created`, `import.updated`, `import.completed`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
+- **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager, ObjectImporter, JumpStartImporter, DeckJsonImporter, DeckCsvImporter
 - **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
+- **Import-Time Behavior**: While a collection is mid-import (`EventDispatcher::suspendForImport($collection)`), `object.created` and `object.updated` events are **suppressed** for that collection — importers fire `import.created` / `import.updated` per object instead, with the same `ObjectEventPayload` shape. Listeners that want to react to import-time writes specifically subscribe to the `import.*` events. `import.completed` auto-resumes the suspension (safety net for forgetful importers). `ObjectImporter` self-suspends when called outside an explicit lifecycle (e.g. `JobRunner` processing a single queued job).
 
 ### Configuration System
 - **Deep Merge**: Override specific nested settings without replacing entire arrays
@@ -276,3 +277,18 @@ These are non-obvious details that are important when working in these areas:
 - **Data Structure**: 8 essential fields (valid, trial, domain, edition, message, validationToken, updatesValid, trialDaysRemaining)
 - **Cache Integration**: Multi-backend with 24-hour TTL
 - **Version Authorization**: License API validates the running T3 version is authorized for the license. Unauthorized versions show a dashboard warning.
+
+### Documentation (`resources/docs/`)
+- **Source of truth**: `resources/docs/*.md` is mirrored to docs.totalcms.co. Template changes to `resources/templates/admin/docs.twig` only affect the in-admin viewer — the public site has its own template that needs parallel changes.
+- **Sidebar menu** lives in `resources/docs/menu.php` (shared by `AdminDocsAction` and `bin/build-docs-index.php`). 13 top-level groups: Get Started, Collections, Schemas, Fields, Site Builder, Twig, Forms, Admin, Notifications, Auth, APIs, Extensions & CLI, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group. Fields, Twig, and Extensions & CLI use nested subgroups (the last via mixed `sub` + `groups`); everything else is flat.
+- **Folder convention**: each doc lives in `resources/docs/<kebab-cased-group-name>/<page>.md` matching its menu group (e.g. `get-started/`, `site-builder/`, `apis/`, `operations/`). Subgroups (Field Types, Field Options, Twig Basics, etc.) exist only in the menu — the files themselves are flat within the group folder. URL = path = file path under `resources/docs/`.
+- **Images & screenshots**: co-locate with the section that uses them, in `resources/docs/<section>/images/<name>.png`. Reference in markdown as `docs/<section>/images/<name>.png` (the `docs/` prefix is required because of the admin's `<base href>`). `AdminDocsAction` serves png/jpg/gif/svg/webp at the same route as markdown pages — see the image-mime branch in that file. Use kebab-case filenames.
+- **Navigation primitives**: breadcrumbs, prev/next, and the related-pages footer are all derived from the menu — no extra config needed. Breadcrumb group label = whichever menu group the page lives in.
+- **No synthetic landing pages**: each group's first sub-entry is its natural overview (e.g. `builder/overview` for Site Builder, `extensions/overview` for Extensions). Avoid adding "Overview" entries that point to fabricated section landings — keep the natural intro page first instead.
+- **Frontmatter conventions** (all optional):
+  - `title:` — H1 fallback, displayed in breadcrumbs and search results
+  - `description:` — used by search
+  - `related:` — list of paths (e.g. `twig/data`) to render a "Related pages" block at the bottom of the page. Resolved against the menu for titles.
+  - `audience:` — `beginner | intermediate | advanced`. Stored but not displayed yet.
+  - `updated:` — date string, displayed in the page footer when present.
+- **Search index**: `resources/docs/search-index.json` is regenerated by `bin/build-docs-index.php`. **The index is checked into git** because it ships with the Composer package — fresh installs need a working docs search out of the box. Rebuild and commit after adding, renaming, or substantially editing doc pages.

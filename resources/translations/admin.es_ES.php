@@ -96,6 +96,9 @@ return [
 	'flash.password_too_short'         => 'La contraseña debe tener al menos 4 caracteres.',
 	'flash.password_reset_success'     => 'Contraseña restablecida con éxito. Ahora puede iniciar sesión con su nueva contraseña.',
 	'flash.forgot_password_sent'       => 'Si existe una cuenta con ese correo electrónico, recibirá un enlace para restablecer la contraseña.',
+	'flash.email_verified'             => 'Su correo electrónico ha sido verificado. Ya puede iniciar sesión.',
+	'flash.email_verification_failed'  => 'Este enlace de verificación no es válido o ha caducado. Solicite un nuevo enlace a continuación.',
+	'flash.resend_verification_sent'   => 'Si existe una cuenta con ese correo electrónico y aún no ha sido verificada, se ha enviado un nuevo enlace de verificación.',
 	'flash.invalid_email'              => 'Por favor, introduzca una dirección de correo electrónico válida.',
 	'flash.download_too_many'          => 'Demasiados intentos de descarga',
 	'flash.download_invalid_password'  => 'Contraseña inválida',
@@ -116,6 +119,12 @@ return [
 	'forgot.send_reset'     => 'Enviar enlace de restablecimiento',
 	'forgot.email_help'     => 'Introduzca la dirección de correo electrónico asociada a su cuenta',
 	'forgot.back_to_login'  => 'Volver al inicio de sesión',
+
+	'verify.resend_title'       => 'Reenviar correo de verificación',
+	'verify.resend_intro'       => 'Introduzca la dirección de correo electrónico con la que se registró. Si su cuenta existe y aún no ha sido verificada, le enviaremos un nuevo enlace de verificación.',
+	'verify.send_link'          => 'Enviar enlace de verificación',
+	'verify.resend_link'        => 'Reenviar correo de verificación',
+	'verify.account_not_active' => 'Su cuenta aún no ha sido verificada.',
 
 	// ── Reset Password ──────────────────────────────────────────────────────
 	'reset.new_password'        => 'Nueva contraseña',

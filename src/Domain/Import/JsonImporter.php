@@ -54,8 +54,13 @@ class JsonImporter
 			throw new \InvalidArgumentException($error);
 		}
 
-		// Suspend per-object index rebuilds during batch import
+		// Suspend per-object index rebuilds AND `object.created`/`object.updated`
+		// events during batch import. Per-object listeners that want
+		// import-time notifications subscribe to `import.created` /
+		// `import.updated` instead — those fire from ObjectImporter and
+		// JobRunner regardless of suspension state.
 		$this->indexBuildListener->suspendForCollection($collection);
+		$this->eventDispatcher->suspendForImport($collection);
 
 		$importCount = 0;
 		$createdIds  = [];

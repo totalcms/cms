@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\DepotSaver;
@@ -43,6 +45,7 @@ class ObjectImporter
 		private readonly GallerySaver $gallerySaver,
 		private readonly FileSaver $fileSaver,
 		private readonly DepotSaver $depotSaver,
+		private readonly EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -57,16 +60,39 @@ class ObjectImporter
 		$this->files     = [];
 		$this->depots    = [];
 
-		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
-		$object     = $this->objectSaver->saveObject($collection, $objectData);
+		// If the caller hasn't already set up an import lifecycle (e.g.
+		// JobRunner processing a single queued job), suspend here so the
+		// inner ObjectSaver's `object.created` event is suppressed. When
+		// already suspended (batch importers like JsonImporter), this is a
+		// no-op and the outer lifecycle owns resume.
+		$wasSuspended = $this->eventDispatcher->isImportSuspended($collection);
+		if (!$wasSuspended) {
+			$this->eventDispatcher->suspendForImport($collection);
+		}
 
-		$this->objectID = $object->id;
-		$this->saveImages();
-		$this->saveFiles();
-		$this->saveGalleries();
-		$this->saveDepots();
+		try {
+			$objectData = $this->saveRefPropsforLaterProcessing($objectData);
+			$object     = $this->objectSaver->saveObject($collection, $objectData);
 
-		return $this->objectFetcher->fetchObject($collection, $this->objectID);
+			$this->objectID = $object->id;
+			$this->saveImages();
+			$this->saveFiles();
+			$this->saveGalleries();
+			$this->saveDepots();
+
+			$result = $this->objectFetcher->fetchObject($collection, $this->objectID);
+
+			$this->eventDispatcher->dispatch(
+				'import.created',
+				new ObjectEventPayload($collection, $result->id, $result),
+			);
+
+			return $result;
+		} finally {
+			if (!$wasSuspended) {
+				$this->eventDispatcher->resumeForImport($collection);
+			}
+		}
 	}
 
 	/** @param array<string,mixed> $objectData */
@@ -95,14 +121,40 @@ class ObjectImporter
 
 		$this->objectID = $objectData['id'];
 
-		$this->objectPatcher->patchObject($collection, $this->objectID, $objectData);
+		// Same self-suspend pattern as importObject() — ObjectPatcher doesn't
+		// fire `object.updated` today, but we still call suspendForImport to
+		// keep the lifecycle consistent in case that changes, and to give
+		// import.completed auto-resume something to clean up.
+		$wasSuspended = $this->eventDispatcher->isImportSuspended($collection);
+		if (!$wasSuspended) {
+			$this->eventDispatcher->suspendForImport($collection);
+		}
 
-		$this->saveImages();
-		$this->saveFiles();
-		$this->saveGalleries();
-		$this->saveDepots();
+		try {
+			// Capture previous state for the event payload — importer subscribers
+			// may want to diff what changed.
+			$previous = $this->objectFetcher->fetchObject($collection, $this->objectID);
 
-		return $this->objectFetcher->fetchObject($collection, $this->objectID);
+			$this->objectPatcher->patchObject($collection, $this->objectID, $objectData);
+
+			$this->saveImages();
+			$this->saveFiles();
+			$this->saveGalleries();
+			$this->saveDepots();
+
+			$result = $this->objectFetcher->fetchObject($collection, $this->objectID);
+
+			$this->eventDispatcher->dispatch(
+				'import.updated',
+				new ObjectEventPayload($collection, $result->id, $result, $previous),
+			);
+
+			return $result;
+		} finally {
+			if (!$wasSuspended) {
+				$this->eventDispatcher->resumeForImport($collection);
+			}
+		}
 	}
 
 	/**

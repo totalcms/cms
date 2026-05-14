@@ -41,9 +41,34 @@ class JumpStartImporter
 		private readonly SchemaSaver $schemaSaver,
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
+		private readonly \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-importer');
+	}
+
+	/**
+	 * Save an object as part of an import: suppress `object.created` for the
+	 * collection (so user-facing listeners don't see import-time writes), then
+	 * fire `import.created` so import-specific listeners get a per-object
+	 * notification.
+	 *
+	 * @param array<string,mixed> $objectData
+	 */
+	private function saveImportedObject(string $collection, array $objectData): \TotalCMS\Domain\Object\Data\ObjectData
+	{
+		$this->eventDispatcher->suspendForImport($collection);
+		try {
+			$object = $this->objectSaver->saveObject($collection, $objectData);
+			$this->eventDispatcher->dispatch(
+				'import.created',
+				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
+			);
+
+			return $object;
+		} finally {
+			$this->eventDispatcher->resumeForImport($collection);
+		}
 	}
 
 	private function addError(string $message): void
@@ -259,7 +284,7 @@ class JumpStartImporter
 
 		// Generate object data using FactoryImporter and save
 		$objectData = $this->generateFactoryObjectDataForImages($collectionId, $objectId, $objectData);
-		$this->objectSaver->saveObject($collectionId, $objectData);
+		$this->saveImportedObject($collectionId, $objectData);
 		$this->addResult(sprintf('Object %s/%s: created', $collectionId, $objectId));
 	}
 
@@ -344,7 +369,7 @@ class JumpStartImporter
 
 		// Generate object data using the same pattern as processObjects
 		$objectData = $this->generateFactoryObjectData($collectionId, $objectId, $factoryData);
-		$this->objectSaver->saveObject($collectionId, $objectData);
+		$this->saveImportedObject($collectionId, $objectData);
 		$this->addResult(sprintf('Factory %s/%s: generated', $collectionId, $objectId));
 	}
 

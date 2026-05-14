@@ -615,6 +615,16 @@ export default class TotalForm {
 		// Templates skip edit mode but still need to run edit actions when updating
 		const runEditActions = this.isEditMode() || this.isTemplateEditMode();
 
+		// Email verification flow: public registration with requireEmailVerification
+		// returns the saved user wrapped with meta.requiresVerification=true. The
+		// user is NOT logged in — instead of running post-save actions (which
+		// usually redirect/reload), reveal a designated message element and
+		// dispatch an event so authors can wire up custom behavior.
+		if (response?.meta?.requiresVerification === true) {
+			this.handleVerificationRequired(response);
+			return;
+		}
+
 		// Extract ID from response for new objects (needed for actions like redirect-object)
 		if (response && response.id && (!this.id || this.id.length === 0)) {
 			this.id = response.id;
@@ -633,6 +643,41 @@ export default class TotalForm {
 				// Error already handled in runActions
 			});
     }
+
+	/**
+	 * Handle a public-registration response that requires email verification.
+	 * Hides the form, reveals any element marked `[data-verification-message]`
+	 * within the form (or its parent), and dispatches a custom event so
+	 * authors can hook in with redirects/analytics/custom UX.
+	 *
+	 * @param {object} response - The save response (includes meta.requiresVerification)
+	 */
+	handleVerificationRequired(response) {
+		// Mark fields saved so dirty-state cleanup still happens.
+		this.fields.forEach(field => field.saved());
+
+		// Hide the form fields so the user doesn't try to submit again.
+		this.form.classList.add("verification-required");
+
+		// Reveal a designated message element. Look inside the form first,
+		// then in the parent — both placements are valid (form-internal or
+		// adjacent).
+		const scopes = [this.form, this.form.parentElement].filter(Boolean);
+		for (const scope of scopes) {
+			const el = scope.querySelector("[data-verification-message]");
+			if (el) {
+				el.hidden = false;
+				el.removeAttribute("hidden");
+				break;
+			}
+		}
+
+		// Dispatch event for custom behavior — redirects, analytics, etc.
+		this.form.dispatchEvent(new CustomEvent("cms:form:verification-required", {
+			bubbles : true,
+			detail  : { response },
+		}));
+	}
 
     async runAction(action) {
 		// Helper to show success banner and wait before navigation (default: true)

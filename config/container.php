@@ -26,6 +26,8 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\AuthTokenService;
+use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
@@ -890,10 +892,22 @@ return [
 		$container->get(Config::class),
 	),
 
-	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
+	AuthTokenService::class => fn (ContainerInterface $container): AuthTokenService => new AuthTokenService(
 		$container->get(CacheManager::class),
-		$container->get(IndexSearcher::class),
-		$container->get(ObjectFetcher::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
+		$container->get(AuthTokenService::class),
+		$container->get(UserValidationService::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	EmailVerificationService::class => fn (ContainerInterface $container): EmailVerificationService => new EmailVerificationService(
+		$container->get(AuthTokenService::class),
+		$container->get(UserValidationService::class),
 		$container->get(ObjectUpdater::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class),
@@ -1084,6 +1098,7 @@ return [
 		$container->get(SchemaSaver::class),
 		$container->get(TemplateSaver::class),
 		$container->get(FactoryImporter::class),
+		$container->get(EventDispatcher::class),
 		$container->get(LoggerFactory::class),
 	),
 

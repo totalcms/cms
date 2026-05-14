@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Import;
 use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -28,6 +30,7 @@ class DeckCsvImporter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectUpdater $objectUpdater,
 		private readonly SchemaFetcher $schemaFetcher,
+		private readonly EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('deck-csv-importer');
@@ -112,11 +115,23 @@ class DeckCsvImporter
 			return 0;
 		}
 
-		// Update the parent object with the complete deck in one operation
+		// Update the parent object with the complete deck in one operation.
+		// Suppress `object.updated` and fire `import.updated` so listeners can
+		// tell deck-import writes apart from regular saves on the parent.
 		$objectData            = $object->toArray();
 		$objectData[$property] = $existingDeck;
 
-		$this->objectUpdater->updateObject($collection, $objectId, $objectData);
+		$this->eventDispatcher->suspendForImport($collection);
+		try {
+			$this->objectUpdater->updateObject($collection, $objectId, $objectData);
+			$updated = $this->objectFetcher->fetchObject($collection, $objectId);
+			$this->eventDispatcher->dispatch(
+				'import.updated',
+				new ObjectEventPayload($collection, $objectId, $updated, $object),
+			);
+		} finally {
+			$this->eventDispatcher->resumeForImport($collection);
+		}
 
 		$this->logger->info("Deck CSV import completed. Imported {$importCount} of {$totalRows} items");
 

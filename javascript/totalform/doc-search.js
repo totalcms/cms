@@ -196,9 +196,16 @@ export default class DocSearch {
 				? `<div class="doc-search-sections">${matchingSections.map(s => `<span>${this.escapeHtml(s)}</span>`).join('')}</div>`
 				: '';
 
+			const groupHtml = doc.group
+				? `<span class="doc-search-group">${this.escapeHtml(doc.group)}</span>`
+				: '';
+
 			return `
 				<a href="${url}" class="doc-search-result">
-					<h3>${this.escapeHtml(doc.title)}</h3>
+					<header>
+						<h3>${this.escapeHtml(doc.title)}</h3>
+						${groupHtml}
+					</header>
 					${sectionsHtml}
 					<p>${highlightedExcerpt}</p>
 				</a>

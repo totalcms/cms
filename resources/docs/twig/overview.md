@@ -1,6 +1,10 @@
 ---
 title: "Twig Overview"
 description: "Learn Twig templating basics in Total CMS including variables, filters, functions, template inheritance, and working with collections and images."
+related:
+  - twig/variables
+  - twig/totalcms
+  - twig/templates
 ---
 
 # Twig Overview

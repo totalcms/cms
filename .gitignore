@@ -22,10 +22,6 @@ env.php
 config/env.php
 /cache
 public/assets
-/resources/.bundle
-/resources/beta
-/resources/jobqueue
-.cache_version
 /tests/test-data/alloy/image-uploads
 /tests/tcms-data/.schemas
 /tests/tcms-data/blog
@@ -49,5 +45,3 @@ public/assets
 # Only access-groups.json is a checked-in fixture other tests rely on.
 /tests/tcms-data/.system/*
 !/tests/tcms-data/.system/access-groups.json
-
-/resources/docs/search-index.json

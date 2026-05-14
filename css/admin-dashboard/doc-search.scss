@@ -71,11 +71,29 @@
 		box-shadow   : 0 2px 8px oklch(var(--totalform-accent) / 0.1);
 	}
 
+	header {
+		display         : flex;
+		align-items     : baseline;
+		justify-content : space-between;
+		gap             : 0.75rem;
+		margin-bottom   : 0.5rem;
+	}
+
 	h3 {
-		margin      : 0 0 0.5rem 0;
+		margin      : 0;
 		font-size   : 1.125rem;
 		color       : oklch(var(--totalform-darkgray));
 		font-weight : 600;
+	}
+
+	.doc-search-group {
+		font-size   : 0.75rem;
+		padding     : 0.25rem 0.6rem;
+		background  : oklch(var(--totalform-nearwhite));
+		color       : oklch(var(--totalform-mediumgray));
+		border-radius: 999px;
+		white-space : nowrap;
+		flex-shrink : 0;
 	}
 
 	p {
@@ -133,11 +151,13 @@
 	}
 }
 
-// Highlight navigation UI
+// Highlight navigation UI — anchored to the top-right of .doc-content
 .doc-highlight-nav {
 	position         : fixed;
-	top              : 1rem;
-	right            : 1rem;
+	position-anchor  : --doc-content;
+	top              : anchor(top);
+	right            : anchor(right);
+	margin           : 1rem;
 	display          : flex;
 	align-items      : center;
 	gap              : 0.5rem;

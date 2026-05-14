@@ -135,6 +135,9 @@ body {
 	&:has(.dash-content-sidebar) {
 		grid-template-columns : max-content auto;
 	}
+	&:has(.dash-content-sidebar):has(.doc-toc) {
+		grid-template-columns : max-content 1fr max-content;
+	}
 }
 
 
@@ -171,6 +174,35 @@ body {
 	details summary {
 		display : none;
 	}
+
+	// Nested subgroup disclosure (used by docs.twig "Managing Content")
+	.docs-subgroups {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.15rem;
+		margin-top     : 0.25rem;
+	}
+	.docs-subgroup {
+		margin-inline-start : 1rem;
+		margin-block-start  : 0 !important;
+
+		> summary {
+			font-size     : 0.95rem;
+			color         : oklch(var(--totalform-darkgray));
+			margin-bottom : 0;
+
+			&::marker {
+				font-size : 1.5rem;
+				content   : "▾ ";
+			}
+		}
+		&:not([open]) > summary::marker {
+			content : "▸ ";
+		}
+		ul {
+			margin-inline-start : 0.75rem;
+		}
+	}
 	// show summary only if there are unfiltered items
 	// .filtered = FilterList (flat sidebars); .filtered-out = TreeView (nested sidebars)
 	details:has(ul li:not(.filtered):not(.filtered-out)) summary {
@@ -196,8 +228,16 @@ body {
 			padding    : 0;
 			margin     : 0;
 		}
-		&.docs li {
-			--collection-icon : var(--icon-bookmark);
+		&.docs {
+			padding-bottom : 4rem;
+
+			li {
+				--collection-icon : var(--icon-bookmark);
+
+				a::before {
+					display : none;
+				}
+			}
 		}
 		&#dataview-links li {
 			--collection-icon : var(--icon-data-views);
@@ -355,6 +395,9 @@ body {
 		max-width  : 65ch;
 		margin-top : 1rem;
 	}
+	table, blockquote {
+		margin-top : 1rem;
+	}
 	p:not(.help):first-of-type {
 		margin-top: 0;
 	}
@@ -391,21 +434,66 @@ body {
 .doc-content {
 	display      : block;
 	padding-left : 4rem;
+	anchor-name  : --doc-content;
 
 	> *:not(pre):not(div):not(table) {
 		max-width : 65ch;
 	}
 
+	// Inline code (single backticks). Block code lives in `pre` and is styled
+	// globally — this rule only targets `code` that is NOT inside a `pre`.
+	:not(pre) > code {
+		background    : oklch(var(--totalform-nearwhite));
+		border        : 1px solid oklch(var(--totalform-border-color));
+		padding       : 0.05em 0.4em;
+		border-radius : 4px;
+		font-size     : 0.875em;
+		font-family   : 'Fira Code', 'Source Code Pro', monospace;
+		color         : oklch(var(--totalform-accent));
+	}
+
 	table {
 		border-collapse : collapse;
+		border          : 1px solid oklch(var(--totalform-border-color));
+		border-radius   : var(--totalform-radius);
+		overflow        : hidden;
 
 		th, td {
-			padding    : 0.4rem 0.75rem;
+			padding    : 0.5rem 0.85rem;
 			text-align : left;
+			border     : 1px solid oklch(var(--totalform-border-color));
+		}
+
+		th {
+			background  : oklch(var(--totalform-nearwhite));
+			font-weight : 600;
+		}
+
+		tbody tr:nth-child(even) td {
+			background : oklch(var(--totalform-nearwhite) / 0.4);
 		}
 	}
 
-	h1,h2,h3,h4,h5,h6,p,ul,ol,pre,iframe,.dash-button {
+	// Blockquotes act as callouts in docs — boxed with accent left border.
+	// The common "**Title:**" leading pattern picks up the accent color.
+	blockquote {
+		margin        : 1.5rem 0;
+		padding       : 1rem 1.25rem;
+		background    : oklch(var(--totalform-accent) / 0.08);
+		border-left   : 4px solid oklch(var(--totalform-accent));
+		border-radius : var(--totalform-radius);
+		color         : oklch(var(--totalform-text-color));
+		font-style    : normal;
+
+		p:first-child { margin-top    : 0; }
+		p:last-child  { margin-bottom : 0; }
+
+		p:first-child > strong:first-child {
+			color : oklch(var(--totalform-accent));
+		}
+	}
+
+	h1,h2,h3,h4,h5,h6,p,ul,ol,pre,iframe,blockquote,.dash-button {
 		margin-block-start: 1em;
 
 		&:first-child {
@@ -413,12 +501,23 @@ body {
 		}
 	}
 
-	h1,h2,h3 {
+	h2 {
+		margin-block-start: 3em;
+	}
+	h3 {
 		margin-block-start: 2em;
+	}
+
+	h2, h3 {
+		scroll-margin-top: 1rem;
 	}
 
 	hr {
 		margin-block-start: 4em;
+	}
+
+	img {
+		border-radius: var(--totalform-radius);
 	}
 
 	&:has(.docs-iframe) {
@@ -432,6 +531,210 @@ body {
 		margin    : 0;
 	}
 }
+
+.doc-breadcrumb {
+	font-size     : 0.85rem;
+	color         : oklch(var(--totalform-darkgray));
+	margin-bottom : 1.5rem;
+	display       : flex;
+	align-items   : center;
+	flex-wrap     : wrap;
+	gap           : 0.4rem;
+
+	a {
+		color           : oklch(var(--totalform-darkgray));
+		text-decoration : none;
+
+		&:hover {
+			color           : oklch(var(--totalform-accent));
+			text-decoration : underline;
+		}
+	}
+
+	.doc-breadcrumb-sep {
+		opacity : 0.5;
+	}
+
+	.doc-breadcrumb-current {
+		color       : oklch(var(--totalform-text-color));
+		font-weight : 500;
+	}
+}
+
+.doc-related {
+	margin-top    : 3rem;
+	padding       : 1.25rem 1.5rem;
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	max-width     : 65ch;
+
+	h3 {
+		margin-top    : 0 !important;
+		margin-bottom : 0.75rem;
+		font-size     : 1rem;
+	}
+
+	ul {
+		margin             : 0 !important;
+		padding-inline-start: 1.2rem;
+	}
+
+	li {
+		margin-block : 0.3rem;
+	}
+
+	a {
+		color : oklch(var(--totalform-accent));
+
+		&:hover {
+			text-decoration : underline;
+		}
+	}
+
+	.doc-related-group {
+		color       : oklch(var(--totalform-darkgray));
+		font-size   : 0.85rem;
+		margin-left : 0.4rem;
+	}
+}
+
+.doc-prev-next {
+	display               : grid;
+	grid-template-columns : 1fr 1fr;
+	gap                   : 1rem;
+	margin-top            : 3rem;
+	max-width             : 65ch;
+
+	a, .doc-prev-next-spacer {
+		padding         : 1rem 1.25rem;
+		border          : 1px solid oklch(var(--totalform-border-color));
+		border-radius   : var(--totalform-radius);
+		text-decoration : none;
+		display         : flex;
+		flex-direction  : column;
+		gap             : 0.25rem;
+		min-height      : 3.5rem;
+	}
+
+	a {
+		color : oklch(var(--totalform-text-color));
+
+		&:hover {
+			border-color : oklch(var(--totalform-accent));
+			background   : oklch(var(--totalform-nearwhite));
+		}
+	}
+
+	.doc-next {
+		text-align  : right;
+		align-items : flex-end;
+	}
+
+	.doc-prev-next-label {
+		font-size : 0.8rem;
+		color     : oklch(var(--totalform-darkgray));
+	}
+
+	.doc-prev-next-title {
+		font-weight : 500;
+	}
+
+	.doc-prev-next-spacer {
+		border       : none;
+		visibility   : hidden;
+	}
+}
+
+.doc-footer {
+	margin-top    : 3rem;
+	padding-top   : 1.5rem;
+	border-top    : 1px solid oklch(var(--totalform-border-color));
+	display       : flex;
+	justify-content : space-between;
+	align-items   : center;
+	gap           : 1rem;
+	flex-wrap     : wrap;
+	max-width     : 65ch;
+	font-size     : 0.85rem;
+	color         : oklch(var(--totalform-darkgray));
+
+	.doc-edit-link {
+		color           : oklch(var(--totalform-accent));
+		text-decoration : none;
+
+		&:hover {
+			text-decoration : underline;
+		}
+	}
+}
+
+.doc-toc {
+	width             : 240px;
+	height            : 100vh;
+	overflow-y        : auto;
+	padding           : 2rem 1.25rem 2rem 0;
+	background-color  : oklch(var(--totalform-white));
+	font-size         : 0.85rem;
+
+	.doc-toc-inner {
+		padding-inline-start : 1.25rem;
+		position             : sticky;
+		top                  : 0;
+	}
+
+	h4 {
+		margin              : 0 0 0.75rem 0;
+		font-size           : 0.75rem;
+		font-weight         : 600;
+		text-transform      : uppercase;
+		letter-spacing      : 0.05em;
+		color               : oklch(var(--totalform-darkgray));
+	}
+
+	ul {
+		list-style    : none;
+		padding-inline-start : 0;
+		margin        : 0;
+		border-left   : 1px solid oklch(var(--totalform-lightgray));
+	}
+
+	li {
+		margin : 0;
+	}
+
+	a {
+		display            : block;
+		padding            : 0.35rem 0.75rem;
+		color              : oklch(var(--totalform-darkgray));
+		text-decoration    : none;
+		border-left        : 2px solid transparent;
+		margin-inline-start: -1px;
+		line-height        : 1.35;
+
+		&:hover {
+			color : oklch(var(--totalform-text-color));
+		}
+
+		&.active {
+			color       : oklch(var(--totalform-accent));
+			border-left : 2px solid oklch(var(--totalform-accent));
+			font-weight : 500;
+		}
+	}
+
+	.doc-toc-h3 a {
+		padding-inline-start : 1.5rem;
+		font-size            : 0.82rem;
+	}
+}
+
+@media (max-width: 1280px) {
+	.doc-toc {
+		display : none;
+	}
+}
+
 .dash-content-section {
 	display       : grid;
 	gap           : 2rem;
@@ -445,11 +748,15 @@ body {
 pre {
 	background-color : oklch(var(--totalform-nearwhite));
 	padding          : 1rem;
-	border-radius    : 5px;
+	border-radius    : var(--totalform-radius);
+	border           : 1px solid oklch(var(--totalform-border-color));
 	overflow-x       : auto;
+	font-size        : 0.875rem;
+	line-height      : 1.55;
 
 	code {
 		font-family : 'Fira Code', 'Source Code Pro', monospace;
+		color       : oklch(var(--totalform-text-color));
 	}
 
 	// Override highlight.js background to use our theme colors

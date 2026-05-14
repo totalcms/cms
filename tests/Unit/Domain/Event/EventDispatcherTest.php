@@ -3,6 +3,7 @@
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 
 describe('EventDispatcher', function (): void {
@@ -90,6 +91,114 @@ describe('EventDispatcher', function (): void {
 
 		expect($dispatcher->hasListeners('test'))->toBeTrue();
 		expect($dispatcher->hasListeners('other'))->toBeFalse();
+	});
+
+	test('suspendForImport blocks object.created for the suspended collection', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+		$received   = [];
+
+		$dispatcher->listen('object.created', function (array $payload) use (&$received): void {
+			$received[] = $payload['id'];
+		});
+
+		$dispatcher->suspendForImport('blog');
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'post-1'));
+
+		expect($received)->toBe([]);
+	});
+
+	test('suspendForImport only blocks the specified collection', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+		$received   = [];
+
+		$dispatcher->listen('object.created', function (array $payload) use (&$received): void {
+			$received[] = $payload['collection'] . ':' . $payload['id'];
+		});
+
+		$dispatcher->suspendForImport('blog');
+
+		// `blog` is suspended — skipped.
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'post-1'));
+		// `gallery` is NOT suspended — fires normally.
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('gallery', 'img-1'));
+
+		expect($received)->toBe(['gallery:img-1']);
+	});
+
+	test('suspendForImport blocks object.updated too', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+		$received   = [];
+
+		$dispatcher->listen('object.updated', function (array $payload) use (&$received): void {
+			$received[] = $payload['id'];
+		});
+
+		$dispatcher->suspendForImport('blog');
+		$dispatcher->dispatch('object.updated', new ObjectEventPayload('blog', 'post-1'));
+
+		expect($received)->toBe([]);
+	});
+
+	test('suspendForImport does NOT block other events', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+		$received   = [];
+
+		$dispatcher->listen('import.created', function (array $payload) use (&$received): void {
+			$received[] = 'import.created:' . $payload['id'];
+		});
+		$dispatcher->listen('object.deleted', function (array $payload) use (&$received): void {
+			$received[] = 'object.deleted:' . $payload['id'];
+		});
+
+		$dispatcher->suspendForImport('blog');
+
+		$dispatcher->dispatch('import.created', new ObjectEventPayload('blog', 'post-1'));
+		$dispatcher->dispatch('object.deleted', new ObjectEventPayload('blog', 'post-2'));
+
+		expect($received)->toBe(['import.created:post-1', 'object.deleted:post-2']);
+	});
+
+	test('resumeForImport allows object.created to fire again', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+		$received   = [];
+
+		$dispatcher->listen('object.created', function (array $payload) use (&$received): void {
+			$received[] = $payload['id'];
+		});
+
+		$dispatcher->suspendForImport('blog');
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'suspended'));
+
+		$dispatcher->resumeForImport('blog');
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'after-resume'));
+
+		expect($received)->toBe(['after-resume']);
+	});
+
+	test('import.completed auto-resumes the suspended collection', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+
+		$dispatcher->suspendForImport('blog');
+		expect($dispatcher->isImportSuspended('blog'))->toBeTrue();
+
+		// Dispatching import.completed should auto-resume so a forgetful
+		// importer can't leave the dispatcher permanently suspended.
+		$dispatcher->dispatch('import.completed', new ImportEventPayload('blog', 0, [], []));
+
+		expect($dispatcher->isImportSuspended('blog'))->toBeFalse();
+	});
+
+	test('isImportSuspended reports current state', function (): void {
+		$dispatcher = new EventDispatcher(new NullLogger());
+
+		expect($dispatcher->isImportSuspended('blog'))->toBeFalse();
+
+		$dispatcher->suspendForImport('blog');
+		expect($dispatcher->isImportSuspended('blog'))->toBeTrue();
+		expect($dispatcher->isImportSuspended('gallery'))->toBeFalse();
+
+		$dispatcher->resumeForImport('blog');
+		expect($dispatcher->isImportSuspended('blog'))->toBeFalse();
 	});
 
 	test('registerAll adds listeners from extensions', function (): void {

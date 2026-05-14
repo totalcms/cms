@@ -25,18 +25,19 @@ class CollectionData
 	public string $id;                        // collection id
 	public string $name;                      // collection name
 	public string $schema;                    // schema name
-	public string $category         = '';             // collection category for grouping in the admin
-	public string $url              = '';                  // collection url to object page minus the slug
-	public string $description      = '';          // collection description
-	public string $labelPlural      = '';          // custom plural label for collection items
-	public string $labelSingular    = '';        // custom singular label for collection items
-	public string $sortBy           = 'id';             // the property to sort the collection by
-	public bool $reverseSort        = false;         // reverse the sort order
-	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
-	public bool $prettyUrl          = false;           // use pretty URLs for the collection
-	public int $count               = 0;                    // total number of objects created in this collection
-	public int $totalObjects        = -1;                // current number of objects (-1 = not calculated yet)
-	public string $lastUpdated      = '';                // ISO 8601 datetime of last object modification
+	public string $category               = '';             // collection category for grouping in the admin
+	public string $url                    = '';                  // collection url to object page minus the slug
+	public string $description            = '';          // collection description
+	public string $labelPlural            = '';          // custom plural label for collection items
+	public string $labelSingular          = '';        // custom singular label for collection items
+	public string $sortBy                 = 'id';             // the property to sort the collection by
+	public bool $reverseSort              = false;         // reverse the sort order
+	public bool $queueRebuildOnSave       = false;  // queue a rebuild of the collection
+	public bool $prettyUrl                = false;           // use pretty URLs for the collection
+	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
+	public int $count                     = 0;                    // total number of objects created in this collection
+	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
+	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification
 
 	/** @var array<string> */
 	public array $groups = [];        // access groups that can access this collection
@@ -81,23 +82,24 @@ class CollectionData
 
 		/** @phpstan-ignore nullCoalesce.property */
 		$collection         = [
-			'id'                 => $this->id,
-			'schema'             => $this->schema,
-			'name'               => $this->name ?? ucfirst($this->id),
-			'description'        => $description,
-			'url'                => $this->url,
-			'category'           => $this->category,
-			'labelPlural'        => $labelPlural,
-			'labelSingular'      => $labelSingular,
-			'groups'             => $this->groups,
-			'publicOperations'   => $this->publicOperations,
-			'sortBy'             => $this->sortBy,
-			'reverseSort'        => $this->reverseSort,
-			'prettyUrl'          => $this->prettyUrl,
-			'queueRebuildOnSave' => $this->queueRebuildOnSave,
-			'count'              => $this->count,
-			'totalObjects'       => max($this->totalObjects, 0),
-			'lastUpdated'        => $this->lastUpdated,
+			'id'                       => $this->id,
+			'schema'                   => $this->schema,
+			'name'                     => $this->name ?? ucfirst($this->id),
+			'description'              => $description,
+			'url'                      => $this->url,
+			'category'                 => $this->category,
+			'labelPlural'              => $labelPlural,
+			'labelSingular'            => $labelSingular,
+			'groups'                   => $this->groups,
+			'publicOperations'         => $this->publicOperations,
+			'sortBy'                   => $this->sortBy,
+			'reverseSort'              => $this->reverseSort,
+			'prettyUrl'                => $this->prettyUrl,
+			'requireEmailVerification' => $this->requireEmailVerification,
+			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
+			'count'                    => $this->count,
+			'totalObjects'             => max($this->totalObjects, 0),
+			'lastUpdated'              => $this->lastUpdated,
 		];
 
 		if ($this->properties !== []) {

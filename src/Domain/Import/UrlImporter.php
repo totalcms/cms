@@ -10,6 +10,7 @@ use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
@@ -56,8 +57,17 @@ readonly class UrlImporter
 			$record['hidden']      = true;
 			$record['date']        = Chronos::now()->format('c');
 
-			$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
+			$savedObject = new ObjectData($record['id'], $record);
+			$this->storage->saveObject($collection, $savedObject);
 			// @todo Add logic that will download the image and save it to the post
+
+			// Per-object import event so listeners get the same notification
+			// shape they would for any other importer. UrlImporter bypasses
+			// ObjectSaver so we dispatch this manually.
+			$this->eventDispatcher->dispatch(
+				'import.created',
+				new ObjectEventPayload($collection, $savedObject->id, $savedObject),
+			);
 
 			$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, 1, [$record['id']]));
 		} catch (\Exception $exception) {

@@ -96,6 +96,9 @@ return [
 	'flash.password_too_short'         => 'Het wachtwoord moet minimaal 4 tekens lang zijn.',
 	'flash.password_reset_success'     => 'Wachtwoord succesvol hersteld! U kunt nu inloggen met uw nieuwe wachtwoord.',
 	'flash.forgot_password_sent'       => 'Als er een account bestaat met dat e-mailadres, ontvangt u een link om uw wachtwoord te herstellen.',
+	'flash.email_verified'             => 'Uw e-mailadres is geverifieerd. U kunt nu inloggen.',
+	'flash.email_verification_failed'  => 'Deze verificatielink is ongeldig of verlopen. Vraag hieronder een nieuwe link aan.',
+	'flash.resend_verification_sent'   => 'Als er een account bestaat met dat e-mailadres dat nog niet is geverifieerd, is er een nieuwe verificatielink verzonden.',
 	'flash.invalid_email'              => 'Voer een geldig e-mailadres in.',
 	'flash.download_too_many'          => 'Te veel downloadpogingen',
 	'flash.download_invalid_password'  => 'Ongeldig wachtwoord',
@@ -116,6 +119,12 @@ return [
 	'forgot.send_reset'     => 'Herstellink verzenden',
 	'forgot.email_help'     => 'Voer het e-mailadres in dat bij uw account hoort',
 	'forgot.back_to_login'  => 'Terug naar inloggen',
+
+	'verify.resend_title'       => 'Verificatie-e-mail opnieuw versturen',
+	'verify.resend_intro'       => 'Voer het e-mailadres in waarmee u zich heeft geregistreerd. Als uw account bestaat en nog niet is geverifieerd, sturen wij u een nieuwe verificatielink.',
+	'verify.send_link'          => 'Verificatielink versturen',
+	'verify.resend_link'        => 'Verificatie-e-mail opnieuw versturen',
+	'verify.account_not_active' => 'Uw account is nog niet geverifieerd.',
 
 	// ── Reset Password ──────────────────────────────────────────────────────
 	'reset.new_password'        => 'Nieuw wachtwoord',

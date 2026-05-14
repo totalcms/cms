@@ -2,6 +2,46 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.5] - 2026-05-14
+
+### Added — Auth
+
+- **Email Verification for Public Registration**: New per-collection "Require Email Verification" toggle (Public Access section of the collection settings). When enabled, accounts created via `POST /admin/register/{collection}` are saved as inactive and a verification email is sent. Clicking the link auto-activates the account and redirects to login; expired links redirect to a resend form. The form builder reveals any `[data-verification-message]` element and dispatches a `cms:form:verification-required` event so authors can wire up custom UX
+- **Resend Verification Endpoint**: New `GET/POST /admin/resend-verification[/{collection}]` for users who lost or never clicked the verification email. Returns generic success regardless of whether the email exists (anti-enumeration). Login page surfaces a contextual "Resend verification email →" link only when login fails with `AccountNotActiveException`
+- **`AuthTokenService`**: Shared service for short-lived auth tokens (password reset, email verification, future magic links). `PasswordResetService` and `EmailVerificationService` consume it via composition with scoped cache keys (`reset:` / `verify:`) so tokens from one flow can't collide with another
+- **`UserValidationService::findUserByEmail()`**: Returns `?ObjectData` for anti-enumeration flows. Replaces three duplicated copies of the same private method across PasswordResetService, EmailVerificationService, and ForgotPasswordSubmitAction
+- **`AccountNotActiveException`**: Typed exception thrown by `LoginService::testUserActive()` so the login action can distinguish inactive-account failures from generic auth failures and surface the resend link
+
+### Added — Event System
+
+- **`import.created` / `import.updated` events**: Fire per object during imports (CSV, JSON, RSS, WordPress, URL, Alloy, JumpStart, Deck JSON/CSV). Same `ObjectEventPayload` shape as `object.created` / `object.updated`. Subscribe to these when you want import-time notifications without the firehose of regular saves
+- **Import-time event suppression**: `EventDispatcher::suspendForImport($collection)` / `resumeForImport($collection)` — while a collection is mid-import, `object.created` and `object.updated` for that collection are short-circuited. Importers fire the new `import.*` events instead. `import.completed` auto-resumes the suspension as a safety net so forgetful importers can't leave the dispatcher permanently suspended
+- **`ObjectImporter` self-suspends**: When called outside an explicit import lifecycle (e.g. JobRunner processing a single queued job from RSS/WordPress/Alloy imports), `ObjectImporter` suspends and resumes per call so the suppression model holds for job-queue-driven imports too
+
+### Enhanced
+
+- **Documentation overhaul**: In-admin docs reorganized into 12 feature-first top-level groups with shared menu config, group-tagged search results, related-pages frontmatter on high-traffic pages, and section landing pages. New navigation layout with improved menu structure
+- **Getting Started and Install docs**: Rewrote getting-started flow and install instructions for the Composer / `composer create-project totalcms/totalcms` distribution
+- **Search index ships with package**: `resources/docs/search-index.json` is now committed to the repo so fresh `composer create-project` installs get working docs search out of the box (previously generated on demand)
+- **`required` via field settings**: `required` flag is now configurable per-field via field settings, in addition to the schema-level `required` array. Useful for forms that want a field required in some contexts but not others
+- **Builder page default data**: `data` field on the `builder-page` schema now has a default value so new pages don't blow up if the template reads `page.data.*` before the operator sets anything
+
+### Fixed
+
+- **Subfolder install routing**: `BasePathMiddleware` now correctly handles installs where T3 lives at a subpath (e.g. `/tcms/`) rather than the docroot. Asset URLs, route generation, and redirects all resolve against the correct base path
+
+### Refactored
+
+- **`PasswordResetService` token mechanics extracted**: All token generation, storage, validation, and invalidation moved to `AuthTokenService`. Public API of `PasswordResetService` is unchanged, so `ForgotPasswordSubmitAction` and `ResetPasswordSubmitAction` need no updates. Cache keys changed from `token:{token}` to `reset:token:{token}` — in-flight password-reset tokens issued before the deploy will return "expired" (acceptable given 30-minute TTL)
+- **`JsonRenderer::jsonItem()` accepts meta**: Optional `array $meta = []` parameter forwards to Fractal's `setMeta()` so actions can return Fractal-shaped JSON with top-level meta alongside `data`. Used by `AuthRegisterSubmitAction` to surface `meta.requiresVerification` when verification is enabled
+
+## [3.5.0-beta.4] - 2026-05-12
+
+### Fixed
+
+- **Composer / tarball releases now ship pre-built frontend assets**: `resources/bundle/` (the compiled ESBuild output) is now included in tagged releases instead of being gitignored. Fresh `composer create-project totalcms/totalcms` installs no longer need to run `composer run build` before the admin UI works
+- **Release script bundle handling**: `bin/prepare-release.sh` now bundles assets before tagging and validates the version number format
+
 ## [3.5.0-beta.3] - 2026-05-12
 
 - Deployment updates

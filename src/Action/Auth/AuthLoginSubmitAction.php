@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
@@ -83,6 +84,12 @@ readonly class AuthLoginSubmitAction
 		$user = null;
 		try {
 			$user = $this->loginService->authenticate($idOrEmail, $password, $collection);
+		} catch (AccountNotActiveException $e) {
+			// Distinct flag so the login template can surface a "resend
+			// verification email" link inline with the error. The generic
+			// error message still shows alongside.
+			$flash->add('error', $e->getMessage());
+			$flash->add('account_not_active', '1');
 		} catch (\Exception $e) {
 			// throw new HttpUnauthorizedException($request, $e->getMessage());
 			$flash->add('error', $e->getMessage());

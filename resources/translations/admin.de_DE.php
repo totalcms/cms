@@ -96,6 +96,9 @@ return [
 	'flash.password_too_short'         => 'Das Passwort muss mindestens 4 Zeichen lang sein.',
 	'flash.password_reset_success'     => 'Passwort erfolgreich zurückgesetzt! Sie können sich jetzt mit Ihrem neuen Passwort anmelden.',
 	'flash.forgot_password_sent'       => 'Falls ein Konto mit dieser E-Mail-Adresse existiert, erhalten Sie einen Link zum Zurücksetzen des Passworts.',
+	'flash.email_verified'             => 'Ihre E-Mail-Adresse wurde bestätigt. Sie können sich jetzt anmelden.',
+	'flash.email_verification_failed'  => 'Dieser Bestätigungslink ist ungültig oder abgelaufen. Fordern Sie unten einen neuen Link an.',
+	'flash.resend_verification_sent'   => 'Falls ein Konto mit dieser E-Mail-Adresse existiert und noch nicht bestätigt wurde, wurde ein neuer Bestätigungslink gesendet.',
 	'flash.invalid_email'              => 'Bitte geben Sie eine gültige E-Mail-Adresse ein.',
 	'flash.download_too_many'          => 'Zu viele Download-Versuche',
 	'flash.download_invalid_password'  => 'Ungültiges Passwort',
@@ -116,6 +119,12 @@ return [
 	'forgot.send_reset'     => 'Zurücksetzungs-Link senden',
 	'forgot.email_help'     => 'Geben Sie die E-Mail-Adresse ein, die mit Ihrem Konto verknüpft ist',
 	'forgot.back_to_login'  => 'Zurück zur Anmeldung',
+
+	'verify.resend_title'       => 'Bestätigungs-E-Mail erneut senden',
+	'verify.resend_intro'       => 'Geben Sie die E-Mail-Adresse ein, mit der Sie sich registriert haben. Falls Ihr Konto existiert und noch nicht bestätigt wurde, senden wir Ihnen einen neuen Bestätigungslink.',
+	'verify.send_link'          => 'Bestätigungslink senden',
+	'verify.resend_link'        => 'Bestätigungs-E-Mail erneut senden',
+	'verify.account_not_active' => 'Ihr Konto wurde noch nicht bestätigt.',
 
 	// ── Reset Password ──────────────────────────────────────────────────────
 	'reset.new_password'        => 'Neues Passwort',
