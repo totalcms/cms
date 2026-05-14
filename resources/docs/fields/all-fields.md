@@ -436,6 +436,68 @@ Field is visible if `deliveryMethod` matches ANY value in the array.
 
 Fields with a `visibility` setting are **hidden by default** until the condition is met. This ensures fields appear only when they should, even on initial form load.
 
+## Required (Form-Level)
+
+The `required` setting marks a field as required in the **form only**, separately from the schema's top-level `required` array. Pair it with `visibility` to make a field required only when another field has a particular value.
+
+```json
+{
+	"required": true
+}
+```
+
+### How it differs from schema-level `required`
+
+Total CMS has two distinct ways to mark a field as required, and they are intentionally separate:
+
+| Where | What it does | When it fires |
+|---|---|---|
+| Schema's top-level `required: ["foo"]` array | Hard data invariant — the object cannot be saved without a value | Server-side on every save (form, API, CLI, import) |
+| Field's `settings.required: true` | Adds the `required` HTML attribute to the input | Client-side HTML5 validation when the form is submitted |
+
+Use the schema's top-level `required` when a value must always exist on every record. Use `settings.required` when the requirement is conditional — typically driven by another field's value via `visibility`.
+
+> **Important:** If a field is listed in the schema's `required` array AND has `settings.required: true`, the schema-level rule still wins on save. For a truly conditional field, leave it out of the schema's `required` array entirely — otherwise saves will be rejected when the field has no value, defeating the conditional behavior.
+
+### Conditional required (toggle pattern)
+
+The common use case is "this field is only required when a toggle is set." Combine `settings.required` with `settings.visibility`:
+
+```json
+{
+	"enableNotifications": {
+		"type": "boolean",
+		"field": "toggle",
+		"label": "Send Email Notifications"
+	},
+	"notificationEmail": {
+		"type": "string",
+		"field": "email",
+		"label": "Notification Email",
+		"settings": {
+			"required": true,
+			"visibility": {
+				"watch": "enableNotifications",
+				"value": "1",
+				"operator": "=="
+			}
+		}
+	}
+}
+```
+
+When `enableNotifications` is on, the email field is visible and the browser enforces the required attribute on submit. When the toggle is off, the field is hidden and the form's visibility system strips the required attribute so an empty value doesn't block submission. Because `notificationEmail` is not listed in the schema's `required` array, saves succeed regardless of toggle state.
+
+### Visibility integration
+
+When a field has both `required` and `visibility`, the form automatically:
+
+- Strips the `required` HTML attribute when the field is hidden
+- Restores it when the field becomes visible
+- Skips client-side validation entirely for hidden fields
+
+This works transparently — no extra configuration beyond setting both `required` and `visibility` on the field.
+
 ## Validation
 
 All fields support validation rules like `pattern`, `minLength`, `maxLength`, `minimum`, `maximum`, `enum`, and more. These are added in the **Extra Schema Definitions** section of a property, not in Settings.
