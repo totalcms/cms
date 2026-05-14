@@ -11,7 +11,7 @@ describe('GuzzleHttpClient', function (): void {
 
 	test('returns HttpResponse from request', function (): void {
 		$client   = new GuzzleHttpClient();
-		$response = $client->request('GET', 'https://httpbin.org/get', [
+		$response = $client->request('GET', 'https://postman-echo.com/get', [
 			'timeout'          => 10,
 			'connect_timeout'  => 5,
 			'follow_redirects' => true,
@@ -33,7 +33,7 @@ describe('GuzzleHttpClient', function (): void {
 
 	test('handles POST with JSON body', function (): void {
 		$client   = new GuzzleHttpClient();
-		$response = $client->request('POST', 'https://httpbin.org/post', [
+		$response = $client->request('POST', 'https://postman-echo.com/post', [
 			'body'    => '{"test":"value"}',
 			'headers' => [
 				'Content-Type: application/json',
@@ -43,12 +43,12 @@ describe('GuzzleHttpClient', function (): void {
 
 		expect($response->statusCode)->toBe(200);
 		$json = $response->json();
-		expect($json['data'] ?? '')->toBe('{"test":"value"}');
+		expect($json['data'] ?? null)->toBe(['test' => 'value']);
 	})->skip(getenv('CI') !== false, 'Skipped in CI - requires network');
 
 	test('returns non-200 status without throwing', function (): void {
 		$client   = new GuzzleHttpClient();
-		$response = $client->request('GET', 'https://httpbin.org/status/404', [
+		$response = $client->request('GET', 'https://postman-echo.com/status/404', [
 			'timeout' => 10,
 		]);
 
