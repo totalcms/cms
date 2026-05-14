@@ -295,4 +295,4 @@ Webpack works but is heavier than Vite for this use case. Use `webpack-manifest-
 ## See Also
 
 - [Builder Twig Reference](docs/twig/builder) — `css()`, `js()`, `asset()`, `preload()` documentation
-- [Site Builder Overview](docs/builder/overview)
+- [Site Builder Overview](docs/site-builder/overview)

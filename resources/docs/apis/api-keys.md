@@ -224,9 +224,9 @@ Last used timestamps appear in the API Keys management interface and update with
 
 ## Related Documentation
 
-- [REST API Documentation](docs/api/rest-api) - Complete API endpoint reference
-- [Field Settings](docs/property-settings/styled-text) - Field configuration options
-- [Collections](docs/api/collections) - Collection types and management
+- [REST API Documentation](docs/apis/rest-api) - Complete API endpoint reference
+- [Field Settings](docs/fields/styled-text) - Field configuration options
+- [Collections](docs/collections/settings) - Collection types and management
 
 ## Troubleshooting
 

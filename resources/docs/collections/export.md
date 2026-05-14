@@ -17,7 +17,7 @@ Total CMS supports multiple export formats:
 
 ## Filtering Exports
 
-Both JSON and CSV exports support `include` and `exclude` query parameters to limit which objects are exported. This uses the same [Index Filtering](docs/api/index-filter) system available in sitemaps and RSS feeds.
+Both JSON and CSV exports support `include` and `exclude` query parameters to limit which objects are exported. This uses the same [Index Filtering](docs/apis/index-filter) system available in sitemaps and RSS feeds.
 
 ### URL Parameters
 
@@ -45,7 +45,7 @@ GET /export/collections/blog/json?include=published&exclude=draft,private
 
 When no filter parameters are provided, all objects in the collection are exported (existing behavior).
 
-For full details on filter syntax, value types, and logic, see the [Index Filtering documentation](docs/api/index-filter).
+For full details on filter syntax, value types, and logic, see the [Index Filtering documentation](docs/apis/index-filter).
 
 ## Exporting from Admin Panel
 

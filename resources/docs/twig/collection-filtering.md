@@ -821,5 +821,5 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 ## See Also
 
 - [Twig Filters Reference](docs/twig/filters) - All available Twig filters
-- [Index Filtering](docs/api/index-filter) - Server-side filtering for APIs
+- [Index Filtering](docs/apis/index-filter) - Server-side filtering for APIs
 - [CMS Grid Tag](docs/twig/cmsgrid-tag) - Display filtered collections

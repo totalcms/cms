@@ -6,7 +6,7 @@ since: "3.5.0"
 
 # A/B Split
 
-`totalcms/ab-split` — bundled with Total CMS. Adds an `ab-split` [page feature](docs/builder/overview#page-features-middleware) that renders an **alternate page template at the same URL** for a percentage of visitors. The visitor's bucket sticks via cookie so refreshes don't re-bucket. Use it to test layout changes, copy variations, hero swaps, CTA wording — anything where you want to measure two renders against each other without changing the URL.
+`totalcms/ab-split` — bundled with Total CMS. Adds an `ab-split` [page feature](docs/site-builder/overview#page-features-middleware) that renders an **alternate page template at the same URL** for a percentage of visitors. The visitor's bucket sticks via cookie so refreshes don't re-bucket. Use it to test layout changes, copy variations, hero swaps, CTA wording — anything where you want to measure two renders against each other without changing the URL.
 
 ## Enabling
 
@@ -102,12 +102,12 @@ When disabled, the `ab-split` name disappears from the page-features picker. Pag
 
 ## Implementation notes
 
-The middleware lives at `resources/extensions/totalcms/ab-split/AbSplitMiddleware.php`. It registers as a [page middleware](docs/builder/overview#page-features-middleware) with name `ab-split` and a class implementing `PageMiddlewareInterface`. The container definition wires `TwigEngine` so it can render the alternate template.
+The middleware lives at `resources/extensions/totalcms/ab-split/AbSplitMiddleware.php`. It registers as a [page middleware](docs/site-builder/overview#page-features-middleware) with name `ab-split` and a class implementing `PageMiddlewareInterface`. The container definition wires `TwigEngine` so it can render the alternate template.
 
 Source: `resources/extensions/totalcms/ab-split/`
 
 ## See also
 
-- [Page Features (Builder)](docs/builder/overview#page-features-middleware) — the middleware framework this plugs into
+- [Page Features (Builder)](docs/site-builder/overview#page-features-middleware) — the middleware framework this plugs into
 - [Bundled Extensions](docs/extensions/bundled) — the bundled-extension concept and the full list
 - [Extension Points](docs/extensions/extension-points#page-middleware) — `addPageMiddleware()` API for shipping your own page features

@@ -7,7 +7,7 @@ description: "Mask plaintext-stored sensitive values like API keys and tokens us
 
 The **secret** field is a masked text input for storing sensitive values that need to be readable later — API keys, access tokens, webhook signing secrets, third-party credentials. It renders as a password input with a show/hide toggle so admins can reveal the value when needed.
 
-Unlike the [password field](docs/property-settings/password), a secret is **not hashed** — it is stored as plain text. Use it only for values your application needs to read back; never use it for user passwords.
+Unlike the [password field](docs/fields/password), a secret is **not hashed** — it is stored as plain text. Use it only for values your application needs to read back; never use it for user passwords.
 
 ## When to Use Each
 
@@ -115,7 +115,7 @@ A settings schema for a third-party integration:
 
 ## Pairing With Card Fields
 
-Group an integration's endpoint and credentials into a single [card field](docs/property-settings/card) so the related settings stay together in the admin UI:
+Group an integration's endpoint and credentials into a single [card field](docs/fields/card) so the related settings stay together in the admin UI:
 
 ```json
 {

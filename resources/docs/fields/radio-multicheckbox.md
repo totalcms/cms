@@ -5,7 +5,7 @@ description: "Configure radio button and multicheckbox fields in Total CMS with 
 
 # Radio & Multicheckbox
 
-Radio and Multicheckbox fields allow users to select options from multiple choices. For how to define options, see [All Field Settings](docs/property-options/static-options).
+Radio and Multicheckbox fields allow users to select options from multiple choices. For how to define options, see [All Field Settings](docs/fields/static-options).
 
 Two layout settings are available for arranging options into multiple columns. Use one or the other — they control different flow directions.
 

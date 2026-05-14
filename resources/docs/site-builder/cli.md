@@ -137,7 +137,7 @@ The default behavior is **skip files that already exist**, so re-running `builde
 | Pull missing files after the scaffold was edited | `tcms builder:frontend` (skips existing) |
 | Reset the scaffold to upstream defaults | `tcms builder:frontend --force` |
 
-See [Frontend Assets](docs/builder/frontend) for the full asset-pipeline reference (Sass, Tailwind, etc.).
+See [Frontend Assets](docs/site-builder/frontend) for the full asset-pipeline reference (Sass, Tailwind, etc.).
 
 ## `builder:routes`
 
@@ -263,10 +263,10 @@ tcms builder:history pages/about --restore=<that-newest-timestamp>
 
 Snapshots live at `tcms-data/builder/.history/{path}/{timestamp}.twig`. The 50 newest snapshots per template are retained; older ones are pruned automatically on each save. You don't need to manage them manually.
 
-See [Template History](docs/builder/admin#template-history) for the same workflow from the admin UI perspective.
+See [Template History](docs/site-builder/admin#template-history) for the same workflow from the admin UI perspective.
 
 ## See Also
 
-- [Site Builder Overview](docs/builder/overview)
-- [Builder Admin UI](docs/builder/admin)
-- [Starter Templates](docs/builder/starters)
+- [Site Builder Overview](docs/site-builder/overview)
+- [Builder Admin UI](docs/site-builder/admin)
+- [Starter Templates](docs/site-builder/starters)
