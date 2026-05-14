@@ -235,6 +235,7 @@ readonly class SettingsValidator
 			'deniedTimeout',
 			'persistentLoginDays',
 			'resetTokenExpiry',
+			'verificationTokenExpiry',
 		];
 
 		foreach ($numericFields as $field) {
