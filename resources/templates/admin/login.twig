@@ -39,6 +39,22 @@
 
 	{{ cms.form.loginForm(formSettings) }}
 
+	{# Surface a "resend verification email" link only when login failed
+	   specifically because the account isn't active yet. Set by
+	   AuthLoginSubmitAction when LoginService throws AccountNotActiveException.
+	   This keeps the link out of operator-only login pages and out of the
+	   way for users who just typed the wrong password. #}
+	{% if flash.has('account_not_active') %}
+		{# Consume the flash so it doesn't persist. #}
+		{% set _ = flash.get('account_not_active') %}
+		<p class="login-resend-verification" style="text-align:center; margin-top:1rem; font-size:0.9em;">
+			<a href="{{ cms.dashboard }}/resend-verification{% if collection %}/{{ collection }}{% endif %}"
+			   style="color: oklch(var(--totalform-accent)); text-decoration: none;">
+				{{ t('verify.resend_link') }} &rarr;
+			</a>
+		</p>
+	{% endif %}
+
 	<section class="login-below">
 		{% if cms.edition.can('whitelabel_pro') %}
 			{{ include('whitelabel/login-below.twig', ignore_missing = true) }}

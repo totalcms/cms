@@ -445,4 +445,96 @@ final class UserValidationServiceTest extends TestCase
 	{
 		expect(UserValidationService::ADMINGROUP)->toBe('admin');
 	}
+
+	public function testFindUserByEmailReturnsObjectDataWhenFound(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		$searchResults = new Collection([
+			['id' => 'user-1', 'email' => 'a@b.test'],
+		]);
+
+		$searcher->expects($this->once())
+			->method('searchByProperty')
+			->with('users', 'email', 'a@b.test')
+			->willReturn($searchResults);
+
+		$mockUser = $this->createMock(ObjectData::class);
+
+		$objectFetcher->expects($this->once())
+			->method('fetchObject')
+			->with('users', 'user-1')
+			->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		$result = $service->findUserByEmail('a@b.test');
+
+		expect($result)->toBe($mockUser);
+	}
+
+	public function testFindUserByEmailReturnsNullWhenUserDoesNotExist(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		// Empty results — unlike validateUserByEmail, this MUST NOT throw.
+		$searcher->expects($this->once())
+			->method('searchByProperty')
+			->willReturn(new Collection([]));
+
+		// And we should never try to fetch the object.
+		$objectFetcher->expects($this->never())->method('fetchObject');
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->findUserByEmail('ghost@example.com'))->toBeNull();
+	}
+
+	public function testFindUserByEmailReturnsNullWhenSearcherThrows(): void
+	{
+		// Defensive: a broken index lookup must not bubble up as an exception
+		// in the anti-enumeration flows. Same posture as validateUser's miss
+		// — callers can't distinguish "user not there" from "lookup failed".
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		$searcher->method('searchByProperty')
+			->willThrowException(new \RuntimeException('index corrupt'));
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->findUserByEmail('a@b.test'))->toBeNull();
+	}
+
+	public function testFindUserByEmailUsesGivenCollectionWhenSpecified(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		// Default collection is 'admin' — but caller passes 'members'.
+		$config->auth = ['collection' => 'admin'];
+
+		$searcher->expects($this->once())
+			->method('searchByProperty')
+			->with('members', 'email', 'a@b.test')  // ← uses 'members', not the default
+			->willReturn(new Collection([['id' => 'user-1']]));
+
+		$objectFetcher->method('fetchObject')->willReturn($this->createMock(ObjectData::class));
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		$service->findUserByEmail('a@b.test', 'members');
+	}
 }

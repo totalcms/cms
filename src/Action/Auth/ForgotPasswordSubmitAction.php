@@ -9,11 +9,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
-use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
@@ -27,8 +25,7 @@ readonly class ForgotPasswordSubmitAction
 		private PasswordResetService $passwordResetService,
 		private EmailService $emailService,
 		private EmailSender $emailSender,
-		private IndexSearcher $indexSearcher,
-		private ObjectFetcher $objectFetcher,
+		private UserValidationService $userValidator,
 		private TwigEngine $twigEngine,
 		private Config $config,
 		private PhpSession $session,
@@ -93,7 +90,7 @@ readonly class ForgotPasswordSubmitAction
 	private function sendResetEmail(string $email, string $token, string $collection): \TotalCMS\Support\OperationResult
 	{
 		// Fetch user to get their name
-		$user     = $this->findUserByEmail($email, $collection);
+		$user     = $this->userValidator->findUserByEmail($email, $collection);
 		$userName = $user?->toArray()['name'] ?? '';
 
 		// Build reset URL
@@ -146,22 +143,4 @@ readonly class ForgotPasswordSubmitAction
 		}
 	}
 
-	/**
-	 * Find a user by email address in the specified collection.
-	 */
-	private function findUserByEmail(string $email, string $collection): ?ObjectData
-	{
-		try {
-			$users = $this->indexSearcher->searchByProperty($collection, 'email', $email);
-			$first = $users->first();
-
-			if ($users->isEmpty() || is_null($first)) {
-				return null;
-			}
-
-			return $this->objectFetcher->fetchObject($collection, $first['id']);
-		} catch (\Exception) {
-			return null;
-		}
-	}
 }

@@ -80,7 +80,7 @@ For user-registration forms specifically, prefer `register: true` over plain `ad
 
 **Behaviour:**
 - Form posts to `/admin/register/{collection}` instead of `/api/collections/{collection}`
-- The new user is authenticated and signed in before the response returns
+- Whether the new user is auto-logged in OR sent a verification email depends on the collection's **Require Email Verification** setting (see below)
 - `addOnly` is implied — the register endpoint only handles POST, no edit/update path exists
 - Image and file fields work the same way they do on any add-only form: uploads are deferred client-side until the parent save completes, then uploaded against the freshly-created user record
 
@@ -98,11 +98,49 @@ return [
 
 The allow-list is empty by default so the operator-only `auth` collection isn't accidentally exposed to public signups. Opt in your member / customer collections explicitly.
 
+### Email Verification
+
+Per-collection, you can require new registrants to confirm their email before their account is activated. Enable **Require Email Verification** on the collection's settings page (under Public Access).
+
+When enabled:
+
+1. The registration save creates the user with `active = false`
+2. A verification email is sent containing a tokenized link (default 24h expiry)
+3. The response JSON carries `meta.requiresVerification: true`; the form builder hides the form and reveals any element marked `data-verification-message`:
+
+   ```twig
+   {{ cms.form.builder('members', {register: true})
+       .addField('email')
+       .addField('password', {field: 'password'})
+       .build() }}
+
+   <div data-verification-message hidden>
+       <h3>Check your email</h3>
+       <p>We've sent you a link to verify your account.</p>
+   </div>
+   ```
+
+4. The form also dispatches a `cms:form:verification-required` event for custom JS (analytics, redirects, etc.)
+5. Clicking the link hits `GET /admin/verify-email/{token}`, flips `active = true`, and redirects to the login page
+6. If the link expired, the user is redirected to `/admin/resend-verification` where they can request a fresh link
+
+A "Resend verification email" link is auto-added below the login form whenever `publicRegistration` is non-empty.
+
+Default behavior (when the toggle is **off**) is unchanged: the new user is authenticated and signed in before the response returns — no verification step.
+
+Verification-related config (in `config/tcms.php` under `auth`):
+
+| Key | Default | Purpose |
+|---|---|---|
+| `verificationTokenExpiry` | `1440` (24h) | Minutes before a verification token expires |
+| `verificationMailerId` | `''` | Optional custom mailer template ID; leave empty for the default Twig template at `email/verify-email.twig` |
+
 **Security caveats the operator owns:**
 
-- Anyone who reaches this endpoint can create a user record. Add a CAPTCHA, rate limit, or email-verification gate before exposing it on a site where the resulting account grants meaningful access.
-- New users land in whatever default access group the auth collection's schema assigns. If that group reaches gated content, every signup (including bot signups) gains that access.
+- Anyone who reaches the registration endpoint can create a user record. Verification stops a bot from logging in, but it doesn't stop them from filling the user table with junk records — gate the form with a CAPTCHA or rate limit even when verification is on.
+- New users land in whatever default access group the auth collection's schema assigns. If that group reaches gated content, every verified signup gains that access.
 - Password validation (minimum length etc.) is the schema's responsibility, not the endpoint's.
+- The verification flow assumes the auth schema has an `email` field. If your custom schema doesn't, the verification email cannot be sent — the account is still created (inactive) but stays in limbo unless an admin activates it manually.
 
 ## Actions
 

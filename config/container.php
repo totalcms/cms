@@ -29,6 +29,8 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
+use TotalCMS\Domain\Auth\Service\AuthTokenService;
+use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -890,10 +892,22 @@ return [
 		$container->get(Config::class),
 	),
 
-	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
+	AuthTokenService::class => fn (ContainerInterface $container): AuthTokenService => new AuthTokenService(
 		$container->get(CacheManager::class),
-		$container->get(IndexSearcher::class),
-		$container->get(ObjectFetcher::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
+		$container->get(AuthTokenService::class),
+		$container->get(UserValidationService::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	EmailVerificationService::class => fn (ContainerInterface $container): EmailVerificationService => new EmailVerificationService(
+		$container->get(AuthTokenService::class),
+		$container->get(UserValidationService::class),
 		$container->get(ObjectUpdater::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class),

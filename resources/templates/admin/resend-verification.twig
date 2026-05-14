@@ -1,0 +1,81 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ cms.config('dashboard', 'title') ?? t('verify.resend_title') ~ ' - Total CMS' }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+
+	<section class="login-above">
+		{{ include(cms.edition.can('whitelabel_standard')
+			? ['whitelabel/resend-verification-above.twig', 'resend-verification-above-default.twig']
+			: ['resend-verification-above-default.twig']
+		, ignore_missing = true) }}
+	</section>
+
+	<section class="login-form">
+		{% set action = cms.dashboard ~ '/resend-verification' %}
+		{% if collection %}
+			{% set action = cms.dashboard ~ '/resend-verification/' ~ collection %}
+		{% endif %}
+
+		<h1>{{ t('verify.resend_title') }}</h1>
+		<p>{{ t('verify.resend_intro') }}</p>
+
+		<form class="totalform" method="post" action="{{ action }}" data-disabled="true" style="position:relative;">
+			{{ csrf_field() }}
+
+			<div class="form-field email-field" data-type="email">
+				<label for="field-email">{{ t('forgot.email') }}</label>
+				<div class="form-group">
+					<input type="email"
+						   id="field-email"
+						   name="email"
+						   placeholder="email@company.com"
+						   value="{{ getData.email | default('') }}"
+						   required
+						   autofocus>
+					<div class="form-group-icon"></div>
+				</div>
+			</div>
+
+			<button class="dash-button" type="submit">{{ t('verify.send_link') }}</button>
+
+			{% for message in flash.get('error') %}
+				<p class="cms-twig-error" role="alert">
+					{{ message }}
+				</p>
+			{% endfor %}
+
+			<p style="position:absolute;bottom:0;right:0;">
+				<a href="{{ cms.dashboard }}/login{% if collection %}/{{ collection }}{% endif %}"
+				   style="color: oklch(var(--totalform-accent)); text-decoration: none;">
+					&larr; {{ t('forgot.back_to_login') }}
+				</a>
+			</p>
+		</form>
+
+		{% for message in flash.get('success') %}
+			<p class="cms-twig-info" role="alert">
+				{{ message }}
+			</p>
+		{% endfor %}
+	</section>
+
+	<section class="login-below">
+		{% if cms.edition.can('whitelabel_pro') %}
+			{{ include('whitelabel/resend-verification-below.twig', ignore_missing = true) }}
+		{% endif %}
+	</section>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const form = document.querySelector('.totalform');
+	if (form) {
+		form.addEventListener('submit', function() {
+			form.classList.add('processing');
+		});
+	}
+});
+</script>
+{% endblock %}

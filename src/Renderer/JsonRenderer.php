@@ -72,6 +72,7 @@ class JsonRenderer
 	 * @param ResponseInterface $response The response
 	 * @param object $item The data
 	 * @param TransformerAbstract $transformer The data transformer
+	 * @param array<string,mixed> $meta Optional top-level meta data to include alongside `data`
 	 *
 	 * @return ResponseInterface The response
 	 */
@@ -79,9 +80,13 @@ class JsonRenderer
 		ResponseInterface $response,
 		object $item,
 		TransformerAbstract $transformer,
+		array $meta = [],
 	): ResponseInterface {
 		$resource = new FractalItem($item, $transformer);
-		$data     = (new FractalManager())->createData($resource)->toArray();
+		if ($meta !== []) {
+			$resource->setMeta($meta);
+		}
+		$data = (new FractalManager())->createData($resource)->toArray();
 
 		return $this->json($response, $data);
 	}

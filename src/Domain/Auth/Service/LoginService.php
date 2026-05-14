@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Factory\LoggerFactory;
@@ -138,7 +139,7 @@ class LoginService
 		if (!isset($user['active']) || !$user['active']) {
 			$error = "User account {$this->account} is not active";
 			$this->logger->error($error);
-			throw new \Exception($error);
+			throw new AccountNotActiveException($error);
 		}
 	}
 

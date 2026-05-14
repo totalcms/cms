@@ -96,6 +96,9 @@ return [
 	'flash.password_too_short'         => 'Password must be at least 4 characters long.',
 	'flash.password_reset_success'     => 'Password reset successful! You can now log in with your new password.',
 	'flash.forgot_password_sent'       => 'If an account exists with that email, you will receive a password reset link.',
+	'flash.email_verified'             => 'Your email has been verified. You can now log in.',
+	'flash.email_verification_failed'  => 'This verification link is invalid or has expired. Request a new link below.',
+	'flash.resend_verification_sent'   => 'If an account exists with that email and is not yet verified, a new verification link has been sent.',
 	'flash.invalid_email'              => 'Please enter a valid email address.',
 	'flash.download_too_many'          => 'Too many download attempts',
 	'flash.download_invalid_password'  => 'Invalid password',
@@ -116,6 +119,12 @@ return [
 	'forgot.send_reset'     => 'Send Reset Link',
 	'forgot.email_help'     => 'Enter the email address associated with your account',
 	'forgot.back_to_login'  => 'Back to Login',
+
+	'verify.resend_title'       => 'Resend Verification Email',
+	'verify.resend_intro'       => "Enter the email address you signed up with. If your account exists and hasn't been verified yet, we'll send a new verification link.",
+	'verify.send_link'          => 'Send Verification Link',
+	'verify.resend_link'        => 'Resend verification email',
+	'verify.account_not_active' => "Your account hasn't been verified yet.",
 
 	// ── Reset Password ──────────────────────────────────────────────────────
 	'reset.new_password'        => 'New Password',

@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -16,16 +13,18 @@ use TotalCMS\Support\OperationResult;
 
 /**
  * Service for handling password reset functionality.
- * Manages token generation, validation, and password updates.
+ * Token mechanics (generation, storage, expiry) are delegated to AuthTokenService;
+ * this service owns the password-reset domain logic on top.
  */
 readonly class PasswordResetService
 {
+	private const SCOPE = 'reset';
+
 	private LoggerInterface $logger;
 
 	public function __construct(
-		private CacheManager $cacheManager,
-		private IndexSearcher $indexSearcher,
-		private ObjectFetcher $objectFetcher,
+		private AuthTokenService $tokenService,
+		private UserValidationService $userValidator,
 		private ObjectUpdater $objectUpdater,
 		private Config $config,
 		LoggerFactory $loggerFactory,
@@ -34,30 +33,12 @@ readonly class PasswordResetService
 	}
 
 	/**
-	 * Generate a secure random token for password reset.
+	 * Generate a secure random token. Kept for backward compatibility; new
+	 * callers should ask AuthTokenService directly.
 	 */
 	public function generateToken(): string
 	{
-		return bin2hex(random_bytes(32)); // 64 character hex string
-	}
-
-	/**
-	 * Find a user by email address in the specified collection.
-	 */
-	private function findUserByEmail(string $email, string $collection): ?ObjectData
-	{
-		try {
-			$users = $this->indexSearcher->searchByProperty($collection, 'email', $email);
-			$first = $users->first();
-
-			if ($users->isEmpty() || is_null($first)) {
-				return null;
-			}
-
-			return $this->objectFetcher->fetchObject($collection, $first['id']);
-		} catch (\Exception) {
-			return null;
-		}
+		return $this->tokenService->generateToken();
 	}
 
 	/**
@@ -67,7 +48,7 @@ readonly class PasswordResetService
 	public function createResetToken(string $email, string $collection): OperationResult
 	{
 		// Check if user exists
-		$user = $this->findUserByEmail($email, $collection);
+		$user = $this->userValidator->findUserByEmail($email, $collection);
 
 		if (!$user instanceof ObjectData) {
 			// Don't reveal whether user exists for security
@@ -80,38 +61,15 @@ readonly class PasswordResetService
 			return OperationResult::success('If an account exists with that email, you will receive a password reset link.');
 		}
 
-		// Invalidate any previous token for this user
-		$this->invalidatePreviousToken($email, $collection);
-
-		// Generate new token
-		$token = $this->generateToken();
-
 		// Get token expiry from config (in minutes)
 		$expiryMinutes = (int)($this->config->auth['resetTokenExpiry'] ?? 30);
-		$ttl           = $expiryMinutes * 60; // Convert to seconds
+		$ttl           = $expiryMinutes * 60;
 
-		// Store token data in cache
-		$tokenData = [
-			'email'      => $email,
-			'collection' => $collection,
-			'createdAt'  => time(),
-			'expiresAt'  => time() + $ttl,
-		];
+		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl);
 
-		$stored = $this->cacheManager->storePasswordResetData("token:{$token}", $tokenData, $ttl);
-
-		if (!$stored) {
-			$this->logger->error('Failed to store password reset token', [
-				'email'      => $email,
-				'collection' => $collection,
-			]);
-
+		if (!$result->success) {
 			return OperationResult::failure('Unable to create password reset token. Please try again.');
 		}
-
-		// Store reference to latest token for this user
-		$latestTokenData = ['token' => $token];
-		$this->cacheManager->storePasswordResetData("latest:{$email}:{$collection}", $latestTokenData, $ttl);
 
 		$this->logger->info('Password reset token created', [
 			'email'      => $email,
@@ -119,25 +77,10 @@ readonly class PasswordResetService
 			'expiresIn'  => $expiryMinutes . ' minutes',
 		]);
 
-		return OperationResult::success('Password reset token created successfully.', ['token' => $token]);
-	}
-
-	/**
-	 * Invalidate any previous reset token for a user.
-	 */
-	private function invalidatePreviousToken(string $email, string $collection): void
-	{
-		$latestData = $this->cacheManager->getPasswordResetData("latest:{$email}:{$collection}");
-
-		if ($latestData !== null && isset($latestData['token'])) {
-			$oldToken = $latestData['token'];
-			$this->cacheManager->clearPasswordResetData("token:{$oldToken}");
-
-			$this->logger->info('Previous password reset token invalidated', [
-				'email'      => $email,
-				'collection' => $collection,
-			]);
-		}
+		return OperationResult::success(
+			'Password reset token created successfully.',
+			['token' => $result->data['token']],
+		);
 	}
 
 	/**
@@ -145,33 +88,7 @@ readonly class PasswordResetService
 	 */
 	public function validateToken(string $token): OperationResult
 	{
-		$tokenData = $this->cacheManager->getPasswordResetData("token:{$token}");
-
-		if ($tokenData === null) {
-			$this->logger->warning('Password reset attempted with invalid token', [
-				'token' => substr($token, 0, 8) . '...', // Log only first 8 chars for security
-			]);
-
-			return OperationResult::failure('Invalid or expired reset token.');
-		}
-
-		// Check if token has expired (double-check even though cache should handle TTL)
-		if (isset($tokenData['expiresAt']) && $tokenData['expiresAt'] < time()) {
-			$this->logger->warning('Password reset attempted with expired token', [
-				'email'      => $tokenData['email'] ?? 'unknown',
-				'collection' => $tokenData['collection'] ?? 'unknown',
-			]);
-
-			// Clean up expired token
-			$this->cacheManager->clearPasswordResetData("token:{$token}");
-
-			return OperationResult::failure('This reset token has expired. Please request a new one.');
-		}
-
-		return OperationResult::success('Token is valid.', [
-			'email'      => $tokenData['email'],
-			'collection' => $tokenData['collection'],
-		]);
+		return $this->tokenService->validateToken(self::SCOPE, $token);
 	}
 
 	/**
@@ -196,7 +113,7 @@ readonly class PasswordResetService
 		}
 
 		// Fetch user object
-		$user = $this->findUserByEmail($email, $collection);
+		$user = $this->userValidator->findUserByEmail($email, $collection);
 
 		if (!$user instanceof ObjectData) {
 			$this->logger->error('User not found during password reset', [
@@ -218,8 +135,8 @@ readonly class PasswordResetService
 			$this->objectUpdater->updateObject($collection, $user->id, $userData);
 
 			// Invalidate the token (single-use)
-			$this->cacheManager->clearPasswordResetData("token:{$token}");
-			$this->cacheManager->clearPasswordResetData("latest:{$email}:{$collection}");
+			$this->tokenService->invalidateToken(self::SCOPE, $token);
+			$this->tokenService->invalidateLatest(self::SCOPE, $email, $collection);
 
 			$this->logger->info('Password reset successful', [
 				'email'      => $email,

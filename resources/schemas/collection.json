@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\n---Sitemap---\nsitemap sitemap\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\n---Sitemap---\nsitemap sitemap\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -136,6 +136,12 @@
 			"type"  : "boolean",
 			"label" : "Queue Rebuild Index on Save",
 			"help"  : "When enabled, saving objects will no longer trigger a rebuild of the index. This is useful for large collections.",
+			"field" : "checkbox"
+        },
+        "requireEmailVerification": {
+			"type"  : "boolean",
+			"label" : "Require Email Verification",
+			"help"  : "When a user registers via the public registration endpoint, create their account inactive and send a verification email. Only takes effect for collections listed in $config->auth['publicRegistration'].",
 			"field" : "checkbox"
         },
         "count": {

@@ -16,6 +16,13 @@
 		display : block;
 	}
 
+	// Public-registration response with `requireEmailVerification` enabled:
+	// the form's JS adds this class so all form children collapse, leaving
+	// only the author-placed [data-verification-message] element visible.
+	&.verification-required > *:not([data-verification-message]) {
+		display: none;
+	}
+
 	input:focus,
 	textarea:focus,
 	input:focus + .form-group-icon,
