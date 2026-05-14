@@ -119,5 +119,23 @@ function setupTocScrollSpy() {
 
 setupTocScrollSpy();
 
+// In-page anchor links (#foo) resolve against <base href="/admin/"> instead
+// of the current document, so a click goes to /admin/#foo and drops you on
+// the dashboard. Rewrite every #-only link to include the current pathname
+// so the browser scrolls within this doc and the URL bar carries the right
+// deep link. Covers both the on-page TOC and any in-body anchors authors
+// wrote in markdown.
+function fixAnchorLinks() {
+	const here = location.pathname;
+	document.querySelectorAll('a[href^="#"]').forEach((a) => {
+		const hash = a.getAttribute('href');
+		if (hash && hash.length > 1) {
+			a.setAttribute('href', here + hash);
+		}
+	});
+}
+
+fixAnchorLinks();
+
 // Export for potential manual use
 export { hljs };
