@@ -93,7 +93,7 @@ readonly class AuthRegisterSubmitAction
 		// collection BEFORE saving so we know whether to force-disable the
 		// new account.
 		$collectionData         = $this->collectionFetcher->fetchCollection($collection);
-		$requiresVerification   = $collectionData !== null && $collectionData->requireEmailVerification === true;
+		$requiresVerification   = $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData && $collectionData->requireEmailVerification;
 
 		if ($requiresVerification) {
 			// Force the new account inactive regardless of what the form
