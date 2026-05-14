@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Import\DeckJsonImporter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -39,6 +41,7 @@ final class DeckJsonImporterTest extends TestCase
 			$this->objectFetcher,
 			$this->objectUpdater,
 			$this->schemaFetcher,
+			new EventDispatcher(new NullLogger()),
 			$loggerFactory,
 		);
 	}

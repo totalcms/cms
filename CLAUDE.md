@@ -108,7 +108,7 @@ composer run test:all
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
 - **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, and extension management
 - **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
-- **Event System**: Synchronous event dispatcher with 15 core events (object/collection/schema/template/user CRUD, extension lifecycle, devmode, cache.cleared)
+- **Event System**: Synchronous event dispatcher with 17 core events (object/collection/schema/template/user CRUD, import.created/updated/completed, extension lifecycle, devmode, cache.cleared)
 - **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/totalcms`
 - **Build System**: ESBuild with code splitting
 
@@ -262,9 +262,10 @@ These are non-obvious details that are important when working in these areas:
 
 ### Event System
 - **Dispatcher**: `src/Domain/Event/EventDispatcher.php` — synchronous, priority-ordered
-- **Core Events** (15): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
-- **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager
+- **Core Events** (17): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `import.created`, `import.updated`, `import.completed`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
+- **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager, ObjectImporter, JumpStartImporter, DeckJsonImporter, DeckCsvImporter
 - **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
+- **Import-Time Behavior**: While a collection is mid-import (`EventDispatcher::suspendForImport($collection)`), `object.created` and `object.updated` events are **suppressed** for that collection — importers fire `import.created` / `import.updated` per object instead, with the same `ObjectEventPayload` shape. Listeners that want to react to import-time writes specifically subscribe to the `import.*` events. `import.completed` auto-resumes the suspension (safety net for forgetful importers). `ObjectImporter` self-suspends when called outside an explicit lifecycle (e.g. `JobRunner` processing a single queued job).
 
 ### Configuration System
 - **Deep Merge**: Override specific nested settings without replacing entire arrays

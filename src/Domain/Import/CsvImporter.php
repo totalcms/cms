@@ -93,8 +93,12 @@ class CsvImporter
 		$totalRecords   = count($cleanedRecords);
 		$this->logger->info(sprintf('Found %d records to import', $totalRecords));
 
-		// Suspend per-object index rebuilds during batch import
+		// Suspend per-object index rebuilds AND `object.created`/`object.updated`
+		// events during batch import. Listeners that want import-time
+		// notifications subscribe to `import.created` / `import.updated`
+		// instead — those fire from ObjectImporter regardless of suspension.
 		$this->indexBuildListener->suspendForCollection($collection);
+		$this->eventDispatcher->suspendForImport($collection);
 
 		foreach ($cleanedRecords as $offset => $record) {
 			try {

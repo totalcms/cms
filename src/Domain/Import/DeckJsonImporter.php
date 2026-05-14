@@ -6,6 +6,8 @@ namespace TotalCMS\Domain\Import;
 
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -30,6 +32,7 @@ class DeckJsonImporter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectUpdater $objectUpdater,
 		private readonly SchemaFetcher $schemaFetcher,
+		private readonly EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('deck-json-importer');
@@ -102,7 +105,20 @@ class DeckJsonImporter
 		$objectData            = $object->toArray();
 		$objectData[$property] = $existingDeck;
 
-		$this->objectUpdater->updateObject($collection, $objectId, $objectData);
+		// Suppress the standard `object.updated` event and fire `import.updated`
+		// instead so listeners can distinguish a deck-import write from a
+		// user-driven save on the parent object.
+		$this->eventDispatcher->suspendForImport($collection);
+		try {
+			$this->objectUpdater->updateObject($collection, $objectId, $objectData);
+			$updated = $this->objectFetcher->fetchObject($collection, $objectId);
+			$this->eventDispatcher->dispatch(
+				'import.updated',
+				new ObjectEventPayload($collection, $objectId, $updated, $object),
+			);
+		} finally {
+			$this->eventDispatcher->resumeForImport($collection);
+		}
 
 		$this->logger->info("Deck JSON import completed. Imported {$importCount} items");
 

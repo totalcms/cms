@@ -112,9 +112,46 @@ $context->addEventListener('collection.deleted', function (array $payload): void
 });
 ```
 
+### `import.created`
+
+Fired **per object** when an importer creates a new object. Replaces `object.created` for the duration of an import — during import, `object.created` is suppressed for the importing collection so listeners can distinguish import-time writes from user-driven ones.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | Collection ID |
+| `id` | `string` | Object ID |
+| `object` | `ObjectData` | Newly created object |
+
+```php
+$context->addEventListener('import.created', function (array $payload): void {
+    // e.g., index the newly imported object in an external search service
+});
+```
+
+Fired by: `ObjectImporter` (used by CSV, JSON, RSS, WordPress, URL, Alloy, Total CMS 1 imports), `JumpStartImporter`, `UrlImporter`.
+
+### `import.updated`
+
+Fired **per object** when an importer updates an existing object. Replaces `object.updated` during import (same suppression model as `import.created`).
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | Collection ID |
+| `id` | `string` | Object ID |
+| `object` | `ObjectData` | Updated object |
+| `previous` | `?ObjectData` | Object state before the update (when available) |
+
+```php
+$context->addEventListener('import.updated', function (array $payload): void {
+    // e.g., diff payload['object'] against payload['previous']
+});
+```
+
+Fired by: `ObjectImporter` (CSV/JSON update mode), `DeckJsonImporter`, `DeckCsvImporter`.
+
 ### `import.completed`
 
-Fired after a batch import (CSV, JSON, or URL) finishes processing.
+Fired ONCE per batch import (CSV, JSON, or URL) after all objects in the batch are processed. Triggers a single index rebuild and auto-resumes the `object.*` event suppression for the collection.
 
 | Key | Type | Description |
 |---|---|---|
@@ -135,6 +172,8 @@ $context->addEventListener('import.completed', function (array $payload): void {
     }
 });
 ```
+
+> **Why subscribe to `import.*` instead of `object.*`?** When a 10,000-row CSV imports, `object.created` would fire 10,000 times — but it doesn't, because the dispatcher suspends it. Subscribe to `import.created` if you want per-object import notifications; subscribe to `import.completed` if you only care about the batch summary; subscribe to both if you need both.
 
 ### `schema.saved`
 
