@@ -1256,6 +1256,7 @@ return [
 	),
 
 	SetupCheckMiddleware::class => fn (ContainerInterface $container): SetupCheckMiddleware => new SetupCheckMiddleware(
+		$container->get(App::class),
 		$container->get(Config::class),
 		$container->get(RedirectRenderer::class),
 		$container->get(SetupStateManager::class),
