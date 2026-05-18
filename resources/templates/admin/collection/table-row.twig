@@ -48,6 +48,16 @@
 				{{ value|e }}
 			{% elseif col.type == 'password' %}
 				********
+			{% elseif col.type in ['localizedtext', 'localizedstyledtext'] %}
+				{# Show the defaultLocale value (or first non-empty) in the list view.
+				   Mirrors PropertyData::__toString() behavior — but operates on the
+				   already-transformed dict, since transform() runs before render. #}
+				{% set defaultLocale = cms.config('defaultLocale') %}
+				{% set displayValue = defaultLocale ? value[defaultLocale]|default('') : '' %}
+				{% if displayValue == '' %}
+					{% set displayValue = value|filter(v => v != '')|first|default('') %}
+				{% endif %}
+				{{ displayValue|striptags }}
 			{% else %}
 				{{ value|striptags }}
 			{% endif %}

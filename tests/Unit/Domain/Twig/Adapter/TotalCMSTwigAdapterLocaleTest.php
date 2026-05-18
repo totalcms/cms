@@ -8,6 +8,7 @@ use Cake\I18n\I18n;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
+use TotalCMS\Support\Config;
 
 final class TotalCMSTwigAdapterLocaleTest extends TestCase
 {
@@ -16,8 +17,12 @@ final class TotalCMSTwigAdapterLocaleTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		$translator    = $this->createMock(TranslationService::class);
-		$this->adapter = new LocaleTwigAdapter($translator);
+		$translator = $this->createMock(TranslationService::class);
+		// Per CLAUDE.md: mock Config via reflection (avoids the full settings array).
+		// These tests don't exercise the i18n bucket; the default empty values
+		// on the typed property are fine.
+		$config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->adapter = new LocaleTwigAdapter($translator, $config);
 		// Reset locale before each test
 		\Locale::setDefault('en_US');
 		I18n::setLocale('en_US');

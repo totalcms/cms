@@ -32,6 +32,29 @@ $settings['sentry'] = true;
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
+// Internationalization (Pro edition — localized field types).
+// Empty by default — opt in by overriding in config/tcms.php to enable the
+// `localizedtext` and `localizedstyledtext` field types in the schema builder.
+// Order of the `available` list matters: it's used as the fall-down order
+// when a Twig helper request like `cms.locale.text(value, 'en')` needs to
+// pick among multiple en_* variants.
+// Codes use mixed-case POSIX format (en_US, pt_BR) to match PHP intl, CakePHP
+// I18n, and Faker conventions. `dir` is required (`ltr` or `rtl`).
+//
+// Example:
+//   $settings['i18n'] = [
+//       'default'   => 'en_US',
+//       'available' => [
+//           ['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr'],
+//           ['code' => 'de',    'label' => 'Deutsch',      'dir' => 'ltr'],
+//           ['code' => 'ar',    'label' => 'العربية',     'dir' => 'rtl'],
+//       ],
+//   ];
+$settings['i18n'] = [
+	'default'   => $settings['locale'],
+	'available' => [],
+];
+
 $settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unknown';
 $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'

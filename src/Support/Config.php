@@ -15,6 +15,21 @@ class Config
 	public string $url                = '';
 	public string $api                = '';
 	public string $locale             = '';
+	/**
+	 * Internationalization config bucket for the localized field types.
+	 *
+	 * Shape:
+	 *   - `default`   string  — locale code used as the field-level fallback when a requested
+	 *                           locale's value is empty. Also drives the active tab on render.
+	 *   - `available` array   — site-wide list of locales. Each entry:
+	 *                           `['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr']`.
+	 *                           Order matters: it determines fall-down order in the Twig helper.
+	 *
+	 * Empty `available` = field types refuse to render (config not opted-in).
+	 *
+	 * @var array{default: string, available: array<int,array<string,string>>}
+	 */
+	public array $i18n                = ['default' => '', 'available' => []];
 	public string $timezone           = '';
 	public string $notfound           = '';
 	public int $maxDownloadSize       = 2048;
@@ -74,6 +89,7 @@ class Config
 		$this->url                = $settings['url'];
 		$this->api                = $settings['api'];
 		$this->locale             = $settings['locale'];
+		$this->i18n               = self::normalizeI18nSettings($settings);
 		$this->session            = $settings['session'];
 		$this->auth               = $settings['auth'];
 		$this->debug              = $settings['debug'];
@@ -102,5 +118,33 @@ class Config
 	public static function init(): self
 	{
 		return new Config(require PathResolver::packageRoot() . '/config/settings.php');
+	}
+
+	/**
+	 * Resolve i18n settings from either the canonical `$settings['i18n']`
+	 * bucket or the flat-key shape (`$settings['locales']` + `$settings['defaultLocale']`)
+	 * used during the 3.5 sliver. The bucket form wins when both are present.
+	 *
+	 * @param array<string,mixed> $settings
+	 *
+	 * @return array{default: string, available: array<int,array<string,string>>}
+	 */
+	private static function normalizeI18nSettings(array $settings): array
+	{
+		// Canonical shape — operator config opted into the bucket.
+		$bucket = $settings['i18n'] ?? null;
+		if (is_array($bucket)) {
+			return [
+				'default'   => (string)($bucket['default'] ?? ''),
+				'available' => is_array($bucket['available'] ?? null) ? $bucket['available'] : [],
+			];
+		}
+
+		// Legacy flat-key shape (3.5 sliver pre-rename). Fold into the bucket
+		// so callers only ever see one structure.
+		return [
+			'default'   => (string)($settings['defaultLocale'] ?? ''),
+			'available' => is_array($settings['locales'] ?? null) ? $settings['locales'] : [],
+		];
 	}
 }

@@ -1,0 +1,19 @@
+{
+	"$id": "https://www.totalcms.co/schemas/properties/localizedtext.json",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"anyOf": [
+		{
+			"type"        : "object",
+			"description" : "Locale-keyed dict for the localizedtext and localizedstyledtext field types. One value per configured locale; keys use mixed-case POSIX codes (en_US, de, pt_BR). Values are plain strings for localizedtext or HTML for localizedstyledtext — sanitization is applied per-value when HTML is detected. Pro edition only.",
+			"patternProperties": {
+				"^[a-z]{2,3}(_[A-Z][A-Za-z]+)?$": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		{
+			"$ref": "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
+}

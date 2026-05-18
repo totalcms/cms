@@ -65,6 +65,7 @@ return [
 					['title' => 'ID',                    'path' => 'fields/id'],
 					['title' => 'Image & Gallery',       'path' => 'fields/image-gallery'],
 					['title' => 'Lists',                 'path' => 'fields/lists'],
+					['title' => 'Localized Text',        'path' => 'fields/localized-text'],
 					['title' => 'Number & Range',        'path' => 'fields/number-range'],
 					['title' => 'Password',              'path' => 'fields/password'],
 					['title' => 'Price',                 'path' => 'fields/price'],

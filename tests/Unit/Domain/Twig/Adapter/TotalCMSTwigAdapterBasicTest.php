@@ -12,13 +12,17 @@ use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Support\Config;
 
 final class TotalCMSTwigAdapterBasicTest extends TestCase
 {
 	public function testLanguagesReturnsCorrectArray(): void
 	{
 		$translator = $this->createMock(TranslationService::class);
-		$adapter    = new LocaleTwigAdapter($translator);
+		// Per CLAUDE.md: mock Config via reflection. This test calls languages()
+		// which only reads the static method table; an empty Config is sufficient.
+		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$adapter    = new LocaleTwigAdapter($translator, $config);
 		$languages  = $adapter->languages();
 
 		expect($languages)->toBeArray();

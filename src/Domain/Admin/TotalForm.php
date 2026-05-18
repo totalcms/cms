@@ -91,6 +91,10 @@ class TotalForm implements \Stringable
 			'image',
 			'password',
 		],
+		'Localization Fields' => [
+			'localizedtext',
+			'localizedstyledtext',
+		],
 	];
 
 	/**
@@ -114,8 +118,13 @@ class TotalForm implements \Stringable
 		'id'            => 'slug',
 		'image'         => 'image',
 		'json'          => 'json',
-		'list'          => 'list',
-		'multicheckbox' => 'array',
+		'list'                => 'list',
+		// Both localized field variants share a single stored type. The
+		// `field` value still distinguishes them at the rendering layer
+		// (FormField + JS class), but the saved-schema `type` is unified.
+		'localizedtext'       => 'localizedtext',
+		'localizedstyledtext' => 'localizedtext',
+		'multicheckbox'       => 'array',
 		'multiselect'   => 'array',
 		'number'        => 'number',
 		'password'      => 'password',
@@ -215,6 +224,8 @@ class TotalForm implements \Stringable
 		'image',
 		'json',
 		'list',
+		'localizedtext',
+		'localizedstyledtext',
 		'multicheckbox',
 		'multiselect',
 		'number',
@@ -872,6 +883,24 @@ class TotalForm implements \Stringable
 	public function baseApi(): string
 	{
 		return $this->config->api;
+	}
+
+	/**
+	 * Return the site-wide list of locales configured for `localizedtext` /
+	 * `localizedstyledtext` field types. Each entry: ['code' => 'en_US',
+	 * 'label' => 'English (US)', 'dir' => 'ltr']. Empty array means the
+	 * operator has not opted in to localized content.
+	 *
+	 * @return array<int,array<string,string>>
+	 */
+	public function getLocales(): array
+	{
+		return $this->config->i18n['available'];
+	}
+
+	public function getDefaultLocale(): string
+	{
+		return $this->config->i18n['default'];
 	}
 
 	/**

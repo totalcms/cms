@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Support\Config;
 
 /**
  * Twig sub-adapter for locale and internationalization.
@@ -15,6 +16,7 @@ readonly class LocaleTwigAdapter
 {
 	public function __construct(
 		private TranslationService $translator,
+		private Config $config,
 	) {
 	}
 
@@ -127,5 +129,113 @@ readonly class LocaleTwigAdapter
 	public function jsTranslations(): array
 	{
 		return $this->translator->getCatalog('js');
+	}
+
+	//-------------------------------------------------------------------
+	// Localized field-value helpers (Pro). Operate on the locale-keyed
+	// dict stored by `localizedtext` / `localizedstyledtext` field types.
+	// Direct array access (post.title.de, post.title['en_US']) bypasses
+	// these helpers and gives you the raw value with no fallback chain.
+	//-------------------------------------------------------------------
+
+	/**
+	 * Look up a localized text value from a locale-keyed dict, applying the
+	 * deterministic fallback chain:
+	 *   1. Canonicalize the requested locale (case-insensitive input).
+	 *   2. Exact match on the dict.
+	 *   3. Region fall-up: `de_DE` → bare `de`.
+	 *   4. Region fall-down: bare `en` → first matching `en_*` in the order
+	 *      of the site's configured locales.
+	 *   5. Empty string.
+	 *
+	 * Usage in Twig: {{ cms.locale.text(post.title, 'de') }}
+	 *
+	 * @param mixed  $value  Expected: array<string,string>. Other shapes return ''.
+	 * @param string $locale Requested locale (case-insensitive on input).
+	 */
+	public function text(mixed $value, string $locale): string
+	{
+		if (!is_array($value) || $value === []) {
+			return '';
+		}
+
+		$canonical = self::canonicalizeLocale($locale);
+		if ($canonical === '') {
+			return '';
+		}
+
+		// 1. Exact match
+		if (isset($value[$canonical]) && is_scalar($value[$canonical])) {
+			return (string)$value[$canonical];
+		}
+
+		// 2. Region fall-up: `de_DE` → `de`
+		if (str_contains($canonical, '_')) {
+			$bare = explode('_', $canonical, 2)[0];
+			if (isset($value[$bare]) && is_scalar($value[$bare])) {
+				return (string)$value[$bare];
+			}
+		}
+
+		// 3. Region fall-down: bare `en` → first matching `en_*` in
+		//    configured locales order. Falls back to alphabetical dict
+		//    order if no site locales are configured.
+		if (!str_contains($canonical, '_')) {
+			$prefix = $canonical . '_';
+
+			foreach ($this->config->i18n['available'] as $configured) {
+				$code = (string)($configured['code'] ?? '');
+				if ($code !== '' && str_starts_with($code, $prefix) && isset($value[$code]) && is_scalar($value[$code])) {
+					return (string)$value[$code];
+				}
+			}
+
+			// Fallback: scan the value dict directly in insertion order.
+			foreach ($value as $key => $val) {
+				if (is_string($key) && str_starts_with($key, $prefix) && is_scalar($val)) {
+					return (string)$val;
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Same as text() but reserved for `localizedstyledtext` content. Returned
+	 * value is HTML — pipe through `|raw` in templates to render unescaped.
+	 *
+	 * Usage in Twig: {{ cms.locale.styledtext(post.body, 'de')|raw }}
+	 */
+	public function styledtext(mixed $value, string $locale): string
+	{
+		return $this->text($value, $locale);
+	}
+
+	/**
+	 * Normalize a locale code to the canonical `{lang}_{REGION}` form:
+	 * language lowercased, region uppercased. Bare-language codes
+	 * (`de`, `fr`) stay bare. Empty input returns empty string.
+	 */
+	public static function canonicalizeLocale(string $locale): string
+	{
+		$locale = trim($locale);
+		if ($locale === '') {
+			return '';
+		}
+
+		// Accept either `en_US` or `en-US` style on input; canonical is underscore.
+		$locale = str_replace('-', '_', $locale);
+		$parts  = explode('_', $locale, 2);
+		$lang   = strtolower($parts[0]);
+		if ($lang === '') {
+			return '';
+		}
+
+		if (!isset($parts[1]) || $parts[1] === '') {
+			return $lang;
+		}
+
+		return $lang . '_' . strtoupper($parts[1]);
 	}
 }

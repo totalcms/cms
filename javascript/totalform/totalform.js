@@ -22,6 +22,8 @@ import MultiCheckboxField from './multicheckbox';
 import ListField from './list';
 import RangeSlider from './range';
 import StyledTextField from './styledtext';
+import LocalizedTextField from './localizedtext';
+import LocalizedStyledTextField from './localizedstyledtext';
 import SVGField from './svg';
 import ImageField from './image';
 import GalleryField from './gallery';
@@ -336,6 +338,12 @@ export default class TotalForm {
 
 			case "styledtext":
                 return new StyledTextField(field, settings);
+
+			case "localizedtext":
+				return new LocalizedTextField(field, settings);
+
+			case "localizedstyledtext":
+				return new LocalizedStyledTextField(field, settings);
 
             case "svg":
                 return new SVGField(field, settings);
