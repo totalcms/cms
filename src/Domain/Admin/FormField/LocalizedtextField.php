@@ -22,6 +22,19 @@ class LocalizedtextField extends FormField
 	protected string $defaultFieldType = 'localizedtext';
 	protected string $defaultInputType = 'text';
 
+	/**
+	 * Skip the default form-group wrapper that FormField::build() adds around
+	 * the whole buildFormField() output. Each locale-pane emits its own
+	 * form-group + form-group-icon (inside `buildPane()`) so the icon sits
+	 * next to the input the user is actively editing instead of stranded at
+	 * the bottom of the tab stack. The field-level label and help text are
+	 * still produced by `createFormField()`.
+	 */
+	public function build(): string
+	{
+		return $this->createFormField($this->buildFormField());
+	}
+
 	public function buildFormField(): string
 	{
 		$locales = $this->form->getLocales();
@@ -125,6 +138,8 @@ class LocalizedtextField extends FormField
 		$id    = "field-{$this->uuid}-{$slug}";
 
 		$input = $this->buildLocaleInput($code, $dir, $id, $value);
+		$icon  = $this->icon ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';
+		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
 		$paneAttrs = [
 			'class'            => 'locale-pane',
@@ -137,7 +152,7 @@ class LocalizedtextField extends FormField
 			$paneAttrs['hidden'] = '';
 		}
 
-		return HTMLUtils::element('div', $input, $paneAttrs);
+		return HTMLUtils::element('div', $group, $paneAttrs);
 	}
 
 	/**

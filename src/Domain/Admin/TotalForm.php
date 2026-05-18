@@ -93,6 +93,7 @@ class TotalForm implements \Stringable
 		],
 		'Localization Fields' => [
 			'localizedtext',
+			'localizedtextarea',
 			'localizedstyledtext',
 		],
 	];
@@ -119,10 +120,11 @@ class TotalForm implements \Stringable
 		'image'         => 'image',
 		'json'          => 'json',
 		'list'                => 'list',
-		// Both localized field variants share a single stored type. The
+		// All three localized field variants share a single stored type. The
 		// `field` value still distinguishes them at the rendering layer
 		// (FormField + JS class), but the saved-schema `type` is unified.
 		'localizedtext'       => 'localizedtext',
+		'localizedtextarea'   => 'localizedtext',
 		'localizedstyledtext' => 'localizedtext',
 		'multicheckbox'       => 'array',
 		'multiselect'   => 'array',
@@ -225,6 +227,7 @@ class TotalForm implements \Stringable
 		'json',
 		'list',
 		'localizedtext',
+		'localizedtextarea',
 		'localizedstyledtext',
 		'multicheckbox',
 		'multiselect',

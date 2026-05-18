@@ -340,6 +340,10 @@ export default class TotalForm {
                 return new StyledTextField(field, settings);
 
 			case "localizedtext":
+			case "localizedtextarea":
+				// Same JS class for both — getValue/setValue queries
+				// `input[data-locale], textarea[data-locale]` and works
+				// uniformly. The PHP FormField subclass decides the shape.
 				return new LocalizedTextField(field, settings);
 
 			case "localizedstyledtext":
