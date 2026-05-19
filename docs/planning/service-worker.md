@@ -1,8 +1,8 @@
 # T3 Service Worker — Feature Plan
 
-**Status:** Planning (2026-04-23, refined 2026-05-01) — candidate for 3.5 (post-i18n)
+**Status:** Planning (2026-04-23, refined 2026-05-01) — candidate for 3.7 (post-i18n full system)
 **Refinement notes (2026-05-01):** Folded in i18n coupling (cache keys, version header, locale-aware manifest), lifecycle/kill-switch story, quota and eviction policy, HTMX-aware routing, range request handling, multi-tab coordination, dev-mode behavior. Observability moved from Phase 4 polish to Phase 1 foundation.
-**Related:** HTMX Load More (shipped 3.2), Tiptap (shipped 3.2), Site Builder plan (`docs/planning/5-brief-builder.md`), Browser Extension plan (`docs/planning/browser-extension.md`), **Internationalization plan (`docs/planning/internationalization.md`) — lands first in 3.4**
+**Related:** HTMX Load More (shipped 3.2), Tiptap (shipped 3.2), Site Builder (shipped), Browser Extension plan (`docs/planning/browser-extension.md`), **Internationalization plan (`docs/planning/internationalization.md`) — must land first**
 
 ## Vision
 

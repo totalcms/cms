@@ -1,16 +1,10 @@
 # Bundled Extensions Roadmap
 
-Tracks what's shipped, what's queued, and what's deferred for the bundled-extension family that ships in `resources/extensions/totalcms/`. Companion to [Site Builder refinements](5-builder-refinements.md) and the [page-middleware framework](../../resources/docs/builder/overview.md#page-features-middleware).
+Tracks what's queued and what's deferred for the bundled-extension family that ships in `resources/extensions/totalcms/`. Companion to the [page-middleware framework](../../resources/docs/builder/overview.md#page-features-middleware).
 
 The framework is small and stable: extensions register a name + container definition + a class implementing `PageMiddlewareInterface`; pages opt in via the **Features** field; the runner invokes the chain with the request + page record and short-circuits on the first response.
 
-## Shipped
-
-| Extension | Pattern demonstrated | Notes |
-|---|---|---|
-| `totalcms/auth` (core) | Session check + 302 redirect (or 401 JSON) | Built into core, not under `resources/extensions/`. Ground-truth example for what a page middleware looks like. |
-| `totalcms/ab-split` | Render alternate template at same URL + cookie-state stickiness | First bundled. Validates `addContainerDefinition` + `addPageMiddleware` wire. Surfaced + fixed five latent bugs in the framework along the way. |
-| `totalcms/geo-redirect` | 302 based on request headers (CDN-injected country) | No DI deps. Demonstrates the "read request signal, short-circuit with redirect" shape. |
+Already shipped: `totalcms/auth` (core), `totalcms/ab-split`, and `totalcms/geo-redirect` — see those extensions' source for live patterns to model new middleware against.
 
 ## Queued — easy wins worth shipping next
 
@@ -181,7 +175,7 @@ After that, decide whether to extend the middleware contract for header injectio
 
 ## See also
 
-- [Site Builder Refinements](5-builder-refinements.md) — the parent plan that bundled extensions came out of
+- The bundled-extension family came out of the now-completed Site Builder Refinements project (shipped 2026-05-05).
 - [Page Features (Builder)](../../resources/docs/builder/overview.md#page-features-middleware) — user-facing docs for the framework
 - [Bundled Extensions](../../resources/docs/extensions/bundled.md) — user-facing docs for the bundled-extension concept and the list of extensions
 - [Extension Points → Page Middleware](../../resources/docs/extensions/extension-points.md) — how third-party extensions register their own middleware

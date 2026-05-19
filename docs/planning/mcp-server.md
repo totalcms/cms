@@ -1,8 +1,7 @@
 # T3 MCP Server — Feature Plan
 
-**Status:** Planning (2026-05-01) — headline feature for 3.3 platform release
-**Supersedes:** `docs/planning/7-brief-mcp.md` (kept for historical context — the brief was scoped narrowly to developer scaffolding; this plan adds the consumer-facing content surface)
-**Related:** Docs MCP server (`docs/planning/1-brief-docs-mcp.md` — separate project, serves T3 documentation), CLI (shipped 3.3), Extensions (shipped 3.3), Internationalization plan (`docs/planning/internationalization.md` — 3.4)
+**Status:** Planning (2026-05-01) — headline feature for the next platform release
+**Related:** Docs MCP server (separate hosted project at `mcp.totalcms.co`, serves T3 documentation to AI agents), CLI (shipped), Extensions (shipped), Internationalization plan (`docs/planning/internationalization.md` — 3.6)
 
 ## Goal
 

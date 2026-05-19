@@ -1,7 +1,7 @@
 # Frontend Asset Pipeline — Feature Plan
 
-**Status:** Planning (2026-05-04, revised 2026-05-04) — candidate for 3.3
-**Related:** Extension System (shipped 3.3, `docs/planning/4-brief-extensions.md`), Service Worker (`docs/planning/service-worker.md`), Frontend Build Integration (deferred — see "Future Evolution" below)
+**Status:** Planning (2026-05-04, revised 2026-05-04) — 3.6 candidate
+**Related:** Extension System (shipped), Service Worker (`docs/planning/service-worker.md`), Frontend Build Integration (deferred — see "Future Evolution" below)
 
 ## Goal
 
