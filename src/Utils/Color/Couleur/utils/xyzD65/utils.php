@@ -54,7 +54,6 @@ function stringify(
     bool|null $alpha     = null,
     int|null  $precision = null,
 ) :string {
-    $legacy    ??= Constant::LEGACY->value();
     $precision ??= Constant::PRECISION->value();
     $alpha     ??= ($opacity !== (float) 1);
 

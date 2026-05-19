@@ -40,7 +40,7 @@ function toHsv(
     $saturation /= 100;
     $lightness  /= 100;
     $value       = $lightness + $saturation * \min($lightness, 1 - $lightness);
-    $saturation  = ($value === 0)
+    $saturation  = ($value === 0.0)
         ? 0
         : 200 * (1 - $lightness / $value)
     ;
@@ -144,10 +144,11 @@ function toProPhoto(
 }
 
 function toRgb(
-    float $hue        = 0,
-    float $saturation = 0,
-    float $lightness  = 0,
-    float $opacity    = 100,
+    float    $hue        = 0,
+    float    $saturation = 0,
+    float    $lightness  = 0,
+    float    $opacity    = 100,
+    int|null $precision  = null,
 ) :array {
     $precision ??= 0;
     $hue        /= 60;

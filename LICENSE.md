@@ -31,7 +31,10 @@ Total CMS bundles source code from the following third-party libraries that ship
 - **Location:** `src/Utils/Color/Couleur/`
 - **Upstream:** https://github.com/matthieumastadenis/couleur
 - **License:** MIT
-- **Includes modifications by:** Joe Workman (enhanced OKLCH support, PHP 8.4 compatibility)
+- **Includes modifications by:** Joe Workman
+  - enhanced OKLCH support
+  - PHP 8.4 compatibility
+  - Modernized code base
 
 ```
 MIT License

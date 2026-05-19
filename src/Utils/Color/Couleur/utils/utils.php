@@ -321,8 +321,7 @@ function cleanHexValue(
  * @param  float        $number
  * @param  integer      $length
  * @param  boolean|null $uppercase
- * @param  integer|null $precision
- * 
+ *
  * @return string
  */
 function decToHex(

@@ -65,6 +65,7 @@ function toHsl(
             : $d / ($max + $min)
         ;
 
+        $hue = 0.0;
         switch ($max) {
             case $red:
                 $hue = ($green - $blue) / $d + ($green < $blue ? 6 : 0);

@@ -54,7 +54,7 @@ function oklchChange(array $oklch, array $change): array
 
     // ColorFactory library doesn't handle hue wrapping - only change hue if specified
     $updatedHue = $oklch['h'];
-    if (isset($change['h']) && $change['h'] !== null) {
+    if (isset($change['h'])) {
         $updatedHue = changeHue($oklch['h'], $change['h']);
     }
 
@@ -117,24 +117,22 @@ function changeHue(int|float $hue, string $formula): float
 function cleanEnhanced(mixed $value, bool|null $throw = null): array
 {
     $cleaned = clean($value, $throw);
-    
+
     // Additional boundary checking for better color accuracy
-    if ($cleaned !== null) {
-        // Ensure lightness is properly bounded (0-100%)
-        $cleaned[0] = max(0, min(100, $cleaned[0]));
-        
-        // Ensure chroma is non-negative (can be > 1 in OKLCH)
-        $cleaned[1] = max(0, $cleaned[1]);
-        
-        // Ensure hue is properly wrapped (0-360°)
-        $cleaned[2] = fmod($cleaned[2], 360);
-        if ($cleaned[2] < 0) {
-            $cleaned[2] += 360;
-        }
-        
-        // Ensure opacity is properly bounded (0-100%)
-        $cleaned[3] = max(0, min(100, $cleaned[3]));
+    // Ensure lightness is properly bounded (0-100%)
+    $cleaned[0] = max(0, min(100, $cleaned[0]));
+
+    // Ensure chroma is non-negative (can be > 1 in OKLCH)
+    $cleaned[1] = max(0, $cleaned[1]);
+
+    // Ensure hue is properly wrapped (0-360°)
+    $cleaned[2] = fmod($cleaned[2], 360);
+    if ($cleaned[2] < 0) {
+        $cleaned[2] += 360;
     }
-    
+
+    // Ensure opacity is properly bounded (0-100%)
+    $cleaned[3] = max(0, min(100, $cleaned[3]));
+
     return $cleaned;
 }

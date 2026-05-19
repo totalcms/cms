@@ -40,7 +40,7 @@ function toHsl(
     $saturation /= 100;
     $value      /= 100;
     $lightness   = $value * (1 - $saturation / 2);
-    $saturation  = (\in_array($lightness, [ 0, 1 ], true))
+    $saturation  = (\in_array($lightness, [ 0.0, 1.0 ], true))
         ? 0
         : 100 * ($value - $lightness) / \min($lightness, 1 - $lightness)
     ;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9dc4ca3bde6e0d10ef82d56366573425",
+    "content-hash": "fc929b0168f2c8ccf8e58dd641475460",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -895,16 +895,16 @@
         },
         {
             "name": "erusev/parsedown",
-            "version": "dev-master",
+            "version": "1.8.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/joeworkman-forks/parsedown.git",
-                "reference": "8e48c64155234d8c2b9e5f2a475ca061ca82c676"
+                "url": "https://github.com/erusev/parsedown.git",
+                "reference": "96baaad00f71ba04d76e45b4620f54d3beabd6f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joeworkman-forks/parsedown/zipball/8e48c64155234d8c2b9e5f2a475ca061ca82c676",
-                "reference": "8e48c64155234d8c2b9e5f2a475ca061ca82c676",
+                "url": "https://api.github.com/repos/erusev/parsedown/zipball/96baaad00f71ba04d76e45b4620f54d3beabd6f7",
+                "reference": "96baaad00f71ba04d76e45b4620f54d3beabd6f7",
                 "shasum": ""
             },
             "require": {
@@ -914,21 +914,13 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.5|^8.5|^9.6"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-0": {
                     "Parsedown": ""
                 }
             },
-            "autoload-dev": {
-                "psr-0": {
-                    "TestParsedown": "test/",
-                    "ParsedownTest": "test/",
-                    "CommonMarkTest": "test/",
-                    "CommonMarkTestWeak": "test/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -946,26 +938,33 @@
                 "parser"
             ],
             "support": {
-                "source": "https://github.com/joeworkman-forks/parsedown/tree/master"
+                "issues": "https://github.com/erusev/parsedown/issues",
+                "source": "https://github.com/erusev/parsedown/tree/1.8.0"
             },
-            "time": "2025-12-04T22:29:01+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/erusev",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-16T11:41:01+00:00"
         },
         {
             "name": "erusev/parsedown-extra",
-            "version": "dev-master",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/joeworkman-forks/parsedown-extra.git",
-                "reference": "86d88abc6ba49eb9ceedc953129616a740ee3db1"
+                "url": "https://github.com/erusev/parsedown-extra.git",
+                "reference": "5b5b9b9d000792c7ac631aec23a6688e0b6d3dc5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joeworkman-forks/parsedown-extra/zipball/86d88abc6ba49eb9ceedc953129616a740ee3db1",
-                "reference": "86d88abc6ba49eb9ceedc953129616a740ee3db1",
+                "url": "https://api.github.com/repos/erusev/parsedown-extra/zipball/5b5b9b9d000792c7ac631aec23a6688e0b6d3dc5",
+                "reference": "5b5b9b9d000792c7ac631aec23a6688e0b6d3dc5",
                 "shasum": ""
             },
             "require": {
-                "erusev/parsedown": "^1.7.4 || ^1.8.0",
+                "erusev/parsedown": "^1.8",
                 "ext-dom": "*",
                 "ext-libxml": "*",
                 "ext-mbstring": "*",
@@ -974,22 +973,13 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.5|^8.5|^9.6"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-0": {
                     "ParsedownExtra": ""
                 }
             },
-            "autoload-dev": {
-                "psr-0": {
-                    "TestParsedown": "test/",
-                    "ParsedownExtraTest": "test/",
-                    "ParsedownTest": "vendor/erusev/parsedown/test/",
-                    "CommonMarkTest": "vendor/erusev/parsedown/test/",
-                    "CommonMarkTestWeak": "vendor/erusev/parsedown/test/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1009,9 +999,16 @@
                 "parser"
             ],
             "support": {
-                "source": "https://github.com/joeworkman-forks/parsedown-extra/tree/master"
+                "issues": "https://github.com/erusev/parsedown-extra/issues",
+                "source": "https://github.com/erusev/parsedown-extra/tree/0.9.0"
             },
-            "time": "2025-12-04T22:55:59+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/erusev",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-16T13:06:37+00:00"
         },
         {
             "name": "fakerphp/faker",
@@ -2024,92 +2021,6 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.1"
             },
             "time": "2025-03-19T14:43:43+00:00"
-        },
-        {
-            "name": "joeworkman-forks/couleur",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/joeworkman-forks/couleur.git",
-                "reference": "e82ac5052106b59e65d2a0a11e317b1334a10c33"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/joeworkman-forks/couleur/zipball/e82ac5052106b59e65d2a0a11e317b1334a10c33",
-                "reference": "e82ac5052106b59e65d2a0a11e317b1334a10c33",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "php": "^8.2",
-                "phpunit/phpunit": "^9.5"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/utils/utils.php",
-                    "src/utils/css/conversions.php",
-                    "src/utils/css/utils.php",
-                    "src/utils/hexRgb/conversions.php",
-                    "src/utils/hexRgb/utils.php",
-                    "src/utils/hsl/conversions.php",
-                    "src/utils/hsl/utils.php",
-                    "src/utils/hsv/conversions.php",
-                    "src/utils/hsv/utils.php",
-                    "src/utils/hwb/conversions.php",
-                    "src/utils/hwb/utils.php",
-                    "src/utils/lab/conversions.php",
-                    "src/utils/lab/utils.php",
-                    "src/utils/lch/conversions.php",
-                    "src/utils/lch/utils.php",
-                    "src/utils/linP3/conversions.php",
-                    "src/utils/linP3/utils.php",
-                    "src/utils/linProPhoto/conversions.php",
-                    "src/utils/linProPhoto/utils.php",
-                    "src/utils/linRgb/conversions.php",
-                    "src/utils/linRgb/utils.php",
-                    "src/utils/okLab/conversions.php",
-                    "src/utils/okLab/utils.php",
-                    "src/utils/okLch/conversions.php",
-                    "src/utils/okLch/utils.php",
-                    "src/utils/p3/conversions.php",
-                    "src/utils/p3/utils.php",
-                    "src/utils/proPhoto/conversions.php",
-                    "src/utils/proPhoto/utils.php",
-                    "src/utils/rgb/conversions.php",
-                    "src/utils/rgb/utils.php",
-                    "src/utils/xyzD50/conversions.php",
-                    "src/utils/xyzD50/utils.php",
-                    "src/utils/xyzD65/conversions.php",
-                    "src/utils/xyzD65/utils.php",
-                    "src/utils/okLch/enhanced.php"
-                ],
-                "psr-4": {
-                    "matthieumastadenis\\couleur\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Matthieu Masta Denis",
-                    "email": "matthieu.denis@abitus.net"
-                },
-                {
-                    "name": "Joe Workman",
-                    "email": "joe@joeworkman.net",
-                    "role": "Enhanced OKLCH & PHP 8.4 compatibility"
-                }
-            ],
-            "description": "A modern PHP 8.2+ color library with enhanced OKLCH support and PHP 8.4 compatibility",
-            "support": {
-                "source": "https://github.com/joeworkman-forks/couleur/tree/main"
-            },
-            "time": "2025-08-23T20:55:21+00:00"
         },
         {
             "name": "khanzadimahdi/uploadmanager",
@@ -15606,18 +15517,6 @@
     ],
     "aliases": [
         {
-            "package": "erusev/parsedown",
-            "version": "9999999-dev",
-            "alias": "1.8.0",
-            "alias_normalized": "1.8.0.0"
-        },
-        {
-            "package": "erusev/parsedown-extra",
-            "version": "9999999-dev",
-            "alias": "1.8.0",
-            "alias_normalized": "1.8.0.0"
-        },
-        {
             "package": "ksubileau/color-thief-php",
             "version": "dev-fix-deprecations",
             "alias": "2.0.3",
@@ -15626,9 +15525,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "erusev/parsedown": 20,
-        "erusev/parsedown-extra": 20,
-        "joeworkman-forks/couleur": 20,
         "ksubileau/color-thief-php": 20,
         "nekofar/pest-plugin-slim": 20,
         "nekofar/slim-test": 20,

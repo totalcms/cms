@@ -66,7 +66,7 @@ enum ColorSpace :string {
         foreach (static::cases() as $space) {
             $aliases[\strtolower($space->name)] = $space;
 
-            foreach ($space->aliases(true) as $alias) {
+            foreach ($space->aliases() as $alias) {
                 $aliases[(string) $alias] = $space;
             }
         }
@@ -94,7 +94,7 @@ enum ColorSpace :string {
         $lcName  = \strtolower((string) $name);
         $throw ??= !$fallback;
 
-        foreach (static::allAliases($throw) as $alias => $space) {
+        foreach (static::allAliases() as $alias => $space) {
             if ($lcName === \strtolower($alias)) {
                 return $space;
             }
