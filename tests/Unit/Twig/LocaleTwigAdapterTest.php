@@ -159,3 +159,94 @@ describe('LocaleTwigAdapter::styledtext', function (): void {
 		expect($adapter->styledtext($value, 'fr'))->toBe('');
 	});
 });
+
+describe('LocaleTwigAdapter::text — site-default fallback', function (): void {
+	test('falls back to i18n.default when the requested locale is missing', function (): void {
+		// Site default is en_US (the first in the configured list — see
+		// makeLocaleAdapter()). A French request that the dict can\'t satisfy
+		// should reach for en_US as the last-resort step before empty.
+		$adapter = makeLocaleAdapter([
+			['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr'],
+			['code' => 'de',    'label' => 'Deutsch',      'dir' => 'ltr'],
+		]);
+		$value = ['en_US' => 'Hello'];
+
+		expect($adapter->text($value, 'fr'))->toBe('Hello');
+		expect($adapter->text($value, 'ja_JP'))->toBe('Hello');
+	});
+
+	test('site-default fallback does not loop when the request is the default', function (): void {
+		$adapter = makeLocaleAdapter([
+			['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr'],
+		]);
+		// dict has no en_US, no en, nothing. Requesting en_US (which IS the
+		// site default) should NOT recurse back into the default — it should
+		// give up and return empty.
+		expect($adapter->text(['xx_XX' => 'orphan'], 'en_US'))->toBe('');
+	});
+
+	test('returns empty when no site default is configured and no fallback path matches', function (): void {
+		$adapter = makeLocaleAdapter();  // no available locales, no default
+		$value   = ['en_US' => 'Hello'];
+
+		expect($adapter->text($value, 'fr'))->toBe('');
+	});
+
+	test('region fall-up still runs before site-default fallback', function (): void {
+		// Make sure adding step 5 didn\'t short-circuit step 3.
+		$adapter = makeLocaleAdapter([
+			['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr'],
+			['code' => 'de',    'label' => 'Deutsch',      'dir' => 'ltr'],
+		]);
+		$value = ['en_US' => 'Hello', 'de' => 'Hallo'];
+
+		// Request `de_DE` — should fall UP to `de` (Hallo), not to the
+		// site default (en_US's Hello).
+		expect($adapter->text($value, 'de_DE'))->toBe('Hallo');
+	});
+});
+
+describe('LocalizedtextData REST serialization shape', function (): void {
+	test('transform() returns the full locale-keyed dict (no resolution)', function (): void {
+		// The REST API path uses `ObjectData::toArray()` which calls
+		// `transform()` on every PropertyData object. For localized fields
+		// the contract is "always return the full multi-locale object" —
+		// no server-side resolution to a single locale in 3.5. This test
+		// is the contract guard.
+		$data = new TotalCMS\Domain\Property\Data\LocalizedtextData([
+			'en_US' => 'Welcome',
+			'de'    => 'Willkommen',
+			'ar'    => 'أهلا بك',
+		]);
+
+		$out = $data->transform();
+		expect($out)->toBe([
+			'en_US' => 'Welcome',
+			'de'    => 'Willkommen',
+			'ar'    => 'أهلا بك',
+		]);
+
+		// json_encode round-trip = what the REST response body looks like.
+		$json = (string)json_encode($out, JSON_UNESCAPED_UNICODE);
+		expect($json)->toContain('"en_US":"Welcome"');
+		expect($json)->toContain('"de":"Willkommen"');
+		expect($json)->toContain('"ar":"أهلا بك"');
+	});
+
+	test('transform() preserves empty-string locales (no value dropping)', function (): void {
+		// A locale that's been authored as empty should round-trip as empty —
+		// downstream callers may treat "" differently from "key absent",
+		// and the REST shape must distinguish them.
+		$data = new TotalCMS\Domain\Property\Data\LocalizedtextData([
+			'en_US' => 'Welcome',
+			'de'    => '',
+			'ar'    => '',
+		]);
+
+		expect($data->transform())->toBe([
+			'en_US' => 'Welcome',
+			'de'    => '',
+			'ar'    => '',
+		]);
+	});
+});

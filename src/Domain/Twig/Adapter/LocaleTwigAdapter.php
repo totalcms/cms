@@ -129,7 +129,11 @@ readonly class LocaleTwigAdapter
 	 *   3. Region fall-up: `de_DE` → bare `de`.
 	 *   4. Region fall-down: bare `en` → first matching `en_*` in the order
 	 *      of the site's configured locales.
-	 *   5. Empty string.
+	 *   5. Site default — try `$config->i18n['default']` as the last resort
+	 *      before giving up. Sparse-data templates (object has only an
+	 *      English value but a German request comes in) get the English
+	 *      value instead of an empty cell.
+	 *   6. Empty string.
 	 *
 	 * Usage in Twig: {{ cms.locale.text(post.title, 'de') }}
 	 *
@@ -179,6 +183,15 @@ readonly class LocaleTwigAdapter
 					return (string)$val;
 				}
 			}
+		}
+
+		// 4. Site-default fallback. When the requested locale yields nothing,
+		//    try the site's `i18n.default` as a last resort before giving up.
+		//    Skip when the default IS the requested code (already tried in
+		//    step 1) to avoid redundant work.
+		$siteDefault = self::canonicalizeLocale($this->config->i18n['default']);
+		if ($siteDefault !== '' && $siteDefault !== $canonical && isset($value[$siteDefault]) && is_scalar($value[$siteDefault])) {
+			return (string)$value[$siteDefault];
 		}
 
 		return '';

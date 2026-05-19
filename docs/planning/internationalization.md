@@ -48,7 +48,7 @@ These decisions are locked in 3.5 because changing them in 3.6 would be a migrat
 
 1. **Storage format is mixed-case POSIX locale codes.** `{ "en_US": "About Us", "de": "Über uns", "pt_BR": "Sobre" }`. Language lowercase, region uppercase, underscore separator — the format PHP's intl extension, CakePHP I18n, Faker, and T3's existing admin translation files (`admin.en_US.php`, `js.de_DE.php`, etc.) all canonicalize to. Bare language codes (`de`, `fr`) are valid. BCP 47 normalization (`en-US`, lowercase `/en-us/`) happens at the HTML/HTTP output boundary in 3.6, not at storage.
 2. **Twig accessor namespace and signature are final.** `cms.locale.text(value, locale)` and `cms.locale.styledtext(value, locale)`, where `value` is the localized dict (typically `post.title`). The `cms.locale.*` namespace gives the full 3.6 surface (`cms.locale.t()`, `cms.locale.url()`, `cms.locale.current`, `cms.locale.switcher()`, formatters) a clean home alongside existing `cms.locale.set()`/`cms.locale.get()`/`cms.locale.t()`/`cms.locale.languages()`. In 3.5 the `locale` argument is required; in 3.6 it becomes optional and auto-resolves to the active locale. Same call shape, expanded behavior — no template rewrites. Direct array access (`post.title.de`, `post.title['en_US']`) also works without a helper for the simple case.
-3. **Helper locale matching is lenient.** Lookup order: (1) canonicalize input (case-insensitive — `'en_us'`, `'EN_US'`, `'En_Us'` all become `en_US`), (2) exact match in the value dict, (3) region fall-up (request `de_DE`, fall to bare `de`), (4) region fall-down (request bare `en`, fall to first matching `en_*` in the order of the site's configured locales), (5) field-level `defaultLocale`, (6) empty string. This stays the same in 3.6 — active-locale resolution feeds the same chain.
+3. **Helper locale matching is lenient.** Lookup order: (1) canonicalize input (case-insensitive — `'en_us'`, `'EN_US'`, `'En_Us'` all become `en_US`), (2) exact match in the value dict, (3) region fall-up (request `de_DE`, fall to bare `de`), (4) region fall-down (request bare `en`, fall to first matching `en_*` in the order of the site's configured locales), (5) site default — `cms.config('i18n', 'default')` (originally specified as per-field `defaultLocale` but the helper only sees the value dict; site default is the practical equivalent), (6) empty string. This stays the same in 3.6 — active-locale resolution feeds the same chain.
 4. **REST API serialization shape stays.** Localized fields always serialize as the full `{ "en_US": ..., "de": ... }` object in 3.5. In 3.6, the default behavior shifts to "return the resolved string for the active locale" with `?expand=locales` for the full object — but the full-object shape stays available exactly as today. No breaking shape change for clients that opt into `?expand=locales`.
 5. **Locale-content config lives at the site level in 3.5 under the `i18n` bucket, with a future per-collection override in 3.6.** `cms.config('i18n', 'available')` returns the site list; `cms.config('i18n', 'default')` returns the default locale. When 3.6 adds per-collection locale config, the site-wide setting becomes the default fallback. No data migration.
 6. **No reserved collections.** Unlike the existing `text` / `styledtext` collections, `localizedtext` and `localizedstyledtext` are field *types* only — they don't get auto-reserved collections. Customers use them on their own schemas.
@@ -198,8 +198,10 @@ The Twig helper applies a deterministic lookup chain. Given `cms.locale.text(val
 2. **Exact match** in the value dict — `value[canonicalized_locale]` if present.
 3. **Region fall-up** — if the requested code has a region (`de_DE`), try the bare language (`de`).
 4. **Region fall-down** — if the requested code is a bare language (`en`), walk the site's `cms.config('i18n', 'available')` array in order and return the first entry whose code starts with `{lang}_` and has a value in the dict. Configured order matters here — it's how operators express preference.
-5. **Field-level `defaultLocale`** — the value at that key, if set.
+5. **Site default** — try `cms.config('i18n', 'default')` as the last resort before giving up. Sparse-data templates (object has only an English value but a German request comes in) get the English value instead of an empty cell. Note: this step uses the *site*-level default; the original plan called for a per-field `defaultLocale` step, but the helper takes only the value dict and never sees the schema's settings, so the site default is the practical equivalent.
 6. **Empty string.**
+
+`LocalizedtextData::__toString()` still honors the per-field `defaultLocale` setting for direct stringification (e.g., when the property object is printed without going through the helper).
 
 Direct array access bypasses the helper and gives you the raw value: `post.title.de` works (Twig syntax for bare-language keys), `post.title['en_US']` works for region-coded keys. Use the helper when you want the fallback chain or case-insensitive locale handling.
 
@@ -473,7 +475,7 @@ Always opt-in. Always backed up. Dry-run mode shows the plan without writing.
 - Site-wide `i18n.available` + `i18n.default` config bucket, exposed via `cms.config('i18n', 'available')` / `cms.config('i18n', 'default')`
 - Per-field `defaultLocale` setting for fallback
 - `cms.locale.text(value, locale)` and `cms.locale.styledtext(value, locale)` Twig accessors (locale required, case-insensitive)
-- Helper fallback chain: exact match → region fall-up → region fall-down (configured-order) → field defaultLocale → empty
+- Helper fallback chain: exact match → region fall-up → region fall-down (configured-order) → site default → empty
 - Direct array access (`post.title.de`, `post.title['en_US']`) works without a helper
 - Admin form: per-field locale tab interface (`defaultLocale` active on render) with `dir` attribute on input/textarea rendering for RTL locales; ~10 lines of delegated-click JS, no framework
 - REST API: localized fields serialize as `{ "en_US": ..., "de": ... }` always
@@ -482,6 +484,24 @@ Always opt-in. Always backed up. Dry-run mode shows the plan without writing.
 - Documentation: field-type docs + manual migration guide from the `field_en` workaround (no CLI tool yet)
 
 **Done:** a Pro-licensed customer building a multi-language site can replace `title_en` / `title_de` field pairs with a single `localizedtext` field, store and retrieve all locale values cleanly, and render them in templates with `cms.locale.text(post.title, 'de')` or `post.title.de`.
+
+#### Beyond the original sliver scope — also shipped in 3.5
+
+Discovered or polished during sliver development. None of these blocked the plan, but documenting here so future maintainers know they exist:
+
+- **`localizedtextarea` field type** — third variant for multi-line plain text, between `localizedtext` (single-line) and `localizedstyledtext` (Tiptap). All three share the same storage type and `LocalizedtextData` class.
+- **`LocaleRegistry` (`src/Domain/Locale/LocaleRegistry.php`)** — curated 55-locale registry, single source of truth for `label` (native script), `english` name, `dir`, and which codes T3 understands. Replaces the parallel locale list that used to live in `LocaleTwigAdapter::languages()`.
+- **Settings UI page** — `/admin/settings/i18n` exposes the default locale + available content locales as actual form controls. Driven by `propertyOptions: "locales"`, which resolves to `LocaleRegistry::options()`.
+- **System locale moved into the `i18n` bucket** — `$settings['i18n']['default']` is the canonical place. `$config->locale` (top-level string property, unchanged interface) derives from it. `$settings['locale']` at top level remains as an advanced-override path for sites that need formatting locale ≠ content default.
+- **Setup wizard integration** — `DataPathInstaller::writeLocale()` writes the wizard's selected locale to `i18n.default` (canonical location) rather than the old top-level `locale` key.
+- **CSV dot-notation export/import** — localized properties expand to `title.en_US`, `title.de`, … columns (mirroring CardField's existing pattern). Both `ObjectExporter` and `ObjectImporter` updated. Single-column JSON fallback still works when locales aren't configured.
+- **`cms.locale.languages()` reads from `LocaleRegistry::all()`** — the legacy method now delegates so the registry is the only place to maintain the locale table.
+- **CSS / UX polish** — slim tab-bar styling (no boxed container); form-group + icon per locale-pane so the field-state icon lines up with the active input; keyboard arrow-key tab navigation; full WAI-ARIA tablist / tab / tabpanel roles.
+- **Backwards-compat shims** — `Config::normalizeI18nSettings()` accepts three input shapes (canonical `i18n` bucket, sliver flat-keys `locales`+`defaultLocale`, pre-3.5 top-level `locale`). `LocaleRegistry::normalize()` accepts both flat code lists and pre-expanded dict-of-dicts. Operators who set things up against any iteration of the docs during 3.5 development still work.
+- **Settings UI fixes (orthogonal but discovered while testing)** — `SettingsValidator` was missing `builder` and `i18n` from its allowed sections list (causing silent save failures); `JsonRenderer::json()`'s third arg was `int $options` but every caller was passing HTTP status codes through it, so 400/500/etc. were never reaching the browser. Both fixed.
+- **Settings sidebar alphabetical sort** — `admin/settings.twig` sorts the section list by visible label (localized) so adding new sections doesn't require re-ordering the literal.
+- **Deck/card compat** — localized fields are usable inside cards and decks. No special-casing needed; the storage shape is a flat dict so `PropertyFactory::createCard` / `createDeck` already handle it through the standard recursive path.
+- **Test coverage** — `LocalizedtextDataTest`, `LocalizedtextFieldTest` (rendering + RTL), `LocaleTwigAdapterTest` (including the new site-default fallback step), `LocaleRegistryTest`, `ConfigI18nTest`, `SchemaRegistrationTest`. ~80 sliver-related tests.
 
 ### Phase 1 — Foundation (3.6)
 
@@ -592,7 +612,7 @@ Always opt-in. Always backed up. Dry-run mode shows the plan without writing.
 - The admin form renders a tab strip per localized field — one tab per configured locale, defaultLocale active on render, RTL `dir` propagated to inputs/textareas
 - Stored values use mixed-case POSIX keys (`{ "en_US": ..., "de": ..., "pt_BR": ... }`)
 - Direct array access works in Twig: `{{ post.title.de }}` or `{{ post.title['en_US'] }}`
-- `cms.locale.text(value, 'de')` and `cms.locale.styledtext(value, 'de')` return the right value, case-insensitive on the locale arg, with the full fallback chain (exact → region fall-up → region fall-down → field defaultLocale → empty)
+- `cms.locale.text(value, 'de')` and `cms.locale.styledtext(value, 'de')` return the right value, case-insensitive on the locale arg, with the full fallback chain (exact → region fall-up → region fall-down → site default → empty)
 - Per-field `defaultLocale` fallback works when the requested locale is missing
 - REST API serializes localized fields as the full multi-locale object
 - A Pro-licensed customer can replace `title_en` / `title_de` field pairs with a single `localizedtext` field and continue building their multi-language site with cleaner storage
