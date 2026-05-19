@@ -121,7 +121,11 @@ final class DataPathInstallerTest extends TestCase
 		$this->installer->install('default', '', $this->docroot, 'fr_FR');
 
 		$settings = json_decode((string)file_get_contents($this->sandbox . '/tcms-data/.system/settings.json'), true);
-		$this->assertSame('fr_FR', $settings['locale']);
+		// 3.5+: wizard writes to `i18n.default` (canonical) rather than the
+		// top-level `locale` key (now reserved as an advanced-override path).
+		$this->assertArrayHasKey('i18n', $settings);
+		$this->assertSame('fr_FR', $settings['i18n']['default']);
+		$this->assertArrayNotHasKey('locale', $settings);
 	}
 }
 
