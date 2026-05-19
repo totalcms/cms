@@ -29,29 +29,35 @@ $settings = [];
 $settings['sentry'] = true;
 
 // Default env to production
-$settings['env']    = 'prod';
-$settings['locale'] = 'en_US';
+$settings['env'] = 'prod';
 
-// Internationalization (Pro edition — localized field types).
-// Empty by default — opt in by overriding in config/tcms.php to enable the
-// `localizedtext` and `localizedstyledtext` field types in the schema builder.
-// Order of the `available` list matters: it's used as the fall-down order
-// when a Twig helper request like `cms.locale.text(value, 'en')` needs to
-// pick among multiple en_* variants.
-// Codes use mixed-case POSIX format (en_US, pt_BR) to match PHP intl, CakePHP
-// I18n, and Faker conventions. `dir` is required (`ltr` or `rtl`).
+// Internationalization config.
 //
-// Example:
+// `default`   — Single canonical locale for the site. Drives runtime formatting
+//               (PHP intl, CakePHP I18n, Faker — dates, numbers, currency), the
+//               admin UI translation language, and (Pro) the default tab on
+//               localized content fields plus the field-level fallback.
+//               `$config->locale` mirrors this value.
+// `available` — Pro only. Flat list of locale codes (from LocaleRegistry) used
+//               by localized field types. Empty list = field types are disabled.
+//               Order matters: the Twig helper uses it for region fall-down
+//               (e.g., a request for bare `en` returns the first matching `en_*`).
+//
+// Codes use mixed-case POSIX format (en_US, pt_BR) to match PHP intl, CakePHP I18n,
+// Faker, and T3's existing admin translation file naming.
+//
+// Example (Pro):
 //   $settings['i18n'] = [
 //       'default'   => 'en_US',
-//       'available' => [
-//           ['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr'],
-//           ['code' => 'de',    'label' => 'Deutsch',      'dir' => 'ltr'],
-//           ['code' => 'ar',    'label' => 'العربية',     'dir' => 'rtl'],
-//       ],
+//       'available' => ['en_US', 'de', 'ar'],
 //   ];
+//
+// Advanced override: operators who need the formatting / admin-UI locale to differ
+// from the content default can set `$settings['locale']` at the top level here or
+// in their `config/tcms.php`. That value wins for `$config->locale` while
+// `$config->i18n['default']` continues to drive content-default behavior.
 $settings['i18n'] = [
-	'default'   => $settings['locale'],
+	'default'   => 'en_US',
 	'available' => [],
 ];
 

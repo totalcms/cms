@@ -320,6 +320,8 @@ return [
 	'settings.dashboard_desc'          => 'Admin-Dashboard-Konfiguration',
 	'settings.html_sanitization'       => 'HTML-Bereinigung',
 	'settings.html_sanitization_desc'  => 'HTML-Bereinigung und -Säuberung',
+	'settings.i18n'                    => 'Internationalisierung',
+	'settings.i18n_desc'               => 'Systemgebietsschema und Inhaltslokalisierung',
 	'settings.imageworks'              => 'ImageWorks',
 	'settings.imageworks_desc'         => 'Bildverarbeitung und Wasserzeichen',
 	'settings.mailer'                  => 'Mailer',

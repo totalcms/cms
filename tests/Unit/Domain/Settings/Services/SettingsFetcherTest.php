@@ -121,8 +121,8 @@ final class SettingsFetcherTest extends TestCase
 			'sentry'   => 'test-sentry',
 			'notfound' => '404.html',
 			'timezone' => 'UTC',
-			'locale'   => 'en_US',
-			'cache'    => ['enabled' => true], // This should not be in general
+			'locale'   => 'en_US',                // moved to i18n section in 3.5
+			'cache'    => ['enabled' => true],     // not part of general section
 		];
 
 		$this->settingsRepository->method('load')->willReturn($settings);
@@ -132,7 +132,10 @@ final class SettingsFetcherTest extends TestCase
 		$this->assertArrayHasKey('sentry', $result);
 		$this->assertArrayHasKey('notfound', $result);
 		$this->assertArrayHasKey('timezone', $result);
-		$this->assertArrayHasKey('locale', $result);
+		// `locale` moved out of `general` and into the `i18n` section in 3.5,
+		// so loadSection('general') no longer surfaces it even when it's
+		// present at the top level of the settings file.
+		$this->assertArrayNotHasKey('locale', $result);
 		$this->assertArrayNotHasKey('cache', $result);
 	}
 

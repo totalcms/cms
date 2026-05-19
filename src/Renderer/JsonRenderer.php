@@ -14,23 +14,30 @@ use Psr\Http\Message\ResponseInterface;
 class JsonRenderer
 {
 	/**
-	 * Write JSON to the response body.
+	 * Write JSON to the response body and (optionally) set the HTTP status.
 	 *
-	 * This method prepares the response object to return an HTTP JSON
-	 * response to the client.
+	 * The third argument is an HTTP status code, not a `json_encode()` flag
+	 * bitmask. Callers across the codebase had been passing values like
+	 * `400` / `500` here expecting the response status to update — that's
+	 * the intent this signature honours. Pass `0` (the default) to leave the
+	 * incoming response's status unchanged.
 	 *
 	 * @param ResponseInterface $response The response
-	 * @param mixed|null $data The data
-	 * @param int $options Json encoding options
+	 * @param mixed|null        $data     Payload to encode
+	 * @param int               $status   HTTP status code to apply (0 = leave unchanged)
 	 *
 	 * @return ResponseInterface The response
 	 */
 	public function json(
 		ResponseInterface $response,
 		mixed $data = null,
-		int $options = 0,
+		int $status = 0,
 	): ResponseInterface {
-		$json = json_encode($data, $options);
+		if ($status > 0) {
+			$response = $response->withStatus($status);
+		}
+
+		$json = json_encode($data);
 
 		$response = $response->withHeader('Content-Type', 'application/json');
 		$body     = $response->getBody();

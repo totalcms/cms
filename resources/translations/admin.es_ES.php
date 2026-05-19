@@ -320,6 +320,8 @@ return [
 	'settings.dashboard_desc'          => 'Configuración del panel de administración',
 	'settings.html_sanitization'       => 'Sanitización HTML',
 	'settings.html_sanitization_desc'  => 'Limpieza y sanitización de HTML',
+	'settings.i18n'                    => 'Internacionalización',
+	'settings.i18n_desc'               => 'Configuración regional del sistema y localización del contenido',
 	'settings.imageworks'              => 'ImageWorks',
 	'settings.imageworks_desc'         => 'Procesamiento de imágenes y marcas de agua',
 	'settings.mailer'                  => 'Mailer',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
@@ -20,42 +21,24 @@ readonly class LocaleTwigAdapter
 	) {
 	}
 
-	/** @return array<string,string> */
+	/**
+	 * Return a `{label => code}` map for use in language pickers.
+	 *
+	 * Reads from `LocaleRegistry` so the locale table has a single source of
+	 * truth across the settings UI, FormFields, Twig helper, and this method.
+	 * Labels are the registry's native-language strings (Deutsch, 日本語,
+	 * العربية, etc.) — same convention as the locale-picker dropdowns.
+	 *
+	 * @return array<string,string>
+	 */
 	public function languages(): array
 	{
-		return [
-			'Arabic'          => 'ar_SA',
-			'Bengali'         => 'bn_BD',
-			'Czech'           => 'cs_CZ',
-			'Dutch'           => 'nl_NL',
-			'English'         => 'en_US',
-			'French'          => 'fr_FR',
-			'German'          => 'de_DE',
-			'Greek'           => 'el_GR',
-			'Hebrew'          => 'he_IL',
-			'Hindi'           => 'hi_IN',
-			'Italian'         => 'it_IT',
-			'Japanese'        => 'ja_JP',
-			'Javanese'        => 'jv_ID',
-			'Korean'          => 'ko_KR',
-			'Malay'           => 'ms_MY',
-			'Mandarin'        => 'zh_CN',
-			'Persian (Farsi)' => 'fa_IR',
-			'Polish'          => 'pl_PL',
-			'Portuguese'      => 'pt_BR',
-			'Punjabi'         => 'pa_IN',
-			'Romanian'        => 'ro_RO',
-			'Russian'         => 'ru_RU',
-			'Spanish'         => 'es_ES',
-			'Swahili'         => 'sw_KE',
-			'Tamil'           => 'ta_IN',
-			'Tagalog'         => 'tl_PH',
-			'Thai'            => 'th_TH',
-			'Turkish'         => 'tr_TR',
-			'Ukrainian'       => 'uk_UA',
-			'Urdu'            => 'ur_PK',
-			'Vietnamese'      => 'vi_VN',
-		];
+		$out = [];
+		foreach (LocaleRegistry::all() as $code => $meta) {
+			$out[$meta['label']] = $code;
+		}
+
+		return $out;
 	}
 
 	/**

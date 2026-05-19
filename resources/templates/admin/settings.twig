@@ -25,6 +25,10 @@
 		'label': t('settings.html_sanitization'),
 		'description': t('settings.html_sanitization_desc')
 	},
+	'i18n': {
+		'label': t('settings.i18n'),
+		'description': t('settings.i18n_desc')
+	},
 	'imageworks': {
 		'label': t('settings.imageworks'),
 		'description': t('settings.imageworks_desc')
@@ -63,6 +67,13 @@
 		}
 	}) %}
 {% endif %}
+
+{# Sort the sidebar alphabetically by the visible label so it scales as
+   more sections are added. Sorts by label (which is localized) so each
+   operator sees their own language's ordering. Twig's |sort preserves
+   the dict keys, which the for-loop below uses for the `settings-{id}`
+   class and active-state matching. #}
+{% set sections = sections|sort((a, b) => a.label|lower <=> b.label|lower) %}
 
 {% block dashcontent %}
 

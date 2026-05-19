@@ -16,16 +16,7 @@ class Config
 	public string $api                = '';
 	public string $locale             = '';
 	/**
-	 * Internationalization config bucket for the localized field types.
-	 *
-	 * Shape:
-	 *   - `default`   string  — locale code used as the field-level fallback when a requested
-	 *                           locale's value is empty. Also drives the active tab on render.
-	 *   - `available` array   — site-wide list of locales. Each entry:
-	 *                           `['code' => 'en_US', 'label' => 'English (US)', 'dir' => 'ltr']`.
-	 *                           Order matters: it determines fall-down order in the Twig helper.
-	 *
-	 * Empty `available` = field types refuse to render (config not opted-in).
+	 * Internationalization config bucket.
 	 *
 	 * @var array{default: string, available: array<int,array<string,string>>}
 	 */
@@ -88,8 +79,14 @@ class Config
 		$this->domain             = $settings['domain'];
 		$this->url                = $settings['url'];
 		$this->api                = $settings['api'];
-		$this->locale             = $settings['locale'];
 		$this->i18n               = self::normalizeI18nSettings($settings);
+		// System locale: an explicit top-level `$settings['locale']` in tcms.php
+		// is the advanced-override path for sites that need formatting to differ
+		// from content default. Otherwise `$config->locale` mirrors the i18n
+		// default, falling back to `en_US`.
+		$this->locale             = isset($settings['locale']) && is_string($settings['locale']) && $settings['locale'] !== ''
+			? $settings['locale']
+			: ($this->i18n['default'] !== '' ? $this->i18n['default'] : 'en_US');
 		$this->session            = $settings['session'];
 		$this->auth               = $settings['auth'];
 		$this->debug              = $settings['debug'];
@@ -121,9 +118,21 @@ class Config
 	}
 
 	/**
-	 * Resolve i18n settings from either the canonical `$settings['i18n']`
-	 * bucket or the flat-key shape (`$settings['locales']` + `$settings['defaultLocale']`)
-	 * used during the 3.5 sliver. The bucket form wins when both are present.
+	 * Resolve i18n settings from one of three accepted shapes (newest wins):
+	 *
+	 * 1. **Canonical (3.5):** `$settings['i18n']` is a bucket with
+	 *    `default` / `available` keys. `available` is a flat list of registry
+	 *    codes — expanded into the full `[{code, label, dir}, ...]` shape via
+	 *    `LocaleRegistry::expand()`. A `locale` sub-key is also tolerated for
+	 *    backwards compat with the in-development i18n.locale layout — its
+	 *    value is folded into `default` when `default` is empty.
+	 *
+	 * 2. **Sliver shape (pre-bucket-rename):** `$settings['locales']` (flat
+	 *    array OR pre-expanded dict-of-dicts) + `$settings['defaultLocale']`
+	 *    at top level. System locale stays at top-level `$settings['locale']`.
+	 *
+	 * 3. **Pre-3.5:** only `$settings['locale']` (system locale string)
+	 *    exists; content-localization config is absent.
 	 *
 	 * @param array<string,mixed> $settings
 	 *
@@ -131,20 +140,25 @@ class Config
 	 */
 	private static function normalizeI18nSettings(array $settings): array
 	{
-		// Canonical shape — operator config opted into the bucket.
 		$bucket = $settings['i18n'] ?? null;
 		if (is_array($bucket)) {
+			$default = (string)($bucket['default'] ?? '');
+			// In-flight compat: a stray `i18n.locale` from before the
+			// consolidation gets folded into `default` when default is empty.
+			if ($default === '' && isset($bucket['locale']) && is_string($bucket['locale'])) {
+				$default = $bucket['locale'];
+			}
+
 			return [
-				'default'   => (string)($bucket['default'] ?? ''),
-				'available' => is_array($bucket['available'] ?? null) ? $bucket['available'] : [],
+				'default'   => $default,
+				'available' => \TotalCMS\Domain\Locale\LocaleRegistry::normalize($bucket['available'] ?? []),
 			];
 		}
 
-		// Legacy flat-key shape (3.5 sliver pre-rename). Fold into the bucket
-		// so callers only ever see one structure.
+		// Legacy flat-key shape (3.5 sliver pre-rename). Fold into the bucket.
 		return [
 			'default'   => (string)($settings['defaultLocale'] ?? ''),
-			'available' => is_array($settings['locales'] ?? null) ? $settings['locales'] : [],
+			'available' => \TotalCMS\Domain\Locale\LocaleRegistry::normalize($settings['locales'] ?? []),
 		];
 	}
 }

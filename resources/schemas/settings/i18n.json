@@ -1,0 +1,28 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Internationalization Settings",
+	"description" : "Default locale and content-localization configuration. The default locale drives both runtime formatting (PHP intl, CakePHP I18n, Faker — dates, numbers, currency) and the default tab on `localizedtext` / `localizedtextarea` / `localizedstyledtext` fields (Pro edition).",
+	"type"        : "object",
+	"properties"  : {
+		"default": {
+			"type"        : "string",
+			"field"       : "select",
+			"label"       : "Default Locale",
+			"placeholder" : "Select default locale",
+			"help"        : "The single canonical locale for this site. Drives date / number / currency formatting (PHP intl, CakePHP I18n, Faker), the admin UI translation language, and — for Pro sites using localized content fields — the default tab on render plus the fallback when a template requests a locale that has no content. Should be one of the available locales below when content localization is in use. Advanced operators who need to split the formatting locale from the content default can override `$settings['locale']` directly in <code>config/tcms.php</code>.",
+			"settings"    : {
+				"propertyOptions" : "locales"
+			}
+		},
+		"available": {
+			"type"        : "array",
+			"field"       : "list",
+			"label"       : "Available Content Locales",
+			"placeholder" : "Type a locale code (e.g. en_US, de, ar) and press Enter",
+			"help"        : "Pro: locale codes available for `localizedtext` and `localizedstyledtext` fields. Each code expands into a tab in the admin editor. <strong>Order matters:</strong> when a template asks for a bare language code like `en` and the data has both `en_US` and `en_GB`, the helper returns the first matching entry in this list. Pick from the autocomplete to ensure the label and direction (LTR/RTL) come from the registry.",
+			"settings"    : {
+				"propertyOptions" : "locales"
+			}
+		}
+	}
+}

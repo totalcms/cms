@@ -907,6 +907,17 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Return the locale registry as `{value, label}` options — feeds
+	 * `propertyOptions: "locales"` on select / list / multiselect fields.
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function localeList(): array
+	{
+		return \TotalCMS\Domain\Locale\LocaleRegistry::options();
+	}
+
+	/**
 	 * Render a field as a sub-field of a composite property (file, image, depot,
 	 * gallery, deck-table, etc.). Skips parent-object schema inheritance so that
 	 * a sub-field with a name matching a top-level property (e.g. `name`, `alt`,

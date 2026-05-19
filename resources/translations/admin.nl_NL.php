@@ -320,6 +320,8 @@ return [
 	'settings.dashboard_desc'          => 'Configuratie van het beheerdersdashboard',
 	'settings.html_sanitization'       => 'HTML-opschoning',
 	'settings.html_sanitization_desc'  => 'HTML-opschoning en -zuivering',
+	'settings.i18n'                    => 'Internationalisering',
+	'settings.i18n_desc'               => 'Systeem-locale en inhoudslokalisatie',
 	'settings.imageworks'              => 'ImageWorks',
 	'settings.imageworks_desc'         => 'Beeldverwerking en watermerken',
 	'settings.mailer'                  => 'Mailer',

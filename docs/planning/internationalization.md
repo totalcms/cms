@@ -69,7 +69,7 @@ These decisions are locked in 3.5 because changing them in 3.6 would be a migrat
 
 ### Locale Configuration
 
-In 3.5, locale-content settings live in a single site-wide `i18n` config bucket — sibling to the existing `auth`, `htmlclean`, etc. buckets — distinct from the system locale string at `$config->locale`:
+In 3.5, locale settings live in a single site-wide `i18n` config bucket — sibling to the existing `auth`, `htmlclean`, etc. buckets. `i18n.default` is the canonical locale for the site (drives formatting, admin UI language, and content default in one go); `i18n.available` lists locales for the localized field types. `$config->locale` mirrors `i18n.default` for backwards compat with existing callers (TranslationService, TwigEngine, FakerFactory). Operators who need to split formatting from content default override `$settings['locale']` at the top level in tcms.php.
 
 ```php
 // config/tcms.php
