@@ -114,12 +114,12 @@ readonly class LocaleTwigAdapter
 		return $this->translator->getCatalog('js');
 	}
 
-	//-------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	// Localized field-value helpers (Pro). Operate on the locale-keyed
 	// dict stored by `localizedtext` / `localizedstyledtext` field types.
 	// Direct array access (post.title.de, post.title['en_US']) bypasses
 	// these helpers and gives you the raw value with no fallback chain.
-	//-------------------------------------------------------------------
+	// -------------------------------------------------------------------
 
 	/**
 	 * Look up a localized text value from a locale-keyed dict, applying the
@@ -138,7 +138,7 @@ readonly class LocaleTwigAdapter
 	 * Usage in Twig: {{ cms.locale.text(post.title, 'de') }}
 	 *
 	 * @param mixed  $value  Expected: array<string,string>. Other shapes return ''.
-	 * @param string $locale Requested locale (case-insensitive on input).
+	 * @param string $locale requested locale (case-insensitive on input)
 	 */
 	public function text(mixed $value, string $locale): string
 	{

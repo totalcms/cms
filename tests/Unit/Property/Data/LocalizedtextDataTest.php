@@ -134,5 +134,4 @@ describe('LocalizedtextData', function (): void {
 
 		expect($data->values['en_US'])->toBe($html);
 	});
-
 });

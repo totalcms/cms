@@ -19,12 +19,12 @@
 
 declare(strict_types=1);
 
-const DOCS_DIR = __DIR__ . '/../resources/docs';
+const DOCS_DIR  = __DIR__ . '/../resources/docs';
 const MENU_FILE = DOCS_DIR . '/menu.php';
 
 $docsDir = realpath(DOCS_DIR);
 if ($docsDir === false || !is_dir($docsDir)) {
-	fwrite(STDERR, "Docs directory not found at " . DOCS_DIR . "\n");
+	fwrite(STDERR, 'Docs directory not found at ' . DOCS_DIR . "\n");
 	exit(1);
 }
 
@@ -39,7 +39,7 @@ $reached = [];
 // 1+2. Walk every .md file and verify internal/image refs resolve.
 // ---------------------------------------------------------------
 $mdFiles = [];
-$it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docsDir, FilesystemIterator::SKIP_DOTS));
+$it      = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docsDir, FilesystemIterator::SKIP_DOTS));
 foreach ($it as $entry) {
 	if (!$entry->isFile() || $entry->getExtension() !== 'md') {
 		continue;
@@ -54,7 +54,7 @@ foreach ($it as $entry) {
 
 $imageExts = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
 foreach ($mdFiles as $file) {
-	$rel = ltrim(str_replace($docsDir, '', $file), '/');
+	$rel     = ltrim(str_replace($docsDir, '', $file), '/');
 	$content = file_get_contents($file);
 
 	// Match (docs/<anything-not-paren-or-quote>) in markdown link/image parens.
@@ -64,7 +64,7 @@ foreach ($mdFiles as $file) {
 
 	foreach ($matches as $m) {
 		$target = $m[1];
-		$ext = strtolower(pathinfo($target, PATHINFO_EXTENSION));
+		$ext    = strtolower(pathinfo($target, PATHINFO_EXTENSION));
 
 		if (in_array($ext, $imageExts, true)) {
 			$resolved = $docsDir . '/' . $target;
@@ -88,11 +88,11 @@ foreach ($mdFiles as $file) {
 // 3. Walk menu.php and verify every path resolves.
 // ---------------------------------------------------------------
 if (!is_file(MENU_FILE)) {
-	$failures[] = "[menu]  menu.php not found at " . MENU_FILE;
+	$failures[] = '[menu]  menu.php not found at ' . MENU_FILE;
 } else {
 	$menu = require MENU_FILE;
 	if (!is_array($menu)) {
-		$failures[] = "[menu]  menu.php did not return an array";
+		$failures[] = '[menu]  menu.php did not return an array';
 	} else {
 		$checkEntries = function (array $entries, string $context) use ($docsDir, &$failures, &$reached): void {
 			foreach ($entries as $entry) {
@@ -147,7 +147,7 @@ if ($failures === []) {
 	exit(0);
 }
 
-fwrite(STDERR, "FAIL: " . count($failures) . " broken references in $pageCount markdown files:\n\n");
+fwrite(STDERR, 'FAIL: ' . count($failures) . " broken references in $pageCount markdown files:\n\n");
 foreach ($failures as $line) {
 	fwrite(STDERR, "  $line\n");
 }

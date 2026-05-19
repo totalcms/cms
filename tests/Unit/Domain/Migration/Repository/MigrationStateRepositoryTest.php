@@ -42,8 +42,8 @@ describe('MigrationStateRepository', function (): void {
 		$storage = test()->createMock(StorageFilesystemAdapter::class);
 		$storage->method('fileExists')->willReturn(true);
 		$storage->method('read')->willReturn(json_encode([
-			'good' => ['ranAt' => '2026-05-18T12:00:00Z', 'result' => 1],
-			'bad'  => 'not an array',
+			'good'    => ['ranAt' => '2026-05-18T12:00:00Z', 'result' => 1],
+			'bad'     => 'not an array',
 			'partial' => ['ranAt' => '2026-05-18T12:00:00Z'],
 		]));
 

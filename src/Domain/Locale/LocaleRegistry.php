@@ -226,7 +226,7 @@ final class LocaleRegistry
 
 		if (is_string($first)) {
 			/** @var array<int,string> $codes */
-			$codes = array_values(array_filter($available, 'is_string'));
+			$codes = array_values(array_filter($available, is_string(...)));
 
 			return self::expand($codes);
 		}

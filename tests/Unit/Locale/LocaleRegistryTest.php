@@ -35,7 +35,7 @@ describe('LocaleRegistry static lookups', function (): void {
 		expect(count($opts))->toBeGreaterThan(40);
 
 		// Pick a known entry and check shape
-		$en_US = array_values(array_filter($opts, fn ($o) => $o['value'] === 'en_US'))[0] ?? null;
+		$en_US = array_values(array_filter($opts, fn (array $o): bool => $o['value'] === 'en_US'))[0] ?? null;
 		expect($en_US)->not->toBeNull();
 		expect($en_US['label'])->toBe('English (US) [en_US]');
 	});
@@ -100,7 +100,7 @@ describe('LocaleRegistry::normalize (lenient)', function (): void {
 		$out = LocaleRegistry::normalize([
 			['code' => 'en_US', 'label' => 'EN'],
 			['label' => 'no code here'],
-			['code' => 'de'],
+			['code'  => 'de'],
 		]);
 
 		expect($out)->toHaveCount(2);

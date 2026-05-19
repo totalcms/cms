@@ -2,88 +2,84 @@
 
 namespace TotalCMS\Utils\Color\Colors;
 
-use       TotalCMS\Utils\Color\Color;
-use       TotalCMS\Utils\Color\ColorFactory;
-use       TotalCMS\Utils\Color\ColorInterface;
-use       TotalCMS\Utils\Color\Util;
-use       TotalCMS\Utils\Color\Converters\Hsl as HslConverter;
+use TotalCMS\Utils\Color\Color;
+use TotalCMS\Utils\Color\ColorFactory;
+use TotalCMS\Utils\Color\ColorInterface;
+use TotalCMS\Utils\Color\Converters\Hsl as HslConverter;
+use TotalCMS\Utils\Color\Util;
 
-class      Hsl
-extends    Color
-implements ColorInterface {
+class Hsl extends Color implements ColorInterface
+{
+	/* #region Constructor */
 
-    /* #region Constructor */
+	public function __construct(
+		public readonly float $hue        = 0,
+		public readonly float $saturation = 0,
+		public readonly float $lightness  = 0,
+		public readonly float $opacity    = 100,
+	) {
+	}
 
-    public function __construct(
-        public readonly float $hue        = 0,
-        public readonly float $saturation = 0,
-        public readonly float $lightness  = 0,
-        public readonly float $opacity    = 100,
-    ) {
+	/* #endregion */
 
-    }
+	/* #region Public Static Methods */
 
-    /* #endregion */
+	/**
+	 * @return array<int, string>
+	 */
+	public static function aliases(): array
+	{
+		return [
+			'hsl',
+			'hsla',
+		];
+	}
 
-    /* #region Public Static Methods */
+	/* #endregion */
 
-    /**
-     * @return array<int, string>
-     */
-    public static function aliases(
+	/* #region Public Methods */
 
-    ) :array {
-        return [
-            'hsl',
-            'hsla',
-        ];
-    }
+	public function change(
+		\Stringable|string|int|float|null $hue        = null,
+		\Stringable|string|int|float|null $saturation = null,
+		\Stringable|string|int|float|null $lightness  = null,
+		\Stringable|string|int|float|null $opacity    = null,
+		?Hsl $fallback   = null,
+		?bool $throw      = null,
+	): Hsl {
+		$changeThrow = $throw ?? true;
 
-    /* #endregion */
-    
-    /* #region Public Methods */
+		/** @var Hsl $result */
+		$result = ColorFactory::newHsl(
+			value    : [
+				Util::changeCoordinate($this->hue, $hue, false, $changeThrow, true),
+				Util::changeCoordinate($this->saturation, $saturation, false, $changeThrow),
+				Util::changeCoordinate($this->lightness, $lightness, false, $changeThrow),
+				Util::changeCoordinate($this->opacity, $opacity, false, $changeThrow),
+			],
+			from     : $this::space(),
+			fallback : $fallback,
+			throw    : $throw,
+		);
 
-    public function change(
-        \Stringable|string|int|float|null $hue        = null,
-        \Stringable|string|int|float|null $saturation = null,
-        \Stringable|string|int|float|null $lightness  = null,
-        \Stringable|string|int|float|null $opacity    = null,
-        Hsl|null                          $fallback   = null,
-        bool|null                         $throw      = null,
-    ) :Hsl {
-        $changeThrow = $throw ?? true;
+		return $result;
+	}
 
-        /** @var Hsl $result */
-        $result = ColorFactory::newHsl(
-            value    : [
-                Util::changeCoordinate($this->hue,        $hue,        false, $changeThrow, true),
-                Util::changeCoordinate($this->saturation, $saturation, false, $changeThrow),
-                Util::changeCoordinate($this->lightness,  $lightness,  false, $changeThrow),
-                Util::changeCoordinate($this->opacity,    $opacity,    false, $changeThrow),
-            ],
-            from     : $this::space(),
-            fallback : $fallback,
-            throw    : $throw,
-        );
+	public function stringify(
+		?bool $legacy    = null,
+		?bool $alpha     = null,
+		?int $precision = null,
+	): string {
+		return HslConverter::stringify(
+			hue        : $this->hue,
+			saturation : $this->saturation,
+			lightness  : $this->lightness,
+			opacity    : $this->opacity,
+			legacy     : $legacy,
+			alpha      : $alpha,
+			precision  : $precision,
+		);
+	}
 
-        return $result;
-    }
-    
-    public function stringify(
-        bool|null $legacy    = null,
-        bool|null $alpha     = null,
-        int|null  $precision = null,
-    ) :string {
-        return HslConverter::stringify(
-            hue        : $this->hue,
-            saturation : $this->saturation,
-            lightness  : $this->lightness,
-            opacity    : $this->opacity,
-            legacy     : $legacy,
-            alpha      : $alpha,
-            precision  : $precision,
-        );
-    }
-
-    /* #endregion */
+	/* #endregion */
 }

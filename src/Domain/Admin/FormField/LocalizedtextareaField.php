@@ -31,7 +31,7 @@ class LocalizedtextareaField extends LocalizedtextField
 			'placeholder'  => $this->placeholder === '' ? null : $this->placeholder,
 			'autocomplete' => 'off',
 		];
-		$attributes = array_filter($attributes, static fn ($x): bool => $x !== null);
+		$attributes = array_filter($attributes, static fn (?string $x): bool => $x !== null);
 
 		return HTMLUtils::element('textarea', $value, $attributes);
 	}

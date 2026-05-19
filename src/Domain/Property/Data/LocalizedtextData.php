@@ -74,6 +74,6 @@ class LocalizedtextData extends PropertyData implements \Stringable
 			return $this->values[$default];
 		}
 
-		return $this->values !== [] ? (string)reset($this->values) : '';
+		return $this->values !== [] ? reset($this->values) : '';
 	}
 }

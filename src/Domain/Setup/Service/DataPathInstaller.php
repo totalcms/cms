@@ -143,8 +143,8 @@ readonly class DataPathInstaller
 			@copy($settingsFile, $settingsFile . '.bak');
 		}
 
-		$i18n = isset($existing['i18n']) && is_array($existing['i18n']) ? $existing['i18n'] : [];
-		$i18n['default'] = $locale;
+		$i18n             = isset($existing['i18n']) && is_array($existing['i18n']) ? $existing['i18n'] : [];
+		$i18n['default']  = $locale;
 		$existing['i18n'] = $i18n;
 
 		@file_put_contents($settingsFile, (string)json_encode($existing, JSON_PRETTY_PRINT));

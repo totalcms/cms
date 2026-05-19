@@ -9,7 +9,7 @@ return [
 	'confirm.delete_item'          => 'Sei sicuro di voler eliminare questo elemento? Questa azione non può essere annullata.',
 	'confirm.delete_files'         => 'Sei sicuro di voler eliminare {count} file? Questa azione non può essere annullata.',
 	'confirm.delete_folder_name'   => 'Il nome della cartella inserito non corrisponde. Eliminazione annullata.',
-	'confirm.image_in_use'         => "Questa immagine è attualmente utilizzata nel contenuto. Eliminandola si interromperà il riferimento. Continuare?",
+	'confirm.image_in_use'         => 'Questa immagine è attualmente utilizzata nel contenuto. Eliminandola si interromperà il riferimento. Continuare?',
 	'confirm.file_in_use'          => 'Questo file è attualmente referenziato nel contenuto. Eliminandolo si interromperà il link. Continuare?',
 	'confirm.video_in_use'         => 'Questo {label} è attualmente utilizzato nel contenuto. Eliminandolo si interromperà il riferimento. Continuare?',
 	'confirm.delete_label'         => 'Eliminare questo {label}?',

@@ -60,7 +60,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		// Inject domain via config
 		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
 		$configProp     = $reflection->getProperty('config');
-		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config         = $this->createMock(Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -75,7 +75,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
 		$configProp     = $reflection->getProperty('config');
-		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config         = $this->createMock(Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -90,7 +90,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
 		$configProp     = $reflection->getProperty('config');
-		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config         = $this->createMock(Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -105,7 +105,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$reflection     = new \ReflectionClass(CollectionTwigAdapter::class);
 		$configProp     = $reflection->getProperty('config');
-		$config         = $this->createMock(\TotalCMS\Support\Config::class);
+		$config         = $this->createMock(Config::class);
 		$config->domain = 'example.com';
 		$configProp->setValue($adapter, $config);
 
@@ -146,7 +146,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		// Inject config with api
 		$reflection  = new \ReflectionClass(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
@@ -159,7 +159,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testJobQueuePendingInfoReturnsEmptyStringForNoPendingJobs(): void
 	{
-		$config = new \TotalCMS\Support\Config([
+		$config = new Config([
 			'env'        => 'test',
 			'template'   => sys_get_temp_dir(),
 			'dashboard'  => [],
@@ -198,7 +198,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testJobQueueFailedInfoReturnsEmptyStringForNoFailedJobs(): void
 	{
-		$config = new \TotalCMS\Support\Config([
+		$config = new Config([
 			'env'        => 'test',
 			'template'   => sys_get_temp_dir(),
 			'dashboard'  => [],
@@ -242,7 +242,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		// Inject config with api
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
@@ -269,7 +269,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
@@ -291,7 +291,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
@@ -311,7 +311,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$reflection  = new \ReflectionClass(MediaTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
@@ -338,7 +338,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testProcessJobQueueCommandGeneratesCorrectCommand(): void
 	{
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->env = 'prod';
 
 		$adapter = new AdminTwigAdapter(
@@ -439,7 +439,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$config      = $this->createMock(\TotalCMS\Support\Config::class);
+		$config      = $this->createMock(Config::class);
 		$config->api = '';
 
 		$adapter = new MediaTwigAdapter($objectFetcher, $config, $loggerFactory);
@@ -456,7 +456,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$adapter = new RenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
-			$this->createMock(\TotalCMS\Support\Config::class),
+			$this->createMock(Config::class),
 			$this->createMock(DataTwigAdapter::class),
 			$this->createMock(MediaTwigAdapter::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),

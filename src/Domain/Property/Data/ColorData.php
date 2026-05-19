@@ -179,7 +179,7 @@ class ColorData extends PropertyData implements \Stringable
 		if (!$oklch instanceof OkLch) {
 			return ['l' => 0, 'c' => 0, 'h' => 0]; // black
 		}
-		$coordinates = array_map(fn ($c): float => round((float) $c, 3), $oklch->coordinates());
+		$coordinates = array_map(fn (float|int|string $c): float => round((float)$c, 3), $oklch->coordinates());
 
 		return [
 			'l' => $coordinates[0],
@@ -198,9 +198,9 @@ class ColorData extends PropertyData implements \Stringable
 		$coordinates = $rgb->coordinates();
 
 		return [
-			'r' => (int) $coordinates[0],
-			'g' => (int) $coordinates[1],
-			'b' => (int) $coordinates[2],
+			'r' => (int)$coordinates[0],
+			'g' => (int)$coordinates[1],
+			'b' => (int)$coordinates[2],
 		];
 	}
 
@@ -211,7 +211,7 @@ class ColorData extends PropertyData implements \Stringable
 		if (!$hsl instanceof Hsl) {
 			return ['h' => 0, 's' => 0, 'l' => 0]; // black
 		}
-		$coordinates = array_map(fn ($c): float => round((float) $c, 3), $hsl->coordinates());
+		$coordinates = array_map(fn (float|int|string $c): float => round((float)$c, 3), $hsl->coordinates());
 
 		return [
 			'h' => $coordinates[0],

@@ -272,7 +272,7 @@ readonly class TotalFormFactory
 		$objects = [];
 		foreach ($index->objects->all() as $object) {
 			$id        = (string)($object['id'] ?? '');
-			$title     = self::indexLabelToString($object['title'] ?? $object['name'] ?? $id, $id);
+			$title     = $this->indexLabelToString($object['title'] ?? $object['name'] ?? $id, $id);
 			$objects[] = ['value' => $id, 'label' => $title];
 		}
 
@@ -286,7 +286,7 @@ readonly class TotalFormFactory
 	 * dropdowns and listings show something sensible without `(string)` on
 	 * an array triggering a warning.
 	 */
-	private static function indexLabelToString(mixed $value, string $fallback): string
+	private function indexLabelToString(mixed $value, string $fallback): string
 	{
 		if (is_scalar($value)) {
 			return (string)$value;

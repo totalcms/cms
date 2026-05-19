@@ -19,8 +19,8 @@ use TotalCMS\Support\Config;
  */
 function makeLocaleAdapter(array $locales = []): LocaleTwigAdapter
 {
-	$configRef = new ReflectionClass(Config::class);
-	$config    = $configRef->newInstanceWithoutConstructor();
+	$configRef    = new ReflectionClass(Config::class);
+	$config       = $configRef->newInstanceWithoutConstructor();
 	$config->i18n = [
 		'default'   => $locales[0]['code'] ?? '',
 		'available' => $locales,

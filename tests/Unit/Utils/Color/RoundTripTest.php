@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Utils\Color\ColorFactory;
 use TotalCMS\Utils\Color\Colors\HexRgb;
 use TotalCMS\Utils\Color\Colors\Hsl;
 use TotalCMS\Utils\Color\Colors\OkLch;
 use TotalCMS\Utils\Color\Colors\Rgb;
-use TotalCMS\Utils\Color\ColorFactory;
 use TotalCMS\Utils\Color\ColorSpace;
 
 /**
@@ -48,11 +48,11 @@ test('hex to rgb to hex round-trip preserves rgb coordinates exactly', function 
 		expect($backToHex)->toBeInstanceOf(HexRgb::class, "{$name}: hex round-trip returned null");
 
 		// Verify by converting both hexes back to rgb and comparing coordinates (avoids #ff0000 vs #F00 shorthand issue)
-		$rgbFromOriginal = ColorFactory::newRgb($hex, ColorSpace::HexRgb)->coordinates();
-		$rgbFromRoundTrip = ColorFactory::newRgb((string) $backToHex, ColorSpace::HexRgb)->coordinates();
+		$rgbFromOriginal  = ColorFactory::newRgb($hex, ColorSpace::HexRgb)->coordinates();
+		$rgbFromRoundTrip = ColorFactory::newRgb((string)$backToHex, ColorSpace::HexRgb)->coordinates();
 		foreach (range(0, 2) as $channel) {
-			expect((int) $rgbFromRoundTrip[$channel])
-				->toBe((int) $rgbFromOriginal[$channel], "{$name}: channel {$channel} hex round-trip lost data");
+			expect((int)$rgbFromRoundTrip[$channel])
+				->toBe((int)$rgbFromOriginal[$channel], "{$name}: channel {$channel} hex round-trip lost data");
 		}
 	}
 });
@@ -74,7 +74,7 @@ test('rgb to hsl to rgb round-trip preserves color within tolerance', function (
 
 		$resultCoords = $backToRgb->coordinates();
 		foreach (range(0, 2) as $channel) {
-			expect(abs((float) $resultCoords[$channel] - (float) $rgbCoords[$channel]))
+			expect(abs((float)$resultCoords[$channel] - (float)$rgbCoords[$channel]))
 				->toBeLessThan(1.5, "{$name}: channel {$channel} drifted past tolerance");
 		}
 	}
@@ -99,7 +99,7 @@ test('hex to oklch to hex round-trip preserves color within tolerance', function
 		$originalCoords = $originalRgb->coordinates();
 
 		foreach (range(0, 2) as $channel) {
-			expect(abs((float) $rgbCoords[$channel] - (float) $originalCoords[$channel]))
+			expect(abs((float)$rgbCoords[$channel] - (float)$originalCoords[$channel]))
 				->toBeLessThan(2.0, "{$name}: channel {$channel} drifted past oklch round-trip tolerance");
 		}
 	}
@@ -113,27 +113,27 @@ test('pure red converts to expected OKLCH values', function (): void {
 
 	$coords = $oklch->coordinates();
 	// Published reference: oklch(62.8% 0.258 29.23) for sRGB red
-	expect((float) $coords[0])->toBeGreaterThan(62.0)->toBeLessThan(64.0);
-	expect((float) $coords[1])->toBeGreaterThan(0.24)->toBeLessThan(0.27);
-	expect((float) $coords[2])->toBeGreaterThan(28.0)->toBeLessThan(31.0);
+	expect((float)$coords[0])->toBeGreaterThan(62.0)->toBeLessThan(64.0);
+	expect((float)$coords[1])->toBeGreaterThan(0.24)->toBeLessThan(0.27);
+	expect((float)$coords[2])->toBeGreaterThan(28.0)->toBeLessThan(31.0);
 });
 
 test('pure white has OKLCH lightness near 100%', function (): void {
 	$oklch  = ColorFactory::newOkLch('#ffffff', ColorSpace::HexRgb);
 	$coords = $oklch->coordinates();
-	expect((float) $coords[0])->toBeGreaterThan(99.0);
-	expect((float) $coords[1])->toBeLessThan(0.01); // no chroma
+	expect((float)$coords[0])->toBeGreaterThan(99.0);
+	expect((float)$coords[1])->toBeLessThan(0.01); // no chroma
 });
 
 test('pure black has OKLCH lightness near 0%', function (): void {
 	$oklch  = ColorFactory::newOkLch('#000000', ColorSpace::HexRgb);
 	$coords = $oklch->coordinates();
-	expect((float) $coords[0])->toBeLessThan(1.0);
-	expect((float) $coords[1])->toBeLessThan(0.01);
+	expect((float)$coords[0])->toBeLessThan(1.0);
+	expect((float)$coords[1])->toBeLessThan(0.01);
 });
 
 test('pure gray has near-zero OKLCH chroma', function (): void {
 	$oklch  = ColorFactory::newOkLch('#808080', ColorSpace::HexRgb);
 	$coords = $oklch->coordinates();
-	expect((float) $coords[1])->toBeLessThan(0.01);
+	expect((float)$coords[1])->toBeLessThan(0.01);
 });

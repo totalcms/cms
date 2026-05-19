@@ -67,8 +67,8 @@ class LocalizedtextField extends FormField
 		foreach ($locales as $locale) {
 			$code     = $locale['code'] ?? '';
 			$isActive = $code === $activeCode;
-			$tabs    .= $this->buildTab($locale, $isActive);
-			$panes   .= $this->buildPane($locale, $values[$code] ?? '', $isActive);
+			$tabs .= $this->buildTab($locale, $isActive);
+			$panes .= $this->buildPane($locale, $values[$code] ?? '', $isActive);
 		}
 
 		$tabsRow = HTMLUtils::element('div', $tabs, ['class' => 'locale-tabs', 'role' => 'tablist']);
@@ -103,9 +103,9 @@ class LocalizedtextField extends FormField
 	 */
 	protected function buildTab(array $locale, bool $isActive): string
 	{
-		$code  = $locale['code']  ?? '';
+		$code  = $locale['code'] ?? '';
 		$label = $locale['label'] ?? $code;
-		$dir   = $locale['dir']   ?? 'ltr';
+		$dir   = $locale['dir'] ?? 'ltr';
 		$slug  = $this->slugifyLocale($code);
 
 		$attributes = [
@@ -133,7 +133,7 @@ class LocalizedtextField extends FormField
 	protected function buildPane(array $locale, string $value, bool $isActive): string
 	{
 		$code  = $locale['code'] ?? '';
-		$dir   = $locale['dir']  ?? 'ltr';
+		$dir   = $locale['dir'] ?? 'ltr';
 		$slug  = $this->slugifyLocale($code);
 		$id    = "field-{$this->uuid}-{$slug}";
 
@@ -172,7 +172,7 @@ class LocalizedtextField extends FormField
 			'maxlength'    => $this->maxlength > 0 ? (string)$this->maxlength : null,
 			'autocomplete' => 'nofill',
 		];
-		$attributes = array_filter($attributes, static fn ($x): bool => $x !== null);
+		$attributes = array_filter($attributes, static fn (?string $x): bool => $x !== null);
 
 		return HTMLUtils::inlineElement('input', $attributes);
 	}

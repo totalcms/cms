@@ -62,7 +62,7 @@ test('constructor with default argument defaults to black', function (): void {
 });
 
 test('constructor throws InvalidArgumentException for unparseable strings', function (): void {
-	expect(fn () => new ColorData('totally-not-a-color'))
+	expect(fn (): ColorData => new ColorData('totally-not-a-color'))
 		->toThrow(InvalidArgumentException::class, 'Invalid color format');
 });
 
@@ -217,7 +217,7 @@ test('transform returns array with hex and oklch keys', function (): void {
 });
 
 test('__toString produces CSS oklch() syntax', function (): void {
-	$str = (string) new ColorData('#ff0000');
+	$str = (string)new ColorData('#ff0000');
 	expect($str)->toStartWith('oklch(');
 	expect($str)->toEndWith(')');
 	expect($str)->toContain('%');

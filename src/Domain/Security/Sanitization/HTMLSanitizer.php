@@ -154,11 +154,11 @@ class HTMLSanitizer
 			return $html;
 		}
 
-		$allowedTags = array_map('strtolower', array_filter($config['allowed_tags'], 'is_string'));
+		$allowedTags = array_map(strtolower(...), array_filter($config['allowed_tags'], is_string(...)));
 
 		return (string)preg_replace_callback(
 			'/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/',
-			static fn(array $m): string => in_array(strtolower($m[1]), $allowedTags, true) ? $m[0] : '',
+			static fn (array $m): string => in_array(strtolower($m[1]), $allowedTags, true) ? $m[0] : '',
 			$html
 		);
 	}

@@ -55,8 +55,7 @@ final readonly class ReloadPulseListener
 		$this->pulse->pulse($collection . '/' . $id);
 	}
 
-	/** @param array<string,mixed> $payload */
-	public function onDevModeDisabled(array $payload): void
+	public function onDevModeDisabled(): void
 	{
 		$this->pulse->pulse('devmode-disabled');
 	}

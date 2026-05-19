@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\FormField\LocalizedtextField;
-use TotalCMS\Domain\Admin\FormField\LocalizedtextareaField;
 use TotalCMS\Domain\Admin\FormField\LocalizedstyledtextField;
+use TotalCMS\Domain\Admin\FormField\LocalizedtextareaField;
+use TotalCMS\Domain\Admin\FormField\LocalizedtextField;
 use TotalCMS\Domain\Admin\TotalForm;
 
 describe('LocalizedtextField rendering', function (): void {
@@ -53,7 +53,7 @@ describe('LocalizedtextField rendering', function (): void {
 	});
 
 	test('renders the configuration-missing error when no locales are configured', function (): void {
-		$form = $this->createMock(TotalForm::class);
+		$form     = $this->createMock(TotalForm::class);
 		$form->id = '123';
 		$form->method('getLocales')->willReturn([]);
 		$form->method('getDefaultLocale')->willReturn('');

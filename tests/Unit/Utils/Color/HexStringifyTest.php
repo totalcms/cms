@@ -6,14 +6,13 @@ use TotalCMS\Utils\Color\Converters\HexRgb;
 
 /**
  * Adapted from upstream couleur's utils/hexRgb/StringifyTest.php
- * Original: https://github.com/matthieumastadenis/couleur/blob/main/src/tests/utils/hexRgb/StringifyTest.php
+ * Original: https://github.com/matthieumastadenis/couleur/blob/main/src/tests/utils/hexRgb/StringifyTest.php.
  *
  * Fuzz tests the hex stringify function across the `sharp`, `short`, `alpha`,
  * and `uppercase` parameters with randomly-generated hex digit pairs.
  */
-
 const HEX_FUZZ_LOOPS = 30;
-const HEX_CHARS      = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'];
+const HEX_CHARS      = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
 
 /** Returns a random hex char, optionally excluding $not. */
 function randomHexChar(?string $not = null): string
@@ -21,6 +20,7 @@ function randomHexChar(?string $not = null): string
 	do {
 		$char = HEX_CHARS[array_rand(HEX_CHARS)];
 	} while ($char === $not);
+
 	return $char;
 }
 
@@ -34,6 +34,7 @@ function randomHexPair(bool $same = false, ?string $not = null): string
 		$c1     = randomHexChar();
 		$number = $same ? $c1 . $c1 : $c1 . randomHexChar($c1);
 	} while ($number === $not);
+
 	return $number;
 }
 
@@ -57,7 +58,7 @@ test('hex stringify omits # when sharp:false', function (): void {
 
 test('hex stringify omits opacity by default for varied input', function (): void {
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
-		$same = (bool) ($i % 2);
+		$same = (bool)($i % 2);
 		$hex  = HexRgb::stringify(randomHexPair($same), randomHexPair($same), randomHexPair($same));
 		expect(strlen($hex))->toBe($same ? 4 : 7);
 	}
@@ -65,7 +66,7 @@ test('hex stringify omits opacity by default for varied input', function (): voi
 
 test('hex stringify omits opacity when alpha is FF by default', function (): void {
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
-		$same = (bool) ($i % 2);
+		$same = (bool)($i % 2);
 		$o    = $same ? 'FF' : 'ff';
 		$hex  = HexRgb::stringify(randomHexPair($same), randomHexPair($same), randomHexPair($same), $o);
 		expect(strlen($hex))->toBe($same ? 4 : 7);
@@ -74,7 +75,7 @@ test('hex stringify omits opacity when alpha is FF by default', function (): voi
 
 test('hex stringify includes opacity when not FF by default', function (): void {
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
-		$same = (bool) ($i % 2);
+		$same = (bool)($i % 2);
 		$o    = randomHexPair($same, 'FF');
 		$hex  = HexRgb::stringify(randomHexPair($same), randomHexPair($same), randomHexPair($same), $o);
 		expect(strlen($hex))->toBe($same ? 5 : 9);

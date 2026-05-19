@@ -79,7 +79,7 @@ class Config
 		$this->domain             = $settings['domain'];
 		$this->url                = $settings['url'];
 		$this->api                = $settings['api'];
-		$this->i18n               = self::normalizeI18nSettings($settings);
+		$this->i18n               = $this->normalizeI18nSettings($settings);
 		// System locale: an explicit top-level `$settings['locale']` in tcms.php
 		// is the advanced-override path for sites that need formatting to differ
 		// from content default. Otherwise `$config->locale` mirrors the i18n
@@ -138,7 +138,7 @@ class Config
 	 *
 	 * @return array{default: string, available: array<int,array<string,string>>}
 	 */
-	private static function normalizeI18nSettings(array $settings): array
+	private function normalizeI18nSettings(array $settings): array
 	{
 		$bucket = $settings['i18n'] ?? null;
 		if (is_array($bucket)) {
