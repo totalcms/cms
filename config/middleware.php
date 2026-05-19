@@ -15,6 +15,7 @@ use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\BundleMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\MaintenanceModeMiddleware;
+use TotalCMS\Middleware\MigrationMiddleware;
 use TotalCMS\Middleware\PageRouterMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
@@ -28,6 +29,12 @@ return function (App $app): void {
 	$app->add(CacheInvalidationMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(MaintenanceModeMiddleware::class);
+	// One-shot data/layout migrations (e.g. legacy `tcms-data/templates/` →
+	// `tcms-data/builder/` for pre-3.5 upgrades). Runs once per process via a
+	// static flag; the ledger ensures each migration applies at most once per
+	// install. Placed near MaintenanceMode because both are install-state
+	// concerns that run before public/admin routing decisions.
+	$app->add(MigrationMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
 	$app->add(LicenseValidationMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
