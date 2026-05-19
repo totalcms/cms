@@ -47,19 +47,21 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(13, $sections);
+		$this->assertCount(15, $sections);
 		$this->assertContains('installation', $sections);
 		$this->assertContains('general', $sections);
-		$this->assertContains('dashboard', $sections);
-		$this->assertContains('imageworks', $sections);
-		$this->assertContains('smtp', $sections);
-		$this->assertContains('cache', $sections);
 		$this->assertContains('auth', $sections);
+		$this->assertContains('builder', $sections);
+		$this->assertContains('cache', $sections);
+		$this->assertContains('dashboard', $sections);
 		$this->assertContains('htmlclean', $sections);
-		$this->assertContains('mailer', $sections);
-		$this->assertContains('pushnotif', $sections);
-		$this->assertContains('presets', $sections);
+		$this->assertContains('i18n', $sections);
+		$this->assertContains('imageworks', $sections);
 		$this->assertContains('license', $sections);
+		$this->assertContains('mailer', $sections);
+		$this->assertContains('presets', $sections);
+		$this->assertContains('pushnotif', $sections);
+		$this->assertContains('smtp', $sections);
 		$this->assertContains('sync', $sections);
 	}
 

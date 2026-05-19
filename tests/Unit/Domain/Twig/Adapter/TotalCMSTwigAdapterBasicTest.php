@@ -12,26 +12,45 @@ use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Support\Config;
 
 final class TotalCMSTwigAdapterBasicTest extends TestCase
 {
 	public function testLanguagesReturnsCorrectArray(): void
 	{
 		$translator = $this->createMock(TranslationService::class);
-		$adapter    = new LocaleTwigAdapter($translator);
+		// Per CLAUDE.md: mock Config via reflection. This test calls languages()
+		// which only reads the static method table; an empty Config is sufficient.
+		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$adapter    = new LocaleTwigAdapter($translator, $config);
 		$languages  = $adapter->languages();
 
+		// `languages()` delegates to LocaleRegistry, which uses native-language
+		// labels (Deutsch, Español, Français, العربية) and emits one entry per
+		// registered code. Bare codes own the simple labels (`English` => `en`);
+		// regional variants get country-suffixed labels (`English (US)` => `en_US`).
 		expect($languages)->toBeArray();
+
+		// Bare codes — simple labels, no parens.
 		expect($languages)->toHaveKey('English');
-		expect($languages['English'])->toBe('en_US');
-		expect($languages)->toHaveKey('Spanish');
-		expect($languages['Spanish'])->toBe('es_ES');
-		expect($languages)->toHaveKey('French');
-		expect($languages['French'])->toBe('fr_FR');
-		expect($languages)->toHaveKey('German');
-		expect($languages['German'])->toBe('de_DE');
-		expect(count($languages))->toBeGreaterThan(20);
-		expect(count($languages))->toBeLessThan(50);
+		expect($languages['English'])->toBe('en');
+		expect($languages)->toHaveKey('Deutsch');
+		expect($languages['Deutsch'])->toBe('de');
+		expect($languages)->toHaveKey('Español');
+		expect($languages['Español'])->toBe('es');
+		expect($languages)->toHaveKey('Français');
+		expect($languages['Français'])->toBe('fr');
+
+		// Regional variants — language + country code in parens.
+		expect($languages)->toHaveKey('English (US)');
+		expect($languages['English (US)'])->toBe('en_US');
+		expect($languages)->toHaveKey('Deutsch (DE)');
+		expect($languages['Deutsch (DE)'])->toBe('de_DE');
+		expect($languages)->toHaveKey('Português (BR)');
+		expect($languages['Português (BR)'])->toBe('pt_BR');
+
+		expect(count($languages))->toBeGreaterThan(40);
+		expect(count($languages))->toBeLessThan(80);
 	}
 
 	public function testPrettyUrlHandlesBasicPath(): void

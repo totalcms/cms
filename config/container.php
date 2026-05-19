@@ -557,7 +557,7 @@ return [
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
 		$container->get(BuilderTwigAdapter::class),
-		new LocaleTwigAdapter($container->get(TranslationService::class)),
+		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
 	),
 

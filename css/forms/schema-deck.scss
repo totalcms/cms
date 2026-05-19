@@ -334,6 +334,9 @@
 .string-type {
 	--schema-type-icon : var(--icon-text);
 }
+.localizedtext-type {
+	--schema-type-icon : var(--icon-i18n);
+}
 .svg-type {
 	--schema-type-icon : var(--icon-svg);
 }
@@ -420,6 +423,13 @@
 	&.string-type:after {
 		display : none;
 	}
+}
+.localizedtext-field,
+.localizedtextarea-field {
+	--schema-icon : var(--icon-text);
+}
+.localizedstyledtext-field {
+	--schema-icon : var(--icon-styledtext);
 }
 .code-field {
 	--schema-icon : var(--icon-file-code);

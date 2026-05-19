@@ -69,42 +69,6 @@
 				{"value": "alert",     "label": "Alert"},
 				{"value": "emergency", "label": "Emergency"}
 			]
-		},
-		"locale": {
-			"type"        : "string",
-			"field"       : "select",
-			"label"       : "Locale",
-			"placeholder" : "Select Locale",
-			"help"        : "The locale setting affects how dates, numbers, and currency are formatted. This uses PHP's locale system.",
-			"options"     : [
-				{"value": "en_US", "label": "English (United States)"},
-				{"value": "en_GB", "label": "English (United Kingdom)"},
-				{"value": "en_CA", "label": "English (Canada)"},
-				{"value": "en_AU", "label": "English (Australia)"},
-				{"value": "en_SG", "label": "English (Singapore)"},
-				{"value": "ar_SA", "label": "Arabic (Saudi Arabia)"},
-				{"value": "cs_CZ", "label": "Czech (Czech Republic)"},
-				{"value": "da_DK", "label": "Danish (Denmark)"},
-				{"value": "de_DE", "label": "German (Germany)"},
-				{"value": "es_ES", "label": "Spanish (Spain)"},
-				{"value": "es_MX", "label": "Spanish (Mexico)"},
-				{"value": "fr_FR", "label": "French (France)"},
-				{"value": "fr_CA", "label": "French (Canada)"},
-				{"value": "hu_HU", "label": "Hungarian (Hungary)"},
-				{"value": "it_IT", "label": "Italian (Italy)"},
-				{"value": "ja_JP", "label": "Japanese (Japan)"},
-				{"value": "km_KH", "label": "Khmer (Cambodia)"},
-				{"value": "nl_NL", "label": "Dutch (Netherlands)"},
-				{"value": "no_NO", "label": "Norwegian (Norway)"},
-				{"value": "pl_PL", "label": "Polish (Poland)"},
-				{"value": "pt_BR", "label": "Portuguese (Brazil)"},
-				{"value": "pt_PT", "label": "Portuguese (Portugal)"},
-				{"value": "ru_RU", "label": "Russian (Russia)"},
-				{"value": "tr_TR", "label": "Turkish (Turkey)"},
-				{"value": "uk_UA", "label": "Ukrainian (Ukraine)"},
-				{"value": "vi_VN", "label": "Vietnamese (Vietnam)"},
-				{"value": "zh_CN", "label": "Chinese (Simplified)"}
-			]
 		}
 	}
 }

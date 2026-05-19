@@ -169,9 +169,9 @@ class ObjectImporter
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
 
-		// Combine flat dot-notation card columns (e.g. mycard.title) into nested
-		// arrays before the unknown-property filter strips them.
-		$objectData = $this->unflattenCardProperties($objectData, $schema);
+		// Combine flat dot-notation columns (cards and localized fields) into
+		// nested arrays before the unknown-property filter strips them.
+		$objectData = $this->unflattenDottedProperties($objectData, $schema);
 
 		// Filter out properties that are not in the schema
 		$objectData = array_filter(
@@ -193,8 +193,11 @@ class ObjectImporter
 				continue;
 			}
 
-			// Check if the property is a reference to a card, image, gallery, file, depot, or deck
-			// and if the data is a valid JSON string, decode it and continue
+			// Check if the property is a reference to a card, image, gallery, file, depot, deck,
+			// or localizedtext and if the data is a valid JSON string, decode it and continue.
+			// Localized fields normally come through unflattenDottedProperties (one column per
+			// locale), but the single-column JSON fallback path (used when no locales are
+			// configured at export time) still needs to round-trip.
 			if (in_array($property['$ref'], [
 				SchemaData::PROPERTY_TYPE_TO_REF['card'],
 				SchemaData::PROPERTY_TYPE_TO_REF['image'],
@@ -202,6 +205,7 @@ class ObjectImporter
 				SchemaData::PROPERTY_TYPE_TO_REF['file'],
 				SchemaData::PROPERTY_TYPE_TO_REF['depot'],
 				SchemaData::PROPERTY_TYPE_TO_REF['deck'],
+				SchemaData::PROPERTY_TYPE_TO_REF['localizedtext'],
 			], true) && $this->isJson($objectData[$name])) {
 				$objectData[$name] = json_decode($objectData[$name], true);
 				continue;
@@ -242,26 +246,39 @@ class ObjectImporter
 	}
 
 	/**
-	 * Combine flat dot-notation card columns into nested arrays.
+	 * Combine flat dot-notation columns into nested arrays for property types
+	 * that store a flat sub-key dict: cards and localized fields.
+	 *
 	 * E.g. ["mycard.title" => "foo", "mycard.name" => "bar"]
 	 *      → ["mycard" => ["title" => "foo", "name" => "bar"]].
+	 * E.g. ["title.en_US" => "Hi", "title.de" => "Hallo"]
+	 *      → ["title" => ["en_US" => "Hi", "de" => "Hallo"]].
 	 *
-	 * Used by CSV import where each card sub-property is its own column. If
-	 * any dotted keys exist for a card, they replace the flat column entirely.
+	 * Used by CSV import where each sub-key is its own column. If any dotted
+	 * keys exist for a property, they replace the flat column entirely.
 	 *
 	 * @param array<string,mixed> $objectData
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function unflattenCardProperties(array $objectData, SchemaData $schema): array
+	private function unflattenDottedProperties(array $objectData, SchemaData $schema): array
 	{
+		// Property types whose CSV representation is one column per sub-key.
+		// All three localized field types (`localizedtext`, `localizedtextarea`,
+		// `localizedstyledtext`) share the same $ref after the 3.5 consolidation,
+		// so a single entry catches all of them.
+		$dottedRefs = [
+			SchemaData::PROPERTY_TYPE_TO_REF['card'],
+			SchemaData::PROPERTY_TYPE_TO_REF['localizedtext'],
+		];
+
 		foreach ($schema->properties as $name => $property) {
-			if (!is_array($property) || ($property['$ref'] ?? null) !== SchemaData::PROPERTY_TYPE_TO_REF['card']) {
+			if (!is_array($property) || !in_array($property['$ref'] ?? null, $dottedRefs, true)) {
 				continue;
 			}
 
 			$prefix    = $name . '.';
-			$cardData  = [];
+			$nested    = [];
 			$foundKeys = false;
 
 			foreach (array_keys($objectData) as $key) {
@@ -275,17 +292,18 @@ class ObjectImporter
 				}
 				$value = $objectData[$keyStr];
 				// Round-trip nested values that the exporter JSON-encoded
-				// (e.g. an image stored inside a card).
+				// (e.g. an image stored inside a card). Localized values are
+				// plain strings, so this branch is a no-op for them.
 				if (is_string($value) && $value !== '' && ($value[0] === '{' || $value[0] === '[') && $this->isJson($value)) {
 					$value = json_decode($value, true);
 				}
-				$cardData[$subKey] = $value;
+				$nested[$subKey] = $value;
 				unset($objectData[$keyStr]);
 				$foundKeys = true;
 			}
 
 			if ($foundKeys) {
-				$objectData[$name] = $cardData;
+				$objectData[$name] = $nested;
 			}
 		}
 
