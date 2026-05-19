@@ -6,17 +6,9 @@ use TotalCMS\Utils\Color\Couleur\ColorFactory;
 use TotalCMS\Utils\Color\Couleur\ColorSpace;
 use TotalCMS\Utils\Color\Couleur\exceptions\UnknownColorSpace;
 
-use function TotalCMS\Utils\Color\Couleur\utils\hsl\toHsv as hslToHsv;
 use function TotalCMS\Utils\Color\Couleur\utils\hsl\toRgb as hslToRgb;
-use function TotalCMS\Utils\Color\Couleur\utils\hsv\toHsl as hsvToHsl;
-use function TotalCMS\Utils\Color\Couleur\utils\hwb\toHsv as hwbToHsv;
 use function TotalCMS\Utils\Color\Couleur\utils\rgb\toHsl as rgbToHsl;
-use function TotalCMS\Utils\Color\Couleur\utils\linP3\stringify as linP3Stringify;
-use function TotalCMS\Utils\Color\Couleur\utils\linProPhoto\stringify as linProPhotoStringify;
 use function TotalCMS\Utils\Color\Couleur\utils\linRgb\stringify as linRgbStringify;
-use function TotalCMS\Utils\Color\Couleur\utils\p3\stringify as p3Stringify;
-use function TotalCMS\Utils\Color\Couleur\utils\proPhoto\stringify as proPhotoStringify;
-use function TotalCMS\Utils\Color\Couleur\utils\xyzD50\stringify as xyzD50Stringify;
 use function TotalCMS\Utils\Color\Couleur\utils\xyzD65\stringify as xyzD65Stringify;
 
 // ===== Bug: $hue undefined when switch finds no match (rgb/conversions.php) =====
@@ -46,34 +38,6 @@ test('rgb to hsl converts pure white without crashing', function (): void {
 // ===== Bug: ($value === 0) strict comparison against float (hsl/hsv/hwb conversions) =====
 // Float 0.0 was never matched by int 0 under strict comparison, causing divide-by-zero.
 
-test('hsl to hsv on pure black does not divide by zero', function (): void {
-	$result = hslToHsv(0, 0, 0);
-	expect((float) $result[1])->toEqual(0.0);
-	expect((float) $result[2])->toEqual(0.0);
-	expect(is_finite((float) $result[1]))->toBeTrue();
-	expect(is_finite((float) $result[2]))->toBeTrue();
-});
-
-test('hsv to hsl on pure black does not divide by zero', function (): void {
-	$result = hsvToHsl(0, 0, 0);
-	expect((float) $result[1])->toEqual(0.0);
-	expect((float) $result[2])->toEqual(0.0);
-	expect(is_finite((float) $result[1]))->toBeTrue();
-});
-
-test('hsv to hsl on pure white does not divide by zero', function (): void {
-	$result = hsvToHsl(0, 0, 100);
-	expect((float) $result[2])->toEqual(100.0);
-	expect(is_finite((float) $result[1]))->toBeTrue();
-});
-
-test('hwb to hsv on full whiteness does not divide by zero', function (): void {
-	// whiteness + blackness >= 1 takes a different branch; this triggers the $value === 0 path
-	$result = hwbToHsv(0, 0, 100);
-	expect($result[1])->toBeNumeric();
-	expect(is_finite((float) $result[1]))->toBeTrue();
-});
-
 // ===== Bug: missing $precision parameter (hsl/conversions.php toRgb) =====
 
 test('hsl to rgb accepts explicit precision parameter', function (): void {
@@ -89,36 +53,12 @@ test('hsl to rgb works with default precision (regression: undefined variable)',
 	expect(count($result))->toBe(4);
 });
 
-// ===== Bug: dead $legacy ??= against undeclared variable (7 stringify functions) =====
+// ===== Bug: dead $legacy ??= against undeclared variable (intermediate-space stringify functions) =====
 // These functions referenced an undeclared $legacy var, emitting "undefined variable" warnings.
-
-test('linP3 stringify produces valid color() string without warning', function (): void {
-	$result = linP3Stringify(0.5, 0.5, 0.5);
-	expect($result)->toStartWith('color(p3-linear ');
-});
-
-test('linProPhoto stringify produces valid color() string', function (): void {
-	$result = linProPhotoStringify(0.5, 0.5, 0.5);
-	expect($result)->toStartWith('color(');
-});
+// Only linRgb and xyzD65 remain (intermediates in the OKLCH conversion chain).
 
 test('linRgb stringify produces valid color() string', function (): void {
 	$result = linRgbStringify(0.5, 0.5, 0.5);
-	expect($result)->toStartWith('color(');
-});
-
-test('p3 stringify produces valid color() string', function (): void {
-	$result = p3Stringify(0.5, 0.5, 0.5);
-	expect($result)->toStartWith('color(');
-});
-
-test('proPhoto stringify produces valid color() string', function (): void {
-	$result = proPhotoStringify(0.5, 0.5, 0.5);
-	expect($result)->toStartWith('color(');
-});
-
-test('xyzD50 stringify produces valid color() string', function (): void {
-	$result = xyzD50Stringify(0.5, 0.5, 0.5);
 	expect($result)->toStartWith('color(');
 });
 

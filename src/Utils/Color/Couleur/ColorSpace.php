@@ -2,64 +2,44 @@
 
 namespace TotalCMS\Utils\Color\Couleur;
 
-use       TotalCMS\Utils\Color\Couleur\colors\Css;
 use       TotalCMS\Utils\Color\Couleur\colors\HexRgb;
 use       TotalCMS\Utils\Color\Couleur\colors\Hsl;
-use       TotalCMS\Utils\Color\Couleur\colors\Hsv;
-use       TotalCMS\Utils\Color\Couleur\colors\Hwb;
-use       TotalCMS\Utils\Color\Couleur\colors\Lab;
-use       TotalCMS\Utils\Color\Couleur\colors\Lch;
-use       TotalCMS\Utils\Color\Couleur\colors\LinP3;
-use       TotalCMS\Utils\Color\Couleur\colors\LinProPhoto;
 use       TotalCMS\Utils\Color\Couleur\colors\LinRgb;
 use       TotalCMS\Utils\Color\Couleur\colors\OkLab;
 use       TotalCMS\Utils\Color\Couleur\colors\OkLch;
-use       TotalCMS\Utils\Color\Couleur\colors\P3;
-use       TotalCMS\Utils\Color\Couleur\colors\ProPhoto;
 use       TotalCMS\Utils\Color\Couleur\colors\Rgb;
-use       TotalCMS\Utils\Color\Couleur\colors\XyzD50;
 use       TotalCMS\Utils\Color\Couleur\colors\XyzD65;
 use       TotalCMS\Utils\Color\Couleur\exceptions\UnsupportedColorSpace;
 
 /**
- * Represents a color space supported by Couleur. 
- * 
+ * Represents a color space supported by Couleur.
+ *
  * Can be accessed using aliases (all accepted alias are documented at https://github.com/matthieumastadenis/couleur-dev#-color-spaces).
  * Provides access to dedicated functions (clean(), from(), stringify(), verify()).
  */
 enum ColorSpace :string {
-    
+
     /* #region Cases */
 
-    case Css         = Css::class;
     case HexRgb      = HexRgb::class;
     case Hsl         = Hsl::class;
-    case Hsv         = Hsv::class;
-    case Hwb         = Hwb::class;
-    case Lab         = Lab::class;
-    case Lch         = Lch::class;
-    case LinP3       = LinP3::class;
-    case LinProPhoto = LinProPhoto::class;
     case LinRgb      = LinRgb::class;
     case OkLab       = OkLab::class;
     case OkLch       = OkLch::class;
-    case P3          = P3::class;
-    case ProPhoto    = ProPhoto::class;
     case Rgb         = Rgb::class;
-    case XyzD50      = XyzD50::class;
     case XyzD65      = XyzD65::class;
 
     /* #endregion */
-    
+
     /* #region Public Static Methods */
-    
+
     /**
      * Returns an array containing all supported aliases and the corresponding ColorSpace instances.
      *
      * @return array
      */
     public static function allAliases(
-        
+
     ) :array {
         $aliases = [];
 
@@ -76,14 +56,14 @@ enum ColorSpace :string {
 
     /**
      * Returns the ColorSpace instance corresponding to the alias $name, if it exists.
-     * 
-     * If $name does not match a supported alias, an UnsupportedColorSpace Exception will be thrown by default, 
+     *
+     * If $name does not match a supported alias, an UnsupportedColorSpace Exception will be thrown by default,
      * unless a $fallback is provided or $throw is set to false. In that case, the method will return $fallback.
      *
      * @param  \Stringable|string $name     Name or alias of the desired ColorSpace
      * @param  ColorSpace|null    $fallback Fallback returned if $name is not a supported alias
      * @param  boolean|null       $throw    If false the method will not throw exceptions, $fallback will be returned instead
-     * 
+     *
      * @return static|null                  The ColorSpace instance matching the $name alias, $fallback instead
      */
     public static function fromAlias(
@@ -107,7 +87,7 @@ enum ColorSpace :string {
     }
 
     /* #endregion */
-    
+
     /* #region Public Methods */
 
     /**
@@ -116,7 +96,7 @@ enum ColorSpace :string {
      * @return array
      */
     public function aliases(
-        
+
     ) :array {
         return ($this->value)::aliases();
     }
@@ -189,5 +169,5 @@ enum ColorSpace :string {
     }
 
     /* #endregion */
-    
+
 }

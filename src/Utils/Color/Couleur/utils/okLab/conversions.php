@@ -2,26 +2,11 @@
 
 namespace TotalCMS\Utils\Color\Couleur\utils\okLab;
 
-use       TotalCMS\Utils\Color\Couleur\CssColor;
 use       TotalCMS\Utils\Color\Couleur\utils;
 use       TotalCMS\Utils\Color\Couleur\utils\hsl;
-use       TotalCMS\Utils\Color\Couleur\utils\hsv;
-use       TotalCMS\Utils\Color\Couleur\utils\lab;
-use       TotalCMS\Utils\Color\Couleur\utils\linP3;
-use       TotalCMS\Utils\Color\Couleur\utils\linProPhoto;
 use       TotalCMS\Utils\Color\Couleur\utils\linRgb;
 use       TotalCMS\Utils\Color\Couleur\utils\rgb;
-use       TotalCMS\Utils\Color\Couleur\utils\xyzD50;
 use       TotalCMS\Utils\Color\Couleur\utils\xyzD65;
-
-function toCss(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :CssColor {
-    return rgb\toCss(... toRgb($lightness, $a, $b, $opacity));
-}
 
 function toHexRgb(
     float $lightness = 0,
@@ -39,60 +24,6 @@ function toHsl(
     float $opacity   = 100,
 ) :array {
     return rgb\toHsl(... toRgb($lightness, $a, $b, $opacity));
-}
-
-function toHsv(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return hsl\toHsv(... toHsl($lightness, $a, $b, $opacity));
-}
-
-function toHwb(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return hsv\toHwb(... toHsv($lightness, $a, $b, $opacity));
-}
-
-function toLab(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return xyzD50\toLab(... toXyzD50($lightness, $a, $b, $opacity));
-}
-
-function toLch(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return lab\toLch(... toLab($lightness, $a, $b, $opacity));
-}
-
-function toLinP3(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return xyzD65\toLinP3(... toXyzD65($lightness, $a, $b, $opacity));
-}
-
-function toLinProPhoto(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return xyzD50\toLinProPhoto(... toXyzD50($lightness, $a, $b, $opacity));
 }
 
 function toLinRgb(
@@ -122,24 +53,6 @@ function toOkLch(
     ];
 }
 
-function toP3(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return linP3\toP3(... toLinP3($lightness, $a, $b, $opacity));
-}
-
-function toProPhoto(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return linProPhoto\toProPhoto(... toLinProPhoto($lightness, $a, $b, $opacity));
-}
-
 function toRgb(
     float $lightness = 0,
     float $a         = 0,
@@ -147,15 +60,6 @@ function toRgb(
     float $opacity   = 100,
 ) :array {
     return linRgb\toRgb(... toLinRgb($lightness, $a, $b, $opacity));
-}
-
-function toXyzD50(
-    float $lightness = 0,
-    float $a         = 0,
-    float $b         = 0,
-    float $opacity   = 100,
-) :array {
-    return xyzD65\toXyzD50(... toXyzD65($lightness, $a, $b, $opacity));
 }
 
 function toXyzD65(

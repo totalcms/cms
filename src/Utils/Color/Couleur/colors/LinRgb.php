@@ -49,7 +49,7 @@ implements ColorInterface {
         \Stringable|string|int|float|null $green     = null,
         \Stringable|string|int|float|null $blue      = null,
         \Stringable|string|int|float|null $opacity   = null,
-        LinP3|null                        $fallback  = null,
+        LinRgb|null                       $fallback  = null,
         bool|null                         $throw     = null,
     ) :LinRgb {
         $changeThrow = $throw ?? true;
