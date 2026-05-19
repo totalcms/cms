@@ -168,7 +168,6 @@
     "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
     "bundle": "php bin/make-bundle.php",
-    "docs:api": "open API_DOCUMENTATION.md",
     "docs:validate": "php bin/validate-docs.php",
     "md": [
       "@md:src",
