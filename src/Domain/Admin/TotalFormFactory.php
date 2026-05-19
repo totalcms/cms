@@ -27,6 +27,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -221,6 +222,12 @@ readonly class TotalFormFactory
 	{
 		[$objects, $deckProperties] = $this->getDeckFormData($collection);
 
+		// Nothing to export — return empty so the caller (export.twig) can
+		// suppress the section entirely instead of rendering a useless form.
+		if ($deckProperties === []) {
+			return '';
+		}
+
 		$options['api']            = $this->api;
 		$options['collection']     = $collection;
 		$options['objects']        = $objects;
@@ -234,23 +241,22 @@ readonly class TotalFormFactory
 	/**
 	 * Build the object list and deck property list for a collection.
 	 *
+	 * Returns `[[], []]` when the schema has no deck properties — the deck
+	 * export UI uses that as a signal to suppress the section entirely, and
+	 * we skip the per-object index walk that would otherwise run pointlessly.
+	 *
 	 * @return array{0: array<array{value:string,label:string}>, 1: array<array{value:string,label:string}>}
 	 */
 	private function getDeckFormData(string $collection): array
 	{
-		$index   = $this->collectionReader->fetchIndex($collection);
-		$objects = [];
-		foreach ($index->objects->all() as $object) {
-			$id        = (string)($object['id'] ?? '');
-			$title     = (string)($object['title'] ?? $object['name'] ?? $id);
-			$objects[] = ['value' => $id, 'label' => $title];
-		}
-
 		$deckProperties = [];
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 			foreach ($schema->properties as $propName => $propConfig) {
-				if (PropertyDefinition::extractSchemaRef($propConfig) !== null) {
+				// Match only true deck properties — cards also carry a
+				// `schemaref`, so checking `extractSchemaRef !== null` (the
+				// old behaviour) leaked card properties into this dropdown.
+				if (is_array($propConfig) && ($propConfig['$ref'] ?? null) === SchemaData::PROPERTY_TYPE_TO_REF['deck']) {
 					$deckProperties[] = ['value' => $propName, 'label' => $propName];
 				}
 			}
@@ -258,7 +264,47 @@ readonly class TotalFormFactory
 			// Schema lookup failed, leave empty
 		}
 
+		if ($deckProperties === []) {
+			return [[], []];
+		}
+
+		$index   = $this->collectionReader->fetchIndex($collection);
+		$objects = [];
+		foreach ($index->objects->all() as $object) {
+			$id        = (string)($object['id'] ?? '');
+			$title     = $this->indexLabelToString($object['title'] ?? $object['name'] ?? $id, $id);
+			$objects[] = ['value' => $id, 'label' => $title];
+		}
+
 		return [$objects, $deckProperties];
+	}
+
+	/**
+	 * Coerce an index-stored label value to a display string. Localized
+	 * fields store a locale-keyed dict — pick the default-locale value (or
+	 * the first non-empty locale, falling back to the object's ID) so
+	 * dropdowns and listings show something sensible without `(string)` on
+	 * an array triggering a warning.
+	 */
+	private function indexLabelToString(mixed $value, string $fallback): string
+	{
+		if (is_scalar($value)) {
+			return (string)$value;
+		}
+
+		if (is_array($value) && $value !== []) {
+			// Prefer the first non-empty entry — for localized values this
+			// gives the most reasonable display. The dict isn't ordered by
+			// locale preference at the storage layer; the data shape is
+			// transparent here, the caller just wants *some* string.
+			foreach ($value as $entry) {
+				if (is_scalar($entry) && (string)$entry !== '') {
+					return (string)$entry;
+				}
+			}
+		}
+
+		return $fallback;
 	}
 
 	/** @param array<string,mixed> $options */

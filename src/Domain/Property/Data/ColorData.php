@@ -2,14 +2,12 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use matthieumastadenis\couleur\ColorFactory;
-use matthieumastadenis\couleur\colors\Hsl;
-use matthieumastadenis\couleur\colors\OkLch;
-use matthieumastadenis\couleur\colors\Rgb;
-use matthieumastadenis\couleur\ColorSpace;
-
-use function matthieumastadenis\couleur\utils\okLch\oklchChange;
-use function matthieumastadenis\couleur\utils\okLch\oklchToHex;
+use TotalCMS\Utils\Color\ColorFactory;
+use TotalCMS\Utils\Color\Colors\Hsl;
+use TotalCMS\Utils\Color\Colors\OkLch;
+use TotalCMS\Utils\Color\Colors\Rgb;
+use TotalCMS\Utils\Color\ColorSpace;
+use TotalCMS\Utils\Color\Converters\OkLch as OkLchConverter;
 
 /**
  * Color property data.
@@ -160,7 +158,7 @@ class ColorData extends PropertyData implements \Stringable
 	/** @param array<string,float> $oklch */
 	public static function oklchToHex(array $oklch): string
 	{
-		return oklchToHex($oklch);
+		return OkLchConverter::oklchToHex($oklch);
 	}
 
 	/**
@@ -171,7 +169,7 @@ class ColorData extends PropertyData implements \Stringable
 	 */
 	public static function oklchChange(array $oklch, array $change): array
 	{
-		return oklchChange($oklch, $change);
+		return OkLchConverter::oklchChange($oklch, $change);
 	}
 
 	/** @return array<string,float> */
@@ -181,7 +179,7 @@ class ColorData extends PropertyData implements \Stringable
 		if (!$oklch instanceof OkLch) {
 			return ['l' => 0, 'c' => 0, 'h' => 0]; // black
 		}
-		$coordinates = array_map(fn ($c): float => round($c, 3), $oklch->coordinates());
+		$coordinates = array_map(fn (float|int|string $c): float => round((float)$c, 3), $oklch->coordinates());
 
 		return [
 			'l' => $coordinates[0],
@@ -200,9 +198,9 @@ class ColorData extends PropertyData implements \Stringable
 		$coordinates = $rgb->coordinates();
 
 		return [
-			'r' => $coordinates[0],
-			'g' => $coordinates[1],
-			'b' => $coordinates[2],
+			'r' => (int)$coordinates[0],
+			'g' => (int)$coordinates[1],
+			'b' => (int)$coordinates[2],
 		];
 	}
 
@@ -213,7 +211,7 @@ class ColorData extends PropertyData implements \Stringable
 		if (!$hsl instanceof Hsl) {
 			return ['h' => 0, 's' => 0, 'l' => 0]; // black
 		}
-		$coordinates = array_map(fn ($c): float => round($c, 3), $hsl->coordinates());
+		$coordinates = array_map(fn (float|int|string $c): float => round((float)$c, 3), $hsl->coordinates());
 
 		return [
 			'h' => $coordinates[0],

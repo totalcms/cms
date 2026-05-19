@@ -106,6 +106,9 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
+use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
+use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
+use TotalCMS\Domain\Migration\Service\MigrationRunner;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\AutogenService;
@@ -209,6 +212,7 @@ use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
+use TotalCMS\Middleware\MigrationMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\Security\RateLimitMiddleware;
@@ -557,7 +561,7 @@ return [
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
 		$container->get(BuilderTwigAdapter::class),
-		new LocaleTwigAdapter($container->get(TranslationService::class)),
+		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
 	),
 
@@ -1256,6 +1260,7 @@ return [
 	),
 
 	SetupCheckMiddleware::class => fn (ContainerInterface $container): SetupCheckMiddleware => new SetupCheckMiddleware(
+		$container->get(App::class),
 		$container->get(Config::class),
 		$container->get(RedirectRenderer::class),
 		$container->get(SetupStateManager::class),
@@ -1304,6 +1309,7 @@ return [
 		$dispatcher->listen('template.saved', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
 		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('devmode.disabled', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onDevModeDisabled'), -50);
 
 		return $dispatcher;
 	},
@@ -1365,6 +1371,30 @@ return [
 
 	TemplateMigrationService::class => fn (ContainerInterface $container): TemplateMigrationService => new TemplateMigrationService(
 		$container->get(StorageAdapterInterface::class),
+	),
+
+	// Migrations — generic one-shot data/layout migrations. Register concrete
+	// migrations in the MigrationRunner factory below; the middleware runs them
+	// at boot time on every request (ledger-gated, so each migration applies
+	// at most once per install).
+	MigrationStateRepository::class => fn (ContainerInterface $container): MigrationStateRepository => new MigrationStateRepository(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	LegacyTemplatesMigration::class => fn (ContainerInterface $container): LegacyTemplatesMigration => new LegacyTemplatesMigration(
+		$container->get(TemplateMigrationService::class),
+	),
+
+	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
+		[
+			$container->get(LegacyTemplatesMigration::class),
+		],
+		$container->get(MigrationStateRepository::class),
+		$container->get(LoggerFactory::class)->addFileHandler('migrations.log')->createLogger('migrations'),
+	),
+
+	MigrationMiddleware::class => fn (ContainerInterface $container): MigrationMiddleware => new MigrationMiddleware(
+		$container->get(MigrationRunner::class),
 	),
 
 	// Builder

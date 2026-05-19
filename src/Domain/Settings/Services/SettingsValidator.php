@@ -21,16 +21,18 @@ readonly class SettingsValidator
 		$this->validSections = [
 			'installation',
 			'general',
-			'dashboard',
-			'imageworks',
-			'smtp',
-			'cache',
 			'auth',
+			'builder',
+			'cache',
+			'dashboard',
 			'htmlclean',
-			'mailer',
-			'pushnotif',
-			'presets',
+			'i18n',
+			'imageworks',
 			'license',
+			'mailer',
+			'presets',
+			'pushnotif',
+			'smtp',
 			'sync',
 		];
 	}
@@ -235,6 +237,7 @@ readonly class SettingsValidator
 			'deniedTimeout',
 			'persistentLoginDays',
 			'resetTokenExpiry',
+			'verificationTokenExpiry',
 		];
 
 		foreach ($numericFields as $field) {

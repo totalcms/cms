@@ -7,32 +7,36 @@ namespace TotalCMS\Action\Admin\Builder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Stream;
-use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Builder\Service\BuilderReloadPulseService;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 
 /**
- * `GET /admin/builder/events` — Server-Sent Events stream powering the
- * Builder's live-reload feature.
+ * `GET /livereload/events` — Server-Sent Events stream powering the Builder's
+ * live-reload feature.
  *
- * Connected admin tabs hold this connection open and receive a `reload`
- * event whenever the pulse repository's timestamp advances (i.e. someone
- * saves a Builder template or page record). Clients call `location.reload()`
- * on receipt.
+ * Connected pages hold this connection open and receive a `reload` event
+ * whenever the pulse repository's timestamp advances (i.e. someone saves a
+ * Builder template or page record). Clients call `location.reload()` on
+ * receipt.
+ *
+ * Dev Mode is the sole gate. The route is registered as a public endpoint
+ * because Dev Mode also bypasses Twig caching — anyone watching the site in
+ * a dev context should get the reload, which is what makes the demo case
+ * work (developer + client both watching, both reload on save). With Dev
+ * Mode off, the action refuses the connection with 403; the injector also
+ * stops emitting the script, so there's nothing trying to connect.
  *
  * Streaming details:
  *   - Connection lifetime is capped at ~30 seconds. The browser's `EventSource`
  *     auto-reconnects on close, so the cap recycles workers without affecting
  *     UX. Without it, a worker could be tied up indefinitely.
  *   - `session_write_close()` runs immediately so we don't hold the session
- *     lock while streaming. Other admin requests would otherwise block until
- *     this connection closes.
+ *     lock while streaming. Other requests from the same browser would
+ *     otherwise block until this connection closes.
  *   - `output_buffering` is forced off and `flush()` is called per heartbeat
  *     to defeat fastcgi/proxy buffering.
  *   - A heartbeat comment is sent every poll so reverse proxies don't drop
  *     the connection on idle timeouts.
- *
- * The action is admin-gated by `AdminOnlyMiddleware` on the route — non-admins
- * never reach this code.
  */
 final readonly class BuilderEventsAction
 {
@@ -41,7 +45,7 @@ final readonly class BuilderEventsAction
 
 	public function __construct(
 		private BuilderReloadPulseService $pulse,
-		private AccessManager $accessManager,
+		private DevModeManager $devModeManager,
 	) {
 	}
 
@@ -49,11 +53,12 @@ final readonly class BuilderEventsAction
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 	): ResponseInterface {
-		// Defense in depth: the route is gated by AdminOnlyMiddleware, but a
-		// stream that bypasses auth would be a nasty leak if the route is ever
-		// reconfigured. Cheap to check, refuses unauthenticated readers cleanly.
-		if (!$this->accessManager->sessionHasUser()) {
-			return $response->withStatus(401);
+		// Dev Mode is the sole gate. With it off, the injector also stops
+		// emitting the script, so the only way to reach here is a stale page
+		// that was loaded while Dev Mode was on. 403 lets the browser see a
+		// permanent close rather than retrying indefinitely.
+		if (!$this->devModeManager->isDevModeActive()) {
+			return $response->withStatus(403);
 		}
 
 		// Release the session lock immediately. Sessions are per-file-locked by

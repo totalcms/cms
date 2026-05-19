@@ -62,7 +62,7 @@
 		<input type="search" class="filter" placeholder="{{ t('utils.filter') }}" autofocus />
 	</header>
 
-	<nav class="links docs">
+	<nav class="links">
 		{% for group in menu %}
 		{% set groupPaths = group.sub|column('path') %}
 		{% set hasVisible = false %}

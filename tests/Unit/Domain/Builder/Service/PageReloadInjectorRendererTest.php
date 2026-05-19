@@ -8,66 +8,52 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Support\Config;
 
 /**
- * Tests the live-reload script injector. Covers the gating rules
- * (admin session, setting toggle) and the script's resolved endpoint URL.
+ * Tests the live-reload script injector. Dev Mode is the sole gate — the
+ * script is injected for every visitor when Dev Mode is active, and not at
+ * all when it's off.
  */
 final class PageReloadInjectorRendererTest extends TestCase
 {
-	private AccessManager&MockObject $accessManager;
-	private BuilderConfigService&MockObject $builderConfig;
+	private DevModeManager&MockObject $devModeManager;
 	private Config $config;
 	private PageReloadInjectorRenderer $renderer;
 
 	protected function setUp(): void
 	{
-		$this->accessManager = $this->createMock(AccessManager::class);
-		$this->builderConfig = $this->createMock(BuilderConfigService::class);
-		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->config->api   = 'https://example.test';
-		$this->renderer      = new PageReloadInjectorRenderer($this->accessManager, $this->builderConfig, $this->config);
+		$this->devModeManager = $this->createMock(DevModeManager::class);
+		$this->config         = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->api    = 'https://example.test';
+		$this->renderer       = new PageReloadInjectorRenderer($this->devModeManager, $this->config);
 	}
 
-	public function testReturnsBodyUnchangedWhenNotLoggedIn(): void
+	public function testReturnsBodyUnchangedWhenDevModeOff(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(false);
-		$this->builderConfig->method('isLiveReloadEnabled')->willReturn(true);
+		$this->devModeManager->method('isDevModeActive')->willReturn(false);
 
 		$body = '<html><body>hi</body></html>';
 		$this->assertSame($body, $this->renderer->maybeInject($body, $this->request()));
 	}
 
-	public function testReturnsBodyUnchangedWhenSettingDisabled(): void
+	public function testInjectsScriptWhenDevModeOn(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
-		$this->builderConfig->method('isLiveReloadEnabled')->willReturn(false);
-
-		$body = '<html><body>hi</body></html>';
-		$this->assertSame($body, $this->renderer->maybeInject($body, $this->request()));
-	}
-
-	public function testInjectsScriptWhenAdminAndEnabled(): void
-	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
-		$this->builderConfig->method('isLiveReloadEnabled')->willReturn(true);
+		$this->devModeManager->method('isDevModeActive')->willReturn(true);
 
 		$result = $this->renderer->maybeInject('<html><body>hi</body></html>', $this->request());
 
 		$this->assertStringContainsString('<script', $result);
 		$this->assertStringContainsString('EventSource', $result);
-		$this->assertStringContainsString('https://example.test/admin/builder/events', $result);
+		$this->assertStringContainsString('https://example.test/livereload/events', $result);
 		$this->assertStringContainsString('location.reload()', $result);
 	}
 
 	public function testInjectsBeforeClosingBodyTag(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
-		$this->builderConfig->method('isLiveReloadEnabled')->willReturn(true);
+		$this->devModeManager->method('isDevModeActive')->willReturn(true);
 
 		$result = $this->renderer->maybeInject('<html><body>hi</body></html>', $this->request());
 		$this->assertMatchesRegularExpression('#<script[^>]*data-totalcms="builder-live-reload".*</body></html>$#s', $result);
@@ -75,8 +61,7 @@ final class PageReloadInjectorRendererTest extends TestCase
 
 	public function testFallsBackToAppendingWhenNoBodyTagPresent(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
-		$this->builderConfig->method('isLiveReloadEnabled')->willReturn(true);
+		$this->devModeManager->method('isDevModeActive')->willReturn(true);
 
 		$result = $this->renderer->maybeInject('<div>fragment</div>', $this->request());
 		$this->assertStringStartsWith('<div>fragment</div>', $result);

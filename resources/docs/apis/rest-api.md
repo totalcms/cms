@@ -751,6 +751,204 @@ GET /api/schemas/{collection}
 }
 ```
 
+## Property Files API
+
+Save, move, delete, and manage files attached to a property on an object. These are the endpoints the admin UI uses behind every image, file, gallery, and depot field — and the ones to call from your own integrations.
+
+Files are stored under `tcms-data/{collection}/{id}/{property}/[{path}/]{filename}` and served back over the public `imageworks` / `download` / `stream` endpoints documented in [File Downloads & Streaming](#file-downloads--streaming).
+
+### Save a File to a Property
+
+Upload a file to an `image`, `file`, `gallery`, or `depot` property. The same endpoint handles three input modes:
+
+- **Direct upload** — `multipart/form-data` with the file under the property name (or, for nested fields, under the child field name — see the nested example below).
+- **Chunked upload** — Dropzone-compatible chunking via `dzchunkindex` / `dztotalchunkcount` (or `chunkindex` / `totalchunkcount`) in the form body. Intermediate chunks return `{ "status": "chunk received" }`; the final chunk assembles and saves.
+- **URL upload** — Instead of a file, POST a JSON body with the property name set to a URL. The server downloads the URL (subject to `maxDownloadSize` in `tcms.php`) and saves the result as if it had been uploaded directly.
+
+```http
+POST /api/collections/{collection}/{id}/{property}
+POST /api/collections/{collection}/{id}/{property}/{path}
+```
+
+**Behavior:**
+
+- HEIC images are auto-converted to JPEG before saving.
+- The response is the updated object (same shape as `GET /api/collections/{collection}/{id}`) so clients see the new file in context.
+- Nested-path uploads target card children, deck-item children, or depot subfolders. The form-field name in the request body must match the *last* segment of `{path}` (e.g., uploading to `…/mycard/image` puts the file under the form key `image`, not `mycard`).
+
+**Direct upload example:**
+```bash
+curl -X POST https://yoursite.com/api/collections/blog/my-post/cover \
+  -H "Authorization: Bearer tcms_1234567890abcdef1234567890abcdef" \
+  -F "cover=@./hero.jpg"
+```
+
+**URL upload example:**
+```bash
+curl -X POST https://yoursite.com/api/collections/blog/my-post/cover \
+  -H "Authorization: Bearer tcms_..." \
+  -H "Content-Type: application/json" \
+  -d '{"cover": "https://example.com/external-hero.jpg"}'
+```
+
+**Nested upload example** (image inside a card field):
+```bash
+curl -X POST https://yoursite.com/api/collections/blog/my-post/hero-card/image \
+  -H "Authorization: Bearer tcms_..." \
+  -F "image=@./photo.jpg"
+```
+
+**Response** (full object with updated file metadata):
+```json
+{
+    "data": {
+        "id": "my-post",
+        "cover": {
+            "name": "hero.jpg",
+            "size": 245760,
+            "alt": "",
+            "focalpoint": { "x": 50, "y": 50 }
+        }
+    },
+    "meta": { ... }
+}
+```
+
+**Common errors:**
+```json
+{ "error": "No file found in request for property: cover" }
+```
+```json
+{ "error": "File exceeds upload_max_filesize in php.ini" }
+```
+
+### Delete a File
+
+Remove a single file from a gallery or depot, or delete the file held by an image/file field.
+
+```http
+DELETE /api/collections/{collection}/{id}/{property}/{path}
+```
+
+`{path}` is the file's name relative to the property — `photo.jpg` for a top-level file, `2026/photo.jpg` for a depot subfolder, or the child field key for a nested property delete (e.g., `mycard/image`).
+
+**Example:**
+```bash
+curl -X DELETE https://yoursite.com/api/collections/blog/my-post/gallery/old-photo.jpg \
+  -H "Authorization: Bearer tcms_..."
+```
+
+Response is the updated object after the delete.
+
+### Move a File
+
+Move a file from one depot subfolder to another. Used by the depot field's drag-and-drop UI; the request body's `destination` is the new subfolder path.
+
+```http
+PUT /api/collections/{collection}/{id}/{property}/{name}/move
+```
+
+**Query parameters:**
+
+- **path** — Current subfolder containing the file. Omit if the file is at the root of the property.
+
+**Request body:**
+
+- **destination** — Target subfolder path.
+
+**Example:**
+```bash
+curl -X PUT "https://yoursite.com/api/collections/blog/my-post/files/report.pdf/move?path=2025" \
+  -H "Authorization: Bearer tcms_..." \
+  -H "Content-Type: application/json" \
+  -d '{"destination": "2026/january"}'
+```
+
+**Response:**
+```json
+{ "moved": true }
+```
+
+### Create a Folder
+
+Create a subfolder inside a depot property.
+
+```http
+POST /api/collections/{collection}/{id}/{property}/folder
+```
+
+**Request body:**
+
+- **path** — Folder path to create. Forward slashes create nested folders in one call.
+
+```bash
+curl -X POST https://yoursite.com/api/collections/blog/my-post/files/folder \
+  -H "Authorization: Bearer tcms_..." \
+  -H "Content-Type: application/json" \
+  -d '{"path": "2026/q1"}'
+```
+
+Response is the updated object showing the new folder structure.
+
+### Rename a Folder
+
+```http
+PUT /api/collections/{collection}/{id}/{property}/folder/rename
+```
+
+**Query parameters:**
+
+- **path** — Current folder path to rename.
+
+**Request body:**
+
+- **name** — New folder name (just the last segment, not a full path).
+
+```bash
+curl -X PUT "https://yoursite.com/api/collections/blog/my-post/files/folder/rename?path=2025/q4" \
+  -H "Authorization: Bearer tcms_..." \
+  -H "Content-Type: application/json" \
+  -d '{"name": "archived-q4"}'
+```
+
+### Clear a Property's Image Cache
+
+Force-regenerate every cached image derivative (ImageWorks output) for a property. Useful after changing image presets or watermark settings.
+
+```http
+DELETE /api/collections/{collection}/{id}/{property}/cache
+```
+
+**Response:**
+```json
+{ "deleted": 12 }
+```
+
+`deleted` is the number of cached files that were removed.
+
+### Clear Cache for One File
+
+Clear the cache for a single gallery item, or the cache that lives under a card / deck child property.
+
+```http
+DELETE /api/collections/{collection}/{id}/{property}/{path}/cache
+```
+
+The action picks the right cache to clear based on filesystem state: a gallery file name clears just that file's image derivatives; a child-property key clears the nested property's cache directory.
+
+### Tiptap / Styled-Text Embedded Uploads
+
+The styled-text (Tiptap) editor uses a separate, internal `/api/upload/*` namespace for inline image and file embeds inserted from the rich-text toolbar:
+
+```http
+POST   /api/upload/{collection}/{id}/{property}[/{path}]
+GET    /api/upload/{collection}/{id}/{property}
+GET    /api/upload/{collection}/{id}/{property}/{path}
+DELETE /api/upload/{collection}/{id}/{property}/{path}
+```
+
+These behave similarly to the property-file endpoints above but return a single `link` URL (image/audio/video/file get routed to `imageworks` / `stream` / `download` respectively) rather than the full object. They're public-facing in the sense that the URLs need to remain stable for content embedded in saved HTML, but they're not the recommended integration surface — **prefer the `/api/collections/{collection}/{id}/{property}` endpoints above for any first-party file upload work.**
+
 ## File Downloads & Streaming
 
 ### Download File (Forces Download)

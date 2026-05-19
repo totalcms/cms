@@ -99,6 +99,17 @@
 			<h2>{{ t('mailer.test_email') }}</h2>
 			<p>Send a test email using this template. Enter test data in JSON format to test Twig variable substitution.</p>
 
+			<details class="cms-accordion" id="mailer-load-details">
+				<summary style="font-size:1rem;font-weight:normal">{{ t('mailer.test_data_load_label') }}</summary>
+				<div class="content totalform">
+					{{ cms.form.field("text", "mailer_load_from", {
+						placeholder : t('mailer.test_data_load_placeholder'),
+					}) }}
+					<button type="button" class="dash-button transparent" id="mailer-load-btn">{{ t('mailer.test_data_load_button') }}</button>
+					<span class="mailer-load-status" role="status" aria-live="polite"></span>
+				</div>
+			</details>
+
 			{% set testDataField %}
 				<input type="hidden" name="mailerId" value="{{ url.id }}" />
 				{{ cms.form.field("json", "data", {
@@ -127,7 +138,7 @@
 
 {% if url.id and url.id != 'new' and url.id[:1] != '-' %}
 <script>
-{# Persist test data in localStorage per mailer #}
+{# Persist test data in localStorage per mailer, and wire the "Load from object" helper. #}
 document.addEventListener('DOMContentLoaded', () => {
 	const storageKey = 'mailer-test-data:{{ url.id }}';
 	const container = document.querySelector('.test-email-form .form-field[data-type="json"]');
@@ -146,6 +157,71 @@ document.addEventListener('DOMContentLoaded', () => {
 		const raw = field.editor ? field.editor.getValue() : textarea.value;
 		localStorage.setItem(storageKey, raw);
 	});
+
+	// "Load from object" helper — fetches an existing object and dumps its
+	// fields into the test data textarea so operators can preview an email
+	// against real data without retyping it.
+	const loadInput  = document.querySelector('[name="mailer_load_from"]');
+	const loadBtn    = document.getElementById('mailer-load-btn');
+	const loadStatus = document.querySelector('.mailer-load-status');
+	if (loadBtn) {
+		const messages = {
+			formatError: {{ t('mailer.test_data_load_format_error') | json_encode | raw }},
+			failed:      {{ t('mailer.test_data_load_failed')       | json_encode | raw }},
+		};
+
+		const setStatus = (text, state) => {
+			if (!loadStatus) return;
+			loadStatus.textContent = text;
+			loadStatus.dataset.state = state;
+		};
+
+		const writeJson = (json) => {
+			if (field.editor && typeof field.editor.setValue === 'function') {
+				field.editor.setValue(json);
+			} else if (textarea) {
+				textarea.value = json;
+			}
+			localStorage.setItem(storageKey, json);
+		};
+
+		loadBtn.addEventListener('click', async () => {
+			const path = (loadInput.value || '').trim();
+			if (!/^[^/]+\/[^/]+$/.test(path)) {
+				setStatus(messages.formatError, 'error');
+				return;
+			}
+
+			setStatus('', 'pending');
+			try {
+				const resp = await fetch(`{{ cms.api }}/collections/${path}`, {
+					headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+					credentials: 'same-origin',
+				});
+				if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+				const body = await resp.json();
+				const object = body.data ?? body;
+				writeJson(JSON.stringify(object, null, 2));
+				setStatus('', '');
+			} catch (err) {
+				setStatus(messages.failed, 'error');
+			}
+		});
+
+		loadInput?.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				loadBtn.click();
+			}
+		});
+
+		// Focus the input when the disclosure opens so the operator can start
+		// typing immediately.
+		const loaderDetails = document.getElementById('mailer-load-details');
+		loaderDetails?.addEventListener('toggle', () => {
+			if (loaderDetails.open && loadInput) loadInput.focus();
+		});
+	}
 });
 
 document.querySelector('.duplicate a')?.addEventListener('click', (e) => {

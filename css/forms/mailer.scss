@@ -50,6 +50,31 @@
 		color         : oklch(var(--totalform-darkgray));
 	}
 }
+.mailer-load-status {
+	display    : block;
+	min-height : 1.25rem;
+	margin-top : 0.5rem;
+	font-size  : 0.875rem;
+	color      : oklch(var(--totalform-darkgray));
+
+	&[data-state="error"]   { color : oklch(var(--totalform-error)); }
+	&[data-state="success"] { color : oklch(var(--totalform-success)); }
+	&[data-state="pending"]::before {
+		content            : "";
+		display            : inline-block;
+		width              : 0.75rem;
+		height             : 0.75rem;
+		margin-right       : 0.25rem;
+		border             : 2px solid currentColor;
+		border-right-color : transparent;
+		border-radius      : 50%;
+		animation          : mailer-loader-spin 0.7s linear infinite;
+		vertical-align     : middle;
+	}
+}
+@keyframes mailer-loader-spin {
+	to { transform : rotate(360deg); }
+}
 .bulk-pro-badge {
 	display: inline-block;
 	font-size: 0.65em;

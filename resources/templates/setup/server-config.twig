@@ -65,6 +65,9 @@
 .setup-server-config {
 	max-width: 760px;
 	width: 100%;
+	/* Override .login-layout's default grid track so long <pre> snippets can
+	   hit their own overflow-x: auto instead of stretching the column. */
+	grid-template-columns: minmax(0, 1fr);
 }
 
 .setup-section {

@@ -22,6 +22,8 @@ import MultiCheckboxField from './multicheckbox';
 import ListField from './list';
 import RangeSlider from './range';
 import StyledTextField from './styledtext';
+import LocalizedTextField from './localizedtext';
+import LocalizedStyledTextField from './localizedstyledtext';
 import SVGField from './svg';
 import ImageField from './image';
 import GalleryField from './gallery';
@@ -336,6 +338,16 @@ export default class TotalForm {
 
 			case "styledtext":
                 return new StyledTextField(field, settings);
+
+			case "localizedtext":
+			case "localizedtextarea":
+				// Same JS class for both — getValue/setValue queries
+				// `input[data-locale], textarea[data-locale]` and works
+				// uniformly. The PHP FormField subclass decides the shape.
+				return new LocalizedTextField(field, settings);
+
+			case "localizedstyledtext":
+				return new LocalizedStyledTextField(field, settings);
 
             case "svg":
                 return new SVGField(field, settings);

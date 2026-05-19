@@ -118,6 +118,12 @@ readonly class DataPathInstaller
 	 * Persist the wizard's selected locale into the data directory's
 	 * settings.json. Called late so the directory is guaranteed to exist
 	 * and Config has the new datadir.
+	 *
+	 * Writes to `$settings['i18n']['default']` — the canonical location for
+	 * the site's default locale after the 3.5 consolidation. `$config->locale`
+	 * mirrors that value, so PHP intl / CakePHP I18n / Faker pick it up.
+	 * Top-level `$settings['locale']` is reserved for an advanced override
+	 * (formatting locale ≠ content default) and is not what the wizard sets.
 	 */
 	private function writeLocale(string $dataPath, string $locale): void
 	{
@@ -137,7 +143,10 @@ readonly class DataPathInstaller
 			@copy($settingsFile, $settingsFile . '.bak');
 		}
 
-		$existing['locale'] = $locale;
+		$i18n             = isset($existing['i18n']) && is_array($existing['i18n']) ? $existing['i18n'] : [];
+		$i18n['default']  = $locale;
+		$existing['i18n'] = $i18n;
+
 		@file_put_contents($settingsFile, (string)json_encode($existing, JSON_PRETTY_PRINT));
 	}
 }

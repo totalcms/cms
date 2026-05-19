@@ -59,7 +59,7 @@ readonly class PropertyFactory
 		}
 
 		// Handle JSON string passed to array types (form sends JSON strings for complex fields)
-		$arrayTypes = ['image', 'gallery', 'file', 'depot', 'deck'];
+		$arrayTypes = ['image', 'gallery', 'file', 'depot', 'localizedtext'];
 		if (is_string($value) && in_array($type, $arrayTypes, true)) {
 			if (str_starts_with($value, '{') || str_starts_with($value, '[')) {
 				$decoded = json_decode($value, true);

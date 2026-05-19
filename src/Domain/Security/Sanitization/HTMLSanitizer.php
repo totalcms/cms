@@ -19,14 +19,11 @@ class HTMLSanitizer
 		$html = self::removeScripts($html);
 		$html = self::removeEventHandlers($html);
 		$html = self::removeDangerousProtocols($html);
-		$html = self::removeDangerousAttributes($html);
 		$html = self::removeDangerousTags($html);
 		$html = self::handleIframes($html, $config);
-		$html = self::removeComments($html);
 		$html = self::sanitizeStyles($html, $config);
-		$html = self::handleAllowedTags($html, $config);
 
-		return self::removeAlertCalls($html);
+		return self::handleAllowedTags($html, $config);
 	}
 
 	/**
@@ -66,20 +63,24 @@ class HTMLSanitizer
 
 	private static function removeDangerousProtocols(string $html): string
 	{
-		$html = (string)preg_replace('/javascript:/i', '', $html);
-		$html = (string)preg_replace('/vbscript:/i', '', $html);
+		// Only strip protocols inside tag markup (attribute values, etc.).
+		// Text content between tags is left alone so prose and code samples
+		// can mention `javascript:` / `vbscript:` literally without damage.
+		return (string)preg_replace_callback(
+			'/<[^>]*>/',
+			static function (array $m): string {
+				$tag = (string)preg_replace('/javascript:/i', '', $m[0]);
+				$tag = (string)preg_replace('/vbscript:/i', '', $tag);
 
-		return (string)preg_replace('/data:text\/html/i', '', $html);
-	}
-
-	private static function removeDangerousAttributes(string $html): string
-	{
-		return (string)preg_replace('/\s*data-\w+\s*=\s*["\'][^"\']*["\']/i', '', $html);
+				return (string)preg_replace('/data:text\/html/i', '', $tag);
+			},
+			$html
+		);
 	}
 
 	private static function removeDangerousTags(string $html): string
 	{
-		$dangerousTags = ['object', 'embed', 'form', 'input', 'button', 'link', 'meta', 'base'];
+		$dangerousTags = ['object', 'embed', 'form', 'input', 'link', 'meta', 'base', 'style'];
 		foreach ($dangerousTags as $tag) {
 			$html = (string)preg_replace("/<{$tag}[^>]*>.*?<\/{$tag}>/is", '', $html);
 			$html = (string)preg_replace("/<{$tag}[^>]*\/?>/i", '', $html);
@@ -122,25 +123,7 @@ class HTMLSanitizer
 
 	private static function processDefaultIframes(string $html): string
 	{
-		// Default behavior - allow youtube for rich content
-		$allowedIframes = [];
-		preg_match_all('/<iframe[^>]*>.*?<\/iframe>/is', $html, $matches);
-
-		foreach ($matches[0] as $iframe) {
-			if (preg_match('/src=["\']https:\/\/www\.youtube\.com/i', $iframe)) {
-				$allowedIframes[] = $iframe;
-			}
-		}
-
-		// Remove all iframes first, then add back allowed ones
-		$html = (string)preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $html);
-
-		return $html . implode('', $allowedIframes);
-	}
-
-	private static function removeComments(string $html): string
-	{
-		return (string)preg_replace('/<!--.*?-->/s', '', $html);
+		return self::processCustomIframeDomains($html, HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS);
 	}
 
 	/**
@@ -148,10 +131,13 @@ class HTMLSanitizer
 	 */
 	private static function sanitizeStyles(string $html, array $config): string
 	{
-		// Remove style attributes that contain dangerous content
-		$html = (string)preg_replace('/style\s*=\s*["\'][^"\']*(?:javascript|expression|behavior|vbscript)[^"\']*["\']/i', '', $html);
+		// Strip `expression(...)` — historic IE-only XSS vector. Anchored on the
+		// function-call shape so the literal word "expression" inside a font
+		// name or CSS comment isn't a false positive. Other protocols inside
+		// style values (javascript:/vbscript:/data:text/html) are already
+		// removed by removeDangerousProtocols, which runs earlier.
+		$html = (string)preg_replace('/\s*style\s*=\s*["\'][^"\']*expression\s*\([^"\']*["\']/i', '', $html);
 
-		// If custom config specifies no CSS, remove all styles
 		if (empty($config['allowed_css_properties'] ?? [])) {
 			$html = (string)preg_replace('/\s*style\s*=\s*["\'][^"\']*["\']/i', '', $html);
 		}
@@ -164,25 +150,16 @@ class HTMLSanitizer
 	 */
 	private static function handleAllowedTags(string $html, array $config): string
 	{
-		// Skip if allowed_tags is not set or not an array
 		if (!isset($config['allowed_tags']) || !is_array($config['allowed_tags'])) {
 			return $html;
 		}
 
-		$allowedTags = $config['allowed_tags'];
-		// For simplicity, just remove specific disallowed tags for tests
-		if (!in_array('div', $allowedTags, true)) {
-			$html = (string)preg_replace('/<\/?div[^>]*>/i', '', $html);
-		}
-		if (!in_array('strong', $allowedTags, true)) {
-			$html = (string)preg_replace('/<\/?strong[^>]*>/i', '', $html);
-		}
+		$allowedTags = array_map(strtolower(...), array_filter($config['allowed_tags'], is_string(...)));
 
-		return $html;
-	}
-
-	private static function removeAlertCalls(string $html): string
-	{
-		return (string)preg_replace('/alert\s*\([^)]*\)/i', '', $html);
+		return (string)preg_replace_callback(
+			'/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/',
+			static fn (array $m): string => in_array(strtolower($m[1]), $allowedTags, true) ? $m[0] : '',
+			$html
+		);
 	}
 }

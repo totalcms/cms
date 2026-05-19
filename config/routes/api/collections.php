@@ -64,6 +64,11 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}/increment[/{amount}]', Action\Object\ObjectPropertyIncrementAction::class)->setName('property-increment');
 		$group->post('/{collection}/{id}/{property}/decrement[/{amount}]', Action\Object\ObjectPropertyDecrementAction::class)->setName('property-decrement');
 
+		// Depot file move — MUST register before the greedy `{path:.+}` PUT below.
+		// Same FastRoute ordering concern as the `/cache` DELETE route: the bare
+		// catch-all would otherwise capture `{name}/move` as `path` and 404.
+		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
+
 		// Object Property Meta — `{path:.+}` covers both gallery item meta and
 		// card-nested property updates. The action dispatches on filesystem state.
 		$group->put('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
@@ -91,7 +96,6 @@ return function (RouteCollectorProxyInterface $app): void {
 		// `{path:.+}` covers gallery file delete AND nested property delete.
 		// FileDeleteAction dispatches based on filesystem state.
 		$group->delete('/{collection}/{id}/{property}/{path:.+}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
-		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
 
 		// Nested file save — children of card (and later deck) fields. The
 		// `{path:.+}` greedy segment captures one or more child-key/item-id

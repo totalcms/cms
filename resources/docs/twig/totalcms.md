@@ -11,9 +11,9 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 
 | Namespace | Description | Documentation |
 |-----------|-------------|---------------|
-| `cms.admin.*` | Dashboard stats, job queue, dev mode, URL helpers | [Admin Reference](docs/twig/admin) |
-| `cms.auth.*` | Login/logout, user info, access control, passkeys | [Auth Reference](docs/twig/auth) |
-| `cms.builder.*` | Site Builder navigation and asset helpers | [Builder Reference](docs/twig/builder) |
+| `cms.admin.*` | Dashboard stats, job queue, dev mode, URL helpers | [Admin Reference](docs/admin/twig) |
+| `cms.auth.*` | Login/logout, user info, access control, passkeys | [Auth Reference](docs/auth/twig) |
+| `cms.builder.*` | Site Builder navigation and asset helpers | [Builder Reference](docs/site-builder/twig) |
 | `cms.barcode.*` | Barcode generation (Code 128, EAN-13, UPC-A, etc.) | [Barcode Reference](docs/twig/barcodes) |
 | `cms.collection.*` | Collection listing, objects, search, URLs, navigation | [Collections Reference](docs/twig/collections) |
 | `cms.data.*` | Typed data access (text, toggle, date, color, etc.) | [Data Reference](docs/twig/data) |
@@ -22,7 +22,7 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 | `cms.media.*` | Image paths, gallery paths, downloads, streaming | [Media Reference](docs/twig/media) |
 | `cms.qrcode.*` | QR code generation | [QR Code Reference](docs/twig/qrcodes) |
 | `cms.render.*` | HTML rendering for images, galleries, pagination | [Render Reference](docs/twig/render) |
-| `cms.schema.*` | Schema listing, fetching, inheritance, decks | [Schemas Reference](docs/twig/schemas) |
+| `cms.schema.*` | Schema listing, fetching, inheritance, decks | [Schemas Reference](docs/schemas/twig) |
 | `cms.view.*` | Pre-computed data views | [Views Reference](docs/twig/views) |
 
 **Standalone systems:**

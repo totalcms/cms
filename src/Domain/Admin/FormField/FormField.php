@@ -366,9 +366,14 @@ class FormField
 	 * Supports:
 	 * - true: fetch unique values from current collection for this property
 	 * - "collections": fetch unique category values from all collections
-	 * - "schemas": fetch unique category values from all schemas.
+	 * - "schemas": fetch unique category values from all schemas
+	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 *
-	 * @return array<string>
+	 * Return shape varies by source: most return a flat list of strings, but
+	 * some (locales, relational sources) return `[{value, label}]` dicts that
+	 * `HTMLUtils::options()` accepts natively.
+	 *
+	 * @return array<int,string|array<string,string>>
 	 */
 	protected function buildOptionsForProperty(): array
 	{
@@ -400,6 +405,10 @@ class FormField
 
 		if ($source === 'schemaProperties') {
 			return $this->form->schemaPropertyKeys();
+		}
+
+		if ($source === 'locales') {
+			return $this->form->localeList();
 		}
 
 		// Default: fetch from current collection

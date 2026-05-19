@@ -223,7 +223,7 @@ The resolved `article` schema will have properties: `title`, `author`, `date` (f
 {% endfor %}
 ```
 
-See [cms.schema.inheritedProperties()](docs/twig/schemas#inheritedproperties) for more details.
+See [cms.schema.inheritedProperties()](docs/schemas/twig#inheritedproperties) for more details.
 
 
 
@@ -272,4 +272,4 @@ See [cms.schema.inheritedProperties()](docs/twig/schemas#inheritedproperties) fo
 - [Schema Validation](docs/schemas/validation) - Validation rules for schema properties
 - [Form Grid Layout](docs/schemas/formgrid) - Arranging fields in the admin form
 - [Collection Settings](docs/collections/settings) - Collection-level configuration
-- [cms.schema](docs/twig/schemas) - Twig functions for accessing schemas
+- [cms.schema](docs/schemas/twig) - Twig functions for accessing schemas

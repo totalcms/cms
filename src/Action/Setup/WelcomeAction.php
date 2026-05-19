@@ -20,6 +20,7 @@ readonly class WelcomeAction
 		'en_GB' => 'English (UK)',
 		'de_DE' => 'Deutsch',
 		'es_ES' => 'Español',
+		'it_IT' => 'Italiano',
 		'nl_NL' => 'Nederlands',
 	];
 

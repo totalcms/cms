@@ -19,6 +19,7 @@ class SecretField extends FormField
 		$attributes = parent::formFieldAttributes();
 
 		$attributes['data-1p-ignore'] = '';
+		$attributes['data-lpignore']  = 'true';
 		$attributes['autocomplete']   = 'off';
 
 		return $attributes;

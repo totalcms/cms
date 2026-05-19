@@ -12,14 +12,25 @@ Total CMS runs on any server with **PHP 8.2 or higher**. The setup wizard checks
 
 ## Quick check
 
-Run these in your terminal to see your PHP version and confirm every required extension is loaded:
+Run these in your terminal to see your PHP version and confirm every required extension is loaded.
+
+**macOS / Linux:**
 
 ```bash
 php -v
 php -r 'foreach (explode(" ", "curl exif fileinfo gd json mbstring openssl") as $e) echo (extension_loaded($e) ? "✓" : "✗") . " $e\n";'
 ```
 
-A `✗` next to anything means you'll need to install that extension before continuing. The rest of this page explains what each one is for.
+**Windows (cmd / PowerShell):**
+
+```bat
+php -v
+php -r "foreach (explode(' ', 'curl exif fileinfo gd json mbstring openssl') as $e) { echo (extension_loaded($e) ? 'OK' : 'MISSING') . \" $e\r\n\"; }"
+```
+
+Windows shells don't treat single quotes as string delimiters — only double quotes — so the quoting has to be inverted.
+
+A `✗` (or `MISSING`) next to anything means you'll need to install that extension before continuing. The rest of this page explains what each one is for.
 
 ## PHP
 

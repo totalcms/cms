@@ -2,7 +2,44 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-beta.5] - 2026-05-14
+## [3.5.0-beta.6] - 2026-05-19
+
+### Added — Internationalization (i18n)
+
+- **`LocaleRegistry`**: New BCP 47 locale registry with supported-locales list, site-default fallback, and per-field localization metadata. Settings live in a dedicated `i18n` settings schema (moved out of `general`)
+- **`LocalizedText` field**: New field type for per-locale text content. Stores values keyed by locale code with site-default fallback when a locale is missing
+- **`LocalizedTextarea` field**: Multi-line variant of `LocalizedText` for longer localized content
+- **`LocalizedStyledText` field**: Tiptap-backed rich-text variant for per-locale formatted content
+- **Localized export/import**: `ObjectExporter` and `ObjectImporter` now round-trip localized field values so CSV/JSON exports preserve per-locale content
+- **`LocaleTwigAdapter`**: Exposes `cms.locale.*` helpers for site default, current locale, and per-field localized value resolution with fallback
+- **Italian dashboard translation**: Italian (`it_IT`) translations added to admin
+- **Locale-aware setup wizard**: Setup wizard now persists the chosen UI locale through completion (fixed bug where lang setting was dropped mid-flow)
+
+### Added
+
+- **Migration middleware**: New `MigrationMiddleware` + `MigrationRunner` runs idempotent install migrations on first request after an update. `LegacyTemplatesMigration` is the first concrete migration; state tracked in `MigrationStateRepository` so each migration runs at most once
+
+### Enhanced
+
+- **Builder live reload gated on Dev Mode**: `{% live_reload %}` only emits when Dev Mode is on, and broadcasts to all current visitors of a page (not just the editing tab) — preview-share workflows now stay in sync
+- **Page Inspector in dev environment**: Builder page inspector is now available whenever `cms.env` is `development`, not just for logged-in admins
+- **HTMLSanitizer default rules relaxed**: Loosened a few too-strict defaults that were stripping legitimate attributes from user content
+- **LastPass / 1Password autofill suppressed on ID and Secret fields**: ID and Secret fields now carry `data-lpignore` / `data-1p-ignore` so password managers don't try to fill them
+- **Hide deck export when collection has no deck**: Collection export UI hides the "Export Deck" option for collections whose schema has no deck property
+- **Mailer test data loaded from object**: Mailer test-send pulls realistic field values from an existing collection object instead of using placeholder strings, so previewed merge tags match what end users will see
+
+### Fixed
+
+- **Depot file move API 404**: `PUT /api/collections/{collection}/{id}/{property}/{name}/move` was being shadowed by the greedy `{path:.+}` property-meta-update route registered before it. Moved the route registration ahead of the catch-all (same pattern already used for the `/cache` DELETE route). Depot drag-into-folder now works again
+- **Utils nav**: Fixed broken navigation links in the admin Utils section
+- **Subfolder-install wizard redirect loop**: `SetupCheckMiddleware` now strips the configured base path before matching the wizard step, so installs at a subpath (e.g. `/tcms/`) no longer loop back to `/setup/welcome`
+- **Setup server-config step styles**: Fixed visual glitches in the rewrite-rule snippet panels on the wizard's server-config step
+- **`/setup` language selection**: Locale chosen on the welcome step now persists through the rest of the wizard
+
+### Internal
+
+- **Couleur color library taken in-house**: Forked the `couleur` color manipulation library into `src/Color/`, dropped the `\Couleur` namespace level, refactored to static classes with PascalCase namespaces, trimmed 10 unused color spaces, fixed bugs and added a full test suite, cleared PHPStan Level 8 errors. No public-API changes for T3 — internal consumers (ImageWorks watermarking, OKLCH variable resolution) are unaffected
+- **Parsedown updated to latest upstream**
 
 ### Added — Auth
 

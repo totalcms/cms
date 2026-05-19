@@ -91,6 +91,11 @@ class TotalForm implements \Stringable
 			'image',
 			'password',
 		],
+		'Localization Fields' => [
+			'localizedtext',
+			'localizedtextarea',
+			'localizedstyledtext',
+		],
 	];
 
 	/**
@@ -98,40 +103,46 @@ class TotalForm implements \Stringable
 	 * omits an explicit `type`; the saver fills it in from the chosen `field`.
 	 */
 	public const FIELD_DEFAULT_TYPE = [
-		'card'          => 'card',
-		'checkbox'      => 'boolean',
-		'code'          => 'code',
-		'color'         => 'color',
-		'date'          => 'date',
-		'datetime'      => 'date',
-		'deck'          => 'deck',
-		'deckTable'     => 'deck',
-		'depot'         => 'depot',
-		'email'         => 'email',
-		'file'          => 'file',
-		'gallery'       => 'gallery',
-		'hidden'        => 'string',
-		'id'            => 'slug',
-		'image'         => 'image',
-		'json'          => 'json',
-		'list'          => 'list',
-		'multicheckbox' => 'array',
-		'multiselect'   => 'array',
-		'number'        => 'number',
-		'password'      => 'password',
-		'phone'         => 'phone',
-		'price'         => 'number',
-		'radio'         => 'string',
-		'range'         => 'number',
-		'secret'        => 'string',
-		'select'        => 'string',
-		'styledtext'    => 'string',
-		'svg'           => 'svg',
-		'text'          => 'string',
-		'textarea'      => 'string',
-		'time'          => 'time',
-		'toggle'        => 'boolean',
-		'url'           => 'url',
+		'card'                => 'card',
+		'checkbox'            => 'boolean',
+		'code'                => 'code',
+		'color'               => 'color',
+		'date'                => 'date',
+		'datetime'            => 'date',
+		'deck'                => 'deck',
+		'deckTable'           => 'deck',
+		'depot'               => 'depot',
+		'email'               => 'email',
+		'file'                => 'file',
+		'gallery'             => 'gallery',
+		'hidden'              => 'string',
+		'id'                  => 'slug',
+		'image'               => 'image',
+		'json'                => 'json',
+		'list'                => 'list',
+		// All three localized field variants share a single stored type. The
+		// `field` value still distinguishes them at the rendering layer
+		// (FormField + JS class), but the saved-schema `type` is unified.
+		'localizedtext'       => 'localizedtext',
+		'localizedtextarea'   => 'localizedtext',
+		'localizedstyledtext' => 'localizedtext',
+		'multicheckbox'       => 'array',
+		'multiselect'         => 'array',
+		'number'              => 'number',
+		'password'            => 'password',
+		'phone'               => 'phone',
+		'price'               => 'number',
+		'radio'               => 'string',
+		'range'               => 'number',
+		'secret'              => 'string',
+		'select'              => 'string',
+		'styledtext'          => 'string',
+		'svg'                 => 'svg',
+		'text'                => 'string',
+		'textarea'            => 'string',
+		'time'                => 'time',
+		'toggle'              => 'boolean',
+		'url'                 => 'url',
 	];
 
 	/** @var array<string,class-string> Extension-registered field types: name => FQCN */
@@ -215,6 +226,9 @@ class TotalForm implements \Stringable
 		'image',
 		'json',
 		'list',
+		'localizedtext',
+		'localizedtextarea',
+		'localizedstyledtext',
 		'multicheckbox',
 		'multiselect',
 		'number',
@@ -872,6 +886,35 @@ class TotalForm implements \Stringable
 	public function baseApi(): string
 	{
 		return $this->config->api;
+	}
+
+	/**
+	 * Return the site-wide list of locales configured for `localizedtext` /
+	 * `localizedstyledtext` field types. Each entry: ['code' => 'en_US',
+	 * 'label' => 'English (US)', 'dir' => 'ltr']. Empty array means the
+	 * operator has not opted in to localized content.
+	 *
+	 * @return array<int,array<string,string>>
+	 */
+	public function getLocales(): array
+	{
+		return $this->config->i18n['available'];
+	}
+
+	public function getDefaultLocale(): string
+	{
+		return $this->config->i18n['default'];
+	}
+
+	/**
+	 * Return the locale registry as `{value, label}` options — feeds
+	 * `propertyOptions: "locales"` on select / list / multiselect fields.
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function localeList(): array
+	{
+		return \TotalCMS\Domain\Locale\LocaleRegistry::options();
 	}
 
 	/**

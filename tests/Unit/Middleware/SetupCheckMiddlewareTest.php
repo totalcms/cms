@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\App;
 use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\Renderer\RedirectRenderer;
@@ -14,6 +15,7 @@ use TotalCMS\Support\Config;
 
 final class SetupCheckMiddlewareTest extends TestCase
 {
+	private \PHPUnit\Framework\MockObject\MockObject $app;
 	private \PHPUnit\Framework\MockObject\MockObject $config;
 	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
 	private \PHPUnit\Framework\MockObject\MockObject $setupState;
@@ -22,15 +24,18 @@ final class SetupCheckMiddlewareTest extends TestCase
 
 	protected function setUp(): void
 	{
+		$this->app              = $this->createMock(App::class);
 		$this->config           = $this->createMock(Config::class);
 		$this->redirectRenderer = $this->createMock(RedirectRenderer::class);
 		$this->setupState       = $this->createMock(SetupStateManager::class);
 		$this->handler          = $this->createMock(RequestHandlerInterface::class);
 
+		$this->app->method('getBasePath')->willReturn('');
 		$this->setupState->method('getCurrentStep')->willReturn('setup-welcome');
 		$this->setupState->method('isStepComplete')->willReturn(false);
 
 		$this->middleware = new SetupCheckMiddleware(
+			$this->app,
 			$this->config,
 			$this->redirectRenderer,
 			$this->setupState,
@@ -243,6 +248,71 @@ final class SetupCheckMiddlewareTest extends TestCase
 			$result = $this->middleware->process($this->createRequest($path), $this->handler);
 			$this->assertSame($expectedResponse, $result);
 		}
+	}
+
+	public function testAllowsSetupRoutesOnSubfolderInstall(): void
+	{
+		// Regression: on a subfolder install (Stacks plugin), the request
+		// path is the FULL URL (e.g. `/rw_common/plugins/stacks/tcms/setup`),
+		// not the basePath-relative path. The middleware must strip the
+		// app's basePath before doing prefix checks — otherwise `/setup`
+		// requests fall through to the redirect branch and loop, because
+		// the redirect target (also basePath-prefixed via urlFor) bounces
+		// straight back into the middleware.
+		$app = $this->createMock(App::class);
+		$app->method('getBasePath')->willReturn('/rw_common/plugins/stacks/tcms');
+
+		$middleware = new SetupCheckMiddleware(
+			$app,
+			$this->config,
+			$this->redirectRenderer,
+			$this->setupState,
+		);
+
+		$this->config->env = 'prod';
+		$this->setupState->method('isSetupComplete')->willReturn(false);
+
+		$request          = $this->createRequest('/rw_common/plugins/stacks/tcms/setup');
+		$expectedResponse = $this->createMock(ResponseInterface::class);
+
+		$this->handler->expects($this->once())
+			->method('handle')
+			->willReturn($expectedResponse);
+		$this->redirectRenderer->expects($this->never())->method('redirectFor');
+
+		$result = $middleware->process($request, $this->handler);
+
+		$this->assertSame($expectedResponse, $result);
+	}
+
+	public function testAllowsNestedSetupRoutesOnSubfolderInstall(): void
+	{
+		// Companion to the /setup root case: /setup/environment etc must
+		// also strip the basePath before the prefix check.
+		$app = $this->createMock(App::class);
+		$app->method('getBasePath')->willReturn('/rw_common/plugins/stacks/tcms');
+
+		$middleware = new SetupCheckMiddleware(
+			$app,
+			$this->config,
+			$this->redirectRenderer,
+			$this->setupState,
+		);
+
+		$this->config->env = 'prod';
+		$this->setupState->method('isSetupComplete')->willReturn(false);
+
+		$request          = $this->createRequest('/rw_common/plugins/stacks/tcms/setup/environment');
+		$expectedResponse = $this->createMock(ResponseInterface::class);
+
+		$this->handler->expects($this->once())
+			->method('handle')
+			->willReturn($expectedResponse);
+		$this->redirectRenderer->expects($this->never())->method('redirectFor');
+
+		$result = $middleware->process($request, $this->handler);
+
+		$this->assertSame($expectedResponse, $result);
 	}
 
 	public function testAllowsAccessToLaterSetupStepsAfterAccountCreation(): void

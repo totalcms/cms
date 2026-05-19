@@ -1,0 +1,91 @@
+//------------------------------
+// Localized Text Fields (Pro)
+//
+// Lightweight tab strip floating above the active per-locale input. No
+// wrapping box — the input/textarea/styledtext inside renders at full
+// width and inherits the same styling as a non-localized field. The
+// JS field class toggles `hidden` on inactive panes and updates
+// `aria-selected` on tabs. RTL locales propagate `dir="rtl"` to both
+// the tab label and the editable element so caret + text alignment
+// render correctly.
+//------------------------------
+
+.totalform {
+    .localizedtext-field,
+    .localizedtextarea-field,
+    .localizedstyledtext-field {
+        .localized-stack {
+            display        : flex;
+            flex-direction : column;
+            gap            : .25rem;
+        }
+
+        // Slim, label-style tab bar above the input. No background, no
+        // bottom border — the underline on the active tab is the only
+        // visual affordance, keeping the field as flat as a normal one.
+        .locale-tabs {
+            display      : flex;
+            flex-wrap    : wrap;
+            gap          : 1rem;
+            margin-block : 0.5rem;
+            padding      : 0;
+        }
+
+        .locale-tab {
+            padding         : .125rem;
+            margin          : 0;
+            font-family     : inherit;
+            font-size       : .75rem;
+            font-weight     : 500;
+            line-height     : 1.5;
+            color           : oklch(var(--totalform-darkgray));
+            background      : transparent;
+            border          : 0;
+            border-bottom   : 2px solid transparent;
+            cursor          : pointer;
+            transition      : color .15s ease, border-color .15s ease;
+            user-select     : none;
+
+            &:hover {
+                color: oklch(var(--totalform-text-color));
+            }
+
+            &:focus-visible {
+                outline        : 2px solid oklch(var(--totalform-accent));
+                outline-offset : 2px;
+                border-radius  : 2px;
+            }
+
+            &[aria-selected="true"] {
+                color               : oklch(var(--totalform-accent));
+                border-bottom-color : oklch(var(--totalform-accent));
+            }
+        }
+
+        // Pane is structural only — no padding, no background. The
+        // input/textarea inside renders flush against the field, matching
+        // a non-localized text/styledtext field.
+        .locale-pane {
+            margin : 0;
+            padding: 0;
+        }
+
+        // RTL-aware text direction is set per-input via the `dir` attribute,
+        // so right-to-left locales render correctly without conditional CSS.
+        input[dir="rtl"],
+        textarea[dir="rtl"] {
+            text-align : right;
+        }
+    }
+
+    // Surface the per-locale error when no locales are configured (operator
+    // tried to use a localized field without setting up tcms.php).
+    .localized-field-error {
+        padding          : .75rem;
+        border           : 1px solid oklch(var(--totalform-warning));
+        border-radius    : var(--totalform-radius);
+        background-color : oklch(var(--totalform-warning) / .15);
+        color            : oklch(var(--totalform-text-color));
+        font-size        : .875rem;
+    }
+}

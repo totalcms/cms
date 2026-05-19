@@ -29,8 +29,37 @@ $settings = [];
 $settings['sentry'] = true;
 
 // Default env to production
-$settings['env']    = 'prod';
-$settings['locale'] = 'en_US';
+$settings['env'] = 'prod';
+
+// Internationalization config.
+//
+// `default`   — Single canonical locale for the site. Drives runtime formatting
+//               (PHP intl, CakePHP I18n, Faker — dates, numbers, currency), the
+//               admin UI translation language, and (Pro) the default tab on
+//               localized content fields plus the field-level fallback.
+//               `$config->locale` mirrors this value.
+// `available` — Pro only. Flat list of locale codes (from LocaleRegistry) used
+//               by localized field types. Empty list = field types are disabled.
+//               Order matters: the Twig helper uses it for region fall-down
+//               (e.g., a request for bare `en` returns the first matching `en_*`).
+//
+// Codes use mixed-case POSIX format (en_US, pt_BR) to match PHP intl, CakePHP I18n,
+// Faker, and T3's existing admin translation file naming.
+//
+// Example (Pro):
+//   $settings['i18n'] = [
+//       'default'   => 'en_US',
+//       'available' => ['en_US', 'de', 'ar'],
+//   ];
+//
+// Advanced override: operators who need the formatting / admin-UI locale to differ
+// from the content default can set `$settings['locale']` at the top level here or
+// in their `config/tcms.php`. That value wins for `$config->locale` while
+// `$config->i18n['default']` continues to drive content-default behavior.
+$settings['i18n'] = [
+	'default'   => 'en_US',
+	'available' => [],
+];
 
 $settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unknown';
 $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'

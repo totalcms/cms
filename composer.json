@@ -12,9 +12,6 @@
   "repositories": [
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/couleur.git" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/parsedown-extra" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/parsedown" },
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/color-thief-php.git" }
   ],
   "require": {
@@ -26,8 +23,8 @@
     "cocur/slugify": "^4.0",
     "embed/embed": "^4.3",
     "enshrined/svg-sanitize": "^0.22.0",
-    "erusev/parsedown": "dev-master as 1.8.0",
-    "erusev/parsedown-extra": "dev-master as 1.8.0",
+    "erusev/parsedown": "^1.8",
+    "erusev/parsedown-extra": "^0.9",
     "fakerphp/faker": "^1.23",
     "fig/http-message-util": "^1.1",
     "firebase/php-jwt": "^7.0",
@@ -35,7 +32,6 @@
     "guzzlehttp/guzzle": "^7",
     "halaxa/json-machine": "^1.1",
     "illuminate/collections": "^11.45",
-    "joeworkman-forks/couleur": "dev-main",
     "khanzadimahdi/uploadmanager": "^1.0",
     "ksubileau/color-thief-php": "dev-fix-deprecations as 2.0.3",
     "laminas/laminas-feed": "^2.26",
@@ -168,7 +164,7 @@
     "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
     "bundle": "php bin/make-bundle.php",
-    "docs:api": "open API_DOCUMENTATION.md",
+    "docs:validate": "php bin/validate-docs.php",
     "md": [
       "@md:src",
       "@md:config",
@@ -180,10 +176,12 @@
     ],
     "test:all": [
       "@stan",
+      "@docs:validate",
       "@test"
     ],
     "test:build": [
       "@stan",
+      "@docs:validate",
       "@test"
     ],
     "quality": [
