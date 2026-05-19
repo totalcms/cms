@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\exceptions;
+namespace TotalCMS\Utils\Color\Couleur\Exceptions;
 
 class   UnsupportedCoordinateModifier 
 extends \Exception {

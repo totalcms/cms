@@ -1,11 +1,12 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\colors;
+namespace TotalCMS\Utils\Color\Couleur\Colors;
 
 use       TotalCMS\Utils\Color\Couleur\Color;
 use       TotalCMS\Utils\Color\Couleur\ColorFactory;
 use       TotalCMS\Utils\Color\Couleur\ColorInterface;
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Util;
+use       TotalCMS\Utils\Color\Couleur\Converters\HexRgb as HexRgbConverter;
 
 class      HexRgb
 extends    Color
@@ -54,10 +55,10 @@ implements ColorInterface {
 
         return ColorFactory::newHexRgb(
             value    : [
-                utils\changeCoordinate($this->red,     $red,     true, $changeThrow),
-                utils\changeCoordinate($this->green,   $green,   true, $changeThrow),
-                utils\changeCoordinate($this->blue,    $blue,    true, $changeThrow),
-                utils\changeCoordinate($this->opacity, $opacity, true, $changeThrow),
+                Util::changeCoordinate($this->red,     $red,     true, $changeThrow),
+                Util::changeCoordinate($this->green,   $green,   true, $changeThrow),
+                Util::changeCoordinate($this->blue,    $blue,    true, $changeThrow),
+                Util::changeCoordinate($this->opacity, $opacity, true, $changeThrow),
             ],
             from     : $this::space(),
             fallback : $fallback,
@@ -71,7 +72,7 @@ implements ColorInterface {
         bool|null $uppercase = null,
         bool      $sharp     = true,
     ) :string {        
-        return utils\hexRgb\stringify(
+        return HexRgbConverter::stringify(
             red       : $this->red,
             green     : $this->green,
             blue      : $this->blue,

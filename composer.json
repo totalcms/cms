@@ -108,23 +108,7 @@
       "TotalCMS\\": "src/"
     },
     "files": [
-      "src/i18n-globals.php",
-      "src/Utils/Color/Couleur/utils/utils.php",
-      "src/Utils/Color/Couleur/utils/hexRgb/conversions.php",
-      "src/Utils/Color/Couleur/utils/hexRgb/utils.php",
-      "src/Utils/Color/Couleur/utils/hsl/conversions.php",
-      "src/Utils/Color/Couleur/utils/hsl/utils.php",
-      "src/Utils/Color/Couleur/utils/linRgb/conversions.php",
-      "src/Utils/Color/Couleur/utils/linRgb/utils.php",
-      "src/Utils/Color/Couleur/utils/okLab/conversions.php",
-      "src/Utils/Color/Couleur/utils/okLab/utils.php",
-      "src/Utils/Color/Couleur/utils/okLch/conversions.php",
-      "src/Utils/Color/Couleur/utils/okLch/utils.php",
-      "src/Utils/Color/Couleur/utils/okLch/enhanced.php",
-      "src/Utils/Color/Couleur/utils/rgb/conversions.php",
-      "src/Utils/Color/Couleur/utils/rgb/utils.php",
-      "src/Utils/Color/Couleur/utils/xyzD65/conversions.php",
-      "src/Utils/Color/Couleur/utils/xyzD65/utils.php"
+      "src/i18n-globals.php"
     ]
   },
   "autoload-dev": {

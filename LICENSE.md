@@ -31,10 +31,18 @@ Total CMS bundles source code from the following third-party libraries that ship
 - **Location:** `src/Utils/Color/Couleur/`
 - **Upstream:** https://github.com/matthieumastadenis/couleur
 - **License:** MIT
-- **Includes modifications by:** Joe Workman
-  - enhanced OKLCH support
-  - PHP 8.4 compatibility
-  - Modernized code base
+
+The bundled code is a substantially modified fork. The conversion math is preserved from upstream; the surrounding library structure has been reorganized to fit Total CMS conventions.
+
+**Modifications by Joe Workman:**
+
+- Enhanced OKLCH support (proper 360° hue wraparound, improved hex conversion)
+- PHP 8.2+ / 8.4 compatibility
+- Fixed 11 conversion bugs (divide-by-zero in HSL/HSV/HWB, undefined variables, missing parameters)
+- Trimmed to 7 color spaces (HexRgb, Hsl, Rgb, LinRgb, OkLab, OkLch, XyzD65); 10 unused spaces removed
+- Refactored namespaced functions into static method classes; no `autoload.files` dependency
+- PSR-style PascalCase naming throughout
+- Dedicated Pest test suite covering conversion paths, bug regressions, and OKLCH enhancements
 
 ```
 MIT License

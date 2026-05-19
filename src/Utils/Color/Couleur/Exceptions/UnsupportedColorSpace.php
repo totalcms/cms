@@ -1,17 +1,17 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\exceptions;
+namespace TotalCMS\Utils\Color\Couleur\Exceptions;
 
-class   MissingColorValue 
+class   UnsupportedColorSpace 
 extends \Exception {
 
     public function __construct(
-        string          $name,
+        string          $space, 
         int             $code     = 0, 
         \Throwable|null $previous = null,
     ) {
         parent::__construct(
-            message  : "Color value \"$name\" is missing",
+            message  : "The color space \"$space\" is not supported",
             code     : $code,
             previous : $previous,
         );

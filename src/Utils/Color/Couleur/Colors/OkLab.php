@@ -1,11 +1,12 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\colors;
+namespace TotalCMS\Utils\Color\Couleur\Colors;
 
 use       TotalCMS\Utils\Color\Couleur\Color;
 use       TotalCMS\Utils\Color\Couleur\ColorFactory;
 use       TotalCMS\Utils\Color\Couleur\ColorInterface;
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Util;
+use       TotalCMS\Utils\Color\Couleur\Converters\OkLab as OkLabConverter;
 
 class      OkLab
 extends    Color
@@ -52,10 +53,10 @@ implements ColorInterface {
 
         return ColorFactory::newOkLab(
             value    : [
-                utils\changeCoordinate($this->lightness, $lightness, false, $changeThrow),
-                utils\changeCoordinate($this->a,         $a,         false, $changeThrow),
-                utils\changeCoordinate($this->b,         $b,         false, $changeThrow),
-                utils\changeCoordinate($this->opacity,   $opacity,   false, $changeThrow),
+                Util::changeCoordinate($this->lightness, $lightness, false, $changeThrow),
+                Util::changeCoordinate($this->a,         $a,         false, $changeThrow),
+                Util::changeCoordinate($this->b,         $b,         false, $changeThrow),
+                Util::changeCoordinate($this->opacity,   $opacity,   false, $changeThrow),
             ],
             from     : $this::space(),
             fallback : $fallback,
@@ -68,7 +69,7 @@ implements ColorInterface {
         bool|null $alpha     = null,
         int|null  $precision = null,
     ) :string {
-        return utils\okLab\stringify(
+        return OkLabConverter::stringify(
             lightness : $this->lightness,
             a         : $this->a,
             b         : $this->b,

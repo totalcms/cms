@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function TotalCMS\Utils\Color\Couleur\utils\hexRgb\stringify as hexStringify;
+use TotalCMS\Utils\Color\Couleur\Converters\HexRgb;
 
 /**
  * Adapted from upstream couleur's utils/hexRgb/StringifyTest.php
@@ -41,16 +41,16 @@ function randomHexPair(bool $same = false, ?string $not = null): string
 
 test('hex stringify starts with # by default', function (): void {
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
-		expect(hexStringify(randomHexPair(), randomHexPair(), randomHexPair()))->toStartWith('#');
+		expect(HexRgb::stringify(randomHexPair(), randomHexPair(), randomHexPair()))->toStartWith('#');
 	}
 });
 
 test('hex stringify starts with # when sharp:true', function (): void {
-	expect(hexStringify('A1', 'B2', 'C3', sharp: true))->toStartWith('#');
+	expect(HexRgb::stringify('A1', 'B2', 'C3', sharp: true))->toStartWith('#');
 });
 
 test('hex stringify omits # when sharp:false', function (): void {
-	expect(hexStringify('A1', 'B2', 'C3', sharp: false))->not->toStartWith('#');
+	expect(HexRgb::stringify('A1', 'B2', 'C3', sharp: false))->not->toStartWith('#');
 });
 
 // ===== alpha / opacity =====
@@ -58,7 +58,7 @@ test('hex stringify omits # when sharp:false', function (): void {
 test('hex stringify omits opacity by default for varied input', function (): void {
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
 		$same = (bool) ($i % 2);
-		$hex  = hexStringify(randomHexPair($same), randomHexPair($same), randomHexPair($same));
+		$hex  = HexRgb::stringify(randomHexPair($same), randomHexPair($same), randomHexPair($same));
 		expect(strlen($hex))->toBe($same ? 4 : 7);
 	}
 });
@@ -67,7 +67,7 @@ test('hex stringify omits opacity when alpha is FF by default', function (): voi
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
 		$same = (bool) ($i % 2);
 		$o    = $same ? 'FF' : 'ff';
-		$hex  = hexStringify(randomHexPair($same), randomHexPair($same), randomHexPair($same), $o);
+		$hex  = HexRgb::stringify(randomHexPair($same), randomHexPair($same), randomHexPair($same), $o);
 		expect(strlen($hex))->toBe($same ? 4 : 7);
 	}
 });
@@ -76,19 +76,19 @@ test('hex stringify includes opacity when not FF by default', function (): void 
 	for ($i = 0; $i < HEX_FUZZ_LOOPS; $i++) {
 		$same = (bool) ($i % 2);
 		$o    = randomHexPair($same, 'FF');
-		$hex  = hexStringify(randomHexPair($same), randomHexPair($same), randomHexPair($same), $o);
+		$hex  = HexRgb::stringify(randomHexPair($same), randomHexPair($same), randomHexPair($same), $o);
 		expect(strlen($hex))->toBe($same ? 5 : 9);
 		expect($hex)->toEndWith($same ? $o[0] : $o);
 	}
 });
 
 test('hex stringify omits opacity when alpha:false', function (): void {
-	$hex = hexStringify('A1', 'B2', 'C3', 'AB', alpha: false);
+	$hex = HexRgb::stringify('A1', 'B2', 'C3', 'AB', alpha: false);
 	expect(strlen($hex))->toBe(7);
 });
 
 test('hex stringify always includes opacity when alpha:true even at FF', function (): void {
-	$hex = hexStringify('A1', 'B2', 'C3', 'FF', alpha: true);
+	$hex = HexRgb::stringify('A1', 'B2', 'C3', 'FF', alpha: true);
 	expect(strlen($hex))->toBe(9);
 });
 
@@ -99,34 +99,34 @@ test('short hex chars produce identical output to expanded form by default', fun
 		$r = randomHexChar();
 		$g = randomHexChar();
 		$b = randomHexChar();
-		expect(hexStringify($r, $g, $b))->toBe(hexStringify($r . $r, $g . $g, $b . $b));
+		expect(HexRgb::stringify($r, $g, $b))->toBe(HexRgb::stringify($r . $r, $g . $g, $b . $b));
 	}
 });
 
 test('returns short form when all channels can be compressed (default)', function (): void {
-	expect(strlen(hexStringify('AA', 'BB', 'CC')))->toBe(4);
+	expect(strlen(HexRgb::stringify('AA', 'BB', 'CC')))->toBe(4);
 });
 
 test('returns long form when any channel cannot be compressed', function (): void {
-	expect(strlen(hexStringify('A1', 'BB', 'CC')))->toBe(7);
+	expect(strlen(HexRgb::stringify('A1', 'BB', 'CC')))->toBe(7);
 });
 
 test('forces short form when short:true and possible', function (): void {
-	expect(strlen(hexStringify('AA', 'BB', 'CC', short: true)))->toBe(4);
+	expect(strlen(HexRgb::stringify('AA', 'BB', 'CC', short: true)))->toBe(4);
 });
 
 test('forces long form when short:false', function (): void {
-	expect(strlen(hexStringify('AA', 'BB', 'CC', short: false)))->toBe(7);
+	expect(strlen(HexRgb::stringify('AA', 'BB', 'CC', short: false)))->toBe(7);
 });
 
 // ===== uppercase / lowercase =====
 
 test('forces uppercase output when uppercase:true', function (): void {
-	$hex = hexStringify('a1', 'b2', 'c3', uppercase: true);
+	$hex = HexRgb::stringify('a1', 'b2', 'c3', uppercase: true);
 	expect($hex)->toBe(strtoupper($hex));
 });
 
 test('forces lowercase output when uppercase:false', function (): void {
-	$hex = hexStringify('A1', 'B2', 'C3', uppercase: false);
+	$hex = HexRgb::stringify('A1', 'B2', 'C3', uppercase: false);
 	expect($hex)->toBe(strtolower($hex));
 });

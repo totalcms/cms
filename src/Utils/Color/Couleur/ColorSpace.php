@@ -2,14 +2,14 @@
 
 namespace TotalCMS\Utils\Color\Couleur;
 
-use       TotalCMS\Utils\Color\Couleur\colors\HexRgb;
-use       TotalCMS\Utils\Color\Couleur\colors\Hsl;
-use       TotalCMS\Utils\Color\Couleur\colors\LinRgb;
-use       TotalCMS\Utils\Color\Couleur\colors\OkLab;
-use       TotalCMS\Utils\Color\Couleur\colors\OkLch;
-use       TotalCMS\Utils\Color\Couleur\colors\Rgb;
-use       TotalCMS\Utils\Color\Couleur\colors\XyzD65;
-use       TotalCMS\Utils\Color\Couleur\exceptions\UnsupportedColorSpace;
+use       TotalCMS\Utils\Color\Couleur\Colors\HexRgb;
+use       TotalCMS\Utils\Color\Couleur\Colors\Hsl;
+use       TotalCMS\Utils\Color\Couleur\Colors\LinRgb;
+use       TotalCMS\Utils\Color\Couleur\Colors\OkLab;
+use       TotalCMS\Utils\Color\Couleur\Colors\OkLch;
+use       TotalCMS\Utils\Color\Couleur\Colors\Rgb;
+use       TotalCMS\Utils\Color\Couleur\Colors\XyzD65;
+use       TotalCMS\Utils\Color\Couleur\Exceptions\UnsupportedColorSpace;
 
 /**
  * Represents a color space supported by Couleur.
@@ -102,8 +102,8 @@ enum ColorSpace :string {
     }
 
     /**
-     * Returns the complete name of the clean() function dedicated to the current ColorSpace
-     * (example: ColorSpace::Rgb->cleanCallback() returns "TotalCMS\Utils\Color\Couleur\utils\rgb\clean()')
+     * Returns the complete name of the clean() method dedicated to the current ColorSpace
+     * (example: ColorSpace::Rgb->cleanCallback() returns "TotalCMS\Utils\Color\Couleur\Converters\Rgb::clean")
      *
      * @return string
      */
@@ -114,8 +114,8 @@ enum ColorSpace :string {
     }
 
     /**
-     * Returns the complete name of the from() function dedicated to the current ColorSpace
-     * (example: ColorSpace::Rgb->fromCallback() returns "TotalCMS\Utils\Color\Couleur\utils\rgb\from()')
+     * Returns the complete name of the from() method dedicated to the current ColorSpace
+     * (example: ColorSpace::Rgb->fromCallback() returns "TotalCMS\Utils\Color\Couleur\Converters\Rgb::from")
      *
      * @return string
      */
@@ -126,8 +126,8 @@ enum ColorSpace :string {
     }
 
     /**
-     * Returns the complete name of the stringify() function dedicated to the current ColorSpace
-     * (example: ColorSpace::Rgb->stringifyCallback() returns "TotalCMS\Utils\Color\Couleur\utils\rgb\stringify()')
+     * Returns the complete name of the stringify() method dedicated to the current ColorSpace
+     * (example: ColorSpace::Rgb->stringifyCallback() returns "TotalCMS\Utils\Color\Couleur\Converters\Rgb::stringify")
      *
      * @return string
      */
@@ -138,8 +138,8 @@ enum ColorSpace :string {
     }
 
     /**
-     * Returns the complete name of the verifiy() function dedicated to the current ColorSpace
-     * (example: ColorSpace::Rgb->verifyCallback() returns "TotalCMS\Utils\Color\Couleur\utils\rgb\verify()')
+     * Returns the complete name of the verify() method dedicated to the current ColorSpace
+     * (example: ColorSpace::Rgb->verifyCallback() returns "TotalCMS\Utils\Color\Couleur\Converters\Rgb::verify")
      *
      * @return string
      */
@@ -154,7 +154,8 @@ enum ColorSpace :string {
     /* #region Protected Methods */
 
     /**
-     * Returns the complete name of the desired function dedicated to the current ColorSpace
+     * Returns the complete name of the desired static method dedicated to the current ColorSpace
+     * as a "Class::method" string suitable for use as a PHP callable.
      *
      * @return string
      */
@@ -162,9 +163,9 @@ enum ColorSpace :string {
         \Stringable|string $name,
     ) :string {
         return __NAMESPACE__
-            .'\\utils\\'
-            .\lcfirst($this->name)
-            ."\\$name"
+            .'\\Converters\\'
+            .$this->name
+            ."::$name"
         ;
     }
 

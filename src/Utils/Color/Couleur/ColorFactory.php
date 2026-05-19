@@ -2,14 +2,14 @@
 
 namespace TotalCMS\Utils\Color\Couleur;
 
-use       TotalCMS\Utils\Color\Couleur\colors\HexRgb;
-use       TotalCMS\Utils\Color\Couleur\colors\Hsl;
-use       TotalCMS\Utils\Color\Couleur\colors\LinRgb;
-use       TotalCMS\Utils\Color\Couleur\colors\OkLab;
-use       TotalCMS\Utils\Color\Couleur\colors\OkLch;
-use       TotalCMS\Utils\Color\Couleur\colors\Rgb;
-use       TotalCMS\Utils\Color\Couleur\colors\XyzD65;
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Colors\HexRgb;
+use       TotalCMS\Utils\Color\Couleur\Colors\Hsl;
+use       TotalCMS\Utils\Color\Couleur\Colors\LinRgb;
+use       TotalCMS\Utils\Color\Couleur\Colors\OkLab;
+use       TotalCMS\Utils\Color\Couleur\Colors\OkLch;
+use       TotalCMS\Utils\Color\Couleur\Colors\Rgb;
+use       TotalCMS\Utils\Color\Couleur\Colors\XyzD65;
+use       TotalCMS\Utils\Color\Couleur\Util;
 
 abstract class ColorFactory {
 
@@ -35,7 +35,7 @@ abstract class ColorFactory {
     ) :ColorInterface|null {
         $throw ??= !$fallback;
 
-        utils\setFromAndTo(
+        Util::setFromAndTo(
             value    : $value,
             to       : $to,
             from     : $from,
@@ -47,7 +47,7 @@ abstract class ColorFactory {
             return $fallback;
         }
 
-        return new ($to->value)(... utils\toColor(
+        return new ($to->value)(... Util::toColor(
             value     : $value,
             to        : $to,
             from      : $from,
@@ -57,11 +57,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\HexRgb instance corresponding to $value.
+     * Returns a new Colors\HexRgb instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  HexRgb|null                        $fallback A colors\HexRgb instance used as a fallback in case of failure
+     * @param  HexRgb|null                        $fallback A Colors\HexRgb instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return HexRgb|null
@@ -82,11 +82,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\Hsl instance corresponding to $value.
+     * Returns a new Colors\Hsl instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  Hsl|null                           $fallback A colors\Hsl instance used as a fallback in case of failure
+     * @param  Hsl|null                           $fallback A Colors\Hsl instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return Hsl|null
@@ -107,11 +107,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\LinRgb instance corresponding to $value.
+     * Returns a new Colors\LinRgb instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  LinRgb|null                        $fallback A colors\LinRgb instance used as a fallback in case of failure
+     * @param  LinRgb|null                        $fallback A Colors\LinRgb instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return LinRgb|null
@@ -132,11 +132,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\OkLab instance corresponding to $value.
+     * Returns a new Colors\OkLab instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  OkLab|null                         $fallback A colors\OkLab instance used as a fallback in case of failure
+     * @param  OkLab|null                         $fallback A Colors\OkLab instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return OkLab|null
@@ -157,11 +157,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\OkLch instance corresponding to $value.
+     * Returns a new Colors\OkLch instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  OkLch|null                         $fallback A colors\OkLch instance used as a fallback in case of failure
+     * @param  OkLch|null                         $fallback A Colors\OkLch instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return OkLch|null
@@ -182,11 +182,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\Rgb instance corresponding to $value.
+     * Returns a new Colors\Rgb instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  Rgb|null                           $fallback A colors\Rgb instance used as a fallback in case of failure
+     * @param  Rgb|null                           $fallback A Colors\Rgb instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return Rgb|null
@@ -207,11 +207,11 @@ abstract class ColorFactory {
     }
 
     /**
-     * Returns a new colors\XyzD65 instance corresponding to $value.
+     * Returns a new Colors\XyzD65 instance corresponding to $value.
      *
      * @param  mixed                              $value    A color string (like '#ff0000' or 'rgb(255,0,0)') or a coordinates array (like [ 'ff', '00', '00' ] or [ 255, 0, 0])
      * @param  ColorSpace|\Stringable|string|null $from     The input color space (if not specified it will be automatically guessed by interpreting the format of $value)
-     * @param  XyzD65|null                        $fallback A colors\XyzD65 instance used as a fallback in case of failure
+     * @param  XyzD65|null                        $fallback A Colors\XyzD65 instance used as a fallback in case of failure
      * @param  boolean|null                       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
      * @return XyzD65|null

@@ -1,11 +1,12 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\colors;
+namespace TotalCMS\Utils\Color\Couleur\Colors;
 
 use       TotalCMS\Utils\Color\Couleur\Color;
 use       TotalCMS\Utils\Color\Couleur\ColorFactory;
 use       TotalCMS\Utils\Color\Couleur\ColorInterface;
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Util;
+use       TotalCMS\Utils\Color\Couleur\Converters\OkLch as OkLchConverter;
 
 class      OkLch
 extends    Color
@@ -52,10 +53,10 @@ implements ColorInterface {
 
         return ColorFactory::newOkLch(
             value    : [
-                utils\changeCoordinate($this->lightness, $lightness, false, $changeThrow),
-                utils\changeCoordinate($this->chroma,    $chroma,    false, $changeThrow),
-                utils\changeCoordinate($this->hue,       $hue,       false, $changeThrow, true),
-                utils\changeCoordinate($this->opacity,   $opacity,   false, $changeThrow),
+                Util::changeCoordinate($this->lightness, $lightness, false, $changeThrow),
+                Util::changeCoordinate($this->chroma,    $chroma,    false, $changeThrow),
+                Util::changeCoordinate($this->hue,       $hue,       false, $changeThrow, true),
+                Util::changeCoordinate($this->opacity,   $opacity,   false, $changeThrow),
             ],
             from     : $this::space(),
             fallback : $fallback,
@@ -68,7 +69,7 @@ implements ColorInterface {
         bool|null $alpha     = null,
         int|null  $precision = null,
     ) :string {
-        return utils\okLch\stringify(
+        return OkLchConverter::stringify(
             lightness : $this->lightness,
             chroma    : $this->chroma,
             hue       : $this->hue,

@@ -3,13 +3,11 @@
 namespace TotalCMS\Domain\Property\Data;
 
 use TotalCMS\Utils\Color\Couleur\ColorFactory;
-use TotalCMS\Utils\Color\Couleur\colors\Hsl;
-use TotalCMS\Utils\Color\Couleur\colors\OkLch;
-use TotalCMS\Utils\Color\Couleur\colors\Rgb;
+use TotalCMS\Utils\Color\Couleur\Colors\Hsl;
+use TotalCMS\Utils\Color\Couleur\Colors\OkLch;
+use TotalCMS\Utils\Color\Couleur\Colors\Rgb;
 use TotalCMS\Utils\Color\Couleur\ColorSpace;
-
-use function TotalCMS\Utils\Color\Couleur\utils\okLch\oklchChange;
-use function TotalCMS\Utils\Color\Couleur\utils\okLch\oklchToHex;
+use TotalCMS\Utils\Color\Couleur\Converters\OkLch as OkLchConverter;
 
 /**
  * Color property data.
@@ -160,7 +158,7 @@ class ColorData extends PropertyData implements \Stringable
 	/** @param array<string,float> $oklch */
 	public static function oklchToHex(array $oklch): string
 	{
-		return oklchToHex($oklch);
+		return OkLchConverter::oklchToHex($oklch);
 	}
 
 	/**
@@ -171,7 +169,7 @@ class ColorData extends PropertyData implements \Stringable
 	 */
 	public static function oklchChange(array $oklch, array $change): array
 	{
-		return oklchChange($oklch, $change);
+		return OkLchConverter::oklchChange($oklch, $change);
 	}
 
 	/** @return array<string,float> */

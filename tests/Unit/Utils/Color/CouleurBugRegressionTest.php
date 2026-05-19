@@ -4,32 +4,31 @@ declare(strict_types=1);
 
 use TotalCMS\Utils\Color\Couleur\ColorFactory;
 use TotalCMS\Utils\Color\Couleur\ColorSpace;
-use TotalCMS\Utils\Color\Couleur\exceptions\UnknownColorSpace;
-
-use function TotalCMS\Utils\Color\Couleur\utils\hsl\toRgb as hslToRgb;
-use function TotalCMS\Utils\Color\Couleur\utils\rgb\toHsl as rgbToHsl;
-use function TotalCMS\Utils\Color\Couleur\utils\linRgb\stringify as linRgbStringify;
-use function TotalCMS\Utils\Color\Couleur\utils\xyzD65\stringify as xyzD65Stringify;
+use TotalCMS\Utils\Color\Couleur\Converters\Hsl;
+use TotalCMS\Utils\Color\Couleur\Converters\LinRgb;
+use TotalCMS\Utils\Color\Couleur\Converters\Rgb;
+use TotalCMS\Utils\Color\Couleur\Converters\XyzD65;
+use TotalCMS\Utils\Color\Couleur\Exceptions\UnknownColorSpace;
 
 // ===== Bug: $hue undefined when switch finds no match (rgb/conversions.php) =====
 // Defensive default initialization protects against floating-point precision misses.
 
 test('rgb to hsl converts pure gray without undefined variable warning', function (): void {
-	$result = rgbToHsl(128, 128, 128);
+	$result = Rgb::toHsl(128, 128, 128);
 	expect($result)->toBeArray();
 	expect($result[0])->toBe(0.0);    // hue defaults to 0 for grays
 	expect($result[1])->toBe(0.0);    // saturation = 0 (gray)
 });
 
 test('rgb to hsl converts pure black without crashing', function (): void {
-	$result = rgbToHsl(0, 0, 0);
+	$result = Rgb::toHsl(0, 0, 0);
 	expect($result[0])->toBe(0.0);
 	expect($result[1])->toBe(0.0);
 	expect($result[2])->toBe(0.0);
 });
 
 test('rgb to hsl converts pure white without crashing', function (): void {
-	$result = rgbToHsl(255, 255, 255);
+	$result = Rgb::toHsl(255, 255, 255);
 	expect($result[0])->toBe(0.0);
 	expect($result[1])->toBe(0.0);
 	expect($result[2])->toBe(100.0);
@@ -42,13 +41,13 @@ test('rgb to hsl converts pure white without crashing', function (): void {
 
 test('hsl to rgb accepts explicit precision parameter', function (): void {
 	// Was using undefined $precision variable; now exposed as parameter
-	$result = hslToRgb(120, 100, 50, 100, precision: 2);
+	$result = Hsl::toRgb(120, 100, 50, 100, precision: 2);
 	expect($result)->toBeArray();
 	expect($result[0])->toBeFloat();
 });
 
 test('hsl to rgb works with default precision (regression: undefined variable)', function (): void {
-	$result = hslToRgb(120, 100, 50);
+	$result = Hsl::toRgb(120, 100, 50);
 	expect($result)->toBeArray();
 	expect(count($result))->toBe(4);
 });
@@ -58,12 +57,12 @@ test('hsl to rgb works with default precision (regression: undefined variable)',
 // Only linRgb and xyzD65 remain (intermediates in the OKLCH conversion chain).
 
 test('linRgb stringify produces valid color() string', function (): void {
-	$result = linRgbStringify(0.5, 0.5, 0.5);
+	$result = LinRgb::stringify(0.5, 0.5, 0.5);
 	expect($result)->toStartWith('color(');
 });
 
 test('xyzD65 stringify produces valid color() string', function (): void {
-	$result = xyzD65Stringify(0.5, 0.5, 0.5);
+	$result = XyzD65::stringify(0.5, 0.5, 0.5);
 	expect($result)->toStartWith('color(');
 });
 

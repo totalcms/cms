@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Utils\Color\Couleur;
 
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Util;
 
 /**
  * Represents a configuration constant accepted by Couleur.
@@ -38,7 +38,7 @@ enum Constant :int {
         int|null $value  = null,
         bool     $create = false,
     ) :int {
-        return (int) utils\constant(
+        return (int) Util::constant(
             name   : $this->name,
             value  : $value ?? $this->value,
             create : $create,

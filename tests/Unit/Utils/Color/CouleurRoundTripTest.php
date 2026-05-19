@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Utils\Color\Couleur\colors\HexRgb;
-use TotalCMS\Utils\Color\Couleur\colors\Hsl;
-use TotalCMS\Utils\Color\Couleur\colors\OkLch;
-use TotalCMS\Utils\Color\Couleur\colors\Rgb;
+use TotalCMS\Utils\Color\Couleur\Colors\HexRgb;
+use TotalCMS\Utils\Color\Couleur\Colors\Hsl;
+use TotalCMS\Utils\Color\Couleur\Colors\OkLch;
+use TotalCMS\Utils\Color\Couleur\Colors\Rgb;
 use TotalCMS\Utils\Color\Couleur\ColorFactory;
 use TotalCMS\Utils\Color\Couleur\ColorSpace;
 

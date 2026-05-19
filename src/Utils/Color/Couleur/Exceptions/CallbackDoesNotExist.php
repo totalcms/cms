@@ -1,17 +1,17 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\exceptions;
+namespace TotalCMS\Utils\Color\Couleur\Exceptions;
 
-class   UnsupportedColorSpace 
+class   CallbackDoesNotExist 
 extends \Exception {
 
     public function __construct(
-        string          $space, 
+        string          $callback, 
         int             $code     = 0, 
         \Throwable|null $previous = null,
     ) {
         parent::__construct(
-            message  : "The color space \"$space\" is not supported",
+            message  : "Callback $callback does not exist",
             code     : $code,
             previous : $previous,
         );

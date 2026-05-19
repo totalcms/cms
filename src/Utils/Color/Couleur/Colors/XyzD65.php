@@ -1,11 +1,12 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\colors;
+namespace TotalCMS\Utils\Color\Couleur\Colors;
 
 use       TotalCMS\Utils\Color\Couleur\Color;
 use       TotalCMS\Utils\Color\Couleur\ColorFactory;
 use       TotalCMS\Utils\Color\Couleur\ColorInterface;
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Util;
+use       TotalCMS\Utils\Color\Couleur\Converters\XyzD65 as XyzD65Converter;
 
 class      XyzD65
 extends    Color
@@ -53,10 +54,10 @@ implements ColorInterface {
 
         return ColorFactory::newXyzD65(
             value    : [
-                utils\changeCoordinate($this->x,       $y,       false, $changeThrow),
-                utils\changeCoordinate($this->y,       $y,       false, $changeThrow),
-                utils\changeCoordinate($this->z,       $z,       false, $changeThrow),
-                utils\changeCoordinate($this->opacity, $opacity, false, $changeThrow),
+                Util::changeCoordinate($this->x,       $y,       false, $changeThrow),
+                Util::changeCoordinate($this->y,       $y,       false, $changeThrow),
+                Util::changeCoordinate($this->z,       $z,       false, $changeThrow),
+                Util::changeCoordinate($this->opacity, $opacity, false, $changeThrow),
             ],
             from     : $this::space(),
             fallback : $fallback,
@@ -69,7 +70,7 @@ implements ColorInterface {
         bool|null $alpha     = null,
         int|null  $precision = null,
     ) :string {
-        return utils\xyzD65\stringify(
+        return XyzD65Converter::stringify(
             x         : $this->x,
             y         : $this->y,
             z         : $this->z,

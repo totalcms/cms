@@ -1,11 +1,12 @@
 <?php
 
-namespace TotalCMS\Utils\Color\Couleur\colors;
+namespace TotalCMS\Utils\Color\Couleur\Colors;
 
 use       TotalCMS\Utils\Color\Couleur\Color;
 use       TotalCMS\Utils\Color\Couleur\ColorFactory;
 use       TotalCMS\Utils\Color\Couleur\ColorInterface;
-use       TotalCMS\Utils\Color\Couleur\utils;
+use       TotalCMS\Utils\Color\Couleur\Util;
+use       TotalCMS\Utils\Color\Couleur\Converters\Hsl as HslConverter;
 
 class      Hsl
 extends    Color
@@ -51,10 +52,10 @@ implements ColorInterface {
 
         return ColorFactory::newHsl(
             value    : [
-                utils\changeCoordinate($this->hue,        $hue,        false, $changeThrow, true),
-                utils\changeCoordinate($this->saturation, $saturation, false, $changeThrow),
-                utils\changeCoordinate($this->lightness,  $lightness,  false, $changeThrow),
-                utils\changeCoordinate($this->opacity,    $opacity,    false, $changeThrow),
+                Util::changeCoordinate($this->hue,        $hue,        false, $changeThrow, true),
+                Util::changeCoordinate($this->saturation, $saturation, false, $changeThrow),
+                Util::changeCoordinate($this->lightness,  $lightness,  false, $changeThrow),
+                Util::changeCoordinate($this->opacity,    $opacity,    false, $changeThrow),
             ],
             from     : $this::space(),
             fallback : $fallback,
@@ -67,7 +68,7 @@ implements ColorInterface {
         bool|null $alpha     = null,
         int|null  $precision = null,
     ) :string {
-        return utils\hsl\stringify(
+        return HslConverter::stringify(
             hue        : $this->hue,
             saturation : $this->saturation,
             lightness  : $this->lightness,
