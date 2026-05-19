@@ -2,12 +2,12 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use TotalCMS\Utils\Color\Couleur\ColorFactory;
-use TotalCMS\Utils\Color\Couleur\Colors\Hsl;
-use TotalCMS\Utils\Color\Couleur\Colors\OkLch;
-use TotalCMS\Utils\Color\Couleur\Colors\Rgb;
-use TotalCMS\Utils\Color\Couleur\ColorSpace;
-use TotalCMS\Utils\Color\Couleur\Converters\OkLch as OkLchConverter;
+use TotalCMS\Utils\Color\ColorFactory;
+use TotalCMS\Utils\Color\Colors\Hsl;
+use TotalCMS\Utils\Color\Colors\OkLch;
+use TotalCMS\Utils\Color\Colors\Rgb;
+use TotalCMS\Utils\Color\ColorSpace;
+use TotalCMS\Utils\Color\Converters\OkLch as OkLchConverter;
 
 /**
  * Color property data.

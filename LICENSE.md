@@ -28,7 +28,7 @@ Total CMS bundles source code from the following third-party libraries that ship
 
 ### couleur
 
-- **Location:** `src/Utils/Color/Couleur/`
+- **Location:** `src/Utils/Color/`
 - **Upstream:** https://github.com/matthieumastadenis/couleur
 - **License:** MIT
 
