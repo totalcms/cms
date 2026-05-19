@@ -7,10 +7,12 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\LocalizedtextData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 readonly class ObjectExporter
 {
@@ -21,6 +23,7 @@ readonly class ObjectExporter
 		private ObjectFetcher $objectFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private IndexFilter $indexFilter,
+		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -147,15 +150,19 @@ readonly class ObjectExporter
 	 */
 	private function buildCsvExport(string $collection, array $objectIds): array
 	{
-		$schema                                                  = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		['headers' => $headers, 'cardSubProps' => $cardSubProps] = $this->buildCsvHeaders($schema);
-		$objects                                                 = [$headers];
-		$errors                                                  = [];
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		[
+			'headers'         => $headers,
+			'cardSubProps'    => $cardSubProps,
+			'localizedProps'  => $localizedProps,
+		]            = $this->buildCsvHeaders($schema);
+		$objects     = [$headers];
+		$errors      = [];
 
 		foreach ($objectIds as $id) {
 			try {
 				$object    = $this->objectFetcher->fetchObject($collection, $id);
-				$objects[] = $this->buildCsvRow($object, $headers, $cardSubProps);
+				$objects[] = $this->buildCsvRow($object, $headers, $cardSubProps, $localizedProps);
 			} catch (\Throwable $e) {
 				$this->logger->warning('Skipping object during CSV export due to data mismatch', [
 					'collection' => $collection,
@@ -175,37 +182,91 @@ readonly class ObjectExporter
 	}
 
 	/**
-	 * Build CSV column headers for a schema. Card properties expand into
-	 * `{cardName}.{subProperty}` columns; everything else uses the property name.
+	 * Build CSV column headers for a schema. Card and localized-text properties
+	 * expand into `{name}.{subKey}` columns; everything else uses the property
+	 * name as a single column.
 	 *
-	 * @return array{headers: array<int,string>, cardSubProps: array<string,array<int,string>>}
+	 *   - Card properties pull sub-keys from the linked schemaref's fields.
+	 *   - Localized properties pull sub-keys from the site's configured
+	 *     `i18n.available` locales (`localizedtext`, `localizedtextarea`, and
+	 *     `localizedstyledtext` all share the same `$ref`).
+	 *
+	 * Cards or localized properties with no resolvable sub-keys fall back to
+	 * a single column (the standard CSV-stringified representation).
+	 *
+	 * @return array{headers: array<int,string>, cardSubProps: array<string,array<int,string>>, localizedProps: array<string,array<int,string>>}
 	 */
 	private function buildCsvHeaders(SchemaData $schema): array
 	{
-		$headers      = [];
-		$cardSubProps = [];
+		$headers        = [];
+		$cardSubProps   = [];
+		$localizedProps = [];
 
 		foreach ($schema->properties as $name => $property) {
 			$nameStr = (string)$name;
-			if (!is_array($property) || ($property['$ref'] ?? null) !== SchemaData::PROPERTY_TYPE_TO_REF['card']) {
+			if (!is_array($property)) {
 				$headers[] = $nameStr;
 				continue;
 			}
 
-			$subProps = $this->fetchCardSubProperties($property);
-			if ($subProps === []) {
-				// Sub-schema missing or unloadable — fall back to a single flat column.
-				$headers[] = $nameStr;
+			$ref = $property['$ref'] ?? null;
+
+			if ($ref === SchemaData::PROPERTY_TYPE_TO_REF['card']) {
+				$subProps = $this->fetchCardSubProperties($property);
+				if ($subProps === []) {
+					$headers[] = $nameStr;
+					continue;
+				}
+				$cardSubProps[$nameStr] = $subProps;
+				foreach ($subProps as $subProp) {
+					$headers[] = $nameStr . '.' . $subProp;
+				}
 				continue;
 			}
 
-			$cardSubProps[$nameStr] = $subProps;
-			foreach ($subProps as $subProp) {
-				$headers[] = $nameStr . '.' . $subProp;
+			if ($ref === SchemaData::PROPERTY_TYPE_TO_REF['localizedtext']) {
+				$locales = $this->fetchLocalizedSubKeys();
+				if ($locales === []) {
+					// Operator hasn't opted into i18n yet — fall back to one column.
+					$headers[] = $nameStr;
+					continue;
+				}
+				$localizedProps[$nameStr] = $locales;
+				foreach ($locales as $locale) {
+					$headers[] = $nameStr . '.' . $locale;
+				}
+				continue;
+			}
+
+			$headers[] = $nameStr;
+		}
+
+		return [
+			'headers'        => $headers,
+			'cardSubProps'   => $cardSubProps,
+			'localizedProps' => $localizedProps,
+		];
+	}
+
+	/**
+	 * Return the sub-key list for a localized property: the codes from
+	 * `$config->i18n['available']`, in configured order. Order matters so
+	 * the CSV columns mirror the operator's preferred locale order
+	 * (which is also the Twig helper's fall-down order).
+	 *
+	 * @return array<int,string>
+	 */
+	private function fetchLocalizedSubKeys(): array
+	{
+		$out = [];
+		foreach ($this->config->i18n['available'] as $locale) {
+			$code = (string)($locale['code'] ?? '');
+			if ($code !== '') {
+				$out[] = $code;
 			}
 		}
 
-		return ['headers' => $headers, 'cardSubProps' => $cardSubProps];
+		return $out;
 	}
 
 	/**
@@ -236,25 +297,30 @@ readonly class ObjectExporter
 	}
 
 	/**
-	 * Build a single CSV row, pulling card sub-values directly from CardData
-	 * for dot-notation columns and falling back to the standard CSV-stringified
-	 * representation for everything else.
+	 * Build a single CSV row, pulling sub-values directly from CardData /
+	 * LocalizedtextData for dot-notation columns and falling back to the
+	 * standard CSV-stringified representation for everything else.
 	 *
-	 * @param array<int,string>                  $headers
-	 * @param array<string,array<int,string>>    $cardSubProps
+	 * @param array<int,string>               $headers
+	 * @param array<string,array<int,string>> $cardSubProps
+	 * @param array<string,array<int,string>> $localizedProps
 	 *
 	 * @return array<int,string>
 	 */
-	private function buildCsvRow(ObjectData $object, array $headers, array $cardSubProps): array
+	private function buildCsvRow(ObjectData $object, array $headers, array $cardSubProps, array $localizedProps): array
 	{
 		$forCsv = $object->forCsv();
 		$row    = [];
 
 		foreach ($headers as $header) {
 			if (str_contains($header, '.')) {
-				[$cardName, $subProp] = explode('.', $header, 2);
-				if (isset($cardSubProps[$cardName])) {
-					$row[] = $this->extractCardSubValue($object, $cardName, $subProp);
+				[$propName, $subKey] = explode('.', $header, 2);
+				if (isset($cardSubProps[$propName])) {
+					$row[] = $this->extractCardSubValue($object, $propName, $subKey);
+					continue;
+				}
+				if (isset($localizedProps[$propName])) {
+					$row[] = $this->extractLocalizedSubValue($object, $propName, $subKey);
 					continue;
 				}
 			}
@@ -280,6 +346,27 @@ readonly class ObjectExporter
 		$value = is_scalar($raw) ? (string)$raw : (string)json_encode($raw, JSON_UNESCAPED_SLASHES);
 
 		// Match ObjectData::forCsv() — escape newlines so the CSV stays single-line per row.
+		return str_replace(["\r\n", "\r", "\n"], ['\\n', '\\n', '\\n'], $value);
+	}
+
+	/**
+	 * Pull a single locale's value from a `LocalizedtextData` property.
+	 * Missing locales produce an empty cell — the importer treats those as
+	 * absent (won't overwrite existing data on re-import unless a value is
+	 * supplied), matching CardData behaviour.
+	 */
+	private function extractLocalizedSubValue(ObjectData $object, string $propName, string $locale): string
+	{
+		$property = $object->properties->get($propName);
+		if (!$property instanceof LocalizedtextData) {
+			return '';
+		}
+
+		$value = $property->values[$locale] ?? '';
+
+		// Escape newlines so the CSV stays single-line per row (mirrors
+		// ObjectData::forCsv() and extractCardSubValue() above). Tiptap HTML
+		// rarely contains literal newlines but a `<pre>` block could.
 		return str_replace(["\r\n", "\r", "\n"], ['\\n', '\\n', '\\n'], $value);
 	}
 
