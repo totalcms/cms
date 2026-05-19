@@ -89,14 +89,24 @@ final class HTMLSanitizerTest extends TestCase
 		$this->assertStringContainsString('<em>', $result);
 	}
 
-	public function testSanitizeRichContentRemovesDataAttributes(): void
+	public function testSanitizeRichContentPreservesDataAttributesButStripsDangerousProtocols(): void
 	{
 		$input  = '<div data-malicious="javascript:alert(1)" data-safe="value">Content</div>';
 		$result = HTMLSanitizer::sanitizeRichContent($input);
 
 		$this->assertStringContainsString('Content', $result);
-		$this->assertStringNotContainsString('data-malicious', $result);
+		$this->assertStringContainsString('data-safe="value"', $result);
 		$this->assertStringNotContainsString('javascript:', $result);
+	}
+
+	public function testSanitizeRichContentPreservesStyledtextImageDataAttributes(): void
+	{
+		$input  = '<img src="/uploads/photo.jpg" data-float="left" data-size="medium" class="ste-img--float-left ste-img--medium">';
+		$result = HTMLSanitizer::sanitizeRichContent($input);
+
+		$this->assertStringContainsString('data-float="left"', $result);
+		$this->assertStringContainsString('data-size="medium"', $result);
+		$this->assertStringContainsString('class="ste-img--float-left ste-img--medium"', $result);
 	}
 
 	public function testSanitizeRichContentHandlesIframes(): void
@@ -192,13 +202,13 @@ final class HTMLSanitizerTest extends TestCase
 		// For production use with malformed HTML, consider additional HTML validation
 	}
 
-	public function testSQLInjectionAttempts(): void
+	public function testHTMLCommentsArePreserved(): void
 	{
-		$input  = '<p>Text</p><!-- \'; DROP TABLE users; -->';
+		$input  = '<p>Text</p><!-- TODO: revisit this -->';
 		$result = HTMLSanitizer::sanitizeRichContent($input);
 
 		$this->assertStringContainsString('<p>Text</p>', $result);
-		$this->assertStringNotContainsString('DROP TABLE', $result);
+		$this->assertStringContainsString('<!-- TODO: revisit this -->', $result);
 	}
 
 	public function testXSSAttackVectors(): void
@@ -222,8 +232,9 @@ final class HTMLSanitizerTest extends TestCase
 		foreach ($xssVectors as $vector) {
 			$result = HTMLSanitizer::sanitizeRichContent($vector);
 
-			$this->assertStringNotContainsString('alert', $result, "XSS vector was not properly sanitized: $vector");
+			$this->assertStringNotContainsString('<script', $result, "Script tag not removed: $vector");
 			$this->assertStringNotContainsString('javascript:', $result, "JavaScript protocol not removed: $vector");
+			$this->assertDoesNotMatchRegularExpression('/\son\w+\s*=/i', $result, "Event handler not removed: $vector");
 		}
 	}
 

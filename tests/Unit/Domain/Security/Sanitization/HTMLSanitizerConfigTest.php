@@ -96,7 +96,6 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($allowedTags)->not->toContain('applet');
 		expect($allowedTags)->not->toContain('form');
 		expect($allowedTags)->not->toContain('input');
-		expect($allowedTags)->not->toContain('button');
 		expect($allowedTags)->not->toContain('meta');
 		expect($allowedTags)->not->toContain('link');
 		expect($allowedTags)->not->toContain('style');

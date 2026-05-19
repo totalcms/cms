@@ -16,7 +16,7 @@ class HTMLSanitizerConfig
 		'blockquote', 'cite', 'q', 'code', 'pre', 'kbd', 'samp', 'var',
 		'div', 'span', 'section', 'article', 'aside', 'header', 'footer', 'main', 'nav',
 		'audio', 'video', 'source', 'track', 'fieldset', 'legend', 'label',
-		'abbr', 'acronym', 'address', 'time', 'details', 'summary',
+		'abbr', 'acronym', 'address', 'time', 'details', 'summary', 'button',
 	];
 
 	public const STRICT_CONTENT_ALLOWED_TAGS = [
@@ -41,7 +41,9 @@ class HTMLSanitizerConfig
 	];
 
 	public const ALLOWED_IFRAME_DOMAINS = [
-		'www.youtube.com', 'youtube.com', 'player.vimeo.com', 'vimeo.com',
+		'www.youtube.com', 'youtube.com',
+		'www.youtube-nocookie.com', 'youtube-nocookie.com',
+		'player.vimeo.com', 'vimeo.com',
 		'www.dailymotion.com', 'dailymotion.com', 'embed.ted.com', 'www.ted.com',
 		'codepen.io', 'jsfiddle.net', 'github.com', 'gist.github.com',
 	];
