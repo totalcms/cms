@@ -26,7 +26,10 @@ implements ColorInterface {
     /* #endregion */
 
     /* #region Public Static Methods */
-    
+
+    /**
+     * @return array<int, string>
+     */
     public static function aliases(
 
     ) :array {
@@ -34,10 +37,10 @@ implements ColorInterface {
             'srgb-linear',
             'linrgb',
             'lin-rgb',
-            'lin_rgb',            
+            'lin_rgb',
             'linsrgb',
             'lin-srgb',
-            'lin_srgb',            
+            'lin_srgb',
         ];
     }
 
@@ -55,7 +58,8 @@ implements ColorInterface {
     ) :LinRgb {
         $changeThrow = $throw ?? true;
 
-        return ColorFactory::newLinRgb(
+        /** @var LinRgb $result */
+        $result = ColorFactory::newLinRgb(
             value    : [
                 Util::changeCoordinate($this->red,     $red,     false, $changeThrow),
                 Util::changeCoordinate($this->green,   $green,   false, $changeThrow),
@@ -66,7 +70,9 @@ implements ColorInterface {
             fallback : $fallback,
             throw    : $throw,
         );
-    } 
+
+        return $result;
+    }
     
     public function stringify(
         bool|null $legacy    = null,

@@ -9,6 +9,9 @@ use       TotalCMS\Utils\Color\Exceptions\MissingColorValue;
 
 abstract class XyzD65 {
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function clean(
         mixed     $value,
         bool|null $throw = null,
@@ -19,6 +22,7 @@ abstract class XyzD65 {
         $z       =                       $values['z'] ?? $values[2] ?? null;
         $opacity = $values['opacity'] ?? $values['o'] ?? $values[3] ?? null;
 
+        // @phpstan-ignore-next-line nullCoalesce.expr
         return match (true) {
             !$throw       => null,
             ($x === null) => throw new MissingColorValue('x'),
@@ -33,19 +37,26 @@ abstract class XyzD65 {
         ];
     }
 
+    /**
+     * @param  array<int, float|int>|null $fallback
+     *
+     * @return array<int, float|int>|null
+     */
     public static function from(
         mixed                              $value,
         ColorSpace|\Stringable|string|null $from     = null,
         array|null                         $fallback = null,
         bool|null                          $throw    = null,
-    ) :array {
-        return Util::to(
+    ) :array|null {
+        /** @var array<int, float|int>|null $result */
+        $result = Util::to(
             value    : $value,
             to       : ColorSpace::XyzD65,
             from     : $from,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     public static function stringify(
@@ -84,6 +95,9 @@ abstract class XyzD65 {
         return Util::isColorString($value, ColorSpace::XyzD65);
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function toHexRgb(
         float $x       = 0,
         float $y       = 0,
@@ -93,6 +107,9 @@ abstract class XyzD65 {
         return Rgb::toHexRgb(... self::toRgb($x, $y, $z, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toHsl(
         float    $x       = 0,
         float    $y       = 0,
@@ -102,13 +119,17 @@ abstract class XyzD65 {
         return Rgb::toHsl(... self::toRgb($x, $y, $z, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toLinRgb(
         float $x       = 0,
         float $y       = 0,
         float $z       = 0,
         float $opacity = 1,
     ) :array {
-        return Util::push(
+        /** @var array<int, float|int> $result */
+        $result = Util::push(
             value : $opacity,
             array : Util::multiplyMatrices(
                 a : [
@@ -119,14 +140,19 @@ abstract class XyzD65 {
                 b : [ $x, $y, $z ],
             ),
         );
+        return $result;
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLab(
         float $x       = 0,
         float $y       = 0,
         float $z       = 0,
         float $opacity = 1,
     ) :array {
+        /** @var array<int, float|int> $okLab */
         $okLab = Util::push(
             value : $opacity * 100,
             array : Util::multiplyMatrices(
@@ -136,7 +162,10 @@ abstract class XyzD65 {
                     [  0.0259040371,  0.7827717662, -0.8086757660 ],
                 ],
                 b : \array_map(
-                    callback : fn ($v) => \pow($v, 1/3),
+                    callback : function ($v): float {
+                        /** @var float|int $v */
+                        return \pow($v, 1/3);
+                    },
                     array    : Util::multiplyMatrices(
                         a : [
                             [ 0.8190224432164319,   0.3619062562801221,  -0.12887378261216414 ],
@@ -155,6 +184,9 @@ abstract class XyzD65 {
         return $okLab;
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLch(
         float $x       = 0,
         float $y       = 0,
@@ -164,6 +196,9 @@ abstract class XyzD65 {
         return OkLab::toOkLch(... self::toOkLab($x, $y, $z, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toRgb(
         float $x       = 0,
         float $y       = 0,

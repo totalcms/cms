@@ -29,10 +29,10 @@ enum Constant :int {
      * 
      * If $create is set to true, the constant will be defined with $value as a value.
      *
-     * @param  mixed   $value  Fallback value (also used to define the constant if $create is true)
-     * @param  boolean $create If true the constant will be defined with $value as a value
-     * 
-     * @return mixed           The constant value if it exists and is declared, its default value or $value otherwise
+     * @param  int|null $value  Fallback value (also used to define the constant if $create is true)
+     * @param  boolean  $create If true the constant will be defined with $value as a value
+     *
+     * @return int              The constant value if it exists and is declared, its default value or $value otherwise
      */
     public function value(
         int|null $value  = null,

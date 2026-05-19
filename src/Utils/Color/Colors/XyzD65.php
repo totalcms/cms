@@ -26,7 +26,10 @@ implements ColorInterface {
     /* #endregion */
     
     /* #region Public Static Methods */
-    
+
+    /**
+     * @return array<int, string>
+     */
     public static function aliases(
 
     ) :array {
@@ -52,7 +55,8 @@ implements ColorInterface {
     ) :XyzD65 {
         $changeThrow = $throw ?? true;
 
-        return ColorFactory::newXyzD65(
+        /** @var XyzD65 $result */
+        $result = ColorFactory::newXyzD65(
             value    : [
                 Util::changeCoordinate($this->x,       $y,       false, $changeThrow),
                 Util::changeCoordinate($this->y,       $y,       false, $changeThrow),
@@ -63,6 +67,8 @@ implements ColorInterface {
             fallback : $fallback,
             throw    : $throw,
         );
+
+        return $result;
     }
     
     public function stringify(

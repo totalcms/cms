@@ -79,14 +79,15 @@ abstract class Util {
 
         $val      = (string) $new;
         $original = (float) ($hex
-            ? self::hexToDec($value)
-            : $value
+            ? self::hexToDec((string) $value)
+            : (string) $value
         );
 
         $modifier = self::startsWith($val, [ '+',   '-',  '*',  '/',  '%' ]);
-        $val      = \substr($val, \strlen((string) $modifier));
+        $modStr   = \is_string($modifier) ? $modifier : '';
+        $val      = \substr($val, \strlen($modStr));
 
-        if (\str_ends_with($new, '%')) {
+        if (\str_ends_with((string) $new, '%')) {
             $val = $original / 100 * (float) \substr($val, 0, -1);
 
             if (!$modifier) {
@@ -102,26 +103,27 @@ abstract class Util {
             }
 
             if ($hex) {
-                $val = (float) match ($modifier) {
+                $val = (float) match ($modStr) {
                     '+', '-' => self::hexToDec($val),
                     default  => $val,
                 };
             }
         }
 
-        $result = match ($modifier) {
-            '+'     => $original + $val,
-            '-'     => $original - $val,
-            '*'     => $original * $val,
-            '/'     => $original / $val,
-            '%'     => \fmod($original, $val),
+        $valFloat = (float) $val;
+        $result = match ($modStr) {
+            '+'     => $original + $valFloat,
+            '-'     => $original - $valFloat,
+            '*'     => $original * $valFloat,
+            '/'     => $original / $valFloat,
+            '%'     => \fmod($original, $valFloat),
             default => $throw
-                ? throw new UnsupportedCoordinateModifier($modifier)
+                ? throw new UnsupportedCoordinateModifier($modStr)
                 : $original,
         };
 
         // Apply hue wraparound for 360° values (e.g., hue in OKLCH, HSL)
-        if ($hue && !$hex && is_numeric($result)) {
+        if ($hue && !$hex) {
             $result = (float) $result;
             if ($result < 0 || $result >= 360) {
                 $result = \fmod($result, 360);
@@ -155,8 +157,8 @@ abstract class Util {
      * $precision can not exceed \ini_get('precision'), and will be considered as 0 by default.
      *
      * @param \Stringable|string|integer|float $value     The stringable or number to clean
-     * @param integer                          $min       Minimum allowed value (can be null to unbound)
-     * @param integer                          $max       Maximum allowed value (can be null to unbound)
+     * @param float|null                       $min       Minimum allowed value (can be null to unbound)
+     * @param float|null                       $max       Maximum allowed value (can be null to unbound)
      * @param boolean                          $loop
      * @param integer|null                     $precision Used to round the value
      * @param boolean                          $round     If true the value will be rounded
@@ -175,18 +177,18 @@ abstract class Util {
         \Stringable|string|null      $padLeft   = null,
         ?int                         $length    = null,
     ) :float {
-        if (self::isStringable($value)) {
-            $value = self::addLeadingZero((string) $value);
-            $value = \str_ends_with($value, '%')
-                ? (((float) $value) * $max / 100)
-                : (float) $value
+        if (\is_string($value) || $value instanceof \Stringable) {
+            $sValue = (string) self::addLeadingZero((string) $value);
+            $value  = \str_ends_with($sValue, '%')
+                ? (((float) $sValue) * ($max ?? 100) / 100)
+                : (float) $sValue
             ;
         }
 
-        $value = (float) ($round
-            ? \round($value, self::cleanPrecision($precision))
-            : $value
-        );
+        $value = $round
+            ? \round((float) $value, self::cleanPrecision($precision))
+            : (float) $value
+        ;
 
         // Handle looping/wraparound for values like hue (0-360°)
         if ($loop && $min !== null && $max !== null) {
@@ -213,10 +215,10 @@ abstract class Util {
 
         return ($padLeft === null)
             ? $value
-            : \str_pad(
-                string     : $value,
+            : (float) \str_pad(
+                string     : (string) $value,
                 length     : $length ?? \strlen((string) $max),
-                pad_string : $padLeft,
+                pad_string : (string) $padLeft,
                 pad_type   : \STR_PAD_LEFT,
             )
         ;
@@ -238,6 +240,7 @@ abstract class Util {
     ) :int {
         $default = \ini_get('precision');
 
+        // @phpstan-ignore-next-line function.impossibleType
         if (!\in_array($default, [ '', false ], true)) {
             $default = 14;
         }
@@ -406,7 +409,7 @@ abstract class Util {
      * @param  ColorSpace|\Stringable|string|null $from
      * @param  boolean                            $throw
      *
-     * @return array
+     * @return array<string, ColorSpace|null>
      */
     public static function findFromAndTo(
         mixed                              $value,
@@ -454,8 +457,8 @@ abstract class Util {
      * Returns true if $value is a stringable color expression using any supported color space
      * (like 'rgba(255,0,0,1)' or 'color(xyz-d50 0.41 0.21 0.02 / 100%)'). Returns false otherwise.
      *
-     * @param  mixed                         $value
-     * @param  \Stringable|string|array|null $spaces
+     * @param  mixed                                                    $value
+     * @param  ColorSpace|\Stringable|string|array<int, string>|null    $spaces
      *
      * @return boolean
      */
@@ -532,10 +535,10 @@ abstract class Util {
      *
      * It returns an array which is the product of the two number matrices passed as parameters.
      *
-     * @param  array $a m x n matrice
-     * @param  array $b n x p matrice
+     * @param  array<int, mixed> $a m x n matrice
+     * @param  array<int, mixed> $b n x p matrice
      *
-     * @return array    m x p product
+     * @return array<int, mixed>    m x p product
      */
     public static function multiplyMatrices(
         array $a,
@@ -594,7 +597,7 @@ abstract class Util {
         if ($p === 1) {
             // Avoid [[a], [b], [c], ...]]:
             return \array_map(
-                callback : fn ($v) => $v[0],
+                callback : fn ($v) => \is_array($v) ? $v[0] : $v,
                 array    : $product,
             );
         }
@@ -610,7 +613,7 @@ abstract class Util {
      * @param  mixed          $value
      * @param  int|float|null $opacityFactor
      *
-     * @return array
+     * @return array<int|string, mixed>
      */
     public static function parseColorValue(
         mixed          $value,
@@ -629,7 +632,7 @@ abstract class Util {
      * @param  \Stringable|string $value
      * @param  int|float|null     $opacityFactor
      *
-     * @return array
+     * @return array<int|string, mixed>
      */
     public static function parseStringColorValue(
         \Stringable|string $value,
@@ -664,7 +667,7 @@ abstract class Util {
             array    : \array_values(
                 array : \array_filter(
                     array : \array_map(
-                        callback : fn ($v) => self::addLeadingZero(\preg_replace(
+                        callback : fn ($v) => self::addLeadingZero((string) \preg_replace(
                             pattern     : '/[^0-9\.%]/',
                             replacement : '',
                             subject     : $v,
@@ -682,13 +685,14 @@ abstract class Util {
 
         return \array_map(
             function ($v, $i) use ($opacityFactor, $opacityIndex) {
-                if (($i === $opacityIndex) && !\str_ends_with($v, '%')) {
-                    $v = $opacityFactor * ((float) $v);
+                $sv = \is_scalar($v) ? (string) $v : '';
+                if (($i === $opacityIndex) && !\str_ends_with($sv, '%')) {
+                    $v = $opacityFactor * ((float) $sv);
                 }
 
                 return $v;
             },
-            \array_values($values),
+            $values,
             \array_keys($values),
         );
     }
@@ -702,12 +706,12 @@ abstract class Util {
      * By default if $array already contains a value with the $index key, it will not be replaced,
      * except if $replace is set to true.
      *
-     * @param mixed               $value
-     * @param array               $array
-     * @param string|integer|null $index
-     * @param boolean             $replace
+     * @param mixed                    $value
+     * @param array<int|string, mixed> $array
+     * @param string|integer|null      $index
+     * @param boolean                  $replace
      *
-     * @return array
+     * @return array<int|string, mixed>
      */
     public static function push(
         mixed           $value,
@@ -736,7 +740,7 @@ abstract class Util {
      * @param  ColorSpace|\Stringable|string|null $from
      * @param  boolean                            $throw
      *
-     * @return array
+     * @return array<string, ColorSpace|null>
      */
     public static function setFromAndTo(
         mixed                               $value,
@@ -767,9 +771,9 @@ abstract class Util {
      *            startsWith('+50', [ '*', '/' ])        returns false ;
      *
      *
-     * @param  \Stringable|string          $haystack
-     * @param  \Stringable|string|iterable $needles
-     * @param  boolean                     $returnNeedle
+     * @param  \Stringable|string                                $haystack
+     * @param  \Stringable|string|iterable<int, \Stringable|string> $needles
+     * @param  boolean                                           $returnNeedle
      * @return string|boolean
      */
     public static function startsWith(
@@ -805,13 +809,13 @@ abstract class Util {
      * If the conversion succeeds, it always returns an array of values, like [ 255,0,0,255 ] or [ 'FF','00','00','FF' ].
      * In case of errors, it will throw exceptions, except if $throw if set to false (or if $throw is null and $fallback is not null).
      *
-     * @param  mixed                              $value
-     * @param  ColorSpace|\Stringable|string|null $to
-     * @param  ColorSpace|\Stringable|string|null $from
-     * @param  array|null                         $fallback
-     * @param  boolean|null                       $throw
+     * @param  mixed                                       $value
+     * @param  ColorSpace|\Stringable|string|null          $to
+     * @param  ColorSpace|\Stringable|string|null          $from
+     * @param  array<int, float|int|string>|null           $fallback
+     * @param  boolean|null                                $throw
      *
-     * @return array
+     * @return array<int, float|int|string>|null
      */
     public static function to(
         mixed                              $value,
@@ -819,7 +823,7 @@ abstract class Util {
         ColorSpace|\Stringable|string|null $from      = null,
         array|null                         $fallback  = null,
         bool|null                          $throw     = null,
-    ) :array {
+    ) :array|null {
         self::setFromAndTo(
             value    : $value,
             to       : $to,
@@ -851,7 +855,7 @@ abstract class Util {
      * @param  mixed   $value
      * @param  boolean $keep
      *
-     * @return array
+     * @return array<int|string, mixed>
      */
     public static function toArray(
         mixed $value,
@@ -877,7 +881,7 @@ abstract class Util {
      *
      * @param  mixed    $value
      * @param  boolean  $keep
-     * @return iterable
+     * @return iterable<int|string, mixed>
      */
     public static function toIterable(
         mixed $value,
@@ -898,13 +902,13 @@ abstract class Util {
      * If the conversion succeeds, it always returns an array of values, like [ 255,0,0,255 ] or [ 'FF','00','00','FF' ].
      * In case of errors, it will throw exceptions, except if $throw if set to false (or if $throw is null and $fallback is not null).
      *
-     * @param  mixed           $value
-     * @param  ColorSpace      $to
-     * @param  ColorSpace|null $from
-     * @param  array|null      $fallback
-     * @param  boolean|null    $throw
+     * @param  mixed                              $value
+     * @param  ColorSpace                         $to
+     * @param  ColorSpace|null                    $from
+     * @param  array<int, float|int|string>|null  $fallback
+     * @param  boolean|null                       $throw
      *
-     * @return array
+     * @return array<int, float|int|string>|null
      */
     public static function toColor(
         mixed      $value,
@@ -912,7 +916,7 @@ abstract class Util {
         ?ColorSpace $from      = null,
         array|null $fallback  = null,
         bool|null  $throw     = null,
-    ) :array {
+    ) :array|null {
         $throw   ??= ($fallback === null);
         $from    ??= $to;
         $cleanFrom = $from->cleanCallback();
@@ -938,6 +942,7 @@ abstract class Util {
         }
 
         if ($from === $to) {
+            /** @var array<int, float|int|string> $values */
             return $values;
         }
 
@@ -950,7 +955,13 @@ abstract class Util {
             }
         }
 
-        return self::toArray($cleanTo($convert(... $values)));
+        // @phpstan-ignore-next-line callable.nonCallable
+        $converted = $convert(... $values);
+        // @phpstan-ignore-next-line callable.nonCallable
+        $cleaned = $cleanTo($converted);
+        /** @var array<int, float|int|string> $result */
+        $result = self::toArray($cleaned);
+        return $result;
     }
 
     /**

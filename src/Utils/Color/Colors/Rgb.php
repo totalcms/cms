@@ -26,7 +26,10 @@ implements ColorInterface {
     /* #endregion */
     
     /* #region Public Static Methods */
-    
+
+    /**
+     * @return array<int, string>
+     */
     public static function aliases(
 
     ) :array {
@@ -53,7 +56,8 @@ implements ColorInterface {
     ) :Rgb {
         $changeThrow = $throw ?? true;
 
-        return ColorFactory::newRgb(
+        /** @var Rgb $result */
+        $result = ColorFactory::newRgb(
             value    : [
                 Util::changeCoordinate($this->red,     $red,     false, $changeThrow),
                 Util::changeCoordinate($this->green,   $green,   false, $changeThrow),
@@ -64,7 +68,9 @@ implements ColorInterface {
             fallback : $fallback,
             throw    : $throw,
         );
-    } 
+
+        return $result;
+    }
     
     public function stringify(
         bool|null $legacy    = null,

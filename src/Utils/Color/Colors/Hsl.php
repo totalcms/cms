@@ -26,7 +26,10 @@ implements ColorInterface {
     /* #endregion */
 
     /* #region Public Static Methods */
-    
+
+    /**
+     * @return array<int, string>
+     */
     public static function aliases(
 
     ) :array {
@@ -50,7 +53,8 @@ implements ColorInterface {
     ) :Hsl {
         $changeThrow = $throw ?? true;
 
-        return ColorFactory::newHsl(
+        /** @var Hsl $result */
+        $result = ColorFactory::newHsl(
             value    : [
                 Util::changeCoordinate($this->hue,        $hue,        false, $changeThrow, true),
                 Util::changeCoordinate($this->saturation, $saturation, false, $changeThrow),
@@ -61,7 +65,9 @@ implements ColorInterface {
             fallback : $fallback,
             throw    : $throw,
         );
-    } 
+
+        return $result;
+    }
     
     public function stringify(
         bool|null $legacy    = null,

@@ -9,6 +9,9 @@ use       TotalCMS\Utils\Color\Exceptions\MissingColorValue;
 
 abstract class OkLab {
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function clean(
         mixed     $value,
         bool|null $throw = null,
@@ -19,6 +22,7 @@ abstract class OkLab {
         $b         =                         $values['b'] ?? $values[2] ?? null;
         $opacity   = $values['opacity']   ?? $values['o'] ?? $values[3] ?? null;
 
+        // @phpstan-ignore-next-line nullCoalesce.expr
         return match (true) {
             !$throw               => null,
             ($lightness === null) => throw new MissingColorValue('lightness'),
@@ -33,19 +37,26 @@ abstract class OkLab {
         ];
     }
 
+    /**
+     * @param  array<int, float|int>|null $fallback
+     *
+     * @return array<int, float|int>|null
+     */
     public static function from(
         mixed                              $value,
         ColorSpace|\Stringable|string|null $from     = null,
         array|null                         $fallback = null,
         bool|null                          $throw    = null,
-    ) :array {
-        return Util::to(
+    ) :array|null {
+        /** @var array<int, float|int>|null $result */
+        $result = Util::to(
             value    : $value,
             to       : ColorSpace::OkLab,
             from     : $from,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     public static function stringify(
@@ -102,6 +113,9 @@ abstract class OkLab {
         return Util::isColorString($value, ColorSpace::OkLab);
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function toHexRgb(
         float $lightness = 0,
         float $a         = 0,
@@ -111,6 +125,9 @@ abstract class OkLab {
         return Rgb::toHexRgb(... self::toRgb($lightness, $a, $b, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toHsl(
         float $lightness = 0,
         float $a         = 0,
@@ -120,6 +137,9 @@ abstract class OkLab {
         return Rgb::toHsl(... self::toRgb($lightness, $a, $b, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toLinRgb(
         float $lightness = 0,
         float $a         = 0,
@@ -129,6 +149,9 @@ abstract class OkLab {
         return XyzD65::toLinRgb(... self::toXyzD65($lightness, $a, $b, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLch(
         float $lightness = 0,
         float $a         = 0,
@@ -147,6 +170,9 @@ abstract class OkLab {
         ];
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toRgb(
         float $lightness = 0,
         float $a         = 0,
@@ -156,6 +182,9 @@ abstract class OkLab {
         return LinRgb::toRgb(... self::toLinRgb($lightness, $a, $b, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toXyzD65(
         float $lightness = 0,
         float $a         = 0,
@@ -165,7 +194,8 @@ abstract class OkLab {
         // Divide $lightness by 100 to convert from CSS OkLab:
         $lightness /= 100;
 
-        return Util::push(
+        /** @var array<int, float|int> $result */
+        $result = Util::push(
             value : $opacity / 100,
             array : Util::multiplyMatrices(
                 a : [
@@ -174,7 +204,10 @@ abstract class OkLab {
                         [ -0.07637294974672142, -0.4214933239627914,  1.5869240244272418  ],
                 ],
                 b : \array_map(
-                    callback : fn ($v) => $v ** 3,
+                    callback : function ($v): float|int {
+                        /** @var float|int $v */
+                        return $v ** 3;
+                    },
                     array    : Util::multiplyMatrices(
                         a : [
                                 [ 0.99999999845051981432,  0.39633779217376785678,   0.21580375806075880339  ],
@@ -186,5 +219,6 @@ abstract class OkLab {
                 ),
             ),
         );
+        return $result;
     }
 }

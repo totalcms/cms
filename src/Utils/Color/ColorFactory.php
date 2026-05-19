@@ -47,13 +47,35 @@ abstract class ColorFactory {
             return $fallback;
         }
 
-        return new ($to->value)(... Util::toColor(
+        $coords = Util::toColor(
             value     : $value,
             to        : $to,
             from      : $from,
-            fallback  : $fallback,
+            fallback  : null,
             throw     : $throw,
-        ));
+        );
+
+        if ($coords === null) {
+            return $fallback;
+        }
+
+        // HexRgb takes string coords, the others take float coords.
+        if ($to === ColorSpace::HexRgb) {
+            /** @var array<int, string> $hexCoords */
+            $hexCoords = $coords;
+            return new HexRgb(... $hexCoords);
+        }
+
+        /** @var array<int, float> $floatCoords */
+        $floatCoords = $coords;
+        return match ($to) {
+            ColorSpace::Hsl    => new Hsl(... $floatCoords),
+            ColorSpace::LinRgb => new LinRgb(... $floatCoords),
+            ColorSpace::OkLab  => new OkLab(... $floatCoords),
+            ColorSpace::OkLch  => new OkLch(... $floatCoords),
+            ColorSpace::Rgb    => new Rgb(... $floatCoords),
+            ColorSpace::XyzD65 => new XyzD65(... $floatCoords),
+        };
     }
 
     /**
@@ -72,13 +94,15 @@ abstract class ColorFactory {
         HexRgb|null                        $fallback  = null,
         bool|null                          $throw     = null,
     ) :HexRgb|null {
-        return static::new(
+        /** @var HexRgb|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::HexRgb,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /**
@@ -97,13 +121,15 @@ abstract class ColorFactory {
         Hsl|null                           $fallback  = null,
         bool|null                          $throw     = null,
     ) :Hsl|null {
-        return static::new(
+        /** @var Hsl|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::Hsl,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /**
@@ -122,13 +148,15 @@ abstract class ColorFactory {
         LinRgb|null                        $fallback  = null,
         bool|null                          $throw     = null,
     ) :LinRgb|null {
-        return static::new(
+        /** @var LinRgb|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::LinRgb,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /**
@@ -147,13 +175,15 @@ abstract class ColorFactory {
         OkLab|null                         $fallback  = null,
         bool|null                          $throw     = null,
     ) :OkLab|null {
-        return static::new(
+        /** @var OkLab|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::OkLab,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /**
@@ -172,13 +202,15 @@ abstract class ColorFactory {
         OkLch|null                         $fallback  = null,
         bool|null                          $throw     = null,
     ) :OkLch|null {
-        return static::new(
+        /** @var OkLch|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::OkLch,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /**
@@ -197,13 +229,15 @@ abstract class ColorFactory {
         Rgb|null                           $fallback  = null,
         bool|null                          $throw     = null,
     ) :Rgb|null {
-        return static::new(
+        /** @var Rgb|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::Rgb,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /**
@@ -222,13 +256,15 @@ abstract class ColorFactory {
         XyzD65|null                        $fallback  = null,
         bool|null                          $throw     = null,
     ) :XyzD65|null {
-        return static::new(
+        /** @var XyzD65|null $result */
+        $result = static::new(
             value     : $value,
             to        : ColorSpace::XyzD65,
             from      : $from,
             fallback  : $fallback,
             throw     : $throw,
         );
+        return $result;
     }
 
     /* #endregion */

@@ -36,7 +36,7 @@ enum ColorSpace :string {
     /**
      * Returns an array containing all supported aliases and the corresponding ColorSpace instances.
      *
-     * @return array
+     * @return array<string, ColorSpace>
      */
     public static function allAliases(
 
@@ -64,13 +64,13 @@ enum ColorSpace :string {
      * @param  ColorSpace|null    $fallback Fallback returned if $name is not a supported alias
      * @param  boolean|null       $throw    If false the method will not throw exceptions, $fallback will be returned instead
      *
-     * @return static|null                  The ColorSpace instance matching the $name alias, $fallback instead
+     * @return static                       The ColorSpace instance matching the $name alias, $fallback instead
      */
     public static function fromAlias(
         \Stringable|string $name,
         ColorSpace|null    $fallback = null,
         bool|null          $throw    = null,
-    ) :static|null {
+    ) :static {
         $lcName  = \strtolower((string) $name);
         $throw ??= !$fallback;
 
@@ -93,7 +93,7 @@ enum ColorSpace :string {
     /**
      * Returns an array containing all supported aliases for the current ColorSpace.
      *
-     * @return array
+     * @return array<int, string>
      */
     public function aliases(
 

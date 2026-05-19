@@ -7,6 +7,9 @@ use       TotalCMS\Utils\Color\Util;
 
 abstract class HexRgb {
 
+    /**
+     * @return array<int, string>
+     */
     public static function clean(
         mixed    $value,
         bool     $throw = true,
@@ -35,19 +38,26 @@ abstract class HexRgb {
         ];
     }
 
+    /**
+     * @param  array<int, string>|null $fallback
+     *
+     * @return array<int, string>|null
+     */
     public static function from(
         mixed                              $value,
         ColorSpace|\Stringable|string|null $from     = null,
         array|null                         $fallback = null,
         bool|null                          $throw    = null,
-    ) :array {
-        return Util::to(
+    ) :array|null {
+        /** @var array<int, string>|null $result */
+        $result = Util::to(
             value    : $value,
             to       : ColorSpace::HexRgb,
             from     : $from,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     public static function stringify(
@@ -107,6 +117,9 @@ abstract class HexRgb {
         );
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toHsl(
         string $red     = '00',
         string $green   = '00',
@@ -116,6 +129,9 @@ abstract class HexRgb {
         return Rgb::toHsl(... self::toRgb($red, $green, $blue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toLinRgb(
         string $red     = '00',
         string $green   = '00',
@@ -125,6 +141,9 @@ abstract class HexRgb {
         return Rgb::toLinRgb(... self::toRgb($red, $green, $blue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLab(
         string $red     = '00',
         string $green   = '00',
@@ -134,6 +153,9 @@ abstract class HexRgb {
         return XyzD65::toOkLab(... self::toXyzD65($red, $green, $blue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLch(
         string $red     = '00',
         string $green   = '00',
@@ -143,6 +165,9 @@ abstract class HexRgb {
         return OkLab::toOkLch(... self::toOkLab($red, $green, $blue, $opacity));
     }
 
+    /**
+     * @return array<int, float>
+     */
     public static function toRgb(
         string $red     = '00',
         string $green   = '00',
@@ -157,6 +182,9 @@ abstract class HexRgb {
         ];
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toXyzD65(
         string $red     = '00',
         string $green   = '00',

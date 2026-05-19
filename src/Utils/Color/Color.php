@@ -57,12 +57,14 @@ abstract class Color {
     /**
      * Returns an array containing all coordinates of the current color.
      *
-     * @return array
+     * @return array<int, float|int|string>
      */
     public function coordinates(
 
     ) :array {
-        return \array_values(\get_object_vars($this));
+        /** @var array<int, float|int|string> $coords */
+        $coords = \array_values(\get_object_vars($this));
+        return $coords;
     }
 
     /**
@@ -91,13 +93,15 @@ abstract class Color {
         ColorInterface|null                $fallback = null,
         bool|null                          $throw    = null,
     ) :ColorInterface {
-        return ColorFactory::new(
+        /** @var ColorInterface $result */
+        $result = ColorFactory::new(
             value    : $this->coordinates(),
             to       : $to,
             from     : $this::space(),
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -112,11 +116,13 @@ abstract class Color {
         HexRgb|null $fallback = null,
         bool|null   $throw    = null,
     ) :HexRgb {
-        return $this->to(
+        /** @var HexRgb $result */
+        $result = $this->to(
             to       : ColorSpace::HexRgb,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -131,11 +137,13 @@ abstract class Color {
         Hsl|null  $fallback = null,
         bool|null $throw    = null,
     ) :Hsl {
-        return $this->to(
+        /** @var Hsl $result */
+        $result = $this->to(
             to       : ColorSpace::Hsl,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -150,11 +158,13 @@ abstract class Color {
         LinRgb|null $fallback = null,
         bool|null   $throw    = null,
     ) :LinRgb {
-        return $this->to(
+        /** @var LinRgb $result */
+        $result = $this->to(
             to       : ColorSpace::LinRgb,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -169,11 +179,13 @@ abstract class Color {
         OkLab|null $fallback = null,
         bool|null  $throw    = null,
     ) :OkLab {
-        return $this->to(
+        /** @var OkLab $result */
+        $result = $this->to(
             to       : ColorSpace::OkLab,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -188,11 +200,13 @@ abstract class Color {
         OkLch|null $fallback = null,
         bool|null  $throw    = null,
     ) :OkLch {
-        return $this->to(
+        /** @var OkLch $result */
+        $result = $this->to(
             to       : ColorSpace::OkLch,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -207,11 +221,13 @@ abstract class Color {
         Rgb|null  $fallback = null,
         bool|null $throw    = null,
     ) :Rgb {
-        return $this->to(
+        /** @var Rgb $result */
+        $result = $this->to(
             to       : ColorSpace::Rgb,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /**
@@ -226,11 +242,13 @@ abstract class Color {
         XyzD65|null $fallback = null,
         bool|null   $throw    = null,
     ) :XyzD65 {
-        return $this->to(
+        /** @var XyzD65 $result */
+        $result = $this->to(
             to       : ColorSpace::XyzD65,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     /* #endregion */

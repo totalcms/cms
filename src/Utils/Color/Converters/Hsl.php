@@ -9,6 +9,9 @@ use       TotalCMS\Utils\Color\Exceptions\MissingColorValue;
 
 abstract class Hsl {
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function clean(
         mixed     $value,
         bool|null $throw = null,
@@ -19,6 +22,7 @@ abstract class Hsl {
         $lightness  = $values['lightness']  ?? $values['l'] ?? $values[2] ?? null;
         $opacity    = $values['opacity']    ?? $values['o'] ?? $values[3] ?? null;
 
+        // @phpstan-ignore-next-line nullCoalesce.expr
         return match (true) {
             !$throw                => null,
             ($hue        === null) => throw new MissingColorValue('hue'),
@@ -33,19 +37,26 @@ abstract class Hsl {
         ];
     }
 
+    /**
+     * @param  array<int, float|int>|null $fallback
+     *
+     * @return array<int, float|int>|null
+     */
     public static function from(
         mixed                              $value,
         ColorSpace|\Stringable|string|null $from     = null,
         array|null                         $fallback = null,
         bool|null                          $throw    = null,
-    ) :array {
-        return Util::to(
+    ) :array|null {
+        /** @var array<int, float|int>|null $result */
+        $result = Util::to(
             value    : $value,
             to       : ColorSpace::Hsl,
             from     : $from,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     public static function stringify(
@@ -107,6 +118,9 @@ abstract class Hsl {
         return Util::isColorString($value, ColorSpace::Hsl);
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function toHexRgb(
         float $hue        = 0,
         float $saturation = 0,
@@ -116,6 +130,9 @@ abstract class Hsl {
         return Rgb::toHexRgb(... self::toRgb($hue, $saturation, $lightness, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toLinRgb(
         float $hue        = 0,
         float $saturation = 0,
@@ -125,6 +142,9 @@ abstract class Hsl {
         return Rgb::toLinRgb(... self::toRgb($hue, $saturation, $lightness, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLab(
         float $hue        = 0,
         float $saturation = 0,
@@ -134,6 +154,9 @@ abstract class Hsl {
         return XyzD65::toOkLab(... self::toXyzD65($hue, $saturation, $lightness, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLch(
         float $hue        = 0,
         float $saturation = 0,
@@ -143,6 +166,9 @@ abstract class Hsl {
         return OkLab::toOkLch(... self::toOkLab($hue, $saturation, $lightness, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toRgb(
         float    $hue        = 0,
         float    $saturation = 0,
@@ -208,6 +234,9 @@ abstract class Hsl {
         ];
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toXyzD65(
         float $hue        = 0,
         float $saturation = 0,

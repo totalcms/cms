@@ -39,7 +39,7 @@ extends   \Stringable {
     /**
      * Returns an array containing all supported aliases for the ColorSpace of the current color.
      *
-     * @return array
+     * @return array<int, string>
      */
     public static function aliases(
 
@@ -71,7 +71,7 @@ extends   \Stringable {
     /**
      * Returns an array containing all coordinates of the current color.
      *
-     * @return array
+     * @return array<int, float|int|string>
      */
     public function coordinates(
 

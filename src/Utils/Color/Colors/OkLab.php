@@ -26,7 +26,10 @@ implements ColorInterface {
     /* #endregion */
 
     /* #region Public Static Methods */
-    
+
+    /**
+     * @return array<int, string>
+     */
     public static function aliases(
 
     ) :array {
@@ -51,7 +54,8 @@ implements ColorInterface {
     ) :OkLab {
         $changeThrow = $throw ?? true;
 
-        return ColorFactory::newOkLab(
+        /** @var OkLab $result */
+        $result = ColorFactory::newOkLab(
             value    : [
                 Util::changeCoordinate($this->lightness, $lightness, false, $changeThrow),
                 Util::changeCoordinate($this->a,         $a,         false, $changeThrow),
@@ -62,6 +66,8 @@ implements ColorInterface {
             fallback : $fallback,
             throw    : $throw,
         );
+
+        return $result;
     }
     
     public function stringify(

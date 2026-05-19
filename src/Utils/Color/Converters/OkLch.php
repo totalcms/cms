@@ -10,6 +10,9 @@ use       TotalCMS\Utils\Color\Exceptions\MissingColorValue;
 
 abstract class OkLch {
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function clean(
         mixed     $value,
         bool|null $throw = null,
@@ -20,6 +23,7 @@ abstract class OkLch {
         $hue       = $values['hue']       ?? $values['h'] ?? $values[2] ?? null;
         $opacity   = $values['opacity']   ?? $values['o'] ?? $values[3] ?? null;
 
+        // @phpstan-ignore-next-line nullCoalesce.expr
         return match (true) {
             !$throw               => null,
             ($lightness === null) => throw new MissingColorValue('lightness'),
@@ -34,19 +38,26 @@ abstract class OkLch {
         ];
     }
 
+    /**
+     * @param  array<int, float|int>|null $fallback
+     *
+     * @return array<int, float|int>|null
+     */
     public static function from(
         mixed                              $value,
         ColorSpace|\Stringable|string|null $from     = null,
         array|null                         $fallback = null,
         bool|null                          $throw    = null,
-    ) :array {
-        return Util::to(
+    ) :array|null {
+        /** @var array<int, float|int>|null $result */
+        $result = Util::to(
             value    : $value,
             to       : ColorSpace::OkLch,
             from     : $from,
             fallback : $fallback,
             throw    : $throw,
         );
+        return $result;
     }
 
     public static function stringify(
@@ -104,6 +115,9 @@ abstract class OkLch {
         return Util::isColorString($value, ColorSpace::OkLch);
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function toHexRgb(
         float $lightness = 0,
         float $chroma    = 0,
@@ -113,6 +127,9 @@ abstract class OkLch {
         return Rgb::toHexRgb(... self::toRgb($lightness, $chroma, $hue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toHsl(
         float $lightness = 0,
         float $chroma    = 0,
@@ -122,6 +139,9 @@ abstract class OkLch {
         return Rgb::toHsl(... self::toRgb($lightness, $chroma, $hue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toLinRgb(
         float $lightness = 0,
         float $chroma    = 0,
@@ -131,6 +151,9 @@ abstract class OkLch {
         return XyzD65::toLinRgb(... self::toXyzD65($lightness, $chroma, $hue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toOkLab(
         float $lightness = 0,
         float $chroma    = 0,
@@ -145,6 +168,9 @@ abstract class OkLch {
         ];
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toRgb(
         float $lightness = 0,
         float $chroma    = 0,
@@ -154,6 +180,9 @@ abstract class OkLch {
         return LinRgb::toRgb(... self::toLinRgb($lightness, $chroma, $hue, $opacity));
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public static function toXyzD65(
         float $lightness = 0,
         float $chroma    = 0,
@@ -187,9 +216,9 @@ abstract class OkLch {
 
         // Manually format hex to avoid ColorFactory stringify issues
         // Apply proper boundary checking and rounding
-        $r = max(0, min(255, round($coordinates[0])));
-        $g = max(0, min(255, round($coordinates[1])));
-        $b = max(0, min(255, round($coordinates[2])));
+        $r = max(0, min(255, round((float) $coordinates[0])));
+        $g = max(0, min(255, round((float) $coordinates[1])));
+        $b = max(0, min(255, round((float) $coordinates[2])));
 
         return sprintf('#%02x%02x%02x', $r, $g, $b);
     }
@@ -221,7 +250,7 @@ abstract class OkLch {
             hue: null // Don't let ColorFactory handle hue changes
         );
 
-        $coordinates = array_map(fn ($c) => round($c, 3), $oklchColor->coordinates());
+        $coordinates = array_map(fn ($c) => round((float) $c, 3), $oklchColor->coordinates());
 
         return [
             'l' => $coordinates[0],
@@ -269,7 +298,7 @@ abstract class OkLch {
      *
      * @param mixed $value Input color value
      * @param bool|null $throw Whether to throw exceptions on error
-     * @return array Cleaned OKLCH coordinates
+     * @return array<int, float|int> Cleaned OKLCH coordinates
      */
     public static function cleanEnhanced(mixed $value, bool|null $throw = null): array
     {
@@ -277,20 +306,21 @@ abstract class OkLch {
 
         // Additional boundary checking for better color accuracy
         // Ensure lightness is properly bounded (0-100%)
-        $cleaned[0] = max(0, min(100, $cleaned[0]));
+        $cleaned[0] = max(0, min(100, (float) $cleaned[0]));
 
         // Ensure chroma is non-negative (can be > 1 in OKLCH)
-        $cleaned[1] = max(0, $cleaned[1]);
+        $cleaned[1] = max(0, (float) $cleaned[1]);
 
         // Ensure hue is properly wrapped (0-360°)
-        $cleaned[2] = fmod($cleaned[2], 360);
+        $cleaned[2] = fmod((float) $cleaned[2], 360);
         if ($cleaned[2] < 0) {
             $cleaned[2] += 360;
         }
 
         // Ensure opacity is properly bounded (0-100%)
-        $cleaned[3] = max(0, min(100, $cleaned[3]));
+        $cleaned[3] = max(0, min(100, (float) $cleaned[3]));
 
+        /** @var array<int, float|int> $cleaned */
         return $cleaned;
     }
 }
