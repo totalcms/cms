@@ -2,14 +2,14 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use matthieumastadenis\couleur\ColorFactory;
-use matthieumastadenis\couleur\colors\Hsl;
-use matthieumastadenis\couleur\colors\OkLch;
-use matthieumastadenis\couleur\colors\Rgb;
-use matthieumastadenis\couleur\ColorSpace;
+use TotalCMS\Utils\Color\Couleur\ColorFactory;
+use TotalCMS\Utils\Color\Couleur\colors\Hsl;
+use TotalCMS\Utils\Color\Couleur\colors\OkLch;
+use TotalCMS\Utils\Color\Couleur\colors\Rgb;
+use TotalCMS\Utils\Color\Couleur\ColorSpace;
 
-use function matthieumastadenis\couleur\utils\okLch\oklchChange;
-use function matthieumastadenis\couleur\utils\okLch\oklchToHex;
+use function TotalCMS\Utils\Color\Couleur\utils\okLch\oklchChange;
+use function TotalCMS\Utils\Color\Couleur\utils\okLch\oklchToHex;
 
 /**
  * Color property data.
