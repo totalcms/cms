@@ -28,6 +28,7 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 
 | Code | Native name (UI) | English name | Direction |
 |------|------------------|--------------|-----------|
+| `af_ZA` | Afrikaans | Afrikaans (South Africa) | LTR |
 | `ar` | العربية | Arabic | RTL |
 | `ar_SA` | العربية (SA) | Arabic (Saudi Arabia) | RTL |
 | `bn_BD` | বাংলা | Bengali (Bangladesh) | LTR |
@@ -71,6 +72,7 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 | `pt_PT` | Português (PT) | Portuguese (Portugal) | LTR |
 | `ro_RO` | Română | Romanian (Romania) | LTR |
 | `ru_RU` | Русский | Russian (Russia) | LTR |
+| `sr_RS` | Српски | Serbian (Serbia) | LTR |
 | `sv_SE` | Svenska | Swedish (Sweden) | LTR |
 | `sw_KE` | Kiswahili | Swahili (Kenya) | LTR |
 | `ta_IN` | தமிழ் | Tamil (India) | LTR |

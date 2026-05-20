@@ -50,6 +50,7 @@ final class LocaleRegistry
 	// see the code when configuring. The `english` column carries the full
 	// country name for the docs reference and English-speaking integrators.
 	public const LOCALES = [
+		'af_ZA' => ['label' => 'Afrikaans',                'english' => 'Afrikaans (South Africa)', 'dir' => 'ltr'],
 		'ar'    => ['label' => 'العربية',                  'english' => 'Arabic',                  'dir' => 'rtl'],
 		'ar_SA' => ['label' => 'العربية (SA)',             'english' => 'Arabic (Saudi Arabia)',   'dir' => 'rtl'],
 		'bn_BD' => ['label' => 'বাংলা',                     'english' => 'Bengali (Bangladesh)',    'dir' => 'ltr'],
@@ -96,6 +97,7 @@ final class LocaleRegistry
 		'pt_PT' => ['label' => 'Português (PT)',           'english' => 'Portuguese (Portugal)',   'dir' => 'ltr'],
 		'ro_RO' => ['label' => 'Română',                   'english' => 'Romanian (Romania)',      'dir' => 'ltr'],
 		'ru_RU' => ['label' => 'Русский',                 'english' => 'Russian (Russia)',        'dir' => 'ltr'],
+		'sr_RS' => ['label' => 'Српски',                  'english' => 'Serbian (Serbia)',        'dir' => 'ltr'],
 		'sv_SE' => ['label' => 'Svenska',                  'english' => 'Swedish (Sweden)',        'dir' => 'ltr'],
 		'sw_KE' => ['label' => 'Kiswahili',                'english' => 'Swahili (Kenya)',         'dir' => 'ltr'],
 		'ta_IN' => ['label' => 'தமிழ்',                     'english' => 'Tamil (India)',           'dir' => 'ltr'],
