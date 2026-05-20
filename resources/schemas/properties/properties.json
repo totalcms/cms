@@ -38,6 +38,12 @@
 				"options": {
 					"type" : ["array", "object"],
 					"description": "The options for the field."
+				},
+				"mcp": {
+					"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+					"field"     : "card",
+					"schemaref" : "https://www.totalcms.co/schemas/mcp-property.json",
+					"help"      : "Per-property MCP settings (AI description, expose, filterable, sortable). Optional — defaults apply when unset."
 				}
 			},
 			"required": [

@@ -45,7 +45,7 @@ readonly class McpServerFactory
 
 		$builder = Server::builder()
 			->setServerInfo(
-				name: $this->serverName(),
+				name: $this->config->displayName(),
 				version: Version::number(),
 				description: 'Total CMS site exposed as an MCP server.',
 			)
@@ -58,10 +58,11 @@ readonly class McpServerFactory
 			->setSession($this->sessionStore)
 			->setLogger($this->logger);
 
+		$prefix = $this->toolNamePrefix();
 		foreach ($this->toolRegistry->forPersona($persona) as $tool) {
 			$builder->addTool(
 				handler: $tool->handler,
-				name: $tool->name,
+				name: $prefix . $tool->name,
 				description: $tool->description,
 				annotations: $readOnly,
 				inputSchema: $tool->inputSchema,
@@ -71,18 +72,32 @@ readonly class McpServerFactory
 		return $builder->build();
 	}
 
+	/**
+	 * Resolves the optional tool-name prefix from config. Operators running
+	 * multiple T3 sites in one AI agent can set `mcp.toolPrefix` to namespace
+	 * each site's tools (e.g. `bistro` → `bistro_list_collections`). Returns
+	 * the prefix with a trailing underscore, or empty string if unset.
+	 *
+	 * Validates against the same snake_case regex as the settings schema —
+	 * invalid values silently fall back to empty so a misconfigured setting
+	 * can't break the endpoint.
+	 */
+	private function toolNamePrefix(): string
+	{
+		$prefix = trim((string)($this->config->mcp['toolPrefix'] ?? ''));
+		if ($prefix === '') {
+			return '';
+		}
+
+		if (!preg_match('/^[a-z][a-z0-9_]{0,23}$/', $prefix)) {
+			return '';
+		}
+
+		return $prefix . '_';
+	}
+
 	public function protocolVersion(): string
 	{
 		return self::PROTOCOL_VERSION;
-	}
-
-	private function serverName(): string
-	{
-		$dashboardTitle = (string)(($this->config->dashboard['title'] ?? '') ?: '');
-		if ($dashboardTitle !== '' && $dashboardTitle !== 'Total CMS Admin') {
-			return $dashboardTitle;
-		}
-
-		return $this->config->domain;
 	}
 }

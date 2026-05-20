@@ -6,21 +6,43 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Settings\Repository\InstallationRepository;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 
 final class SettingsFetcherTest extends TestCase
 {
 	private SettingsFetcher $fetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
 	private \PHPUnit\Framework\MockObject\MockObject $installationRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
 
 	protected function setUp(): void
 	{
 		$this->settingsRepository     = $this->createMock(SettingsRepository::class);
 		$this->installationRepository = $this->createMock(InstallationRepository::class);
+		$this->schemaFetcher          = $this->createMock(SettingsSchemaFetcher::class);
+
+		// SettingsFetcher derives the general section's field list from
+		// SettingsSchemaFetcher::getProperties('general'). Mock to return the
+		// canonical 'general' field set so loadSection('general') extracts
+		// the expected keys — matches what general.json defines on disk.
+		$this->schemaFetcher->method('getProperties')->willReturnCallback(
+			static fn (string $section): array => $section === 'general'
+				? [
+					'siteName'           => ['field' => 'text'],
+					'sentry'             => ['field' => 'toggle'],
+					'notfound'           => ['field' => 'text'],
+					'timezone'           => ['field' => 'select'],
+					'maxDownloadSize'    => ['field' => 'number'],
+					'appLogLevel'        => ['field' => 'select'],
+					'extensionsLogLevel' => ['field' => 'select'],
+				]
+				: []
+		);
 
 		$this->fetcher = new SettingsFetcher(
 			$this->settingsRepository,
-			$this->installationRepository
+			$this->installationRepository,
+			$this->schemaFetcher,
 		);
 	}
 

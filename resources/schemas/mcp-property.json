@@ -1,0 +1,51 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/mcp-property.json",
+	"id"          : "mcp-property",
+	"type"        : "object",
+	"description" : "Per-property MCP server settings. Controls how a single field on a schema is exposed to AI agents — its description, whether it's visible in responses, and whether it can be filtered or sorted by.",
+	"formgrid"    : "description description description\nexpose filterable sortable",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "ID",
+			"help"     : "Reserved — required by the schema system but unused for cards.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"readonly" : true
+			}
+		},
+		"description": {
+			"type"        : "string",
+			"label"       : "AI Description",
+			"help"        : "Description shown to AI agents in tool input/output schemas. Falls back to the field's <code>help</code> text, then <code>label</code>, if blank. Write for AI consumption — what does this field semantically mean in the data model (not how to fill it in).",
+			"field"       : "textarea",
+			"placeholder" : "e.g. The post's URL slug, used in the public URL /blog/{slug}",
+			"default"     : "",
+			"settings"    : {
+				"rows" : 3
+			}
+		},
+		"expose": {
+			"type"    : "boolean",
+			"label"   : "Expose to MCP",
+			"help"    : "When disabled, this field is stripped from MCP responses. Use for internal-only fields (supplier costs, internal notes, etc.) that admins set but shouldn't reach AI agents.",
+			"field"   : "checkbox",
+			"default" : true
+		},
+		"filterable": {
+			"type"    : "boolean",
+			"label"   : "Filterable",
+			"help"    : "Whether this field can appear in <code>include</code>/<code>exclude</code> filters on query_collection. When blank, T3 infers from the field type (text/select/toggle/number/date are filterable by default).",
+			"field"   : "checkbox"
+		},
+		"sortable": {
+			"type"    : "boolean",
+			"label"   : "Sortable",
+			"help"    : "Whether this field can appear in the <code>sort</code> parameter on query_collection. When blank, T3 infers from the field type (number/date are sortable by default).",
+			"field"   : "checkbox"
+		}
+	},
+	"required": []
+}

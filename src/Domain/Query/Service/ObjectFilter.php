@@ -66,6 +66,12 @@ readonly class ObjectFilter
 	/**
 	 * Extract filter options from options array.
 	 *
+	 * Empty-string values are treated as "filter not set" — an empty include
+	 * or exclude string would otherwise be parsed as a filter for a field
+	 * with empty name, which never matches anything and silently drops every
+	 * result. Callers wanting "no filter" can pass either an absent key or
+	 * an empty string and get consistent behavior.
+	 *
 	 * @param array<string,string> $options Options array
 	 *
 	 * @return array<string,string> Filter options (include, exclude)
@@ -77,7 +83,7 @@ readonly class ObjectFilter
 		$filterKeys = ['include', 'exclude'];
 
 		foreach ($filterKeys as $key) {
-			if (isset($options[$key])) {
+			if (isset($options[$key]) && trim((string)$options[$key]) !== '') {
 				$filterOptions[$key] = $options[$key];
 			}
 		}

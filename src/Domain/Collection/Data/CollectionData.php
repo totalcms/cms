@@ -60,6 +60,9 @@ class CollectionData
 	/** @var array<string,mixed> */
 	public array $sitemap = [];  // Sitemap card settings (enabled, date, frequency, priority, include, exclude)
 
+	/** @var array<string,mixed> */
+	public array $mcp = [];  // MCP card settings (access, description, resource). Pro+ only — see EditionFeature::MCP_SERVER.
+
 	public function __construct()
 	{
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -120,6 +123,10 @@ class CollectionData
 
 		if ($this->sitemap !== []) {
 			$collection['sitemap'] = $this->sitemap;
+		}
+
+		if ($this->mcp !== []) {
+			$collection['mcp'] = $this->mcp;
 		}
 
 		return $collection;

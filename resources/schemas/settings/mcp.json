@@ -45,6 +45,16 @@
 					"operator": "=="
 				}
 			}
+		},
+		"toolPrefix": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Tool Name Prefix",
+			"help"        : "Optional prefix prepended to every MCP tool name. Useful when running multiple T3 sites in the same AI agent so tools are distinguishable (e.g. <code>bistro</code> produces <code>bistro_list_collections</code>, <code>bistro_query_collection</code>). Leave blank for default names. Snake-case only, max 24 characters. <strong>Note:</strong> changing this requires connected AI clients (Claude Desktop, Inspector, etc.) to reconnect — existing sessions will see stale tool names until they re-initialize.",
+			"placeholder" : "bistro",
+			"default"     : "",
+			"pattern"     : "^[a-z][a-z0-9_]*$",
+			"maxLength"   : 24
 		}
 	}
 }

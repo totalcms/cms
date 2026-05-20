@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\n---Sitemap---\nsitemap sitemap\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\n---Sitemap---\nsitemap sitemap\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -198,6 +198,12 @@
 			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
 			"field"     : "card",
 			"schemaref" : "https://www.totalcms.co/schemas/sitemap-meta.json"
+		},
+		"mcp": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/mcp-collection.json",
+			"help"      : "Configure how this collection is exposed via the MCP server. Pro+ only."
 		},
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",

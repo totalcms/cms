@@ -8,19 +8,24 @@ use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
 /**
  * Admin MCP tool: returns runtime info about the T3 instance.
  *
- * Useful as a smoke test ("is the agent connected to the right site?") and as
- * the canonical example of an admin-only tool that requires an API key.
+ * Acts as the AI agent's "where am I?" tool — surfacing site identity
+ * (name + URL), runtime (version, PHP, edition, environment), localization
+ * (timezone, locale), and installed extensions. Useful as a smoke test
+ * ("is the agent connected to the right site?") and as the canonical example
+ * of an admin-only tool that requires an API key.
  */
 readonly class SiteInfoTool
 {
 	public function __construct(
 		private EditionFeatureService $editionFeatures,
 		private ExtensionManager $extensionManager,
+		private Config $config,
 	) {
 	}
 
@@ -28,7 +33,7 @@ readonly class SiteInfoTool
 	{
 		$registry->register(new McpToolDefinition(
 			name: 'site_info',
-			description: 'Returns runtime information about this Total CMS instance: version, edition, PHP version, and installed extensions. Useful for verifying the agent is connected to the expected site.',
+			description: 'Returns runtime information about this Total CMS instance: site name + URL, version, edition, environment, PHP version, timezone, locale, and installed extensions. Useful for verifying the agent is connected to the expected site.',
 			access: 'admin',
 			handler: $this->handler(...),
 			inputSchema: [
@@ -55,10 +60,15 @@ readonly class SiteInfoTool
 		}
 
 		return [
-			't3_version' => Version::number(),
-			'edition'    => $this->editionFeatures->getEdition()->value,
-			'php'        => PHP_VERSION,
-			'extensions' => $extensions,
+			'site_name'   => $this->config->displayName(),
+			'site_url'    => $this->config->url,
+			'environment' => $this->config->env,
+			'version'     => Version::number(),
+			'edition'     => $this->editionFeatures->getEdition()->value,
+			'php'         => PHP_VERSION,
+			'timezone'    => $this->config->timezone,
+			'locale'      => $this->config->locale,
+			'extensions'  => $extensions,
 		];
 	}
 }

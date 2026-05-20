@@ -11,14 +11,20 @@
 			"label"   : "Draft",
 			"help"    : "Mark this post as a draft",
 			"field"   : "checkbox",
-			"default" : false
+			"default" : false,
+			"mcp"     : {
+				"description": "Whether the post is a draft. Drafts are auto-hidden from anonymous MCP callers; admin callers see them by default."
+			}
 		},
 		"featured": {
 			"type"    : "boolean",
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
-			"factory" : "boolean"
+			"factory" : "boolean",
+			"mcp"     : {
+				"description": "Whether the post is featured (typically promoted on the homepage or in highlighted listings)."
+			}
 		},
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -28,6 +34,9 @@
 			"factory"  : "slug",
 			"settings" : {
 				"autogen": "${title}"
+			},
+			"mcp"      : {
+				"description": "Unique URL-safe slug identifying the post. Appears in the post's public URL (e.g. /blog/{id})."
 			}
 		},
 		"title": {
@@ -35,7 +44,10 @@
 			"label"   : "Title",
 			"help"    : "Blog Post title",
 			"field"   : "text",
-			"factory" : "catchPhrase"
+			"factory" : "catchPhrase",
+			"mcp"     : {
+				"description": "Display title of the post, shown in listings and as the page H1."
+			}
 		},
 		"date": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
@@ -43,7 +55,10 @@
 			"help"    : "Blog Post date",
 			"field"   : "date",
 			"default" : "now",
-			"factory" : "iso8601"
+			"factory" : "iso8601",
+			"mcp"     : {
+				"description": "Publication date of the post (ISO 8601). Use for chronological filtering and sorting."
+			}
 		},
 		"author": {
 			"type"     : "string",
@@ -53,6 +68,9 @@
 			"factory"  : "name",
 			"settings" : {
 				"propertyOptions": true
+			},
+			"mcp"      : {
+				"description": "Display name of the post's author."
 			}
 		},
 		"summary": {
@@ -60,28 +78,40 @@
 			"label"   : "Summary",
 			"help"    : "Blog Post summary",
 			"field"   : "styledtext",
-			"factory" : "styledtext(1,3,false)"
+			"factory" : "styledtext(1,3,false)",
+			"mcp"     : {
+				"description": "Short summary or excerpt of the post, shown in listings and meta descriptions. Rich text — request format=markdown for token-efficient output."
+			}
 		},
 		"media": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
 			"label"   : "Media",
 			"help"    : "Media URL for this post",
 			"field"   : "url",
-			"factory" : "url"
+			"factory" : "url",
+			"mcp"     : {
+				"description": "Optional URL to associated media (video embed, podcast episode, etc.). Empty when the post has no media."
+			}
 		},
 		"content": {
 			"type"    : "string",
 			"label"   : "Content",
 			"help"    : "Main blog post content",
 			"field"   : "styledtext",
-			"factory" : "styledtext(1,8,true)"
+			"factory" : "styledtext(1,8,true)",
+			"mcp"     : {
+				"description": "Main body content of the post. Rich text — request format=markdown for token-efficient output or format=text for plain text."
+			}
 		},
 		"extra": {
 			"type"    : "string",
 			"label"   : "Extra Content",
 			"help"    : "Extra content area for this post",
 			"field"   : "styledtext",
-			"factory" : "styledtext(0,3,true)"
+			"factory" : "styledtext(0,3,true)",
+			"mcp"     : {
+				"description": "Secondary content area for sidebars, footnotes, or supplementary material. Often empty."
+			}
 		},
 		"categories": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
@@ -91,6 +121,10 @@
 			"factory"  : "tags",
 			"settings" : {
 				"propertyOptions": true
+			},
+			"mcp"      : {
+				"description": "Categories the post belongs to (array of strings). Filterable with include='categories:tech' to find posts in a category.",
+				"filterable" : true
 			}
 		},
 		"tags": {
@@ -101,6 +135,10 @@
 			"factory"  : "tags",
 			"settings" : {
 				"propertyOptions": true
+			},
+			"mcp"      : {
+				"description": "Tags applied to the post (array of strings). Filterable with include='tags:php'.",
+				"filterable" : true
 			}
 		},
 		"image": {
@@ -108,14 +146,20 @@
 			"label"   : "Image",
 			"help"    : "Main image for this post",
 			"field"   : "image",
-			"factory" : "imageShapes(1920,1080)"
+			"factory" : "imageShapes(1920,1080)",
+			"mcp"     : {
+				"description": "Hero/cover image for the post. Object includes name, alt text, width, height. Use the URL builder helpers to construct a fetchable URL."
+			}
 		},
 		"gallery": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/gallery.json",
 			"label"   : "Gallery",
 			"help"    : "Gallery of images for this post",
 			"field"   : "gallery",
-			"factory" : "galleryShapes(5,1920,1080)"
+			"factory" : "galleryShapes(5,1920,1080)",
+			"mcp"     : {
+				"description": "Image gallery for the post (array of image objects). Empty when the post has no gallery."
+			}
 		},
 		"updated": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
@@ -126,6 +170,9 @@
 			"settings" : {
 				"onUpdate": true,
 				"readonly": true
+			},
+			"mcp"      : {
+				"description": "Auto-set timestamp of the last save (ISO 8601). System-managed; not editable by users."
 			}
 		},
 		"created": {
@@ -137,6 +184,9 @@
 			"settings" : {
 				"onCreate": true,
 				"readonly": true
+			},
+			"mcp"      : {
+				"description": "Auto-set timestamp when the post was first created (ISO 8601). System-managed; immutable."
 			}
 		}
 	},

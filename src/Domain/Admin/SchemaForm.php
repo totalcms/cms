@@ -240,6 +240,19 @@ class SchemaForm extends TotalForm
 	 */
 	protected function buildFieldOptions(string $name, array $options = []): array
 	{
+		// Sub-fields of card/deck composites bring their own complete config
+		// from the card's sub-schema iteration — skip the parent-schema lookup
+		// and (further down) the schemaObjectData value pull, otherwise a
+		// sub-field named `description` would inherit the parent schema's
+		// `description` property settings AND value. Matches the guard pattern
+		// in ObjectForm::buildFieldOptions.
+		if (isset($options['subfield']) && $options['subfield'] === true) {
+			$options['name'] = $name;
+			$options['form'] = $this;
+
+			return $options;
+		}
+
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];
 		$defaults = TotalForm::filterFieldProperties($defaults);

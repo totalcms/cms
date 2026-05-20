@@ -62,6 +62,14 @@ $settings['i18n'] = [
 ];
 
 $settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unknown';
+
+// Human-readable site name (e.g. "Joe's Bistro"). When blank, T3 falls back
+// to dashboard.title (if customized) and then $domain via Config::displayName().
+// Used by the MCP server's serverInfo and site_info tool; future features
+// (RSS, sitemap, setup wizard, email From, PWA manifest, JumpStart filenames)
+// adopt the same helper. See docs/planning/site-name.md.
+$settings['siteName'] = '';
+
 $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
 					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
@@ -370,11 +378,14 @@ $settings['builder'] = [
 // When `enabled` is false the endpoint returns 404 and discovery reports disabled.
 // `publicAccess` is the master switch for the anonymous persona; individual collections
 // must additionally opt in via their `mcp.access` schema setting (Phase 1).
+// `toolPrefix` is an optional namespace prepended to every tool name — useful when
+// running multiple T3 sites in the same AI agent (e.g. 'bistro' → bistro_list_collections).
 $settings['mcp'] = [
 	'enabled'           => true,
 	'publicAccess'      => false,
 	'allowedOrigins'    => [],
 	'publicIpPerMinute' => 60,
+	'toolPrefix'        => '',
 ];
 
 // https://www.php.net/manual/en/timezones.php

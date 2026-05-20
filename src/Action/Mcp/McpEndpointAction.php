@@ -12,6 +12,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Service\McpAuth;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -32,6 +33,7 @@ readonly class McpEndpointAction
 	public function __construct(
 		private McpServerFactory $serverFactory,
 		private McpAuth $mcpAuth,
+		private PersonaContext $personaContext,
 		private EditionFeatureService $editionFeatures,
 		private JsonRenderer $renderer,
 		private Config $config,
@@ -63,6 +65,11 @@ readonly class McpEndpointAction
 				'error' => ['message' => $e->getMessage()],
 			], 401);
 		}
+
+		// Stash the persona so individual tool handlers can read it during
+		// dispatch. Must happen before build() since the SDK invokes handlers
+		// synchronously from inside the server->run() call below.
+		$this->personaContext->set($persona);
 
 		$server    = $this->serverFactory->build($persona);
 		$transport = new StreamableHttpTransport($request);

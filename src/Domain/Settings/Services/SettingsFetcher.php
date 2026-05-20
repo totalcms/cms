@@ -16,6 +16,7 @@ readonly class SettingsFetcher
 	public function __construct(
 		private SettingsRepository $settingsRepository,
 		private InstallationRepository $installationRepository,
+		private SettingsSchemaFetcher $schemaFetcher,
 	) {
 	}
 
@@ -54,12 +55,13 @@ readonly class SettingsFetcher
 		// All other settings come from settings.json
 		$settings = $this->loadSettings();
 
-		// General settings are stored at the top level, not under 'general' key
+		// General settings are stored at the top level of settings.json, not
+		// under a 'general' key. The set of "general" fields is whatever the
+		// general settings schema declares — derive dynamically so adding a
+		// new field to general.json doesn't require updating this list. Falls
+		// back to a safe minimal set if the schema can't be loaded.
 		if ($section === 'general') {
-			// Extract only the general settings fields from top level.
-			// Note: `locale` moved out of `general` into the `i18n` section
-			// in 3.5 — it now lives under `$settings['i18n']['locale']`.
-			$generalFields   = ['sentry', 'notfound', 'timezone'];
+			$generalFields   = array_keys($this->schemaFetcher->getProperties('general'));
 			$generalSettings = [];
 			foreach ($generalFields as $field) {
 				if (isset($settings[$field])) {

@@ -11,6 +11,13 @@
 			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
 			"default" : true
 		},
+		"siteName": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Site Name",
+			"help"        : "Human-readable name for your site (e.g. 'Joe's Bistro'). Used in the MCP server identity, the <code>site_info</code> MCP tool, and other public-facing surfaces as they adopt it. When blank, T3 falls back to the admin dashboard title and then the domain.",
+			"placeholder" : "Joe's Bistro"
+		},
 		"notfound": {
 			"type"        : "string",
 			"field"       : "text",

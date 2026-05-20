@@ -37,6 +37,8 @@ class SchemaData
 		'gallery',
 		'image',
 		'mailer',
+		'mcp-collection',
+		'mcp-property',
 		'number',
 		'builder-page',
 		'playground',

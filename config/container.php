@@ -2,6 +2,8 @@
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mcp\Server\Session\FileSessionStore;
+use Mcp\Server\Session\SessionStoreInterface as McpSessionStoreInterface;
 use Middlewares\TrailingSlash;
 use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -24,6 +26,7 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\AuthTokenService;
@@ -104,6 +107,10 @@ use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
+use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Mcp\Tools\Admin\SiteInfoTool;
+use TotalCMS\Domain\Mcp\Tools\Content\HardcodedBlogQueryTool;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -1202,9 +1209,12 @@ return [
 	SettingsFetcher::class => fn (ContainerInterface $container): SettingsFetcher => new SettingsFetcher(
 		$container->get(SettingsRepository::class),
 		$container->get(InstallationRepository::class),
+		$container->get(SettingsSchemaFetcher::class),
 	),
 
-	SettingsValidator::class => fn (ContainerInterface $container): SettingsValidator => new SettingsValidator(),
+	SettingsValidator::class => fn (ContainerInterface $container): SettingsValidator => new SettingsValidator(
+		$container->get(SettingsRepository::class),
+	),
 
 	SettingsSaver::class => fn (ContainerInterface $container): SettingsSaver => new SettingsSaver(
 		$container->get(SettingsFetcher::class),
@@ -1458,11 +1468,11 @@ return [
 	// ToolRegistry is a singleton; each tool's register() method is invoked at
 	// container build time so the registry is fully populated before any
 	// request reaches McpServerFactory.
-	TotalCMS\Domain\Mcp\Service\ToolRegistry::class => function (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\ToolRegistry {
-		$registry = new TotalCMS\Domain\Mcp\Service\ToolRegistry();
+	ToolRegistry::class => function (ContainerInterface $container): ToolRegistry {
+		$registry = new ToolRegistry();
 
-		$container->get(TotalCMS\Domain\Mcp\Tools\Admin\SiteInfoTool::class)->register($registry);
-		$container->get(TotalCMS\Domain\Mcp\Tools\Content\HardcodedBlogQueryTool::class)->register($registry);
+		$container->get(SiteInfoTool::class)->register($registry);
+		$container->get(HardcodedBlogQueryTool::class)->register($registry);
 
 		return $registry;
 	},
@@ -1471,24 +1481,24 @@ return [
 	// state — same conceptual shape as PHP sessions, which T3 also keeps under
 	// tmpdir. Not domain data, so doesn't belong in tcms-data/.system. Operator
 	// "clear cache" flows don't touch this; session expiry handles cleanup.
-	Mcp\Server\Session\SessionStoreInterface::class => function (ContainerInterface $container): Mcp\Server\Session\SessionStoreInterface {
+	McpSessionStoreInterface::class => function (ContainerInterface $container): McpSessionStoreInterface {
 		$dir = $container->get(Config::class)->tmpdir . '/mcp-sessions';
 		if (!is_dir($dir)) {
 			@mkdir($dir, 0755, true);
 		}
 
-		return new Mcp\Server\Session\FileSessionStore($dir, 3600);
+		return new FileSessionStore($dir, 3600);
 	},
 
-	TotalCMS\Domain\Mcp\Service\McpServerFactory::class => fn (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\McpServerFactory => new TotalCMS\Domain\Mcp\Service\McpServerFactory(
-		$container->get(TotalCMS\Domain\Mcp\Service\ToolRegistry::class),
+	// McpServerFactory needs an explicit definition for the custom logger
+	// handler ("mcp.log" via LoggerFactory). McpAuth, McpDescriptionResolver,
+	// and McpSchemaResolver are autowired — their dependencies (Config,
+	// ApiKeyAuthenticator, SchemaFetcher, etc.) all resolve through the
+	// container without custom factory logic.
+	McpServerFactory::class => fn (ContainerInterface $container): McpServerFactory => new McpServerFactory(
+		$container->get(ToolRegistry::class),
 		$container->get(Config::class),
-		$container->get(Mcp\Server\Session\SessionStoreInterface::class),
+		$container->get(McpSessionStoreInterface::class),
 		$container->get(LoggerFactory::class)->addFileHandler('mcp.log')->createLogger('mcp'),
-	),
-
-	TotalCMS\Domain\Mcp\Service\McpAuth::class => fn (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\McpAuth => new TotalCMS\Domain\Mcp\Service\McpAuth(
-		$container->get(TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator::class),
-		$container->get(Config::class),
 	),
 ];
