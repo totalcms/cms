@@ -326,6 +326,8 @@ return [
 	'settings.imageworks_desc'         => 'Elaborazione immagini e filigrane',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'Invio email e limitazione della frequenza',
+	'settings.mcp'                     => 'Server MCP',
+	'settings.mcp_desc'                => 'Endpoint Model Context Protocol per agenti IA',
 	'settings.pushnotif'               => 'Notifiche push',
 	'settings.pushnotif_desc'          => 'Configurazione del servizio di notifiche push',
 	'settings.presets'                 => 'Preset impostazioni',

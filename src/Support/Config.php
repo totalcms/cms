@@ -55,6 +55,8 @@ class Config
 	public string $docroot = '';
 	/** @var array<string,mixed> */
 	public array $builder = [];
+	/** @var array<string,mixed> */
+	public array $mcp = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -99,6 +101,7 @@ class Config
 		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
 		$this->pushnotif          = is_array($settings['pushnotif'] ?? null) ? $settings['pushnotif'] : [];
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
+		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

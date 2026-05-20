@@ -25,6 +25,7 @@ enum EditionFeature: string
 
 	// API features
 	case EXTERNAL_REST_API = 'external_rest_api';
+	case MCP_SERVER        = 'mcp_server';
 
 	// Media features
 	case QR_CODES = 'qr_codes';
@@ -66,6 +67,7 @@ enum EditionFeature: string
 			self::WEBHOOK_ACTIONS      => 'Webhook Form Actions',
 			self::PUSHOVER_ACTIONS     => 'Pushover Form Actions',
 			self::EXTERNAL_REST_API    => 'External REST API',
+			self::MCP_SERVER           => 'MCP Server',
 			self::QR_CODES             => 'QR Codes',
 			self::BARCODES             => 'Barcodes',
 			self::TEMPLATES            => 'Templates',
@@ -106,6 +108,7 @@ enum EditionFeature: string
 			self::WEBHOOK_ACTIONS,
 			self::PUSHOVER_ACTIONS,
 			self::EXTERNAL_REST_API,
+			self::MCP_SERVER,
 			self::BARCODES,
 			self::WHITELABEL_PRO,
 			self::DATA_VIEWS,

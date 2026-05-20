@@ -1453,4 +1453,43 @@ return [
 		$container->get(AccessManager::class),
 		$container->get(Config::class),
 	),
+
+	// MCP (Model Context Protocol) Server — Phase 0 walking skeleton.
+	// ToolRegistry is a singleton; each tool's register() method is invoked at
+	// container build time so the registry is fully populated before any
+	// request reaches McpServerFactory.
+	TotalCMS\Domain\Mcp\Service\ToolRegistry::class => function (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\ToolRegistry {
+		$registry = new TotalCMS\Domain\Mcp\Service\ToolRegistry();
+
+		$container->get(TotalCMS\Domain\Mcp\Tools\Admin\SiteInfoTool::class)->register($registry);
+		$container->get(TotalCMS\Domain\Mcp\Tools\Content\HardcodedBlogQueryTool::class)->register($registry);
+
+		return $registry;
+	},
+
+	// MCP session store. Sessions are short-lived (1h TTL), per-client transport
+	// state — same conceptual shape as PHP sessions, which T3 also keeps under
+	// tmpdir. Not domain data, so doesn't belong in tcms-data/.system. Operator
+	// "clear cache" flows don't touch this; session expiry handles cleanup.
+	Mcp\Server\Session\SessionStoreInterface::class => function (ContainerInterface $container): Mcp\Server\Session\SessionStoreInterface {
+		$dir = $container->get(Config::class)->tmpdir . '/mcp-sessions';
+		if (!is_dir($dir)) {
+			@mkdir($dir, 0755, true);
+		}
+
+		return new Mcp\Server\Session\FileSessionStore($dir, 3600);
+	},
+
+	TotalCMS\Domain\Mcp\Service\McpServerFactory::class => fn (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\McpServerFactory => new TotalCMS\Domain\Mcp\Service\McpServerFactory(
+		$container->get(TotalCMS\Domain\Mcp\Service\ToolRegistry::class),
+		$container->get(Config::class),
+		$container->get(Mcp\Server\Session\SessionStoreInterface::class),
+		$container->get(LoggerFactory::class)->addFileHandler('mcp.log')->createLogger('mcp'),
+	),
+
+	TotalCMS\Domain\Mcp\Service\McpAuth::class => fn (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\McpAuth => new TotalCMS\Domain\Mcp\Service\McpAuth(
+		$container->get(TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator::class),
+		$container->get(TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository::class),
+		$container->get(Config::class),
+	),
 ];

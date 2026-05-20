@@ -326,6 +326,8 @@ return [
 	'settings.imageworks_desc'         => 'Bildverarbeitung und Wasserzeichen',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'E-Mail-Versand und Ratenbegrenzung',
+	'settings.mcp'                     => 'MCP-Server',
+	'settings.mcp_desc'                => 'Model-Context-Protocol-Endpunkt für KI-Agenten',
 	'settings.pushnotif'               => 'Push-Benachrichtigungen',
 	'settings.pushnotif_desc'          => 'Konfiguration des Push-Benachrichtigungsdienstes',
 	'settings.presets'                 => 'Einstellungs-Vorlagen',

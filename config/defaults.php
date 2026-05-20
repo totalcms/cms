@@ -365,6 +365,18 @@ $settings['builder'] = [
 	'assetsPath'      => 'assets',        // Public assets directory relative to docroot
 ];
 
+// MCP (Model Context Protocol) Server
+// Exposes /mcp and /.well-known/mcp.json. Pro+ only — see EditionFeature::MCP_SERVER.
+// When `enabled` is false the endpoint returns 404 and discovery reports disabled.
+// `publicAccess` is the master switch for the anonymous persona; individual collections
+// must additionally opt in via their `mcp.access` schema setting (Phase 1).
+$settings['mcp'] = [
+	'enabled'           => true,
+	'publicAccess'      => false,
+	'allowedOrigins'    => [],
+	'publicIpPerMinute' => 60,
+];
+
 // https://www.php.net/manual/en/timezones.php
 // DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();

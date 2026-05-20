@@ -216,7 +216,7 @@ For every collection with `mcpResource: true` (defaults true for `public` and `a
 - `tcms://blog/my-post-2026` — individual post as a fetchable resource
 - `tcms://products/sku-12345` — individual product
 
-When i18n lands (3.4), URIs become locale-prefixed: `tcms://en/blog/my-post`. Until then, the default locale is implicit.
+When i18n lands (3.6), URIs become locale-prefixed: `tcms://en/blog/my-post`. Until then, the default locale is implicit.
 
 Resources are how AI agents bookmark, reference, and re-fetch content across conversations. Tools are imperative; resources are declarative. A content site needs both — the brief only had tools.
 
@@ -301,7 +301,7 @@ Markdown is the default because it's the highest-quality input for LLM reasoning
 
 ### i18n Integration (Forward-Compatible from Day One)
 
-i18n ships in 3.4, after MCP in 3.3. To avoid a painful retrofit, MCP is designed locale-aware from the start even though i18n isn't there yet:
+i18n ships in 3.6, after MCP in 3.5. To avoid a painful retrofit, MCP is designed locale-aware from the start even though i18n isn't there yet:
 
 - All auto-generated tools accept an optional `locale` parameter
 - Resource URIs reserve a locale segment: `tcms://blog/post-1` works now; `tcms://en-US/blog/post-1` will work post-i18n
@@ -356,11 +356,11 @@ MCP spec is evolving. Strategy:
 
 ## Phases
 
-### Phase 1 — Core MCP Server (3.3 ship)
+### Phase 1 — Core MCP Server (3.5 ship)
 
 **Effort: ~3–4 weeks**
 
-This is the headline of 3.3. Must ship enough that "every T3 site is an MCP server" is true, with both developer and consumer surfaces working.
+This is the headline of 3.5. Must ship enough that "every T3 site is an MCP server" is true, with both developer and consumer surfaces working.
 
 - `POST /mcp` endpoint with MCP protocol 2025-06-18 compliance
 - `GET /.well-known/mcp.json` discovery
@@ -432,13 +432,13 @@ This is the headline of 3.3. Must ship enough that "every T3 site is an MCP serv
 
 | Phase | Effort | Cumulative | Target |
 |---|---|---|---|
-| 1. Core MCP server | 3–4 weeks | 4 weeks | **3.3 ship** |
-| 2. Resources + polish | 2 weeks | 6 weeks | 3.3.x or 3.4 |
-| 3. Custom tools + SSE | 2 weeks | 8 weeks | 3.4 |
-| 4. OAuth + observability | 2–3 weeks | 11 weeks | 3.4 or 3.5 |
+| 1. Core MCP server | 3–4 weeks | 4 weeks | **3.5 ship** |
+| 2. Resources + polish | 2 weeks | 6 weeks | 3.5.x  |
+| 3. Custom tools + SSE | 2 weeks | 8 weeks | 3.5 |
+| 4. OAuth + observability | 2–3 weeks | 11 weeks | 3.5 |
 | 5. Semantic search + advanced | 2–3 weeks | 14 weeks | 3.5+ |
 
-**Total: ~11–14 weeks** for all phases. Phase 1 alone (~4 weeks) is the 3.3 headline and delivers the marketable claim.
+**Total: ~11–14 weeks** for all phases. Phase 1 alone (~4 weeks) is the 3.5 headline and delivers the marketable claim.
 
 ## T3-Side Changes Summary
 
@@ -527,5 +527,5 @@ Restaurant owner clicks "Connect Joe's Bistro to Claude" in Claude Desktop. OAut
 - Rate limits are enforced per-IP for public, per-token for authenticated, per-tool for expensive operations, with a global kill switch.
 - Schema field documentation directly drives MCP tool descriptions, creating a strong incentive to document schemas well.
 - Disabling MCP entirely (`mcp.enabled: false`) returns the site to non-MCP behavior with no other effects.
-- When i18n ships in 3.4, the existing locale parameter on tools and the reserved locale segment in resource URIs start doing real work — no breaking changes for existing clients.
+- When i18n ships in 3.6, the existing locale parameter on tools and the reserved locale segment in resource URIs start doing real work — no breaking changes for existing clients.
 - T3's market positioning becomes "the flat-file CMS where every site is an MCP server out of the box." Marketable, defensible, and true.

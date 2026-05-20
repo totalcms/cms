@@ -326,6 +326,8 @@ return [
 	'settings.imageworks_desc'         => 'Procesamiento de imágenes y marcas de agua',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'Envío de Mailer y límites de velocidad',
+	'settings.mcp'                     => 'Servidor MCP',
+	'settings.mcp_desc'                => 'Endpoint del Model Context Protocol para agentes de IA',
 	'settings.pushnotif'               => 'Notificaciones Push',
 	'settings.pushnotif_desc'          => 'Configuración del servicio de notificaciones push',
 	'settings.presets'                 => 'Preajustes de configuración',

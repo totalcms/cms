@@ -326,6 +326,8 @@ return [
 	'settings.imageworks_desc'         => 'Image processing and watermarks',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'Email sending and rate limiting',
+	'settings.mcp'                     => 'MCP Server',
+	'settings.mcp_desc'                => 'Model Context Protocol endpoint for AI agents',
 	'settings.pushnotif'               => 'Push Notifications',
 	'settings.pushnotif_desc'          => 'Push notification service configuration',
 	'settings.presets'                 => 'Setting Presets',

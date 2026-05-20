@@ -326,6 +326,8 @@ return [
 	'settings.imageworks_desc'         => 'Beeldverwerking en watermerken',
 	'settings.mailer'                  => 'Mailer',
 	'settings.mailer_desc'             => 'E-mailverzending en snelheidslimiet',
+	'settings.mcp'                     => 'MCP-server',
+	'settings.mcp_desc'                => 'Model Context Protocol-eindpunt voor AI-agenten',
 	'settings.pushnotif'               => 'Pushmeldingen',
 	'settings.pushnotif_desc'          => 'Configuratie van pushmeldingservices',
 	'settings.presets'                 => 'Instellingspresets',
