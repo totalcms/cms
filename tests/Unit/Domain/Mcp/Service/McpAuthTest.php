@@ -7,7 +7,6 @@ namespace Tests\Unit\Domain\Mcp\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
-use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Exception\McpAuthException;
@@ -17,13 +16,11 @@ use TotalCMS\Support\Config;
 final class McpAuthTest extends TestCase
 {
 	private \PHPUnit\Framework\MockObject\MockObject $authenticator;
-	private \PHPUnit\Framework\MockObject\MockObject $repository;
 	private Config $config;
 
 	protected function setUp(): void
 	{
 		$this->authenticator = $this->createMock(ApiKeyAuthenticator::class);
-		$this->repository    = $this->createMock(ApiKeyRepository::class);
 
 		// Config can't be createMock'd reliably because its constructor expects
 		// a fully-populated settings array; bypass it.
@@ -33,44 +30,27 @@ final class McpAuthTest extends TestCase
 
 	private function auth(): McpAuth
 	{
-		return new McpAuth($this->authenticator, $this->repository, $this->config);
+		return new McpAuth($this->authenticator, $this->config);
 	}
 
-	private function requestWithoutKey(): ServerRequestInterface
+	private function makeApiKey(): ApiKeyData
 	{
-		$request = $this->createMock(ServerRequestInterface::class);
-		$this->authenticator->method('hasApiKeyHeader')->with($request)->willReturn(false);
-
-		return $request;
-	}
-
-	private function requestWithBearer(string $token): ServerRequestInterface
-	{
-		$request = $this->createMock(ServerRequestInterface::class);
-		$this->authenticator->method('hasApiKeyHeader')->with($request)->willReturn(true);
-		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
-
-		return $request;
-	}
-
-	private function requestWithXApiKey(string $key): ServerRequestInterface
-	{
-		$request = $this->createMock(ServerRequestInterface::class);
-		$this->authenticator->method('hasApiKeyHeader')->with($request)->willReturn(true);
-		$request->method('getHeaderLine')->willReturnMap([
-			['Authorization', ''],
-			['X-API-Key', $key],
+		return new ApiKeyData([
+			'id'      => 'k1',
+			'name'    => 'Test',
+			'key'     => 'tcms_valid',
+			'created' => '2025-01-01T00:00:00Z',
+			'scopes'  => ['methods' => ['POST'], 'paths' => ['/mcp']],
 		]);
-		$request->method('hasHeader')->with('X-API-Key')->willReturn(true);
-
-		return $request;
 	}
 
 	public function testNoKeyAndPublicAccessOnReturnsPublicPersona(): void
 	{
 		$this->config->mcp = ['publicAccess' => true];
+		$request           = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(false);
 
-		$persona = $this->auth()->resolvePersona($this->requestWithoutKey());
+		$persona = $this->auth()->resolvePersona($request);
 
 		$this->assertSame(McpPersona::PUBLIC_, $persona);
 	}
@@ -78,11 +58,13 @@ final class McpAuthTest extends TestCase
 	public function testNoKeyAndPublicAccessOffThrows(): void
 	{
 		$this->config->mcp = ['publicAccess' => false];
+		$request           = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(false);
 
 		$this->expectException(McpAuthException::class);
 		$this->expectExceptionMessage('Anonymous access is disabled');
 
-		$this->auth()->resolvePersona($this->requestWithoutKey());
+		$this->auth()->resolvePersona($request);
 	}
 
 	public function testNoKeyAndPublicAccessMissingDefaultsToDeny(): void
@@ -90,85 +72,66 @@ final class McpAuthTest extends TestCase
 		// Defensive: an MCP block missing publicAccess entirely should deny,
 		// not silently allow public.
 		$this->config->mcp = [];
+		$request           = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(false);
 
 		$this->expectException(McpAuthException::class);
 
-		$this->auth()->resolvePersona($this->requestWithoutKey());
+		$this->auth()->resolvePersona($request);
 	}
 
-	public function testValidBearerTokenResolvesToAdmin(): void
+	public function testValidKeyWithMcpScopeResolvesToAdmin(): void
 	{
-		$apiKey = new ApiKeyData([
-			'id'      => 'k1',
-			'name'    => 'Test',
-			'key'     => 'tcms_valid',
-			'created' => '2025-01-01T00:00:00Z',
-			'scopes'  => ['methods' => [], 'paths' => []],
-		]);
-		$this->repository->method('findByKey')->with('tcms_valid')->willReturn($apiKey);
+		// authenticate() returns ApiKeyData when the key is valid AND its
+		// scopes cover the actual request method + path. McpAuth treats that
+		// as proof of admin authority — no further checks.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->with($request)->willReturn($this->makeApiKey());
 
-		$persona = $this->auth()->resolvePersona($this->requestWithBearer('tcms_valid'));
-
-		$this->assertSame(McpPersona::ADMIN, $persona);
-	}
-
-	public function testValidXApiKeyResolvesToAdmin(): void
-	{
-		$apiKey = new ApiKeyData([
-			'id'      => 'k2',
-			'name'    => 'Test2',
-			'key'     => 'tcms_xkey',
-			'created' => '2025-01-01T00:00:00Z',
-			'scopes'  => ['methods' => [], 'paths' => []],
-		]);
-		$this->repository->method('findByKey')->with('tcms_xkey')->willReturn($apiKey);
-
-		$persona = $this->auth()->resolvePersona($this->requestWithXApiKey('tcms_xkey'));
+		$persona = $this->auth()->resolvePersona($request);
 
 		$this->assertSame(McpPersona::ADMIN, $persona);
 	}
 
 	public function testInvalidKeyThrows(): void
 	{
-		$this->repository->method('findByKey')->willReturn(null);
+		// authenticate() returns null for both "key doesn't exist" and "valid
+		// key without /mcp scope". McpAuth collapses both into one error since
+		// they're functionally identical for the caller.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->with($request)->willReturn(null);
 
 		$this->expectException(McpAuthException::class);
-		$this->expectExceptionMessage('Invalid API key');
+		$this->expectExceptionMessage('insufficient permissions for MCP access');
 
-		$this->auth()->resolvePersona($this->requestWithBearer('tcms_bogus'));
+		$this->auth()->resolvePersona($request);
 	}
 
-	public function testEmptyBearerTokenThrows(): void
+	public function testKeyWithoutMcpScopeIsRejected(): void
 	{
-		// "Bearer " with nothing after — has the header, has no actual key.
+		// A key scoped only to /collections/blog should not unlock MCP —
+		// expressed via authenticate() returning null because the scope check
+		// fails inside the standard pipeline.
 		$request = $this->createMock(ServerRequestInterface::class);
-		$this->authenticator->method('hasApiKeyHeader')->with($request)->willReturn(true);
-		$request->method('getHeaderLine')->willReturnMap([
-			['Authorization', ''],
-			['X-API-Key', ''],
-		]);
-		$request->method('hasHeader')->with('X-API-Key')->willReturn(true);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->with($request)->willReturn(null);
 
 		$this->expectException(McpAuthException::class);
-		$this->expectExceptionMessage('Empty API key supplied');
 
 		$this->auth()->resolvePersona($request);
 	}
 
 	public function testValidKeyBypassesPublicAccessFlag(): void
 	{
-		// Even with publicAccess off, a valid key still authenticates.
+		// Even with publicAccess off, a valid key still authenticates as admin.
 		$this->config->mcp = ['publicAccess' => false];
-		$apiKey            = new ApiKeyData([
-			'id'      => 'k3',
-			'name'    => 'Test3',
-			'key'     => 'tcms_admin',
-			'created' => '2025-01-01T00:00:00Z',
-			'scopes'  => ['methods' => [], 'paths' => []],
-		]);
-		$this->repository->method('findByKey')->willReturn($apiKey);
+		$request           = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->with($request)->willReturn($this->makeApiKey());
 
-		$persona = $this->auth()->resolvePersona($this->requestWithBearer('tcms_admin'));
+		$persona = $this->auth()->resolvePersona($request);
 
 		$this->assertSame(McpPersona::ADMIN, $persona);
 	}

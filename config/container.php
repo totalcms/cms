@@ -1489,7 +1489,6 @@ return [
 
 	TotalCMS\Domain\Mcp\Service\McpAuth::class => fn (ContainerInterface $container): TotalCMS\Domain\Mcp\Service\McpAuth => new TotalCMS\Domain\Mcp\Service\McpAuth(
 		$container->get(TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator::class),
-		$container->get(TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository::class),
 		$container->get(Config::class),
 	),
 ];
