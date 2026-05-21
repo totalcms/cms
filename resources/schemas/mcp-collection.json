@@ -19,7 +19,7 @@
 		"access": {
 			"type"        : "string",
 			"label"       : "MCP Access",
-			"help"        : "Controls who can call MCP content tools (query_collection, get_collection, search_collection) against this collection. <strong>Admin</strong>: only callers with a valid API key. <strong>Public</strong>: anonymous AI agents can read this collection.",
+			"help"        : "Controls who can call MCP content tools (query_collection, get_object, search_collection, describe_collection) against this collection. <strong>Admin</strong>: only callers with a valid API key. <strong>Public</strong>: anonymous AI agents can read this collection.",
 			"field"       : "select",
 			"placeholder" : "Admin only",
 			"default"     : "admin",

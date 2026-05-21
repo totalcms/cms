@@ -37,13 +37,13 @@
 		"filterable": {
 			"type"    : "boolean",
 			"label"   : "Filterable",
-			"help"    : "Whether this field can appear in <code>include</code>/<code>exclude</code> filters on query_collection. When blank, T3 infers from the field type (text/select/toggle/number/date are filterable by default).",
+			"help"    : "Whether this field can appear in <code>include</code>/<code>exclude</code> filters on query_collection. When blank, T3 infers from the field type (text/textarea/styledtext/select/toggle/checkbox/number/range/date/datetime/slug/id/email/url/phone are filterable by default). Note: the schema's <code>index</code> list is authoritative — non-indexed fields can never be filtered regardless of this setting.",
 			"field"   : "checkbox"
 		},
 		"sortable": {
 			"type"    : "boolean",
 			"label"   : "Sortable",
-			"help"    : "Whether this field can appear in the <code>sort</code> parameter on query_collection. When blank, T3 infers from the field type (number/date are sortable by default).",
+			"help"    : "Whether this field can appear in the <code>sort</code> parameter on query_collection. When blank, T3 infers from the field type (number/range/date/datetime/id are sortable by default). Note: the schema's <code>index</code> list is authoritative — non-indexed fields can never be sorted regardless of this setting.",
 			"field"   : "checkbox"
 		}
 	},
