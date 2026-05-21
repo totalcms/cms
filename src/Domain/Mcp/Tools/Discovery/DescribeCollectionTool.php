@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tools\Discovery;
 
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -47,6 +48,13 @@ readonly class DescribeCollectionTool
 			access: 'public',
 			handler: $this->handler(...),
 			inputSchema: $this->inputSchema(),
+			annotations: new ToolAnnotations(
+				title: 'Describe Collection',
+				readOnlyHint: true,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
 		));
 	}
 

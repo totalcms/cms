@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tools\Admin;
 
+use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
@@ -41,6 +42,13 @@ readonly class SiteInfoTool
 				'properties'           => new \stdClass(),
 				'additionalProperties' => false,
 			],
+			annotations: new ToolAnnotations(
+				title: 'Site Info',
+				readOnlyHint: true,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
 		));
 	}
 

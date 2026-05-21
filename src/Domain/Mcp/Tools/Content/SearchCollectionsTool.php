@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tools\Content;
 
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -57,6 +58,13 @@ readonly class SearchCollectionsTool
 			access: 'public',
 			handler: $this->handler(...),
 			inputSchema: $this->inputSchema(),
+			annotations: new ToolAnnotations(
+				title: 'Search Across Collections',
+				readOnlyHint: true,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
 		));
 	}
 

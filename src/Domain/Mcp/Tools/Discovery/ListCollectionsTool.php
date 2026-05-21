@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tools\Discovery;
 
+use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
@@ -45,6 +46,13 @@ readonly class ListCollectionsTool
 			access: 'public',
 			handler: $this->handler(...),
 			inputSchema: $this->inputSchema(),
+			annotations: new ToolAnnotations(
+				title: 'List Collections',
+				readOnlyHint: true,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
 		));
 	}
 

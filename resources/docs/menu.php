@@ -192,6 +192,7 @@ return [
 		'sub'   => [
 			['title' => 'REST API',     'path' => 'apis/rest-api'],
 			['title' => 'PHP API',      'path' => 'apis/php-api'],
+			['title' => 'MCP Server',   'path' => 'apis/mcp'],
 			['title' => 'API Keys',     'path' => 'apis/api-keys'],
 			['title' => 'Index Filter', 'path' => 'apis/index-filter'],
 			['title' => 'OpenAPI Docs', 'path' => 'apis/openapi'],

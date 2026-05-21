@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tools\Content;
 
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
@@ -50,6 +51,13 @@ readonly class GetObjectTool
 			handler: $this->handler(...),
 			inputSchema: $this->inputSchema(),
 			descriptionBuilder: $this->buildDescription(...),
+			annotations: new ToolAnnotations(
+				title: 'Get Object',
+				readOnlyHint: true,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
 		));
 	}
 

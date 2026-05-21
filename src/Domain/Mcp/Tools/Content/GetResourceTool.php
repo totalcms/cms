@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tools\Content;
 
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 
@@ -36,6 +37,13 @@ readonly class GetResourceTool
 			access: 'public',
 			handler: $this->handler(...),
 			inputSchema: $this->inputSchema(),
+			annotations: new ToolAnnotations(
+				title: 'Get Resource',
+				readOnlyHint: true,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
 		));
 	}
 
