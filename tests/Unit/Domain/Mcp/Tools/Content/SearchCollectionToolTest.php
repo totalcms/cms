@@ -11,9 +11,11 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 use TotalCMS\Domain\Mcp\Tools\Content\SearchCollectionTool;
 use TotalCMS\Domain\Query\Service\ObjectSearcher;
 
@@ -45,6 +47,7 @@ final class SearchCollectionToolTest extends TestCase
 			$this->urls,
 			$this->persona,
 			$this->resolver,
+			new ContentRenderer(new TiptapToMarkdownConverter()),
 		);
 	}
 

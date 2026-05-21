@@ -11,9 +11,11 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 use TotalCMS\Domain\Mcp\Tools\Content\GetObjectTool;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -41,6 +43,7 @@ final class GetObjectToolTest extends TestCase
 			$this->urls,
 			$this->persona,
 			$this->resolver,
+			new ContentRenderer(new TiptapToMarkdownConverter()),
 		);
 	}
 

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
@@ -44,6 +45,7 @@ readonly class SearchCollectionsTool
 		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
+		private ContentRenderer $contentRenderer,
 	) {
 	}
 
@@ -64,6 +66,7 @@ readonly class SearchCollectionsTool
 	public function handler(
 		string $query,
 		int $limit = 10,
+		string $format = 'markdown',
 		string $locale = '',
 	): array {
 		unset($locale);
@@ -97,12 +100,18 @@ readonly class SearchCollectionsTool
 			}
 
 			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
+			$renderable = $this->schemaResolver->renderableProperties($collection);
 			foreach ($matches as $item) {
-				$item['collection'] = $collection->id;
-				$item['url']        = $this->urlBuilder->buildUrl($collection, $item);
 				foreach ($nonExposed as $field) {
 					unset($item[$field]);
 				}
+				foreach ($renderable as $field) {
+					if (isset($item[$field])) {
+						$item[$field] = $this->contentRenderer->render($item[$field], $format);
+					}
+				}
+				$item['collection'] = $collection->id;
+				$item['url']        = $this->urlBuilder->buildUrl($collection, $item);
 				$aggregate[] = $item;
 
 				// Early exit once we've collected enough — avoids iterating
@@ -152,6 +161,12 @@ readonly class SearchCollectionsTool
 					'maximum'     => self::LIMIT_CAP,
 					'default'     => 10,
 					'description' => 'Maximum items returned in aggregate across all collections. Capped at 50 for MCP response-size budgets.',
+				],
+				'format' => [
+					'type'        => 'string',
+					'enum'        => ['markdown', 'html', 'text'],
+					'default'     => 'markdown',
+					'description' => 'Output format for styledtext properties on the matched items. markdown is friendliest for AI consumption.',
 				],
 				'locale' => [
 					'type'        => 'string',

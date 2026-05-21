@@ -10,6 +10,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
@@ -44,6 +45,7 @@ readonly class QueryCollectionTool
 		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
+		private ContentRenderer $contentRenderer,
 	) {
 	}
 
@@ -72,11 +74,10 @@ readonly class QueryCollectionTool
 		string $format = 'markdown',
 		string $locale = '',
 	): array {
-		// Forward-compat acknowledgements. format will route through
-		// ContentRenderer when Chunk F ships; locale is reserved for 3.6 i18n.
-		// Touched here so static analysis doesn't drift if PHPStan tightens
-		// unused-parameter rules later.
-		unset($format, $locale);
+		// `locale` is forward-compat for 3.6 i18n; touched so static analysis
+		// doesn't drift if PHPStan tightens unused-parameter rules. `format`
+		// is consumed below by ContentRenderer on styledtext properties.
+		unset($locale);
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if ($collectionData === null) {
@@ -114,14 +115,23 @@ readonly class QueryCollectionTool
 			$params['exclude'] = $exclude;
 		}
 
-		$result        = $this->indexQueryService->query($collection, $params);
-		$nonExposed    = $this->schemaResolver->nonExposedProperties($collectionData);
-		$items         = [];
+		$result      = $this->indexQueryService->query($collection, $params);
+		$nonExposed  = $this->schemaResolver->nonExposedProperties($collectionData);
+		$renderable  = $this->schemaResolver->renderableProperties($collectionData);
+		$items       = [];
 		foreach ($result->items as $item) {
-			$item['url'] = $this->urlBuilder->buildUrl($collectionData, $item);
+			// Strip first so we don't bother rendering content we're about to
+			// drop anyway.
 			foreach ($nonExposed as $field) {
 				unset($item[$field]);
 			}
+			// Transform styledtext properties per the agent's chosen format.
+			foreach ($renderable as $field) {
+				if (isset($item[$field])) {
+					$item[$field] = $this->contentRenderer->render($item[$field], $format);
+				}
+			}
+			$item['url'] = $this->urlBuilder->buildUrl($collectionData, $item);
 			$items[] = $item;
 		}
 

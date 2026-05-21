@@ -354,6 +354,38 @@ final class McpSchemaResolverTest extends TestCase
 
 	// ─── nonExposedProperties() — list of properties to strip from MCP output ─
 
+	// ─── renderableProperties() — properties whose values are HTML (styledtext) ─
+
+	public function testRenderablePropertiesListsStyledtextAndLocalizedstyledtext(): void
+	{
+		// Content tools call this once per request and transform each listed
+		// property's value through ContentRenderer. Both styledtext (plain
+		// HTML string) and localizedstyledtext (locale-keyed object of HTML)
+		// qualify — ContentRenderer is polymorphic on the input shape.
+		$schema = $this->schemaWithProperties([
+			'title'   => ['field' => 'text'],
+			'summary' => ['field' => 'styledtext'],
+			'date'    => ['field' => 'date'],
+			'body'    => ['field' => 'localizedstyledtext'],
+			'extra'   => ['field' => 'textarea'],
+			'caption' => ['field' => 'localizedtext'],  // plain localized text — agent sees verbatim
+		]);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->assertSame(['summary', 'body'], $this->resolver->renderableProperties($this->collection()));
+	}
+
+	public function testRenderablePropertiesReturnsEmptyWhenNoStyledtextFields(): void
+	{
+		$schema = $this->schemaWithProperties([
+			'title' => ['field' => 'text'],
+			'date'  => ['field' => 'date'],
+		]);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->assertSame([], $this->resolver->renderableProperties($this->collection()));
+	}
+
 	public function testNonExposedPropertiesReturnsEmptyListWhenAllExposed(): void
 	{
 		// When every property is exposed (or omits mcp.expose), tools have

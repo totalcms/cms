@@ -11,11 +11,13 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tools\Content\QueryCollectionTool;
 use TotalCMS\Domain\Query\Data\QueryResult;
+use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class QueryCollectionToolTest extends TestCase
 {
@@ -40,6 +42,10 @@ final class QueryCollectionToolTest extends TestCase
 			$this->urls,
 			$this->persona,
 			$this->resolver,
+			// Real ContentRenderer with the real converter — pure functions, no
+			// IO. Lets the rendering tests assert actual markdown output instead
+			// of mock contract.
+			new ContentRenderer(new TiptapToMarkdownConverter()),
 		);
 	}
 
@@ -304,6 +310,85 @@ final class QueryCollectionToolTest extends TestCase
 			->willReturn(new QueryResult(items: [], total: 0, limit: 50, offset: 0));
 
 		$this->tool->handler(collection: 'blog', limit: 250);
+	}
+
+	// ─── Format param wiring (Chunk F) ────────────────────────────────────────
+
+	public function testStyledtextPropertiesAreConvertedToMarkdownByDefault(): void
+	{
+		// Default format is markdown. Properties named in renderableProperties
+		// have their HTML values converted to markdown before reaching the
+		// agent. Properties NOT in the list (e.g. plain title) pass through
+		// verbatim.
+		$this->persona->set(McpPersona::ADMIN);
+		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
+		$this->resolver->method('renderableProperties')->willReturn(['content', 'summary']);
+
+		$this->indexQuery->method('query')->willReturn(new QueryResult(
+			items: [
+				[
+					'id'      => 'post-a',
+					'title'   => 'Plain Title',
+					'summary' => '<p><strong>Bold</strong> summary.</p>',
+					'content' => '<p>Body with a <a href="#x">link</a>.</p>',
+				],
+			],
+			total: 1, limit: 10, offset: 0,
+		));
+		$this->urls->method('buildUrl')->willReturn('/blog/post-a');
+
+		$result = $this->tool->handler(collection: 'blog');
+		$item   = $result['items'][0];
+
+		// Plain title pass-through.
+		$this->assertSame('Plain Title', $item['title']);
+		// Renderable properties converted to markdown.
+		$this->assertStringContainsString('**Bold** summary.', $item['summary']);
+		$this->assertStringContainsString('[link](#x)', $item['content']);
+	}
+
+	public function testHtmlFormatLeavesStyledtextUnchanged(): void
+	{
+		// Pass-through path: the agent that wants HTML gets the storage shape
+		// directly — no double conversion.
+		$this->persona->set(McpPersona::ADMIN);
+		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
+		$this->resolver->method('renderableProperties')->willReturn(['content']);
+
+		$html = '<p><strong>HTML</strong> body.</p>';
+		$this->indexQuery->method('query')->willReturn(new QueryResult(
+			items: [['id' => 'x', 'content' => $html]],
+			total: 1, limit: 10, offset: 0,
+		));
+		$this->urls->method('buildUrl')->willReturn('/blog/x');
+
+		$result = $this->tool->handler(collection: 'blog', format: 'html');
+
+		$this->assertSame($html, $result['items'][0]['content']);
+	}
+
+	public function testTextFormatStripsTagsFromStyledtext(): void
+	{
+		$this->persona->set(McpPersona::ADMIN);
+		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
+		$this->resolver->method('renderableProperties')->willReturn(['content']);
+
+		$this->indexQuery->method('query')->willReturn(new QueryResult(
+			items: [['id' => 'x', 'content' => '<p>Plain &amp; <strong>simple</strong>.</p>']],
+			total: 1, limit: 10, offset: 0,
+		));
+		$this->urls->method('buildUrl')->willReturn('/blog/x');
+
+		$result = $this->tool->handler(collection: 'blog', format: 'text');
+
+		$this->assertStringContainsString('Plain & simple.', $result['items'][0]['content']);
+		$this->assertStringNotContainsString('<', $result['items'][0]['content']);
 	}
 
 	public function testHandlerReturnsPaginatedEnvelope(): void

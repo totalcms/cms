@@ -9,6 +9,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
@@ -36,6 +37,7 @@ readonly class GetObjectTool
 		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
+		private ContentRenderer $contentRenderer,
 	) {
 	}
 
@@ -60,8 +62,9 @@ readonly class GetObjectTool
 		string $format = 'markdown',
 		string $locale = '',
 	): array {
-		// Forward-compat parameters; see QueryCollectionTool for the same note.
-		unset($format, $locale);
+		// `locale` is forward-compat for 3.6 i18n; `format` is consumed below
+		// when transforming styledtext properties.
+		unset($locale);
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if ($collectionData === null) {
@@ -92,11 +95,19 @@ readonly class GetObjectTool
 			throw $this->notFound($collection, $id);
 		}
 
-		$object['url'] = $this->urlBuilder->buildUrl($collectionData, $object);
-
+		// Strip first so we don't bother rendering content we're about to drop.
 		foreach ($this->schemaResolver->nonExposedProperties($collectionData) as $field) {
 			unset($object[$field]);
 		}
+
+		// Transform styledtext properties per the agent's chosen format.
+		foreach ($this->schemaResolver->renderableProperties($collectionData) as $field) {
+			if (isset($object[$field])) {
+				$object[$field] = $this->contentRenderer->render($object[$field], $format);
+			}
+		}
+
+		$object['url'] = $this->urlBuilder->buildUrl($collectionData, $object);
 
 		return $object;
 	}

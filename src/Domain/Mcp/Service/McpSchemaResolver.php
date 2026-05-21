@@ -153,6 +153,35 @@ readonly class McpSchemaResolver
 	}
 
 	/**
+	 * Names of properties whose values are HTML and should pass through
+	 * ContentRenderer for the agent's chosen `format` (markdown/html/text).
+	 *
+	 * Covers `styledtext` (plain HTML string) AND `localizedstyledtext`
+	 * (locale-keyed object of HTML strings — `{en_US: "<html>", de: "<html>"}`).
+	 * ContentRenderer is polymorphic on input and handles both shapes.
+	 *
+	 * @return list<string>
+	 */
+	public function renderableProperties(CollectionData $collection): array
+	{
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection->id);
+		$names  = [];
+
+		foreach ($schema->properties as $name => $property) {
+			if (!is_array($property)) {
+				continue;
+			}
+
+			$fieldType = (string)($property['field'] ?? '');
+			if (in_array($fieldType, ['styledtext', 'localizedstyledtext'], true)) {
+				$names[] = (string)$name;
+			}
+		}
+
+		return $names;
+	}
+
+	/**
 	 * Names of properties marked `mcp.expose: false` on this collection's schema.
 	 *
 	 * Content tools call this once per request and unset each listed key from
