@@ -14,6 +14,48 @@ final class ObjectFilterTest extends TestCase
 		$this->filter = new ObjectFilter();
 	}
 
+	// --- isFilterableType — canonical answer to "does this form-field type ─────
+	//     make sense to include/exclude on?" Sourced from SchemaData's central
+	//     FILTERABLE_FIELD_TYPES catalog. Consumers (MCP catalog builder, future
+	//     REST query validators, admin search UI) all funnel through here so the
+	//     answer stays consistent.
+
+	public function testIsFilterableTypeReturnsTrueForCanonicalScalarTypes(): void
+	{
+		$this->assertTrue(ObjectFilter::isFilterableType('text'));
+		$this->assertTrue(ObjectFilter::isFilterableType('select'));
+		$this->assertTrue(ObjectFilter::isFilterableType('toggle'));
+		$this->assertTrue(ObjectFilter::isFilterableType('number'));
+		$this->assertTrue(ObjectFilter::isFilterableType('date'));
+	}
+
+	public function testIsFilterableTypeReturnsTrueForIdField(): void
+	{
+		// The `id` form-field type is every collection's slug-like primary key —
+		// exact-match filters on it are a core query pattern. Verify it explicitly
+		// to lock in the loose-thread fix from Chunk B planning.
+		$this->assertTrue(ObjectFilter::isFilterableType('id'));
+	}
+
+	public function testIsFilterableTypeReturnsFalseForComplexBlobs(): void
+	{
+		// Container/blob fields aren't usefully filterable by string match —
+		// you'd be matching against serialized JSON. AI agents should not be
+		// pointed at them in the filter catalog.
+		$this->assertFalse(ObjectFilter::isFilterableType('card'));
+		$this->assertFalse(ObjectFilter::isFilterableType('deck'));
+		$this->assertFalse(ObjectFilter::isFilterableType('image'));
+		$this->assertFalse(ObjectFilter::isFilterableType('gallery'));
+	}
+
+	public function testIsFilterableTypeReturnsFalseForUnknownType(): void
+	{
+		// Defensive default: an unrecognised field type is NOT filterable.
+		// Adding new types should be a deliberate opt-in via SchemaData's
+		// constant, not "anything string-shaped works".
+		$this->assertFalse(ObjectFilter::isFilterableType('made-up-type'));
+	}
+
 	// --- extractFilterOptions ---
 
 	public function testExtractFilterOptionsIncludeOnly(): void

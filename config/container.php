@@ -110,7 +110,9 @@ use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tools\Admin\SiteInfoTool;
-use TotalCMS\Domain\Mcp\Tools\Content\HardcodedBlogQueryTool;
+use TotalCMS\Domain\Mcp\Tools\Content\GetObjectTool;
+use TotalCMS\Domain\Mcp\Tools\Content\QueryCollectionTool;
+use TotalCMS\Domain\Mcp\Tools\Content\SearchCollectionTool;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -1464,15 +1466,19 @@ return [
 		$container->get(Config::class),
 	),
 
-	// MCP (Model Context Protocol) Server — Phase 0 walking skeleton.
+	// MCP (Model Context Protocol) Server.
 	// ToolRegistry is a singleton; each tool's register() method is invoked at
 	// container build time so the registry is fully populated before any
-	// request reaches McpServerFactory.
+	// request reaches McpServerFactory. Tools then expose persona-aware
+	// description builders (Phase 1) that the factory invokes per-request to
+	// render the field catalog matching the resolved persona.
 	ToolRegistry::class => function (ContainerInterface $container): ToolRegistry {
 		$registry = new ToolRegistry();
 
 		$container->get(SiteInfoTool::class)->register($registry);
-		$container->get(HardcodedBlogQueryTool::class)->register($registry);
+		$container->get(QueryCollectionTool::class)->register($registry);
+		$container->get(GetObjectTool::class)->register($registry);
+		$container->get(SearchCollectionTool::class)->register($registry);
 
 		return $registry;
 	},

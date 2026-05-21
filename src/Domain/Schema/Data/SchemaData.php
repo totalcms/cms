@@ -75,6 +75,38 @@ class SchemaData
 		'time',
 		'url',
 	];
+
+	/**
+	 * Form-field types (the `field` key in property definitions) that have a
+	 * meaningful include/exclude filter semantics. The truth is editorial —
+	 * `ObjectFilter` can technically match a string against any scalar, but
+	 * filtering on a styledtext blob or a media field by string equality is
+	 * never useful. Container/blob fields (`card`, `deck`, `image`, `gallery`,
+	 * `depot`, `file`, `svg`, `json`) are deliberately excluded.
+	 *
+	 * Consumed via `ObjectFilter::isFilterableType()`. Per-property operator
+	 * overrides (e.g. `mcp.filterable: false`) win at the McpSchemaResolver
+	 * layer; this constant only describes the default when none is set.
+	 */
+	public const FILTERABLE_FIELD_TYPES = [
+		'text', 'textarea', 'styledtext', 'select', 'toggle', 'checkbox', 'time',
+		'number', 'range', 'date', 'datetime', 'slug', 'string', 'id', 'email', 'url', 'phone',
+	];
+
+	/**
+	 * Form-field types with a well-defined sort order. Strictly numeric and
+	 * temporal types plus `id` (the slug-like primary key — `sort=id:asc` is
+	 * the natural deterministic fallback when no other sortable column exists).
+	 *
+	 * Text-shaped types are intentionally absent: lexicographic sorting of
+	 * styledtext / textarea bodies is rarely what callers want. Operators can
+	 * still opt in per-property via `mcp.sortable: true`.
+	 *
+	 * Consumed via `CollectionSorter::isSortableType()`.
+	 */
+	public const SORTABLE_FIELD_TYPES = [
+		'number', 'range', 'date', 'datetime', 'id',
+	];
 	public const PROPERTY_TYPE_TO_REF = [
 		'card'          => 'https://www.totalcms.co/schemas/properties/card.json',
 		'code'          => 'https://www.totalcms.co/schemas/properties/code.json',

@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
+use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -25,24 +29,20 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 readonly class McpSchemaResolver
 {
 	/**
-	 * Field types that are filterable by default (include/exclude predicate).
-	 * Operator can override by setting `mcp.filterable: false` per property.
+	 * Field-type capability defaults live on SchemaData (the canonical catalog)
+	 * and are consulted through ObjectFilter::isFilterableType() /
+	 * CollectionSorter::isSortableType(). Per-property operator overrides
+	 * (mcp.filterable / mcp.sortable) win when set — see resolveFilterable /
+	 * resolveSortable below.
 	 */
-	private const DEFAULT_FILTERABLE_FIELDS = [
-		'text', 'textarea', 'styledtext', 'select', 'toggle', 'checkbox',
-		'number', 'range', 'date', 'datetime', 'slug', 'email', 'url', 'phone',
-	];
 
-	/**
-	 * Field types that are sortable by default. Operator can override.
-	 */
-	private const DEFAULT_SORTABLE_FIELDS = [
-		'number', 'range', 'date', 'datetime',
-	];
+	/** Catalog cap shared with the dynamic-description builder. */
+	public const DEFAULT_CATALOG_CAP = 30;
 
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
 		private McpDescriptionResolver $descriptions,
+		private CollectionRepository $collections,
 	) {
 	}
 
@@ -127,6 +127,100 @@ readonly class McpSchemaResolver
 	}
 
 	/**
+	 * Names of properties marked `mcp.expose: false` on this collection's schema.
+	 *
+	 * Content tools call this once per request and unset each listed key from
+	 * every result item — cheap, deterministic, no per-item schema lookup.
+	 *
+	 * @return list<string>
+	 */
+	public function nonExposedFields(CollectionData $collection): array
+	{
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection->id);
+		$names  = [];
+
+		foreach ($schema->properties as $name => $property) {
+			if (!is_array($property)) {
+				continue;
+			}
+
+			$mcp = is_array($property['mcp'] ?? null) ? $property['mcp'] : [];
+			if (array_key_exists('expose', $mcp) && $mcp['expose'] === false) {
+				$names[] = (string)$name;
+			}
+		}
+
+		return $names;
+	}
+
+	/**
+	 * Renders the persona-scoped collection/field catalog appended to content-tool
+	 * descriptions. Format per line:
+	 *
+	 *   - <id> — <field> (<type>[, sortable]), <field> (<type>[, sortable])
+	 *
+	 * Fields that are neither filterable nor sortable are omitted from the line —
+	 * they aren't actionable for query composition, so they don't deserve the
+	 * tokens. When a collection has zero filterable/sortable fields the line
+	 * carries an explicit "(no filterable fields)" marker so the agent doesn't
+	 * try to compose include/exclude against it.
+	 *
+	 * Returns empty string when zero collections are visible (fresh install or
+	 * a public persona on a site with no public collections); callers compose
+	 * their own base description and skip the catalog block.
+	 *
+	 * Capped at $cap visible collections; overflow rolls into a closing pointer
+	 * at `list_collections` so the agent has a known fallback.
+	 */
+	public function renderCatalog(McpPersona $persona, int $cap = self::DEFAULT_CATALOG_CAP): string
+	{
+		$visible = array_filter(
+			$this->collections->listAllCollections(),
+			fn (CollectionData $collection): bool => $this->isAccessibleTo($collection, $persona->value),
+		);
+
+		if ($visible === []) {
+			return '';
+		}
+
+		// Stable order so identical sites generate identical tool descriptions.
+		usort($visible, static fn (CollectionData $a, CollectionData $b): int => strcmp($a->id, $b->id));
+
+		$overflow = max(0, count($visible) - $cap);
+		$shown    = array_slice($visible, 0, $cap);
+
+		$lines = ['Available collections and filterable fields:'];
+		foreach ($shown as $collection) {
+			$lines[] = '- ' . $collection->id . ' — ' . $this->renderFieldList($collection);
+		}
+
+		if ($overflow > 0) {
+			$lines[] = sprintf('Plus %d more — call list_collections for the full list.', $overflow);
+		}
+
+		return implode("\n", $lines);
+	}
+
+	private function renderFieldList(CollectionData $collection): string
+	{
+		$parts = [];
+		foreach ($this->filterableFields($collection) as $field) {
+			if (!$field['filterable'] && !$field['sortable']) {
+				continue;
+			}
+
+			$attrs = [$field['type']];
+			if ($field['sortable']) {
+				$attrs[] = 'sortable';
+			}
+
+			$parts[] = $field['name'] . ' (' . implode(', ', $attrs) . ')';
+		}
+
+		return $parts === [] ? '(no filterable fields)' : implode(', ', $parts);
+	}
+
+	/**
 	 * Whether a specific property is exposed to MCP responses.
 	 * Used by content tools to strip non-exposed fields from output.
 	 */
@@ -151,7 +245,7 @@ readonly class McpSchemaResolver
 			return (bool)$mcp['filterable'];
 		}
 
-		return in_array($fieldType, self::DEFAULT_FILTERABLE_FIELDS, true);
+		return ObjectFilter::isFilterableType($fieldType);
 	}
 
 	/**
@@ -163,6 +257,6 @@ readonly class McpSchemaResolver
 			return (bool)$mcp['sortable'];
 		}
 
-		return in_array($fieldType, self::DEFAULT_SORTABLE_FIELDS, true);
+		return CollectionSorter::isSortableType($fieldType);
 	}
 }

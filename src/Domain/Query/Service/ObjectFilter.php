@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Query\Service;
 
+use TotalCMS\Domain\Schema\Data\SchemaData;
+
 /**
  * Generic array-of-objects filtering with include/exclude criteria.
  *
@@ -25,6 +27,21 @@ namespace TotalCMS\Domain\Query\Service;
  */
 readonly class ObjectFilter
 {
+	/**
+	 * Whether a form-field type (the `field` key on a schema property) has
+	 * meaningful include/exclude filter semantics. Defers to SchemaData's
+	 * FILTERABLE_FIELD_TYPES catalog so the answer is consistent across every
+	 * consumer (MCP description-catalog builder, admin search UI, REST query
+	 * validators).
+	 *
+	 * Per-property operator overrides (e.g. `mcp.filterable: false`) are
+	 * applied at the consumer layer — this method only reports the default.
+	 */
+	public static function isFilterableType(string $fieldType): bool
+	{
+		return in_array($fieldType, SchemaData::FILTERABLE_FIELD_TYPES, true);
+	}
+
 	/**
 	 * Filter an array of objects based on include/exclude criteria.
 	 *

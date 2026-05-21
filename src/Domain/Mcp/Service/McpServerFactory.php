@@ -60,10 +60,19 @@ readonly class McpServerFactory
 
 		$prefix = $this->toolNamePrefix();
 		foreach ($this->toolRegistry->forPersona($persona) as $tool) {
+			// Persona-aware tools (Phase 1 content tools) expose a builder that
+			// renders a per-persona description — e.g., the field catalog must
+			// only list collections the caller can actually see. Static-string
+			// tools (Phase 0 SiteInfoTool, admin tools) leave the builder unset
+			// and use $tool->description verbatim.
+			$description = $tool->descriptionBuilder !== null
+				? ($tool->descriptionBuilder)($persona)
+				: $tool->description;
+
 			$builder->addTool(
 				handler: $tool->handler,
 				name: $prefix . $tool->name,
-				description: $tool->description,
+				description: $description,
 				annotations: $readOnly,
 				inputSchema: $tool->inputSchema,
 			);

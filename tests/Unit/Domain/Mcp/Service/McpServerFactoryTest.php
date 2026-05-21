@@ -111,4 +111,33 @@ final class McpServerFactoryTest extends TestCase
 
 		$this->assertInstanceOf(Server::class, $this->factory()->build(McpPersona::ADMIN));
 	}
+
+	public function testDescriptionBuilderIsInvokedWithBuildPersona(): void
+	{
+		// Phase 1: content tools dynamically render their description per persona
+		// so the field catalog only mentions collections the caller can see.
+		// Factory must call the builder with the resolved persona at build time —
+		// not at registry-population time — so the same registered tool can serve
+		// admin and public requests differently.
+		$invocations = [];
+		$tool        = new McpToolDefinition(
+			name: 'dynamic',
+			description: 'static fallback',
+			access: 'public',
+			handler: static fn (): array => [],
+			inputSchema: null,
+			descriptionBuilder: function (McpPersona $persona) use (&$invocations): string {
+				$invocations[] = $persona;
+
+				return 'built-for-' . $persona->value;
+			},
+		);
+
+		$this->registry->register($tool);
+
+		$this->factory()->build(McpPersona::ADMIN);
+		$this->factory()->build(McpPersona::PUBLIC_);
+
+		$this->assertSame([McpPersona::ADMIN, McpPersona::PUBLIC_], $invocations);
+	}
 }
