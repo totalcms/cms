@@ -109,6 +109,10 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Mcp\Tools\Admin\CacheTools;
+use TotalCMS\Domain\Mcp\Tools\Admin\CollectionTools;
+use TotalCMS\Domain\Mcp\Tools\Admin\ExtensionTools;
+use TotalCMS\Domain\Mcp\Tools\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tools\Admin\SiteInfoTool;
 use TotalCMS\Domain\Mcp\Tools\Content\GetObjectTool;
 use TotalCMS\Domain\Mcp\Tools\Content\GetResourceTool;
@@ -1479,7 +1483,15 @@ return [
 	ToolRegistry::class => function (ContainerInterface $container): ToolRegistry {
 		$registry = new ToolRegistry();
 
+		// Admin tools (require API key with /mcp scope).
 		$container->get(SiteInfoTool::class)->register($registry);
+		$container->get(SchemaTools::class)->register($registry);
+		$container->get(CacheTools::class)->register($registry);
+		$container->get(ExtensionTools::class)->register($registry);
+		$container->get(CollectionTools::class)->register($registry);
+
+		// Public tools (work for both admin and public personas; per-collection
+		// access is enforced inside each handler via McpSchemaResolver).
 		$container->get(QueryCollectionTool::class)->register($registry);
 		$container->get(GetObjectTool::class)->register($registry);
 		$container->get(SearchCollectionTool::class)->register($registry);

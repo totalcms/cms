@@ -71,6 +71,8 @@ readonly class ListCollectionsTool
 
 			$items[] = [
 				'id'            => $collection->id,
+				'name'          => $collection->name ?? $collection->id,
+				'schema'        => $collection->schema,
 				'description'   => $cfg['description'],
 				'url_pattern'   => $collection->url,
 				'access'        => $cfg['access'],
@@ -92,7 +94,7 @@ readonly class ListCollectionsTool
 	{
 		return implode(' ', [
 			'Discover the collections visible to you. Lean overview — one entry per collection.',
-			'Returns id, description, url_pattern, access level, and total_objects (so you can decide whether to paginate or enumerate).',
+			'Returns id, name (display label), schema (the schema id this collection uses), description, url_pattern, access level, and total_objects (so you can decide whether to paginate or enumerate).',
 			'For the per-property detail of one collection (which properties exist, which are filterable/sortable), call describe_collection. Then query_collection / search_collection / get_object for the data.',
 		]);
 	}

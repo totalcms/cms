@@ -41,7 +41,7 @@ readonly class McpServerFactory
 
 	public function build(McpPersona $persona): Server
 	{
-		$readOnly = new ToolAnnotations(readOnlyHint: true);
+		$readOnlyDefault = new ToolAnnotations(readOnlyHint: true);
 
 		$builder = Server::builder()
 			->setServerInfo(
@@ -52,7 +52,7 @@ readonly class McpServerFactory
 			->setInstructions(
 				'This is a Total CMS site exposed via the Model Context Protocol. '
 				. 'Use the available tools to discover and query collection content. '
-				. 'Admin tools (schema_*, template_*, site_info, cache_clear) require an API key; '
+				. 'Admin tools (schema_*, template_*, get_site_info, clear_cache) require an API key; '
 				. 'public tools require no authentication. Tool descriptions describe their inputs and outputs.'
 			)
 			->setSession($this->sessionStore)
@@ -69,11 +69,16 @@ readonly class McpServerFactory
 				? ($tool->descriptionBuilder)($persona)
 				: $tool->description;
 
+			// Per-tool annotations win over the default. Destructive admin tools
+			// (delete_schema, clear_cache) MUST opt out of the read-only default
+			// — mandatory before Anthropic Directory submission.
+			$annotations = $tool->annotations ?? $readOnlyDefault;
+
 			$builder->addTool(
 				handler: $tool->handler,
 				name: $prefix . $tool->name,
 				description: $description,
-				annotations: $readOnly,
+				annotations: $annotations,
 				inputSchema: $tool->inputSchema,
 			);
 		}

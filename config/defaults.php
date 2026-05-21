@@ -65,7 +65,7 @@ $settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unk
 
 // Human-readable site name (e.g. "Joe's Bistro"). When blank, T3 falls back
 // to dashboard.title (if customized) and then $domain via Config::displayName().
-// Used by the MCP server's serverInfo and site_info tool; future features
+// Used by the MCP server's serverInfo and get_site_info tool; future features
 // (RSS, sitemap, setup wizard, email From, PWA manifest, JumpStart filenames)
 // adopt the same helper. See docs/planning/site-name.md.
 $settings['siteName'] = '';

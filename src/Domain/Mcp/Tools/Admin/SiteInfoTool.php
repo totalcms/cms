@@ -32,7 +32,7 @@ readonly class SiteInfoTool
 	public function register(ToolRegistry $registry): void
 	{
 		$registry->register(new McpToolDefinition(
-			name: 'site_info',
+			name: 'get_site_info',
 			description: 'Returns runtime information about this Total CMS instance: site name + URL, version, edition, environment, PHP version, timezone, locale, and installed extensions. Useful for verifying the agent is connected to the expected site.',
 			access: 'admin',
 			handler: $this->handler(...),

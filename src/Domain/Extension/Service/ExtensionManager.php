@@ -26,7 +26,7 @@ use Twig\TwigFunction;
 /**
  * Orchestrates extension discovery, loading, and lifecycle.
  */
-final class ExtensionManager
+class ExtensionManager
 {
 	/** @var array<string,ExtensionManifest> */
 	private array $discoveredManifests = [];

@@ -258,61 +258,33 @@ final class McpSchemaResolverTest extends TestCase
 		}
 	}
 
-	public function testDescribePropertiesIndexGateOverridesOperatorPromotion(): void
+	public function testDescribePropertiesIgnoresOperatorFilterableSortableOverrides(): void
 	{
-		// Operator marking `mcp.filterable: true` on a non-indexed property is a
-		// physical impossibility — the value isn't in the index, so no filter
-		// can match it. The index wins; the operator override doesn't promote
-		// non-indexed properties.
-		$schema = $this->schemaWithProperties(
-			[
-				'body' => ['field' => 'styledtext', 'mcp' => ['filterable' => true]],
-			],
-			index: [],
-		);
-		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
-
-		$properties = $this->resolver->describeProperties($this->collection());
-
-		$this->assertCount(1, $properties);
-		$this->assertFalse($properties[0]['filterable']);
-	}
-
-	public function testDescribePropertiesIndexedPropertyCanStillBeDemotedByOperator(): void
-	{
-		// The reverse direction is still allowed: operator can say "this
-		// indexed property is NOT a useful filter target" via mcp.filterable:false
-		// and the catalog respects that. The index is the OUTER gate; operator
-		// overrides apply WITHIN it.
+		// The per-property mcp.filterable / mcp.sortable overrides were dropped:
+		// the index + field-type combination is the sole source of truth, and
+		// operators steer filtering by editing the schema's `index` list (the
+		// real lever) rather than per-property MCP knobs. Any persisted
+		// mcp.filterable / mcp.sortable values become inert.
+		//
+		// This test pins the new behavior: an indexed filterable-typed property
+		// remains filterable even when the operator explicitly set
+		// mcp.filterable:false. Mirror for sortable.
 		$schema = $this->schemaWithProperties(
 			[
 				'title' => ['field' => 'text', 'mcp' => ['filterable' => false]],
+				'date'  => ['field' => 'date', 'mcp' => ['sortable' => false]],
 			],
-			index: ['title'],
+			index: ['title', 'date'],
 		);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
 		$properties = $this->resolver->describeProperties($this->collection());
+		$byName     = array_column($properties, null, 'name');
 
-		$this->assertCount(1, $properties);
-		$this->assertFalse($properties[0]['filterable']);
-	}
-
-	public function testDescribePropertiesRespectsExplicitMcpFlags(): void
-	{
-		// Operator-set values override type-inferred defaults (within the index).
-		$schema = $this->schemaWithProperties([
-			'title' => [
-				'field' => 'text',
-				'mcp'   => ['filterable' => false, 'sortable' => true],
-			],
-		]);
-		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
-
-		$properties = $this->resolver->describeProperties($this->collection());
-
-		$this->assertFalse($properties[0]['filterable']);
-		$this->assertTrue($properties[0]['sortable']);
+		// Override ignored — text is filterable by default for indexed properties.
+		$this->assertTrue($byName['title']['filterable']);
+		// Override ignored — date is sortable by default.
+		$this->assertTrue($byName['date']['sortable']);
 	}
 
 	public function testDescribePropertiesStripsNonExposedProperties(): void
@@ -455,22 +427,29 @@ final class McpSchemaResolverTest extends TestCase
 
 		$this->collectionRepository->method('listAllCollections')->willReturn([$collection]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn(
-			$this->schemaWithProperties([
-				'featured' => ['field' => 'toggle'],
-				'price'    => ['field' => 'number'],
-				'tags'     => ['field' => 'text', 'mcp' => ['filterable' => false, 'sortable' => false]],
-			]),
+			// `notes` is text (filterable type) but excluded from the index —
+			// so it's listed as a property but not as a queryable. Catalog
+			// renders only actionable properties; non-actionable are silently
+			// elided from the line.
+			$this->schemaWithProperties(
+				[
+					'featured' => ['field' => 'toggle'],
+					'price'    => ['field' => 'number'],
+					'notes'    => ['field' => 'text'],
+				],
+				index: ['featured', 'price'],
+			),
 		);
 
 		$catalog = $this->resolver->renderCatalog(McpPersona::ADMIN);
 
-		// Field metadata: toggle = filterable boolean, number = filterable + sortable.
-		// Non-filterable, non-sortable fields are omitted from the line — they
-		// aren't actionable for query composition.
+		// Property metadata: toggle = filterable boolean, number = filterable + sortable.
+		// Non-indexed properties are omitted from the line — they aren't
+		// actionable for query composition (agent fetches them via get_object).
 		$this->assertStringContainsString('- products', $catalog);
 		$this->assertStringContainsString('featured (toggle)', $catalog);
 		$this->assertStringContainsString('price (number, sortable)', $catalog);
-		$this->assertStringNotContainsString('tags', $catalog);
+		$this->assertStringNotContainsString('notes', $catalog);
 	}
 
 	public function testRenderCatalogCapsAtThirtyCollectionsByDefault(): void
@@ -535,10 +514,14 @@ final class McpSchemaResolverTest extends TestCase
 		$collection->id = 'plain';
 
 		$this->collectionRepository->method('listAllCollections')->willReturn([$collection]);
+		// Property exists but isn't indexed → no actionable filter. Catalog
+		// surfaces this honestly with the "(no filterable properties)" marker
+		// so the agent doesn't try to compose an include/exclude on it.
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn(
-			$this->schemaWithProperties([
-				'note' => ['field' => 'text', 'mcp' => ['filterable' => false, 'sortable' => false]],
-			]),
+			$this->schemaWithProperties(
+				['note' => ['field' => 'text']],
+				index: [],
+			),
 		);
 
 		$catalog = $this->resolver->renderCatalog(McpPersona::ADMIN);

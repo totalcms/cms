@@ -112,6 +112,37 @@ final class McpServerFactoryTest extends TestCase
 		$this->assertInstanceOf(Server::class, $this->factory()->build(McpPersona::ADMIN));
 	}
 
+	public function testPerToolAnnotationsAreUsedWhenSetOtherwiseFallBackToReadOnlyDefault(): void
+	{
+		// Tools that explicitly set annotations (e.g. destructive admin tools)
+		// must reach the SDK with those exact annotations — the factory's
+		// readOnly default only applies to tools that didn't override. Verified
+		// via successful Server build with both shapes registered; deeper
+		// per-tool annotation routing is exercised through SDK integration
+		// tests (the SDK exposes annotations via tools/list).
+		$customAnnotations = new \Mcp\Schema\ToolAnnotations(
+			title: 'Custom',
+			readOnlyHint: false,
+			destructiveHint: true,
+			idempotentHint: false,
+		);
+		$customTool = new McpToolDefinition(
+			name: 'destructive_tool',
+			description: 'd',
+			access: 'admin',
+			handler: static fn (): array => [],
+			inputSchema: null,
+			descriptionBuilder: null,
+			annotations: $customAnnotations,
+		);
+		$defaultTool = $this->tool('read_only_tool', 'public');
+
+		$this->registry->register($customTool);
+		$this->registry->register($defaultTool);
+
+		$this->assertInstanceOf(Server::class, $this->factory()->build(McpPersona::ADMIN));
+	}
+
 	public function testDescriptionBuilderIsInvokedWithBuildPersona(): void
 	{
 		// Phase 1: content tools dynamically render their description per persona

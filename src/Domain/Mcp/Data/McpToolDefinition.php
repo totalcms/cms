@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Data;
 
 use Closure;
+use Mcp\Schema\ToolAnnotations;
 
 /**
  * Value object describing a single MCP tool.
@@ -27,6 +28,12 @@ readonly class McpToolDefinition
 	 *                                                              per-persona field catalog so the AI agent learns
 	 *                                                              which collections + fields it can query without a
 	 *                                                              separate round-trip to list_collections.
+	 * @param ToolAnnotations|null      $annotations        Optional per-tool annotation override (title, readOnlyHint,
+	 *                                                      destructiveHint, idempotentHint, openWorldHint). When null,
+	 *                                                      McpServerFactory falls back to a read-only default. Destructive
+	 *                                                      tools (delete_schema, clear_cache, template_delete) MUST set
+	 *                                                      destructiveHint:true — Anthropic Directory review treats
+	 *                                                      missing annotations as a pass/fail check.
 	 */
 	public function __construct(
 		public string $name,
@@ -35,6 +42,7 @@ readonly class McpToolDefinition
 		public Closure $handler,
 		public ?array $inputSchema = null,
 		public ?Closure $descriptionBuilder = null,
+		public ?ToolAnnotations $annotations = null,
 	) {
 	}
 

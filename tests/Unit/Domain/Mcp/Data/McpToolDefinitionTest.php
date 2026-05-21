@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Data;
 
+use Mcp\Schema\ToolAnnotations;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
@@ -49,6 +50,42 @@ final class McpToolDefinitionTest extends TestCase
 		$tool = new McpToolDefinition('t', 'static-desc', 'public', static fn () => null);
 
 		$this->assertNull($tool->descriptionBuilder);
+	}
+
+	public function testAnnotationsDefaultsToNull(): void
+	{
+		// Tools that don't override annotations fall back to the McpServerFactory
+		// default (read-only). Required cross-cutting requirement before
+		// Anthropic Directory submission — only destructive tools need to
+		// explicitly opt out of the read-only default.
+		$tool = new McpToolDefinition('t', 'd', 'public', static fn () => null);
+
+		$this->assertNull($tool->annotations);
+	}
+
+	public function testAnnotationsCanCarryFullToolMetadata(): void
+	{
+		// Destructive tools (delete_schema, clear_cache, template_delete) need
+		// the full set: title + readOnlyHint:false + destructiveHint:true +
+		// idempotentHint:false. Anthropic Directory review treats missing
+		// annotations as pass/fail.
+		$annotations = new ToolAnnotations(
+			title: 'Delete Schema',
+			readOnlyHint: false,
+			destructiveHint: true,
+			idempotentHint: false,
+		);
+		$tool = new McpToolDefinition(
+			name: 'delete_schema',
+			description: 'd',
+			access: 'admin',
+			handler: static fn () => null,
+			inputSchema: null,
+			descriptionBuilder: null,
+			annotations: $annotations,
+		);
+
+		$this->assertSame($annotations, $tool->annotations);
 	}
 
 	public function testDescriptionBuilderCanBeSetAndInvokedWithPersona(): void

@@ -136,14 +136,17 @@ final class ListCollectionsToolTest extends TestCase
 
 	public function testItemShapeIsLeanWithMetadataOnly(): void
 	{
-		// Lean shape (Chunk C revision): list_collections is the overview
-		// layer — describe_collection carries per-property detail. Each item
-		// here is {id, description, url_pattern, access, total_objects}.
-		// total_objects lets the agent plan: paginate big collections,
-		// enumerate small ones via query_collection with limit:50.
+		// Lean shape: list_collections is the overview layer — describe_collection
+		// carries per-property detail. Each item here is {id, name, schema,
+		// description, url_pattern, access, total_objects}. name + schema
+		// folded in (formerly only in the dropped collection_admin_list) so the
+		// agent gets a single canonical list with enough metadata to plan
+		// drill-downs without a second round-trip.
 		$this->persona->set(McpPersona::ADMIN);
 
-		$blog = $this->collection('blog', access: 'public', url: '/blog/{id}', totalObjects: 26006);
+		$blog         = $this->collection('blog', access: 'public', url: '/blog/{id}', totalObjects: 26006);
+		$blog->name   = 'Blog Posts';
+		$blog->schema = 'blog-pro';
 		$this->collections->method('listAllCollections')->willReturn([$blog]);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
@@ -154,6 +157,8 @@ final class ListCollectionsToolTest extends TestCase
 		$item   = $result['collections'][0];
 
 		$this->assertSame('blog', $item['id']);
+		$this->assertSame('Blog Posts', $item['name']);
+		$this->assertSame('blog-pro', $item['schema']);
 		$this->assertSame('Blog posts', $item['description']);
 		$this->assertSame('/blog/{id}', $item['url_pattern']);
 		$this->assertSame('public', $item['access']);

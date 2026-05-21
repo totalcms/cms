@@ -141,9 +141,11 @@ readonly class McpSchemaResolver
 				'description' => $this->descriptions->forProperty($property),
 				'indexed'     => $indexed,
 				// Index gate is the outer constraint: a non-indexed property
-				// can never be filterable/sortable regardless of operator hints.
-				'filterable'  => $indexed && $this->resolveFilterable($mcp, $type),
-				'sortable'    => $indexed && $this->resolveSortable($mcp, $type),
+				// can never be filterable/sortable. The inner check is purely
+				// field-type-based — operators steer this via the schema's
+				// `index` list, not per-property mcp keys.
+				'filterable'  => $indexed && $this->resolveFilterable($type),
+				'sortable'    => $indexed && $this->resolveSortable($type),
 			];
 		}
 
@@ -265,26 +267,22 @@ readonly class McpSchemaResolver
 	}
 
 	/**
-	 * @param array<string,mixed> $mcp
+	 * Filterability is derived purely from the schema's index + field type —
+	 * operators steer filtering by editing the schema's `index` list (the real
+	 * lever). Per-property `mcp.filterable` keys are intentionally ignored;
+	 * any persisted values are inert.
 	 */
-	private function resolveFilterable(array $mcp, string $fieldType): bool
+	private function resolveFilterable(string $fieldType): bool
 	{
-		if (array_key_exists('filterable', $mcp)) {
-			return (bool)$mcp['filterable'];
-		}
-
 		return ObjectFilter::isFilterableType($fieldType);
 	}
 
 	/**
-	 * @param array<string,mixed> $mcp
+	 * Sortability is derived purely from the field type — see resolveFilterable.
+	 * Per-property `mcp.sortable` keys are intentionally ignored.
 	 */
-	private function resolveSortable(array $mcp, string $fieldType): bool
+	private function resolveSortable(string $fieldType): bool
 	{
-		if (array_key_exists('sortable', $mcp)) {
-			return (bool)$mcp['sortable'];
-		}
-
 		return CollectionSorter::isSortableType($fieldType);
 	}
 }
