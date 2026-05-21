@@ -228,6 +228,18 @@ class ExtensionManager
 			}
 		}
 
+		// Wire MCP tools from extensions into the ToolRegistry (strict-deny on
+		// collisions with core OR cross-extension). Runs before Twig wiring so
+		// the registry is ready by the time the first /mcp request lands —
+		// boot is the latest safe moment since extensions populate their
+		// contexts during register().
+		if ($this->container->has(\TotalCMS\Domain\Mcp\Service\ToolRegistry::class)) {
+			/** @var \TotalCMS\Domain\Mcp\Service\ToolRegistry $toolRegistry */
+			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Service\ToolRegistry::class);
+			$mcpRegistrar  = new \TotalCMS\Domain\Extension\Service\McpExtensionRegistrar($this->logger);
+			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
+		}
+
 		// Wire Twig items from extensions into the TwigEngine (with collision protection)
 		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
 			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
@@ -555,6 +567,30 @@ class ExtensionManager
 		}
 
 		return $functions;
+	}
+
+	/**
+	 * Per-extension map of MCP tools, in the shape McpExtensionRegistrar expects:
+	 * `{extensionId => list<McpToolDefinition>}`. The id-keyed map (instead of a
+	 * flat list) lets the registrar attribute collisions to a specific extension
+	 * in the warning log.
+	 *
+	 * @return array<string,list<\TotalCMS\Domain\Mcp\Data\McpToolDefinition>>
+	 */
+	public function getAllMcpTools(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:tools')) {
+				continue;
+			}
+			$tools = $context->getRegisteredMcpTools();
+			if ($tools !== []) {
+				$byExtension[$id] = $tools;
+			}
+		}
+
+		return $byExtension;
 	}
 
 	/** @return list<TwigFilter> */

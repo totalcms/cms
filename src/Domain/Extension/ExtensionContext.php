@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension;
 
+use Mcp\Schema\ToolAnnotations;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
@@ -12,6 +13,7 @@ use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use Twig\TwigFilter;
@@ -73,6 +75,12 @@ final class ExtensionContext
 
 	/** @var array<string,string> page-middleware name => container service ID */
 	private array $pageMiddleware = [];
+
+	/** @var list<McpToolDefinition> Tools registered for the MCP server */
+	private array $mcpTools = [];
+
+	/** @var list<array{uri: string, description: string, handler: \Closure}> MCP resources (Phase 2 surface) */
+	private array $mcpResources = [];
 
 	public function __construct(
 		private readonly ExtensionManifest $manifest,
@@ -214,6 +222,53 @@ final class ExtensionContext
 	public function addCommand(Command $command): void
 	{
 		$this->commands[] = $command;
+	}
+
+	/**
+	 * Register an MCP tool exposed at /mcp.
+	 *
+	 * Strict-deny collision policy: a tool whose name conflicts with a core
+	 * tool or another extension's tool is logged and skipped. Pick a vendor-
+	 * prefixed name (`acme_search_invoices`) to avoid collisions.
+	 *
+	 * The `handler` closure is invoked by the SDK using PHP reflection on its
+	 * named parameters — define typed string/int/bool/array params that map
+	 * one-to-one with your `inputSchema` properties.
+	 *
+	 * @param string                   $name        Tool name (snake_case)
+	 * @param string                   $description Description AI agents read
+	 * @param string                   $access      'admin' or 'public'
+	 * @param \Closure                 $handler     Invoked with named params from MCP call
+	 * @param array<string,mixed>|null $inputSchema JSON Schema for the handler's inputs
+	 * @param ToolAnnotations|null     $annotations Read/write/destructive hints — mandatory before Anthropic Directory submission
+	 */
+	public function registerMcpTool(
+		string $name,
+		string $description,
+		string $access,
+		\Closure $handler,
+		?array $inputSchema = null,
+		?ToolAnnotations $annotations = null,
+	): void {
+		$this->mcpTools[] = new McpToolDefinition(
+			name: $name,
+			description: $description,
+			access: $access,
+			handler: $handler,
+			inputSchema: $inputSchema,
+			annotations: $annotations,
+		);
+	}
+
+	/**
+	 * Register an MCP resource — `tcms://...` URIs the agent can fetch via
+	 * the `get_resource` tool. Phase 2 will expand this to resource/list and
+	 * resource/subscribe; for now the URI is just an alias addressable
+	 * through `get_resource`.
+	 */
+	public function registerMcpResource(string $uri, string $description, \Closure $handler): void
+	{
+		$this->mcpResources[] = ['uri' => $uri, 'description' => $description, 'handler' => $handler];
 	}
 
 	/**
@@ -405,6 +460,18 @@ final class ExtensionContext
 		return $this->commands;
 	}
 
+	/** @return list<McpToolDefinition> */
+	public function getRegisteredMcpTools(): array
+	{
+		return $this->mcpTools;
+	}
+
+	/** @return list<array{uri: string, description: string, handler: \Closure}> */
+	public function getRegisteredMcpResources(): array
+	{
+		return $this->mcpResources;
+	}
+
 	/** @return list<callable> */
 	public function getRegisteredRoutes(): array
 	{
@@ -505,6 +572,8 @@ final class ExtensionContext
 			'schemas'         => 'Schemas',
 			'container'       => 'Container Defs',
 			'page-middleware' => 'Page Middleware',
+			'mcp:tools'       => 'MCP Tools',
+			'mcp:resources'   => 'MCP Resources',
 		];
 	}
 
@@ -566,6 +635,12 @@ final class ExtensionContext
 		}
 		if (is_dir($this->extensionPath . '/schemas')) {
 			$caps['schemas'] = true;
+		}
+		if ($this->mcpTools !== []) {
+			$caps['mcp:tools'] = true;
+		}
+		if ($this->mcpResources !== []) {
+			$caps['mcp:resources'] = true;
 		}
 
 		return $caps;
