@@ -12,8 +12,21 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 /**
  * CSRF Protection Middleware.
  *
- * Validates CSRF tokens for state-changing HTTP methods (POST, PUT, DELETE, PATCH)
- * to prevent Cross-Site Request Forgery attacks.
+ * Validates CSRF tokens on state-changing HTTP methods (POST/PUT/DELETE/PATCH)
+ * to block cross-site request forgery against session-authed users.
+ *
+ * **Bypasses when the request carries API key credentials** (X-API-Key header
+ * or Authorization: Bearer). CSRF attacks ride session cookies that browsers
+ * auto-attach; API keys aren't cookies and require explicit code to send, so
+ * they're inherently safe from CSRF. Skipping the check on API-keyed requests
+ * keeps external integrators working without forcing them to fetch a CSRF
+ * token they don't need.
+ *
+ * Operator forms get the token automatically: TotalForm / SimpleForm /
+ * LoginForm render `<input type="hidden" name="csrf_token" ...>` via
+ * CSRFTokenManager::getTokenField(), and the admin JS reads
+ * `<meta name="csrf-token">` and injects it as `X-CSRF-Token` on every
+ * HTMX request.
  */
 readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 {
@@ -46,6 +59,11 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
+		// API key auth bypass — CSRF doesn't apply to non-cookie credentials.
+		if ($this->hasApiKeyCredentials($request)) {
+			return $handler->handle($request);
+		}
+
 		// Check if route is explicitly exempt
 		if ($this->isExemptRoute($uri)) {
 			return $handler->handle($request);
@@ -59,7 +77,27 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 			);
 		}
 
+		// Rotate the token after a successful state-changing request so any
+		// validated token can't be replayed. Forms re-render with the fresh
+		// value on the next page load via CSRFTokenManager::getToken().
+		$this->csrfManager->generateToken();
+
 		return $handler->handle($request);
+	}
+
+	/**
+	 * Detect API key credentials in the request. Mirrors `ApiKeyAuthenticator`
+	 * shape so we exempt the same calls that bypass session auth elsewhere.
+	 */
+	private function hasApiKeyCredentials(ServerRequestInterface $request): bool
+	{
+		if ($request->hasHeader('X-API-Key')) {
+			return true;
+		}
+
+		$auth = $request->getHeaderLine('Authorization');
+
+		return $auth !== '' && stripos($auth, 'Bearer ') === 0;
 	}
 
 	/**
@@ -101,21 +139,6 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 		}
 
 		return false;
-	}
-
-	/**
-	 * Add a route pattern to the exempt list.
-	 * Useful for dynamic configuration.
-	 */
-	public function addExemptRoute(string $routePattern): void
-	{
-		if (!in_array($routePattern, self::EXEMPT_ROUTES)) {
-			$exemptRoutes   = self::EXEMPT_ROUTES;
-			$exemptRoutes[] = $routePattern;
-			// Note: This modifies the constant conceptually,
-			// but in practice you'd want to make EXEMPT_ROUTES non-const
-			// or use a property for dynamic exemptions
-		}
 	}
 
 	/**
