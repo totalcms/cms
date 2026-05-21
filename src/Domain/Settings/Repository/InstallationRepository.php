@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Settings\Repository;
 
+use TotalCMS\Support\PathResolver;
+
 /**
  * Repository for managing tcms.php installation settings.
  *
  * Installation settings are bootstrap configuration that must be
  * available before the data directory is loaded (e.g., datadir path).
- *
- * @SuppressWarnings("PHPMD.Superglobals")
  */
 readonly class InstallationRepository
 {
@@ -77,6 +77,6 @@ readonly class InstallationRepository
 	 */
 	private function getConfigFilePath(): string
 	{
-		return $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+		return PathResolver::configFile();
 	}
 }
