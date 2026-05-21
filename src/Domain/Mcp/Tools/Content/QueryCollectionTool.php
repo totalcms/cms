@@ -153,6 +153,7 @@ readonly class QueryCollectionTool
 			'Query a collection for paginated content.',
 			'Returns the matching items plus pagination metadata (total, limit, offset, has_more); each item is decorated with a public `url` field where one is configured.',
 			'Use REST-style `include` / `exclude` filter strings (comma-separated field:value pairs; AND-semantics for include, OR-semantics for exclude) and `sort` (e.g. `date:desc`).',
+			'Only fields listed in the catalog below are queryable — other schema fields exist on objects but are not filterable here; use get_object if you need the full record.',
 			'This tool does not free-text search content — use search_collection for that. It does not fetch a single object by id — use get_object.',
 		]);
 	}

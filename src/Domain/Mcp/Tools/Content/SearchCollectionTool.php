@@ -132,8 +132,8 @@ readonly class SearchCollectionTool
 	{
 		return implode(' ', [
 			'Free-text search within a single collection.',
-			'Returns matching items decorated with a public `url`; total reflects what was found, not the index size.',
-			'Supports AND (default), OR, and "quoted phrases". Searches across all readable fields.',
+			'Returns matching items decorated with a public `url`; total reflects what was found.',
+			'Supports AND (default), OR, and "quoted phrases". Searches across the fields listed in the catalog below — other schema fields exist on objects but are not searchable here; use get_object if you need the full record.',
 			'This tool does not filter by field value — use query_collection with `include`/`exclude` for that. Drafts are auto-hidden from anonymous callers.',
 		]);
 	}

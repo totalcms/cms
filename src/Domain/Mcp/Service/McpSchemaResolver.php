@@ -93,6 +93,14 @@ readonly class McpSchemaResolver
 	 * ListCollectionsTool's filterable_fields output AND the dynamic tool
 	 * description builder in Chunk B).
 	 *
+	 * **Index gate.** query_collection / search_collection iterate the
+	 * collection's index — a denormalised subset of object fields. Fields not
+	 * in `$schema->index` aren't visible to ObjectFilter or ObjectSearcher, so
+	 * advertising them would point the agent at queries that always return
+	 * empty. The index is authoritative: only indexed properties surface in
+	 * the catalog. Operator overrides (`mcp.filterable: true`) cannot promote
+	 * a non-indexed field — they only demote within the indexed set.
+	 *
 	 * @return list<array{name: string, type: string, description: ?string, filterable: bool, sortable: bool}>
 	 */
 	public function filterableFields(CollectionData $collection): array
@@ -102,6 +110,12 @@ readonly class McpSchemaResolver
 
 		foreach ($schema->properties as $name => $property) {
 			if (!is_array($property)) {
+				continue;
+			}
+
+			// Index gate — non-indexed properties are physically unqueryable,
+			// so omit them from the catalog entirely. Cheapest check first.
+			if (!in_array((string)$name, $schema->index, true)) {
 				continue;
 			}
 

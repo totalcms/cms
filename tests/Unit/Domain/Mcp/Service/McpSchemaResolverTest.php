@@ -40,11 +40,22 @@ final class McpSchemaResolverTest extends TestCase
 		return $collection;
 	}
 
-	private function schemaWithProperties(array $properties): SchemaData
+	/**
+	 * @param array<string,array<string,mixed>> $properties
+	 * @param array<int,string>|null            $index Defaults to "every property is
+	 *                                                 indexed" so existing tests keep
+	 *                                                 measuring field-type behavior
+	 *                                                 without redundant boilerplate.
+	 *                                                 Pass an explicit list (including
+	 *                                                 []) when index-gate behavior is
+	 *                                                 the actual assertion.
+	 */
+	private function schemaWithProperties(array $properties, ?array $index = null): SchemaData
 	{
 		$schema             = new SchemaData();
 		$schema->id         = 'blog';
 		$schema->properties = $properties;
+		$schema->index      = $index ?? array_keys($properties);
 
 		return $schema;
 	}
@@ -167,6 +178,82 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertTrue($fields[0]['sortable']);
 		$this->assertTrue($fields[1]['filterable']);
 		$this->assertTrue($fields[1]['sortable']);
+	}
+
+	// ─── Index gate — filterable/sortable only applies to indexed fields ─────
+
+	public function testFilterableFieldsExcludesPropertiesNotInTheIndex(): void
+	{
+		// query_collection and search_collection iterate the COLLECTION INDEX
+		// (a denormalised subset of object fields persisted as a flat list).
+		// Non-indexed fields aren't visible to ObjectFilter / ObjectSearcher,
+		// so advertising them as filterable would point the AI at queries that
+		// always return empty. The index is authoritative; the catalog must
+		// reflect it.
+		$schema = $this->schemaWithProperties(
+			[
+				'title' => ['field' => 'text'],
+				'body'  => ['field' => 'styledtext'],  // present in schema, NOT in index
+			],
+			index: ['title'],
+		);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$fields = $this->resolver->filterableFields($this->collection());
+
+		$this->assertCount(1, $fields);
+		$this->assertSame('title', $fields[0]['name']);
+	}
+
+	public function testFilterableFieldsReturnsEmptyWhenIndexIsEmpty(): void
+	{
+		// A schema with no indexed fields has nothing queryable, full stop.
+		// The catalog should be honest about that rather than listing every
+		// property and lying about filterability.
+		$schema = $this->schemaWithProperties(
+			['title' => ['field' => 'text']],
+			index: [],
+		);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->assertSame([], $this->resolver->filterableFields($this->collection()));
+	}
+
+	public function testFilterableFieldsIndexGateOverridesOperatorPromotion(): void
+	{
+		// Operator marking `mcp.filterable: true` on a non-indexed field is a
+		// physical impossibility — the value isn't in the index, so no filter
+		// can match it. The index wins; the operator override doesn't promote
+		// non-indexed fields.
+		$schema = $this->schemaWithProperties(
+			[
+				'body' => ['field' => 'styledtext', 'mcp' => ['filterable' => true]],
+			],
+			index: [],
+		);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->assertSame([], $this->resolver->filterableFields($this->collection()));
+	}
+
+	public function testFilterableFieldsIndexedFieldCanStillBeDemotedByOperator(): void
+	{
+		// The reverse direction is still allowed: operator can say "this
+		// indexed field is NOT a useful filter target" via mcp.filterable:false
+		// and the catalog respects that. The index is the OUTER gate; operator
+		// overrides apply WITHIN it.
+		$schema = $this->schemaWithProperties(
+			[
+				'title' => ['field' => 'text', 'mcp' => ['filterable' => false]],
+			],
+			index: ['title'],
+		);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$fields = $this->resolver->filterableFields($this->collection());
+
+		$this->assertCount(1, $fields);  // still in the catalog
+		$this->assertFalse($fields[0]['filterable']);  // but flagged non-filterable
 	}
 
 	public function testFilterableFieldsRespectsExplicitMcpFlags(): void
