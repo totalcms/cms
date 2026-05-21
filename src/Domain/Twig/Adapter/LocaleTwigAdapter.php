@@ -209,9 +209,21 @@ readonly class LocaleTwigAdapter
 	}
 
 	/**
-	 * Normalize a locale code to the canonical `{lang}_{REGION}` form:
-	 * language lowercased, region uppercased. Bare-language codes
-	 * (`de`, `fr`) stay bare. Empty input returns empty string.
+	 * Normalize a locale code to the canonical BCP-47-shaped form, written
+	 * with underscores so it matches our registry keys:
+	 *
+	 *   - Language: lowercase (`de`, `sr`).
+	 *   - Region:   uppercase (`DE`, `RS`).
+	 *   - Script:   title case (`Latn`, `Cyrl`, `Hans`).
+	 *
+	 * Accepted shapes (input may use `_` or `-`):
+	 *   `de`               → `de`
+	 *   `en-us`            → `en_US`
+	 *   `sr-latn-rs`       → `sr_Latn_RS`
+	 *   `sr_CYRL_rs`       → `sr_Cyrl_RS`
+	 *
+	 * Empty input returns empty string. Extra subtags beyond language/script/region
+	 * are dropped — we don't carry variant or extension subtags in the registry.
 	 */
 	public static function canonicalizeLocale(string $locale): string
 	{
@@ -222,16 +234,40 @@ readonly class LocaleTwigAdapter
 
 		// Accept either `en_US` or `en-US` style on input; canonical is underscore.
 		$locale = str_replace('-', '_', $locale);
-		$parts  = explode('_', $locale, 2);
-		$lang   = strtolower($parts[0]);
+		$parts  = array_values(array_filter(explode('_', $locale), fn (string $p): bool => $p !== ''));
+
+		$lang = strtolower($parts[0] ?? '');
 		if ($lang === '') {
 			return '';
 		}
 
-		if (!isset($parts[1]) || $parts[1] === '') {
-			return $lang;
+		// Two subtags: `lang_REGION`. Three: `lang_Script_REGION` (BCP-47 shape
+		// for languages with multiple scripts in active use, like Serbian).
+		// A 4-char second subtag (`Latn`, `Cyrl`, `Hans`, `Hant`) is ISO 15924
+		// — title-case it. Anything 2-3 chars is a region — uppercase it.
+		$out = $lang;
+
+		if (isset($parts[1])) {
+			$out .= '_' . self::canonicalizeSubtag($parts[1]);
 		}
 
-		return $lang . '_' . strtoupper($parts[1]);
+		if (isset($parts[2])) {
+			$out .= '_' . self::canonicalizeSubtag($parts[2]);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Casing rule per ISO 15924 / ISO 3166-1: 4-letter subtag is a script
+	 * (title case), 2-3 letters / digits is a region (upper case).
+	 */
+	private static function canonicalizeSubtag(string $subtag): string
+	{
+		if (strlen($subtag) === 4) {
+			return ucfirst(strtolower($subtag));
+		}
+
+		return strtoupper($subtag);
 	}
 }

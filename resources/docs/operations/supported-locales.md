@@ -72,7 +72,8 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 | `pt_PT` | Português (PT) | Portuguese (Portugal) | LTR |
 | `ro_RO` | Română | Romanian (Romania) | LTR |
 | `ru_RU` | Русский | Russian (Russia) | LTR |
-| `sr_RS` | Српски | Serbian (Serbia) | LTR |
+| `sr_Latn_RS` | Srpski (Latn) | Serbian (Latin, Serbia) | LTR |
+| `sr_Cyrl_RS` | Српски (Ћирилица) | Serbian (Cyrillic, Serbia) | LTR |
 | `sv_SE` | Svenska | Swedish (Sweden) | LTR |
 | `sw_KE` | Kiswahili | Swahili (Kenya) | LTR |
 | `ta_IN` | தமிழ் | Tamil (India) | LTR |

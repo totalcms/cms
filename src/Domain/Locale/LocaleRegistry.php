@@ -97,7 +97,14 @@ final class LocaleRegistry
 		'pt_PT' => ['label' => 'Português (PT)',           'english' => 'Portuguese (Portugal)',   'dir' => 'ltr'],
 		'ro_RO' => ['label' => 'Română',                   'english' => 'Romanian (Romania)',      'dir' => 'ltr'],
 		'ru_RU' => ['label' => 'Русский',                 'english' => 'Russian (Russia)',        'dir' => 'ltr'],
-		'sr_RS' => ['label' => 'Српски',                  'english' => 'Serbian (Serbia)',        'dir' => 'ltr'],
+		// Serbian is the only language in this registry that genuinely needs a
+		// script subtag — speakers in Serbia routinely write the same language
+		// in both Latin and Cyrillic. `sr_RS` alone is ambiguous per BCP-47.
+		// (Chinese splits the same way conceptually, but `zh_CN`/`zh_TW` are
+		// conventional region proxies for Simplified/Traditional and don't
+		// need the explicit script tag.)
+		'sr_Latn_RS' => ['label' => 'Srpski (Latn)',       'english' => 'Serbian (Latin, Serbia)',    'dir' => 'ltr'],
+		'sr_Cyrl_RS' => ['label' => 'Српски (Ћирилица)',   'english' => 'Serbian (Cyrillic, Serbia)', 'dir' => 'ltr'],
 		'sv_SE' => ['label' => 'Svenska',                  'english' => 'Swedish (Sweden)',        'dir' => 'ltr'],
 		'sw_KE' => ['label' => 'Kiswahili',                'english' => 'Swahili (Kenya)',         'dir' => 'ltr'],
 		'ta_IN' => ['label' => 'தமிழ்',                     'english' => 'Tamil (India)',           'dir' => 'ltr'],
