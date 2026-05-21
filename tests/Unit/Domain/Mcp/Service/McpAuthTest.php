@@ -123,6 +123,38 @@ final class McpAuthTest extends TestCase
 		$this->auth()->resolvePersona($request);
 	}
 
+	public function testNoKeyAndPublicAccessOffCarriesLoginRequiredReason(): void
+	{
+		// The exception carries a `reason` so the endpoint action can emit the
+		// correct WWW-Authenticate header: login_required for absent
+		// credentials vs invalid_token for bad credentials. Lazy-auth UX in
+		// Claude relies on the distinction.
+		$this->config->mcp = ['publicAccess' => false];
+		$request           = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(false);
+
+		try {
+			$this->auth()->resolvePersona($request);
+			$this->fail('Expected McpAuthException.');
+		} catch (McpAuthException $e) {
+			$this->assertSame('login_required', $e->reason);
+		}
+	}
+
+	public function testInvalidKeyCarriesInvalidTokenReason(): void
+	{
+		$request = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->with($request)->willReturn(null);
+
+		try {
+			$this->auth()->resolvePersona($request);
+			$this->fail('Expected McpAuthException.');
+		} catch (McpAuthException $e) {
+			$this->assertSame('invalid_token', $e->reason);
+		}
+	}
+
 	public function testValidKeyBypassesPublicAccessFlag(): void
 	{
 		// Even with publicAccess off, a valid key still authenticates as admin.

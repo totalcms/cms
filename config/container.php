@@ -1274,7 +1274,7 @@ return [
 	),
 
 	RateLimitMiddleware::class => fn (ContainerInterface $container): RateLimitMiddleware => new RateLimitMiddleware(
-		$container->get(APCuService::class),
+		$container->get(CacheManager::class),
 		$container->get(JsonRenderer::class),
 		$container->get(Config::class),
 	),
@@ -1302,6 +1302,16 @@ return [
 		$dispatcher->listen('object.created', $lazy(CollectionMetadataListener::class, 'onObjectCreated'), -100);
 		$dispatcher->listen('object.updated', $lazy(CollectionMetadataListener::class, 'onObjectUpdated'), -100);
 		$dispatcher->listen('object.deleted', $lazy(CollectionMetadataListener::class, 'onObjectDeleted'), -100);
+
+		// McpSessionListener — drops MCP client sessions when the published
+		// tool surface may have changed (per-property mcp.expose, collection
+		// mcp.access toggle, new/removed collections). Clients auto-reconnect
+		// and pick up the fresh surface on next request. mcp.* settings are
+		// handled directly in SettingsSaver — no settings-save event yet.
+		$dispatcher->listen('schema.saved', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.created', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.updated', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.deleted', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
 
 		// IndexBuildListener
 		$dispatcher->listen('object.created', $lazy(IndexBuildListener::class, 'onObjectCreated'), -100);
@@ -1516,15 +1526,21 @@ return [
 		return new FileSessionStore($dir, 3600);
 	},
 
-	// McpServerFactory needs an explicit definition for the custom logger
-	// handler ("mcp.log" via LoggerFactory). McpAuth, McpDescriptionResolver,
-	// and McpSchemaResolver are autowired — their dependencies (Config,
-	// ApiKeyAuthenticator, SchemaFetcher, etc.) all resolve through the
-	// container without custom factory logic.
+	// McpServerFactory needs an explicit definition for its custom logger
+	// handler — `mcp-activity.log` at Debug level so the SDK's per-call
+	// dispatch messages ("Executing tool …" / "Tool executed successfully"
+	// / "Error while executing tool") get captured. The Info default would
+	// skip those debug messages, leaving the activity trace blank.
+	//
+	// McpAuth, McpDescriptionResolver, and McpSchemaResolver are autowired —
+	// their dependencies (Config, ApiKeyAuthenticator, SchemaFetcher, etc.)
+	// all resolve through the container without custom factory logic.
 	McpServerFactory::class => fn (ContainerInterface $container): McpServerFactory => new McpServerFactory(
 		$container->get(ToolRegistry::class),
 		$container->get(Config::class),
 		$container->get(McpSessionStoreInterface::class),
-		$container->get(LoggerFactory::class)->addFileHandler('mcp.log')->createLogger('mcp'),
+		$container->get(LoggerFactory::class)
+			->addFileHandler('mcp-activity.log', level: \Monolog\Level::Debug)
+			->createLogger('mcp-activity'),
 	),
 ];

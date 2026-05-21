@@ -8,21 +8,26 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
 /**
- * Rate limiting middleware using APCu for storage.
+ * Rate limiting middleware for mailer endpoints — per-IP + per-template caps.
  *
- * Protects email endpoints against abuse by limiting requests per IP and per template.
+ * Routes counters through T3's `CacheManager`, so a production install on
+ * Redis gets accurate cross-worker accounting and APCu-only fallbacks pay
+ * the standard "per-worker" caveat (effective limit = `ratePerIp × workers`).
+ * Fail-open posture: when every cache backend is unreachable, the counter
+ * reads zero and requests pass through rather than locking out legitimate
+ * traffic on a broken cache.
  */
 readonly class RateLimitMiddleware implements MiddlewareInterface
 {
 	private const CACHE_PREFIX = 'rate_limit_';
 
 	public function __construct(
-		private APCuService $cache,
+		private CacheManager $cache,
 		private JsonRenderer $renderer,
 		private Config $config,
 	) {
@@ -96,23 +101,17 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 
 	private function getCount(string $key): int
 	{
-		if (!$this->cache->isAvailable()) {
-			return 0; // Skip rate limiting if APCu not available
-		}
-
-		$count = $this->cache->get($key);
+		// getData() returns null when the key is absent or every backend is
+		// unreachable — both collapse to zero so the limiter fails open
+		// rather than blocking traffic on a broken cache.
+		$count = $this->cache->getData($key);
 
 		return is_int($count) ? $count : 0;
 	}
 
 	private function incrementCount(string $key, int $ttl): void
 	{
-		if (!$this->cache->isAvailable()) {
-			return; // Skip if APCu not available
-		}
-
-		$current = $this->getCount($key);
-		$this->cache->set($key, $current + 1, $ttl);
+		$this->cache->storeData($key, $this->getCount($key) + 1, $ttl);
 	}
 
 	private function createRateLimitResponse(int $limit, int $window, string $type): ResponseInterface

@@ -36,7 +36,10 @@ readonly class McpAuth
 	{
 		if (!$this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
 			if (!(bool)($this->config->mcp['publicAccess'] ?? false)) {
-				throw new McpAuthException('Anonymous access is disabled. Provide an API key in the X-API-Key header or Authorization: Bearer.');
+				throw new McpAuthException(
+					'Anonymous access is disabled. Provide an API key in the X-API-Key header or Authorization: Bearer.',
+					reason: 'login_required',
+				);
 			}
 
 			return McpPersona::PUBLIC_;
@@ -49,7 +52,10 @@ readonly class McpAuth
 		// identical to "no MCP access" from the caller's perspective.
 		$apiKey = $this->apiKeyAuthenticator->authenticate($request);
 		if ($apiKey === null) {
-			throw new McpAuthException('Invalid API key or insufficient permissions for MCP access.');
+			throw new McpAuthException(
+				'Invalid API key or insufficient permissions for MCP access.',
+				reason: 'invalid_token',
+			);
 		}
 
 		return McpPersona::ADMIN;

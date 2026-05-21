@@ -71,6 +71,20 @@ describe('McpEndpointAction', function (): void {
 		}
 	});
 
+	it('emits WWW-Authenticate header on 401 keyed by reason (login_required vs invalid_token)', function (): void {
+		// Mandatory for Anthropic Directory: MCP hosts use WWW-Authenticate to
+		// pick the right lazy-auth UX. login_required = "you need to log in";
+		// invalid_token = "your credentials didn't work, try again." Without
+		// the header, hosts can't distinguish.
+		$response = postJson('/mcp', mcpInitializePayload());
+
+		if ($response->getStatusCode() === 401) {
+			$header = $response->getHeaderLine('WWW-Authenticate');
+			expect($header)->toStartWith('Bearer realm="MCP"');
+			expect($header)->toMatch('/error="(login_required|invalid_token)"/');
+		}
+	});
+
 	it('rejects bogus API key with 401', function (): void {
 		// Use the Nekofar helper's underlying request — we need to pass an
 		// X-API-Key header. Slim test helpers don't support headers directly,

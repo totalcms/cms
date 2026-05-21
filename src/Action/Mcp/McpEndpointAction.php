@@ -61,9 +61,18 @@ readonly class McpEndpointAction
 		try {
 			$persona = $this->mcpAuth->resolvePersona($request);
 		} catch (McpAuthException $e) {
-			return $this->renderer->json($response, [
+			// WWW-Authenticate triggers lazy-auth UX in MCP clients — the host
+			// knows whether to prompt for credentials (login_required) vs surface
+			// a "your token didn't work" message (invalid_token). Required for
+			// Anthropic Directory submission.
+			$response = $this->renderer->json($response, [
 				'error' => ['message' => $e->getMessage()],
 			], 401);
+
+			return $response->withHeader(
+				'WWW-Authenticate',
+				sprintf('Bearer realm="MCP", error="%s"', $e->reason),
+			);
 		}
 
 		// Stash the persona so individual tool handlers can read it during
