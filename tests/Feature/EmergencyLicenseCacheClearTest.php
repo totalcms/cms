@@ -11,6 +11,11 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
+
+	// EmergencyRateLimitMiddleware caps each IP at 1 call per 15 min via
+	// CacheManager. Clear just the rate-limit counter (not all caches —
+	// some tests store data they expect to survive the test setup).
+	$this->app->getContainer()->get(CacheManager::class)->clearByPatternAllBackends('emergency_rl_*');
 });
 
 describe('Emergency License Cache Clear Endpoint', function (): void {
@@ -153,9 +158,10 @@ describe('Emergency License Cache Clear Endpoint', function (): void {
 		$response1 = $this->app->handle($request1);
 		$response2 = $this->app->handle($request2);
 
-		// Both should succeed (or fail gracefully)
+		// First request succeeds; second hits EmergencyRateLimitMiddleware (429).
+		// Either request may also produce a graceful 500 if cache backends fail.
 		expect($response1->getStatusCode())->toBeIn([200, 500]);
-		expect($response2->getStatusCode())->toBeIn([200, 500]);
+		expect($response2->getStatusCode())->toBeIn([200, 429, 500]);
 
 		// Both should return valid JSON
 		$data1 = json_decode((string)$response1->getBody(), true);
