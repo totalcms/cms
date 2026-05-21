@@ -89,55 +89,65 @@ readonly class McpSchemaResolver
 	}
 
 	/**
-	 * Returns per-property filter/sort metadata for AI consumers (used by
-	 * ListCollectionsTool's filterable_fields output AND the dynamic tool
-	 * description builder in Chunk B).
+	 * Per-property describe metadata for AI consumers — used by:
+	 *   - `describe_collection` tool output (full property list with flags)
+	 *   - Dynamic description-builder field catalogs in content tools
+	 *     (filters internally to only actionable — see renderFieldList)
 	 *
-	 * **Index gate.** query_collection / search_collection iterate the
-	 * collection's index — a denormalised subset of object fields. Fields not
-	 * in `$schema->index` aren't visible to ObjectFilter or ObjectSearcher, so
-	 * advertising them would point the agent at queries that always return
-	 * empty. The index is authoritative: only indexed properties surface in
-	 * the catalog. Operator overrides (`mcp.filterable: true`) cannot promote
-	 * a non-indexed field — they only demote within the indexed set.
+	 * **Index gate.** `query_collection` and `search_collection` iterate the
+	 * collection's index. Properties not in `$schema->index` are physically
+	 * unqueryable — they live on objects but aren't in what the filter/search
+	 * code sees. We list them anyway so the agent knows they exist (to fetch
+	 * via `get_object`), but flag both `filterable: false` and `sortable:
+	 * false`. Operator `mcp.filterable: true` cannot promote a non-indexed
+	 * property; the index is authoritative.
 	 *
-	 * @return list<array{name: string, type: string, description: ?string, filterable: bool, sortable: bool}>
+	 * Non-exposed properties (`mcp.expose: false`) are excluded entirely —
+	 * distinct from non-indexed: the operator has marked them "not for AI."
+	 *
+	 * Each property entry includes an `indexed` flag — the authoritative
+	 * signal for "does this property appear in query_collection /
+	 * search_collection results?". Properties with `indexed: false` only
+	 * surface via `get_object`. The invariant `indexed: false → filterable:
+	 * false AND sortable: false` always holds; the reverse is not true (an
+	 * operator-demoted indexed property reads filterable: false despite
+	 * being indexed).
+	 *
+	 * @return list<array{name: string, type: string, description: ?string, indexed: bool, filterable: bool, sortable: bool}>
 	 */
-	public function filterableFields(CollectionData $collection): array
+	public function describeProperties(CollectionData $collection): array
 	{
-		$schema   = $this->schemaFetcher->fetchSchemaForCollection($collection->id);
-		$fields   = [];
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection->id);
+		$properties = [];
 
 		foreach ($schema->properties as $name => $property) {
 			if (!is_array($property)) {
 				continue;
 			}
 
-			// Index gate — non-indexed properties are physically unqueryable,
-			// so omit them from the catalog entirely. Cheapest check first.
-			if (!in_array((string)$name, $schema->index, true)) {
-				continue;
-			}
-
-			// Strip non-exposed fields entirely — they shouldn't appear in
-			// AI-facing metadata.
+			// Strip non-exposed properties entirely — they shouldn't appear in
+			// AI-facing metadata at all.
 			$mcp = is_array($property['mcp'] ?? null) ? $property['mcp'] : [];
 			if (array_key_exists('expose', $mcp) && $mcp['expose'] === false) {
 				continue;
 			}
 
-			$type = (string)($property['field'] ?? 'text');
+			$type    = (string)($property['field'] ?? 'text');
+			$indexed = in_array((string)$name, $schema->index, true);
 
-			$fields[] = [
+			$properties[] = [
 				'name'        => (string)$name,
 				'type'        => $type,
 				'description' => $this->descriptions->forProperty($property),
-				'filterable'  => $this->resolveFilterable($mcp, $type),
-				'sortable'    => $this->resolveSortable($mcp, $type),
+				'indexed'     => $indexed,
+				// Index gate is the outer constraint: a non-indexed property
+				// can never be filterable/sortable regardless of operator hints.
+				'filterable'  => $indexed && $this->resolveFilterable($mcp, $type),
+				'sortable'    => $indexed && $this->resolveSortable($mcp, $type),
 			];
 		}
 
-		return $fields;
+		return $properties;
 	}
 
 	/**
@@ -148,7 +158,7 @@ readonly class McpSchemaResolver
 	 *
 	 * @return list<string>
 	 */
-	public function nonExposedFields(CollectionData $collection): array
+	public function nonExposedProperties(CollectionData $collection): array
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection->id);
 		$names  = [];
@@ -203,7 +213,7 @@ readonly class McpSchemaResolver
 		$overflow = max(0, count($visible) - $cap);
 		$shown    = array_slice($visible, 0, $cap);
 
-		$lines = ['Available collections and filterable fields:'];
+		$lines = ['Available collections and filterable properties:'];
 		foreach ($shown as $collection) {
 			$lines[] = '- ' . $collection->id . ' — ' . $this->renderFieldList($collection);
 		}
@@ -218,20 +228,24 @@ readonly class McpSchemaResolver
 	private function renderFieldList(CollectionData $collection): string
 	{
 		$parts = [];
-		foreach ($this->filterableFields($collection) as $field) {
-			if (!$field['filterable'] && !$field['sortable']) {
+		foreach ($this->describeProperties($collection) as $property) {
+			// Catalog scope: only actionable properties appear in tool
+			// descriptions. Non-indexed properties live on objects but
+			// aren't query targets — they're documented in describe_collection
+			// output instead, where the agent can see "filterable: false".
+			if (!$property['filterable'] && !$property['sortable']) {
 				continue;
 			}
 
-			$attrs = [$field['type']];
-			if ($field['sortable']) {
+			$attrs = [$property['type']];
+			if ($property['sortable']) {
 				$attrs[] = 'sortable';
 			}
 
-			$parts[] = $field['name'] . ' (' . implode(', ', $attrs) . ')';
+			$parts[] = $property['name'] . ' (' . implode(', ', $attrs) . ')';
 		}
 
-		return $parts === [] ? '(no filterable fields)' : implode(', ', $parts);
+		return $parts === [] ? '(no filterable properties)' : implode(', ', $parts);
 	}
 
 	/**

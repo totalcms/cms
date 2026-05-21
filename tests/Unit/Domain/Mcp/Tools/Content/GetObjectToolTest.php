@@ -197,7 +197,7 @@ final class GetObjectToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 		$this->objects->method('existsObject')->willReturn(true);
 		$this->objects->method('fetchObject')->willReturn($this->objectData('secret', ['draft' => true, 'title' => 'Secret']));
 		$this->urls->method('buildUrl')->willReturn('/blog/secret');
@@ -216,7 +216,7 @@ final class GetObjectToolTest extends TestCase
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn(['secret_field']);
+		$this->resolver->method('nonExposedProperties')->willReturn(['secret_field']);
 		$this->objects->method('existsObject')->willReturn(true);
 		$this->objects->method('fetchObject')->willReturn(
 			$this->objectData('hello', ['title' => 'Hi', 'secret_field' => 'hidden']),

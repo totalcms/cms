@@ -127,25 +127,25 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertTrue($this->resolver->isAccessibleTo($this->collection(['access' => 'public']), 'authenticated'));
 	}
 
-	// ─── filterableFields() — field-type inference ───────────────────────────
+	// ─── describeProperties() — full schema describe with per-property flags ─
 
-	public function testFilterableFieldsInfersFilterableForTextField(): void
+	public function testDescribePropertiesInfersFilterableForTextProperty(): void
 	{
 		$schema = $this->schemaWithProperties([
 			'title' => ['field' => 'text', 'label' => 'Title'],
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertCount(1, $fields);
-		$this->assertSame('title', $fields[0]['name']);
-		$this->assertSame('text', $fields[0]['type']);
-		$this->assertTrue($fields[0]['filterable']);
-		$this->assertFalse($fields[0]['sortable']);
+		$this->assertCount(1, $properties);
+		$this->assertSame('title', $properties[0]['name']);
+		$this->assertSame('text', $properties[0]['type']);
+		$this->assertTrue($properties[0]['filterable']);
+		$this->assertFalse($properties[0]['sortable']);
 	}
 
-	public function testFilterableFieldsInfersFilterableAndSortableForIdField(): void
+	public function testDescribePropertiesInfersFilterableAndSortableForIdProperty(): void
 	{
 		// The `id` form-field type (used by every collection's slug-like identifier
 		// — see resources/schemas/blog.json) is the natural key for filtering and
@@ -156,15 +156,15 @@ final class McpSchemaResolverTest extends TestCase
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertCount(1, $fields);
-		$this->assertSame('id', $fields[0]['name']);
-		$this->assertTrue($fields[0]['filterable']);
-		$this->assertTrue($fields[0]['sortable']);
+		$this->assertCount(1, $properties);
+		$this->assertSame('id', $properties[0]['name']);
+		$this->assertTrue($properties[0]['filterable']);
+		$this->assertTrue($properties[0]['sortable']);
 	}
 
-	public function testFilterableFieldsInfersSortableForNumberAndDate(): void
+	public function testDescribePropertiesInfersSortableForNumberAndDate(): void
 	{
 		$schema = $this->schemaWithProperties([
 			'price' => ['field' => 'number', 'label' => 'Price'],
@@ -172,24 +172,24 @@ final class McpSchemaResolverTest extends TestCase
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertTrue($fields[0]['filterable']);
-		$this->assertTrue($fields[0]['sortable']);
-		$this->assertTrue($fields[1]['filterable']);
-		$this->assertTrue($fields[1]['sortable']);
+		$this->assertTrue($properties[0]['filterable']);
+		$this->assertTrue($properties[0]['sortable']);
+		$this->assertTrue($properties[1]['filterable']);
+		$this->assertTrue($properties[1]['sortable']);
 	}
 
-	// ─── Index gate — filterable/sortable only applies to indexed fields ─────
+	// ─── Index gate — non-indexed properties are listed but flagged unqueryable ─
 
-	public function testFilterableFieldsExcludesPropertiesNotInTheIndex(): void
+	public function testDescribePropertiesIncludesNonIndexedPropertiesWithFlagsFalse(): void
 	{
-		// query_collection and search_collection iterate the COLLECTION INDEX
-		// (a denormalised subset of object fields persisted as a flat list).
-		// Non-indexed fields aren't visible to ObjectFilter / ObjectSearcher,
-		// so advertising them as filterable would point the AI at queries that
-		// always return empty. The index is authoritative; the catalog must
-		// reflect it.
+		// New semantics (lean list_collections + describe_collection split):
+		// non-indexed properties STILL appear in describe_collection output so
+		// the agent learns they exist on objects — but with indexed: false (so
+		// they don't appear in query/search results) and filterable/sortable
+		// false (cannot be queried at all). The agent retrieves them via
+		// get_object.
 		$schema = $this->schemaWithProperties(
 			[
 				'title' => ['field' => 'text'],
@@ -199,32 +199,71 @@ final class McpSchemaResolverTest extends TestCase
 		);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertCount(1, $fields);
-		$this->assertSame('title', $fields[0]['name']);
+		$byName = array_column($properties, null, 'name');
+		$this->assertTrue($byName['title']['indexed']);
+		$this->assertTrue($byName['title']['filterable']);
+		$this->assertFalse($byName['body']['indexed']);
+		$this->assertFalse($byName['body']['filterable']);
+		$this->assertFalse($byName['body']['sortable']);
 	}
 
-	public function testFilterableFieldsReturnsEmptyWhenIndexIsEmpty(): void
+	public function testDescribePropertiesIndexedFlagInvariantHolds(): void
 	{
-		// A schema with no indexed fields has nothing queryable, full stop.
-		// The catalog should be honest about that rather than listing every
-		// property and lying about filterability.
+		// The invariant: indexed=false implies filterable=false and sortable=false.
+		// (Reverse not true: indexed=true + operator demote = filterable=false
+		// even though indexed.) This invariant is what makes `indexed` the
+		// authoritative signal for "appears in query results?".
 		$schema = $this->schemaWithProperties(
-			['title' => ['field' => 'text']],
+			[
+				'a' => ['field' => 'text'],
+				'b' => ['field' => 'number'],
+				'c' => ['field' => 'date', 'mcp' => ['filterable' => true, 'sortable' => true]],
+			],
+			index: [],  // nothing indexed
+		);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$properties = $this->resolver->describeProperties($this->collection());
+
+		foreach ($properties as $prop) {
+			$this->assertFalse($prop['indexed']);
+			$this->assertFalse($prop['filterable']);
+			$this->assertFalse($prop['sortable']);
+		}
+	}
+
+	public function testDescribePropertiesEmptyIndexFlagsEveryPropertyUnqueryable(): void
+	{
+		// Schema with no indexed properties: every property shows up but all
+		// flags read false. Honest — agent learns the shape but doesn't try
+		// to filter.
+		$schema = $this->schemaWithProperties(
+			[
+				'title' => ['field' => 'text'],
+				'body'  => ['field' => 'textarea'],
+			],
 			index: [],
 		);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$this->assertSame([], $this->resolver->filterableFields($this->collection()));
+		$properties = $this->resolver->describeProperties($this->collection());
+
+		$this->assertCount(2, $properties);
+		foreach ($properties as $prop) {
+			$this->assertFalse($prop['indexed']);
+			$this->assertFalse($prop['filterable']);
+			$this->assertFalse($prop['sortable']);
+		}
 	}
 
-	public function testFilterableFieldsIndexGateOverridesOperatorPromotion(): void
+	public function testDescribePropertiesIndexGateOverridesOperatorPromotion(): void
 	{
-		// Operator marking `mcp.filterable: true` on a non-indexed field is a
+		// Operator marking `mcp.filterable: true` on a non-indexed property is a
 		// physical impossibility — the value isn't in the index, so no filter
 		// can match it. The index wins; the operator override doesn't promote
-		// non-indexed fields.
+		// non-indexed properties.
 		$schema = $this->schemaWithProperties(
 			[
 				'body' => ['field' => 'styledtext', 'mcp' => ['filterable' => true]],
@@ -233,13 +272,16 @@ final class McpSchemaResolverTest extends TestCase
 		);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$this->assertSame([], $this->resolver->filterableFields($this->collection()));
+		$properties = $this->resolver->describeProperties($this->collection());
+
+		$this->assertCount(1, $properties);
+		$this->assertFalse($properties[0]['filterable']);
 	}
 
-	public function testFilterableFieldsIndexedFieldCanStillBeDemotedByOperator(): void
+	public function testDescribePropertiesIndexedPropertyCanStillBeDemotedByOperator(): void
 	{
 		// The reverse direction is still allowed: operator can say "this
-		// indexed field is NOT a useful filter target" via mcp.filterable:false
+		// indexed property is NOT a useful filter target" via mcp.filterable:false
 		// and the catalog respects that. The index is the OUTER gate; operator
 		// overrides apply WITHIN it.
 		$schema = $this->schemaWithProperties(
@@ -250,15 +292,15 @@ final class McpSchemaResolverTest extends TestCase
 		);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertCount(1, $fields);  // still in the catalog
-		$this->assertFalse($fields[0]['filterable']);  // but flagged non-filterable
+		$this->assertCount(1, $properties);
+		$this->assertFalse($properties[0]['filterable']);
 	}
 
-	public function testFilterableFieldsRespectsExplicitMcpFlags(): void
+	public function testDescribePropertiesRespectsExplicitMcpFlags(): void
 	{
-		// Operator-set values override type-inferred defaults.
+		// Operator-set values override type-inferred defaults (within the index).
 		$schema = $this->schemaWithProperties([
 			'title' => [
 				'field' => 'text',
@@ -267,28 +309,30 @@ final class McpSchemaResolverTest extends TestCase
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertFalse($fields[0]['filterable']);
-		$this->assertTrue($fields[0]['sortable']);
+		$this->assertFalse($properties[0]['filterable']);
+		$this->assertTrue($properties[0]['sortable']);
 	}
 
-	public function testFilterableFieldsStripsNonExposedFields(): void
+	public function testDescribePropertiesStripsNonExposedProperties(): void
 	{
-		// expose:false → field shouldn't appear in AI metadata at all.
+		// expose:false → property shouldn't appear in AI metadata at all.
+		// Distinct from non-indexed: those are listed with flags false; these
+		// are hidden entirely.
 		$schema = $this->schemaWithProperties([
 			'title'          => ['field' => 'text'],
 			'internal_notes' => ['field' => 'textarea', 'mcp' => ['expose' => false]],
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertCount(1, $fields);
-		$this->assertSame('title', $fields[0]['name']);
+		$this->assertCount(1, $properties);
+		$this->assertSame('title', $properties[0]['name']);
 	}
 
-	public function testFilterableFieldsIncludesDescriptionViaFallbackChain(): void
+	public function testDescribePropertiesIncludesDescriptionViaFallbackChain(): void
 	{
 		$schema = $this->schemaWithProperties([
 			'a' => ['field' => 'text', 'mcp' => ['description' => 'mcp-desc']],
@@ -298,12 +342,12 @@ final class McpSchemaResolverTest extends TestCase
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$fields = $this->resolver->filterableFields($this->collection());
+		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertSame('mcp-desc',   $fields[0]['description']);
-		$this->assertSame('help-desc',  $fields[1]['description']);
-		$this->assertSame('C Label',    $fields[2]['description']);
-		$this->assertNull($fields[3]['description']);
+		$this->assertSame('mcp-desc',   $properties[0]['description']);
+		$this->assertSame('help-desc',  $properties[1]['description']);
+		$this->assertSame('C Label',    $properties[2]['description']);
+		$this->assertNull($properties[3]['description']);
 	}
 
 	// ─── isPropertyExposed ────────────────────────────────────────────────────
@@ -336,9 +380,9 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertTrue($this->resolver->isPropertyExposed($schema, 'missing'));
 	}
 
-	// ─── nonExposedFields() — list of fields to strip from MCP responses ──────
+	// ─── nonExposedProperties() — list of properties to strip from MCP output ─
 
-	public function testNonExposedFieldsReturnsEmptyListWhenAllExposed(): void
+	public function testNonExposedPropertiesReturnsEmptyListWhenAllExposed(): void
 	{
 		// When every property is exposed (or omits mcp.expose), tools have
 		// nothing to strip and the helper returns an empty list.
@@ -348,13 +392,13 @@ final class McpSchemaResolverTest extends TestCase
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$this->assertSame([], $this->resolver->nonExposedFields($this->collection()));
+		$this->assertSame([], $this->resolver->nonExposedProperties($this->collection()));
 	}
 
-	public function testNonExposedFieldsListsPropertiesWithMcpExposeFalse(): void
+	public function testNonExposedPropertiesListsPropertiesWithMcpExposeFalse(): void
 	{
 		// Content tools (query_collection, get_object, search_collection)
-		// strip these field names from each returned item.
+		// strip these property names from each returned item.
 		$schema = $this->schemaWithProperties([
 			'title'    => ['field' => 'text'],
 			'secret'   => ['field' => 'text', 'mcp' => ['expose' => false]],
@@ -362,7 +406,7 @@ final class McpSchemaResolverTest extends TestCase
 		]);
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$this->assertSame(['secret', 'admin_id'], $this->resolver->nonExposedFields($this->collection()));
+		$this->assertSame(['secret', 'admin_id'], $this->resolver->nonExposedProperties($this->collection()));
 	}
 
 	// ─── renderCatalog() — dynamic description field catalog ──────────────────
@@ -500,6 +544,6 @@ final class McpSchemaResolverTest extends TestCase
 		$catalog = $this->resolver->renderCatalog(McpPersona::ADMIN);
 
 		$this->assertStringContainsString('- plain', $catalog);
-		$this->assertStringContainsString('(no filterable fields)', $catalog);
+		$this->assertStringContainsString('(no filterable properties)', $catalog);
 	}
 }

@@ -94,7 +94,7 @@ readonly class GetObjectTool
 
 		$object['url'] = $this->urlBuilder->buildUrl($collectionData, $object);
 
-		foreach ($this->schemaResolver->nonExposedFields($collectionData) as $field) {
+		foreach ($this->schemaResolver->nonExposedProperties($collectionData) as $field) {
 			unset($object[$field]);
 		}
 

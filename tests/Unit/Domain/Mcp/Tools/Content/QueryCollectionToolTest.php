@@ -185,7 +185,7 @@ final class QueryCollectionToolTest extends TestCase
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexQuery->expects($this->once())
 			->method('query')
@@ -206,7 +206,7 @@ final class QueryCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::PUBLIC_);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexQuery->expects($this->once())
 			->method('query')
@@ -227,7 +227,7 @@ final class QueryCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexQuery->expects($this->once())
 			->method('query')
@@ -248,7 +248,7 @@ final class QueryCollectionToolTest extends TestCase
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$item = ['id' => 'hello', 'title' => 'Hello'];
 		$this->indexQuery->method('query')
@@ -269,7 +269,7 @@ final class QueryCollectionToolTest extends TestCase
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn(['internal_notes', 'admin_only']);
+		$this->resolver->method('nonExposedProperties')->willReturn(['internal_notes', 'admin_only']);
 
 		$items = [
 			['id' => 'a', 'internal_notes' => 'private', 'title' => 'A'],
@@ -293,7 +293,7 @@ final class QueryCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexQuery->expects($this->once())
 			->method('query')
@@ -311,7 +311,7 @@ final class QueryCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 		$this->indexQuery->method('query')
 			->willReturn(new QueryResult(items: [['id' => 'x']], total: 25, limit: 10, offset: 10));
 		$this->urls->method('buildUrl')->willReturn('/blog/x');

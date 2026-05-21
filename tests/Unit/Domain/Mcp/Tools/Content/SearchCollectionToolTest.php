@@ -129,7 +129,7 @@ final class SearchCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::PUBLIC_);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexFilter->expects($this->once())
 			->method('fetchFilteredIndex')
@@ -150,7 +150,7 @@ final class SearchCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexFilter->expects($this->once())
 			->method('fetchFilteredIndex')
@@ -169,7 +169,7 @@ final class SearchCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
 			['id' => 'a', 'title' => 'Rust adventures', 'body' => 'Memory safe code.'],
@@ -190,7 +190,7 @@ final class SearchCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn([]);
+		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		// 60 matching items — the cap should slice us back to 50.
 		$items = [];
@@ -212,7 +212,7 @@ final class SearchCollectionToolTest extends TestCase
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedFields')->willReturn(['secret']);
+		$this->resolver->method('nonExposedProperties')->willReturn(['secret']);
 
 		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
 			['id' => 'a', 'title' => 'rust', 'secret' => 'hidden'],

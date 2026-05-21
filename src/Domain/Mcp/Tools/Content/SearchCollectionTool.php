@@ -101,7 +101,7 @@ readonly class SearchCollectionTool
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$matches     = array_slice($matches, 0, $cappedLimit);
 
-		$nonExposed = $this->schemaResolver->nonExposedFields($collectionData);
+		$nonExposed = $this->schemaResolver->nonExposedProperties($collectionData);
 		$shaped     = [];
 		foreach ($matches as $item) {
 			$item['url'] = $this->urlBuilder->buildUrl($collectionData, $item);
@@ -133,7 +133,7 @@ readonly class SearchCollectionTool
 		return implode(' ', [
 			'Free-text search within a single collection.',
 			'Returns matching items decorated with a public `url`; total reflects what was found.',
-			'Supports AND (default), OR, and "quoted phrases". Searches across the fields listed in the catalog below — other schema fields exist on objects but are not searchable here; use get_object if you need the full record.',
+			'Supports AND (default), OR, and "quoted phrases". Searches across the properties listed in the catalog below — other schema properties exist on objects but are not searchable here; use get_object for the full record or describe_collection to see every property.',
 			'This tool does not filter by field value — use query_collection with `include`/`exclude` for that. Drafts are auto-hidden from anonymous callers.',
 		]);
 	}

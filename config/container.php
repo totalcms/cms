@@ -111,8 +111,12 @@ use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tools\Admin\SiteInfoTool;
 use TotalCMS\Domain\Mcp\Tools\Content\GetObjectTool;
+use TotalCMS\Domain\Mcp\Tools\Content\GetResourceTool;
 use TotalCMS\Domain\Mcp\Tools\Content\QueryCollectionTool;
 use TotalCMS\Domain\Mcp\Tools\Content\SearchCollectionTool;
+use TotalCMS\Domain\Mcp\Tools\Content\SearchCollectionsTool;
+use TotalCMS\Domain\Mcp\Tools\Discovery\DescribeCollectionTool;
+use TotalCMS\Domain\Mcp\Tools\Discovery\ListCollectionsTool;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -1479,6 +1483,10 @@ return [
 		$container->get(QueryCollectionTool::class)->register($registry);
 		$container->get(GetObjectTool::class)->register($registry);
 		$container->get(SearchCollectionTool::class)->register($registry);
+		$container->get(ListCollectionsTool::class)->register($registry);
+		$container->get(DescribeCollectionTool::class)->register($registry);
+		$container->get(SearchCollectionsTool::class)->register($registry);
+		$container->get(GetResourceTool::class)->register($registry);
 
 		return $registry;
 	},
