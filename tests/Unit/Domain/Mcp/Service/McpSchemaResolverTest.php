@@ -352,6 +352,41 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertTrue($this->resolver->isPropertyExposed($schema, 'missing'));
 	}
 
+	public function testIsPropertyExposedDefaultsFalseForPasswordField(): void
+	{
+		// Sensitive-field default — password fields default to non-exposed even
+		// when no explicit mcp.expose key is set. Catches the common case
+		// (hashed user password) without requiring per-schema opt-out.
+		$schema = $this->schemaWithProperties([
+			'password' => ['field' => 'password'],
+		]);
+
+		$this->assertFalse($this->resolver->isPropertyExposed($schema, 'password'));
+	}
+
+	public function testIsPropertyExposedDefaultsFalseForSecretField(): void
+	{
+		// API keys / tokens / OAuth secrets stored via SecretField default
+		// to non-exposed for the same reason as password.
+		$schema = $this->schemaWithProperties([
+			'apiKey' => ['field' => 'secret'],
+		]);
+
+		$this->assertFalse($this->resolver->isPropertyExposed($schema, 'apiKey'));
+	}
+
+	public function testIsPropertyExposedExplicitTrueOverridesSensitiveDefault(): void
+	{
+		// Operators who genuinely want a sensitive field surfaced can opt
+		// back in with mcp.expose: true. Explicit beats default in both
+		// directions.
+		$schema = $this->schemaWithProperties([
+			'password' => ['field' => 'password', 'mcp' => ['expose' => true]],
+		]);
+
+		$this->assertTrue($this->resolver->isPropertyExposed($schema, 'password'));
+	}
+
 	// ─── nonExposedProperties() — list of properties to strip from MCP output ─
 
 	// ─── renderableProperties() — properties whose values are HTML (styledtext) ─
@@ -411,6 +446,36 @@ final class McpSchemaResolverTest extends TestCase
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
 		$this->assertSame(['secret', 'admin_id'], $this->resolver->nonExposedProperties($this->collection()));
+	}
+
+	public function testNonExposedPropertiesIncludesSensitiveFieldsByDefault(): void
+	{
+		// Sensitive field types (password, secret) auto-populate the strip
+		// list even when no mcp key is set on the property — content tools
+		// drop them from query/search/get_object output the same way they
+		// drop explicit mcp.expose:false fields.
+		$schema = $this->schemaWithProperties([
+			'name'     => ['field' => 'text'],
+			'password' => ['field' => 'password'],
+			'apiToken' => ['field' => 'secret'],
+		]);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->assertSame(['password', 'apiToken'], $this->resolver->nonExposedProperties($this->collection()));
+	}
+
+	public function testNonExposedPropertiesRespectsExplicitOptInOnSensitiveField(): void
+	{
+		// mcp.expose: true on a sensitive field flips the default — the field
+		// no longer appears in the strip list. Symmetric with the explicit
+		// opt-out path.
+		$schema = $this->schemaWithProperties([
+			'name'     => ['field' => 'text'],
+			'password' => ['field' => 'password', 'mcp' => ['expose' => true]],
+		]);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->assertSame([], $this->resolver->nonExposedProperties($this->collection()));
 	}
 
 	// ─── renderCatalog() — dynamic description field catalog ──────────────────

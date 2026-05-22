@@ -107,6 +107,22 @@ class SchemaData
 	public const SORTABLE_FIELD_TYPES = [
 		'number', 'range', 'date', 'datetime', 'id',
 	];
+
+	/**
+	 * Form-field types that hold credential / secret values. Properties using
+	 * these types default to `mcp.expose: false` — they never appear in MCP
+	 * responses unless the operator explicitly sets `mcp.expose: true`.
+	 *
+	 * The defensive default catches the common case (password hashes, API
+	 * keys, OAuth tokens stored in plain text via SecretField) without
+	 * requiring every operator to remember to opt out per-schema.
+	 *
+	 * Consumed via `McpSchemaResolver::isPropertyExposed()`.
+	 */
+	public const SENSITIVE_FIELD_TYPES = [
+		'password',
+		'secret',
+	];
 	public const PROPERTY_TYPE_TO_REF = [
 		'card'          => 'https://www.totalcms.co/schemas/properties/card.json',
 		'code'          => 'https://www.totalcms.co/schemas/properties/code.json',

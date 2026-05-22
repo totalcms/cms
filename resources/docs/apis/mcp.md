@@ -157,7 +157,7 @@ The same `mcp` card lives on each **data view** (in the dataviews editor) with i
 | Field | Default | Meaning |
 |---|---|---|
 | `description` | falls back to `help` → `label` | AI-targeted description shown per property in `describe_collection` and tool-description catalogs. |
-| `expose` | `true` | When `false`, this property is stripped from every MCP response entirely. Use for operator-only fields (credentials, internal references, supplier costs). |
+| `expose` | `true` (see below) | When `false`, this property is stripped from every MCP response entirely. Use for operator-only fields (credentials, internal references, supplier costs). **Defaults to `false` on `password` and `secret` fields** — explicit operator opt-in with `mcp.expose: true` is required to surface a sensitive field. |
 
 Filterability and sortability are NOT operator-controlled — they're derived from:
 1. The schema's `index` list (a non-indexed property can never be queried regardless of intent).
@@ -167,11 +167,12 @@ To make a property queryable, **add it to the schema's `index` array**. That's t
 
 ### Reserved security defaults
 
-The reserved `auth` schema ships with `mcp.expose: false` on:
-- `password` (the password hash)
-- `passkeys` (WebAuthn credential array)
+Two layers of defensive defaults protect credential-shaped data:
 
-These never appear in MCP responses regardless of persona, even if an operator marks the auth collection public. The defensive default belongs to T3, not to operators.
+1. **Field-type default.** Any property using the `password` or `secret` field type is treated as non-exposed unless the operator explicitly sets `mcp.expose: true` on it. Catches the common case (hashed passwords, API keys, OAuth tokens stored via SecretField) for every custom schema without requiring per-schema opt-out.
+2. **Explicit schema opt-out.** The reserved `auth` schema additionally ships with `mcp.expose: false` on `password` (redundant with the field-type default but kept for defense in depth and reader clarity) and on `passkeys` (a `hidden`-type array of WebAuthn credentials — the field-type default doesn't cover it, so the explicit entry is load-bearing).
+
+Both layers are honored regardless of persona — even if an operator marks the auth collection public, these properties stay stripped.
 
 ---
 

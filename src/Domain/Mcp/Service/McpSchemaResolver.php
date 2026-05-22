@@ -127,8 +127,7 @@ readonly class McpSchemaResolver
 
 			// Strip non-exposed properties entirely — they shouldn't appear in
 			// AI-facing metadata at all.
-			$mcp = is_array($property['mcp'] ?? null) ? $property['mcp'] : [];
-			if (array_key_exists('expose', $mcp) && $mcp['expose'] === false) {
+			if (!$this->isPropertyArrayExposed($property)) {
 				continue;
 			}
 
@@ -199,8 +198,7 @@ readonly class McpSchemaResolver
 				continue;
 			}
 
-			$mcp = is_array($property['mcp'] ?? null) ? $property['mcp'] : [];
-			if (array_key_exists('expose', $mcp) && $mcp['expose'] === false) {
+			if (!$this->isPropertyArrayExposed($property)) {
 				$names[] = (string)$name;
 			}
 		}
@@ -290,9 +288,35 @@ readonly class McpSchemaResolver
 			return true;
 		}
 
+		return $this->isPropertyArrayExposed($property);
+	}
+
+	/**
+	 * Effective `mcp.expose` decision for a property.
+	 *
+	 * Default: exposed. Two paths to non-exposure:
+	 *   1. Explicit operator opt-out — `mcp.expose: false` set on the property.
+	 *   2. Sensitive-field default — `field` is in {@see SchemaData::SENSITIVE_FIELD_TYPES}
+	 *      (password / secret) and the operator has NOT explicitly opted IN with
+	 *      `mcp.expose: true`. Catches the common case (hashed passwords, API
+	 *      keys, OAuth tokens) without requiring per-schema opt-out.
+	 *
+	 * Explicit beats default: an operator who really wants a secret field
+	 * surfaced (rare, but supported) sets `mcp.expose: true` and wins.
+	 *
+	 * @param array<string,mixed> $property
+	 */
+	private function isPropertyArrayExposed(array $property): bool
+	{
 		$mcp = is_array($property['mcp'] ?? null) ? $property['mcp'] : [];
 
-		return !(array_key_exists('expose', $mcp) && $mcp['expose'] === false);
+		if (array_key_exists('expose', $mcp)) {
+			return $mcp['expose'] !== false;
+		}
+
+		$fieldType = (string)($property['field'] ?? '');
+
+		return !in_array($fieldType, SchemaData::SENSITIVE_FIELD_TYPES, true);
 	}
 
 	/**
