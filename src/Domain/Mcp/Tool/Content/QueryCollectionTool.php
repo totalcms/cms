@@ -66,7 +66,39 @@ readonly class QueryCollectionTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['items', 'total', 'limit', 'offset', 'has_more'],
+			'additionalProperties' => false,
+			'properties'           => [
+				'items' => [
+					'type'        => 'array',
+					'description' => 'Matching objects in sort order. Field set varies by collection — call describe_collection for the schema.',
+					'items'       => [
+						'type'                 => 'object',
+						'additionalProperties' => true,
+						'required'             => ['id'],
+						'properties'           => [
+							'id'  => ['type' => 'string'],
+							'url' => ['type' => 'string', 'description' => 'Public URL for this object when the collection has a URL pattern configured.'],
+						],
+					],
+				],
+				'total'    => ['type' => 'integer', 'description' => 'Total matching items (post-persona-filter).'],
+				'limit'    => ['type' => 'integer', 'description' => 'Cap applied to this response — server may have lowered the requested limit.'],
+				'offset'   => ['type' => 'integer'],
+				'has_more' => ['type' => 'boolean', 'description' => 'True when total > offset + count(items); call again with offset += limit to paginate.'],
+			],
+		];
 	}
 
 	/**

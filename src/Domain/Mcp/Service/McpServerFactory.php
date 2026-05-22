@@ -100,6 +100,7 @@ readonly class McpServerFactory
 				description: $description,
 				annotations: $annotations,
 				inputSchema: $tool->inputSchema,
+				outputSchema: $tool->outputSchema,
 			);
 		}
 

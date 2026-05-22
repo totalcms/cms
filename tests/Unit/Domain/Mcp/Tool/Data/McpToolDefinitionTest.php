@@ -152,4 +152,37 @@ final class McpToolDefinitionTest extends TestCase
 	{
 		$this->assertTrue($this->tool('authenticated')->isVisibleTo(McpPersona::AUTHENTICATED));
 	}
+
+	public function testOutputSchemaDefaultsToNull(): void
+	{
+		// Tools that don't declare an outputSchema get null — the SDK's
+		// addTool() default. Content + discovery tools that return
+		// structured data opt in to a schema for SDK-aware host validation.
+		$tool = new McpToolDefinition('t', 'd', 'public', static fn () => null);
+
+		$this->assertNull($tool->outputSchema);
+	}
+
+	public function testOutputSchemaCanCarryArbitraryJsonSchema(): void
+	{
+		// The shape is forwarded verbatim to addTool()'s outputSchema arg,
+		// then exposed in tools/list for hosts that pre-validate results.
+		$schema = [
+			'type'       => 'object',
+			'required'   => ['items', 'total'],
+			'properties' => [
+				'items' => ['type' => 'array'],
+				'total' => ['type' => 'integer'],
+			],
+		];
+		$tool = new McpToolDefinition(
+			name: 't',
+			description: 'd',
+			access: 'public',
+			handler: static fn () => null,
+			outputSchema: $schema,
+		);
+
+		$this->assertSame($schema, $tool->outputSchema);
+	}
 }

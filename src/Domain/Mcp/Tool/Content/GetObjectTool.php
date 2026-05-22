@@ -58,7 +58,27 @@ readonly class GetObjectTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		// get_object returns the raw object as a flat map of fields — field set
+		// varies by collection, so the schema permits any additional property
+		// but pins the two values the agent can always rely on (id + url).
+		return [
+			'type'                 => 'object',
+			'required'             => ['id'],
+			'additionalProperties' => true,
+			'properties'           => [
+				'id'  => ['type' => 'string', 'description' => 'Object id (slug).'],
+				'url' => ['type' => 'string', 'description' => 'Public URL for this object when the collection has a URL pattern configured.'],
+			],
+		];
 	}
 
 	/**

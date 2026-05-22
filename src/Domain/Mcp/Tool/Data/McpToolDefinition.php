@@ -35,6 +35,11 @@ readonly class McpToolDefinition
 	 *                                                      tools (delete_schema, clear_cache, template_delete) MUST set
 	 *                                                      destructiveHint:true — Anthropic Directory review treats
 	 *                                                      missing annotations as a pass/fail check.
+	 * @param array<string,mixed>|null  $outputSchema       JSON Schema describing the tool's return shape. Optional but
+	 *                                                      strongly recommended on content + discovery tools so SDK-aware
+	 *                                                      hosts can pre-validate before passing results to the LLM.
+	 *                                                      When set, McpServerFactory forwards it to addTool's
+	 *                                                      outputSchema argument; the SDK exposes it in tools/list.
 	 */
 	public function __construct(
 		public string $name,
@@ -44,6 +49,7 @@ readonly class McpToolDefinition
 		public ?array $inputSchema = null,
 		public ?Closure $descriptionBuilder = null,
 		public ?ToolAnnotations $annotations = null,
+		public ?array $outputSchema = null,
 	) {
 	}
 

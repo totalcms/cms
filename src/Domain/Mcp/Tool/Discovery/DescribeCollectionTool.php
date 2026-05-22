@@ -55,7 +55,44 @@ readonly class DescribeCollectionTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['id', 'access', 'total_objects', 'properties'],
+			'additionalProperties' => false,
+			'properties'           => [
+				'id'            => ['type' => 'string'],
+				'description'   => ['type' => ['string', 'null'], 'description' => 'Collection-level mcp.description, falling back to the schema description.'],
+				'url_pattern'   => ['type' => 'string', 'description' => 'URL template for objects, e.g. "/blog/{id}". Empty string when no pattern is configured.'],
+				'access'        => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated'], 'description' => 'Persona that can query this collection.'],
+				'total_objects' => ['type' => 'integer'],
+				'properties'    => [
+					'type'        => 'array',
+					'description' => 'One entry per exposed property (mcp.expose:false fields are stripped). Per-property mcp.description is surfaced here when set.',
+					'items'       => [
+						'type'                 => 'object',
+						'required'             => ['name', 'type', 'indexed', 'filterable', 'sortable'],
+						'additionalProperties' => false,
+						'properties'           => [
+							'name'        => ['type' => 'string'],
+							'type'        => ['type' => 'string', 'description' => 'Schema field type (text, number, date, toggle, etc.).'],
+							'description' => ['type' => ['string', 'null'], 'description' => 'Resolved property description — mcp.description → help → label.'],
+							'indexed'     => ['type' => 'boolean', 'description' => 'True when the property appears in query/search results. False = available via get_object only.'],
+							'filterable'  => ['type' => 'boolean'],
+							'sortable'    => ['type' => 'boolean'],
+						],
+					],
+				],
+			],
+		];
 	}
 
 	/**

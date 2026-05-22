@@ -53,7 +53,41 @@ readonly class ListCollectionsTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['collections', 'total'],
+			'additionalProperties' => false,
+			'properties'           => [
+				'collections' => [
+					'type'        => 'array',
+					'description' => 'Persona-filtered list, sorted alphabetically by id.',
+					'items'       => [
+						'type'                 => 'object',
+						'required'             => ['id', 'name', 'schema', 'access', 'total_objects'],
+						'additionalProperties' => false,
+						'properties'           => [
+							'id'            => ['type' => 'string'],
+							'name'          => ['type' => 'string', 'description' => 'Display label, falls back to id.'],
+							'schema'        => ['type' => 'string', 'description' => 'Schema id this collection uses.'],
+							'description'   => ['type' => ['string', 'null'], 'description' => 'Resolved mcp.description, falling back to the schema description.'],
+							'url_pattern'   => ['type' => 'string', 'description' => 'URL template for objects, e.g. "/blog/{id}". Empty string when no pattern is configured.'],
+							'access'        => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated']],
+							'total_objects' => ['type' => 'integer'],
+						],
+					],
+				],
+				'total' => ['type' => 'integer', 'description' => 'Number of collections in the response (post-persona-filter).'],
+			],
+		];
 	}
 
 	/**

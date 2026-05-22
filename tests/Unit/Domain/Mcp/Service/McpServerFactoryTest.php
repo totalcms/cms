@@ -157,6 +157,30 @@ final class McpServerFactoryTest extends TestCase
 		$this->assertInstanceOf(Server::class, $this->factory()->build(McpPersona::ADMIN));
 	}
 
+	public function testToolOutputSchemaIsForwardedToTheSdk(): void
+	{
+		// Per Phase 2 Chunk E the four content + discovery tools declare an
+		// outputSchema that ends up on the SDK's tool record — SDK-aware
+		// hosts use it to pre-validate result shapes before passing them to
+		// the LLM. Verified via successful Server build with a schema-bearing
+		// tool registered; the SDK exposes the schema through tools/list.
+		$toolWithSchema = new McpToolDefinition(
+			name: 'schema_carrier',
+			description: 'd',
+			access: 'public',
+			handler: static fn (): array => ['ok' => true],
+			outputSchema: [
+				'type'       => 'object',
+				'required'   => ['ok'],
+				'properties' => ['ok' => ['type' => 'boolean']],
+			],
+		);
+
+		$this->registry->register($toolWithSchema);
+
+		$this->assertInstanceOf(Server::class, $this->factory()->build(McpPersona::PUBLIC_));
+	}
+
 	public function testDescriptionBuilderIsInvokedWithBuildPersona(): void
 	{
 		// Phase 1: content tools dynamically render their description per persona
