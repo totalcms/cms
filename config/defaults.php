@@ -381,11 +381,15 @@ $settings['builder'] = [
 // `toolPrefix` is an optional namespace prepended to every tool name — useful when
 // running multiple T3 sites in the same AI agent (e.g. 'bistro' → bistro_list_collections).
 $settings['mcp'] = [
-	'enabled'           => true,
-	'publicAccess'      => false,
-	'allowedOrigins'    => [],
-	'publicIpPerMinute' => 60,
-	'toolPrefix'        => '',
+	'enabled'              => true,
+	'publicAccess'         => false,
+	'allowedOrigins'       => [],
+	'publicIpPerMinute'    => 60,
+	'toolPrefix'           => '',
+	// Operator kill switch for resource subscriptions. When off, the SDK falls
+	// back to its per-session-only default — resources/subscribe still works
+	// but T3 won't push notifications/resources/updated when content changes.
+	'subscriptionsEnabled' => true,
 ];
 
 // https://www.php.net/manual/en/timezones.php

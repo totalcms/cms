@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Service;
 
 use Mcp\Server;
+use Mcp\Server\Resource\SessionSubscriptionManager;
 use Mcp\Server\Session\InMemorySessionStore;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -38,7 +39,16 @@ final class McpServerFactoryTest extends TestCase
 
 	private function factory(): McpServerFactory
 	{
-		return new McpServerFactory($this->registry, $this->resources, $this->config, $this->sessions, $this->logger);
+		// SessionSubscriptionManager is the SDK default — fine as a stand-in
+		// for tests since they don't exercise subscription dispatch.
+		return new McpServerFactory(
+			$this->registry,
+			$this->resources,
+			new SessionSubscriptionManager(),
+			$this->config,
+			$this->sessions,
+			$this->logger,
+		);
 	}
 
 	private function tool(string $name, string $access = 'public'): McpToolDefinition

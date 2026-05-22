@@ -55,6 +55,13 @@
 			"default"     : "",
 			"pattern"     : "^[a-z][a-z0-9_]*$",
 			"maxLength"   : 24
+		},
+		"subscriptionsEnabled": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Enable Resource Subscriptions",
+			"help"    : "When on, AI agents can call <code>resources/subscribe</code> on URIs like <code>tcms://blog/</code> and T3 will push <code>notifications/resources/updated</code> when matching content changes. When off, the SDK still accepts subscribe calls but T3 won't push notifications — the kill switch for production troubleshooting.",
+			"default" : true
 		}
 	}
 }

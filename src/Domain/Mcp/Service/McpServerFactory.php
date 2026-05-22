@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Service;
 
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
+use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
@@ -37,6 +38,7 @@ readonly class McpServerFactory
 	public function __construct(
 		private ToolRegistry $toolRegistry,
 		private ResourceRegistry $resourceRegistry,
+		private SubscriptionManagerInterface $subscriptionManager,
 		private Config $config,
 		private SessionStoreInterface $sessionStore,
 		private LoggerInterface $logger,
@@ -65,6 +67,16 @@ readonly class McpServerFactory
 			)
 			->setSession($this->sessionStore)
 			->setLogger($this->logger);
+
+		// Resource subscriptions: when enabled, swap in T3's manager so subscribe/
+		// unsubscribe also writes to the reverse URI→sessionIds index that the
+		// McpResourceSubscriptionListener queries on object.* events. When the
+		// kill switch is off the SDK falls back to its per-session-only default
+		// — clients can still call resources/subscribe but no cross-session
+		// push happens.
+		if (($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
+			$builder->setResourceSubscriptionManager($this->subscriptionManager);
+		}
 
 		$prefix = $this->toolNamePrefix();
 		foreach ($this->toolRegistry->forPersona($persona) as $tool) {

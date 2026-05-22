@@ -7,9 +7,12 @@ namespace TotalCMS\Domain\Mcp\Subscription\Service;
 /**
  * Maintains a JSON reverse-index mapping resource URIs to subscribed session IDs.
  *
- * The index file lives at {tmpdir}/mcp-sessions/_subscribers.json — the leading
- * underscore keeps it from colliding with the SDK's UUID-named session files in
- * the same directory.
+ * The index file lives at {tmpdir}/mcp-subscriptions.json — intentionally
+ * OUTSIDE /mcp-sessions/ because McpSessionInvalidator::invalidateAll() wipes
+ * every file in that directory whenever the tool surface changes. The
+ * subscription index must outlive session invalidations so re-subscribed
+ * clients (which re-initialize with fresh session ids after invalidation)
+ * can pick up where they left off via purgeSession() of the stale ids.
  *
  * JSON shape:
  *   {
