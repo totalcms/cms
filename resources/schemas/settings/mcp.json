@@ -22,8 +22,17 @@
 			"type"     : "array",
 			"field"    : "list",
 			"label"    : "CORS Allowed Origins",
-			"placeholder" : "Type an origin (e.g. https://app.example.com) and press Enter",
-			"help"     : "Origins permitted to call the MCP endpoint from a browser. Leave empty to deny browser-based AI clients (the default — most AI agents call MCP server-side). Use <code>*</code> to allow any origin (not recommended for sites with non-public tools).",
+			"placeholder" : "Pick a known AI client or type a custom origin",
+			"help"     : "Origins permitted to call <code>/mcp</code> from <strong>inside a browser tab</strong>. Pick a known browser-based AI client from the dropdown, or type a custom origin (e.g. <code>https://example.com</code>) for in-house playgrounds. <br><br><strong>Native MCP clients (Claude Desktop, Cursor, Claude Code, MCP Inspector) connect regardless of this setting</strong> — CORS is a browser-only mechanism and never reaches non-browser clients. Server-side AI integrations are also unaffected. <br><br>Leave empty (default) to block browser clients entirely. Use <code>*</code> to allow any origin (not recommended for sites with non-public collections — any website's JavaScript could read your public MCP surface).",
+			"options"  : [
+				{"value": "https://chatgpt.com",          "label": "ChatGPT"},
+				{"value": "https://claude.ai",            "label": "Claude.ai"},
+				{"value": "https://copilot.microsoft.com","label": "Microsoft Copilot"},
+				{"value": "https://gemini.google.com",    "label": "Google Gemini"},
+				{"value": "https://chat.mistral.ai",      "label": "Mistral Le Chat"},
+				{"value": "https://www.perplexity.ai",    "label": "Perplexity"},
+				{"value": "*",                            "label": "* (any origin — use cautiously)"}
+			],
 			"settings" : {
 				"duplicateItemsAllowed" : false,
 				"addChoices"            : true
