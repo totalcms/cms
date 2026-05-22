@@ -7,7 +7,6 @@ use Mcp\Server\Protocol as McpProtocol;
 use Mcp\Server\Session\FileSessionStore as McpFileSessionStore;
 use Mcp\Server\Session\SessionManager as McpSessionManager;
 use Mcp\Server\Session\SessionStoreInterface as McpSessionStoreInterface;
-use Middlewares\TrailingSlash;
 use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\Middleware\SessionStartMiddleware;
@@ -27,49 +26,13 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Auth\Service\AuthTokenService;
-use TotalCMS\Domain\Auth\Service\EmailVerificationService;
-use TotalCMS\Domain\Auth\Service\FileAccessManager;
-use TotalCMS\Domain\Auth\Service\LogoutService;
-use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\PasswordResetService;
-use TotalCMS\Domain\Auth\Service\PersistentLoginService;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\Buffer\BufferController;
-use TotalCMS\Domain\Builder\Service\BuilderConfigService;
-use TotalCMS\Domain\Builder\Service\BuilderInstaller;
-use TotalCMS\Domain\Builder\Service\PageRouter;
-use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Cache\CacheReporter;
-use TotalCMS\Domain\Cache\CacheSizingAdvisor;
-use TotalCMS\Domain\Cache\Service\APCuService;
-use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
-use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Cache\Service\FilesystemService;
-use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
-use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\DataView\Repository\DataViewRepository;
-use TotalCMS\Domain\DataView\Service\DataViewBuilder;
-use TotalCMS\Domain\DataView\Service\DataViewFetcher;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
-use TotalCMS\Domain\DataView\Service\DataViewRemover;
-use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
@@ -83,34 +46,11 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
-use TotalCMS\Domain\Factory\Service\FactoryImporter;
-use TotalCMS\Domain\Factory\Service\FakerFactory;
-use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
-use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
-use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
-use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
-use TotalCMS\Domain\Import\TotalCmsOneImporter;
-use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
-use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\Index\Service\IndexSearcher;
-use TotalCMS\Domain\JobQueue\Service\JobManager;
-use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
-use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
-use TotalCMS\Domain\License\Repository\OfflineLicenseRepository;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
-use TotalCMS\Domain\License\Service\LicenseValidator;
-use TotalCMS\Domain\License\Service\OfflineLicenseValidator;
-use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
-use TotalCMS\Domain\Mailer\Service\BulkMailerService;
-use TotalCMS\Domain\Mailer\Service\EmailSender;
-use TotalCMS\Domain\Mailer\Service\EmailService;
-use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
@@ -136,130 +76,53 @@ use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeViewTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListViewsTool;
-use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
-use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
 use TotalCMS\Domain\Migration\Service\MigrationRunner;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use TotalCMS\Domain\Object\Service\AutogenIdService;
-use TotalCMS\Domain\Object\Service\AutogenService;
-use TotalCMS\Domain\Object\Service\CalcService;
-use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Domain\Property\Service\DeckItemFactory;
-use TotalCMS\Domain\Property\Service\DeckItemFetcher;
-use TotalCMS\Domain\Property\Service\DeckItemRemover;
-use TotalCMS\Domain\Property\Service\DeckItemSaver;
-use TotalCMS\Domain\Property\Service\DeckItemUpdater;
-use TotalCMS\Domain\Property\Service\DeckItemValidator;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
-use TotalCMS\Domain\Property\Service\PropertyFactory;
-use TotalCMS\Domain\Property\Service\PropertyFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
-use TotalCMS\Domain\Query\Service\ObjectFilter;
-use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
-use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Schema\Service\SchemaSaver;
-use TotalCMS\Domain\Schema\Service\SchemaValidator;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Domain\Security\Encryption\Cipher;
-use TotalCMS\Domain\Security\Upload\FileUploadValidator;
-use TotalCMS\Domain\Settings\Repository\InstallationRepository;
-use TotalCMS\Domain\Settings\Repository\SettingsRepository;
-use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
-use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
-use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
-use TotalCMS\Domain\Settings\Services\SettingsValidator;
-use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Domain\Template\Service\TemplateMigrationService;
-use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
-use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
-use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\SchemaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\UtilsTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\ViewTwigAdapter;
-use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
-use TotalCMS\Domain\Twig\Designer\TemplateDesignerRegistry;
-use TotalCMS\Domain\Twig\Designer\TemplateDesignerSync;
-use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
-use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
-use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
-use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
-use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
-use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
-use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
-use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
-use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
-use TotalCMS\Middleware\Access\DesignerAccessMiddleware;
-use TotalCMS\Middleware\Access\DocsAccessMiddleware;
-use TotalCMS\Middleware\Access\MailerAccessMiddleware;
-use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
-use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
-use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
-use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
-use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\BasePathMiddleware;
-use TotalCMS\Middleware\CacheInvalidationMiddleware;
-use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
-use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
-use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
-use TotalCMS\Middleware\License\BulkMailerEditionMiddleware;
-use TotalCMS\Middleware\License\CollectionEditionMiddleware;
-use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
-use TotalCMS\Middleware\License\LicenseValidationMiddleware;
-use TotalCMS\Middleware\License\MailerEditionMiddleware;
-use TotalCMS\Middleware\License\RssImportEditionMiddleware;
-use TotalCMS\Middleware\License\SchemaEditionMiddleware;
-use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
-use TotalCMS\Middleware\MigrationMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
-use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
-use TotalCMS\Middleware\Security\RateLimitMiddleware;
-use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Renderer\RedirectRenderer;
-use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\PathResolver;
 
 return [
-	// Application settings
-	Config::class => Config::init(...),
+	// Application settings — plain closure (rather than `Config::init(...)`)
+	// so the entire container is compileable; PHP-DI's compiler rejects
+	// first-class callables because they internally reference `self`.
+	Config::class => fn (): Config => Config::init(),
 
 	App::class => function (ContainerInterface $container): App {
 		AppFactory::setContainer($container);
@@ -415,72 +278,9 @@ return [
 
 	PhpRenderer::class => fn (ContainerInterface $container): PhpRenderer => new PhpRenderer($container->get(Config::class)->template),
 
-	TrailingSlash::class => fn (ContainerInterface $container): TrailingSlash => new TrailingSlash(),
-
-	BufferController::class => fn (ContainerInterface $container): BufferController => new BufferController(),
-
-	FakerFactory::class => fn (ContainerInterface $container): FakerFactory => new FakerFactory(
-		$container->get(Config::class)
-	),
-
-	IndexReader::class => fn (ContainerInterface $container): IndexReader => new IndexReader(
-		$container->get(IndexRepository::class),
-		$container->get(IndexBuilder::class),
-	),
-
-	IndexFilter::class => fn (ContainerInterface $container): IndexFilter => new IndexFilter(
-		$container->get(IndexReader::class),
-		$container->get(ObjectFilter::class),
-	),
-
-	ObjectFetcher::class => fn (ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
-
-	PropertyFetcher::class => fn (ContainerInterface $container): PropertyFetcher => new PropertyFetcher($container->get(ObjectFetcher::class)),
-
 	PropertyDataProcessorInterface::class => fn (ContainerInterface $container): PropertyDataProcessor => new PropertyDataProcessor(),
 
 	PropertyDataProcessor::class => fn (ContainerInterface $container) => $container->get(PropertyDataProcessorInterface::class),
-
-	TotalFormFactory::class => fn (ContainerInterface $container): TotalFormFactory => new TotalFormFactory(
-		$container->get(Config::class),
-		$container->get(PhpSession::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionLister::class),
-		$container->get(IndexReader::class),
-		$container->get(IndexFilter::class),
-		$container->get(SchemaFetcher::class),
-		$container->get(SchemaLister::class),
-		$container->get(AccessGroupLister::class),
-		$container->get(CollectionEditionService::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(SchemaFactory::class),
-		$container->get(TemplateRepository::class),
-		$container->get(CSRFTokenManager::class),
-		$container->get(SettingsSchemaFetcher::class),
-		$container->get(SettingsFetcher::class),
-		$container->get(JobManager::class),
-		$container->get(DataViewLister::class),
-		$container->get(PropertyMetaResolver::class),
-		$container->get(DataViewFilter::class),
-		$container->get(TranslationService::class),
-		$container->get(ExtensionDiscovery::class),
-		$container->get(ExtensionSettingsManager::class),
-		$container->get(ExtensionManager::class),
-		$container->get(TemplateLister::class),
-		$container->get(DevModeManager::class),
-		$container->get(TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
-	),
-
-	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
-
-	DepotBrowserRenderer::class => fn (ContainerInterface $container): DepotBrowserRenderer => new DepotBrowserRenderer(),
-
-	EditionTwigAdapter::class => fn (ContainerInterface $container): EditionTwigAdapter => new EditionTwigAdapter(
-		$container->get(EditionFeatureService::class),
-	),
-
-	HtmxRenderer::class => fn (): HtmxRenderer => new HtmxRenderer(),
 
 	RenderTwigAdapter::class => fn (ContainerInterface $container): RenderTwigAdapter => new RenderTwigAdapter(
 		$container->get(HtmxRenderer::class),
@@ -496,81 +296,6 @@ return [
 		$container->get(IndexQueryService::class),
 		fn () => $container->get(DataViewQueryService::class),
 		fn () => $container->get(TwigEngine::class),
-	),
-
-	ViewTwigAdapter::class => fn (ContainerInterface $container): ViewTwigAdapter => new ViewTwigAdapter(
-		$container->get(DataViewFetcher::class),
-		$container->get(DataViewLister::class),
-	),
-
-	MediaTwigAdapter::class => fn (ContainerInterface $container): MediaTwigAdapter => new MediaTwigAdapter(
-		$container->get(ObjectFetcher::class),
-		$container->get(Config::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	DataTwigAdapter::class => fn (ContainerInterface $container): DataTwigAdapter => new DataTwigAdapter(
-		$container->get(ObjectFetcher::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	AuthTwigAdapter::class => fn (ContainerInterface $container): AuthTwigAdapter => new AuthTwigAdapter(
-		$container->get(Config::class),
-		$container->get(PhpSession::class),
-		$container->get(AccessManager::class),
-		$container->get(FileAccessManager::class),
-		$container->get(AccessControlService::class),
-		$container->get(CollectionLister::class),
-		$container->get(TranslationService::class),
-		$container->get(EditionFeatureService::class),
-	),
-
-	CollectionTwigAdapter::class => fn (ContainerInterface $container): CollectionTwigAdapter => new CollectionTwigAdapter(
-		$container->get(Config::class),
-		$container->get(CollectionLister::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionEditionService::class),
-		$container->get(IndexReader::class),
-		$container->get(IndexSearcher::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(ObjectUrlBuilder::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	SchemaTwigAdapter::class => fn (ContainerInterface $container): SchemaTwigAdapter => new SchemaTwigAdapter(
-		$container->get(SchemaLister::class),
-		$container->get(SchemaFetcher::class),
-		$container->get(DeckCompatibilityChecker::class),
-		$container->get(CollectionEditionService::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	AdminTwigAdapter::class => fn (ContainerInterface $container): AdminTwigAdapter => new AdminTwigAdapter(
-		$container->get(Config::class),
-		$container->get(AuthTwigAdapter::class),
-		$container->get(CollectionLister::class),
-		$container->get(SchemaLister::class),
-		$container->get(TemplateLister::class),
-		$container->get(JobManager::class),
-		$container->get(DevModeManager::class),
-		$container->get(CollectionEditionService::class),
-		$container->get(CacheReporter::class),
-		$container->get(LicenseStatus::class),
-		$container->get(IndexReader::class),
-		$container->get(ServerChecker::class),
-		$container->get(LogAnalyzer::class),
-		$container->get(ImageCacheService::class),
-		$container->get(CacheSizingAdvisor::class),
-		$container->get(UpdateChecker::class),
-		$container->get(BuilderConfigService::class),
-		$container->get(CollectionFetcher::class),
-	),
-
-	BuilderTwigAdapter::class => fn (ContainerInterface $container): BuilderTwigAdapter => new BuilderTwigAdapter(
-		$container->get(BuilderConfigService::class),
-		$container->get(IndexReader::class),
-		$container->get(TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
-		$container->get(Config::class),
 	),
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
@@ -597,507 +322,12 @@ return [
 		new UtilsTwigAdapter(),
 	),
 
-	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
-
-	TotalCMSTwigExtension::class => fn (ContainerInterface $container): TotalCMSTwigExtension => new TotalCMSTwigExtension(
-		$container->get(TotalCMSTwigAdapter::class),
-		$container->get(TotalCMSTwigPatterns::class),
-		$container->get(FakerFactory::class),
-		$container->get(QRCodeTwigAdapter::class),
-		$container->get(BarcodeTwigAdapter::class),
-		$container->get(PhpSession::class),
-		$container->get(CSRFTokenManager::class),
-		$container->get(TranslationService::class),
-	),
-
-	QRCodeTwigAdapter::class => fn (ContainerInterface $container): QRCodeTwigAdapter => new QRCodeTwigAdapter($container->get(QRGenerator::class)),
-
-	QRGenerator::class => fn (ContainerInterface $container): QRGenerator => new QRGenerator(
-		$container->get(EditionFeatureService::class)
-	),
-
-	BarcodeGenerator::class => fn (ContainerInterface $container): BarcodeGenerator => new BarcodeGenerator(
-		$container->get(EditionFeatureService::class)
-	),
-
-	BarcodeTwigAdapter::class => fn (ContainerInterface $container): BarcodeTwigAdapter => new BarcodeTwigAdapter($container->get(BarcodeGenerator::class)),
-
-	FileUploadValidator::class => fn (ContainerInterface $container): FileUploadValidator => new FileUploadValidator(),
-
-	Cipher::class => fn (ContainerInterface $container): Cipher => new Cipher(),
-
-	CSRFTokenManager::class => fn (ContainerInterface $container): CSRFTokenManager => new CSRFTokenManager(
-		$container->get(PhpSession::class)
-	),
-
-	CSRFProtectionMiddleware::class => fn (ContainerInterface $container): CSRFProtectionMiddleware => new CSRFProtectionMiddleware(
-		$container->get(CSRFTokenManager::class)
-	),
-
-	AuthMiddleware::class => fn (ContainerInterface $container): AuthMiddleware => new AuthMiddleware(
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(PhpSession::class),
-		$container->get(Config::class),
-		$container->get(AccessManager::class),
-		$container->get(PersistentLoginService::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	CollectionAccessMiddleware::class => fn (ContainerInterface $container): CollectionAccessMiddleware => new CollectionAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	CollectionMetaAccessMiddleware::class => fn (ContainerInterface $container): CollectionMetaAccessMiddleware => new CollectionMetaAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	SchemaAccessMiddleware::class => fn (ContainerInterface $container): SchemaAccessMiddleware => new SchemaAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	TemplateAccessMiddleware::class => fn (ContainerInterface $container): TemplateAccessMiddleware => new TemplateAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	UtilsAccessMiddleware::class => fn (ContainerInterface $container): UtilsAccessMiddleware => new UtilsAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	MailerAccessMiddleware::class => fn (ContainerInterface $container): MailerAccessMiddleware => new MailerAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	PlaygroundAccessMiddleware::class => fn (ContainerInterface $container): PlaygroundAccessMiddleware => new PlaygroundAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	// Data View Services
-	DataViewRepository::class => fn (ContainerInterface $container): DataViewRepository => new DataViewRepository(
-		$container->get(StorageFilesystemAdapter::class),
-		$container->get(CacheManager::class),
-	),
-
-	DataViewLister::class => fn (ContainerInterface $container): DataViewLister => new DataViewLister(
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionRepository::class),
-		$container->get(IndexReader::class),
-	),
-
-	DataViewBuilder::class => fn (ContainerInterface $container): DataViewBuilder => new DataViewBuilder(
-		$container->get(DataViewRepository::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(ObjectUpdater::class),
-		$container->get(TwigEngine::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	DataViewFetcher::class => fn (ContainerInterface $container): DataViewFetcher => new DataViewFetcher(
-		$container->get(DataViewRepository::class),
-	),
-
-	DataViewFilter::class => fn (ContainerInterface $container): DataViewFilter => new DataViewFilter(
-		$container->get(DataViewFetcher::class),
-		$container->get(ObjectFilter::class),
-	),
-
-	DataViewRemover::class => fn (ContainerInterface $container): DataViewRemover => new DataViewRemover(
-		$container->get(DataViewRepository::class),
-	),
-
-	DataViewUpdateScheduler::class => fn (ContainerInterface $container): DataViewUpdateScheduler => new DataViewUpdateScheduler(
-		$container->get(IndexReader::class),
-		$container->get(JobQueuer::class),
-	),
-
-	DataViewsAccessMiddleware::class => fn (ContainerInterface $container): DataViewsAccessMiddleware => new DataViewsAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	DocsAccessMiddleware::class => fn (ContainerInterface $container): DocsAccessMiddleware => new DocsAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	AdminOnlyMiddleware::class => fn (ContainerInterface $container): AdminOnlyMiddleware => new AdminOnlyMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
-		$container->get(DevModeManager::class),
-		$container->get(OPcacheService::class)
-	),
-
-	LicenseValidationMiddleware::class => fn (ContainerInterface $container): LicenseValidationMiddleware => new LicenseValidationMiddleware(
-		$container->get(LicenseValidator::class),
-		$container->get(Config::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(RedirectRenderer::class),
-		$container->get(PhpSession::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	TwigEngine::class => fn (ContainerInterface $container): TwigEngine => new TwigEngine(
-		$container->get(Config::class),
-		$container->get(TotalCMSTwigExtension::class),
-		$container->get(DevModeManager::class),
-		$container->get(TemplateDesignerPreprocessor::class),
-		$container->get(TemplateDesignerSync::class),
-	),
-
-	TwigRenderer::class => fn (ContainerInterface $container): TwigRenderer => new TwigRenderer(
-		$container->get(TwigEngine::class)
-	),
-
-	// Template Designer Services
-	TemplateDesignerRegistry::class => fn (): TemplateDesignerRegistry => new TemplateDesignerRegistry(),
-
-	TemplateDesignerPreprocessor::class => fn (ContainerInterface $container): TemplateDesignerPreprocessor => new TemplateDesignerPreprocessor(
-		$container->get(TemplateDesignerRegistry::class),
-	),
-
-	TemplateDesignerSync::class => fn (ContainerInterface $container): TemplateDesignerSync => new TemplateDesignerSync(
-		$container->get(Config::class),
-		$container->get(TemplateSaver::class),
-		$container->get(TemplateDesignerRegistry::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(HttpClientInterface::class),
-	),
-
-	DesignerAccessMiddleware::class => fn (ContainerInterface $container): DesignerAccessMiddleware => new DesignerAccessMiddleware(
-		$container->get(TemplateRepository::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-	),
-
-	RedirectRenderer::class => fn (ContainerInterface $container): RedirectRenderer => new RedirectRenderer(
-		$container->get(RouteParserInterface::class)
-	),
-
-	// Cache Services
-	FilesystemService::class => fn (ContainerInterface $container): FilesystemService => new FilesystemService($container->get(Config::class)),
-
-	OPcacheService::class => fn (ContainerInterface $container): OPcacheService => new OPcacheService(),
-
-	RedisService::class => fn (ContainerInterface $container): RedisService => new RedisService($container->get(Config::class)),
-
-	MemcachedService::class => fn (ContainerInterface $container): MemcachedService => new MemcachedService($container->get(Config::class)),
-
-	APCuService::class => fn (ContainerInterface $container): APCuService => new APCuService($container->get(Config::class)),
-
-	CacheReporter::class => fn (ContainerInterface $container): CacheReporter => new CacheReporter(
-		$container->get(FilesystemService::class),
-		$container->get(OPcacheService::class),
-		$container->get(RedisService::class),
-		$container->get(MemcachedService::class),
-		$container->get(APCuService::class),
-		$container->get(DevModeManager::class),
-	),
-
-	CacheSizingAdvisor::class => fn (ContainerInterface $container): CacheSizingAdvisor => new CacheSizingAdvisor(
-		$container->get(Config::class),
-		$container->get(CollectionLister::class),
-		$container->get(CacheManager::class),
-		$container->get(APCuService::class),
-		$container->get(RedisService::class),
-		$container->get(MemcachedService::class),
-	),
-
-	CacheManager::class => fn (ContainerInterface $container): CacheManager => new CacheManager(
-		$container->get(FilesystemService::class),
-		$container->get(OPcacheService::class),
-		$container->get(RedisService::class),
-		$container->get(MemcachedService::class),
-		$container->get(APCuService::class),
-		$container->get(WatermarkCleanupService::class),
-		$container->get(DevModeManager::class),
-		$container->get(CacheInvalidationSignal::class),
-		$container->get(EventDispatcher::class),
-		$container->get(Config::class),
-		$container->get(LoggerFactory::class)
-	),
-
-	CacheInvalidationSignal::class => fn (ContainerInterface $container): CacheInvalidationSignal => new CacheInvalidationSignal(
-		$container->get(Config::class),
-	),
-
-	CacheInvalidationMiddleware::class => fn (ContainerInterface $container): CacheInvalidationMiddleware => new CacheInvalidationMiddleware(
-		$container->get(CacheInvalidationSignal::class),
-		$container->get(CacheManager::class),
-	),
-
-	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(
-		$container->get(EventDispatcher::class),
-	),
-
-	SchemaRepository::class => fn (ContainerInterface $container): SchemaRepository => new SchemaRepository(
-		$container->get(StorageAdapterInterface::class),
-		$container->get(SchemaFactory::class),
-		$container->get(CacheManager::class),
-		$container->get(Config::class),
-	),
-
-	ImageCacheService::class => fn (ContainerInterface $container): ImageCacheService => new ImageCacheService(
-		$container->get(Config::class),
-		$container->get(CacheManager::class)
-	),
-
-	IndexSearcher::class => fn (ContainerInterface $container): IndexSearcher => new IndexSearcher($container->get(IndexReader::class)),
-
-	UserValidationService::class => fn (ContainerInterface $container): UserValidationService => new UserValidationService(
-		$container->get(IndexSearcher::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(Config::class),
-	),
-
-	AuthTokenService::class => fn (ContainerInterface $container): AuthTokenService => new AuthTokenService(
-		$container->get(CacheManager::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
-		$container->get(AuthTokenService::class),
-		$container->get(UserValidationService::class),
-		$container->get(ObjectUpdater::class),
-		$container->get(Config::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	EmailVerificationService::class => fn (ContainerInterface $container): EmailVerificationService => new EmailVerificationService(
-		$container->get(AuthTokenService::class),
-		$container->get(UserValidationService::class),
-		$container->get(ObjectUpdater::class),
-		$container->get(Config::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	PersistentLoginService::class => fn (ContainerInterface $container): PersistentLoginService => new PersistentLoginService(
-		$container->get(PhpSession::class),
-		$container->get(Config::class),
-		$container->get(UserValidationService::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	LogoutService::class => fn (ContainerInterface $container): LogoutService => new LogoutService(
-		$container->get(PhpSession::class),
-		$container->get(LoggerFactory::class),
-		$container->get(PersistentLoginService::class),
-		$container->get(EventDispatcher::class),
-	),
-
-	// License Services
-	OfflineLicenseRepository::class => fn (ContainerInterface $container): OfflineLicenseRepository => new OfflineLicenseRepository(
-		$container->get(StorageAdapterInterface::class),
-		$container->get(Config::class),
-	),
-
-	OfflineLicenseValidator::class => fn (ContainerInterface $container): OfflineLicenseValidator => new OfflineLicenseValidator(
-		$container->get(OfflineLicenseRepository::class),
-		$container->get(Config::class),
-		$container->get(LoggerFactory::class),
-	),
-
+	// HttpClientInterface → GuzzleHttpClient. Interface binding (autowiring can't
+	// resolve interfaces without an explicit mapping). All other middleware,
+	// services, and edition gates above (auth, access control, license,
+	// editions, cache, data views, twig, etc.) are autowired — their
+	// constructors take only typed class dependencies that PHP-DI resolves.
 	HttpClientInterface::class => fn (): HttpClientInterface => new GuzzleHttpClient(),
-
-	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
-		$container->get(Config::class),
-		$container->get(CacheManager::class),
-		$container->get(HttpClientInterface::class),
-		$container->get(OfflineLicenseValidator::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	LicenseStatus::class => fn (ContainerInterface $container): LicenseStatus => new LicenseStatus(
-		$container->get(LicenseValidator::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	EditionFeatureService::class => fn (ContainerInterface $container): EditionFeatureService => new EditionFeatureService(
-		$container->get(LicenseValidator::class),
-		$container->get(SettingsFetcher::class),
-	),
-
-	CollectionEditionService::class => fn (ContainerInterface $container): CollectionEditionService => new CollectionEditionService(
-		$container->get(EditionFeatureService::class),
-		$container->get(SchemaFetcher::class),
-		$container->get(SchemaLister::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionLister::class),
-	),
-
-	CollectionEditionMiddleware::class => fn (ContainerInterface $container): CollectionEditionMiddleware => new CollectionEditionMiddleware(
-		$container->get(CollectionEditionService::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	SchemaEditionMiddleware::class => fn (ContainerInterface $container): SchemaEditionMiddleware => new SchemaEditionMiddleware(
-		$container->get(CollectionEditionService::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	TemplatesEditionMiddleware::class => fn (ContainerInterface $container): TemplatesEditionMiddleware => new TemplatesEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	DataViewsEditionMiddleware::class => fn (ContainerInterface $container): DataViewsEditionMiddleware => new DataViewsEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	MailerEditionMiddleware::class => fn (ContainerInterface $container): MailerEditionMiddleware => new MailerEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	BulkMailerEditionMiddleware::class => fn (ContainerInterface $container): BulkMailerEditionMiddleware => new BulkMailerEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	AccessGroupsEditionMiddleware::class => fn (ContainerInterface $container): AccessGroupsEditionMiddleware => new AccessGroupsEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	ApiKeysEditionMiddleware::class => fn (ContainerInterface $container): ApiKeysEditionMiddleware => new ApiKeysEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	RssImportEditionMiddleware::class => fn (ContainerInterface $container): RssImportEditionMiddleware => new RssImportEditionMiddleware(
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigRenderer::class),
-		$container->get(JsonRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-	),
-
-	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(
-		$container->get(PhpSession::class),
-		$container->get(Config::class),
-		$container->get(UserValidationService::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	AccessControlService::class => fn (ContainerInterface $container): AccessControlService => new AccessControlService(
-		$container->get(UserValidationService::class),
-		$container->get(AccessGroupLister::class),
-		$container->get(PhpSession::class),
-	),
-
-	TotalCmsOneImporter::class => fn (ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionFactory::class),
-		$container->get(CollectionRepository::class),
-		$container->get(IndexReader::class),
-		$container->get(JobQueuer::class),
-		$container->get(LoggerFactory::class),
-	),
 
 	JumpStartExporter::class => fn (ContainerInterface $container): JumpStartExporter => new JumpStartExporter(
 		$container->get(CollectionLister::class),
@@ -1110,195 +340,6 @@ return [
 		new JumpStartData(),
 		$container->get(CacheManager::class),
 		$container->get(LoggerFactory::class),
-	),
-
-	FactoryImporter::class => fn (ContainerInterface $container): FactoryImporter => new FactoryImporter(
-		$container->get(ObjectFactory::class),
-		$container->get(ObjectRepository::class),
-		$container->get(IndexBuilder::class),
-		$container->get(IndexReader::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionSaver::class),
-		$container->get(SchemaFetcher::class),
-		$container->get(PropertyRepository::class),
-		$container->get(DataViewFilter::class),
-		$container->get(FakerFactory::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	JumpStartImporter::class => fn (ContainerInterface $container): JumpStartImporter => new JumpStartImporter(
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionSaver::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(ObjectSaver::class),
-		$container->get(SchemaSaver::class),
-		$container->get(TemplateSaver::class),
-		$container->get(FactoryImporter::class),
-		$container->get(EventDispatcher::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	WatermarkCleanupService::class => fn (ContainerInterface $container): WatermarkCleanupService => new WatermarkCleanupService(
-		$container->get(StorageAdapterInterface::class),
-		$container->get(LoggerFactory::class)
-	),
-
-	TextWatermarkFactory::class => fn (ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
-		$container->get(StorageAdapterInterface::class),
-		$container->get(Config::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(LoggerFactory::class)
-	),
-
-	GlideFactory::class => fn (ContainerInterface $container): GlideFactory => new GlideFactory(
-		$container->get(StorageAdapterInterface::class),
-		$container->get(Config::class),
-	),
-
-	// Property and Object Factories
-	PropertyFactory::class => fn (ContainerInterface $container): PropertyFactory => new PropertyFactory(
-		$container->get(SchemaFetcher::class),
-		$container->get(DeckCompatibilityChecker::class),
-	),
-
-	AutogenService::class => fn (ContainerInterface $container): AutogenService => new AutogenService(
-		$container->get(CollectionFetcher::class),
-	),
-
-	AutogenIdService::class => fn (ContainerInterface $container): AutogenIdService => new AutogenIdService(
-		$container->get(AutogenService::class),
-	),
-
-	CalcService::class => fn (): CalcService => new CalcService(),
-
-	ObjectFactory::class => fn (ContainerInterface $container): ObjectFactory => new ObjectFactory(
-		$container->get(SchemaFetcher::class),
-		$container->get(PropertyFactory::class),
-		$container->get(AutogenIdService::class),
-		$container->get(AutogenService::class),
-		$container->get(CalcService::class),
-	),
-
-	// Deck Services
-	DeckItemFetcher::class => fn (ContainerInterface $container): DeckItemFetcher => new DeckItemFetcher(
-		$container->get(ObjectFetcher::class),
-	),
-
-	DeckItemValidator::class => fn (ContainerInterface $container): DeckItemValidator => new DeckItemValidator(
-		$container->get(SchemaFetcher::class),
-		$container->get(SchemaValidator::class),
-	),
-
-	DeckItemSaver::class => fn (ContainerInterface $container): DeckItemSaver => new DeckItemSaver(
-		$container->get(ObjectFetcher::class),
-		$container->get(ObjectUpdater::class),
-		$container->get(PropertyFactory::class),
-		$container->get(DeckItemValidator::class),
-	),
-
-	DeckItemUpdater::class => fn (ContainerInterface $container): DeckItemUpdater => new DeckItemUpdater(
-		$container->get(ObjectFetcher::class),
-		$container->get(ObjectUpdater::class),
-		$container->get(PropertyFactory::class),
-		$container->get(DeckItemValidator::class),
-	),
-
-	DeckItemFactory::class => fn (ContainerInterface $container): DeckItemFactory => new DeckItemFactory(
-		$container->get(SchemaFetcher::class),
-		$container->get(AutogenIdService::class),
-		$container->get(AutogenService::class),
-		$container->get(CalcService::class),
-	),
-
-	DeckItemRemover::class => fn (ContainerInterface $container): DeckItemRemover => new DeckItemRemover(
-		$container->get(ObjectFetcher::class),
-		$container->get(ObjectUpdater::class),
-	),
-
-	// Schema Services
-	DeckCompatibilityChecker::class => fn (ContainerInterface $container): DeckCompatibilityChecker => new DeckCompatibilityChecker(
-		$container->get(SchemaFetcher::class),
-	),
-
-	// Settings Services
-	SettingsSchemaFetcher::class => fn (ContainerInterface $container): SettingsSchemaFetcher => new SettingsSchemaFetcher(),
-
-	// Settings Repositories
-	SettingsRepository::class => fn (ContainerInterface $container): SettingsRepository => new SettingsRepository(
-		$container->get(StorageFilesystemAdapter::class),
-	),
-
-	InstallationRepository::class => fn (ContainerInterface $container): InstallationRepository => new InstallationRepository(),
-
-	// Settings Services
-	SettingsFetcher::class => fn (ContainerInterface $container): SettingsFetcher => new SettingsFetcher(
-		$container->get(SettingsRepository::class),
-		$container->get(InstallationRepository::class),
-		$container->get(SettingsSchemaFetcher::class),
-	),
-
-	SettingsValidator::class => fn (ContainerInterface $container): SettingsValidator => new SettingsValidator(
-		$container->get(SettingsRepository::class),
-	),
-
-	SettingsSaver::class => fn (ContainerInterface $container): SettingsSaver => new SettingsSaver(
-		$container->get(SettingsFetcher::class),
-		$container->get(SettingsValidator::class),
-		$container->get(CacheManager::class),
-		$container->get(SettingsRepository::class),
-	),
-
-	InstallationSettingsSaver::class => fn (ContainerInterface $container): InstallationSettingsSaver => new InstallationSettingsSaver(
-		$container->get(CacheManager::class),
-		$container->get(InstallationRepository::class),
-	),
-
-	DataDirectoryManager::class => fn (): DataDirectoryManager => new DataDirectoryManager(),
-
-	// Mailer Services
-	BulkMailerRepository::class => fn (ContainerInterface $container): BulkMailerRepository => new BulkMailerRepository(
-		$container->get(Config::class),
-	),
-
-	BulkMailerService::class => fn (ContainerInterface $container): BulkMailerService => new BulkMailerService(
-		$container->get(MailerFetcher::class),
-		$container->get(IndexFilter::class),
-		$container->get(ObjectFetcher::class),
-		$container->get(JobQueuer::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(TwigEngine::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	EmailSender::class => fn (ContainerInterface $container): EmailSender => new EmailSender(
-		$container->get(Config::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	MailerFetcher::class => fn (ContainerInterface $container): MailerFetcher => new MailerFetcher(
-		$container->get(ObjectRepository::class),
-	),
-
-	EmailService::class => fn (ContainerInterface $container): EmailService => new EmailService(
-		$container->get(MailerFetcher::class),
-		$container->get(EmailSender::class),
-		$container->get(TwigEngine::class),
-		$container->get(Config::class),
-		$container->get(EditionFeatureService::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	RateLimitMiddleware::class => fn (ContainerInterface $container): RateLimitMiddleware => new RateLimitMiddleware(
-		$container->get(CacheManager::class),
-		$container->get(JsonRenderer::class),
-		$container->get(Config::class),
-	),
-
-	SetupCheckMiddleware::class => fn (ContainerInterface $container): SetupCheckMiddleware => new SetupCheckMiddleware(
-		$container->get(App::class),
-		$container->get(Config::class),
-		$container->get(RedirectRenderer::class),
-		$container->get(SetupStateManager::class),
 	),
 
 	EventDispatcher::class => function (ContainerInterface $container): EventDispatcher {
@@ -1372,36 +413,9 @@ return [
 		return $dispatcher;
 	},
 
-	TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Repository\ReloadPulseRepository => new TotalCMS\Domain\Builder\Repository\ReloadPulseRepository(
-		$container->get(StorageFilesystemAdapter::class),
-	),
-
-	TotalCMS\Domain\Builder\Service\BuilderReloadPulseService::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Service\BuilderReloadPulseService => new TotalCMS\Domain\Builder\Service\BuilderReloadPulseService(
-		$container->get(TotalCMS\Domain\Builder\Repository\ReloadPulseRepository::class),
-	),
-
-	TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\EventListener\ReloadPulseListener => new TotalCMS\Domain\Builder\EventListener\ReloadPulseListener(
-		$container->get(TotalCMS\Domain\Builder\Service\BuilderReloadPulseService::class),
-		$container->get(BuilderConfigService::class),
-	),
-
 	// -------------------------------------------------------------------------
 	// Extensions
 	// -------------------------------------------------------------------------
-
-	ManifestValidator::class => fn (ContainerInterface $container): ManifestValidator => new ManifestValidator(
-		$container->get(EditionFeatureService::class),
-	),
-
-	ExtensionDependencySorter::class => fn (): ExtensionDependencySorter => new ExtensionDependencySorter(),
-
-	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
-		$container->get(StorageFilesystemAdapter::class),
-	),
-
-	ExtensionStateRepository::class => fn (ContainerInterface $container): ExtensionStateRepository => new ExtensionStateRepository(
-		$container->get(StorageFilesystemAdapter::class),
-	),
 
 	ExtensionDiscovery::class => function (ContainerInterface $container): ExtensionDiscovery {
 		$extLevel = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
@@ -1427,64 +441,16 @@ return [
 		);
 	},
 
-	TemplateMigrationService::class => fn (ContainerInterface $container): TemplateMigrationService => new TemplateMigrationService(
-		$container->get(StorageAdapterInterface::class),
-	),
-
-	// Migrations — generic one-shot data/layout migrations. Register concrete
-	// migrations in the MigrationRunner factory below; the middleware runs them
-	// at boot time on every request (ledger-gated, so each migration applies
-	// at most once per install).
-	MigrationStateRepository::class => fn (ContainerInterface $container): MigrationStateRepository => new MigrationStateRepository(
-		$container->get(StorageFilesystemAdapter::class),
-	),
-
-	LegacyTemplatesMigration::class => fn (ContainerInterface $container): LegacyTemplatesMigration => new LegacyTemplatesMigration(
-		$container->get(TemplateMigrationService::class),
-	),
-
+	// Migrations — generic one-shot data/layout migrations. The runner has a
+	// custom logger handler (migrations.log) and an array literal of registered
+	// migrations, so the factory stays. The migrations themselves and the
+	// state repo are autowired.
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
 			$container->get(LegacyTemplatesMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->addFileHandler('migrations.log')->createLogger('migrations'),
-	),
-
-	MigrationMiddleware::class => fn (ContainerInterface $container): MigrationMiddleware => new MigrationMiddleware(
-		$container->get(MigrationRunner::class),
-	),
-
-	// Builder
-	BuilderConfigService::class => fn (ContainerInterface $container): BuilderConfigService => new BuilderConfigService(
-		$container->get(Config::class),
-		$container->get(CollectionFetcher::class),
-	),
-
-	BuilderInstaller::class => fn (ContainerInterface $container): BuilderInstaller => new BuilderInstaller(
-		$container->get(BuilderConfigService::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionSaver::class),
-		$container->get(TemplateMigrationService::class),
-		$container->get(TemplateFetcher::class),
-		$container->get(TemplateSaver::class),
-	),
-
-	StarterService::class => fn (ContainerInterface $container): StarterService => new StarterService(
-		$container->get(BuilderConfigService::class),
-		$container->get(BuilderInstaller::class),
-		$container->get(TemplateLister::class),
-		$container->get(TemplateMigrationService::class),
-		$container->get(JumpStartImporter::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	PageRouter::class => fn (ContainerInterface $container): PageRouter => new PageRouter(
-		$container->get(BuilderConfigService::class),
-		$container->get(IndexReader::class),
-		$container->get(CollectionLister::class),
-		$container->get(ObjectUrlBuilder::class),
-		$container->get(ObjectFetcher::class),
 	),
 
 	// Per-page middleware infrastructure. Registry holds name → service-id
@@ -1501,16 +467,6 @@ return [
 
 		return $registry;
 	},
-
-	TotalCMS\Domain\Builder\Service\PageMiddlewareRunner::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\Service\PageMiddlewareRunner => new TotalCMS\Domain\Builder\Service\PageMiddlewareRunner(
-		$container->get(TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class => fn (ContainerInterface $container): TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware => new TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware(
-		$container->get(AccessManager::class),
-		$container->get(Config::class),
-	),
 
 	// MCP (Model Context Protocol) Server.
 	// ToolRegistry is a singleton; each tool's register() method is invoked at
@@ -1646,8 +602,4 @@ return [
 		);
 	},
 
-	McpResourceSubscriptionListener::class => fn (ContainerInterface $container): McpResourceSubscriptionListener
-		=> new McpResourceSubscriptionListener(
-			$container->get(ResourceNotifier::class),
-		),
 ];

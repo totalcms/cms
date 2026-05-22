@@ -1,8 +1,8 @@
 <?php
 
-use DI\Container;
 use Slim\App;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\ContainerFactory;
 
 // Workaround for routes with a dot in local php server
 if (php_sapi_name() == 'cli-server') {
@@ -23,7 +23,7 @@ if (!defined('ROOT')) {
 	define('ROOT', TotalCMS\Support\PathResolver::packageRoot());
 }
 
-$container = new Container(require __DIR__ . '/container.php');
+$container = ContainerFactory::build();
 
 // Sentry Logger
 $sentryEnabled = $container->get(Config::class)->sentry;

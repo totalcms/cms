@@ -54,6 +54,7 @@ use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Update\Service\UpdateDownloader;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\ContainerFactory;
 use TotalCMS\Support\PathResolver;
 
 /**
@@ -76,8 +77,8 @@ class TotalCMS
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(bool $autoStartBuffer = true)
 	{
-		// Build PHP-DI Container instance
-		$this->container = new Container(require PathResolver::packageRoot() . '/config/container.php');
+		// Build PHP-DI Container instance (with compilation in prod)
+		$this->container = ContainerFactory::build();
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
