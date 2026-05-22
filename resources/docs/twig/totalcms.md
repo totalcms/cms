@@ -39,7 +39,8 @@ These properties are accessed directly on `cms` without a namespace.
 {{ cms.env }}                    {# Current environment (development, production) #}
 {{ cms.api }}                    {# API base URL #}
 {{ cms.dashboard }}              {# Admin dashboard URL #}
-{{ cms.domain }}                 {# Current domain name #}
+{{ cms.domain }}                 {# Current domain (HTTP host, e.g. example.com) #}
+{{ cms.siteName }}               {# Human-readable site name (falls back to domain when not set) #}
 {{ cms.clearcache }}             {# Emergency cache clear URL #}
 {{ cms.currentUrl }}             {# Current request URI #}
 {{ cms.version }}                {# Version information object #}
