@@ -8,7 +8,7 @@ related:
   - extensions/extension-points
   - operations/security
 audience: intermediate
-updated: 2026-05-21
+updated: 2026-05-22
 ---
 
 # MCP Server
@@ -25,8 +25,9 @@ The Model Context Protocol is Anthropic's open standard for how AI agents talk t
 
 For Total CMS specifically, MCP gives agents:
 
-- **Discovery** — `list_collections` and `describe_collection` map the site's content shape.
-- **Read** — `query_collection`, `search_collection`, `get_object` fetch content with the same filter/sort syntax as the REST API.
+- **Discovery** — `list_collections`, `describe_collection`, `list_views`, `describe_view` map the site's content shape and pre-computed views.
+- **Read** — `query_collection`, `search_collection`, `get_object`, `query_view`, `get_view` fetch content with the same filter/sort syntax as the REST API.
+- **Resources** — `tcms://{collection}/`, `tcms://{collection}/{id}`, and `tcms://view/{id}` URIs the agent can address by URI, subscribe to, and re-fetch across sessions.
 - **Write (admin)** — `create_schema`, `update_schema`, `delete_schema`, `create_collection`, `clear_cache`, `list_extensions`, `get_site_info` for operator-driven workflows from inside the agent.
 
 ---
@@ -77,7 +78,9 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | Tool | Access | What it does |
 |---|---|---|
 | `list_collections` | public | Persona-filtered overview of every collection. Returns id, name, schema, description, url_pattern, access, total_objects. |
-| `describe_collection` | public | Detailed view of one collection — its properties with `indexed` / `filterable` / `sortable` flags + type. The agent uses this to learn what's queryable. |
+| `describe_collection` | public | Detailed view of one collection — its properties with `indexed` / `filterable` / `sortable` flags + type + resolved property descriptions. The agent uses this to learn what's queryable. |
+| `list_views` | public | Persona-filtered catalog of pre-computed data views. Returns id, name, description, last_built, access per view. |
+| `describe_view` | public | Metadata + inferred output shape for a single view, sampled from the first cached item. Admin persona also receives the view's Twig `definition`. |
 
 ### Content reads
 
@@ -87,7 +90,9 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `search_collection` | public | Free-text search within a single collection. Drafts auto-hidden from anonymous callers. |
 | `search_collections` | public | Cross-collection full-text search. Each result carries its `collection` for chaining into `get_object`. |
 | `get_object` | public | Fetch one object by id. Drafts return "not found" to anonymous callers (doesn't leak existence). |
-| `get_resource` | public | Resolve a `tcms://{collection}/{id}` URI — Phase 1 entry point for the Phase 2 resource model. |
+| `query_view` | public | Paginated query against a data view's cached result. Same REST-style filter/sort vocabulary as `query_collection`. Limit caps at 50. |
+| `get_view` | public | Fetch a data view's full cached result, capped at 50 items. Larger views emit a hint pointing at `query_view`. |
+| `get_resource` | public | Resolve a `tcms://{collection}/{id}` URI to its underlying object. Sibling to the SDK's `resources/read` transport method — same data, different access path. |
 
 ### Admin
 
@@ -123,7 +128,9 @@ Operators control AI exposure via two layers of MCP config — one per **collect
 |---|---|---|
 | `access` | `"admin"` | Who can call `query_collection` / `search_collection` / `get_object` against this collection. `"admin"` requires an API key; `"public"` allows anonymous AI agents. |
 | `description` | empty | AI-targeted description shown in `list_collections` and the dynamic tool-description catalog. Falls back to the collection's general description if blank. |
-| `resource` | `true` | When true, objects in this collection are addressable via `tcms://{collection}/{id}` URIs (Phase 2 resource model). |
+| `resource` | `true` | When true, the collection is exposed as a `tcms://{collection}/` resource and its objects via the `tcms://{collection}/{id}` template. Set to `false` if you want the collection in tools but not in `resources/list`. |
+
+The same `mcp` card lives on each **data view** (in the dataviews editor) with identical fields. A view marked `mcp.access: 'public'` shows up in `list_views` for anonymous callers and is fetchable at `tcms://view/{id}`.
 
 ### Property-level (MCP Details accordion on each property)
 
@@ -176,11 +183,93 @@ Settings live in **Admin → Settings → MCP Server** and serialize to `mcp.*` 
 |---|---|---|
 | `mcp.enabled` | `true` | Master switch. When `false`, `POST /mcp` returns 404 and discovery reports `disabled: true`. |
 | `mcp.publicAccess` | `false` | Default-deny for anonymous callers. When `false`, requests without an API key get 401 + `WWW-Authenticate: Bearer realm="MCP", error="login_required"`. |
-| `mcp.allowedOrigins` | `[]` | CORS origin allow-list for browser-based AI clients (Phase 2 wires this). Empty = deny browser-based clients. |
+| `mcp.allowedOrigins` | `[]` | CORS origin allow-list for **browser-rendered** AI clients. Empty = browsers blocked. See [CORS and browser AI clients](#cors-and-browser-ai-clients) below. |
 | `mcp.publicIpPerMinute` | `60` | Per-IP rate limit on anonymous requests, 60-second window. API key callers bypass. Set to `0` to disable. |
 | `mcp.toolPrefix` | `""` | Optional snake_case prefix prepended to every tool name (`bistro` → `bistro_list_collections`). Useful when an agent connects to multiple T3 sites simultaneously. |
+| `mcp.subscriptionsEnabled` | `true` | Master switch for resource subscriptions. When `false`, `resources/subscribe` still succeeds at the protocol level but T3 won't push `notifications/resources/updated` when content changes. See [Resource subscriptions](#resource-subscriptions). |
 
 Changing any of these triggers a session invalidation — active agent sessions get "session not found" on their next request and auto-reconnect with the new surface.
+
+---
+
+## Resources
+
+Resources are MCP's URI-addressable content primitive. Where tools are imperative (`query_collection({name: "blog"})`), resources are declarative — every resource has a stable URI an agent can bookmark, fetch, and re-fetch across sessions.
+
+Total CMS exposes three URI shapes:
+
+| URI | What it is | Registered when |
+|---|---|---|
+| `tcms://{collection}/` | Collection summary — recent items, capped at 50 | Every collection with `mcp.resource: true` (default) |
+| `tcms://{collection}/{id}` | Single object | Same; registered as a *template*, not enumerated per-object |
+| `tcms://view/{id}` | A data view's cached result | Every data view with `mcp.resource: true` |
+
+Agents address these via three SDK transport methods:
+
+- **`resources/list`** — flat list of concrete resources (collection summaries + per-view resources). Persona-filtered.
+- **`resources/templates/list`** — list of URI templates (`tcms://{collection}/{id}`, `tcms://view/{id}`). Agents use templates to construct concrete URIs from known ids.
+- **`resources/read`** — fetch the content at a URI. Returns the same data the equivalent tool would (`get_object` / `get_view`); `tcms://{collection}/` returns recent-item summaries.
+
+The `get_resource` tool is an in-tool-flow alias for `resources/read` — handy when a URI lives in another tool's output (a recommendation, a search result) and the agent wants to dereference it inline.
+
+### Resource enumeration is sparse on purpose
+
+A site with 50k blog posts does NOT register 50k resource entries. `resources/list` returns one entry per collection (`tcms://blog/`); the template (`tcms://blog/{id}`) tells agents "this URI shape exists, plug in any blog post id." Concrete per-object URIs are dereferenced on demand via `resources/read`, which delegates to the same persona-aware code path as `get_object`.
+
+Data views are different — each view IS independently named, so each gets its own concrete `tcms://view/{id}` entry in `resources/list`. The shared template still appears in `resources/templates/list` for admin agents.
+
+---
+
+## Resource subscriptions
+
+Subscribed agents get pushed `notifications/resources/updated` events when content behind a URI changes — no polling required.
+
+### How it works
+
+1. Agent calls `resources/subscribe` with a `tcms://{collection}/` or `tcms://view/{id}` URI.
+2. Total CMS records the subscription in `tmp/mcp-subscriptions.json` (a reverse index keyed by URI).
+3. When any `object.created` / `object.updated` / `object.deleted` event fires for the collection, T3's listener walks the index, finds subscribed sessions, and pushes a JSON-RPC notification into each session's outbox file.
+4. The subscriber's open SSE connection drains the outbox on its next loop tick (typically ~100ms latency) and the agent host surfaces the change.
+
+### What it does NOT do
+
+- **No per-object subscriptions** in 3.5. You subscribe to `tcms://blog/`, not `tcms://blog/hello-world`. Per-object granularity is a candidate for 3.5.x if customer demand surfaces.
+- **No notification storms during imports.** T3's EventDispatcher auto-suspends `object.*` events for collections mid-import (e.g. JumpStart bulk loads fire `import.*` events instead, which the listener doesn't subscribe to). Bulk operations produce zero subscription notifications by design.
+- **Within-request coalescing only.** A 1-second per-`(session, uri)` window collapses duplicate notifications. Across-request coalescing isn't implemented — agents may see multiple notifications when sweeps span requests.
+
+### Per-view subscriptions
+
+Data views are the bounded exception to the "collection-level only" rule. Subscribing to `tcms://view/{id}` notifies on every successful `DataViewBuilder::buildView` for that specific view (the builder calls `ObjectUpdater::updateObject` at the end of every rebuild, which fires `object.updated` on the `dataviews` collection — the listener routes those to per-view URIs instead of `tcms://dataviews/`).
+
+### Kill switch
+
+Set `mcp.subscriptionsEnabled: false` to disable push entirely. The SDK still accepts subscribe calls (so non-conformant clients that error on rejected subscriptions don't break) but T3 stops fanning out notifications. Useful when a noisy listener interferes with a deploy or migration.
+
+---
+
+## CORS and browser AI clients
+
+CORS is a **browser-only** enforcement mechanism. It does nothing for server-side or native clients.
+
+| Client | Does CORS apply? |
+|---|---|
+| Claude Desktop, Cursor, Claude Code, MCP Inspector (native apps) | **No.** They make raw HTTP requests; the browser security model never enters. |
+| Server-side AI integrations (your own agent on a backend) | **No.** |
+| Claude.ai web UI, ChatGPT.com, Google Gemini, Mistral Le Chat, etc. (browser-rendered) | **Yes.** The browser refuses the call unless T3 returns `Access-Control-Allow-Origin: <their-origin>`. |
+
+So `mcp.allowedOrigins` is only meaningful if your customer plans to use a browser-rendered AI client against your site. Native and server-side AI works regardless.
+
+### Configuring origins
+
+The settings UI ships clickable presets for the well-known browser AI clients (Claude.ai, ChatGPT, Google Gemini, Microsoft Copilot, Mistral Le Chat, Perplexity) plus a wildcard option. Operators can also type custom origins for in-house playgrounds.
+
+```
+Admin → Settings → MCP Server → CORS Allowed Origins
+```
+
+**Default-deny.** Empty list = no `Access-Control-Allow-Origin` header sent = browsers block. Adding an origin echoes it back on matching requests. The wildcard (`*`) echoes the request's `Origin` for any caller — use with caution on sites that have any non-public MCP collections, since it opens your public MCP surface to any website's JavaScript.
+
+Preflight `OPTIONS` requests short-circuit to a 204 with the standard handshake headers; the rate limiter doesn't see them so a single browser tab can perform a normal session without burning the public-IP quota on preflights.
 
 ---
 
@@ -264,34 +353,9 @@ tcms mcp:test list_collections --json
 
 ## Extension authoring
 
-Extensions can publish their own MCP tools and resources via `ExtensionContext`:
+Extensions can publish their own MCP tools and resources via `ExtensionContext::registerMcpTool()`, `registerMcpResource()`, and `registerMcpResourceTemplate()`. Custom tools and resources show up alongside the core surface — AI agents see them the same way they see `query_collection` or `tcms://blog/`.
 
-```php
-// extension's boot.php
-$context->registerMcpTool(
-    name: 'acme_search_invoices',
-    description: 'Search invoices by customer name or invoice number.',
-    access: 'admin',
-    handler: function (string $query, int $limit = 10) use ($context): array {
-        $repository = $context->get(\Acme\Invoices\Repository\InvoiceRepository::class);
-        return ['items' => $repository->search($query, $limit)];
-    },
-    inputSchema: [
-        'type'     => 'object',
-        'required' => ['query'],
-        'properties' => [
-            'query' => ['type' => 'string', 'description' => 'Customer name or invoice number.'],
-            'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50, 'default' => 10],
-        ],
-    ],
-);
-```
-
-**Collision policy: strict deny.** A tool whose name conflicts with a core tool OR another extension's tool is logged to `extensions.log` and skipped. Pick a vendor-prefixed name (`acme_*`) to avoid conflicts.
-
-**Capabilities:** `mcp:tools` and `mcp:resources` appear in the Extensions admin page; operators can toggle them per extension.
-
-The handler closure is invoked by the MCP SDK using PHP reflection on its named parameters — define typed `string` / `int` / `bool` / `array` params that map one-to-one with your `inputSchema` properties.
+See **[MCP Server Extensions](extensions/mcp)** in the Extensions docs for the full authoring guide, including registration examples, naming conventions, capability toggles, and real-world use cases.
 
 ---
 
@@ -364,9 +428,9 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 
 ## What's deferred to later phases
 
-- **Phase 2:** `tcms://` resource list/subscribe model, CORS allow-list UI.
-- **Phase 3:** Custom tools defined entirely in schema JSON (no PHP), SSE streaming for long content.
-- **Phase 4:** OAuth 2.1 + PKCE flow, per-token scopes, per-token rate limits, customer-visible activity dashboard.
-- **Phase 5:** Semantic search providers, MCP prompts.
+- **Phase 3:** Custom tools defined entirely in schema JSON (no PHP), SSE streaming for long content, MCP prompts (templated workflows like `/draft-blog-post`, `/audit-broken-links`).
+- **Phase 4:** OAuth 2.1 + PKCE flow, per-token scopes, per-token CORS, per-token rate limits, customer-visible activity dashboard, scoped tokens for "connect Joe's Bistro to Claude" flows.
+- **Phase 5:** Semantic search providers (Pinecone, Qdrant, OpenAI embeddings via extension hook), MCP sampling.
+- **Object-level resource subscriptions** (subscribe to a single `tcms://blog/post-1` rather than the collection) — deferred indefinitely; the collection-level model meets the typical agent's needs.
 
 See the planning notes in `docs/planning/mcp-server.md` for the full forward roadmap.

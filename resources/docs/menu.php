@@ -208,6 +208,7 @@ return [
 			['title' => 'Schemas',             'path' => 'extensions/schemas'],
 			['title' => 'CLI',                 'path' => 'extensions/cli'],
 			['title' => 'AI Integration',      'path' => 'extensions/ai-integration'],
+			['title' => 'MCP Server',          'path' => 'extensions/mcp'],
 		],
 		'groups' => [
 			[
