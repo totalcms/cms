@@ -38,6 +38,10 @@
     <base href="{{ cms.dashboard }}/">
 
 	{% block head %}{% endblock %}
+	{# dashboard.css ships the global reset (* { margin: 0 }, normalize rules) the dashboard chrome relies on.
+	   It is deliberately NOT in adminAssetsHead() so customers using that helper on their own admin pages
+	   don't get the reset bleeding into their content. Load it here explicitly for the dashboard frame. #}
+	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css?v={{ cms.version }}"/>
 	{{ cms.adminAssetsHead() }}
 
 	{% if cms.edition.can('whitelabel_pro') %}
