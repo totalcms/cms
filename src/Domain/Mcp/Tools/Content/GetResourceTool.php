@@ -10,17 +10,19 @@ use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 
 /**
- * `get_resource(uri)` — Phase 1 entry point for T3's `tcms://` resource URI
- * scheme. Parses `tcms://{collection}/{id}` and routes to `GetObjectTool`.
+ * `get_resource(uri)` — Imperative entry point for T3's `tcms://` resource URIs.
  *
- * Working subset of the Phase 2 resource model: provides a stable, discoverable
- * URI namespace today (no breaking change when subscribe/list-resources land)
- * without committing to the full subscription surface yet. URIs surfaced
- * elsewhere (e.g. as cross-references in tool output, future
- * `resources/list` enumeration) can be fed directly into this tool.
+ * Parses URIs like `tcms://blog/hello-world` and routes to GetObjectTool.
+ * Functionally equivalent to calling `resources/read` with the same URI for
+ * core `tcms://` URIs; provided as a tool so existing tool-call flows can fetch
+ * by URI without switching to the resource transport surface.
  *
- * Persona enforcement lives in `GetObjectTool` — `get_resource` is a thin
- * routing layer, not a policy point. Same persona rules apply.
+ * Extension-registered URI schemes (e.g. `acme://...`) are reachable via
+ * `resources/read` on the SDK transport surface; this tool intentionally stays
+ * scoped to `tcms://` so it can construct precise error messages.
+ *
+ * Persona enforcement lives in GetObjectTool; get_resource is a thin routing
+ * layer, not a policy point.
  */
 readonly class GetResourceTool
 {
@@ -69,7 +71,7 @@ readonly class GetResourceTool
 		$prefix = 'tcms://';
 		if (!str_starts_with($uri, $prefix)) {
 			throw new ToolCallException(
-				'Expected a tcms:// URI (e.g. "tcms://blog/hello-world"). Other schemes are not accepted.',
+				'Expected a tcms:// URI (e.g. "tcms://blog/hello-world"). Extension-registered URIs are reachable via the resources/read transport surface.',
 			);
 		}
 
@@ -85,7 +87,7 @@ readonly class GetResourceTool
 
 		$id = $parts[1] ?? '';
 		if ($id === '') {
-			throw new ToolCallException(sprintf(
+			throw new ToolCallException(\sprintf(
 				'URI "%s" is missing the object id segment. Format: tcms://{collection}/{id}. Use query_collection or search_collection to discover available ids.',
 				$uri,
 			));
@@ -99,7 +101,7 @@ readonly class GetResourceTool
 		return implode(' ', [
 			'Resolve a tcms:// resource URI to its underlying object.',
 			'Format: tcms://{collection}/{id} — e.g. tcms://blog/hello-world. Equivalent to calling get_object with the parsed collection and id; returns the same shape.',
-			'Use this when a URI has been surfaced to you (in other tool output, in user input, etc.); use get_object directly when you have a separate collection + id pair.',
+			'Use this when a URI has been surfaced to you (in other tool output, in user input, etc.); use get_object directly when you have a separate collection + id pair. Extension-registered URIs (other schemes) are reachable via the resources/read transport surface.',
 		]);
 	}
 

@@ -16,13 +16,14 @@ use TotalCMS\Support\Version;
  * Builds a configured mcp/sdk Server for a given persona.
  *
  * The factory is the single integration point between T3 and the MCP SDK. It
- * filters the ToolRegistry by persona so the tools/list response never leaks
- * admin-only tools to an anonymous caller, and wires the SDK to T3's logger,
- * session storage, and server metadata.
+ * filters the ToolRegistry and ResourceRegistry by persona so the tools/list
+ * and resources/list responses never leak admin-only surface to an anonymous
+ * caller, and wires the SDK to T3's logger, session storage, and server
+ * metadata.
  *
- * A new Server is built per request because the registered tool surface
- * depends on the resolved persona. The construction is cheap — registry is
- * already populated at container build time.
+ * A new Server is built per request because the registered tool/resource
+ * surface depends on the resolved persona. The construction is cheap —
+ * registries are already populated at container build time.
  *
  * Session storage and logger are constructed in the container and injected so
  * the factory stays narrow: given deps, build a configured Server.
@@ -33,6 +34,7 @@ readonly class McpServerFactory
 
 	public function __construct(
 		private ToolRegistry $toolRegistry,
+		private ResourceRegistry $resourceRegistry,
 		private Config $config,
 		private SessionStoreInterface $sessionStore,
 		private LoggerInterface $logger,
@@ -50,10 +52,14 @@ readonly class McpServerFactory
 				description: 'Total CMS site exposed as an MCP server.',
 			)
 			->setInstructions(
-				'This is a Total CMS site exposed via the Model Context Protocol. '
-				. 'Use the available tools to discover and query collection content. '
-				. 'Admin tools (schema_*, template_*, get_site_info, clear_cache) require an API key; '
-				. 'public tools require no authentication. Tool descriptions describe their inputs and outputs.'
+				'Total CMS site exposed via the Model Context Protocol. '
+				. 'Discovery: list_collections returns collections with their filterable fields. '
+				. 'Tools: query_collection / get_object / search_collection for collection content; '
+				. 'admin tools (schema_*, template_*, get_site_info, clear_cache) require an API key. '
+				. 'Resources: tcms://{collection}/ for collection summaries, tcms://{collection}/{id} for objects — '
+				. 'reachable via resources/read or the get_resource tool. '
+				. 'Drafts are hidden from anonymous callers. '
+				. 'Tool descriptions describe their inputs and outputs.'
 			)
 			->setSession($this->sessionStore)
 			->setLogger($this->logger);
@@ -80,6 +86,26 @@ readonly class McpServerFactory
 				description: $description,
 				annotations: $annotations,
 				inputSchema: $tool->inputSchema,
+			);
+		}
+
+		foreach ($this->resourceRegistry->forPersona($persona) as $resource) {
+			$builder->addResource(
+				handler:     $resource->handler,
+				uri:         $resource->uri,
+				name:        $resource->name,
+				description: $resource->description,
+				mimeType:    $resource->mimeType,
+			);
+		}
+
+		foreach ($this->resourceRegistry->templatesForPersona($persona) as $template) {
+			$builder->addResourceTemplate(
+				handler:     $template->handler,
+				uriTemplate: $template->uriTemplate,
+				name:        $template->name,
+				description: $template->description,
+				mimeType:    $template->mimeType,
 			);
 		}
 

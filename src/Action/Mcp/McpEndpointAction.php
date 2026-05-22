@@ -80,6 +80,11 @@ readonly class McpEndpointAction
 		// synchronously from inside the server->run() call below.
 		$this->personaContext->set($persona);
 
+		// Slim's BodyParsingMiddleware reads and consumes the body stream.
+		// Rewind so the SDK's StreamableHttpTransport can call getContents()
+		// from the beginning of the stream.
+		$request->getBody()->rewind();
+
 		$server    = $this->serverFactory->build($persona);
 		$transport = new StreamableHttpTransport($request);
 

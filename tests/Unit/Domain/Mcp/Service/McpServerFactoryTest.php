@@ -11,6 +11,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 use TotalCMS\Support\Config;
 
@@ -21,10 +22,13 @@ final class McpServerFactoryTest extends TestCase
 	private InMemorySessionStore $sessions;
 	private NullLogger $logger;
 
+	private ResourceRegistry $resources;
+
 	protected function setUp(): void
 	{
-		$this->registry = new ToolRegistry();
-		$this->config   = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->registry  = new ToolRegistry();
+		$this->resources = new ResourceRegistry();
+		$this->config    = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		// Minimum config the factory reads.
 		$this->config->domain    = 'test.local';
 		$this->config->dashboard = [];
@@ -34,7 +38,7 @@ final class McpServerFactoryTest extends TestCase
 
 	private function factory(): McpServerFactory
 	{
-		return new McpServerFactory($this->registry, $this->config, $this->sessions, $this->logger);
+		return new McpServerFactory($this->registry, $this->resources, $this->config, $this->sessions, $this->logger);
 	}
 
 	private function tool(string $name, string $access = 'public'): McpToolDefinition

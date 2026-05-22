@@ -107,7 +107,9 @@ use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
+use TotalCMS\Domain\Mcp\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tools\Admin\CacheTools;
 use TotalCMS\Domain\Mcp\Tools\Admin\CollectionTools;
@@ -1513,6 +1515,17 @@ return [
 		return $registry;
 	},
 
+	// ResourceRegistry is a singleton, fully populated at container build time
+	// via CollectionResourceRegistrar (introduced in Phase 2 Chunk A6, wired
+	// here in A7). Per-collection access is enforced by McpServerFactory::build()'s
+	// persona-filtered iteration.
+	ResourceRegistry::class => function (ContainerInterface $container): ResourceRegistry {
+		$registry = new ResourceRegistry();
+		$container->get(CollectionResourceRegistrar::class)->registerAll($registry);
+
+		return $registry;
+	},
+
 	// MCP session store. Sessions are short-lived (1h TTL), per-client transport
 	// state — same conceptual shape as PHP sessions, which T3 also keeps under
 	// tmpdir. Not domain data, so doesn't belong in tcms-data/.system. Operator
@@ -1537,6 +1550,7 @@ return [
 	// all resolve through the container without custom factory logic.
 	McpServerFactory::class => fn (ContainerInterface $container): McpServerFactory => new McpServerFactory(
 		$container->get(ToolRegistry::class),
+		$container->get(ResourceRegistry::class),
 		$container->get(Config::class),
 		$container->get(McpSessionStoreInterface::class),
 		$container->get(LoggerFactory::class)
