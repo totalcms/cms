@@ -11,7 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
  * `tcms mcp:test <tool> [--params='{"key":"value"}'] [--persona=admin]` —

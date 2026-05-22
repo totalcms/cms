@@ -233,9 +233,9 @@ class ExtensionManager
 		// the registry is ready by the time the first /mcp request lands —
 		// boot is the latest safe moment since extensions populate their
 		// contexts during register().
-		if ($this->container->has(\TotalCMS\Domain\Mcp\Service\ToolRegistry::class)) {
-			/** @var \TotalCMS\Domain\Mcp\Service\ToolRegistry $toolRegistry */
-			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Service\ToolRegistry::class);
+		if ($this->container->has(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class)) {
+			/** @var \TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry $toolRegistry */
+			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class);
 			$mcpRegistrar  = new \TotalCMS\Domain\Extension\Service\McpExtensionRegistrar($this->logger);
 			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
 		}
@@ -575,7 +575,7 @@ class ExtensionManager
 	 * flat list) lets the registrar attribute collisions to a specific extension
 	 * in the warning log.
 	 *
-	 * @return array<string,list<\TotalCMS\Domain\Mcp\Data\McpToolDefinition>>
+	 * @return array<string,list<\TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition>>
 	 */
 	public function getAllMcpTools(): array
 	{

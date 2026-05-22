@@ -9,10 +9,10 @@ use Mcp\Server\Session\InMemorySessionStore;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
-use TotalCMS\Domain\Mcp\Service\ResourceRegistry;
-use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Support\Config;
 
 final class McpServerFactoryTest extends TestCase

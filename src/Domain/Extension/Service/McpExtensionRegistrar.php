@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Extension\Service;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
-use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
  * Adds extension-registered MCP tools to the core `ToolRegistry`, with strict

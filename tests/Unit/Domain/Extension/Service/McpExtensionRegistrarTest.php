@@ -7,8 +7,8 @@ namespace Tests\Unit\Domain\Extension\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Extension\Service\McpExtensionRegistrar;
-use TotalCMS\Domain\Mcp\Data\McpToolDefinition;
-use TotalCMS\Domain\Mcp\Service\ToolRegistry;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class McpExtensionRegistrarTest extends TestCase
 {
