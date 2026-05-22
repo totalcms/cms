@@ -223,6 +223,21 @@ class SentryMiddleware implements MiddlewareInterface
 			return null;
 		}
 
+		// Belt-and-suspenders on `ignore_exceptions`. The Sentry SDK applies
+		// this option natively, but its `IgnoreErrorsIntegration` doesn't
+		// reliably walk deeply-chained exceptions (e.g. PHP-DI wraps its own
+		// `InvalidDefinition` 4 levels deep when an autowire chain fails),
+		// so events that should be dropped occasionally slip through to
+		// Sentry. Re-check here against the same list — `instanceof` will
+		// match the outermost exception's class even when the SDK's chain
+		// walk misses it.
+		$ignoreExceptions = $config['ignore_exceptions'] ?? [];
+		foreach ($ignoreExceptions as $exceptionClass) {
+			if ($exception instanceof $exceptionClass) {
+				return null;
+			}
+		}
+
 		// Check if this exception class should be filtered as a user error
 		$userErrorExceptions = $config['user_error_exceptions'] ?? [];
 		$userErrorMessages   = $config['user_error_messages'] ?? [];
