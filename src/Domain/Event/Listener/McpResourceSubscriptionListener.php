@@ -87,7 +87,19 @@ final class McpResourceSubscriptionListener
 	/**
 	 * Map an object event payload to the resource URI that subscribers watch.
 	 *
-	 * Returns null when the payload doesn't carry a usable collection name —
+	 * Two URI shapes:
+	 *   - tcms://{collection}/        — for ordinary collections (collection-level subs)
+	 *   - tcms://view/{objectId}      — for the `dataviews` collection (per-view subs)
+	 *
+	 * The DataView branch is the Phase 2 Chunk F bounded exception to the
+	 * collection-level-only subscription rule. Views are independently named
+	 * surfaces — each one is its own resource URI — so subscribers register
+	 * against the specific view's URI, not the parent `dataviews` collection.
+	 * DataViewBuilder::buildView() calls ObjectUpdater::updateObject(dataviews,
+	 * viewId, …) at the end of every successful rebuild, which fires
+	 * object.updated; this branch routes that to the per-view subscribers.
+	 *
+	 * Returns null when the payload doesn't carry a usable collection / id —
 	 * defensive guard for any future event source that emits an object.* event
 	 * without one.
 	 *
@@ -98,6 +110,15 @@ final class McpResourceSubscriptionListener
 		$collection = (string)($payload['collection'] ?? '');
 		if ($collection === '') {
 			return null;
+		}
+
+		if ($collection === 'dataviews') {
+			$id = (string)($payload['id'] ?? '');
+			if ($id === '') {
+				return null;
+			}
+
+			return \sprintf('tcms://view/%s', $id);
 		}
 
 		return \sprintf('tcms://%s/', $collection);

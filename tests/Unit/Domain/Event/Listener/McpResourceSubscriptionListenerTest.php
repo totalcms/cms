@@ -97,4 +97,45 @@ final class McpResourceSubscriptionListenerTest extends TestCase
 		$this->listener->onObjectUpdated(['collection' => 'blog', 'id' => 'a']);
 		$this->listener->onObjectDeleted(['collection' => 'blog', 'id' => 'a']);
 	}
+
+	// ── Phase 2 Chunk F: dataviews branch ───────────────────────────────────
+
+	public function testDataviewsCollectionMapsToPerViewUri(): void
+	{
+		// When a dataview object changes (typically because DataViewBuilder
+		// finished a rebuild), the listener fires notifications on the per-view
+		// URI tcms://view/{viewId} rather than the collection-level URI
+		// tcms://dataviews/. This is the bounded exception to the
+		// collection-level-only subscription rule from the Phase 2 spec.
+		$this->notifier->expects($this->once())
+			->method('notifyResourceChanged')
+			->with('tcms://view/monthly-sales-summary');
+
+		$this->listener->onObjectUpdated([
+			'collection' => 'dataviews',
+			'id'         => 'monthly-sales-summary',
+		]);
+	}
+
+	public function testDataviewsPayloadWithoutIdSkipsNotification(): void
+	{
+		// Defensive: a dataviews event without an id can't map to a URI.
+		// Listener returns silently rather than misrouting to tcms://view//.
+		$this->notifier->expects($this->never())
+			->method('notifyResourceChanged');
+
+		$this->listener->onObjectUpdated(['collection' => 'dataviews']);
+		$this->listener->onObjectUpdated(['collection' => 'dataviews', 'id' => '']);
+	}
+
+	public function testDataviewsViewIdsAreSeparateUrisForCoalescing(): void
+	{
+		// Two events on DIFFERENT views in the same request both fire notifications —
+		// coalescing is per-URI, and per-view URIs are distinct.
+		$this->notifier->expects($this->exactly(2))
+			->method('notifyResourceChanged');
+
+		$this->listener->onObjectUpdated(['collection' => 'dataviews', 'id' => 'view-a']);
+		$this->listener->onObjectUpdated(['collection' => 'dataviews', 'id' => 'view-b']);
+	}
 }

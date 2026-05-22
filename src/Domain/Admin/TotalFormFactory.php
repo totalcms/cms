@@ -504,7 +504,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'save'        => 'Save',
 			'delete'      => 'Delete',
-			'class'       => 'dataview-form no-unsaved-warning',
+			'class'       => 'dataview-form help-on-hover help-box no-unsaved-warning',
 		], $options);
 		$options['id'] = $id;
 

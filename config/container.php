@@ -112,6 +112,7 @@ use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
+use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpNotificationService;
@@ -126,11 +127,15 @@ use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SiteInfoTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetResourceTool;
+use TotalCMS\Domain\Mcp\Tool\Content\GetViewTool;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryCollectionTool;
+use TotalCMS\Domain\Mcp\Tool\Content\QueryViewTool;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeCollectionTool;
+use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeViewTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListCollectionsTool;
+use TotalCMS\Domain\Mcp\Tool\Discovery\ListViewsTool;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -1533,16 +1538,27 @@ return [
 		$container->get(SearchCollectionsTool::class)->register($registry);
 		$container->get(GetResourceTool::class)->register($registry);
 
+		// DataView tools (Phase 2 Chunk F) — parallel surface to the
+		// collection tools, scoped to views. Public persona only sees views
+		// marked mcp.access: 'public' per the per-view config; the tools
+		// enforce that at handler time.
+		$container->get(ListViewsTool::class)->register($registry);
+		$container->get(QueryViewTool::class)->register($registry);
+		$container->get(GetViewTool::class)->register($registry);
+		$container->get(DescribeViewTool::class)->register($registry);
+
 		return $registry;
 	},
 
 	// ResourceRegistry is a singleton, fully populated at container build time
-	// via CollectionResourceRegistrar (introduced in Phase 2 Chunk A6, wired
-	// here in A7). Per-collection access is enforced by McpServerFactory::build()'s
-	// persona-filtered iteration.
+	// via CollectionResourceRegistrar + DataViewResourceRegistrar. The DataView
+	// registrar adds per-view tcms://view/{id} resources plus a single
+	// tcms://view/{id} template. Per-resource access is enforced by
+	// McpServerFactory::build()'s persona-filtered iteration.
 	ResourceRegistry::class => function (ContainerInterface $container): ResourceRegistry {
 		$registry = new ResourceRegistry();
 		$container->get(CollectionResourceRegistrar::class)->registerAll($registry);
+		$container->get(DataViewResourceRegistrar::class)->registerAll($registry);
 
 		return $registry;
 	},

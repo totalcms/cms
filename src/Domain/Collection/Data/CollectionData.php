@@ -18,6 +18,12 @@ class CollectionData
 		'logs',
 		'.schemas',
 		'schemas',
+		// Reserved for the MCP DataView URI namespace (tcms://view/{id}).
+		// Without these reservations a customer could create a collection
+		// named `view` or `views` whose objects would collide with the
+		// per-view resource URIs registered by DataViewResourceRegistrar.
+		'view',
+		'views',
 	];
 
 	private readonly Serializer $serializer;
