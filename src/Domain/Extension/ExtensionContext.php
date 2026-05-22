@@ -79,8 +79,11 @@ final class ExtensionContext
 	/** @var list<McpToolDefinition> Tools registered for the MCP server */
 	private array $mcpTools = [];
 
-	/** @var list<array{uri: string, description: string, handler: \Closure}> MCP resources (Phase 2 surface) */
+	/** @var list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> Concrete MCP resources */
 	private array $mcpResources = [];
+
+	/** @var list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> MCP resource templates (URI patterns with {placeholder} segments) */
+	private array $mcpResourceTemplates = [];
 
 	public function __construct(
 		private readonly ExtensionManifest $manifest,
@@ -261,14 +264,78 @@ final class ExtensionContext
 	}
 
 	/**
-	 * Register an MCP resource — `tcms://...` URIs the agent can fetch via
-	 * the `get_resource` tool. Phase 2 will expand this to resource/list and
-	 * resource/subscribe; for now the URI is just an alias addressable
-	 * through `get_resource`.
+	 * Register an MCP resource — a concrete `tcms://...` or extension-scheme URI
+	 * (e.g. `acme://invoices/all`) that the agent can fetch via `resources/read`
+	 * or the `get_resource` tool. The handler is invoked with no arguments and
+	 * must return a SDK ResourceContent envelope:
+	 *
+	 *   ['contents' => [['uri' => '...', 'mimeType' => '...', 'text' => '...']]]
+	 *
+	 * Collision policy: strict deny. An extension URI that collides with a core
+	 * resource OR another extension's resource is logged and skipped by
+	 * McpExtensionRegistrar — there is no last-wins fallback. Pick a vendor-
+	 * prefixed scheme (`acme://...`) to avoid colliding with `tcms://`.
+	 *
+	 * @param string   $uri         Concrete URI
+	 * @param string   $description Description AI agents read
+	 * @param \Closure $handler     Invoked with no args; returns ResourceContent
+	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
+	 * @param string   $name        Human-readable name shown in resources/list (defaults to the URI)
+	 * @param string   $mimeType    Content type the handler will produce
 	 */
-	public function registerMcpResource(string $uri, string $description, \Closure $handler): void
-	{
-		$this->mcpResources[] = ['uri' => $uri, 'description' => $description, 'handler' => $handler];
+	public function registerMcpResource(
+		string $uri,
+		string $description,
+		\Closure $handler,
+		string $access = 'public',
+		string $name = '',
+		string $mimeType = 'application/json',
+	): void {
+		$this->mcpResources[] = [
+			'uri'         => $uri,
+			'name'        => $name !== '' ? $name : $uri,
+			'description' => $description,
+			'handler'     => $handler,
+			'access'      => $access,
+			'mimeType'    => $mimeType,
+		];
+	}
+
+	/**
+	 * Register an MCP resource template — a URI pattern with `{name}` placeholders
+	 * (e.g. `acme://invoices/{id}`) that AI agents fill in to construct concrete
+	 * resource URIs. Handler receives the substituted segment values as named
+	 * arguments matching the template's placeholders.
+	 *
+	 * Use this when the resource set is unbounded — enumerating thousands of
+	 * objects into `resources/list` is impractical, but a single template tells
+	 * AI agents the URI shape exists.
+	 *
+	 * Same collision policy as registerMcpResource(): strict deny.
+	 *
+	 * @param string   $uriTemplate URI template with `{name}` placeholders
+	 * @param string   $description Description AI agents read
+	 * @param \Closure $handler     Invoked with named args matching template variables; returns ResourceContent
+	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
+	 * @param string   $name        Human-readable name (defaults to the template)
+	 * @param string   $mimeType    Content type the handler will produce
+	 */
+	public function registerMcpResourceTemplate(
+		string $uriTemplate,
+		string $description,
+		\Closure $handler,
+		string $access = 'public',
+		string $name = '',
+		string $mimeType = 'application/json',
+	): void {
+		$this->mcpResourceTemplates[] = [
+			'uriTemplate' => $uriTemplate,
+			'name'        => $name !== '' ? $name : $uriTemplate,
+			'description' => $description,
+			'handler'     => $handler,
+			'access'      => $access,
+			'mimeType'    => $mimeType,
+		];
 	}
 
 	/**
@@ -466,10 +533,16 @@ final class ExtensionContext
 		return $this->mcpTools;
 	}
 
-	/** @return list<array{uri: string, description: string, handler: \Closure}> */
+	/** @return list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> */
 	public function getRegisteredMcpResources(): array
 	{
 		return $this->mcpResources;
+	}
+
+	/** @return list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> */
+	public function getRegisteredMcpResourceTemplates(): array
+	{
+		return $this->mcpResourceTemplates;
 	}
 
 	/** @return list<callable> */
@@ -639,7 +712,7 @@ final class ExtensionContext
 		if ($this->mcpTools !== []) {
 			$caps['mcp:tools'] = true;
 		}
-		if ($this->mcpResources !== []) {
+		if ($this->mcpResources !== [] || $this->mcpResourceTemplates !== []) {
 			$caps['mcp:resources'] = true;
 		}
 

@@ -228,16 +228,35 @@ class ExtensionManager
 			}
 		}
 
-		// Wire MCP tools from extensions into the ToolRegistry (strict-deny on
-		// collisions with core OR cross-extension). Runs before Twig wiring so
-		// the registry is ready by the time the first /mcp request lands —
-		// boot is the latest safe moment since extensions populate their
-		// contexts during register().
+		// Wire MCP tools and resources from extensions into their respective
+		// registries (strict-deny on collisions, both core-vs-extension and
+		// cross-extension). Runs before Twig wiring so registries are ready
+		// by the time the first /mcp request lands — boot is the latest safe
+		// moment since extensions populate their contexts during register().
 		if ($this->container->has(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class)) {
 			/** @var \TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry $toolRegistry */
 			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class);
 			$mcpRegistrar  = new \TotalCMS\Domain\Extension\Service\McpExtensionRegistrar($this->logger);
 			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
+
+			// Only request the ResourceRegistry singleton when extensions have
+			// resources to add. Resolving the registry eagerly would trigger
+			// its CollectionResourceRegistrar pass over every collection on
+			// disk, which (a) is wasted work when no extension contributes
+			// resources, and (b) snapshots the collection list at boot time —
+			// any collection created later in the same process (e.g. in a
+			// test's beforeEach) wouldn't appear in the registry.
+			$extensionResources = $this->getAllMcpResources();
+			$extensionTemplates = $this->getAllMcpResourceTemplates();
+			if (
+				($extensionResources !== [] || $extensionTemplates !== [])
+				&& $this->container->has(\TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry::class)
+			) {
+				/** @var \TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry $resourceRegistry */
+				$resourceRegistry = $this->container->get(\TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry::class);
+				$mcpRegistrar->registerResources($resourceRegistry, $extensionResources);
+				$mcpRegistrar->registerResourceTemplates($resourceRegistry, $extensionTemplates);
+			}
 		}
 
 		// Wire Twig items from extensions into the TwigEngine (with collision protection)
@@ -587,6 +606,52 @@ class ExtensionManager
 			$tools = $context->getRegisteredMcpTools();
 			if ($tools !== []) {
 				$byExtension[$id] = $tools;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of MCP resources. Same id-keyed shape as getAllMcpTools()
+	 * so McpExtensionRegistrar can attribute collisions to a specific extension.
+	 * Gated by the `mcp:resources` capability permission.
+	 *
+	 * @return array<string,list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}>>
+	 */
+	public function getAllMcpResources(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:resources')) {
+				continue;
+			}
+			$resources = $context->getRegisteredMcpResources();
+			if ($resources !== []) {
+				$byExtension[$id] = $resources;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of MCP resource templates. Same shape + gating as
+	 * getAllMcpResources(); templates and concrete resources share the
+	 * `mcp:resources` capability flag.
+	 *
+	 * @return array<string,list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}>>
+	 */
+	public function getAllMcpResourceTemplates(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:resources')) {
+				continue;
+			}
+			$templates = $context->getRegisteredMcpResourceTemplates();
+			if ($templates !== []) {
+				$byExtension[$id] = $templates;
 			}
 		}
 

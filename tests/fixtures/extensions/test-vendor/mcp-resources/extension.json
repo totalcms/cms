@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/mcp-resources",
+    "name": "MCP Resources Test Fixture",
+    "description": "Test extension that registers MCP resources + resource templates with a custom URI scheme.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}
