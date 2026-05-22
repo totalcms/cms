@@ -67,21 +67,21 @@ readonly class CollectionResourceRegistrar
 		$objectResource     = $this->collectionObjectResource;
 
 		$registry->register(new McpResourceDefinition(
-			uri:         \sprintf('tcms://%s/', $collectionId),
-			name:        $sdkName,
+			uri: \sprintf('tcms://%s/', $collectionId),
+			name: $sdkName,
 			description: $desc,
-			mimeType:    'application/json',
-			access:      $access,
-			handler:     static fn (): array => $collectionResource->read($collectionId),
+			mimeType: 'application/json',
+			access: $access,
+			handler: static fn (): array => $collectionResource->read($collectionId),
 		));
 
 		$registry->registerTemplate(new McpResourceTemplateDefinition(
 			uriTemplate: \sprintf('tcms://%s/{id}', $collectionId),
-			name:        $sdkName . '-item',
+			name: $sdkName . '-item',
 			description: \sprintf('Fetch a single %s by id.', $displayName),
-			mimeType:    'application/json',
-			access:      $access,
-			handler:     static fn (string $id): array => $objectResource->read($collectionId, $id),
+			mimeType: 'application/json',
+			access: $access,
+			handler: static fn (string $id): array => $objectResource->read($collectionId, $id),
 		));
 	}
 

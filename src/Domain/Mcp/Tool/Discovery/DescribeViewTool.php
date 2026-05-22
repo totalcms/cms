@@ -8,8 +8,8 @@ use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
@@ -74,7 +74,7 @@ readonly class DescribeViewTool
 		$data        = $this->fetcher->getViewData($id);
 		$values      = array_values($data);
 		$first       = is_array($values[0] ?? null) ? $values[0] : [];
-		$outputKeys  = array_values(array_filter(array_keys($first), 'is_string'));
+		$outputKeys  = array_values(array_filter(array_keys($first), is_string(...)));
 
 		$payload = [
 			'id'           => (string)$view['id'],

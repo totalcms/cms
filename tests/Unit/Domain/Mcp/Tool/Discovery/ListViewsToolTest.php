@@ -48,7 +48,7 @@ final class ListViewsToolTest extends TestCase
 			['id' => 'public-one',  'name' => 'Public One',  'mcp' => ['access' => 'public']],
 			['id' => 'admin-only',  'name' => 'Admin Only',  'mcp' => ['access' => 'admin']],
 			['id' => 'public-two',  'name' => 'Public Two',  'mcp' => ['access' => 'public']],
-			['id' => 'no-mcp-block','name' => 'Defaults Admin'], // missing mcp → defaults to admin
+			['id' => 'no-mcp-block', 'name' => 'Defaults Admin'], // missing mcp → defaults to admin
 		]);
 
 		$result = $this->tool->handler();
@@ -102,9 +102,9 @@ final class ListViewsToolTest extends TestCase
 			$byId[$view['id']] = $view['description'];
 		}
 
-		$this->assertSame('mcp text',  $byId['a']);
+		$this->assertSame('mcp text', $byId['a']);
 		$this->assertSame('view text', $byId['b']);
-		$this->assertSame('',          $byId['c']);
+		$this->assertSame('', $byId['c']);
 	}
 
 	public function testEmptyIdsAreSkipped(): void

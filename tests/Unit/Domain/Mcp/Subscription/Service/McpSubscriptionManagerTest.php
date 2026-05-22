@@ -10,8 +10,8 @@ use Mcp\Server\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
-use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpSubscriptionManager;
+use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
 
 final class McpSubscriptionManagerTest extends TestCase
 {
@@ -222,10 +222,8 @@ final class McpSubscriptionManagerTest extends TestCase
 		$protocol->expects($this->once())
 			->method('sendNotification')
 			->with(
-				$this->callback(static function (mixed $notification) use ($uri): bool {
-					return $notification instanceof ResourceUpdatedNotification
-						&& $notification->uri === $uri;
-				}),
+				$this->callback(static fn (mixed $notification): bool => $notification instanceof ResourceUpdatedNotification
+						&& $notification->uri === $uri),
 				$this->session
 			);
 
@@ -273,9 +271,10 @@ final class TestRecordingLogger extends \Psr\Log\AbstractLogger
 
 	/**
 	 * @param array<string,mixed> $context
+	 * @param mixed $level
 	 */
 	public function log($level, \Stringable|string $message, array $context = []): void
 	{
-		$this->records[] = ['level' => (string) $level, 'message' => (string) $message, 'context' => $context];
+		$this->records[] = ['level' => (string)$level, 'message' => (string)$message, 'context' => $context];
 	}
 }

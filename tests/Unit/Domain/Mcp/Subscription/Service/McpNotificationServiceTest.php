@@ -227,11 +227,12 @@ final class NotificationTestLogger extends AbstractLogger
 
 	/**
 	 * @param array<string,mixed> $context
+	 * @param mixed $level
 	 */
 	public function log($level, \Stringable|string $message, array $context = []): void
 	{
-		if ((string) $level === 'error') {
-			$this->errors[] = ['level' => 'error', 'message' => (string) $message, 'context' => $context];
+		if ((string)$level === 'error') {
+			$this->errors[] = ['level' => 'error', 'message' => (string)$message, 'context' => $context];
 		}
 	}
 }

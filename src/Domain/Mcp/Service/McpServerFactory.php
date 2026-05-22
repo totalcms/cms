@@ -106,21 +106,21 @@ readonly class McpServerFactory
 
 		foreach ($this->resourceRegistry->forPersona($persona) as $resource) {
 			$builder->addResource(
-				handler:     $resource->handler,
-				uri:         $resource->uri,
-				name:        $resource->name,
+				handler: $resource->handler,
+				uri: $resource->uri,
+				name: $resource->name,
 				description: $resource->description,
-				mimeType:    $resource->mimeType,
+				mimeType: $resource->mimeType,
 			);
 		}
 
 		foreach ($this->resourceRegistry->templatesForPersona($persona) as $template) {
 			$builder->addResourceTemplate(
-				handler:     $template->handler,
+				handler: $template->handler,
 				uriTemplate: $template->uriTemplate,
-				name:        $template->name,
+				name: $template->name,
 				description: $template->description,
-				mimeType:    $template->mimeType,
+				mimeType: $template->mimeType,
 			);
 		}
 

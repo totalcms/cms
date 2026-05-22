@@ -76,23 +76,21 @@ final class QueryViewToolTest extends TestCase
 			->method('query')
 			->with(
 				'recent',
-				$this->callback(static function (array $params): bool {
-					return ($params['include'] ?? '') === 'featured:true'
+				$this->callback(static fn (array $params): bool => ($params['include'] ?? '') === 'featured:true'
 						&& ($params['exclude'] ?? '') === 'draft:true'
-						&& ($params['sort']    ?? '') === 'date:desc'
-						&& $params['limit']  === '5'
-						&& $params['offset'] === '10';
-				}),
+						&& ($params['sort'] ?? '') === 'date:desc'
+						&& $params['limit'] === '5'
+						&& $params['offset'] === '10'),
 			)
 			->willReturn(new QueryResult(items: [['a' => 1]], total: 1, limit: 5, offset: 10));
 
 		$result = $this->tool->handler(
-			id:      'recent',
+			id: 'recent',
 			include: 'featured:true',
 			exclude: 'draft:true',
-			sort:    'date:desc',
-			limit:   5,
-			offset:  10,
+			sort: 'date:desc',
+			limit: 5,
+			offset: 10,
 		);
 
 		$this->assertSame(1, $result['total']);

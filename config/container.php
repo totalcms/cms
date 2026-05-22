@@ -59,7 +59,6 @@ use TotalCMS\Domain\Mcp\Subscription\Service\McpNotificationService;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpSubscriptionManager;
 use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
@@ -70,12 +69,13 @@ use TotalCMS\Domain\Mcp\Tool\Content\GetResourceTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetViewTool;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryViewTool;
-use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionsTool;
+use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeViewTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListViewsTool;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
 use TotalCMS\Domain\Migration\Service\MigrationRunner;
@@ -122,7 +122,7 @@ return [
 	// Application settings — plain closure (rather than `Config::init(...)`)
 	// so the entire container is compileable; PHP-DI's compiler rejects
 	// first-class callables because they internally reference `self`.
-	Config::class => fn (): Config => Config::init(),
+	Config::class => Config::init(...),
 
 	App::class => function (ContainerInterface $container): App {
 		AppFactory::setContainer($container);
@@ -364,10 +364,10 @@ return [
 		// mcp.access toggle, new/removed collections). Clients auto-reconnect
 		// and pick up the fresh surface on next request. mcp.* settings are
 		// handled directly in SettingsSaver — no settings-save event yet.
-		$dispatcher->listen('schema.saved', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
-		$dispatcher->listen('collection.created', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
-		$dispatcher->listen('collection.updated', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
-		$dispatcher->listen('collection.deleted', $lazy(\TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('schema.saved', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.created', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.updated', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.deleted', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
 
 		// IndexBuildListener
 		$dispatcher->listen('object.created', $lazy(IndexBuildListener::class, 'onObjectCreated'), -100);
@@ -548,7 +548,7 @@ return [
 		$container->get(Config::class),
 		$container->get(McpSessionStoreInterface::class),
 		$container->get(LoggerFactory::class)
-			->addFileHandler('mcp-activity.log', level: \Monolog\Level::Debug)
+			->addFileHandler('mcp-activity.log', level: Level::Debug)
 			->createLogger('mcp-activity'),
 	),
 
@@ -557,21 +557,19 @@ return [
 	// McpSessionInvalidator::invalidateAll() wipes every file in that
 	// directory whenever the tool surface changes; the subscription index
 	// outlives session invalidations.
-	SubscriptionIndex::class => fn (ContainerInterface $container): SubscriptionIndex
-		=> new SubscriptionIndex(
-			$container->get(Config::class)->tmpdir . '/mcp-subscriptions.json',
-		),
+	SubscriptionIndex::class => fn (ContainerInterface $container): SubscriptionIndex => new SubscriptionIndex(
+		$container->get(Config::class)->tmpdir . '/mcp-subscriptions.json',
+	),
 
 	// McpSubscriptionManager wraps the SDK default with reverse-index writes.
 	// Logger writes to mcp-activity.log alongside other MCP traces so
 	// index-write failures surface in the standard MCP log file.
-	McpSubscriptionManager::class => fn (ContainerInterface $container): McpSubscriptionManager
-		=> new McpSubscriptionManager(
-			$container->get(SubscriptionIndex::class),
-			$container->get(LoggerFactory::class)
-				->addFileHandler('mcp-activity.log', level: \Monolog\Level::Debug)
+	McpSubscriptionManager::class => fn (ContainerInterface $container): McpSubscriptionManager => new McpSubscriptionManager(
+		$container->get(SubscriptionIndex::class),
+		$container->get(LoggerFactory::class)
+				->addFileHandler('mcp-activity.log', level: Level::Debug)
 				->createLogger('mcp-subscription'),
-		),
+	),
 
 	// McpNotificationService fans out notifications/resources/updated to
 	// every subscribed session when an object.* event fires. The McpServerFactory
@@ -579,16 +577,15 @@ return [
 	// here, but Protocol holds no per-session state — its constructor is
 	// session-agnostic and sendNotification takes session as a parameter. We
 	// build one Protocol against the SessionManager and reuse it across calls.
-	ResourceNotifier::class => fn (ContainerInterface $container): ResourceNotifier
-		=> $container->get(McpNotificationService::class),
+	ResourceNotifier::class => fn (ContainerInterface $container): ResourceNotifier => $container->get(McpNotificationService::class),
 
 	McpNotificationService::class => function (ContainerInterface $container): McpNotificationService {
 		$sessionManager = new McpSessionManager($container->get(McpSessionStoreInterface::class));
 		$protocol       = new McpProtocol(
-			requestHandlers:      [],
+			requestHandlers: [],
 			notificationHandlers: [],
-			messageFactory:       McpMessageFactory::make(),
-			sessionManager:       $sessionManager,
+			messageFactory: McpMessageFactory::make(),
+			sessionManager: $sessionManager,
 		);
 
 		return new McpNotificationService(
@@ -597,9 +594,8 @@ return [
 			$protocol,
 			$sessionManager,
 			$container->get(LoggerFactory::class)
-				->addFileHandler('mcp-activity.log', level: \Monolog\Level::Debug)
+				->addFileHandler('mcp-activity.log', level: Level::Debug)
 				->createLogger('mcp-notification'),
 		);
 	},
-
 ];

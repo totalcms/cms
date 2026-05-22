@@ -18,7 +18,6 @@ use TotalCMS\Domain\Property\Data\ArrayData;
  * would split every comma in the JSON and shred the data.
  */
 describe('ArrayData', function (): void {
-
 	describe('PHP array input', function (): void {
 		test('list of strings passes through unchanged', function (): void {
 			$data = new ArrayData(['red', 'green', 'blue']);

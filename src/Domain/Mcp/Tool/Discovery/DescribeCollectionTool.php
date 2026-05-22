@@ -7,9 +7,9 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
@@ -101,7 +101,7 @@ readonly class DescribeCollectionTool
 	public function handler(string $collection): array
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			throw new ToolCallException(sprintf(
 				'Collection "%s" not found. Use list_collections to see available collections.',
 				$collection,

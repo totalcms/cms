@@ -22,7 +22,7 @@ final class McpCorsMiddlewareTest extends TestCase
 	 */
 	private function middleware(array $allowedOrigins = []): McpCorsMiddleware
 	{
-		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config      = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->mcp = ['allowedOrigins' => $allowedOrigins];
 
 		return new McpCorsMiddleware($config);
@@ -40,8 +40,10 @@ final class McpCorsMiddlewareTest extends TestCase
 
 	private function passthroughHandler(int $status = 200): RequestHandlerInterface
 	{
-		return new class ($status) implements RequestHandlerInterface {
-			public function __construct(private readonly int $status) {}
+		return new class($status) implements RequestHandlerInterface {
+			public function __construct(private readonly int $status)
+			{
+			}
 
 			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
@@ -97,8 +99,11 @@ final class McpCorsMiddlewareTest extends TestCase
 		$response = $this->middleware(['https://example.com'])
 			->process($this->request('GET', 'https://app.example.com'), $this->passthroughHandler());
 
-		$this->assertSame('', $response->getHeaderLine('Access-Control-Allow-Origin'),
-			'Subdomain should not match the apex entry — operators must list each subdomain explicitly.');
+		$this->assertSame(
+			'',
+			$response->getHeaderLine('Access-Control-Allow-Origin'),
+			'Subdomain should not match the apex entry — operators must list each subdomain explicitly.'
+		);
 	}
 
 	// ── Wildcard ─────────────────────────────────────────────────────────────
@@ -161,7 +166,7 @@ final class McpCorsMiddlewareTest extends TestCase
 
 	public function testNonArrayConfigDefaultsToEmptyAllowlist(): void
 	{
-		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config      = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->mcp = ['allowedOrigins' => 'not-an-array'];
 
 		$middleware = new McpCorsMiddleware($config);

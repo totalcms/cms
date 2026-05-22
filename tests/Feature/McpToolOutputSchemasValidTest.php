@@ -24,7 +24,6 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * fixture would catch more theoretical edge cases, but the structural walker
  * below catches the practical ones at zero infrastructure cost.
  */
-
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 });
@@ -56,6 +55,7 @@ const KNOWN_TYPES = ['string', 'integer', 'number', 'boolean', 'object', 'array'
  * Empty result = schema looks good.
  *
  * @param array<string,mixed>|mixed $schema
+ *
  * @return list<string>
  */
 function structuralProblems(mixed $schema, string $path = '$'): array
@@ -67,7 +67,7 @@ function structuralProblems(mixed $schema, string $path = '$'): array
 	$problems = [];
 
 	// 1. All top-level keys must be known JSON Schema keywords.
-	foreach ($schema as $key => $_) {
+	foreach (array_keys($schema) as $key) {
 		if (!is_string($key)) {
 			$problems[] = "{$path}: non-string key " . json_encode($key);
 			continue;
@@ -151,7 +151,7 @@ function structuralProblems(mixed $schema, string $path = '$'): array
 /**
  * @return list<array{name: string, schema: array<string,mixed>}>
  */
-function toolsWithOutputSchemaFromRegistry(\Slim\App $app): array
+function toolsWithOutputSchemaFromRegistry(Slim\App $app): array
 {
 	/** @var ToolRegistry $registry */
 	$registry = $app->getContainer()->get(ToolRegistry::class);

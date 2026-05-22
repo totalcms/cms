@@ -23,7 +23,6 @@ use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
  * path that exercises the listener → notifier → SDK → session-file outbox
  * pipeline end to end.
  */
-
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 });
@@ -54,7 +53,7 @@ beforeEach(function (): void {
  * SubscriptionIndex. Mirrors what McpSubscriptionManager::subscribe would do
  * if a client had subscribed via the MCP protocol.
  */
-function seedSubscriber(\Slim\App $app, string $uri): string
+function seedSubscriber(Slim\App $app, string $uri): string
 {
 	$container = $app->getContainer();
 	$config    = $container->get(TotalCMS\Support\Config::class);
@@ -67,8 +66,8 @@ function seedSubscriber(\Slim\App $app, string $uri): string
 	$sessionId = $uuid->toRfc4122();
 
 	$sessionPayload = [
-		'initialized'           => true,
-		'protocol_version'      => '2025-06-18',
+		'initialized'            => true,
+		'protocol_version'       => '2025-06-18',
 		'resource_subscriptions' => [$uri => true],
 	];
 	file_put_contents($dir . '/' . $sessionId, json_encode($sessionPayload));
@@ -91,7 +90,7 @@ function readQueuedNotifications(string $tmpdir, string $sessionId, string $uri)
 		return [];
 	}
 
-	$decoded = json_decode((string) file_get_contents($file), true);
+	$decoded = json_decode((string)file_get_contents($file), true);
 	if (!is_array($decoded)) {
 		return [];
 	}
@@ -144,7 +143,7 @@ describe('McpSubscriptions — cross-request push', function (): void {
 		$listener->onObjectCreated(['collection' => 'blog', 'id' => 'p1']);
 
 		$tmpdir = $this->app->getContainer()->get(TotalCMS\Support\Config::class)->tmpdir;
-		expect(readQueuedNotifications($tmpdir, $blogSession,    'tcms://blog/'))->not->toBeEmpty();
+		expect(readQueuedNotifications($tmpdir, $blogSession, 'tcms://blog/'))->not->toBeEmpty();
 		expect(readQueuedNotifications($tmpdir, $productSession, 'tcms://products/'))->toBe([]);
 	});
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Data;
 
-use Closure;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 
 /**
@@ -26,7 +25,7 @@ readonly class McpResourceTemplateDefinition
 	 * @param string  $description Description for AI agents
 	 * @param string  $mimeType    Content type the handler will produce
 	 * @param string  $access      'admin', 'public', or 'authenticated' ('authenticated' reserved for Phase 4 OAuth)
-	 * @param Closure $handler     Invoked with named args matching template variables
+	 * @param \Closure $handler     Invoked with named args matching template variables
 	 */
 	public function __construct(
 		public string $uriTemplate,
@@ -34,7 +33,7 @@ readonly class McpResourceTemplateDefinition
 		public string $description,
 		public string $mimeType,
 		public string $access,
-		public Closure $handler,
+		public \Closure $handler,
 	) {
 	}
 

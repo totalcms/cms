@@ -28,7 +28,7 @@ function mcpInitializePayload(): array
 		'method'  => 'initialize',
 		'params'  => [
 			'protocolVersion' => '2025-06-18',
-			'capabilities'    => new \stdClass(),
+			'capabilities'    => new stdClass(),
 			'clientInfo'      => ['name' => 'pest', 'version' => '0.1'],
 		],
 	];
@@ -90,7 +90,7 @@ describe('McpEndpointAction', function (): void {
 		// X-API-Key header. Slim test helpers don't support headers directly,
 		// so build via the app instance.
 		$app     = $this->app;
-		$request = (new \Nyholm\Psr7\Factory\Psr17Factory())
+		$request = (new Nyholm\Psr7\Factory\Psr17Factory())
 			->createServerRequest('POST', '/mcp')
 			->withHeader('Content-Type', 'application/json')
 			->withHeader('Accept', 'application/json, text/event-stream')

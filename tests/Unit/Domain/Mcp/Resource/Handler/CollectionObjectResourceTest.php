@@ -59,7 +59,7 @@ final class CollectionObjectResourceTest extends TestCase
 			->willReturn($object);
 
 		$result  = $this->resource->read('blog', 'hello-world');
-		$decoded = json_decode($result['contents'][0]['text'], true);
+		$decoded = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertIsArray($decoded);
 		$this->assertSame($object, $decoded);

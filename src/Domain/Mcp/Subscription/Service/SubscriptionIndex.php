@@ -36,7 +36,9 @@ namespace TotalCMS\Domain\Mcp\Subscription\Service;
  */
 class SubscriptionIndex
 {
-	public function __construct(private readonly string $indexFile) {}
+	public function __construct(private readonly string $indexFile)
+	{
+	}
 
 	// -------------------------------------------------------------------------
 	// Public API
@@ -76,7 +78,7 @@ class SubscriptionIndex
 			/** @var list<string> $set */
 			$set = array_values(
 				array_filter(
-					(array) $data[$uri],
+					$data[$uri],
 					static fn (mixed $id): bool => $id !== $sessionId
 				)
 			);

@@ -25,7 +25,7 @@ final class ExportJumpStartSyncModeTest extends TestCase
 		$this->request           = $this->createMock(ServerRequestInterface::class);
 		$this->response          = $this->createMock(ResponseInterface::class);
 
-		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->siteName  = '';
 		$config->domain    = '';
 		$config->dashboard = [];

@@ -23,12 +23,13 @@ use Psr\SimpleCache\InvalidArgumentException;
  * event listener (Phase 2 Chunk B4) can query "all sessions subscribed to
  * tcms://blog/" after a blog object changes.
  */
-final class McpSubscriptionManager implements SubscriptionManagerInterface
+final readonly class McpSubscriptionManager implements SubscriptionManagerInterface
 {
 	public function __construct(
-		private readonly SubscriptionIndex $index,
-		private readonly LoggerInterface $logger = new NullLogger(),
-	) {}
+		private SubscriptionIndex $index,
+		private LoggerInterface $logger = new NullLogger(),
+	) {
+	}
 
 	// -------------------------------------------------------------------------
 	// SubscriptionManagerInterface

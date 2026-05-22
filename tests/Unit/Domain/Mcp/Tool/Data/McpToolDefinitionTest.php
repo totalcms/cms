@@ -18,7 +18,6 @@ final class McpToolDefinitionTest extends TestCase
 			description: 'Example',
 			access: $access,
 			handler: static fn (): array => [],
-			inputSchema: null,
 		);
 	}
 
@@ -38,7 +37,7 @@ final class McpToolDefinitionTest extends TestCase
 
 	public function testInputSchemaDefaultsToNull(): void
 	{
-		$tool = new McpToolDefinition('t', 'd', 'public', static fn () => null);
+		$tool = new McpToolDefinition('t', 'd', 'public', static fn (): null => null);
 
 		$this->assertNull($tool->inputSchema);
 	}
@@ -47,7 +46,7 @@ final class McpToolDefinitionTest extends TestCase
 	{
 		// Tools that aren't persona-aware leave the dynamic builder unset and rely
 		// solely on the static description string.
-		$tool = new McpToolDefinition('t', 'static-desc', 'public', static fn () => null);
+		$tool = new McpToolDefinition('t', 'static-desc', 'public', static fn (): null => null);
 
 		$this->assertNull($tool->descriptionBuilder);
 	}
@@ -58,7 +57,7 @@ final class McpToolDefinitionTest extends TestCase
 		// default (read-only). Required cross-cutting requirement before
 		// Anthropic Directory submission — only destructive tools need to
 		// explicitly opt out of the read-only default.
-		$tool = new McpToolDefinition('t', 'd', 'public', static fn () => null);
+		$tool = new McpToolDefinition('t', 'd', 'public', static fn (): null => null);
 
 		$this->assertNull($tool->annotations);
 	}
@@ -79,7 +78,7 @@ final class McpToolDefinitionTest extends TestCase
 			name: 'delete_schema',
 			description: 'd',
 			access: 'admin',
-			handler: static fn () => null,
+			handler: static fn (): null => null,
 			inputSchema: null,
 			descriptionBuilder: null,
 			annotations: $annotations,
@@ -98,7 +97,7 @@ final class McpToolDefinitionTest extends TestCase
 			name: 't',
 			description: 'fallback',
 			access: 'public',
-			handler: static fn () => null,
+			handler: static fn (): null => null,
 			inputSchema: null,
 			descriptionBuilder: $builder,
 		);
@@ -158,7 +157,7 @@ final class McpToolDefinitionTest extends TestCase
 		// Tools that don't declare an outputSchema get null — the SDK's
 		// addTool() default. Content + discovery tools that return
 		// structured data opt in to a schema for SDK-aware host validation.
-		$tool = new McpToolDefinition('t', 'd', 'public', static fn () => null);
+		$tool = new McpToolDefinition('t', 'd', 'public', static fn (): null => null);
 
 		$this->assertNull($tool->outputSchema);
 	}
@@ -179,7 +178,7 @@ final class McpToolDefinitionTest extends TestCase
 			name: 't',
 			description: 'd',
 			access: 'public',
-			handler: static fn () => null,
+			handler: static fn (): null => null,
 			outputSchema: $schema,
 		);
 

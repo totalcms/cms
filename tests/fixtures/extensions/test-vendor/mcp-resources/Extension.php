@@ -23,9 +23,9 @@ class Extension implements ExtensionInterface
 	{
 		// Concrete resource: a list of all widgets, addressable by URI.
 		$context->registerMcpResource(
-			uri:         'acme://widgets/all',
+			uri: 'acme://widgets/all',
 			description: 'Acme widget inventory — full list of widgets, in inventory order.',
-			handler:     fn (): array => [
+			handler: fn (): array => [
 				'contents' => [
 					[
 						'uri'      => 'acme://widgets/all',
@@ -38,14 +38,14 @@ class Extension implements ExtensionInterface
 				],
 			],
 			access: 'public',
-			name:   'Acme Widgets',
+			name: 'Acme Widgets',
 		);
 
 		// Resource template: per-widget detail, URI parameterized on widget id.
 		$context->registerMcpResourceTemplate(
 			uriTemplate: 'acme://widgets/{id}',
 			description: 'A single Acme widget by id. Use list_collections to discover available widget ids via the inventory resource.',
-			handler:     fn (string $id): array => [
+			handler: fn (string $id): array => [
 				'contents' => [
 					[
 						'uri'      => "acme://widgets/{$id}",
@@ -55,7 +55,7 @@ class Extension implements ExtensionInterface
 				],
 			],
 			access: 'public',
-			name:   'Acme Widget Detail',
+			name: 'Acme Widget Detail',
 		);
 	}
 

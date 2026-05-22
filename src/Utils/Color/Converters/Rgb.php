@@ -210,7 +210,7 @@ abstract class Rgb
 			value : $opacity / 255,
 			array : \array_map(
 				callback : function (int|float $v): float {
-					$v    = (float)($v / 255);
+					$v /= 255;
 					$abs  = \abs($v);
 					$sign = ($v < 0)
 						? -1
@@ -220,9 +220,7 @@ abstract class Rgb
 						return $v / 12.92;
 					}
 
-					return (float)(
-						$sign * (($abs + 0.055) / 1.055) ** 2.4
-					);
+					return $sign * (($abs + 0.055) / 1.055) ** 2.4;
 				},
 				array : [$red, $green, $blue],
 			),

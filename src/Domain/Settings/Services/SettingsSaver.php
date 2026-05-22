@@ -64,7 +64,7 @@ readonly class SettingsSaver
 		// mcp.enabled) force MCP client sessions to re-initialize so they
 		// pick up the new surface — otherwise cached `tools/list` responses
 		// drift and clients hit "tool not found" on subsequent calls.
-		if ($section === 'mcp' && $this->mcpSessionInvalidator !== null) {
+		if ($section === 'mcp' && $this->mcpSessionInvalidator instanceof McpSessionInvalidator) {
 			$this->mcpSessionInvalidator->invalidateAll();
 		}
 	}

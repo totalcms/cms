@@ -87,7 +87,7 @@ final class TiptapToMarkdownConverterTest extends TestCase
 		// Configured for atx style (# instead of underline) — easier for the
 		// agent to read and shorter on the wire.
 		for ($i = 1; $i <= 6; $i++) {
-			$result = trim($this->converter->convert("<h{$i}>Heading {$i}</h{$i}>"));
+			$result   = trim($this->converter->convert("<h{$i}>Heading {$i}</h{$i}>"));
 			$expected = str_repeat('#', $i) . " Heading {$i}";
 			$this->assertSame($expected, $result, "H{$i} should render as $expected");
 		}

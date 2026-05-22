@@ -25,17 +25,18 @@ use Symfony\Component\Uid\Uuid;
  * argument so all session-specific state flows through that parameter; the
  * Protocol itself holds no per-session state in its constructor.
  */
-final class McpNotificationService implements ResourceNotifier
+final readonly class McpNotificationService implements ResourceNotifier
 {
 	public function __construct(
-		private readonly SubscriptionIndex $index,
+		private SubscriptionIndex $index,
 		// Typed against the SDK interface so the McpSubscriptionManager
 		// implementation can stay `final` — tests mock the interface.
-		private readonly SubscriptionManagerInterface $subscriptionManager,
-		private readonly Protocol $protocol,
-		private readonly SessionManagerInterface $sessionManager,
-		private readonly LoggerInterface $logger = new NullLogger(),
-	) {}
+		private SubscriptionManagerInterface $subscriptionManager,
+		private Protocol $protocol,
+		private SessionManagerInterface $sessionManager,
+		private LoggerInterface $logger = new NullLogger(),
+	) {
+	}
 
 	/**
 	 * Notify every session subscribed to $uri that the resource changed.

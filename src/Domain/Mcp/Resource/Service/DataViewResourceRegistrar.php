@@ -40,11 +40,11 @@ readonly class DataViewResourceRegistrar
 		$resource = $this->resource;
 		$registry->registerTemplate(new McpResourceTemplateDefinition(
 			uriTemplate: 'tcms://view/{id}',
-			name:        'view-detail',
+			name: 'view-detail',
 			description: 'Fetch a single data view by id. Use list_views or describe_view to discover ids and shapes.',
-			mimeType:    'application/json',
-			access:      'admin',
-			handler:     static fn (string $id): array => $resource->read($id),
+			mimeType: 'application/json',
+			access: 'admin',
+			handler: static fn (string $id): array => $resource->read($id),
 		));
 
 		foreach ($this->lister->listViews() as $entry) {
@@ -71,12 +71,12 @@ readonly class DataViewResourceRegistrar
 			}
 
 			$registry->register(new McpResourceDefinition(
-				uri:         sprintf('tcms://view/%s', $id),
-				name:        $name,
+				uri: sprintf('tcms://view/%s', $id),
+				name: $name,
 				description: $desc,
-				mimeType:    'application/json',
-				access:      $access,
-				handler:     static fn () => $resource->read($id),
+				mimeType: 'application/json',
+				access: $access,
+				handler: static fn (): array => $resource->read($id),
 			));
 		}
 	}

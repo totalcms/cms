@@ -172,7 +172,7 @@ readonly class SchemaTools
 	{
 		try {
 			$schema = $this->fetcher->fetchSchema($id);
-		} catch (\UnexpectedValueException $e) {
+		} catch (\UnexpectedValueException) {
 			throw new ToolCallException(sprintf(
 				'Schema "%s" not found. Use list_schemas to see available schemas.',
 				$id,
@@ -197,12 +197,12 @@ readonly class SchemaTools
 
 		try {
 			$saved = $this->saver->saveSchema($schemaData);
-		} catch (\InvalidArgumentException | \UnexpectedValueException $e) {
+		} catch (\InvalidArgumentException|\UnexpectedValueException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not create schema "%s": %s',
 				$id,
 				$e->getMessage(),
-			));
+			), $e->getCode(), $e);
 		}
 
 		return $saved->toArray();
@@ -222,12 +222,12 @@ readonly class SchemaTools
 
 		try {
 			$updated = $this->saver->updateSchema($id, $schemaData);
-		} catch (\InvalidArgumentException | \UnexpectedValueException $e) {
+		} catch (\InvalidArgumentException|\UnexpectedValueException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not update schema "%s": %s',
 				$id,
 				$e->getMessage(),
-			));
+			), $e->getCode(), $e);
 		}
 
 		return $updated->toArray();
@@ -240,8 +240,8 @@ readonly class SchemaTools
 	{
 		try {
 			$deleted = $this->remover->deleteSchema($id);
-		} catch (\UnexpectedValueException | \DomainException $e) {
-			throw new ToolCallException($e->getMessage());
+		} catch (\UnexpectedValueException|\DomainException $e) {
+			throw new ToolCallException($e->getMessage(), $e->getCode(), $e);
 		}
 
 		return [

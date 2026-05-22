@@ -29,7 +29,7 @@ class PersonaContext
 
 	public function current(): McpPersona
 	{
-		if ($this->persona === null) {
+		if (!$this->persona instanceof McpPersona) {
 			throw new \LogicException('Persona has not been resolved for this request.');
 		}
 
@@ -38,6 +38,6 @@ class PersonaContext
 
 	public function isResolved(): bool
 	{
-		return $this->persona !== null;
+		return $this->persona instanceof McpPersona;
 	}
 }

@@ -43,7 +43,7 @@ readonly class CollectionResource
 	public function read(string $collection): array
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			throw new ToolCallException(\sprintf(
 				'Collection "%s" not found. Use list_collections to see available collections.',
 				$collection,

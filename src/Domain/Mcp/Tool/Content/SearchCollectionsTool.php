@@ -11,10 +11,10 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Query\Service\ObjectSearcher;
 
@@ -120,7 +120,7 @@ readonly class SearchCollectionsTool
 				}
 				$item['collection'] = $collection->id;
 				$item['url']        = $this->urlBuilder->buildUrl($collection, $item);
-				$aggregate[] = $item;
+				$aggregate[]        = $item;
 
 				// Early exit once we've collected enough — avoids iterating
 				// further collections for results we'd just slice off anyway.

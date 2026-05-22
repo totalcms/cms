@@ -6,8 +6,8 @@ namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class CacheToolsTest extends TestCase
 {

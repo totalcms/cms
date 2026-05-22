@@ -10,10 +10,10 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Query\Service\ObjectSearcher;
 
@@ -84,7 +84,7 @@ readonly class SearchCollectionTool
 		unset($locale);
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			throw new ToolCallException(sprintf(
 				'Collection "%s" not found. Use list_collections to see available collections.',
 				$collection,
@@ -110,7 +110,7 @@ readonly class SearchCollectionTool
 		$filterOptions = $persona === McpPersona::PUBLIC_ ? ['exclude' => 'draft:true'] : [];
 		$items         = $this->indexFilter->fetchFilteredIndex($collection, $filterOptions);
 
-		$matches    = $this->searcher->search($items, $query);
+		$matches     = $this->searcher->search($items, $query);
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$matches     = array_slice($matches, 0, $cappedLimit);
 
@@ -127,7 +127,7 @@ readonly class SearchCollectionTool
 				}
 			}
 			$item['url'] = $this->urlBuilder->buildUrl($collectionData, $item);
-			$shaped[] = $item;
+			$shaped[]    = $item;
 		}
 
 		return [

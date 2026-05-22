@@ -38,7 +38,6 @@ use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
-use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
@@ -46,6 +45,7 @@ use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
+use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 
 return function (App $app): void {
 	$app->group('/admin', function (RouteCollectorProxy $group): void {

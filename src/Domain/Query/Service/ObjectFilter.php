@@ -100,7 +100,7 @@ readonly class ObjectFilter
 		$filterKeys = ['include', 'exclude'];
 
 		foreach ($filterKeys as $key) {
-			if (isset($options[$key]) && trim((string)$options[$key]) !== '') {
+			if (isset($options[$key]) && trim($options[$key]) !== '') {
 				$filterOptions[$key] = $options[$key];
 			}
 		}

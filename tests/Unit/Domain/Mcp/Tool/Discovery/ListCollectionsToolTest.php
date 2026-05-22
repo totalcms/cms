@@ -10,8 +10,8 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListCollectionsTool;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class ListCollectionsToolTest extends TestCase
 {

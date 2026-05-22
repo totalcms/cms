@@ -82,12 +82,12 @@ readonly class CollectionTools
 
 		try {
 			$collection = $this->saver->saveCollection($data);
-		} catch (\DomainException | \UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not create collection "%s": %s',
 				$id,
 				$e->getMessage(),
-			));
+			), $e->getCode(), $e);
 		}
 
 		return $collection->toArray();

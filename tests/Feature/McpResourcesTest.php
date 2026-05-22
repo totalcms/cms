@@ -73,7 +73,7 @@ function mcpResourcePayload(string $method, array $params = []): array
  *
  * Returns empty string when MCP is unavailable (non-200 init response).
  */
-function mcpInitAdminSession(\Slim\App $app): string
+function mcpInitAdminSession(Slim\App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -82,13 +82,13 @@ function mcpInitAdminSession(\Slim\App $app): string
 		->withHeader('Accept', 'application/json, text/event-stream')
 		->withHeader('X-API-Key', 'tcms_mcp_resource_test_key_fixture_00000000');
 
-	$request->getBody()->write((string) json_encode([
+	$request->getBody()->write((string)json_encode([
 		'jsonrpc' => '2.0',
 		'id'      => 0,
 		'method'  => 'initialize',
 		'params'  => [
 			'protocolVersion' => '2025-06-18',
-			'capabilities'    => new \stdClass(),
+			'capabilities'    => new stdClass(),
 			'clientInfo'      => ['name' => 'pest', 'version' => '0.1'],
 		],
 	]));
@@ -115,10 +115,10 @@ function mcpInitAdminSession(\Slim\App $app): string
  * @param string              $sessionId Session ID from mcpInitAdminSession()
  */
 function mcpAdminRequest(
-	\Slim\App $app,
+	Slim\App $app,
 	array $payload,
 	string $sessionId,
-): \Psr\Http\Message\ResponseInterface {
+): Psr\Http\Message\ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')
@@ -127,7 +127,7 @@ function mcpAdminRequest(
 		->withHeader('X-API-Key', 'tcms_mcp_resource_test_key_fixture_00000000')
 		->withHeader('Mcp-Session-Id', $sessionId);
 
-	$request->getBody()->write((string) json_encode($payload));
+	$request->getBody()->write((string)json_encode($payload));
 	$request->getBody()->rewind();
 
 	return $app->handle($request);
@@ -152,7 +152,7 @@ describe('McpResources — resources/list', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 
-		$body = json_decode((string) $response->getBody(), true);
+		$body = json_decode((string)$response->getBody(), true);
 		expect($body)->toHaveKey('result');
 		expect($body['result'])->toHaveKey('resources');
 		expect($body['result']['resources'])->toBeArray();
@@ -172,14 +172,14 @@ describe('McpResources — resources/list', function (): void {
 			->withHeader('Content-Type', 'application/json')
 			->withHeader('Accept', 'application/json, text/event-stream');
 
-		$request->getBody()->write((string) json_encode(mcpResourcePayload('resources/list')));
+		$request->getBody()->write((string)json_encode(mcpResourcePayload('resources/list')));
 		$request->getBody()->rewind();
 
 		$response = $this->app->handle($request);
 		$status   = $response->getStatusCode();
 
 		if ($status === 200) {
-			$parsed = json_decode((string) $response->getBody(), true);
+			$parsed = json_decode((string)$response->getBody(), true);
 			// Public persona sees no admin-only collections.
 			expect($parsed['result']['resources'])->toBe([]);
 		} else {
@@ -207,7 +207,7 @@ describe('McpResources — resources/templates/list', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 
-		$body = json_decode((string) $response->getBody(), true);
+		$body = json_decode((string)$response->getBody(), true);
 		expect($body)->toHaveKey('result');
 		expect($body['result'])->toHaveKey('resourceTemplates');
 		expect($body['result']['resourceTemplates'])->toBeArray();
@@ -236,7 +236,7 @@ describe('McpResources — resources/read', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 
-		$body = json_decode((string) $response->getBody(), true);
+		$body = json_decode((string)$response->getBody(), true);
 		expect($body)->toHaveKey('result');
 		expect($body['result'])->toHaveKey('contents');
 		expect($body['result']['contents'])->toBeArray();
@@ -249,7 +249,7 @@ describe('McpResources — resources/read', function (): void {
 		expect($first)->toHaveKey('text');
 
 		// The text payload must be valid JSON.
-		$decoded = json_decode($first['text'], true);
+		$decoded = json_decode((string)$first['text'], true);
 		expect($decoded)->toBeArray();
 	});
 });

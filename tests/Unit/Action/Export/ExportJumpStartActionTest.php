@@ -27,9 +27,9 @@ final class ExportJumpStartActionTest extends TestCase
 		// Config requires a full settings array; reflection sidesteps that.
 		// Empty siteName + domain mean displaySlug() returns '' so the action
 		// falls back to the legacy `jumpstart-export-{date}.json` filename.
-		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->siteName = '';
-		$config->domain   = '';
+		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->siteName  = '';
+		$config->domain    = '';
 		$config->dashboard = [];
 
 		$this->action = new ExportJumpStartAction($this->jumpStartExporter, $config);
@@ -172,7 +172,7 @@ final class ExportJumpStartActionTest extends TestCase
 		// When the operator has set a siteName in General settings, the
 		// default export filename leads with the slug — easier for customers
 		// to identify when multiple sites' exports land in the same folder.
-		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->siteName  = "Joe's Bistro";
 		$config->domain    = 'example.com';
 		$config->dashboard = [];

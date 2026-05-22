@@ -8,8 +8,8 @@ use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 

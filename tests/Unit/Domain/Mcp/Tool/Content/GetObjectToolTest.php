@@ -14,11 +14,11 @@ use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class GetObjectToolTest extends TestCase
 {
@@ -74,7 +74,7 @@ final class GetObjectToolTest extends TestCase
 		// toArray() reads $properties; rather than fight the property type
 		// system we wrap ObjectData in an anonymous subclass that returns the
 		// canned array. Keeps the production code's call shape intact.
-		return new class ($id, $data) extends ObjectData {
+		return new class($id, $data) extends ObjectData {
 			/** @param array<string,mixed> $data */
 			public function __construct(string $id, private readonly array $data)
 			{

@@ -14,8 +14,8 @@ use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryCollectionTool;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
@@ -197,10 +197,10 @@ final class QueryCollectionToolTest extends TestCase
 			->method('query')
 			->with(
 				'blog',
-				$this->callback(static function (array $params): bool {
+				$this->callback(
 					// Caller's exclude is preserved AND draft:true is appended.
-					return ($params['exclude'] ?? '') === 'category:internal,draft:true';
-				}),
+					static fn (array $params): bool => ($params['exclude'] ?? '') === 'category:internal,draft:true'
+				),
 			)
 			->willReturn(new QueryResult(items: [], total: 0, limit: 10, offset: 0));
 
@@ -335,7 +335,9 @@ final class QueryCollectionToolTest extends TestCase
 					'content' => '<p>Body with a <a href="#x">link</a>.</p>',
 				],
 			],
-			total: 1, limit: 10, offset: 0,
+			total: 1,
+			limit: 10,
+			offset: 0,
 		));
 		$this->urls->method('buildUrl')->willReturn('/blog/post-a');
 
@@ -362,7 +364,9 @@ final class QueryCollectionToolTest extends TestCase
 		$html = '<p><strong>HTML</strong> body.</p>';
 		$this->indexQuery->method('query')->willReturn(new QueryResult(
 			items: [['id' => 'x', 'content' => $html]],
-			total: 1, limit: 10, offset: 0,
+			total: 1,
+			limit: 10,
+			offset: 0,
 		));
 		$this->urls->method('buildUrl')->willReturn('/blog/x');
 
@@ -381,7 +385,9 @@ final class QueryCollectionToolTest extends TestCase
 
 		$this->indexQuery->method('query')->willReturn(new QueryResult(
 			items: [['id' => 'x', 'content' => '<p>Plain &amp; <strong>simple</strong>.</p>']],
-			total: 1, limit: 10, offset: 0,
+			total: 1,
+			limit: 10,
+			offset: 0,
 		));
 		$this->urls->method('buildUrl')->willReturn('/blog/x');
 

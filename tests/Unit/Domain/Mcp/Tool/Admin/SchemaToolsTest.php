@@ -6,8 +6,8 @@ namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -39,10 +39,10 @@ final class SchemaToolsTest extends TestCase
 
 	private function schema(string $id, array $properties = []): SchemaData
 	{
-		$schema             = new SchemaData();
-		$schema->id         = $id;
+		$schema              = new SchemaData();
+		$schema->id          = $id;
 		$schema->description = "Schema $id";
-		$schema->properties = $properties;
+		$schema->properties  = $properties;
 
 		return $schema;
 	}
@@ -180,10 +180,8 @@ final class SchemaToolsTest extends TestCase
 		]);
 		$this->saver->expects($this->once())
 			->method('saveSchema')
-			->with($this->callback(static function (array $data): bool {
-				return $data['id'] === 'portfolio'
-					&& isset($data['properties']['title']);
-			}))
+			->with($this->callback(static fn (array $data): bool => $data['id'] === 'portfolio'
+					&& isset($data['properties']['title'])))
 			->willReturn($saved);
 
 		$result = $this->tool->createHandler(
@@ -275,7 +273,7 @@ final class SchemaToolsTest extends TestCase
 		// SchemaRemover throws \DomainException when the schema is inherited
 		// or used by a collection — distinct exception type, same UX outcome.
 		$this->remover->method('deleteSchema')
-			->willThrowException(new \DomainException("Unable to delete schema (custom). It is inherited by: child"));
+			->willThrowException(new \DomainException('Unable to delete schema (custom). It is inherited by: child'));
 
 		try {
 			$this->tool->deleteHandler(id: 'custom');

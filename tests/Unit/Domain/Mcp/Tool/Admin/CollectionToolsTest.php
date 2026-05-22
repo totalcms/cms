@@ -8,8 +8,8 @@ use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class CollectionToolsTest extends TestCase
 {
@@ -66,9 +66,7 @@ final class CollectionToolsTest extends TestCase
 		$saved = $this->collection('reviews', 'review');
 		$this->saver->expects($this->once())
 			->method('saveCollection')
-			->with($this->callback(static function (array $data): bool {
-				return $data['id'] === 'reviews' && $data['schema'] === 'review';
-			}))
+			->with($this->callback(static fn (array $data): bool => $data['id'] === 'reviews' && $data['schema'] === 'review'))
 			->willReturn($saved);
 
 		$result = $this->tool->createHandler(id: 'reviews', schema: 'review');
@@ -81,11 +79,9 @@ final class CollectionToolsTest extends TestCase
 		$saved = $this->collection('reviews', 'review');
 		$this->saver->expects($this->once())
 			->method('saveCollection')
-			->with($this->callback(static function (array $data): bool {
-				return ($data['name'] ?? '') === 'Customer Reviews'
+			->with($this->callback(static fn (array $data): bool => ($data['name'] ?? '') === 'Customer Reviews'
 					&& ($data['url'] ?? '') === '/reviews/{id}'
-					&& ($data['description'] ?? '') === 'Reviews from customers';
-			}))
+					&& ($data['description'] ?? '') === 'Reviews from customers'))
 			->willReturn($saved);
 
 		$this->tool->createHandler(

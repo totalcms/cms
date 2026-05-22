@@ -7,8 +7,8 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**

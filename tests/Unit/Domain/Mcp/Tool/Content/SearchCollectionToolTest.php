@@ -14,10 +14,10 @@ use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionTool;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Query\Service\ObjectSearcher;
+use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class SearchCollectionToolTest extends TestCase
 {

@@ -100,7 +100,7 @@ final class SubscriptionIndexTest extends TestCase
 		$this->assertSame([], $this->index->subscribersOf('tcms://blog/'));
 
 		// The raw JSON file must NOT contain the URI key at all
-		$raw     = (string) file_get_contents($this->indexFile);
+		$raw     = (string)file_get_contents($this->indexFile);
 		$decoded = json_decode($raw, true);
 		$this->assertIsArray($decoded);
 		$this->assertArrayNotHasKey('tcms://blog/', $decoded);
@@ -150,7 +150,7 @@ final class SubscriptionIndexTest extends TestCase
 
 		$this->assertSame([], $this->index->subscribersOf('tcms://blog/'));
 
-		$raw     = (string) file_get_contents($this->indexFile);
+		$raw     = (string)file_get_contents($this->indexFile);
 		$decoded = json_decode($raw, true);
 		$this->assertIsArray($decoded);
 		$this->assertArrayNotHasKey('tcms://blog/', $decoded);
@@ -181,7 +181,7 @@ final class SubscriptionIndexTest extends TestCase
 		$this->assertSame([], $this->index->subscribersOf('tcms://blog/'));
 		$this->assertSame([], $this->index->subscribersOf('tcms://products/'));
 
-		$raw     = (string) file_get_contents($this->indexFile);
+		$raw     = (string)file_get_contents($this->indexFile);
 		$decoded = json_decode($raw, true);
 		$this->assertIsArray($decoded);
 		$this->assertSame([], $decoded);

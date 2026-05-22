@@ -29,7 +29,7 @@ final class McpExtensionRegistrarTest extends TestCase
 		// Capture warnings via an anonymous logger so tests can assert
 		// "this collision was reported" without coupling to a specific
 		// logger backend.
-		return new class ($this->log) extends NullLogger {
+		return new class($this->log) extends NullLogger {
 			public function __construct(public array &$log)
 			{
 			}

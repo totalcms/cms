@@ -6,8 +6,8 @@ namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class ExtensionToolsTest extends TestCase
 {

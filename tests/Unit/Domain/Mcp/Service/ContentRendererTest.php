@@ -23,7 +23,7 @@ final class ContentRendererTest extends TestCase
 
 	public function testMarkdownFormatConvertsHtmlToMarkdown(): void
 	{
-		$result = trim($this->renderer->render(
+		$result = trim((string)$this->renderer->render(
 			value: '<p>Hello <strong>world</strong>.</p>',
 			format: 'markdown',
 		));
@@ -33,7 +33,7 @@ final class ContentRendererTest extends TestCase
 
 	public function testMarkdownIsTheDefaultFormat(): void
 	{
-		$result = trim($this->renderer->render(value: '<p>Hi.</p>'));
+		$result = trim((string)$this->renderer->render(value: '<p>Hi.</p>'));
 		$this->assertSame('Hi.', $result);
 	}
 
@@ -54,7 +54,7 @@ final class ContentRendererTest extends TestCase
 
 	public function testTextFormatStripsHtmlTags(): void
 	{
-		$result = trim($this->renderer->render(
+		$result = trim((string)$this->renderer->render(
 			value: '<p>Hello <strong>world</strong>.</p>',
 			format: 'text',
 		));
@@ -67,7 +67,7 @@ final class ContentRendererTest extends TestCase
 		// HTML entities (e.g. &amp; &lt;) must decode in text mode — the
 		// agent shouldn't see "Tom &amp; Jerry" when the actual content
 		// is "Tom & Jerry".
-		$result = trim($this->renderer->render(
+		$result = trim((string)$this->renderer->render(
 			value: '<p>Tom &amp; Jerry &lt;3</p>',
 			format: 'text',
 		));
@@ -102,7 +102,7 @@ final class ContentRendererTest extends TestCase
 	{
 		// Defensive: agent passing a typo'd format shouldn't crash. Fall back
 		// to the default (markdown) silently — better than erroring.
-		$result = trim($this->renderer->render(
+		$result = trim((string)$this->renderer->render(
 			value: '<p><strong>bold</strong></p>',
 			format: 'invalid-format',
 		));
@@ -126,8 +126,8 @@ final class ContentRendererTest extends TestCase
 		$result = $this->renderer->render($value, 'markdown');
 
 		$this->assertIsArray($result);
-		$this->assertSame('Hello **world**.', trim($result['en_US']));
-		$this->assertSame('Hallo **Welt**.', trim($result['de']));
+		$this->assertSame('Hello **world**.', trim((string)$result['en_US']));
+		$this->assertSame('Hallo **Welt**.', trim((string)$result['de']));
 	}
 
 	public function testLocalizedstyledtextHonorsHtmlAndTextFormats(): void
@@ -138,7 +138,7 @@ final class ContentRendererTest extends TestCase
 		$this->assertSame($value['en_US'], $html['en_US']);
 
 		$text = $this->renderer->render($value, 'text');
-		$this->assertSame('Hello world.', trim($text['en_US']));
+		$this->assertSame('Hello world.', trim((string)$text['en_US']));
 	}
 
 	public function testLocalizedValueWithNonStringLocaleValuePassesThrough(): void
@@ -147,14 +147,14 @@ final class ContentRendererTest extends TestCase
 		// null after a migration) shouldn't crash the renderer. Pass it
 		// through verbatim — the AI sees the broken data and can flag it.
 		$value = [
-			'en_US' => '<p>Good.</p>',
-			'broken' => null,
+			'en_US'       => '<p>Good.</p>',
+			'broken'      => null,
 			'also_broken' => ['unexpected'],
 		];
 
 		$result = $this->renderer->render($value, 'markdown');
 
-		$this->assertSame('Good.', trim($result['en_US']));
+		$this->assertSame('Good.', trim((string)$result['en_US']));
 		$this->assertNull($result['broken']);
 		$this->assertSame(['unexpected'], $result['also_broken']);
 	}
@@ -165,8 +165,8 @@ final class ContentRendererTest extends TestCase
 		// a one-line snippet). All three formats should handle this gracefully.
 		$plain = 'Just plain text.';
 
-		$this->assertSame($plain, trim($this->renderer->render($plain, 'markdown')));
+		$this->assertSame($plain, trim((string)$this->renderer->render($plain, 'markdown')));
 		$this->assertSame($plain, $this->renderer->render($plain, 'html'));
-		$this->assertSame($plain, trim($this->renderer->render($plain, 'text')));
+		$this->assertSame($plain, trim((string)$this->renderer->render($plain, 'text')));
 	}
 }

@@ -16,8 +16,8 @@ final class CollectionDataReservedNamesTest extends TestCase
 		// named `extensions` / `templates` / `schemas` that collide with
 		// admin sub-URLs and the schema storage path.
 		$this->assertContains('extensions', CollectionData::RESERVED_NAMES);
-		$this->assertContains('templates',  CollectionData::RESERVED_NAMES);
-		$this->assertContains('schemas',    CollectionData::RESERVED_NAMES);
+		$this->assertContains('templates', CollectionData::RESERVED_NAMES);
+		$this->assertContains('schemas', CollectionData::RESERVED_NAMES);
 	}
 
 	public function testViewAndViewsAreReservedForMcpUriNamespace(): void
@@ -28,7 +28,7 @@ final class CollectionDataReservedNamesTest extends TestCase
 		// named `view` would expose objects at tcms://view/{objectId} that
 		// the SDK's resource router can't disambiguate from per-view URIs
 		// registered by DataViewResourceRegistrar.
-		$this->assertContains('view',  CollectionData::RESERVED_NAMES);
+		$this->assertContains('view', CollectionData::RESERVED_NAMES);
 		$this->assertContains('views', CollectionData::RESERVED_NAMES);
 	}
 }

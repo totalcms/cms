@@ -63,8 +63,8 @@ readonly class ContentRenderer
 		}
 
 		return match ($format) {
-			'html' => $html,
-			'text' => $this->toPlainText($html),
+			'html'  => $html,
+			'text'  => $this->toPlainText($html),
 			default => $this->converter->convert($html),
 		};
 	}

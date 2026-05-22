@@ -11,8 +11,8 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionObjectResource;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionResource;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
 final class CollectionResourceRegistrarTest extends TestCase
 {
@@ -21,17 +21,18 @@ final class CollectionResourceRegistrarTest extends TestCase
 	/** @param array<string,mixed> $mcp */
 	private function makeCollection(string $id, string $name, array $mcp = []): CollectionData
 	{
-		$collection       = new CollectionData();
-		$collection->id   = $id;
-		$collection->name = $name;
+		$collection         = new CollectionData();
+		$collection->id     = $id;
+		$collection->name   = $name;
 		$collection->schema = 'text';
-		$collection->mcp  = $mcp;
+		$collection->mcp    = $mcp;
 
 		return $collection;
 	}
 
 	/**
 	 * @param array<CollectionData> $collections
+	 *
 	 * @return array{
 	 *     registrar: CollectionResourceRegistrar,
 	 *     registry: ResourceRegistry,
@@ -58,13 +59,13 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$registry   = new ResourceRegistry();
 		$registrar  = new CollectionResourceRegistrar(
-			collectionRepository:    $repo,
-			schemaResolver:          $resolver,
-			collectionResource:      $collectionResource,
+			collectionRepository: $repo,
+			schemaResolver: $resolver,
+			collectionResource: $collectionResource,
 			collectionObjectResource: $objectResource,
 		);
 
-		return compact('registrar', 'registry', 'repo', 'resolver', 'collectionResource', 'objectResource');
+		return ['registrar' => $registrar, 'registry' => $registry, 'repo' => $repo, 'resolver' => $resolver, 'collectionResource' => $collectionResource, 'objectResource' => $objectResource];
 	}
 
 	// ── Tests ─────────────────────────────────────────────────────────────────
@@ -243,7 +244,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		['registrar' => $registrar, 'registry' => $registry, 'resolver' => $resolver, 'collectionResource' => $collectionResource] = $this->makeRegistrar([$collection]);
 
-		$sentinel = ['contents' => [['uri' => 'tcms://blog/', 'mimeType' => 'application/json', 'text' => '{}' ]]];
+		$sentinel = ['contents' => [['uri' => 'tcms://blog/', 'mimeType' => 'application/json', 'text' => '{}']]];
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
@@ -271,7 +272,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		['registrar' => $registrar, 'registry' => $registry, 'resolver' => $resolver, 'objectResource' => $objectResource] = $this->makeRegistrar([$collection]);
 
-		$sentinel = ['contents' => [['uri' => 'tcms://blog/post-1', 'mimeType' => 'application/json', 'text' => '{}' ]]];
+		$sentinel = ['contents' => [['uri' => 'tcms://blog/post-1', 'mimeType' => 'application/json', 'text' => '{}']]];
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',

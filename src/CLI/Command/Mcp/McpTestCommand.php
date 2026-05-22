@@ -42,8 +42,8 @@ class McpTestCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$toolName = (string)$input->getArgument('tool');
-		$rawParams = (string)$input->getOption('params');
+		$toolName   = (string)$input->getArgument('tool');
+		$rawParams  = (string)$input->getOption('params');
 		$personaArg = (string)$input->getOption('persona');
 
 		$params = json_decode($rawParams, true);

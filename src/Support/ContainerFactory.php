@@ -60,6 +60,6 @@ final class ContainerFactory
 		$path  = PathResolver::packageRoot() . '/config/container.php';
 		$mtime = (int)@filemtime($path);
 
-		return 'CompiledContainer_' . substr(sha1((string)$mtime . $path), 0, 12);
+		return 'CompiledContainer_' . substr(sha1($mtime . $path), 0, 12);
 	}
 }

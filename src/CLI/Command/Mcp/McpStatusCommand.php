@@ -83,7 +83,7 @@ class McpStatusCommand extends BaseCommand
 
 		$output->writeln(sprintf('<info>Admin persona</info> (%d tools)', count($admin)));
 		foreach ($admin as $name) {
-			$output->writeln('  - ' . (string)$name);
+			$output->writeln('  - ' . $name);
 		}
 		$output->writeln('');
 
@@ -92,7 +92,7 @@ class McpStatusCommand extends BaseCommand
 			$output->writeln('  <comment>(none — flip mcp.publicAccess on and mark collections mcp.access=public)</comment>');
 		}
 		foreach ($pub as $name) {
-			$output->writeln('  - ' . (string)$name);
+			$output->writeln('  - ' . $name);
 		}
 		$output->writeln('');
 	}

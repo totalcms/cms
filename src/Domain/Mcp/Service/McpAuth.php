@@ -51,7 +51,7 @@ readonly class McpAuth
 		// message — a key that's valid for REST but lacks `/mcp` is functionally
 		// identical to "no MCP access" from the caller's perspective.
 		$apiKey = $this->apiKeyAuthenticator->authenticate($request);
-		if ($apiKey === null) {
+		if (!$apiKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 			throw new McpAuthException(
 				'Invalid API key or insufficient permissions for MCP access.',
 				reason: 'invalid_token',

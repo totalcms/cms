@@ -20,9 +20,9 @@ readonly class McpToolDefinition
 	 * @param string                    $name               Tool name (snake_case, no tcms_ prefix)
 	 * @param string                    $description        Static fallback description for AI agents — used when descriptionBuilder is null
 	 * @param string                    $access             'admin', 'public', or 'authenticated'
-	 * @param Closure                   $handler            Invoked with named params from MCP call
+	 * @param \Closure                   $handler            Invoked with named params from MCP call
 	 * @param array<string,mixed>|null  $inputSchema        JSON Schema for input params (null = SDK introspects from Closure signature)
-	 * @param (Closure(McpPersona): string)|null $descriptionBuilder Optional persona-aware description builder.
+	 * @param (\Closure(McpPersona): string)|null $descriptionBuilder Optional persona-aware description builder.
 	 *                                                              When set, McpServerFactory invokes it at server-build
 	 *                                                              time and uses the returned string as the tool's
 	 *                                                              description. Lets Phase 1 content tools append a
@@ -45,9 +45,9 @@ readonly class McpToolDefinition
 		public string $name,
 		public string $description,
 		public string $access,
-		public Closure $handler,
+		public \Closure $handler,
 		public ?array $inputSchema = null,
-		public ?Closure $descriptionBuilder = null,
+		public ?\Closure $descriptionBuilder = null,
 		public ?ToolAnnotations $annotations = null,
 		public ?array $outputSchema = null,
 	) {

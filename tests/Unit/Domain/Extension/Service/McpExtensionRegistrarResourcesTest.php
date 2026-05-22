@@ -80,12 +80,12 @@ final class McpExtensionRegistrarResourcesTest extends TestCase
 	{
 		// Simulate a core registration: a tcms:// resource already in the registry.
 		$this->registry->register(new \TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition(
-			uri:         'tcms://blog/',
-			name:        'core-blog',
+			uri: 'tcms://blog/',
+			name: 'core-blog',
 			description: 'core',
-			mimeType:    'application/json',
-			access:      'public',
-			handler:     fn (): array => [],
+			mimeType: 'application/json',
+			access: 'public',
+			handler: fn (): array => [],
 		));
 
 		$result = $this->registrar->registerResources($this->registry, [
@@ -104,7 +104,7 @@ final class McpExtensionRegistrarResourcesTest extends TestCase
 			'broken/ext' => [
 				'not-an-array',
 				['missing-uri' => true],
-				['uri' => 'acme://ok/', 'name' => 'OK', 'description' => '', 'handler' => fn (): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
+				['uri'         => 'acme://ok/', 'name' => 'OK', 'description' => '', 'handler' => fn (): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
 			],
 		]);
 

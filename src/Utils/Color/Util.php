@@ -632,7 +632,7 @@ abstract class Util
 						callback : fn ($v): float|int|string|\Stringable => self::addLeadingZero((string)\preg_replace(
 							pattern     : '/[^0-9\.%]/',
 							replacement : '',
-							subject     : (string)$v,
+							subject     : $v,
 						)),
 						array : $values,
 					),

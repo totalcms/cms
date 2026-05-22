@@ -42,7 +42,7 @@ readonly class McpDiscoveryAction
 			return $this->renderer->json($response, [
 				'mcpVersion' => $this->serverFactory->protocolVersion(),
 				'disabled'   => true,
-				'reason'     => !$enabled ? 'config' : 'edition',
+				'reason'     => $enabled ? 'edition' : 'config',
 				'edition'    => $this->editionFeatures->getEdition()->value,
 			], 200);
 		}

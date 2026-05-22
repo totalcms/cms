@@ -86,7 +86,7 @@ final class CollectionResourceTest extends TestCase
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertIsArray($payload);
 		$this->assertArrayHasKey('items', $payload);
@@ -135,7 +135,7 @@ final class CollectionResourceTest extends TestCase
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/x');
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertCount(50, $payload['items']);
 	}
@@ -155,7 +155,7 @@ final class CollectionResourceTest extends TestCase
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/x');
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertTrue($payload['truncated']);
 		$this->assertArrayHasKey('hint', $payload);
@@ -178,7 +178,7 @@ final class CollectionResourceTest extends TestCase
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/x');
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertFalse($payload['truncated']);
 		$this->assertArrayNotHasKey('hint', $payload);
@@ -203,7 +203,7 @@ final class CollectionResourceTest extends TestCase
 		);
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertSame(2, $payload['total']);
 		$this->assertCount(2, $payload['items']);
@@ -230,7 +230,7 @@ final class CollectionResourceTest extends TestCase
 		);
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertSame(2, $payload['total']);
 		$this->assertCount(2, $payload['items']);
@@ -259,7 +259,7 @@ final class CollectionResourceTest extends TestCase
 		);
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertSame(2, $payload['total']);
 		$ids = array_column($payload['items'], 'id');
@@ -285,7 +285,7 @@ final class CollectionResourceTest extends TestCase
 		$this->urlBuilder->method('buildUrl')->willReturn('/x');
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertSame(3, $payload['total'], 'total should be the post-filter count for public callers');
 		$this->assertCount(3, $payload['items']);
@@ -306,7 +306,7 @@ final class CollectionResourceTest extends TestCase
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$item = $payload['items'][0];
 		$this->assertArrayHasKey('title', $item);
@@ -335,7 +335,7 @@ final class CollectionResourceTest extends TestCase
 			);
 
 		$result  = $this->resource->read('blog');
-		$payload = json_decode($result['contents'][0]['text'], true);
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
 
 		$this->assertSame('/blog/post-1', $payload['items'][0]['url']);
 		$this->assertSame('/blog/post-2', $payload['items'][1]['url']);

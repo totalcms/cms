@@ -32,8 +32,8 @@ readonly class McpSessionListener
 	}
 
 	/**
-	 * @param array<string,mixed> $payload Event payload (unused — we don't
-	 *                                     differentiate by event type).
+	 * @param array<string,mixed> $payload event payload (unused — we don't
+	 *                                     differentiate by event type)
 	 */
 	public function onToolSurfaceChange(array $payload): void
 	{

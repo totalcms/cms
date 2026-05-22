@@ -105,17 +105,17 @@ final class LocaleRegistry
 		// need the explicit script tag.)
 		'sr_Latn_RS' => ['label' => 'Srpski (Latn)',       'english' => 'Serbian (Latin, Serbia)',    'dir' => 'ltr'],
 		'sr_Cyrl_RS' => ['label' => 'Српски (Ћирилица)',   'english' => 'Serbian (Cyrillic, Serbia)', 'dir' => 'ltr'],
-		'sv_SE' => ['label' => 'Svenska',                  'english' => 'Swedish (Sweden)',        'dir' => 'ltr'],
-		'sw_KE' => ['label' => 'Kiswahili',                'english' => 'Swahili (Kenya)',         'dir' => 'ltr'],
-		'ta_IN' => ['label' => 'தமிழ்',                     'english' => 'Tamil (India)',           'dir' => 'ltr'],
-		'th_TH' => ['label' => 'ไทย',                      'english' => 'Thai (Thailand)',         'dir' => 'ltr'],
-		'tl_PH' => ['label' => 'Tagalog',                  'english' => 'Tagalog (Philippines)',   'dir' => 'ltr'],
-		'tr_TR' => ['label' => 'Türkçe',                   'english' => 'Turkish (Turkey)',        'dir' => 'ltr'],
-		'uk_UA' => ['label' => 'Українська',              'english' => 'Ukrainian (Ukraine)',     'dir' => 'ltr'],
-		'ur_PK' => ['label' => 'اردو',                      'english' => 'Urdu (Pakistan)',         'dir' => 'rtl'],
-		'vi_VN' => ['label' => 'Tiếng Việt',               'english' => 'Vietnamese (Vietnam)',    'dir' => 'ltr'],
-		'zh_CN' => ['label' => '中文 (CN)',                'english' => 'Chinese (Mainland)',      'dir' => 'ltr'],
-		'zh_TW' => ['label' => '中文 (TW)',                'english' => 'Chinese (Taiwan)',        'dir' => 'ltr'],
+		'sv_SE'      => ['label' => 'Svenska',                  'english' => 'Swedish (Sweden)',        'dir' => 'ltr'],
+		'sw_KE'      => ['label' => 'Kiswahili',                'english' => 'Swahili (Kenya)',         'dir' => 'ltr'],
+		'ta_IN'      => ['label' => 'தமிழ்',                     'english' => 'Tamil (India)',           'dir' => 'ltr'],
+		'th_TH'      => ['label' => 'ไทย',                      'english' => 'Thai (Thailand)',         'dir' => 'ltr'],
+		'tl_PH'      => ['label' => 'Tagalog',                  'english' => 'Tagalog (Philippines)',   'dir' => 'ltr'],
+		'tr_TR'      => ['label' => 'Türkçe',                   'english' => 'Turkish (Turkey)',        'dir' => 'ltr'],
+		'uk_UA'      => ['label' => 'Українська',              'english' => 'Ukrainian (Ukraine)',     'dir' => 'ltr'],
+		'ur_PK'      => ['label' => 'اردو',                      'english' => 'Urdu (Pakistan)',         'dir' => 'rtl'],
+		'vi_VN'      => ['label' => 'Tiếng Việt',               'english' => 'Vietnamese (Vietnam)',    'dir' => 'ltr'],
+		'zh_CN'      => ['label' => '中文 (CN)',                'english' => 'Chinese (Mainland)',      'dir' => 'ltr'],
+		'zh_TW'      => ['label' => '中文 (TW)',                'english' => 'Chinese (Taiwan)',        'dir' => 'ltr'],
 	];
 
 	/**

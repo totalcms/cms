@@ -56,7 +56,6 @@ use TotalCMS\Domain\Update\Service\UpdateDownloader;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
-use TotalCMS\Support\PathResolver;
 
 /**
  * Entry point for Total CMS PHP API.

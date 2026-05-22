@@ -11,8 +11,8 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeCollectionTool;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class DescribeCollectionToolTest extends TestCase
 {

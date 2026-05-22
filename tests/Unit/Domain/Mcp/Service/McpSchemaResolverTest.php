@@ -316,9 +316,9 @@ final class McpSchemaResolverTest extends TestCase
 
 		$properties = $this->resolver->describeProperties($this->collection());
 
-		$this->assertSame('mcp-desc',   $properties[0]['description']);
-		$this->assertSame('help-desc',  $properties[1]['description']);
-		$this->assertSame('C Label',    $properties[2]['description']);
+		$this->assertSame('mcp-desc', $properties[0]['description']);
+		$this->assertSame('help-desc', $properties[1]['description']);
+		$this->assertSame('C Label', $properties[2]['description']);
 		$this->assertNull($properties[3]['description']);
 	}
 
@@ -494,10 +494,10 @@ final class McpSchemaResolverTest extends TestCase
 	{
 		// Public persona must NOT see admin-only collections in the catalog —
 		// otherwise the AI agent gets pointed at tools it'll be refused from.
-		$adminOnly = $this->collection(['access' => 'admin']);
+		$adminOnly     = $this->collection(['access' => 'admin']);
 		$adminOnly->id = 'auth';
 
-		$publicBlog = $this->collection(['access' => 'public']);
+		$publicBlog     = $this->collection(['access' => 'public']);
 		$publicBlog->id = 'blog';
 
 		$this->collectionRepository->method('listAllCollections')->willReturn([$adminOnly, $publicBlog]);
@@ -555,8 +555,8 @@ final class McpSchemaResolverTest extends TestCase
 		// budgets. Overflow rolls into the closing pointer at list_collections.
 		$collections = [];
 		for ($i = 1; $i <= 35; $i++) {
-			$c     = $this->collection(['access' => 'public']);
-			$c->id = sprintf('col%02d', $i);
+			$c             = $this->collection(['access' => 'public']);
+			$c->id         = sprintf('col%02d', $i);
 			$collections[] = $c;
 		}
 		$this->collectionRepository->method('listAllCollections')->willReturn($collections);

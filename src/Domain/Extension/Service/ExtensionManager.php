@@ -236,7 +236,7 @@ class ExtensionManager
 		if ($this->container->has(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class)) {
 			/** @var \TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry $toolRegistry */
 			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class);
-			$mcpRegistrar  = new \TotalCMS\Domain\Extension\Service\McpExtensionRegistrar($this->logger);
+			$mcpRegistrar  = new McpExtensionRegistrar($this->logger);
 			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
 
 			// Only request the ResourceRegistry singleton when extensions have
