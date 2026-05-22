@@ -668,6 +668,10 @@ return [
 	'import_rss.entry_preview'      => 'Entry Preview',
 	'import_rss.has_image'          => 'Has image',
 	'import_rss.queued'             => 'All items have been queued for import.',
+	'import_rss.cron_title'         => 'Schedule with cron',
+	'import_rss.cron_desc'          => 'Copy this command into your crontab to run the same import on a schedule. Chain it with <code>jobs:process</code> if you also want the queue drained in the same run.',
+	'import_rss.cron_field_mapping_note' => 'To customise field mappings in your cron job, append <code>--map feedField=collectionProperty</code> arguments.',
+	'import_rss.cron_docs_link'     => 'See CLI docs for examples',
 
 	// ── Import WordPress ────────────────────────────────────────────────────
 	'import_wp.title'                => 'Import from WordPress',

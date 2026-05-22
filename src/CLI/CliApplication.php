@@ -70,6 +70,9 @@ class CliApplication
 		// Deck commands
 		$app->addCommand(new Command\DeckImportCommand($totalcms));
 
+		// Feed / external imports
+		$app->addCommand(new Command\RssImportCommand($totalcms));
+
 		// JumpStart commands
 		$app->addCommand(new Command\JumpStartExportCommand($totalcms));
 		$app->addCommand(new Command\JumpStartImportCommand($totalcms));

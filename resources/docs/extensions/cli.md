@@ -312,6 +312,92 @@ tcms deck:import invoices inv-001 items line-items.csv --update
 
 ---
 
+## Feed Commands
+
+### `rss:import`
+
+Queue every entry from an RSS, Atom, or JSON feed into a target collection. The CLI counterpart to the **Utilities → Import RSS** admin page. Designed for cron — the admin form has a "Schedule with cron" panel that builds the exact command line for the configured import so operators can paste it directly into crontab.
+
+```bash
+# Basic import — auto field mapping, items queued as drafts
+tcms rss:import https://example.com/feed.xml blog
+
+# Publish immediately
+tcms rss:import https://example.com/feed.xml blog --no-draft
+
+# Drain the queue in the same cron run
+tcms rss:import https://example.com/feed.xml blog && tcms jobs:process
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `url` | Yes | RSS / Atom / JSON Feed URL |
+| `collection` | Yes | Target collection ID |
+
+| Option | Description |
+|--------|-------------|
+| `--draft` / `--no-draft` | Queue items as drafts (default) or publish immediately |
+| `--map, -m` | Field mapping in the form `feedField=collectionField`. Repeat the option or comma-separate within one value. See below. |
+| `--json` | Output JSON (success status + count) |
+
+#### Field mapping
+
+The importer maps these eight feed-side fields to your collection's properties:
+
+| Feed field | Default collection property |
+|---|---|
+| `title` | `title` |
+| `content` | `content` |
+| `summary` | `summary` |
+| `date` | `date` |
+| `author` | `author` |
+| `categories` | `categories` |
+| `link` | `media` |
+| `image` | `image` |
+
+To override a default mapping, pass `--map feedField=collectionProperty`. To **drop** a field entirely (don't write it to the object), map it to an empty string with `--map feedField=`.
+
+```bash
+# Map the feed's `title` into your schema's `heading` property,
+# and the feed's `content` into your schema's `body` property.
+tcms rss:import https://example.com/feed.xml blog \
+  --map title=heading \
+  --map content=body
+
+# Same thing, comma-separated single argument (handy in crontab one-liners).
+tcms rss:import https://example.com/feed.xml blog --map "title=heading,content=body"
+
+# Drop the link/categories fields entirely; remap the rest.
+tcms rss:import https://example.com/feed.xml news \
+  --map title=headline \
+  --map content=body \
+  --map image=hero \
+  --map link= \
+  --map categories=
+
+# Realistic news-import recipe targeting a schema with
+# `heading`, `body`, `excerpt`, `published`, `byline`, `tags`, `hero`.
+tcms rss:import https://example.com/feed.xml news --no-draft \
+  --map title=heading \
+  --map content=body \
+  --map summary=excerpt \
+  --map date=published \
+  --map author=byline \
+  --map categories=tags \
+  --map image=hero
+```
+
+#### Cron example
+
+```cron
+# Hourly RSS pull — drain the queue right after queuing
+0 * * * * /usr/local/bin/php /var/www/site/resources/bin/tcms rss:import "https://example.com/feed.xml" blog --no-draft --map "title=heading,content=body" && /usr/local/bin/php /var/www/site/resources/bin/tcms jobs:process
+```
+
+The admin UI's "Schedule with cron" panel under **Utilities → Import RSS** prints this command for you with your site's PHP and install paths already filled in — open the panel, copy, paste into crontab.
+
+---
+
 ## JumpStart Commands
 
 ### `jumpstart:export`

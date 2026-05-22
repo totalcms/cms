@@ -668,6 +668,10 @@ return [
 	'import_rss.entry_preview'      => 'Anteprima voce',
 	'import_rss.has_image'          => 'Contiene immagine',
 	'import_rss.queued'             => "Tutti gli elementi sono stati accodati per l'importazione.",
+	'import_rss.cron_title'         => 'Pianifica con cron',
+	'import_rss.cron_desc'          => "Copia questo comando nel tuo crontab per eseguire la stessa importazione su una pianificazione. Concatenalo con <code>jobs:process</code> se vuoi anche svuotare la coda nella stessa esecuzione.",
+	'import_rss.cron_field_mapping_note' => 'Per personalizzare le mappature dei campi nel tuo cron job, aggiungi gli argomenti <code>--map feedField=collectionProperty</code>.',
+	'import_rss.cron_docs_link'     => 'Vedi esempi nella documentazione CLI',
 
 	// ── Import WordPress ────────────────────────────────────────────────────
 	'import_wp.title'                => 'Importa da WordPress',

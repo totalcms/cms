@@ -668,6 +668,10 @@ return [
 	'import_rss.entry_preview'      => 'Eintragsvorschau',
 	'import_rss.has_image'          => 'Hat Bild',
 	'import_rss.queued'             => 'Alle Einträge wurden zum Import in die Warteschlange gestellt.',
+	'import_rss.cron_title'         => 'Mit cron planen',
+	'import_rss.cron_desc'          => 'Kopieren Sie diesen Befehl in Ihre crontab, um denselben Import nach einem Zeitplan auszuführen. Verketten Sie ihn mit <code>jobs:process</code>, wenn die Warteschlange im selben Lauf abgearbeitet werden soll.',
+	'import_rss.cron_field_mapping_note' => 'Um Feldzuordnungen in Ihrem Cron-Job anzupassen, hängen Sie <code>--map feedField=collectionProperty</code>-Argumente an.',
+	'import_rss.cron_docs_link'     => 'Beispiele in der CLI-Dokumentation',
 
 	// ── Import WordPress ────────────────────────────────────────────────────
 	'import_wp.title'                => 'Import von WordPress',

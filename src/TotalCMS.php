@@ -19,6 +19,7 @@ use TotalCMS\Domain\Import\CsvImporter;
 use TotalCMS\Domain\Import\DeckCsvImporter;
 use TotalCMS\Domain\Import\DeckJsonImporter;
 use TotalCMS\Domain\Import\JsonImporter;
+use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -474,6 +475,11 @@ class TotalCMS
 	public function deckCsvImporter(): DeckCsvImporter
 	{
 		return $this->container->get(DeckCsvImporter::class);
+	}
+
+	public function rssImporter(): RssImporter
+	{
+		return $this->container->get(RssImporter::class);
 	}
 
 	public function schemaSaver(): SchemaSaver

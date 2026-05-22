@@ -668,6 +668,10 @@ return [
 	'import_rss.entry_preview'      => 'Vermeldingsvoorbeeld',
 	'import_rss.has_image'          => 'Heeft afbeelding',
 	'import_rss.queued'             => 'Alle items zijn in de wachtrij geplaatst voor import.',
+	'import_rss.cron_title'         => 'Plannen met cron',
+	'import_rss.cron_desc'          => 'Kopieer deze opdracht naar uw crontab om dezelfde import volgens een schema uit te voeren. Koppel hem met <code>jobs:process</code> als u ook de wachtrij in dezelfde run wilt verwerken.',
+	'import_rss.cron_field_mapping_note' => 'Om veldtoewijzingen in uw cron-taak aan te passen, voeg <code>--map feedField=collectionProperty</code>-argumenten toe.',
+	'import_rss.cron_docs_link'     => 'Zie CLI-documentatie voor voorbeelden',
 
 	// ── Import WordPress ────────────────────────────────────────────────────
 	'import_wp.title'                => 'Importeren vanuit WordPress',
