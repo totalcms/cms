@@ -6,11 +6,13 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Support\Config;
 
 readonly class ExportJumpStartAction
 {
 	public function __construct(
 		private JumpStartExporter $jumpStartExporter,
+		private Config $config,
 	) {
 	}
 
@@ -32,10 +34,17 @@ readonly class ExportJumpStartAction
 
 		$date = date('Ymd-His');
 
-		// Set response headers for JSON download
-		$filename = $name === '' ?
-			sprintf('jumpstart-export-%s.json', $date) :
-			sprintf('jumpstart-%s-%s.json', preg_replace('/[^a-zA-Z0-9-_]/', '-', strtolower((string)$name)), $date);
+		// Set response headers for JSON download. Default to the site's
+		// slugified display name (e.g. `joes-bistro-jumpstart-...`); an
+		// explicit `?name=` override still wins.
+		if ($name === '') {
+			$slug     = $this->config->displaySlug();
+			$filename = $slug !== ''
+				? sprintf('%s-jumpstart-%s.json', $slug, $date)
+				: sprintf('jumpstart-export-%s.json', $date);
+		} else {
+			$filename = sprintf('jumpstart-%s-%s.json', preg_replace('/[^a-zA-Z0-9-_]/', '-', strtolower((string)$name)), $date);
+		}
 
 		$response = $response->withHeader('Content-Type', 'application/json')
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));

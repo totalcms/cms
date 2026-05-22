@@ -41,6 +41,7 @@ readonly class DataPathInstaller
 	 * @param string $customPath Used only when $location === 'custom'
 	 * @param string $docroot Document root (typically $_SERVER['DOCUMENT_ROOT'])
 	 * @param string $locale Wizard's selected locale, written to settings.json
+	 * @param string $siteName Wizard's site name (welcome step), written to settings.json. Empty = skip.
 	 *
 	 * @throws \InvalidArgumentException when the location is empty or a
 	 *                                   custom path fails validation
@@ -49,7 +50,7 @@ readonly class DataPathInstaller
 	 *
 	 * @return string the resolved absolute data path
 	 */
-	public function install(string $location, string $customPath, string $docroot, string $locale): string
+	public function install(string $location, string $customPath, string $docroot, string $locale, string $siteName = ''): string
 	{
 		$dataPath = $this->directoryManager->resolveDataPath($location, $docroot, $customPath);
 		if ($dataPath === '') {
@@ -75,7 +76,7 @@ readonly class DataPathInstaller
 			$this->settingsSaver->saveSettings(['datadir' => $dataPath]);
 		}
 
-		$this->writeLocale($dataPath, $locale);
+		$this->writeWizardSettings($dataPath, $locale, $siteName);
 		$this->cacheManager->clearAllCaches();
 
 		return $dataPath;
@@ -115,17 +116,22 @@ readonly class DataPathInstaller
 	}
 
 	/**
-	 * Persist the wizard's selected locale into the data directory's
-	 * settings.json. Called late so the directory is guaranteed to exist
-	 * and Config has the new datadir.
+	 * Persist the wizard's welcome-step selections (locale + site name) into
+	 * the data directory's settings.json. Called late so the directory is
+	 * guaranteed to exist and Config has the new datadir.
 	 *
-	 * Writes to `$settings['i18n']['default']` — the canonical location for
-	 * the site's default locale after the 3.5 consolidation. `$config->locale`
-	 * mirrors that value, so PHP intl / CakePHP I18n / Faker pick it up.
-	 * Top-level `$settings['locale']` is reserved for an advanced override
-	 * (formatting locale ≠ content default) and is not what the wizard sets.
+	 * Writes:
+	 *   - `$settings['i18n']['default']` — canonical location for the site's
+	 *     default locale after the 3.5 consolidation. `$config->locale`
+	 *     mirrors that value, so PHP intl / CakePHP I18n / Faker pick it up.
+	 *     Top-level `$settings['locale']` is reserved for an advanced override
+	 *     (formatting locale ≠ content default) and is not what the wizard sets.
+	 *   - `$settings['siteName']` — canonical human-readable identity; surfaced
+	 *     via `Config::displayName()` to feeds, sitemaps, MCP serverInfo, etc.
+	 *     Empty `$siteName` is skipped — operator can fill it in later via
+	 *     General settings.
 	 */
-	private function writeLocale(string $dataPath, string $locale): void
+	private function writeWizardSettings(string $dataPath, string $locale, string $siteName): void
 	{
 		$systemDir = $dataPath . '/.system';
 		if (!is_dir($systemDir)) {
@@ -146,6 +152,10 @@ readonly class DataPathInstaller
 		$i18n             = isset($existing['i18n']) && is_array($existing['i18n']) ? $existing['i18n'] : [];
 		$i18n['default']  = $locale;
 		$existing['i18n'] = $i18n;
+
+		if ($siteName !== '') {
+			$existing['siteName'] = $siteName;
+		}
 
 		@file_put_contents($settingsFile, (string)json_encode($existing, JSON_PRETTY_PRINT));
 	}

@@ -1104,8 +1104,11 @@ return [
 
 	// Setup Wizard
 	'wizard.welcome'                => 'Welkom bij Total CMS',
-	'wizard.welcome_desc'           => 'Laten we uw website instellen. Kies uw taal om te beginnen.',
+	'wizard.welcome_desc'           => 'Laten we uw website instellen. Vertel ons iets over uw website om te beginnen.',
 	'wizard.language'               => 'Taal',
+	'wizard.site_name'              => 'Sitenaam',
+	'wizard.site_name_placeholder'  => 'Mijn geweldige website',
+	'wizard.site_name_help'         => 'Wordt gebruikt in feeds, sitemaps en AI-integraties. U kunt dit later wijzigen in Instellingen.',
 	'wizard.get_started'            => 'Aan de slag',
 	'wizard.env_title'              => 'Omgevingscontrole',
 	'wizard.env_desc'               => 'Laten we controleren of uw server aan de vereisten voldoet.',

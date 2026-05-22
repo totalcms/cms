@@ -30,6 +30,7 @@ class TotalCMSTwigAdapter
 	public string $login;
 
 	public string $domain;
+	public string $siteName;
 	public string $clearcache;
 	public VersionData $version;
 	public string $currentUrl;
@@ -66,6 +67,7 @@ class TotalCMSTwigAdapter
 		$this->clearcache = $this->api . '/emergency/cache/clear';
 		$this->dashboard  = $this->base . '/admin';
 		$this->domain     = $this->config->domain;
+		$this->siteName   = $this->config->displayName();
 		$this->currentUrl = $_SERVER['REQUEST_URI'] ?? '';
 		$this->version    = new VersionData();
 	}

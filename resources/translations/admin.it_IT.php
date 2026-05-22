@@ -1104,8 +1104,11 @@ return [
 
 	// Setup Wizard
 	'wizard.welcome'                => 'Benvenuto in Total CMS',
-	'wizard.welcome_desc'           => 'Configuriamo il tuo sito. Scegli la tua lingua per iniziare.',
+	'wizard.welcome_desc'           => 'Configuriamo il tuo sito. Dicci qualcosa del tuo sito per iniziare.',
 	'wizard.language'               => 'Lingua',
+	'wizard.site_name'              => 'Nome del sito',
+	'wizard.site_name_placeholder'  => 'Il mio sito fantastico',
+	'wizard.site_name_help'         => 'Utilizzato in feed, sitemap e integrazioni AI. Puoi modificarlo in seguito nelle Impostazioni.',
 	'wizard.get_started'            => 'Inizia',
 	'wizard.env_title'              => 'Verifica ambiente',
 	'wizard.env_desc'               => 'Assicuriamoci che il tuo server soddisfi i requisiti.',

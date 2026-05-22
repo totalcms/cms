@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Support;
 
+use TotalCMS\Domain\Property\Data\SlugData;
+
 class Config
 {
 	public const LICENSE_API_URL = 'https://license.totalcms.co';
@@ -143,6 +145,19 @@ class Config
 		}
 
 		return $this->domain;
+	}
+
+	/**
+	 * Slugified variant of {@see displayName()} — safe for filenames, URL
+	 * slugs, and any context that needs a single token without spaces or
+	 * punctuation. Same fallback chain as `displayName()`, then run through
+	 * `SlugData::slugify()` (which strips diacritics and non-alphanumerics).
+	 *
+	 * Example: `Joe's Bistro` → `joes-bistro`; `example.com` → `example-com`.
+	 */
+	public function displaySlug(): string
+	{
+		return SlugData::slugify($this->displayName());
 	}
 
 	public static function init(): self

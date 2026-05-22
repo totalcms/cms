@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Export\ExportJumpStartAction;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Support\Config;
 
 final class ExportJumpStartSyncModeTest extends TestCase
 {
@@ -24,7 +25,12 @@ final class ExportJumpStartSyncModeTest extends TestCase
 		$this->request           = $this->createMock(ServerRequestInterface::class);
 		$this->response          = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ExportJumpStartAction($this->jumpStartExporter);
+		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->siteName  = '';
+		$config->domain    = '';
+		$config->dashboard = [];
+
+		$this->action = new ExportJumpStartAction($this->jumpStartExporter, $config);
 
 		$this->response->method('withHeader')->willReturnSelf();
 		$this->response->method('withBody')->willReturnSelf();

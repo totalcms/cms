@@ -1104,8 +1104,11 @@ return [
 
 	// Setup Wizard
 	'wizard.welcome'                => 'Willkommen bei Total CMS',
-	'wizard.welcome_desc'           => 'Richten wir Ihre Website ein. Wählen Sie Ihre Sprache, um zu beginnen.',
+	'wizard.welcome_desc'           => 'Richten wir Ihre Website ein. Erzählen Sie uns etwas über Ihre Website, um zu beginnen.',
 	'wizard.language'               => 'Sprache',
+	'wizard.site_name'              => 'Website-Name',
+	'wizard.site_name_placeholder'  => 'Meine großartige Website',
+	'wizard.site_name_help'         => 'Wird in Feeds, Sitemaps und KI-Integrationen verwendet. Sie können dies später in den Einstellungen ändern.',
 	'wizard.get_started'            => 'Loslegen',
 	'wizard.env_title'              => 'Umgebungsprüfung',
 	'wizard.env_desc'               => 'Überprüfen wir, ob Ihr Server die Anforderungen erfüllt.',
