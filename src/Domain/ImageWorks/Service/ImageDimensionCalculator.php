@@ -86,12 +86,11 @@ class ImageDimensionCalculator
 			];
 		}
 
-		// Only height specified - maintain aspect ratio
-		// PHPStan knows $targetHeight must be non-null here due to early return at line 30
-		if ($targetHeight === null) {
-			return ['width' => $originalWidth, 'height' => $originalHeight];
-		}
-
+		// Only height specified — maintain aspect ratio. $targetHeight is
+		// guaranteed non-null here: the "both null" branch returned at line 32,
+		// the "both non-null" branch returned at line 69, and the "width-only"
+		// branch returned just above — leaving "height-only" as the sole path
+		// that reaches here.
 		return [
 			'width'  => (int)round($targetHeight * $aspectRatio),
 			'height' => $targetHeight,
