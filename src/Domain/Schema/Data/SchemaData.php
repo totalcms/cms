@@ -39,6 +39,7 @@ class SchemaData
 		'mailer',
 		'mcp-collection',
 		'mcp-property',
+		'mcp-tool',
 		'number',
 		'builder-page',
 		'playground',

@@ -4,7 +4,7 @@
 	"id"          : "mcp-collection",
 	"type"        : "object",
 	"description" : "Per-collection MCP server settings. Used as a card sub-schema on the collection meta. Controls whether the collection is exposed to AI agents via /mcp and how it appears to them.",
-	"formgrid"    : "access access\ndescription description\nresource resource",
+	"formgrid"    : "access access\ndescription description\nresource resource\ntools tools",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -48,9 +48,15 @@
 		},
 		"tools": {
 			"type"        : "array",
-			"description" : "Schema-defined saved-query tools exposed for this collection.",
+			"label"       : "Custom MCP Tools",
+			"help"        : "Define saved-query tools as a JSON array. Each entry needs a name and description; optional params, filters, and other settings shape the query. See the docs for syntax and examples.",
+			"field"       : "json",
+			"placeholder" : "[]",
 			"items"       : { "$ref": "https://www.totalcms.co/schemas/mcp-tool.json" },
-			"default"     : []
+			"default"     : [],
+			"settings"    : {
+				"rows" : 10
+			}
 		}
 	},
 	"required": []
