@@ -122,7 +122,7 @@ return [
 	// Application settings — plain closure (rather than `Config::init(...)`)
 	// so the entire container is compileable; PHP-DI's compiler rejects
 	// first-class callables because they internally reference `self`.
-	Config::class => Config::init(...),
+	Config::class => fn (): Config => Config::init(),
 
 	App::class => function (ContainerInterface $container): App {
 		AppFactory::setContainer($container);
