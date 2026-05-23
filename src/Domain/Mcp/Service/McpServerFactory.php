@@ -11,6 +11,7 @@ use Mcp\Server\Session\SessionStoreInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Mcp\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
@@ -42,6 +43,7 @@ readonly class McpServerFactory
 		private Config $config,
 		private SessionStoreInterface $sessionStore,
 		private LoggerInterface $logger,
+		private SchemaToolRegistrar $schemaToolRegistrar,
 	) {
 	}
 
@@ -77,6 +79,13 @@ readonly class McpServerFactory
 		if (($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
 			$builder->setResourceSubscriptionManager($this->subscriptionManager);
 		}
+
+		// Auto-register schema-defined tools from all collection meta files.
+		// Called once per request lifecycle. The registry is request-scoped so
+		// previous-request schema tools don't carry over; if build() is ever
+		// called twice on the same factory instance the second pass would
+		// see the first pass's tools as collisions and skip them — don't do that.
+		$this->schemaToolRegistrar->register($this->toolRegistry);
 
 		$prefix = $this->toolNamePrefix();
 		foreach ($this->toolRegistry->forPersona($persona) as $tool) {

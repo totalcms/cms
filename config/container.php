@@ -30,6 +30,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
@@ -55,6 +56,8 @@ use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
+use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpNotificationService;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpSubscriptionManager;
 use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
@@ -532,6 +535,17 @@ return [
 		return new McpFileSessionStore($dir, 3600);
 	},
 
+	// SchemaToolRegistrar needs an explicit definition so it gets the same
+	// mcp-activity logger as McpServerFactory rather than the generic
+	// LoggerInterface (which is not bound to a concrete class by default).
+	SchemaToolRegistrar::class => fn (ContainerInterface $container): SchemaToolRegistrar => new SchemaToolRegistrar(
+		$container->get(CollectionRepository::class),
+		$container->get(SavedQueryToolFactory::class),
+		$container->get(LoggerFactory::class)
+			->addFileHandler('mcp-activity.log', level: Level::Debug)
+			->createLogger('mcp-schema-tools'),
+	),
+
 	// McpServerFactory needs an explicit definition for its custom logger
 	// handler — `mcp-activity.log` at Debug level so the SDK's per-call
 	// dispatch messages ("Executing tool …" / "Tool executed successfully"
@@ -550,6 +564,7 @@ return [
 		$container->get(LoggerFactory::class)
 			->addFileHandler('mcp-activity.log', level: Level::Debug)
 			->createLogger('mcp-activity'),
+		$container->get(SchemaToolRegistrar::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at

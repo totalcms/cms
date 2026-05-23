@@ -41,6 +41,22 @@ final class McpServerFactoryTest extends TestCase
 	{
 		// SessionSubscriptionManager is the SDK default — fine as a stand-in
 		// for tests since they don't exercise subscription dispatch.
+		// SchemaToolRegistrar is constructed with a mocked CollectionRepository
+		// that returns an empty collection list — no filesystem access needed.
+		$collectionRepoMock = $this->createMock(\TotalCMS\Domain\Collection\Repository\CollectionRepository::class);
+		$collectionRepoMock->method('listAllCollections')->willReturn([]);
+
+		// SavedQueryToolFactory is final — construct a real one with a no-op
+		// container. It is never called when listAllCollections returns [].
+		$savedQueryFactory = new \TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory(
+			$this->createMock(\Psr\Container\ContainerInterface::class),
+		);
+		$schemaRegistrar = new \TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar(
+			$collectionRepoMock,
+			$savedQueryFactory,
+			$this->createMock(\Psr\Log\LoggerInterface::class),
+		);
+
 		return new McpServerFactory(
 			$this->registry,
 			$this->resources,
@@ -48,6 +64,7 @@ final class McpServerFactoryTest extends TestCase
 			$this->config,
 			$this->sessions,
 			$this->logger,
+			$schemaRegistrar,
 		);
 	}
 
