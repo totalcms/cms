@@ -306,6 +306,16 @@ return [
 	'schema.import_title'            => 'Schema importeren',
 	'schema.import_desc'             => 'Kies een Schema-JSON-bestand om te uploaden. Hiermee worden alleen nieuwe Schemas aangemaakt die nog niet in het CMS bestaan. U kunt de import niet gebruiken om bestaande Schemas bij te werken of te wijzigen.',
 
+	// ── Schema MCP Tools ────────────────────────────────────────────────────
+	'schema.mcp.tools_section_label'     => 'Custom MCP Tools',
+	'schema.mcp.tools_section_help'      => 'Define saved-query tools as a JSON array. See the docs page for syntax and examples.',
+	'schema.mcp.tools_label'             => 'Tools JSON',
+	'schema.mcp.tools_help'              => 'Each tool needs a name, description, optional params, and either filters or include/exclude. Save will fail with a parse hint if the JSON is malformed.',
+	'schema.mcp.tools_placeholder'       => '[]',
+	'schema.mcp.tools_invalid_json'      => 'Tools field is not valid JSON. Check brackets and quotes.',
+	'schema.mcp.tools_validation_failed' => 'Tool definition #:index failed validation: :message',
+	'schema.mcp.tools_collision_warning' => 'Tool name ":name" collides with an existing :source tool. The schema tool will be skipped at runtime.',
+
 	// ── Settings ────────────────────────────────────────────────────────────
 	'settings.filter'                  => 'Instellingen filteren',
 	'settings.installation'            => 'Installatie',

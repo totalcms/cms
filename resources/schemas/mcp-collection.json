@@ -45,6 +45,12 @@
 			"help"    : "When enabled, objects in this collection are addressable via <code>tcms://{collection}/{id}</code> URIs that AI clients can subscribe to.",
 			"field"   : "toggle",
 			"default" : true
+		},
+		"tools": {
+			"type"        : "array",
+			"description" : "Schema-defined saved-query tools exposed for this collection.",
+			"items"       : { "$ref": "https://www.totalcms.co/schemas/mcp-tool.json" },
+			"default"     : []
 		}
 	},
 	"required": []

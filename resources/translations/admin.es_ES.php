@@ -306,6 +306,16 @@ return [
 	'schema.import_title'            => 'Importar Schema',
 	'schema.import_desc'             => 'Seleccione un archivo JSON de schema para cargar. Esto solo creará nuevos schemas que no existan en el CMS. No puede utilizar la importación para actualizar o modificar schemas existentes.',
 
+	// ── Schema MCP Tools ────────────────────────────────────────────────────
+	'schema.mcp.tools_section_label'     => 'Custom MCP Tools',
+	'schema.mcp.tools_section_help'      => 'Define saved-query tools as a JSON array. See the docs page for syntax and examples.',
+	'schema.mcp.tools_label'             => 'Tools JSON',
+	'schema.mcp.tools_help'              => 'Each tool needs a name, description, optional params, and either filters or include/exclude. Save will fail with a parse hint if the JSON is malformed.',
+	'schema.mcp.tools_placeholder'       => '[]',
+	'schema.mcp.tools_invalid_json'      => 'Tools field is not valid JSON. Check brackets and quotes.',
+	'schema.mcp.tools_validation_failed' => 'Tool definition #:index failed validation: :message',
+	'schema.mcp.tools_collision_warning' => 'Tool name ":name" collides with an existing :source tool. The schema tool will be skipped at runtime.',
+
 	// ── Settings ────────────────────────────────────────────────────────────
 	'settings.filter'                  => 'Filtrar configuración',
 	'settings.installation'            => 'Instalación',

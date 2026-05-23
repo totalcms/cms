@@ -1,0 +1,90 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/mcp-tool.json",
+	"title": "MCP Schema-Defined Tool",
+	"description": "A saved-query tool exposed on the MCP server, defined per collection.",
+	"type": "object",
+	"required": ["name", "description"],
+	"additionalProperties": false,
+	"properties": {
+		"name": {
+			"type": "string",
+			"pattern": "^[a-z][a-z0-9_]*$",
+			"maxLength": 64,
+			"description": "Tool name in snake_case. Globally unique across all core, extension, and schema tools (including any mcp.toolPrefix)."
+		},
+		"description": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 1024,
+			"description": "Human-readable description AI agents read. Auto-generated parameter block is appended at registration time."
+		},
+		"params": {
+			"type": "object",
+			"description": "Typed caller parameters. Keys are snake_case param names; values declare type and validation. Omit for fixed-filter tools.",
+			"additionalProperties": {
+				"type": "object",
+				"required": ["type"],
+				"properties": {
+					"type":        { "type": "string", "enum": ["string", "number", "integer", "boolean"] },
+					"description": { "type": "string" },
+					"required":    { "type": "boolean", "default": false },
+					"default":     {},
+					"enum":        { "type": "array" },
+					"minimum":     { "type": "number" },
+					"maximum":     { "type": "number" },
+					"format":      { "type": "string" }
+				},
+				"additionalProperties": false
+			}
+		},
+		"filters": {
+			"type": "object",
+			"description": "Field-name to value+operator map. Filter values may reference {{params.X}} placeholders.",
+			"additionalProperties": {
+				"type": "object",
+				"required": ["value"],
+				"properties": {
+					"value":    {},
+					"operator": {
+						"type": "string",
+						"enum": ["eq", "ne", "lt", "lte", "gt", "gte", "contains", "starts", "ends", "in", "notin"],
+						"default": "eq"
+					}
+				},
+				"additionalProperties": false
+			}
+		},
+		"sort": {
+			"type": "string",
+			"description": "REST-style sort spec (e.g. 'date:desc' or 'priority:asc,date:desc')."
+		},
+		"limit": {
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 50,
+			"default": 20,
+			"description": "Max results returned (default 20). Schema validation enforces the upper bound of 50."
+		},
+		"offset": {
+			"type": "integer",
+			"minimum": 0,
+			"default": 0,
+			"description": "Skip the first N matching results — for paginated tools where 'limit' results aren't enough."
+		},
+		"include": {
+			"type": "string",
+			"description": "REST-style include filter string — escape hatch for shapes the structured `filters` block can't express."
+		},
+		"exclude": {
+			"type": "string",
+			"description": "REST-style exclude filter string — escape hatch for shapes the structured `filters` block can't express."
+		},
+		"format": {
+			"type": "string",
+			"enum": ["markdown", "html", "text"],
+			"default": "markdown",
+			"description": "Output format for rich-text fields: markdown (default), html, or plain text."
+		}
+	}
+}
