@@ -7,8 +7,8 @@ namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListViewsTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 

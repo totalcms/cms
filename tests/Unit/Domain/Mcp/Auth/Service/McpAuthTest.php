@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Domain\Mcp\Service;
+namespace Tests\Unit\Domain\Mcp\Auth\Service;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Exception\McpAuthException;
-use TotalCMS\Domain\Mcp\Service\McpAuth;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
+use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
 use TotalCMS\Support\Config;
 
 final class McpAuthTest extends TestCase

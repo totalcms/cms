@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Mcp\Data;
+namespace TotalCMS\Domain\Mcp\Auth\Data;
 
 /**
  * Identifies the caller of an MCP request.

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Data;
 
-use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
  * Value object describing a single MCP resource (concrete `tcms://...` URI).

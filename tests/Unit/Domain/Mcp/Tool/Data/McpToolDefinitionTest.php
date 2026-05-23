@@ -6,7 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Data;
 
 use Mcp\Schema\ToolAnnotations;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 
 final class McpToolDefinitionTest extends TestCase

@@ -6,7 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Data;
 
 use Closure;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
  * Value object describing a single MCP tool.

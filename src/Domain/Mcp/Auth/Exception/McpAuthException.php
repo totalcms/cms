@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Mcp\Exception;
+namespace TotalCMS\Domain\Mcp\Auth\Exception;
 
 /**
  * Thrown by McpAuth when an MCP request lacks valid credentials.

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Resource\Data;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 
 final class McpResourceDefinitionTest extends TestCase

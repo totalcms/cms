@@ -9,10 +9,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Mcp\Exception\McpAuthException;
-use TotalCMS\Domain\Mcp\Service\McpAuth;
+use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
+use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
-use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 

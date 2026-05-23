@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Mcp\Service;
+namespace TotalCMS\Domain\Mcp\Auth\Service;
 
-use TotalCMS\Domain\Mcp\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
  * Request-scoped store of the resolved MCP persona.

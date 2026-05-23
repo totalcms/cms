@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Domain\Mcp\Service;
+namespace Tests\Unit\Domain\Mcp\Auth\Service;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 
 final class PersonaContextTest extends TestCase
 {

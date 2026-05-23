@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Mcp\Service;
+namespace TotalCMS\Domain\Mcp\Auth\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Domain\Mcp\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Exception\McpAuthException;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Support\Config;
 
 /**
