@@ -4,9 +4,8 @@ description: "Define parameterized AI-callable query tools for a collection usin
 audience: intermediate
 updated: 2026-05-23
 related:
-  - apis/mcp
-  - extensions/mcp
-  - extensions/mcp-extensions
+  - mcp/server
+  - mcp/extensions
 ---
 
 # MCP Saved-Query Tools
@@ -196,6 +195,5 @@ Use a saved-query tool when you want a predictable, named entry point. Use `quer
 
 ## Reference
 
-- [MCP Server API reference](apis/mcp) — personas, transport, core tool catalog, collection MCP settings.
-- [MCP Server Extensions](extensions/mcp) — registering tools and resources from PHP extensions.
-- [MCP Extension Tools — Advanced Patterns](extensions/mcp-extensions) — progress notifications, error handling, persona-aware handlers.
+- [MCP Server](mcp/server) — personas, transport, core tool catalog, collection MCP settings.
+- [Extending MCP](mcp/extensions) — registering tools and resources from PHP extensions, progress notifications, error handling, persona-aware handlers.

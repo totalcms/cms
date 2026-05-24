@@ -192,10 +192,17 @@ return [
 		'sub'   => [
 			['title' => 'REST API',     'path' => 'apis/rest-api'],
 			['title' => 'PHP API',      'path' => 'apis/php-api'],
-			['title' => 'MCP Server',   'path' => 'apis/mcp'],
 			['title' => 'API Keys',     'path' => 'apis/api-keys'],
 			['title' => 'Index Filter', 'path' => 'apis/index-filter'],
 			['title' => 'OpenAPI Docs', 'path' => 'apis/openapi'],
+		],
+	],
+	[
+		'title' => 'MCP',
+		'sub'   => [
+			['title' => 'MCP Server',        'path' => 'mcp/server'],
+			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
+			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
 		],
 	],
 	[
@@ -208,9 +215,6 @@ return [
 			['title' => 'Schemas',             'path' => 'extensions/schemas'],
 			['title' => 'CLI',                 'path' => 'extensions/cli'],
 			['title' => 'AI Integration',      'path' => 'extensions/ai-integration'],
-			['title' => 'MCP Server',          'path' => 'extensions/mcp'],
-			['title' => 'MCP Extension Tools', 'path' => 'extensions/mcp-extensions'],
-			['title' => 'MCP Saved-Query Tools', 'path' => 'extensions/mcp-saved-query-tools'],
 		],
 		'groups' => [
 			[

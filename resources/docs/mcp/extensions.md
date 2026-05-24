@@ -1,18 +1,18 @@
 ---
-title: "MCP Server Extensions"
+title: "Extending MCP"
 description: "Publish custom MCP tools and resources from a T3 extension — vendor-prefixed names, capability toggles, strict collision policy."
 related:
-  - apis/mcp
+  - mcp/server
   - extensions/extension-points
 audience: advanced
 updated: 2026-05-22
 ---
 
-# MCP Server Extensions
+# Extending MCP
 
 Extensions can publish their own MCP tools and resources via `ExtensionContext`, plugging directly into the site's MCP server alongside the core surface. AI agents see your extension's tools and resources the same way they see `query_collection`, `get_object`, or `tcms://blog/`.
 
-For an overview of T3's MCP server itself — personas, transport, tool catalog, resources — see the [MCP Server API reference](apis/mcp).
+For an overview of T3's MCP server itself — personas, transport, tool catalog, resources — see the [MCP Server](mcp/server).
 
 ## What you'd build with this
 
@@ -57,7 +57,7 @@ $context->registerMcpTool(
 );
 ```
 
-`access` controls which [persona](apis/mcp#three-audiences-one-endpoint) sees the tool: `admin` (default), `public`, or `authenticated` (Phase 4).
+`access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (default), `public`, or `authenticated` (Phase 4).
 
 The handler closure is invoked by the MCP SDK using PHP reflection on its named parameters — define typed `string` / `int` / `bool` / `array` params that map one-to-one with your `inputSchema` properties.
 
@@ -100,6 +100,161 @@ Use a concrete resource when there's a fixed, enumerable URI (a dashboard view, 
 
 The template handler's named parameters map one-to-one with `{name}` placeholders in `uriTemplate`. `acme://invoices/{id}` → `fn (string $id)`. `acme://customers/{customerId}/orders/{orderId}` → `fn (string $customerId, string $orderId)`.
 
+## Structured error responses
+
+When a tool encounters a recoverable error — bad input, a missing record, a failed external call — return an error envelope instead of throwing. Throwing an uncaught exception past the SDK transport produces an unstructured error that may not surface cleanly to the agent.
+
+```php
+handler: function (string $invoice_id) use ($context): array {
+    $repo = $context->get(\Acme\Invoices\Repository\InvoiceRepository::class);
+    $invoice = $repo->find($invoice_id);
+
+    if ($invoice === null) {
+        return [
+            'isError' => true,
+            'content' => [[
+                'type' => 'text',
+                'text' => "Invoice '{$invoice_id}' not found.",
+            ]],
+        ];
+    }
+
+    return ['content' => [['type' => 'text', 'text' => json_encode($invoice)]]];
+},
+```
+
+The `isError: true` flag tells the SDK to mark the tool call as failed without crashing the session. The agent receives a structured error it can reason about and report to the user.
+
+Use `isError` for domain errors. Let genuine programming exceptions propagate — the SDK will catch them at the transport boundary and convert them to a generic error response, which surfaces as a Sentry event if Sentry is configured.
+
+## Persona-aware handlers
+
+The `access` parameter you pass to `registerMcpTool()` is the registry filter: `'admin'`, `'public'`, or `'authenticated'`. It controls which persona's tool catalog includes the tool — it does not gate calls made against the wrong persona. If your tool should behave differently based on which authenticated user is calling, inspect the session explicitly inside the handler.
+
+```php
+$context->registerMcpTool(
+    name: 'acme_my_orders',
+    description: 'Return orders for the currently authenticated customer.',
+    access: 'authenticated',
+    handler: function (?\Mcp\Server\RequestContext $ctx = null) use ($context): array {
+        $session = $ctx?->getSession();
+        $userId  = $session?->get('AUTH_USER');
+
+        if ($userId === null) {
+            return [
+                'isError' => true,
+                'content' => [['type' => 'text', 'text' => 'Not authenticated.']],
+            ];
+        }
+
+        $orders = $context->get(\Acme\Orders\Repository\OrderRepository::class)
+            ->findByUser((string) $userId);
+
+        return ['content' => [['type' => 'text', 'text' => json_encode($orders)]]];
+    },
+);
+```
+
+## Progress notifications
+
+When a tool performs a slow operation (bulk import, external API call, multi-step seeding), it can emit progress notifications so clients that support streaming show incremental feedback. The MCP SDK handles transport automatically; you only need to declare a `RequestContext` parameter and call `progress()`.
+
+### Declaring the context parameter
+
+Add `?\Mcp\Server\RequestContext $ctx = null` to your handler's parameter list. The SDK's `ReferenceHandler` injects it automatically via reflection — no wiring required in T3.
+
+The parameter **must** be nullable with a `null` default. Clients that do not include a `_meta.progressToken` in their `tools/call` request do not receive a context that supports progress, and `progress()` silently no-ops in that case. Using the null-safe operator `$ctx?->` ensures non-streaming callers are unaffected.
+
+```php
+// extension's boot.php
+$context->registerMcpTool(
+    name: 'acme_bulk_import',
+    description: 'Import many records into the site.',
+    access: 'admin',
+    handler: function (array $records, ?\Mcp\Server\RequestContext $ctx = null): array {
+        $total = count($records);
+
+        foreach ($records as $i => $record) {
+            // ... process $record ...
+
+            if (($i + 1) % 10 === 0) {
+                $ctx?->getClientGateway()->progress(
+                    progress: (float) ($i + 1),
+                    total:    (float) $total,
+                    message:  sprintf('processed %d of %d', $i + 1, $total),
+                );
+            }
+        }
+
+        return [
+            'content' => [['type' => 'text', 'text' => "Imported {$total} records."]],
+        ];
+    },
+    inputSchema: [
+        'type'       => 'object',
+        'required'   => ['records'],
+        'properties' => [
+            'records' => [
+                'type'  => 'array',
+                'items' => ['type' => 'object', 'additionalProperties' => true],
+                'description' => 'Records to import.',
+            ],
+        ],
+    ],
+);
+```
+
+### progress() signature
+
+```php
+$ctx?->getClientGateway()->progress(
+    float $progress,
+    ?float $total   = null,
+    ?string $message = null,
+): void
+```
+
+| Parameter | Type | Notes |
+|---|---|---|
+| `$progress` | `float` | Current progress value (units are caller-defined — typically an index, byte count, or percentage) |
+| `$total` | `?float` | Total expected value, or `null` if the ceiling is not known up front |
+| `$message` | `?string` | Optional human-readable status string shown by the client |
+
+The SDK automatically switches the HTTP response to `Content-Type: text/event-stream` when it flushes the first notification. No T3-side wiring is needed.
+
+`progress()` is a no-op when:
+
+- The client did not send `_meta.progressToken` in the `tools/call` request (most command-line callers).
+- `$ctx` is `null` (handler called outside an MCP request context in tests).
+
+Do not gate notification calls with your own condition checks — just use `$ctx?->` and let the SDK decide.
+
+### Checkpoint pattern
+
+For tools with discrete phases rather than a loop, emit one notification per phase at the completion percentage:
+
+```php
+handler: function (string $id, ?\Mcp\Server\RequestContext $ctx = null): array {
+    // Phase 1
+    $this->validateSource($id);
+    $ctx?->getClientGateway()->progress(25.0, 100.0, 'source validated');
+
+    // Phase 2
+    $objects = $this->fetchRemoteData($id);
+    $ctx?->getClientGateway()->progress(50.0, 100.0, 'data fetched');
+
+    // Phase 3
+    $this->persistObjects($objects);
+    $ctx?->getClientGateway()->progress(75.0, 100.0, 'objects saved');
+
+    // Phase 4
+    $this->flushCaches();
+    $ctx?->getClientGateway()->progress(100.0, 100.0, 'complete');
+
+    return ['content' => [['type' => 'text', 'text' => 'Sync finished.']]];
+},
+```
+
 ## Naming and URI schemes
 
 **Use vendor-prefixed names and URI schemes.** Tools should be `acme_*` (or whatever your vendor slug is). URI schemes should be `acme://` — never `tcms://`, which is reserved for core resources.
@@ -117,12 +272,18 @@ Operators can disable either independently without uninstalling the extension. T
 
 ## Subscriptions and change notifications
 
-T3's resource subscription system pushes `notifications/resources/updated` events when subscribed URIs change. Core wires this to collection/object events automatically; extensions opt in by dispatching events the [`McpResourceSubscriptionListener`](apis/mcp#resource-subscriptions) listens for, or by calling `ResourceNotifier::notifyResourceChanged($uri)` directly from your domain code when something behind your URIs changes.
+T3's resource subscription system pushes `notifications/resources/updated` events when subscribed URIs change. Core wires this to collection/object events automatically; extensions opt in by dispatching events the [`McpResourceSubscriptionListener`](mcp/server#resource-subscriptions) listens for, or by calling `ResourceNotifier::notifyResourceChanged($uri)` directly from your domain code when something behind your URIs changes.
 
 For most extensions, the simpler path is: store your data in a T3 collection (perhaps a reserved-name collection like `acme-invoices`) and let the core listener handle subscriptions to `tcms://acme-invoices/` automatically. Custom URI schemes (`acme://...`) require explicit notification calls.
 
+## Common pitfalls
+
+**Do not write LLM instructions into the tool description.** Text like "Always call this tool before X" or "You must pass Y first" reads as prompt injection at Anthropic's directory review. Descriptions should explain what the tool returns, not how an agent should behave. For cross-tool guidance, configure the server's `setInstructions()` block.
+
+**Do not catch `Throwable` and return silently.** If an exception escapes your catch block, the SDK converts it to a structured error and the session continues. Swallowing exceptions hides bugs and makes Sentry alerts disappear.
+
 ## Related
 
-- [MCP Server API reference](apis/mcp) — personas, transport, core tool catalog
+- [MCP Server](mcp/server) — personas, transport, core tool catalog
 - [Extension Points](extensions/extension-points) — full catalog of `ExtensionContext` hooks
 - [Events](extensions/events) — dispatching custom events that listeners (including subscription listeners) can consume

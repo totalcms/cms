@@ -356,7 +356,7 @@ tcms mcp:test list_collections --json
 
 Extensions can publish their own MCP tools and resources via `ExtensionContext::registerMcpTool()`, `registerMcpResource()`, and `registerMcpResourceTemplate()`. Custom tools and resources show up alongside the core surface — AI agents see them the same way they see `query_collection` or `tcms://blog/`.
 
-See **[MCP Server Extensions](extensions/mcp)** in the Extensions docs for the full authoring guide, including registration examples, naming conventions, capability toggles, and real-world use cases.
+See **[Extending MCP](mcp/extensions)** for the full authoring guide, including registration examples, naming conventions, capability toggles, and real-world use cases.
 
 ---
 
