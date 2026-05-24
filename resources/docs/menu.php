@@ -209,6 +209,8 @@ return [
 			['title' => 'CLI',                 'path' => 'extensions/cli'],
 			['title' => 'AI Integration',      'path' => 'extensions/ai-integration'],
 			['title' => 'MCP Server',          'path' => 'extensions/mcp'],
+			['title' => 'MCP Extension Tools', 'path' => 'extensions/mcp-extensions'],
+			['title' => 'MCP Saved-Query Tools', 'path' => 'extensions/mcp-saved-query-tools'],
 		],
 		'groups' => [
 			[
