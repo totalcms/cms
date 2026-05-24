@@ -77,10 +77,13 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 			);
 		}
 
-		// Rotate the token after a successful state-changing request so any
-		// validated token can't be replayed. Forms re-render with the fresh
-		// value on the next page load via CSRFTokenManager::getToken().
-		$this->csrfManager->generateToken();
+		// Token is session-bound, not per-request. Rotation here would break
+		// AJAX/HTMX flows that stay on the page after a state change (the
+		// meta tag in DOM still carries the old value). Per-session tokens
+		// are the industry standard (Django, Rails, Laravel, Symfony, ASP.NET
+		// Core) and OWASP's CSRF cheatsheet lists per-request rotation as
+		// "MAY" not "MUST". CSRFTokenManager::regenerateToken() is still
+		// available for session-boundary events (login, password change).
 
 		return $handler->handle($request);
 	}

@@ -112,6 +112,16 @@ export default class TotalCMS {
         sessionStorage.clear();
     }
 
+	// Read the CSRF token from the admin layout's <meta name="csrf-token"> tag.
+	// Returns null if the tag is absent (e.g. public-facing pages where the
+	// admin layout isn't rendered) — callers can omit the header in that case.
+	// CSRFProtectionMiddleware is only mounted on the admin route group, so
+	// public callers don't need the header anyway.
+	getCsrfToken() {
+		const tag = document.querySelector('meta[name="csrf-token"]');
+		return tag ? tag.getAttribute('content') : null;
+	}
+
 	putAPI(api, data) {
 		return this.postAPI(api, data, "PUT");
     }
@@ -131,6 +141,11 @@ export default class TotalCMS {
 
 		let headers = { "Content-Type":"application/json" };
 		if (method !== "POST") headers["X-Http-Method-Override"] = method.toUpperCase();
+		// CSRFProtectionMiddleware on the admin route group reads X-CSRF-Token
+		// for non-cookie-credentialed requests. JSON bodies don't surface the
+		// hidden csrf_token form field, so the header is the route in.
+		const csrf = this.getCsrfToken();
+		if (csrf) headers["X-CSRF-Token"] = csrf;
 
 		// console.log(method, headers);
 
@@ -160,6 +175,11 @@ export default class TotalCMS {
 
 		let headers = {};
 		if (method !== "POST") headers["X-Http-Method-Override"] = method.toUpperCase();
+		// CSRF token for the admin route group — same rationale as postAPI.
+		// Multipart bodies CAN include the csrf_token field, but using the
+		// header keeps a single consistent path across both API methods.
+		const csrf = this.getCsrfToken();
+		if (csrf) headers["X-CSRF-Token"] = csrf;
 
 		// console.log(method, headers);
 
@@ -199,6 +219,12 @@ export default class TotalCMS {
     fetchAPI(api, method = "GET") {
 		let headers = {};
 		if (method !== "GET") headers["X-Http-Method-Override"] = method.toUpperCase();
+		// Add CSRF token only when this is being used to send a state-changing
+		// method via X-Http-Method-Override (GET is exempt from CSRF check).
+		if (method !== "GET") {
+			const csrf = this.getCsrfToken();
+			if (csrf) headers["X-CSRF-Token"] = csrf;
+		}
 
 		return fetch(this.buildApiQuery(api), {
             method  : "GET",
