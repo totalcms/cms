@@ -75,9 +75,14 @@ final readonly class SavedQueryToolFactory
 			}
 		}
 
+		// MCP requires inputSchema.properties to be a JSON object, not an array.
+		// PHP json_encode renders an empty PHP array as `[]` — fine for non-empty
+		// associative arrays, wrong when params is empty. Cast to stdClass so
+		// json_encode emits `{}` and strict MCP clients (e.g. Inspector) accept
+		// the tool. Reference: tools with no params still need a valid object.
 		$schema = [
 			'type'       => 'object',
-			'properties' => $properties,
+			'properties' => $properties === [] ? new \stdClass() : $properties,
 		];
 
 		if ($required !== []) {

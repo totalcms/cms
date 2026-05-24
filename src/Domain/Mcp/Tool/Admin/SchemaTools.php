@@ -371,7 +371,16 @@ readonly class SchemaTools
 					],
 				],
 				'extra' => [
-					'type'        => 'object',
+					// Accept either an object (with extra fields) or an empty array.
+					// mcp/sdk ~0.5's SchemaValidator::convertDataForValidator() only
+					// converts non-empty assoc arrays to stdClass — JSON `{}` arrives
+					// as PHP `[]` and would fail strict `type: object` validation.
+					// `oneOf` lets MCP clients (e.g. Inspector) submit empty {} OR [].
+					// The handler tolerates both shapes server-side.
+					'oneOf' => [
+						['type' => 'object'],
+						['type' => 'array', 'maxItems' => 0],
+					],
 					'description' => 'Optional additional schema-level fields: description, category, formgrid, required (array of names), index (array of names), inheritFrom (array of schema ids).',
 					'default'     => new \stdClass(),
 				],

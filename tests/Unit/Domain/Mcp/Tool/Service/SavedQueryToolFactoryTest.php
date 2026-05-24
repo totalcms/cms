@@ -87,7 +87,11 @@ final class SavedQueryToolFactoryTest extends TestCase
 		$schema = $this->factory->inputSchemaFor($def);
 
 		$this->assertSame('object', $schema['type']);
-		$this->assertSame([], $schema['properties']);
+		// properties must be a JSON object ({}), not a JSON array ([]). PHP
+		// json_encode renders empty arrays as `[]`; stdClass forces `{}`.
+		// Strict MCP clients (e.g. Inspector) reject `[]` for inputSchema.properties.
+		$this->assertInstanceOf(\stdClass::class, $schema['properties']);
+		$this->assertSame('{}', json_encode($schema['properties']));
 		$this->assertSame([], $schema['required'] ?? []);
 	}
 
