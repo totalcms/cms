@@ -78,6 +78,7 @@ use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeViewTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListViewsTool;
+use TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
@@ -534,6 +535,15 @@ return [
 
 		return new McpFileSessionStore($dir, 3600);
 	},
+
+	// McpToolsValidator needs an explicit definition so it gets a logger bound
+	// to the mcp-activity log channel (same as SchemaToolRegistrar).
+	McpToolsValidator::class => fn (ContainerInterface $container): McpToolsValidator => new McpToolsValidator(
+		$container->get(ToolRegistry::class),
+		$container->get(LoggerFactory::class)
+			->addFileHandler('mcp-activity.log', level: Level::Debug)
+			->createLogger('mcp-tools-validator'),
+	),
 
 	// SchemaToolRegistrar needs an explicit definition so it gets the same
 	// mcp-activity logger as McpServerFactory rather than the generic

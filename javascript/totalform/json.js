@@ -32,6 +32,7 @@ export default class JSONField extends TotalField {
 
         this.editor = window.TotalCMSCodeMirror.createJsonEditor(editorContainer, {
             value: this.input.value || '',
+            placeholder: this.input.getAttribute('placeholder') || '',
             matchBrackets: true,
             autoCloseBrackets: true,
             lineWrapping: true,

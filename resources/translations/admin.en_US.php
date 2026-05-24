@@ -313,8 +313,8 @@ return [
 	'schema.mcp.tools_help'              => 'Each tool needs a name, description, optional params, and either filters or include/exclude. Save will fail with a parse hint if the JSON is malformed.',
 	'schema.mcp.tools_placeholder'       => '[]',
 	'schema.mcp.tools_invalid_json'      => 'Tools field is not valid JSON. Check brackets and quotes.',
-	'schema.mcp.tools_validation_failed' => 'Tool definition #:index failed validation: :message',
-	'schema.mcp.tools_collision_warning' => 'Tool name ":name" collides with an existing :source tool. The schema tool will be skipped at runtime.',
+	'schema.mcp.tools_validation_failed' => 'Tool definition #{index} failed validation: {message}',
+	'schema.mcp.tools_collision_warning' => 'Tool name "{name}" collides with an existing {source} tool. The schema tool will be skipped at runtime.',
 
 	// ── Settings ────────────────────────────────────────────────────────────
 	'settings.filter'                  => 'Filter Settings',
