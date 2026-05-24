@@ -2,6 +2,8 @@
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\ResourceServer;
 use Mcp\JsonRpc\MessageFactory as McpMessageFactory;
 use Mcp\Server\Protocol as McpProtocol;
 use Mcp\Server\Session\FileSessionStore as McpFileSessionStore;
@@ -53,25 +55,9 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
-use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\ResourceServer;
-use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenRepository;
-use TotalCMS\Domain\OAuth\Adapter\LeagueAuthCodeRepository;
-use TotalCMS\Domain\OAuth\Adapter\LeagueClientRepository;
-use TotalCMS\Domain\OAuth\Adapter\LeagueRefreshTokenRepository;
-use TotalCMS\Domain\OAuth\Adapter\LeagueScopeRepository;
-use TotalCMS\Domain\OAuth\Adapter\LeagueUserRepository;
-use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
-use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
-use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
-use TotalCMS\Domain\OAuth\Service\OAuthDiscoveryProvider;
-use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
-use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
-use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
-use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpNotificationService;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpSubscriptionManager;
 use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
@@ -93,10 +79,16 @@ use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeViewTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Discovery\ListViewsTool;
 use TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator;
+use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
+use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
 use TotalCMS\Domain\Migration\Service\MigrationRunner;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
@@ -641,9 +633,12 @@ return [
 		);
 	},
 
-	// === OAuth Phase 4 ===
-
-	OAuthScopeRegistry::class => fn (): OAuthScopeRegistry => new OAuthScopeRegistry(),
+	// === OAuth ===
+	//
+	// Only the entries with non-type-hinted constructor args (string paths,
+	// integer TTLs) and the two league classes built via OAuthServerFactory
+	// need explicit definitions. Everything else (league adapters, services,
+	// admin actions) autowires from constructor type hints.
 
 	OAuthClientRepository::class => fn (ContainerInterface $container): OAuthClientRepository => new OAuthClientRepository(
 		$container->get(Config::class)->datadir . '/.system/oauth-clients.json',
@@ -658,21 +653,7 @@ return [
 		3600, // TODO: derive from $config->oauth['accessTokenTtl'] DateInterval if needed
 	),
 
-	// The six league adapters — constructor args are all registered types so autowire works.
-	LeagueClientRepository::class       => \DI\autowire(),
-	LeagueAccessTokenRepository::class  => \DI\autowire(),
-	LeagueRefreshTokenRepository::class => \DI\autowire(),
-	LeagueAuthCodeRepository::class     => \DI\autowire(),
-	LeagueScopeRepository::class        => \DI\autowire(),
-	LeagueUserRepository::class         => \DI\autowire(),
+	AuthorizationServer::class => fn (ContainerInterface $container): AuthorizationServer => $container->get(OAuthServerFactory::class)->buildAuthorizationServer(),
 
-	OAuthServerFactory::class => \DI\autowire(),
-
-	AuthorizationServer::class => fn (ContainerInterface $container): AuthorizationServer =>
-		$container->get(OAuthServerFactory::class)->buildAuthorizationServer(),
-
-	ResourceServer::class => fn (ContainerInterface $container): ResourceServer =>
-		$container->get(OAuthServerFactory::class)->buildResourceServer(),
-
-	OAuthDiscoveryProvider::class => \DI\autowire(),
+	ResourceServer::class => fn (ContainerInterface $container): ResourceServer => $container->get(OAuthServerFactory::class)->buildResourceServer(),
 ];

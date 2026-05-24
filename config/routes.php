@@ -26,6 +26,7 @@ return function (App $app): void {
 	$app->group('/api', function (RouteCollectorProxy $api): void {
 		(require __DIR__ . '/routes/api/access-groups.php')($api);
 		(require __DIR__ . '/routes/api/apikey.php')($api);
+		(require __DIR__ . '/routes/api/oauth-clients.php')($api);
 		(require __DIR__ . '/routes/api/assets.php')($api);
 		(require __DIR__ . '/routes/api/passkeys.php')($api);
 		(require __DIR__ . '/routes/api/cache.php')($api);

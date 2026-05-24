@@ -1,0 +1,50 @@
+{# Reusable client card — expects `row` with keys: client, grantCount #}
+{% set client = row.client %}
+<article class="dash-card">
+	<header>
+		<h3>{{ client.name }}</h3>
+		<div class="dash-card-actions">
+			{{ cms.admin.quickActionButton('', 'oauth-clients/' ~ client.id, {
+				method: 'delete',
+				confirm: t('oauth_clients.confirm_delete'),
+				reload: true,
+				class: 'dash-card-action delete',
+			}) }}
+		</div>
+	</header>
+
+	<div class="dash-card-details">
+		<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+			<strong>{{ t('oauth_clients.client_id_label') }}</strong>
+			<code style="font-size:0.8em; word-break:break-all;">{{ client.id }}</code>
+		</div>
+
+		<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+			<strong>{{ t('oauth_clients.scopes_label') }}</strong>
+			<div class="dash-badge-group">
+				{% for scope in client.scopes %}
+					<span class="dash-badge accent">{{ scope }}</span>
+				{% endfor %}
+			</div>
+		</div>
+
+		<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+			<strong>{{ t('oauth_clients.redirect_uris_label') }}</strong>
+			<div style="display:flex; flex-direction:column; gap:0.35rem;">
+				{% for uri in client.redirectUris %}
+					<code style="font-size:0.8em; word-break:break-all;">{{ uri }}</code>
+				{% endfor %}
+			</div>
+		</div>
+
+		<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+			<strong>{{ t('oauth_clients.created_label') }}</strong>
+			<span>{{ client.createdAt|date('Y-m-d H:i') }}</span>
+		</div>
+
+		<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+			<strong>{{ t('label.status') }}</strong>
+			<span>{{ t('oauth_clients.active_grants')|replace({'%count%': row.grantCount}) }}</span>
+		</div>
+	</div>
+</article>

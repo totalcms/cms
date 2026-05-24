@@ -7,7 +7,11 @@ use TotalCMS\Action\OAuth\OAuthApproveAction;
 use TotalCMS\Action\OAuth\OAuthAuthorizeAction;
 use TotalCMS\Action\OAuth\OAuthDiscoveryAction;
 use TotalCMS\Action\OAuth\OAuthJwksAction;
+use TotalCMS\Action\OAuth\OAuthRegisterAction;
+use TotalCMS\Action\OAuth\OAuthRevokeAction;
 use TotalCMS\Action\OAuth\OAuthTokenAction;
+use TotalCMS\Middleware\Response\NoCacheMiddleware;
+use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\Security\OAuthTokenRateLimitMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
@@ -30,16 +34,50 @@ return function (RouteCollectorProxyInterface $app): void {
 	// admin; POST captures the approve/deny decision and completes the flow
 	// (issuing the auth code and redirecting back to the client). Admin
 	// session required — anonymous requests redirect to admin login.
+	//
+	// AuthMiddleware deliberately NOT applied — the action does its own
+	// session check + redirect-to-login with ?next= preservation. Wrapping
+	// with AuthMiddleware would also leak client_id validity to unauth'd
+	// callers (valid client -> login redirect, invalid client -> OAuth
+	// error page; attackers could distinguish them).
+	//
+	// Slim's ->add() wraps inside-out: the LAST add() runs FIRST. On POST,
+	// NoCache outer / CSRF inner means CSRF validates before the action
+	// runs, and the no-cache header lands on the final response.
 	$app->get('/oauth/authorize', OAuthAuthorizeAction::class)
+		->add(NoCacheMiddleware::class)
 		->setName('oauth.authorize');
 	$app->post('/oauth/authorize', OAuthApproveAction::class)
+		->add(CSRFProtectionMiddleware::class)
+		->add(NoCacheMiddleware::class)
 		->setName('oauth.approve');
 
 	// Token endpoint. Exchanges authorization codes (with PKCE verifier)
 	// for access + refresh tokens, and refreshes existing tokens via the
 	// refresh_token grant. Rate-limited per IP to defeat brute-force code
-	// exchange and runaway refresh loops.
+	// exchange and runaway refresh loops. NoCache because the response
+	// payload contains short-lived access tokens.
 	$app->post('/oauth/token', OAuthTokenAction::class)
 		->add(OAuthTokenRateLimitMiddleware::class)
+		->add(NoCacheMiddleware::class)
 		->setName('oauth.token');
+
+	// RFC 7591 — dynamic client registration. Lets MCP clients (Claude,
+	// Cursor) self-register OAuth credentials without admin intervention.
+	// Rate-limited tightly because it creates persistent server state
+	// from an unauthenticated request. Operator-disable via
+	// $config->oauth['dynamicRegistration'] = false. NoCache because the
+	// response carries a one-time client_secret.
+	$app->post('/oauth/register', OAuthRegisterAction::class)
+		->add(OAuthTokenRateLimitMiddleware::class)
+		->add(NoCacheMiddleware::class)
+		->setName('oauth.register');
+
+	// RFC 7009 — token revocation. Clients can call this to revoke their
+	// own tokens (access or refresh). Always returns 200 to avoid leaking
+	// token-existence info; only 400 on missing param or 401 on client
+	// auth failure. NoCache because outcomes are session/auth-dependent.
+	$app->post('/oauth/revoke', OAuthRevokeAction::class)
+		->add(NoCacheMiddleware::class)
+		->setName('oauth.revoke');
 };

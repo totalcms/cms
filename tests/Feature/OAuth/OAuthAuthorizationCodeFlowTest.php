@@ -6,6 +6,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
@@ -133,6 +134,18 @@ function reopenSession(Slim\App $app): PhpSession
 	return $session;
 }
 
+/**
+ * Mint a CSRF token bound to the current session. Required for any POST
+ * to /oauth/authorize because CSRFProtectionMiddleware sits on that route.
+ * The session must already be started (call seedSessionUser/reopenSession first).
+ */
+function mintCsrfToken(Slim\App $app): string
+{
+	/** @var CSRFTokenManager $csrf */
+	$csrf = $app->getContainer()->get(CSRFTokenManager::class);
+	return $csrf->generateToken();
+}
+
 // ---------------------------------------------------------------------------
 // Happy-path: full authorization-code flow with PKCE
 // ---------------------------------------------------------------------------
@@ -181,7 +194,8 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 		// SessionStartMiddleware called session_write_close() at end of request.
 		// Re-open the session so the oauth_authorize_request stash is accessible
 		// for the POST handler, and keep AUTH_USER alive.
-		$session = reopenSession($this->app);
+		$session   = reopenSession($this->app);
+		$csrfToken = mintCsrfToken($this->app);
 
 		// ------------------------------------------------------------------
 		// Step 2: POST /oauth/authorize with decision=approve
@@ -190,7 +204,7 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 		$approveResponse = $this->app->handle(
 			$factory->createServerRequest('POST', '/oauth/authorize')
 				->withHeader('Content-Type', 'application/x-www-form-urlencoded')
-				->withParsedBody(['decision' => 'approve']),
+				->withParsedBody(['decision' => 'approve', 'csrf_token' => $csrfToken]),
 		);
 
 		expect($approveResponse->getStatusCode())->toBe(302);
@@ -267,12 +281,13 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 
 		// Re-open session for step 2.
 		reopenSession($this->app);
+		$csrfToken = mintCsrfToken($this->app);
 
 		// Step 2 — approve
 		$approveResponse = $this->app->handle(
 			$factory->createServerRequest('POST', '/oauth/authorize')
 				->withHeader('Content-Type', 'application/x-www-form-urlencoded')
-				->withParsedBody(['decision' => 'approve']),
+				->withParsedBody(['decision' => 'approve', 'csrf_token' => $csrfToken]),
 		);
 		expect($approveResponse->getStatusCode())->toBe(302);
 

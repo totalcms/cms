@@ -14,6 +14,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -38,6 +41,11 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
 	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
+	private OAuthClientRepository $oauthClientRepository;
+	private OAuthGrantRepository $oauthGrantRepository;
+	private OAuthScopeRegistry $oauthScopeRegistry;
+	private string $oauthClientsTmpFile;
+	private string $oauthGrantsTmpFile;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -57,6 +65,14 @@ final class AdminUtilsActionTest extends TestCase
 		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
 		$this->templateLister        = $this->createMock(TemplateLister::class);
 		$this->updateChecker         = $this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class);
+		// OAuth repositories + scope registry are all final classes (can't be
+		// doubled). Use real instances pointed at empty tmp files — the tests
+		// here exercise the action's plumbing, not OAuth data shape.
+		$this->oauthClientsTmpFile   = sys_get_temp_dir() . '/oauth-clients-utils-test-' . uniqid() . '.json';
+		$this->oauthGrantsTmpFile    = sys_get_temp_dir() . '/oauth-grants-utils-test-' . uniqid() . '.json';
+		$this->oauthClientRepository = new OAuthClientRepository($this->oauthClientsTmpFile);
+		$this->oauthGrantRepository  = new OAuthGrantRepository($this->oauthGrantsTmpFile);
+		$this->oauthScopeRegistry    = new OAuthScopeRegistry();
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 
@@ -75,7 +91,20 @@ final class AdminUtilsActionTest extends TestCase
 			$this->settingsFetcher,
 			$this->templateLister,
 			$this->updateChecker,
+			$this->oauthClientRepository,
+			$this->oauthGrantRepository,
+			$this->oauthScopeRegistry,
 		);
+	}
+
+	protected function tearDown(): void
+	{
+		if (is_file($this->oauthClientsTmpFile)) {
+			unlink($this->oauthClientsTmpFile);
+		}
+		if (is_file($this->oauthGrantsTmpFile)) {
+			unlink($this->oauthGrantsTmpFile);
+		}
 	}
 
 	/**
