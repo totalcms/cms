@@ -80,7 +80,7 @@ $context->registerMcpResource(
         ]],
     ],
     access: 'admin',
-    name:   'Acme recent invoices',
+    name:   'acme-recent-invoices',
 );
 
 // URI template — placeholders fill at resources/read time, not enumerated per-id
@@ -95,8 +95,11 @@ $context->registerMcpResourceTemplate(
         ]],
     ],
     access: 'admin',
+    name:        'acme-invoice',
 );
 ```
+
+**Resource `name` is a slug, not a label.** The MCP SDK validates `name` against `[A-Za-z0-9_-]+` — alphanumeric, underscores, hyphens only, no spaces. Despite the docblock describing it as "human-readable", any name with a space triggers a 400 at registration time. Use slug-form identifiers (`acme-recent-invoices`, not `'Acme recent invoices'`). When omitted, defaults to the URI / template — also a valid slug shape by convention.
 
 Use a concrete resource when there's a fixed, enumerable URI (a dashboard view, an "all invoices" rollup). Use a template when the URI is parameterized by an id, slug, or other lookup key — templates avoid enumerating every possible URI in `resources/list` and are how core publishes `tcms://{collection}/{id}`.
 

@@ -280,7 +280,8 @@ final class ExtensionContext
 	 * @param string   $description Description AI agents read
 	 * @param \Closure $handler     Invoked with no args; returns ResourceContent
 	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
-	 * @param string   $name        Human-readable name shown in resources/list (defaults to the URI)
+	 * @param string   $name        Slug-form identifier shown in resources/list — must match `[A-Za-z0-9_-]+`
+	 *                              per MCP SDK validation (no spaces). Defaults to the URI when empty.
 	 * @param string   $mimeType    Content type the handler will produce
 	 */
 	public function registerMcpResource(
@@ -317,7 +318,8 @@ final class ExtensionContext
 	 * @param string   $description Description AI agents read
 	 * @param \Closure $handler     Invoked with named args matching template variables; returns ResourceContent
 	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
-	 * @param string   $name        Human-readable name (defaults to the template)
+	 * @param string   $name        Slug-form identifier — must match `[A-Za-z0-9_-]+` per MCP SDK validation
+	 *                              (no spaces). Defaults to the template when empty.
 	 * @param string   $mimeType    Content type the handler will produce
 	 */
 	public function registerMcpResourceTemplate(
