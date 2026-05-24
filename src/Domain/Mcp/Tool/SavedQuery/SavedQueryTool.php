@@ -198,6 +198,13 @@ final readonly class SavedQueryTool
 
 	private function encodeFilterPart(string $field, string $op, mixed $value): string
 	{
+		if ($op === 'in' || $op === 'notin') {
+			$list    = is_array($value) ? $value : [$value];
+			$encoded = implode('|', array_map(fn (mixed $v): string => is_bool($v) ? ($v ? 'true' : 'false') : (string)$v, $list));
+
+			return "{$field}:{$op}:{$encoded}";
+		}
+
 		$encoded = is_bool($value) ? ($value ? 'true' : 'false') : (string)$value;
 
 		if ($op === 'eq') {

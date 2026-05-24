@@ -289,4 +289,390 @@ final class ObjectFilterTest extends TestCase
 		$this->assertCount(1, $result);
 		$this->assertSame('3', $result[0]['id']);
 	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// parseFilterString — operator-qualified (3-part) syntax
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testParseFilterStringThreePartOperator(): void
+	{
+		$result = $this->filter->parseFilterString('price:lte:500000');
+
+		$this->assertCount(1, $result);
+		$this->assertSame('price', $result[0]['field']);
+		$this->assertSame('lte', $result[0]['op']);
+		$this->assertSame('500000', $result[0]['value']);
+	}
+
+	public function testParseFilterStringThreePartContains(): void
+	{
+		$result = $this->filter->parseFilterString('city:contains:Austin');
+
+		$this->assertCount(1, $result);
+		$this->assertSame('city', $result[0]['field']);
+		$this->assertSame('contains', $result[0]['op']);
+		$this->assertSame('Austin', $result[0]['value']);
+	}
+
+	public function testParseFilterStringTwoPartImpliesEq(): void
+	{
+		$result = $this->filter->parseFilterString('status:active');
+
+		$this->assertCount(1, $result);
+		$this->assertSame('status', $result[0]['field']);
+		$this->assertSame('eq', $result[0]['op']);
+		$this->assertSame('active', $result[0]['value']);
+	}
+
+	public function testParseFilterStringThreePartUnknownMiddleTokenTreatedAsValue(): void
+	{
+		// Middle token "someval" is not a known operator; treated as two-part with colon value.
+		$result = $this->filter->parseFilterString('field:someval:extra');
+
+		$this->assertCount(1, $result);
+		$this->assertSame('field', $result[0]['field']);
+		$this->assertSame('eq', $result[0]['op']);
+		$this->assertSame('someval:extra', $result[0]['value']);
+	}
+
+	public function testParseFilterStringBooleanCoercedForEqOnly(): void
+	{
+		// eq: "true" string → boolean true
+		$eq = $this->filter->parseFilterString('field:eq:true');
+		$this->assertTrue($eq[0]['value']);
+
+		// lte: "true" stays as string
+		$lte = $this->filter->parseFilterString('count:lte:true');
+		$this->assertSame('true', $lte[0]['value']);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// ne — not-equal operator
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testNeOperatorIncludesNonMatchingObjects(): void
+	{
+		$objects = [
+			['id' => '1', 'status' => 'active'],
+			['id' => '2', 'status' => 'archived'],
+			['id' => '3', 'status' => 'active'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'status:ne:archived']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testNeOperatorExcludesMatchingObjects(): void
+	{
+		$objects = [
+			['id' => '1', 'status' => 'active'],
+			['id' => '2', 'status' => 'archived'],
+			['id' => '3', 'status' => 'pending'],
+		];
+
+		// Exclude anything whose status is NOT active (ne:active => anything ≠ active triggers exclusion)
+		$result = $this->filter->filterObjects($objects, ['exclude' => 'status:ne:active']);
+
+		// Objects 2 and 3 have status ≠ "active" so they are excluded.
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// lt / lte / gt / gte — numeric comparison operators
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testLtOperatorFiltersNumericValues(): void
+	{
+		$objects = [
+			['id' => '1', 'price' => 100],
+			['id' => '2', 'price' => 200],
+			['id' => '3', 'price' => 300],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'price:lt:200']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	public function testLteOperatorFiltersNumericValues(): void
+	{
+		$objects = [
+			['id' => '1', 'price' => 100],
+			['id' => '2', 'price' => 200],
+			['id' => '3', 'price' => 300],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'price:lte:200']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('2', $result[1]['id']);
+	}
+
+	public function testGtOperatorFiltersNumericValues(): void
+	{
+		$objects = [
+			['id' => '1', 'price' => 100],
+			['id' => '2', 'price' => 200],
+			['id' => '3', 'price' => 300],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'price:gt:200']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('3', $result[0]['id']);
+	}
+
+	public function testGteOperatorFiltersNumericValues(): void
+	{
+		$objects = [
+			['id' => '1', 'price' => 100],
+			['id' => '2', 'price' => 200],
+			['id' => '3', 'price' => 300],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'price:gte:200']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('2', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testNumericOperatorHandlesStringStoredNumbers(): void
+	{
+		// T3 sometimes stores numbers as strings in JSON — both sides must coerce.
+		$objects = [
+			['id' => '1', 'score' => '85'],
+			['id' => '2', 'score' => '92'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'score:gte:90']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('2', $result[0]['id']);
+	}
+
+	public function testNumericOperatorReturnsFalseForNonNumericField(): void
+	{
+		// When the field value is not numeric, the object is excluded.
+		$objects = [
+			['id' => '1', 'score' => 'n/a'],
+			['id' => '2', 'score' => 100],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'score:gte:50']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('2', $result[0]['id']);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// contains — case-insensitive substring match
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testContainsOperatorCaseInsensitiveSubstring(): void
+	{
+		$objects = [
+			['id' => '1', 'city' => 'Austin'],
+			['id' => '2', 'city' => 'Dallas'],
+			['id' => '3', 'city' => 'San Antonio'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'city:contains:aus']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	public function testContainsOperatorMatchesUpperCase(): void
+	{
+		$objects = [
+			['id' => '1', 'city' => 'AUSTIN'],
+			['id' => '2', 'city' => 'Dallas'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'city:contains:austin']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	public function testContainsOperatorExcludesNonMatch(): void
+	{
+		$objects = [
+			['id' => '1', 'city' => 'Austin'],
+			['id' => '2', 'city' => 'Dallas'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['exclude' => 'city:contains:dall']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// starts — case-insensitive prefix match
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testStartsOperatorCaseInsensitivePrefix(): void
+	{
+		$objects = [
+			['id' => '1', 'name' => 'Apple Watch'],
+			['id' => '2', 'name' => 'Samsung Galaxy'],
+			['id' => '3', 'name' => 'Apple MacBook'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'name:starts:apple']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testStartsOperatorDoesNotMatchMidString(): void
+	{
+		$objects = [
+			['id' => '1', 'name' => 'Apple Watch'],
+			['id' => '2', 'name' => 'My Apple'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'name:starts:apple']);
+
+		// "My Apple" starts with "My", not "apple" — only Apple Watch matches.
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// ends — case-insensitive suffix match
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testEndsOperatorCaseInsensitiveSuffix(): void
+	{
+		$objects = [
+			['id' => '1', 'email' => 'admin@example.com'],
+			['id' => '2', 'email' => 'user@example.org'],
+			['id' => '3', 'email' => 'other@example.com'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'email:ends:.com']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testEndsOperatorDoesNotMatchPrefix(): void
+	{
+		$objects = [
+			['id' => '1', 'tag' => 'com.example'],
+			['id' => '2', 'tag' => 'example.com'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'tag:ends:com']);
+
+		// "com.example" does not end with "com".
+		$this->assertCount(1, $result);
+		$this->assertSame('2', $result[0]['id']);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// in / notin — list membership operators
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testInOperatorMatchesAnyListMember(): void
+	{
+		$objects = [
+			['id' => '1', 'category' => 'tech'],
+			['id' => '2', 'category' => 'travel'],
+			['id' => '3', 'category' => 'food'],
+			['id' => '4', 'category' => 'sports'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'category:in:tech|travel|food']);
+
+		$this->assertCount(3, $result);
+		$ids = array_column($result, 'id');
+		$this->assertContains('1', $ids);
+		$this->assertContains('2', $ids);
+		$this->assertContains('3', $ids);
+		$this->assertNotContains('4', $ids);
+	}
+
+	public function testInOperatorIsCaseSensitive(): void
+	{
+		$objects = [
+			['id' => '1', 'category' => 'Tech'],
+			['id' => '2', 'category' => 'tech'],
+		];
+
+		// in list uses lowercase "tech" — only exact case matches.
+		$result = $this->filter->filterObjects($objects, ['include' => 'category:in:tech']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('2', $result[0]['id']);
+	}
+
+	public function testNotinOperatorExcludesListMembers(): void
+	{
+		$objects = [
+			['id' => '1', 'status' => 'active'],
+			['id' => '2', 'status' => 'archived'],
+			['id' => '3', 'status' => 'draft'],
+			['id' => '4', 'status' => 'active'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'status:notin:archived|draft']);
+
+		$this->assertCount(2, $result);
+		$ids = array_column($result, 'id');
+		$this->assertContains('1', $ids);
+		$this->assertContains('4', $ids);
+	}
+
+	public function testNotinOperatorOnExclude(): void
+	{
+		$objects = [
+			['id' => '1', 'role' => 'admin'],
+			['id' => '2', 'role' => 'editor'],
+			['id' => '3', 'role' => 'viewer'],
+		];
+
+		// Exclude objects whose role is NOT in the trusted list.
+		$result = $this->filter->filterObjects($objects, ['exclude' => 'role:notin:admin|editor']);
+
+		// "viewer" is not in the list so notin is true → excluded.
+		$this->assertCount(2, $result);
+		$ids = array_column($result, 'id');
+		$this->assertContains('1', $ids);
+		$this->assertContains('2', $ids);
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// Cross-operator — multiple operators in a single include string
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testCrossOperatorContainsAndLte(): void
+	{
+		// Simulates the find_listings fixture: city contains "Austin" AND price ≤ 500000.
+		$objects = [
+			['id' => 'austin-1',     'city' => 'Austin', 'price' => 450000, 'status' => 'active', 'draft' => false],
+			['id' => 'austin-2',     'city' => 'Austin', 'price' => 650000, 'status' => 'active', 'draft' => false],
+			['id' => 'dallas-1',     'city' => 'Dallas', 'price' => 380000, 'status' => 'active', 'draft' => false],
+			['id' => 'austin-draft', 'city' => 'Austin', 'price' => 500000, 'status' => 'active', 'draft' => true],
+		];
+
+		$result = $this->filter->filterObjects($objects, [
+			'include' => 'status:active,city:contains:Austin,price:lte:500000',
+			'exclude' => 'draft:true',
+		]);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('austin-1', $result[0]['id']);
+	}
 }

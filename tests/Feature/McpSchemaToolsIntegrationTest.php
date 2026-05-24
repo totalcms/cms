@@ -13,14 +13,20 @@ use TotalCMS\Support\Config;
  * walks collection → SavedQueryTool dispatches → JSON-RPC response.
  *
  * The `listings` fixture collection uses `mcp.access = "public"` and declares
- * a single schema tool `find_listings` with a required `city` param. Tests
- * cover:
+ * a schema tool `find_listings` with a `city` (contains) + `price` (lte) filter.
+ * Tests cover:
  *
  *   1. find_listings appears in tools/list for public persona.
- *   2. tools/call with valid args returns matching objects + filters out
- *      non-matching city and draft items.
+ *   2. tools/call with city + max_price exercises contains AND lte AND draft-filter
+ *      simultaneously: {city:"Austin", max_price:500000} returns only austin-1.
  *   3. admin-only collection rejects public persona with isError.
  *   4. Collision with a core tool name is skipped at server-build + warns in log.
+ *
+ * Fixture objects:
+ *   austin-1     city=Austin  price=450000  draft=false  → matches (city contains "Austin", price ≤ 500000)
+ *   austin-2     city=Austin  price=650000  draft=false  → excluded (price > 500000)
+ *   dallas-1     city=Dallas  price=380000  draft=false  → excluded (city doesn't contain "Austin")
+ *   austin-draft city=Austin  price=500000  draft=true   → excluded (public persona draft filter)
  *
  * Skip-safe pattern: when MCP is unavailable (non-Pro edition, disabled, or
  * auth gate rejects), the session init returns '' and every test passes
@@ -324,14 +330,22 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 		return;
 	}
 
-	// Call with city=Austin. Expected results:
-	//   austin-1  (Austin, active, draft:false) — MATCHES
-	//   austin-2  (Austin, active, draft:false) — MATCHES
-	//   dallas-1  (Dallas, active, draft:false) — does NOT match city filter
-	//   austin-draft (Austin, active, draft:true) — excluded by public-persona draft filter
+	// Call with city="Austin" AND max_price=500000.
+	//
+	// The find_listings tool uses:
+	//   city:contains:"Austin"   (case-insensitive substring)
+	//   price:lte:500000         (numeric ≤)
+	//   status:eq:"active"       (eq — always active)
+	//   exclude draft:true       (public-persona safety filter)
+	//
+	// Expected results:
+	//   austin-1     city=Austin  price=450000  draft=false  → MATCHES (all three pass)
+	//   austin-2     city=Austin  price=650000  draft=false  → EXCLUDED (price > 500000)
+	//   dallas-1     city=Dallas  price=380000  draft=false  → EXCLUDED (city doesn't contain "Austin")
+	//   austin-draft city=Austin  price=500000  draft=true   → EXCLUDED (public persona draft filter)
 	$response = schemaTestPublicRequest(
 		$this->app,
-		schemaTestToolsCall('find_listings', ['city' => 'Austin']),
+		schemaTestToolsCall('find_listings', ['city' => 'Austin', 'max_price' => 500000]),
 		$sessionId,
 	);
 
@@ -350,8 +364,8 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 	// The SDK wraps the tool handler output in an outer content envelope.
 	// Navigate through: result.content[0].text → {content:[{type,text}]}
 	// → content[0].text → {items:[...], count:N}
-	$outerText   = $result['content'][0]['text'];
-	$toolOutput  = json_decode($outerText, true);
+	$outerText  = $result['content'][0]['text'];
+	$toolOutput = json_decode($outerText, true);
 
 	// Handle both single-wrap and double-wrap SDK serialization patterns.
 	if (is_array($toolOutput) && isset($toolOutput['content'])) {
@@ -369,14 +383,16 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 	$items = $payload['items'];
 	$ids   = array_column($items, 'id');
 
-	// Austin-1 and Austin-2 must appear (active, not draft, city matches).
+	// Only austin-1 must appear: city contains "Austin" AND price ≤ 500000 AND not draft.
 	expect($ids)->toContain('austin-1');
-	expect($ids)->toContain('austin-2');
 
-	// Dallas-1 must NOT appear (different city).
+	// austin-2 must NOT appear (price 650000 > 500000).
+	expect($ids)->not()->toContain('austin-2');
+
+	// dallas-1 must NOT appear (city "Dallas" doesn't contain "Austin").
 	expect($ids)->not()->toContain('dallas-1');
 
-	// Austin-draft must NOT appear (draft:true excluded by public persona).
+	// austin-draft must NOT appear (draft:true excluded by public persona).
 	expect($ids)->not()->toContain('austin-draft');
 
 	// Count must match the returned items array length.

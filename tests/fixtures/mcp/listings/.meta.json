@@ -23,12 +23,17 @@
         "tools": [
             {
                 "name": "find_listings",
-                "description": "Search active listings by city.",
+                "description": "Search active listings by city substring and max price.",
                 "params": {
                     "city": {
                         "type": "string",
-                        "description": "City name (exact match).",
+                        "description": "City name substring (case-insensitive).",
                         "required": true
+                    },
+                    "max_price": {
+                        "type": "number",
+                        "description": "Maximum listing price (inclusive).",
+                        "required": false
                     }
                 },
                 "filters": {
@@ -37,8 +42,12 @@
                         "value": "active"
                     },
                     "city": {
-                        "operator": "eq",
+                        "operator": "contains",
                         "value": "{{params.city}}"
+                    },
+                    "price": {
+                        "operator": "lte",
+                        "value": "{{params.max_price}}"
                     }
                 },
                 "sort": "id:asc",

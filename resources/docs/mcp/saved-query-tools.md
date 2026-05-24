@@ -142,14 +142,14 @@ Specify an `operator` alongside `value` in any filter entry. The default is `eq`
 | `contains` | Substring match (case-insensitive for string fields) |
 | `starts` | Starts with |
 | `ends` | Ends with |
-| `in` | Value is in a comma-separated list |
-| `notin` | Value is not in a comma-separated list |
+| `in` | Value is in a pipe-separated list (`a\|b\|c`) |
+| `notin` | Value is not in a pipe-separated list |
 
 ```json
 "filters": {
   "tag":    { "operator": "contains", "value": "featured" },
   "rating": { "operator": "gte",      "value": 4 },
-  "status": { "operator": "notin",    "value": "draft,archived" }
+  "status": { "operator": "notin",    "value": "draft|archived" }
 }
 ```
 
