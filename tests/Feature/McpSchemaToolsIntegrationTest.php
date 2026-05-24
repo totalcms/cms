@@ -610,6 +610,16 @@ it('schema-vs-schema collision: find_active defined in two collections is absent
 	// Install the parts fixture (also declares find_active).
 	installPartsFixture();
 
+	// CollectionRepository::listAllCollections() caches via CacheManager's
+	// `collections_list` key, invalidated only on saveCollection / deleteCollection.
+	// Both fixture installs bypass those (direct file_put_contents) — explicitly
+	// invalidate so the registrar sees the new fixture + the edited listings meta.
+	// Without this, APCu-backed caches on CI return stale state and the
+	// schema-vs-schema collision is silently undetectable.
+	/** @var \TotalCMS\Domain\Cache\CacheManager $cacheManager */
+	$cacheManager = $this->app->getContainer()->get(\TotalCMS\Domain\Cache\CacheManager::class);
+	$cacheManager->clearComputedData('collections_list');
+
 	// Re-bootstrap so SchemaToolRegistrar sees both collections.
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
