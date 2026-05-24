@@ -60,6 +60,8 @@ class Config
 	public array $builder = [];
 	/** @var array<string,mixed> */
 	public array $mcp = [];
+	/** @var array<string,mixed> */
+	public array $oauth = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -106,6 +108,7 @@ class Config
 		$this->pushnotif          = is_array($settings['pushnotif'] ?? null) ? $settings['pushnotif'] : [];
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
 		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
+		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

@@ -53,6 +53,20 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\ResourceServer;
+use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenRepository;
+use TotalCMS\Domain\OAuth\Adapter\LeagueAuthCodeRepository;
+use TotalCMS\Domain\OAuth\Adapter\LeagueClientRepository;
+use TotalCMS\Domain\OAuth\Adapter\LeagueRefreshTokenRepository;
+use TotalCMS\Domain\OAuth\Adapter\LeagueScopeRepository;
+use TotalCMS\Domain\OAuth\Adapter\LeagueUserRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthDiscoveryProvider;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
+use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
@@ -626,4 +640,39 @@ return [
 				->createLogger('mcp-notification'),
 		);
 	},
+
+	// === OAuth Phase 4 ===
+
+	OAuthScopeRegistry::class => fn (): OAuthScopeRegistry => new OAuthScopeRegistry(),
+
+	OAuthClientRepository::class => fn (ContainerInterface $container): OAuthClientRepository => new OAuthClientRepository(
+		$container->get(Config::class)->datadir . '/.system/oauth-clients.json',
+	),
+
+	OAuthGrantRepository::class => fn (ContainerInterface $container): OAuthGrantRepository => new OAuthGrantRepository(
+		$container->get(Config::class)->datadir . '/.system/oauth-grants.json',
+	),
+
+	OAuthRevocationList::class => fn (ContainerInterface $container): OAuthRevocationList => new OAuthRevocationList(
+		$container->get(CacheManager::class),
+		3600, // TODO: derive from $config->oauth['accessTokenTtl'] DateInterval if needed
+	),
+
+	// The six league adapters — constructor args are all registered types so autowire works.
+	LeagueClientRepository::class       => \DI\autowire(),
+	LeagueAccessTokenRepository::class  => \DI\autowire(),
+	LeagueRefreshTokenRepository::class => \DI\autowire(),
+	LeagueAuthCodeRepository::class     => \DI\autowire(),
+	LeagueScopeRepository::class        => \DI\autowire(),
+	LeagueUserRepository::class         => \DI\autowire(),
+
+	OAuthServerFactory::class => \DI\autowire(),
+
+	AuthorizationServer::class => fn (ContainerInterface $container): AuthorizationServer =>
+		$container->get(OAuthServerFactory::class)->buildAuthorizationServer(),
+
+	ResourceServer::class => fn (ContainerInterface $container): ResourceServer =>
+		$container->get(OAuthServerFactory::class)->buildResourceServer(),
+
+	OAuthDiscoveryProvider::class => \DI\autowire(),
 ];

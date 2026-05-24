@@ -392,6 +392,18 @@ $settings['mcp'] = [
 	'subscriptionsEnabled' => true,
 ];
 
+// OAuth 2.0 Server
+// RSA key pair for signing access tokens (JWTs) and encrypting auth code payloads.
+// Generate with: tcms oauth:setup (creates keys at the paths below).
+// accessTokenTtl / refreshTokenTtl / authCodeTtl are PHP DateInterval specs.
+$settings['oauth'] = [
+	'signingKeyPath'  => $settings['datadir'] . '/.system/oauth-keys/private.key',
+	'publicKeyPath'   => $settings['datadir'] . '/.system/oauth-keys/public.key',
+	'accessTokenTtl'  => 'PT1H',   // 1 hour
+	'refreshTokenTtl' => 'P30D',   // 30 days
+	'authCodeTtl'     => 'PT10M',  // 10 minutes
+];
+
 // https://www.php.net/manual/en/timezones.php
 // DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();

@@ -1288,4 +1288,13 @@ return [
 	'orphan.page_of'                => 'Page {page} of {total} ({entries} entries)',
 	'orphan.prev'                   => 'Prev',
 	'orphan.next'                   => 'Next',
+
+	// ── OAuth Consent ───────────────────────────────────────────────────────
+	'oauth.consent.title'               => 'Anwendung autorisieren',
+	'oauth.consent.signed_in_as'        => 'Sie sind angemeldet als: %user%',
+	'oauth.consent.requested_permissions' => 'Angeforderte Berechtigungen',
+	'oauth.consent.allow'               => 'Erlauben',
+	'oauth.consent.deny'                => 'Abbrechen',
+	'oauth.error.title'                 => 'Autorisierungsfehler',
+	'oauth.error.return'                => 'Zurück zu %site%',
 ];

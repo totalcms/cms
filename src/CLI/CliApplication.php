@@ -49,6 +49,9 @@ class CliApplication
 		$app->addCommand(new Command\Mcp\McpStatusCommand($totalcms));
 		$app->addCommand(new Command\Mcp\McpTestCommand($totalcms));
 
+		// OAuth commands
+		$app->addCommand(new Command\OAuth\OAuthSetupCommand($totalcms));
+
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));
 		$app->addCommand(new Command\SchemaGetCommand($totalcms));
