@@ -6,8 +6,11 @@ namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -20,20 +23,29 @@ final class SchemaToolsTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $fetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $saver;
 	private \PHPUnit\Framework\MockObject\MockObject $remover;
+	private \PHPUnit\Framework\MockObject\MockObject $objectSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
 	private SchemaTools $tool;
 
 	protected function setUp(): void
 	{
-		$this->lister  = $this->createMock(SchemaLister::class);
-		$this->fetcher = $this->createMock(SchemaFetcher::class);
-		$this->saver   = $this->createMock(SchemaSaver::class);
-		$this->remover = $this->createMock(SchemaRemover::class);
+		$this->lister            = $this->createMock(SchemaLister::class);
+		$this->fetcher           = $this->createMock(SchemaFetcher::class);
+		$this->saver             = $this->createMock(SchemaSaver::class);
+		$this->remover           = $this->createMock(SchemaRemover::class);
+		$this->objectSaver       = $this->createMock(ObjectSaver::class);
+		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
 
 		$this->tool = new SchemaTools(
 			$this->lister,
 			$this->fetcher,
 			$this->saver,
 			$this->remover,
+			$this->objectSaver,
+			$this->collectionFetcher,
+			$this->collectionSaver,
 		);
 	}
 

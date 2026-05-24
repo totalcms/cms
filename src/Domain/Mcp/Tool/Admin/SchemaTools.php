@@ -6,8 +6,12 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\RequestContext;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaRemover;
@@ -36,6 +40,9 @@ readonly class SchemaTools
 		private SchemaFetcher $fetcher,
 		private SchemaSaver $saver,
 		private SchemaRemover $remover,
+		private ObjectSaver $objectSaver,
+		private CollectionFetcher $collectionFetcher,
+		private CollectionSaver $collectionSaver,
 	) {
 	}
 
@@ -88,10 +95,10 @@ readonly class SchemaTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'create_schema',
-			description: 'Create a new schema. Requires id + properties. Errors if the id collides with an existing or reserved schema. Use update_schema to modify an existing schema.',
+			description: 'Create a new schema. Requires id + properties. Errors if the id collides with an existing or reserved schema. Use update_schema to modify an existing schema. Pass seedObjects to populate the new collection with initial content — the call emits SSE progress notifications while seeding so callers can track multi-step progress.',
 			access: 'admin',
 			handler: $this->createHandler(...),
-			inputSchema: $this->mutationInputSchema(),
+			inputSchema: $this->createInputSchema(),
 			annotations: new ToolAnnotations(
 				title: 'Create Schema',
 				readOnlyHint: false,
@@ -183,13 +190,27 @@ readonly class SchemaTools
 	}
 
 	/**
-	 * @param array<string,array<string,mixed>> $properties
-	 * @param array<string,mixed>               $extra      Additional schema fields (required, index, inheritFrom, description, category, formgrid)
+	 * Create a new schema, optionally seeding initial objects into the collection.
+	 *
+	 * When $seedObjects is non-empty the handler emits two SSE progress
+	 * notifications via the SDK's ClientGateway so callers can track multi-step
+	 * progress. The gateway's progress() method is a no-op when the client did
+	 * not include a progressToken in the request meta, so non-streaming callers
+	 * are unaffected.
+	 *
+	 * @param array<string,array<string,mixed>>   $properties
+	 * @param array<string,mixed>                 $extra       Additional schema fields (required, index, inheritFrom, description, category, formgrid)
+	 * @param array<int,mixed>|null               $seedObjects Optional seed objects to create in the new collection
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function createHandler(string $id, array $properties, array $extra = []): array
-	{
+	public function createHandler(
+		string $id,
+		array $properties,
+		array $extra = [],
+		?array $seedObjects = null,
+		?RequestContext $ctx = null,
+	): array {
 		$schemaData       = $extra;
 		$schemaData['id'] = $id;
 		// Properties array passed by the agent wins over anything in $extra.
@@ -205,7 +226,56 @@ readonly class SchemaTools
 			), $e->getCode(), $e);
 		}
 
-		return $saved->toArray();
+		$result = $saved->toArray();
+
+		// Seed initial objects when requested — emits progress notifications so
+		// streaming clients can show step-by-step feedback. Non-streaming callers
+		// (no progressToken) pass through the progress() calls silently.
+		$seededCount = 0;
+		if ($seedObjects !== null && $seedObjects !== []) {
+			// Checkpoint 1: schema is on disk, about to seed objects.
+			$ctx?->getClientGateway()->progress(50.0, 100.0, 'schema persisted');
+
+			// Ensure the collection exists before writing objects. Try to
+			// fetch first (reserved or already-created custom), then create
+			// a new custom collection tied to this schema if not found.
+			if (!$this->collectionFetcher->collectionExists($id)) {
+				try {
+					$this->collectionSaver->saveCollection([
+						'id'     => $id,
+						'schema' => $id,
+					]);
+				} catch (\DomainException) {
+					// Already exists — either reserved schema's auto-collection or a
+					// concurrent create. Other CollectionSaver failures (storage error,
+					// permission, etc.) propagate so ObjectSaver doesn't run against an
+					// invalid state.
+				}
+			}
+
+			foreach ($seedObjects as $objectData) {
+				if (!is_array($objectData)) {
+					continue;
+				}
+				try {
+					$this->objectSaver->saveObject($id, $objectData);
+					$seededCount++;
+				} catch (\Throwable $e) {
+					throw new ToolCallException(sprintf(
+						'Could not seed object into "%s": %s',
+						$id,
+						$e->getMessage(),
+					), 0, $e);
+				}
+			}
+
+			// Checkpoint 2: all seed objects written.
+			$ctx?->getClientGateway()->progress(100.0, 100.0, 'seed objects created');
+
+			$result['seeded'] = $seededCount;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -248,6 +318,28 @@ readonly class SchemaTools
 			'id'      => $id,
 			'deleted' => $deleted,
 		];
+	}
+
+	/**
+	 * Input schema for create_schema — extends the shared mutation shape with an
+	 * optional seedObjects array for initial content seeding.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function createInputSchema(): array
+	{
+		$base = $this->mutationInputSchema();
+
+		$base['properties']['seedObjects'] = [
+			'type'        => 'array',
+			'description' => 'Optional list of objects to create in the new collection immediately after the schema is saved. When provided, the call emits SSE progress notifications (checkpoint 1: schema persisted; checkpoint 2: seed objects created). Each entry is a plain object whose keys match the schema properties.',
+			'items'       => [
+				'type'                 => 'object',
+				'additionalProperties' => true,
+			],
+		];
+
+		return $base;
 	}
 
 	/**
