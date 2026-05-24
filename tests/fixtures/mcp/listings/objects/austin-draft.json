@@ -1,0 +1,8 @@
+{
+    "id": "austin-draft",
+    "city": "Austin",
+    "price": 500000,
+    "status": "active",
+    "draft": true,
+    "title": "Coming Soon: Condo in East Austin"
+}

@@ -1,0 +1,50 @@
+{
+    "id": "listings",
+    "schema": "text",
+    "name": "Listings",
+    "description": "Real estate listings test fixture for Phase 3 E2E smoke.",
+    "url": "/listings/{id}",
+    "category": "",
+    "labelPlural": "Listings",
+    "labelSingular": "Listing",
+    "groups": [],
+    "publicOperations": [],
+    "sortBy": "id",
+    "reverseSort": false,
+    "prettyUrl": false,
+    "queueRebuildOnSave": false,
+    "count": 4,
+    "totalObjects": 4,
+    "lastUpdated": "2026-01-01T00:00:00Z",
+    "mcp": {
+        "access": "public",
+        "description": "Real estate listings test fixture for Phase 3 E2E smoke.",
+        "resource": true,
+        "tools": [
+            {
+                "name": "find_listings",
+                "description": "Search active listings by city.",
+                "params": {
+                    "city": {
+                        "type": "string",
+                        "description": "City name (exact match).",
+                        "required": true
+                    }
+                },
+                "filters": {
+                    "status": {
+                        "operator": "eq",
+                        "value": "active"
+                    },
+                    "city": {
+                        "operator": "eq",
+                        "value": "{{params.city}}"
+                    }
+                },
+                "sort": "id:asc",
+                "limit": 20,
+                "format": "markdown"
+            }
+        ]
+    }
+}
