@@ -57,7 +57,9 @@ $context->registerMcpTool(
 );
 ```
 
-`access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (default), `public`, or `authenticated` (Phase 4).
+`access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (default), `public`, or `authenticated`.
+
+**Important — `authenticated` is a Phase 4 capability.** Registering `access: 'authenticated'` for a tool, resource, or template causes it to be silently invisible to all clients until Phase 4 ships OAuth and scoped-token support. No error is raised; the tool simply never appears in `tools/list`. Use `'admin'` or `'public'` for all current deployments.
 
 The handler closure is invoked by the MCP SDK using PHP reflection on its named parameters — define typed `string` / `int` / `bool` / `array` params that map one-to-one with your `inputSchema` properties.
 
@@ -97,6 +99,8 @@ $context->registerMcpResourceTemplate(
 ```
 
 Use a concrete resource when there's a fixed, enumerable URI (a dashboard view, an "all invoices" rollup). Use a template when the URI is parameterized by an id, slug, or other lookup key — templates avoid enumerating every possible URI in `resources/list` and are how core publishes `tcms://{collection}/{id}`.
+
+As with tools, `access: 'authenticated'` on a resource or template makes it invisible to all clients until Phase 4 ships. Use `'admin'` or `'public'` for current deployments.
 
 The template handler's named parameters map one-to-one with `{name}` placeholders in `uriTemplate`. `acme://invoices/{id}` → `fn (string $id)`. `acme://customers/{customerId}/orders/{orderId}` → `fn (string $customerId, string $orderId)`.
 

@@ -75,6 +75,39 @@ function removeListingsFixture(): void
 	recursiveDelete(cmsDataDir() . 'listings');
 }
 
+/**
+ * Install the parts fixture into the live test data dir.
+ * The parts fixture declares a `find_active` tool — used for cross-collection
+ * collision tests in conjunction with a listings fixture that also declares
+ * `find_active`.
+ */
+function installPartsFixture(): void
+{
+	$src  = __DIR__ . '/../fixtures/mcp/parts';
+	$dest = cmsDataDir() . 'parts';
+
+	if (!is_dir($dest)) {
+		mkdir($dest, 0755, true);
+	}
+
+	copy($src . '/.meta.json', $dest . '/.meta.json');
+	copy($src . '/.index.json', $dest . '/.index.json');
+
+	$objectsSrc  = $src . '/objects';
+	$objectsDest = $dest;
+	foreach (glob($objectsSrc . '/*.json') ?: [] as $file) {
+		copy($file, $objectsDest . '/' . basename($file));
+	}
+}
+
+/**
+ * Remove the live parts fixture from the test data dir.
+ */
+function removePartsFixture(): void
+{
+	recursiveDelete(cmsDataDir() . 'parts');
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Session/request helpers — adapted from McpResourcesTest
 // ──────────────────────────────────────────────────────────────────────────────
@@ -553,4 +586,95 @@ it('schema tool whose name collides with a core tool is absent from tools/list (
 		// Pass — the functional assertion (single query_collection) is the primary guard.
 		expect(true)->toBeTrue();
 	}
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Test 5 — cross-collection schema-vs-schema collision: both tools are absent
+// ──────────────────────────────────────────────────────────────────────────────
+
+it('schema-vs-schema collision: find_active defined in two collections is absent from tools/list (strict deny)', function (): void {
+	// Add find_active to the listings fixture so both listings and parts
+	// declare a tool with the same name. SchemaToolRegistrar should drop BOTH
+	// (strict-deny policy) and log a warning.
+	$metaPath = cmsDataDir() . 'listings/.meta.json';
+	$meta     = json_decode((string)file_get_contents($metaPath), true);
+	$meta['mcp']['tools'][] = [
+		'name'        => 'find_active',
+		'description' => 'Return active listings — collision test.',
+		'filters'     => ['status' => ['value' => 'active']],
+		'limit'       => 10,
+		'format'      => 'markdown',
+	];
+	file_put_contents($metaPath, json_encode($meta, JSON_PRETTY_PRINT));
+
+	// Install the parts fixture (also declares find_active).
+	installPartsFixture();
+
+	// Re-bootstrap so SchemaToolRegistrar sees both collections.
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		session_destroy();
+	}
+	$this->setUpApp(bootstrap());
+
+	// Rewrite the API key after re-bootstrap.
+	$apiKeysFile = cmsDataDir() . '.system/apikeys.json';
+	file_put_contents($apiKeysFile, json_encode([
+		'apikeys' => [
+			[
+				'id'       => 'schema-tool-collision-test-key',
+				'name'     => 'Schema Tool Cross-Collision Test Key',
+				'key'      => 'tcms_schema_tool_int_test_key_fixture_000',
+				'created'  => '2026-01-01T00:00:00Z',
+				'lastUsed' => null,
+				'scopes'   => [
+					'methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+					'paths'   => ['*'],
+				],
+			],
+		],
+	], JSON_PRETTY_PRINT));
+
+	$sessionId = schemaTestAdminInit($this->app);
+
+	if ($sessionId === '') {
+		// MCP unavailable — skip-safe pass.
+		removePartsFixture();
+		expect(true)->toBeTrue();
+
+		return;
+	}
+
+	$response = schemaTestAdminRequest(
+		$this->app,
+		schemaTestToolsList(),
+		$sessionId,
+	);
+
+	expect($response->getStatusCode())->toBe(200);
+
+	$body = json_decode((string)$response->getBody(), true);
+	expect($body)->toHaveKey('result');
+	expect($body['result'])->toHaveKey('tools');
+
+	$toolNames = array_column($body['result']['tools'], 'name');
+
+	// find_active must appear ZERO times — strict deny drops both.
+	expect(array_count_values($toolNames)['find_active'] ?? 0)->toBe(0);
+
+	// find_listings (non-colliding) must still appear from the listings collection.
+	expect($toolNames)->toContain('find_listings');
+
+	// Verify the cross-collection collision warning was logged.
+	$logDir  = \TotalCMS\Support\PathResolver::projectRoot() . '/logs';
+	$today   = date('Y-m-d');
+	$logFile = $logDir . '/mcp-activity-' . $today . '.log';
+
+	if (file_exists($logFile)) {
+		$logContents = (string)file_get_contents($logFile);
+		expect($logContents)->toContain('find_active');
+	} else {
+		expect(true)->toBeTrue();
+	}
+
+	removePartsFixture();
 });

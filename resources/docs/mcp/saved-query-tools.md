@@ -40,7 +40,7 @@ Each entry in the array is an object with the following fields. Only `name` and 
 
 | Field | Required | Type | Notes |
 |---|---|---|---|
-| `name` | yes | string | Snake_case `^[a-z][a-z0-9_]*$`, max 64 characters. Globally unique across all tools. |
+| `name` | yes | string | Snake_case `^[a-z][a-z0-9_]*$`. The registered name (base + any `mcp.toolPrefix`) must be ≤ 64 characters; the save-time validator enforces the full limit. Globally unique across all tools. |
 | `description` | yes | string | Min 1, max 1024 characters. Describe what the tool returns — not how an agent should use it. |
 | `params` | no | object | Typed caller parameters (see [Parameterized tools](#parameterized-tools)). Omit for fixed-filter tools. |
 | `filters` | no | object | Field-name → `{value, operator?}` map. Filter values may reference `{{params.X}}` placeholders. |
@@ -50,6 +50,8 @@ Each entry in the array is an object with the following fields. Only `name` and 
 | `include` | no | string | REST-style include filter — escape hatch for filter shapes the `filters` object can't express. |
 | `exclude` | no | string | REST-style exclude filter — escape hatch. |
 | `format` | no | enum | Output format for rich-text fields: `markdown` (default), `html`, or `text`. |
+
+The `mcp-tool.json` JSON Schema enforces `maxLength: 64` on the base `name` field only — it cannot dynamically account for the site's configured `mcp.toolPrefix`. The save-time validator performs the full prefix-inclusive check: `strlen(toolPrefix + "_" + name) ≤ 64`. If a site has a 10-character prefix configured, base names must be ≤ 54 characters. The error message will state both the prefix in use and the resulting length.
 
 ## Fixed-filter tools
 

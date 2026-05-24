@@ -19,7 +19,7 @@ final readonly class McpToolsValidationResult
 	private const STATE_FAILED       = 'failed';
 
 	/**
-	 * @param list<array{name:string,source:string}> $warnings Non-blocking collision notices.
+	 * @param list<array{type:string,name?:string,source?:string,tool?:string,message?:string}> $warnings Non-blocking notices.
 	 */
 	private function __construct(
 		public string $state,
@@ -29,7 +29,9 @@ final readonly class McpToolsValidationResult
 	) {
 	}
 
-	/** @param list<array{name:string,source:string}> $warnings */
+	/**
+	 * @param list<array{type:string,name?:string,source?:string,tool?:string,message?:string}> $warnings
+	 */
 	public static function ok(array $warnings = []): self
 	{
 		return new self(self::STATE_OK, -1, '', $warnings);
@@ -60,7 +62,15 @@ final readonly class McpToolsValidationResult
 		return $this->state === self::STATE_FAILED;
 	}
 
-	/** @return list<array{name:string,source:string}> */
+	/**
+	 * Returns all non-blocking warnings.
+	 *
+	 * Two shapes are present in the list:
+	 *  - Collision warning: `{type: 'collision', name: string, source: string}`
+	 *  - Placeholder warning: `{type: 'placeholder', tool: string, message: string}`
+	 *
+	 * @return list<array{type:string,name?:string,source?:string,tool?:string,message?:string}>
+	 */
 	public function warnings(): array
 	{
 		return $this->warnings;

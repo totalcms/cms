@@ -675,4 +675,79 @@ final class ObjectFilterTest extends TestCase
 		$this->assertCount(1, $result);
 		$this->assertSame('austin-1', $result[0]['id']);
 	}
+
+	// ─────────────────────────────────────────────────────────────────────────────
+	// matchesString legacy wildcard syntax — regression guard
+	//
+	// ObjectFilter::matchesString() supports legacy wildcard patterns used by
+	// existing T3 callers building filter strings with `*` prefix/suffix.
+	// These are processed in the `eq` inline path BEFORE the operator-coverage
+	// refactor routes non-eq operators through applyOperator(). A regression
+	// in matchesString() would silently break callers that rely on this syntax.
+	// ─────────────────────────────────────────────────────────────────────────────
+
+	public function testWildcardPrefixMatchesStartsWith(): void
+	{
+		// "value*" — field must start with "value" (case-insensitive)
+		$objects = [
+			['id' => '1', 'slug' => 'article-intro'],
+			['id' => '2', 'slug' => 'news-brief'],
+			['id' => '3', 'slug' => 'article-review'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'slug:article*']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testWildcardSuffixMatchesEndsWith(): void
+	{
+		// "*value" — field must end with "value" (case-insensitive)
+		$objects = [
+			['id' => '1', 'slug' => 'intro-article'],
+			['id' => '2', 'slug' => 'news-brief'],
+			['id' => '3', 'slug' => 'review-article'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'slug:*article']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testWildcardBothSidesMatchesContains(): void
+	{
+		// "*value*" — field must contain "value" (case-insensitive)
+		$objects = [
+			['id' => '1', 'title' => 'Getting started with PHP'],
+			['id' => '2', 'title' => 'TypeScript deep dive'],
+			['id' => '3', 'title' => 'PHP best practices guide'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'title:*php*']);
+
+		$this->assertCount(2, $result);
+		$this->assertSame('1', $result[0]['id']);
+		$this->assertSame('3', $result[1]['id']);
+	}
+
+	public function testWildcardNotShadowedByOperatorPath(): void
+	{
+		// Confirm that a two-part filter value containing a wildcard (no explicit
+		// operator) still routes through matchesString() and is NOT swallowed by
+		// the applyOperator() path (which only fires for three-part filters).
+		$objects = [
+			['id' => '1', 'category' => 'tech-news'],
+			['id' => '2', 'category' => 'sports'],
+		];
+
+		// "category:tech*" is a two-part filter → op=eq → matchesString()
+		$result = $this->filter->filterObjects($objects, ['include' => 'category:tech*']);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('1', $result[0]['id']);
+	}
 }

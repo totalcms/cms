@@ -184,6 +184,81 @@ it('returns 200 with a warning when mcp.tools has a name colliding with a core t
 	expect($payload['meta']['warnings'][0])->toContain('core/extension');
 });
 
+it('returns 200 with a warning when a filter value contains an unrecognized {{...}} placeholder', function (): void {
+	$base = mcpToolsCollectionBase();
+	$id   = $base['id'];
+
+	// The customer mistakenly writes {{this_month}} thinking it will be
+	// substituted at runtime — only {{params.X}} is supported.
+	$toolWithBadPlaceholder = [
+		'name'        => 'recent_items',
+		'description' => 'Items from this month.',
+		'filters'     => [
+			'month' => ['value' => '{{this_month}}'],   // Unrecognized placeholder.
+		],
+	];
+
+	$payload        = $base;
+	$payload['mcp'] = [
+		'access' => 'admin',
+		'tools'  => [$toolWithBadPlaceholder],
+	];
+
+	$response = putJson('/api/collections/' . $id, $payload);
+
+	// Save must succeed — the warning is non-blocking.
+	expect($response->getStatusCode())->toBe(200);
+
+	$body        = (string)$response->getBody();
+	$jsonPayload = json_decode($body, true);
+
+	expect($jsonPayload)->toBeArray();
+	expect($jsonPayload)->toHaveKey('meta');
+	expect($jsonPayload['meta'])->toHaveKey('warnings');
+	expect($jsonPayload['meta']['warnings'])->toBeArray()->not->toBeEmpty();
+
+	// At least one warning should mention the unrecognized placeholder.
+	$warningText = implode(' ', $jsonPayload['meta']['warnings']);
+	expect($warningText)->toContain('this_month');
+	expect($warningText)->toContain('params');
+});
+
+it('rejects a tool whose base name plus toolPrefix exceeds 64 characters with a 400 response', function (): void {
+	$base = mcpToolsCollectionBase();
+	$id   = $base['id'];
+
+	// Configure a 7-char prefix ("bistro_") — leaves only 57 chars for the base.
+	// A 58-char base name will push the registered name to 65 chars → must fail.
+	/** @var \TotalCMS\Support\Config $config */
+	$config = $this->app->getContainer()->get(\TotalCMS\Support\Config::class);
+	$config->mcp['toolPrefix'] = 'bistro';   // resolves to "bistro_" (7 chars)
+
+	// 58 chars: "find_listings_by_city_and_zip_with_extra_padding_text_here" (let us count)
+	// bistro_ (7) + name (57) = 64 — exact, OK.  bistro_ (7) + name (58) = 65 — fail.
+	$longName = 'find_listings_by_city_zip_region_price_type_beds_ba_pets_x'; // 58 chars
+	expect(strlen($longName))->toBe(58);
+
+	$toolWithLongName = [
+		'name'        => $longName,
+		'description' => 'A tool whose base name is 58 chars, which overflows when prefixed.',
+	];
+
+	$payload        = $base;
+	$payload['mcp'] = [
+		'access' => 'admin',
+		'tools'  => [$toolWithLongName],
+	];
+
+	$response = putJson('/api/collections/' . $id, $payload);
+	expect($response->getStatusCode())->toBe(400);
+
+	$body = (string)$response->getBody();
+	// Must mention the overflow in the message.
+	expect($body)->toContain('Tool definition #1');
+	// Should mention the registered name or the limit.
+	expect($body)->toContain('64');
+});
+
 it('CollectionUpdateAction uses the route-param collection id, not body id', function (): void {
 	$base = mcpToolsCollectionBase();
 	$id   = $base['id'];

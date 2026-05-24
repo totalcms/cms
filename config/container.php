@@ -538,11 +538,14 @@ return [
 
 	// McpToolsValidator needs an explicit definition so it gets a logger bound
 	// to the mcp-activity log channel (same as SchemaToolRegistrar).
+	// Config is injected so the prefix-inclusive 64-char length check can
+	// read mcp.toolPrefix at save time.
 	McpToolsValidator::class => fn (ContainerInterface $container): McpToolsValidator => new McpToolsValidator(
 		$container->get(ToolRegistry::class),
 		$container->get(LoggerFactory::class)
 			->addFileHandler('mcp-activity.log', level: Level::Debug)
 			->createLogger('mcp-tools-validator'),
+		$container->get(Config::class),
 	),
 
 	// SchemaToolRegistrar needs an explicit definition so it gets the same

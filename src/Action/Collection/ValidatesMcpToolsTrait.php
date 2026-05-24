@@ -75,10 +75,17 @@ trait ValidatesMcpToolsTrait
 		$meta = [];
 		if ($result->warnings() !== []) {
 			$meta['warnings'] = array_map(
-				fn (array $w): string => $translator->trans('schema.mcp.tools_collision_warning', [
-					'{name}'   => $w['name'],
-					'{source}' => $w['source'],
-				]),
+				function (array $w) use ($translator): string {
+					if ($w['type'] === 'placeholder') {
+						return (string)($w['message'] ?? 'Tool has an unrecognized {{...}} placeholder in a filter value.');
+					}
+
+					// Default: collision warning.
+					return $translator->trans('schema.mcp.tools_collision_warning', [
+						'{name}'   => (string)($w['name'] ?? ''),
+						'{source}' => (string)($w['source'] ?? ''),
+					]);
+				},
 				$result->warnings(),
 			);
 		}
