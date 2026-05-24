@@ -27,7 +27,8 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  */
 final class SchemaToolRegistrar
 {
-	private bool $registered = false;
+	/** @var list<string> Tool names this registrar contributed in previous register() calls */
+	private array $contributedNames = [];
 
 	public function __construct(
 		private readonly CollectionRepository $collectionRepository,
@@ -38,11 +39,15 @@ final class SchemaToolRegistrar
 
 	public function register(ToolRegistry $registry): void
 	{
-		if ($this->registered) {
-			return;
+		// Re-scanning collections on each call is idempotent + picks up
+		// mid-process data changes (tests that mutate mcp.tools mid-suite,
+		// worker-mode setups that survive multiple requests, etc.).
+		// Unregister what we contributed last time so re-scan starts clean
+		// without producing "already registered" collision warnings.
+		foreach ($this->contributedNames as $name) {
+			$registry->unregister($name);
 		}
-		$this->registered = true;
-
+		$this->contributedNames = [];
 
 		// Pre-compute existing names for collision detection. Anything already in
 		// the registry (core + extension) at this point wins; schema tools yield.
@@ -102,6 +107,12 @@ final class SchemaToolRegistrar
 					]);
 					// Remove the first registration too — strict deny.
 					$registry->unregister($definition->name);
+					// Drop from our contributed list so subsequent register() calls
+					// don't try to unregister something that's no longer there.
+					$this->contributedNames = array_values(array_diff(
+						$this->contributedNames,
+						[$definition->name],
+					));
 					continue;
 				}
 
@@ -134,6 +145,7 @@ final class SchemaToolRegistrar
 				}
 
 				$seenSchemaNames[$definition->name] = $collection->id;
+				$this->contributedNames[]           = $definition->name;
 			}
 		}
 	}
