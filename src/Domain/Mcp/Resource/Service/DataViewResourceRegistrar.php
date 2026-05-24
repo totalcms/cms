@@ -97,7 +97,7 @@ readonly class DataViewResourceRegistrar
 	{
 		return match ($access) {
 			'public'        => 'public',
-			'authenticated' => 'admin', // 3.5: no distinct authenticated persona for resources
+			'authenticated' => 'authenticated',
 			default         => 'admin',
 		};
 	}

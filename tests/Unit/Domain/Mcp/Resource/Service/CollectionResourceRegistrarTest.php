@@ -147,7 +147,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 		$this->assertSame('admin', $template->access);
 	}
 
-	public function testAuthenticatedAccessIsNormalizedToAdmin(): void
+	public function testAuthenticatedAccessRegistersWithAuthenticatedAccess(): void
 	{
 		$collection = $this->makeCollection('gated', 'Gated', ['access' => 'authenticated', 'resource' => true]);
 
@@ -163,11 +163,11 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resource = $registry->get('tcms://gated/');
 		$this->assertNotNull($resource);
-		$this->assertSame('admin', $resource->access);
+		$this->assertSame('authenticated', $resource->access);
 
 		$template = $registry->getTemplate('tcms://gated/{id}');
 		$this->assertNotNull($template);
-		$this->assertSame('admin', $template->access);
+		$this->assertSame('authenticated', $template->access);
 	}
 
 	public function testDescriptionFallbackWhenNoneProvided(): void

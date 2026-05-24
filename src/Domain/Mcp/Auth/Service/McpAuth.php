@@ -13,12 +13,19 @@ use TotalCMS\Support\Config;
 /**
  * Resolves the caller persona for an MCP request.
  *
- * Authentication is delegated to ApiKeyAuthenticator, which validates the key
- * against the request's method + path using the standard scope model. For an
- * MCP request to succeed with admin persona, the key's scopes must allow POST
- * (or GET) on `/mcp`. That means existing "All endpoints" (paths: ['*']) keys
- * automatically grant MCP access, while "specific" keys must include `/mcp` in
- * their paths — same model the REST API uses.
+ * Resolution order:
+ *   1. OAuth Bearer — OAuthBearerMiddleware (mounted upstream) validates the
+ *      JWT and sets `oauth_scopes` as a request attribute. McpAuth reads that
+ *      attribute; it does not touch the ResourceServer directly. Bearer takes
+ *      precedence over all other checks because the middleware already paid the
+ *      validation cost. A token with at least one `mcp:*` scope resolves to
+ *      AUTHENTICATED; a valid token with no `mcp:*` scopes throws
+ *      insufficient_scope.
+ *   2. API key — ApiKeyAuthenticator validates the X-API-Key / Authorization
+ *      header against stored keys and path/method scopes. A valid key resolves
+ *      to ADMIN.
+ *   3. Anonymous — resolves to PUBLIC_ when mcp.publicAccess is true; throws
+ *      login_required otherwise.
  *
  * When `mcp.publicAccess` is false in config, anonymous callers are rejected
  * with 401 rather than resolved to the public persona — that's the master
@@ -34,6 +41,40 @@ readonly class McpAuth
 
 	public function resolvePersona(ServerRequestInterface $request): McpPersona
 	{
+		// ── 1. OAuth Bearer path ────────────────────────────────────────────────
+		// OAuthBearerMiddleware (upstream) validates the JWT and sets oauth_scopes
+		// on the request when a Bearer header is present. We read the attribute
+		// rather than calling ResourceServer directly — single responsibility.
+		$oauthScopes = $request->getAttribute('oauth_scopes');
+		if (is_array($oauthScopes)) {
+			// League may pass Scope entity objects or plain strings depending on
+			// the version; normalise to a list<string>.
+			$scopes = array_values(array_map(
+				static fn (mixed $s): string => is_object($s) && method_exists($s, 'getIdentifier')
+					? (string) $s->getIdentifier()
+					: (string) $s,
+				$oauthScopes,
+			));
+
+			$hasMcpScope = false;
+			foreach ($scopes as $scope) {
+				if (str_starts_with($scope, 'mcp:')) {
+					$hasMcpScope = true;
+					break;
+				}
+			}
+
+			if (!$hasMcpScope) {
+				throw new McpAuthException(
+					'OAuth token lacks an mcp:* scope required for MCP access.',
+					reason: 'insufficient_scope',
+				);
+			}
+
+			return McpPersona::AUTHENTICATED;
+		}
+
+		// ── 2. API key path ─────────────────────────────────────────────────────
 		if (!$this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
 			if (!(bool)($this->config->mcp['publicAccess'] ?? false)) {
 				throw new McpAuthException(

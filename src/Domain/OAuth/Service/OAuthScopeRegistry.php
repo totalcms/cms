@@ -100,14 +100,14 @@ final class OAuthScopeRegistry
 				identifier:    'mcp:tools',
 				description:   'Call AI tools on your site',
 				impliedPaths:  [],
-				mcpOperations: ['tools/call', 'tools/list'],
+				mcpOperations: ['initialize', 'tools/call', 'tools/list'],
 				implies:       [],
 			),
 			new OAuthScopeData(
 				identifier:    'mcp:resources',
 				description:   'Read addressable AI resources',
 				impliedPaths:  [],
-				mcpOperations: ['resources/read', 'resources/subscribe', 'resources/list', 'resources/templates/list'],
+				mcpOperations: ['initialize', 'resources/read', 'resources/subscribe', 'resources/list', 'resources/templates/list'],
 				implies:       [],
 			),
 		];

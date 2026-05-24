@@ -22,7 +22,7 @@ readonly class McpResourceDefinition
 	 * @param string  $name        Human-readable name for resources/list output
 	 * @param string  $description Description for AI agents
 	 * @param string  $mimeType    Content type the handler will produce
-	 * @param string  $access      'admin', 'public', or 'authenticated' ('authenticated' reserved for Phase 4 OAuth)
+	 * @param string  $access      'admin', 'public', or 'authenticated' (OAuth Bearer with mcp:* scope)
 	 * @param \Closure $handler     Invoked with no args; returns ResourceContent array
 	 */
 	public function __construct(

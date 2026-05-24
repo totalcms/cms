@@ -22,8 +22,8 @@ use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
  *
  * The collection's `mcp.access` becomes the resource's access level — public
  * collections appear in resources/list for the public persona; admin-only
- * collections only appear for the admin persona. The `'authenticated'` value
- * is reserved for Phase 4 OAuth; in 3.5 it's normalized to `'admin'`.
+ * collections only appear for the admin persona; `'authenticated'` collections
+ * appear for callers whose OAuth Bearer token carries an `mcp:*` scope.
  *
  * Collections with `mcp.resource: false` are skipped entirely.
  *
@@ -107,7 +107,7 @@ readonly class CollectionResourceRegistrar
 	{
 		return match ($access) {
 			'public'        => 'public',
-			'authenticated' => 'admin', // Phase 4 will distinguish
+			'authenticated' => 'authenticated',
 			default         => 'admin',
 		};
 	}

@@ -167,4 +167,102 @@ final class McpAuthTest extends TestCase
 
 		$this->assertSame(McpPersona::ADMIN, $persona);
 	}
+
+	// ── Bearer / OAuth tests ────────────────────────────────────────────────────
+
+	public function testBearerWithMcpToolsScopeResolvesToAuthenticated(): void
+	{
+		// OAuthBearerMiddleware upstream has already validated the JWT and set
+		// oauth_scopes on the request. McpAuth reads the attribute directly.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')
+			->with('oauth_scopes')
+			->willReturn(['mcp:tools']);
+
+		$persona = $this->auth()->resolvePersona($request);
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
+	}
+
+	public function testBearerWithMcpResourcesScopeResolvesToAuthenticated(): void
+	{
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')
+			->with('oauth_scopes')
+			->willReturn(['mcp:resources']);
+
+		$persona = $this->auth()->resolvePersona($request);
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
+	}
+
+	public function testBearerWithMixedScopesResolvesToAuthenticatedWhenMcpPresent(): void
+	{
+		// A token that includes both non-MCP and MCP scopes is still valid for
+		// MCP access — the presence of at least one mcp:* scope is sufficient.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')
+			->with('oauth_scopes')
+			->willReturn(['cms:admin', 'mcp:tools']);
+
+		$persona = $this->auth()->resolvePersona($request);
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
+	}
+
+	public function testBearerWithNoMcpScopeThrowsInsufficientScope(): void
+	{
+		// A valid OAuth token that carries only non-MCP scopes must be rejected
+		// with insufficient_scope — it reached the server but isn't authorised.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')
+			->with('oauth_scopes')
+			->willReturn(['cms:read']);
+
+		$this->expectException(McpAuthException::class);
+
+		try {
+			$this->auth()->resolvePersona($request);
+			$this->fail('Expected McpAuthException.');
+		} catch (McpAuthException $e) {
+			$this->assertSame('insufficient_scope', $e->reason);
+			throw $e;
+		}
+	}
+
+	public function testBearerWithEmptyScopesArrayThrowsInsufficientScope(): void
+	{
+		// An empty scopes list from the middleware means the token carries no
+		// scopes at all — should be rejected with insufficient_scope.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')
+			->with('oauth_scopes')
+			->willReturn([]);
+
+		$this->expectException(McpAuthException::class);
+
+		try {
+			$this->auth()->resolvePersona($request);
+			$this->fail('Expected McpAuthException.');
+		} catch (McpAuthException $e) {
+			$this->assertSame('insufficient_scope', $e->reason);
+			throw $e;
+		}
+	}
+
+	public function testNoOauthScopesAttributeFallsThroughToApiKeyFlow(): void
+	{
+		// When oauth_scopes is null (no Bearer header / middleware didn't run),
+		// McpAuth falls through to the existing API key + public flow unchanged.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')
+			->with('oauth_scopes')
+			->willReturn(null);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(false);
+		$this->config->mcp = ['publicAccess' => true];
+
+		$persona = $this->auth()->resolvePersona($request);
+
+		$this->assertSame(McpPersona::PUBLIC_, $persona);
+	}
 }

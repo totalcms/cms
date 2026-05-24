@@ -58,7 +58,7 @@ readonly class McpToolDefinition
 	 *
 	 * Persona policy:
 	 *   - admin: sees everything
-	 *   - authenticated (Phase 4): public + authenticated
+	 *   - authenticated: public + authenticated (OAuth Bearer with mcp:* scope)
 	 *   - public: public only
 	 */
 	public function isVisibleTo(McpPersona $persona): bool

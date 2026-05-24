@@ -9,13 +9,15 @@ namespace TotalCMS\Domain\Mcp\Auth\Exception;
  *
  * The endpoint action converts this to a 401 JSON response with a
  * WWW-Authenticate header keyed off `$reason`:
- *   - `login_required` — no credentials were supplied and publicAccess is off.
- *   - `invalid_token`  — credentials were supplied but didn't validate (bad
+ *   - `login_required`    — no credentials were supplied and publicAccess is off.
+ *   - `invalid_token`     — credentials were supplied but didn't validate (bad
  *     key, expired key, or key without MCP scope).
+ *   - `insufficient_scope` — a valid OAuth Bearer token was presented but it
+ *     carries no `mcp:*` scope; the token holder cannot access the MCP endpoint.
  *
  * The distinction matters for lazy-auth UX in MCP clients: hosts react
  * differently to "you need to log in" vs. "the credentials you sent are
- * wrong."
+ * wrong" vs. "your token doesn't have the right scopes."
  */
 class McpAuthException extends \RuntimeException
 {

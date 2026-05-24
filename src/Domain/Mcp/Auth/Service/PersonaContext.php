@@ -17,10 +17,17 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
  * Instead McpEndpointAction writes the persona here after auth, and tools
  * inject this service to read it during dispatch. The container treats this
  * as a singleton per request — same lifetime as the Slim app instance.
+ *
+ * For OAuth Bearer requests McpEndpointAction also stores the resolved scopes
+ * via setScopes() so OAuthScopeEvaluator can read them during tool dispatch
+ * without needing access to the PSR-7 request directly.
  */
 class PersonaContext
 {
 	private ?McpPersona $persona = null;
+
+	/** @var list<string> */
+	private array $scopes = [];
 
 	public function set(McpPersona $persona): void
 	{
@@ -39,5 +46,26 @@ class PersonaContext
 	public function isResolved(): bool
 	{
 		return $this->persona instanceof McpPersona;
+	}
+
+	/**
+	 * Store the OAuth scopes for this request. Called by McpEndpointAction
+	 * after Bearer authentication resolves an AUTHENTICATED persona.
+	 *
+	 * @param list<string> $scopes
+	 */
+	public function setScopes(array $scopes): void
+	{
+		$this->scopes = $scopes;
+	}
+
+	/**
+	 * Return the OAuth scopes for this request. Empty for non-Bearer requests.
+	 *
+	 * @return list<string>
+	 */
+	public function getScopes(): array
+	{
+		return $this->scopes;
 	}
 }
