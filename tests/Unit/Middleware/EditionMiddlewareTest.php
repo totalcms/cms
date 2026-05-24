@@ -15,6 +15,7 @@ use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
+use TotalCMS\Middleware\License\OAuthEditionMiddleware;
 use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 use TotalCMS\Middleware\License\TemplatesEditionMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -436,6 +437,62 @@ final class EditionMiddlewareTest extends TestCase
 	// Tests: each middleware checks the correct feature
 	// ------------------------------------------------------------------
 
+	// ------------------------------------------------------------------
+	// Tests: OAuthEditionMiddleware — OAUTH_SERVER feature gating
+	// ------------------------------------------------------------------
+
+	public function testOAuthAllowsWhenFeatureEnabled(): void
+	{
+		$this->editionFeatures->method('can')->with(EditionFeature::OAUTH_SERVER)->willReturn(true);
+
+		$handlerResponse = $this->createMock(ResponseInterface::class);
+		$this->handler->expects($this->once())->method('handle')->willReturn($handlerResponse);
+
+		$middleware = new OAuthEditionMiddleware(
+			$this->editionFeatures,
+			$this->twigRenderer,
+			$this->jsonRenderer,
+			$this->responseFactory,
+			$this->config
+		);
+
+		$result = $middleware->process($this->request, $this->handler);
+		$this->assertSame($handlerResponse, $result);
+	}
+
+	public function testOAuthBlocksWithJson403WhenFeatureDisabled(): void
+	{
+		$this->editionFeatures->method('can')->with(EditionFeature::OAUTH_SERVER)->willReturn(false);
+		$this->editionFeatures->method('getEdition')->willReturn(Edition::STANDARD);
+		$this->mockRequestWithPath('/api/oauth-clients');
+
+		$forbiddenResponse = $this->mock403Response();
+
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$this->jsonRenderer->expects($this->once())
+			->method('json')
+			->with($forbiddenResponse, $this->callback(fn (array $data): bool => isset($data['error']['message'])
+					&& str_contains($data['error']['message'], 'OAuth')))
+			->willReturn($jsonResponse);
+
+		$this->handler->expects($this->never())->method('handle');
+
+		$middleware = new OAuthEditionMiddleware(
+			$this->editionFeatures,
+			$this->twigRenderer,
+			$this->jsonRenderer,
+			$this->responseFactory,
+			$this->config
+		);
+
+		$result = $middleware->process($this->request, $this->handler);
+		$this->assertSame($jsonResponse, $result);
+	}
+
+	// ------------------------------------------------------------------
+	// Tests: each middleware checks the correct feature
+	// ------------------------------------------------------------------
+
 	/**
 	 * @dataProvider middlewareFeatureProvider
 	 */
@@ -470,6 +527,7 @@ final class EditionMiddlewareTest extends TestCase
 			'api keys'      => [ApiKeysEditionMiddleware::class, EditionFeature::API_KEYS],
 			'data views'    => [DataViewsEditionMiddleware::class, EditionFeature::DATA_VIEWS],
 			'mailer'        => [MailerEditionMiddleware::class, EditionFeature::MAILER_ACTIONS],
+			'oauth server'  => [OAuthEditionMiddleware::class, EditionFeature::OAUTH_SERVER],
 			'templates'     => [TemplatesEditionMiddleware::class, EditionFeature::TEMPLATES],
 			'rss import'    => [RssImportEditionMiddleware::class, EditionFeature::RSS_IMPORT],
 		];
