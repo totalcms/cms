@@ -10,6 +10,8 @@ use ReflectionProperty;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Action\OAuth\OAuthJwksAction;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -55,12 +57,22 @@ final class OAuthJwksActionTest extends TestCase
 		return $config;
 	}
 
-	private function makeAction(string $publicKeyPath): OAuthJwksAction
+	private function makeAction(string $publicKeyPath, bool $editionAllowsOAuth = true): OAuthJwksAction
 	{
 		return new OAuthJwksAction(
 			$this->makeConfig($publicKeyPath),
 			new JsonRenderer(),
+			$this->makeEditionService($editionAllowsOAuth),
 		);
+	}
+
+	private function makeEditionService(bool $allowsOAuth = true): EditionFeatureService
+	{
+		$editionFeatures = $this->createMock(EditionFeatureService::class);
+		$editionFeatures->method('can')->willReturnCallback(
+			fn (EditionFeature $f): bool => $f === EditionFeature::OAUTH_SERVER ? $allowsOAuth : true,
+		);
+		return $editionFeatures;
 	}
 
 	/**
@@ -222,7 +234,7 @@ final class OAuthJwksActionTest extends TestCase
 			'publicKeyPath' => '',
 		]);
 
-		$action  = new OAuthJwksAction($config, new JsonRenderer());
+		$action  = new OAuthJwksAction($config, new JsonRenderer(), $this->makeEditionService());
 		$request = (new ServerRequestFactory())->createServerRequest('GET', '/.well-known/jwks.json');
 		$result  = $action($request, new Response());
 
@@ -240,7 +252,7 @@ final class OAuthJwksActionTest extends TestCase
 		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		(new ReflectionProperty($config, 'oauth'))->setValue($config, []);
 
-		$action  = new OAuthJwksAction($config, new JsonRenderer());
+		$action  = new OAuthJwksAction($config, new JsonRenderer(), $this->makeEditionService());
 		$request = (new ServerRequestFactory())->createServerRequest('GET', '/.well-known/jwks.json');
 		$result  = $action($request, new Response());
 
@@ -254,5 +266,14 @@ final class OAuthJwksActionTest extends TestCase
 		$result  = $action($request, new Response());
 
 		$this->assertStringContainsString('application/json', $result->getHeaderLine('Content-Type'));
+	}
+
+	public function testReturns404OnNonProEdition(): void
+	{
+		$action  = $this->makeAction($this->publicKeyPath, editionAllowsOAuth: false);
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/.well-known/jwks.json');
+		$result  = $action($request, new Response());
+
+		$this->assertSame(404, $result->getStatusCode());
 	}
 }

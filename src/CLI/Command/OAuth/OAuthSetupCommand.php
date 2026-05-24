@@ -8,6 +8,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Command\BaseCommand;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Support\Config;
 
 class OAuthSetupCommand extends BaseCommand
@@ -23,6 +25,17 @@ class OAuthSetupCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
+		$editionFeatures = $this->totalcms->container()->get(EditionFeatureService::class);
+		if (!$editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
+			$required = EditionFeature::OAUTH_SERVER->requiredEdition();
+			$output->writeln(sprintf(
+				'<error>OAuth server requires the %s edition or higher. Cannot generate keys on the current edition.</error>',
+				ucfirst($required->value),
+			));
+
+			return 1;
+		}
+
 		$config      = $this->totalcms->container()->get(Config::class);
 		$privatePath = (string)($config->oauth['signingKeyPath'] ?? '');
 		$publicPath  = (string)($config->oauth['publicKeyPath'] ?? '');

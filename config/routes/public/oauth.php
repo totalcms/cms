@@ -10,6 +10,7 @@ use TotalCMS\Action\OAuth\OAuthJwksAction;
 use TotalCMS\Action\OAuth\OAuthRegisterAction;
 use TotalCMS\Action\OAuth\OAuthRevokeAction;
 use TotalCMS\Action\OAuth\OAuthTokenAction;
+use TotalCMS\Middleware\License\OAuthEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\Security\OAuthTokenRateLimitMiddleware;
@@ -44,12 +45,21 @@ return function (RouteCollectorProxyInterface $app): void {
 	// Slim's ->add() wraps inside-out: the LAST add() runs FIRST. On POST,
 	// NoCache outer / CSRF inner means CSRF validates before the action
 	// runs, and the no-cache header lands on the final response.
+	// Edition-gated routes below. OAuthEditionMiddleware is applied as the
+	// OUTERMOST add() on each — runs FIRST per Slim's inside-out wrapping —
+	// so non-Pro instances get a clean 403 access-denied before any OAuth
+	// logic executes. The .well-known/* endpoints above stay accessible but
+	// 404 inline on non-Pro (handled inside their actions) so external
+	// clients can detect the unsupported server through standard discovery
+	// failure rather than getting a license error.
 	$app->get('/oauth/authorize', OAuthAuthorizeAction::class)
 		->add(NoCacheMiddleware::class)
+		->add(OAuthEditionMiddleware::class)
 		->setName('oauth.authorize');
 	$app->post('/oauth/authorize', OAuthApproveAction::class)
 		->add(CSRFProtectionMiddleware::class)
 		->add(NoCacheMiddleware::class)
+		->add(OAuthEditionMiddleware::class)
 		->setName('oauth.approve');
 
 	// Token endpoint. Exchanges authorization codes (with PKCE verifier)
@@ -60,6 +70,7 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->post('/oauth/token', OAuthTokenAction::class)
 		->add(OAuthTokenRateLimitMiddleware::class)
 		->add(NoCacheMiddleware::class)
+		->add(OAuthEditionMiddleware::class)
 		->setName('oauth.token');
 
 	// RFC 7591 — dynamic client registration. Lets MCP clients (Claude,
@@ -71,6 +82,7 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->post('/oauth/register', OAuthRegisterAction::class)
 		->add(OAuthTokenRateLimitMiddleware::class)
 		->add(NoCacheMiddleware::class)
+		->add(OAuthEditionMiddleware::class)
 		->setName('oauth.register');
 
 	// RFC 7009 — token revocation. Clients can call this to revoke their
@@ -79,5 +91,6 @@ return function (RouteCollectorProxyInterface $app): void {
 	// auth failure. NoCache because outcomes are session/auth-dependent.
 	$app->post('/oauth/revoke', OAuthRevokeAction::class)
 		->add(NoCacheMiddleware::class)
+		->add(OAuthEditionMiddleware::class)
 		->setName('oauth.revoke');
 };

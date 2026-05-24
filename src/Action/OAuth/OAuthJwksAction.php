@@ -6,6 +6,8 @@ namespace TotalCMS\Action\OAuth;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -14,11 +16,20 @@ readonly class OAuthJwksAction
 	public function __construct(
 		private Config $config,
 		private JsonRenderer $renderer,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
+		// Non-Pro instances 404 here, matching the discovery endpoint's
+		// behaviour. Resource servers checking JWT signatures should never
+		// reach this URL anyway on a non-Pro instance because no tokens
+		// were ever issued.
+		if (!$this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
+			return $response->withStatus(404);
+		}
+
 		$publicPath = (string)($this->config->oauth['publicKeyPath'] ?? '');
 		if ($publicPath === '' || !is_file($publicPath)) {
 			return $this->renderer->json($response, ['keys' => []], 503);
