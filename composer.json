@@ -129,6 +129,7 @@
     "md:src": "phpmd src ansi phpmd.xml",
     "md:config": "phpmd config ansi phpmd.xml",
     "md:tests": "phpmd tests ansi phpmd.xml",
+    "mcp:inspect": "bin/mcp-inspector.sh",
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcbf.xml",
     "sniffer:fix": "phpcbf --standard=phpcbf.xml",
