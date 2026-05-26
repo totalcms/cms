@@ -67,11 +67,14 @@ describe('OAuthDynamicRegistration', function (): void {
 		expect($body)->toBeArray();
 		expect($body)->toHaveKey('client_id');
 		expect($body)->toHaveKey('client_secret');
+		expect($body)->toHaveKey('client_secret_expires_at');
 		expect($body)->toHaveKey('registration_access_token');
 		expect($body)->toHaveKey('client_id_issued_at');
 		expect($body)->toHaveKey('redirect_uris');
 		expect($body)->toHaveKey('client_name');
 		expect($body)->toHaveKey('scope');
+
+		expect($body['client_secret_expires_at'])->toBe(0); // RFC 7591 §3.2.1: 0 = non-expiring
 
 		expect($body['client_name'])->toBe('Test Dynamic Client');
 		expect($body['redirect_uris'])->toBe(['https://app.test/cb']);

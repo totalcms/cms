@@ -27,7 +27,7 @@ final class OAuthDynamicRegistrar
 
 	/**
 	 * @param  array<string,mixed> $metadata
-	 * @return array{client_id: string, client_secret: string, registration_access_token: string, client_id_issued_at: int, redirect_uris: list<string>, client_name: string, scope: string}
+	 * @return array{client_id: string, client_secret: string, client_secret_expires_at: int, registration_access_token: string, client_id_issued_at: int, redirect_uris: list<string>, client_name: string, scope: string}
 	 */
 	public function register(array $metadata): array
 	{
@@ -59,6 +59,7 @@ final class OAuthDynamicRegistrar
 		return [
 			'client_id'                 => $result['client']->id,
 			'client_secret'             => $result['secret'],
+			'client_secret_expires_at'  => 0, // RFC 7591 §3.2.1: 0 = non-expiring secret
 			'registration_access_token' => $this->generateRegistrationAccessToken(),
 			'client_id_issued_at'       => time(),
 			'redirect_uris'             => $result['client']->redirectUris,

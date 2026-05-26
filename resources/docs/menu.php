@@ -201,6 +201,7 @@ return [
 		'title' => 'MCP',
 		'sub'   => [
 			['title' => 'MCP Server',        'path' => 'mcp/server'],
+			['title' => 'OAuth Server',      'path' => 'mcp/oauth'],
 			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
 			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
 		],

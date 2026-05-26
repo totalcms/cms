@@ -48,6 +48,7 @@ final class OAuthDynamicRegistrarTest extends TestCase
 
 		$this->assertArrayHasKey('client_id', $result);
 		$this->assertArrayHasKey('client_secret', $result);
+		$this->assertArrayHasKey('client_secret_expires_at', $result);
 		$this->assertArrayHasKey('registration_access_token', $result);
 		$this->assertArrayHasKey('client_id_issued_at', $result);
 		$this->assertArrayHasKey('redirect_uris', $result);
@@ -56,6 +57,7 @@ final class OAuthDynamicRegistrarTest extends TestCase
 
 		$this->assertIsString($result['client_id']);
 		$this->assertIsString($result['client_secret']);
+		$this->assertSame(0, $result['client_secret_expires_at']); // RFC 7591 §3.2.1: 0 = non-expiring
 		$this->assertIsString($result['registration_access_token']);
 		$this->assertIsInt($result['client_id_issued_at']);
 		$this->assertSame(['https://app.test/cb'], $result['redirect_uris']);
