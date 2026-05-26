@@ -16,6 +16,7 @@
   ],
   "require": {
     "php": "^8.2",
+    "algolia/algoliasearch-client-php": "^4.43",
     "bacon/bacon-qr-code": "^3.0",
     "cakephp/chronos": "^3.1",
     "cakephp/i18n": "^5.2",

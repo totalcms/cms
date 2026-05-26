@@ -223,6 +223,7 @@ return [
 				'sub'   => [
 					['title' => 'Bundled Overview', 'path' => 'extensions/bundled'],
 					['title' => 'A/B Split',        'path' => 'extensions/ab-split'],
+					['title' => 'Algolia Search',   'path' => 'extensions/algolia-search'],
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
 				],
 			],

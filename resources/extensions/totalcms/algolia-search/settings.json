@@ -1,0 +1,37 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Algolia Search",
+	"description": "Configure your Algolia account credentials. Find these in your Algolia dashboard under API Keys.",
+	"type": "object",
+	"properties": {
+		"appId": {
+			"type": "string",
+			"field": "text",
+			"label": "Application ID",
+			"help": "Your Algolia Application ID — shown in the dashboard as 'Application ID'.",
+			"placeholder": "ABC123XYZ",
+			"default": ""
+		},
+		"adminApiKey": {
+			"type": "string",
+			"field": "password",
+			"label": "Admin API Key",
+			"help": "Used for indexing content. KEEP SECRET — anyone with this key can modify your Algolia data.",
+			"default": ""
+		},
+		"searchApiKey": {
+			"type": "string",
+			"field": "text",
+			"label": "Search-Only API Key",
+			"help": "Used for querying. Safe to expose in client-side code (eventually — not used by T3 directly).",
+			"default": ""
+		},
+		"indexName": {
+			"type": "string",
+			"field": "text",
+			"label": "Index Name",
+			"help": "Name of the Algolia index that holds T3 content. Defaults to <code>tcms_content</code>; change if you share an Algolia account with other apps.",
+			"default": "tcms_content"
+		}
+	}
+}
