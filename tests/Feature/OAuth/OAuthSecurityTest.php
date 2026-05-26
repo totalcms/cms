@@ -354,18 +354,11 @@ describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
 		}
 	});
 
-	it('documents behavior for code_challenge_method=plain (D5-b)', function (): void {
-		// DOCUMENTED BEHAVIOR: league/oauth2-server's AuthCodeGrant constructor always
-		// registers BOTH S256Verifier and PlainVerifier regardless of T3's `pkceMethods`
-		// config. The `pkceMethods` config only populates the discovery document; it does
-		// not restrict which methods the grant server actually accepts.
-		//
-		// To enforce S256-only, T3 would need to customize AuthCodeGrant to remove the
-		// PlainVerifier — a future hardening task. This test pins the current behavior.
-		//
-		// Security impact: `plain` exposes the verifier as the challenge (no hashing),
-		// making it weaker, but not completely broken when used over HTTPS. S256 is
-		// strongly preferred and advertised in the discovery doc.
+	it('rejects code_challenge_method=plain (D5-b)', function (): void {
+		// OAuthServerFactory strips the PlainVerifier from AuthCodeGrant after
+		// construction (league registers both S256 and plain by default). T3
+		// requires S256 — plain exposes the verifier as the challenge, weakening
+		// the protection PKCE provides.
 		securitySetupKeys($this->app);
 		$clientId = 'sec-d5b-' . uniqid('', true);
 		securityCreateClient($this->app, $clientId, 'secret', ['https://app.test/cb']);
@@ -381,26 +374,14 @@ describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
 				'redirect_uri'          => 'https://app.test/cb',
 				'scope'                 => 'cms:read',
 				'state'                 => 'state-d5b',
-				'code_challenge'        => $codeVerifier,  // plain: verifier IS the challenge
+				'code_challenge'        => $codeVerifier,
 				'code_challenge_method' => 'plain',
 			])),
 		);
 
-		// League accepts 'plain' today (200 consent screen).
-		// If this ever returns 400, league was tightened or T3 removed PlainVerifier — good.
-		if ($response->getStatusCode() === 302) {
-			parse_str((string)parse_url($response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
-			if (isset($params['error'])) {
-				// League rejected it — ideal security outcome
-				expect($params)->toHaveKey('error');
-			} else {
-				// Plain was accepted — consent page shown (current behavior)
-				expect($params)->not()->toHaveKey('code'); // no code without POST approval
-			}
-		} else {
-			// 200 = consent shown (league accepted plain), 4xx = rejected (ideal)
-			expect($response->getStatusCode())->toBeIn([200, 400, 401, 403]);
-		}
+		// league returns 400 (error page rendered through OAuthAuthorizeAction's
+		// catch block) when the requested code_challenge_method isn't registered.
+		expect($response->getStatusCode())->toBe(400);
 	});
 
 	it('rejects token exchange with wrong code_verifier (D5-c)', function (): void {

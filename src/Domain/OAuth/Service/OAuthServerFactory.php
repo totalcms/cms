@@ -53,6 +53,19 @@ final class OAuthServerFactory
 		);
 		$authCodeGrant->setRefreshTokenTTL(new DateInterval((string)$this->config->oauth['refreshTokenTtl']));
 
+		// Strip the `plain` PKCE verifier. AuthCodeGrant's constructor
+		// unconditionally registers both S256 and plain verifiers; the
+		// codeChallengeVerifiers property is private so reflection is
+		// the only way to remove plain after construction. We require
+		// S256 only — `plain` would let an attacker who steals an
+		// authorization code use it directly without the verifier.
+		$verifiersProp = (new \ReflectionClass(AuthCodeGrant::class))
+			->getProperty('codeChallengeVerifiers');
+		/** @var array<string,mixed> $verifiers */
+		$verifiers = $verifiersProp->getValue($authCodeGrant);
+		unset($verifiers['plain']);
+		$verifiersProp->setValue($authCodeGrant, $verifiers);
+
 		$server->enableGrantType(
 			$authCodeGrant,
 			new DateInterval((string)$this->config->oauth['accessTokenTtl']),

@@ -51,6 +51,7 @@ class CliApplication
 
 		// OAuth commands
 		$app->addCommand(new Command\OAuth\OAuthSetupCommand($totalcms));
+		$app->addCommand(new Command\OAuth\OAuthGcCommand($totalcms));
 
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));
