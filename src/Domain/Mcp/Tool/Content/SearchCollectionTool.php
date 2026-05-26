@@ -8,41 +8,39 @@ use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Query\Service\ObjectSearcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 
 /**
  * `search_collection(name, query, …)` — free-text search within a single
  * collection. Companion to `query_collection` (structured filters) and
  * `get_object` (single object by id).
  *
- * **Why this tool exists instead of routing through IndexQueryService:**
- * QueryPipeline treats `search` and `include`/`exclude` as mutually exclusive
- * — passing both clears the safety filter. Public callers must not be able to
- * see drafts EVER, so for the search path we bypass the pipeline and:
+ * Routes through SearchService → TextSearchProvider, which applies the same
+ * filter+search pipeline as the previous inline implementation:
  *
- *   1. Load the index with the safety filter pre-applied (IndexFilter::fetchFilteredIndex
- *      with `exclude: draft:true` for public callers).
- *   2. Hand the already-filtered items to ObjectSearcher::search().
+ *   1. IndexFilter::fetchFilteredIndex with persona-based options (public
+ *      callers get `exclude: draft:true` applied before any search).
+ *   2. ObjectSearcher::search on the pre-filtered items.
  *
- * The ordering is the load-bearing detail. A regression that wires search back
- * through QueryPipeline, or applies the search before the safety filter, would
- * leak drafts to public callers and is the kind of bug only a test can catch.
+ * Drafts are never visible to public callers — the persona is forwarded to
+ * SearchQuery so TextSearchProvider enforces the filter inside the provider.
  */
 readonly class SearchCollectionTool
 {
 	private const LIMIT_CAP = 50;
 
 	public function __construct(
-		private IndexFilter $indexFilter,
-		private ObjectSearcher $searcher,
+		private SearchServiceInterface $searchService,
 		private CollectionFetcher $collectionFetcher,
+		private ObjectFetcher $objectFetcher,
 		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
@@ -105,14 +103,22 @@ readonly class SearchCollectionTool
 			);
 		}
 
-		// Load index with the safety filter applied FIRST. Order is essential —
-		// see the class docblock.
-		$filterOptions = $persona === McpPersona::PUBLIC_ ? ['exclude' => 'draft:true'] : [];
-		$items         = $this->indexFilter->fetchFilteredIndex($collection, $filterOptions);
-
-		$matches     = $this->searcher->search($items, $query);
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
-		$matches     = array_slice($matches, 0, $cappedLimit);
+		$results     = $this->searchService->search(new SearchQuery(
+			text:       $query,
+			collection: $collection,
+			limit:      $cappedLimit,
+			persona:    $persona->value,
+		));
+
+		// Resolve result IDs back to full object arrays.
+		$matches = [];
+		foreach ($results as $result) {
+			if (!$this->objectFetcher->existsObject($collection, $result->id)) {
+				continue;
+			}
+			$matches[] = $this->objectFetcher->fetchObject($collection, $result->id)->toArray();
+		}
 
 		$nonExposed = $this->schemaResolver->nonExposedProperties($collectionData);
 		$renderable = $this->schemaResolver->renderableProperties($collectionData);

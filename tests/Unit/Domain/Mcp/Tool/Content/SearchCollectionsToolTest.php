@@ -9,20 +9,24 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Query\Service\ObjectSearcher;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Data\SearchResult;
+use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class SearchCollectionsToolTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
-	private ObjectSearcher $searcher;
+	/** @var \PHPUnit\Framework\MockObject\MockObject&SearchServiceInterface */
+	private \PHPUnit\Framework\MockObject\MockObject $searchService;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionsRepo;
 	private \PHPUnit\Framework\MockObject\MockObject $urls;
 	private \PHPUnit\Framework\MockObject\MockObject $resolver;
@@ -31,17 +35,17 @@ final class SearchCollectionsToolTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->indexFilter     = $this->createMock(IndexFilter::class);
-		$this->searcher        = new ObjectSearcher();
+		$this->searchService   = $this->createMock(SearchServiceInterface::class);
+		$this->objectFetcher   = $this->createMock(ObjectFetcher::class);
 		$this->collectionsRepo = $this->createMock(CollectionRepository::class);
 		$this->urls            = $this->createMock(ObjectUrlBuilder::class);
 		$this->resolver        = $this->createMock(McpSchemaResolver::class);
 		$this->persona         = new PersonaContext();
 
 		$this->tool = new SearchCollectionsTool(
-			$this->indexFilter,
-			$this->searcher,
+			$this->searchService,
 			$this->collectionsRepo,
+			$this->objectFetcher,
 			$this->urls,
 			$this->persona,
 			$this->resolver,
@@ -57,6 +61,19 @@ final class SearchCollectionsToolTest extends TestCase
 		$collection->mcp    = ['access' => $access];
 
 		return $collection;
+	}
+
+	/**
+	 * Helper: build an ObjectData mock whose toArray() returns the given array.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private function objectDataMock(array $data): ObjectData
+	{
+		$mock = $this->createMock(ObjectData::class);
+		$mock->method('toArray')->willReturn($data);
+
+		return $mock;
 	}
 
 	// ─── Registration ────────────────────────────────────────────────────────
@@ -110,15 +127,16 @@ final class SearchCollectionsToolTest extends TestCase
 		}
 	}
 
-	// ─── Persona-aware safety filter applied per-collection BEFORE search ────
+	// ─── Persona-aware safety: public persona searches visible collections only ─
 
-	public function testPublicPersonaSearchesOnlyPublicCollectionsWithDraftExcluded(): void
+	public function testPublicPersonaSearchesOnlyPublicCollectionsWithPublicPersonaInQuery(): void
 	{
-		// THE critical test for C2. Public must NOT see results from admin-only
-		// collections AND must not see drafts within public collections. The
-		// safety filter applies per-collection BEFORE ObjectSearcher runs —
-		// same architecture as SearchCollectionTool (B3) but iterated across
-		// every visible collection.
+		// THE critical test for cross-collection search. Public must NOT see
+		// results from admin-only collections AND must not see drafts within
+		// public collections. The persona is forwarded to SearchQuery so
+		// TextSearchProvider applies `exclude: draft:true` inside the provider.
+		// Only `blog` passes the visibility filter — `auth` is filtered out
+		// before SearchService is even called.
 		$this->persona->set(McpPersona::PUBLIC_);
 
 		$blog = $this->collection('blog', access: 'public');
@@ -130,23 +148,32 @@ final class SearchCollectionsToolTest extends TestCase
 		);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
-		// Only `blog` should be queried — `auth` must not even hit
-		// fetchFilteredIndex. And blog's fetch must include the safety filter.
-		$this->indexFilter->expects($this->once())
-			->method('fetchFilteredIndex')
-			->with('blog', ['exclude' => 'draft:true'])
-			->willReturn([
-				['id' => 'public-post', 'title' => 'hello world'],
-			]);
+		// Only `blog` should reach SearchService — `auth` must not appear in
+		// any SearchQuery. The query must carry the public persona.
+		$capturedQueries = [];
+		$this->searchService->expects($this->once())
+			->method('search')
+			->willReturnCallback(function (SearchQuery $q) use (&$capturedQueries): array {
+				$capturedQueries[] = $q;
+
+				return [new SearchResult(collection: 'blog', id: 'public-post', score: 1.0)];
+			});
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')
+			->willReturn($this->objectDataMock(['id' => 'public-post', 'title' => 'hello world']));
 		$this->urls->method('buildUrl')->willReturn('/blog/public-post');
 
 		$result = $this->tool->handler(query: 'hello');
 
+		$this->assertCount(1, $capturedQueries);
+		$this->assertSame('blog', $capturedQueries[0]->collection);
+		$this->assertSame('public', $capturedQueries[0]->persona);
 		$this->assertCount(1, $result['items']);
 		$this->assertSame('public-post', $result['items'][0]['id']);
 	}
 
-	public function testAdminPersonaSearchesEveryCollectionWithoutSafetyFilter(): void
+	public function testAdminPersonaSearchesEveryCollectionWithAdminPersonaInQuery(): void
 	{
 		$this->persona->set(McpPersona::ADMIN);
 
@@ -157,19 +184,26 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
-		// Both collections must be visited; admin sees drafts so options stay empty.
-		$expectations = [];
-		$this->indexFilter->expects($this->exactly(2))
-			->method('fetchFilteredIndex')
-			->willReturnCallback(function (string $collection, array $opts) use (&$expectations): array {
-				$expectations[] = [$collection, $opts];
+		// Both collections must be visited; admin persona forwarded so provider
+		// doesn't apply draft exclusion.
+		$capturedQueries = [];
+		$this->searchService->expects($this->exactly(2))
+			->method('search')
+			->willReturnCallback(function (SearchQuery $q) use (&$capturedQueries): array {
+				$capturedQueries[] = $q;
 
 				return [];
 			});
 
 		$this->tool->handler(query: 'admin');
 
-		$this->assertSame([['blog', []], ['auth', []]], $expectations);
+		$this->assertCount(2, $capturedQueries);
+		$collections = array_column($capturedQueries, 'collection');
+		$this->assertContains('blog', $collections);
+		$this->assertContains('auth', $collections);
+		foreach ($capturedQueries as $q) {
+			$this->assertSame('admin', $q->persona);
+		}
 	}
 
 	// ─── Result decoration ───────────────────────────────────────────────────
@@ -187,9 +221,18 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->collectionsRepo->method('listAllCollections')->willReturn([$blog, $products]);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
-		$this->indexFilter->method('fetchFilteredIndex')->willReturnOnConsecutiveCalls(
-			[['id' => 'post-a', 'title' => 'rust adventures']],
-			[['id' => 'widget',  'name'  => 'rust mug']],
+
+		$this->searchService->method('search')->willReturnCallback(
+			fn (SearchQuery $q): array => match ($q->collection) {
+				'blog'     => [new SearchResult(collection: 'blog', id: 'post-a', score: 1.0)],
+				'products' => [new SearchResult(collection: 'products', id: 'widget', score: 0.9)],
+				default    => [],
+			},
+		);
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturnCallback(
+			fn (string $col, string $id): ObjectData => $this->objectDataMock(['id' => $id, 'title' => 'rust ' . $id]),
 		);
 		$this->urls->method('buildUrl')->willReturnOnConsecutiveCalls('/blog/post-a', '/products/widget');
 
@@ -216,9 +259,22 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->resolver->method('nonExposedProperties')->willReturnCallback(
 			static fn (CollectionData $c): array => $c->id === 'blog' ? ['internal_notes'] : [],
 		);
-		$this->indexFilter->method('fetchFilteredIndex')->willReturnOnConsecutiveCalls(
-			[['id' => 'a', 'title' => 'match', 'internal_notes' => 'private']],
-			[['id' => 'b', 'name'  => 'match', 'internal_notes' => 'kept']],
+
+		$this->searchService->method('search')->willReturnCallback(
+			fn (SearchQuery $q): array => match ($q->collection) {
+				'blog'     => [new SearchResult(collection: 'blog', id: 'a', score: 1.0)],
+				'products' => [new SearchResult(collection: 'products', id: 'b', score: 0.9)],
+				default    => [],
+			},
+		);
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturnCallback(
+			fn (string $col, string $id): ObjectData => match ($id) {
+				'a' => $this->objectDataMock(['id' => 'a', 'title' => 'match', 'internal_notes' => 'private']),
+				'b' => $this->objectDataMock(['id' => 'b', 'name' => 'match', 'internal_notes' => 'kept']),
+				default => $this->objectDataMock(['id' => $id]),
+			},
 		);
 		$this->urls->method('buildUrl')->willReturn('/x');
 
@@ -247,11 +303,16 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		// Each collection returns 30 matches → 90 total → must clamp to 50.
-		$items = [];
-		for ($i = 0; $i < 30; $i++) {
-			$items[] = ['id' => 'i' . $i, 'title' => 'match'];
-		}
-		$this->indexFilter->method('fetchFilteredIndex')->willReturn($items);
+		$this->searchService->method('search')->willReturnCallback(
+			fn (SearchQuery $q): array => array_map(
+				fn (int $i): SearchResult => new SearchResult(collection: $q->collection ?? 'x', id: $q->collection . '-i' . $i, score: 1.0),
+				range(0, 29),
+			),
+		);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturnCallback(
+			fn (string $col, string $id): ObjectData => $this->objectDataMock(['id' => $id, 'title' => 'match']),
+		);
 		$this->urls->method('buildUrl')->willReturn('/x');
 
 		$result = $this->tool->handler(query: 'match', limit: 1000);

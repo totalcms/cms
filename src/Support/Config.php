@@ -62,6 +62,8 @@ class Config
 	public array $mcp = [];
 	/** @var array<string,mixed> */
 	public array $oauth = [];
+	/** @var array<string,mixed> */
+	public array $search = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -109,6 +111,7 @@ class Config
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
 		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
 		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
+		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

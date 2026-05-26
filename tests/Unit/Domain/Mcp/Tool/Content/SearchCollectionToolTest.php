@@ -9,20 +9,24 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Query\Service\ObjectSearcher;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Data\SearchResult;
+use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class SearchCollectionToolTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
-	private ObjectSearcher $searcher;
+	/** @var \PHPUnit\Framework\MockObject\MockObject&SearchServiceInterface */
+	private \PHPUnit\Framework\MockObject\MockObject $searchService;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collections;
 	private \PHPUnit\Framework\MockObject\MockObject $urls;
 	private \PHPUnit\Framework\MockObject\MockObject $resolver;
@@ -31,19 +35,17 @@ final class SearchCollectionToolTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->indexFilter = $this->createMock(IndexFilter::class);
-		// ObjectSearcher is pure — exercise the real implementation so the
-		// AND/OR/quoted-phrase behavior is part of what we're asserting.
-		$this->searcher    = new ObjectSearcher();
-		$this->collections = $this->createMock(CollectionFetcher::class);
-		$this->urls        = $this->createMock(ObjectUrlBuilder::class);
-		$this->resolver    = $this->createMock(McpSchemaResolver::class);
-		$this->persona     = new PersonaContext();
+		$this->searchService = $this->createMock(SearchServiceInterface::class);
+		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
+		$this->collections   = $this->createMock(CollectionFetcher::class);
+		$this->urls          = $this->createMock(ObjectUrlBuilder::class);
+		$this->resolver      = $this->createMock(McpSchemaResolver::class);
+		$this->persona       = new PersonaContext();
 
 		$this->tool = new SearchCollectionTool(
-			$this->indexFilter,
-			$this->searcher,
+			$this->searchService,
 			$this->collections,
+			$this->objectFetcher,
 			$this->urls,
 			$this->persona,
 			$this->resolver,
@@ -59,6 +61,19 @@ final class SearchCollectionToolTest extends TestCase
 		$collection->mcp    = ['access' => 'public'];
 
 		return $collection;
+	}
+
+	/**
+	 * Helper: build an ObjectData mock whose toArray() returns the given array.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private function objectDataMock(array $data): ObjectData
+	{
+		$mock = $this->createMock(ObjectData::class);
+		$mock->method('toArray')->willReturn($data);
+
+		return $mock;
 	}
 
 	// ─── Registration ────────────────────────────────────────────────────────
@@ -115,70 +130,84 @@ final class SearchCollectionToolTest extends TestCase
 		}
 	}
 
-	// ─── Safety-filter-first ordering (the architectural reason this tool exists) ──
+	// ─── Persona forwarded to SearchService (the architectural safety guarantee) ─
 
-	public function testPublicPersonaAppliesDraftExcludeBeforeSearching(): void
+	public function testPublicPersonaForwardsPublicPersonaToSearchService(): void
 	{
-		// THE critical test. QueryPipeline's include/exclude is mutually
-		// exclusive with search — so the search path naively wired through
-		// IndexQueryService would have NO way to enforce draft:true for
-		// public callers. This tool side-steps that by calling IndexFilter
-		// directly with the safety filter, then handing the filtered set
-		// to ObjectSearcher.
-		//
-		// If a regression ever re-wires the search path through
-		// IndexQueryService::query() or skips the filter call, this test
-		// will catch it.
+		// THE critical test. Public callers must never see drafts. The persona
+		// is forwarded in SearchQuery so TextSearchProvider applies
+		// `exclude: draft:true` inside the provider before ObjectSearcher runs.
+		// If a regression strips the persona from SearchQuery, drafts leak.
 		$this->persona->set(McpPersona::PUBLIC_);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
-		$this->indexFilter->expects($this->once())
-			->method('fetchFilteredIndex')
-			->with('blog', ['exclude' => 'draft:true'])
-			->willReturn([
-				['id' => 'public-post', 'title' => 'Hello world'],
-			]);
+		$capturedQuery = null;
+		$this->searchService->expects($this->once())
+			->method('search')
+			->willReturnCallback(function (SearchQuery $q) use (&$capturedQuery): array {
+				$capturedQuery = $q;
+
+				return [new SearchResult(collection: 'blog', id: 'public-post', score: 1.0)];
+			});
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')
+			->willReturn($this->objectDataMock(['id' => 'public-post', 'title' => 'Hello world']));
 		$this->urls->method('buildUrl')->willReturn('/blog/public-post');
 
 		$result = $this->tool->handler(collection: 'blog', query: 'hello');
 
+		$this->assertSame('public', $capturedQuery->persona);
 		$this->assertCount(1, $result['items']);
 		$this->assertSame('public-post', $result['items'][0]['id']);
 	}
 
-	public function testAdminPersonaLoadsIndexWithoutSafetyFilter(): void
+	public function testAdminPersonaForwardsAdminPersonaToSearchService(): void
 	{
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
-		$this->indexFilter->expects($this->once())
-			->method('fetchFilteredIndex')
-			->with('blog', [])  // No exclude applied — admin sees drafts.
-			->willReturn([]);
+		$capturedQuery = null;
+		$this->searchService->expects($this->once())
+			->method('search')
+			->willReturnCallback(function (SearchQuery $q) use (&$capturedQuery): array {
+				$capturedQuery = $q;
+
+				return [];
+			});
 
 		$this->tool->handler(collection: 'blog', query: 'anything');
+
+		// Admin persona must be forwarded so the provider does not apply draft exclusion.
+		$this->assertSame('admin', $capturedQuery->persona);
 	}
 
-	// ─── Search delegates to ObjectSearcher correctly ────────────────────────
+	// ─── Search delegates to SearchService correctly ─────────────────────────
 
-	public function testSearchActuallyFiltersItemsByQueryViaObjectSearcher(): void
+	public function testSearchActuallyFiltersItemsByQueryViaSearchService(): void
 	{
-		// Two items in the index — only one matches the query "rust". This
-		// verifies the search step actually runs after the safety filter.
+		// SearchService returns only matching results; the handler resolves
+		// those result IDs via ObjectFetcher. This verifies the full pipeline
+		// from SearchService result → ObjectFetcher → shaped output.
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
-		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
-			['id' => 'a', 'title' => 'Rust adventures', 'body' => 'Memory safe code.'],
-			['id' => 'b', 'title' => 'PHP musings',     'body' => 'Static analysis.'],
+		// SearchService returns only the rust-matching post.
+		$this->searchService->method('search')->willReturn([
+			new SearchResult(collection: 'blog', id: 'a', score: 1.0),
 		]);
-		$this->urls->method('buildUrl')->willReturnOnConsecutiveCalls('/blog/a', '/blog/b');
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')
+			->with('blog', 'a')
+			->willReturn($this->objectDataMock(['id' => 'a', 'title' => 'Rust adventures', 'body' => 'Memory safe code.']));
+		$this->urls->method('buildUrl')->willReturn('/blog/a');
 
 		$result = $this->tool->handler(collection: 'blog', query: 'rust');
 
@@ -195,16 +224,30 @@ final class SearchCollectionToolTest extends TestCase
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
-		// 60 matching items — the cap should slice us back to 50.
-		$items = [];
+		// SearchService returns 60 results — the cap at LIMIT_CAP=50 must apply.
+		$results = [];
 		for ($i = 0; $i < 60; $i++) {
-			$items[] = ['id' => 'p' . $i, 'title' => 'match'];
+			$results[] = new SearchResult(collection: 'blog', id: 'p' . $i, score: 1.0);
 		}
-		$this->indexFilter->method('fetchFilteredIndex')->willReturn($items);
+
+		$capturedQuery = null;
+		$this->searchService->expects($this->once())
+			->method('search')
+			->willReturnCallback(function (SearchQuery $q) use (&$capturedQuery, $results): array {
+				$capturedQuery = $q;
+
+				// Return only up to the requested limit (simulating what SearchService does).
+				return array_slice($results, 0, $q->limit);
+			});
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')
+			->willReturnCallback(fn (string $col, string $id): ObjectData => $this->objectDataMock(['id' => $id, 'title' => 'match']));
 		$this->urls->method('buildUrl')->willReturn('/blog/x');
 
 		$result = $this->tool->handler(collection: 'blog', query: 'match', limit: 1000);
 
+		$this->assertSame(50, $capturedQuery->limit);
 		$this->assertCount(50, $result['items']);
 		$this->assertSame(50, $result['limit']);
 	}
@@ -217,9 +260,12 @@ final class SearchCollectionToolTest extends TestCase
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn(['secret']);
 
-		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
-			['id' => 'a', 'title' => 'rust', 'secret' => 'hidden'],
+		$this->searchService->method('search')->willReturn([
+			new SearchResult(collection: 'blog', id: 'a', score: 1.0),
 		]);
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')
+			->willReturn($this->objectDataMock(['id' => 'a', 'title' => 'rust', 'secret' => 'hidden']));
 		$this->urls->method('buildUrl')->willReturn('/blog/a');
 
 		$result = $this->tool->handler(collection: 'blog', query: 'rust');
@@ -230,12 +276,12 @@ final class SearchCollectionToolTest extends TestCase
 
 	public function testEmptyQueryReturnsEmptyResultSetWithoutInvokingSearcher(): void
 	{
-		// An empty `query` would otherwise be interpreted by ObjectSearcher as
-		// "match nothing". We short-circuit instead and tell the caller — with
-		// a recovery hint — that they need to pass a query.
+		// An empty `query` short-circuits before SearchService is called.
 		$this->persona->set(McpPersona::ADMIN);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
+
+		$this->searchService->expects($this->never())->method('search');
 
 		try {
 			$this->tool->handler(collection: 'blog', query: '   ');

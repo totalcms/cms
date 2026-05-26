@@ -96,6 +96,10 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Domain\Search\Service\SearchService;
+use TotalCMS\Domain\Search\Service\SearchServiceInterface;
+use TotalCMS\Domain\Search\Service\TextSearchProvider;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
@@ -669,4 +673,33 @@ return [
 			->addFileHandler('oauth-activity.log', level: Level::Info)
 			->createLogger('oauth-activity'),
 	),
+
+	// === Search Providers Phase 5 ===
+
+	SearchProviderRegistry::class => function (ContainerInterface $container): SearchProviderRegistry {
+		$registry = new SearchProviderRegistry();
+		// Built-in text provider is always registered.
+		$registry->register($container->get(TextSearchProvider::class));
+		return $registry;
+	},
+
+	// TextSearchProvider autowires (IndexFilter + ObjectSearcher deps,
+	// both resolvable by PHP-DI). No explicit entry needed.
+
+	SearchService::class => function (ContainerInterface $container): SearchService {
+		return new SearchService(
+			$container->get(SearchProviderRegistry::class),
+			$container->get(TextSearchProvider::class),
+			$container->get(LoggerFactory::class)
+				->addFileHandler('search.log', level: Level::Info)
+				->createLogger('search'),
+			$container->get(Config::class),
+		);
+	},
+
+	// Bind the interface to the concrete implementation so PHP-DI autowires
+	// SearchServiceInterface injections (e.g. in the MCP search tools) to
+	// the same singleton SearchService instance.
+	SearchServiceInterface::class => fn (ContainerInterface $container): SearchService =>
+		$container->get(SearchService::class),
 ];

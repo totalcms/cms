@@ -392,6 +392,16 @@ $settings['mcp'] = [
 	'subscriptionsEnabled' => true,
 ];
 
+// Search providers — Phase 5.
+// activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').
+// indexOnSave: when true, T3 pushes object.created/updated events to the active
+//   provider's index() method. Disable during bulk imports to avoid embedding-API
+//   load; re-enable + run `tcms search:reindex` after.
+$settings['search'] = [
+	'activeProvider' => 'text',
+	'indexOnSave'    => true,
+];
+
 // OAuth 2.0 Server
 // RSA key pair for signing access tokens (JWTs) and encrypting auth code payloads.
 // Generate with: tcms oauth:setup (creates keys at the paths below).

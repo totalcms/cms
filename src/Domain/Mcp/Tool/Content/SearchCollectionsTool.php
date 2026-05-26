@@ -9,21 +9,23 @@ use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Query\Service\ObjectSearcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 
 /**
  * `search_collections(query, …)` — cross-collection full-text search. Plural
  * to mirror `list_collections` and contrast with the singular
- * `search_collection` (one collection only). Same architecture as B3:
- * safety filter applied per-collection BEFORE `ObjectSearcher::search()`
- * so drafts can never leak to public callers even when crossing collection
+ * `search_collection` (one collection only). Routes through SearchService
+ * per-collection (TextSearchProvider does not support cross-collection queries)
+ * so the safety filter is applied inside the provider before ObjectSearcher
+ * runs — drafts can never leak to public callers even when crossing collection
  * boundaries.
  *
  * Each result carries a `collection` field so the agent can chain into
@@ -40,9 +42,9 @@ readonly class SearchCollectionsTool
 	private const LIMIT_CAP = 50;
 
 	public function __construct(
-		private IndexFilter $indexFilter,
-		private ObjectSearcher $searcher,
+		private SearchServiceInterface $searchService,
 		private CollectionRepository $collections,
+		private ObjectFetcher $objectFetcher,
 		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
@@ -85,8 +87,7 @@ readonly class SearchCollectionsTool
 			);
 		}
 
-		$persona       = $this->personaContext->current();
-		$filterOptions = $persona === McpPersona::PUBLIC_ ? ['exclude' => 'draft:true'] : [];
+		$persona = $this->personaContext->current();
 
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
@@ -97,19 +98,30 @@ readonly class SearchCollectionsTool
 		$aggregate   = [];
 
 		foreach ($visible as $collection) {
-			// Safety filter applied PER COLLECTION before the search runs —
-			// same architectural guarantee as SearchCollectionTool. Drafts
-			// never make it into the array ObjectSearcher sees.
-			$items   = $this->indexFilter->fetchFilteredIndex($collection->id, $filterOptions);
-			$matches = $this->searcher->search($items, $query);
+			// SearchService routes to TextSearchProvider which applies the
+			// persona-based safety filter PER COLLECTION before ObjectSearcher
+			// runs — same architectural guarantee as before. Drafts never make
+			// it into the results for public callers.
+			$results = $this->searchService->search(new SearchQuery(
+				text:       $query,
+				collection: $collection->id,
+				limit:      $cappedLimit,
+				persona:    $persona->value,
+			));
 
-			if ($matches === []) {
+			if ($results === []) {
 				continue;
 			}
 
 			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
 			$renderable = $this->schemaResolver->renderableProperties($collection);
-			foreach ($matches as $item) {
+
+			foreach ($results as $result) {
+				if (!$this->objectFetcher->existsObject($collection->id, $result->id)) {
+					continue;
+				}
+				$item = $this->objectFetcher->fetchObject($collection->id, $result->id)->toArray();
+
 				foreach ($nonExposed as $field) {
 					unset($item[$field]);
 				}
