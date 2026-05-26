@@ -24,14 +24,15 @@ class JobData
 		self::STATUS_FAILED,
 	];
 
-	public const TYPE_IMPORT      = 'import';
-	public const TYPE_UPDATE      = 'update';
-	public const TYPE_EXPORT      = 'export';
-	public const TYPE_REBUILD     = 'rebuild';
-	public const TYPE_FACTORY     = 'factory';
-	public const TYPE_VIEW_UPDATE = 'view_update';
-	public const TYPE_EMAIL       = 'email';
-	public const TYPE_LIST        = [
+	public const TYPE_IMPORT         = 'import';
+	public const TYPE_UPDATE         = 'update';
+	public const TYPE_EXPORT         = 'export';
+	public const TYPE_REBUILD        = 'rebuild';
+	public const TYPE_FACTORY        = 'factory';
+	public const TYPE_VIEW_UPDATE    = 'view_update';
+	public const TYPE_EMAIL          = 'email';
+	public const TYPE_SEARCH_REINDEX = 'search.reindex';
+	public const TYPE_LIST           = [
 		self::TYPE_IMPORT,
 		self::TYPE_EXPORT,
 		self::TYPE_REBUILD,
@@ -39,6 +40,7 @@ class JobData
 		self::TYPE_FACTORY,
 		self::TYPE_VIEW_UPDATE,
 		self::TYPE_EMAIL,
+		self::TYPE_SEARCH_REINDEX,
 	];
 
 	/** @return array<string,string|int> */

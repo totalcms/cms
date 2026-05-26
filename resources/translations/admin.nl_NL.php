@@ -342,6 +342,8 @@ return [
 	'settings.oauth_desc'              => 'Instellingen voor OAuth 2.1-autorisatieserver (sleutelpaden, tokenlevensduur, snelheidslimieten, dynamische registratie)',
 	'settings.pushnotif'               => 'Pushmeldingen',
 	'settings.pushnotif_desc'          => 'Configuratie van pushmeldingservices',
+	'settings.search'                  => 'Zoekproviders',
+	'settings.search_desc'             => 'Configureer de zoekbackend voor MCP-tools (en toekomstige sitewijde zoekopdrachten).',
 	'settings.presets'                 => 'Instellingspresets',
 	'settings.presets_desc'            => 'Benoemde eigenschap-instellingspresets voor hergebruik in Schemas',
 	'settings.smtp'                    => 'SMTP',

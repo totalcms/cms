@@ -1,0 +1,25 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Search Providers",
+	"description" : "Configure the search backend used by MCP tools and (eventually) site-wide search. The built-in text provider is always available; install search-provider extensions to add semantic / hosted backends.",
+	"type"        : "object",
+	"properties"  : {
+		"activeProvider": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Active Provider",
+			"help"    : "Pick the search backend that MCP search tools use. <strong>Text Search</strong> (built-in) operates on T3's existing IndexData with no external dependencies — keyword-only matching. Install a search provider extension (Algolia, etc.) to add additional options here.",
+			"default" : "text",
+			"options" : [
+				{ "value": "text", "label": "Text Search (built-in)" }
+			]
+		},
+		"indexOnSave": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Index on save",
+			"help"    : "Push content changes (object.created / object.updated / object.deleted) to the active provider's index automatically. Disable during bulk imports to avoid embedding-API load; re-enable + run <code>tcms search:reindex --all</code> after to backfill. Has no effect when the active provider is <strong>Text Search</strong> (which is maintained by T3's own IndexBuilder).",
+			"default" : true
+		}
+	}
+}

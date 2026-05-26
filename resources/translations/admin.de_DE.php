@@ -342,6 +342,8 @@ return [
 	'settings.oauth_desc'              => 'OAuth-2.1-Autorisierungsserver-Einstellungen (Schlüsselpfade, Token-Lebensdauer, Ratenlimits, dynamische Registrierung)',
 	'settings.pushnotif'               => 'Push-Benachrichtigungen',
 	'settings.pushnotif_desc'          => 'Konfiguration des Push-Benachrichtigungsdienstes',
+	'settings.search'                  => 'Suchanbieter',
+	'settings.search_desc'             => 'Suchbackend für MCP-Werkzeuge konfigurieren (und zukünftige seitenweite Suche).',
 	'settings.presets'                 => 'Einstellungs-Vorlagen',
 	'settings.presets_desc'            => 'Benannte Eigenschaftseinstellungs-Vorlagen zur Wiederverwendung in Schemas',
 	'settings.smtp'                    => 'SMTP',

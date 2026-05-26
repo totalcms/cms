@@ -43,6 +43,7 @@ use TotalCMS\Domain\Event\Listener\DataViewListener;
 use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Listener\McpResourceSubscriptionListener;
+use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -426,6 +427,15 @@ return [
 		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('devmode.disabled', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onDevModeDisabled'), -50);
 
+		// ContentChangeListener — push content changes to the active search
+		// provider's index/delete. Skips when active=text or indexOnSave=false;
+		// failures enqueue search.reindex jobs for retry. Priority -50 so it
+		// runs after the metadata/index listeners (-100) but before extension
+		// listeners (default 0).
+		$dispatcher->listen('object.created', $lazy(ContentChangeListener::class, 'onObjectSaved'), -50);
+		$dispatcher->listen('object.updated', $lazy(ContentChangeListener::class, 'onObjectSaved'), -50);
+		$dispatcher->listen('object.deleted', $lazy(ContentChangeListener::class, 'onObjectDeleted'), -50);
+
 		return $dispatcher;
 	},
 
@@ -694,6 +704,7 @@ return [
 				->addFileHandler('search.log', level: Level::Info)
 				->createLogger('search'),
 			$container->get(Config::class),
+			$container->get(CollectionFetcher::class),
 		);
 	},
 

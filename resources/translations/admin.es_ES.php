@@ -342,6 +342,8 @@ return [
 	'settings.oauth_desc'              => 'Configuración del servidor de autorización OAuth 2.1 (rutas de claves, vida útil de tokens, límites de velocidad, registro dinámico)',
 	'settings.pushnotif'               => 'Notificaciones Push',
 	'settings.pushnotif_desc'          => 'Configuración del servicio de notificaciones push',
+	'settings.search'                  => 'Proveedores de búsqueda',
+	'settings.search_desc'             => 'Configura el backend de búsqueda para las herramientas MCP (y la búsqueda global futura).',
 	'settings.presets'                 => 'Preajustes de configuración',
 	'settings.presets_desc'            => 'Preajustes de configuración de propiedades con nombre para reutilizar en schemas',
 	'settings.smtp'                    => 'SMTP',

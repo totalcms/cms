@@ -85,6 +85,9 @@ final class ExtensionContext
 	/** @var list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> MCP resource templates (URI patterns with {placeholder} segments) */
 	private array $mcpResourceTemplates = [];
 
+	/** @var list<\TotalCMS\Domain\Search\Service\SearchProvider> */
+	private array $searchProviders = [];
+
 	public function __construct(
 		private readonly ExtensionManifest $manifest,
 		private readonly string $extensionPath,
@@ -338,6 +341,34 @@ final class ExtensionContext
 			'access'      => $access,
 			'mimeType'    => $mimeType,
 		];
+	}
+
+	/**
+	 * Register a search provider. The extension is responsible for the provider's
+	 * full lifecycle (index, query, delete) and any external dependencies (API
+	 * clients, vector stores, etc.). Provider ids must be unique across all
+	 * extensions + the built-in 'text' provider; the registrar logs + skips on
+	 * collisions during boot.
+	 *
+	 * Typical use: a Pro-edition-gated provider extension calls this from its
+	 * `register()` lifecycle method:
+	 *
+	 *   public function register(ExtensionContext $context): void {
+	 *       if (!$context->editionAllows(EditionFeature::ALGOLIA_SEARCH)) return;
+	 *       $context->registerSearchProvider(new AlgoliaSearchProvider(...));
+	 *   }
+	 */
+	public function registerSearchProvider(\TotalCMS\Domain\Search\Service\SearchProvider $provider): void
+	{
+		$this->searchProviders[] = $provider;
+	}
+
+	/**
+	 * @return list<\TotalCMS\Domain\Search\Service\SearchProvider>
+	 */
+	public function getRegisteredSearchProviders(): array
+	{
+		return $this->searchProviders;
 	}
 
 	/**
@@ -649,6 +680,7 @@ final class ExtensionContext
 			'page-middleware' => 'Page Middleware',
 			'mcp:tools'       => 'MCP Tools',
 			'mcp:resources'   => 'MCP Resources',
+			'mcp:search'      => 'Search Provider',
 		];
 	}
 
@@ -716,6 +748,9 @@ final class ExtensionContext
 		}
 		if ($this->mcpResources !== [] || $this->mcpResourceTemplates !== []) {
 			$caps['mcp:resources'] = true;
+		}
+		if ($this->searchProviders !== []) {
+			$caps['mcp:search'] = true;
 		}
 
 		return $caps;

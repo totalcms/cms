@@ -342,6 +342,8 @@ return [
 	'settings.oauth_desc'              => 'Impostazioni del server di autorizzazione OAuth 2.1 (percorsi chiavi, durata token, limiti di velocità, registrazione dinamica)',
 	'settings.pushnotif'               => 'Notifiche push',
 	'settings.pushnotif_desc'          => 'Configurazione del servizio di notifiche push',
+	'settings.search'                  => 'Provider di ricerca',
+	'settings.search_desc'             => 'Configura il backend di ricerca per gli strumenti MCP (e la futura ricerca a livello di sito).',
 	'settings.presets'                 => 'Preset impostazioni',
 	'settings.presets_desc'            => 'Preset di impostazioni proprietà nominati per il riutilizzo tra schemi',
 	'settings.smtp'                    => 'SMTP',

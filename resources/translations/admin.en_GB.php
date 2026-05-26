@@ -342,6 +342,8 @@ return [
 	'settings.oauth_desc'              => 'OAuth 2.1 authorisation server settings (key paths, token lifetimes, rate limits, dynamic registration)',
 	'settings.pushnotif'               => 'Push Notifications',
 	'settings.pushnotif_desc'          => 'Push notification service configuration',
+	'settings.search'                  => 'Search Providers',
+	'settings.search_desc'             => 'Configure the search backend for MCP tools (and future site-wide search).',
 	'settings.presets'                 => 'Setting Presets',
 	'settings.presets_desc'            => 'Named property setting presets for reuse across schemas',
 	'settings.smtp'                    => 'SMTP',

@@ -16,6 +16,7 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
+use TotalCMS\Domain\Search\Job\ReindexJob;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -39,6 +40,7 @@ readonly class JobRunner
 		private EmailService $emailService,
 		private BulkMailerRepository $bulkMailerRepository,
 		private ObjectFetcher $objectFetcher,
+		private ReindexJob $searchReindexJob,
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -226,6 +228,9 @@ readonly class JobRunner
 				break;
 			case JobData::TYPE_EMAIL:
 				$this->processEmailJob($job);
+				break;
+			case JobData::TYPE_SEARCH_REINDEX:
+				$this->processSearchReindexJob($job);
 				break;
 			default:
 				$error = 'Unknown job type: ' . $job->type;
@@ -430,6 +435,11 @@ readonly class JobRunner
 			'collection' => $collection,
 			'batchId'    => $batchId,
 		]);
+	}
+
+	private function processSearchReindexJob(JobData $job): void
+	{
+		$this->searchReindexJob->run($job);
 	}
 
 	/**

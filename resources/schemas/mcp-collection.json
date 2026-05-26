@@ -4,7 +4,7 @@
 	"id"          : "mcp-collection",
 	"type"        : "object",
 	"description" : "Per-collection MCP server settings. Used as a card sub-schema on the collection meta. Controls whether the collection is exposed to AI agents via /mcp and how it appears to them.",
-	"formgrid"    : "access\ndescription\ntools\nresource",
+	"formgrid"    : "access\nsearchProvider\ndescription\ntools\nresource",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -15,6 +15,17 @@
 			"settings" : {
 				"readonly" : true
 			}
+		},
+		"searchProvider": {
+			"type"        : "string",
+			"label"       : "Search Provider Override",
+			"help"        : "Optional override of the site-wide search provider for this collection. <strong>Default</strong>: use the active provider from Settings → Search Providers. <strong>Text</strong>: force text search for this collection (good for SKU-heavy content where exact matches matter).",
+			"field"       : "select",
+			"default"     : "default",
+			"options"     : [
+				{ "value" : "default", "label" : "Use site-wide default" },
+				{ "value" : "text",    "label" : "Text Search (built-in)" }
+			]
 		},
 		"access": {
 			"type"        : "string",

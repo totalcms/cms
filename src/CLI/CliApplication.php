@@ -53,6 +53,9 @@ class CliApplication
 		$app->addCommand(new Command\OAuth\OAuthSetupCommand($totalcms));
 		$app->addCommand(new Command\OAuth\OAuthGcCommand($totalcms));
 
+		// Search commands
+		$app->addCommand(new Command\Search\SearchReindexCommand($totalcms));
+
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));
 		$app->addCommand(new Command\SchemaGetCommand($totalcms));

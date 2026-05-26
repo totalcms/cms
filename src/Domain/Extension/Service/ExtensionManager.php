@@ -259,6 +259,29 @@ class ExtensionManager
 			}
 		}
 
+		// Wire extension search providers into the SearchProviderRegistry.
+		// Strict-deny on collisions (matches MCP tool registrar policy). The
+		// registry's register() method already throws LogicException on
+		// duplicate ids — wrap each call so one bad extension can't break the
+		// rest of the drain.
+		if ($this->container->has(\TotalCMS\Domain\Search\Service\SearchProviderRegistry::class)) {
+			/** @var \TotalCMS\Domain\Search\Service\SearchProviderRegistry $searchRegistry */
+			$searchRegistry = $this->container->get(\TotalCMS\Domain\Search\Service\SearchProviderRegistry::class);
+			foreach ($this->getAllMcpSearchProviders() as $extensionId => $providers) {
+				foreach ($providers as $provider) {
+					try {
+						$searchRegistry->register($provider);
+					} catch (\LogicException $e) {
+						$this->logger->warning('Extension search provider registration collision; skipped', [
+							'extension'   => $extensionId,
+							'provider_id' => $provider->id(),
+							'message'     => $e->getMessage(),
+						]);
+					}
+				}
+			}
+		}
+
 		// Wire Twig items from extensions into the TwigEngine (with collision protection)
 		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
 			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
@@ -655,6 +678,29 @@ class ExtensionManager
 			}
 		}
 
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension list of registered search providers. Drained during
+	 * boot() into the SearchProviderRegistry; collisions with the built-in
+	 * 'text' provider OR another extension's provider are logged + skipped.
+	 * Gated by the `mcp:search` capability permission.
+	 *
+	 * @return array<string,list<\TotalCMS\Domain\Search\Service\SearchProvider>>
+	 */
+	public function getAllMcpSearchProviders(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:search')) {
+				continue;
+			}
+			$providers = $context->getRegisteredSearchProviders();
+			if ($providers !== []) {
+				$byExtension[$id] = $providers;
+			}
+		}
 		return $byExtension;
 	}
 
