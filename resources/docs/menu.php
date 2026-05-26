@@ -193,6 +193,7 @@ return [
 			['title' => 'REST API',     'path' => 'apis/rest-api'],
 			['title' => 'PHP API',      'path' => 'apis/php-api'],
 			['title' => 'API Keys',     'path' => 'apis/api-keys'],
+			['title' => 'OAuth Server', 'path' => 'apis/oauth'],
 			['title' => 'Index Filter', 'path' => 'apis/index-filter'],
 			['title' => 'OpenAPI Docs', 'path' => 'apis/openapi'],
 		],
@@ -201,7 +202,6 @@ return [
 		'title' => 'MCP',
 		'sub'   => [
 			['title' => 'MCP Server',        'path' => 'mcp/server'],
-			['title' => 'OAuth Server',      'path' => 'mcp/oauth'],
 			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
 			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
 		],

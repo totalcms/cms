@@ -3,9 +3,9 @@ title: OAuth Server
 description: Connect external services and AI clients to your T3 site via OAuth 2.1
 audience: intermediate
 related:
-  - mcp/server
-  - mcp/saved-query-tools
   - apis/api-keys
+  - apis/rest-api
+  - mcp/server
 updated: 2026-05-25
 ---
 
