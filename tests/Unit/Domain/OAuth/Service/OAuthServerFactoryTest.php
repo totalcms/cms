@@ -16,10 +16,13 @@ use TotalCMS\Domain\OAuth\Adapter\LeagueRefreshTokenRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Support\Config;
+use Psr\Log\NullLogger;
 
 final class OAuthServerFactoryTest extends TestCase
 {
@@ -86,9 +89,15 @@ final class OAuthServerFactoryTest extends TestCase
 		$revocation  = new OAuthRevocationList($cache, 3600);
 		$scopeReg    = new OAuthScopeRegistry();
 
+		$replayCache = $this->createMock(CacheManager::class);
+		$replayCache->method('storeComputedData')->willReturn(true);
+		$replayCache->method('getComputedData')->willReturn(null);
+		$replayDetector = new OAuthReplayDetector($replayCache, 2592000);
+		$activityLogger = new OAuthActivityLogger(new NullLogger());
+
 		$leagueClients       = new LeagueClientRepository($clientRepo);
 		$leagueAccessTokens  = new LeagueAccessTokenRepository($revocation);
-		$leagueRefreshTokens = new LeagueRefreshTokenRepository($grantRepo);
+		$leagueRefreshTokens = new LeagueRefreshTokenRepository($grantRepo, $replayDetector, $activityLogger);
 		$leagueAuthCodes     = new LeagueAuthCodeRepository($cache);
 		$leagueScopes        = new LeagueScopeRepository($scopeReg, $clientRepo);
 

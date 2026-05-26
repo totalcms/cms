@@ -87,7 +87,9 @@ use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
 use TotalCMS\Domain\Migration\Service\MigrationRunner;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
@@ -653,7 +655,18 @@ return [
 		3600, // TODO: derive from $config->oauth['accessTokenTtl'] DateInterval if needed
 	),
 
+	OAuthReplayDetector::class => fn (ContainerInterface $container): OAuthReplayDetector => new OAuthReplayDetector(
+		$container->get(CacheManager::class),
+		refreshTokenTtlSeconds: 30 * 24 * 3600, // 30 days; matches default refresh TTL
+	),
+
 	AuthorizationServer::class => fn (ContainerInterface $container): AuthorizationServer => $container->get(OAuthServerFactory::class)->buildAuthorizationServer(),
 
 	ResourceServer::class => fn (ContainerInterface $container): ResourceServer => $container->get(OAuthServerFactory::class)->buildResourceServer(),
+
+	OAuthActivityLogger::class => fn (ContainerInterface $container): OAuthActivityLogger => new OAuthActivityLogger(
+		$container->get(LoggerFactory::class)
+			->addFileHandler('oauth-activity.log', level: Level::Info)
+			->createLogger('oauth-activity'),
+	),
 ];

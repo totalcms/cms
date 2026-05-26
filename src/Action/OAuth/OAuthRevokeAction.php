@@ -14,6 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -45,6 +46,7 @@ readonly class OAuthRevokeAction
 		private OAuthRevocationList $revocationList,
 		private JsonRenderer $renderer,
 		private Config $config,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -88,6 +90,7 @@ readonly class OAuthRevokeAction
 				$grant = $this->grants->findByRefreshTokenHash($hash);
 				if ($grant !== null && $grant->clientId === $client->id) {
 					$this->grants->delete($grant->id);
+					$this->activityLogger->tokenRevoked($client->id, 'refresh_token', $grant->id);
 					return $response->withStatus(200);
 				}
 			}
@@ -113,6 +116,7 @@ readonly class OAuthRevokeAction
 				// League sets the client id as the `aud` claim via permittedFor().
 				if ($jti !== '' && $client->id !== '' && $jwt->isPermittedFor($client->id)) {
 					$this->revocationList->revoke($jti);
+					$this->activityLogger->tokenRevoked($client->id, 'access_token', $jti);
 				}
 			} catch (\Throwable) {
 				// Token didn't parse as JWT. Per RFC 7009 §2.2, return 200 anyway.

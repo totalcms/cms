@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -39,6 +40,7 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 		private CacheManager $cache,
 		private JsonRenderer $renderer,
 		private Config $config,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -68,6 +70,7 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 		$count = $this->getCount($key);
 
 		if ($count >= $limit) {
+			$this->activityLogger->rateLimitHit($path, $ip);
 			return $this->tooManyRequests($limit, $window);
 		}
 

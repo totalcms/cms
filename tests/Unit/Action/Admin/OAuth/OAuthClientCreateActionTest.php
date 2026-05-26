@@ -7,9 +7,11 @@ namespace Tests\Unit\Action\Admin\OAuth;
 use Odan\Session\PhpSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\NullLogger;
 use Slim\Psr7\Response;
 use TotalCMS\Action\Admin\OAuth\OAuthClientCreateAction;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientCreator;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -42,7 +44,7 @@ final class OAuthClientCreateActionTest extends TestCase
 		$this->session->set(SessionKeys::AUTH_USER, 'admin@example.com');
 
 		$this->action = new OAuthClientCreateAction(
-			new OAuthClientCreator($this->clients, new OAuthScopeRegistry()),
+			new OAuthClientCreator($this->clients, new OAuthScopeRegistry(), new OAuthActivityLogger(new NullLogger())),
 			$this->session,
 			new JsonRenderer(),
 		);

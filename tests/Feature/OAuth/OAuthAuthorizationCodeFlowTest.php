@@ -23,6 +23,15 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
+
+	// Bump rate limits so cross-test accumulation doesn't trip the
+	// limiter (all tests share the same filesystem cache bucket per
+	// IP). The actual rate-limit behaviour is verified separately.
+	$config = $this->app->getContainer()->get(Config::class);
+	$config->oauth = array_merge($config->oauth, [
+		'tokenEndpointLimit'       => 10000,
+		'dynamicRegistrationLimit' => 10000,
+	]);
 });
 
 // ---------------------------------------------------------------------------

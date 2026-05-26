@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Service;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientCreator;
 use TotalCMS\Domain\OAuth\Service\OAuthDynamicRegistrar;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -22,7 +24,7 @@ final class OAuthDynamicRegistrarTest extends TestCase
 		$this->tmpFile = sys_get_temp_dir() . '/oauth-dyn-clients-' . uniqid() . '.json';
 		$this->clients = new OAuthClientRepository($this->tmpFile);
 		$this->scopes  = new OAuthScopeRegistry();
-		$creator       = new OAuthClientCreator($this->clients, $this->scopes);
+		$creator       = new OAuthClientCreator($this->clients, $this->scopes, new OAuthActivityLogger(new NullLogger()));
 		$this->registrar = new OAuthDynamicRegistrar($creator, $this->scopes);
 	}
 

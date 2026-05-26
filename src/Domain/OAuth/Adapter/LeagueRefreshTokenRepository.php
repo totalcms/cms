@@ -10,6 +10,8 @@ use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 
 /**
  * Bridges league's RefreshTokenRepositoryInterface to T3's OAuthGrantRepository.
@@ -22,6 +24,8 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 {
 	public function __construct(
 		private readonly OAuthGrantRepository $grants,
+		private readonly OAuthReplayDetector $replayDetector,
+		private readonly OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -63,6 +67,7 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 		$hash  = hash('sha256', $tokenId);
 		$grant = $this->grants->findByRefreshTokenHash($hash);
 		if ($grant !== null) {
+			$this->replayDetector->recordRotated($hash, $grant->clientId, $grant->userId);
 			$this->grants->delete($grant->id);
 		}
 	}
@@ -70,7 +75,35 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 	public function isRefreshTokenRevoked(string $tokenId): bool
 	{
 		$hash = hash('sha256', $tokenId);
-		return $this->grants->findByRefreshTokenHash($hash) === null;
+
+		if ($this->grants->findByRefreshTokenHash($hash) !== null) {
+			return false; // grant is live
+		}
+
+		// No live grant — check if this hash was previously rotated out.
+		$rotated = $this->replayDetector->getRotatedIdentity($hash);
+		if ($rotated !== null) {
+			// REPLAY DETECTED. Revoke all grants for this client+user.
+			$clientId = $rotated['client_id'];
+			$userId   = $rotated['user_id'];
+
+			$grantsForClient = $this->grants->findByClientId($clientId);
+			$revokedGrantId  = null;
+			foreach ($grantsForClient as $g) {
+				if ($g->userId === $userId) {
+					$this->grants->delete($g->id);
+					$revokedGrantId = $revokedGrantId ?? $g->id;
+				}
+			}
+
+			$this->activityLogger->refreshReplayDetected(
+				$clientId,
+				$revokedGrantId ?? '',
+				$hash,
+			);
+		}
+
+		return true; // either way, this specific token is revoked
 	}
 
 	/**

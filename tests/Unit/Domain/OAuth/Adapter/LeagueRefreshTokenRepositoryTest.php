@@ -6,6 +6,8 @@ namespace Tests\Unit\Domain\OAuth\Adapter;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueClientEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueRefreshTokenEntity;
@@ -13,6 +15,8 @@ use TotalCMS\Domain\OAuth\Adapter\LeagueRefreshTokenRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 
 final class LeagueRefreshTokenRepositoryTest extends TestCase
 {
@@ -24,7 +28,14 @@ final class LeagueRefreshTokenRepositoryTest extends TestCase
 	{
 		$this->tmpFile   = sys_get_temp_dir() . '/oauth-grants-' . uniqid() . '.json';
 		$this->grantRepo = new OAuthGrantRepository($this->tmpFile);
-		$this->adapter   = new LeagueRefreshTokenRepository($this->grantRepo);
+
+		$cache          = $this->createMock(CacheManager::class);
+		$cache->method('storeComputedData')->willReturn(true);
+		$cache->method('getComputedData')->willReturn(null);
+		$replayDetector = new OAuthReplayDetector($cache, 2592000);
+		$activityLogger = new OAuthActivityLogger(new NullLogger());
+
+		$this->adapter  = new LeagueRefreshTokenRepository($this->grantRepo, $replayDetector, $activityLogger);
 	}
 
 	protected function tearDown(): void

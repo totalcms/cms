@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Admin\OAuth;
 
+use Odan\Session\PhpSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Action\Admin\OAuth\OAuthClientDeleteAction;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class OAuthClientDeleteActionTest extends TestCase
@@ -35,10 +38,17 @@ final class OAuthClientDeleteActionTest extends TestCase
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 		$this->response       = $this->createMock(ResponseInterface::class);
 
+		$session = new PhpSession();
+		if (!$session->isStarted()) {
+			$session->start();
+		}
+
 		$this->action = new OAuthClientDeleteAction(
 			$this->clients,
 			$this->grants,
 			$this->jsonRenderer,
+			$session,
+			new OAuthActivityLogger(new NullLogger()),
 		);
 	}
 

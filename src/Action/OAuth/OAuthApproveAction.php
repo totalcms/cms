@@ -11,6 +11,7 @@ use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Adapter\LeagueUserEntity;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
 
@@ -20,6 +21,7 @@ readonly class OAuthApproveAction
 		private AuthorizationServer $authServer,
 		private PhpSession $session,
 		private TwigRenderer $twig,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -55,14 +57,31 @@ readonly class OAuthApproveAction
 		$parsed   = (array) $request->getParsedBody();
 		$decision = (string) ($parsed['decision'] ?? 'deny');
 
-		$authRequest->setUser(new LeagueUserEntity((string) $userId));
+		$clientId = $authRequest->getClient()->getIdentifier();
+		$userIdStr = (string) $userId;
+
+		$authRequest->setUser(new LeagueUserEntity($userIdStr));
 		$authRequest->setAuthorizationApproved($decision === 'approve');
 
 		// Clear the stashed request before delegating — avoid replay on server error.
 		$this->session->delete('oauth_authorize_request');
 
+		if ($decision !== 'approve') {
+			$this->activityLogger->consentDenied($clientId, $userIdStr);
+
+			try {
+				return $this->authServer->completeAuthorizationRequest($authRequest, $response);
+			} catch (OAuthServerException $e) {
+				return $this->twig->template(
+					$response->withStatus($e->getHttpStatusCode()),
+					'oauth/error.twig',
+					['errorType' => $e->getErrorType(), 'errorDescription' => $e->getMessage()],
+				);
+			}
+		}
+
 		try {
-			return $this->authServer->completeAuthorizationRequest($authRequest, $response);
+			$result = $this->authServer->completeAuthorizationRequest($authRequest, $response);
 		} catch (OAuthServerException $e) {
 			return $this->twig->template(
 				$response->withStatus($e->getHttpStatusCode()),
@@ -70,5 +89,14 @@ readonly class OAuthApproveAction
 				['errorType' => $e->getErrorType(), 'errorDescription' => $e->getMessage()],
 			);
 		}
+
+		$scopeObjects = $authRequest->getScopes();
+		$scopes = array_map(
+			static fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(),
+			$scopeObjects,
+		);
+		$this->activityLogger->consentGranted($clientId, $userIdStr, array_values($scopes));
+
+		return $result;
 	}
 }

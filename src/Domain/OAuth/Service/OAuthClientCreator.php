@@ -17,6 +17,7 @@ final class OAuthClientCreator
 	public function __construct(
 		private readonly OAuthClientRepository $clients,
 		private readonly OAuthScopeRegistry $scopes,
+		private readonly OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -61,6 +62,7 @@ final class OAuthClientCreator
 			iconPath:        $iconPath,
 		);
 		$this->clients->save($client);
+		$this->activityLogger->clientCreated($client->id, $client->name, $client->isDynamic, $createdBy);
 
 		return ['client' => $client, 'secret' => $secret];
 	}

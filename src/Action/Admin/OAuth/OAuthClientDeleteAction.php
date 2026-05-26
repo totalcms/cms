@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Admin\OAuth;
 
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -19,6 +22,8 @@ readonly class OAuthClientDeleteAction
 		private OAuthClientRepository $clients,
 		private OAuthGrantRepository $grants,
 		private JsonRenderer $jsonRenderer,
+		private PhpSession $session,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -45,6 +50,9 @@ readonly class OAuthClientDeleteAction
 		// Cascade: revoke all grants for this client, then delete the client.
 		$this->grants->deleteByClientId($id);
 		$this->clients->delete($id);
+
+		$deletedBy = (string)$this->session->get(SessionKeys::AUTH_USER, 'admin');
+		$this->activityLogger->clientDeleted($id, $deletedBy);
 
 		return $this->jsonRenderer->json($response, [
 			'success' => true,
