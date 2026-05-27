@@ -40,46 +40,54 @@ if (!defined('ROOT')) {
 	$src = __DIR__ . '/tcms-data-fixtures';
 	$dst = __DIR__ . '/tcms-data';
 
-	fwrite(STDERR, "[bootstrap] fixture restore: src={$src} dst={$dst}\n");
-	fwrite(STDERR, "[bootstrap] src is_dir=" . (is_dir($src) ? 'yes' : 'NO') . " dst is_dir=" . (is_dir($dst) ? 'yes' : 'no') . "\n");
-
-	if (!is_dir($src)) {
-		fwrite(STDERR, "[bootstrap] ERROR: fixtures source missing, aborting copy\n");
-		return;
+	if (is_dir($src)) {
+		$copy = function (string $src, string $dst) use (&$copy): void {
+			if (!is_dir($dst)) {
+				mkdir($dst, 0777, true);
+			}
+			foreach (scandir($src) as $item) {
+				if ($item === '.' || $item === '..') {
+					continue;
+				}
+				$s = $src . DIRECTORY_SEPARATOR . $item;
+				$d = $dst . DIRECTORY_SEPARATOR . $item;
+				if (is_dir($s)) {
+					$copy($s, $d);
+				} else {
+					copy($s, $d);
+				}
+			}
+		};
+		$copy($src, $dst);
 	}
 
-	$copied = 0;
-	$copy = function (string $src, string $dst) use (&$copy, &$copied): void {
-		if (!is_dir($dst)) {
-			$mk = mkdir($dst, 0777, true);
-			if (!$mk) {
-				fwrite(STDERR, "[bootstrap] ERROR: mkdir failed: {$dst}\n");
-			}
+	// Generate OAuth signing keys if missing. The OAuth server's
+	// AuthorizationServer + ResourceServer are constructed at every /api/*
+	// request via OAuthBearerMiddleware's DI; the constructor calls
+	// League\OAuth2\Server\CryptKey which throws "Invalid key supplied" if
+	// the key file is missing. Locally this can be masked by leftover dev
+	// keys; CI starts clean and needs these generated up front.
+	// Paths must match $settings['oauth']['signingKeyPath'] from
+	// config/local.test.php.
+	$keyDir = $dst . '/.system/oauth-keys';
+	if (!file_exists($keyDir . '/private.key') || !file_exists($keyDir . '/public.key')) {
+		if (!is_dir($keyDir)) {
+			mkdir($keyDir, 0700, true);
 		}
-		foreach (scandir($src) as $item) {
-			if ($item === '.' || $item === '..') {
-				continue;
-			}
-			$s = $src . DIRECTORY_SEPARATOR . $item;
-			$d = $dst . DIRECTORY_SEPARATOR . $item;
-			if (is_dir($s)) {
-				$copy($s, $d);
-			} else {
-				$ok = copy($s, $d);
-				if (!$ok) {
-					fwrite(STDERR, "[bootstrap] ERROR: copy failed: {$s} -> {$d}\n");
-				}
-				$copied++;
-			}
-		}
-	};
+		$res = openssl_pkey_new([
+			'private_key_type' => OPENSSL_KEYTYPE_RSA,
+			'private_key_bits' => 2048,
+		]);
+		if ($res !== false) {
+			openssl_pkey_export($res, $privKey);
+			file_put_contents($keyDir . '/private.key', $privKey);
+			chmod($keyDir . '/private.key', 0600);
 
-	$copy($src, $dst);
-	fwrite(STDERR, "[bootstrap] fixture restore complete: {$copied} files copied\n");
-	if (is_dir($dst . '/auth')) {
-		$authFiles = glob($dst . '/auth/*.json');
-		fwrite(STDERR, "[bootstrap] dst/auth/ has " . count($authFiles ?: []) . " json files\n");
-	} else {
-		fwrite(STDERR, "[bootstrap] WARN: dst/auth/ does not exist after copy\n");
+			$details = openssl_pkey_get_details($res);
+			if (is_array($details) && isset($details['key'])) {
+				file_put_contents($keyDir . '/public.key', $details['key']);
+				chmod($keyDir . '/public.key', 0644);
+			}
+		}
 	}
 })();

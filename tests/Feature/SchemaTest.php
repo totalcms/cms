@@ -19,29 +19,9 @@ function schemaTestData(): array
 }
 
 it('saves a new schema', function (): void {
-	$schema   = schemaTestData();
-	$id       = $schema['id'];
-	$response = postJson('/api/schemas', $schema);
-
-	// TEMP CI DIAGNOSTIC: dump response body when status isn't 200.
-	if ($response->getStatusCode() !== 200) {
-		fwrite(STDERR, "\n[CI DIAG] POST /api/schemas -> " . $response->getStatusCode() . "\n");
-		fwrite(STDERR, "[CI DIAG] body: " . (string)$response->getBody() . "\n");
-		fwrite(STDERR, "[CI DIAG] tcms-data/ contents:\n");
-		foreach (glob(cmsDataDir() . '*') ?: [] as $path) {
-			fwrite(STDERR, "  " . basename($path) . (is_dir($path) ? '/' : '') . "\n");
-		}
-		fwrite(STDERR, "[CI DIAG] auth/ contents:\n");
-		foreach (glob(cmsDataDir() . 'auth/*') ?: [] as $path) {
-			fwrite(STDERR, "  " . basename($path) . "\n");
-		}
-		fwrite(STDERR, "[CI DIAG] .system/ contents:\n");
-		foreach (glob(cmsDataDir() . '.system/*') ?: [] as $path) {
-			fwrite(STDERR, "  " . basename($path) . "\n");
-		}
-	}
-
-	$response
+	$schema = schemaTestData();
+	$id     = $schema['id'];
+	postJson('/api/schemas', $schema)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
