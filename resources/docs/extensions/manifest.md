@@ -165,6 +165,18 @@ Each entry must have a `label` and a `url`. Malformed entries are silently dropp
 
 If filtering leaves no visible links for the current state, the entire links row is hidden.
 
+### `hidden`
+
+When `true`, the extension is excluded from the admin Extensions page and the `tcms extension:list` CLI output. It still loads, registers, and boots normally — it just doesn't appear in the operator-facing management UI. Defaults to `false`.
+
+```json
+"hidden": true
+```
+
+Useful for bundled page-middleware extensions (like `protect`, `scheduled`, `maintenance`) that are enabled per-page via the Features field rather than globally via the Extension Manager. There's no toggle to show — the extension is always active; individual pages opt in.
+
+Hidden extensions can still be targeted by `tcms extension:enable` and `tcms extension:disable` if you know the ID.
+
 ### `license`
 
 License identifier (e.g. `MIT`, `proprietary`).

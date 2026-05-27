@@ -14,14 +14,14 @@
 		},
 		"adminApiKey": {
 			"type": "string",
-			"field": "password",
+			"field": "secret",
 			"label": "Admin API Key",
 			"help": "Used for indexing content. KEEP SECRET — anyone with this key can modify your Algolia data.",
 			"default": ""
 		},
 		"searchApiKey": {
 			"type": "string",
-			"field": "text",
+			"field": "secret",
 			"label": "Search-Only API Key",
 			"help": "Used for querying. Safe to expose in client-side code (eventually — not used by T3 directly).",
 			"default": ""

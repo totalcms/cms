@@ -26,6 +26,11 @@ final readonly class ExtensionManifest
 	 *                                                                rather than installed by the user. Bundled extensions can be
 	 *                                                                disabled but not removed. Set by ExtensionDiscovery — not declared
 	 *                                                                in the manifest JSON.
+	 * @param bool                                    $hidden         When true, the extension is excluded from the admin Extensions
+	 *                                                                page and `extension:list` CLI output. It still loads, registers,
+	 *                                                                and boots normally — it's just invisible to operators. Useful for
+	 *                                                                bundled page-middleware that's enabled/disabled per page, not
+	 *                                                                globally via the Extension Manager.
 	 */
 	public function __construct(
 		public string $id,
@@ -41,6 +46,7 @@ final readonly class ExtensionManifest
 		public array $links = [],
 		public string $icon = '',
 		public bool $bundled = false,
+		public bool $hidden = false,
 	) {
 	}
 
@@ -62,6 +68,7 @@ final readonly class ExtensionManifest
 			license: (string)($data['license'] ?? 'proprietary'),
 			links: self::parseLinks($data['links'] ?? null),
 			icon: (string)($data['icon'] ?? ''),
+			hidden: (bool)($data['hidden'] ?? false),
 		);
 	}
 
@@ -135,6 +142,7 @@ final readonly class ExtensionManifest
 			links: $this->links,
 			icon: $this->icon,
 			bundled: $bundled,
+			hidden: $this->hidden,
 		);
 	}
 
@@ -160,6 +168,7 @@ final readonly class ExtensionManifest
 			links: $this->links,
 			icon: $this->icon,
 			bundled: $this->bundled,
+			hidden: $this->hidden,
 		);
 	}
 

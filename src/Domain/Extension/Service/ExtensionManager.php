@@ -523,6 +523,9 @@ class ExtensionManager
 
 		$extensions = [];
 		foreach ($manifests as $id => $manifest) {
+			if ($manifest->hidden) {
+				continue;
+			}
 			$extensions[] = $this->buildExtensionInfo($id, $manifest, $states[$id] ?? null, $capabilityLabels);
 		}
 
@@ -590,6 +593,7 @@ class ExtensionManager
 			'links'           => $manifest->links,
 			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
 			'icon'            => $this->resolveIcon($id, $manifest),
+			'hidden'          => $manifest->hidden,
 		];
 	}
 

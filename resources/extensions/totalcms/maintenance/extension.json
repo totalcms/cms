@@ -1,0 +1,24 @@
+{
+    "id"          : "totalcms/maintenance",
+    "name"        : "Maintenance",
+    "description" : "Per-page 503 maintenance mode. Take individual pages offline with a custom message while the rest of the site stays up. Admins bypass automatically.",
+    "icon"        : "icon.png",
+    "hidden"      : false,
+    "requires"    : {
+        "totalcms" : ">=3.5.0-beta",
+        "php"      : ">=8.2"
+    },
+    "entrypoint"       : "Extension.php",
+    "settings_schema"  : "settings.json",
+    "author"     : {
+        "name" : "Total CMS",
+        "url"  : "https://totalcms.co"
+    },
+    "license" : "proprietary",
+    "links"   : [
+        {
+            "label" : "Documentation",
+            "url"   : "docs/extensions/bundled/maintenance"
+        }
+    ]
+}

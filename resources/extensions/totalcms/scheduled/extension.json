@@ -1,8 +1,9 @@
 {
-    "id"          : "totalcms/ab-split",
-    "name"        : "A/B Split",
-    "description" : "Render an alternate template at the same URL for a percentage of visitors. Useful for testing layout, copy, or CTA variations without changing the page URL.",
+    "id"          : "totalcms/scheduled",
+    "name"        : "Scheduled",
+    "description" : "Time-window gating. Only renders a page between configured start and end timestamps. For holiday campaigns, embargoed announcements, and time-limited sales.",
     "icon"        : "icon.png",
+    "hidden"      : false,
     "requires"    : {
         "totalcms" : ">=3.5.0-beta",
         "php"      : ">=8.2"
@@ -16,7 +17,7 @@
     "links"   : [
         {
             "label" : "Documentation",
-            "url"   : "docs/extensions/bundled/ab-split"
+            "url"   : "docs/extensions/bundled/scheduled"
         }
     ]
 }

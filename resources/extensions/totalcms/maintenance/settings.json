@@ -1,0 +1,25 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Maintenance",
+	"description": "Default settings for per-page maintenance mode. Individual pages can override these in their Page Data JSON.",
+	"type": "object",
+	"properties": {
+		"message": {
+			"type": "string",
+			"field": "textarea",
+			"label": "Default Message",
+			"help": "Shown to visitors when a page is in maintenance mode. Pages can override this in their Page Data.",
+			"placeholder": "This page is temporarily unavailable.",
+			"default": "This page is temporarily unavailable."
+		},
+		"retryAfter": {
+			"type": "number",
+			"field": "number",
+			"label": "Default Retry-After (seconds)",
+			"help": "Value for the <code>Retry-After</code> response header. Tells crawlers and clients how long to wait before retrying.",
+			"placeholder": "3600",
+			"default": 3600,
+			"min": 0
+		}
+	}
+}

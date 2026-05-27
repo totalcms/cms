@@ -31,6 +31,9 @@ class ExtensionListCommand extends BaseCommand
 
 		$data = [];
 		foreach ($manifests as $id => $manifest) {
+			if ($manifest->hidden) {
+				continue;
+			}
 			$state  = $states[$id] ?? null;
 			$data[] = [
 				'id'      => $id,

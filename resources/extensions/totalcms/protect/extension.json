@@ -1,0 +1,24 @@
+{
+	"id"          : "totalcms/protect",
+	"name"        : "Protect",
+	"description" : "Gate a page behind a numeric passcode. Visitors enter a code to unlock — cookie remembers them for 7 days. For client previews and soft launches.",
+	"icon"        : "icon.png",
+	"hidden"      : false,
+	"requires"    : {
+		"totalcms" : ">=3.5.0-beta",
+		"php"      : ">=8.2"
+	},
+	"entrypoint"       : "Extension.php",
+	"settings_schema"  : "settings.json",
+	"author"     : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary",
+	"links"   : [
+		{
+			"label" : "Documentation",
+			"url"   : "docs/extensions/bundled/protect"
+		}
+	]
+}
