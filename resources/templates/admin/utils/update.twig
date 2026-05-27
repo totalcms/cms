@@ -185,7 +185,13 @@ document.getElementById('update-btn')?.addEventListener('click', async () => {
 	results.innerHTML = '';
 
 	try {
-		const res = await fetch('utils/update/apply', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+		const res = await fetch('utils/update/apply', {
+			method: 'POST',
+			headers: {
+				'X-Requested-With': 'XMLHttpRequest',
+				'X-CSRF-Token': '{{ csrf_token() }}',
+			},
+		});
 		const data = await res.json();
 		if (data.success) {
 			available.innerHTML = `<div class="update-installing success"><h3>${data.message}</h3></div>`;

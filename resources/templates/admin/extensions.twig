@@ -160,6 +160,7 @@
 			<a href="extensions/{{ ext.id }}/settings" class="dash-card-action edit" title="Settings" style="--icon-edit: var(--icon-cog);"></a>
 			{% endif %}
 			<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/disable" style="margin:0;">
+				{{ csrf_field() }}
 				<button type="submit" class="btn btn-sm">Disable</button>
 			</form>
 		</div>
@@ -169,6 +170,7 @@
 		<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ') }}">Enable</button>
 		{% else %}
 		<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
+			{{ csrf_field() }}
 			<button type="submit" class="btn btn-sm btn-primary">Enable</button>
 		</form>
 		{% endif %}
