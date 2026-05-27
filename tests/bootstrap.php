@@ -40,13 +40,21 @@ if (!defined('ROOT')) {
 	$src = __DIR__ . '/tcms-data-fixtures';
 	$dst = __DIR__ . '/tcms-data';
 
+	fwrite(STDERR, "[bootstrap] fixture restore: src={$src} dst={$dst}\n");
+	fwrite(STDERR, "[bootstrap] src is_dir=" . (is_dir($src) ? 'yes' : 'NO') . " dst is_dir=" . (is_dir($dst) ? 'yes' : 'no') . "\n");
+
 	if (!is_dir($src)) {
+		fwrite(STDERR, "[bootstrap] ERROR: fixtures source missing, aborting copy\n");
 		return;
 	}
 
-	$copy = function (string $src, string $dst) use (&$copy): void {
+	$copied = 0;
+	$copy = function (string $src, string $dst) use (&$copy, &$copied): void {
 		if (!is_dir($dst)) {
-			mkdir($dst, 0777, true);
+			$mk = mkdir($dst, 0777, true);
+			if (!$mk) {
+				fwrite(STDERR, "[bootstrap] ERROR: mkdir failed: {$dst}\n");
+			}
 		}
 		foreach (scandir($src) as $item) {
 			if ($item === '.' || $item === '..') {
@@ -57,10 +65,21 @@ if (!defined('ROOT')) {
 			if (is_dir($s)) {
 				$copy($s, $d);
 			} else {
-				copy($s, $d);
+				$ok = copy($s, $d);
+				if (!$ok) {
+					fwrite(STDERR, "[bootstrap] ERROR: copy failed: {$s} -> {$d}\n");
+				}
+				$copied++;
 			}
 		}
 	};
 
 	$copy($src, $dst);
+	fwrite(STDERR, "[bootstrap] fixture restore complete: {$copied} files copied\n");
+	if (is_dir($dst . '/auth')) {
+		$authFiles = glob($dst . '/auth/*.json');
+		fwrite(STDERR, "[bootstrap] dst/auth/ has " . count($authFiles ?: []) . " json files\n");
+	} else {
+		fwrite(STDERR, "[bootstrap] WARN: dst/auth/ does not exist after copy\n");
+	}
 })();
