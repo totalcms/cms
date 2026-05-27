@@ -5,22 +5,18 @@
 	"type"        : "object",
 	"title"       : "MCP Prompt",
 	"description" : "A templated AI-agent workflow exposed via the MCP server's prompts/list and prompts/get endpoints.",
-	"formgrid"    : "name\ndescription\ntargetCollection\naccess\nargs\nbody",
-	"required"    : ["name", "description", "body"],
+	"formgrid"    : "id\ndescription\ntargetCollection\naccess\nargs\nbody",
+	"required"    : ["id", "description", "body"],
 	"properties"  : {
 		"id": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"    : "ID",
-			"field"    : "id",
-			"factory"  : "slug",
-			"settings" : { "readonly" : true }
-		},
-		"name": {
-			"type"        : "string",
-			"pattern"     : "^[a-z][a-z0-9_]*$",
-			"maxLength"   : 64,
-			"label"       : "Name",
-			"help"        : "Snake_case identifier AI clients use to call this prompt. Globally unique."
+			"$ref"      : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"     : "Name",
+			"help"      : "Snake_case identifier AI clients use to call this prompt.",
+			"field"     : "id",
+			"factory"   : "slug",
+			"pattern"   : "^[a-z][a-z0-9_]*$",
+			"maxLength" : 64,
+			"settings"  : { "snakeCase" : true }
 		},
 		"description": {
 			"type"        : "string",
@@ -34,18 +30,18 @@
 			"label"       : "Target Collection",
 			"help"        : "Which collection this prompt scopes to. Leave blank for site-wide.",
 			"field"       : "select",
-			"factory"     : "collections",
-			"default"     : "",
-			"settings"    : { "placeholder" : "(site-wide)" }
+			"placeholder" : "All Collections",
+			"settings"    : {
+				"propertyOptions" : "collectionIds"
+			}
 		},
 		"access": {
 			"type"        : "string",
 			"label"       : "Access",
 			"help"        : "Who can call this prompt. Defaults to inheriting the target collection's MCP access (admin for site-wide).",
 			"field"       : "select",
-			"default"     : "",
+			"placeholder" : "Inherit from Collection",
 			"options"     : [
-				{ "value" : "",              "label" : "(inherit from collection)" },
 				{ "value" : "admin",         "label" : "Admin only (API key)" },
 				{ "value" : "authenticated", "label" : "Authenticated (OAuth Bearer token)" },
 				{ "value" : "public",        "label" : "Public (anonymous AI agents)" }

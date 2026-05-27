@@ -50,11 +50,15 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
@@ -437,6 +441,13 @@ return [
 		$dispatcher->listen('object.updated', $lazy(ContentChangeListener::class, 'onObjectSaved'), -50);
 		$dispatcher->listen('object.deleted', $lazy(ContentChangeListener::class, 'onObjectDeleted'), -50);
 
+		// PromptChangeListener — invalidates the PromptDiscoveryService in-memory
+		// cache whenever an mcp-prompt object changes so prompt edits go live
+		// without a process restart. Priority -50 (same tier as ContentChangeListener).
+		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.deleted', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
+
 		return $dispatcher;
 	},
 
@@ -583,6 +594,16 @@ return [
 			->createLogger('mcp-schema-tools'),
 	),
 
+	// PromptDiscoveryService needs an explicit definition so it gets the mcp-activity
+	// logger channel. PromptRenderer and PromptRegistrar autowire from type hints.
+	PromptDiscoveryService::class => fn (ContainerInterface $container): PromptDiscoveryService => new PromptDiscoveryService(
+		$container->get(IndexFilter::class),
+		$container->get(CollectionRepository::class),
+		$container->get(LoggerFactory::class)
+			->addFileHandler('mcp-activity.log', level: Level::Debug)
+			->createLogger('mcp-prompts'),
+	),
+
 	// McpServerFactory needs an explicit definition for its custom logger
 	// handler — `mcp-activity.log` at Debug level so the SDK's per-call
 	// dispatch messages ("Executing tool …" / "Tool executed successfully"
@@ -602,6 +623,8 @@ return [
 			->addFileHandler('mcp-activity.log', level: Level::Debug)
 			->createLogger('mcp-activity'),
 		$container->get(SchemaToolRegistrar::class),
+		$container->get(PromptDiscoveryService::class),
+		$container->get(PromptRegistrar::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at

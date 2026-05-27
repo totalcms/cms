@@ -11,9 +11,10 @@
 		"id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"       : "Name",
-			"help"        : "Snake_case argument name. Referenced in the body as <code>{{ args.&lt;name&gt; }}</code>.",
+			"help"        : "Snake_case argument name.",
 			"field"       : "id",
-			"factory"     : "slug"
+			"factory"     : "slug",
+			"settings"    : { "snakeCase" : true }
 		},
 		"description": {
 			"type"      : "string",

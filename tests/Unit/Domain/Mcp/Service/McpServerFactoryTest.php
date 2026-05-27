@@ -9,11 +9,17 @@ use Mcp\Server\Resource\SessionSubscriptionManager;
 use Mcp\Server\Session\InMemorySessionStore;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
 
 final class McpServerFactoryTest extends TestCase
@@ -57,6 +63,18 @@ final class McpServerFactoryTest extends TestCase
 			$this->createMock(\Psr\Log\LoggerInterface::class),
 		);
 
+		// PromptDiscoveryService with a no-op IndexFilter (no prompts in test context).
+		$indexFilterMock = $this->createMock(IndexFilter::class);
+		$indexFilterMock->method('fetchFilteredIndex')->willReturn([]);
+		$promptDiscovery = new PromptDiscoveryService(
+			$indexFilterMock,
+			$this->createMock(CollectionRepository::class),
+			new NullLogger(),
+		);
+
+		$promptRenderer  = new PromptRenderer($this->createMock(TwigEngine::class));
+		$promptRegistrar = new PromptRegistrar($promptRenderer);
+
 		return new McpServerFactory(
 			$this->registry,
 			$this->resources,
@@ -65,6 +83,8 @@ final class McpServerFactoryTest extends TestCase
 			$this->sessions,
 			$this->logger,
 			$schemaRegistrar,
+			$promptDiscovery,
+			$promptRegistrar,
 		);
 	}
 

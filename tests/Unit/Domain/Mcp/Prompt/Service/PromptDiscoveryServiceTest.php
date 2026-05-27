@@ -23,7 +23,10 @@ final class PromptDiscoveryServiceTest extends TestCase
 	{
 		$this->indexFilter = $this->createMock(IndexFilter::class);
 		$this->collections = $this->createMock(CollectionRepository::class);
-		$this->svc         = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger());
+		// Default: collection exists. Tests that need the missing-collection
+		// branch can override with willReturn(false).
+		$this->collections->method('collectionExists')->willReturn(true);
+		$this->svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger());
 	}
 
 	public function testReturnsEmptyListWhenCollectionEmpty(): void
@@ -35,7 +38,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 	public function testDiscoversFromCollection(): void
 	{
 		$this->indexFilter->method('fetchFilteredIndex')->with('mcp-prompt')->willReturn([
-			['name' => 'draft_post', 'description' => 'd', 'body' => 'b'],
+			['id' => 'draft_post', 'description' => 'd', 'body' => 'b'],
 		]);
 		$result = $this->svc->discover();
 		$this->assertCount(1, $result);
@@ -53,7 +56,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 		$this->collections->method('fetchCollection')->with('blog')->willReturn($collection);
 
 		$this->indexFilter->method('fetchFilteredIndex')->with('mcp-prompt')->willReturn([
-			['name' => 'p', 'description' => 'd', 'body' => 'b', 'targetCollection' => 'blog', 'access' => ''],
+			['id' => 'p', 'description' => 'd', 'body' => 'b', 'targetCollection' => 'blog', 'access' => ''],
 		]);
 		$result = $this->svc->discover();
 		$this->assertCount(1, $result);
@@ -64,7 +67,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 	public function testSiteWidePromptDefaultsToAdmin(): void
 	{
 		$this->indexFilter->method('fetchFilteredIndex')->with('mcp-prompt')->willReturn([
-			['name' => 'audit', 'description' => 'd', 'body' => 'b', 'targetCollection' => '', 'access' => ''],
+			['id' => 'audit', 'description' => 'd', 'body' => 'b', 'targetCollection' => '', 'access' => ''],
 		]);
 		$result = $this->svc->discover();
 		$this->assertSame('admin', $result[0]->access);
@@ -73,7 +76,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 	public function testRespectsExplicitAccessOverride(): void
 	{
 		$this->indexFilter->method('fetchFilteredIndex')->with('mcp-prompt')->willReturn([
-			['name' => 'p', 'description' => 'd', 'body' => 'b', 'access' => 'public'],
+			['id' => 'p', 'description' => 'd', 'body' => 'b', 'access' => 'public'],
 		]);
 		$result = $this->svc->discover();
 		$this->assertSame('public', $result[0]->access);
@@ -82,10 +85,23 @@ final class PromptDiscoveryServiceTest extends TestCase
 	public function testCollidesOnDuplicateName(): void
 	{
 		$this->indexFilter->method('fetchFilteredIndex')->with('mcp-prompt')->willReturn([
-			['name' => 'dup', 'description' => 'd1', 'body' => 'b1'],
-			['name' => 'dup', 'description' => 'd2', 'body' => 'b2'],
+			['id' => 'dup', 'description' => 'd1', 'body' => 'b1'],
+			['id' => 'dup', 'description' => 'd2', 'body' => 'b2'],
 		]);
 		$this->expectException(PromptCollisionException::class);
 		$this->svc->discover();
+	}
+
+	public function testReturnsEmptyWhenCollectionDoesNotExist(): void
+	{
+		// Lite/Standard installs (and fresh test environments) never created
+		// the mcp-prompt collection — discovery should silently return [].
+		$indexFilter = $this->createMock(IndexFilter::class);
+		$indexFilter->expects($this->never())->method('fetchFilteredIndex');
+		$collections = $this->createMock(CollectionRepository::class);
+		$collections->method('collectionExists')->willReturn(false);
+
+		$svc = new PromptDiscoveryService($indexFilter, $collections, new NullLogger());
+		$this->assertSame([], $svc->discover());
 	}
 }

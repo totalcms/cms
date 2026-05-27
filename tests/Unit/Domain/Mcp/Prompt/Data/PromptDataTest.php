@@ -32,7 +32,7 @@ final class PromptDataTest extends TestCase
 	public function testFromArrayAcceptsMinimal(): void
 	{
 		$prompt = PromptData::fromArray([
-			'name'        => 'minimal',
+			'id'          => 'minimal',
 			'description' => 'desc',
 			'body'        => 'hello',
 		]);
@@ -46,7 +46,7 @@ final class PromptDataTest extends TestCase
 	{
 		// Deck shape: keyed by arg name. This is the storage form.
 		$prompt = PromptData::fromArray([
-			'name'        => 'with_args',
+			'id'          => 'with_args',
 			'description' => 'desc',
 			'body'        => 'hello',
 			'args'        => [
@@ -67,7 +67,7 @@ final class PromptDataTest extends TestCase
 		// If `id` and the key disagree, the deck key wins (it's how the form
 		// builder stores the canonical name).
 		$prompt = PromptData::fromArray([
-			'name'        => 'p',
+			'id'          => 'p',
 			'description' => 'd',
 			'body'        => 'b',
 			'args'        => [
@@ -81,7 +81,7 @@ final class PromptDataTest extends TestCase
 	{
 		// Robustness: list-shaped or malformed entries that yield no name are skipped.
 		$prompt = PromptData::fromArray([
-			'name'        => 'p',
+			'id'          => 'p',
 			'description' => 'd',
 			'body'        => 'b',
 			'args'        => [

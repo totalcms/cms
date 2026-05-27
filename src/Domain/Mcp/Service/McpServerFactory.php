@@ -10,6 +10,9 @@ use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
+use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -44,6 +47,8 @@ readonly class McpServerFactory
 		private SessionStoreInterface $sessionStore,
 		private LoggerInterface $logger,
 		private SchemaToolRegistrar $schemaToolRegistrar,
+		private PromptDiscoveryService $promptDiscoveryService,
+		private PromptRegistrar $promptRegistrar,
 	) {
 	}
 
@@ -133,7 +138,31 @@ readonly class McpServerFactory
 			);
 		}
 
+		// Register prompts (Phase 5 Chunk B).
+		// discover() returns cached results on subsequent calls within one request.
+		// The persona filter hides inaccessible prompts from prompts/list; the
+		// handler closure in PromptRegistrar re-checks at prompts/get call time
+		// to guard against name-guessing by lower-privilege callers.
+		$prompts = $this->promptDiscoveryService->discover();
+		$prompts = $this->filterPromptsForPersona($prompts, $persona);
+		$this->promptRegistrar->registerAll($builder, $prompts, $persona);
+
 		return $builder->build();
+	}
+
+	/**
+	 * Filters the prompt list to those accessible by the given persona.
+	 * Fails closed: prompts with unrecognised access values are treated as admin-only.
+	 *
+	 * @param list<PromptData> $prompts
+	 * @return list<PromptData>
+	 */
+	private function filterPromptsForPersona(array $prompts, McpPersona $persona): array
+	{
+		return array_values(array_filter(
+			$prompts,
+			static fn (PromptData $p): bool => PromptRegistrar::personaCanAccess($persona, $p->access),
+		));
 	}
 
 	/**

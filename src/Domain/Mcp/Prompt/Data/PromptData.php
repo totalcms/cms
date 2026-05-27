@@ -48,8 +48,13 @@ final readonly class PromptData
 			}
 		}
 
+		// The MCP prompt name is the collection object's `id`. The schema
+		// enforces snake_case slugs (id.settings.snakeCase: true) via ObjectFactory,
+		// so AI clients see e.g. `prompts/get { name: 'draft_post' }` matching
+		// tcms-data/mcp-prompt/draft_post.json. Falls back to `name` for
+		// programmatic construction (tests, code-defined prompts in extensions).
 		return new self(
-			name:             (string)($data['name'] ?? ''),
+			name:             (string)($data['id'] ?? $data['name'] ?? ''),
 			description:      (string)($data['description'] ?? ''),
 			body:             (string)($data['body'] ?? ''),
 			args:             $args,

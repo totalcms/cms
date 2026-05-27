@@ -62,17 +62,16 @@ Fields the form builder renders:
   "type": "object",
   "title": "MCP Prompt",
   "description": "A templated AI-agent workflow exposed via the MCP server's prompts/list and prompts/get endpoints.",
-  "formgrid": "name\ndescription\ntargetCollection\naccess\nargs\nbody",
-  "required": ["name", "description", "body"],
+  "formgrid": "id\ndescription\ntargetCollection\naccess\nargs\nbody",
+  "required": ["id", "description", "body"],
   "properties": {
-    "id":          { "$ref": "https://www.totalcms.co/schemas/properties/slug.json", "field": "id", "factory": "slug", "settings": { "readonly": true } },
-    "name":        { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "maxLength": 64, "label": "Name", "help": "Snake_case identifier AI clients use to call this prompt. Globally unique." },
+    "id":          { "$ref": "https://www.totalcms.co/schemas/properties/slug.json", "label": "Name", "help": "Snake_case identifier AI clients use to call this prompt (e.g. draft_post). Globally unique.", "field": "id", "factory": "slug", "settings": { "snakeCase": true } },
     "description": { "type": "string", "label": "Description", "help": "What this prompt does — shown to AI agents in prompts/list. Write for AI consumption.", "field": "textarea", "settings": { "rows": 3 } },
     "targetCollection": {
       "type": "string", "label": "Target Collection",
       "help": "Which collection this prompt scopes to. Leave blank for site-wide.",
-      "field": "select", "factory": "collections", "default": "",
-      "settings": { "placeholder": "(site-wide)" }
+      "field": "select", "default": "",
+      "settings": { "placeholder": "(site-wide)", "propertyOptions": "collectionIds" }
     },
     "access": {
       "type": "string", "label": "Access",
@@ -86,10 +85,13 @@ Fields the form builder renders:
       ]
     },
     "args": {
-      "type": "array", "label": "Arguments",
-      "help": "Typed caller parameters available in the body as {{ args.name }}.",
-      "field": "card",
-      "items": { "$ref": "https://www.totalcms.co/schemas/mcp-prompt-arg.json" }
+      "field": "deck", "label": "Arguments",
+      "help": "Typed caller parameters available in the body as {{ args.&lt;name&gt; }}.",
+      "schemaref": "https://www.totalcms.co/schemas/mcp-prompt-arg.json",
+      "$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+      "patternProperties": {
+        "^[a-z][a-z0-9_]*$": { "$ref": "https://www.totalcms.co/schemas/mcp-prompt-arg.json" }
+      }
     },
     "body": {
       "type": "string", "label": "Prompt Body",
@@ -100,14 +102,16 @@ Fields the form builder renders:
 }
 ```
 
-Companion `mcp-prompt-arg.json` schema for the arg card:
+Companion `mcp-prompt-arg.json` schema for the deck items (one per argument):
 
 ```jsonc
 {
+  "formgrid": "id\ndescription\nrequired",
+  "required": ["id"],
   "properties": {
-    "name":        { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "label": "Name" },
-    "description": { "type": "string", "label": "Description", "help": "Shown to AI agents." },
-    "required":    { "type": "boolean", "label": "Required", "default": false }
+    "id":          { "$ref": "https://www.totalcms.co/schemas/properties/slug.json", "label": "Name", "field": "id", "factory": "slug", "settings": { "snakeCase": true } },
+    "description": { "type": "string", "label": "Description", "field": "textarea", "settings": { "rows": 2 } },
+    "required":    { "type": "boolean", "label": "Required", "field": "toggle", "default": false }
   }
 }
 ```

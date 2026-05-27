@@ -284,4 +284,45 @@ final class ObjectFactoryTest extends TestCase
 		expect($object)->toBeInstanceOf(ObjectData::class);
 		expect($object->id)->toBe('test-5');
 	}
+
+	public function testGenerateObjectAppliesSnakeCaseIdsWhenSchemaOptsIn(): void
+	{
+		// Schemas can opt into underscore-separated ids via
+		// `id.settings.snakeCase: true` (used by mcp-prompt where the id is
+		// the MCP prompt name and must satisfy snake_case conventions).
+		$schema             = new SchemaData();
+		$schema->id         = 'snake-schema';
+		$schema->properties = [
+			'id' => ['type' => 'string', 'label' => 'ID', 'settings' => ['snakeCase' => true]],
+		];
+
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($schema);
+
+		$objectData = ['id' => 'Draft Post'];
+
+		$object = $this->factory->generateObject('test-collection', $objectData);
+
+		expect($object->id)->toBe('draft_post');
+	}
+
+	public function testGenerateObjectKeepsHyphensWhenSnakeCaseNotSet(): void
+	{
+		// Default behaviour stays as-is — hyphenated ids for every schema
+		// that doesn't opt into snakeCase.
+		$schema             = new SchemaData();
+		$schema->id         = 'plain-schema';
+		$schema->properties = [
+			'id' => ['type' => 'string', 'label' => 'ID'],
+		];
+
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($schema);
+
+		$objectData = ['id' => 'Draft Post'];
+
+		$object = $this->factory->generateObject('test-collection', $objectData);
+
+		expect($object->id)->toBe('draft-post');
+	}
 }
