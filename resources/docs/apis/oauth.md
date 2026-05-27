@@ -234,6 +234,79 @@ The JWT access tokens are RS256-signed. Resource servers (or auditing tools) can
 
 ---
 
+## Pruning expired grants with `oauth:gc`
+
+OAuth grants accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk in `tcms-data/.system/oauth/` until explicitly pruned. The `oauth:gc` command removes them:
+
+```bash
+tcms oauth:gc
+```
+
+Output:
+
+```
+Pruned 14 expired OAuth grants.
+```
+
+The command is safe to run at any time. It touches only grants whose refresh token has passed its configured lifetime (`oauth.refreshTokenTtl`) — active grants are untouched.
+
+### Running on a schedule
+
+Prune once a day via cron. Add a line to the crontab of the web server user (typically `www-data` or the PHP-FPM pool user):
+
+```
+0 3 * * * cd /var/www/your-site && php resources/bin/tcms oauth:gc >> tcms-data/logs/oauth-gc.log 2>&1
+```
+
+Adjust the path to match your install location. The `>> ... 2>&1` redirect appends output to a log file so you can confirm it ran. On low-traffic sites a weekly schedule is sufficient; on sites with many OAuth connections (public AI client deployments) daily is recommended.
+
+---
+
+## OAuth activity log
+
+Every OAuth lifecycle event is appended to `tcms-data/logs/oauth-activity.log`. The log is the authoritative record for incident response — if a token was issued, refreshed, or revoked, it's here.
+
+### Event types
+
+| Type | Level | When it appears |
+|---|---|---|
+| `client.created` | INFO | A new static client is saved in the admin |
+| `client.dynamic_registered` | INFO | Dynamic registration via `POST /oauth/register` |
+| `client.deleted` | INFO | A client is deleted from the admin (cascades to all grants) |
+| `consent.granted` | INFO | A user approves the consent screen |
+| `consent.denied` | INFO | A user clicks Deny on the consent screen |
+| `token.issued` | INFO | An access token is minted after code exchange |
+| `token.refreshed` | INFO | An access token is renewed via refresh token |
+| `token.revoked` | INFO | A token is revoked via the admin or `POST /oauth/revoke` |
+| `scope.rejected` | INFO | A request is rejected because the token lacks the required scope |
+| `security.refresh_replay` | **WARNING** | A previously-used refresh token is presented — the entire grant chain is revoked immediately |
+| `security.rate_limit` | **WARNING** | The token endpoint or dynamic-registration rate limit is hit |
+
+`WARNING`-level events are security signals. A `security.refresh_replay` entry means a refresh token was replayed — either a bug in the connected app (it didn't update its stored token after the last refresh) or an active theft attempt. The grant chain is revoked automatically; review the `client_id` and `grant_id` fields and determine whether the connection needs re-authorization.
+
+### Log format
+
+Each line is a Monolog-formatted JSON record:
+
+```
+[2026-05-21T10:22:33-07:00] oauth-activity.INFO: OAuth token issued {"type":"token.issued","client_id":"3e4b...","user_id":"admin","scopes":["cms:read","mcp:tools"]}
+[2026-05-21T10:22:38-07:00] oauth-activity.WARNING: OAuth refresh token replay — chain revoked {"type":"security.refresh_replay","client_id":"3e4b...","grant_id":"7f9a...","token_hash":"d3e8f1a2…"}
+```
+
+The `token_hash` in replay events is a truncated prefix of the presented token's hash — enough to correlate with a specific request in your web server access log without exposing the full token value.
+
+---
+
+## OAuth tokens and MCP scopes
+
+Tokens issued through the OAuth flow authenticate requests to `/mcp` — but only if they carry an `mcp:*` scope. A token with `cms:read` alone, without any `mcp:*` scope, receives a **403** on every MCP request regardless of what collections it could otherwise reach.
+
+The token's scopes determine which tools and resources appear in `tools/list` and `resources/list`. An agent whose token lacks `mcp:resources` cannot subscribe to change notifications; one without `mcp:prompts` cannot invoke prompts. T3 filters the surface at session initialization so agents only see what their token can actually call.
+
+For a complete breakdown of which scopes unlock which MCP capabilities, and a worked example of configuring Claude Desktop with a static OAuth client, see [Connecting an AI client via OAuth](docs/mcp/server#connecting-an-ai-client-via-oauth).
+
+---
+
 ## Settings reference
 
 Settings live in **Admin → Settings → OAuth Server**.

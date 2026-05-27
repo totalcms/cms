@@ -38,9 +38,9 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 
 | Persona | How they authenticate | What they see |
 |---|---|---|
-| **Developer / operator** | `X-API-Key: <admin-key>` header on every request | Every tool — including the admin write tools. Same surface as the admin UI. |
-| **Public AI agent** | No credentials (anonymous) | Only tools marked `access: public` AND only collections with `mcp.access: 'public'`. Drafts are auto-hidden. |
-| **OAuth-scoped consumer** | Phase 4 (not in 3.5) | Reserved for a future "connect Joe's Bistro to Claude" flow. |
+| **Developer / operator** (`admin`) | `X-API-Key: <admin-key>` header on every request | Every tool — including the admin write tools. Same surface as the admin UI. |
+| **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | Tools marked `access: public` plus collections with `mcp.access: 'authenticated'` or `'public'`. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [OAuth Server](docs/apis/oauth) for setup. |
+| **Public AI agent** (`public`) | No credentials (anonymous) | Only tools marked `access: public` AND only collections with `mcp.access: 'public'`. Drafts are auto-hidden. |
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
 
@@ -66,6 +66,81 @@ Public access is **default-deny**. Anonymous requests get a 401 unless the opera
    A successful response carries `result.serverInfo` and `result.capabilities`.
 
 For Claude Desktop / Claude Code: add your site under MCP servers in the client's settings — point at the `/mcp` URL and provide the API key as the Bearer token if the host supports it, otherwise as a header config.
+
+---
+
+## Connecting an AI client via OAuth
+
+API keys and OAuth both authenticate `/mcp` requests, but they serve different trust relationships. Choose based on who is operating the tool.
+
+**Use an API key** for your own development tooling: Claude Code pointed at your site during a content project, a Stacks workflow that runs on your machine, or an admin script you control end-to-end. The key lives in your config file and never touches a consent screen.
+
+**Use OAuth** when you ship a "connect to Claude" experience to end-users — your customers, your clients, team members who do not have T3 admin credentials. OAuth issues each person a scoped token through a consent screen; you can revoke individual connections without changing any shared secret; and every token action is logged to the OAuth activity log so you have a record.
+
+### Prerequisites
+
+- **Pro edition** — OAuth is a Pro+ feature. Trials count.
+- **Keys generated.** Run `tcms oauth:setup` once if you haven't already.
+- **OAuth server enabled.** Toggle on in **Admin → Settings → OAuth Server**.
+- **Read the full OAuth setup guide** at [OAuth Server](docs/apis/oauth) before continuing — it covers key generation, client creation, scope definitions, and dynamic registration.
+
+### Required scopes for MCP
+
+A Bearer token must carry at least one `mcp:*` scope to do anything useful at `/mcp`. Tokens without any `mcp:*` scope receive a 403 on every request — even for collections the token's `cms:read` scope would otherwise cover.
+
+| Scope | What it unlocks at `/mcp` |
+|---|---|
+| `mcp:tools` | Authorize all `tools/call` requests. Every persona-filtered tool the token's collection scopes can reach becomes callable. |
+| `mcp:resources` | Authorize `resources/read`, `resources/list`, `resources/templates/list`, and `resources/subscribe`. Without this scope, resource methods return 403. |
+| `mcp:search` | Currently inherits from `mcp:tools` — a token with `mcp:tools` can call `search_collection` and `search_collections`. The scope is reserved separately so it can be gated independently in a future release. |
+| `mcp:prompts` | Authorize `prompts/list` and `prompts/get`. Prompts are visible in `prompts/list` but the content is withheld until the token carries this scope. |
+
+A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:resources`. A connection that also needs prompts adds `mcp:prompts`. Grant the minimum scopes for the use case.
+
+### Configuring a static client for Claude Desktop
+
+Dynamic registration is on by default and handles the zero-touch Claude Desktop flow automatically. If you've disabled it — or if you want a named client you can track and revoke independently — create a static client first:
+
+1. **Admin → Utilities → OAuth Clients → Create Client.**
+2. Name it something traceable: "Claude Desktop – Joe", "Cursor – Content Team".
+3. Add `http://localhost/` as a redirect URI (the `mcp-remote` shim binds a local loopback server for the code exchange).
+4. Check `mcp:tools`, `mcp:resources`, and `mcp:prompts` under Scopes.
+5. Save and copy the **Client ID** (UUID). The client secret is not needed — you'll pass only the client ID to `mcp-remote`.
+
+Then add your site to Claude Desktop's `claude_desktop_config.json`:
+
+```json
+{
+	"mcpServers": {
+		"my-site": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"mcp-remote",
+				"https://your-site.example.com/mcp",
+				"--client-id",
+				"<paste-client-id-here>"
+			]
+		}
+	}
+}
+```
+
+Replace `https://your-site.example.com/mcp` and `<paste-client-id-here>` with your values. `mcp-remote` is the bridge shim that handles the OAuth authorization-code flow on behalf of native clients that don't have a built-in browser.
+
+### What the end-user sees on first connection
+
+1. Claude Desktop starts `mcp-remote`, which opens a browser tab pointing at `https://your-site.example.com/oauth/authorize`.
+2. The user logs in with their T3 account (or is already logged in).
+3. The consent screen lists the requested scopes in plain language. The user clicks **Allow**.
+4. `mcp-remote` completes the PKCE code exchange, stores the access and refresh tokens in its local token cache, and the MCP session initializes.
+5. Subsequent connections are silent — `mcp-remote` refreshes the access token automatically until the refresh token expires or the operator revokes the grant.
+
+### Revoking access
+
+Navigate to **Admin → Utilities → OAuth Grants**. Every active grant is listed with its client name and the scopes it holds. Click **Revoke** to immediately invalidate the access and refresh tokens for that connection. The next tool call from that client returns 401 and the user is prompted to re-authorize.
+
+Deleting the client in **Admin → Utilities → OAuth Clients** cascades — all grants for that client are revoked at once. Useful when you retire a shared client that multiple users connected through.
 
 ---
 
@@ -385,7 +460,7 @@ Tool errors land at ERROR level.
 
 Active MCP client sessions cache the `tools/list` response from `initialize`. When any setting that affects the tool surface changes — `mcp.*` settings, a schema's `mcp.access` toggle, a per-property `mcp.expose` flip — sessions are dropped from `tmp/mcp-sessions/` and clients auto-reconnect on their next request.
 
-The reconnect path is universally supported by conformant MCP clients. A future enhancement (Phase 1.5+) adds `notifications/tools/list_changed` for in-place refresh without the reconnect blip.
+The reconnect path is universally supported by conformant MCP clients. A future enhancement will add `notifications/tools/list_changed` push for in-place refresh without the reconnect blip.
 
 ### `WWW-Authenticate` on 401 (G4)
 
@@ -427,11 +502,21 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 
 ---
 
-## What's deferred to later phases
+## What shipped in 3.5
 
-- **Phase 3:** Custom tools defined entirely in schema JSON (no PHP), SSE streaming for long content, MCP prompts (templated workflows like `/draft-blog-post`, `/audit-broken-links`).
-- **Phase 4:** OAuth 2.1 + PKCE flow, per-token scopes, per-token CORS, per-token rate limits, customer-visible activity dashboard, scoped tokens for "connect Joe's Bistro to Claude" flows.
-- **Phase 5:** Semantic search providers (Pinecone, Qdrant, OpenAI embeddings via extension hook), MCP sampling.
+The full MCP server, including all of the following, ships in 3.5:
+
+- **Core MCP server** — `/mcp` endpoint, three personas, full tool catalog ([this page](docs/mcp/server)).
+- **MCP resources** — collection / data-view URIs and `resources/subscribe` with SSE notifications.
+- **Saved-query tools** — JSON-defined query tools per collection, no PHP needed ([Saved-Query Tools](docs/mcp/saved-query-tools)).
+- **MCP prompts** — templated workflows like "draft a blog post in our voice" or "audit broken links" ([Prompts](docs/mcp/prompts)).
+- **OAuth 2.1 + PKCE** — full authorization-code flow, scoped tokens, customer-visible activity dashboard, the "connect Joe's Bistro to Claude" path ([OAuth Server](docs/apis/oauth)).
+- **Pluggable search providers** — extension hook for swapping the built-in text search for Algolia, Meilisearch, etc.; built-in `text` provider always available.
+
+## What's deferred
+
+- **SSE streaming for long tool responses** — currently every response is a single JSON-RPC reply.
 - **Object-level resource subscriptions** (subscribe to a single `tcms://blog/post-1` rather than the collection) — deferred indefinitely; the collection-level model meets the typical agent's needs.
+- **MCP sampling** — letting the server request inference from the client. Not on the near-term roadmap.
 
 See the planning notes in `docs/planning/mcp-server.md` for the full forward roadmap.

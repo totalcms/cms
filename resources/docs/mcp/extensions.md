@@ -3,7 +3,9 @@ title: "Extending MCP"
 description: "Publish custom MCP tools and resources from a T3 extension — vendor-prefixed names, capability toggles, strict collision policy."
 related:
   - mcp/server
+  - mcp/prompts
   - extensions/extension-points
+  - extensions/algolia-search
 audience: advanced
 updated: 2026-05-22
 ---
@@ -270,18 +272,268 @@ handler: function (string $id, ?\Mcp\Server\RequestContext $ctx = null): array {
 
 ## Capability toggles
 
-Two capabilities show up automatically in the Extensions admin page once your extension registers anything MCP-shaped:
+The following capabilities show up automatically in the Extensions admin page once your extension registers anything in that category. Operators can toggle each one independently without uninstalling the extension. Detection is automatic — you don't declare capabilities in `manifest.json`; the system observes what you called during `boot()`.
 
-- **`mcp:tools`** — toggle to drop all of this extension's tools from the registry
-- **`mcp:resources`** — toggle to drop all of this extension's resources AND templates from the registry
-
-Operators can disable either independently without uninstalling the extension. The capability detection is automatic — you don't declare these in `manifest.json`; the system observes what you called during `boot()` and surfaces the toggles.
+| Capability | Detected when | What disabling it does |
+|---|---|---|
+| `mcp:tools` | `registerMcpTool()` is called at least once | All of this extension's tools are removed from the registry; `tools/list` no longer includes them. |
+| `mcp:resources` | `registerMcpResource()` or `registerMcpResourceTemplate()` is called | All of this extension's resources and templates are removed from the registry; `resources/list` and `resources/templates/list` no longer include them. |
+| `mcp:prompts` | `registerMcpPrompt()` is called at least once | All of this extension's code-defined prompts are removed from `prompts/list`; `prompts/get` returns not-found for those names. Operator-authored prompts in the `mcp-prompt` collection are unaffected. |
+| `mcp:search` | `registerSearchProvider()` is called | The registered provider is deregistered. `SearchService` falls back to the built-in text provider for all queries. Pending `ReindexJob` records for the provider are not cleared automatically. |
 
 ## Subscriptions and change notifications
 
 T3's resource subscription system pushes `notifications/resources/updated` events when subscribed URIs change. Core wires this to collection/object events automatically; extensions opt in by dispatching events the [`McpResourceSubscriptionListener`](mcp/server#resource-subscriptions) listens for, or by calling `ResourceNotifier::notifyResourceChanged($uri)` directly from your domain code when something behind your URIs changes.
 
 For most extensions, the simpler path is: store your data in a T3 collection (perhaps a reserved-name collection like `acme-invoices`) and let the core listener handle subscriptions to `tcms://acme-invoices/` automatically. Custom URI schemes (`acme://...`) require explicit notification calls.
+
+## Registering code-defined prompts
+
+Extensions can register MCP prompts as PHP code via `$context->registerMcpPrompt()`. This is the parallel to the operator-authored prompts stored in the `mcp-prompt` collection — same `prompts/list` and `prompts/get` surface, different authoring path.
+
+### When to use code-defined prompts vs collection-stored
+
+| | Code-defined | Collection-stored |
+|---|---|---|
+| Defined in | Extension PHP (`boot.php`) | `mcp-prompt` collection via the admin |
+| Arguments | Declared in the `\Mcp\Schema\Prompt` object | Declared as schema fields on the collection |
+| Twig in body | No — rendered entirely in PHP | Yes — full `cms.*` available |
+| Operator can edit | No — requires extension update | Yes — editable in admin |
+| Ships with the extension | Yes — installed with `composer require` | No — operator creates manually |
+
+Use code-defined prompts when the prompt body is complex PHP logic, when arguments are validated at the type level, or when the prompt ships as part of an extension that operators install rather than configure. Use collection-stored prompts when operators need to edit the body to match their site's voice.
+
+### Signature
+
+```php
+$context->registerMcpPrompt(
+    \Mcp\Schema\Prompt $prompt,
+    callable $handler,
+): void
+```
+
+The `\Mcp\Schema\Prompt` object carries the prompt's name, description, and argument definitions. The handler receives the resolved `array $arguments` and returns a `list<\Mcp\Schema\Content\PromptMessage>`. The SDK wraps the list in a `GetPromptResult` automatically — do not pre-wrap.
+
+### Example: Audit broken links
+
+This prompt accepts a page URL and instructs the agent to crawl all links and report any that return a non-200 status:
+
+```php
+// extension's boot.php
+use Mcp\Schema\Prompt;
+use Mcp\Schema\PromptArgument;
+use Mcp\Schema\Content\PromptMessage;
+use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Enum\Role;
+
+$context->registerMcpPrompt(
+    new Prompt(
+        name: 'audit_broken_links',
+        description: 'Audit all hyperlinks on a page and report any that return an error status.',
+        arguments: [
+            new PromptArgument(
+                name: 'url',
+                description: 'The full URL of the page to audit (e.g. https://example.com/blog).',
+                required: true,
+            ),
+            new PromptArgument(
+                name: 'depth',
+                description: 'How many levels of links to follow from the starting URL. Default is 1 (the page itself only).',
+                required: false,
+            ),
+        ],
+    ),
+    handler: function (array $arguments = []): array {
+        $url   = $arguments['url'] ?? '';
+        $depth = (int) ($arguments['depth'] ?? 1);
+
+        return [
+            new PromptMessage(
+                role: Role::User,
+                content: new TextContent(
+                    text: sprintf(
+                        "Fetch the page at %s. Collect every <a href> link. "
+                        . "For each link, make a HEAD request and record the status code. "
+                        . "%s"
+                        . "Return a markdown table with columns: URL, Status, Note. "
+                        . "Flag any link with a 4xx or 5xx status as broken.",
+                        $url,
+                        $depth > 1
+                            ? sprintf("Follow links up to %d levels deep. ", $depth)
+                            : '',
+                    ),
+                ),
+            ),
+        ];
+    },
+);
+```
+
+### Collision policy
+
+Collection-stored prompts win on a name clash. If an operator has an `mcp-prompt` object named `audit_broken_links`, the extension's code-defined prompt with the same name is logged to `extensions.log` and skipped at boot. The operator's version takes precedence. Rename your extension's prompt if you need to guarantee it loads regardless of operator configuration.
+
+---
+
+## Registering a search provider
+
+Extensions can replace T3's built-in text search with an external engine — Algolia, Meilisearch, OpenAI embeddings, or any custom backend — by implementing the `SearchProvider` interface and registering the implementation via `$context->registerSearchProvider()`.
+
+The registered provider handles all content search across the site: MCP `search_collection` and `search_collections` tools, and any future REST search endpoints. T3's built-in `text` provider remains available as a fallback when the registered provider's `isAvailable()` returns false.
+
+### The `SearchProvider` interface
+
+```php
+namespace TotalCMS\Domain\Search\Service;
+
+interface SearchProvider
+{
+    // Stable, lowercase id (e.g. 'algolia', 'meilisearch'). Never change after release.
+    public function id(): string;
+
+    // Human-readable name shown in admin UI.
+    public function label(): string;
+
+    // Execute a query. Return ranked results — T3 handles pagination above this layer.
+    // Throwing causes SearchService to fall back to the text provider silently.
+    public function search(SearchQuery $query): array; // list<SearchResult>
+
+    // Index (or re-index) one object. Called by ContentChangeListener on
+    // object.created and object.updated events. Must be idempotent.
+    public function index(string $collection, string $id, array $data): void;
+
+    // Remove one object from the index. Called on object.deleted. Idempotent.
+    public function delete(string $collection, string $id): void;
+
+    // Health check on the hot path — cache the result with a short TTL.
+    // Returning false routes the current request to the text fallback silently.
+    public function isAvailable(): bool;
+}
+```
+
+`SearchQuery` carries `text` (string), `collection` (nullable string — null means cross-collection), `limit` (int), and `offset` (int). `SearchResult` carries `collection` (string), `id` (string), `score` (float 0–1), and `snippet` (nullable string).
+
+### How core calls each method
+
+| Method | Called by | When |
+|---|---|---|
+| `search()` | `SearchService` | Every `search_collection` / `search_collections` MCP tool call. Falls back to text on exception or `isAvailable() === false`. |
+| `index()` | `ContentChangeListener` | After `object.created` and `object.updated` events. Exceptions are caught and queued as a `ReindexJob` for retry. |
+| `delete()` | `ContentChangeListener` | After `object.deleted` events. Same retry behavior on exception. |
+| `isAvailable()` | `SearchService` (pre-search check) | Before every search. Cache the result — this is on the hot path. |
+
+### Collision policy
+
+Provider ids must be globally unique across all registered providers plus the built-in `text` provider. Registering a provider whose id is already taken throws a `LogicException` at boot — this is a hard error, not a skip. The built-in id `text` is reserved; do not use it.
+
+### Edition gating
+
+The framework does not gate search providers by edition. Extensions are responsible for their own checks. If your provider is a paid add-on, check `$context->editionAllows()` in `register()` and return early if the site's edition doesn't qualify — the provider simply won't register and the site falls back to text search silently.
+
+### Worked example: Meilisearch
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\MeilisearchProvider\Service;
+
+use Meilisearch\Client as MeilisearchClient;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Data\SearchResult;
+use TotalCMS\Domain\Search\Service\SearchProvider;
+
+final class MeilisearchSearchProvider implements SearchProvider
+{
+    private ?MeilisearchClient $client = null;
+
+    public function __construct(
+        private readonly string $host,
+        private readonly string $apiKey,
+        private readonly string $indexName,
+    ) {
+    }
+
+    public function id(): string
+    {
+        return 'meilisearch';
+    }
+
+    public function label(): string
+    {
+        return 'Meilisearch';
+    }
+
+    public function search(SearchQuery $query): array
+    {
+        $params = ['limit' => $query->limit, 'offset' => $query->offset];
+        if ($query->collection !== null) {
+            $params['filter'] = 'collection = "' . addslashes($query->collection) . '"';
+        }
+
+        $hits    = $this->getClient()->index($this->indexName)->search($query->text, $params)->getHits();
+        $total   = count($hits);
+        $results = [];
+
+        foreach (array_values($hits) as $i => $hit) {
+            $results[] = new SearchResult(
+                collection: (string) ($hit['collection'] ?? ''),
+                id:         (string) ($hit['id'] ?? ''),
+                score:      $total > 1 ? 1.0 - ($i / max($total - 1, 1)) * 0.5 : 1.0,
+                snippet:    isset($hit['_formatted']['content'])
+                    ? strip_tags((string) $hit['_formatted']['content'])
+                    : null,
+            );
+        }
+
+        return $results;
+    }
+
+    public function index(string $collection, string $id, array $data): void
+    {
+        $document               = $data;
+        $document['collection'] = $collection;
+        $document['id']         = $id;
+
+        $this->getClient()->index($this->indexName)->addDocuments([$document], 'id');
+    }
+
+    public function delete(string $collection, string $id): void
+    {
+        $this->getClient()->index($this->indexName)->deleteDocument($id);
+    }
+
+    public function isAvailable(): bool
+    {
+        return $this->host !== '' && $this->apiKey !== '';
+    }
+
+    private function getClient(): MeilisearchClient
+    {
+        if ($this->client === null) {
+            $this->client = new MeilisearchClient($this->host, $this->apiKey);
+        }
+        return $this->client;
+    }
+}
+```
+
+Register it in `boot.php`:
+
+```php
+use Acme\MeilisearchProvider\Service\MeilisearchSearchProvider;
+
+$context->registerSearchProvider(new MeilisearchSearchProvider(
+    host:      $context->getSetting('host', ''),
+    apiKey:    $context->getSetting('apiKey', ''),
+    indexName: $context->getSetting('indexName', 'totalcms'),
+));
+```
+
+For a production-quality reference implementation see the bundled **[Algolia Search](extensions/algolia-search)** extension — it follows the same pattern with cross-collection faceting, snippet extraction, and ranking score normalization.
+
+---
 
 ## Common pitfalls
 
@@ -292,5 +544,7 @@ For most extensions, the simpler path is: store your data in a T3 collection (pe
 ## Related
 
 - [MCP Server](mcp/server) — personas, transport, core tool catalog
+- [MCP Prompts](mcp/prompts) — operator-authored prompts stored in the `mcp-prompt` collection
 - [Extension Points](extensions/extension-points) — full catalog of `ExtensionContext` hooks
 - [Events](extensions/events) — dispatching custom events that listeners (including subscription listeners) can consume
+- [Algolia Search](extensions/algolia-search) — bundled search provider extension, complete working implementation
