@@ -4,12 +4,11 @@ use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\post;
 
 beforeAll(function (): void {
-	// Setup wizard tests simulate a fresh install — wipe EVERYTHING under
-	// tcms-data, including auth/ and .system/ which the default
-	// recursiveDelete preserves. auth/ would make SetupCheckMiddleware
-	// think setup is complete via the backward-compat path; .system/ may
-	// hold a stale setup-state.json with completed_at from an earlier
-	// non-setup test run.
+	// Setup wizard tests simulate a fresh install — wipe EVERYTHING and
+	// suppress the fixture auto-restore that recursiveDelete() does by
+	// default. Restored auth/ would make SetupCheckMiddleware think setup
+	// was complete; .system/setup-state.json might hold a completed_at
+	// timestamp from an earlier test run. $forceComplete=true skips both.
 	recursiveDelete(cmsDataDir(), [], true);
 });
 
@@ -18,22 +17,18 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 
-	// Wipe everything (auth + .system included) so each test starts from
-	// a true pre-setup state.
+	// Force-wipe so every test starts from a true pre-setup state — no
+	// fixture restore between tests in this file.
 	recursiveDelete(cmsDataDir(), [], true);
 
 	$this->setUpApp(bootstrap());
 });
 
 afterAll(function (): void {
-	// Restore test data after setup tests complete
-	$testDataPath = __DIR__ . '/../tcms-data';
-	$fixturesPath = $testDataPath . '-fixtures';
-
-	if (is_dir($fixturesPath)) {
-		recursiveDelete($testDataPath, [], true);
-		exec('cp -r ' . escapeshellarg($fixturesPath) . ' ' . escapeshellarg($testDataPath));
-	}
+	// Restore checked-in fixtures so subsequent tests in other files start
+	// from a known state. recursiveDelete() with $forceComplete=false (the
+	// default) wipes everything then auto-restores from tcms-data-fixtures/.
+	recursiveDelete(cmsDataDir());
 });
 
 describe('Data Path Setup Feature', function (): void {
@@ -99,7 +94,7 @@ describe('Data Path Setup Feature', function (): void {
 	});
 
 	it('validates custom path is absolute', function (): void {
-		recursiveDelete(cmsDataDir());
+		recursiveDelete(cmsDataDir(), [], true);
 
 		$response = post('/setup/data-path', [
 			'location'   => 'custom',
@@ -112,7 +107,7 @@ describe('Data Path Setup Feature', function (): void {
 	});
 
 	it('validates custom path parent directory exists', function (): void {
-		recursiveDelete(cmsDataDir());
+		recursiveDelete(cmsDataDir(), [], true);
 
 		$response = post('/setup/data-path', [
 			'location'   => 'custom',
@@ -126,7 +121,7 @@ describe('Data Path Setup Feature', function (): void {
 
 	it('skips setup check for setup routes', function (): void {
 		// Even without tcms-data, setup routes should be accessible
-		recursiveDelete(cmsDataDir());
+		recursiveDelete(cmsDataDir(), [], true);
 
 		$response = get('/setup/data-path');
 
@@ -136,7 +131,7 @@ describe('Data Path Setup Feature', function (): void {
 	});
 
 	it('skips setup check for static assets', function (): void {
-		recursiveDelete(cmsDataDir());
+		recursiveDelete(cmsDataDir(), [], true);
 
 		// Static asset routes should not trigger setup redirect
 		// They might return 404 if file doesn't exist, but not redirect to setup
@@ -160,7 +155,7 @@ describe('Data Path Setup Feature', function (): void {
 	});
 
 	it('handles form submission with empty location', function (): void {
-		recursiveDelete(cmsDataDir());
+		recursiveDelete(cmsDataDir(), [], true);
 
 		$response = post('/setup/data-path', [
 			'location' => '',
