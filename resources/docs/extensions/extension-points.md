@@ -510,3 +510,89 @@ PSR-3 levels are available: `debug`, `info`, `notice`, `warning`, `error`, `crit
 Logger access is not a separate capability — `$context->logger()` is always available, in both `register()` and `boot()`.
 
 Prefix log messages with your extension id (e.g. `[acme/starter]`) so multi-extension logs stay readable. All extensions share the `extensions` channel and the same rotating log file.
+
+## MCP Prompts
+
+Register prompts that the MCP server exposes to AI agents via `prompts/list` and `prompts/get`. Use when the extension ships prompts as PHP code rather than relying on operator-authored objects in the `mcp-prompt` collection.
+
+```php
+use Mcp\Schema\Content\PromptMessage;
+use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Enum\Role;
+use Mcp\Schema\Prompt;
+use Mcp\Schema\Result\GetPromptResult;
+
+public function register(ExtensionContext $context): void
+{
+    $context->registerMcpPrompt(
+        new Prompt(
+            name: 'acme_audit_links',
+            description: 'Audit broken links on any page.',
+            arguments: [
+                new \Mcp\Schema\PromptArgument('url', 'The URL to audit', required: true),
+            ],
+        ),
+        handler: fn (array $arguments = []) => new GetPromptResult(
+            messages: [new PromptMessage(
+                Role::User,
+                new TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
+            )],
+        ),
+    );
+}
+```
+
+**Capability:** `mcp:prompts`
+
+**Collision policy:** If a prompt name collides with a collection-stored prompt, the collection-stored version wins — the extension's prompt is logged and skipped.
+
+## Search Providers
+
+Register a custom search provider that replaces or supplements T3's built-in text search. The provider handles indexing (on object create/update/delete events) and querying (from MCP search tools, future REST endpoints, or site-wide search).
+
+```php
+use TotalCMS\Domain\Search\Service\SearchProvider;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Data\SearchResult;
+
+class MySearchProvider implements SearchProvider
+{
+    public function id(): string { return 'my-search'; }
+    public function label(): string { return 'My Search'; }
+
+    public function search(SearchQuery $query): array
+    {
+        // Query your search backend, return list<SearchResult>
+        return [];
+    }
+
+    public function index(string $collection, string $id, array $data): void
+    {
+        // Index one object in your backend
+    }
+
+    public function delete(string $collection, string $id): void
+    {
+        // Remove one object from your backend
+    }
+
+    public function isAvailable(): bool
+    {
+        // Fast health check — cache with short TTL (on the hot path)
+        return true;
+    }
+}
+```
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $context->registerSearchProvider(new MySearchProvider());
+}
+```
+
+**Capability:** `mcp:search`
+
+Provider ids must be unique across all extensions + the built-in `text` provider. The registrar logs and skips collisions during boot. When `isAvailable()` returns false, SearchService silently falls back to text search. Throwing from `search()` also triggers the fallback. Throwing from `index()` or `delete()` enqueues a retry job.
+
+See the bundled [Algolia Search extension](docs/extensions/algolia-search) for a complete working example.
