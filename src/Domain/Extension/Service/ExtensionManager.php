@@ -704,6 +704,28 @@ class ExtensionManager
 		return $byExtension;
 	}
 
+	/**
+	 * Per-extension map of code-defined MCP prompts. The id-keyed map lets
+	 * McpServerFactory attribute collisions to a specific extension in the warning
+	 * log. Gated by the `mcp:prompts` capability permission.
+	 *
+	 * @return array<string,list<array{prompt: \Mcp\Schema\Prompt, handler: callable}>>
+	 */
+	public function getAllMcpPrompts(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:prompts')) {
+				continue;
+			}
+			$prompts = $context->getRegisteredMcpPrompts();
+			if ($prompts !== []) {
+				$byExtension[$id] = $prompts;
+			}
+		}
+		return $byExtension;
+	}
+
 	/** @return list<TwigFilter> */
 	public function getAllTwigFilters(): array
 	{

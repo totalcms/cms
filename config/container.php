@@ -625,6 +625,7 @@ return [
 		$container->get(SchemaToolRegistrar::class),
 		$container->get(PromptDiscoveryService::class),
 		$container->get(PromptRegistrar::class),
+		$container->get(ExtensionManager::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at

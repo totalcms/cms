@@ -75,6 +75,9 @@ final class McpServerFactoryTest extends TestCase
 		$promptRenderer  = new PromptRenderer($this->createMock(TwigEngine::class));
 		$promptRegistrar = new PromptRegistrar($promptRenderer);
 
+		$extensionManager = $this->createMock(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+		$extensionManager->method('getAllMcpPrompts')->willReturn([]);
+
 		return new McpServerFactory(
 			$this->registry,
 			$this->resources,
@@ -85,6 +88,7 @@ final class McpServerFactoryTest extends TestCase
 			$schemaRegistrar,
 			$promptDiscovery,
 			$promptRegistrar,
+			$extensionManager,
 		);
 	}
 

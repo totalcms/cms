@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Mcp\Prompt\Service;
 use Mcp\Schema\Content\PromptMessage;
 use Mcp\Schema\Content\TextContent;
 use Mcp\Schema\Enum\Role;
-use Mcp\Schema\Result\GetPromptResult;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptRenderException;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -20,9 +19,16 @@ final readonly class PromptRenderer
 	}
 
 	/**
+	 * Renders a prompt body into an array of PromptMessage objects.
+	 *
+	 * The MCP SDK's GetPromptHandler wraps the returned array in a
+	 * GetPromptResult itself, so the handler MUST return PromptMessage[]
+	 * (or one PromptMessage) — not a pre-wrapped GetPromptResult.
+	 *
 	 * @param array<string,mixed> $arguments
+	 * @return list<PromptMessage>
 	 */
-	public function render(PromptData $prompt, array $arguments): GetPromptResult
+	public function render(PromptData $prompt, array $arguments): array
 	{
 		$args = $this->validateAndCoerce($prompt, $arguments);
 
@@ -36,10 +42,7 @@ final readonly class PromptRenderer
 			);
 		}
 
-		return new GetPromptResult(
-			messages:    [new PromptMessage(Role::User, new TextContent($rendered))],
-			description: $prompt->description,
-		);
+		return [new PromptMessage(Role::User, new TextContent($rendered))];
 	}
 
 	/**

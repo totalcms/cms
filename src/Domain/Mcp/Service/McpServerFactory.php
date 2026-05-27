@@ -9,6 +9,7 @@ use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
@@ -49,6 +50,7 @@ readonly class McpServerFactory
 		private SchemaToolRegistrar $schemaToolRegistrar,
 		private PromptDiscoveryService $promptDiscoveryService,
 		private PromptRegistrar $promptRegistrar,
+		private ExtensionManager $extensions,
 	) {
 	}
 
@@ -146,6 +148,41 @@ readonly class McpServerFactory
 		$prompts = $this->promptDiscoveryService->discover();
 		$prompts = $this->filterPromptsForPersona($prompts, $persona);
 		$this->promptRegistrar->registerAll($builder, $prompts, $persona);
+
+		// Extension-registered prompts (Phase 5 Chunk C).
+		// These are code-defined prompts shipped by extensions using
+		// ExtensionContext::registerMcpPrompt(). They use the SDK's Mcp\Schema\Prompt
+		// type directly (not PromptData) and take a separate registration path.
+		// Collision policy: soft-deny — collection-stored prompts always win.
+		// If a name is already registered, the SDK throws on addPrompt(); we catch
+		// that and log a warning instead of crashing the server build.
+		$collectionPromptNames = array_flip(array_map(static fn (PromptData $p): string => $p->name, $prompts));
+		foreach ($this->extensions->getAllMcpPrompts() as $extensionId => $registrations) {
+			foreach ($registrations as $reg) {
+				$name = $reg['prompt']->name;
+				if (isset($collectionPromptNames[$name])) {
+					$this->logger->warning('Extension MCP prompt skipped: name collides with collection-stored prompt', [
+						'extension' => $extensionId,
+						'prompt'    => $name,
+					]);
+					continue;
+				}
+				try {
+					$handler = $reg['handler'];
+					$builder->addPrompt(
+						handler:     \Closure::fromCallable($handler),
+						name:        $name,
+						description: $reg['prompt']->description ?? '',
+					);
+				} catch (\LogicException $e) {
+					$this->logger->warning('Extension MCP prompt registration failed', [
+						'extension' => $extensionId,
+						'prompt'    => $name,
+						'error'     => $e->getMessage(),
+					]);
+				}
+			}
+		}
 
 		return $builder->build();
 	}

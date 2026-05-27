@@ -46,12 +46,11 @@ final class PromptRendererTest extends TestCase
 
 		$result = $this->renderer->render($prompt, ['name' => 'Joe']);
 
-		$this->assertCount(1, $result->messages);
-		$this->assertInstanceOf(PromptMessage::class, $result->messages[0]);
-		$this->assertSame(Role::User, $result->messages[0]->role);
-		$this->assertInstanceOf(TextContent::class, $result->messages[0]->content);
-		$this->assertSame('Hello Joe', $result->messages[0]->content->text);
-		$this->assertSame('Greet someone', $result->description);
+		$this->assertCount(1, $result);
+		$this->assertInstanceOf(PromptMessage::class, $result[0]);
+		$this->assertSame(Role::User, $result[0]->role);
+		$this->assertInstanceOf(TextContent::class, $result[0]->content);
+		$this->assertSame('Hello Joe', $result[0]->content->text);
 	}
 
 	public function testThrowsOnMissingRequiredArg(): void
@@ -86,7 +85,7 @@ final class PromptRendererTest extends TestCase
 		);
 
 		$result = $this->renderer->render($prompt, ['name' => 'Joe', 'extra' => 'dropped']);
-		$this->assertSame('hi', $result->messages[0]->content->text);
+		$this->assertSame('hi', $result[0]->content->text);
 	}
 
 	public function testWrapsTwigErrorsInPromptRenderException(): void

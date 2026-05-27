@@ -1,0 +1,11 @@
+{
+    "id": "needs_arg",
+    "name": "needs_arg",
+    "description": "Requires one argument.",
+    "body": "{{ args.x }}",
+    "access": "public",
+    "targetCollection": "",
+    "args": [
+        { "name": "x", "description": "Required arg.", "required": true }
+    ]
+}

@@ -88,6 +88,9 @@ final class ExtensionContext
 	/** @var list<\TotalCMS\Domain\Search\Service\SearchProvider> */
 	private array $searchProviders = [];
 
+	/** @var list<array{prompt: \Mcp\Schema\Prompt, handler: callable}> Code-defined MCP prompts registered by this extension */
+	private array $registeredMcpPrompts = [];
+
 	public function __construct(
 		private readonly ExtensionManifest $manifest,
 		private readonly string $extensionPath,
@@ -369,6 +372,41 @@ final class ExtensionContext
 	public function getRegisteredSearchProviders(): array
 	{
 		return $this->searchProviders;
+	}
+
+	/**
+	 * Register a code-defined MCP prompt. Use when the extension ships the prompt
+	 * as PHP code rather than relying on operator-authored objects in the
+	 * mcp-prompt collection. The prompt appears in `prompts/list` and is callable
+	 * via `prompts/get` on the MCP server.
+	 *
+	 * Collision policy: soft-deny. If the prompt name collides with a
+	 * collection-stored prompt, the extension's prompt is logged and skipped —
+	 * collection-stored prompts always win.
+	 *
+	 * Example:
+	 *
+	 *   $context->registerMcpPrompt(
+	 *       new \Mcp\Schema\Prompt(name: 'audit_links', description: 'Audit broken links on any page.'),
+	 *       handler: fn (array $arguments = []) => new \Mcp\Schema\Result\GetPromptResult(
+	 *           messages: [new \Mcp\Schema\Content\PromptMessage(
+	 *               \Mcp\Schema\Enum\Role::User,
+	 *               new \Mcp\Schema\Content\TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
+	 *           )],
+	 *       ),
+	 *   );
+	 */
+	public function registerMcpPrompt(\Mcp\Schema\Prompt $prompt, callable $handler): void
+	{
+		$this->registeredMcpPrompts[] = ['prompt' => $prompt, 'handler' => $handler];
+	}
+
+	/**
+	 * @return list<array{prompt: \Mcp\Schema\Prompt, handler: callable}>
+	 */
+	public function getRegisteredMcpPrompts(): array
+	{
+		return $this->registeredMcpPrompts;
 	}
 
 	/**
@@ -681,6 +719,7 @@ final class ExtensionContext
 			'mcp:tools'       => 'MCP Tools',
 			'mcp:resources'   => 'MCP Resources',
 			'mcp:search'      => 'Search Provider',
+			'mcp:prompts'     => 'MCP Prompts',
 		];
 	}
 
@@ -751,6 +790,9 @@ final class ExtensionContext
 		}
 		if ($this->searchProviders !== []) {
 			$caps['mcp:search'] = true;
+		}
+		if ($this->registeredMcpPrompts !== []) {
+			$caps['mcp:prompts'] = true;
 		}
 
 		return $caps;

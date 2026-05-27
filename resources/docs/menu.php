@@ -203,6 +203,7 @@ return [
 		'sub'   => [
 			['title' => 'MCP Server',        'path' => 'mcp/server'],
 			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
+			['title' => 'Prompts',           'path' => 'mcp/prompts'],
 			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
 		],
 	],
