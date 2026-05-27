@@ -18,6 +18,31 @@ For using autogen on non-ID fields (text, textarea, etc.), see the
 }
 ```
 
+## Snake Case IDs
+
+By default, the ID field slugifies input using **hyphens** as the separator
+(`Draft Post` → `draft-post`). Schemas can opt into **underscore** separators
+by setting `snakeCase: true` under the field's settings:
+
+```json
+{
+	"snakeCase" : true
+}
+```
+
+With `snakeCase: true`, `Draft Post` slugifies to `draft_post` instead of
+`draft-post`. The same transform applies on both sides of the form:
+
+* **Client-side** — the form's identifier field auto-slugs to underscores as
+  the operator types, so the preview matches what will actually be saved.
+* **Server-side** — `ObjectFactory::createObject()` honours the same flag
+  during slugification, ensuring API submissions get the same treatment as
+  admin saves.
+
+The pattern is enforced at JSON Schema validation time (rejects raw input
+that wouldn't be a valid snake_case id even after slugification — e.g.
+identifiers starting with a digit).
+
 ## Special Autogen Variables
 
 * **now** - Current timestamp in milliseconds (e.g., 1692123456789)

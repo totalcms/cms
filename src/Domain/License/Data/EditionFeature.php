@@ -24,7 +24,10 @@ enum EditionFeature: string
 	case PUSHOVER_ACTIONS = 'pushover_actions';
 
 	// API features
+	case ALGOLIA_SEARCH    = 'algolia_search';
 	case EXTERNAL_REST_API = 'external_rest_api';
+	case MCP_SERVER        = 'mcp_server';
+	case OAUTH_SERVER      = 'oauth_server';
 
 	// Media features
 	case QR_CODES = 'qr_codes';
@@ -65,7 +68,10 @@ enum EditionFeature: string
 			self::MAILER_ACTIONS       => 'Mailer Form Actions',
 			self::WEBHOOK_ACTIONS      => 'Webhook Form Actions',
 			self::PUSHOVER_ACTIONS     => 'Pushover Form Actions',
+			self::ALGOLIA_SEARCH       => 'Algolia Search',
 			self::EXTERNAL_REST_API    => 'External REST API',
+			self::MCP_SERVER           => 'MCP Server',
+			self::OAUTH_SERVER         => 'OAuth Server',
 			self::QR_CODES             => 'QR Codes',
 			self::BARCODES             => 'Barcodes',
 			self::TEMPLATES            => 'Templates',
@@ -101,11 +107,14 @@ enum EditionFeature: string
 			self::RSS_IMPORT => Edition::STANDARD,
 
 			// Pro features
+			self::ALGOLIA_SEARCH,
 			self::CUSTOM_SCHEMAS,
 			self::TEXT_WATERMARKS,
 			self::WEBHOOK_ACTIONS,
 			self::PUSHOVER_ACTIONS,
 			self::EXTERNAL_REST_API,
+			self::MCP_SERVER,
+			self::OAUTH_SERVER,
 			self::BARCODES,
 			self::WHITELABEL_PRO,
 			self::DATA_VIEWS,

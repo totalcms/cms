@@ -23,6 +23,13 @@ use TotalCMS\Domain\Twig\Data\FrontendAsset;
  * when loaded as a classic script — `type="module"` would put the binding
  * in module scope and leave the global undefined, breaking
  * `htmx.ajax(...)` calls in admin-table.js and elsewhere.
+ *
+ * `dashboard.css` is intentionally NOT in this list — it ships a global
+ * reset (`* { margin: 0 }`, normalize-style rules) needed by T3's own
+ * dashboard chrome but harmful when customers call `adminAssetsHead()`
+ * from a custom admin page on their site (the reset bleeds into their
+ * own content). T3's `admin-dashboard.twig` loads `dashboard.css` via an
+ * explicit <link> tag.
  */
 final class CoreAdminAssetRegistrar extends CoreAssetRegistrar
 {
@@ -30,7 +37,6 @@ final class CoreAdminAssetRegistrar extends CoreAssetRegistrar
 		['path' => 'content-bundled.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['path' => 'icons.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['path' => 'admin.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'dashboard.css',       'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['path' => 'htmx.min.js',         'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
 		['path' => 'content.js',          'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		['path' => 'admin.js',            'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],

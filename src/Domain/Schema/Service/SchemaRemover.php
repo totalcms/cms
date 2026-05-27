@@ -24,7 +24,8 @@ readonly class SchemaRemover
 	/**
 	 * delete a schema.
 	 *
-	 * @throws \UnexpectedValueException
+	 * @throws \UnexpectedValueException When the schema is reserved
+	 * @throws \DomainException          When the schema is inherited by other schemas or used by a collection
 	 */
 	public function deleteSchema(string $id): bool
 	{

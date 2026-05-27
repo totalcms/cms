@@ -92,6 +92,16 @@ class CollectionRepository extends StorageRepository
 			return null;
 		}
 
+		// Directory name and collection id must match. A mismatch means the
+		// directory is a stray copy (e.g. `dataviews-bkp/` with id="dataviews"
+		// from a manual backup) — `listAllCollections` would otherwise return
+		// the same id twice and downstream registrars like the MCP resource
+		// registrar crash on the duplicate URI. Treat as not-found so the
+		// caller gets a clean miss and the stale directory is invisible.
+		if ($collectionData->id !== $collection) {
+			return null;
+		}
+
 		// Auto-calculate totalObjects if missing or zero (backward compatibility + self-healing)
 		// Calculate in-memory only - values persist on next normal save operation
 		// Recalculating for zero is cheap (empty directory scan) and catches stale counts

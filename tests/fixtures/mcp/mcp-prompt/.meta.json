@@ -1,0 +1,19 @@
+{
+    "id": "mcp-prompt",
+    "schema": "mcp-prompt",
+    "name": "MCP Prompts",
+    "description": "Test fixture for MCP prompt collection.",
+    "url": "/mcp-prompt/{id}",
+    "category": "",
+    "labelPlural": "Prompts",
+    "labelSingular": "Prompt",
+    "groups": [],
+    "publicOperations": [],
+    "sortBy": "id",
+    "reverseSort": false,
+    "prettyUrl": false,
+    "queueRebuildOnSave": false,
+    "count": 3,
+    "totalObjects": 3,
+    "lastUpdated": "2026-01-01T00:00:00Z"
+}

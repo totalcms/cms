@@ -1,0 +1,79 @@
+{# OAuth Client Created — secret shown exactly once #}
+<h1>{{ t('oauth_clients.create_success') }}</h1>
+
+<section class="dash-content-section">
+
+	<div class="warning-box" style="margin-block-end: 2rem;">
+		<div>
+			<strong>{{ t('oauth_clients.secret_shown_once_warning') }}</strong>
+			<p>{{ t('oauth_clients.secret_copy_desc') }}</p>
+		</div>
+	</div>
+
+	<div class="dash-card" style="max-width: 680px;">
+		<div class="dash-card-details">
+			<div class="dash-card-detail" style="grid-template-columns:160px 1fr;">
+				<strong>{{ t('oauth_clients.name_label') }}</strong>
+				<span>{{ client.name }}</span>
+			</div>
+
+			<div class="dash-card-detail" style="grid-template-columns:160px 1fr;">
+				<strong>{{ t('oauth_clients.client_id_label') }}</strong>
+				<code id="client-id-value" style="word-break:break-all;">{{ client.id }}</code>
+			</div>
+
+			<div class="dash-card-detail" style="grid-template-columns:160px 1fr;">
+				<strong>{{ t('oauth_clients.client_secret_label') }}</strong>
+				<div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+					<code id="client-secret-value" style="word-break:break-all; flex:1;">{{ secret }}</code>
+					<button
+						type="button"
+						class="dash-button small cms-clip-button"
+						data-clip="#client-secret-value"
+					>{{ t('btn.copy_clipboard') }}</button>
+				</div>
+			</div>
+
+			<div class="dash-card-detail" style="grid-template-columns:160px 1fr;">
+				<strong>{{ t('oauth_clients.scopes_label') }}</strong>
+				<div class="dash-badge-group">
+					{% for scope in client.scopes %}
+						<span class="dash-badge accent">{{ scope }}</span>
+					{% endfor %}
+				</div>
+			</div>
+
+			<div class="dash-card-detail" style="grid-template-columns:160px 1fr;">
+				<strong>{{ t('oauth_clients.redirect_uris_label') }}</strong>
+				<div style="display:flex; flex-direction:column; gap:0.35rem;">
+					{% for uri in client.redirectUris %}
+						<code style="font-size:0.85em; word-break:break-all;">{{ uri }}</code>
+					{% endfor %}
+				</div>
+			</div>
+
+			<div class="dash-card-detail" style="grid-template-columns:160px 1fr;">
+				<strong>{{ t('oauth_clients.created_label') }}</strong>
+				<span>{{ client.createdAt|date('Y-m-d H:i') }}</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="form-inline-fields" style="text-align: right; margin-top: 2rem; gap: 1rem;">
+		<a href="utils/oauth-clients/new" class="dash-button transparent">{{ t('oauth_clients.create_another') }}</a>
+		<a href="utils/oauth-clients" class="dash-button">{{ t('oauth_clients.back_to_list') }}</a>
+	</div>
+
+</section>
+
+<style>
+.warning-box {
+	background    : oklch(var(--totalform-warning-bg, var(--totalform-nearwhite)));
+	border        : 2px solid oklch(var(--totalform-accent));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem 1.25rem;
+}
+.warning-box strong {
+	color : oklch(var(--totalform-accent));
+}
+</style>

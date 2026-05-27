@@ -647,6 +647,10 @@ export default class TotalForm {
 		// Mark all fields as saved
 		this.fields.forEach(field => field.saved());
 
+		// Stash any warnings from this response so runAction's showSuccessAndWait
+		// can include them when it fires the success event before navigating away.
+		this._savedResponse = response || null;
+
 		// Run actions first, then show success banner
 		const actions = runEditActions ? this.settings.actions.edit : this.settings.actions.new;
 		this.runActions(actions)
@@ -692,10 +696,12 @@ export default class TotalForm {
 	}
 
     async runAction(action) {
-		// Helper to show success banner and wait before navigation (default: true)
+		// Helper to show success banner and wait before navigation (default: true).
+		// Pass the stashed response so meta.warnings reach the status banner even
+		// when the action navigates away before the post-actions success() call fires.
 		const showSuccessAndWait = async () => {
 			if (action.showSuccess !== false) {
-				this.success();
+				this.success(this._savedResponse);
 				await new Promise(resolve => setTimeout(resolve, this.delayActions));
 			}
 		};

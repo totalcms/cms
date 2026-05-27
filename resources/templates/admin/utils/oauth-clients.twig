@@ -1,0 +1,48 @@
+{% if action == 'new' %}
+	{% include 'admin/utils/oauth-clients/new.twig' %}
+{% elseif action == 'created' %}
+	{% include 'admin/utils/oauth-clients/client-created.twig' %}
+{% else %}
+
+{# List OAuth Clients Page #}
+<h1>{{ t('oauth_clients.title') }}</h1>
+
+<section class="dash-content-section">
+
+	<p>{{ t('oauth_clients.desc') }}</p>
+
+	<div style="margin-block: 2rem; text-align: right;">
+		<a href="utils/oauth-clients?action=new" class="dash-button">＋ {{ t('oauth_clients.create_btn') }}</a>
+	</div>
+
+	{% set hasAny = oauthClients.static|length > 0 or oauthClients.dynamic|length > 0 %}
+
+	{% if not hasAny %}
+		<div class="dash-empty-state">
+			<em>{{ t('oauth_clients.empty') }}</em>
+		</div>
+	{% endif %}
+
+	{# ── Static clients (admin-created) ───────────────────────────────────── #}
+	{% if oauthClients.static|length > 0 %}
+		<h2 style="margin-block: 1.5rem 1rem;">{{ t('oauth_clients.static_heading') }}</h2>
+		<div class="dash-card-grid">
+			{% for row in oauthClients.static %}
+				{% include 'admin/utils/oauth-clients/_card.twig' with {row: row} %}
+			{% endfor %}
+		</div>
+	{% endif %}
+
+	{# ── Dynamic clients (RFC 7591 self-registered) ───────────────────────── #}
+	{% if oauthClients.dynamic|length > 0 %}
+		<h2 style="margin-block: 1.5rem 1rem;">{{ t('oauth_clients.dynamic_heading') }}</h2>
+		<div class="dash-card-grid">
+			{% for row in oauthClients.dynamic %}
+				{% include 'admin/utils/oauth-clients/_card.twig' with {row: row} %}
+			{% endfor %}
+		</div>
+	{% endif %}
+
+</section>
+
+{% endif %}

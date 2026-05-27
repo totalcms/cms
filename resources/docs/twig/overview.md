@@ -261,7 +261,8 @@ Access global variables in all templates:
 {{ cms.api }}
 {{ cms.dashboard }}
 {{ cms.logout }}
-{{ cms.domain }}
+{{ cms.domain }}      {# HTTP host #}
+{{ cms.siteName }}    {# Site display name — operator-set, falls back to domain #}
 ```
 
 ### Template Debugging

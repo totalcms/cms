@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Settings\Repository;
 
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Repository for managing settings.json in tcms-data/.system/.
+ *
+ * Also exposes the canonical list of available settings sections, derived
+ * from the schema files in `resources/schemas/settings/`. The repository
+ * is the single source of truth for both "what sections are available"
+ * and "what values are stored" — the SettingsValidator and the admin
+ * settings UI both consume this catalog.
  */
 class SettingsRepository extends StorageRepository
 {
@@ -20,6 +27,13 @@ class SettingsRepository extends StorageRepository
 	 * @var array<string,mixed>|null
 	 */
 	private ?array $requestCache = null;
+
+	/**
+	 * Request-level cache for the section catalog.
+	 *
+	 * @var list<string>|null
+	 */
+	private ?array $sectionsCache = null;
 
 	/**
 	 * Load all settings from settings.json.
@@ -87,5 +101,42 @@ class SettingsRepository extends StorageRepository
 	public function exists(): bool
 	{
 		return $this->filesystem->fileExists(self::SETTINGS_FILE);
+	}
+
+	/**
+	 * List all settings sections that have a schema file.
+	 *
+	 * The section name is the schema file's basename without `.json`. Adding
+	 * a new file at `resources/schemas/settings/{name}.json` registers a new
+	 * section without any code changes — `SettingsValidator::isValidSection()`
+	 * and the admin settings UI pick it up automatically.
+	 *
+	 * Uses native `glob()` rather than the flysystem adapter because the
+	 * schema directory lives under packageRoot (resources), not datadir.
+	 *
+	 * @return list<string>
+	 */
+	public function listSections(): array
+	{
+		if ($this->sectionsCache !== null) {
+			return $this->sectionsCache;
+		}
+
+		$dir = PathResolver::packageRoot() . '/resources/schemas/settings';
+		if (!is_dir($dir)) {
+			$this->sectionsCache = [];
+
+			return $this->sectionsCache;
+		}
+
+		$sections = [];
+		foreach (glob($dir . '/*.json') ?: [] as $path) {
+			$sections[] = basename($path, '.json');
+		}
+
+		sort($sections);
+		$this->sectionsCache = $sections;
+
+		return $this->sectionsCache;
 	}
 }

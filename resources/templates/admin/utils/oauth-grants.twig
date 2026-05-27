@@ -1,0 +1,67 @@
+{# List OAuth Grants Page #}
+<h1>{{ t('oauth_grants.title') }}</h1>
+
+<section class="dash-content-section">
+
+	<p>{{ t('oauth_grants.desc') }}</p>
+
+	{% if oauthGrants|length == 0 %}
+		<div class="dash-empty-state">
+			<em>{{ t('oauth_grants.empty') }}</em>
+		</div>
+	{% else %}
+		<div class="dash-card-grid">
+			{% for row in oauthGrants %}
+				{% set grant = row.grant %}
+				<article class="dash-card">
+					<header>
+						<h3>{{ row.clientName }}</h3>
+						<div class="dash-card-actions">
+							{{ cms.admin.quickActionButton('', 'oauth-grants/' ~ grant.id, {
+								method: 'delete',
+								confirm: t('oauth_grants.confirm_revoke'),
+								reload: true,
+								class: 'dash-card-action delete',
+							}) }}
+						</div>
+					</header>
+
+					<div class="dash-card-details">
+						<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+							<strong>{{ t('oauth_grants.user_label') }}</strong>
+							<span>{{ grant.userId }}</span>
+						</div>
+
+						<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+							<strong>{{ t('oauth_grants.scopes_label') }}</strong>
+							<div class="dash-badge-group">
+								{% for scope in grant.scopes %}
+									<span class="dash-badge accent">{{ scope }}</span>
+								{% endfor %}
+							</div>
+						</div>
+
+						<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+							<strong>{{ t('oauth_grants.issued_label') }}</strong>
+							<span>{{ grant.issuedAt|date('Y-m-d H:i') }}</span>
+						</div>
+
+						<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+							<strong>{{ t('oauth_grants.expires_label') }}</strong>
+							{% if row.expiresAt is null %}
+								<span>{{ t('oauth_grants.never_expires') }}</span>
+							{% elseif row.isExpired %}
+								<span style="color:oklch(var(--totalform-danger));">
+									{{ t('oauth_grants.expired_n_days_ago')|replace({'%days%': row.daysUntilExpiry|abs}) }}
+								</span>
+							{% else %}
+								<span>{{ t('oauth_grants.expires_in_n_days')|replace({'%days%': row.daysUntilExpiry}) }}</span>
+							{% endif %}
+						</div>
+					</div>
+				</article>
+			{% endfor %}
+		</div>
+	{% endif %}
+
+</section>

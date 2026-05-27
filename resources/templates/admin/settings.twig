@@ -37,6 +37,10 @@
 		'label': t('settings.mailer'),
 		'description': t('settings.mailer_desc')
 	},
+	'mcp': {
+		'label': t('settings.mcp'),
+		'description': t('settings.mcp_desc')
+	},
 	'pushnotif': {
 		'label': t('settings.pushnotif'),
 		'description': t('settings.pushnotif_desc')
@@ -49,6 +53,10 @@
 		'label': t('settings.smtp'),
 		'description': t('settings.smtp_desc')
 	},
+	'search': {
+		'label': t('settings.search'),
+		'description': t('settings.search_desc')
+	},
 	'sync': {
 		'label': t('settings.sync'),
 		'description': t('settings.sync_desc')
@@ -58,6 +66,15 @@
 		'description': 'Site Builder stub generation settings'
 	},
 } %}
+
+{% if cms.edition.can('oauth_server') %}
+	{% set sections = sections|merge({
+		'oauth': {
+			'label': t('settings.oauth'),
+			'description': t('settings.oauth_desc')
+		}
+	}) %}
+{% endif %}
 
 {% if cms.license.canSimulateEdition() %}
 	{% set sections = sections|merge({

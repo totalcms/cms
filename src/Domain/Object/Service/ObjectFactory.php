@@ -43,8 +43,14 @@ readonly class ObjectFactory
 			}
 		}
 
-		// Ensure ID is properly slugified (handles CSV imports with non-slug IDs)
-		$objectData['id'] = SlugData::slugify($objectData['id']);
+		// Ensure ID is properly slugified (handles CSV imports with non-slug IDs).
+		// Schemas can opt into underscore separators by setting `id.settings.snakeCase: true`
+		// (matches MCP convention + deck-key requirements — e.g. mcp-prompt).
+		$idSlug = SlugData::slugify($objectData['id']);
+		if (($schema->properties['id']['settings']['snakeCase'] ?? false) === true) {
+			$idSlug = str_replace('-', '_', $idSlug);
+		}
+		$objectData['id'] = $idSlug;
 
 		$properties = $this->generateProperties($collection, $objectData, $schema);
 

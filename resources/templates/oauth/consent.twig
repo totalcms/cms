@@ -1,0 +1,138 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('oauth.consent.title') }} - {{ cms.config('siteName') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout oauth-consent">
+
+	<section class="oauth-consent__header">
+		{% if clientIcon %}
+			<img src="{{ clientIcon }}" alt="{{ clientName }}" class="oauth-consent__icon">
+		{% endif %}
+		<h1>{{ clientName }}</h1>
+		<p class="oauth-consent__subtitle">{{ t('oauth.consent.title') }}</p>
+	</section>
+
+	<p class="oauth-consent__signed-in">
+		{{ t('oauth.consent.signed_in_as', {user: userId}) }}
+	</p>
+
+	<section class="oauth-consent__scopes">
+		<h2>{{ t('oauth.consent.requested_permissions') }}</h2>
+		<ul class="oauth-consent__scope-list">
+			{% for scope in scopes %}
+				<li class="oauth-consent__scope-item">
+					<strong>{{ scope.description }}</strong>
+					<code>{{ scope.identifier }}</code>
+				</li>
+			{% endfor %}
+		</ul>
+	</section>
+
+	<form method="POST" action="{{ cms.base }}/oauth/authorize" class="oauth-consent__form">
+		{{ csrfField|raw }}
+		<div class="oauth-consent__actions">
+			<button type="submit" name="decision" value="approve" class="dash-button">
+				{{ t('oauth.consent.allow') }}
+			</button>
+			<button type="submit" name="decision" value="deny" class="dash-button transparent">
+				{{ t('oauth.consent.deny') }}
+			</button>
+		</div>
+	</form>
+
+</main>
+
+<style>
+.oauth-consent {
+	max-width: 480px;
+	margin: 0 auto;
+}
+
+.oauth-consent__header {
+	text-align: center;
+	margin-bottom: 1.5rem;
+}
+
+.oauth-consent__icon {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+	border-radius: var(--totalform-radius);
+	margin-bottom: 0.75rem;
+	display: block;
+	margin-inline: auto;
+}
+
+.oauth-consent__header h1 {
+	font-size: 1.5rem;
+	margin-bottom: 0.25rem;
+}
+
+.oauth-consent__subtitle {
+	font-size: 0.95rem;
+	color: oklch(var(--totalform-darkgray));
+	margin: 0;
+}
+
+.oauth-consent__signed-in {
+	font-size: 0.875rem;
+	text-align: center;
+	color: oklch(var(--totalform-darkgray) / 0.75);
+	padding: 0.5rem 0.75rem;
+	background: oklch(var(--totalform-nearwhite));
+	border-radius: var(--totalform-radius);
+	margin-bottom: 1.5rem;
+}
+
+.oauth-consent__scopes h2 {
+	font-size: 0.9rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: oklch(var(--totalform-darkgray));
+	margin-bottom: 0.75rem;
+}
+
+.oauth-consent__scope-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-bottom: 1.5rem;
+}
+
+.oauth-consent__scope-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+}
+
+.oauth-consent__scope-item strong {
+	font-size: 0.9rem;
+}
+
+.oauth-consent__scope-item code {
+	font-size: 0.8rem;
+	color: oklch(var(--totalform-darkgray));
+	white-space: nowrap;
+}
+
+.oauth-consent__form {
+	margin-top: 0.5rem;
+}
+
+.oauth-consent__actions {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+}
+</style>
+{% endblock %}

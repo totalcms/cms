@@ -5,15 +5,29 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Settings\Services;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
 
 final class SettingsValidatorTest extends TestCase
 {
 	private SettingsValidator $validator;
+	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
 
 	protected function setUp(): void
 	{
-		$this->validator = new SettingsValidator();
+		// SettingsValidator now derives the section list from the
+		// SettingsRepository, which globs resources/schemas/settings/*.json.
+		// We mock with the canonical 16-entry list so this test stays a unit
+		// test (no filesystem dependency) and matches the behavior the admin
+		// settings UI actually sees.
+		$this->settingsRepository = $this->createMock(SettingsRepository::class);
+		$this->settingsRepository->method('listSections')->willReturn([
+			'auth', 'builder', 'cache', 'dashboard', 'general', 'htmlclean',
+			'i18n', 'imageworks', 'installation', 'license', 'mailer', 'mcp',
+			'presets', 'pushnotif', 'smtp', 'sync',
+		]);
+
+		$this->validator = new SettingsValidator($this->settingsRepository);
 	}
 
 	// ==================== Section Validation ====================
@@ -47,7 +61,7 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(15, $sections);
+		$this->assertCount(16, $sections);
 		$this->assertContains('installation', $sections);
 		$this->assertContains('general', $sections);
 		$this->assertContains('auth', $sections);
@@ -59,6 +73,7 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertContains('imageworks', $sections);
 		$this->assertContains('license', $sections);
 		$this->assertContains('mailer', $sections);
+		$this->assertContains('mcp', $sections);
 		$this->assertContains('presets', $sections);
 		$this->assertContains('pushnotif', $sections);
 		$this->assertContains('smtp', $sections);

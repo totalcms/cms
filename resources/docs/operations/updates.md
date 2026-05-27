@@ -124,3 +124,31 @@ Updates are classified by severity:
 **Site stuck in maintenance mode** — The maintenance flag is at `cache/maintenance.flag`. Delete it manually: `rm cache/maintenance.flag`
 
 **Permission errors during update** — The PHP process needs write access to the application directory to perform the swap. Check file ownership and permissions.
+
+## Version-Specific Upgrade Notes
+
+Route shapes are stable across patch releases, but new minor versions occasionally consolidate endpoints or rearrange storage paths. Review the notes for any version you skip over.
+
+### 3.2 → 3.5
+
+3.5 consolidated several namespaces. The changes below are not auto-rewritten in your own templates, scripts, or WAF rules — review each.
+
+**Content APIs moved under `/api/`.** Every content endpoint that used to live at the root (`/collections/...`, `/schemas/...`, `/upload/...`, `/cache/...`, `/report/...`, etc.) now lives under `/api/{same path}`. Update API clients, integrations, and webhook URLs.
+
+A few previously-API endpoints intentionally moved **out** of `/api/` — `/sitemap`, `/feeds`, ImageWorks `download/` and `stream/` — because they're public-facing surfaces that don't fit the API auth/CORS model.
+
+**Auth routes moved under `/admin/`.** Login, logout, register, forgot-password, and reset-password endpoints used to live at the root. They now live under `/admin/` (e.g. `/admin/login`, `/admin/logout`, `/admin/register/{collection}`). Update any custom login forms or links that posted to the old paths.
+
+**Twig `{% include %}` paths now need a `templates/` prefix.** The Twig loader for stored templates was re-rooted from `tcms-data/templates/` to `tcms-data/builder/` so it can resolve both designer templates and Site Builder templates from one loader. Includes that used to resolve relative to the old root must add the new subdirectory:
+
+```twig
+{# 3.2 #}
+{% include 'header.twig' %}
+
+{# 3.5 #}
+{% include 'templates/header.twig' %}
+```
+
+Templates referenced inside a collection schema's `template` field, or rendered through the public-API `template` parameter, follow the same rule.
+
+**Whitelabel templates must live under `whitelabel/`.** During the upgrade, T3 migrates `tcms-data/templates/*` into `tcms-data/builder/templates/*`, except for files already under a `whitelabel/` subfolder, which move to `tcms-data/builder/whitelabel/*`. If you had whitelabel overrides saved **outside** that subfolder, the auto-migration won't pick them up — open them in the admin Templates UI and re-save under the `whitelabel/` folder so they take effect against the whitelabel chrome.

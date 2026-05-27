@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Support\PathResolver;
 
 readonly class SettingsSaver
 {
@@ -14,8 +15,6 @@ readonly class SettingsSaver
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.Superglobals")
-	 *
 	 * @param array<string,string> $settings
 	 *
 	 * @return array<string,mixed>
@@ -50,7 +49,7 @@ readonly class SettingsSaver
 			$settings['dashboard'] = $dashboardSettings;
 		}
 
-		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+		$configFile = PathResolver::configFile();
 		if (file_exists($configFile)) {
 			$existingSettings = include $configFile;
 			if (is_array($existingSettings)) {

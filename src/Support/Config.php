@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Support;
 
+use TotalCMS\Domain\Property\Data\SlugData;
+
 class Config
 {
 	public const LICENSE_API_URL = 'https://license.totalcms.co';
@@ -12,6 +14,7 @@ class Config
 	public string $tmpdir             = '';
 	public string $cachedir           = '';
 	public string $domain             = '';
+	public string $siteName           = '';
 	public string $url                = '';
 	public string $api                = '';
 	public string $locale             = '';
@@ -55,6 +58,12 @@ class Config
 	public string $docroot = '';
 	/** @var array<string,mixed> */
 	public array $builder = [];
+	/** @var array<string,mixed> */
+	public array $mcp = [];
+	/** @var array<string,mixed> */
+	public array $oauth = [];
+	/** @var array<string,mixed> */
+	public array $search = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -77,6 +86,7 @@ class Config
 		$this->error              = $settings['error'];
 		$this->imageworks         = $settings['imageworks'];
 		$this->domain             = $settings['domain'];
+		$this->siteName           = (string)($settings['siteName'] ?? '');
 		$this->url                = $settings['url'];
 		$this->api                = $settings['api'];
 		$this->i18n               = $this->normalizeI18nSettings($settings);
@@ -99,6 +109,9 @@ class Config
 		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
 		$this->pushnotif          = is_array($settings['pushnotif'] ?? null) ? $settings['pushnotif'] : [];
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
+		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
+		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
+		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];
@@ -110,6 +123,47 @@ class Config
 	public function toArray(): array
 	{
 		return get_object_vars($this);
+	}
+
+	/**
+	 * Canonical human-readable site identity. Used by features that surface
+	 * the site to humans or AI agents (MCP serverInfo, future RSS feed title,
+	 * sitemap chrome, PWA manifest, etc.) instead of falling back to the bare
+	 * domain or co-opting the admin dashboard title for double duty.
+	 *
+	 * Fallback chain (first non-empty wins):
+	 *   1. `siteName` — operator's explicit choice
+	 *   2. `dashboard.title` — only if customized away from the default
+	 *      "Total CMS Admin" (which is meaningless as a site name)
+	 *   3. `domain` — last resort, always present
+	 *
+	 * See docs/planning/site-name.md for the catalog of future adopters.
+	 */
+	public function displayName(): string
+	{
+		if ($this->siteName !== '') {
+			return $this->siteName;
+		}
+
+		$dashboardTitle = (string)($this->dashboard['title'] ?? '');
+		if ($dashboardTitle !== '' && $dashboardTitle !== 'Total CMS Admin') {
+			return $dashboardTitle;
+		}
+
+		return $this->domain;
+	}
+
+	/**
+	 * Slugified variant of {@see displayName()} — safe for filenames, URL
+	 * slugs, and any context that needs a single token without spaces or
+	 * punctuation. Same fallback chain as `displayName()`, then run through
+	 * `SlugData::slugify()` (which strips diacritics and non-alphanumerics).
+	 *
+	 * Example: `Joe's Bistro` → `joes-bistro`; `example.com` → `example-com`.
+	 */
+	public function displaySlug(): string
+	{
+		return SlugData::slugify($this->displayName());
 	}
 
 	public static function init(): self

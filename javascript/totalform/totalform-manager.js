@@ -66,8 +66,8 @@ export default class TotalFormManager {
 				this.unsavedCounter = 0;
 				if (useStatusBanner) this.bannerStatus();
 			});
-			form.form.addEventListener("success", () => {
-				if (useStatusBanner) this.success();
+			form.form.addEventListener("success", (event) => {
+				if (useStatusBanner) this.success(event.detail?.meta?.warnings);
 			});
 		});
 		// Save on CMD/Ctrl+S
@@ -202,13 +202,42 @@ export default class TotalFormManager {
         });
     }
 
-    success() {
+    success(warnings = null) {
 		this.unsavedCounter--;
 		if (this.unsavedCounter !== 0) return;
+
+		// Collect warnings across all forms (multiple forms can fire success in one save cycle)
+		if (Array.isArray(warnings) && warnings.length > 0) {
+			if (!this._pendingWarnings) this._pendingWarnings = [];
+			this._pendingWarnings.push(...warnings);
+		}
+
 		this.delayProcessing(() => {
-			this.bannerStatus("success");
-			console.log("All forms saved successfully.");
-			window.setTimeout(() => this.bannerStatus(), this.successLimit);
+			const pendingWarnings = this._pendingWarnings;
+			this._pendingWarnings = null;
+
+			if (pendingWarnings && pendingWarnings.length > 0) {
+				console.warn("Save succeeded with warnings:", pendingWarnings);
+				this.warn(pendingWarnings);
+			} else {
+				this.bannerStatus("success");
+				console.log("All forms saved successfully.");
+				window.setTimeout(() => this.bannerStatus(), this.successLimit);
+			}
 		});
     }
+
+	warn(warnings) {
+		const message = warnings.join(" | ");
+		this.statusBanner.style.setProperty('--totalform-formwarning', `"${message.replace(/"/g, '')}"`);
+		this.bannerStatus("warning");
+		this.statusBanner.addEventListener("click", () => {
+			this.bannerStatus();
+			this.statusBanner.style.setProperty('--totalform-formwarning', "");
+		}, {once: true});
+		window.setTimeout(() => {
+			this.bannerStatus();
+			this.statusBanner.style.setProperty('--totalform-formwarning', "");
+		}, this.successLimit * 5);
+	}
 }

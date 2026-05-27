@@ -8,6 +8,12 @@ use TotalCMS\Action\Auth;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 
 return function (App $app): void {
+	// Auth routes intentionally skip CSRFProtectionMiddleware. The threat model
+	// for each is either pre-auth (no session cookie to ride yet) or
+	// token-based (reset-password's URL token IS the auth), so CSRF adds
+	// friction without meaningful protection. State-changing operations
+	// against an authed admin session live under admin/admin.php and DO get
+	// CSRF.
 	$app->group('/admin', function (RouteCollectorProxy $group): void {
 		$group->any('/logout', Auth\AuthLogoutAction::class)->setName('logout');
 		$group->any('/denied', Auth\AuthDeniedAction::class)->setName('denied');

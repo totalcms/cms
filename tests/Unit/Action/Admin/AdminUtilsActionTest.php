@@ -14,6 +14,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -38,6 +41,11 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
 	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
+	private OAuthClientRepository $oauthClientRepository;
+	private OAuthGrantRepository $oauthGrantRepository;
+	private OAuthScopeRegistry $oauthScopeRegistry;
+	private string $oauthClientsTmpFile;
+	private string $oauthGrantsTmpFile;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
@@ -57,6 +65,14 @@ final class AdminUtilsActionTest extends TestCase
 		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
 		$this->templateLister        = $this->createMock(TemplateLister::class);
 		$this->updateChecker         = $this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class);
+		// OAuth repositories + scope registry are all final classes (can't be
+		// doubled). Use real instances pointed at empty tmp files — the tests
+		// here exercise the action's plumbing, not OAuth data shape.
+		$this->oauthClientsTmpFile   = sys_get_temp_dir() . '/oauth-clients-utils-test-' . uniqid() . '.json';
+		$this->oauthGrantsTmpFile    = sys_get_temp_dir() . '/oauth-grants-utils-test-' . uniqid() . '.json';
+		$this->oauthClientRepository = new OAuthClientRepository($this->oauthClientsTmpFile);
+		$this->oauthGrantRepository  = new OAuthGrantRepository($this->oauthGrantsTmpFile);
+		$this->oauthScopeRegistry    = new OAuthScopeRegistry();
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 
@@ -75,7 +91,20 @@ final class AdminUtilsActionTest extends TestCase
 			$this->settingsFetcher,
 			$this->templateLister,
 			$this->updateChecker,
+			$this->oauthClientRepository,
+			$this->oauthGrantRepository,
+			$this->oauthScopeRegistry,
 		);
+	}
+
+	protected function tearDown(): void
+	{
+		if (is_file($this->oauthClientsTmpFile)) {
+			unlink($this->oauthClientsTmpFile);
+		}
+		if (is_file($this->oauthGrantsTmpFile)) {
+			unlink($this->oauthGrantsTmpFile);
+		}
 	}
 
 	/**
@@ -348,6 +377,201 @@ final class AdminUtilsActionTest extends TestCase
 		$this->renderer->method('template')->willReturn($expectedResponse);
 
 		($this->action)($this->request, $this->response, ['page' => 'other-page']);
+	}
+
+	public function testRendersOAuthClientsPageWithClientGroupsAndGrantCounts(): void
+	{
+		$this->setupRoutingContext();
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/utils/oauth-clients');
+		$uri->method('getQuery')->willReturn('');
+
+		$this->request->method('getUri')->willReturn($uri);
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getQueryParams')->willReturn([]);
+
+		// Seed one static client and one dynamic client
+		$staticClient = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+			id:             'static-1',
+			name:           'Static App',
+			secretHash:     '$2y$12$hash1',
+			redirectUris:   ['https://example.com/cb'],
+			scopes:         ['cms:read'],
+			isDynamic:      false,
+			isConfidential: true,
+			createdAt:      '2026-01-01T00:00:00Z',
+			createdBy:      'admin',
+		);
+		$dynamicClient = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+			id:             'dynamic-1',
+			name:           'Dynamic App',
+			secretHash:     '$2y$12$hash2',
+			redirectUris:   ['https://dynamic.example.com/cb'],
+			scopes:         ['cms:read'],
+			isDynamic:      true,
+			isConfidential: true,
+			createdAt:      '2026-01-01T00:00:00Z',
+			createdBy:      'admin',
+		);
+		$this->oauthClientRepository->save($staticClient);
+		$this->oauthClientRepository->save($dynamicClient);
+
+		// Seed one grant per client
+		$grant1 = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+			id:               'grant-1',
+			clientId:         'static-1',
+			userId:           'user@example.com',
+			scopes:           ['cms:read'],
+			refreshTokenHash: 'hash-a',
+			issuedAt:         '2026-01-01T00:00:00Z',
+			expiresAt:        '2027-01-01T00:00:00Z',
+		);
+		$grant2 = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+			id:               'grant-2',
+			clientId:         'dynamic-1',
+			userId:           'user@example.com',
+			scopes:           ['cms:read'],
+			refreshTokenHash: 'hash-b',
+			issuedAt:         '2026-01-01T00:00:00Z',
+			expiresAt:        '2027-01-01T00:00:00Z',
+		);
+		$this->oauthGrantRepository->save($grant1);
+		$this->oauthGrantRepository->save($grant2);
+
+		$expectedResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->expects($this->once())
+			->method('template')
+			->with(
+				$this->response,
+				'admin/utils.twig',
+				$this->callback(function (array $data): bool {
+					if ($data['page'] !== 'oauth-clients') {
+						return false;
+					}
+					$clients = $data['oauthClients'] ?? null;
+					if (!is_array($clients)) {
+						return false;
+					}
+					// One static client with one grant
+					if (count($clients['static']) !== 1) {
+						return false;
+					}
+					// One dynamic client with one grant
+					if (count($clients['dynamic']) !== 1) {
+						return false;
+					}
+					$staticRow  = $clients['static'][0];
+					$dynamicRow = $clients['dynamic'][0];
+
+					return $staticRow['client']->id === 'static-1'
+						&& $staticRow['grantCount'] === 1
+						&& $dynamicRow['client']->id === 'dynamic-1'
+						&& $dynamicRow['grantCount'] === 1;
+				})
+			)
+			->willReturn($expectedResponse);
+
+		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-clients']);
+
+		$this->assertSame($expectedResponse, $result);
+	}
+
+	public function testRendersOAuthClientsNewFormWithScopeList(): void
+	{
+		$this->setupRoutingContext();
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/utils/oauth-clients');
+		$uri->method('getQuery')->willReturn('action=new');
+
+		$this->request->method('getUri')->willReturn($uri);
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getQueryParams')->willReturn(['action' => 'new']);
+
+		$expectedResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->expects($this->once())
+			->method('template')
+			->with(
+				$this->response,
+				'admin/utils.twig',
+				$this->callback(function (array $data): bool {
+					if ($data['page'] !== 'oauth-clients') {
+						return false;
+					}
+					$form = $data['oauthClientsForm'] ?? null;
+					if (!is_array($form) || !isset($form['scopes'])) {
+						return false;
+					}
+					// OAuthScopeRegistry defines 5 T3 scopes
+					return count($form['scopes']) === 5;
+				})
+			)
+			->willReturn($expectedResponse);
+
+		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-clients', 'action' => 'new']);
+
+		$this->assertSame($expectedResponse, $result);
+	}
+
+	public function testRendersOAuthGrantsPageWithGrantsJoinedToClientNames(): void
+	{
+		$this->setupRoutingContext();
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/utils/oauth-grants');
+		$uri->method('getQuery')->willReturn('');
+
+		$this->request->method('getUri')->willReturn($uri);
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getQueryParams')->willReturn([]);
+
+		// Seed a client and a grant
+		$client = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+			id:             'client-xyz',
+			name:           'My OAuth App',
+			secretHash:     '$2y$12$hash',
+			redirectUris:   ['https://example.com/cb'],
+			scopes:         ['cms:read'],
+			isDynamic:      false,
+			isConfidential: true,
+			createdAt:      '2026-01-01T00:00:00Z',
+			createdBy:      'admin',
+		);
+		$grant = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+			id:               'grant-xyz',
+			clientId:         'client-xyz',
+			userId:           'user@example.com',
+			scopes:           ['cms:read'],
+			refreshTokenHash: 'hash-x',
+			issuedAt:         '2026-01-01T00:00:00Z',
+			expiresAt:        '2027-01-01T00:00:00Z',
+		);
+		$this->oauthClientRepository->save($client);
+		$this->oauthGrantRepository->save($grant);
+
+		$expectedResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->expects($this->once())
+			->method('template')
+			->with(
+				$this->response,
+				'admin/utils.twig',
+				$this->callback(function (array $data): bool {
+					if ($data['page'] !== 'oauth-grants') {
+						return false;
+					}
+					$grants = $data['oauthGrants'] ?? null;
+					if (!is_array($grants) || count($grants) !== 1) {
+						return false;
+					}
+					$row = $grants[0];
+
+					return $row['grant']->id === 'grant-xyz'
+						&& $row['clientName'] === 'My OAuth App';
+				})
+			)
+			->willReturn($expectedResponse);
+
+		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-grants']);
+
+		$this->assertSame($expectedResponse, $result);
 	}
 
 	public function testIncludesUrlData(): void

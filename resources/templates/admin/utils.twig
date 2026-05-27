@@ -7,6 +7,10 @@
 {% if cms.auth.isAdmin() and cms.edition.can('api_keys') %}
 	{% set authSub = authSub | merge([{ "title": "API Keys", "path": "api-keys" }]) %}
 {% endif %}
+{% if cms.auth.isAdmin() and cms.edition.can('oauth_server') %}
+	{% set authSub = authSub | merge([{ "title": "OAuth Apps",   "path": "oauth-clients" }]) %}
+	{% set authSub = authSub | merge([{ "title": "OAuth Grants", "path": "oauth-grants" }]) %}
+{% endif %}
 
 {% set importSub = [
 	{ "title": "Import Alloy",       "path": "import-alloy" },

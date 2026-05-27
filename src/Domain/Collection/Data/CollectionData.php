@@ -18,6 +18,12 @@ class CollectionData
 		'logs',
 		'.schemas',
 		'schemas',
+		// Reserved for the MCP DataView URI namespace (tcms://view/{id}).
+		// Without these reservations a customer could create a collection
+		// named `view` or `views` whose objects would collide with the
+		// per-view resource URIs registered by DataViewResourceRegistrar.
+		'view',
+		'views',
 	];
 
 	private readonly Serializer $serializer;
@@ -59,6 +65,9 @@ class CollectionData
 
 	/** @var array<string,mixed> */
 	public array $sitemap = [];  // Sitemap card settings (enabled, date, frequency, priority, include, exclude)
+
+	/** @var array<string,mixed> */
+	public array $mcp = [];  // MCP card settings (access, description, resource). Pro+ only — see EditionFeature::MCP_SERVER.
 
 	public function __construct()
 	{
@@ -122,6 +131,10 @@ class CollectionData
 			$collection['sitemap'] = $this->sitemap;
 		}
 
+		if ($this->mcp !== []) {
+			$collection['mcp'] = $this->mcp;
+		}
+
 		return $collection;
 	}
 
@@ -168,7 +181,7 @@ class CollectionData
 	}
 
 	/**
-	 * @return array{labelPlural: string, labelSingular: string}
+	 * @return array{labelPlural: string, labelSingular: string, name?: string}
 	 */
 	public static function getDefaultLabelsForSchema(string $schemaId): array
 	{
@@ -178,6 +191,7 @@ class CollectionData
 			'code'         => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'playground'   => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'mailer'       => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
+			'mcp-prompt'   => ['labelPlural' => 'Prompts', 'labelSingular' => 'Prompt', 'name' => 'MCP Prompts'],
 			'color'        => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
 			'date'         => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
 			'depot'        => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],

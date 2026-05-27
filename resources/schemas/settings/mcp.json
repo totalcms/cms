@@ -1,0 +1,76 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "MCP Server Settings",
+	"description" : "Configure the Model Context Protocol server. Exposes <code>/mcp</code> so AI agents can discover and query your site. Available on Pro and higher editions. Per-collection access is configured on each collection's schema (Phase 1).",
+	"type"        : "object",
+	"properties"  : {
+		"enabled": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Enable MCP Server",
+			"help"    : "Master switch for the MCP endpoint. When off, <code>/mcp</code> returns 404 and discovery reports <code>disabled: true</code>. Defaults on for Pro+ editions.",
+			"default" : true
+		},
+		"publicAccess": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Allow Public Access",
+			"help"    : "Allow anonymous (no API key) callers to discover and use tools whose collection has <code>mcp.access: 'public'</code> set on its schema. Turn this off to require an API key for every MCP request, regardless of collection settings.",
+			"default" : true
+		},
+		"allowedOrigins": {
+			"type"     : "array",
+			"field"    : "list",
+			"label"    : "CORS Allowed Origins",
+			"placeholder" : "Pick a known AI client or type a custom origin",
+			"help"     : "Origins permitted to call <code>/mcp</code> from <strong>inside a browser tab</strong>. Pick a known browser-based AI client from the dropdown, or type a custom origin (e.g. <code>https://example.com</code>) for in-house playgrounds. <br><br><strong>Native MCP clients (Claude Desktop, Cursor, Claude Code, MCP Inspector) connect regardless of this setting</strong> — CORS is a browser-only mechanism and never reaches non-browser clients. Server-side AI integrations are also unaffected. <br><br>Leave empty (default) to block browser clients entirely. Use <code>*</code> to allow any origin (not recommended for sites with non-public collections — any website's JavaScript could read your public MCP surface).",
+			"options"  : [
+				{"value": "https://chatgpt.com",          "label": "ChatGPT"},
+				{"value": "https://claude.ai",            "label": "Claude.ai"},
+				{"value": "https://copilot.microsoft.com","label": "Microsoft Copilot"},
+				{"value": "https://gemini.google.com",    "label": "Google Gemini"},
+				{"value": "https://chat.mistral.ai",      "label": "Mistral Le Chat"},
+				{"value": "https://www.perplexity.ai",    "label": "Perplexity"},
+				{"value": "*",                            "label": "* (any origin — use cautiously)"}
+			],
+			"settings" : {
+				"duplicateItemsAllowed" : false,
+				"addChoices"            : true
+			}
+		},
+		"publicIpPerMinute": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Public Rate Limit (per minute)",
+			"help"        : "Maximum MCP requests per minute from a single IP for unauthenticated (public persona) callers. Admin API key callers bypass this limit. Set to <code>0</code> to disable rate limiting for public callers.",
+			"placeholder" : "60",
+			"default"     : 60,
+			"min"         : 0,
+			"max"         : 6000,
+			"settings" : {
+				"visibility": {
+					"watch": "publicAccess",
+					"value": true,
+					"operator": "=="
+				}
+			}
+		},
+		"toolPrefix": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Tool Name Prefix",
+			"help"        : "Optional prefix prepended to every MCP tool name. Useful when running multiple T3 sites in the same AI agent so tools are distinguishable (e.g. <code>bistro</code> produces <code>bistro_list_collections</code>, <code>bistro_query_collection</code>). Leave blank for default names. Snake-case only, max 24 characters. <strong>Note:</strong> changing this requires connected AI clients (Claude Desktop, Inspector, etc.) to reconnect — existing sessions will see stale tool names until they re-initialize.",
+			"placeholder" : "bistro",
+			"default"     : "",
+			"pattern"     : "^[a-z][a-z0-9_]*$",
+			"maxLength"   : 24
+		},
+		"subscriptionsEnabled": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Enable Resource Subscriptions",
+			"help"    : "When on, AI agents can call <code>resources/subscribe</code> on URIs like <code>tcms://blog/</code> and T3 will push <code>notifications/resources/updated</code> when matching content changes. When off, the SDK still accepts subscribe calls but T3 won't push notifications — the kill switch for production troubleshooting.",
+			"default" : true
+		}
+	}
+}

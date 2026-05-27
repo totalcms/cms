@@ -1,0 +1,11 @@
+{
+    "id": "greet",
+    "name": "greet",
+    "description": "Say hi.",
+    "body": "Hello {{ args.name }}",
+    "access": "public",
+    "targetCollection": "",
+    "args": [
+        { "name": "name", "description": "The name to greet.", "required": true }
+    ]
+}

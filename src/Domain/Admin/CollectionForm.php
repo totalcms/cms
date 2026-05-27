@@ -224,6 +224,19 @@ class CollectionForm extends TotalForm
 	 */
 	protected function buildFieldOptions(string $name, array $options = []): array
 	{
+		// Sub-fields of card/deck composites bring their own complete config
+		// from the card's sub-schema iteration — skip parent-schema lookup
+		// and collectionData value pull, otherwise a sub-field named
+		// `description` (inside the mcp card, say) would inherit the
+		// collection's top-level `description` value. Matches the guard
+		// pattern in ObjectForm::buildFieldOptions.
+		if (isset($options['subfield']) && $options['subfield'] === true) {
+			$options['name'] = $name;
+			$options['form'] = $this;
+
+			return $options;
+		}
+
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];
 		$defaults = TotalForm::filterFieldProperties($defaults);

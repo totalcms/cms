@@ -1,0 +1,38 @@
+{
+    "id": "parts",
+    "schema": "text",
+    "name": "Parts",
+    "description": "Parts inventory fixture for cross-collection schema tool collision test.",
+    "url": "/parts/{id}",
+    "category": "",
+    "labelPlural": "Parts",
+    "labelSingular": "Part",
+    "groups": [],
+    "publicOperations": [],
+    "sortBy": "id",
+    "reverseSort": false,
+    "prettyUrl": false,
+    "queueRebuildOnSave": false,
+    "count": 1,
+    "totalObjects": 1,
+    "lastUpdated": "2026-01-01T00:00:00Z",
+    "mcp": {
+        "access": "public",
+        "description": "Parts inventory fixture.",
+        "resource": false,
+        "tools": [
+            {
+                "name": "find_active",
+                "description": "Return active parts.",
+                "filters": {
+                    "status": {
+                        "operator": "eq",
+                        "value": "active"
+                    }
+                },
+                "limit": 20,
+                "format": "markdown"
+            }
+        ]
+    }
+}

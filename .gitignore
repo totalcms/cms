@@ -33,6 +33,8 @@ public/assets
 /tests/tcms-data/file
 /tests/tcms-data/gallery
 /tests/tcms-data/image
+/tests/tcms-data/mcp-prompt
+/tests/tcms-data/mcp-prompt-arg
 /tests/tcms-data/number
 /tests/tcms-data/playground
 /tests/tcms-data/products

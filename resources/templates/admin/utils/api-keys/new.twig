@@ -52,7 +52,8 @@
 		{% set endpointOptions = [
 			{value: "/schemas", label: t('api_keys.schemas_readonly')},
 			{value: "/collections", label: t('api_keys.all_collections_ep')},
-			{value: "/dataviews", label: t('api_keys.all_dataviews_ep')}
+			{value: "/dataviews", label: t('api_keys.all_dataviews_ep')},
+			{value: "/mcp", label: t('api_keys.all_mcp_ep')}
 		] %}
 		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_collections')): collectionOptions}) %}
 		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_dataviews')): dataviewOptions}) %}

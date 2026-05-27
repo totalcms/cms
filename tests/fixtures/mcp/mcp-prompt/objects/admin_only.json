@@ -1,0 +1,9 @@
+{
+    "id": "admin_only",
+    "name": "admin_only",
+    "description": "Admin-only prompt.",
+    "body": "secret",
+    "access": "admin",
+    "targetCollection": "",
+    "args": []
+}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Settings\Services;
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Mcp\Service\McpSessionInvalidator;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 
 /**
@@ -17,6 +18,9 @@ readonly class SettingsSaver
 		private SettingsValidator $settingsValidator,
 		private CacheManager $cacheManager,
 		private SettingsRepository $settingsRepository,
+		// Nullable so non-MCP-aware tests (most of them) don't need to wire
+		// the dep. Container always populates it in production.
+		private ?McpSessionInvalidator $mcpSessionInvalidator = null,
 	) {
 	}
 
@@ -55,6 +59,14 @@ readonly class SettingsSaver
 
 		$this->writeSettings($settings);
 		$this->cacheManager->clearAllCaches();
+
+		// Tool-surface-changing settings (mcp.publicAccess, mcp.toolPrefix,
+		// mcp.enabled) force MCP client sessions to re-initialize so they
+		// pick up the new surface — otherwise cached `tools/list` responses
+		// drift and clients hit "tool not found" on subsequent calls.
+		if ($section === 'mcp' && $this->mcpSessionInvalidator instanceof McpSessionInvalidator) {
+			$this->mcpSessionInvalidator->invalidateAll();
+		}
 	}
 
 	/**

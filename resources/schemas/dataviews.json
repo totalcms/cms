@@ -4,7 +4,7 @@
  "id"          : "dataviews",
  "type"        : "object",
  "description" : "A schema for a Total CMS Data View",
- "formgrid"    : "id .\nname name\ndescription description\ndependencies dependencies\ndefinition definition\nlastBuilt .",
+ "formgrid"    : "id .\nname name\ndescription description\ndependencies dependencies\ndefinition definition\n---MCP Server---\nmcp mcp\n---\nlastBuilt .",
  "properties"  : {
         "id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -56,6 +56,11 @@
 				"autoCloseTags": true
 			}
         },
+		"mcp": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/mcp-collection.json"
+		},
 		"lastBuilt": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"    : "Last Built",
@@ -81,6 +86,9 @@
     "index": [
         "id",
         "name",
-        "dependencies"
+        "description",
+        "dependencies",
+        "lastBuilt",
+        "mcp"
     ]
 }

@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Collection\Utilities;
 
 use Illuminate\Support\Collection;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 /**
  * Collection Sorter
@@ -21,6 +22,19 @@ class CollectionSorter
 	public function __construct(
 		private readonly array $collection,
 	) {
+	}
+
+	/**
+	 * Whether a form-field type has a well-defined sort order. Defers to
+	 * SchemaData's SORTABLE_FIELD_TYPES catalog so callers (the MCP catalog
+	 * builder, future admin sort UIs) share one source of truth.
+	 *
+	 * Per-property operator overrides (`mcp.sortable: true/false`) apply at
+	 * the consumer layer — this method only reports the default.
+	 */
+	public static function isSortableType(string $fieldType): bool
+	{
+		return in_array($fieldType, SchemaData::SORTABLE_FIELD_TYPES, true);
 	}
 
 	/** @return array<array<string,mixed>> */

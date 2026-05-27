@@ -45,6 +45,17 @@ class CliApplication
 		$app->addCommand(new Command\CacheClearCommand($totalcms));
 		$app->addCommand(new Command\JobsProcessCommand($totalcms));
 
+		// MCP server status + local tool dispatch helper
+		$app->addCommand(new Command\Mcp\McpStatusCommand($totalcms));
+		$app->addCommand(new Command\Mcp\McpTestCommand($totalcms));
+
+		// OAuth commands
+		$app->addCommand(new Command\OAuth\OAuthSetupCommand($totalcms));
+		$app->addCommand(new Command\OAuth\OAuthGcCommand($totalcms));
+
+		// Search commands
+		$app->addCommand(new Command\Search\SearchReindexCommand($totalcms));
+
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));
 		$app->addCommand(new Command\SchemaGetCommand($totalcms));
@@ -65,6 +76,9 @@ class CliApplication
 
 		// Deck commands
 		$app->addCommand(new Command\DeckImportCommand($totalcms));
+
+		// Feed / external imports
+		$app->addCommand(new Command\RssImportCommand($totalcms));
 
 		// JumpStart commands
 		$app->addCommand(new Command\JumpStartExportCommand($totalcms));

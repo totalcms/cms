@@ -55,6 +55,15 @@ describe('LocaleTwigAdapter::canonicalizeLocale', function (): void {
 		expect(LocaleTwigAdapter::canonicalizeLocale(''))->toBe('');
 		expect(LocaleTwigAdapter::canonicalizeLocale('   '))->toBe('');
 	});
+
+	test('title-cases script subtag in language-script-region form', function (): void {
+		// BCP-47 casing convention: script in title case (ISO 15924), region
+		// upper. Same rule whether the caller passes underscores or dashes.
+		expect(LocaleTwigAdapter::canonicalizeLocale('sr_Latn_RS'))->toBe('sr_Latn_RS');
+		expect(LocaleTwigAdapter::canonicalizeLocale('sr-latn-rs'))->toBe('sr_Latn_RS');
+		expect(LocaleTwigAdapter::canonicalizeLocale('SR_CYRL_RS'))->toBe('sr_Cyrl_RS');
+		expect(LocaleTwigAdapter::canonicalizeLocale('zh-Hans-CN'))->toBe('zh_Hans_CN');
+	});
 });
 
 describe('LocaleTwigAdapter::text — exact match', function (): void {
