@@ -157,44 +157,11 @@ Optional arguments with no default in the body render as an empty string when ab
 
 Only declared argument names are injected into the template context. Extra keys passed by the caller are silently dropped.
 
-## Extension authoring
+## Code-defined prompts (extensions)
 
-Extensions can ship code-defined prompts alongside collection-stored ones. Register them from the extension's `register()` or `boot()` method:
+Extensions can ship code-defined prompts alongside the collection-stored ones this page covers. They share the same `prompts/list` and `prompts/get` surface; the difference is authoring path — PHP in an extension vs. JSON object in the admin.
 
-```php
-use Mcp\Schema\Content\PromptMessage;
-use Mcp\Schema\Content\TextContent;
-use Mcp\Schema\Enum\Role;
-use Mcp\Schema\Prompt;
-use Mcp\Schema\Result\GetPromptResult;
-
-public function boot(ExtensionContext $context): void
-{
-    $context->registerMcpPrompt(
-        new Prompt(
-            name:        'generate_release_notes',
-            description: 'Draft release notes from the site changelog collection.',
-        ),
-        handler: function (array $arguments = []): GetPromptResult {
-            $version = $arguments['version'] ?? 'latest';
-            return new GetPromptResult(
-                messages: [
-                    new PromptMessage(
-                        Role::User,
-                        new TextContent("Summarise release $version from the CHANGELOG."),
-                    ),
-                ],
-            );
-        },
-    );
-}
-```
-
-The prompt appears in `prompts/list` alongside collection-stored prompts. Registering triggers the `mcp:prompts` capability, which operators can toggle in the Extensions admin UI.
-
-**Collision policy.** If an extension prompt's name matches a collection-stored prompt, the extension's version is silently skipped and a warning is logged. Collection-stored prompts always win.
-
-For the full extension authoring guide, including capability toggles and persona-aware patterns, see [Extending MCP](mcp/extensions).
+See **[Extending MCP → Registering code-defined prompts](mcp/extensions)** for the full guide: signature, when-to-use comparison vs. collection-stored, worked examples, access tiers, and collision policy.
 
 ## ID field and snake_case
 

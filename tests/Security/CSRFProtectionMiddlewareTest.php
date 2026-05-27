@@ -10,6 +10,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 
@@ -25,6 +27,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $handler;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private \PHPUnit\Framework\MockObject\MockObject $apiKeyAuthenticator;
 
 	protected function setUp(): void
 	{
@@ -37,8 +40,16 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		// Clear any existing CSRF data
 		$this->session->delete('csrf_token');
 
-		$this->csrfManager = new CSRFTokenManager($this->session);
-		$this->middleware  = new CSRFProtectionMiddleware($this->csrfManager);
+		$this->csrfManager          = new CSRFTokenManager($this->session);
+		$this->apiKeyAuthenticator  = $this->createMock(ApiKeyAuthenticator::class);
+
+		// Default: no API key header present
+		$this->apiKeyAuthenticator->method('hasApiKeyHeader')->willReturn(false);
+
+		$this->middleware = new CSRFProtectionMiddleware(
+			$this->csrfManager,
+			$this->apiKeyAuthenticator,
+		);
 
 		// Create mocks
 		$this->request  = $this->createMock(ServerRequestInterface::class);
@@ -358,6 +369,72 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$this->request->method('getQueryParams')->willReturn([]);
 
 		$response = $this->middleware->process($this->request, $this->handler);
+
+		$this->assertSame($this->response, $response);
+	}
+
+	/**
+	 * An invalid X-API-Key header must be rejected with 403, not silently
+	 * dropped to session-cookie authentication. This closes the bypass where
+	 * an attacker could send an arbitrary header value to skip CSRF validation.
+	 */
+	public function testRejectsRequestWithInvalidApiKeyHeader(): void
+	{
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/collections/blog/123');
+
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getUri')->willReturn($uri);
+
+		// Stub the authenticator: header is present but the key is bogus
+		$this->apiKeyAuthenticator = $this->createMock(ApiKeyAuthenticator::class);
+		$this->apiKeyAuthenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->apiKeyAuthenticator->method('authenticate')->willReturn(null);
+
+		$middleware = new CSRFProtectionMiddleware(
+			$this->csrfManager,
+			$this->apiKeyAuthenticator,
+		);
+
+		$this->expectException(HttpForbiddenException::class);
+		$this->expectExceptionMessage('Invalid API key');
+
+		$middleware->process($this->request, $this->handler);
+	}
+
+	/**
+	 * A valid X-API-Key header must be exempted from CSRF — this is the
+	 * legitimate API-caller path that the fix must not break.
+	 */
+	public function testAllowsRequestWithValidApiKeyHeader(): void
+	{
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/collections/blog/123');
+
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getUri')->willReturn($uri);
+
+		// Build a minimal ApiKeyData object to return as "valid key"
+		$apiKeyData = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test Key',
+			'key'     => 'tcms_validkey123',
+			'created' => '2024-01-01T00:00:00+00:00',
+			'scopes'  => ['methods' => [], 'paths' => []],
+		]);
+
+		// Stub the authenticator: header present and key validates
+		$this->apiKeyAuthenticator = $this->createMock(ApiKeyAuthenticator::class);
+		$this->apiKeyAuthenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->apiKeyAuthenticator->method('authenticate')->willReturn($apiKeyData);
+
+		$middleware = new CSRFProtectionMiddleware(
+			$this->csrfManager,
+			$this->apiKeyAuthenticator,
+		);
+
+		// No CSRF token in body/headers — should still pass because key is valid
+		$response = $middleware->process($this->request, $this->handler);
 
 		$this->assertSame($this->response, $response);
 	}

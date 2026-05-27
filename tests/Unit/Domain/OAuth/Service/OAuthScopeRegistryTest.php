@@ -9,13 +9,13 @@ use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 
 final class OAuthScopeRegistryTest extends TestCase
 {
-	public function testFiveCoarseScopesPresent(): void
+	public function testCoarseScopesPresent(): void
 	{
 		$registry = new OAuthScopeRegistry();
 		$identifiers = array_map(fn ($s) => $s->identifier, $registry->all());
 
 		$this->assertEqualsCanonicalizing(
-			['cms:read', 'cms:write', 'cms:admin', 'mcp:tools', 'mcp:resources'],
+			['cms:read', 'cms:write', 'cms:admin', 'mcp:tools', 'mcp:resources', 'mcp:prompts'],
 			$identifiers,
 		);
 	}

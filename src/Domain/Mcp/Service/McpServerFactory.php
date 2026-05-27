@@ -156,10 +156,21 @@ readonly class McpServerFactory
 		// Collision policy: soft-deny — collection-stored prompts always win.
 		// If a name is already registered, the SDK throws on addPrompt(); we catch
 		// that and log a warning instead of crashing the server build.
+		// H5 fix: extension prompts are filtered by persona using the same access
+		// logic as collection-stored prompts (PromptRegistrar::personaCanAccess).
+		// The handler is also wrapped to re-check access at call time so a
+		// lower-privilege caller who guesses a prompt name via prompts/get is denied.
 		$collectionPromptNames = array_flip(array_map(static fn (PromptData $p): string => $p->name, $prompts));
 		foreach ($this->extensions->getAllMcpPrompts() as $extensionId => $registrations) {
 			foreach ($registrations as $reg) {
-				$name = $reg['prompt']->name;
+				$name   = $reg['prompt']->name;
+				$access = $reg['access'];
+
+				// Persona filter — hide prompts the current persona cannot access.
+				if (!PromptRegistrar::personaCanAccess($persona, $access)) {
+					continue;
+				}
+
 				if (isset($collectionPromptNames[$name])) {
 					$this->logger->warning('Extension MCP prompt skipped: name collides with collection-stored prompt', [
 						'extension' => $extensionId,
@@ -168,9 +179,8 @@ readonly class McpServerFactory
 					continue;
 				}
 				try {
-					$handler = $reg['handler'];
 					$builder->addPrompt(
-						handler:     \Closure::fromCallable($handler),
+						handler:     $this->buildExtensionPromptHandler($reg['handler'], $persona, $name, $access),
 						name:        $name,
 						description: $reg['prompt']->description ?? '',
 					);
@@ -200,6 +210,31 @@ readonly class McpServerFactory
 			$prompts,
 			static fn (PromptData $p): bool => PromptRegistrar::personaCanAccess($persona, $p->access),
 		));
+	}
+
+	/**
+	 * Wraps an extension prompt handler with a runtime access re-check.
+	 *
+	 * Mirrors the pattern used by PromptRegistrar::buildHandler() for
+	 * collection-stored prompts: the handler closure returned here re-checks
+	 * personaCanAccess() at invocation time so a caller who guesses an admin-only
+	 * prompt name via prompts/get receives a clean MCP error rather than content.
+	 * The outer persona filter in build() already prevents the prompt from
+	 * appearing in prompts/list, but the call-time guard defends against
+	 * name-guessing independently.
+	 */
+	private function buildExtensionPromptHandler(callable $handler, McpPersona $persona, string $name, string $access): \Closure
+	{
+		return static function (array $arguments = []) use ($handler, $persona, $name, $access): mixed {
+			if (!PromptRegistrar::personaCanAccess($persona, $access)) {
+				throw new \Mcp\Exception\PromptGetException(sprintf(
+					'Prompt "%s" requires %s access.',
+					$name,
+					$access,
+				));
+			}
+			return $handler($arguments);
+		};
 	}
 
 	/**

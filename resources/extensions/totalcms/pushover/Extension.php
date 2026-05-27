@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Bundled\Pushover;
 
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
@@ -38,12 +39,17 @@ class Extension implements ExtensionInterface
 			),
 		);
 
+		$rateLimitPerMinute = (int)$context->setting('rateLimitPerMinute', 10);
+
 		$context->addContainerDefinition(
 			SendPushoverAction::class,
 			fn ($c) => new SendPushoverAction(
 				$c->get(PushoverService::class),
 				$c->get(JsonRenderer::class),
 				$c->get(AccessManager::class),
+				$c->get(CacheManager::class),
+				$c->get(LoggerFactory::class),
+				$rateLimitPerMinute,
 			),
 		);
 

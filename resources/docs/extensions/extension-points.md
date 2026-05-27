@@ -520,7 +520,6 @@ use Mcp\Schema\Content\PromptMessage;
 use Mcp\Schema\Content\TextContent;
 use Mcp\Schema\Enum\Role;
 use Mcp\Schema\Prompt;
-use Mcp\Schema\Result\GetPromptResult;
 
 public function register(ExtensionContext $context): void
 {
@@ -532,17 +531,20 @@ public function register(ExtensionContext $context): void
                 new \Mcp\Schema\PromptArgument('url', 'The URL to audit', required: true),
             ],
         ),
-        handler: fn (array $arguments = []) => new GetPromptResult(
-            messages: [new PromptMessage(
+        handler: fn (array $arguments = []): array => [
+            new PromptMessage(
                 Role::User,
                 new TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
-            )],
-        ),
+            ),
+        ],
+        access: 'admin',
     );
 }
 ```
 
 **Capability:** `mcp:prompts`
+
+**Access:** The optional third argument `$access` sets visibility — `'admin'` (default), `'authenticated'`, or `'public'`. The default keeps prompts private to admin-persona callers. Choose `'public'` only when the prompt body contains no site-private data.
 
 **Collision policy:** If a prompt name collides with a collection-stored prompt, the collection-stored version wins — the extension's prompt is logged and skipped.
 

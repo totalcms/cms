@@ -110,6 +110,13 @@ final class OAuthScopeRegistry
 				mcpOperations: ['initialize', 'resources/read', 'resources/subscribe', 'resources/list', 'resources/templates/list'],
 				implies:       [],
 			),
+			new OAuthScopeData(
+				identifier:    'mcp:prompts',
+				description:   'List and retrieve AI prompts',
+				impliedPaths:  [],
+				mcpOperations: ['initialize', 'prompts/list', 'prompts/get'],
+				implies:       [],
+			),
 		];
 
 		$this->scopes = [];

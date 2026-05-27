@@ -7,6 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
@@ -15,12 +16,20 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
  * Validates CSRF tokens on state-changing HTTP methods (POST/PUT/DELETE/PATCH)
  * to block cross-site request forgery against session-authed users.
  *
- * **Bypasses when the request carries API key credentials** (X-API-Key header
- * or Authorization: Bearer). CSRF attacks ride session cookies that browsers
+ * **Bypasses when the request carries a VALID API key** (X-API-Key header or
+ * Authorization: Bearer). CSRF attacks ride session cookies that browsers
  * auto-attach; API keys aren't cookies and require explicit code to send, so
  * they're inherently safe from CSRF. Skipping the check on API-keyed requests
  * keeps external integrators working without forcing them to fetch a CSRF
  * token they don't need.
+ *
+ * IMPORTANT: The bypass requires the key to actually validate against the
+ * stored key store. A request that presents an unrecognised or malformed key
+ * header is rejected with 403 rather than silently falling through to
+ * session-cookie authentication. This closes the vector where an
+ * attacker-controlled page could send `X-API-Key: anything` (or an arbitrary
+ * Bearer value) in a cross-origin fetch to skip CSRF and let the victim's
+ * session cookie do the rest.
  *
  * Operator forms get the token automatically: TotalForm / SimpleForm /
  * LoginForm render `<input type="hidden" name="csrf_token" ...>` via
@@ -46,6 +55,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 
 	public function __construct(
 		private CSRFTokenManager $csrfManager,
+		private ApiKeyAuthenticator $apiKeyAuthenticator,
 	) {
 	}
 
@@ -59,8 +69,20 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// API key auth bypass — CSRF doesn't apply to non-cookie credentials.
-		if ($this->hasApiKeyCredentials($request)) {
+		// If the request carries an API key header, validate it. A valid key
+		// means non-cookie auth — CSRF doesn't apply. An invalid key is
+		// rejected outright (403) so attackers cannot use a bogus header to
+		// bypass CSRF and ride the session cookie instead.
+		if ($this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
+			$validatedKey = $this->apiKeyAuthenticator->authenticate($request);
+			if ($validatedKey === null) {
+				throw new HttpForbiddenException(
+					$request,
+					'Invalid API key. Request rejected.'
+				);
+			}
+
+			// Valid API key — CSRF is not required for non-cookie credentials.
 			return $handler->handle($request);
 		}
 
@@ -86,21 +108,6 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 		// available for session-boundary events (login, password change).
 
 		return $handler->handle($request);
-	}
-
-	/**
-	 * Detect API key credentials in the request. Mirrors `ApiKeyAuthenticator`
-	 * shape so we exempt the same calls that bypass session auth elsewhere.
-	 */
-	private function hasApiKeyCredentials(ServerRequestInterface $request): bool
-	{
-		if ($request->hasHeader('X-API-Key')) {
-			return true;
-		}
-
-		$auth = $request->getHeaderLine('Authorization');
-
-		return $auth !== '' && stripos($auth, 'Bearer ') === 0;
 	}
 
 	/**

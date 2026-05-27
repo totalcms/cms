@@ -501,8 +501,9 @@ final class AdminUtilsActionTest extends TestCase
 					if (!is_array($form) || !isset($form['scopes'])) {
 						return false;
 					}
-					// OAuthScopeRegistry defines 5 T3 scopes
-					return count($form['scopes']) === 5;
+					// OAuthScopeRegistry defines 6 T3 scopes
+					// (cms:read, cms:write, cms:admin, mcp:tools, mcp:resources, mcp:prompts)
+					return count($form['scopes']) === 6;
 				})
 			)
 			->willReturn($expectedResponse);

@@ -35,7 +35,7 @@ final class OAuthServerFactory
 
 	public function buildAuthorizationServer(): AuthorizationServer
 	{
-		$privateKey    = new CryptKey((string)$this->config->oauth['signingKeyPath'], null, false);
+		$privateKey    = new CryptKey((string)$this->config->oauth['signingKeyPath']);
 		$encryptionKey = $this->deriveEncryptionKey();
 
 		$server = new AuthorizationServer(
@@ -83,6 +83,12 @@ final class OAuthServerFactory
 
 	public function buildResourceServer(): ResourceServer
 	{
+		// Public keys are public — operator-readable / world-readable is the
+		// expected posture. league's CryptKey enforces a strict 0400/0440/
+		// 0600/0640/0660 allowlist that doesn't accommodate the typical 0644
+		// shipped by `tcms oauth:setup`. The third arg disables the check on
+		// the public key only; the private key (in buildAuthorizationServer)
+		// still gets the full league enforcement.
 		$publicKey = new CryptKey((string)$this->config->oauth['publicKeyPath'], null, false);
 		return new ResourceServer($this->accessTokens, $publicKey);
 	}

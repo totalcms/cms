@@ -102,7 +102,7 @@ final class OAuthDiscoveryProviderTest extends TestCase
 	// Scopes
 	// -------------------------------------------------------------------------
 
-	public function testScopesSupportedContainsFiveT3Scopes(): void
+	public function testScopesSupportedContainsT3Scopes(): void
 	{
 		$meta   = $this->makeProvider($this->makeConfig())->metadata();
 		$scopes = $meta['scopes_supported'];
@@ -113,7 +113,8 @@ final class OAuthDiscoveryProviderTest extends TestCase
 		$this->assertContains('cms:admin', $scopes);
 		$this->assertContains('mcp:tools', $scopes);
 		$this->assertContains('mcp:resources', $scopes);
-		$this->assertCount(5, $scopes);
+		$this->assertContains('mcp:prompts', $scopes);
+		$this->assertCount(6, $scopes);
 	}
 
 	// -------------------------------------------------------------------------

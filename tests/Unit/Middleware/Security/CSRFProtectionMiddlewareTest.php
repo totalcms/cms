@@ -11,11 +11,14 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 
 /**
- * Tests for CSRFProtectionMiddleware — focusing on the no-rotation behaviour.
+ * Tests for CSRFProtectionMiddleware — focusing on the no-rotation behaviour
+ * and the API-key validation security fix.
  *
  * PHPSession is final and depends on PHP session state. We start a real
  * session (the bootstrap sets session.save_path to a writable tmp dir).
@@ -34,7 +37,12 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		}
 
 		$this->csrfManager = new CSRFTokenManager($this->session);
-		$this->middleware  = new CSRFProtectionMiddleware($this->csrfManager);
+
+		// Default middleware has a no-op ApiKeyAuthenticator mock (no header present)
+		$noApiKey = $this->createMock(ApiKeyAuthenticator::class);
+		$noApiKey->method('hasApiKeyHeader')->willReturn(false);
+
+		$this->middleware = new CSRFProtectionMiddleware($this->csrfManager, $noApiKey);
 	}
 
 	protected function tearDown(): void
@@ -116,18 +124,76 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 	}
 
 	// ------------------------------------------------------------------
-	// Test: Bearer token bypasses CSRF check
+	// Test: valid API key bypasses CSRF check
 	// ------------------------------------------------------------------
 
-	public function testBearerAuthBypassesCsrfCheck(): void
+	public function testValidApiKeyBypassesCsrfCheck(): void
 	{
+		$apiKeyData = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test Key',
+			'key'     => 'tcms_validkey123',
+			'created' => '2024-01-01T00:00:00+00:00',
+			'scopes'  => ['methods' => [], 'paths' => []],
+		]);
+
+		$authenticator = $this->createMock(ApiKeyAuthenticator::class);
+		$authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$authenticator->method('authenticate')->willReturn($apiKeyData);
+
+		$middleware = new CSRFProtectionMiddleware($this->csrfManager, $authenticator);
+
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())
 			->createServerRequest('POST', '/api/collections/blog/objects')
-			->withHeader('Authorization', 'Bearer some-jwt-token');
+			->withHeader('X-API-Key', 'tcms_validkey123');
 
-		// No CSRF token — should still pass because Bearer auth bypasses CSRF.
-		$result = $this->middleware->process($request, $handler);
+		// No CSRF token — should still pass because API key is valid.
+		$result = $middleware->process($request, $handler);
 		$this->assertSame(200, $result->getStatusCode());
+	}
+
+	// ------------------------------------------------------------------
+	// Test: invalid API key header is rejected with 403 (bypass closed)
+	// ------------------------------------------------------------------
+
+	public function testInvalidApiKeyHeaderIsRejectedWith403(): void
+	{
+		$authenticator = $this->createMock(ApiKeyAuthenticator::class);
+		$authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$authenticator->method('authenticate')->willReturn(null); // key doesn't validate
+
+		$middleware = new CSRFProtectionMiddleware($this->csrfManager, $authenticator);
+
+		$handler = $this->makeHandler(new Response());
+		$request = (new ServerRequestFactory())
+			->createServerRequest('POST', '/admin/collections/blog/123')
+			->withHeader('X-API-Key', 'invalid-bogus-key');
+
+		$this->expectException(\Slim\Exception\HttpForbiddenException::class);
+
+		$middleware->process($request, $handler);
+	}
+
+	// ------------------------------------------------------------------
+	// Test: invalid Bearer header is rejected with 403 (bypass closed)
+	// ------------------------------------------------------------------
+
+	public function testInvalidBearerHeaderIsRejectedWith403(): void
+	{
+		$authenticator = $this->createMock(ApiKeyAuthenticator::class);
+		$authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$authenticator->method('authenticate')->willReturn(null); // Bearer token is not a stored API key
+
+		$middleware = new CSRFProtectionMiddleware($this->csrfManager, $authenticator);
+
+		$handler = $this->makeHandler(new Response());
+		$request = (new ServerRequestFactory())
+			->createServerRequest('POST', '/admin/collections/blog/objects')
+			->withHeader('Authorization', 'Bearer attacker-controlled-value');
+
+		$this->expectException(\Slim\Exception\HttpForbiddenException::class);
+
+		$middleware->process($request, $handler);
 	}
 }

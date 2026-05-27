@@ -91,7 +91,7 @@ final class ExtensionContext
 	/** @var list<\TotalCMS\Domain\Search\Service\SearchProvider> */
 	private array $searchProviders = [];
 
-	/** @var list<array{prompt: \Mcp\Schema\Prompt, handler: callable}> Code-defined MCP prompts registered by this extension */
+	/** @var list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
 	private array $registeredMcpPrompts = [];
 
 	public function __construct(
@@ -387,25 +387,32 @@ final class ExtensionContext
 	 * collection-stored prompt, the extension's prompt is logged and skipped —
 	 * collection-stored prompts always win.
 	 *
+	 * @param string $access  Access level: 'public', 'authenticated', or 'admin' (default).
+	 *                        'admin'         — only visible to admin-persona callers (API key auth).
+	 *                        'authenticated' — visible to OAuth/session-authenticated callers and admin.
+	 *                        'public'        — visible to all callers including anonymous (use sparingly).
+	 *                        Unrecognised values are treated as 'admin' (fails closed).
+	 *
 	 * Example:
 	 *
 	 *   $context->registerMcpPrompt(
 	 *       new \Mcp\Schema\Prompt(name: 'audit_links', description: 'Audit broken links on any page.'),
-	 *       handler: fn (array $arguments = []) => new \Mcp\Schema\Result\GetPromptResult(
-	 *           messages: [new \Mcp\Schema\Content\PromptMessage(
+	 *       handler: fn (array $arguments = []) => [
+	 *           new \Mcp\Schema\Content\PromptMessage(
 	 *               \Mcp\Schema\Enum\Role::User,
 	 *               new \Mcp\Schema\Content\TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
-	 *           )],
-	 *       ),
+	 *           ),
+	 *       ],
+	 *       access: 'admin',
 	 *   );
 	 */
-	public function registerMcpPrompt(\Mcp\Schema\Prompt $prompt, callable $handler): void
+	public function registerMcpPrompt(\Mcp\Schema\Prompt $prompt, callable $handler, string $access = 'admin'): void
 	{
-		$this->registeredMcpPrompts[] = ['prompt' => $prompt, 'handler' => $handler];
+		$this->registeredMcpPrompts[] = ['prompt' => $prompt, 'handler' => $handler, 'access' => $access];
 	}
 
 	/**
-	 * @return list<array{prompt: \Mcp\Schema\Prompt, handler: callable}>
+	 * @return list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}>
 	 */
 	public function getRegisteredMcpPrompts(): array
 	{

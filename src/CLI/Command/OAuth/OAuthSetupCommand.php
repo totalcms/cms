@@ -81,9 +81,13 @@ class OAuthSetupCommand extends BaseCommand
 			return 1;
 		}
 
+		// Write key files with restrictive umask so no world-readable window exists.
+		$oldUmask = umask(0177);
 		file_put_contents($privatePath, (string)$privatePem);
 		file_put_contents($publicPath, (string)$details['key']);
+		umask($oldUmask);
 
+		// Belt-and-suspenders: enforce 0600 on the private key even if umask was overridden.
 		if (!@chmod($privatePath, 0600)) {
 			$output->writeln(sprintf('<comment>Warning: could not set 0600 permissions on %s</comment>', $privatePath));
 		}

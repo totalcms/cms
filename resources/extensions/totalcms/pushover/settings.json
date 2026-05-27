@@ -24,6 +24,14 @@
 			"label": "Group Key (optional)",
 			"help": "For sending to a delivery group instead of a single user. Leave empty if not using groups.",
 			"default": ""
+		},
+		"rateLimitPerMinute": {
+			"type": "integer",
+			"field": "number",
+			"label": "Rate Limit (requests per minute)",
+			"help": "Maximum Pushover notifications allowed per IP address and per user per minute. Set to 0 to disable rate limiting.",
+			"default": 10,
+			"minimum": 0
 		}
 	}
 }

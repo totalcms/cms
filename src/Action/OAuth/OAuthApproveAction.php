@@ -10,6 +10,8 @@ use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\OAuth\Adapter\LeagueClientEntity;
+use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueUserEntity;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -36,7 +38,12 @@ readonly class OAuthApproveAction
 			);
 		}
 
-		$authRequest = unserialize($stashed);
+		$authRequest = unserialize($stashed, ['allowed_classes' => [
+			AuthorizationRequest::class,
+			LeagueClientEntity::class,
+			LeagueScopeEntity::class,
+			LeagueUserEntity::class,
+		]]);
 		if (!$authRequest instanceof AuthorizationRequest) {
 			return $this->twig->template(
 				$response->withStatus(400),

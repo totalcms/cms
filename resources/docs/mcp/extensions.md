@@ -309,14 +309,25 @@ Use code-defined prompts when the prompt body is complex PHP logic, when argumen
 $context->registerMcpPrompt(
     \Mcp\Schema\Prompt $prompt,
     callable $handler,
+    string $access = 'admin',
 ): void
 ```
 
 The `\Mcp\Schema\Prompt` object carries the prompt's name, description, and argument definitions. The handler receives the resolved `array $arguments` and returns a `list<\Mcp\Schema\Content\PromptMessage>`. The SDK wraps the list in a `GetPromptResult` automatically — do not pre-wrap.
 
+The `$access` parameter controls which callers can see and invoke the prompt:
+
+| Value | Who can call the prompt |
+|---|---|
+| `'admin'` (default) | Admin-persona callers only (API key auth) |
+| `'authenticated'` | OAuth/session-authenticated callers and admin |
+| `'public'` | All callers, including anonymous |
+
+Unrecognised values are treated as `'admin'` (fails closed). The default is `'admin'` — choose a less restrictive level only when the prompt body does not expose sensitive data.
+
 ### Example: Audit broken links
 
-This prompt accepts a page URL and instructs the agent to crawl all links and report any that return a non-200 status:
+This prompt is only useful to an authenticated operator, so it uses the default `'admin'` access:
 
 ```php
 // extension's boot.php
@@ -366,6 +377,29 @@ $context->registerMcpPrompt(
             ),
         ];
     },
+    access: 'admin',
+);
+```
+
+### Example: Public-facing prompt
+
+A prompt safe for anonymous access (no site-private data in the body) can opt in to `'public'`:
+
+```php
+$context->registerMcpPrompt(
+    new Prompt(
+        name: 'site_summary',
+        description: 'Summarise what this site is about.',
+    ),
+    handler: function (array $arguments = []): array {
+        return [
+            new PromptMessage(
+                role: Role::User,
+                content: new TextContent('Describe this website in two sentences for a new visitor.'),
+            ),
+        ];
+    },
+    access: 'public',
 );
 ```
 

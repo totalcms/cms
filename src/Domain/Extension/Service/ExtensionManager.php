@@ -727,7 +727,7 @@ class ExtensionManager
 	 * McpServerFactory attribute collisions to a specific extension in the warning
 	 * log. Gated by the `mcp:prompts` capability permission.
 	 *
-	 * @return array<string,list<array{prompt: \Mcp\Schema\Prompt, handler: callable}>>
+	 * @return array<string,list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}>>
 	 */
 	public function getAllMcpPrompts(): array
 	{

@@ -22,6 +22,12 @@ use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
  *     }
  *
  * Cookie: `tcms_protect_<pageId>=<hmac>`, 7-day TTL.
+ *
+ * The HMAC uses a per-install secret (32 random bytes stored in
+ * `.system/protect/secret`) so cookie values are bound to this
+ * installation and cannot be computed from public information alone.
+ * The message is `pageId:passcode` so a valid cookie for one page
+ * cannot be replayed against a different page.
  */
 class ProtectMiddleware implements PageMiddlewareInterface
 {
@@ -29,6 +35,7 @@ class ProtectMiddleware implements PageMiddlewareInterface
 	public const COOKIE_TTL    = 7 * 86400;
 
 	public function __construct(
+		private readonly string $secret,
 		private readonly string $defaultPasscode = '',
 		private readonly string $defaultPromptTitle = 'Enter passcode to view',
 	) {
@@ -61,7 +68,7 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		$input = is_array($body) ? trim((string)($body['passcode'] ?? '')) : '';
 
 		if ($input === $passcode) {
-			$cookie = $this->cookie($page->id, $passcode);
+			$cookie = $this->cookie($request, $page->id, $passcode);
 
 			return (new Psr17Factory())->createResponse(302)
 				->withHeader('Location', $request->getUri()->getPath())
@@ -83,28 +90,39 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		return hash_equals($this->hmac($pageId, $passcode), $existing);
 	}
 
+	/**
+	 * Compute the HMAC for a (pageId, passcode) pair.
+	 *
+	 * Key:     per-install secret (loaded from .system/protect/secret)
+	 * Message: "pageId:passcode" — binds the token to both the specific
+	 *          page and the correct passcode for that page.
+	 */
 	private function hmac(string $pageId, string $passcode): string
 	{
-		return hash_hmac('sha256', $passcode, $pageId);
+		return hash_hmac('sha256', $pageId . ':' . $passcode, $this->secret);
 	}
 
-	private function cookie(string $pageId, string $passcode): string
+	private function cookie(ServerRequestInterface $request, string $pageId, string $passcode): string
 	{
 		$expires = gmdate('D, d M Y H:i:s T', time() + self::COOKIE_TTL);
+		$isHttps = $request->getUri()->getScheme() === 'https';
+		$secure  = $isHttps ? '; Secure' : '';
 
 		return sprintf(
-			'%s%s=%s; Expires=%s; Path=/; SameSite=Lax; HttpOnly',
+			'%s%s=%s; Expires=%s; Path=/; SameSite=Lax; HttpOnly%s',
 			self::COOKIE_PREFIX,
 			$pageId,
 			$this->hmac($pageId, $passcode),
 			$expires,
+			$secure,
 		);
 	}
 
 	private function renderPrompt(PageData $page, bool $error): ResponseInterface
 	{
-		$title   = $this->stringConfig($page, 'promptTitle') ?: $this->defaultPromptTitle;
-		$message = $error ? '<p class="tcms-protect-error">Incorrect passcode.</p>' : '';
+		$rawTitle = $this->stringConfig($page, 'promptTitle') ?: $this->defaultPromptTitle;
+		$title    = htmlspecialchars($rawTitle, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+		$message  = $error ? '<p class="tcms-protect-error">Incorrect passcode.</p>' : '';
 
 		$html = <<<HTML
 		<!DOCTYPE html>
