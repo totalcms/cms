@@ -52,8 +52,6 @@ class Config
 	/** @var array<string,mixed> */
 	public array $mailer = [];
 	/** @var array<string,mixed> */
-	public array $pushnotif = [];
-	/** @var array<string,mixed> */
 	public array $presets  = [];
 	public string $docroot = '';
 	/** @var array<string,mixed> */
@@ -107,7 +105,6 @@ class Config
 		$this->htmlclean          = is_array($settings['htmlclean'] ?? null) ? $settings['htmlclean'] : [];
 		$this->smtp               = is_array($settings['smtp'] ?? null) ? $settings['smtp'] : [];
 		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
-		$this->pushnotif          = is_array($settings['pushnotif'] ?? null) ? $settings['pushnotif'] : [];
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
 		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
 		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];

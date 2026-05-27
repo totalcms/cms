@@ -21,7 +21,6 @@ enum EditionFeature: string
 	// Form action features
 	case MAILER_ACTIONS   = 'mailer_actions';
 	case WEBHOOK_ACTIONS  = 'webhook_actions';
-	case PUSHOVER_ACTIONS = 'pushover_actions';
 
 	// API features
 	case ALGOLIA_SEARCH    = 'algolia_search';
@@ -67,7 +66,6 @@ enum EditionFeature: string
 			self::TEXT_WATERMARKS      => 'Text Watermarks',
 			self::MAILER_ACTIONS       => 'Mailer Form Actions',
 			self::WEBHOOK_ACTIONS      => 'Webhook Form Actions',
-			self::PUSHOVER_ACTIONS     => 'Pushover Form Actions',
 			self::ALGOLIA_SEARCH       => 'Algolia Search',
 			self::EXTERNAL_REST_API    => 'External REST API',
 			self::MCP_SERVER           => 'MCP Server',
@@ -111,7 +109,6 @@ enum EditionFeature: string
 			self::CUSTOM_SCHEMAS,
 			self::TEXT_WATERMARKS,
 			self::WEBHOOK_ACTIONS,
-			self::PUSHOVER_ACTIONS,
 			self::EXTERNAL_REST_API,
 			self::MCP_SERVER,
 			self::OAUTH_SERVER,

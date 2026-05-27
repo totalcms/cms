@@ -2,35 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Domain\Notification\Service;
+namespace Tests\Unit\Bundled\Pushover;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Bundled\Pushover\PushoverService;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
+
+require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/pushover/PushoverService.php';
 
 final class PushoverServiceTest extends TestCase
 {
 	private PushoverService $service;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
 	private \PHPUnit\Framework\MockObject\MockObject $logger;
 
 	protected function setUp(): void
 	{
-		$this->twigEngine      = $this->createMock(TwigEngine::class);
-		$this->config          = $this->createMock(Config::class);
-		$this->editionFeatures = $this->createMock(EditionFeatureService::class);
-		$this->editionFeatures->method('can')->willReturn(true);
-		$this->logger          = $this->createMock(LoggerInterface::class);
+		$this->twigEngine = $this->createMock(TwigEngine::class);
+		$this->logger     = $this->createMock(LoggerInterface::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -40,19 +34,21 @@ final class PushoverServiceTest extends TestCase
 
 		$this->service = new PushoverService(
 			$this->twigEngine,
-			$this->config,
-			$this->editionFeatures,
+			'fake-token',
+			'fake-user',
+			'',
 			$imageGenerator,
-			$loggerFactory
+			$loggerFactory,
 		);
 	}
 
 	public function testReturnsFailureWhenNotConfigured(): void
 	{
-		$this->config->pushnotif = ['pushoverAppToken' => '', 'pushoverUserKey' => ''];
+		$service = $this->buildServiceWithCredentials('', '');
+
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
-		$result = $this->service->send(message: 'Hello', title: 'Test');
+		$result = $service->send(message: 'Hello', title: 'Test');
 
 		$this->assertFalse($result->success);
 		$this->assertStringContainsString('not configured', $result->message);
@@ -60,10 +56,11 @@ final class PushoverServiceTest extends TestCase
 
 	public function testReturnsFailureWhenMissingUserKey(): void
 	{
-		$this->config->pushnotif = ['pushoverAppToken' => 'abc123', 'pushoverUserKey' => ''];
+		$service = $this->buildServiceWithCredentials('abc123', '');
+
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
-		$result = $this->service->send(message: 'Hello', title: 'Test');
+		$result = $service->send(message: 'Hello', title: 'Test');
 
 		$this->assertFalse($result->success);
 		$this->assertStringContainsString('not configured', $result->message);
@@ -71,48 +68,18 @@ final class PushoverServiceTest extends TestCase
 
 	public function testReturnsFailureWhenMissingAppToken(): void
 	{
-		$this->config->pushnotif = ['pushoverAppToken' => '', 'pushoverUserKey' => 'abc123'];
+		$service = $this->buildServiceWithCredentials('', 'abc123');
+
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
-		$result = $this->service->send(message: 'Hello', title: 'Test');
+		$result = $service->send(message: 'Hello', title: 'Test');
 
 		$this->assertFalse($result->success);
 		$this->assertStringContainsString('not configured', $result->message);
 	}
 
-	public function testBlockedByEditionGating(): void
-	{
-		$editionFeatures = $this->createMock(EditionFeatureService::class);
-		$editionFeatures->method('can')
-			->with(EditionFeature::PUSHOVER_ACTIONS)
-			->willReturn(false);
-		$editionFeatures->method('getEdition')
-			->willReturn(\TotalCMS\Domain\License\Data\Edition::LITE);
-
-		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn($this->logger);
-
-		$imageGenerator = $this->createMock(ImageGenerator::class);
-
-		$service = new PushoverService(
-			$this->twigEngine,
-			$this->config,
-			$editionFeatures,
-			$imageGenerator,
-			$loggerFactory
-		);
-
-		$result = $service->send(message: 'Hello', title: 'Test');
-
-		$this->assertFalse($result->success);
-		$this->assertStringContainsString('Pro edition', $result->message);
-	}
-
 	public function testProcessesTwigInTitleAndMessage(): void
 	{
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
-
 		$this->twigEngine->expects($this->atLeast(2))
 			->method('renderString')
 			->willReturnCallback(function (string $template, array $data): string {
@@ -136,8 +103,6 @@ final class PushoverServiceTest extends TestCase
 
 	public function testHandlesTwigProcessingErrors(): void
 	{
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
-
 		$this->twigEngine->method('renderString')
 			->willReturnCallback(function (string $template): string {
 				if (str_contains($template, 'invalid')) {
@@ -155,7 +120,8 @@ final class PushoverServiceTest extends TestCase
 
 	public function testLogsWarningWhenNotConfigured(): void
 	{
-		$this->config->pushnotif = ['pushoverAppToken' => '', 'pushoverUserKey' => ''];
+		$service = $this->buildServiceWithCredentials('', '');
+
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
 		$this->logger->expects($this->once())
@@ -163,39 +129,6 @@ final class PushoverServiceTest extends TestCase
 			->with(
 				'Pushover not configured',
 				$this->callback(fn ($context): bool => isset($context['hasToken']) && isset($context['hasUser']))
-			);
-
-		$this->service->send(message: 'Hello', title: 'Test');
-	}
-
-	public function testLogsEditionBlockWarning(): void
-	{
-		$editionFeatures = $this->createMock(EditionFeatureService::class);
-		$editionFeatures->method('can')
-			->with(EditionFeature::PUSHOVER_ACTIONS)
-			->willReturn(false);
-		$editionFeatures->method('getEdition')
-			->willReturn(\TotalCMS\Domain\License\Data\Edition::LITE);
-
-		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn($this->logger);
-
-		$imageGenerator = $this->createMock(ImageGenerator::class);
-
-		$service = new PushoverService(
-			$this->twigEngine,
-			$this->config,
-			$editionFeatures,
-			$imageGenerator,
-			$loggerFactory
-		);
-
-		$this->logger->expects($this->once())
-			->method('warning')
-			->with(
-				'Pushover action blocked by edition',
-				$this->callback(fn ($context): bool => isset($context['edition']))
 			);
 
 		$service->send(message: 'Hello', title: 'Test');
@@ -219,7 +152,6 @@ final class PushoverServiceTest extends TestCase
 
 		$service = $this->buildServiceWith($imageGenerator);
 
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
 		$result = $service->send(
@@ -248,7 +180,6 @@ final class PushoverServiceTest extends TestCase
 
 		$service = $this->buildServiceWith($imageGenerator);
 
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
 		$result = $service->send(
@@ -267,7 +198,6 @@ final class PushoverServiceTest extends TestCase
 
 		$service = $this->buildServiceWith($imageGenerator);
 
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
 		$this->logger->expects($this->atLeastOnce())
@@ -294,7 +224,6 @@ final class PushoverServiceTest extends TestCase
 
 		$service = $this->buildServiceWith($imageGenerator);
 
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
 		$result = $service->send(
@@ -320,7 +249,6 @@ final class PushoverServiceTest extends TestCase
 
 		$service = $this->buildServiceWith($imageGenerator);
 
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
 		$this->twigEngine->method('renderString')->willReturnArgument(0);
 
 		$this->logger->expects($this->atLeastOnce())
@@ -365,8 +293,6 @@ final class PushoverServiceTest extends TestCase
 
 		$service = $this->buildServiceWith($imageGenerator);
 
-		$this->config->pushnotif = ['pushoverAppToken' => 'fake-token', 'pushoverUserKey' => 'fake-user'];
-
 		$result = $service->send(
 			message: 'Test',
 			data: ['id' => 'resolved-id'],
@@ -384,10 +310,29 @@ final class PushoverServiceTest extends TestCase
 
 		return new PushoverService(
 			$this->twigEngine,
-			$this->config,
-			$this->editionFeatures,
+			'fake-token',
+			'fake-user',
+			'',
 			$imageGenerator,
-			$loggerFactory
+			$loggerFactory,
+		);
+	}
+
+	private function buildServiceWithCredentials(string $appToken, string $userKey, string $groupKey = ''): PushoverService
+	{
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn($this->logger);
+
+		$imageGenerator = $this->createMock(ImageGenerator::class);
+
+		return new PushoverService(
+			$this->twigEngine,
+			$appToken,
+			$userKey,
+			$groupKey,
+			$imageGenerator,
+			$loggerFactory,
 		);
 	}
 }

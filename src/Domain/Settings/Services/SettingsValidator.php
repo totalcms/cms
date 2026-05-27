@@ -42,7 +42,7 @@ readonly class SettingsValidator
 			return [
 				'installation', 'general', 'auth', 'builder', 'cache',
 				'dashboard', 'htmlclean', 'i18n', 'imageworks', 'license',
-				'mailer', 'mcp', 'presets', 'pushnotif', 'smtp', 'sync',
+				'mailer', 'mcp', 'presets', 'smtp', 'sync',
 			];
 		}
 

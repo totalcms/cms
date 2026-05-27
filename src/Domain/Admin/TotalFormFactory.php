@@ -16,6 +16,7 @@ use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -85,6 +86,7 @@ readonly class TotalFormFactory
 		private TemplateLister $templateLister,
 		private DevModeManager $devModeManager,
 		private PageMiddlewareRegistry $pageMiddlewareRegistry,
+		private FormActionRegistry $formActionRegistry,
 	) {
 		$this->api = $this->config->api . '/api';
 	}
@@ -151,6 +153,7 @@ readonly class TotalFormFactory
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
+			'formActionRegistry'       => $this->formActionRegistry,
 		]);
 
 		$form = new TotalForm(...$options);

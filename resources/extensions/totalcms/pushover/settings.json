@@ -1,0 +1,29 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Pushover Notifications",
+	"description": "Configure your Pushover account credentials. Find these at pushover.net.",
+	"type": "object",
+	"properties": {
+		"appToken": {
+			"type": "string",
+			"field": "secret",
+			"label": "Application Token",
+			"help": "Your Pushover Application Token — create one at <a href='https://pushover.net/apps/build' target='_blank'>pushover.net/apps/build</a>.",
+			"default": ""
+		},
+		"userKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "User Key",
+			"help": "Your Pushover User Key — shown on your Pushover dashboard.",
+			"default": ""
+		},
+		"groupKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "Group Key (optional)",
+			"help": "For sending to a delivery group instead of a single user. Leave empty if not using groups.",
+			"default": ""
+		}
+	}
+}

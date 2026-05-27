@@ -350,6 +350,55 @@ Once registered, `geo-redirect` shows up in the page form's middleware multisele
 
 See the [Page Middleware section in the Builder overview](docs/site-builder/overview#page-middleware) for the user-facing perspective.
 
+## Form Actions
+
+Register custom form action types that fire after a form save. The JavaScript form processor dispatches the action to an extension-owned API route — no core JS changes needed per provider.
+
+```php
+use TotalCMS\Domain\Extension\Data\FormAction;
+
+public function register(ExtensionContext $context): void
+{
+    // Register the action type — tells core "slack" is a valid form action
+    $context->addFormAction('slack', new FormAction(
+        name: 'slack',
+        route: '/ext/acme/slack-notify/send',
+        label: 'Slack Notification',
+    ));
+
+    // Register the API route that handles the action
+    $context->addRoutes(function ($group): void {
+        $group->post('/send', SlackNotifyAction::class);
+    });
+}
+```
+
+**Capability:** `form-actions`
+
+**Edition requirement:** Extension form actions require the Pro edition. On lower editions, actions matching extension-registered types are silently filtered from the form's action list.
+
+The action handler receives a POST with `{ data: <formData>, ...actionConfig }` — the form data plus all properties from the action's JSON config. For example, a collection's `.meta.json` might define:
+
+```json
+{
+    "formSettings": {
+        "newActions": [
+            {
+                "action": "slack",
+                "channel": "#orders",
+                "message": "New order from {{ data.name }}"
+            }
+        ]
+    }
+}
+```
+
+The handler receives `data` (the saved form fields), `channel`, `message`, and any other properties the operator configured. Parse what you need, ignore the rest.
+
+**Naming:** Use your vendor name or a distinctive slug (e.g. `slack`, `discord`, `ntfy`). The name appears in collection action configs and must be stable once shipped.
+
+See the bundled [Pushover extension](docs/extensions/pushover) for a complete working example.
+
 ## Assets (CSS / JS)
 
 Extensions can register CSS or JavaScript files for the **admin interface** and/or **public pages**. Each surface has its own registration method and capability:

@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Notification\Service;
+namespace TotalCMS\Bundled\Pushover;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
 
 /**
@@ -30,8 +27,9 @@ readonly class PushoverService
 
 	public function __construct(
 		private TwigEngine $twigEngine,
-		private Config $config,
-		private EditionFeatureService $editionFeatures,
+		private string $appToken,
+		private string $userKey,
+		private string $groupKey,
 		private ImageGenerator $imageGenerator,
 		LoggerFactory $loggerFactory,
 	) {
@@ -64,17 +62,9 @@ readonly class PushoverService
 		array $image     = [],
 		bool $group      = false,
 	): OperationResult {
-		if (!$this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS)) {
-			$this->logger->warning('Pushover action blocked by edition', [
-				'edition' => $this->editionFeatures->getEdition()->value,
-			]);
-
-			return OperationResult::failure('Pushover actions require the Pro edition');
-		}
-
-		$appToken  = $this->config->pushnotif['pushoverAppToken'] ?? '';
-		$userKey   = $this->config->pushnotif['pushoverUserKey'] ?? '';
-		$groupKey  = $this->config->pushnotif['pushoverGroupKey'] ?? '';
+		$appToken  = $this->appToken;
+		$userKey   = $this->userKey;
+		$groupKey  = $this->groupKey;
 		$recipient = $group && $groupKey !== '' ? $groupKey : $userKey;
 
 		if ($appToken === '' || $recipient === '') {

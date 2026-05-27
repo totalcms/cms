@@ -1,0 +1,36 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<main class="dash-main-content" style="max-width:100%;">
+	<header>
+		<h1><a href="{{ cms.dashboard }}/extensions">Extensions</a> / <a href="{{ cms.dashboard }}/extensions/totalcms/pushover/settings">Pushover</a> / <span>Test</span></h1>
+	</header>
+
+	<section class="dash-content-section" style="max-width:600px;">
+		{% if testResult is defined %}
+			{% if testResult.success %}
+				<p class="cms-success" role="alert">{{ testResult.message }}</p>
+			{% else %}
+				<p class="cms-error" role="alert">{{ testResult.message }}</p>
+			{% endif %}
+		{% endif %}
+
+		<p>Send a test notification to verify your Pushover configuration is working.</p>
+
+		{{ cms.form.simple('ext/totalcms/pushover/test', '
+			<div class="field-wrapper field-text">
+				<label for="test_message">Test Message</label>
+				<input type="text" id="test_message" name="message" placeholder="This is a test notification from Total CMS." />
+				<div class="help">Enter an optional message. Leave blank for the default.</div>
+			</div>
+		', {
+			'method': 'POST',
+			'label': 'Send Test Notification',
+			'buttonClass': 'cms-secondary',
+			'ajax': false
+		}) }}
+	</section>
+</main>
+
+{% endblock %}

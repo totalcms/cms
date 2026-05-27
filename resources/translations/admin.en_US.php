@@ -340,8 +340,6 @@ return [
 	'settings.mcp_desc'                => 'Model Context Protocol endpoint for AI agents',
 	'settings.oauth'                   => 'OAuth Server',
 	'settings.oauth_desc'              => 'OAuth 2.1 authorization server settings (key paths, token lifetimes, rate limits, dynamic registration)',
-	'settings.pushnotif'               => 'Push Notifications',
-	'settings.pushnotif_desc'          => 'Push notification service configuration',
 	'settings.search'                  => 'Search Providers',
 	'settings.search_desc'             => 'Configure the search backend for MCP tools (and future site-wide search).',
 	'settings.presets'                 => 'Setting Presets',
@@ -358,13 +356,6 @@ return [
 	'settings.smtp_test_ph'            => 'your@email.com',
 	'settings.smtp_test_help'          => 'Enter the email address where you want to receive the test email.',
 	'settings.smtp_test_btn'           => 'Send Test Email',
-	'settings.pushnotif_test_title'    => 'Test Push Notifications',
-	'settings.pushnotif_test_desc'     => 'Send a test notification to verify your Pushover configuration is working.',
-	'settings.pushnotif_test_message'  => 'Test Message',
-	'settings.pushnotif_test_ph'       => 'This is a test notification from Total CMS.',
-	'settings.pushnotif_test_help'     => 'Enter an optional message for the test notification. Leave blank for the default message.',
-	'settings.pushnotif_test_btn'      => 'Send Test Notification',
-
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'Filter Emails',
 	'mailer.title'                       => 'Email Templates',

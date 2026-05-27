@@ -26,6 +26,7 @@ This keeps core lean for sites that don't need a particular feature, while still
 | `totalcms/geo-redirect` | Redirect visitors based on their country. Reads from CDN-injected headers (Cloudflare, Vercel, generic). Useful for compliance redirects and regional landing pages. | [Geo Redirect →](docs/extensions/geo-redirect) |
 | `totalcms/maintenance` | Per-page 503 maintenance mode. Take individual pages offline with a custom message while the rest of the site stays up. Admins bypass automatically. | [Maintenance →](docs/extensions/maintenance) |
 | `totalcms/protect` | Gate a page behind a numeric passcode. Visitors enter a code to unlock — cookie remembers them for 7 days. For client previews and soft launches. | [Protect →](docs/extensions/protect) |
+| `totalcms/pushover` | Send push notifications via Pushover when forms are submitted. Supports Twig templates, image attachments, and delivery groups. Pro edition. | [Pushover →](docs/extensions/pushover) |
 | `totalcms/scheduled` | Time-window gating. Only renders a page between configured start/end timestamps. For holiday campaigns, embargoed announcements, and time-limited sales. | [Scheduled →](docs/extensions/scheduled) |
 
 ## How to enable / disable

@@ -228,6 +228,20 @@ class ExtensionManager
 			}
 		}
 
+		// Wire form-action registrations from extensions into the registry.
+		if ($this->container->has(\TotalCMS\Domain\Extension\Service\FormActionRegistry::class)) {
+			/** @var \TotalCMS\Domain\Extension\Service\FormActionRegistry $formActionRegistry */
+			$formActionRegistry = $this->container->get(\TotalCMS\Domain\Extension\Service\FormActionRegistry::class);
+			foreach ($this->contexts as $id => $context) {
+				if (!$this->isCapabilityPermitted($id, 'form-actions')) {
+					continue;
+				}
+				foreach ($context->getRegisteredFormActions() as $name => $formAction) {
+					$formActionRegistry->register($formAction);
+				}
+			}
+		}
+
 		// Wire MCP tools and resources from extensions into their respective
 		// registries (strict-deny on collisions, both core-vs-extension and
 		// cross-extension). Runs before Twig wiring so registries are ready

@@ -208,6 +208,8 @@ When an extension is enabled, the system runs a trial registration to discover w
 | `fields` | `$context->addFieldType(...)` | Custom field types |
 | `schemas` | `schemas/` directory exists in the extension | Read-only schemas (Pro+ only) |
 | `container` | `$context->addContainerDefinition(...)` | DI container services |
+| `page-middleware` | `$context->addPageMiddleware(...)` | Per-page middleware |
+| `form-actions` | `$context->addFormAction(...)` | Custom form action types (Pro) |
 
 If you add a new capability to an already-enabled extension (for example, you create a `schemas/` directory after the fact), disable + re-enable the extension so the trial registration picks up the new capability and adds it to the permissions list.
 

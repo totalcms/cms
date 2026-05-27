@@ -76,6 +76,9 @@ final class ExtensionContext
 	/** @var array<string,string> page-middleware name => container service ID */
 	private array $pageMiddleware = [];
 
+	/** @var array<string, \TotalCMS\Domain\Extension\Data\FormAction> */
+	private array $formActions = [];
+
 	/** @var list<McpToolDefinition> Tools registered for the MCP server */
 	private array $mcpTools = [];
 
@@ -570,6 +573,16 @@ final class ExtensionContext
 		$this->pageMiddleware[$name] = $serviceId;
 	}
 
+	/**
+	 * Register a form action type that the JS form processor can dispatch
+	 * to an extension-owned API route. The route must be registered
+	 * separately via addRoutes().
+	 */
+	public function addFormAction(string $name, \TotalCMS\Domain\Extension\Data\FormAction $action): void
+	{
+		$this->formActions[$name] = $action;
+	}
+
 	// -------------------------------------------------------------------------
 	// Getters (used by ExtensionManager to collect registrations)
 	// -------------------------------------------------------------------------
@@ -688,6 +701,12 @@ final class ExtensionContext
 		return $this->pageMiddleware;
 	}
 
+	/** @return array<string, \TotalCMS\Domain\Extension\Data\FormAction> */
+	public function getRegisteredFormActions(): array
+	{
+		return $this->formActions;
+	}
+
 	// -------------------------------------------------------------------------
 	// Capability detection
 	// -------------------------------------------------------------------------
@@ -716,6 +735,7 @@ final class ExtensionContext
 			'schemas'         => 'Schemas',
 			'container'       => 'Container Defs',
 			'page-middleware' => 'Page Middleware',
+			'form-actions'    => 'Form Actions',
 			'mcp:tools'       => 'MCP Tools',
 			'mcp:resources'   => 'MCP Resources',
 			'mcp:search'      => 'Search Provider',
@@ -778,6 +798,9 @@ final class ExtensionContext
 		}
 		if ($this->pageMiddleware !== []) {
 			$caps['page-middleware'] = true;
+		}
+		if ($this->formActions !== []) {
+			$caps['form-actions'] = true;
 		}
 		if (is_dir($this->extensionPath . '/schemas')) {
 			$caps['schemas'] = true;

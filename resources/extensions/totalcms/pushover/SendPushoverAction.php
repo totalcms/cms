@@ -2,17 +2,13 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Action\Notification;
+namespace TotalCMS\Bundled\Pushover;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Renderer\JsonRenderer;
 
-/**
- * SendPushoverAction handles push notification sending via Pushover.
- */
 readonly class SendPushoverAction
 {
 	public function __construct(
@@ -26,7 +22,6 @@ readonly class SendPushoverAction
 	{
 		$data = (array)$request->getParsedBody();
 
-		// Validate required fields
 		if (!isset($data['message']) || $data['message'] === '') {
 			return $this->renderer->json($response->withStatus(400), [
 				'success' => false,

@@ -175,7 +175,6 @@ return [
 		'title' => 'Notifications',
 		'sub'   => [
 			['title' => 'Mailer',   'path' => 'notifications/mailer'],
-			['title' => 'Pushover', 'path' => 'notifications/pushover'],
 		],
 	],
 	[
@@ -228,6 +227,7 @@ return [
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
 					['title' => 'Maintenance',      'path' => 'extensions/maintenance'],
 					['title' => 'Protect',          'path' => 'extensions/protect'],
+					['title' => 'Pushover',         'path' => 'extensions/pushover'],
 					['title' => 'Scheduled',        'path' => 'extensions/scheduled'],
 				],
 			],

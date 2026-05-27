@@ -8,7 +8,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
-use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
@@ -35,7 +34,6 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 		$this->installationSaver = $this->createMock(InstallationSettingsSaver::class);
 		$this->validator         = $this->createMock(SettingsValidator::class);
 		$this->emailSender       = $this->createMock(EmailSender::class);
-		$pushoverService         = $this->createMock(PushoverService::class);
 		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
 		$this->editionFeatures   = $this->createMock(EditionFeatureService::class);
 		$this->request           = $this->createMock(ServerRequestInterface::class);
@@ -47,7 +45,6 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 			$this->installationSaver,
 			$this->validator,
 			$this->emailSender,
-			$pushoverService,
 			$this->twigRenderer,
 			$this->editionFeatures
 		);

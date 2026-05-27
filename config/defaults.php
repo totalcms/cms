@@ -238,13 +238,6 @@ $settings['smtp'] = [
 	'sendDelay' => 0,
 ];
 
-// Push notification settings
-$settings['pushnotif'] = [
-	'pushoverAppToken'  => '',
-	'pushoverUserKey'   => '',
-	'pushoverGroupKey'  => '',
-];
-
 // Mailer settings (email sending system)
 $settings['mailer'] = [
 	// Only allow emails to these domains

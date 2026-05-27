@@ -1,6 +1,7 @@
 ---
-title: "Pushover Push Notifications"
-description: "Configure Pushover push notifications for Total CMS form actions and system events."
+title: "Pushover Notifications (Bundled Extension)"
+description: "Send push notifications via Pushover when forms are submitted. Supports Twig templates, image attachments, priority levels, and delivery groups."
+since: "3.5.0"
 ---
 
 # Pushover Push Notifications
@@ -268,3 +269,9 @@ Pushover allows 10,000 messages per month on the free tier. Each successful API 
 - [Form Settings](docs/collections/form-settings) - Configure form actions for collections
 - [Mailer Actions](docs/collections/form-settings#mailer) - Send email notifications from form actions
 - [Webhook Actions](docs/collections/form-settings#webhook) - Call external URLs from form actions
+
+## See also
+
+- [Page Features (Builder)](docs/site-builder/overview#page-features-middleware) — the middleware framework for page features
+- [Bundled Extensions](docs/extensions/bundled) — concept and list of all bundled extensions
+- [Extension Points](docs/extensions/extension-points) — the full extension API

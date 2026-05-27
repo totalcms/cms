@@ -340,8 +340,6 @@ return [
 	'settings.mcp_desc'                => 'Endpoint del Model Context Protocol para agentes de IA',
 	'settings.oauth'                   => 'Servidor OAuth',
 	'settings.oauth_desc'              => 'Configuración del servidor de autorización OAuth 2.1 (rutas de claves, vida útil de tokens, límites de velocidad, registro dinámico)',
-	'settings.pushnotif'               => 'Notificaciones Push',
-	'settings.pushnotif_desc'          => 'Configuración del servicio de notificaciones push',
 	'settings.search'                  => 'Proveedores de búsqueda',
 	'settings.search_desc'             => 'Configura el backend de búsqueda para las herramientas MCP (y la búsqueda global futura).',
 	'settings.presets'                 => 'Preajustes de configuración',
@@ -358,13 +356,6 @@ return [
 	'settings.smtp_test_ph'            => 'su@correo.com',
 	'settings.smtp_test_help'          => 'Introduzca la dirección de correo donde desea recibir el correo de prueba.',
 	'settings.smtp_test_btn'           => 'Enviar correo de prueba',
-	'settings.pushnotif_test_title'    => 'Probar notificaciones push',
-	'settings.pushnotif_test_desc'     => 'Envíe una notificación de prueba para verificar que su configuración de Pushover funciona.',
-	'settings.pushnotif_test_message'  => 'Mensaje de prueba',
-	'settings.pushnotif_test_ph'       => 'Esta es una notificación de prueba de Total CMS.',
-	'settings.pushnotif_test_help'     => 'Introduzca un mensaje opcional para la notificación de prueba. Déjelo en blanco para el mensaje predeterminado.',
-	'settings.pushnotif_test_btn'      => 'Enviar notificación de prueba',
-
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'Filtrar correos',
 	'mailer.title'                       => 'Plantillas de correo',

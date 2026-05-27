@@ -1,0 +1,28 @@
+{
+	"id"              : "totalcms/pushover",
+	"name"            : "Pushover Notifications",
+	"description"     : "Send push notifications via Pushover when forms are submitted. Supports Twig templates in messages, image attachments, priority levels, and delivery groups.",
+	"icon"            : "icon.png",
+	"requires"        : {
+		"totalcms" : ">=3.5.0-beta",
+		"php"      : ">=8.2"
+	},
+	"min_edition"      : "pro",
+	"entrypoint"       : "Extension.php",
+	"settings_schema"  : "settings.json",
+	"author"     : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary",
+	"links"   : [
+		{
+			"label" : "Documentation",
+			"url"   : "docs/extensions/bundled/pushover"
+		},
+		{
+			"label" : "Test Notification",
+			"url"   : "/admin/ext/totalcms/pushover/test"
+		}
+	]
+}

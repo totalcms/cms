@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Tests\Integration;
+namespace Tests\Unit\Bundled\Pushover;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Bundled\Pushover\PushoverService;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
+
+require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/pushover/PushoverService.php';
 
 /**
  * Integration tests that send real Pushover notifications.
@@ -25,7 +25,7 @@ final class PushoverIntegrationTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$envFile = dirname(__DIR__, 2) . '/.env';
+		$envFile = dirname(__DIR__, 4) . '/.env';
 		if (!file_exists($envFile)) {
 			$this->markTestSkipped('.env file not found — skipping Pushover integration tests');
 		}
@@ -39,23 +39,17 @@ final class PushoverIntegrationTest extends TestCase
 			$this->markTestSkipped('PUSHOVER_APP_TOKEN or PUSHOVER_USER_KEY not set in .env');
 		}
 
-		$twigEngine      = $this->createMock(TwigEngine::class);
+		$twigEngine = $this->createMock(TwigEngine::class);
 		$twigEngine->method('renderString')->willReturnCallback(
 			fn (string $template): string => $template
 		);
-
-		$config            = $this->createMock(Config::class);
-		$config->pushnotif = ['pushoverAppToken' => $appToken, 'pushoverUserKey' => $userKey];
-
-		$editionFeatures = $this->createMock(EditionFeatureService::class);
-		$editionFeatures->method('can')->willReturn(true);
 
 		$logger        = $this->createMock(LoggerInterface::class);
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($logger);
 
-		$testImage = dirname(__DIR__) . '/test-data/test-image.jpg';
+		$testImage = dirname(__DIR__, 3) . '/test-data/test-image.jpg';
 		$jpeg      = file_get_contents($testImage);
 		assert($jpeg !== false);
 
@@ -70,10 +64,11 @@ final class PushoverIntegrationTest extends TestCase
 
 		$this->service = new PushoverService(
 			$twigEngine,
-			$config,
-			$editionFeatures,
+			$appToken,
+			$userKey,
+			'',
 			$imageGenerator,
-			$loggerFactory
+			$loggerFactory,
 		);
 	}
 
