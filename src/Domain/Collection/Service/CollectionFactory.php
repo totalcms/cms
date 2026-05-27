@@ -73,6 +73,14 @@ readonly class CollectionFactory
 		$collection->schema      = $collectionId;
 		$collection->lastUpdated = DateData::cleanDate();
 
+		// Apply pretty default name when the labels table declares one
+		// (avoids ucfirst() collisions on hyphenated IDs like `mcp-prompt`
+		// which would otherwise render as "Mcp-prompt").
+		$defaults = CollectionData::getDefaultLabelsForSchema($collectionId);
+		if (isset($defaults['name'])) {
+			$collection->name = $defaults['name'];
+		}
+
 		return $collection;
 	}
 }

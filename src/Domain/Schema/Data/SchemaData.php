@@ -38,6 +38,8 @@ class SchemaData
 		'image',
 		'mailer',
 		'mcp-collection',
+		'mcp-prompt',
+		'mcp-prompt-arg',
 		'mcp-property',
 		'mcp-tool',
 		'number',

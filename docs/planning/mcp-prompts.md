@@ -31,7 +31,7 @@ T3 core ships the storage model + discovery + Twig renderer + MCP SDK integratio
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Storage model | Reserved collection `mcp-prompts` | Mailer-style pattern: zero new admin UI, free CRUD via form builder, sync/JumpStart/audit "just work." Prose-heavy content needs a proper form field, not a JSON textarea. |
+| Storage model | Reserved collection `mcp-prompt` | Mailer-style pattern: zero new admin UI, free CRUD via form builder, sync/JumpStart/audit "just work." Prose-heavy content needs a proper form field, not a JSON textarea. |
 | Templating engine | Full Twig in the body | Site-wide aggregation prompts need iteration (`{% for %}`) — Mustache can't. Twig is a strict superset for simple prompts. Operators already know it from site templates. |
 | Trust model for Twig | Same as site templates (full `cms.*` API) | Prompts are authored by admins. Output is text returned to a client — no eval, no server side effect. Sandboxing adds maintenance cost (allowlist tracking) for no realistic threat reduction. |
 | Message structure (v1) | Single user-role message | Covers all three use case categories. No use case in scope **requires** the system/user split. Adding `systemMessage` later is non-breaking. |
@@ -40,13 +40,13 @@ T3 core ships the storage model + discovery + Twig renderer + MCP SDK integratio
 | Capability detection | `mcp:prompts` | Mirrors existing `mcp:tools`, `mcp:resources`, `mcp:search`. Shows up in the Extensions admin permissions UI. |
 | Access model | Per-prompt `access` field (admin / authenticated / public), defaults inherited from the target collection's MCP access (or `admin` for site-wide) | Same enum, same enforcement layer as `mcp-collection`. Operator can override per prompt when needed. |
 | Scope: site-wide vs per-collection | Single field `targetCollection` on each prompt object; empty = site-wide | One storage location; one discovery pass; clean filtering for the "what prompts apply to collection X" query. |
-| Live updates | Event listener on `object.created/updated/deleted` for `mcp-prompts` | No restart, no rebuild. Same pattern as saved-query tool reloading. |
+| Live updates | Event listener on `object.created/updated/deleted` for `mcp-prompt` | No restart, no rebuild. Same pattern as saved-query tool reloading. |
 
 ## Architecture
 
-### Reserved collection: `mcp-prompts`
+### Reserved collection: `mcp-prompt`
 
-A new reserved schema `mcp-prompt` and matching reserved collection ID `mcp-prompts`. Lives at `tcms-data/mcp-prompts/{id}.json` — one file per prompt.
+A new reserved schema `mcp-prompt` and matching reserved collection ID `mcp-prompt`. Lives at `tcms-data/mcp-prompt/{id}.json` — one file per prompt.
 
 Added to `SchemaData::RESERVED_SCHEMAS` next to `mailer`, `auth`, `builder-pages`, etc. The CLI, admin, sync, and JumpStart all pick it up automatically — no per-system wiring needed.
 
@@ -134,7 +134,7 @@ final class PromptDiscoveryService
     /** @return list<PromptData> */
     public function discover(): array
     {
-        // 1. Read all objects from `mcp-prompts` collection (collection-stored prompts).
+        // 1. Read all objects from `mcp-prompt` collection (collection-stored prompts).
         // 2. Drain $extensions->getAllMcpPrompts() (code-defined prompts).
         // 3. Resolve access for each (inherit from collection if blank).
         // 4. Collision detect by `name` — strict-deny (LogicException), same as tool/search-provider registries.
@@ -224,7 +224,7 @@ Capability detection: `'mcp:prompts'` added to `ExtensionContext::detectCapabili
 
 ### Event-driven re-registration
 
-A new `PromptChangeListener` (parallel to the search-providers `ContentChangeListener`) subscribes to `object.created`, `object.updated`, `object.deleted`. When the collection is `mcp-prompts`, the listener invalidates the in-memory prompt cache so the next `prompts/list` call re-discovers from disk.
+A new `PromptChangeListener` (parallel to the search-providers `ContentChangeListener`) subscribes to `object.created`, `object.updated`, `object.deleted`. When the collection is `mcp-prompt`, the listener invalidates the in-memory prompt cache so the next `prompts/list` call re-discovers from disk.
 
 No restart. No rebuild. Matches the saved-query tool reload behavior.
 
@@ -240,7 +240,7 @@ src/Domain/Mcp/Prompt/
 │   ├── PromptRegistrar.php
 │   └── PromptRenderer.php
 ├── Handler/
-│   └── PromptListener.php      # object.created/updated/deleted on mcp-prompts → cache invalidation
+│   └── PromptListener.php      # object.created/updated/deleted on mcp-prompt → cache invalidation
 └── Exception/
     └── PromptCollisionException.php
 
@@ -277,7 +277,7 @@ If no prompts are registered, the capability is omitted entirely (matches SDK co
 - **`PromptDiscoveryServiceTest`** — loads from a fixtures dir, asserts collision detection, asserts access inheritance from target collection.
 - **`PromptRendererTest`** — covers all three use case categories: house-style scaffold (no args), object-aware (object fetch in body), site-wide aggregation (loop over collection). Missing-required-arg throws. Extra args are dropped.
 - **`PromptRegistrarTest`** — registers against a mock SDK registry, asserts the right `Prompt` shape and handler wiring.
-- **`PromptListenerTest`** — saves to `mcp-prompts` invalidate the cache; saves to other collections don't.
+- **`PromptListenerTest`** — saves to `mcp-prompt` invalidate the cache; saves to other collections don't.
 - **`McpPromptsFeatureTest`** — full end-to-end: POST to `/mcp` with `prompts/list`, assert response shape. POST with `prompts/get` for a real prompt, assert rendered text. Access enforcement: anonymous caller against an `admin` prompt → 403.
 - **Extension hook test** — register a code-defined prompt via `registerMcpPrompt()`, assert it appears in `prompts/list` alongside collection-stored prompts.
 

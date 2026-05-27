@@ -181,7 +181,7 @@ class CollectionData
 	}
 
 	/**
-	 * @return array{labelPlural: string, labelSingular: string}
+	 * @return array{labelPlural: string, labelSingular: string, name?: string}
 	 */
 	public static function getDefaultLabelsForSchema(string $schemaId): array
 	{
@@ -191,6 +191,7 @@ class CollectionData
 			'code'         => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'playground'   => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'mailer'       => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
+			'mcp-prompt'   => ['labelPlural' => 'Prompts', 'labelSingular' => 'Prompt', 'name' => 'MCP Prompts'],
 			'color'        => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
 			'date'         => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
 			'depot'        => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],

@@ -83,6 +83,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
 use TotalCMS\Domain\Migration\Service\MigrationRunner;
@@ -474,6 +475,7 @@ return [
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
 			$container->get(LegacyTemplatesMigration::class),
+			$container->get(EnsureMcpPromptCollectionMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->addFileHandler('migrations.log')->createLogger('migrations'),
