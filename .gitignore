@@ -21,7 +21,6 @@ tcms-data/*
 env.php
 config/env.php
 /cache
-public/assets
 /tests/test-data/alloy/image-uploads
 /tests/tcms-data/.schemas
 /tests/tcms-data/blog
