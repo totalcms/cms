@@ -140,18 +140,14 @@ function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete 
 		return unlink($dir);
 	}
 
-	// If this is the root tcms-data directory and not forcing complete deletion,
-	// preserve auth and .system directories by default
-	$isRootDataDir   = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
-	$defaultPreserve = ($isRootDataDir && !$forceComplete) ? ['auth', '.system'] : [];
-	$preserve        = array_merge($defaultPreserve, $preserve);
+	$isRootDataDir = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
 
 	foreach (scandir($dir) as $item) {
 		if ($item === '.' || $item === '..') {
 			continue;
 		}
 
-		// Skip preserved directories
+		// Skip explicitly-preserved entries (caller-supplied opt-in only).
 		if (in_array($item, $preserve, true)) {
 			continue;
 		}
@@ -161,10 +157,57 @@ function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete 
 		}
 	}
 
-	// Don't remove the root directory itself
+	// Don't remove the root tcms-data dir itself. Restore checked-in fixtures
+	// (auth users, .system/access-groups.json, etc.) so tests start from a
+	// known state every time. The whole /tests/tcms-data/ tree is gitignored;
+	// fixtures live at /tests/tcms-data-fixtures/ as the source of truth.
+	// $forceComplete suppresses the restore — used when a test genuinely needs
+	// an empty dir (e.g. setup-wizard tests).
 	if ($isRootDataDir) {
+		if (!$forceComplete) {
+			restoreFixtures();
+		}
 		return true;
 	}
 
 	return rmdir($dir);
+}
+
+/**
+ * Copy every file under /tests/tcms-data-fixtures/ into the live test data
+ * dir. Called by recursiveDelete() at root-dir cleanup so every test run
+ * starts with the canonical fixtures (auth users, access-groups.json, etc.)
+ * in place. Idempotent — safe to call standalone if you need to restore
+ * fixtures without first wiping the dir.
+ */
+function restoreFixtures(): void
+{
+	$src = __DIR__ . '/tcms-data-fixtures';
+	if (!is_dir($src)) {
+		return;
+	}
+	recursiveCopy($src, rtrim(cmsDataDir(), '/'));
+}
+
+/**
+ * Copy a directory tree from $src to $dst, creating dirs as needed and
+ * overwriting existing files. Helper for restoreFixtures().
+ */
+function recursiveCopy(string $src, string $dst): void
+{
+	if (!is_dir($dst)) {
+		mkdir($dst, 0777, true);
+	}
+	foreach (scandir($src) as $item) {
+		if ($item === '.' || $item === '..') {
+			continue;
+		}
+		$srcPath = $src . DIRECTORY_SEPARATOR . $item;
+		$dstPath = $dst . DIRECTORY_SEPARATOR . $item;
+		if (is_dir($srcPath)) {
+			recursiveCopy($srcPath, $dstPath);
+		} else {
+			copy($srcPath, $dstPath);
+		}
+	}
 }
