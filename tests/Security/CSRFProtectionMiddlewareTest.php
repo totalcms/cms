@@ -165,6 +165,9 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$this->request->method('getUri')->willReturn($uri);
 		$this->request->method('getParsedBody')->willReturn([]);
 		$this->request->method('getHeaders')->willReturn(['X-CSRF-Token' => [$token]]);
+		$this->request->method('getHeader')->willReturnCallback(
+			static fn (string $name): array => strtolower($name) === 'x-csrf-token' ? [$token] : []
+		);
 		$this->request->method('getQueryParams')->willReturn([]);
 
 		$response = $this->middleware->process($this->request, $this->handler);
@@ -285,6 +288,12 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 			'X-CSRF-Token' => [$token, 'other_value'],
 			'Content-Type' => ['application/json'],
 		]);
+		// PSR-7 getHeader() returns the array of values; middleware takes the
+		// first element so duplicates downstream of the proxy don't break the
+		// token comparison.
+		$this->request->method('getHeader')->willReturnCallback(
+			static fn (string $name): array => strtolower($name) === 'x-csrf-token' ? [$token, 'other_value'] : []
+		);
 		$this->request->method('getQueryParams')->willReturn([]);
 
 		$response = $this->middleware->process($this->request, $this->handler);

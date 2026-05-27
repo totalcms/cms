@@ -110,18 +110,24 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 	{
 		// Get token from various sources
 		$postData  = $request->getParsedBody() ?? [];
-		$headers   = $request->getHeaders();
 		$queryData = $request->getQueryParams();
-
-		// Flatten headers array for easier access
-		$flatHeaders = [];
-		foreach ($headers as $name => $values) {
-			$flatHeaders[$name] = $values[0] ?? '';
-		}
 
 		// Convert POST data to array if it's an object
 		if (is_object($postData)) {
 			$postData = (array)$postData;
+		}
+
+		// Use getHeader() for the X-CSRF-Token lookup. PSR-7's getHeader()
+		// is case-insensitive and returns an array of values, while iterating
+		// getHeaders() and doing an exact-case array lookup misses when the
+		// underlying transport normalises header names (HTTP/2 lowercases by
+		// spec; some PSR-7 implementations also normalise). Taking only the
+		// first value mirrors the previous behaviour and avoids the comma-
+		// joined surprise of getHeaderLine() when a client sends duplicates.
+		$flatHeaders = [];
+		$tokenValues = $request->getHeader('X-CSRF-Token');
+		if (isset($tokenValues[0]) && $tokenValues[0] !== '') {
+			$flatHeaders['X-CSRF-Token'] = $tokenValues[0];
 		}
 
 		return $this->csrfManager->validateFromRequest($postData, $flatHeaders, $queryData);
