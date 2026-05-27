@@ -132,45 +132,49 @@ function objectFilesPath(string $collection, string $id): string
 
 function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete = false)
 {
-	if (!file_exists($dir)) {
-		return true;
-	}
-
-	if (!is_dir($dir)) {
-		return unlink($dir);
-	}
-
 	$isRootDataDir = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
 
-	foreach (scandir($dir) as $item) {
-		if ($item === '.' || $item === '..') {
-			continue;
+	// Wipe pass — only if the directory actually exists. A non-existent root
+	// data dir on a fresh clone (CI, new checkout) still needs the fixture
+	// restore below, so we don't short-circuit here.
+	if (file_exists($dir)) {
+		if (!is_dir($dir)) {
+			return unlink($dir);
 		}
 
-		// Skip explicitly-preserved entries (caller-supplied opt-in only).
-		if (in_array($item, $preserve, true)) {
-			continue;
+		foreach (scandir($dir) as $item) {
+			if ($item === '.' || $item === '..') {
+				continue;
+			}
+
+			// Skip explicitly-preserved entries (caller-supplied opt-in only).
+			if (in_array($item, $preserve, true)) {
+				continue;
+			}
+
+			if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item, [], $forceComplete)) {
+				return false;
+			}
 		}
 
-		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item, [], $forceComplete)) {
-			return false;
+		// Don't remove the root tcms-data dir itself — only its contents.
+		if (!$isRootDataDir) {
+			return rmdir($dir);
 		}
 	}
 
-	// Don't remove the root tcms-data dir itself. Restore checked-in fixtures
-	// (auth users, .system/access-groups.json, etc.) so tests start from a
-	// known state every time. The whole /tests/tcms-data/ tree is gitignored;
-	// fixtures live at /tests/tcms-data-fixtures/ as the source of truth.
-	// $forceComplete suppresses the restore — used when a test genuinely needs
-	// an empty dir (e.g. setup-wizard tests).
-	if ($isRootDataDir) {
-		if (!$forceComplete) {
-			restoreFixtures();
-		}
-		return true;
+	// Restore checked-in fixtures (auth users, .system/access-groups.json,
+	// etc.) so tests start from a known state every time. Fixtures live at
+	// /tests/tcms-data-fixtures/ as the source of truth; the whole
+	// /tests/tcms-data/ tree is gitignored. Runs even when the root dir
+	// didn't exist beforehand — recursiveCopy() creates it.
+	// $forceComplete suppresses the restore — used when a test genuinely
+	// needs a pre-fixture state (e.g. setup-wizard tests).
+	if ($isRootDataDir && !$forceComplete) {
+		restoreFixtures();
 	}
 
-	return rmdir($dir);
+	return true;
 }
 
 /**
