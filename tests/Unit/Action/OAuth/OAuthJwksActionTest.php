@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\OAuth;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use ReflectionProperty;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Action\OAuth\OAuthJwksAction;
@@ -50,10 +48,11 @@ final class OAuthJwksActionTest extends TestCase
 
 	private function makeConfig(string $publicKeyPath): Config
 	{
-		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty($config, 'oauth'))->setValue($config, [
+		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		(new \ReflectionProperty($config, 'oauth'))->setValue($config, [
 			'publicKeyPath' => $publicKeyPath,
 		]);
+
 		return $config;
 	}
 
@@ -72,6 +71,7 @@ final class OAuthJwksActionTest extends TestCase
 		$editionFeatures->method('can')->willReturnCallback(
 			fn (EditionFeature $f): bool => $f === EditionFeature::OAUTH_SERVER ? $allowsOAuth : true,
 		);
+
 		return $editionFeatures;
 	}
 
@@ -86,6 +86,7 @@ final class OAuthJwksActionTest extends TestCase
 		$body     = (string)$result->getBody();
 		/** @var array<string,mixed>|null $decoded */
 		$decoded = json_decode($body, true);
+
 		return $decoded;
 	}
 
@@ -229,8 +230,8 @@ final class OAuthJwksActionTest extends TestCase
 
 	public function testReturnsEmptyKeysWithStatus503WhenPublicKeyPathIsEmpty(): void
 	{
-		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty($config, 'oauth'))->setValue($config, [
+		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		(new \ReflectionProperty($config, 'oauth'))->setValue($config, [
 			'publicKeyPath' => '',
 		]);
 
@@ -249,8 +250,8 @@ final class OAuthJwksActionTest extends TestCase
 
 	public function testReturnsEmptyKeysWithStatus503WhenOauthConfigMissing(): void
 	{
-		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty($config, 'oauth'))->setValue($config, []);
+		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		(new \ReflectionProperty($config, 'oauth'))->setValue($config, []);
 
 		$action  = new OAuthJwksAction($config, new JsonRenderer(), $this->makeEditionService());
 		$request = (new ServerRequestFactory())->createServerRequest('GET', '/.well-known/jwks.json');

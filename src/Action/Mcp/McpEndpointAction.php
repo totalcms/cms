@@ -12,8 +12,8 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
-use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -95,8 +95,8 @@ readonly class McpEndpointAction
 			/** @var list<string> $scopes */
 			$scopes = array_values(array_map(
 				static fn (mixed $s): string => is_object($s) && method_exists($s, 'getIdentifier')
-					? (string) $s->getIdentifier()
-					: (string) $s,
+					? (string)$s->getIdentifier()
+					: (string)$s,
 				$oauthScopes,
 			));
 			$this->personaContext->setScopes($scopes);
@@ -140,7 +140,7 @@ readonly class McpEndpointAction
 			}
 
 			if ($method !== '' && !$this->scopeEvaluator->isAllowed($this->personaContext->getScopes(), $operation)) {
-				$clientId = (string) $request->getAttribute('oauth_client_id', '');
+				$clientId = (string)$request->getAttribute('oauth_client_id', '');
 				$this->activityLogger->scopeRejected($clientId, $operation, $this->personaContext->getScopes());
 
 				$response = $this->renderer->json($response, [
@@ -149,6 +149,7 @@ readonly class McpEndpointAction
 						'operation' => $method,
 					],
 				], 403);
+
 				return $response->withHeader(
 					'WWW-Authenticate',
 					'Bearer realm="MCP", error="insufficient_scope"',

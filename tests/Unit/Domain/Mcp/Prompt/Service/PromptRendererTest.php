@@ -38,10 +38,10 @@ final class PromptRendererTest extends TestCase
 			->willReturn('Hello Joe');
 
 		$prompt = new PromptData(
-			name:        'greet',
+			name: 'greet',
 			description: 'Greet someone',
-			body:        'Hello {{ args.name }}',
-			args:        [new PromptArgData('name', '', true)],
+			body: 'Hello {{ args.name }}',
+			args: [new PromptArgData('name', '', true)],
 		);
 
 		$result = $this->renderer->render($prompt, ['name' => 'Joe']);
@@ -56,10 +56,10 @@ final class PromptRendererTest extends TestCase
 	public function testThrowsOnMissingRequiredArg(): void
 	{
 		$prompt = new PromptData(
-			name:        'greet',
+			name: 'greet',
 			description: 'Greet',
-			body:        'Hello {{ args.name }}',
-			args:        [new PromptArgData('name', '', true)],
+			body: 'Hello {{ args.name }}',
+			args: [new PromptArgData('name', '', true)],
 		);
 
 		$this->expectException(PromptRenderException::class);
@@ -78,10 +78,10 @@ final class PromptRendererTest extends TestCase
 			->willReturn('hi');
 
 		$prompt = new PromptData(
-			name:        'p',
+			name: 'p',
 			description: 'd',
-			body:        'hi',
-			args:        [new PromptArgData('name')],
+			body: 'hi',
+			args: [new PromptArgData('name')],
 		);
 
 		$result = $this->renderer->render($prompt, ['name' => 'Joe', 'extra' => 'dropped']);

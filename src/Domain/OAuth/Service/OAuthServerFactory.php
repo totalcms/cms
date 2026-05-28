@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Service;
 
-use DateInterval;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
@@ -49,9 +48,9 @@ final class OAuthServerFactory
 		$authCodeGrant = new AuthCodeGrant(
 			$this->authCodes,
 			$this->refreshTokens,
-			new DateInterval((string)$this->config->oauth['authCodeTtl']),
+			new \DateInterval((string)$this->config->oauth['authCodeTtl']),
 		);
-		$authCodeGrant->setRefreshTokenTTL(new DateInterval((string)$this->config->oauth['refreshTokenTtl']));
+		$authCodeGrant->setRefreshTokenTTL(new \DateInterval((string)$this->config->oauth['refreshTokenTtl']));
 
 		// Strip the `plain` PKCE verifier. AuthCodeGrant's constructor
 		// unconditionally registers both S256 and plain verifiers; the
@@ -68,14 +67,14 @@ final class OAuthServerFactory
 
 		$server->enableGrantType(
 			$authCodeGrant,
-			new DateInterval((string)$this->config->oauth['accessTokenTtl']),
+			new \DateInterval((string)$this->config->oauth['accessTokenTtl']),
 		);
 
 		$refreshGrant = new RefreshTokenGrant($this->refreshTokens);
-		$refreshGrant->setRefreshTokenTTL(new DateInterval((string)$this->config->oauth['refreshTokenTtl']));
+		$refreshGrant->setRefreshTokenTTL(new \DateInterval((string)$this->config->oauth['refreshTokenTtl']));
 		$server->enableGrantType(
 			$refreshGrant,
-			new DateInterval((string)$this->config->oauth['accessTokenTtl']),
+			new \DateInterval((string)$this->config->oauth['accessTokenTtl']),
 		);
 
 		return $server;
@@ -90,6 +89,7 @@ final class OAuthServerFactory
 		// the public key only; the private key (in buildAuthorizationServer)
 		// still gets the full league enforcement.
 		$publicKey = new CryptKey((string)$this->config->oauth['publicKeyPath'], null, false);
+
 		return new ResourceServer($this->accessTokens, $publicKey);
 	}
 
@@ -103,6 +103,7 @@ final class OAuthServerFactory
 	private function deriveEncryptionKey(): string
 	{
 		$pem = (string)file_get_contents((string)$this->config->oauth['signingKeyPath']);
+
 		return hash('sha256', $pem);
 	}
 }

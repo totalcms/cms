@@ -42,6 +42,7 @@ readonly class ReindexJob
 				'job_id'     => $job->id,
 				'collection' => $job->collection,
 			]);
+
 			return;
 		}
 
@@ -67,6 +68,7 @@ readonly class ReindexJob
 
 		if ($operation === 'delete') {
 			$provider->delete($job->collection, $objectId);
+
 			return;
 		}
 
@@ -75,6 +77,7 @@ readonly class ReindexJob
 			// Object was deleted between listener firing and job processing —
 			// keep the provider in sync with T3's truth by issuing a delete.
 			$provider->delete($job->collection, $objectId);
+
 			return;
 		}
 

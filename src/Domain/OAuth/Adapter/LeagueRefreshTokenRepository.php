@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Adapter;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
@@ -38,7 +36,7 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 
 	public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity): void
 	{
-		$accessToken = $refreshTokenEntity->getAccessToken();
+		$accessToken    = $refreshTokenEntity->getAccessToken();
 		$userIdentifier = $accessToken->getUserIdentifier();
 
 		/** @var list<string> $scopes */
@@ -47,16 +45,16 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 			$accessToken->getScopes(),
 		);
 
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
 		$grant = new OAuthGrantData(
-			id:               $this->generateId(),
-			clientId:         $accessToken->getClient()->getIdentifier(),
-			userId:           $userIdentifier ?? '',
-			scopes:           $scopes,
+			id: $this->generateId(),
+			clientId: $accessToken->getClient()->getIdentifier(),
+			userId: $userIdentifier ?? '',
+			scopes: $scopes,
 			refreshTokenHash: hash('sha256', $refreshTokenEntity->getIdentifier()),
-			issuedAt:         $now->format(DATE_ATOM),
-			expiresAt:        $refreshTokenEntity->getExpiryDateTime()->format(DATE_ATOM),
+			issuedAt: $now->format(DATE_ATOM),
+			expiresAt: $refreshTokenEntity->getExpiryDateTime()->format(DATE_ATOM),
 		);
 
 		$this->grants->save($grant);
@@ -113,9 +111,10 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 	{
 		$bytes = random_bytes(16);
 		// Set version 4 bits.
-		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+		$bytes[6] = chr((ord($bytes[6]) & 0x0F) | 0x40);
 		// Set variant bits.
-		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3F) | 0x80);
+
 		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 	}
 }

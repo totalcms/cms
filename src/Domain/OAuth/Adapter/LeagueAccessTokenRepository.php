@@ -30,7 +30,7 @@ final class LeagueAccessTokenRepository implements AccessTokenRepositoryInterfac
 	public function getNewToken(
 		ClientEntityInterface $clientEntity,
 		array $scopes,
-		string|null $userIdentifier = null,
+		?string $userIdentifier = null,
 	): AccessTokenEntityInterface {
 		$token = new LeagueAccessTokenEntity();
 		$token->setClient($clientEntity);
@@ -40,6 +40,7 @@ final class LeagueAccessTokenRepository implements AccessTokenRepositoryInterfac
 		if ($userIdentifier !== null && $userIdentifier !== '') {
 			$token->setUserIdentifier($userIdentifier);
 		}
+
 		return $token;
 	}
 

@@ -27,6 +27,7 @@ final class OAuthDynamicRegistrar
 
 	/**
 	 * @param  array<string,mixed> $metadata
+	 *
 	 * @return array{client_id: string, client_secret: string, client_secret_expires_at: int, registration_access_token: string, client_id_issued_at: int, redirect_uris: list<string>, client_name: string, scope: string}
 	 */
 	public function register(array $metadata): array
@@ -39,7 +40,7 @@ final class OAuthDynamicRegistrar
 
 		$clientName = isset($metadata['client_name']) ? (string)$metadata['client_name'] : 'Unnamed dynamic client';
 
-		$scope = isset($metadata['scope']) ? (string)$metadata['scope'] : '';
+		$scope  = isset($metadata['scope']) ? (string)$metadata['scope'] : '';
 		$scopes = $scope !== '' ? array_values(array_filter(explode(' ', $scope))) : [];
 		foreach ($scopes as $s) {
 			if (!$this->scopes->has($s)) {
@@ -48,11 +49,11 @@ final class OAuthDynamicRegistrar
 		}
 
 		$result = $this->creator->create(
-			name:           $clientName,
-			redirectUris:   $redirectUris,
-			allowedScopes:  $scopes,
-			createdBy:      'rfc7591-self-registered',
-			isDynamic:      true,
+			name: $clientName,
+			redirectUris: $redirectUris,
+			allowedScopes: $scopes,
+			createdBy: 'rfc7591-self-registered',
+			isDynamic: true,
 			isConfidential: true,
 		);
 

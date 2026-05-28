@@ -24,6 +24,7 @@ final class OAuthClientCreator
 	/**
 	 * @param  list<string> $redirectUris
 	 * @param  list<string> $allowedScopes
+	 *
 	 * @return array{client: OAuthClientData, secret: string}  plaintext secret shown once
 	 */
 	public function create(
@@ -50,16 +51,16 @@ final class OAuthClientCreator
 		$hash   = password_hash($secret, PASSWORD_BCRYPT, ['cost' => 12]);
 
 		$client = new OAuthClientData(
-			id:              $id,
-			name:            $name,
-			secretHash:      $hash,
-			redirectUris:    $redirectUris,
-			scopes:          $allowedScopes,
-			isDynamic:       $isDynamic,
-			isConfidential:  $isConfidential,
-			createdAt:       gmdate('c'),
-			createdBy:       $createdBy,
-			iconPath:        $iconPath,
+			id: $id,
+			name: $name,
+			secretHash: $hash,
+			redirectUris: $redirectUris,
+			scopes: $allowedScopes,
+			isDynamic: $isDynamic,
+			isConfidential: $isConfidential,
+			createdAt: gmdate('c'),
+			createdBy: $createdBy,
+			iconPath: $iconPath,
 		);
 		$this->clients->save($client);
 		$this->activityLogger->clientCreated($client->id, $client->name, $client->isDynamic, $createdBy);
@@ -69,9 +70,10 @@ final class OAuthClientCreator
 
 	private function generateUuid(): string
 	{
-		$bytes = random_bytes(16);
-		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+		$bytes    = random_bytes(16);
+		$bytes[6] = chr((ord($bytes[6]) & 0x0F) | 0x40);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3F) | 0x80);
+
 		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 	}
 

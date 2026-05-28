@@ -22,7 +22,7 @@ final class ProtectMiddlewareTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->middleware = new ProtectMiddleware(self::TEST_SECRET);
-		$this->psr17     = new Psr17Factory();
+		$this->psr17      = new Psr17Factory();
 	}
 
 	// --- no-op cases ---

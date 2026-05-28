@@ -33,6 +33,7 @@ final class OAuthScopeRegistry
 		if (!isset($scopes[$identifier])) {
 			throw new \OutOfBoundsException("Unknown OAuth scope: {$identifier}");
 		}
+
 		return $scopes[$identifier];
 	}
 
@@ -46,6 +47,7 @@ final class OAuthScopeRegistry
 	 * (transitive closure). cms:admin → [cms:admin, cms:read, cms:write].
 	 *
 	 * @param  list<string> $identifiers
+	 *
 	 * @return list<string>
 	 */
 	public function expand(array $identifiers): array
@@ -62,6 +64,7 @@ final class OAuthScopeRegistry
 				$queue[] = $implied;
 			}
 		}
+
 		return $expanded;
 	}
 
@@ -76,46 +79,46 @@ final class OAuthScopeRegistry
 
 		$defs = [
 			new OAuthScopeData(
-				identifier:    'cms:read',
-				description:   'Read your content',
-				impliedPaths:  ['#^GET\s+/api/(collections|objects)#'],
+				identifier: 'cms:read',
+				description: 'Read your content',
+				impliedPaths: ['#^GET\s+/api/(collections|objects)#'],
 				mcpOperations: ['tool:query_collection', 'tool:get_object', 'tool:search_collection', 'tool:list_collections'],
-				implies:       [],
+				implies: [],
 			),
 			new OAuthScopeData(
-				identifier:    'cms:write',
-				description:   'Create, update, and delete your content',
-				impliedPaths:  ['#^(POST|PUT|PATCH|DELETE)\s+/api/(collections|objects)#'],
+				identifier: 'cms:write',
+				description: 'Create, update, and delete your content',
+				impliedPaths: ['#^(POST|PUT|PATCH|DELETE)\s+/api/(collections|objects)#'],
 				mcpOperations: [],
-				implies:       [],
+				implies: [],
 			),
 			new OAuthScopeData(
-				identifier:    'cms:admin',
-				description:   'Administer your site (implies read + write)',
-				impliedPaths:  ['#^[A-Z]+\s+/api/(schemas|cache|extensions)#'],
+				identifier: 'cms:admin',
+				description: 'Administer your site (implies read + write)',
+				impliedPaths: ['#^[A-Z]+\s+/api/(schemas|cache|extensions)#'],
 				mcpOperations: ['tool:schema_create', 'tool:schema_update', 'tool:schema_delete', 'tool:clear_cache', 'tool:extension_list'],
-				implies:       ['cms:read', 'cms:write'],
+				implies: ['cms:read', 'cms:write'],
 			),
 			new OAuthScopeData(
-				identifier:    'mcp:tools',
-				description:   'Call AI tools on your site',
-				impliedPaths:  [],
+				identifier: 'mcp:tools',
+				description: 'Call AI tools on your site',
+				impliedPaths: [],
 				mcpOperations: ['initialize', 'tools/call', 'tools/list'],
-				implies:       [],
+				implies: [],
 			),
 			new OAuthScopeData(
-				identifier:    'mcp:resources',
-				description:   'Read addressable AI resources',
-				impliedPaths:  [],
+				identifier: 'mcp:resources',
+				description: 'Read addressable AI resources',
+				impliedPaths: [],
 				mcpOperations: ['initialize', 'resources/read', 'resources/subscribe', 'resources/list', 'resources/templates/list'],
-				implies:       [],
+				implies: [],
 			),
 			new OAuthScopeData(
-				identifier:    'mcp:prompts',
-				description:   'List and retrieve AI prompts',
-				impliedPaths:  [],
+				identifier: 'mcp:prompts',
+				description: 'List and retrieve AI prompts',
+				impliedPaths: [],
 				mcpOperations: ['initialize', 'prompts/list', 'prompts/get'],
-				implies:       [],
+				implies: [],
 			),
 		];
 
@@ -123,6 +126,7 @@ final class OAuthScopeRegistry
 		foreach ($defs as $scope) {
 			$this->scopes[$scope->identifier] = $scope;
 		}
+
 		return $this->scopes;
 	}
 }

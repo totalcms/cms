@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Exception\SavedQueryToolException;
-use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
-use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 
 /**
  * Runtime tool for a single schema-defined entry.
@@ -47,6 +46,7 @@ final readonly class SavedQueryTool
 
 	/**
 	 * @param  array<string,mixed> $args
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function handle(array $args): array
@@ -129,6 +129,7 @@ final readonly class SavedQueryTool
 
 	/**
 	 * @param  array<string,mixed> $args
+	 *
 	 * @return array<string,array{value:mixed,operator:string}>
 	 */
 	private function resolveFilters(array $args): array
@@ -151,6 +152,7 @@ final readonly class SavedQueryTool
 
 	/**
 	 * @param  array<string,array{value:mixed,operator:string}> $resolved
+	 *
 	 * @return array<string,string>
 	 */
 	private function buildQueryParams(array $resolved, McpPersona $persona): array

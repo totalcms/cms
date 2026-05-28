@@ -12,14 +12,14 @@ final class PromptDataTest extends TestCase
 {
 	public function testConstructAssignsAllFields(): void
 	{
-		$arg = new PromptArgData('topic');
+		$arg    = new PromptArgData('topic');
 		$prompt = new PromptData(
-			name:             'draft_post',
-			description:      'Outline a new blog post',
-			body:             'Draft a post about: {{ args.topic }}',
-			args:             [$arg],
+			name: 'draft_post',
+			description: 'Outline a new blog post',
+			body: 'Draft a post about: {{ args.topic }}',
+			args: [$arg],
 			targetCollection: 'blog',
-			access:           'authenticated',
+			access: 'authenticated',
 		);
 		$this->assertSame('draft_post', $prompt->name);
 		$this->assertSame('Outline a new blog post', $prompt->description);

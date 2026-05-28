@@ -30,7 +30,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 
 	// Bump rate limits so cross-test accumulation doesn't trip the limiter.
-	$config = $this->app->getContainer()->get(Config::class);
+	$config        = $this->app->getContainer()->get(Config::class);
 	$config->oauth = array_merge($config->oauth, [
 		'tokenEndpointLimit'       => 10000,
 		'dynamicRegistrationLimit' => 10000,
@@ -99,17 +99,18 @@ function revokeCreateTestClient(
 	array $scopes = ['cms:read'],
 ): OAuthClientData {
 	$client = new OAuthClientData(
-		id:             $clientId,
-		name:           'Revoke Test Client',
-		secretHash:     password_hash($secret, PASSWORD_BCRYPT),
-		redirectUris:   $redirectUris,
-		scopes:         $scopes,
-		isDynamic:      false,
+		id: $clientId,
+		name: 'Revoke Test Client',
+		secretHash: password_hash($secret, PASSWORD_BCRYPT),
+		redirectUris: $redirectUris,
+		scopes: $scopes,
+		isDynamic: false,
 		isConfidential: true,
-		createdAt:      gmdate('c'),
-		createdBy:      'test',
+		createdAt: gmdate('c'),
+		createdBy: 'test',
 	);
 	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
+
 	return $client;
 }
 
@@ -205,9 +206,10 @@ function revokeIssueTokens(
  *
  * @param array<string,string> $params
  */
-function postRevoke(Slim\App $app, array $params): \Psr\Http\Message\ResponseInterface
+function postRevoke(Slim\App $app, array $params): Psr\Http\Message\ResponseInterface
 {
 	$factory = new Psr17Factory();
+
 	return $app->handle(
 		$factory->createServerRequest('POST', '/oauth/revoke')
 			->withHeader('Content-Type', 'application/x-www-form-urlencoded')
@@ -220,7 +222,6 @@ function postRevoke(Slim\App $app, array $params): \Psr\Http\Message\ResponseInt
 // ---------------------------------------------------------------------------
 
 describe('OAuthRevocation', function (): void {
-
 	// -----------------------------------------------------------------------
 	// 1. Missing token parameter → 400 invalid_request
 	// -----------------------------------------------------------------------
@@ -400,5 +401,4 @@ describe('OAuthRevocation', function (): void {
 		$grantsAfter = $grantRepo->findByClientId($clientAId);
 		expect($grantsAfter)->not()->toBeEmpty();
 	});
-
 });

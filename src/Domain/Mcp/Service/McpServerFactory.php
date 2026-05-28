@@ -180,8 +180,8 @@ readonly class McpServerFactory
 				}
 				try {
 					$builder->addPrompt(
-						handler:     $this->buildExtensionPromptHandler($reg['handler'], $persona, $name, $access),
-						name:        $name,
+						handler: $this->buildExtensionPromptHandler($reg['handler'], $persona, $name, $access),
+						name: $name,
 						description: $reg['prompt']->description ?? '',
 					);
 				} catch (\LogicException $e) {
@@ -202,6 +202,7 @@ readonly class McpServerFactory
 	 * Fails closed: prompts with unrecognised access values are treated as admin-only.
 	 *
 	 * @param list<PromptData> $prompts
+	 *
 	 * @return list<PromptData>
 	 */
 	private function filterPromptsForPersona(array $prompts, McpPersona $persona): array
@@ -233,6 +234,7 @@ readonly class McpServerFactory
 					$access,
 				));
 			}
+
 			return $handler($arguments);
 		};
 	}

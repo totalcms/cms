@@ -32,18 +32,20 @@ final class LeagueScopeRepository implements ScopeRepositoryInterface
 		if (!$this->registry->has($identifier)) {
 			return null;
 		}
+
 		return new LeagueScopeEntity($identifier);
 	}
 
 	/**
 	 * @param  ScopeEntityInterface[]  $scopes
+	 *
 	 * @return ScopeEntityInterface[]
 	 */
 	public function finalizeScopes(
 		array $scopes,
 		string $grantType,
 		ClientEntityInterface $clientEntity,
-		string|null $userIdentifier = null,
+		?string $userIdentifier = null,
 		?string $authCodeId = null,
 	): array {
 		$client = $this->clients->find($clientEntity->getIdentifier());

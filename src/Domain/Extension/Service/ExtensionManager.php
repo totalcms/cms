@@ -229,9 +229,9 @@ class ExtensionManager
 		}
 
 		// Wire form-action registrations from extensions into the registry.
-		if ($this->container->has(\TotalCMS\Domain\Extension\Service\FormActionRegistry::class)) {
-			/** @var \TotalCMS\Domain\Extension\Service\FormActionRegistry $formActionRegistry */
-			$formActionRegistry = $this->container->get(\TotalCMS\Domain\Extension\Service\FormActionRegistry::class);
+		if ($this->container->has(FormActionRegistry::class)) {
+			/** @var FormActionRegistry $formActionRegistry */
+			$formActionRegistry = $this->container->get(FormActionRegistry::class);
 			foreach ($this->contexts as $id => $context) {
 				if (!$this->isCapabilityPermitted($id, 'form-actions')) {
 					continue;
@@ -719,6 +719,7 @@ class ExtensionManager
 				$byExtension[$id] = $providers;
 			}
 		}
+
 		return $byExtension;
 	}
 
@@ -741,6 +742,7 @@ class ExtensionManager
 				$byExtension[$id] = $prompts;
 			}
 		}
+
 		return $byExtension;
 	}
 

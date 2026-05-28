@@ -16,15 +16,15 @@ final class LeagueUserRepositoryTest extends TestCase
 		$adapter = new LeagueUserRepository();
 
 		$clientData = new OAuthClientData(
-			id:             'c-1',
-			name:           'Test',
-			secretHash:     'hash',
-			redirectUris:   ['https://x.test/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: 'c-1',
+			name: 'Test',
+			secretHash: 'hash',
+			redirectUris: ['https://x.test/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-05-24T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$clientEntity = new LeagueClientEntity($clientData);
 

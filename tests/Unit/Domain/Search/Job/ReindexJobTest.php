@@ -53,7 +53,8 @@ final class ReindexJobTest extends TestCase
 		$indexedId         = null;
 		$indexedData       = null;
 
-		$provider = $this->makeProvider('algolia',
+		$provider = $this->makeProvider(
+			'algolia',
 			indexCallback: function (string $c, string $id, array $data) use (&$indexedCollection, &$indexedId, &$indexedData) {
 				$indexedCollection = $c;
 				$indexedId         = $id;
@@ -69,8 +70,12 @@ final class ReindexJobTest extends TestCase
 		$objData->method('toArray')->willReturn(['id' => 'post-1', 'title' => 'X']);
 		$fetcher->method('fetchObject')->willReturn($objData);
 
-		$job = new ReindexJob($registry, $fetcher, new NullLogger(),
-			$this->makeConfig(['activeProvider' => 'algolia']));
+		$job = new ReindexJob(
+			$registry,
+			$fetcher,
+			new NullLogger(),
+			$this->makeConfig(['activeProvider' => 'algolia'])
+		);
 
 		$job->run($this->makeJob(['object_id' => 'post-1', 'operation' => 'index']));
 
@@ -84,7 +89,8 @@ final class ReindexJobTest extends TestCase
 		$deletedCollection = null;
 		$deletedId         = null;
 
-		$provider = $this->makeProvider('algolia',
+		$provider = $this->makeProvider(
+			'algolia',
 			deleteCallback: function (string $c, string $id) use (&$deletedCollection, &$deletedId) {
 				$deletedCollection = $c;
 				$deletedId         = $id;
@@ -96,8 +102,12 @@ final class ReindexJobTest extends TestCase
 		$fetcher = $this->createMock(ObjectFetcher::class);
 		$fetcher->method('existsObject')->willReturn(false);
 
-		$job = new ReindexJob($registry, $fetcher, new NullLogger(),
-			$this->makeConfig(['activeProvider' => 'algolia']));
+		$job = new ReindexJob(
+			$registry,
+			$fetcher,
+			new NullLogger(),
+			$this->makeConfig(['activeProvider' => 'algolia'])
+		);
 
 		$job->run($this->makeJob(['object_id' => 'post-1', 'operation' => 'index']));
 
@@ -109,7 +119,8 @@ final class ReindexJobTest extends TestCase
 	{
 		$deletedId = null;
 
-		$provider = $this->makeProvider('algolia',
+		$provider = $this->makeProvider(
+			'algolia',
 			deleteCallback: function (string $c, string $id) use (&$deletedId) {
 				$deletedId = $id;
 			},
@@ -117,8 +128,12 @@ final class ReindexJobTest extends TestCase
 		$registry = new SearchProviderRegistry();
 		$registry->register($provider);
 
-		$job = new ReindexJob($registry, $this->createMock(ObjectFetcher::class), new NullLogger(),
-			$this->makeConfig(['activeProvider' => 'algolia']));
+		$job = new ReindexJob(
+			$registry,
+			$this->createMock(ObjectFetcher::class),
+			new NullLogger(),
+			$this->makeConfig(['activeProvider' => 'algolia'])
+		);
 
 		$job->run($this->makeJob(['object_id' => 'post-1', 'operation' => 'delete']));
 
@@ -127,7 +142,8 @@ final class ReindexJobTest extends TestCase
 
 	public function testRethrowsWhenProviderThrows(): void
 	{
-		$provider = $this->makeProvider('algolia',
+		$provider = $this->makeProvider(
+			'algolia',
 			indexCallback: fn () => throw new \RuntimeException('boom'),
 		);
 		$registry = new SearchProviderRegistry();
@@ -139,8 +155,12 @@ final class ReindexJobTest extends TestCase
 		$objData->method('toArray')->willReturn(['id' => 'post-1']);
 		$fetcher->method('fetchObject')->willReturn($objData);
 
-		$job = new ReindexJob($registry, $fetcher, new NullLogger(),
-			$this->makeConfig(['activeProvider' => 'algolia']));
+		$job = new ReindexJob(
+			$registry,
+			$fetcher,
+			new NullLogger(),
+			$this->makeConfig(['activeProvider' => 'algolia'])
+		);
 
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('boom');
@@ -156,6 +176,7 @@ final class ReindexJobTest extends TestCase
 		(new \ReflectionProperty($job, 'type'))->setValue($job, 'search.reindex');
 		(new \ReflectionProperty($job, 'collection'))->setValue($job, 'blog');
 		(new \ReflectionProperty($job, 'payload'))->setValue($job, (string)json_encode($data));
+
 		return $job;
 	}
 
@@ -166,17 +187,36 @@ final class ReindexJobTest extends TestCase
 				private readonly string $id,
 				private readonly ?\Closure $indexCallback,
 				private readonly ?\Closure $deleteCallback,
-			) {}
-			public function id(): string { return $this->id; }
-			public function label(): string { return ucfirst($this->id); }
-			public function search(SearchQuery $query): array { return []; }
-			public function isAvailable(): bool { return true; }
+			) {
+			}
+
+			public function id(): string
+			{
+				return $this->id;
+			}
+
+			public function label(): string
+			{
+				return ucfirst($this->id);
+			}
+
+			public function search(SearchQuery $query): array
+			{
+				return [];
+			}
+
+			public function isAvailable(): bool
+			{
+				return true;
+			}
+
 			public function index(string $collection, string $id, array $data): void
 			{
 				if ($this->indexCallback !== null) {
 					($this->indexCallback)($collection, $id, $data);
 				}
 			}
+
 			public function delete(string $collection, string $id): void
 			{
 				if ($this->deleteCallback !== null) {
@@ -191,6 +231,7 @@ final class ReindexJobTest extends TestCase
 	{
 		$c = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		(new \ReflectionProperty($c, 'search'))->setValue($c, $search);
+
 		return $c;
 	}
 }

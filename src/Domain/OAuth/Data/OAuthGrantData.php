@@ -32,13 +32,13 @@ readonly class OAuthGrantData
 	public static function fromArray(array $data): self
 	{
 		return new self(
-			id:               (string)$data['id'],
-			clientId:         (string)$data['client_id'],
-			userId:           (string)$data['user_id'],
-			scopes:           array_values(array_map('strval', (array)$data['scopes'])),
+			id: (string)$data['id'],
+			clientId: (string)$data['client_id'],
+			userId: (string)$data['user_id'],
+			scopes: array_values(array_map('strval', (array)$data['scopes'])),
 			refreshTokenHash: (string)$data['refresh_token_hash'],
-			issuedAt:         (string)$data['issued_at'],
-			expiresAt:        (string)$data['expires_at'],
+			issuedAt: (string)$data['issued_at'],
+			expiresAt: (string)$data['expires_at'],
 		);
 	}
 

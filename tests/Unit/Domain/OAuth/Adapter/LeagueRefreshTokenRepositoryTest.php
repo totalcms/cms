@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\OAuth\Adapter;
 
-use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
@@ -85,15 +84,15 @@ final class LeagueRefreshTokenRepositoryTest extends TestCase
 		string $clientId,
 	): LeagueRefreshTokenEntity {
 		$clientData = new OAuthClientData(
-			id:             $clientId,
-			name:           'Test',
-			secretHash:     'hash',
-			redirectUris:   ['https://x.test/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: $clientId,
+			name: 'Test',
+			secretHash: 'hash',
+			redirectUris: ['https://x.test/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-05-24T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$clientEntity = new LeagueClientEntity($clientData);
 
@@ -104,12 +103,12 @@ final class LeagueRefreshTokenRepositoryTest extends TestCase
 		$accessToken->setClient($clientEntity);
 		$accessToken->addScope($scope);
 		$accessToken->setUserIdentifier($userId);
-		$accessToken->setExpiryDateTime(new DateTimeImmutable('+1 hour'));
+		$accessToken->setExpiryDateTime(new \DateTimeImmutable('+1 hour'));
 
 		$refreshToken = new LeagueRefreshTokenEntity();
 		$refreshToken->setIdentifier($identifier);
 		$refreshToken->setAccessToken($accessToken);
-		$refreshToken->setExpiryDateTime(new DateTimeImmutable($expiryModifier));
+		$refreshToken->setExpiryDateTime(new \DateTimeImmutable($expiryModifier));
 
 		return $refreshToken;
 	}

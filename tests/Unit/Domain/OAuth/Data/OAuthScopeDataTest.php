@@ -12,11 +12,11 @@ final class OAuthScopeDataTest extends TestCase
 	public function testConstructsWithImpliedPathsAndOperations(): void
 	{
 		$scope = new OAuthScopeData(
-			identifier:    'cms:read',
-			description:   'Read your content',
-			impliedPaths:  ['^GET /api/collections/'],
+			identifier: 'cms:read',
+			description: 'Read your content',
+			impliedPaths: ['^GET /api/collections/'],
 			mcpOperations: ['tool:query_collection'],
-			implies:       [],
+			implies: [],
 		);
 
 		$this->assertSame('cms:read', $scope->identifier);

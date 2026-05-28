@@ -50,6 +50,7 @@ final readonly class SearchService implements SearchServiceInterface
 					'requested' => $provider->id(),
 				]);
 			}
+
 			return $this->fallback->search($query);
 		}
 
@@ -61,6 +62,7 @@ final readonly class SearchService implements SearchServiceInterface
 				'error'    => $e->getMessage(),
 				'query'    => $query->text,
 			]);
+
 			return $this->fallback->search($query);
 		}
 	}
@@ -70,7 +72,7 @@ final readonly class SearchService implements SearchServiceInterface
 	 * overrides at collection.mcp.searchProvider:
 	 *   - 'text'    → return null (caller falls back to text)
 	 *   - <id>      → return that provider if registered; else fall through
-	 *   - 'default' → fall through to site-wide activeProvider
+	 *   - 'default' → fall through to site-wide activeProvider.
 	 *
 	 * Returns null to signal "use the fallback (text) directly".
 	 */
@@ -96,6 +98,7 @@ final readonly class SearchService implements SearchServiceInterface
 		if ($activeId === 'text') {
 			return null;
 		}
+
 		return $this->registry->active($activeId);
 	}
 
@@ -109,6 +112,7 @@ final readonly class SearchService implements SearchServiceInterface
 			return null;
 		}
 		$value = (string)($collection->mcp['searchProvider'] ?? '');
+
 		return $value === '' ? null : $value;
 	}
 }

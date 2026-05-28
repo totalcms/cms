@@ -29,8 +29,8 @@ final readonly class PromptRegistrar
 	{
 		foreach ($prompts as $prompt) {
 			$builder->addPrompt(
-				handler:     $this->buildHandler($prompt, $persona),
-				name:        $prompt->name,
+				handler: $this->buildHandler($prompt, $persona),
+				name: $prompt->name,
 				description: $prompt->description,
 			);
 		}

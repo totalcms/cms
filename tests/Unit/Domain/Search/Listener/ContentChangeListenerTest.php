@@ -17,8 +17,9 @@ final class ContentChangeListenerTest extends TestCase
 {
 	public function testRoutesObjectCreatedToProviderIndex(): void
 	{
-		$called = null;
-		$provider = $this->makeProvider('algolia',
+		$called   = null;
+		$provider = $this->makeProvider(
+			'algolia',
 			indexCallback: function (string $c, string $id, array $data) use (&$called) {
 				$called = compact('c', 'id', 'data');
 			},
@@ -85,7 +86,8 @@ final class ContentChangeListenerTest extends TestCase
 
 	public function testEnqueuesRetryWhenProviderIndexThrows(): void
 	{
-		$provider = $this->makeProvider('algolia',
+		$provider = $this->makeProvider(
+			'algolia',
 			indexCallback: fn () => throw new \RuntimeException('Algolia is down'),
 		);
 
@@ -95,8 +97,8 @@ final class ContentChangeListenerTest extends TestCase
 		$jobs = $this->createMock(JobQueuer::class);
 		$jobs->expects($this->once())
 			->method('queueJob')
-			->with('search.reindex', 'blog', $this->callback(static fn (array $payload): bool =>
-				$payload['object_id'] === 'post-1' && ($payload['operation'] ?? '') === 'index'
+			->with('search.reindex', 'blog', $this->callback(
+				static fn (array $payload): bool => $payload['object_id'] === 'post-1' && ($payload['operation'] ?? '') === 'index'
 			));
 
 		$listener = new ContentChangeListener(
@@ -114,10 +116,11 @@ final class ContentChangeListenerTest extends TestCase
 		$deletedCollection = null;
 		$deletedId         = null;
 
-		$provider = $this->makeProvider('algolia',
+		$provider = $this->makeProvider(
+			'algolia',
 			deleteCallback: function (string $c, string $id) use (&$deletedCollection, &$deletedId) {
 				$deletedCollection = $c;
-				$deletedId = $id;
+				$deletedId         = $id;
 			},
 		);
 
@@ -147,17 +150,36 @@ final class ContentChangeListenerTest extends TestCase
 				private readonly string $id,
 				private readonly ?\Closure $indexCallback,
 				private readonly ?\Closure $deleteCallback,
-			) {}
-			public function id(): string { return $this->id; }
-			public function label(): string { return ucfirst($this->id); }
-			public function search(SearchQuery $query): array { return []; }
-			public function isAvailable(): bool { return true; }
+			) {
+			}
+
+			public function id(): string
+			{
+				return $this->id;
+			}
+
+			public function label(): string
+			{
+				return ucfirst($this->id);
+			}
+
+			public function search(SearchQuery $query): array
+			{
+				return [];
+			}
+
+			public function isAvailable(): bool
+			{
+				return true;
+			}
+
 			public function index(string $collection, string $id, array $data): void
 			{
 				if ($this->indexCallback !== null) {
 					($this->indexCallback)($collection, $id, $data);
 				}
 			}
+
 			public function delete(string $collection, string $id): void
 			{
 				if ($this->deleteCallback !== null) {
@@ -172,6 +194,7 @@ final class ContentChangeListenerTest extends TestCase
 	{
 		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		(new \ReflectionProperty($config, 'search'))->setValue($config, $search);
+
 		return $config;
 	}
 }

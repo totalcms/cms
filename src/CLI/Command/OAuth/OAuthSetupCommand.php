@@ -102,5 +102,4 @@ class OAuthSetupCommand extends BaseCommand
 
 		return 0;
 	}
-
 }

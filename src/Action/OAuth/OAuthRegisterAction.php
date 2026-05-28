@@ -56,8 +56,8 @@ readonly class OAuthRegisterAction
 
 		$remoteAddr = $this->extractClientIp($request);
 		$this->activityLogger->dynamicRegistration(
-			(string) $result['client_id'],
-			(string) $result['client_name'],
+			(string)$result['client_id'],
+			(string)$result['client_name'],
 			$remoteAddr,
 		);
 
@@ -71,8 +71,10 @@ readonly class OAuthRegisterAction
 		}
 		if ($request->hasHeader('X-Forwarded-For')) {
 			$first = explode(',', $request->getHeaderLine('X-Forwarded-For'))[0];
+
 			return trim($first);
 		}
+
 		return $request->getServerParams()['REMOTE_ADDR'] ?? '0.0.0.0';
 	}
 }

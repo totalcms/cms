@@ -164,6 +164,7 @@ function mcpIntegrationCompleteAuthFlow(
 
 	/** @var array<string,mixed> $payload */
 	$payload = json_decode((string)$tokenResponse->getBody(), true);
+
 	return (string)($payload['access_token'] ?? '');
 }
 
@@ -243,7 +244,6 @@ function mcpIntegrationInitSession(Slim\App $app, string $accessToken): string
 // ---------------------------------------------------------------------------
 
 describe('OAuthMcpIntegration', function (): void {
-
 	// -----------------------------------------------------------------------
 	// 1. Full Claude-style end-to-end flow
 	//    discovery → dynamic registration → consent → token → MCP calls
@@ -330,6 +330,7 @@ describe('OAuthMcpIntegration', function (): void {
 		// plumbing, not the edition gate.
 		if ($sessionId === '') {
 			expect(true)->toBeTrue(); // skip-safe pass
+
 			return;
 		}
 
@@ -407,6 +408,7 @@ describe('OAuthMcpIntegration', function (): void {
 		if ($sessionId === '') {
 			// MCP unavailable in this environment — skip MCP assertions.
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -472,5 +474,4 @@ describe('OAuthMcpIntegration', function (): void {
 			expect($response->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope');
 		}
 	});
-
 });

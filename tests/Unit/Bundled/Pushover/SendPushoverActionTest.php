@@ -7,7 +7,6 @@ namespace Tests\Unit\Bundled\Pushover;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Bundled\Pushover\PushoverService;
 use TotalCMS\Bundled\Pushover\SendPushoverAction;
@@ -75,6 +74,7 @@ final class SendPushoverActionTest extends TestCase
 		$callCount = 0;
 		$this->cache->method('getData')->willReturnCallback(function () use (&$callCount): int {
 			$callCount++;
+
 			// First call = IP counter (ok), second call = user counter (at limit)
 			return $callCount === 1 ? 0 : 10;
 		});

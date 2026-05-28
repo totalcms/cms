@@ -26,6 +26,7 @@ final class PromptChangeListenerTest extends TestCase
 			->method('fetchFilteredIndex')
 			->willReturnCallback(function () use (&$callCount): array {
 				$callCount++;
+
 				return [];
 			});
 

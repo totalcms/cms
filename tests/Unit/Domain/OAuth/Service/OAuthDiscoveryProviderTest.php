@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Service;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use TotalCMS\Domain\OAuth\Service\OAuthDiscoveryProvider;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Support\Config;
@@ -18,8 +17,8 @@ final class OAuthDiscoveryProviderTest extends TestCase
 
 	private function makeConfig(string $url = 'https://example.com', array $oauth = []): Config
 	{
-		$config     = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$reflection = new ReflectionClass($config);
+		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$reflection = new \ReflectionClass($config);
 
 		$urlProp = $reflection->getProperty('url');
 		$urlProp->setValue($config, $url);

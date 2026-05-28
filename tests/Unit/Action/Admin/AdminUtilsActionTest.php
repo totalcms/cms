@@ -392,48 +392,48 @@ final class AdminUtilsActionTest extends TestCase
 
 		// Seed one static client and one dynamic client
 		$staticClient = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
-			id:             'static-1',
-			name:           'Static App',
-			secretHash:     '$2y$12$hash1',
-			redirectUris:   ['https://example.com/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: 'static-1',
+			name: 'Static App',
+			secretHash: '$2y$12$hash1',
+			redirectUris: ['https://example.com/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-01-01T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$dynamicClient = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
-			id:             'dynamic-1',
-			name:           'Dynamic App',
-			secretHash:     '$2y$12$hash2',
-			redirectUris:   ['https://dynamic.example.com/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      true,
+			id: 'dynamic-1',
+			name: 'Dynamic App',
+			secretHash: '$2y$12$hash2',
+			redirectUris: ['https://dynamic.example.com/cb'],
+			scopes: ['cms:read'],
+			isDynamic: true,
 			isConfidential: true,
-			createdAt:      '2026-01-01T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$this->oauthClientRepository->save($staticClient);
 		$this->oauthClientRepository->save($dynamicClient);
 
 		// Seed one grant per client
 		$grant1 = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
-			id:               'grant-1',
-			clientId:         'static-1',
-			userId:           'user@example.com',
-			scopes:           ['cms:read'],
+			id: 'grant-1',
+			clientId: 'static-1',
+			userId: 'user@example.com',
+			scopes: ['cms:read'],
 			refreshTokenHash: 'hash-a',
-			issuedAt:         '2026-01-01T00:00:00Z',
-			expiresAt:        '2027-01-01T00:00:00Z',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
 		);
 		$grant2 = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
-			id:               'grant-2',
-			clientId:         'dynamic-1',
-			userId:           'user@example.com',
-			scopes:           ['cms:read'],
+			id: 'grant-2',
+			clientId: 'dynamic-1',
+			userId: 'user@example.com',
+			scopes: ['cms:read'],
 			refreshTokenHash: 'hash-b',
-			issuedAt:         '2026-01-01T00:00:00Z',
-			expiresAt:        '2027-01-01T00:00:00Z',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
 		);
 		$this->oauthGrantRepository->save($grant1);
 		$this->oauthGrantRepository->save($grant2);
@@ -501,6 +501,7 @@ final class AdminUtilsActionTest extends TestCase
 					if (!is_array($form) || !isset($form['scopes'])) {
 						return false;
 					}
+
 					// OAuthScopeRegistry defines 6 T3 scopes
 					// (cms:read, cms:write, cms:admin, mcp:tools, mcp:resources, mcp:prompts)
 					return count($form['scopes']) === 6;
@@ -526,24 +527,24 @@ final class AdminUtilsActionTest extends TestCase
 
 		// Seed a client and a grant
 		$client = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
-			id:             'client-xyz',
-			name:           'My OAuth App',
-			secretHash:     '$2y$12$hash',
-			redirectUris:   ['https://example.com/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: 'client-xyz',
+			name: 'My OAuth App',
+			secretHash: '$2y$12$hash',
+			redirectUris: ['https://example.com/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-01-01T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$grant = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
-			id:               'grant-xyz',
-			clientId:         'client-xyz',
-			userId:           'user@example.com',
-			scopes:           ['cms:read'],
+			id: 'grant-xyz',
+			clientId: 'client-xyz',
+			userId: 'user@example.com',
+			scopes: ['cms:read'],
 			refreshTokenHash: 'hash-x',
-			issuedAt:         '2026-01-01T00:00:00Z',
-			expiresAt:        '2027-01-01T00:00:00Z',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
 		);
 		$this->oauthClientRepository->save($client);
 		$this->oauthGrantRepository->save($grant);

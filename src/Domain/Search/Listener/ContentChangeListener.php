@@ -15,7 +15,7 @@ use TotalCMS\Support\Config;
  * index()/delete() methods. Skips when:
  *   - the active provider is 'text' (IndexBuilder already handles it)
  *   - indexOnSave is disabled (operator-managed bulk imports)
- *   - the active provider isn't registered (no-op silently)
+ *   - the active provider isn't registered (no-op silently).
  *
  * Index failures are caught and enqueued as `search.reindex` jobs for
  * eventual retry. Content saves are never blocked by provider outages.
@@ -114,6 +114,7 @@ readonly class ContentChangeListener
 		if ($activeId === 'text') {
 			return null; // IndexBuilder handles the text path
 		}
+
 		return $this->registry->active($activeId);
 	}
 }

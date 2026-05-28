@@ -37,7 +37,7 @@ final class ScheduledMiddlewareTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->middleware = new TestableScheduledMiddleware();
-		$this->psr17     = new Psr17Factory();
+		$this->psr17      = new Psr17Factory();
 	}
 
 	// --- no-op cases ---

@@ -52,7 +52,7 @@ final class LeagueScopeRepositoryTest extends TestCase
 		$client = $this->makeClient('c-1', ['cms:read', 'cms:write']);
 		$this->clientRepo->save($client);
 
-		$clientEntity  = new LeagueClientEntity($client);
+		$clientEntity   = new LeagueClientEntity($client);
 		$requestedRead  = new LeagueScopeEntity('cms:read');
 		$requestedAdmin = new LeagueScopeEntity('cms:admin');
 
@@ -101,15 +101,15 @@ final class LeagueScopeRepositoryTest extends TestCase
 	private function makeClient(string $id, array $scopes): OAuthClientData
 	{
 		return new OAuthClientData(
-			id:             $id,
-			name:           'Test ' . $id,
-			secretHash:     'hash',
-			redirectUris:   ['https://x.test/cb'],
-			scopes:         $scopes,
-			isDynamic:      false,
+			id: $id,
+			name: 'Test ' . $id,
+			secretHash: 'hash',
+			redirectUris: ['https://x.test/cb'],
+			scopes: $scopes,
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-05-24T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T00:00:00Z',
+			createdBy: 'admin',
 		);
 	}
 }

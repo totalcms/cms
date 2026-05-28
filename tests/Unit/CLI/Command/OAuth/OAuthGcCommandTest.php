@@ -8,7 +8,6 @@ use DI\Container;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\OAuth\OAuthGcCommand;
-use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
@@ -60,13 +59,13 @@ it('reports zero when no grants are expired', function (): void {
 	// Seed a live (non-expired) grant
 	$future = gmdate('c', strtotime('+1 day'));
 	$this->grantRepository->save(new OAuthGrantData(
-		id:               'g-live',
-		clientId:         'c-1',
-		userId:           'admin',
-		scopes:           ['cms:read'],
+		id: 'g-live',
+		clientId: 'c-1',
+		userId: 'admin',
+		scopes: ['cms:read'],
 		refreshTokenHash: 'hash-live',
-		issuedAt:         gmdate('c'),
-		expiresAt:        $future,
+		issuedAt: gmdate('c'),
+		expiresAt: $future,
 	));
 
 	$container = $this->createMock(Container::class);
@@ -96,20 +95,32 @@ it('prunes expired grants and reports the count', function (): void {
 
 	// Two expired grants
 	$this->grantRepository->save(new OAuthGrantData(
-		id: 'g-expired-1', clientId: 'c-1', userId: 'admin',
-		scopes: ['cms:read'], refreshTokenHash: 'h1',
-		issuedAt: $past, expiresAt: $past,
+		id: 'g-expired-1',
+		clientId: 'c-1',
+		userId: 'admin',
+		scopes: ['cms:read'],
+		refreshTokenHash: 'h1',
+		issuedAt: $past,
+		expiresAt: $past,
 	));
 	$this->grantRepository->save(new OAuthGrantData(
-		id: 'g-expired-2', clientId: 'c-2', userId: 'admin',
-		scopes: ['cms:read'], refreshTokenHash: 'h2',
-		issuedAt: $past, expiresAt: $past,
+		id: 'g-expired-2',
+		clientId: 'c-2',
+		userId: 'admin',
+		scopes: ['cms:read'],
+		refreshTokenHash: 'h2',
+		issuedAt: $past,
+		expiresAt: $past,
 	));
 	// One live grant
 	$this->grantRepository->save(new OAuthGrantData(
-		id: 'g-live', clientId: 'c-3', userId: 'admin',
-		scopes: ['cms:read'], refreshTokenHash: 'h3',
-		issuedAt: $now, expiresAt: $future,
+		id: 'g-live',
+		clientId: 'c-3',
+		userId: 'admin',
+		scopes: ['cms:read'],
+		refreshTokenHash: 'h3',
+		issuedAt: $now,
+		expiresAt: $future,
 	));
 
 	$container = $this->createMock(Container::class);

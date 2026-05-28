@@ -19,7 +19,6 @@ beforeEach(function (): void {
 });
 
 describe('Search provider extension integration', function (): void {
-
 	it('the SearchProviderRegistry is wired in the live container with the text fallback', function (): void {
 		// Without enabling the Algolia extension OR a Pro license, Algolia is NOT
 		// registered. This test verifies the registry is constructed (smoke test
@@ -39,7 +38,7 @@ describe('Search provider extension integration', function (): void {
 	});
 
 	it('SearchService falls back to text when active provider is missing keys', function (): void {
-		$config = $this->app->getContainer()->get(Config::class);
+		$config                           = $this->app->getContainer()->get(Config::class);
 		$config->search['activeProvider'] = 'algolia';
 
 		$service = $this->app->getContainer()->get(SearchService::class);
@@ -50,5 +49,4 @@ describe('Search provider extension integration', function (): void {
 		// empty data dir → text returns nothing. Just confirms no exception.
 		expect($out)->toBeArray();
 	});
-
 });

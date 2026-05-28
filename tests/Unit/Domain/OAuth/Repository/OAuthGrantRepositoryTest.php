@@ -143,13 +143,13 @@ final class OAuthGrantRepositoryTest extends TestCase
 		$repo->save($this->makeGrant('g-1', 'client-A', null, 'old-hash'));
 
 		$updated = new OAuthGrantData(
-			id:               'g-1',
-			clientId:         'client-A',
-			userId:           'user-1',
-			scopes:           ['cms:read'],
+			id: 'g-1',
+			clientId: 'client-A',
+			userId: 'user-1',
+			scopes: ['cms:read'],
 			refreshTokenHash: 'new-hash',
-			issuedAt:         '2026-05-24T10:00:00Z',
-			expiresAt:        '2026-06-24T10:00:00Z',
+			issuedAt: '2026-05-24T10:00:00Z',
+			expiresAt: '2026-06-24T10:00:00Z',
 		);
 		$repo->save($updated);
 
@@ -165,13 +165,13 @@ final class OAuthGrantRepositoryTest extends TestCase
 		?string $refreshTokenHash = null,
 	): OAuthGrantData {
 		return new OAuthGrantData(
-			id:               $id,
-			clientId:         $clientId ?? 'client-default',
-			userId:           'user-1',
-			scopes:           ['cms:read'],
+			id: $id,
+			clientId: $clientId ?? 'client-default',
+			userId: 'user-1',
+			scopes: ['cms:read'],
 			refreshTokenHash: $refreshTokenHash ?? 'hash-' . $id,
-			issuedAt:         '2026-05-24T10:00:00Z',
-			expiresAt:        $expiresAt ?? '2026-06-24T10:00:00Z',
+			issuedAt: '2026-05-24T10:00:00Z',
+			expiresAt: $expiresAt ?? '2026-06-24T10:00:00Z',
 		);
 	}
 }

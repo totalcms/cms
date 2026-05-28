@@ -45,14 +45,14 @@ final class PromptDiscoveryService
 			return $this->cache = [];
 		}
 
-		$raw = $this->indexFilter->fetchFilteredIndex(self::COLLECTION_ID);
+		$raw     = $this->indexFilter->fetchFilteredIndex(self::COLLECTION_ID);
 		$seen    = [];
 		$prompts = [];
 
 		foreach ($raw as $row) {
 			// Object collections always provide `id` as the canonical key; tolerate
 			// `name` as a fallback for code-defined / programmatic construction paths.
-			$hasId   = isset($row['id'])   && is_string($row['id'])   && $row['id']   !== '';
+			$hasId   = isset($row['id']) && is_string($row['id']) && $row['id'] !== '';
 			$hasName = isset($row['name']) && is_string($row['name']) && $row['name'] !== '';
 			if (!$hasId && !$hasName) {
 				continue;
@@ -68,12 +68,12 @@ final class PromptDiscoveryService
 
 			$resolvedAccess = $this->resolveAccess($prompt);
 			$prompts[]      = new PromptData(
-				name:             $prompt->name,
-				description:      $prompt->description,
-				body:             $prompt->body,
-				args:             $prompt->args,
+				name: $prompt->name,
+				description: $prompt->description,
+				body: $prompt->body,
+				args: $prompt->args,
 				targetCollection: $prompt->targetCollection,
-				access:           $resolvedAccess,
+				access: $resolvedAccess,
 			);
 		}
 
@@ -113,6 +113,7 @@ final class PromptDiscoveryService
 				]);
 			}
 		}
+
 		return 'admin';
 	}
 }

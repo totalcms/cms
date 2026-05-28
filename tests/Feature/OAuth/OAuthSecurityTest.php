@@ -30,7 +30,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 
 	// Bump rate limits so cross-test accumulation doesn't trip the limiter.
-	$config = $this->app->getContainer()->get(Config::class);
+	$config        = $this->app->getContainer()->get(Config::class);
 	$config->oauth = array_merge($config->oauth, [
 		'tokenEndpointLimit'       => 10000,
 		'dynamicRegistrationLimit' => 10000,
@@ -100,17 +100,18 @@ function securityCreateClient(
 	bool $isConfidential = true,
 ): OAuthClientData {
 	$client = new OAuthClientData(
-		id:             $clientId,
-		name:           'Security Test Client',
-		secretHash:     $isConfidential ? password_hash($secret, PASSWORD_BCRYPT) : '',
-		redirectUris:   $redirectUris,
-		scopes:         $scopes,
-		isDynamic:      false,
+		id: $clientId,
+		name: 'Security Test Client',
+		secretHash: $isConfidential ? password_hash($secret, PASSWORD_BCRYPT) : '',
+		redirectUris: $redirectUris,
+		scopes: $scopes,
+		isDynamic: false,
 		isConfidential: $isConfidential,
-		createdAt:      gmdate('c'),
-		createdBy:      'test',
+		createdAt: gmdate('c'),
+		createdBy: 'test',
 	);
 	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
+
 	return $client;
 }
 
@@ -125,6 +126,7 @@ function securitySeedUser(Slim\App $app, string $userId = 'admin@example.test'):
 		$session->start();
 	}
 	$session->set(SessionKeys::AUTH_USER, $userId);
+
 	return $session;
 }
 
@@ -138,6 +140,7 @@ function securityReopenSession(Slim\App $app): PhpSession
 	if (!$session->isStarted()) {
 		$session->start();
 	}
+
 	return $session;
 }
 
@@ -148,6 +151,7 @@ function securityMintCsrf(Slim\App $app): string
 {
 	/** @var CSRFTokenManager $csrf */
 	$csrf = $app->getContainer()->get(CSRFTokenManager::class);
+
 	return $csrf->generateToken();
 }
 
@@ -156,6 +160,7 @@ function securityMintCsrf(Slim\App $app): string
  * Scopes are passed through to both the client and the authorize request.
  *
  * @param list<string> $scopes
+ *
  * @return array{access_token: string, refresh_token: string, code: string}
  */
 function securityIssueToken(
@@ -232,7 +237,6 @@ function securityIssueToken(
 // ---------------------------------------------------------------------------
 
 describe('OAuthSecurity — open-redirect protection (D4)', function (): void {
-
 	// Helper: send an authorize GET with the given redirect_uri and a valid
 	// client registered at 'https://app.test/cb'. Returns the response.
 	$authorizeWithUri = function (Slim\App $app, string $clientId, string $maliciousUri) {
@@ -324,7 +328,6 @@ describe('OAuthSecurity — open-redirect protection (D4)', function (): void {
 // ---------------------------------------------------------------------------
 
 describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
-
 	it('rejects authorize without code_challenge for a public client (D5-a)', function (): void {
 		securitySetupKeys($this->app);
 		$clientId = 'sec-d5a-' . uniqid('', true);
@@ -510,9 +513,8 @@ describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
 // ---------------------------------------------------------------------------
 
 describe('OAuthSecurity — JWT algorithm-confusion (D6)', function (): void {
-
 	it('rejects a hand-crafted alg:none token (D6-a)', function (): void {
-		$keys = securitySetupKeys($this->app);
+		$keys         = securitySetupKeys($this->app);
 		$clientId     = 'sec-d6a-' . uniqid('', true);
 		$clientSecret = 'secret-d6a';
 		securityCreateClient($this->app, $clientId, $clientSecret, ['https://app.test/cb'], ['cms:read']);
@@ -546,7 +548,7 @@ describe('OAuthSecurity — JWT algorithm-confusion (D6)', function (): void {
 	});
 
 	it('rejects HMAC-signed token presented to RS256 endpoint (D6-b)', function (): void {
-		$keys = securitySetupKeys($this->app);
+		$keys         = securitySetupKeys($this->app);
 		$clientId     = 'sec-d6b-' . uniqid('', true);
 		$clientSecret = 'secret-d6b';
 		securityCreateClient($this->app, $clientId, $clientSecret, ['https://app.test/cb'], ['cms:read']);
@@ -586,7 +588,6 @@ describe('OAuthSecurity — JWT algorithm-confusion (D6)', function (): void {
 // ---------------------------------------------------------------------------
 
 describe('OAuthSecurity — authorization code single-use (D7)', function (): void {
-
 	it('rejects a second use of the same authorization code (D7-a)', function (): void {
 		securitySetupKeys($this->app);
 		$clientId     = 'sec-d7a-' . uniqid('', true);
@@ -598,7 +599,7 @@ describe('OAuthSecurity — authorization code single-use (D7)', function (): vo
 
 		// First use already happened inside securityIssueToken — now try again
 		// with the exact same code.
-		$factory       = new Psr17Factory();
+		$factory        = new Psr17Factory();
 		$replayResponse = $this->app->handle(
 			$factory->createServerRequest('POST', '/oauth/token')
 				->withHeader('Content-Type', 'application/x-www-form-urlencoded')
@@ -629,7 +630,6 @@ describe('OAuthSecurity — authorization code single-use (D7)', function (): vo
 // ---------------------------------------------------------------------------
 
 describe('OAuthSecurity — scope-downscoping (D8)', function (): void {
-
 	it('allows refresh token to request a strict subset of original scopes (D8-a)', function (): void {
 		securitySetupKeys($this->app);
 		$clientId     = 'sec-d8a-' . uniqid('', true);
@@ -729,7 +729,6 @@ describe('OAuthSecurity — scope-downscoping (D8)', function (): void {
 // ---------------------------------------------------------------------------
 
 describe('OAuthSecurity — state parameter (D9)', function (): void {
-
 	it('echoes the state parameter in the redirect (D9-a)', function (): void {
 		securitySetupKeys($this->app);
 		$clientId     = 'sec-d9a-' . uniqid('', true);

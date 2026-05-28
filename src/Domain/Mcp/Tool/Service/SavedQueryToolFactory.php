@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tool\Service;
 
 use Psr\Container\ContainerInterface;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
-use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
 
@@ -41,13 +41,13 @@ final readonly class SavedQueryToolFactory
 	public function build(SavedQueryToolDefinition $definition): SavedQueryTool
 	{
 		return new SavedQueryTool(
-			definition:           $definition,
-			indexQueryService:    $this->container->get(\TotalCMS\Domain\Index\Service\IndexQueryService::class),
-			filterValueResolver:  $this->container->get(FilterValueResolver::class),
-			contentRenderer:      $this->container->get(ContentRenderer::class),
-			personaContext:       $this->container->get(PersonaContext::class),
-			objectUrlBuilder:     $this->container->get(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
-			schemaResolver:       $this->container->get(McpSchemaResolver::class),
+			definition: $definition,
+			indexQueryService: $this->container->get(\TotalCMS\Domain\Index\Service\IndexQueryService::class),
+			filterValueResolver: $this->container->get(FilterValueResolver::class),
+			contentRenderer: $this->container->get(ContentRenderer::class),
+			personaContext: $this->container->get(PersonaContext::class),
+			objectUrlBuilder: $this->container->get(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
+			schemaResolver: $this->container->get(McpSchemaResolver::class),
 			collectionRepository: $this->container->get(\TotalCMS\Domain\Collection\Repository\CollectionRepository::class),
 		);
 	}
@@ -154,10 +154,10 @@ final readonly class SavedQueryToolFactory
 
 		$paramSrc = [];
 		foreach ($definition->params as $name => $spec) {
-			$type   = self::phpTypeHintFor((string)$spec['type']);
-			$nullok = empty($spec['required']);
-			$prefix = $nullok ? '?' : '';
-			$tail   = $nullok ? ' = null' : '';
+			$type       = self::phpTypeHintFor((string)$spec['type']);
+			$nullok     = empty($spec['required']);
+			$prefix     = $nullok ? '?' : '';
+			$tail       = $nullok ? ' = null' : '';
 			$paramSrc[] = "{$prefix}{$type} \${$name}{$tail}";
 		}
 

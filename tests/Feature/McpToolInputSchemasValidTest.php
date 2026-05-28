@@ -185,7 +185,7 @@ function nakedObjectTypeProperties(array $inputSchema): array
 
 		// Only flag bare `type: object` — NOT `type: object` buried inside oneOf.
 		// A oneOf is the fix; a bare `type: object` at the top level is the bug.
-		$hasOneOf    = isset($propSchema['oneOf']) || isset($propSchema['anyOf']) || isset($propSchema['allOf']);
+		$hasOneOf     = isset($propSchema['oneOf']) || isset($propSchema['anyOf']) || isset($propSchema['allOf']);
 		$isBareObject = isset($propSchema['type']) && $propSchema['type'] === 'object' && !$hasOneOf;
 
 		if ($isBareObject) {
@@ -202,16 +202,16 @@ function nakedObjectTypeProperties(array $inputSchema): array
  *
  * @param array<string,mixed> $inputSchema
  */
-function stubArgsFor(array $inputSchema): \stdClass
+function stubArgsFor(array $inputSchema): stdClass
 {
 	$required = $inputSchema['required'] ?? [];
 	if (!is_array($required)) {
-		return new \stdClass();
+		return new stdClass();
 	}
 
 	$properties = $inputSchema['properties'] ?? [];
 
-	$obj = new \stdClass();
+	$obj = new stdClass();
 	foreach ($required as $name) {
 		if (!is_string($name)) {
 			continue;
@@ -225,7 +225,7 @@ function stubArgsFor(array $inputSchema): \stdClass
 			'number'         => 3.14,
 			'boolean'        => true,
 			'array'          => [],
-			'object'         => new \stdClass(),
+			'object'         => new stdClass(),
 			default          => 'sample',
 		};
 	}
@@ -250,7 +250,7 @@ describe('inputSchema helper self-tests', function (): void {
 	it('propertiesArrayViolations does not flag stdClass for properties', function (): void {
 		$schema = [
 			'type'       => 'object',
-			'properties' => new \stdClass(), // json_encode emits `{}`
+			'properties' => new stdClass(), // json_encode emits `{}`
 		];
 
 		// stdClass is not an array, so our check is skipped.
@@ -394,7 +394,7 @@ describe('MCP tool inputSchemas — Assertion A: properties wire format', functi
 describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip', function (): void {
 	it('every admin tool inputSchema does not throw when validated against empty args', function (): void {
 		$validator    = new SchemaValidator();
-		$emptyArgs    = new \stdClass();
+		$emptyArgs    = new stdClass();
 		$noThrowFails = [];
 
 		foreach (inputSchemaTestToolsFor($this->app, McpPersona::ADMIN) as $tool) {
@@ -405,7 +405,7 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 			// Must not throw — errors are returned as a list, not exceptions.
 			try {
 				$errors = $validator->validateAgainstJsonSchema($emptyArgs, $tool->inputSchema);
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				$noThrowFails[] = "{$tool->name}: SchemaValidator threw {$e->getMessage()}";
 				continue;
 			}
@@ -415,9 +415,9 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 			$required = $tool->inputSchema['required'] ?? [];
 			if (is_array($required) && $required === []) {
 				if ($errors !== []) {
-					$errorMessages = array_column($errors, 'message');
+					$errorMessages  = array_column($errors, 'message');
 					$noThrowFails[] = sprintf(
-						"%s: unexpected validation errors for empty args (no required params): %s",
+						'%s: unexpected validation errors for empty args (no required params): %s',
 						$tool->name,
 						implode('; ', $errorMessages),
 					);
@@ -434,14 +434,14 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 	it('empty PHP array [] is treated equivalently to empty stdClass by the SchemaValidator', function (): void {
 		// The SDK converts empty array to stdClass internally, so both inputs
 		// should produce the same validation outcome against a no-required schema.
-		$validator  = new SchemaValidator();
+		$validator      = new SchemaValidator();
 		$noParamsSchema = [
 			'type'                 => 'object',
-			'properties'           => new \stdClass(),
+			'properties'           => new stdClass(),
 			'additionalProperties' => false,
 		];
 
-		$errorsWithStdClass = $validator->validateAgainstJsonSchema(new \stdClass(), $noParamsSchema);
+		$errorsWithStdClass = $validator->validateAgainstJsonSchema(new stdClass(), $noParamsSchema);
 		$errorsWithEmptyArr = $validator->validateAgainstJsonSchema([], $noParamsSchema);
 
 		expect($errorsWithStdClass)->toBe([], 'stdClass{} should pass a no-params schema');
@@ -479,8 +479,8 @@ describe('MCP tool inputSchemas — Assertion C: optional object properties', fu
 				// (the agent must supply a real value, not `{}`).
 				if (!in_array($propName, $requiredFields, true)) {
 					$failures[] = sprintf(
-						"%s.properties.%s: optional property has bare `type:object` — must use oneOf permissive shape. "
-						. "Hint: oneOf:[{type:object},{type:array,maxItems:0}] accepts both stdClass and [].",
+						'%s.properties.%s: optional property has bare `type:object` — must use oneOf permissive shape. '
+						. 'Hint: oneOf:[{type:object},{type:array,maxItems:0}] accepts both stdClass and [].',
 						$tool->name,
 						$propName,
 					);
@@ -527,7 +527,7 @@ describe('MCP tool inputSchemas — Assertion D: schema-defined tool required-pa
 			$stubArgs = stubArgsFor($schema);
 			try {
 				$errors = $validator->validateAgainstJsonSchema($stubArgs, $schema);
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				$failures[] = "{$tool->name}: SchemaValidator threw on stub args: {$e->getMessage()}";
 				continue;
 			}
@@ -535,7 +535,7 @@ describe('MCP tool inputSchemas — Assertion D: schema-defined tool required-pa
 			if ($errors !== []) {
 				$errorMessages = array_column($errors, 'message');
 				$failures[]    = sprintf(
-					"%s: stub args failed validation: %s",
+					'%s: stub args failed validation: %s',
 					$tool->name,
 					implode('; ', $errorMessages),
 				);

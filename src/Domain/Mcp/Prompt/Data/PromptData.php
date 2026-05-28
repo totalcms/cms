@@ -41,9 +41,9 @@ final readonly class PromptData
 					continue;
 				}
 				$args[] = new PromptArgData(
-					name:        $name,
+					name: $name,
 					description: (string)($rawArg['description'] ?? ''),
-					required:    (bool)($rawArg['required'] ?? false),
+					required: (bool)($rawArg['required'] ?? false),
 				);
 			}
 		}
@@ -54,12 +54,12 @@ final readonly class PromptData
 		// tcms-data/mcp-prompt/draft_post.json. Falls back to `name` for
 		// programmatic construction (tests, code-defined prompts in extensions).
 		return new self(
-			name:             (string)($data['id'] ?? $data['name'] ?? ''),
-			description:      (string)($data['description'] ?? ''),
-			body:             (string)($data['body'] ?? ''),
-			args:             $args,
+			name: (string)($data['id'] ?? $data['name'] ?? ''),
+			description: (string)($data['description'] ?? ''),
+			body: (string)($data['body'] ?? ''),
+			args: $args,
 			targetCollection: (string)($data['targetCollection'] ?? ''),
-			access:           (string)($data['access'] ?? ''),
+			access: (string)($data['access'] ?? ''),
 		);
 	}
 }

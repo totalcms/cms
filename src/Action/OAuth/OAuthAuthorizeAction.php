@@ -46,7 +46,7 @@ readonly class OAuthAuthorizeAction
 
 		$userId = $this->session->get(SessionKeys::AUTH_USER);
 		if ($userId === null) {
-			$next     = (string) $request->getUri();
+			$next     = (string)$request->getUri();
 			$loginUrl = RouteContext::fromRequest($request)->getRouteParser()->urlFor('login');
 
 			return $response
@@ -74,7 +74,7 @@ readonly class OAuthAuthorizeAction
 			'clientName' => $client !== null ? $client->name : $authRequest->getClient()->getIdentifier(),
 			'clientIcon' => $client?->iconPath,
 			'scopes'     => $scopeRows,
-			'userId'     => (string) $userId,
+			'userId'     => (string)$userId,
 			'csrfField'  => $this->csrf->getTokenField(),
 			'state'      => $authRequest->getState(),
 		]);

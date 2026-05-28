@@ -53,6 +53,7 @@ final class OAuthScopeEvaluator
 				}
 			}
 		}
+
 		return false;
 	}
 
@@ -79,6 +80,7 @@ final class OAuthScopeEvaluator
 				}
 			}
 		}
+
 		return false;
 	}
 }

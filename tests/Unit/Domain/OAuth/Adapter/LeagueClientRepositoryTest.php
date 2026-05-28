@@ -84,15 +84,15 @@ final class LeagueClientRepositoryTest extends TestCase
 	public function testValidateClientReturnsTrueForNullSecretOnPublicClient(): void
 	{
 		$client = new OAuthClientData(
-			id:             'c-5',
-			name:           'Public App',
-			secretHash:     '',
-			redirectUris:   ['https://example.test/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: 'c-5',
+			name: 'Public App',
+			secretHash: '',
+			redirectUris: ['https://example.test/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: false,
-			createdAt:      '2026-05-24T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$this->repo->save($client);
 
@@ -108,15 +108,15 @@ final class LeagueClientRepositoryTest extends TestCase
 	private function makeConfidentialClientWithHash(string $id, string $hash): OAuthClientData
 	{
 		return new OAuthClientData(
-			id:             $id,
-			name:           'Test ' . $id,
-			secretHash:     $hash,
-			redirectUris:   ['https://example.test/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: $id,
+			name: 'Test ' . $id,
+			secretHash: $hash,
+			redirectUris: ['https://example.test/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-05-24T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T00:00:00Z',
+			createdBy: 'admin',
 		);
 	}
 }

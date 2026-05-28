@@ -20,10 +20,10 @@ final class LeagueClientEntity implements ClientEntityInterface
 	public function __construct(OAuthClientData $data)
 	{
 		/** @var non-empty-string $id */
-		$id                 = $data->id;
-		$this->identifier   = $id;
-		$this->name         = $data->name;
-		$this->redirectUri  = $data->redirectUris;
+		$id                   = $data->id;
+		$this->identifier     = $id;
+		$this->name           = $data->name;
+		$this->redirectUri    = $data->redirectUris;
 		$this->isConfidential = $data->isConfidential;
 	}
 }

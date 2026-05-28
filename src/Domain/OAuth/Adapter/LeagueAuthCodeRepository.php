@@ -59,6 +59,7 @@ final class LeagueAuthCodeRepository implements AuthCodeRepositoryInterface
 	public function isAuthCodeRevoked(string $codeId): bool
 	{
 		$value = $this->cache->getComputedData(self::PREFIX . $codeId);
+
 		// Missing entry (null) or false sentinel → revoked.
 		return $value !== true;
 	}

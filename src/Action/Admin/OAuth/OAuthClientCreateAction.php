@@ -57,11 +57,11 @@ readonly class OAuthClientCreateAction
 
 		try {
 			$result = $this->creator->create(
-				name:           $name,
-				redirectUris:   $redirectUris,
-				allowedScopes:  $scopes,
-				createdBy:      $createdBy,
-				isDynamic:      false,
+				name: $name,
+				redirectUris: $redirectUris,
+				allowedScopes: $scopes,
+				createdBy: $createdBy,
+				isDynamic: false,
 				isConfidential: true,
 			);
 		} catch (\InvalidArgumentException $e) {

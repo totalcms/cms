@@ -65,6 +65,7 @@ final class OAuthClientCreateActionTest extends TestCase
 		$this->request->method('getParsedBody')->willReturn($body);
 		/** @var Response $result */
 		$result = ($this->action)($this->request, new Response());
+
 		return $result;
 	}
 
@@ -75,6 +76,7 @@ final class OAuthClientCreateActionTest extends TestCase
 	{
 		/** @var array<string,mixed> $data */
 		$data = json_decode((string)$response->getBody(), true);
+
 		return $data;
 	}
 

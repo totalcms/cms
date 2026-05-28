@@ -9,13 +9,13 @@ use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
-use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
-use TotalCMS\Domain\Mcp\Service\ContentRenderer;
-use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
+use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
+use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 
 final class SavedQueryToolFactoryTest extends TestCase
 {

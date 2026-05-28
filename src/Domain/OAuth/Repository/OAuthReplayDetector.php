@@ -52,6 +52,7 @@ final class OAuthReplayDetector
 		if (!is_array($data) || !isset($data['client_id'], $data['user_id'])) {
 			return null;
 		}
+
 		return [
 			'client_id' => (string)$data['client_id'],
 			'user_id'   => (string)$data['user_id'],

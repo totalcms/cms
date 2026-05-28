@@ -76,7 +76,7 @@ final class ExtensionContext
 	/** @var array<string,string> page-middleware name => container service ID */
 	private array $pageMiddleware = [];
 
-	/** @var array<string, \TotalCMS\Domain\Extension\Data\FormAction> */
+	/** @var array<string, Data\FormAction> */
 	private array $formActions = [];
 
 	/** @var list<McpToolDefinition> Tools registered for the MCP server */
@@ -585,7 +585,7 @@ final class ExtensionContext
 	 * to an extension-owned API route. The route must be registered
 	 * separately via addRoutes().
 	 */
-	public function addFormAction(string $name, \TotalCMS\Domain\Extension\Data\FormAction $action): void
+	public function addFormAction(string $name, Data\FormAction $action): void
 	{
 		$this->formActions[$name] = $action;
 	}
@@ -708,7 +708,7 @@ final class ExtensionContext
 		return $this->pageMiddleware;
 	}
 
-	/** @return array<string, \TotalCMS\Domain\Extension\Data\FormAction> */
+	/** @return array<string, Data\FormAction> */
 	public function getRegisteredFormActions(): array
 	{
 		return $this->formActions;

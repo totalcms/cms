@@ -58,11 +58,12 @@ final readonly class McpToolsValidator
 	/**
 	 * Validate and normalise `mcp.tools`.
 	 *
-	 * @param  string              $collectionId Collection ID (used in validation messages).
-	 * @param  string              $access       Inherited access level ("admin"|"public").
-	 * @param  mixed               $rawTools     Value from the incoming request body — may be
+	 * @param  string              $collectionId collection ID (used in validation messages)
+	 * @param  string              $access       inherited access level ("admin"|"public")
+	 * @param  mixed               $rawTools     value from the incoming request body — may be
 	 *                                           a PHP array (from JSON body), a JSON string
-	 *                                           (direct API caller), null, or "".
+	 *                                           (direct API caller), null, or ""
+	 *
 	 * @return McpToolsValidationResult
 	 */
 	public function validate(string $collectionId, string $access, mixed $rawTools): McpToolsValidationResult
@@ -116,7 +117,8 @@ final readonly class McpToolsValidator
 			$registeredName   = $prefix . $definition->name;
 			$registeredLength = strlen($registeredName);
 			if ($registeredLength > self::MAX_REGISTERED_NAME_LEN) {
-				$prefixLabel = $prefix !== '' ? " (prefix '{$prefix}' uses " . (strlen($prefix)) . ' chars)' : '';
+				$prefixLabel = $prefix !== '' ? " (prefix '{$prefix}' uses " . strlen($prefix) . ' chars)' : '';
+
 				return McpToolsValidationResult::validationFailed(
 					(int)$index,
 					"Tool name '{$definition->name}' results in a registered name '{$registeredName}' of {$registeredLength} characters{$prefixLabel}; the limit is " . self::MAX_REGISTERED_NAME_LEN . ' (including prefix).',
@@ -158,9 +160,9 @@ final readonly class McpToolsValidator
 
 					// Unrecognized — log + warn.
 					$this->logger->warning('save-time schema tool filter has unrecognized placeholder', [
-						'collection' => $collectionId,
-						'tool'       => $definition->name,
-						'field'      => $field,
+						'collection'  => $collectionId,
+						'tool'        => $definition->name,
+						'field'       => $field,
 						'placeholder' => $inner,
 					]);
 

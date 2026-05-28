@@ -36,6 +36,7 @@ class SearchReindexCommand extends BaseCommand
 
 		if ($activeId === 'text') {
 			$output->writeln('<comment>Active provider is "text" — nothing to reindex (IndexBuilder maintains the text index).</comment>');
+
 			return 0;
 		}
 
@@ -43,6 +44,7 @@ class SearchReindexCommand extends BaseCommand
 		$provider = $registry->active($activeId);
 		if ($provider === null) {
 			$output->writeln(sprintf('<error>Active provider "%s" is not registered.</error>', $activeId));
+
 			return 1;
 		}
 
@@ -51,6 +53,7 @@ class SearchReindexCommand extends BaseCommand
 
 		if ($collectionArg === '' && !$all) {
 			$output->writeln('<error>Specify a collection id or pass --all.</error>');
+
 			return 1;
 		}
 

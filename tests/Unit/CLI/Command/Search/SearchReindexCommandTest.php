@@ -44,6 +44,7 @@ function makeCollectionData(string $id): CollectionData
 	$cd->id     = $id;
 	$cd->schema = 'blog';
 	$cd->name   = ucfirst($id);
+
 	return $cd;
 }
 
@@ -91,9 +92,9 @@ it('exits 1 with error when active provider is not registered', function (): voi
 	$container = $this->createMock(Container::class);
 	$container->method('get')->willReturnCallback(
 		fn (string $class): mixed => match ($class) {
-			Config::class               => $config,
+			Config::class                 => $config,
 			SearchProviderRegistry::class => $registry,
-			default                     => null,
+			default                       => null,
 		}
 	);
 
@@ -123,9 +124,9 @@ it('exits 1 with error when no collection and no --all given', function (): void
 	$container = $this->createMock(Container::class);
 	$container->method('get')->willReturnCallback(
 		fn (string $class): mixed => match ($class) {
-			Config::class               => $config,
+			Config::class                 => $config,
 			SearchProviderRegistry::class => $registry,
-			default                     => null,
+			default                       => null,
 		}
 	);
 
@@ -161,23 +162,24 @@ it('queues one ReindexJob per object for a single collection argument', function
 	$reader = $this->createMock(IndexReader::class);
 	$reader->method('fetchIndex')->with('blog')->willReturn($indexData);
 
-	$queued = [];
+	$queued    = [];
 	$jobQueuer = $this->createMock(JobQueuer::class);
 	$jobQueuer->method('queueJob')
 		->willReturnCallback(function (string $type, string $collection, array $data) use (&$queued): JobData {
 			$queued[] = ['type' => $type, 'collection' => $collection, 'data' => $data];
+
 			return new JobData();
 		});
 
 	$container = $this->createMock(Container::class);
 	$container->method('get')->willReturnCallback(
 		fn (string $class): mixed => match ($class) {
-			Config::class               => $config,
+			Config::class                 => $config,
 			SearchProviderRegistry::class => $registry,
-			IndexReader::class          => $reader,
-			JobQueuer::class            => $jobQueuer,
-			CollectionRepository::class => null,
-			default                     => null,
+			IndexReader::class            => $reader,
+			JobQueuer::class              => $jobQueuer,
+			CollectionRepository::class   => null,
+			default                       => null,
 		}
 	);
 
@@ -230,23 +232,24 @@ it('queues jobs for every collection when --all is passed', function (): void {
 		}
 	);
 
-	$queued = [];
+	$queued    = [];
 	$jobQueuer = $this->createMock(JobQueuer::class);
 	$jobQueuer->method('queueJob')
 		->willReturnCallback(function (string $type, string $collection, array $data) use (&$queued): JobData {
 			$queued[] = ['type' => $type, 'collection' => $collection, 'data' => $data];
+
 			return new JobData();
 		});
 
 	$container = $this->createMock(Container::class);
 	$container->method('get')->willReturnCallback(
 		fn (string $class): mixed => match ($class) {
-			Config::class               => $config,
+			Config::class                 => $config,
 			SearchProviderRegistry::class => $registry,
-			CollectionRepository::class => $collectionRepo,
-			IndexReader::class          => $reader,
-			JobQueuer::class            => $jobQueuer,
-			default                     => null,
+			CollectionRepository::class   => $collectionRepo,
+			IndexReader::class            => $reader,
+			JobQueuer::class              => $jobQueuer,
+			default                       => null,
 		}
 	);
 

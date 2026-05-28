@@ -49,7 +49,7 @@ final class McpServerFactoryTest extends TestCase
 		// for tests since they don't exercise subscription dispatch.
 		// SchemaToolRegistrar is constructed with a mocked CollectionRepository
 		// that returns an empty collection list — no filesystem access needed.
-		$collectionRepoMock = $this->createMock(\TotalCMS\Domain\Collection\Repository\CollectionRepository::class);
+		$collectionRepoMock = $this->createMock(CollectionRepository::class);
 		$collectionRepoMock->method('listAllCollections')->willReturn([]);
 
 		// SavedQueryToolFactory is final — construct a real one with a no-op

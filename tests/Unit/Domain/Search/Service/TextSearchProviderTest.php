@@ -35,7 +35,7 @@ final class TextSearchProviderTest extends TestCase
 
 	public function testIndexAndDeleteAreNoOps(): void
 	{
-		$filter  = $this->createMock(IndexFilter::class);
+		$filter   = $this->createMock(IndexFilter::class);
 		$searcher = $this->createMock(ObjectSearcher::class);
 
 		$filter->expects($this->never())->method($this->anything());
@@ -51,7 +51,7 @@ final class TextSearchProviderTest extends TestCase
 
 	public function testSearchAppliesFilterThenObjectSearcher(): void
 	{
-		$filter  = $this->createMock(IndexFilter::class);
+		$filter   = $this->createMock(IndexFilter::class);
 		$searcher = $this->createMock(ObjectSearcher::class);
 
 		$indexItems = [
@@ -81,7 +81,7 @@ final class TextSearchProviderTest extends TestCase
 
 	public function testSearchAdminPersonaAppliesNoFilter(): void
 	{
-		$filter  = $this->createMock(IndexFilter::class);
+		$filter   = $this->createMock(IndexFilter::class);
 		$searcher = $this->createMock(ObjectSearcher::class);
 
 		$indexItems = [
@@ -108,7 +108,7 @@ final class TextSearchProviderTest extends TestCase
 
 	public function testSearchHonoursLimit(): void
 	{
-		$filter  = $this->createMock(IndexFilter::class);
+		$filter   = $this->createMock(IndexFilter::class);
 		$searcher = $this->createMock(ObjectSearcher::class);
 
 		$allItems = array_map(
@@ -128,7 +128,7 @@ final class TextSearchProviderTest extends TestCase
 
 	public function testSearchWithNullCollectionReturnsEmpty(): void
 	{
-		$filter  = $this->createMock(IndexFilter::class);
+		$filter   = $this->createMock(IndexFilter::class);
 		$searcher = $this->createMock(ObjectSearcher::class);
 
 		$filter->expects($this->never())->method('fetchFilteredIndex');

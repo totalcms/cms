@@ -11,7 +11,7 @@ final class OAuthScopeRegistryTest extends TestCase
 {
 	public function testCoarseScopesPresent(): void
 	{
-		$registry = new OAuthScopeRegistry();
+		$registry    = new OAuthScopeRegistry();
 		$identifiers = array_map(fn ($s) => $s->identifier, $registry->all());
 
 		$this->assertEqualsCanonicalizing(
@@ -33,8 +33,8 @@ final class OAuthScopeRegistryTest extends TestCase
 	public function testExpandIsIdempotent(): void
 	{
 		$registry = new OAuthScopeRegistry();
-		$once  = $registry->expand(['cms:admin']);
-		$twice = $registry->expand($once);
+		$once     = $registry->expand(['cms:admin']);
+		$twice    = $registry->expand($once);
 
 		$this->assertEqualsCanonicalizing($once, $twice);
 	}

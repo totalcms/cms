@@ -12,15 +12,15 @@ final class OAuthClientDataTest extends TestCase
 	public function testConstructsFromArray(): void
 	{
 		$client = OAuthClientData::fromArray([
-			'id'            => 'c-123',
-			'name'          => 'ActivePieces',
-			'secret_hash'   => '$2y$12$...hash...',
-			'redirect_uris' => ['https://cloud.activepieces.com/cb'],
-			'scopes'        => ['cms:read', 'cms:write'],
-			'is_dynamic'    => false,
+			'id'              => 'c-123',
+			'name'            => 'ActivePieces',
+			'secret_hash'     => '$2y$12$...hash...',
+			'redirect_uris'   => ['https://cloud.activepieces.com/cb'],
+			'scopes'          => ['cms:read', 'cms:write'],
+			'is_dynamic'      => false,
 			'is_confidential' => true,
-			'created_at'    => '2026-05-24T10:00:00Z',
-			'created_by'    => 'admin@example.com',
+			'created_at'      => '2026-05-24T10:00:00Z',
+			'created_by'      => 'admin@example.com',
 		]);
 
 		$this->assertSame('c-123', $client->id);

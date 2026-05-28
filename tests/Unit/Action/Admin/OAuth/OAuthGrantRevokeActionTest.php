@@ -43,13 +43,13 @@ final class OAuthGrantRevokeActionTest extends TestCase
 	private function makeGrant(string $id): OAuthGrantData
 	{
 		return new OAuthGrantData(
-			id:               $id,
-			clientId:         'client-1',
-			userId:           'user@example.com',
-			scopes:           ['cms:read'],
+			id: $id,
+			clientId: 'client-1',
+			userId: 'user@example.com',
+			scopes: ['cms:read'],
 			refreshTokenHash: 'hash-' . $id,
-			issuedAt:         '2026-01-01T00:00:00Z',
-			expiresAt:        '2027-01-01T00:00:00Z',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
 		);
 	}
 

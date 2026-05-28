@@ -182,7 +182,7 @@ function streamingMcpRequest(
 function triggerSseBody(Psr\Http\Message\ResponseInterface $response): void
 {
 	ob_start();
-	(string) $response->getBody();
+	(string)$response->getBody();
 	ob_end_clean();
 }
 
@@ -245,6 +245,7 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue(); // MCP unavailable — skip-safe pass
+
 			return;
 		}
 
@@ -282,6 +283,7 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -313,6 +315,7 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -347,8 +350,8 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 		expect($queued[0]['method'])->toBe('notifications/progress');
 		expect($queued[0]['params']['message'])->toBe('schema persisted');
 		// JSON round-trip via session file may decode 50.0 as int 50 — use == not ===.
-		expect((float)($queued[0]['params']['progress']))->toBe(50.0);
-		expect((float)($queued[0]['params']['total']))->toBe(100.0);
+		expect((float)$queued[0]['params']['progress'])->toBe(50.0);
+		expect((float)$queued[0]['params']['total'])->toBe(100.0);
 
 		// Trigger body to complete the remaining seeding work.
 		triggerSseBody($response);
@@ -369,6 +372,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -402,8 +406,8 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 		expect($first['params']['progressToken'])->toBe('progress-values-token');
 		expect($first['params']['message'])->toBe('schema persisted');
 		// JSON round-trip via session file may decode 50.0 as int 50 — use float cast.
-		expect((float)($first['params']['progress']))->toBe(50.0);
-		expect((float)($first['params']['total']))->toBe(100.0);
+		expect((float)$first['params']['progress'])->toBe(50.0);
+		expect((float)$first['params']['total'])->toBe(100.0);
 
 		triggerSseBody($response);
 
@@ -417,6 +421,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -452,7 +457,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 		$schema = null;
 		try {
 			$schema = $fetcher->fetchSchema($schemaId);
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			// Will fail assertion below.
 		}
 
@@ -472,6 +477,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -515,6 +521,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -547,6 +554,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 

@@ -43,7 +43,6 @@ use TotalCMS\Domain\Event\Listener\DataViewListener;
 use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Listener\McpResourceSubscriptionListener;
-use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -102,6 +101,7 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
@@ -716,6 +716,7 @@ return [
 		$registry = new SearchProviderRegistry();
 		// Built-in text provider is always registered.
 		$registry->register($container->get(TextSearchProvider::class));
+
 		return $registry;
 	},
 
@@ -737,6 +738,5 @@ return [
 	// Bind the interface to the concrete implementation so PHP-DI autowires
 	// SearchServiceInterface injections (e.g. in the MCP search tools) to
 	// the same singleton SearchService instance.
-	SearchServiceInterface::class => fn (ContainerInterface $container): SearchService =>
-		$container->get(SearchService::class),
+	SearchServiceInterface::class => fn (ContainerInterface $container): SearchService => $container->get(SearchService::class),
 ];

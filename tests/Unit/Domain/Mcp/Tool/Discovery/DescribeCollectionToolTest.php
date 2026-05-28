@@ -9,8 +9,8 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Discovery\DescribeCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 

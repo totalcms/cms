@@ -57,6 +57,7 @@ final class OAuthDiscoveryProvider
 		if ($issuer !== '') {
 			return rtrim($issuer, '/');
 		}
+
 		return rtrim($this->config->url, '/');
 	}
 }

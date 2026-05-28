@@ -9,10 +9,9 @@ use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
-use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -103,10 +102,10 @@ readonly class SearchCollectionsTool
 			// runs — same architectural guarantee as before. Drafts never make
 			// it into the results for public callers.
 			$results = $this->searchService->search(new SearchQuery(
-				text:       $query,
+				text: $query,
 				collection: $collection->id,
-				limit:      $cappedLimit,
-				persona:    $persona->value,
+				limit: $cappedLimit,
+				persona: $persona->value,
 			));
 
 			if ($results === []) {
