@@ -129,7 +129,7 @@
 			.oauth-key-paths code { word-break: break-all; }
 		</style>
 		<div class="cms-info oauth-key-status">
-			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.{% if not oauthKeys.signingExists or not oauthKeys.publicExists %}<br>Run <code>tcms oauth:setup</code> to generate the pair.{% endif %}</p>
+			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.</p>
 			<dl class="oauth-key-paths">
 				<dt>Private key</dt>
 				<dd>
@@ -150,6 +150,9 @@
 					{% endif %}
 				</dd>
 			</dl>
+			{% if not oauthKeys.signingExists or not oauthKeys.publicExists %}
+			<p>Run <code>tcms oauth:setup</code> to generate the key pair.</p>
+			{% endif %}
 		</div>
 		{% endif %}
 
