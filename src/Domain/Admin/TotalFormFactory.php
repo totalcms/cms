@@ -35,9 +35,11 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -87,9 +89,15 @@ readonly class TotalFormFactory
 		private DevModeManager $devModeManager,
 		private PageMiddlewareRegistry $pageMiddlewareRegistry,
 		private FormActionRegistry $formActionRegistry,
+		LoggerFactory $loggerFactory,
 	) {
-		$this->api = $this->config->api . '/api';
+		$this->api    = $this->config->api . '/api';
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('totalform');
 	}
+
+	private LoggerInterface $logger;
 
 	/**
 	 * Create a report export form.
@@ -157,6 +165,7 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new TotalForm(...$options);
+		$form->setLogger($this->logger);
 
 		return $form->build($content);
 	}
@@ -446,6 +455,7 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new SchemaForm(...$options);
+		$form->setLogger($this->logger);
 
 		return $form->autoBuild();
 	}
@@ -733,6 +743,7 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new CollectionForm(...$options);
+		$form->setLogger($this->logger);
 
 		return $form->autoBuild();
 	}
@@ -761,6 +772,7 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new ObjectForm(...$options);
+		$form->setLogger($this->logger);
 		$form->setTemplateLister($this->templateLister);
 		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 
@@ -796,7 +808,10 @@ readonly class TotalFormFactory
 			'metaResolver'             => $this->metaResolver,
 		]);
 
-		return new DeckItemForm(...$options);
+		$form = new DeckItemForm(...$options);
+		$form->setLogger($this->logger);
+
+		return $form;
 	}
 
 	/**
@@ -1418,7 +1433,7 @@ readonly class TotalFormFactory
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
 		// Use empty collection string to prevent fetching/creating any collection
-		return new ObjectForm(
+		$form = new ObjectForm(
 			objectFetcher            : $this->objectFetcher,
 			collectionFetcher        : $this->collectionFetcher,
 			collectionLister         : $this->collectionLister,
@@ -1436,6 +1451,9 @@ readonly class TotalFormFactory
 			api                      : $this->api,
 			collection               : '',
 		);
+		$form->setLogger($this->logger);
+
+		return $form;
 	}
 
 	/**

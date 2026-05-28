@@ -21,6 +21,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -358,6 +359,24 @@ class TotalForm implements \Stringable
 	public function getMetaResolver(): PropertyMetaResolver
 	{
 		return $this->metaResolver;
+	}
+
+	/**
+	 * Optional structured logger. TotalFormFactory injects this via
+	 * setLogger() after construction so the existing (already large)
+	 * constructor surface doesn't grow; the eventual FormContext
+	 * refactor will fold this into a single context argument.
+	 */
+	private ?LoggerInterface $logger = null;
+
+	public function setLogger(LoggerInterface $logger): void
+	{
+		$this->logger = $logger;
+	}
+
+	public function logger(): ?LoggerInterface
+	{
+		return $this->logger;
 	}
 
 	protected function initClass(): void
