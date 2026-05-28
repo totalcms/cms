@@ -7,19 +7,18 @@ namespace Tests\Unit\Domain\Mcp\Tool\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
-use TotalCMS\Domain\Mcp\Service\ContentRenderer;
-use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /** @internal */

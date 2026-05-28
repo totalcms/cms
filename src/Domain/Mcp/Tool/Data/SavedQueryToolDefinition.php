@@ -86,23 +86,24 @@ readonly class SavedQueryToolDefinition
 		}
 
 		return new self(
-			name:           $data['name'],
-			description:    $data['description'],
+			name: $data['name'],
+			description: $data['description'],
 			collectionName: $collectionName,
-			access:         $access,
-			params:         $params,
-			filters:        $filters,
-			sort:           (string)($data['sort'] ?? ''),
-			limit:          $limit,
-			offset:         max(0, (int)($data['offset'] ?? 0)),
-			include:        (string)($data['include'] ?? ''),
-			exclude:        (string)($data['exclude'] ?? ''),
-			format:         $format,
+			access: $access,
+			params: $params,
+			filters: $filters,
+			sort: (string)($data['sort'] ?? ''),
+			limit: $limit,
+			offset: max(0, (int)($data['offset'] ?? 0)),
+			include: (string)($data['include'] ?? ''),
+			exclude: (string)($data['exclude'] ?? ''),
+			format: $format,
 		);
 	}
 
 	/**
 	 * @param  array<array-key,mixed> $params
+	 *
 	 * @return array<string,array<string,mixed>>
 	 */
 	private static function validateParams(string $toolName, array $params): array
@@ -125,6 +126,7 @@ readonly class SavedQueryToolDefinition
 
 	/**
 	 * @param  array<array-key,mixed> $filters
+	 *
 	 * @return array<string,array{value:mixed,operator?:string}>
 	 */
 	private static function validateFilters(string $toolName, array $filters): array

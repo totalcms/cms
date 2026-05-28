@@ -60,8 +60,8 @@ final class AlgoliaSearchProvider implements SearchProvider
 
 		$response = $this->getClient()->searchSingleIndex($this->indexName, $searchParams);
 
-		$hits = is_array($response['hits'] ?? null) ? $response['hits'] : [];
-		$total = count($hits);
+		$hits    = is_array($response['hits'] ?? null) ? $response['hits'] : [];
+		$total   = count($hits);
 		$results = [];
 
 		foreach (array_values($hits) as $i => $hit) {
@@ -74,14 +74,14 @@ final class AlgoliaSearchProvider implements SearchProvider
 
 			$results[] = new SearchResult(
 				collection: $collection,
-				id:         $id,
+				id: $id,
 				// Score by rank: first hit ~1.0, last hit ~0.5. Algolia returns
 				// hits in relevance order; we don't trust the absolute scores
 				// across queries because Algolia's _rankingInfo is multi-
 				// dimensional. Linear rescale keeps cross-provider behaviour
 				// consistent with TextSearchProvider's scoring.
-				score:      $total > 1 ? 1.0 - ($i / max($total - 1, 1)) * 0.5 : 1.0,
-				snippet:    $this->extractSnippet($hit['_snippetResult'] ?? null),
+				score: $total > 1 ? 1.0 - ($i / max($total - 1, 1)) * 0.5 : 1.0,
+				snippet: $this->extractSnippet($hit['_snippetResult'] ?? null),
 			);
 		}
 
@@ -94,7 +94,7 @@ final class AlgoliaSearchProvider implements SearchProvider
 			return;
 		}
 
-		$record = $data;
+		$record               = $data;
 		$record['objectID']   = $collection . '/' . $id;
 		$record['collection'] = $collection;
 
@@ -125,6 +125,7 @@ final class AlgoliaSearchProvider implements SearchProvider
 			// to the search-only key — for now keep one client for simplicity.
 			$this->client = SearchClient::create($this->appId, $this->adminApiKey);
 		}
+
 		return $this->client;
 	}
 
@@ -147,6 +148,7 @@ final class AlgoliaSearchProvider implements SearchProvider
 				return $val['value'];
 			}
 		}
+
 		return null;
 	}
 }

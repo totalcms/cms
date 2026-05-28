@@ -25,7 +25,7 @@ beforeEach(function (): void {
 	// keyed by IP (0.0.0.0 in tests with no REMOTE_ADDR), so the counter
 	// accumulates across calls within the same test run.
 	/** @var Config $config */
-	$config = $this->app->getContainer()->get(Config::class);
+	$config        = $this->app->getContainer()->get(Config::class);
 	$config->oauth = array_merge($config->oauth, ['dynamicRegistrationLimit' => 1000]);
 });
 
@@ -38,10 +38,11 @@ beforeEach(function (): void {
  *
  * @param array<string,mixed> $payload
  */
-function buildRegisterRequest(array $payload): \Psr\Http\Message\ServerRequestInterface
+function buildRegisterRequest(array $payload): Psr\Http\Message\ServerRequestInterface
 {
 	$factory = new Psr17Factory();
 	$body    = json_encode($payload);
+
 	return $factory->createServerRequest('POST', '/oauth/register')
 		->withHeader('Content-Type', 'application/json')
 		->withBody($factory->createStream((string)$body));
@@ -52,7 +53,6 @@ function buildRegisterRequest(array $payload): \Psr\Http\Message\ServerRequestIn
 // ---------------------------------------------------------------------------
 
 describe('OAuthDynamicRegistration', function (): void {
-
 	it('returns 201 with RFC 7591 credentials for a valid registration', function (): void {
 		$request  = buildRegisterRequest([
 			'redirect_uris' => ['https://app.test/cb'],
@@ -123,7 +123,7 @@ describe('OAuthDynamicRegistration', function (): void {
 
 	it('returns 403 access_denied when dynamicRegistration is disabled', function (): void {
 		/** @var Config $config */
-		$config = $this->app->getContainer()->get(Config::class);
+		$config        = $this->app->getContainer()->get(Config::class);
 		$config->oauth = array_merge($config->oauth, ['dynamicRegistration' => false]);
 
 		$request  = buildRegisterRequest([
@@ -159,5 +159,4 @@ describe('OAuthDynamicRegistration', function (): void {
 		expect($client->isDynamic)->toBeTrue();
 		expect($client->name)->toBe('Verify Dynamic Flag');
 	});
-
 });

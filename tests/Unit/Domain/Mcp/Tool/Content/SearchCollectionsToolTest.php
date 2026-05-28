@@ -10,9 +10,9 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
-use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Content\SearchCollectionsTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -271,8 +271,8 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectFetcher->method('fetchObject')->willReturnCallback(
 			fn (string $col, string $id): ObjectData => match ($id) {
-				'a' => $this->objectDataMock(['id' => 'a', 'title' => 'match', 'internal_notes' => 'private']),
-				'b' => $this->objectDataMock(['id' => 'b', 'name' => 'match', 'internal_notes' => 'kept']),
+				'a'     => $this->objectDataMock(['id' => 'a', 'title' => 'match', 'internal_notes' => 'private']),
+				'b'     => $this->objectDataMock(['id' => 'b', 'name' => 'match', 'internal_notes' => 'kept']),
 				default => $this->objectDataMock(['id' => $id]),
 			},
 		);

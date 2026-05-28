@@ -71,6 +71,7 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 
 		if ($count >= $limit) {
 			$this->activityLogger->rateLimitHit($path, $ip);
+
 			return $this->tooManyRequests($limit, $window);
 		}
 

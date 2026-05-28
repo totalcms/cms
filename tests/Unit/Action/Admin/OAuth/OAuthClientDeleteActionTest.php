@@ -65,28 +65,28 @@ final class OAuthClientDeleteActionTest extends TestCase
 	private function makeClient(string $id, string $name = 'Test App'): OAuthClientData
 	{
 		return new OAuthClientData(
-			id:             $id,
-			name:           $name,
-			secretHash:     '$2y$12$hash',
-			redirectUris:   ['https://example.com/callback'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: $id,
+			name: $name,
+			secretHash: '$2y$12$hash',
+			redirectUris: ['https://example.com/callback'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-01-01T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		);
 	}
 
 	private function makeGrant(string $id, string $clientId): OAuthGrantData
 	{
 		return new OAuthGrantData(
-			id:               $id,
-			clientId:         $clientId,
-			userId:           'user@example.com',
-			scopes:           ['cms:read'],
+			id: $id,
+			clientId: $clientId,
+			userId: 'user@example.com',
+			scopes: ['cms:read'],
 			refreshTokenHash: 'hash-' . $id,
-			issuedAt:         '2026-01-01T00:00:00Z',
-			expiresAt:        '2027-01-01T00:00:00Z',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
 		);
 	}
 

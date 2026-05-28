@@ -61,11 +61,11 @@ readonly class OAuthApproveAction
 			);
 		}
 
-		$parsed   = (array) $request->getParsedBody();
-		$decision = (string) ($parsed['decision'] ?? 'deny');
+		$parsed   = (array)$request->getParsedBody();
+		$decision = (string)($parsed['decision'] ?? 'deny');
 
-		$clientId = $authRequest->getClient()->getIdentifier();
-		$userIdStr = (string) $userId;
+		$clientId  = $authRequest->getClient()->getIdentifier();
+		$userIdStr = (string)$userId;
 
 		$authRequest->setUser(new LeagueUserEntity($userIdStr));
 		$authRequest->setAuthorizationApproved($decision === 'approve');
@@ -98,7 +98,7 @@ readonly class OAuthApproveAction
 		}
 
 		$scopeObjects = $authRequest->getScopes();
-		$scopes = array_map(
+		$scopes       = array_map(
 			static fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(),
 			$scopeObjects,
 		);

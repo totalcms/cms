@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\putJson;
 
@@ -229,8 +230,8 @@ it('rejects a tool whose base name plus toolPrefix exceeds 64 characters with a 
 
 	// Configure a 7-char prefix ("bistro_") — leaves only 57 chars for the base.
 	// A 58-char base name will push the registered name to 65 chars → must fail.
-	/** @var \TotalCMS\Support\Config $config */
-	$config = $this->app->getContainer()->get(\TotalCMS\Support\Config::class);
+	/** @var TotalCMS\Support\Config $config */
+	$config                    = $this->app->getContainer()->get(TotalCMS\Support\Config::class);
 	$config->mcp['toolPrefix'] = 'bistro';   // resolves to "bistro_" (7 chars)
 
 	// 58 chars: "find_listings_by_city_and_zip_with_extra_padding_text_here" (let us count)

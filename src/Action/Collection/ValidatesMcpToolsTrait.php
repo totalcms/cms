@@ -34,9 +34,10 @@ trait ValidatesMcpToolsTrait
 	 *
 	 * @param  array<string,mixed>  $data         Full (or partial) request body
 	 * @param  string               $collectionId Authoritative collection ID
-	 * @return array<string,mixed>                Meta array for the success response
 	 *
 	 * @throws HttpBadRequestException
+	 *
+	 * @return array<string,mixed>                Meta array for the success response
 	 */
 	private function validateMcpTools(
 		ServerRequestInterface $request,

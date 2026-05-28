@@ -68,6 +68,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// upstream. Skip API key + session auth so Bearer-only callers are not blocked.
 		if ($request->getAttribute('oauth_access_token_id') !== null) {
 			$request = $request->withAttribute('authMethod', 'oauth_bearer');
+
 			return $handler->handle($request);
 		}
 

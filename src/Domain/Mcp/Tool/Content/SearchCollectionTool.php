@@ -9,9 +9,9 @@ use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
-use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -105,10 +105,10 @@ readonly class SearchCollectionTool
 
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$results     = $this->searchService->search(new SearchQuery(
-			text:       $query,
+			text: $query,
 			collection: $collection,
-			limit:      $cappedLimit,
-			persona:    $persona->value,
+			limit: $cappedLimit,
+			persona: $persona->value,
 		));
 
 		// Resolve result IDs back to full object arrays.

@@ -202,6 +202,7 @@ function mcpPromptsList(): array
 
 /**
  * @param array<string,mixed> $arguments
+ *
  * @return array<string,mixed>
  */
 function mcpPromptsGet(string $name, array $arguments = []): array
@@ -215,6 +216,7 @@ function mcpPromptsGet(string $name, array $arguments = []): array
 	if ($arguments !== []) {
 		$payload['params']['arguments'] = $arguments;
 	}
+
 	return $payload;
 }
 
@@ -270,6 +272,7 @@ it('prompts/list returns collection-stored prompts for admin persona', function 
 	if ($sessionId === '') {
 		// MCP unavailable (non-Pro edition or disabled) — skip-safe pass.
 		expect(true)->toBeTrue();
+
 		return;
 	}
 
@@ -297,6 +300,7 @@ it('prompts/get renders prompt body with args via Twig', function (): void {
 
 	if ($sessionId === '') {
 		expect(true)->toBeTrue();
+
 		return;
 	}
 
@@ -330,6 +334,7 @@ it('prompts/get returns a JSON-RPC error when a required arg is missing', functi
 
 	if ($sessionId === '') {
 		expect(true)->toBeTrue();
+
 		return;
 	}
 
@@ -342,7 +347,7 @@ it('prompts/get returns a JSON-RPC error when a required arg is missing', functi
 
 	// The SDK may return 200 with an error envelope or a 4xx.
 	// Either way, an `error` key must be present and `result.messages` must be absent.
-	$body = json_decode((string)$response->getBody(), true);
+	$body     = json_decode((string)$response->getBody(), true);
 	$hasError = isset($body['error'])
 		|| (isset($body['result']['isError']) && $body['result']['isError'] === true);
 	expect($hasError)->toBeTrue();
@@ -354,7 +359,7 @@ it('prompts/get returns a JSON-RPC error when a required arg is missing', functi
 
 it('hides admin-only prompts from the public persona on prompts/list', function (): void {
 	/** @var Config $config */
-	$config = $this->app->getContainer()->get(Config::class);
+	$config                      = $this->app->getContainer()->get(Config::class);
 	$config->mcp['publicAccess'] = true;
 
 	$sessionId = mcpPromptPublicInit($this->app);
@@ -362,6 +367,7 @@ it('hides admin-only prompts from the public persona on prompts/list', function 
 	if ($sessionId === '') {
 		// Public MCP not available or publicAccess gated — skip-safe pass.
 		expect(true)->toBeTrue();
+
 		return;
 	}
 
@@ -369,7 +375,7 @@ it('hides admin-only prompts from the public persona on prompts/list', function 
 
 	expect($response->getStatusCode())->toBe(200);
 
-	$body = json_decode((string)$response->getBody(), true);
+	$body  = json_decode((string)$response->getBody(), true);
 	$names = array_column($body['result']['prompts'] ?? [], 'name');
 
 	// admin_only should NOT appear in the public prompt list.
@@ -384,13 +390,14 @@ it('hides admin-only prompts from the public persona on prompts/list', function 
 
 it('public persona cannot fetch an admin-only prompt via prompts/get', function (): void {
 	/** @var Config $config */
-	$config = $this->app->getContainer()->get(Config::class);
+	$config                      = $this->app->getContainer()->get(Config::class);
 	$config->mcp['publicAccess'] = true;
 
 	$sessionId = mcpPromptPublicInit($this->app);
 
 	if ($sessionId === '') {
 		expect(true)->toBeTrue();
+
 		return;
 	}
 

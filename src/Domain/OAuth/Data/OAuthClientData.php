@@ -39,16 +39,16 @@ readonly class OAuthClientData
 	public static function fromArray(array $data): self
 	{
 		return new self(
-			id:             (string)$data['id'],
-			name:           (string)$data['name'],
-			secretHash:     (string)$data['secret_hash'],
-			redirectUris:   array_values(array_map('strval', (array)$data['redirect_uris'])),
-			scopes:         array_values(array_map('strval', (array)$data['scopes'])),
-			isDynamic:      (bool)$data['is_dynamic'],
+			id: (string)$data['id'],
+			name: (string)$data['name'],
+			secretHash: (string)$data['secret_hash'],
+			redirectUris: array_values(array_map('strval', (array)$data['redirect_uris'])),
+			scopes: array_values(array_map('strval', (array)$data['scopes'])),
+			isDynamic: (bool)$data['is_dynamic'],
 			isConfidential: (bool)$data['is_confidential'],
-			createdAt:      (string)$data['created_at'],
-			createdBy:      (string)$data['created_by'],
-			iconPath:       isset($data['icon_path']) ? (string)$data['icon_path'] : null,
+			createdAt: (string)$data['created_at'],
+			createdBy: (string)$data['created_by'],
+			iconPath: isset($data['icon_path']) ? (string)$data['icon_path'] : null,
 		);
 	}
 

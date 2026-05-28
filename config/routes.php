@@ -48,9 +48,9 @@ return function (App $app): void {
 		(require __DIR__ . '/routes/api/orphan.php')($api);
 		(require __DIR__ . '/routes/api/ext.php')($api);
 		(require __DIR__ . '/routes/api/action.php')($api);
-	// OAuthBearerMiddleware runs first (outermost): validates JWT + sets oauth_* request attributes.
-	// OAuthRestScopeMiddleware runs second (inner): gates Bearer-authed requests by scope.
-	// Requests without a Bearer header pass through both transparently so the
-	// existing DualAuthMiddleware / AuthMiddleware / ApiKeyAuthMiddleware flows are unaffected.
+		// OAuthBearerMiddleware runs first (outermost): validates JWT + sets oauth_* request attributes.
+		// OAuthRestScopeMiddleware runs second (inner): gates Bearer-authed requests by scope.
+		// Requests without a Bearer header pass through both transparently so the
+		// existing DualAuthMiddleware / AuthMiddleware / ApiKeyAuthMiddleware flows are unaffected.
 	})->add(OAuthRestScopeMiddleware::class)->add(OAuthBearerMiddleware::class);
 };

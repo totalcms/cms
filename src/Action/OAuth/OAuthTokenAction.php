@@ -27,15 +27,15 @@ readonly class OAuthTokenAction
 		}
 
 		if ($response->getStatusCode() === 200) {
-			$body = (string) $response->getBody();
+			$body = (string)$response->getBody();
 			$response->getBody()->rewind();
 			$payload = json_decode($body, true);
 
 			if (is_array($payload) && isset($payload['scope'])) {
-				$parsedBody = (array) ($request->getParsedBody() ?? []);
-				$clientId   = (string) ($parsedBody['client_id'] ?? '');
-				$grantType  = (string) ($parsedBody['grant_type'] ?? '');
-				$scopes     = $payload['scope'] !== '' ? explode(' ', (string) $payload['scope']) : [];
+				$parsedBody = (array)($request->getParsedBody() ?? []);
+				$clientId   = (string)($parsedBody['client_id'] ?? '');
+				$grantType  = (string)($parsedBody['grant_type'] ?? '');
+				$scopes     = $payload['scope'] !== '' ? explode(' ', (string)$payload['scope']) : [];
 
 				if ($grantType === 'authorization_code') {
 					$this->activityLogger->tokenIssued($clientId, '', $scopes);

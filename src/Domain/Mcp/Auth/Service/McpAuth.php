@@ -51,8 +51,8 @@ readonly class McpAuth
 			// the version; normalise to a list<string>.
 			$scopes = array_values(array_map(
 				static fn (mixed $s): string => is_object($s) && method_exists($s, 'getIdentifier')
-					? (string) $s->getIdentifier()
-					: (string) $s,
+					? (string)$s->getIdentifier()
+					: (string)$s,
 				$oauthScopes,
 			));
 

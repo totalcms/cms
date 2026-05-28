@@ -27,6 +27,7 @@ final class OAuthGrantRepository
 				return OAuthGrantData::fromArray($entry);
 			}
 		}
+
 		return null;
 	}
 
@@ -37,6 +38,7 @@ final class OAuthGrantRepository
 				return OAuthGrantData::fromArray($entry);
 			}
 		}
+
 		return null;
 	}
 
@@ -51,6 +53,7 @@ final class OAuthGrantRepository
 				$results[] = OAuthGrantData::fromArray($entry);
 			}
 		}
+
 		return $results;
 	}
 
@@ -118,6 +121,7 @@ final class OAuthGrantRepository
 				}
 				try {
 					$expiry = new \DateTimeImmutable($expiresAt, new \DateTimeZone('UTC'));
+
 					return $expiry > $now;
 				} catch (\Exception) {
 					return false;
@@ -128,6 +132,7 @@ final class OAuthGrantRepository
 		if ($removed > 0) {
 			$this->writeAtomic(['grants' => $entries]);
 		}
+
 		return $removed;
 	}
 
@@ -144,6 +149,7 @@ final class OAuthGrantRepository
 		if (!is_array($data) || !isset($data['grants']) || !is_array($data['grants'])) {
 			return [];
 		}
+
 		return array_values(array_filter($data['grants'], 'is_array'));
 	}
 

@@ -6,10 +6,9 @@ namespace TotalCMS\Domain\Mcp\Tool\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Exception\SavedQueryToolException;
-use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
  * Auto-registers schema-defined MCP tools into the ToolRegistry at
@@ -128,10 +127,10 @@ final class SchemaToolRegistrar
 
 				try {
 					$registry->register(new McpToolDefinition(
-						name:        $definition->name,
+						name: $definition->name,
 						description: $this->factory->descriptionFor($definition),
-						access:      $definition->access,
-						handler:     $this->factory->closureFor($definition, $tool),
+						access: $definition->access,
+						handler: $this->factory->closureFor($definition, $tool),
 						inputSchema: $this->factory->inputSchemaFor($definition),
 					));
 				} catch (\LogicException $e) {

@@ -6,7 +6,6 @@ namespace Tests\Unit\Domain\Search\Service;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Search\Data\SearchQuery;
-use TotalCMS\Domain\Search\Data\SearchResult;
 use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 
@@ -74,13 +73,37 @@ final class SearchProviderRegistryTest extends TestCase
 	private function makeProvider(string $id): SearchProvider
 	{
 		return new class($id) implements SearchProvider {
-			public function __construct(private readonly string $id) {}
-			public function id(): string { return $this->id; }
-			public function label(): string { return ucfirst($this->id); }
-			public function search(SearchQuery $query): array { return []; }
-			public function index(string $collection, string $id, array $data): void {}
-			public function delete(string $collection, string $id): void {}
-			public function isAvailable(): bool { return true; }
+			public function __construct(private readonly string $id)
+			{
+			}
+
+			public function id(): string
+			{
+				return $this->id;
+			}
+
+			public function label(): string
+			{
+				return ucfirst($this->id);
+			}
+
+			public function search(SearchQuery $query): array
+			{
+				return [];
+			}
+
+			public function index(string $collection, string $id, array $data): void
+			{
+			}
+
+			public function delete(string $collection, string $id): void
+			{
+			}
+
+			public function isAvailable(): bool
+			{
+				return true;
+			}
 		};
 	}
 }

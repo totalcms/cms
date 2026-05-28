@@ -30,6 +30,7 @@ final class PromptRegistrarTest extends TestCase
 	 * reflection (the $prompts property is private on the SDK's final Builder).
 	 *
 	 * @param list<PromptData> $prompts
+	 *
 	 * @return list<\Closure>
 	 */
 	private function captureHandlers(array $prompts, McpPersona $persona): array
@@ -77,7 +78,7 @@ final class PromptRegistrarTest extends TestCase
 		$renderer  = new PromptRenderer($twig);
 		$registrar = new PromptRegistrar($renderer);
 
-		$builder = Server::builder();
+		$builder      = Server::builder();
 		$publicPrompt = new PromptData(name: 'greet', description: 'd', body: 'Hello {{ args.name }}', access: 'public');
 		$registrar->registerAll($builder, [$publicPrompt], McpPersona::PUBLIC_);
 

@@ -26,7 +26,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 
 	// Bump rate limits so cross-test accumulation doesn't trip the limiter.
-	$config = $this->app->getContainer()->get(Config::class);
+	$config        = $this->app->getContainer()->get(Config::class);
 	$config->oauth = array_merge($config->oauth, [
 		'tokenEndpointLimit'       => 10000,
 		'dynamicRegistrationLimit' => 10000,
@@ -95,17 +95,18 @@ function refreshCreateClient(
 	array $scopes = ['cms:read'],
 ): OAuthClientData {
 	$client = new OAuthClientData(
-		id:             $clientId,
-		name:           'Refresh Test Client',
-		secretHash:     password_hash($secret, PASSWORD_BCRYPT),
-		redirectUris:   $redirectUris,
-		scopes:         $scopes,
-		isDynamic:      false,
+		id: $clientId,
+		name: 'Refresh Test Client',
+		secretHash: password_hash($secret, PASSWORD_BCRYPT),
+		redirectUris: $redirectUris,
+		scopes: $scopes,
+		isDynamic: false,
 		isConfidential: true,
-		createdAt:      gmdate('c'),
-		createdBy:      'test',
+		createdAt: gmdate('c'),
+		createdBy: 'test',
 	);
 	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
+
 	return $client;
 }
 
@@ -197,8 +198,9 @@ function doRefresh(
 	string $clientId,
 	string $clientSecret,
 	string $refreshToken,
-): \Psr\Http\Message\ResponseInterface {
+): Psr\Http\Message\ResponseInterface {
 	$factory = new Psr17Factory();
+
 	return $app->handle(
 		$factory->createServerRequest('POST', '/oauth/token')
 			->withHeader('Content-Type', 'application/x-www-form-urlencoded')
@@ -216,7 +218,6 @@ function doRefresh(
 // ---------------------------------------------------------------------------
 
 describe('OAuthTokenRefresh', function (): void {
-
 	// -----------------------------------------------------------------------
 	// 1. Normal rotation: refresh1 → access2 + refresh2 (rotation succeeds)
 	// -----------------------------------------------------------------------
@@ -254,7 +255,7 @@ describe('OAuthTokenRefresh', function (): void {
 		refreshCreateClient($this->app, $clientId, $clientSecret);
 
 		// Step 1: Issue initial tokens (access1 + refresh1).
-		$tokens1 = refreshIssueToken($this->app, $clientId, $clientSecret);
+		$tokens1  = refreshIssueToken($this->app, $clientId, $clientSecret);
 		$refresh1 = $tokens1['refresh_token'];
 
 		// Step 2: Use refresh1 legitimately → get access2 + refresh2.
@@ -268,7 +269,7 @@ describe('OAuthTokenRefresh', function (): void {
 
 		// Verify the new grant (refresh2) is active in the repository.
 		/** @var OAuthGrantRepository $grantRepo */
-		$grantRepo = $this->app->getContainer()->get(OAuthGrantRepository::class);
+		$grantRepo          = $this->app->getContainer()->get(OAuthGrantRepository::class);
 		$grantsBeforeReplay = $grantRepo->findByClientId($clientId);
 		expect($grantsBeforeReplay)->not()->toBeEmpty();
 
@@ -291,5 +292,4 @@ describe('OAuthTokenRefresh', function (): void {
 		$refresh2Response = doRefresh($this->app, $clientId, $clientSecret, $refresh2);
 		expect($refresh2Response->getStatusCode())->toBe(400);
 	});
-
 });

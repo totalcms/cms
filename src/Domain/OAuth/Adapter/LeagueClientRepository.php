@@ -28,6 +28,7 @@ final class LeagueClientRepository implements ClientRepositoryInterface
 		if ($client === null) {
 			return null;
 		}
+
 		return new LeagueClientEntity($client);
 	}
 

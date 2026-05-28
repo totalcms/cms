@@ -1,7 +1,6 @@
 {
-    "version": "3.5.0-beta.6",
-    "build": "ad8784c4",
-    "commits": 53,
-    "date": "2026-05-24",
-    "signature": "e0cc066bd6f66f484df8e0e278286ffb929883576774c88e86e2ce7c280bac36"
+    "version": "3.5.0-beta.7",
+    "build": "421f1687",
+    "date": "2026-05-28",
+    "signature": "41674c7a2984e43501351a3ae9107c83ae2e2d60df33e0f791064385a727334a"
 }

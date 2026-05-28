@@ -27,7 +27,7 @@ beforeEach(function (): void {
 	// Bump rate limits so cross-test accumulation doesn't trip the
 	// limiter (all tests share the same filesystem cache bucket per
 	// IP). The actual rate-limit behaviour is verified separately.
-	$config = $this->app->getContainer()->get(Config::class);
+	$config        = $this->app->getContainer()->get(Config::class);
 	$config->oauth = array_merge($config->oauth, [
 		'tokenEndpointLimit'       => 10000,
 		'dynamicRegistrationLimit' => 10000,
@@ -97,17 +97,18 @@ function createTestClient(
 	array $scopes,
 ): OAuthClientData {
 	$client = new OAuthClientData(
-		id:             $clientId,
-		name:           'Test Client',
-		secretHash:     password_hash($secret, PASSWORD_BCRYPT),
-		redirectUris:   $redirectUris,
-		scopes:         $scopes,
-		isDynamic:      false,
+		id: $clientId,
+		name: 'Test Client',
+		secretHash: password_hash($secret, PASSWORD_BCRYPT),
+		redirectUris: $redirectUris,
+		scopes: $scopes,
+		isDynamic: false,
 		isConfidential: true,
-		createdAt:      gmdate('c'),
-		createdBy:      'test',
+		createdAt: gmdate('c'),
+		createdBy: 'test',
 	);
 	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
+
 	return $client;
 }
 
@@ -125,6 +126,7 @@ function seedSessionUser(Slim\App $app, string $userId): PhpSession
 		$session->start();
 	}
 	$session->set(SessionKeys::AUTH_USER, $userId);
+
 	return $session;
 }
 
@@ -140,6 +142,7 @@ function reopenSession(Slim\App $app): PhpSession
 	if (!$session->isStarted()) {
 		$session->start();
 	}
+
 	return $session;
 }
 
@@ -152,6 +155,7 @@ function mintCsrfToken(Slim\App $app): string
 {
 	/** @var CSRFTokenManager $csrf */
 	$csrf = $app->getContainer()->get(CSRFTokenManager::class);
+
 	return $csrf->generateToken();
 }
 
@@ -160,7 +164,6 @@ function mintCsrfToken(Slim\App $app): string
 // ---------------------------------------------------------------------------
 
 describe('OAuthAuthorizationCodeFlow', function (): void {
-
 	it('completes the full authorization-code flow with PKCE', function (): void {
 		setupOAuthKeys($this->app);
 
@@ -339,15 +342,15 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 
 		// Public client: isConfidential = false
 		$client = new OAuthClientData(
-			id:             $clientId,
-			name:           'Public Test Client',
-			secretHash:     '',
-			redirectUris:   [$redirectUri],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: $clientId,
+			name: 'Public Test Client',
+			secretHash: '',
+			redirectUris: [$redirectUri],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: false,
-			createdAt:      gmdate('c'),
-			createdBy:      'test',
+			createdAt: gmdate('c'),
+			createdBy: 'test',
 		);
 		$this->app->getContainer()->get(OAuthClientRepository::class)->save($client);
 

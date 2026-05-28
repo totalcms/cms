@@ -19,7 +19,7 @@ final readonly class McpToolsValidationResult
 	private const STATE_FAILED       = 'failed';
 
 	/**
-	 * @param list<array{type:string,name?:string,source?:string,tool?:string,message?:string}> $warnings Non-blocking notices.
+	 * @param list<array{type:string,name?:string,source?:string,tool?:string,message?:string}> $warnings non-blocking notices
 	 */
 	private function __construct(
 		public string $state,

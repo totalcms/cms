@@ -19,7 +19,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->middleware = new MaintenanceMiddleware();
-		$this->psr17     = new Psr17Factory();
+		$this->psr17      = new Psr17Factory();
 	}
 
 	// --- no-op cases ---

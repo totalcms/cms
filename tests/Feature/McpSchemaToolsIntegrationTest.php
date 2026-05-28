@@ -312,7 +312,7 @@ afterEach(function (): void {
 it('find_listings appears in tools/list for the public persona', function (): void {
 	// Enable anonymous (public) persona access for this test.
 	/** @var Config $config */
-	$config = $this->app->getContainer()->get(Config::class);
+	$config                      = $this->app->getContainer()->get(Config::class);
 	$config->mcp['publicAccess'] = true;
 
 	$sessionId = schemaTestPublicInit($this->app);
@@ -352,7 +352,7 @@ it('find_listings appears in tools/list for the public persona', function (): vo
 
 it('find_listings tools/call filters by city and excludes drafts (public persona)', function (): void {
 	/** @var Config $config */
-	$config = $this->app->getContainer()->get(Config::class);
+	$config                      = $this->app->getContainer()->get(Config::class);
 	$config->mcp['publicAccess'] = true;
 
 	$sessionId = schemaTestPublicInit($this->app);
@@ -438,13 +438,13 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 
 it('public persona cannot call find_listings when collection access is admin', function (): void {
 	/** @var Config $config */
-	$config = $this->app->getContainer()->get(Config::class);
+	$config                      = $this->app->getContainer()->get(Config::class);
 	$config->mcp['publicAccess'] = true;
 
 	// Override the fixture .meta.json on disk to make the collection admin-only.
 	// The server reads .meta.json at server-build time via CollectionRepository.
-	$metaPath = cmsDataDir() . 'listings/.meta.json';
-	$meta     = json_decode((string)file_get_contents($metaPath), true);
+	$metaPath              = cmsDataDir() . 'listings/.meta.json';
+	$meta                  = json_decode((string)file_get_contents($metaPath), true);
 	$meta['mcp']['access'] = 'admin';
 	file_put_contents($metaPath, json_encode($meta, JSON_PRETTY_PRINT));
 
@@ -452,8 +452,8 @@ it('public persona cannot call find_listings when collection access is admin', f
 	// The CacheManager persists collections_list in the filesystem cache between
 	// test requests in the same Pest run — a direct clear is more reliable than
 	// deleting the entire cache dir (which may race with createCacheDir()).
-	/** @var \TotalCMS\Domain\Cache\CacheManager $cacheManager */
-	$cacheManager = $this->app->getContainer()->get(\TotalCMS\Domain\Cache\CacheManager::class);
+	/** @var TotalCMS\Domain\Cache\CacheManager $cacheManager */
+	$cacheManager = $this->app->getContainer()->get(TotalCMS\Domain\Cache\CacheManager::class);
 	$cacheManager->clearComputedData('collections_list');
 
 	// Re-bootstrap the app so the container's CollectionRepository picks up
@@ -462,7 +462,7 @@ it('public persona cannot call find_listings when collection access is admin', f
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
-	$config = $this->app->getContainer()->get(Config::class);
+	$config                      = $this->app->getContainer()->get(Config::class);
 	$config->mcp['publicAccess'] = true;
 
 	$sessionId = schemaTestPublicInit($this->app);
@@ -509,8 +509,8 @@ it('schema tool whose name collides with a core tool is absent from tools/list (
 	// Override the fixture to declare a tool named `query_collection` — same
 	// as the core tool. SchemaToolRegistrar detects the collision and skips it,
 	// logging a warning to mcp-activity log.
-	$metaPath = cmsDataDir() . 'listings/.meta.json';
-	$meta     = json_decode((string)file_get_contents($metaPath), true);
+	$metaPath               = cmsDataDir() . 'listings/.meta.json';
+	$meta                   = json_decode((string)file_get_contents($metaPath), true);
 	$meta['mcp']['tools'][] = [
 		'name'        => 'query_collection',
 		'description' => 'Schema tool colliding with core query_collection.',
@@ -573,7 +573,7 @@ it('schema tool whose name collides with a core tool is absent from tools/list (
 	expect($toolNames)->toContain('find_listings');
 
 	// Verify the collision warning was logged to mcp-activity.log.
-	$logDir     = \TotalCMS\Support\PathResolver::projectRoot() . '/logs';
+	$logDir     = TotalCMS\Support\PathResolver::projectRoot() . '/logs';
 	$today      = date('Y-m-d');
 	$logFile    = $logDir . '/mcp-activity-' . $today . '.log';
 
@@ -596,8 +596,8 @@ it('schema-vs-schema collision: find_active defined in two collections is absent
 	// Add find_active to the listings fixture so both listings and parts
 	// declare a tool with the same name. SchemaToolRegistrar should drop BOTH
 	// (strict-deny policy) and log a warning.
-	$metaPath = cmsDataDir() . 'listings/.meta.json';
-	$meta     = json_decode((string)file_get_contents($metaPath), true);
+	$metaPath               = cmsDataDir() . 'listings/.meta.json';
+	$meta                   = json_decode((string)file_get_contents($metaPath), true);
 	$meta['mcp']['tools'][] = [
 		'name'        => 'find_active',
 		'description' => 'Return active listings — collision test.',
@@ -616,8 +616,8 @@ it('schema-vs-schema collision: find_active defined in two collections is absent
 	// invalidate so the registrar sees the new fixture + the edited listings meta.
 	// Without this, APCu-backed caches on CI return stale state and the
 	// schema-vs-schema collision is silently undetectable.
-	/** @var \TotalCMS\Domain\Cache\CacheManager $cacheManager */
-	$cacheManager = $this->app->getContainer()->get(\TotalCMS\Domain\Cache\CacheManager::class);
+	/** @var TotalCMS\Domain\Cache\CacheManager $cacheManager */
+	$cacheManager = $this->app->getContainer()->get(TotalCMS\Domain\Cache\CacheManager::class);
 	$cacheManager->clearComputedData('collections_list');
 
 	// Re-bootstrap so SchemaToolRegistrar sees both collections.
@@ -675,7 +675,7 @@ it('schema-vs-schema collision: find_active defined in two collections is absent
 	expect($toolNames)->toContain('find_listings');
 
 	// Verify the cross-collection collision warning was logged.
-	$logDir  = \TotalCMS\Support\PathResolver::projectRoot() . '/logs';
+	$logDir  = TotalCMS\Support\PathResolver::projectRoot() . '/logs';
 	$today   = date('Y-m-d');
 	$logFile = $logDir . '/mcp-activity-' . $today . '.log';
 

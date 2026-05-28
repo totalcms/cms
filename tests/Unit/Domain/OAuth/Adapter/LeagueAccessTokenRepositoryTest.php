@@ -71,15 +71,15 @@ final class LeagueAccessTokenRepositoryTest extends TestCase
 		$adapter        = new LeagueAccessTokenRepository($revocationList);
 
 		$clientData = new OAuthClientData(
-			id:             'c-1',
-			name:           'Test',
-			secretHash:     'hash',
-			redirectUris:   ['https://x.test/cb'],
-			scopes:         ['cms:read'],
-			isDynamic:      false,
+			id: 'c-1',
+			name: 'Test',
+			secretHash: 'hash',
+			redirectUris: ['https://x.test/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
 			isConfidential: true,
-			createdAt:      '2026-05-24T00:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T00:00:00Z',
+			createdBy: 'admin',
 		);
 		$clientEntity = new LeagueClientEntity($clientData);
 		$scope        = new LeagueScopeEntity('cms:read');

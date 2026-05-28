@@ -55,6 +55,7 @@ readonly class EnsureMcpPromptCollectionMigration implements MigrationInterface
 		// collection if present, creates it if missing.
 		$before = $this->collectionFetcher->collectionExists('mcp-prompt');
 		$this->collectionFetcher->fetchOrCreateReserved('mcp-prompt');
+
 		return $before ? 0 : 1;
 	}
 }

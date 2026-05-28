@@ -347,7 +347,7 @@ readonly class ObjectFilter
 	private function applyOperator(string $op, mixed $fieldValue, mixed $filterValue): bool
 	{
 		return match ($op) {
-			'lt', 'lte', 'gt', 'gte' => $this->applyNumericOp($op, $fieldValue, $filterValue),
+			'lt', 'lte', 'gt', 'gte'  => $this->applyNumericOp($op, $fieldValue, $filterValue),
 			'contains'                => $this->applyContains($fieldValue, (string)$filterValue),
 			'starts'                  => $this->applyStarts($fieldValue, (string)$filterValue),
 			'ends'                    => $this->applyEnds($fieldValue, (string)$filterValue),
@@ -371,10 +371,10 @@ readonly class ObjectFilter
 		$cv = (float)$filterValue;
 
 		return match ($op) {
-			'lt'  => $fv < $cv,
-			'lte' => $fv <= $cv,
-			'gt'  => $fv > $cv,
-			'gte' => $fv >= $cv,
+			'lt'    => $fv < $cv,
+			'lte'   => $fv <= $cv,
+			'gt'    => $fv > $cv,
+			'gte'   => $fv >= $cv,
 			default => false,
 		};
 	}

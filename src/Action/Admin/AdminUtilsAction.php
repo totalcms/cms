@@ -352,6 +352,7 @@ readonly class AdminUtilsAction
 			$ga = $a['grant'];
 			/** @var \TotalCMS\Domain\OAuth\Data\OAuthGrantData $gb */
 			$gb = $b['grant'];
+
 			return strcmp($gb->issuedAt, $ga->issuedAt);
 		});
 

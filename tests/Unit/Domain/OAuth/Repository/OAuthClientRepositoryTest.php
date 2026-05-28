@@ -26,7 +26,7 @@ final class OAuthClientRepositoryTest extends TestCase
 
 	public function testFindsClientById(): void
 	{
-		$repo = new OAuthClientRepository($this->tmpFile);
+		$repo   = new OAuthClientRepository($this->tmpFile);
 		$client = $this->makeClient('c-1');
 		$repo->save($client);
 
@@ -66,15 +66,15 @@ final class OAuthClientRepositoryTest extends TestCase
 		$repo->save($this->makeClient('c-1'));
 
 		$updated = new OAuthClientData(
-			id:             'c-1',
-			name:           'Updated Name',
-			secretHash:     'newhash',
-			redirectUris:   ['https://updated.test/cb'],
-			scopes:         ['cms:write'],
-			isDynamic:      true,
+			id: 'c-1',
+			name: 'Updated Name',
+			secretHash: 'newhash',
+			redirectUris: ['https://updated.test/cb'],
+			scopes: ['cms:write'],
+			isDynamic: true,
 			isConfidential: false,
-			createdAt:      '2026-05-24T10:00:00Z',
-			createdBy:      'admin',
+			createdAt: '2026-05-24T10:00:00Z',
+			createdBy: 'admin',
 		);
 		$repo->save($updated);
 
@@ -95,15 +95,15 @@ final class OAuthClientRepositoryTest extends TestCase
 	private function makeClient(string $id): OAuthClientData
 	{
 		return new OAuthClientData(
-			id:              $id,
-			name:            'Test ' . $id,
-			secretHash:      'hash',
-			redirectUris:    ['https://x.test/cb'],
-			scopes:          ['cms:read'],
-			isDynamic:       false,
-			isConfidential:  true,
-			createdAt:       '2026-05-24T10:00:00Z',
-			createdBy:       'admin',
+			id: $id,
+			name: 'Test ' . $id,
+			secretHash: 'hash',
+			redirectUris: ['https://x.test/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
+			isConfidential: true,
+			createdAt: '2026-05-24T10:00:00Z',
+			createdBy: 'admin',
 		);
 	}
 }

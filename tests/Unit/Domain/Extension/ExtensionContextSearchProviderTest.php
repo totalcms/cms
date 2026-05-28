@@ -18,7 +18,7 @@ function makeTestExtensionContext(string $extensionPath = '/path/to/extension'):
 		'version' => '1.0.0',
 	]);
 
-	$container = test()->createMock(\Psr\Container\ContainerInterface::class);
+	$container = test()->createMock(Psr\Container\ContainerInterface::class);
 	$storage   = test()->createMock(StorageFilesystemAdapter::class);
 	$storage->method('fileExists')->willReturn(false);
 	$settings = new ExtensionSettingsManager($storage);
@@ -32,19 +32,37 @@ function makeTestExtensionContext(string $extensionPath = '/path/to/extension'):
 function makeSearchProvider(string $id): SearchProvider
 {
 	return new class($id) implements SearchProvider {
-		public function __construct(private readonly string $id) {}
+		public function __construct(private readonly string $id)
+		{
+		}
 
-		public function id(): string { return $this->id; }
+		public function id(): string
+		{
+			return $this->id;
+		}
 
-		public function label(): string { return ucfirst($this->id); }
+		public function label(): string
+		{
+			return ucfirst($this->id);
+		}
 
-		public function search(SearchQuery $query): array { return []; }
+		public function search(SearchQuery $query): array
+		{
+			return [];
+		}
 
-		public function index(string $collection, string $id, array $data): void {}
+		public function index(string $collection, string $id, array $data): void
+		{
+		}
 
-		public function delete(string $collection, string $id): void {}
+		public function delete(string $collection, string $id): void
+		{
+		}
 
-		public function isAvailable(): bool { return true; }
+		public function isAvailable(): bool
+		{
+			return true;
+		}
 	};
 }
 

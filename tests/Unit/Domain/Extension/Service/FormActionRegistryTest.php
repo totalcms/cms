@@ -13,7 +13,7 @@ final class FormActionRegistryTest extends TestCase
 	public function testRegisterAndGet(): void
 	{
 		$registry = new FormActionRegistry();
-		$action = new FormAction('pushover', '/api/ext/totalcms/pushover/send', 'Pushover Notification');
+		$action   = new FormAction('pushover', '/api/ext/totalcms/pushover/send', 'Pushover Notification');
 
 		$registry->register($action);
 

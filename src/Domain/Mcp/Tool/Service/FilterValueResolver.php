@@ -26,6 +26,7 @@ final class FilterValueResolver
 	 * @param  array<string,mixed>               $args       Caller args (already validated by SDK against inputSchema)
 	 * @param  array<string,array<string,mixed>> $paramsSpec Param spec from the definition
 	 * @param  string                            $toolName   For error messages
+	 *
 	 * @return mixed                                         Literal value or substituted value with type coercion
 	 */
 	public function resolve(mixed $value, array $args, array $paramsSpec, string $toolName): mixed

@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\CLI\Command\OAuth;
 
 use DI\Container;
-use ReflectionClass;
-use ReflectionProperty;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\OAuth\OAuthSetupCommand;
-use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Support\Config;
 use TotalCMS\TotalCMS;
@@ -30,8 +27,9 @@ function makeOAuthSetupTester(TotalCMS $totalcms): CommandTester
 
 function makeConfigWithOAuth(array $oauth): Config
 {
-	$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	(new ReflectionProperty($config, 'oauth'))->setValue($config, $oauth);
+	$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	(new \ReflectionProperty($config, 'oauth'))->setValue($config, $oauth);
+
 	return $config;
 }
 

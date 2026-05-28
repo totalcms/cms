@@ -10,10 +10,10 @@ use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -383,7 +383,7 @@ class TotalForm implements \Stringable
 	 * Filter form actions based on edition.
 	 * - mailer actions require Standard edition
 	 * - webhook actions require Pro edition
-	 * - extension-registered form actions require Pro edition
+	 * - extension-registered form actions require Pro edition.
 	 *
 	 * @param array<int,array<string,mixed>> $actions
 	 *

@@ -55,6 +55,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 	{
 		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->method('handle')->willReturn($returnResponse);
+
 		return $handler;
 	}
 

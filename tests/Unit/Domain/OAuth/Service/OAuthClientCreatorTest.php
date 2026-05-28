@@ -40,10 +40,10 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testCreatesClientAndReturnsPlaintextSecret(): void
 	{
 		$result = $this->creator->create(
-			name:         'Test App',
+			name: 'Test App',
 			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:    'admin',
+			createdBy: 'admin',
 		);
 
 		$this->assertArrayHasKey('client', $result);
@@ -65,10 +65,10 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testClientIsPersistedAndRetrievable(): void
 	{
 		$result = $this->creator->create(
-			name:          'Persisted App',
-			redirectUris:  ['https://app.test/cb'],
+			name: 'Persisted App',
+			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 
 		$id     = $result['client']->id;
@@ -88,10 +88,10 @@ final class OAuthClientCreatorTest extends TestCase
 		$this->expectExceptionMessageMatches('/cms:bogus/');
 
 		$this->creator->create(
-			name:          'Bad Scope App',
-			redirectUris:  ['https://app.test/cb'],
+			name: 'Bad Scope App',
+			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:bogus'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 	}
 
@@ -101,10 +101,10 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testHttpsRedirectUriIsAccepted(): void
 	{
 		$result = $this->creator->create(
-			name:          'HTTPS App',
-			redirectUris:  ['https://app.test/cb'],
+			name: 'HTTPS App',
+			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 
 		$this->assertSame(['https://app.test/cb'], $result['client']->redirectUris);
@@ -116,18 +116,18 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testHttpLocalhostRedirectUrisAreAccepted(): void
 	{
 		$result1 = $this->creator->create(
-			name:          'Localhost App',
-			redirectUris:  ['http://localhost/cb'],
+			name: 'Localhost App',
+			redirectUris: ['http://localhost/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 		$this->assertSame(['http://localhost/cb'], $result1['client']->redirectUris);
 
 		$result2 = $this->creator->create(
-			name:          '127.0.0.1 App',
-			redirectUris:  ['http://127.0.0.1/cb'],
+			name: '127.0.0.1 App',
+			redirectUris: ['http://127.0.0.1/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 		$this->assertSame(['http://127.0.0.1/cb'], $result2['client']->redirectUris);
 	}
@@ -141,10 +141,10 @@ final class OAuthClientCreatorTest extends TestCase
 		$this->expectExceptionMessageMatches('/HTTPS.*localhost/i');
 
 		$this->creator->create(
-			name:          'Attacker App',
-			redirectUris:  ['http://attacker.test/cb'],
+			name: 'Attacker App',
+			redirectUris: ['http://attacker.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 	}
 
@@ -154,10 +154,10 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testCustomSchemeRedirectUriIsAccepted(): void
 	{
 		$result = $this->creator->create(
-			name:          'Native App',
-			redirectUris:  ['claude://oauth/callback'],
+			name: 'Native App',
+			redirectUris: ['claude://oauth/callback'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 
 		$this->assertSame(['claude://oauth/callback'], $result['client']->redirectUris);
@@ -172,10 +172,10 @@ final class OAuthClientCreatorTest extends TestCase
 		$this->expectExceptionMessageMatches('/Invalid redirect URI/i');
 
 		$this->creator->create(
-			name:          'Bad URI App',
-			redirectUris:  ['not-a-url'],
+			name: 'Bad URI App',
+			redirectUris: ['not-a-url'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 	}
 
@@ -185,10 +185,10 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testGeneratedUuidMatchesV4Format(): void
 	{
 		$result = $this->creator->create(
-			name:          'UUID Check App',
-			redirectUris:  ['https://app.test/cb'],
+			name: 'UUID Check App',
+			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 
 		$id = $result['client']->id;
@@ -205,16 +205,16 @@ final class OAuthClientCreatorTest extends TestCase
 	public function testTwoCallsProduceDifferentIdsAndSecrets(): void
 	{
 		$result1 = $this->creator->create(
-			name:          'App One',
-			redirectUris:  ['https://app.test/cb'],
+			name: 'App One',
+			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 		$result2 = $this->creator->create(
-			name:          'App Two',
-			redirectUris:  ['https://app.test/cb'],
+			name: 'App Two',
+			redirectUris: ['https://app.test/cb'],
 			allowedScopes: ['cms:read'],
-			createdBy:     'admin',
+			createdBy: 'admin',
 		);
 
 		$this->assertNotSame($result1['client']->id, $result2['client']->id, 'IDs must be unique');

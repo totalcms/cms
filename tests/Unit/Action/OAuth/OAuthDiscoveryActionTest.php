@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\OAuth;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use ReflectionProperty;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Action\OAuth\OAuthDiscoveryAction;
@@ -25,12 +23,13 @@ final class OAuthDiscoveryActionTest extends TestCase
 {
 	private function makeConfig(): Config
 	{
-		$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty($config, 'url'))->setValue($config, 'https://example.com');
-		(new ReflectionProperty($config, 'oauth'))->setValue($config, [
-			'jwtIssuer'         => 'https://example.com',
+		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		(new \ReflectionProperty($config, 'url'))->setValue($config, 'https://example.com');
+		(new \ReflectionProperty($config, 'oauth'))->setValue($config, [
+			'jwtIssuer'           => 'https://example.com',
 			'dynamicRegistration' => true,
 		]);
+
 		return $config;
 	}
 
@@ -40,6 +39,7 @@ final class OAuthDiscoveryActionTest extends TestCase
 		$editionFeatures->method('can')->willReturnCallback(
 			fn (EditionFeature $f): bool => $f === EditionFeature::OAUTH_SERVER ? $allowsOAuth : true,
 		);
+
 		return $editionFeatures;
 	}
 
@@ -61,6 +61,7 @@ final class OAuthDiscoveryActionTest extends TestCase
 		$response = new Response();
 		/** @var Response $result */
 		$result = $action($request, $response);
+
 		return $result;
 	}
 

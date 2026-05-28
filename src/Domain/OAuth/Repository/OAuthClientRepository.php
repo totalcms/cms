@@ -27,6 +27,7 @@ final class OAuthClientRepository
 				return OAuthClientData::fromArray($entry);
 			}
 		}
+
 		return null;
 	}
 
@@ -80,6 +81,7 @@ final class OAuthClientRepository
 		if (!is_array($data) || !isset($data['clients']) || !is_array($data['clients'])) {
 			return [];
 		}
+
 		return array_values(array_filter($data['clients'], 'is_array'));
 	}
 

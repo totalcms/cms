@@ -75,8 +75,8 @@ final readonly class TextSearchProvider implements SearchProvider
 			$score     = $count > 1 ? 1.0 - ($i / max($count - 1, 1)) * 0.5 : 1.0;
 			$results[] = new SearchResult(
 				collection: $query->collection,
-				id:         $id,
-				score:      $score,
+				id: $id,
+				score: $score,
 			);
 		}
 

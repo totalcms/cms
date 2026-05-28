@@ -84,15 +84,15 @@ function mcpAuthSetupOAuthKeys(Slim\App $app): array
 function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes): string
 {
 	$client = new OAuthClientData(
-		id:             $clientId,
-		name:           'MCP Auth Test Client',
-		secretHash:     password_hash($clientSecret, PASSWORD_BCRYPT),
-		redirectUris:   ['https://mcptest.test/cb'],
-		scopes:         $scopes,
-		isDynamic:      false,
+		id: $clientId,
+		name: 'MCP Auth Test Client',
+		secretHash: password_hash($clientSecret, PASSWORD_BCRYPT),
+		redirectUris: ['https://mcptest.test/cb'],
+		scopes: $scopes,
+		isDynamic: false,
 		isConfidential: true,
-		createdAt:      gmdate('c'),
-		createdBy:      'test',
+		createdAt: gmdate('c'),
+		createdBy: 'test',
 	);
 	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
 
@@ -153,6 +153,7 @@ function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret
 	);
 
 	$payload = json_decode((string)$tokenResp->getBody(), true);
+
 	return (string)($payload['access_token'] ?? '');
 }
 
@@ -249,7 +250,6 @@ function mcpAuthRawBearerRequest(Slim\App $app, string $rawToken, string $method
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe('McpAuthenticatedPersona', function (): void {
-
 	// ──────────────────────────────────────────────────────────────────────────
 	// Scenario 1: Bearer token with mcp:tools scope → AUTHENTICATED persona;
 	// tools/list returns tools
@@ -264,6 +264,7 @@ describe('McpAuthenticatedPersona', function (): void {
 		// Empty token means the OAuth flow failed (non-Pro edition, OAuth not configured).
 		if ($token === '') {
 			expect(true)->toBeTrue(); // skip-safe pass
+
 			return;
 		}
 
@@ -272,6 +273,7 @@ describe('McpAuthenticatedPersona', function (): void {
 		if ($sessionId === '') {
 			// MCP endpoint unavailable (edition gate, disabled config, etc.).
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -306,6 +308,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($token === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -313,6 +316,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -347,6 +351,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($token === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -354,6 +359,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -383,6 +389,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($token === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -390,6 +397,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($sessionId === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
@@ -420,6 +428,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		if ($token === '') {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 

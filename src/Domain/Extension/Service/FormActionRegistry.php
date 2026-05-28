@@ -34,6 +34,6 @@ class FormActionRegistry
 			$map[$name] = $action->route;
 		}
 
-		return json_encode((object) $map, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+		return json_encode((object)$map, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 	}
 }

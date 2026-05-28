@@ -20,8 +20,8 @@ final class SearchServiceTest extends TestCase
 	public function testRoutesToActiveProviderWhenConfigured(): void
 	{
 		$activeResult = new SearchResult(collection: 'blog', id: 'a', score: 0.9);
-		$active = $this->makeProvider('algolia', searchReturn: [$activeResult], available: true);
-		$fallback = $this->makeFallback([]);
+		$active       = $this->makeProvider('algolia', searchReturn: [$activeResult], available: true);
+		$fallback     = $this->makeFallback([]);
 
 		$registry = new SearchProviderRegistry();
 		$registry->register($active);
@@ -39,7 +39,7 @@ final class SearchServiceTest extends TestCase
 	public function testFallsBackToTextWhenActiveIdMissingFromRegistry(): void
 	{
 		$fallbackResult = new SearchResult(collection: 'blog', id: 'fb', score: 0.5);
-		$fallback = $this->makeFallback([$fallbackResult]);
+		$fallback       = $this->makeFallback([$fallbackResult]);
 
 		$registry = new SearchProviderRegistry();
 		// algolia not registered
@@ -72,7 +72,7 @@ final class SearchServiceTest extends TestCase
 
 	public function testFallsBackWhenProviderThrows(): void
 	{
-		$active = $this->makeProvider('algolia', throwInSearch: new \RuntimeException('boom'), available: true);
+		$active   = $this->makeProvider('algolia', throwInSearch: new \RuntimeException('boom'), available: true);
 		$fallback = $this->makeFallback([new SearchResult('blog', 'fb', 0.5)]);
 
 		$registry = new SearchProviderRegistry();
@@ -119,7 +119,7 @@ final class SearchServiceTest extends TestCase
 		$registry = new SearchProviderRegistry();
 		$registry->register($algolia);
 
-		$config = $this->makeConfig(['activeProvider' => 'algolia']);
+		$config  = $this->makeConfig(['activeProvider' => 'algolia']);
 		$fetcher = $this->makeCollectionFetcher('products', ['searchProvider' => 'text']);
 
 		$service = new SearchService($registry, $fallback, new NullLogger(), $config, $fetcher);
@@ -141,7 +141,7 @@ final class SearchServiceTest extends TestCase
 		$registry = new SearchProviderRegistry();
 		$registry->register($algolia);
 
-		$config = $this->makeConfig(['activeProvider' => 'text']);
+		$config  = $this->makeConfig(['activeProvider' => 'text']);
 		$fetcher = $this->makeCollectionFetcher('docs', ['searchProvider' => 'algolia']);
 
 		$service = new SearchService($registry, $fallback, new NullLogger(), $config, $fetcher);
@@ -163,7 +163,7 @@ final class SearchServiceTest extends TestCase
 		$registry = new SearchProviderRegistry();
 		$registry->register($algolia);
 
-		$config = $this->makeConfig(['activeProvider' => 'algolia']);
+		$config  = $this->makeConfig(['activeProvider' => 'algolia']);
 		$fetcher = $this->makeCollectionFetcher('blog', ['searchProvider' => 'default']);
 
 		$service = new SearchService($registry, $fallback, new NullLogger(), $config, $fetcher);
@@ -191,22 +191,40 @@ final class SearchServiceTest extends TestCase
 				private readonly array $searchReturn,
 				private readonly bool $available,
 				private readonly ?\Throwable $throwInSearch,
-			) {}
+			) {
+			}
 
-			public function id(): string { return $this->id; }
-			public function label(): string { return ucfirst($this->id); }
-			public function isAvailable(): bool { return $this->available; }
+			public function id(): string
+			{
+				return $this->id;
+			}
+
+			public function label(): string
+			{
+				return ucfirst($this->id);
+			}
+
+			public function isAvailable(): bool
+			{
+				return $this->available;
+			}
 
 			public function search(SearchQuery $query): array
 			{
 				if ($this->throwInSearch !== null) {
 					throw $this->throwInSearch;
 				}
+
 				return $this->searchReturn;
 			}
 
-			public function index(string $collection, string $id, array $data): void {}
-			public function delete(string $collection, string $id): void {}
+			public function index(string $collection, string $id, array $data): void
+			{
+			}
+
+			public function delete(string $collection, string $id): void
+			{
+			}
 		};
 	}
 
@@ -225,6 +243,7 @@ final class SearchServiceTest extends TestCase
 	{
 		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		(new \ReflectionProperty($config, 'search'))->setValue($config, $search);
+
 		return $config;
 	}
 
@@ -262,6 +281,7 @@ final class SearchServiceTest extends TestCase
 			$fetcher = $this->createMock(CollectionFetcher::class);
 			$fetcher->method('fetchCollection')->willReturn(null);
 		}
+
 		return new SearchService($registry, $fallback, new NullLogger(), $config, $fetcher);
 	}
 }

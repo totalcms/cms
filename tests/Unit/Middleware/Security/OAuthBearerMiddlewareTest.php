@@ -147,7 +147,7 @@ final class OAuthBearerMiddlewareTest extends TestCase
 
 	public function testValidNotRevokedJwtCallsHandlerWithAugmentedRequest(): void
 	{
-		$factory = new Psr17Factory();
+		$factory         = new Psr17Factory();
 		$incomingRequest = $factory->createServerRequest('GET', '/test')
 			->withHeader('Authorization', 'Bearer valid.jwt.token');
 
@@ -180,7 +180,7 @@ final class OAuthBearerMiddlewareTest extends TestCase
 
 	public function testRevokedJwtReturns401WithTokenRevokedDescription(): void
 	{
-		$factory = new Psr17Factory();
+		$factory         = new Psr17Factory();
 		$incomingRequest = $factory->createServerRequest('GET', '/test')
 			->withHeader('Authorization', 'Bearer revoked.jwt.token');
 

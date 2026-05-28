@@ -91,6 +91,7 @@ readonly class OAuthRevokeAction
 				if ($grant !== null && $grant->clientId === $client->id) {
 					$this->grants->delete($grant->id);
 					$this->activityLogger->tokenRevoked($client->id, 'refresh_token', $grant->id);
+
 					return $response->withStatus(200);
 				}
 			}
@@ -104,7 +105,7 @@ readonly class OAuthRevokeAction
 				// Parser::parse() returns Token interface; Plain is the concrete
 				// implementation that carries claims(). Unsupported or unsigned
 				// token types are rejected by the catch below.
-				if (!($jwt instanceof Plain)) {
+				if (!$jwt instanceof Plain) {
 					// Not a plain JWT — fall through to 200.
 					return $response->withStatus(200);
 				}
@@ -142,7 +143,7 @@ readonly class OAuthRevokeAction
 			return null;
 		}
 
-		$pem = (string)file_get_contents($keyPath);
+		$pem           = (string)file_get_contents($keyPath);
 		$encryptionKey = hash('sha256', $pem);
 
 		try {
@@ -151,6 +152,7 @@ readonly class OAuthRevokeAction
 			if (!is_array($payload) || !isset($payload['refresh_token_id'])) {
 				return null;
 			}
+
 			return (string)$payload['refresh_token_id'];
 		} catch (\Throwable) {
 			return null;

@@ -26,6 +26,7 @@ final readonly class PromptRenderer
 	 * (or one PromptMessage) — not a pre-wrapped GetPromptResult.
 	 *
 	 * @param array<string,mixed> $arguments
+	 *
 	 * @return list<PromptMessage>
 	 */
 	public function render(PromptData $prompt, array $arguments): array
@@ -49,6 +50,7 @@ final readonly class PromptRenderer
 	 * Validate required args are present and drop any extras not declared.
 	 *
 	 * @param array<string,mixed> $arguments
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function validateAndCoerce(PromptData $prompt, array $arguments): array
@@ -66,6 +68,7 @@ final readonly class PromptRenderer
 				$declared[$arg->name] = $arguments[$arg->name];
 			}
 		}
+
 		return $declared;
 	}
 }

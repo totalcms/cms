@@ -7,7 +7,7 @@ namespace Tests\Unit\Domain\OAuth\Service;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\ResourceServer;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAuthCodeRepository;
@@ -22,7 +22,6 @@ use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Support\Config;
-use Psr\Log\NullLogger;
 
 final class OAuthServerFactoryTest extends TestCase
 {
@@ -67,8 +66,8 @@ final class OAuthServerFactoryTest extends TestCase
 
 	private function makeConfig(): Config
 	{
-		$config     = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$reflection = new ReflectionClass($config);
+		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$reflection = new \ReflectionClass($config);
 		$prop       = $reflection->getProperty('oauth');
 		$prop->setValue($config, [
 			'signingKeyPath'  => $this->privateKeyPath,
@@ -77,6 +76,7 @@ final class OAuthServerFactoryTest extends TestCase
 			'refreshTokenTtl' => 'P30D',
 			'authCodeTtl'     => 'PT10M',
 		]);
+
 		return $config;
 	}
 

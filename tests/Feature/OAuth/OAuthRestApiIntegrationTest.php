@@ -26,7 +26,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 
 	// Bump rate limits so cross-test accumulation doesn't trip the limiter.
-	$config = $this->app->getContainer()->get(Config::class);
+	$config        = $this->app->getContainer()->get(Config::class);
 	$config->oauth = array_merge($config->oauth, [
 		'tokenEndpointLimit'       => 10000,
 		'dynamicRegistrationLimit' => 10000,
@@ -96,17 +96,18 @@ function restCreateClient(
 	array $scopes,
 ): OAuthClientData {
 	$client = new OAuthClientData(
-		id:             $clientId,
-		name:           'REST Integration Test Client',
-		secretHash:     password_hash($secret, PASSWORD_BCRYPT),
-		redirectUris:   $redirectUris,
-		scopes:         $scopes,
-		isDynamic:      false,
+		id: $clientId,
+		name: 'REST Integration Test Client',
+		secretHash: password_hash($secret, PASSWORD_BCRYPT),
+		redirectUris: $redirectUris,
+		scopes: $scopes,
+		isDynamic: false,
 		isConfidential: true,
-		createdAt:      gmdate('c'),
-		createdBy:      'test',
+		createdAt: gmdate('c'),
+		createdBy: 'test',
 	);
 	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
+
 	return $client;
 }
 
@@ -114,6 +115,7 @@ function restCreateClient(
  * Run the full auth-code flow and return access_token + refresh_token.
  *
  * @param list<string> $scopes
+ *
  * @return array{access_token: string, refresh_token: string}
  */
 function restIssueToken(
@@ -204,7 +206,7 @@ function restApiCall(
 	string $path,
 	string $accessToken,
 	?array $body = null,
-): \Psr\Http\Message\ResponseInterface {
+): Psr\Http\Message\ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory->createServerRequest($method, $path)
 		->withHeader('Authorization', 'Bearer ' . $accessToken);
@@ -259,8 +261,9 @@ function restDoRefresh(
 	string $clientId,
 	string $clientSecret,
 	string $refreshToken,
-): \Psr\Http\Message\ResponseInterface {
+): Psr\Http\Message\ResponseInterface {
 	$factory = new Psr17Factory();
+
 	return $app->handle(
 		$factory->createServerRequest('POST', '/oauth/token')
 			->withHeader('Content-Type', 'application/x-www-form-urlencoded')
@@ -278,7 +281,6 @@ function restDoRefresh(
 // ---------------------------------------------------------------------------
 
 describe('OAuthRestApiIntegration', function (): void {
-
 	// -----------------------------------------------------------------------
 	// 1. GET /api/collections/{collection} with Bearer (cms:read) → 200
 	// -----------------------------------------------------------------------
@@ -400,7 +402,7 @@ describe('OAuthRestApiIntegration', function (): void {
 		$clientSecret = 'rest-secret-replay';
 		restCreateClient($this->app, $clientId, $clientSecret, ['https://app.test/callback'], ['cms:read', 'cms:write']);
 
-		$tokens1 = restIssueToken($this->app, $clientId, $clientSecret, ['cms:read', 'cms:write']);
+		$tokens1  = restIssueToken($this->app, $clientId, $clientSecret, ['cms:read', 'cms:write']);
 		$refresh1 = $tokens1['refresh_token'];
 
 		// Legitimate first use.
@@ -506,5 +508,4 @@ describe('OAuthRestApiIntegration', function (): void {
 		// GET /api/collections matches cms:read impliedPaths (#^GET\s+/api/(collections|objects)#)
 		expect($response->getStatusCode())->toBe(200);
 	});
-
 });
