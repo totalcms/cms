@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Security;
 
 use League\OAuth2\Server\Exception\OAuthServerException;
-use League\OAuth2\Server\ResourceServer;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
@@ -13,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 
 /**
  * Validates Authorization: Bearer <jwt> headers via league's ResourceServer
@@ -36,7 +36,7 @@ use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
 readonly class OAuthBearerMiddleware implements MiddlewareInterface
 {
 	public function __construct(
-		private ResourceServer $resourceServer,
+		private OAuthServerFactory $serverFactory,
 		private OAuthRevocationList $revocationList,
 	) {
 	}
@@ -48,8 +48,21 @@ readonly class OAuthBearerMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
+		// Build the resource server lazily — only when a Bearer header is
+		// actually present. If OAuth keys haven't been generated on this
+		// install (fresh deploy, no `tcms oauth:setup` yet), CryptKey throws
+		// "Invalid key supplied". We can't validate the token without keys,
+		// so the only correct response is 401 — but we must NOT 500 the
+		// request when there's no Bearer header at all (the normal case).
 		try {
-			$validated = $this->resourceServer->validateAuthenticatedRequest($request);
+			$resourceServer = $this->serverFactory->buildResourceServer();
+		} catch (\Throwable) {
+			return (new Response(401))
+				->withHeader('WWW-Authenticate', 'Bearer realm="T3", error="invalid_token"');
+		}
+
+		try {
+			$validated = $resourceServer->validateAuthenticatedRequest($request);
 		} catch (OAuthServerException $e) {
 			$response = (new Response(401))
 				->withHeader('WWW-Authenticate', 'Bearer realm="T3", error="invalid_token"');
