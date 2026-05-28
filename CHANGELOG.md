@@ -2,6 +2,21 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.8] - 2026-05-28
+
+### Enhanced
+
+- **OAuth key paths in settings UI**: Settings → OAuth now shows the configured signing and public key paths with present/missing badges. Paths come from `config/tcms.php` (when overridden) or the bundled defaults. Fresh installs without keys are no longer indistinguishable from correctly set-up ones — the missing badge appears alongside a hint to run `tcms oauth:setup`
+
+### Removed
+
+- **Installation settings section**: The admin Settings → Installation section is gone. Its single field (`datadir`) was a footgun via the UI — saving it would leave every collection, OAuth key, session, and user orphaned at the old path. `datadir` is now exclusively set via `config/tcms.php`, and the Setup Wizard still writes it there on first-run
+
+### Fixed
+
+- **OAuth 500s on key-less installs**: `OAuthBearerMiddleware` previously declared `ResourceServer` as a constructor dependency, so PHP-DI eagerly built it on every API request — calling `CryptKey` against the public key file and 500-ing every request when keys weren't generated yet. Now built lazily, only after a `Bearer` header is detected. Fresh installs no longer need `tcms oauth:setup` before any non-OAuth API call works
+- **`--totalform-danger` references**: An undefined CSS variable was referenced in eight places across four SCSS files, breaking error styling for dashboard widgets, login forms, the styled-text editor, and admin cards/badges. Migrated all references to the canonical `--totalform-error`
+
 ## [3.5.0-beta.7] - 2026-05-27
 
 ### Added — MCP Server
