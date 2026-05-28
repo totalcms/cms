@@ -318,8 +318,6 @@ return [
 
 	// ── Settings ────────────────────────────────────────────────────────────
 	'settings.filter'                  => 'Instellingen filteren',
-	'settings.installation'            => 'Installatie',
-	'settings.installation_desc'       => 'Bootstrap- en installatieconfiguratie',
 	'settings.general'                 => 'Algemeen',
 	'settings.general_desc'            => 'Kerninstellingen van de applicatie',
 	'settings.authentication'          => 'Authenticatie',

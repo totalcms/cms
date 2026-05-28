@@ -40,7 +40,7 @@ readonly class SettingsValidator
 		if ($sections === []) {
 			// Safe fallback if the schemas directory is missing or unreadable.
 			return [
-				'installation', 'general', 'auth', 'builder', 'cache',
+				'general', 'auth', 'builder', 'cache',
 				'dashboard', 'htmlclean', 'i18n', 'imageworks', 'license',
 				'mailer', 'mcp', 'presets', 'smtp', 'sync',
 			];
@@ -63,7 +63,6 @@ readonly class SettingsValidator
 
 		// Process section-specific transformations
 		return match ($section) {
-			'installation' => $this->processInstallation($data),
 			'general'      => $this->processGeneral($data),
 			'dashboard'    => $this->processDashboard($data),
 			'imageworks'   => $this->processImageWorks($data),
@@ -89,18 +88,6 @@ readonly class SettingsValidator
 	private function cleanFormData(array $data): array
 	{
 		return array_filter($data, fn (mixed $value): bool => $value !== null);
-	}
-
-	/**
-	 * Process installation settings.
-	 *
-	 * @param array<string,mixed> $data
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function processInstallation(array $data): array
-	{
-		return $data;
 	}
 
 	/**

@@ -318,8 +318,6 @@ return [
 
 	// ── Settings ────────────────────────────────────────────────────────────
 	'settings.filter'                  => 'Filter Settings',
-	'settings.installation'            => 'Installation',
-	'settings.installation_desc'       => 'Bootstrap and installation configuration',
 	'settings.general'                 => 'General',
 	'settings.general_desc'            => 'Core application settings',
 	'settings.authentication'          => 'Authentication',

@@ -318,8 +318,6 @@ return [
 
 	// ── Settings ────────────────────────────────────────────────────────────
 	'settings.filter'                  => 'Filtrar configuración',
-	'settings.installation'            => 'Instalación',
-	'settings.installation_desc'       => 'Configuración de arranque e instalación',
 	'settings.general'                 => 'General',
 	'settings.general_desc'            => 'Configuración principal de la aplicación',
 	'settings.authentication'          => 'Autenticación',

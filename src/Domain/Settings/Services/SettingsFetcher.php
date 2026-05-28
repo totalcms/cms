@@ -2,20 +2,19 @@
 
 namespace TotalCMS\Domain\Settings\Services;
 
-use TotalCMS\Domain\Settings\Repository\InstallationRepository;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 
 /**
- * Fetches settings from settings.json and tcms.php.
+ * Fetches settings from settings.json.
  *
- * Installation settings (datadir) are loaded from tcms.php via InstallationRepository.
- * All other settings are loaded from settings.json via SettingsRepository.
+ * Bootstrap configuration in tcms.php (datadir) is managed by the
+ * Setup Wizard via InstallationRepository / InstallationSettingsSaver —
+ * not exposed through this service.
  */
 readonly class SettingsFetcher
 {
 	public function __construct(
 		private SettingsRepository $settingsRepository,
-		private InstallationRepository $installationRepository,
 		private SettingsSchemaFetcher $schemaFetcher,
 	) {
 	}
@@ -31,28 +30,12 @@ readonly class SettingsFetcher
 	}
 
 	/**
-	 * Load installation settings from tcms.php.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function loadInstallationSettings(): array
-	{
-		return $this->installationRepository->load();
-	}
-
-	/**
 	 * Load settings for a specific section.
 	 *
 	 * @return array<string,mixed>
 	 */
 	public function loadSection(string $section): array
 	{
-		// Installation settings come from tcms.php
-		if ($section === 'installation') {
-			return $this->loadInstallationSettings();
-		}
-
-		// All other settings come from settings.json
 		$settings = $this->loadSettings();
 
 		// General settings are stored at the top level of settings.json, not

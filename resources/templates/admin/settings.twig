@@ -1,10 +1,6 @@
 {% extends "admin-dashboard.twig" %}
 
 {% set sections = {
-	'installation': {
-		'label': t('settings.installation'),
-		'description': t('settings.installation_desc')
-	},
 	'general': {
 		'label': t('settings.general'),
 		'description': t('settings.general_desc')
@@ -133,7 +129,7 @@
 			.oauth-key-paths code { word-break: break-all; }
 		</style>
 		<div class="cms-info oauth-key-status">
-			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.{% if not oauthKeys.signingExists or not oauthKeys.publicExists %} Run <code>tcms oauth:setup</code> to generate the pair.{% endif %}</p>
+			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.{% if not oauthKeys.signingExists or not oauthKeys.publicExists %}<br>Run <code>tcms oauth:setup</code> to generate the pair.{% endif %}</p>
 			<dl class="oauth-key-paths">
 				<dt>Private key</dt>
 				<dd>
