@@ -40,57 +40,85 @@ You should commit your customization files:
 - Custom templates in your theme directory
 - Custom schemas if you've created any
 
-## Clearing Cache on Deployment
+## Deployment Pipeline
 
-After deploying new code or templates, clear the cache to ensure visitors see the latest content. Total CMS provides an emergency cache clear endpoint that can be called from deployment scripts.
+After pulling new code, four things have to happen in the right order to bring a Total CMS site fully up to date:
 
-### Using curl
+1. **Composer install** — fetch and optimise PHP dependencies
+2. **Frontend build** — compile CSS/JS via Vite or your chosen pipeline
+3. **`tcms deploy`** — wipe the compiled DI container, clear application caches, run pending migrations
+4. **Reload PHP-FPM** — flush the FPM worker OPcache (CLI can't reach it)
 
-The simplest approach is to call the cache clear endpoint directly:
+### The `tcms deploy` Command
+
+Total CMS ships a single CLI command that owns the runtime cleanup the library knows how to do safely:
 
 ```bash
-curl -s https://example.com/tcms/emergency/cache/clear
+vendor/bin/tcms deploy
 ```
 
-For formatted output:
+It does three things, in order:
+
+| Step | Why |
+|------|-----|
+| **Wipe `cache/container/`** | The compiled PHP-DI container caches class constructor signatures. When a deploy changes a constructor (new dependency, removed parameter), stale compiled containers crash with `TypeError`. The compiled-class name embeds `container.php`'s mtime but doesn't track other class changes — manual wipe is the only way to force a clean regen. |
+| **Clear all application caches** | APCu, Redis, Memcached, filesystem cache, image cache, CLI OPcache. Equivalent to `tcms cache:clear` but bundled into the deploy flow. |
+| **Run pending migrations** | One-shot data migrations in `MigrationRunner` get applied immediately rather than firing on the next user request (where a slow migration would manifest as latency). |
+
+Each step has a `--skip-*` flag (`--skip-container`, `--skip-cache`, `--skip-migrations`) for special-case deploys.
+
+`tcms deploy` is the recommended entry point for any deploy script.
+
+### Standard `bin/deploy.sh`
+
+The project skeleton (`totalcms/totalcms-project`) ships a reference script at `bin/deploy.sh`. The shape:
 
 ```bash
-curl -s https://example.com/tcms/emergency/cache/clear | jq
-```
+#!/usr/bin/env bash
+set -euo pipefail
 
-### Example Deployment Script
+PHP_FPM_SERVICE="php8.3-fpm"   # edit for your distro/version
 
-```bash
-#!/bin/bash
+cd "$(dirname "$0")/.."
 
-SITE_URL="https://example.com"
+composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 
-# Pull latest code
-git pull origin main
-
-# Clear cache
-echo "Clearing cache..."
-RESPONSE=$(curl -s "$SITE_URL/tcms/emergency/cache/clear")
-
-# Check if successful
-if echo "$RESPONSE" | grep -q '"success":true'; then
-    echo "Cache cleared successfully"
-else
-    echo "Warning: Cache clear may have had issues"
-    echo "$RESPONSE"
+if [ -d frontend ]; then
+    ( cd frontend && npm ci --no-audit --no-fund --silent && npm run build )
 fi
 
-echo "Deployment complete"
+vendor/bin/tcms deploy
+
+if [ -n "$PHP_FPM_SERVICE" ]; then
+    sudo systemctl reload "$PHP_FPM_SERVICE"
+fi
 ```
+
+Wire it up to whatever triggers your deploy — webhook, cron, CI/CD job, etc.
+
+### Why FPM Reload Is Separate
+
+`tcms deploy` runs from CLI, which has its own OPcache instance. PHP-FPM workers each have a **separate** OPcache that the CLI process can't reach. So even after `tcms deploy` resets CLI OPcache, FPM is still serving the old bytecode until you reload it.
+
+`systemctl reload php-fpm` is graceful — in-flight requests finish on the old workers; new requests pick up the new code. No dropped connections, no downtime.
+
+If you run with `opcache.validate_timestamps=1` (slower in steady state but auto-detects file changes), you can skip the reload — but most production setups disable timestamp validation for performance.
 
 ### CI/CD Integration
 
-#### GitHub Actions
+#### GitHub Actions (SSH deploy)
 
 ```yaml
-- name: Clear cache
-  run: |
-    curl -s -f https://example.com/tcms/emergency/cache/clear || echo "Cache clear failed"
+- name: Deploy
+  uses: appleboy/ssh-action@v1
+  with:
+    host: ${{ secrets.DEPLOY_HOST }}
+    username: deploy
+    key: ${{ secrets.DEPLOY_KEY }}
+    script: |
+      cd /var/www/example.com
+      git pull --ff-only
+      bash bin/deploy.sh
 ```
 
 #### GitLab CI
@@ -98,20 +126,18 @@ echo "Deployment complete"
 ```yaml
 deploy:
   script:
-    - curl -s -f https://example.com/tcms/emergency/cache/clear || echo "Cache clear failed"
+    - ssh deploy@$DEPLOY_HOST 'cd /var/www/example.com && git pull --ff-only && bash bin/deploy.sh'
 ```
 
-### What Gets Cleared
+### Cache Clear Without Shell Access
 
-The cache clear endpoint clears:
+For shared-hosting environments where you can't run shell commands, Total CMS exposes an HTTP fallback that clears application caches (but not the compiled DI container or PHP-FPM OPcache):
 
-- **Filesystem cache** - Cached templates and computed data
-- **OPcache** - PHP bytecode cache
-- **APCu** - In-memory application cache (if enabled)
-- **Redis** - Redis cache (if configured)
-- **Memcached** - Memcached cache (if configured)
-- **Image cache** - Processed/watermarked images
-- **Cache version** - Forces cache invalidation across all backends
+```bash
+curl -s https://example.com/tcms/emergency/cache/clear
+```
+
+This is a last resort — it can't wipe `cache/container/` or reload FPM workers, so any deploy that changes class signatures or constructor wiring needs proper shell access to `tcms deploy`.
 
 
 ## Troubleshooting Deployments
