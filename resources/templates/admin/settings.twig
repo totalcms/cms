@@ -125,6 +125,38 @@
 		</div>
 		{% endif %}
 
+		{% if currentSection == 'oauth' and oauthKeys is defined %}
+		<style>
+			.oauth-key-paths { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; margin: 0.5rem 0 0; }
+			.oauth-key-paths dt { font-weight: 600; }
+			.oauth-key-paths dd { margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+			.oauth-key-paths code { word-break: break-all; }
+		</style>
+		<div class="cms-info oauth-key-status">
+			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.{% if not oauthKeys.signingExists or not oauthKeys.publicExists %} Run <code>tcms oauth:setup</code> to generate the pair.{% endif %}</p>
+			<dl class="oauth-key-paths">
+				<dt>Private key</dt>
+				<dd>
+					<code>{{ oauthKeys.signingKeyPath }}</code>
+					{% if oauthKeys.signingExists %}
+						<span class="dash-badge success">present</span>
+					{% else %}
+						<span class="dash-badge danger">missing</span>
+					{% endif %}
+				</dd>
+				<dt>Public key</dt>
+				<dd>
+					<code>{{ oauthKeys.publicKeyPath }}</code>
+					{% if oauthKeys.publicExists %}
+						<span class="dash-badge success">present</span>
+					{% else %}
+						<span class="dash-badge danger">missing</span>
+					{% endif %}
+				</dd>
+			</dl>
+		</div>
+		{% endif %}
+
 		{{ cms.form.settings(currentSection) }}
 
 		{% if currentSection == 'smtp' %}
