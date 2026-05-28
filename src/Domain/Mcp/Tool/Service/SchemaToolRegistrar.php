@@ -68,13 +68,22 @@ final class SchemaToolRegistrar
 
 			$access = (string)($mcp['access'] ?? 'admin');
 
-			foreach ($tools as $index => $rawEntry) {
+			// Two accepted shapes (see McpToolsValidator::validate):
+			//   - Keyed object (post-migration): key is the canonical id
+			//   - List array (legacy): entry carries its own id field
+			$isLegacyArray = array_is_list($tools);
+
+			foreach ($tools as $key => $rawEntry) {
 				if (!is_array($rawEntry)) {
 					$this->logger->warning('Schema tool entry is not an array', [
 						'collection' => $collection->id,
-						'index'      => $index,
+						'index'      => $key,
 					]);
 					continue;
+				}
+
+				if (!$isLegacyArray && is_string($key)) {
+					$rawEntry['id'] = $key;
 				}
 
 				try {
@@ -82,7 +91,7 @@ final class SchemaToolRegistrar
 				} catch (SavedQueryToolException $e) {
 					$this->logger->warning('Schema tool validation failed', [
 						'collection' => $collection->id,
-						'index'      => $index,
+						'index'      => $key,
 						'message'    => $e->getMessage(),
 					]);
 					continue;

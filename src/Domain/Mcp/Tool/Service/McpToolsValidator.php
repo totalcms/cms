@@ -95,18 +95,36 @@ final readonly class McpToolsValidator
 			$registeredNames[$tool->name] = true;
 		}
 
-		foreach ($rawTools as $index => $entry) {
+		// Two accepted shapes:
+		//   - Keyed object (post-migration): {"featured": {...}, "drafts": {...}}
+		//     The key IS the canonical id; we inject it into the entry so the
+		//     deck-item form can leave the inner `id` field optional/empty.
+		//   - List array (legacy, pre-migration): [{"id": "featured", ...}]
+		//     Accepted during the McpToolsArrayToObjectMigration rollout window
+		//     so concurrent admin submits don't fail mid-upgrade. Drop one
+		//     release after the migration ships.
+		$isLegacyArray = array_is_list($rawTools);
+
+		$index = 0;
+		foreach ($rawTools as $key => $entry) {
 			if (!is_array($entry)) {
 				return McpToolsValidationResult::validationFailed(
-					(int)$index,
+					$index,
 					'each tool definition must be a JSON object',
 				);
+			}
+
+			if (!$isLegacyArray && is_string($key)) {
+				// Deck key is authoritative — overwrite whatever the entry's own
+				// `id` field says. Keeps the canonical lookup stable even if the
+				// operator edits the inner id-form without re-keying.
+				$entry['id'] = $key;
 			}
 
 			try {
 				$definition = SavedQueryToolDefinition::fromArray($collectionId, $access, $entry);
 			} catch (SavedQueryToolException $e) {
-				return McpToolsValidationResult::validationFailed((int)$index, $e->getMessage());
+				return McpToolsValidationResult::validationFailed($index, $e->getMessage());
 			}
 
 			// Blocking: prefix-inclusive registered-name length check.
@@ -120,7 +138,7 @@ final readonly class McpToolsValidator
 				$prefixLabel = $prefix !== '' ? " (prefix '{$prefix}' uses " . strlen($prefix) . ' chars)' : '';
 
 				return McpToolsValidationResult::validationFailed(
-					(int)$index,
+					$index,
 					"Tool name '{$definition->name}' results in a registered name '{$registeredName}' of {$registeredLength} characters{$prefixLabel}; the limit is " . self::MAX_REGISTERED_NAME_LEN . ' (including prefix).',
 				);
 			}
@@ -173,6 +191,8 @@ final readonly class McpToolsValidator
 					];
 				}
 			}
+
+			$index++;
 		}
 
 		return McpToolsValidationResult::ok($warnings);

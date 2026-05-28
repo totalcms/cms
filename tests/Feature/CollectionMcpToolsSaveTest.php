@@ -137,7 +137,7 @@ it('rejects an invalid tool entry with CamelCase name and returns 400', function
 	$body = (string)$response->getBody();
 	// Assert the substituted index (#1) and a fragment of the actual validation message.
 	expect($body)->toContain('Tool definition #1');
-	expect($body)->toContain('name must match');
+	expect($body)->toContain('id must match');
 });
 
 it('returns 200 with a warning when mcp.tools has a name colliding with a core tool', function (): void {
@@ -305,4 +305,42 @@ it('CollectionUpdateAction uses the route-param collection id, not body id', fun
 	// This would be wrong if the validator had used $data['id'] === '' and stored
 	// a tool with collectionName='' inside SavedQueryToolDefinition.
 	expect($collection->id)->toBe($id);
+});
+
+it('accepts mcp.tools in the keyed-object (deck) shape and persists it', function (): void {
+	// After the array-to-object migration ships, the schema editor sends tools
+	// as a keyed object. The validator accepts both shapes; the saver persists
+	// whatever was sent, so the on-disk shape mirrors the request shape.
+	$base = mcpToolsCollectionBase();
+	$id   = $base['id'];
+
+	postJson('/api/collections', $base);
+
+	$payload         = $base;
+	$payload['mcp']  = [
+		'access' => 'public',
+		'tools'  => [
+			'find_featured' => [
+				'id'          => 'find_featured',
+				'description' => 'Return featured items from the collection.',
+				'filters'     => ['featured' => ['value' => true]],
+				'limit'       => 10,
+				'format'      => 'markdown',
+			],
+		],
+	];
+
+	$response = putJson('/api/collections/' . $id, $payload);
+	expect($response->getStatusCode())->toBe(200);
+
+	$container  = $this->app->getContainer();
+	/** @var CollectionRepository $repo */
+	$repo       = $container->get(CollectionRepository::class);
+	$collection = $repo->fetchCollection($id);
+
+	expect($collection)->not->toBeNull();
+	expect($collection->mcp)->toHaveKey('tools');
+	expect($collection->mcp['tools'])->toHaveKey('find_featured');
+	expect($collection->mcp['tools']['find_featured']['description'])
+		->toBe('Return featured items from the collection.');
 });

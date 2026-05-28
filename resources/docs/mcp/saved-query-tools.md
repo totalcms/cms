@@ -16,12 +16,12 @@ Use saved-query tools when a particular query is reused or when you want to give
 
 ## Quick start
 
-Open the schema editor for the collection you want to expose. On the **MCP** tab, find the **Custom MCP Tools** field and enter a JSON array:
+Open the schema editor for the collection you want to expose. On the **MCP** tab, find the **Custom MCP Tools** field — it renders as a deck of tool rows. Click **Add** and fill in the id, description, filters, etc. Behind the scenes the deck stores tools keyed by their id:
 
 ```json
-[
-  {
-    "name": "featured_posts",
+{
+  "featured_posts": {
+    "id": "featured_posts",
     "description": "Return featured blog posts, newest first.",
     "filters": {
       "featured": { "value": true }
@@ -29,18 +29,18 @@ Open the schema editor for the collection you want to expose. On the **MCP** tab
     "sort":  "date:desc",
     "limit": 10
   }
-]
+}
 ```
 
-Save the schema. The tool `featured_posts` is live on `/mcp` immediately — no rebuild, no restart.
+The deck key matches the tool's `id` — that's the canonical identifier; the inner `id` field is what you enter in the form. Save the schema. The tool `featured_posts` is live on `/mcp` immediately — no rebuild, no restart.
 
 ## Tool definition reference
 
-Each entry in the array is an object with the following fields. Only `name` and `description` are required.
+Each tool entry is an object with the following fields. Only `id` and `description` are required.
 
 | Field | Required | Type | Notes |
 |---|---|---|---|
-| `name` | yes | string | Snake_case `^[a-z][a-z0-9_]*$`. The registered name (base + any `mcp.toolPrefix`) must be ≤ 64 characters; the save-time validator enforces the full limit. Globally unique across all tools. |
+| `id` | yes | string | Snake_case `^[a-z][a-z0-9_]*$`. Becomes the wire-level tool name when registered. The registered name (base + any `mcp.toolPrefix`) must be ≤ 64 characters; the save-time validator enforces the full limit. Globally unique across all tools. |
 | `description` | yes | string | Min 1, max 1024 characters. Describe what the tool returns — not how an agent should use it. |
 | `params` | no | object | Typed caller parameters (see [Parameterized tools](#parameterized-tools)). Omit for fixed-filter tools. |
 | `filters` | no | object | Field-name → `{value, operator?}` map. Filter values may reference `{{params.X}}` placeholders. |
@@ -51,16 +51,16 @@ Each entry in the array is an object with the following fields. Only `name` and 
 | `exclude` | no | string | REST-style exclude filter — escape hatch. |
 | `format` | no | enum | Output format for rich-text fields: `markdown` (default), `html`, or `text`. |
 
-The `mcp-tool.json` JSON Schema enforces `maxLength: 64` on the base `name` field only — it cannot dynamically account for the site's configured `mcp.toolPrefix`. The save-time validator performs the full prefix-inclusive check: `strlen(toolPrefix + "_" + name) ≤ 64`. If a site has a 10-character prefix configured, base names must be ≤ 54 characters. The error message will state both the prefix in use and the resulting length.
+The `mcp-tool.json` JSON Schema enforces `maxLength: 64` on the base `id` field only — it cannot dynamically account for the site's configured `mcp.toolPrefix`. The save-time validator performs the full prefix-inclusive check: `strlen(toolPrefix + "_" + id) ≤ 64`. If a site has a 10-character prefix configured, base ids must be ≤ 54 characters. The error message will state both the prefix in use and the resulting length.
 
 ## Fixed-filter tools
 
 Fixed-filter tools take no caller arguments. They are preset queries with a stable result shape — useful for "give me all draft posts" or "return the three most recent announcements":
 
 ```json
-[
-  {
-    "name": "draft_posts",
+{
+  "draft_posts": {
+    "id": "draft_posts",
     "description": "Return blog posts pending editorial review, oldest first.",
     "filters": {
       "status": { "value": "draft" }
@@ -68,13 +68,13 @@ Fixed-filter tools take no caller arguments. They are preset queries with a stab
     "sort":  "date:asc",
     "limit": 20
   },
-  {
-    "name": "recent_announcements",
+  "recent_announcements": {
+    "id": "recent_announcements",
     "description": "The three most recent site announcements.",
     "sort":  "date:desc",
     "limit": 3
   }
-]
+}
 ```
 
 ## Parameterized tools
@@ -83,7 +83,7 @@ Add a `params` block to accept caller-supplied arguments. Reference them in filt
 
 ```json
 {
-  "name": "find_listings_by_city",
+  "id": "find_listings_by_city",
   "description": "Search active real-estate listings by city and optional maximum price.",
   "params": {
     "city": {
@@ -185,7 +185,7 @@ Use a saved-query tool when you want a predictable, named entry point. Use `quer
 
 ## Common pitfalls
 
-**Tool name format.** Only lowercase letters, digits, and underscores. Must start with a letter. Max 64 characters including any `mcp.toolPrefix` the operator has configured.
+**Tool id format.** Only lowercase letters, digits, and underscores. Must start with a letter. Max 64 characters including any `mcp.toolPrefix` the operator has configured.
 
 **Total tool count.** Most MCP clients degrade in usability above roughly 50 tools. If you define many saved-query tools across multiple collections, watch the cumulative count in the admin's MCP status panel.
 

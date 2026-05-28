@@ -39,8 +39,16 @@ export default class DeckField extends TotalField {
 
         this.updateAddButton();
 
-        // Propagate subfield changes to the deck's own changed handler
-        this.container.addEventListener("subfield-change", () => this.changed());
+        // Propagate sub-field edits to the deck's own changed handler.
+        // Ignore events the deck itself dispatched: when the deck is nested
+        // inside a card, deck.changed() → super.changed() emits subfield-change
+        // from this.container, and this listener (also on this.container) would
+        // catch it and recurse indefinitely, re-marking the deck as unsaved on
+        // every cycle. Filter by event target.
+        this.container.addEventListener("subfield-change", e => {
+            if (e.target === this.container) return;
+            this.changed();
+        });
     }
 
     initOidCounter() {

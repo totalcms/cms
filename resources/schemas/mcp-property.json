@@ -5,6 +5,8 @@
 	"type"        : "object",
 	"description" : "Per-property MCP server settings. Controls how a single property on a schema is exposed to AI agents — its description and whether it's visible in responses. Filterability and sortability are derived automatically from the schema's <code>index</code> list plus the property's field type.",
 	"formgrid"    : "description description\nexpose expose",
+	"required"    : ["id"],
+	"index"       : ["id"],
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -34,6 +36,5 @@
 			"field"   : "checkbox",
 			"default" : true
 		}
-	},
-	"required": []
+	}
 }

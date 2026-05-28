@@ -224,16 +224,28 @@ class CollectionForm extends TotalForm
 	 */
 	protected function buildFieldOptions(string $name, array $options = []): array
 	{
+		$options['name'] = $name;
+		$options['form'] = $this;
+
 		// Sub-fields of card/deck composites bring their own complete config
 		// from the card's sub-schema iteration — skip parent-schema lookup
 		// and collectionData value pull, otherwise a sub-field named
 		// `description` (inside the mcp card, say) would inherit the
 		// collection's top-level `description` value. Matches the guard
 		// pattern in ObjectForm::buildFieldOptions.
-		if (isset($options['subfield']) && $options['subfield'] === true) {
-			$options['name'] = $name;
-			$options['form'] = $this;
+		//
+		// Two guards because DeckItem and CardField pass different flags:
+		//   - CardField goes through TotalForm::subField() which sets
+		//     `subfield: true`
+		//   - DeckItem calls form->field() directly with `deck_context: true`
+		// Without the deck_context arm, a deck item's `id` field on a
+		// collection edit form (e.g. tools inside the mcp card) inherits the
+		// collection's id value and gets locked as readonly.
+		if (isset($options['deck_context']) && $options['deck_context'] === true) {
+			return $options;
+		}
 
+		if (isset($options['subfield']) && $options['subfield'] === true) {
 			return $options;
 		}
 
@@ -258,12 +270,6 @@ class CollectionForm extends TotalForm
 			$options['settings']['deckItemLabel'] = $options['deckItemLabel'];
 			unset($options['deckItemLabel']);
 		}
-
-		// Set the name of the field
-		$options['name'] = $name;
-
-		// Setup communication between the field and the form
-		$options['form'] = $this;
 
 		if ($this->collectionData instanceof CollectionData) {
 			$value = $this->collectionData->toArray()[$name] ?? '';

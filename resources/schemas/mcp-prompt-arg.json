@@ -7,6 +7,7 @@
 	"description" : "One argument declaration for an MCP prompt. Stored as a deck item; the deck key matches the argument name.",
 	"formgrid"    : "id\ndescription\nrequired",
 	"required"    : ["id"],
+	"index"       : ["id"],
 	"properties"  : {
 		"id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",

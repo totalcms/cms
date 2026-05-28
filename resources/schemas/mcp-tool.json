@@ -1,91 +1,94 @@
 {
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://www.totalcms.co/schemas/mcp-tool.json",
-	"id": "mcp-tool",
-	"title": "MCP Schema-Defined Tool",
-	"description": "A saved-query tool exposed on the MCP server, defined per collection.",
-	"type": "object",
-	"required": ["name", "description"],
-	"additionalProperties": false,
-	"properties": {
-		"name": {
-			"type": "string",
-			"pattern": "^[a-z][a-z0-9_]*$",
-			"maxLength": 64,
-			"description": "Tool name in snake_case. Globally unique across all core, extension, and schema tools (including any mcp.toolPrefix)."
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/mcp-tool.json",
+	"id"          : "mcp-tool",
+	"type"        : "object",
+	"title"       : "MCP Schema-Defined Tool",
+	"description" : "A saved-query tool exposed on the MCP server, defined per collection. Stored as a deck item — the deck key matches the tool's id.",
+	"formgrid"    : "id id\ndescription description\n---Query---\nparams params\nfilters filters\n---Result Shape---\nlimit offset\nformat format\nsort sort\ninclude include\nexclude exclude",
+	"index"       : ["id", "description"],
+	"required"    : ["id", "description"],
+	"properties"  : {
+		"id": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"     : "Tool ID",
+			"help"      : "Snake_case identifier AI clients use to call this tool. Becomes the wire-level tool name when registered.",
+			"field"     : "id",
+			"factory"   : "slug",
+			"pattern"   : "^[a-z][a-z0-9_]*$",
+			"maxLength" : 64,
+			"settings"  : { "snakeCase" : true }
 		},
 		"description": {
-			"type": "string",
-			"minLength": 1,
-			"maxLength": 1024,
-			"description": "Human-readable description AI agents read. Auto-generated parameter block is appended at registration time."
+			"type"     : "string",
+			"label"    : "Description",
+			"help"     : "What this tool returns. Shown to AI agents in tools/list — write for AI consumption, not LLM instructions.",
+			"field"    : "textarea",
+			"settings" : { "rows" : 2 }
 		},
 		"params": {
-			"type": "object",
-			"description": "Typed caller parameters. Keys are snake_case param names; values declare type and validation. Omit for fixed-filter tools.",
-			"additionalProperties": {
-				"type": "object",
-				"required": ["type"],
-				"properties": {
-					"type":        { "type": "string", "enum": ["string", "number", "integer", "boolean"] },
-					"description": { "type": "string" },
-					"required":    { "type": "boolean", "default": false },
-					"default":     {},
-					"enum":        { "type": "array" },
-					"minimum":     { "type": "number" },
-					"maximum":     { "type": "number" },
-					"format":      { "type": "string" }
-				},
-				"additionalProperties": false
-			}
+			"type"        : "object",
+			"label"       : "Params",
+			"help"        : "Typed caller parameters as JSON. See <a href=\"docs/mcp/saved-query-tools\">the docs</a> for the param shape.",
+			"field"       : "json",
+			"placeholder" : "{\n\t\"city\": {\n\t\t\"type\": \"string\",\n\t\t\"description\": \"City name.\",\n\t\t\"required\": true\n\t},\n\t\"max_price\": {\n\t\t\"type\": \"number\",\n\t\t\"minimum\": 0\n\t}\n}",
+			"settings"    : { "rows" : 6 }
 		},
 		"filters": {
-			"type": "object",
-			"description": "Field-name to value+operator map. Filter values may reference {{params.X}} placeholders.",
-			"additionalProperties": {
-				"type": "object",
-				"required": ["value"],
-				"properties": {
-					"value":    {},
-					"operator": {
-						"type": "string",
-						"enum": ["eq", "ne", "lt", "lte", "gt", "gte", "contains", "starts", "ends", "in", "notin"],
-						"default": "eq"
-					}
-				},
-				"additionalProperties": false
-			}
+			"type"        : "object",
+			"label"       : "Filters",
+			"help"        : "Field-name → {value, operator} map as JSON. Filter values may reference <code>{{params.X}}</code> placeholders.",
+			"field"       : "json",
+			"placeholder" : "{\n\t\"status\": { \"value\": \"active\" },\n\t\"city\":   { \"operator\": \"contains\", \"value\": \"{{params.city}}\" },\n\t\"price\":  { \"operator\": \"lte\",      \"value\": \"{{params.max_price}}\" }\n}",
+			"settings"    : { "rows" : 6 }
 		},
 		"sort": {
-			"type": "string",
-			"description": "REST-style sort spec (e.g. 'date:desc' or 'priority:asc,date:desc')."
+			"type"        : "string",
+			"label"       : "Sort",
+			"help"        : "REST-style sort spec, e.g. <code>date:desc</code> or <code>priority:asc,date:desc</code>.",
+			"field"       : "text",
+			"placeholder" : "date:desc"
 		},
 		"limit": {
-			"type": "integer",
-			"minimum": 1,
-			"maximum": 50,
-			"default": 20,
-			"description": "Max results returned (default 20). Schema validation enforces the upper bound of 50."
+			"type"    : "integer",
+			"label"   : "Limit",
+			"help"    : "Max results per call. Capped at 50.",
+			"field"   : "number",
+			"default" : 20,
+			"minimum" : 1,
+			"maximum" : 50
 		},
 		"offset": {
-			"type": "integer",
-			"minimum": 0,
-			"default": 0,
-			"description": "Skip the first N matching results — for paginated tools where 'limit' results aren't enough."
+			"type"    : "integer",
+			"label"   : "Offset",
+			"help"    : "Skip the first N matching results.",
+			"field"   : "number",
+			"default" : 0,
+			"minimum" : 0
 		},
 		"include": {
-			"type": "string",
-			"description": "REST-style include filter string — escape hatch for shapes the structured `filters` block can't express."
+			"type"  : "string",
+			"label" : "Include",
+			"help"  : "REST-style include filter — escape hatch for shapes the structured filters object can't express.",
+			"field" : "text"
 		},
 		"exclude": {
-			"type": "string",
-			"description": "REST-style exclude filter string — escape hatch for shapes the structured `filters` block can't express."
+			"type"  : "string",
+			"label" : "Exclude",
+			"help"  : "REST-style exclude filter — escape hatch.",
+			"field" : "text"
 		},
 		"format": {
-			"type": "string",
-			"enum": ["markdown", "html", "text"],
-			"default": "markdown",
-			"description": "Output format for rich-text fields: markdown (default), html, or plain text."
+			"type"    : "string",
+			"label"   : "Format",
+			"help"    : "Output format for rich-text fields.",
+			"field"   : "select",
+			"default" : "markdown",
+			"options" : [
+				{ "value" : "markdown", "label" : "Markdown" },
+				{ "value" : "html",     "label" : "HTML" },
+				{ "value" : "text",     "label" : "Plain text" }
+			]
 		}
 	}
 }

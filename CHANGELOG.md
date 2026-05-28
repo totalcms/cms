@@ -2,9 +2,11 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-beta.8] - 2026-05-28
+## [3.5.0-beta.9] - 2026-05-28
 
 ### Enhanced
+
+- **MCP tools shape: array → keyed deck**: The `tools` property on `mcp-collection` is now a deck keyed by tool id, rendered as a structured deck in the schema editor instead of a raw JSON textarea. Each row gets per-tool validation and the same drag-to-reorder + collapsed-label affordances as other decks (mcp-prompt-arg, card+deck combos). Matches the deck convention already established for prompt arguments. `McpToolsValidator` and `SchemaToolRegistrar` accept both keyed-object and legacy list-array input, with the deck key authoritative when present
 
 - **OAuth key paths in settings UI**: Settings → OAuth now shows the configured signing and public key paths with present/missing badges. Paths come from `config/tcms.php` (when overridden) or the bundled defaults. Fresh installs without keys are no longer indistinguishable from correctly set-up ones — the missing badge appears alongside a hint to run `tcms oauth:setup`
 
