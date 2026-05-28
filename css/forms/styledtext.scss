@@ -517,7 +517,7 @@ dialog.ste-dialog {
 	flex-shrink      : 0;
 
 	&:hover {
-		color : oklch(var(--totalform-danger, var(--totalform-darkgray)));
+		color : oklch(var(--totalform-error));
 	}
 }
 
@@ -736,7 +736,7 @@ dialog.ste-dialog {
 	padding       : 8px 12px;
 	font-size     : 13px;
 	color         : oklch(var(--totalform-error));
-	background    : oklch(var(--totalform-danger) / 0.08);
+	background    : oklch(var(--totalform-error) / 0.08);
 	border-radius : var(--totalform-radius);
 }
 
@@ -1150,7 +1150,7 @@ dialog.ste-dialog {
 	padding         : 0 2px;
 
 	&:hover {
-		color : oklch(var(--totalform-danger, var(--totalform-darkgray)));
+		color : oklch(var(--totalform-error));
 	}
 }
 

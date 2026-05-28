@@ -17,13 +17,13 @@ final class SettingsValidatorTest extends TestCase
 	{
 		// SettingsValidator now derives the section list from the
 		// SettingsRepository, which globs resources/schemas/settings/*.json.
-		// We mock with the canonical 16-entry list so this test stays a unit
-		// test (no filesystem dependency) and matches the behavior the admin
-		// settings UI actually sees.
+		// We mock with the canonical list so this test stays a unit test (no
+		// filesystem dependency) and matches the behavior the admin settings
+		// UI actually sees.
 		$this->settingsRepository = $this->createMock(SettingsRepository::class);
 		$this->settingsRepository->method('listSections')->willReturn([
 			'auth', 'builder', 'cache', 'dashboard', 'general', 'htmlclean',
-			'i18n', 'imageworks', 'installation', 'license', 'mailer', 'mcp',
+			'i18n', 'imageworks', 'license', 'mailer', 'mcp',
 			'presets', 'pushnotif', 'smtp', 'sync',
 		]);
 
@@ -34,7 +34,7 @@ final class SettingsValidatorTest extends TestCase
 
 	public function testIsValidSectionReturnsTrueForValidSections(): void
 	{
-		$validSections = ['installation', 'general', 'dashboard', 'imageworks', 'smtp', 'cache', 'auth', 'htmlclean', 'mailer'];
+		$validSections = ['general', 'dashboard', 'imageworks', 'smtp', 'cache', 'auth', 'htmlclean', 'mailer'];
 
 		foreach ($validSections as $section) {
 			$this->assertTrue(
@@ -61,8 +61,7 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(16, $sections);
-		$this->assertContains('installation', $sections);
+		$this->assertCount(15, $sections);
 		$this->assertContains('general', $sections);
 		$this->assertContains('auth', $sections);
 		$this->assertContains('builder', $sections);

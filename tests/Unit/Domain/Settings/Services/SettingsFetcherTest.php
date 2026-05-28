@@ -3,7 +3,6 @@
 namespace Tests\Unit\Domain\Settings\Services;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Settings\Repository\InstallationRepository;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
@@ -12,13 +11,11 @@ final class SettingsFetcherTest extends TestCase
 {
 	private SettingsFetcher $fetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $installationRepository;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
 
 	protected function setUp(): void
 	{
 		$this->settingsRepository     = $this->createMock(SettingsRepository::class);
-		$this->installationRepository = $this->createMock(InstallationRepository::class);
 		$this->schemaFetcher          = $this->createMock(SettingsSchemaFetcher::class);
 
 		// SettingsFetcher derives the general section's field list from
@@ -41,7 +38,6 @@ final class SettingsFetcherTest extends TestCase
 
 		$this->fetcher = new SettingsFetcher(
 			$this->settingsRepository,
-			$this->installationRepository,
 			$this->schemaFetcher,
 		);
 	}
@@ -66,29 +62,6 @@ final class SettingsFetcherTest extends TestCase
 		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSettings();
-
-		$this->assertSame($settings, $result);
-	}
-
-	public function testLoadInstallationSettingsReturnsEmptyArrayWhenFileNotExists(): void
-	{
-		$this->installationRepository->method('load')->willReturn([]);
-
-		$result = $this->fetcher->loadInstallationSettings();
-
-		$this->assertIsArray($result);
-		$this->assertEmpty($result);
-	}
-
-	public function testLoadInstallationSettingsReturnsArrayFromRepository(): void
-	{
-		$settings = [
-			'datadir' => 'test-data',
-		];
-
-		$this->installationRepository->method('load')->willReturn($settings);
-
-		$result = $this->fetcher->loadInstallationSettings();
 
 		$this->assertSame($settings, $result);
 	}
@@ -176,19 +149,6 @@ final class SettingsFetcherTest extends TestCase
 		$this->assertCount(2, $result);
 		$this->assertArrayHasKey('sentry', $result);
 		$this->assertArrayHasKey('timezone', $result);
-	}
-
-	public function testLoadSectionInstallationReturnsInstallationSettings(): void
-	{
-		$installationSettings = [
-			'datadir' => '/custom/data',
-		];
-
-		$this->installationRepository->method('load')->willReturn($installationSettings);
-
-		$result = $this->fetcher->loadSection('installation');
-
-		$this->assertSame($installationSettings, $result);
 	}
 
 	public function testLoadSettingsHandlesComplexNestedArrays(): void

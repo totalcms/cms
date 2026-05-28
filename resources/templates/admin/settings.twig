@@ -1,10 +1,6 @@
 {% extends "admin-dashboard.twig" %}
 
 {% set sections = {
-	'installation': {
-		'label': t('settings.installation'),
-		'description': t('settings.installation_desc')
-	},
 	'general': {
 		'label': t('settings.general'),
 		'description': t('settings.general_desc')
@@ -122,6 +118,41 @@
 		<div class="cms-info">
 			<p><strong>Named presets</strong> &mdash; Reference a preset by name in a schema property's settings with <code>"preset": "my-preset-name"</code>. The preset's settings become the base, and any additional field settings override them.</p>
 			<p><strong>Type defaults</strong> &mdash; Name a preset after a field type (e.g., <code>styledtext</code>, <code>image</code>) and it will automatically apply to every field of that type that has no settings defined at the schema, collection, or object level.</p>
+		</div>
+		{% endif %}
+
+		{% if currentSection == 'oauth' and oauthKeys is defined %}
+		<style>
+			.oauth-key-paths { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; margin: 0.5rem 0 0; }
+			.oauth-key-paths dt { font-weight: 600; }
+			.oauth-key-paths dd { margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+			.oauth-key-paths code { word-break: break-all; }
+		</style>
+		<div class="cms-info oauth-key-status">
+			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.</p>
+			<dl class="oauth-key-paths">
+				<dt>Private key</dt>
+				<dd>
+					<code>{{ oauthKeys.signingKeyPath }}</code>
+					{% if oauthKeys.signingExists %}
+						<span class="dash-badge success">present</span>
+					{% else %}
+						<span class="dash-badge danger">missing</span>
+					{% endif %}
+				</dd>
+				<dt>Public key</dt>
+				<dd>
+					<code>{{ oauthKeys.publicKeyPath }}</code>
+					{% if oauthKeys.publicExists %}
+						<span class="dash-badge success">present</span>
+					{% else %}
+						<span class="dash-badge danger">missing</span>
+					{% endif %}
+				</dd>
+			</dl>
+			{% if not oauthKeys.signingExists or not oauthKeys.publicExists %}
+			<p>Run <code>tcms oauth:setup</code> to generate the key pair.</p>
+			{% endif %}
 		</div>
 		{% endif %}
 

@@ -502,8 +502,8 @@
 		}
 
 		&.status-error {
-			background: oklch(var(--totalform-danger) / 0.1);
-			color: oklch(var(--totalform-danger));
+			background: oklch(var(--totalform-error) / 0.1);
+			color: oklch(var(--totalform-error));
 		}
 
 		&.status-dev {

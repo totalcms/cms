@@ -29,7 +29,7 @@
 
 	// Error variant
 	&.error {
-		border-color : oklch(var(--totalform-danger));
+		border-color : oklch(var(--totalform-error));
 	}
 
 	// Card header: title + actions
@@ -142,8 +142,8 @@
 	}
 
 	&.danger {
-		background : oklch(var(--totalform-danger) / 0.1);
-		color      : oklch(var(--totalform-danger));
+		background : oklch(var(--totalform-error) / 0.1);
+		color      : oklch(var(--totalform-error));
 	}
 
 	&.muted {
@@ -261,6 +261,6 @@ a.dash-badge {
 	}
 
 	&.error {
-		color : oklch(var(--totalform-danger));
+		color : oklch(var(--totalform-error));
 	}
 }

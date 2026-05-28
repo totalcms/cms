@@ -113,8 +113,13 @@ notify_sentry_release() {
             continue
         fi
 
-        # Associate commits with the release
-        if sentry-cli releases set-commits "$release_version" --auto \
+        # Associate commits with the release. --ignore-missing falls back to
+        # the default last-N-commits range when sentry-cli can't find the
+        # previous release's SHA in our local git history — common after a
+        # squash/rebase on a release branch invalidates the SHA Sentry has
+        # on file. Without it, set-commits errors and the release page loses
+        # its changelog block.
+        if sentry-cli releases set-commits "$release_version" --auto --ignore-missing \
             --org "$SENTRY_ORG"; then
             print_success "Commits associated with $project release"
         else
