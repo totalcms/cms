@@ -14,6 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Middleware\Security\OAuthBearerMiddleware;
 
 final class OAuthBearerMiddlewareTest extends TestCase
@@ -53,11 +54,23 @@ final class OAuthBearerMiddlewareTest extends TestCase
 		return new OAuthRevocationList($cache, 3600);
 	}
 
+	/**
+	 * Wrap a ResourceServer mock in a stub OAuthServerFactory so the
+	 * middleware can lazily resolve it.
+	 */
+	private function factoryReturning(ResourceServer $resourceServer): OAuthServerFactory
+	{
+		$factory = $this->createMock(OAuthServerFactory::class);
+		$factory->method('buildResourceServer')->willReturn($resourceServer);
+
+		return $factory;
+	}
+
 	private function middleware(
 		ResourceServer $resourceServer,
 		OAuthRevocationList $revocationList,
 	): OAuthBearerMiddleware {
-		return new OAuthBearerMiddleware($resourceServer, $revocationList);
+		return new OAuthBearerMiddleware($this->factoryReturning($resourceServer), $revocationList);
 	}
 
 	/**
@@ -176,7 +189,29 @@ final class OAuthBearerMiddlewareTest extends TestCase
 		$this->assertSame(['read', 'write'], $handler->received->getAttribute('oauth_scopes'));
 	}
 
-	// ── Test 5: Valid JWT, revoked → 401 with "token revoked" ────────────────
+	// ── Test 5: Bearer present but keys missing → 401, no 500 ────────────────
+
+	public function testMissingKeysReturns401NotServerError(): void
+	{
+		// Simulate the keys-not-generated case: the factory throws when asked
+		// to build the ResourceServer (CryptKey: "Invalid key supplied"). The
+		// middleware must NOT bubble this as a 500 — it should return a 401.
+		$factory = $this->createMock(OAuthServerFactory::class);
+		$factory->expects($this->once())
+			->method('buildResourceServer')
+			->willThrowException(new \RuntimeException('Invalid key supplied'));
+
+		$handler    = $this->capturingHandler();
+		$middleware = new OAuthBearerMiddleware($factory, $this->revocationList());
+		$response   = $middleware->process($this->request('GET', 'Bearer any.jwt.token'), $handler);
+
+		$this->assertSame(401, $response->getStatusCode());
+		$this->assertStringContainsString('Bearer realm="T3"', $response->getHeaderLine('WWW-Authenticate'));
+		$this->assertStringContainsString('invalid_token', $response->getHeaderLine('WWW-Authenticate'));
+		$this->assertNull($handler->received);
+	}
+
+	// ── Test 6: Valid JWT, revoked → 401 with "token revoked" ────────────────
 
 	public function testRevokedJwtReturns401WithTokenRevokedDescription(): void
 	{

@@ -20,7 +20,7 @@ use TotalCMS\Support\Config;
  * Assembles league's AuthorizationServer and ResourceServer wired with
  * T3's six adapter repositories and configuration from $config->oauth[].
  */
-final class OAuthServerFactory
+class OAuthServerFactory
 {
 	public function __construct(
 		private readonly LeagueClientRepository $clients,
