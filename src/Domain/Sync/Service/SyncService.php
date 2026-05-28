@@ -42,9 +42,22 @@ readonly class SyncService
 			]);
 		}
 
-		$httpResponse = $this->httpClient->request('POST', $url . '/import/jumpstart', [
+		// Remote import/export endpoints live under the API group at
+		// `/api/import/jumpstart` and `/api/export/jumpstart`. Users configure
+		// the remote `url` setting as the bare site URL (per the placeholder
+		// `https://example.com/tcms` in settings/sync.json), so we append the
+		// full route path here. rtrim guards against accidentally-trailing
+		// slashes producing a double-slash.
+		// Use the X-API-Key header instead of `Authorization: Bearer` because
+		// OAuthBearerMiddleware (outer layer on the /api/ group since Phase 4)
+		// intercepts any Bearer token and tries to validate it as a JWT —
+		// plain API keys aren't JWTs, so the request would 401 before
+		// DualAuthMiddleware/ApiKeyAuthMiddleware (which accept both header
+		// formats) ever ran. X-API-Key is invisible to OAuthBearerMiddleware
+		// and falls through to the API-key validator cleanly.
+		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . '/api/import/jumpstart', [
 			'headers' => [
-				'Authorization: Bearer ' . $key,
+				'X-API-Key: ' . $key,
 				'Content-Type: application/json',
 				'Accept: application/json',
 			],
@@ -53,9 +66,11 @@ readonly class SyncService
 		]);
 
 		if ($httpResponse->statusCode >= 400) {
-			$remoteResult = json_decode($httpResponse->body, true);
-			$error        = is_array($remoteResult) ? ($remoteResult['error'] ?? $httpResponse->body) : $httpResponse->body;
-			throw new \RuntimeException("Push failed (HTTP {$httpResponse->statusCode}): {$error}");
+			throw new \RuntimeException(sprintf(
+				'Push failed (HTTP %d): %s',
+				$httpResponse->statusCode,
+				$this->extractRemoteError($httpResponse->body),
+			));
 		}
 
 		$remoteResult = json_decode($httpResponse->body, true);
@@ -78,16 +93,21 @@ readonly class SyncService
 	 */
 	public function fetchRemoteSyncData(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): array
 	{
-		$httpResponse = $this->httpClient->request('GET', $url . '/export/jumpstart?mode=sync', [
+		$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/export/jumpstart?mode=sync', [
 			'headers' => [
-				'Authorization: Bearer ' . $key,
+				// See push() for why X-API-Key rather than Authorization: Bearer.
+				'X-API-Key: ' . $key,
 				'Accept: application/json',
 			],
 			'timeout' => 60,
 		]);
 
 		if ($httpResponse->statusCode >= 400) {
-			throw new \RuntimeException("Pull failed (HTTP {$httpResponse->statusCode})");
+			throw new \RuntimeException(sprintf(
+				'Pull failed (HTTP %d): %s',
+				$httpResponse->statusCode,
+				$this->extractRemoteError($httpResponse->body),
+			));
 		}
 
 		$payload = json_decode($httpResponse->body, true);
@@ -152,5 +172,41 @@ readonly class SyncService
 		}
 
 		return $payload;
+	}
+
+	/**
+	 * Pull a usable string error message out of a remote response body.
+	 *
+	 * T3's error responses typically look like `{"error": {"message": "...",
+	 * "code": "..."}}` (nested object). The original implementation read
+	 * `$body['error']` and stringified it, which for the nested-object case
+	 * produces the literal string "Array" — useless for debugging. Handle
+	 * the nested shape, fall back to flat error/message strings, and as a
+	 * last resort return a trimmed slice of the raw body.
+	 */
+	private function extractRemoteError(string $body): string
+	{
+		$decoded = json_decode($body, true);
+
+		if (is_array($decoded)) {
+			$error = $decoded['error'] ?? null;
+
+			if (is_array($error) && is_string($error['message'] ?? null)) {
+				return $error['message'];
+			}
+			if (is_string($error)) {
+				return $error;
+			}
+			if (is_string($decoded['message'] ?? null)) {
+				return $decoded['message'];
+			}
+		}
+
+		$trimmed = trim($body);
+		if ($trimmed === '') {
+			return '(empty response body)';
+		}
+
+		return strlen($trimmed) > 500 ? substr($trimmed, 0, 500) . '…' : $trimmed;
 	}
 }
