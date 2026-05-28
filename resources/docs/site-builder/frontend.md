@@ -12,12 +12,18 @@ This guide covers the recommended setup using **Vite**, with notes on alternativ
 
 ## Quick Start
 
+The fastest path is the bundled scaffold — `tcms builder:frontend` drops a pre-configured `frontend/` directory (with `package.json`, `vite.config.js`, and a starter `css/` + `js/`) into your project. From your project root (same level as `tcms-data/`):
+
 ```bash
-# From your project root (same level as tcms-data/)
-npm create vite@latest frontend -- --template vanilla
+tcms builder:frontend
 cd frontend
 npm install
+npm run build
 ```
+
+That installs Vite, builds the starter assets to `public/assets/`, and writes the manifest T3's asset helpers consume. From there you edit `frontend/css/style.css` and `frontend/js/app.js`, and re-run `npm run build` (or `npm run watch` for continuous rebuild).
+
+If you'd rather build the scaffold yourself instead of using the bundled one, the rest of this guide walks through what `tcms builder:frontend` actually does — `vite.config.js`, package scripts, and the layout conventions T3's helpers expect.
 
 ## Directory Structure
 
@@ -60,8 +66,16 @@ export default defineConfig({
         outDir: resolve(__dirname, '../public/assets'),
         emptyOutDir: true,
 
-        // Generate manifest.json for hashed filenames
-        manifest: true,
+        // Flatten output: hashed files go directly into outDir, not into a
+        // nested `assets/` subdirectory (Vite's default `assetsDir: 'assets'`).
+        // Otherwise paths would double up as `/assets/assets/style-<hash>.css`.
+        assetsDir: '',
+
+        // Vite 5+ writes the manifest to `<outDir>/.vite/manifest.json` by
+        // default. Pin it at `<outDir>/manifest.json` so T3 finds it without
+        // any extra config. (T3 falls back to `.vite/manifest.json` for BYO
+        // projects that don't override this, but it's cleaner to be explicit.)
+        manifest: 'manifest.json',
 
         rollupOptions: {
             input: {
@@ -76,7 +90,8 @@ export default defineConfig({
 ### What This Does
 
 - **`outDir`** — writes compiled files to `public/assets/`
-- **`manifest: true`** — generates `manifest.json` so T3 can resolve hashed filenames
+- **`assetsDir: ''`** — flattens the output (no `assets/assets/` double-prefix)
+- **`manifest: 'manifest.json'`** — places the manifest where T3 looks first
 - **`rollupOptions.input`** — defines your entry points (add as many as needed)
 
 ## Package Scripts
@@ -181,7 +196,8 @@ export default defineConfig({
     build: {
         outDir: resolve(__dirname, '../public/assets'),
         emptyOutDir: true,
-        manifest: true,
+        assetsDir: '',
+        manifest: 'manifest.json',
         rollupOptions: {
             input: {
                 style: resolve(__dirname, 'css/style.css'),

@@ -416,8 +416,19 @@ class BuilderTwigAdapter
 			return $this->manifestCache;
 		}
 
-		$basePath     = $this->getAssetsBasePath();
-		$manifestPath = $this->config->docroot . '/' . ltrim($basePath, '/') . '/manifest.json';
+		$basePath = $this->getAssetsBasePath();
+		$assetDir = $this->config->docroot . '/' . ltrim($basePath, '/');
+
+		// Vite 4 and most other build tools write `manifest.json` at the root
+		// of the output directory. Vite 5+ moved it under `.vite/` by default.
+		// Check both so customers can plug in either layout without having to
+		// override their build config. Our bundled scaffold pins the manifest
+		// at the root via `manifest: 'manifest.json'`, so this fallback only
+		// fires for BYO Vite-5 projects.
+		$manifestPath = $assetDir . '/manifest.json';
+		if (!file_exists($manifestPath)) {
+			$manifestPath = $assetDir . '/.vite/manifest.json';
+		}
 
 		if (!file_exists($manifestPath)) {
 			$this->manifestCache = null;
