@@ -226,6 +226,10 @@
 			margin-bottom : 1rem;
 		}
 
+		p, ul, ol {
+			max-width : none !important;
+		}
+
 		h2 {
 			font-size   : 1.5rem;
 			font-weight : 700;

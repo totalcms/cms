@@ -9,6 +9,39 @@ use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 
 final class CollectionSorterTest extends TestCase
 {
+	// --- isSortableType — canonical answer to "does this form-field type ──────
+	//     have a well-defined ordering?" Lives alongside the sort code so the
+	//     truth is co-located with the implementation.
+
+	public function testIsSortableTypeReturnsTrueForNumericAndTemporalTypes(): void
+	{
+		$this->assertTrue(CollectionSorter::isSortableType('number'));
+		$this->assertTrue(CollectionSorter::isSortableType('range'));
+		$this->assertTrue(CollectionSorter::isSortableType('date'));
+		$this->assertTrue(CollectionSorter::isSortableType('datetime'));
+	}
+
+	public function testIsSortableTypeReturnsTrueForIdField(): void
+	{
+		// `sort=id:asc` is the natural deterministic fallback when a collection
+		// has no other sortable property — locked in by the Chunk B loose-thread.
+		$this->assertTrue(CollectionSorter::isSortableType('id'));
+	}
+
+	public function testIsSortableTypeReturnsFalseForFreeTextTypes(): void
+	{
+		// Sorting `styledtext` lexicographically would order by the start of an
+		// HTML tag, not the content — almost never useful. Operators can opt in
+		// per-property via mcp.sortable if they really want it.
+		$this->assertFalse(CollectionSorter::isSortableType('styledtext'));
+		$this->assertFalse(CollectionSorter::isSortableType('textarea'));
+	}
+
+	public function testIsSortableTypeReturnsFalseForUnknownType(): void
+	{
+		$this->assertFalse(CollectionSorter::isSortableType('made-up-type'));
+	}
+
 	public function testShuffleReturnsAllItems(): void
 	{
 		$collection = [

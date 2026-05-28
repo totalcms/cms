@@ -36,6 +36,7 @@ readonly class DataPathSetupSubmitAction
 		$customPath = (string)($data['customPath'] ?? '');
 		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
 		$locale     = (string)$this->session->get('setup_locale', 'en_US');
+		$siteName   = (string)$this->session->get('setup_site_name', '');
 
 		// Form-level guard kept here so we can surface a translated message
 		// rather than the installer's generic "no location selected" text.
@@ -46,7 +47,7 @@ readonly class DataPathSetupSubmitAction
 		}
 
 		try {
-			$this->installer->install($location, $customPath, $docroot, $locale);
+			$this->installer->install($location, $customPath, $docroot, $locale, $siteName);
 		} catch (\Throwable $e) {
 			$flash->add('error', $e->getMessage());
 

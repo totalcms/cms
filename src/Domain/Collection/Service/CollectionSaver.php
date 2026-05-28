@@ -70,6 +70,16 @@ readonly class CollectionSaver
 			$data['manualSort'] = [];
 		}
 
+		// Ensure mcp.tools is an array — empty/missing/null submissions land as [].
+		// Validation happens upstream in the Action layer via ValidatesMcpToolsTrait;
+		// this normalises the canonical on-disk shape so reads never see a non-array.
+		if (isset($data['mcp']) && is_array($data['mcp'])) {
+			$tools = $data['mcp']['tools'] ?? null;
+			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
+				$data['mcp']['tools'] = [];
+			}
+		}
+
 		$collection = $this->factory->generateCollection($data);
 
 		if ($this->storage->collectionExists($collection->id)) {
@@ -132,6 +142,16 @@ readonly class CollectionSaver
 		// Ensure manualSort is an array (handle empty strings from form)
 		if (isset($data['manualSort']) && $data['manualSort'] === '') {
 			$data['manualSort'] = [];
+		}
+
+		// Ensure mcp.tools is an array — empty/missing/null submissions land as [].
+		// Validation happens upstream in the Action layer via ValidatesMcpToolsTrait;
+		// this normalises the canonical on-disk shape so reads never see a non-array.
+		if (isset($data['mcp']) && is_array($data['mcp'])) {
+			$tools = $data['mcp']['tools'] ?? null;
+			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
+				$data['mcp']['tools'] = [];
+			}
 		}
 
 		$collection = $this->factory->generateCollection($data);

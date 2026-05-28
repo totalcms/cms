@@ -127,6 +127,27 @@ final class DataPathInstallerTest extends TestCase
 		$this->assertSame('fr_FR', $settings['i18n']['default']);
 		$this->assertArrayNotHasKey('locale', $settings);
 	}
+
+	public function testWritesSiteNameToSettingsJsonWhenProvided(): void
+	{
+		// Welcome step captures siteName + locale; both flow through install()
+		// and land in settings.json once the datadir exists.
+		$this->installer->install('default', '', $this->docroot, 'en_US', "Joe's Bistro");
+
+		$settings = json_decode((string)file_get_contents($this->sandbox . '/tcms-data/.system/settings.json'), true);
+		$this->assertSame("Joe's Bistro", $settings['siteName']);
+	}
+
+	public function testOmitsSiteNameWhenEmpty(): void
+	{
+		// Empty siteName is a valid "skipped" state — the field shouldn't be
+		// written so the operator can fill it in later via General settings
+		// without an empty-string entry getting in the way.
+		$this->installer->install('default', '', $this->docroot, 'en_US', '');
+
+		$settings = json_decode((string)file_get_contents($this->sandbox . '/tcms-data/.system/settings.json'), true);
+		$this->assertArrayNotHasKey('siteName', $settings);
+	}
 }
 
 /**

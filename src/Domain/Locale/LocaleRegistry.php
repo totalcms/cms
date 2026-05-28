@@ -50,6 +50,7 @@ final class LocaleRegistry
 	// see the code when configuring. The `english` column carries the full
 	// country name for the docs reference and English-speaking integrators.
 	public const LOCALES = [
+		'af_ZA' => ['label' => 'Afrikaans',                'english' => 'Afrikaans (South Africa)', 'dir' => 'ltr'],
 		'ar'    => ['label' => 'العربية',                  'english' => 'Arabic',                  'dir' => 'rtl'],
 		'ar_SA' => ['label' => 'العربية (SA)',             'english' => 'Arabic (Saudi Arabia)',   'dir' => 'rtl'],
 		'bn_BD' => ['label' => 'বাংলা',                     'english' => 'Bengali (Bangladesh)',    'dir' => 'ltr'],
@@ -96,17 +97,25 @@ final class LocaleRegistry
 		'pt_PT' => ['label' => 'Português (PT)',           'english' => 'Portuguese (Portugal)',   'dir' => 'ltr'],
 		'ro_RO' => ['label' => 'Română',                   'english' => 'Romanian (Romania)',      'dir' => 'ltr'],
 		'ru_RU' => ['label' => 'Русский',                 'english' => 'Russian (Russia)',        'dir' => 'ltr'],
-		'sv_SE' => ['label' => 'Svenska',                  'english' => 'Swedish (Sweden)',        'dir' => 'ltr'],
-		'sw_KE' => ['label' => 'Kiswahili',                'english' => 'Swahili (Kenya)',         'dir' => 'ltr'],
-		'ta_IN' => ['label' => 'தமிழ்',                     'english' => 'Tamil (India)',           'dir' => 'ltr'],
-		'th_TH' => ['label' => 'ไทย',                      'english' => 'Thai (Thailand)',         'dir' => 'ltr'],
-		'tl_PH' => ['label' => 'Tagalog',                  'english' => 'Tagalog (Philippines)',   'dir' => 'ltr'],
-		'tr_TR' => ['label' => 'Türkçe',                   'english' => 'Turkish (Turkey)',        'dir' => 'ltr'],
-		'uk_UA' => ['label' => 'Українська',              'english' => 'Ukrainian (Ukraine)',     'dir' => 'ltr'],
-		'ur_PK' => ['label' => 'اردو',                      'english' => 'Urdu (Pakistan)',         'dir' => 'rtl'],
-		'vi_VN' => ['label' => 'Tiếng Việt',               'english' => 'Vietnamese (Vietnam)',    'dir' => 'ltr'],
-		'zh_CN' => ['label' => '中文 (CN)',                'english' => 'Chinese (Mainland)',      'dir' => 'ltr'],
-		'zh_TW' => ['label' => '中文 (TW)',                'english' => 'Chinese (Taiwan)',        'dir' => 'ltr'],
+		// Serbian is the only language in this registry that genuinely needs a
+		// script subtag — speakers in Serbia routinely write the same language
+		// in both Latin and Cyrillic. `sr_RS` alone is ambiguous per BCP-47.
+		// (Chinese splits the same way conceptually, but `zh_CN`/`zh_TW` are
+		// conventional region proxies for Simplified/Traditional and don't
+		// need the explicit script tag.)
+		'sr_Latn_RS' => ['label' => 'Srpski (Latn)',       'english' => 'Serbian (Latin, Serbia)',    'dir' => 'ltr'],
+		'sr_Cyrl_RS' => ['label' => 'Српски (Ћирилица)',   'english' => 'Serbian (Cyrillic, Serbia)', 'dir' => 'ltr'],
+		'sv_SE'      => ['label' => 'Svenska',                  'english' => 'Swedish (Sweden)',        'dir' => 'ltr'],
+		'sw_KE'      => ['label' => 'Kiswahili',                'english' => 'Swahili (Kenya)',         'dir' => 'ltr'],
+		'ta_IN'      => ['label' => 'தமிழ்',                     'english' => 'Tamil (India)',           'dir' => 'ltr'],
+		'th_TH'      => ['label' => 'ไทย',                      'english' => 'Thai (Thailand)',         'dir' => 'ltr'],
+		'tl_PH'      => ['label' => 'Tagalog',                  'english' => 'Tagalog (Philippines)',   'dir' => 'ltr'],
+		'tr_TR'      => ['label' => 'Türkçe',                   'english' => 'Turkish (Turkey)',        'dir' => 'ltr'],
+		'uk_UA'      => ['label' => 'Українська',              'english' => 'Ukrainian (Ukraine)',     'dir' => 'ltr'],
+		'ur_PK'      => ['label' => 'اردو',                      'english' => 'Urdu (Pakistan)',         'dir' => 'rtl'],
+		'vi_VN'      => ['label' => 'Tiếng Việt',               'english' => 'Vietnamese (Vietnam)',    'dir' => 'ltr'],
+		'zh_CN'      => ['label' => '中文 (CN)',                'english' => 'Chinese (Mainland)',      'dir' => 'ltr'],
+		'zh_TW'      => ['label' => '中文 (TW)',                'english' => 'Chinese (Taiwan)',        'dir' => 'ltr'],
 	];
 
 	/**

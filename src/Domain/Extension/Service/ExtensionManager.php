@@ -26,7 +26,7 @@ use Twig\TwigFunction;
 /**
  * Orchestrates extension discovery, loading, and lifecycle.
  */
-final class ExtensionManager
+class ExtensionManager
 {
 	/** @var array<string,ExtensionManifest> */
 	private array $discoveredManifests = [];
@@ -223,6 +223,74 @@ final class ExtensionManager
 						$pageMiddlewareRegistry->register($name, $serviceId);
 					} catch (\InvalidArgumentException $e) {
 						$this->logger->warning("Extension '{$id}' page-middleware registration failed: " . $e->getMessage());
+					}
+				}
+			}
+		}
+
+		// Wire form-action registrations from extensions into the registry.
+		if ($this->container->has(FormActionRegistry::class)) {
+			/** @var FormActionRegistry $formActionRegistry */
+			$formActionRegistry = $this->container->get(FormActionRegistry::class);
+			foreach ($this->contexts as $id => $context) {
+				if (!$this->isCapabilityPermitted($id, 'form-actions')) {
+					continue;
+				}
+				foreach ($context->getRegisteredFormActions() as $name => $formAction) {
+					$formActionRegistry->register($formAction);
+				}
+			}
+		}
+
+		// Wire MCP tools and resources from extensions into their respective
+		// registries (strict-deny on collisions, both core-vs-extension and
+		// cross-extension). Runs before Twig wiring so registries are ready
+		// by the time the first /mcp request lands — boot is the latest safe
+		// moment since extensions populate their contexts during register().
+		if ($this->container->has(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class)) {
+			/** @var \TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry $toolRegistry */
+			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class);
+			$mcpRegistrar  = new McpExtensionRegistrar($this->logger);
+			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
+
+			// Only request the ResourceRegistry singleton when extensions have
+			// resources to add. Resolving the registry eagerly would trigger
+			// its CollectionResourceRegistrar pass over every collection on
+			// disk, which (a) is wasted work when no extension contributes
+			// resources, and (b) snapshots the collection list at boot time —
+			// any collection created later in the same process (e.g. in a
+			// test's beforeEach) wouldn't appear in the registry.
+			$extensionResources = $this->getAllMcpResources();
+			$extensionTemplates = $this->getAllMcpResourceTemplates();
+			if (
+				($extensionResources !== [] || $extensionTemplates !== [])
+				&& $this->container->has(\TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry::class)
+			) {
+				/** @var \TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry $resourceRegistry */
+				$resourceRegistry = $this->container->get(\TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry::class);
+				$mcpRegistrar->registerResources($resourceRegistry, $extensionResources);
+				$mcpRegistrar->registerResourceTemplates($resourceRegistry, $extensionTemplates);
+			}
+		}
+
+		// Wire extension search providers into the SearchProviderRegistry.
+		// Strict-deny on collisions (matches MCP tool registrar policy). The
+		// registry's register() method already throws LogicException on
+		// duplicate ids — wrap each call so one bad extension can't break the
+		// rest of the drain.
+		if ($this->container->has(\TotalCMS\Domain\Search\Service\SearchProviderRegistry::class)) {
+			/** @var \TotalCMS\Domain\Search\Service\SearchProviderRegistry $searchRegistry */
+			$searchRegistry = $this->container->get(\TotalCMS\Domain\Search\Service\SearchProviderRegistry::class);
+			foreach ($this->getAllMcpSearchProviders() as $extensionId => $providers) {
+				foreach ($providers as $provider) {
+					try {
+						$searchRegistry->register($provider);
+					} catch (\LogicException $e) {
+						$this->logger->warning('Extension search provider registration collision; skipped', [
+							'extension'   => $extensionId,
+							'provider_id' => $provider->id(),
+							'message'     => $e->getMessage(),
+						]);
 					}
 				}
 			}
@@ -469,6 +537,9 @@ final class ExtensionManager
 
 		$extensions = [];
 		foreach ($manifests as $id => $manifest) {
+			if ($manifest->hidden) {
+				continue;
+			}
 			$extensions[] = $this->buildExtensionInfo($id, $manifest, $states[$id] ?? null, $capabilityLabels);
 		}
 
@@ -536,6 +607,7 @@ final class ExtensionManager
 			'links'           => $manifest->links,
 			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
 			'icon'            => $this->resolveIcon($id, $manifest),
+			'hidden'          => $manifest->hidden,
 		];
 	}
 
@@ -555,6 +627,123 @@ final class ExtensionManager
 		}
 
 		return $functions;
+	}
+
+	/**
+	 * Per-extension map of MCP tools, in the shape McpExtensionRegistrar expects:
+	 * `{extensionId => list<McpToolDefinition>}`. The id-keyed map (instead of a
+	 * flat list) lets the registrar attribute collisions to a specific extension
+	 * in the warning log.
+	 *
+	 * @return array<string,list<\TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition>>
+	 */
+	public function getAllMcpTools(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:tools')) {
+				continue;
+			}
+			$tools = $context->getRegisteredMcpTools();
+			if ($tools !== []) {
+				$byExtension[$id] = $tools;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of MCP resources. Same id-keyed shape as getAllMcpTools()
+	 * so McpExtensionRegistrar can attribute collisions to a specific extension.
+	 * Gated by the `mcp:resources` capability permission.
+	 *
+	 * @return array<string,list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}>>
+	 */
+	public function getAllMcpResources(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:resources')) {
+				continue;
+			}
+			$resources = $context->getRegisteredMcpResources();
+			if ($resources !== []) {
+				$byExtension[$id] = $resources;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of MCP resource templates. Same shape + gating as
+	 * getAllMcpResources(); templates and concrete resources share the
+	 * `mcp:resources` capability flag.
+	 *
+	 * @return array<string,list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}>>
+	 */
+	public function getAllMcpResourceTemplates(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:resources')) {
+				continue;
+			}
+			$templates = $context->getRegisteredMcpResourceTemplates();
+			if ($templates !== []) {
+				$byExtension[$id] = $templates;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension list of registered search providers. Drained during
+	 * boot() into the SearchProviderRegistry; collisions with the built-in
+	 * 'text' provider OR another extension's provider are logged + skipped.
+	 * Gated by the `mcp:search` capability permission.
+	 *
+	 * @return array<string,list<\TotalCMS\Domain\Search\Service\SearchProvider>>
+	 */
+	public function getAllMcpSearchProviders(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:search')) {
+				continue;
+			}
+			$providers = $context->getRegisteredSearchProviders();
+			if ($providers !== []) {
+				$byExtension[$id] = $providers;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of code-defined MCP prompts. The id-keyed map lets
+	 * McpServerFactory attribute collisions to a specific extension in the warning
+	 * log. Gated by the `mcp:prompts` capability permission.
+	 *
+	 * @return array<string,list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}>>
+	 */
+	public function getAllMcpPrompts(): array
+	{
+		$byExtension = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'mcp:prompts')) {
+				continue;
+			}
+			$prompts = $context->getRegisteredMcpPrompts();
+			if ($prompts !== []) {
+				$byExtension[$id] = $prompts;
+			}
+		}
+
+		return $byExtension;
 	}
 
 	/** @return list<TwigFilter> */

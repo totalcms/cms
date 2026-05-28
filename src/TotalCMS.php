@@ -19,6 +19,7 @@ use TotalCMS\Domain\Import\CsvImporter;
 use TotalCMS\Domain\Import\DeckCsvImporter;
 use TotalCMS\Domain\Import\DeckJsonImporter;
 use TotalCMS\Domain\Import\JsonImporter;
+use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -54,7 +55,7 @@ use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Update\Service\UpdateDownloader;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\PathResolver;
+use TotalCMS\Support\ContainerFactory;
 
 /**
  * Entry point for Total CMS PHP API.
@@ -76,8 +77,8 @@ class TotalCMS
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(bool $autoStartBuffer = true)
 	{
-		// Build PHP-DI Container instance
-		$this->container = new Container(require PathResolver::packageRoot() . '/config/container.php');
+		// Build PHP-DI Container instance (with compilation in prod)
+		$this->container = ContainerFactory::build();
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
@@ -473,6 +474,11 @@ class TotalCMS
 	public function deckCsvImporter(): DeckCsvImporter
 	{
 		return $this->container->get(DeckCsvImporter::class);
+	}
+
+	public function rssImporter(): RssImporter
+	{
+		return $this->container->get(RssImporter::class);
 	}
 
 	public function schemaSaver(): SchemaSaver

@@ -22,6 +22,7 @@ class SchemaField extends PropertyField
 		'options',
 		'settings',
 		'type',
+		'mcp',
 	];
 
 	/**
@@ -30,6 +31,7 @@ class SchemaField extends PropertyField
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-settings attribute
 	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc
 	 * @param array<mixed> $options - Options for select fields and datalists
+	 * @param array<string,mixed> $mcp - MCP per-property settings (description, expose, filterable, sortable) rendered via mcp-property.json card
 	 */
 	public function __construct(
 		protected TotalForm $form,
@@ -45,6 +47,7 @@ class SchemaField extends PropertyField
 		protected array $options      = [],
 		protected array $settings     = [],
 		protected array $extra        = [],
+		protected array $mcp          = [],
 	) {
 	}
 
@@ -121,12 +124,39 @@ class SchemaField extends PropertyField
 		return HTMLUtils::details('Property Info', $content);
 	}
 
+	/**
+	 * MCP per-property settings accordion — renders the mcp-property.json card
+	 * inline so operators can configure AI description, expose flag, and
+	 * filter/sort flags for this property. Pro+ only (the MCP server itself is
+	 * edition-gated; the accordion is shown unconditionally because the schema
+	 * editor isn't aware of edition state).
+	 *
+	 * Card sub-fields submit as a nested object under the form key `mcp`, so
+	 * the property's saved JSON gets `mcp: {description, expose, filterable,
+	 * sortable}` alongside the other property keys.
+	 */
+	protected function buildMcpInfo(): string
+	{
+		// CardField reads schemaref from $this->settings (FormField's
+		// constructor has no top-level schemaref param). ObjectForm's
+		// buildFieldOptions auto-translates top-level schemaref → settings
+		// but SchemaForm doesn't — so we pass it pre-nested here.
+		$content = $this->form->field('mcp', [
+			'field'    => 'card',
+			'settings' => ['schemaref' => 'https://www.totalcms.co/schemas/mcp-property.json'],
+			'value'    => $this->mcp,
+		]);
+
+		return HTMLUtils::details('MCP Details', $content);
+	}
+
 	protected function buildDialog(string $content = ''): string
 	{
 		$content .= $this->topFieldInfo();
 		$content .= $this->buildFormInfo();
 		$content .= $this->buildSettingsOptions();
 		$content .= $this->buildPropertyInfo();
+		$content .= $this->buildMcpInfo();
 
 		$close = HTMLUtils::button('Close', ['class' => 'close']);
 		$docs  = HTMLUtils::element('a', 'Search Docs', [

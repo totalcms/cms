@@ -45,6 +45,7 @@ use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
+use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 
 return function (App $app): void {
 	$app->group('/admin', function (RouteCollectorProxy $group): void {
@@ -106,5 +107,13 @@ return function (App $app): void {
 
 		// Catch-all 404 route - MUST BE LAST (excludes /admin/ext/ which is handled by extensions)
 		$group->any('/{path:(?!ext/).*}', Admin404Action::class)->setName('admin-404');
-	})->add(VersionCheckMiddleware::class)->add(AuthMiddleware::class)->add(NoCacheMiddleware::class);
+	})
+		->add(VersionCheckMiddleware::class)
+		// CSRF after auth: only authed sessions need protection. The middleware
+		// bypasses API-keyed requests automatically (non-cookie auth = no CSRF
+		// surface). Forms get the token from TotalForm; HTMX gets it from the
+		// meta tag in admin-dashboard.twig.
+		->add(CSRFProtectionMiddleware::class)
+		->add(AuthMiddleware::class)
+		->add(NoCacheMiddleware::class);
 };

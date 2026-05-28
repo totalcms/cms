@@ -16,6 +16,7 @@
   ],
   "require": {
     "php": "^8.2",
+    "algolia/algoliasearch-client-php": "^4.43",
     "bacon/bacon-qr-code": "^3.0",
     "cakephp/chronos": "^3.1",
     "cakephp/i18n": "^5.2",
@@ -40,7 +41,10 @@
     "league/flysystem": "^3.2",
     "league/fractal": "^0.21",
     "league/glide": "^3.0",
+    "league/html-to-markdown": "^5.0",
+    "league/oauth2-server": "^9.0",
     "league/uri": "^7.4",
+    "mcp/sdk": "^0.5.0",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.8",
@@ -96,7 +100,8 @@
     "process-timeout": 0,
     "sort-packages": true,
     "allow-plugins": {
-      "pestphp/pest-plugin": true
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": true
     },
     "platform": {
       "php": "8.2.0"
@@ -126,6 +131,7 @@
     "md:src": "phpmd src ansi phpmd.xml",
     "md:config": "phpmd config ansi phpmd.xml",
     "md:tests": "phpmd tests ansi phpmd.xml",
+    "mcp:inspect": "bin/mcp-inspector.sh",
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcbf.xml",
     "sniffer:fix": "phpcbf --standard=phpcbf.xml",

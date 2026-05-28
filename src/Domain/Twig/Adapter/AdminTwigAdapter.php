@@ -98,10 +98,16 @@ readonly class AdminTwigAdapter
 		return HTMLUtils::element('a', $label, $attrs);
 	}
 
-	/** @SuppressWarnings("PHPMD.Superglobals") */
-	public function processJobQueueCommand(): string
+	/**
+	 * Prefix shared by every cron-displayable `tcms` command — the absolute
+	 * PHP binary + the absolute path to the `tcms` executable, with the
+	 * `APP_ENV=dev` env wedge in dev. Concrete commands (jobs:process,
+	 * rss:import, …) append their own arguments.
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public function tcmsCommandPrefix(): string
 	{
-		// php <install_dir>/resources/bin/tcms jobs:process
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
 		$installDir = PathResolver::packageRoot();
 		$command    = $installDir . '/resources/bin/tcms';
@@ -111,12 +117,12 @@ readonly class AdminTwigAdapter
 
 		$envPrefix = $this->config->env === 'dev' ? 'APP_ENV=dev ' : '';
 
-		return sprintf(
-			'%s%s %s jobs:process',
-			$envPrefix,
-			$phpPath,
-			$quotedCommand,
-		);
+		return sprintf('%s%s %s', $envPrefix, $phpPath, $quotedCommand);
+	}
+
+	public function processJobQueueCommand(): string
+	{
+		return $this->tcmsCommandPrefix() . ' jobs:process';
 	}
 
 	/**

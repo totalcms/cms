@@ -233,6 +233,15 @@ document.querySelector('.duplicate a')?.addEventListener('click', (e) => {
 		type: 'hidden', name: 'duplicate', value: '{{ url.id }}'
 	});
 	form.appendChild(input);
+
+	// CSRF token — without this CSRFProtectionMiddleware rejects the POST with 403.
+	const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+	if (csrfMeta) {
+		form.appendChild(Object.assign(document.createElement('input'), {
+			type: 'hidden', name: 'csrf_token', value: csrfMeta.getAttribute('content')
+		}));
+	}
+
 	document.body.appendChild(form);
 	form.submit();
 });

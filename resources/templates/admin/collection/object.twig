@@ -77,6 +77,16 @@ function duplicateObject(event) {
 	input.value = '{{ url.id }}';
 	tempForm.appendChild(input);
 
+	// CSRF token — without this CSRFProtectionMiddleware rejects the POST with 403.
+	const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+	if (csrfMeta) {
+		const csrfInput = document.createElement('input');
+		csrfInput.type  = 'hidden';
+		csrfInput.name  = 'csrf_token';
+		csrfInput.value = csrfMeta.getAttribute('content');
+		tempForm.appendChild(csrfInput);
+	}
+
 	document.body.appendChild(tempForm);
 	tempForm.submit();
 }

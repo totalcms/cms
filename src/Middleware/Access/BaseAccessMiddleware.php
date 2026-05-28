@@ -59,9 +59,12 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// API keys bypass group checks (trust model)
+		// API keys and OAuth Bearer tokens bypass group checks (trust model).
+		// OAuth Bearer requests were already scope-checked by OAuthRestScopeMiddleware
+		// before reaching here; no additional per-collection access group evaluation
+		// is needed (and there is no session user to check against anyway).
 		$authMethod = $request->getAttribute('authMethod');
-		if ($authMethod === 'apikey') {
+		if ($authMethod === 'apikey' || $authMethod === 'oauth_bearer') {
 			return $handler->handle($request);
 		}
 

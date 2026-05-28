@@ -10,8 +10,9 @@ use TotalCMS\Middleware\SetupLocaleMiddleware;
 
 return function (App $app): void {
 	$app->group('/setup', function (RouteCollectorProxy $group): void {
-		// Welcome screen with language selection
+		// Welcome screen with language + site name
 		$group->get('', Setup\WelcomeAction::class)->setName('setup-welcome');
+		$group->post('', Setup\WelcomeSubmitAction::class)->setName('setup-welcome-submit');
 
 		// Step 1: Environment check
 		$group->get('/environment', Setup\EnvironmentCheckAction::class)->setName('setup-environment');

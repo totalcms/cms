@@ -1,0 +1,33 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/mcp-prompt-arg.json",
+	"id"          : "mcp-prompt-arg",
+	"type"        : "object",
+	"title"       : "MCP Prompt Argument",
+	"description" : "One argument declaration for an MCP prompt. Stored as a deck item; the deck key matches the argument name.",
+	"formgrid"    : "id\ndescription\nrequired",
+	"required"    : ["id"],
+	"properties"  : {
+		"id": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "Name",
+			"help"        : "Snake_case argument name.",
+			"field"       : "id",
+			"factory"     : "slug",
+			"settings"    : { "snakeCase" : true }
+		},
+		"description": {
+			"type"      : "string",
+			"label"     : "Description",
+			"help"      : "Description shown to AI agents.",
+			"field"     : "textarea",
+			"settings"  : { "rows" : 2 }
+		},
+		"required": {
+			"type"      : "boolean",
+			"label"     : "Required",
+			"field"     : "toggle",
+			"default"   : false
+		}
+	}
+}

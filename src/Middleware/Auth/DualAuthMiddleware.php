@@ -28,6 +28,14 @@ use TotalCMS\Support\Config;
  *
  * Supports BOTH API key authentication AND session authentication.
  * Tries API key first (from Authorization header), falls back to session auth.
+ *
+ * Bearer-authenticated requests are passed through without further auth:
+ * when OAuthBearerMiddleware (mounted as an outer layer on the /api/ group)
+ * successfully validates a JWT it sets the `oauth_access_token_id` request
+ * attribute. The presence of that attribute means the request is already
+ * authenticated via OAuth — attempting API key or session auth on top of it
+ * would be redundant (and would fail, since the Bearer JWT is not a stored
+ * API key).
  */
 readonly class DualAuthMiddleware implements MiddlewareInterface
 {
@@ -53,6 +61,14 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	{
 		// If auth is disabled globally, allow through
 		if ($this->config->auth['enable'] === false) {
+			return $handler->handle($request);
+		}
+
+		// Bearer-authenticated requests are already authenticated via OAuthBearerMiddleware
+		// upstream. Skip API key + session auth so Bearer-only callers are not blocked.
+		if ($request->getAttribute('oauth_access_token_id') !== null) {
+			$request = $request->withAttribute('authMethod', 'oauth_bearer');
+
 			return $handler->handle($request);
 		}
 

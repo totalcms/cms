@@ -49,6 +49,7 @@ readonly class WelcomeAction
 			],
 			'locales'       => self::AVAILABLE_LOCALES,
 			'currentLocale' => $locale,
+			'siteName'      => (string)$this->session->get('setup_site_name', ''),
 		]);
 	}
 }

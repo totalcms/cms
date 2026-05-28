@@ -94,6 +94,23 @@ test('CoreAdminAssetRegistrar produces FrontendAsset instances with /assets/ URL
 	}
 });
 
+test('CoreAdminAssetRegistrar does not include dashboard.css', function (): void {
+	// dashboard.css ships a global reset (* { margin: 0 }, normalize rules)
+	// that bleeds into customer content when they call adminAssetsHead() from
+	// their own admin pages. T3's own admin-dashboard.twig loads dashboard.css
+	// via an explicit <link> tag instead; this list is for assets safe to
+	// inject anywhere `adminAssetsHead()` is called.
+	$adapter = makeAdapter('/api');
+
+	(new CoreAdminAssetRegistrar())->register($adapter);
+
+	$urls = array_map(static fn (FrontendAsset $a): string => $a->url, readList($adapter, 'adminAssetsList'));
+
+	foreach ($urls as $url) {
+		expect($url)->not->toContain('/dashboard.css');
+	}
+});
+
 // ===== adapter URL prefixing =====
 
 test('addFrontendAssets prepends api base to each asset URL', function (): void {

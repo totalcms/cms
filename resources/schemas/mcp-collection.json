@@ -1,0 +1,74 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/mcp-collection.json",
+	"id"          : "mcp-collection",
+	"type"        : "object",
+	"description" : "Per-collection MCP server settings. Used as a card sub-schema on the collection meta. Controls whether the collection is exposed to AI agents via /mcp and how it appears to them.",
+	"formgrid"    : "access\nsearchProvider\ndescription\ntools\nresource",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "ID",
+			"help"     : "Reserved — required by the schema system but unused for cards.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"readonly" : true
+			}
+		},
+		"searchProvider": {
+			"type"        : "string",
+			"label"       : "Search Provider Override",
+			"help"        : "Optional override of the site-wide search provider for this collection. <strong>Default</strong>: use the active provider from Settings → Search Providers. <strong>Text</strong>: force text search for this collection (good for SKU-heavy content where exact matches matter).",
+			"field"       : "select",
+			"default"     : "default",
+			"options"     : [
+				{ "value" : "default", "label" : "Use site-wide default" },
+				{ "value" : "text",    "label" : "Text Search (built-in)" }
+			]
+		},
+		"access": {
+			"type"        : "string",
+			"label"       : "MCP Access",
+			"help"        : "Controls who can call MCP content tools (query_collection, get_object, search_collection, describe_collection) against this collection. <strong>Admin</strong>: only callers with a valid API key. <strong>Authenticated</strong>: callers presenting an OAuth Bearer token with an <code>mcp:*</code> scope (Pro edition). <strong>Public</strong>: anonymous AI agents can read this collection.",
+			"field"       : "select",
+			"placeholder" : "Admin only",
+			"default"     : "admin",
+			"options"     : [
+				{ "value" : "admin",         "label" : "Admin only (API key required)" },
+				{ "value" : "authenticated", "label" : "Authenticated (OAuth Bearer token with mcp:* scope)" },
+				{ "value" : "public",        "label" : "Public (anonymous AI agents can read)" }
+			]
+		},
+		"description": {
+			"type"        : "string",
+			"label"       : "AI Description",
+			"help"        : "Description shown to AI agents in list_collections and tool descriptions. Falls back to the collection's general description if blank. Write for AI consumption — what is this collection, what kind of objects does it contain, what makes it distinct.",
+			"field"       : "textarea",
+			"placeholder" : "e.g. Blog posts published on the site. Includes featured posts, drafts, and archived content.",
+			"default"     : "",
+			"settings"    : {
+				"rows" : 3
+			}
+		},
+		"tools": {
+			"type"        : "array",
+			"label"       : "Custom MCP Tools",
+			"help"        : "Define saved-query tools as a JSON array. Each entry needs a name and description; optional params, filters, and other settings shape the query. See the docs for syntax and examples.",
+			"field"       : "json",
+			"placeholder" : "[{\n\t\"name\":\"featured\",\n\t\"description\":\"Return featured items.\",\n\t\"filters\":{\n\t\t\"featured\":{\"value\":true}\n\t},\n\t\"limit\":10\n}]",
+			"items"       : { "$ref": "https://www.totalcms.co/schemas/mcp-tool.json" },
+			"settings"    : {
+				"rows" : 10
+			}
+		},
+		"resource": {
+			"type"    : "boolean",
+			"label"   : "Expose as MCP Resource",
+			"help"    : "When enabled, objects in this collection are addressable via <code>tcms://{collection}/{id}</code> URIs that AI clients can subscribe to.",
+			"field"   : "toggle",
+			"default" : true
+		}
+	},
+	"required": []
+}

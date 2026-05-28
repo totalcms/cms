@@ -35,8 +35,9 @@
 	}
 
     textarea {
-        max-width : 100%;
-        resize    : vertical;
+        max-width  : 100%;
+        max-height : 60vh; // Auto-grow ceiling (textarea.js); falls back to internal scrollbar past this
+        resize     : vertical;
 
         &[rows] {
             height     : auto;

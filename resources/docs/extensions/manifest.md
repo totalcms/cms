@@ -165,6 +165,18 @@ Each entry must have a `label` and a `url`. Malformed entries are silently dropp
 
 If filtering leaves no visible links for the current state, the entire links row is hidden.
 
+### `hidden`
+
+When `true`, the extension is excluded from the admin Extensions page and the `tcms extension:list` CLI output. It still loads, registers, and boots normally — it just doesn't appear in the operator-facing management UI. Defaults to `false`.
+
+```json
+"hidden": true
+```
+
+Useful for bundled page-middleware extensions (like `protect`, `scheduled`, `maintenance`) that are enabled per-page via the Features field rather than globally via the Extension Manager. There's no toggle to show — the extension is always active; individual pages opt in.
+
+Hidden extensions can still be targeted by `tcms extension:enable` and `tcms extension:disable` if you know the ID.
+
 ### `license`
 
 License identifier (e.g. `MIT`, `proprietary`).
@@ -196,6 +208,8 @@ When an extension is enabled, the system runs a trial registration to discover w
 | `fields` | `$context->addFieldType(...)` | Custom field types |
 | `schemas` | `schemas/` directory exists in the extension | Read-only schemas (Pro+ only) |
 | `container` | `$context->addContainerDefinition(...)` | DI container services |
+| `page-middleware` | `$context->addPageMiddleware(...)` | Per-page middleware |
+| `form-actions` | `$context->addFormAction(...)` | Custom form action types (Pro) |
 
 If you add a new capability to an already-enabled extension (for example, you create a `schemas/` directory after the fact), disable + re-enable the extension so the trial registration picks up the new capability and adds it to the permissions list.
 

@@ -20,6 +20,13 @@ use TotalCMS\Support\Config;
  * Auth middleware.
  *
  * Redirects to the login page if the user is not authenticated.
+ *
+ * Bearer-authenticated requests are passed through without a session check:
+ * when OAuthBearerMiddleware (mounted as an outer layer on the /api/ group)
+ * successfully validates a JWT it sets the `oauth_access_token_id` request
+ * attribute. The presence of that attribute means the request is already
+ * authenticated via OAuth — session validation would be redundant and would
+ * block legitimate Bearer-only callers that have no browser session.
  */
 readonly class AuthMiddleware implements MiddlewareInterface
 {
@@ -42,6 +49,12 @@ readonly class AuthMiddleware implements MiddlewareInterface
 	{
 		if ($this->config->auth['enable'] === false) {
 			return $handler->handle($request);
+		}
+
+		// Bearer-authenticated requests are already authenticated via OAuthBearerMiddleware
+		// upstream. Skip the session check so Bearer-only callers are not blocked.
+		if ($request->getAttribute('oauth_access_token_id') !== null) {
+			return $handler->handle($request->withAttribute('authMethod', 'oauth_bearer'));
 		}
 
 		$this->trackSessionActivity();

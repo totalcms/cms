@@ -82,8 +82,10 @@ export default class Identifier extends TotalField {
 		const raw = this.autogen.generate();
 		const slugified = this.slugify(raw);
 
-		// For deck context, replace hyphens with underscores for Twig dot notation compatibility
-		return this.isInDeck ? slugified.replace(/-/g, '_') : slugified;
+		// For deck context OR schemas opting into snake_case (e.g. mcp-prompt),
+		// replace hyphens with underscores so the client-side preview matches the
+		// server-side save (ObjectFactory honours id.settings.snakeCase too).
+		return (this.isInDeck || this.settings.snakeCase) ? slugified.replace(/-/g, '_') : slugified;
 	}
 
 	getCollectionCount() {
@@ -116,7 +118,10 @@ export default class Identifier extends TotalField {
 	}
 
     slugify(id) {
-		id = id.replace('@', '-at-').replace(/\./g, '-');
+		// Schemas may opt into underscore separators via settings.snakeCase
+		// (used by mcp-prompt, parallels server-side ObjectFactory behaviour).
+		const sep = this.settings.snakeCase ? '_' : '-';
+		id = id.replace('@', `${sep}at${sep}`).replace(/\./g, sep);
 
 		// Build the remove regex, allowing custom characters if specified
 		let removeRegex = /[*+~.,()?'"!:@{}\[\]\/\\]/g;
@@ -129,7 +134,7 @@ export default class Identifier extends TotalField {
 		}
 
         return slugify(id, {
-			replacement : '-', // replace spaces with replacement character, defaults to `-`
+			replacement : sep, // replace spaces with replacement character
 			remove      : removeRegex, // remove characters that match regex, defaults to `undefined`
 			lower       : true, // convert to lower case, defaults to `false`
 			strict      : false, // strip special characters except replacement, defaults to `false`

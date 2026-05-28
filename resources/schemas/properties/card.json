@@ -8,6 +8,7 @@
         {"type": "string"},
         {"type": "number"},
         {"type": "boolean"},
+        {"type": "array"},
         {"$ref": "https://www.totalcms.co/schemas/properties/card.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/color.json"},
         {"$ref": "https://www.totalcms.co/schemas/properties/date.json"},

@@ -425,7 +425,7 @@ Send a push notification via [Pushover](https://pushover.net). Requires **Pro ed
 - Alert admin of high-priority form submissions
 - Monitor e-commerce orders in real time
 
-For full documentation including sound options, priority levels, and setup instructions, see [Pushover Push Notifications](docs/notifications/pushover).
+For full documentation including sound options, priority levels, and setup instructions, see [Pushover Push Notifications](docs/extensions/pushover).
 
 ## Complete Examples
 

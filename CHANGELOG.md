@@ -2,6 +2,52 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.7] - 2026-05-27
+
+### Added — MCP Server
+
+- **MCP Saved-Query Tools** (Phase 3): JSON-defined parameterized query tools per collection — no PHP required. Saved tools appear as first-class MCP tools alongside `query_collection` etc., with configurable name, params, filters, sort, format. Server-Sent Events streaming for long responses; progress notifications on schema mutation tools
+- **MCP AUTHENTICATED persona** (Phase 4): Third persona on `/mcp` for end-user OAuth Bearer tokens with `mcp:*` scopes. Joins the existing `admin` (API key) and `public` (anonymous) personas with per-collection access control
+- **MCP Prompts** (Phase 5): Templated AI-agent workflows stored as a reserved `mcp-prompt` collection. Each prompt has args (deck), description, body (full Twig with `cms.*` API), and access tier. `prompts/list` and `prompts/get` surface them to AI clients. `registerMcpPrompt()` extension hook parallel to tools / resources / search providers
+- **Pluggable search providers** (Phase 5): `SearchProvider` interface + registry, three-layer fallback (active provider → text → empty). Built-in text provider always available. `tcms search:reindex` CLI command. `registerSearchProvider()` extension hook for custom backends
+- **Bundled Algolia search extension**: First reference search provider implementation, Algolia SDK v4, Pro-edition gated. Per-extension settings for App ID + admin/search keys + index name. Documents the contract for third-party Meilisearch / Typesense / etc. providers
+- **MCP Inspector helper** (`bin/mcp-inspector.sh`): Local dev helper for launching the MCP Inspector against your `/mcp` endpoint
+
+### Added — OAuth Server
+
+- **OAuth 2.1 Authorization Server**: Full RFC 6749 / RFC 7636 implementation — authorization code flow with PKCE S256 (enforced), refresh tokens, static + dynamic client registration (RFC 7591), `mcp:tools` / `mcp:resources` / `mcp:search` / `mcp:prompts` scopes, consent screen, token revocation. Pro-edition gated
+- **OAuth REST API**: REST API endpoints accept OAuth Bearer tokens alongside API keys. Per-token scope gating; integration tests cover the full Bearer-auth flow
+- **OAuth activity log + replay detection**: Structured audit log at `tcms-data/.system/oauth-activity.log` with event types for client lifecycle, consent, token issue/revoke, refresh replay (logged at WARNING level), and rate-limit events. Refresh token replay detection prevents leaked tokens from being reused
+- **`tcms oauth:gc` CLI**: Prunes expired OAuth grants. Recommended for daily cron on high-volume sites
+
+### Added — Extensions
+
+- **Bundled extensions: protect, scheduled, maintenance**: Three new bundled extensions covering content access protection, scheduled publishing, and site-maintenance windows. New hidden-manifest field for extensions that ship but shouldn't surface in the public extensions list until prerequisites are met (e.g. geo-redirect hidden until i18n ships)
+- **Form action extension point**: New `addFormAction()` extension hook. Pushover form action extracted to a bundled extension demonstrating the pattern
+- **`registerMcpPrompt()` extension hook**: Parallel to tool / resource / search-provider hooks. Bundled and third-party extensions can ship code-defined prompts alongside collection-stored prompts
+- **`registerSearchProvider()` extension hook**: Custom search backends plug in here. Strict-deny collision policy at the registry level
+
+### Added — Schema
+
+- **`id.settings.snakeCase` flag**: Opt a schema's `id` field into snake_case slugs (underscores instead of hyphens). Both server-side `ObjectFactory` and client-side `Identifier` JS honour it. Used by `mcp-prompt` so MCP names are valid Twig dot-notation identifiers
+- **`ObjectFilter` 11-operator coverage**: Extended REST/MCP filter syntax to support all 11 operators (`eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `contains`, `starts`, `ends`, `in`, `notin`) end-to-end
+
+### Enhanced
+
+- **Auto-growing textareas**: Textarea fields grow as the user types, up to `max-height: 60vh`. Desktop manual-resize handle still works and is preserved across edits. Fixes the iPad/iOS issue where the corner drag handle is hard to grab on touch. Opt-out per field via `autoGrow: false`
+- **MCP documentation overhaul**: Closed five gaps from a thorough audit — the three-personas table now describes AUTHENTICATED accurately, new "Connecting an AI client via OAuth" walkthrough in `docs/mcp/server`, `oauth:gc` + activity-log documented, `registerMcpPrompt()` and `registerSearchProvider()` covered in `docs/mcp/extensions`, capability toggles table expanded from 2 to 4 rows
+- **MCP docs reorganized**: Consolidated under a dedicated MCP doc section; OAuth Server page moved into the APIs group
+- **MCP `inputSchema` wire-format compliance**: Strict-client compatible inputSchemas across every registered tool. Conformance tests verify the SDK's SchemaValidator accepts each tool's schema. Tool-name prefix-aware length enforcement
+- **MCP resource `name` parameter**: Documents the SDK's slug-form requirement so customer extensions don't trip on it
+
+### Fixed
+
+- **CSRF header case-insensitive lookup**: `CSRFProtectionMiddleware` now uses PSR-7's `getHeader()` (case-insensitive per spec) instead of iterating `getHeaders()` with an exact-case array lookup. Fixes 403 errors when the transport (HTTP/2, proxies, some PSR-7 implementations) normalises header casing. Affected settings forms, extension toggles, builder preview, and any CSRF-protected admin form using the JS API client
+- **Missing CSRF tokens on five admin forms**: Extension Enable/Disable buttons, Apply Update fetch, Site Builder preview fetch, and the filelinks set-password form were posting without a token. All now include `csrf_field()` or send `X-CSRF-Token` headers
+- **Composer/Packagist releases missing build chunks**: `public/assets` was gitignored but partially tracked; new content-hashed ESBuild chunks would refuse to add without `-f`, so some chunks silently dropped between releases. Removed `public/assets` from `.gitignore`; recovered missing `chunk-IKAX2G5A.js` (referenced by `admin.js` and `totalcms.js`)
+- **OAuth signing keys missing in test environment**: `oauth.signingKeyPath` was computed in `defaults.php` against the live `tcms-data/` BEFORE `local.test.php` overrode `$settings['datadir']` — so test runs were always looking at the wrong path, masked locally by leftover dev keys but failing 228 tests on a fresh CI clone. Re-derived in `local.test.php`; pre-generated test keypair added to `tests/tcms-data-fixtures/`
+- **Docs: broken Pushover links**: Fixed cross-references after the Pushover doc moved into the bundled extensions group
+
 ## [3.5.0-beta.6] - 2026-05-19
 
 ### Added — Internationalization (i18n)

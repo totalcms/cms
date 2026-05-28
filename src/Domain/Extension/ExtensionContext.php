@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension;
 
+use Mcp\Schema\ToolAnnotations;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
@@ -12,6 +13,7 @@ use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use Twig\TwigFilter;
@@ -73,6 +75,24 @@ final class ExtensionContext
 
 	/** @var array<string,string> page-middleware name => container service ID */
 	private array $pageMiddleware = [];
+
+	/** @var array<string, Data\FormAction> */
+	private array $formActions = [];
+
+	/** @var list<McpToolDefinition> Tools registered for the MCP server */
+	private array $mcpTools = [];
+
+	/** @var list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> Concrete MCP resources */
+	private array $mcpResources = [];
+
+	/** @var list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> MCP resource templates (URI patterns with {placeholder} segments) */
+	private array $mcpResourceTemplates = [];
+
+	/** @var list<\TotalCMS\Domain\Search\Service\SearchProvider> */
+	private array $searchProviders = [];
+
+	/** @var list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
+	private array $registeredMcpPrompts = [];
 
 	public function __construct(
 		private readonly ExtensionManifest $manifest,
@@ -214,6 +234,189 @@ final class ExtensionContext
 	public function addCommand(Command $command): void
 	{
 		$this->commands[] = $command;
+	}
+
+	/**
+	 * Register an MCP tool exposed at /mcp.
+	 *
+	 * Strict-deny collision policy: a tool whose name conflicts with a core
+	 * tool or another extension's tool is logged and skipped. Pick a vendor-
+	 * prefixed name (`acme_search_invoices`) to avoid collisions.
+	 *
+	 * The `handler` closure is invoked by the SDK using PHP reflection on its
+	 * named parameters — define typed string/int/bool/array params that map
+	 * one-to-one with your `inputSchema` properties.
+	 *
+	 * @param string                   $name        Tool name (snake_case)
+	 * @param string                   $description Description AI agents read
+	 * @param string                   $access      'admin' or 'public'
+	 * @param \Closure                 $handler     Invoked with named params from MCP call
+	 * @param array<string,mixed>|null $inputSchema JSON Schema for the handler's inputs
+	 * @param ToolAnnotations|null     $annotations Read/write/destructive hints — mandatory before Anthropic Directory submission
+	 */
+	public function registerMcpTool(
+		string $name,
+		string $description,
+		string $access,
+		\Closure $handler,
+		?array $inputSchema = null,
+		?ToolAnnotations $annotations = null,
+	): void {
+		$this->mcpTools[] = new McpToolDefinition(
+			name: $name,
+			description: $description,
+			access: $access,
+			handler: $handler,
+			inputSchema: $inputSchema,
+			annotations: $annotations,
+		);
+	}
+
+	/**
+	 * Register an MCP resource — a concrete `tcms://...` or extension-scheme URI
+	 * (e.g. `acme://invoices/all`) that the agent can fetch via `resources/read`
+	 * or the `get_resource` tool. The handler is invoked with no arguments and
+	 * must return a SDK ResourceContent envelope:
+	 *
+	 *   ['contents' => [['uri' => '...', 'mimeType' => '...', 'text' => '...']]]
+	 *
+	 * Collision policy: strict deny. An extension URI that collides with a core
+	 * resource OR another extension's resource is logged and skipped by
+	 * McpExtensionRegistrar — there is no last-wins fallback. Pick a vendor-
+	 * prefixed scheme (`acme://...`) to avoid colliding with `tcms://`.
+	 *
+	 * @param string   $uri         Concrete URI
+	 * @param string   $description Description AI agents read
+	 * @param \Closure $handler     Invoked with no args; returns ResourceContent
+	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
+	 * @param string   $name        Slug-form identifier shown in resources/list — must match `[A-Za-z0-9_-]+`
+	 *                              per MCP SDK validation (no spaces). Defaults to the URI when empty.
+	 * @param string   $mimeType    Content type the handler will produce
+	 */
+	public function registerMcpResource(
+		string $uri,
+		string $description,
+		\Closure $handler,
+		string $access = 'public',
+		string $name = '',
+		string $mimeType = 'application/json',
+	): void {
+		$this->mcpResources[] = [
+			'uri'         => $uri,
+			'name'        => $name !== '' ? $name : $uri,
+			'description' => $description,
+			'handler'     => $handler,
+			'access'      => $access,
+			'mimeType'    => $mimeType,
+		];
+	}
+
+	/**
+	 * Register an MCP resource template — a URI pattern with `{name}` placeholders
+	 * (e.g. `acme://invoices/{id}`) that AI agents fill in to construct concrete
+	 * resource URIs. Handler receives the substituted segment values as named
+	 * arguments matching the template's placeholders.
+	 *
+	 * Use this when the resource set is unbounded — enumerating thousands of
+	 * objects into `resources/list` is impractical, but a single template tells
+	 * AI agents the URI shape exists.
+	 *
+	 * Same collision policy as registerMcpResource(): strict deny.
+	 *
+	 * @param string   $uriTemplate URI template with `{name}` placeholders
+	 * @param string   $description Description AI agents read
+	 * @param \Closure $handler     Invoked with named args matching template variables; returns ResourceContent
+	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
+	 * @param string   $name        Slug-form identifier — must match `[A-Za-z0-9_-]+` per MCP SDK validation
+	 *                              (no spaces). Defaults to the template when empty.
+	 * @param string   $mimeType    Content type the handler will produce
+	 */
+	public function registerMcpResourceTemplate(
+		string $uriTemplate,
+		string $description,
+		\Closure $handler,
+		string $access = 'public',
+		string $name = '',
+		string $mimeType = 'application/json',
+	): void {
+		$this->mcpResourceTemplates[] = [
+			'uriTemplate' => $uriTemplate,
+			'name'        => $name !== '' ? $name : $uriTemplate,
+			'description' => $description,
+			'handler'     => $handler,
+			'access'      => $access,
+			'mimeType'    => $mimeType,
+		];
+	}
+
+	/**
+	 * Register a search provider. The extension is responsible for the provider's
+	 * full lifecycle (index, query, delete) and any external dependencies (API
+	 * clients, vector stores, etc.). Provider ids must be unique across all
+	 * extensions + the built-in 'text' provider; the registrar logs + skips on
+	 * collisions during boot.
+	 *
+	 * Typical use: a Pro-edition-gated provider extension calls this from its
+	 * `register()` lifecycle method:
+	 *
+	 *   public function register(ExtensionContext $context): void {
+	 *       if (!$context->editionAllows(EditionFeature::ALGOLIA_SEARCH)) return;
+	 *       $context->registerSearchProvider(new AlgoliaSearchProvider(...));
+	 *   }
+	 */
+	public function registerSearchProvider(\TotalCMS\Domain\Search\Service\SearchProvider $provider): void
+	{
+		$this->searchProviders[] = $provider;
+	}
+
+	/**
+	 * @return list<\TotalCMS\Domain\Search\Service\SearchProvider>
+	 */
+	public function getRegisteredSearchProviders(): array
+	{
+		return $this->searchProviders;
+	}
+
+	/**
+	 * Register a code-defined MCP prompt. Use when the extension ships the prompt
+	 * as PHP code rather than relying on operator-authored objects in the
+	 * mcp-prompt collection. The prompt appears in `prompts/list` and is callable
+	 * via `prompts/get` on the MCP server.
+	 *
+	 * Collision policy: soft-deny. If the prompt name collides with a
+	 * collection-stored prompt, the extension's prompt is logged and skipped —
+	 * collection-stored prompts always win.
+	 *
+	 * @param string $access  Access level: 'public', 'authenticated', or 'admin' (default).
+	 *                        'admin'         — only visible to admin-persona callers (API key auth).
+	 *                        'authenticated' — visible to OAuth/session-authenticated callers and admin.
+	 *                        'public'        — visible to all callers including anonymous (use sparingly).
+	 *                        Unrecognised values are treated as 'admin' (fails closed).
+	 *
+	 * Example:
+	 *
+	 *   $context->registerMcpPrompt(
+	 *       new \Mcp\Schema\Prompt(name: 'audit_links', description: 'Audit broken links on any page.'),
+	 *       handler: fn (array $arguments = []) => [
+	 *           new \Mcp\Schema\Content\PromptMessage(
+	 *               \Mcp\Schema\Enum\Role::User,
+	 *               new \Mcp\Schema\Content\TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
+	 *           ),
+	 *       ],
+	 *       access: 'admin',
+	 *   );
+	 */
+	public function registerMcpPrompt(\Mcp\Schema\Prompt $prompt, callable $handler, string $access = 'admin'): void
+	{
+		$this->registeredMcpPrompts[] = ['prompt' => $prompt, 'handler' => $handler, 'access' => $access];
+	}
+
+	/**
+	 * @return list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}>
+	 */
+	public function getRegisteredMcpPrompts(): array
+	{
+		return $this->registeredMcpPrompts;
 	}
 
 	/**
@@ -377,6 +580,16 @@ final class ExtensionContext
 		$this->pageMiddleware[$name] = $serviceId;
 	}
 
+	/**
+	 * Register a form action type that the JS form processor can dispatch
+	 * to an extension-owned API route. The route must be registered
+	 * separately via addRoutes().
+	 */
+	public function addFormAction(string $name, Data\FormAction $action): void
+	{
+		$this->formActions[$name] = $action;
+	}
+
 	// -------------------------------------------------------------------------
 	// Getters (used by ExtensionManager to collect registrations)
 	// -------------------------------------------------------------------------
@@ -403,6 +616,24 @@ final class ExtensionContext
 	public function getRegisteredCommands(): array
 	{
 		return $this->commands;
+	}
+
+	/** @return list<McpToolDefinition> */
+	public function getRegisteredMcpTools(): array
+	{
+		return $this->mcpTools;
+	}
+
+	/** @return list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> */
+	public function getRegisteredMcpResources(): array
+	{
+		return $this->mcpResources;
+	}
+
+	/** @return list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> */
+	public function getRegisteredMcpResourceTemplates(): array
+	{
+		return $this->mcpResourceTemplates;
 	}
 
 	/** @return list<callable> */
@@ -477,6 +708,12 @@ final class ExtensionContext
 		return $this->pageMiddleware;
 	}
 
+	/** @return array<string, Data\FormAction> */
+	public function getRegisteredFormActions(): array
+	{
+		return $this->formActions;
+	}
+
 	// -------------------------------------------------------------------------
 	// Capability detection
 	// -------------------------------------------------------------------------
@@ -505,6 +742,11 @@ final class ExtensionContext
 			'schemas'         => 'Schemas',
 			'container'       => 'Container Defs',
 			'page-middleware' => 'Page Middleware',
+			'form-actions'    => 'Form Actions',
+			'mcp:tools'       => 'MCP Tools',
+			'mcp:resources'   => 'MCP Resources',
+			'mcp:search'      => 'Search Provider',
+			'mcp:prompts'     => 'MCP Prompts',
 		];
 	}
 
@@ -564,8 +806,23 @@ final class ExtensionContext
 		if ($this->pageMiddleware !== []) {
 			$caps['page-middleware'] = true;
 		}
+		if ($this->formActions !== []) {
+			$caps['form-actions'] = true;
+		}
 		if (is_dir($this->extensionPath . '/schemas')) {
 			$caps['schemas'] = true;
+		}
+		if ($this->mcpTools !== []) {
+			$caps['mcp:tools'] = true;
+		}
+		if ($this->mcpResources !== [] || $this->mcpResourceTemplates !== []) {
+			$caps['mcp:resources'] = true;
+		}
+		if ($this->searchProviders !== []) {
+			$caps['mcp:search'] = true;
+		}
+		if ($this->registeredMcpPrompts !== []) {
+			$caps['mcp:prompts'] = true;
 		}
 
 		return $caps;

@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -332,6 +333,7 @@ class TotalForm implements \Stringable
 		// auto-logs them in. Implies `addOnly` because the registration
 		// route only handles POST (no PUT/edit path exists).
 		protected bool $register                 = false,
+		protected ?FormActionRegistry $formActionRegistry = null,
 	) {
 		$this->init();
 		$this->initClass();
@@ -380,7 +382,8 @@ class TotalForm implements \Stringable
 	/**
 	 * Filter form actions based on edition.
 	 * - mailer actions require Standard edition
-	 * - webhook actions require Pro edition.
+	 * - webhook actions require Pro edition
+	 * - extension-registered form actions require Pro edition.
 	 *
 	 * @param array<int,array<string,mixed>> $actions
 	 *
@@ -398,8 +401,9 @@ class TotalForm implements \Stringable
 			return match ($actionType) {
 				'mailer'   => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
 				'webhook'  => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
-				'pushover' => $this->editionFeatures->can(EditionFeature::PUSHOVER_ACTIONS),
-				default    => true, // Allow unknown actions through
+				default    => $this->formActionRegistry?->get($actionType) !== null
+					? $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS)
+					: true,
 			};
 		}));
 	}
@@ -475,6 +479,13 @@ class TotalForm implements \Stringable
 				if ($json) {
 					$attributes[$attribute] = $json;
 				}
+			}
+		}
+
+		if ($this->formActionRegistry !== null) {
+			$jsonMap = $this->formActionRegistry->toJsonMap();
+			if ($jsonMap !== '{}') {
+				$attributes['data-extension-actions'] = $jsonMap;
 			}
 		}
 

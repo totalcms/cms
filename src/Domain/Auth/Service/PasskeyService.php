@@ -340,10 +340,18 @@ class PasskeyService
 			$rpName = $this->config->dashboard['title'];
 		}
 
-		return PublicKeyCredentialRpEntity::create(
-			name: $rpName,
+		// web-auth/webauthn-lib 5.3 deprecated the `$name` constructor arg —
+		// any non-empty string triggers a 5.3-deprecation warning that will
+		// become a hard error in 6.0. Construct with name='' and assign the
+		// real name on the public property; this is the migration path the
+		// library documents.
+		$entity = PublicKeyCredentialRpEntity::create(
+			name: '',
 			id: $this->config->domain,
 		);
+		$entity->name = $rpName;
+
+		return $entity;
 	}
 
 	/**

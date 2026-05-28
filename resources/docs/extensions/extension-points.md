@@ -350,6 +350,55 @@ Once registered, `geo-redirect` shows up in the page form's middleware multisele
 
 See the [Page Middleware section in the Builder overview](docs/site-builder/overview#page-middleware) for the user-facing perspective.
 
+## Form Actions
+
+Register custom form action types that fire after a form save. The JavaScript form processor dispatches the action to an extension-owned API route — no core JS changes needed per provider.
+
+```php
+use TotalCMS\Domain\Extension\Data\FormAction;
+
+public function register(ExtensionContext $context): void
+{
+    // Register the action type — tells core "slack" is a valid form action
+    $context->addFormAction('slack', new FormAction(
+        name: 'slack',
+        route: '/ext/acme/slack-notify/send',
+        label: 'Slack Notification',
+    ));
+
+    // Register the API route that handles the action
+    $context->addRoutes(function ($group): void {
+        $group->post('/send', SlackNotifyAction::class);
+    });
+}
+```
+
+**Capability:** `form-actions`
+
+**Edition requirement:** Extension form actions require the Pro edition. On lower editions, actions matching extension-registered types are silently filtered from the form's action list.
+
+The action handler receives a POST with `{ data: <formData>, ...actionConfig }` — the form data plus all properties from the action's JSON config. For example, a collection's `.meta.json` might define:
+
+```json
+{
+    "formSettings": {
+        "newActions": [
+            {
+                "action": "slack",
+                "channel": "#orders",
+                "message": "New order from {{ data.name }}"
+            }
+        ]
+    }
+}
+```
+
+The handler receives `data` (the saved form fields), `channel`, `message`, and any other properties the operator configured. Parse what you need, ignore the rest.
+
+**Naming:** Use your vendor name or a distinctive slug (e.g. `slack`, `discord`, `ntfy`). The name appears in collection action configs and must be stable once shipped.
+
+See the bundled [Pushover extension](docs/extensions/pushover) for a complete working example.
+
 ## Assets (CSS / JS)
 
 Extensions can register CSS or JavaScript files for the **admin interface** and/or **public pages**. Each surface has its own registration method and capability:
@@ -461,3 +510,91 @@ PSR-3 levels are available: `debug`, `info`, `notice`, `warning`, `error`, `crit
 Logger access is not a separate capability — `$context->logger()` is always available, in both `register()` and `boot()`.
 
 Prefix log messages with your extension id (e.g. `[acme/starter]`) so multi-extension logs stay readable. All extensions share the `extensions` channel and the same rotating log file.
+
+## MCP Prompts
+
+Register prompts that the MCP server exposes to AI agents via `prompts/list` and `prompts/get`. Use when the extension ships prompts as PHP code rather than relying on operator-authored objects in the `mcp-prompt` collection.
+
+```php
+use Mcp\Schema\Content\PromptMessage;
+use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Enum\Role;
+use Mcp\Schema\Prompt;
+
+public function register(ExtensionContext $context): void
+{
+    $context->registerMcpPrompt(
+        new Prompt(
+            name: 'acme_audit_links',
+            description: 'Audit broken links on any page.',
+            arguments: [
+                new \Mcp\Schema\PromptArgument('url', 'The URL to audit', required: true),
+            ],
+        ),
+        handler: fn (array $arguments = []): array => [
+            new PromptMessage(
+                Role::User,
+                new TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
+            ),
+        ],
+        access: 'admin',
+    );
+}
+```
+
+**Capability:** `mcp:prompts`
+
+**Access:** The optional third argument `$access` sets visibility — `'admin'` (default), `'authenticated'`, or `'public'`. The default keeps prompts private to admin-persona callers. Choose `'public'` only when the prompt body contains no site-private data.
+
+**Collision policy:** If a prompt name collides with a collection-stored prompt, the collection-stored version wins — the extension's prompt is logged and skipped.
+
+## Search Providers
+
+Register a custom search provider that replaces or supplements T3's built-in text search. The provider handles indexing (on object create/update/delete events) and querying (from MCP search tools, future REST endpoints, or site-wide search).
+
+```php
+use TotalCMS\Domain\Search\Service\SearchProvider;
+use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Data\SearchResult;
+
+class MySearchProvider implements SearchProvider
+{
+    public function id(): string { return 'my-search'; }
+    public function label(): string { return 'My Search'; }
+
+    public function search(SearchQuery $query): array
+    {
+        // Query your search backend, return list<SearchResult>
+        return [];
+    }
+
+    public function index(string $collection, string $id, array $data): void
+    {
+        // Index one object in your backend
+    }
+
+    public function delete(string $collection, string $id): void
+    {
+        // Remove one object from your backend
+    }
+
+    public function isAvailable(): bool
+    {
+        // Fast health check — cache with short TTL (on the hot path)
+        return true;
+    }
+}
+```
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $context->registerSearchProvider(new MySearchProvider());
+}
+```
+
+**Capability:** `mcp:search`
+
+Provider ids must be unique across all extensions + the built-in `text` provider. The registrar logs and skips collisions during boot. When `isAvailable()` returns false, SearchService silently falls back to text search. Throwing from `search()` also triggers the fallback. Throwing from `index()` or `delete()` enqueues a retry job.
+
+See the bundled [Algolia Search extension](docs/extensions/algolia-search) for a complete working example.

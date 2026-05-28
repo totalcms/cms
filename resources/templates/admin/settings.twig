@@ -37,9 +37,9 @@
 		'label': t('settings.mailer'),
 		'description': t('settings.mailer_desc')
 	},
-	'pushnotif': {
-		'label': t('settings.pushnotif'),
-		'description': t('settings.pushnotif_desc')
+	'mcp': {
+		'label': t('settings.mcp'),
+		'description': t('settings.mcp_desc')
 	},
 	'presets': {
 		'label': t('settings.presets'),
@@ -48,6 +48,10 @@
 	'smtp': {
 		'label': t('settings.smtp'),
 		'description': t('settings.smtp_desc')
+	},
+	'search': {
+		'label': t('settings.search'),
+		'description': t('settings.search_desc')
 	},
 	'sync': {
 		'label': t('settings.sync'),
@@ -58,6 +62,15 @@
 		'description': 'Site Builder stub generation settings'
 	},
 } %}
+
+{% if cms.edition.can('oauth_server') %}
+	{% set sections = sections|merge({
+		'oauth': {
+			'label': t('settings.oauth'),
+			'description': t('settings.oauth_desc')
+		}
+	}) %}
+{% endif %}
 
 {% if cms.license.canSimulateEdition() %}
 	{% set sections = sections|merge({
@@ -143,34 +156,6 @@
 		</section>
 		{% endif %}
 
-		{% if currentSection == 'pushnotif' %}
-		<section class="dash-content-section" style="margin-top: 40px;">
-			<h2>{{ t('settings.pushnotif_test_title') }}</h2>
-
-			{% if testResult is defined %}
-				{% if testResult.success %}
-					<p class="cms-success" role="alert">{{ testResult.message }}</p>
-				{% else %}
-					<p class="cms-error" role="alert">{{ testResult.message }}</p>
-				{% endif %}
-			{% else %}
-				<p>{{ t('settings.pushnotif_test_desc') }}</p>
-
-				{{ cms.form.simple('settings/pushnotif?test=1', '
-					<div class="field-wrapper field-text">
-						<label for="test_message">' ~ t('settings.pushnotif_test_message') ~ '</label>
-						<input type="text" id="test_message" name="test_message" placeholder="'~ t('settings.pushnotif_test_ph') ~'" />
-						<div class="help">'~ t('settings.pushnotif_test_help') ~'</div>
-					</div>
-				', {
-					'method': 'POST',
-					'label': t('settings.pushnotif_test_btn'),
-					'buttonClass': 'cms-secondary',
-					'ajax': false
-				}) }}
-			{% endif %}
-		</section>
-		{% endif %}
 	</section>
 </main>
 

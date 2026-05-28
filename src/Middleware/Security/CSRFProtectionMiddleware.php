@@ -7,13 +7,35 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * CSRF Protection Middleware.
  *
- * Validates CSRF tokens for state-changing HTTP methods (POST, PUT, DELETE, PATCH)
- * to prevent Cross-Site Request Forgery attacks.
+ * Validates CSRF tokens on state-changing HTTP methods (POST/PUT/DELETE/PATCH)
+ * to block cross-site request forgery against session-authed users.
+ *
+ * **Bypasses when the request carries a VALID API key** (X-API-Key header or
+ * Authorization: Bearer). CSRF attacks ride session cookies that browsers
+ * auto-attach; API keys aren't cookies and require explicit code to send, so
+ * they're inherently safe from CSRF. Skipping the check on API-keyed requests
+ * keeps external integrators working without forcing them to fetch a CSRF
+ * token they don't need.
+ *
+ * IMPORTANT: The bypass requires the key to actually validate against the
+ * stored key store. A request that presents an unrecognised or malformed key
+ * header is rejected with 403 rather than silently falling through to
+ * session-cookie authentication. This closes the vector where an
+ * attacker-controlled page could send `X-API-Key: anything` (or an arbitrary
+ * Bearer value) in a cross-origin fetch to skip CSRF and let the victim's
+ * session cookie do the rest.
+ *
+ * Operator forms get the token automatically: TotalForm / SimpleForm /
+ * LoginForm render `<input type="hidden" name="csrf_token" ...>` via
+ * CSRFTokenManager::getTokenField(), and the admin JS reads
+ * `<meta name="csrf-token">` and injects it as `X-CSRF-Token` on every
+ * HTMX request.
  */
 readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 {
@@ -33,6 +55,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 
 	public function __construct(
 		private CSRFTokenManager $csrfManager,
+		private ApiKeyAuthenticator $apiKeyAuthenticator,
 	) {
 	}
 
@@ -43,6 +66,23 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 
 		// Only protect state-changing methods
 		if (!in_array($method, self::PROTECTED_METHODS)) {
+			return $handler->handle($request);
+		}
+
+		// If the request carries an API key header, validate it. A valid key
+		// means non-cookie auth — CSRF doesn't apply. An invalid key is
+		// rejected outright (403) so attackers cannot use a bogus header to
+		// bypass CSRF and ride the session cookie instead.
+		if ($this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
+			$validatedKey = $this->apiKeyAuthenticator->authenticate($request);
+			if ($validatedKey === null) {
+				throw new HttpForbiddenException(
+					$request,
+					'Invalid API key. Request rejected.'
+				);
+			}
+
+			// Valid API key — CSRF is not required for non-cookie credentials.
 			return $handler->handle($request);
 		}
 
@@ -59,6 +99,14 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 			);
 		}
 
+		// Token is session-bound, not per-request. Rotation here would break
+		// AJAX/HTMX flows that stay on the page after a state change (the
+		// meta tag in DOM still carries the old value). Per-session tokens
+		// are the industry standard (Django, Rails, Laravel, Symfony, ASP.NET
+		// Core) and OWASP's CSRF cheatsheet lists per-request rotation as
+		// "MAY" not "MUST". CSRFTokenManager::regenerateToken() is still
+		// available for session-boundary events (login, password change).
+
 		return $handler->handle($request);
 	}
 
@@ -69,18 +117,24 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 	{
 		// Get token from various sources
 		$postData  = $request->getParsedBody() ?? [];
-		$headers   = $request->getHeaders();
 		$queryData = $request->getQueryParams();
-
-		// Flatten headers array for easier access
-		$flatHeaders = [];
-		foreach ($headers as $name => $values) {
-			$flatHeaders[$name] = $values[0] ?? '';
-		}
 
 		// Convert POST data to array if it's an object
 		if (is_object($postData)) {
 			$postData = (array)$postData;
+		}
+
+		// Use getHeader() for the X-CSRF-Token lookup. PSR-7's getHeader()
+		// is case-insensitive and returns an array of values, while iterating
+		// getHeaders() and doing an exact-case array lookup misses when the
+		// underlying transport normalises header names (HTTP/2 lowercases by
+		// spec; some PSR-7 implementations also normalise). Taking only the
+		// first value mirrors the previous behaviour and avoids the comma-
+		// joined surprise of getHeaderLine() when a client sends duplicates.
+		$flatHeaders = [];
+		$tokenValues = $request->getHeader('X-CSRF-Token');
+		if (isset($tokenValues[0]) && $tokenValues[0] !== '') {
+			$flatHeaders['X-CSRF-Token'] = $tokenValues[0];
 		}
 
 		return $this->csrfManager->validateFromRequest($postData, $flatHeaders, $queryData);
@@ -101,21 +155,6 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 		}
 
 		return false;
-	}
-
-	/**
-	 * Add a route pattern to the exempt list.
-	 * Useful for dynamic configuration.
-	 */
-	public function addExemptRoute(string $routePattern): void
-	{
-		if (!in_array($routePattern, self::EXEMPT_ROUTES)) {
-			$exemptRoutes   = self::EXEMPT_ROUTES;
-			$exemptRoutes[] = $routePattern;
-			// Note: This modifies the constant conceptually,
-			// but in practice you'd want to make EXEMPT_ROUTES non-const
-			// or use a property for dynamic exemptions
-		}
 	}
 
 	/**

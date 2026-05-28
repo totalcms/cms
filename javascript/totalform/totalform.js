@@ -79,6 +79,10 @@ export default class TotalForm {
 		if (this.form.dataset.deleteActions) {
 			this.settings.actions.delete = JSON.parse(this.form.dataset.deleteActions);
 		}
+		this.extensionActions = {};
+		if (this.form.dataset.extensionActions) {
+			this.extensionActions = JSON.parse(this.form.dataset.extensionActions);
+		}
 		this.delayActions = 2000;
 
 		this.api = new TotalCMS({
@@ -647,6 +651,10 @@ export default class TotalForm {
 		// Mark all fields as saved
 		this.fields.forEach(field => field.saved());
 
+		// Stash any warnings from this response so runAction's showSuccessAndWait
+		// can include them when it fires the success event before navigating away.
+		this._savedResponse = response || null;
+
 		// Run actions first, then show success banner
 		const actions = runEditActions ? this.settings.actions.edit : this.settings.actions.new;
 		this.runActions(actions)
@@ -692,10 +700,12 @@ export default class TotalForm {
 	}
 
     async runAction(action) {
-		// Helper to show success banner and wait before navigation (default: true)
+		// Helper to show success banner and wait before navigation (default: true).
+		// Pass the stashed response so meta.warnings reach the status banner even
+		// when the action navigates away before the post-actions success() call fires.
 		const showSuccessAndWait = async () => {
 			if (action.showSuccess !== false) {
-				this.success();
+				this.success(this._savedResponse);
 				await new Promise(resolve => setTimeout(resolve, this.delayActions));
 			}
 		};
@@ -731,19 +741,6 @@ export default class TotalForm {
 				await showSuccessAndWait();
                 location.reload(true);
                 break;
-			case "pushover":
-				await this.api.postAPI('/action/pushover', {
-					data      : this.generateData(),
-					title     : action.title || '',
-					message   : action.message || '',
-					priority  : action.priority || 0,
-					sound     : action.sound || '',
-					link      : action.link || '',
-					linkTitle : action.linkTitle || '',
-					image     : action.image || {},
-					group     : action.group || false,
-				});
-				break;
 			case "ajax":
 			case "webhook":
 				const response = await fetch(action.link, {
@@ -757,7 +754,15 @@ export default class TotalForm {
 				}
 				break;
 			default:
-				console.warn(`Unknown action type: ${action.action}`);
+				if (this.extensionActions[action.action]) {
+					const { action: _type, ...config } = action;
+					await this.api.postAPI(this.extensionActions[action.action], {
+						data: this.generateData(),
+						...config,
+					});
+				} else {
+					console.warn(`Unknown action type: ${action.action}`);
+				}
         }
     }
 

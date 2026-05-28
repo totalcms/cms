@@ -20,6 +20,7 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
+use TotalCMS\Domain\Search\Job\ReindexJob;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -73,6 +74,7 @@ final class JobRunnerTest extends TestCase
 		$emailService          = $this->createMock(EmailService::class);
 		$bulkMailerRepository  = $this->createMock(BulkMailerRepository::class);
 		$objectFetcher         = $this->createMock(ObjectFetcher::class);
+		$searchReindexJob      = $this->createMock(ReindexJob::class);
 		$config                = $this->createMock(Config::class);
 
 		$this->jobRunner = new JobRunner(
@@ -86,6 +88,7 @@ final class JobRunnerTest extends TestCase
 			$emailService,
 			$bulkMailerRepository,
 			$objectFetcher,
+			$searchReindexJob,
 			$config,
 			$this->loggerFactory,
 		);

@@ -187,7 +187,12 @@
 
 		btn.disabled = true;
 		try {
-			const res  = await fetch(previewUrl, { method: 'POST', body: fd, credentials: 'same-origin' });
+			const res  = await fetch(previewUrl, {
+				method: 'POST',
+				body: fd,
+				credentials: 'same-origin',
+				headers: { 'X-CSRF-Token': '{{ csrf_token() }}' },
+			});
 			const html = await res.text();
 			// Reveal the panel BEFORE setting srcdoc — assigning srcdoc on an
 			// iframe inside a display:none parent leaves the iframe's first

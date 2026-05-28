@@ -1,0 +1,24 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Protect",
+	"description": "Default settings for passcode-protected pages. Individual pages can override these in their Page Data JSON.",
+	"type": "object",
+	"properties": {
+		"passcode": {
+			"type": "string",
+			"field": "text",
+			"label": "Default Passcode",
+			"help": "Numeric passcode used when a page doesn't specify its own. Leave empty to require per-page passcodes.",
+			"placeholder": "0000",
+			"default": ""
+		},
+		"promptTitle": {
+			"type": "string",
+			"field": "text",
+			"label": "Default Prompt Title",
+			"help": "Heading shown on the passcode form. Pages can override this in their Page Data.",
+			"placeholder": "Enter passcode to view",
+			"default": "Enter passcode to view"
+		}
+	}
+}

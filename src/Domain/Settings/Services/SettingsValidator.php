@@ -4,55 +4,49 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Settings\Services;
 
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+
 /**
  * Validates and transforms settings data for each section.
  */
 readonly class SettingsValidator
 {
-	/**
-	 * Valid settings sections.
-	 *
-	 * @var array<string>
-	 */
-	private array $validSections;
-
-	public function __construct()
-	{
-		$this->validSections = [
-			'installation',
-			'general',
-			'auth',
-			'builder',
-			'cache',
-			'dashboard',
-			'htmlclean',
-			'i18n',
-			'imageworks',
-			'license',
-			'mailer',
-			'presets',
-			'pushnotif',
-			'smtp',
-			'sync',
-		];
+	public function __construct(
+		private SettingsRepository $settingsRepository,
+	) {
 	}
 
 	/**
 	 * Check if a section is valid.
+	 *
+	 * Derives the canonical list from the actual settings schema files
+	 * (`resources/schemas/settings/*.json`) — adding a new schema file
+	 * registers the section automatically. Falls back to a safe baseline if
+	 * the schema directory can't be enumerated.
 	 */
 	public function isValidSection(string $section): bool
 	{
-		return in_array($section, $this->validSections, true);
+		return in_array($section, $this->getValidSections(), true);
 	}
 
 	/**
 	 * Get all valid sections.
 	 *
-	 * @return array<string>
+	 * @return list<string>
 	 */
 	public function getValidSections(): array
 	{
-		return $this->validSections;
+		$sections = $this->settingsRepository->listSections();
+		if ($sections === []) {
+			// Safe fallback if the schemas directory is missing or unreadable.
+			return [
+				'installation', 'general', 'auth', 'builder', 'cache',
+				'dashboard', 'htmlclean', 'i18n', 'imageworks', 'license',
+				'mailer', 'mcp', 'presets', 'smtp', 'sync',
+			];
+		}
+
+		return $sections;
 	}
 
 	/**

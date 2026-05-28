@@ -13,6 +13,9 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
@@ -39,6 +42,9 @@ readonly class AdminUtilsAction
 		private SettingsFetcher $settingsFetcher,
 		private TemplateLister $templateLister,
 		private UpdateChecker $updateChecker,
+		private OAuthClientRepository $oauthClientRepository,
+		private OAuthGrantRepository $oauthGrantRepository,
+		private OAuthScopeRegistry $oauthScopeRegistry,
 	) {
 	}
 
@@ -94,6 +100,24 @@ readonly class AdminUtilsAction
 		$apiKeys = null;
 		if ($page === 'api-keys' && $action !== 'new') {
 			$apiKeys = $this->apiKeyFetcher->getAllKeys();
+		}
+
+		// Fetch OAuth clients for oauth-clients page
+		$oauthClients     = null;
+		$oauthClientsForm = null;
+		if ($page === 'oauth-clients' && $action !== 'new') {
+			$oauthClients = $this->prepareClientsForView();
+		}
+		if ($page === 'oauth-clients' && $action === 'new') {
+			$oauthClientsForm = [
+				'scopes' => $this->oauthScopeRegistry->all(),
+			];
+		}
+
+		// Fetch OAuth grants for oauth-grants page
+		$oauthGrants = null;
+		if ($page === 'oauth-grants') {
+			$oauthGrants = $this->prepareGrantsForView();
 		}
 
 		// Fetch access groups data for access-groups page
@@ -186,6 +210,9 @@ readonly class AdminUtilsAction
 			'totalcms1DetectionData' => $totalcms1DetectionData,
 			'apiKeys'                => $apiKeys,
 			'accessGroupsData'       => $accessGroupsData,
+			'oauthClients'           => $oauthClients,
+			'oauthClientsForm'       => $oauthClientsForm,
+			'oauthGrants'            => $oauthGrants,
 			'lintResults'            => $lintResults,
 			'rssAnalysis'            => $rssAnalysis,
 			'rssError'               => $rssError,
@@ -244,6 +271,92 @@ readonly class AdminUtilsAction
 			'group'       => $isEdit ? $this->accessGroupLister->findById($action) : '',
 			'isEdit'      => $isEdit,
 		];
+	}
+
+	/**
+	 * Build the OAuth clients view data: two bucketed lists (static / dynamic)
+	 * with an active-grant count per client.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function prepareClientsForView(): array
+	{
+		$allClients = $this->oauthClientRepository->all();
+
+		$static  = [];
+		$dynamic = [];
+
+		foreach ($allClients as $client) {
+			$grantCount = count($this->oauthGrantRepository->findByClientId($client->id));
+			$row        = ['client' => $client, 'grantCount' => $grantCount];
+
+			if ($client->isDynamic) {
+				$dynamic[] = $row;
+			} else {
+				$static[] = $row;
+			}
+		}
+
+		return [
+			'static'  => $static,
+			'dynamic' => $dynamic,
+		];
+	}
+
+	/**
+	 * Build the OAuth grants view data: every grant joined with its client
+	 * name and expiry metadata, sorted most-recent first.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private function prepareGrantsForView(): array
+	{
+		$now    = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+		$grants = $this->oauthGrantRepository->all();
+
+		$rows = [];
+
+		foreach ($grants as $grant) {
+			$client     = $this->oauthClientRepository->find($grant->clientId);
+			$clientName = $client !== null ? $client->name : $grant->clientId;
+
+			$expiresAt       = null;
+			$isExpired       = false;
+			$daysUntilExpiry = null;
+
+			if ($grant->expiresAt !== '') {
+				try {
+					$expiry          = new \DateTimeImmutable($grant->expiresAt, new \DateTimeZone('UTC'));
+					$expiresAt       = $expiry;
+					$isExpired       = $expiry < $now;
+					$diff            = $now->diff($expiry);
+					$daysUntilExpiry = $isExpired ? -(int)$diff->days : (int)$diff->days;
+				} catch (\Exception) {
+					// leave null
+				}
+			}
+
+			$rows[] = [
+				'grant'           => $grant,
+				'clientName'      => $clientName,
+				'clientId'        => $grant->clientId,
+				'isExpired'       => $isExpired,
+				'expiresAt'       => $expiresAt,
+				'daysUntilExpiry' => $daysUntilExpiry,
+			];
+		}
+
+		// Sort by issuedAt descending (most recent first)
+		usort($rows, static function (array $a, array $b): int {
+			/** @var \TotalCMS\Domain\OAuth\Data\OAuthGrantData $ga */
+			$ga = $a['grant'];
+			/** @var \TotalCMS\Domain\OAuth\Data\OAuthGrantData $gb */
+			$gb = $b['grant'];
+
+			return strcmp($gb->issuedAt, $ga->issuedAt);
+		});
+
+		return $rows;
 	}
 
 	/**

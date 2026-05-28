@@ -62,6 +62,14 @@ $settings['i18n'] = [
 ];
 
 $settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unknown';
+
+// Human-readable site name (e.g. "Joe's Bistro"). When blank, T3 falls back
+// to dashboard.title (if customized) and then $domain via Config::displayName().
+// Used by the MCP server's serverInfo and get_site_info tool; future features
+// (RSS, sitemap, setup wizard, email From, PWA manifest, JumpStart filenames)
+// adopt the same helper. See docs/planning/site-name.md.
+$settings['siteName'] = '';
+
 $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
 					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
@@ -230,13 +238,6 @@ $settings['smtp'] = [
 	'sendDelay' => 0,
 ];
 
-// Push notification settings
-$settings['pushnotif'] = [
-	'pushoverAppToken'  => '',
-	'pushoverUserKey'   => '',
-	'pushoverGroupKey'  => '',
-];
-
 // Mailer settings (email sending system)
 $settings['mailer'] = [
 	// Only allow emails to these domains
@@ -363,6 +364,48 @@ $settings['license'] = [
 $settings['builder'] = [
 	'pagesCollection' => 'builder-pages', // Collection ID for page metadata
 	'assetsPath'      => 'assets',        // Public assets directory relative to docroot
+];
+
+// MCP (Model Context Protocol) Server
+// Exposes /mcp and /.well-known/mcp.json. Pro+ only — see EditionFeature::MCP_SERVER.
+// When `enabled` is false the endpoint returns 404 and discovery reports disabled.
+// `publicAccess` is the master switch for the anonymous persona; individual collections
+// must additionally opt in via their `mcp.access` schema setting (Phase 1).
+// `toolPrefix` is an optional namespace prepended to every tool name — useful when
+// running multiple T3 sites in the same AI agent (e.g. 'bistro' → bistro_list_collections).
+$settings['mcp'] = [
+	'enabled'              => true,
+	'publicAccess'         => false,
+	'allowedOrigins'       => [],
+	'publicIpPerMinute'    => 60,
+	'toolPrefix'           => '',
+	// Operator kill switch for resource subscriptions. When off, the SDK falls
+	// back to its per-session-only default — resources/subscribe still works
+	// but T3 won't push notifications/resources/updated when content changes.
+	'subscriptionsEnabled' => true,
+];
+
+// Search providers — Phase 5.
+// activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').
+// indexOnSave: when true, T3 pushes object.created/updated events to the active
+//   provider's index() method. Disable during bulk imports to avoid embedding-API
+//   load; re-enable + run `tcms search:reindex` after.
+$settings['search'] = [
+	'activeProvider' => 'text',
+	'indexOnSave'    => true,
+];
+
+// OAuth 2.0 Server
+// RSA key pair for signing access tokens (JWTs) and encrypting auth code payloads.
+// Generate with: tcms oauth:setup (creates keys at the paths below).
+// accessTokenTtl / refreshTokenTtl / authCodeTtl are PHP DateInterval specs.
+$settings['oauth'] = [
+	'signingKeyPath'      => $settings['datadir'] . '/.system/oauth-keys/private.key',
+	'publicKeyPath'       => $settings['datadir'] . '/.system/oauth-keys/public.key',
+	'accessTokenTtl'      => 'PT1H',   // 1 hour
+	'refreshTokenTtl'     => 'P30D',   // 30 days
+	'authCodeTtl'         => 'PT10M',  // 10 minutes
+	'dynamicRegistration' => true,     // RFC 7591 — set false to disable self-registration
 ];
 
 // https://www.php.net/manual/en/timezones.php

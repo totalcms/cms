@@ -49,4 +49,22 @@ class PathResolver
 	{
 		return self::packageRoot() !== self::projectRoot();
 	}
+
+	/**
+	 * Location of the writable installation config (`tcms.php`).
+	 *
+	 * Composer installs keep it at `<project-root>/config/tcms.php` so the
+	 * vendor package can remain read-only. Zip / Stacks installs keep it at
+	 * `DOCUMENT_ROOT/tcms.php` (the legacy location). The Settings UI and
+	 * setup wizard write through this so reads in `config/settings.php` see
+	 * the same file back.
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public static function configFile(): string
+	{
+		return self::isComposerInstall()
+			? self::projectRoot() . '/config/tcms.php'
+			: ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php';
+	}
 }

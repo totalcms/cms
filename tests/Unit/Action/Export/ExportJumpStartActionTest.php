@@ -9,6 +9,7 @@ use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Export\ExportJumpStartAction;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Support\Config;
 
 final class ExportJumpStartActionTest extends TestCase
 {
@@ -23,7 +24,15 @@ final class ExportJumpStartActionTest extends TestCase
 		$this->request           = $this->createMock(ServerRequestInterface::class);
 		$this->response          = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ExportJumpStartAction($this->jumpStartExporter);
+		// Config requires a full settings array; reflection sidesteps that.
+		// Empty siteName + domain mean displaySlug() returns '' so the action
+		// falls back to the legacy `jumpstart-export-{date}.json` filename.
+		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->siteName  = '';
+		$config->domain    = '';
+		$config->dashboard = [];
+
+		$this->action = new ExportJumpStartAction($this->jumpStartExporter, $config);
 	}
 
 	public function testExportsJumpStartSuccessfully(): void
@@ -156,6 +165,41 @@ final class ExportJumpStartActionTest extends TestCase
 		$this->response->method('withBody')->willReturnSelf();
 
 		($this->action)($this->request, $this->response);
+	}
+
+	public function testUsesSlugifiedSiteNameInDefaultFilename(): void
+	{
+		// When the operator has set a siteName in General settings, the
+		// default export filename leads with the slug — easier for customers
+		// to identify when multiple sites' exports land in the same folder.
+		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->siteName  = "Joe's Bistro";
+		$config->domain    = 'example.com';
+		$config->dashboard = [];
+
+		$action = new ExportJumpStartAction($this->jumpStartExporter, $config);
+
+		$this->request->method('getQueryParams')->willReturn([]);
+
+		$jumpStartData = $this->createMock(JumpStartData::class);
+		$jumpStartData->method('streamJsonToFile');
+
+		$this->jumpStartExporter->method('exportCurrentData')->willReturn($jumpStartData);
+
+		$this->response->expects($this->exactly(2))
+			->method('withHeader')
+			->willReturnCallback(function ($name, string $value): ResponseInterface {
+				if ($name === 'Content-Disposition') {
+					// SlugData turns the apostrophe into a hyphen.
+					$this->assertStringContainsString('joe-s-bistro-jumpstart-', $value);
+				}
+
+				return $this->response;
+			});
+
+		$this->response->method('withBody')->willReturnSelf();
+
+		$action($this->request, $this->response);
 	}
 
 	public function testReturnsResponseWithStreamBody(): void

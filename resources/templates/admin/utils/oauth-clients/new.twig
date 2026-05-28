@@ -1,0 +1,115 @@
+{# Create OAuth Client Form #}
+<h1>{{ t('oauth_clients.new_title') }}</h1>
+
+<section class="dash-content-section">
+
+	{% set scopeOptions = [] %}
+	{% for scope in oauthClientsForm.scopes %}
+		{% set scopeOptions = scopeOptions | merge([{
+			value: scope.identifier,
+			label: scope.identifier ~ ' — ' ~ scope.description
+		}]) %}
+	{% endfor %}
+
+	{% set formFields %}
+		{{ cms.form.field("text", "name", {
+			label       : t('oauth_clients.name_label'),
+			placeholder : "Claude Integration",
+			required    : true,
+		}) }}
+
+		{{ cms.form.field("textarea", "redirect_uris", {
+			label    : t('oauth_clients.redirect_uris_label'),
+			help     : t('oauth_clients.redirect_uris_help'),
+			required : true,
+			settings : { rows: 4 },
+		}) }}
+
+		{{ cms.form.field("multicheckbox", "scopes[]", {
+			label    : t('oauth_clients.scopes_label'),
+			required : true,
+			value    : [],
+			options  : scopeOptions,
+		}) }}
+	{% endset %}
+
+	{{ cms.form.totalform("/api/oauth-clients", formFields, {
+		class  : "oauth-client-form",
+		method : "POST",
+		save   : t('oauth_clients.create_submit'),
+	}) }}
+
+	<div style="text-align: right; margin-top: 1rem;">
+		<a href="utils/oauth-clients" class="dash-button transparent">{{ t('btn.cancel') }}</a>
+	</div>
+
+</section>
+
+{# Show Created Client Modal #}
+<dialog id="show-oauth-client-modal" class="cms-modal">
+	<h2>{{ t('oauth_clients.create_success') }}</h2>
+
+	<div class="warning-box">
+		<div>
+			<strong>{{ t('oauth_clients.secret_shown_once_warning') }}</strong>
+			<p>{{ t('oauth_clients.secret_copy_desc') }}</p>
+		</div>
+	</div>
+
+	<form class="totalform">
+		{{ cms.form.field("text", "oauth-client-id", {
+			label    : t('oauth_clients.client_id_label'),
+			class    : "oauth-client-id-display",
+			readonly : true,
+			icon     : false,
+		}) }}
+		{{ cms.form.field("text", "oauth-client-secret", {
+			label    : t('oauth_clients.client_secret_label'),
+			class    : "oauth-client-secret-display",
+			readonly : true,
+			icon     : false,
+		}) }}
+		<button type="button" class="dash-button cms-clip-button" data-clip="input[name='oauth-client-secret']">{{ t('btn.copy_clipboard') }}</button>
+	</form>
+
+	<div class="form-inline-fields" style="text-align: right; margin-top: 2rem;">
+		<a href="utils/oauth-clients" class="dash-button transparent">{{ t('btn.done') }}</a>
+	</div>
+</dialog>
+
+<style>
+#show-oauth-client-modal {
+	gap           : 3rem;
+	align-content : start;
+	height        : fit-content;
+}
+.warning-box {
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 2px solid oklch(var(--totalform-accent));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem 1.25rem;
+}
+.warning-box strong {
+	color : oklch(var(--totalform-accent));
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const form    = document.querySelector('.oauth-client-form');
+	const modalEl = document.getElementById('show-oauth-client-modal');
+
+	form.addEventListener('success', function(event) {
+		const data = event.detail;
+		if (data.success && data.client) {
+			const idInput     = document.querySelector('input[name="oauth-client-id"]');
+			const secretInput = document.querySelector('input[name="oauth-client-secret"]');
+			if (idInput)     idInput.value     = data.client.id;
+			if (secretInput) secretInput.value = data.client.secret;
+			setTimeout(() => {
+				modalEl.dialog ? modalEl.dialog.open() : modalEl.showModal();
+			}, 2500);
+		}
+	});
+});
+</script>

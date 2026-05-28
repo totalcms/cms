@@ -37,6 +37,11 @@ class SchemaData
 		'gallery',
 		'image',
 		'mailer',
+		'mcp-collection',
+		'mcp-prompt',
+		'mcp-prompt-arg',
+		'mcp-property',
+		'mcp-tool',
 		'number',
 		'builder-page',
 		'playground',
@@ -72,6 +77,54 @@ class SchemaData
 		'svg',
 		'time',
 		'url',
+	];
+
+	/**
+	 * Form-field types (the `field` key in property definitions) that have a
+	 * meaningful include/exclude filter semantics. The truth is editorial —
+	 * `ObjectFilter` can technically match a string against any scalar, but
+	 * filtering on a styledtext blob or a media field by string equality is
+	 * never useful. Container/blob fields (`card`, `deck`, `image`, `gallery`,
+	 * `depot`, `file`, `svg`, `json`) are deliberately excluded.
+	 *
+	 * Consumed via `ObjectFilter::isFilterableType()`. Per-property operator
+	 * overrides (e.g. `mcp.filterable: false`) win at the McpSchemaResolver
+	 * layer; this constant only describes the default when none is set.
+	 */
+	public const FILTERABLE_FIELD_TYPES = [
+		'text', 'textarea', 'styledtext', 'select', 'toggle', 'checkbox', 'time',
+		'number', 'range', 'date', 'datetime', 'slug', 'string', 'id', 'email', 'url', 'phone',
+	];
+
+	/**
+	 * Form-field types with a well-defined sort order. Strictly numeric and
+	 * temporal types plus `id` (the slug-like primary key — `sort=id:asc` is
+	 * the natural deterministic fallback when no other sortable column exists).
+	 *
+	 * Text-shaped types are intentionally absent: lexicographic sorting of
+	 * styledtext / textarea bodies is rarely what callers want. Operators can
+	 * still opt in per-property via `mcp.sortable: true`.
+	 *
+	 * Consumed via `CollectionSorter::isSortableType()`.
+	 */
+	public const SORTABLE_FIELD_TYPES = [
+		'number', 'range', 'date', 'datetime', 'id',
+	];
+
+	/**
+	 * Form-field types that hold credential / secret values. Properties using
+	 * these types default to `mcp.expose: false` — they never appear in MCP
+	 * responses unless the operator explicitly sets `mcp.expose: true`.
+	 *
+	 * The defensive default catches the common case (password hashes, API
+	 * keys, OAuth tokens stored in plain text via SecretField) without
+	 * requiring every operator to remember to opt out per-schema.
+	 *
+	 * Consumed via `McpSchemaResolver::isPropertyExposed()`.
+	 */
+	public const SENSITIVE_FIELD_TYPES = [
+		'password',
+		'secret',
 	];
 	public const PROPERTY_TYPE_TO_REF = [
 		'card'          => 'https://www.totalcms.co/schemas/properties/card.json',

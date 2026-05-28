@@ -11,7 +11,8 @@
 	pointer-events   : none;
 	background-color : transparent;
 
-	--totalform-formerror : "An error occurred. See the CMS logs for more details.";
+	--totalform-formerror   : "An error occurred. See the CMS logs for more details.";
+	--totalform-formwarning : "";
 
     &:after {
 		content            : "";
@@ -45,7 +46,7 @@
 		opacity    : 0;
 	}
 
-    &.processing,&.success,&.error{
+    &.processing,&.success,&.error,&.warning{
         opacity         : 1;
         backdrop-filter : blur(5px);
     }
@@ -86,6 +87,23 @@
 			opacity : 1;
 		}
     }
+	&.warning {
+		background-color : oklch(var(--totalform-warning) / 0.85);
+		pointer-events   : auto;
+
+		&:after {
+			animation  : none;
+			rotate     : 0deg; // Reset rotation for Firefox
+			mask-image : var(--icon-warn);
+			opacity    : 1;
+			scale      : 1.2;
+		}
+
+		&:before {
+			content : var(--totalform-formwarning);
+			opacity : 1;
+		}
+	}
 }
 
 @keyframes totalform-spin {

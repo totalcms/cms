@@ -18,6 +18,7 @@ use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
@@ -85,6 +86,7 @@ readonly class TotalFormFactory
 		private TemplateLister $templateLister,
 		private DevModeManager $devModeManager,
 		private PageMiddlewareRegistry $pageMiddlewareRegistry,
+		private FormActionRegistry $formActionRegistry,
 	) {
 		$this->api = $this->config->api . '/api';
 	}
@@ -151,6 +153,7 @@ readonly class TotalFormFactory
 			'csrfManager'              => $this->csrfManager,
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
+			'formActionRegistry'       => $this->formActionRegistry,
 		]);
 
 		$form = new TotalForm(...$options);
@@ -504,7 +507,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'save'        => 'Save',
 			'delete'      => 'Delete',
-			'class'       => 'dataview-form no-unsaved-warning',
+			'class'       => 'dataview-form help-on-hover help-box no-unsaved-warning',
 		], $options);
 		$options['id'] = $id;
 

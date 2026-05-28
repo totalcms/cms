@@ -21,5 +21,5 @@ Total CMS includes a built-in Mailer for sending transactional emails, form noti
 
 ## Related
 
-- [Pushover Notifications](docs/notifications/pushover)
+- [Pushover Notifications](docs/extensions/pushover)
 - [Access Groups](docs/auth/access-groups) — controls who can use the Mailer

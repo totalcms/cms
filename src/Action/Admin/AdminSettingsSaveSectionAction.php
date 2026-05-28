@@ -6,7 +6,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
-use TotalCMS\Domain\Notification\Service\PushoverService;
 use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
@@ -24,7 +23,6 @@ readonly class AdminSettingsSaveSectionAction
 		private InstallationSettingsSaver $installationSettingsSaver,
 		private SettingsValidator $settingsValidator,
 		private EmailSender $emailSender,
-		private PushoverService $pushoverService,
 		private TwigRenderer $twigRenderer,
 		private EditionFeatureService $editionFeatureService,
 	) {
@@ -61,10 +59,6 @@ readonly class AdminSettingsSaveSectionAction
 		if ($section === 'smtp' && isset($queryParams['test'])) {
 			return $this->handleSmtpTest($request, $response);
 		}
-		if ($section === 'pushnotif' && isset($queryParams['test'])) {
-			return $this->handlePushoverTest($request, $response);
-		}
-
 		$formData = (array)$request->getParsedBody();
 
 		// Remove CSRF tokens
@@ -124,36 +118,6 @@ readonly class AdminSettingsSaveSectionAction
 			'success' => false,
 			'message' => 'Failed to send test email: ' . $errorMessage,
 		]);
-	}
-
-	/**
-	 * Handle Pushover test notification request.
-	 */
-	private function handlePushoverTest(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-	{
-		$formData    = (array)$request->getParsedBody();
-		$testMessage = trim((string)($formData['test_message'] ?? ''));
-
-		if ($testMessage === '') {
-			$testMessage = 'This is a test notification from Total CMS.';
-		}
-
-		$result = $this->pushoverService->send(
-			message: $testMessage,
-			title: 'Total CMS Test',
-		);
-
-		if ($result->success) {
-			return $this->renderSettingsPage($response, [
-				'success' => true,
-				'message' => 'Test notification sent successfully. Check your Pushover app.',
-			], 'pushnotif');
-		}
-
-		return $this->renderSettingsPage($response, [
-			'success' => false,
-			'message' => 'Failed to send test notification: ' . $result->message,
-		], 'pushnotif');
 	}
 
 	/**

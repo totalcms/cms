@@ -76,6 +76,20 @@
 						{% endfor %}
 					</div>
 				</details>
+
+				<details class="rss-cron-panel">
+					<summary><strong>{{ t('import_rss.cron_title') }}</strong></summary>
+					<div style="margin-top: 0.5rem;">
+						<p>{{ t('import_rss.cron_desc')|raw }}</p>
+						<p><em>{{ t('jobqueue.php_path_note') }} {{ t('jobqueue.server_note') }}</em></p>
+
+						<pre class="jobqueue-command"><code id="rss-cron-command-text" data-tcms-prefix="{{ cms.admin.tcmsCommandPrefix() }}">{{ cms.admin.tcmsCommandPrefix() }} rss:import …</code></pre>
+						<button type="button" class="cms-clip-button dash-button transparent" data-clip="#rss-cron-command-text">{{ t('btn.copy_command') }}</button>
+
+						<p class="rss-cron-note">{{ t('import_rss.cron_field_mapping_note')|raw }} <a href="docs/extensions/cli#rss-import" target="_blank">{{ t('import_rss.cron_docs_link') }}</a>.</p>
+					</div>
+				</details>
+
 			{% endset %}
 
 			{{ cms.form.simple("/import/rss", importFields, {
@@ -125,6 +139,31 @@
 
 				this.style.display = 'none';
 			});
+
+			// Live-update the base cron command as the user edits URL / collection /
+			// draft. Field mapping is intentionally NOT mirrored here — operators
+			// configure it once in the form for their click-through import, then
+			// translate to `--map feedField=collectionProperty` in their crontab.
+			// The docs link in the panel covers the full mapping syntax.
+			const cronText = document.getElementById('rss-cron-command-text');
+			const cronPrefix = cronText?.dataset.tcmsPrefix || 'tcms';
+
+			const shellQuote = (s) => `"${String(s).replace(/(["\\$`])/g, '\\$1')}"`;
+
+			const buildCron = () => {
+				const url = importForm.querySelector('[name="url"]')?.value || '';
+				const collection = importForm.querySelector('[name="collection"]')?.value || '';
+				const draft = importForm.querySelector('[name="draft"]')?.checked ?? true;
+
+				const parts = [cronPrefix, 'rss:import', shellQuote(url), collection || '<collection>'];
+				if (!draft) parts.push('--no-draft');
+
+				cronText.textContent = parts.join(' ');
+			};
+
+			importForm.addEventListener('input', buildCron);
+			importForm.addEventListener('change', buildCron);
+			buildCron();
 		}
 	</script>
 
@@ -154,6 +193,39 @@
 .rss-entry-item:last-child { border-bottom: none; padding-bottom: 0; }
 .rss-entry-meta { font-size: 0.8rem; color: oklch(var(--totalform-darkgray)); margin-top: 0.25rem; }
 .rss-entry-summary { font-size: 0.8rem; color: oklch(var(--totalform-text-color)); margin-top: 0.25rem; }
-.rss-field-mapping { border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius); padding: 0.75rem; margin-top: 1rem; }
-.rss-field-mapping summary { cursor: pointer; }
+.rss-field-mapping, .rss-cron-panel {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 0.75rem;
+	margin-top: 1rem;
+}
+.rss-field-mapping summary, .rss-cron-panel summary { cursor: pointer; }
+.rss-cron-panel .jobqueue-command {
+	width         : 100%;
+	max-width     : 100%;
+	overflow-x    : auto;
+	white-space   : nowrap;
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+	font-size     : 0.9em;
+	box-sizing    : border-box;
+	margin        : 0.5rem 0;
+}
+.rss-cron-panel .jobqueue-command code {
+	white-space : nowrap;
+	display     : block;
+}
+.rss-cron-note {
+	margin-top    : 0.75rem;
+	max-width     : 100% !important;
+	font-size     : var(--totalform-help-size);
+	font-style    : italic;
+	color         : oklch(var(--totalform-help-color));
+}
+.rss-cron-note a {
+	color           : oklch(var(--totalform-accent));
+	text-decoration : underline;
+}
 </style>

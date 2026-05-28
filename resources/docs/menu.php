@@ -175,7 +175,6 @@ return [
 		'title' => 'Notifications',
 		'sub'   => [
 			['title' => 'Mailer',   'path' => 'notifications/mailer'],
-			['title' => 'Pushover', 'path' => 'notifications/pushover'],
 		],
 	],
 	[
@@ -193,8 +192,18 @@ return [
 			['title' => 'REST API',     'path' => 'apis/rest-api'],
 			['title' => 'PHP API',      'path' => 'apis/php-api'],
 			['title' => 'API Keys',     'path' => 'apis/api-keys'],
+			['title' => 'OAuth Server', 'path' => 'apis/oauth'],
 			['title' => 'Index Filter', 'path' => 'apis/index-filter'],
 			['title' => 'OpenAPI Docs', 'path' => 'apis/openapi'],
+		],
+	],
+	[
+		'title' => 'MCP',
+		'sub'   => [
+			['title' => 'MCP Server',        'path' => 'mcp/server'],
+			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
+			['title' => 'Prompts',           'path' => 'mcp/prompts'],
+			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
 		],
 	],
 	[
@@ -214,7 +223,12 @@ return [
 				'sub'   => [
 					['title' => 'Bundled Overview', 'path' => 'extensions/bundled'],
 					['title' => 'A/B Split',        'path' => 'extensions/ab-split'],
+					['title' => 'Algolia Search',   'path' => 'extensions/algolia-search'],
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
+					['title' => 'Maintenance',      'path' => 'extensions/maintenance'],
+					['title' => 'Protect',          'path' => 'extensions/protect'],
+					['title' => 'Pushover',         'path' => 'extensions/pushover'],
+					['title' => 'Scheduled',        'path' => 'extensions/scheduled'],
 				],
 			],
 		],

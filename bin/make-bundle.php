@@ -2,8 +2,14 @@
 
 echo "Building bundle...\n";
 
-// Accept optional base directory (e.g., "dist" for post-build verification)
-$baseDir = isset($argv[1]) ? rtrim($argv[1], '/') . '/' : __DIR__ . '/../';
+// Accept optional base directory (e.g., "dist" for post-build verification).
+// Composer forwards trailing args to every chained script, so `composer run
+// test -- --filter=Mcp` would otherwise feed `--filter=Mcp` here as a path.
+// Ignore anything starting with `-`.
+$baseDirArg = $argv[1] ?? '';
+$baseDir    = ($baseDirArg !== '' && !str_starts_with($baseDirArg, '-'))
+	? rtrim($baseDirArg, '/') . '/'
+	: __DIR__ . '/../';
 
 $folders = [
 	'config',

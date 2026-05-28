@@ -1,0 +1,39 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/mcp-property.json",
+	"id"          : "mcp-property",
+	"type"        : "object",
+	"description" : "Per-property MCP server settings. Controls how a single property on a schema is exposed to AI agents — its description and whether it's visible in responses. Filterability and sortability are derived automatically from the schema's <code>index</code> list plus the property's field type.",
+	"formgrid"    : "description description\nexpose expose",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "ID",
+			"help"     : "Reserved — required by the schema system but unused for cards.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"readonly" : true
+			}
+		},
+		"description": {
+			"type"        : "string",
+			"label"       : "AI Description",
+			"help"        : "Description shown to AI agents in tool input/output schemas. Falls back to the property's <code>help</code> text, then <code>label</code>, if blank. Write for AI consumption — what does this property semantically mean in the data model (not how to fill it in).",
+			"field"       : "textarea",
+			"placeholder" : "e.g. The post's URL slug, used in the public URL /blog/{slug}",
+			"default"     : "",
+			"settings"    : {
+				"rows" : 3
+			}
+		},
+		"expose": {
+			"type"    : "boolean",
+			"label"   : "Expose to MCP",
+			"help"    : "When disabled, this property is stripped from MCP responses entirely (it won't appear in query_collection, get_object, or describe_collection output). Use for internal-only properties (supplier costs, internal notes, etc.) that admins set but shouldn't reach AI agents. To restrict filtering/sorting instead, edit the schema's <code>index</code> list — the index is what query_collection / search_collection iterate over.",
+			"field"   : "checkbox",
+			"default" : true
+		}
+	},
+	"required": []
+}

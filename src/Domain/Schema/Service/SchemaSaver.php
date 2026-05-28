@@ -23,7 +23,8 @@ readonly class SchemaSaver
 	/**
 	 * @param array<string,mixed> $schemaData
 	 *
-	 * @throws \UnexpectedValueException
+	 * @throws \InvalidArgumentException When the schema shape is invalid (delegates to saveSchema)
+	 * @throws \UnexpectedValueException When the id doesn't match, the schema doesn't exist, or saveSchema rejects the data
 	 */
 	public function updateSchema(string $schemaId, array $schemaData): SchemaData
 	{

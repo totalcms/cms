@@ -1,0 +1,9 @@
+{
+    "id": "simple",
+    "name": "simple",
+    "description": "A trivial test prompt.",
+    "body": "Hello world.",
+    "access": "public",
+    "targetCollection": "",
+    "args": []
+}

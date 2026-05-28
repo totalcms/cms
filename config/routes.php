@@ -2,6 +2,8 @@
 
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Middleware\Security\OAuthBearerMiddleware;
+use TotalCMS\Middleware\Security\OAuthRestScopeMiddleware;
 
 return function (App $app): void {
 	// Admin UI, auth, and setup (auth must load before admin catch-all)
@@ -19,11 +21,14 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/public/download.php')($app);
 	(require __DIR__ . '/routes/public/stream.php')($app);
 	(require __DIR__ . '/routes/public/livereload.php')($app);
+	(require __DIR__ . '/routes/public/mcp.php')($app);
+	(require __DIR__ . '/routes/public/oauth.php')($app);
 
 	// All API routes under /api prefix
 	$app->group('/api', function (RouteCollectorProxy $api): void {
 		(require __DIR__ . '/routes/api/access-groups.php')($api);
 		(require __DIR__ . '/routes/api/apikey.php')($api);
+		(require __DIR__ . '/routes/api/oauth-clients.php')($api);
 		(require __DIR__ . '/routes/api/assets.php')($api);
 		(require __DIR__ . '/routes/api/passkeys.php')($api);
 		(require __DIR__ . '/routes/api/cache.php')($api);
@@ -43,5 +48,9 @@ return function (App $app): void {
 		(require __DIR__ . '/routes/api/orphan.php')($api);
 		(require __DIR__ . '/routes/api/ext.php')($api);
 		(require __DIR__ . '/routes/api/action.php')($api);
-	});
+		// OAuthBearerMiddleware runs first (outermost): validates JWT + sets oauth_* request attributes.
+		// OAuthRestScopeMiddleware runs second (inner): gates Bearer-authed requests by scope.
+		// Requests without a Bearer header pass through both transparently so the
+		// existing DualAuthMiddleware / AuthMiddleware / ApiKeyAuthMiddleware flows are unaffected.
+	})->add(OAuthRestScopeMiddleware::class)->add(OAuthBearerMiddleware::class);
 };

@@ -161,7 +161,7 @@ class RssBuilder
 			'link'        => $defaultLink,
 			'rssurl'      => false,
 			'image'       => false,
-			'name'        => ($this->domainName() ?: 'RSS') . ' Feed',
+			'name'        => ($this->config->displayName() ?: $this->domainName() ?: 'RSS') . ' Feed',
 			'description' => false,
 			'language'    => false,
 		], $options);

@@ -1,0 +1,69 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "OAuth Server Settings",
+	"description" : "Configure the OAuth 2.1 authorization server. Used by AI clients (Claude, Cursor) via dynamic registration and by third-party integrations (ActivePieces, Zapier) via admin-created static clients. Run <code>tcms oauth:setup</code> once to generate the RSA signing key pair before enabling.",
+	"type"        : "object",
+	"properties"  : {
+		"dynamicRegistration": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Allow Dynamic Registration",
+			"help"    : "Enable RFC 7591 self-registration at <code>POST /oauth/register</code>. MCP clients (Claude Desktop, Cursor) need this to connect without manual setup. Turn off to require admin-created static clients for every integration — locks the door but breaks the AI-client zero-touch flow.",
+			"default" : true
+		},
+		"accessTokenTtl": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Access Token Lifetime",
+			"help"        : "How long an access token is valid. PHP <code>DateInterval</code> spec — e.g. <code>PT1H</code> (1 hour), <code>PT15M</code> (15 minutes), <code>P1D</code> (1 day). Shorter = better security (revocation more effective) but more refresh round-trips. Default 1h is the OAuth common middle ground.",
+			"placeholder" : "PT1H",
+			"default"     : "PT1H",
+			"pattern"     : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$"
+		},
+		"refreshTokenTtl": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Refresh Token Lifetime",
+			"help"        : "How long a refresh token can be used to obtain new access tokens. After this, the user must re-authorize via the consent screen. Common values: <code>P30D</code> (30 days), <code>P90D</code> (90 days), <code>P1Y</code> (1 year). Default 30 days.",
+			"placeholder" : "P30D",
+			"default"     : "P30D",
+			"pattern"     : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$"
+		},
+		"authCodeTtl": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "Authorization Code Lifetime",
+			"help"        : "How long an authorization code is valid before it must be exchanged for tokens. Short by design — the user is mid-flow. RFC 6749 §4.1.2 recommends 10 minutes maximum. <code>PT10M</code> default.",
+			"placeholder" : "PT10M",
+			"default"     : "PT10M",
+			"pattern"     : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$"
+		},
+		"tokenEndpointLimit": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Token Endpoint Rate Limit (per minute)",
+			"help"        : "Maximum requests to <code>/oauth/token</code> per minute from a single IP. Protects against brute-force code exchange and runaway refresh loops. Applies to all callers (admin requests are NOT exempt). Set to <code>0</code> to disable. Default 60.",
+			"placeholder" : "60",
+			"default"     : 60,
+			"min"         : 0,
+			"max"         : 6000
+		},
+		"dynamicRegistrationLimit": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Dynamic Registration Rate Limit (per hour)",
+			"help"        : "Maximum requests to <code>/oauth/register</code> per hour from a single IP. Dynamic registration is the abuse vector for client-record flooding — an unauthenticated endpoint that creates persistent server state. Default 10/hour by design. Set to <code>0</code> to disable.",
+			"placeholder" : "10",
+			"default"     : 10,
+			"min"         : 0,
+			"max"         : 1000,
+			"settings" : {
+				"visibility": {
+					"watch": "dynamicRegistration",
+					"value": true,
+					"operator": "=="
+				}
+			}
+		}
+	}
+}

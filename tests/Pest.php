@@ -132,39 +132,86 @@ function objectFilesPath(string $collection, string $id): string
 
 function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete = false)
 {
-	if (!file_exists($dir)) {
-		return true;
+	$isRootDataDir = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
+
+	// Wipe pass — only if the directory actually exists. A non-existent root
+	// data dir on a fresh clone (CI, new checkout) still needs the fixture
+	// restore below, so we don't short-circuit here.
+	if (file_exists($dir)) {
+		if (!is_dir($dir)) {
+			return unlink($dir);
+		}
+
+		foreach (scandir($dir) as $item) {
+			if ($item === '.' || $item === '..') {
+				continue;
+			}
+
+			// Skip explicitly-preserved entries (caller-supplied opt-in only).
+			if (in_array($item, $preserve, true)) {
+				continue;
+			}
+
+			if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item, [], $forceComplete)) {
+				return false;
+			}
+		}
+
+		// Don't remove the root tcms-data dir itself — only its contents.
+		if (!$isRootDataDir) {
+			return rmdir($dir);
+		}
 	}
 
-	if (!is_dir($dir)) {
-		return unlink($dir);
+	// Restore checked-in fixtures (auth users, .system/access-groups.json,
+	// etc.) so tests start from a known state every time. Fixtures live at
+	// /tests/tcms-data-fixtures/ as the source of truth; the whole
+	// /tests/tcms-data/ tree is gitignored. Runs even when the root dir
+	// didn't exist beforehand — recursiveCopy() creates it.
+	// $forceComplete suppresses the restore — used when a test genuinely
+	// needs a pre-fixture state (e.g. setup-wizard tests).
+	if ($isRootDataDir && !$forceComplete) {
+		restoreFixtures();
 	}
 
-	// If this is the root tcms-data directory and not forcing complete deletion,
-	// preserve auth and .system directories by default
-	$isRootDataDir   = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
-	$defaultPreserve = ($isRootDataDir && !$forceComplete) ? ['auth', '.system'] : [];
-	$preserve        = array_merge($defaultPreserve, $preserve);
+	return true;
+}
 
-	foreach (scandir($dir) as $item) {
+/**
+ * Copy every file under /tests/tcms-data-fixtures/ into the live test data
+ * dir. Called by recursiveDelete() at root-dir cleanup so every test run
+ * starts with the canonical fixtures (auth users, access-groups.json, etc.)
+ * in place. Idempotent — safe to call standalone if you need to restore
+ * fixtures without first wiping the dir.
+ */
+function restoreFixtures(): void
+{
+	$src = __DIR__ . '/tcms-data-fixtures';
+	if (!is_dir($src)) {
+		return;
+	}
+	recursiveCopy($src, rtrim(cmsDataDir(), '/'));
+}
+
+/**
+ * Copy a directory tree from $src to $dst, creating dirs as needed and
+ * overwriting existing files. Helper for restoreFixtures().
+ */
+function recursiveCopy(string $src, string $dst): void
+{
+	if (!is_dir($dst)) {
+		mkdir($dst, 0777, true);
+	}
+	foreach (scandir($src) as $item) {
 		if ($item === '.' || $item === '..') {
 			continue;
 		}
-
-		// Skip preserved directories
-		if (in_array($item, $preserve, true)) {
-			continue;
-		}
-
-		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item, [], $forceComplete)) {
-			return false;
+		$srcPath = $src . DIRECTORY_SEPARATOR . $item;
+		$dstPath = $dst . DIRECTORY_SEPARATOR . $item;
+		if (is_dir($srcPath)) {
+			recursiveCopy($srcPath, $dstPath);
+		} else {
+			copy($srcPath, $dstPath);
 		}
 	}
-
-	// Don't remove the root directory itself
-	if ($isRootDataDir) {
-		return true;
-	}
-
-	return rmdir($dir);
 }
