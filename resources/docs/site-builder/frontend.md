@@ -37,11 +37,10 @@ project/
 │   │   └── manifest.json
 │   └── index.php        ← T3 entry point
 └── frontend/            ← source files (not public)
-    ├── src/
-    │   ├── css/
-    │   │   └── style.css
-    │   └── js/
-    │       └── app.js
+    ├── css/
+    │   └── style.css
+    ├── js/
+    │   └── app.js
     ├── vite.config.js
     └── package.json
 ```
@@ -66,8 +65,8 @@ export default defineConfig({
 
         rollupOptions: {
             input: {
-                style: resolve(__dirname, 'src/css/style.css'),
-                app: resolve(__dirname, 'src/js/app.js'),
+                style: resolve(__dirname, 'css/style.css'),
+                app: resolve(__dirname, 'js/app.js'),
             },
         },
     },
@@ -118,7 +117,7 @@ For hot module replacement (HMR) during development, run the Vite dev server and
 ```twig
 {# layouts/default.twig #}
 {% if cms.env == 'development' %}
-    <script type="module" src="http://localhost:5173/src/js/app.js"></script>
+    <script type="module" src="http://localhost:5173/js/app.js"></script>
 {% else %}
     {{ cms.builder.css('style.css') }}
     {{ cms.builder.js('app.js', {module: true}) }}
@@ -153,10 +152,10 @@ public/assets/
 T3's asset functions read the manifest and output the correct filenames:
 
 ```twig
-{{ cms.builder.css('src/css/style.css') }}
+{{ cms.builder.css('css/style.css') }}
 {# Output: <link rel="stylesheet" href="/assets/style.a1b2c3d4.css"> #}
 
-{{ cms.builder.js('src/js/app.js', {module: true}) }}
+{{ cms.builder.js('js/app.js', {module: true}) }}
 {# Output: <script type="module" src="/assets/app.e5f6a7b8.js"></script> #}
 ```
 
@@ -185,8 +184,8 @@ export default defineConfig({
         manifest: true,
         rollupOptions: {
             input: {
-                style: resolve(__dirname, 'src/css/style.css'),
-                app: resolve(__dirname, 'src/js/app.js'),
+                style: resolve(__dirname, 'css/style.css'),
+                app: resolve(__dirname, 'js/app.js'),
             },
         },
     },
@@ -194,14 +193,14 @@ export default defineConfig({
 ```
 
 ```css
-/* frontend/src/css/style.css */
+/* frontend/css/style.css */
 @import "tailwindcss";
 ```
 
 Point Tailwind at your templates so it can scan for classes:
 
 ```css
-/* frontend/src/css/style.css */
+/* frontend/css/style.css */
 @import "tailwindcss";
 @source "../../tcms-data/builder/**/*.twig";
 ```
@@ -219,8 +218,8 @@ Vite handles `.scss` files automatically — just change your entry point:
 // vite.config.js
 rollupOptions: {
     input: {
-        style: resolve(__dirname, 'src/css/style.scss'),
-        app: resolve(__dirname, 'src/js/app.js'),
+        style: resolve(__dirname, 'css/style.scss'),
+        app: resolve(__dirname, 'js/app.js'),
     },
 },
 ```
@@ -239,7 +238,7 @@ A complete layout using all asset functions:
     <meta name="description" content="{{ page.description }}">
 
     {{ cms.builder.preload('fonts/inter.woff2', 'font') }}
-    {{ cms.builder.css('src/css/style.css') }}
+    {{ cms.builder.css('css/style.css') }}
 </head>
 <body>
     {% include 'partials/nav.twig' %}
@@ -248,7 +247,7 @@ A complete layout using all asset functions:
 
     {% include 'partials/footer.twig' %}
 
-    {{ cms.builder.js('src/js/app.js', {module: true}) }}
+    {{ cms.builder.js('js/app.js', {module: true}) }}
 </body>
 </html>
 ```
@@ -279,7 +278,7 @@ T3 adds `?v={mtime}` query strings for cache busting. No manifest, no build step
 const esbuild = require('esbuild')
 
 esbuild.build({
-    entryPoints: ['src/css/style.css', 'src/js/app.js'],
+    entryPoints: ['css/style.css', 'js/app.js'],
     outdir: '../public/assets',
     bundle: true,
     minify: true,

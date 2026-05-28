@@ -110,8 +110,8 @@ Copies the contents of `resources/builder/frontend/` into `<projectRoot>/fronten
 
 - `vite.config.js` — emits hashed assets to `../public/assets/` with manifest
 - `package.json` — `dev` / `build` / `watch` scripts; Vite as the only dependency
-- `src/css/style.css` — minimal starter stylesheet
-- `src/js/app.js` — minimal entry point
+- `css/style.css` — minimal starter stylesheet
+- `js/app.js` — minimal entry point
 - `README.md` — quick reference for the install/build workflow
 - `.gitignore` — excludes `node_modules/`, `dist/`, etc.
 
