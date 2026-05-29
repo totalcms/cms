@@ -32,6 +32,30 @@ If no available locales are configured, the field types refuse to render with a 
 
 Pick **Localization Fields → Localized Text**, **Localized Textarea**, or **Localized Styled Text** in the schema editor's field-type dropdown. The rest of the schema property options work the same way as the regular text / textarea / styled-text fields.
 
+### Field Settings
+
+| Setting      | Type    | Default | Description |
+|--------------|---------|---------|-------------|
+| `localeSync` | boolean | `true`  | When the user clicks a locale tab on one localized field, every other localized field on the page switches to the same locale. Set to `false` to opt this field out of synchronization (its tab clicks won't broadcast, and it won't follow other fields). |
+
+Example:
+
+```json
+{
+    "title": {
+        "field": "localizedtext",
+        "label": "Title"
+    },
+    "body": {
+        "field": "localizedstyledtext",
+        "label": "Body",
+        "settings": {
+            "localeSync": false
+        }
+    }
+}
+```
+
 The stored shape looks like this:
 
 ```json
