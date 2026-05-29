@@ -69,6 +69,7 @@ use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
+use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SiteInfoTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
@@ -522,6 +523,7 @@ return [
 		$container->get(CacheTools::class)->register($registry);
 		$container->get(ExtensionTools::class)->register($registry);
 		$container->get(CollectionTools::class)->register($registry);
+		$container->get(ObjectTools::class)->register($registry);
 
 		// Public tools (work for both admin and public personas; per-collection
 		// access is enforced inside each handler via McpSchemaResolver).

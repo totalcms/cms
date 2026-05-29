@@ -237,6 +237,7 @@ return [
 		'title' => 'Operations',
 		'sub'   => [
 			['title' => 'Deployment',        'path' => 'operations/deployment'],
+			['title' => 'Apache',            'path' => 'operations/apache'],
 			['title' => 'Nginx',             'path' => 'operations/nginx'],
 			['title' => 'Security',          'path' => 'operations/security'],
 			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],

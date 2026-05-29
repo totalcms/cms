@@ -1,5 +1,9 @@
 import TotalField from "./totalfield.js";
 
+// Cross-instance locale-sync channel. When any localized field on the page
+// switches locale (with sync enabled), every other sync-enabled instance follows.
+const LOCALE_SYNC_EVENT = 'totalform:locale-sync';
+
 //-----------------------------------------------
 // Total CMS Localized Text Field (Pro)
 //
@@ -27,8 +31,25 @@ export default class LocalizedTextField extends TotalField {
 
 		this.bindTabSwitching();
 
+		// Cross-field locale sync — default on, opt-out via `settings.localeSync: false`.
+		// When enabled, clicking a tab on one localized field switches every other
+		// sync-enabled localized field on the page to the same locale.
+		if (this.settings.localeSync !== false) {
+			this.bindLocaleSync();
+		}
+
 		// Refresh stored value now that getValue() can read all locales.
 		this.storedValue = JSON.stringify(this.getValue());
+	}
+
+	bindLocaleSync() {
+		this.localeSyncHandler = (e) => {
+			if (!e.detail || e.detail.source === this) return;
+			// Skip the broadcast on the receiver to avoid loops; the originating
+			// field already handled the announcement.
+			this.switchToLocale(e.detail.locale, { broadcast: false });
+		};
+		document.addEventListener(LOCALE_SYNC_EVENT, this.localeSyncHandler);
 	}
 
 	bindTabSwitching() {
@@ -57,8 +78,14 @@ export default class LocalizedTextField extends TotalField {
 		});
 	}
 
-	switchToLocale(locale) {
-		this.container.querySelectorAll('[data-locale-tab]').forEach(t => {
+	switchToLocale(locale, options = {}) {
+		// Bail if this field has no tab for the requested locale — fields can
+		// disagree (e.g. an extension renders one with a custom locale set).
+		const tabs = this.container.querySelectorAll('[data-locale-tab]');
+		const hasLocale = Array.from(tabs).some(t => t.dataset.localeTab === locale);
+		if (!hasLocale) return;
+
+		tabs.forEach(t => {
 			const isActive = t.dataset.localeTab === locale;
 			t.setAttribute('aria-selected', isActive ? 'true' : 'false');
 			t.tabIndex = isActive ? 0 : -1;
@@ -71,6 +98,13 @@ export default class LocalizedTextField extends TotalField {
 		// Subclass hook — LocalizedStyledTextField uses this to nudge the
 		// matching Tiptap instance so its layout settles.
 		this.onLocaleSwitched?.(locale);
+
+		// Broadcast to peer fields unless we're the receiver of a sync event.
+		if (options.broadcast !== false && this.settings.localeSync !== false) {
+			document.dispatchEvent(new CustomEvent(LOCALE_SYNC_EVENT, {
+				detail: { locale, source: this },
+			}));
+		}
 	}
 
 	/** Return the locale-keyed dict of values. */

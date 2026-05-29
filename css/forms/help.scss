@@ -43,7 +43,7 @@
 			border-color : oklch(var(--totalform-border-color));
     	}
     }
-    &.help-on-hover .form-field:not(.card-field):hover {
+    &.help-on-hover .form-field:not(.card-field):not(.deck-field):hover {
         input,
         .form-group-icon {
             border-bottom-right-radius: 0;
@@ -169,6 +169,7 @@
 }
 
 .help-on-focus .form-field:has(input:focus) > .help:not(:empty),
+.help-on-hover .form-field:not(.deck-field):hover > .help:not(:empty),
 .help-on-hover .form-field:not(.card-field):hover > .help:not(:empty) {
     opacity: 1 !important;
 }

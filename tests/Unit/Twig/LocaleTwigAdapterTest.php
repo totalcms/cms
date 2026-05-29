@@ -169,6 +169,26 @@ describe('LocaleTwigAdapter::styledtext', function (): void {
 	});
 });
 
+describe('LocaleTwigAdapter::text — null locale defaults to current locale', function (): void {
+	test('uses cms.locale.get() when locale arg is omitted', function (): void {
+		if (!extension_loaded('intl')) {
+			$this->markTestSkipped('intl extension required for set()/get()');
+		}
+
+		$adapter = makeLocaleAdapter();
+		$value   = ['en_US' => 'About', 'de' => 'Über'];
+
+		// Sequence mirrors the documented page pattern: set once at the top,
+		// then call text() with no locale across the page.
+		$adapter->set('de');
+		expect($adapter->text($value))->toBe('Über');
+		expect($adapter->styledtext($value))->toBe('Über');
+
+		$adapter->set('en_US');
+		expect($adapter->text($value))->toBe('About');
+	});
+});
+
 describe('LocaleTwigAdapter::text — site-default fallback', function (): void {
 	test('falls back to i18n.default when the requested locale is missing', function (): void {
 		// Site default is en_US (the first in the configured list — see
