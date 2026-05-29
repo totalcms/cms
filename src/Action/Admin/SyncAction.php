@@ -7,8 +7,8 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
-use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
+use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Renderer\JsonRenderer;
 
 readonly class SyncAction
