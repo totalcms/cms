@@ -14,7 +14,7 @@ cf145a03c3c39cc064f11272b290806bb355c02cb1416166998e928cb042c3b1  ./css/firacode
 bd67dbbf25fa374b25079460a1c9c2b7356cdcf922a1dbefe25b19dd2b415386  ./css/icons.css
 2c043f395af4c7f90ad08c5cf7a10d061a85482aecf899c161851db9ca6ae8e1  ./dist/autoload.php
 fd2881dc511c7fb21fe457cf5798b3f48abca7fc3f49b4d8e4c0a590b7dde9b6  ./dist/config/htmlclean.sample.php
-ca063c6f5dcf7e87c1056a5c68a9140b227eb44678edd5fcb3de4caee0a9b8af  ./dist/config/container.php
+2c8dc81489463c0391e39c8fecad76cf126a00b65a48b3eb2865be7362ef79ed  ./dist/config/container.php
 5468db029e8a804bf5964d71805bd3a45b5fd61e1bfbfa699872bf423c3ed004  ./dist/config/local.preview.php
 be5519a4039a579d27439a873714ac9affd184ee314a8a0e63bc82ad3e5930a0  ./dist/config/settings.php
 6060cddcd2f7fafbfc9ea76f680e44602ef3c658ed64d650a0f0c92bed687031  ./dist/config/bootstrap.php
@@ -58,7 +58,7 @@ e81903e2d0e3f774f86f48ecede5017bae2228e07c42723da24a0dba8a74fad3  ./dist/config/
 566b71d3a7b638e8b3496545f8b7316a1b7e89f8e3428fc619158832c6c99dcb  ./dist/config/routes/api/assets.php
 e3ac319c3fd366e886a6b7826ad5c4aea0d8e88fb3e16be2a57a85c6d45180dc  ./dist/config/local.stacks.php
 6be68e7890659ca5c2547b42c881f8e4cceff28cca03277aa2c8c3bda3336f19  ./dist/resources/bin/processJobs.php
-83d66990215de0afdaf670a434cc06beeb38feb16d7a85c7f0d5e8bd0775e09f  ./dist/resources/docs/menu.php
+952d953f78127eff3f8fcc4b4e2bc0dcec9285faa0b7f7413136757bd9fb80c2  ./dist/resources/docs/menu.php
 0c01834c4825af63222f8d6ae9aa545414e5243f15aa55b1c5d258c822b52c46  ./dist/resources/extensions/totalcms/ab-split/AbSplitMiddleware.php
 c1fc5b2fd9d6b452602b5a4edc77841f6b7e0de2f253d856818a71dfc81bf6a8  ./dist/resources/extensions/totalcms/ab-split/Extension.php
 ae88fa48163b4c283e706ee1af4dc3bcd466fc4303ad9163d9927b2d3be7b110  ./dist/resources/extensions/totalcms/protect/ProtectMiddleware.php
@@ -122,11 +122,11 @@ be23a04bae683e1f502150b8fba5586a82cc976ba6d3bbc7429ed147b4cfd595  ./dist/public/
 32ca129d9c880b6fc48618b4f33a060905ea941b3e165857f593bb4ed92e0985  ./dist/public/assets/chunk-WLM3Q6HQ.js
 124b6e8f2d11e3e435cd9df2286e51e70b6fe4e93799848e084692ffadae0ee7  ./dist/public/assets/totalcms.js
 ef8d9cec694e8e97f4f389e32b259e9108b0e2e0c5e32f53ed141a5bee43330b  ./dist/public/assets/docs-highlight.js
-fc52c7ca6b5795d5306db3e7bf93c70e04e76e204417ea442b9dbf235aaa2d66  ./dist/public/assets/admin.css
+cab8bf850abf4ad71faa5da9fd8cf8b5a5b257676ba068a784749c9e7c1a4d1d  ./dist/public/assets/admin.css
 5906b198b9b00c1d32f7c26e94d20f8980c89fd4adbbd62aa5bb64a4e8814f54  ./dist/public/assets/swagger.css
 69a1fcb0807a6afc80715a7b6c0363c057d17ff312ac707b19ae9f8b8f2098c0  ./dist/public/assets/imageworks-builder.css
 fa51c9779cade676f0d7308990f56b03b0ee8442f33047526eb875e3a0c11f7a  ./dist/public/assets/filelinks.css
-0447424e6d319915967835e6dab837e19d9c4b6f38524bc1ae76f5aafd24a571  ./dist/public/assets/admin.js
+a6d36e0bef428636d90366a0d788186f8aa0371f76bfd933f66b87b3ca12901c  ./dist/public/assets/admin.js
 4cf1f8dd5c471cba47a2358fa2587731fdcd0fb327cff64ebf28a53d30b8dfc3  ./dist/public/assets/content.js
 6d556469d611dfc7d32f0717aeed8975a0358d1e5fe5316488c39a22feed3a6a  ./dist/public/assets/chunk-IKAX2G5A.js
 24578a258abf7c63b17e29e7fd8221060130a5d719845573ccd469301e33545a  ./dist/public/assets/chunk-CDLZC675.js
@@ -1537,13 +1537,13 @@ d7aaa22a5d9e802aade11b0708e4cb3f654690aad33d04905efe9e6175acaecc  ./dist/vendor/
 d4b2313e562edf942838ec316d983c1a3459ca67da3e5658e861200b0b3693c2  ./dist/vendor/composer/ClassLoader.php
 fba835c2798995adb6cdd52541a48780dd2526de871b811cca192c3fe53cafa5  ./dist/vendor/composer/ca-bundle/src/CaBundle.php
 99abffe22a77a1817bb2931f852d1cd3d628761de03388f2817c43dd1d9f5999  ./dist/vendor/composer/autoload_psr4.php
-89cf93ed8df8d8a2a24ff9f5a7d9a0498c6fd91084e59ed8a8ebfcf74dd2237e  ./dist/vendor/composer/autoload_classmap.php
+ae786309587710fcf0cbe2e76e9b2993e303b02f8d9348b146f80a67bd8ff738  ./dist/vendor/composer/autoload_classmap.php
 d9d67386b623922c4821f6a1a25980950a0d7815c0eb909759e79c4bab12474e  ./dist/vendor/composer/platform_check.php
-10654e03f85e04649dea4b83343e9e78e4d6d254848037f991e171d2c70e278d  ./dist/vendor/composer/autoload_static.php
+dde1f5d00be6199c29b3992a6936627953a6d9188bce6bc00ea69a030a36e72c  ./dist/vendor/composer/autoload_static.php
 2fc1334729e5bdfbc64acd78e6203ae7a696564d47453039f68aaf1c0df0f3c9  ./dist/vendor/composer/autoload_real.php
 c81595c34a27e6b686bdc8ebf5248fe9b15ee23988ea4e3835dc45750fb530e3  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-e75662258d7190902fff9d6874544d74cabc46f0d9f4cc4386575e55ced3aa24  ./dist/vendor/composer/installed.php
+926b749552b18e7056353032a50fb341a7ccfa1fb9849d7873b483dae7e7867f  ./dist/vendor/composer/installed.php
 fec395a82f06c0eb9b09bc8583d3a7f36ac111448acd3f1513eea4a62764bd75  ./dist/vendor/phpdocumentor/reflection-common/src/Element.php
 29f7a07e25f56e9071c997cb101c8296399ecb5fd7fdd1fc00925d10b44c5cb9  ./dist/vendor/phpdocumentor/reflection-common/src/ProjectFactory.php
 26839d4f4a439b3543212ce7631d3a56cf367a50c3aebc7229ca789feaa8ea98  ./dist/vendor/phpdocumentor/reflection-common/src/File.php
@@ -7549,6 +7549,7 @@ d8f24592b04f7a680866ba5c4d2da887b85480c2bf7682783e496bebe2740ff8  ./dist/src/Dom
 eb58b47b3bf4e503a0e9df76a30ffc15dad525481b0be6eacf117220a8677b9c  ./dist/src/Domain/Mcp/Tool/Admin/SiteInfoTool.php
 68a7bc8fca1c7d9b15544f884138c266a234cb8430538d742482e86821e3e874  ./dist/src/Domain/Mcp/Tool/Admin/SchemaTools.php
 83c76776484d29d925d7c8025d5b06bf4a9cd035229ca93e5a9d08140a8dd925  ./dist/src/Domain/Mcp/Tool/Admin/CollectionTools.php
+eb14239a2b2136a5028807c775e6f1d8de17f37e274eed2dc2c3110eb2fcc019  ./dist/src/Domain/Mcp/Tool/Admin/ObjectTools.php
 f61c0e122adbddb4eb2419541ec930634a69af53235fab75e2a896d9bd1d791a  ./dist/src/Domain/Mcp/Tool/Content/QueryViewTool.php
 aec9e5d6324477cc9c762d991822b11500b1c95c874629df06b17ca2b32ee8b3  ./dist/src/Domain/Mcp/Tool/Content/GetResourceTool.php
 4513533c11d9344a0d047ab80721127fbf7a81b0717fb78916d269223cf81f7a  ./dist/src/Domain/Mcp/Tool/Content/SearchCollectionsTool.php
@@ -7663,7 +7664,7 @@ fbd56b82ad6e16592c37658de39640a6580f35ac7edaa68eec6fc2c61f3d735d  ./dist/src/Dom
 3cdb785fba390d84c28857b8402260de1cef8653cbf7d265cfc839361b334f67  ./dist/src/Domain/Twig/Adapter/UtilsTwigAdapter.php
 88706b14cee990176e9aeee430203132ef029ca4fe5b5e96f141a8db1b368579  ./dist/src/Domain/Twig/Adapter/SchemaTwigAdapter.php
 f74bfa859935aa22ae0ec309fdbde978298fda20f696e6f067416961b6692be1  ./dist/src/Domain/Twig/Adapter/ViewTwigAdapter.php
-616d52099b81b9fe706d50173f0268ab5035cb3250a577fb20a565c14b4af40c  ./dist/src/Domain/Twig/Adapter/LocaleTwigAdapter.php
+f980b10db744df696007cdc5c92baa68ee5b495836c35cb9926cf619de964a0c  ./dist/src/Domain/Twig/Adapter/LocaleTwigAdapter.php
 3725326c6e2104ca77dde68992ee62093a21134d875f29ea05d055cd690a7788  ./dist/src/Domain/Twig/Adapter/DataTwigAdapter.php
 14106ad5d5d58b9fe2a814541d9c4387f14aebfa0e8c2d340eb43b27b88264c1  ./dist/src/Domain/Twig/Designer/TemplateDesignerSync.php
 1975b08d5b3360dc48f31fd26ebfce9b167cc9cdcdcd6e965462663044d8aed4  ./dist/src/Domain/Twig/Designer/TemplateDesignerPreprocessor.php
@@ -7758,7 +7759,7 @@ e5b3d55189ac8c7d1534e78a92f698fb3dfeba0c20926652d353d6b1cc646343  ./dist/src/Dom
 b8e6495e9c3767a45e1e25ea756be0aa8cc50acb530bfbcfeb023066ae6d05c7  ./dist/src/Domain/Session/SessionKeys.php
 4215f2725acca14b7e9baeeb923bb702134afee0794715e68e06d3efbe63e630  ./dist/src/Factory/LoggerFactory.php
 fd2881dc511c7fb21fe457cf5798b3f48abca7fc3f49b4d8e4c0a590b7dde9b6  ./config/htmlclean.sample.php
-ca063c6f5dcf7e87c1056a5c68a9140b227eb44678edd5fcb3de4caee0a9b8af  ./config/container.php
+2c8dc81489463c0391e39c8fecad76cf126a00b65a48b3eb2865be7362ef79ed  ./config/container.php
 190b91f82f71e85b084847ad69f4dc6c7ebf1a88c17f8ac13379167780e6bbed  ./config/local.test.php
 5468db029e8a804bf5964d71805bd3a45b5fd61e1bfbfa699872bf423c3ed004  ./config/local.preview.php
 be5519a4039a579d27439a873714ac9affd184ee314a8a0e63bc82ad3e5930a0  ./config/settings.php
@@ -7884,7 +7885,7 @@ d67e44f6cfd28455153fb0ab9576ce6c21d922f808b61317fed53b0cb1417341  ./vendor-local
 34046d2f3cfdbf16f4ab73f8489b6080f25ab38c914d65e7328c4a63b6ca0146  ./vendor-locales/cakephp-localized/src/Validation/ChValidation.php
 2e2d77e306ecf88e922dfac6a83cb15ba635e671b7cfd5e3aaaf808d1afa26c6  ./esbuild.config.js
 6be68e7890659ca5c2547b42c881f8e4cceff28cca03277aa2c8c3bda3336f19  ./resources/bin/processJobs.php
-83d66990215de0afdaf670a434cc06beeb38feb16d7a85c7f0d5e8bd0775e09f  ./resources/docs/menu.php
+952d953f78127eff3f8fcc4b4e2bc0dcec9285faa0b7f7413136757bd9fb80c2  ./resources/docs/menu.php
 0c01834c4825af63222f8d6ae9aa545414e5243f15aa55b1c5d258c822b52c46  ./resources/extensions/totalcms/ab-split/AbSplitMiddleware.php
 c1fc5b2fd9d6b452602b5a4edc77841f6b7e0de2f253d856818a71dfc81bf6a8  ./resources/extensions/totalcms/ab-split/Extension.php
 ae88fa48163b4c283e706ee1af4dc3bcd466fc4303ad9163d9927b2d3be7b110  ./resources/extensions/totalcms/protect/ProtectMiddleware.php
@@ -8169,7 +8170,7 @@ ed0686e8332c5cf6bc82adcec20443baf80fac4f729bca2bfb6ad24a0aeaa8aa  ./tests/Unit/T
 e0668465f3818bd2363253b3a3c8d79916199e69cb011b9869f728fb21d36fe1  ./tests/Unit/Twig/CollectionFiltersTest.php
 f6b9207789c3ce65b03ac303b005cd3b749d278b423eafbada8e92f4047cc2aa  ./tests/Unit/Twig/LocalizationTest.php
 8da7b66039dca40aae3456a069ce1b1208e9535cb2b278ed8a8b9ed6495e5060  ./tests/Unit/Twig/ColorAdjustmentFiltersTest.php
-e0f9f2cbe04e1d89972cc9b38dfdd3634b46261ecb1ed06078e7dcc4dc97c2fa  ./tests/Unit/Twig/LocaleTwigAdapterTest.php
+fc6fe9372a60fa0d9e58b6cd3dd1da1d0c43e61be60f6ebcd6bf7cb120133e84  ./tests/Unit/Twig/LocaleTwigAdapterTest.php
 a28368ff98b2482a99115babc0925f93b75c4731b3243c806b59ebd6da90b953  ./tests/Unit/Twig/Service/AssetRendererTest.php
 afcbc222df910f81a11afc5308df43839014ef2572901699b42e03f14b9d2768  ./tests/Unit/Twig/Service/TwigFunctionCacheTest.php
 0c2a4044f658d6bd944ca5dc5bd9602bf39276ce22dc4d2d5d0bf6c90b97b0de  ./tests/Unit/Twig/Service/DepotBrowserRendererTest.php
@@ -8356,6 +8357,7 @@ ef3104e16b87c19894f06c85fb5c54bc5743ed99876aabfd833aae8fd49172e2  ./tests/Unit/D
 f6ae918016e1bdbbe21f70c59fe34ad1a7b2ac8abbc5ea37ad269b4b92e4db11  ./tests/Unit/Domain/Mcp/Tool/Discovery/ListCollectionsToolTest.php
 ef92cc4a57cbef0290db99ef775ee920e43b80b35d992a80dc63cbf6a82c6125  ./tests/Unit/Domain/Mcp/Tool/Discovery/DescribeCollectionToolTest.php
 12a4f24533b6f21834f148ed9ded9b5557cfed6d21f046ab8361ea4b6d4c3cad  ./tests/Unit/Domain/Mcp/Tool/Admin/CollectionToolsTest.php
+e341a77dffd8937a2d6e5103a50c66b92eb745a8e8b9f72b01aea7df47c21428  ./tests/Unit/Domain/Mcp/Tool/Admin/ObjectToolsTest.php
 5b56ee3aa1f1d69aefbb4f2ed75a60e0de30216e2709a7fc6e7008bd7881515b  ./tests/Unit/Domain/Mcp/Tool/Admin/ExtensionToolsTest.php
 e04ad06165edada80eb38750be4aa02a3108ac7e5d33f97885a8fb9b23d97de2  ./tests/Unit/Domain/Mcp/Tool/Admin/CacheToolsTest.php
 dcb6d4c49ec1f543e8018dca0046b2918140e732fe015b9699428b786525852f  ./tests/Unit/Domain/Mcp/Tool/Admin/SchemaToolsTest.php
@@ -8628,11 +8630,11 @@ be23a04bae683e1f502150b8fba5586a82cc976ba6d3bbc7429ed147b4cfd595  ./public/asset
 32ca129d9c880b6fc48618b4f33a060905ea941b3e165857f593bb4ed92e0985  ./public/assets/chunk-WLM3Q6HQ.js
 124b6e8f2d11e3e435cd9df2286e51e70b6fe4e93799848e084692ffadae0ee7  ./public/assets/totalcms.js
 ef8d9cec694e8e97f4f389e32b259e9108b0e2e0c5e32f53ed141a5bee43330b  ./public/assets/docs-highlight.js
-fc52c7ca6b5795d5306db3e7bf93c70e04e76e204417ea442b9dbf235aaa2d66  ./public/assets/admin.css
+cab8bf850abf4ad71faa5da9fd8cf8b5a5b257676ba068a784749c9e7c1a4d1d  ./public/assets/admin.css
 5906b198b9b00c1d32f7c26e94d20f8980c89fd4adbbd62aa5bb64a4e8814f54  ./public/assets/swagger.css
 69a1fcb0807a6afc80715a7b6c0363c057d17ff312ac707b19ae9f8b8f2098c0  ./public/assets/imageworks-builder.css
 fa51c9779cade676f0d7308990f56b03b0ee8442f33047526eb875e3a0c11f7a  ./public/assets/filelinks.css
-0447424e6d319915967835e6dab837e19d9c4b6f38524bc1ae76f5aafd24a571  ./public/assets/admin.js
+a6d36e0bef428636d90366a0d788186f8aa0371f76bfd933f66b87b3ca12901c  ./public/assets/admin.js
 4cf1f8dd5c471cba47a2358fa2587731fdcd0fb327cff64ebf28a53d30b8dfc3  ./public/assets/content.js
 6d556469d611dfc7d32f0717aeed8975a0358d1e5fe5316488c39a22feed3a6a  ./public/assets/chunk-IKAX2G5A.js
 24578a258abf7c63b17e29e7fd8221060130a5d719845573ccd469301e33545a  ./public/assets/chunk-CDLZC675.js
@@ -8743,7 +8745,7 @@ fda7c5d0a60f9ee5e15d0e3e8118350a033ac71ce2b3746db7bea6a77d2a92d0  ./javascript/t
 ecb34846bdfcc2c5c5274620862b97e925736b790a31ba2b9a314562bb925392  ./javascript/totalform/price.js
 79d393fdbbf3a85a6e1e9087cd44c948279e648f4151048968a0945901912ae0  ./javascript/totalform/droplet-array.js
 9be59b3d8c779885c0f651bdd1c91ed08631808b1c9cad20c5bfbf0fab07c66f  ./javascript/totalform/image.js
-57500842e6a0183a8069414e67573386781346a437e0a6a0714c5ef02caa36b0  ./javascript/totalform/localizedtext.js
+3f2cc305d6ec4175f696ef3d9c909943bef115c26505485468c75e77b242965b  ./javascript/totalform/localizedtext.js
 0bc7a62dd80b4fff24578e4eece1912d279f9cf21c6cfcc772e6a0531f6406b8  ./javascript/totalform/date.js
 4d0fb7fdc2f7b56c8f15e1ab62bbb1e8746ac4160274b64d1ba8cd98261cd47a  ./javascript/totalform/json.js
 e90468c4cbd365ce68f9f28157ce7d4c01d533a619e0d58ba98448bdce15e33c  ./javascript/totalform/secret.js
@@ -9472,6 +9474,7 @@ d8f24592b04f7a680866ba5c4d2da887b85480c2bf7682783e496bebe2740ff8  ./src/Domain/M
 eb58b47b3bf4e503a0e9df76a30ffc15dad525481b0be6eacf117220a8677b9c  ./src/Domain/Mcp/Tool/Admin/SiteInfoTool.php
 68a7bc8fca1c7d9b15544f884138c266a234cb8430538d742482e86821e3e874  ./src/Domain/Mcp/Tool/Admin/SchemaTools.php
 83c76776484d29d925d7c8025d5b06bf4a9cd035229ca93e5a9d08140a8dd925  ./src/Domain/Mcp/Tool/Admin/CollectionTools.php
+eb14239a2b2136a5028807c775e6f1d8de17f37e274eed2dc2c3110eb2fcc019  ./src/Domain/Mcp/Tool/Admin/ObjectTools.php
 f61c0e122adbddb4eb2419541ec930634a69af53235fab75e2a896d9bd1d791a  ./src/Domain/Mcp/Tool/Content/QueryViewTool.php
 aec9e5d6324477cc9c762d991822b11500b1c95c874629df06b17ca2b32ee8b3  ./src/Domain/Mcp/Tool/Content/GetResourceTool.php
 4513533c11d9344a0d047ab80721127fbf7a81b0717fb78916d269223cf81f7a  ./src/Domain/Mcp/Tool/Content/SearchCollectionsTool.php
@@ -9586,7 +9589,7 @@ fbd56b82ad6e16592c37658de39640a6580f35ac7edaa68eec6fc2c61f3d735d  ./src/Domain/T
 3cdb785fba390d84c28857b8402260de1cef8653cbf7d265cfc839361b334f67  ./src/Domain/Twig/Adapter/UtilsTwigAdapter.php
 88706b14cee990176e9aeee430203132ef029ca4fe5b5e96f141a8db1b368579  ./src/Domain/Twig/Adapter/SchemaTwigAdapter.php
 f74bfa859935aa22ae0ec309fdbde978298fda20f696e6f067416961b6692be1  ./src/Domain/Twig/Adapter/ViewTwigAdapter.php
-616d52099b81b9fe706d50173f0268ab5035cb3250a577fb20a565c14b4af40c  ./src/Domain/Twig/Adapter/LocaleTwigAdapter.php
+f980b10db744df696007cdc5c92baa68ee5b495836c35cb9926cf619de964a0c  ./src/Domain/Twig/Adapter/LocaleTwigAdapter.php
 3725326c6e2104ca77dde68992ee62093a21134d875f29ea05d055cd690a7788  ./src/Domain/Twig/Adapter/DataTwigAdapter.php
 14106ad5d5d58b9fe2a814541d9c4387f14aebfa0e8c2d340eb43b27b88264c1  ./src/Domain/Twig/Designer/TemplateDesignerSync.php
 1975b08d5b3360dc48f31fd26ebfce9b167cc9cdcdcd6e965462663044d8aed4  ./src/Domain/Twig/Designer/TemplateDesignerPreprocessor.php
