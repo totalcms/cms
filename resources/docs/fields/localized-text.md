@@ -98,6 +98,19 @@ When you want a deterministic fallback chain, use the helper:
 
 `cms.locale.text()` handles both *localizedtext* and *localizedtextarea* content (they're both plain strings). Use `cms.locale.styledtext()` for *localizedstyledtext* — the HTML renders as-is since Total CMS ships with Twig autoescape disabled.
 
+#### Page-scoped locale
+
+If you omit the locale argument, both helpers fall back to whatever `cms.locale.get()` returns — the active intl/CakePHP locale. Set it once at the top of a page with `cms.locale.set()` and every subsequent `text()` / `styledtext()` call follows:
+
+```twig
+{% do cms.locale.set('de') %}
+
+<h1>{{ cms.locale.text(post.title) }}</h1>
+<article>{{ cms.locale.styledtext(post.body) }}</article>
+```
+
+This is useful for whole-page localization driven by a URL segment or a session preference. Pass the locale explicitly when you need a different value than the page's current locale.
+
 The helper canonicalizes the requested locale (case-insensitive — *'en_us'*, *'EN_US'*, and *'En_Us'* all become *en_US*) and walks this lookup order:
 
 1. **Exact match** — `value[canonical]`

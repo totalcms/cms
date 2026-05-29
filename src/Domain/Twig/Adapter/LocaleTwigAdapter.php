@@ -135,18 +135,24 @@ readonly class LocaleTwigAdapter
 	 *      value instead of an empty cell.
 	 *   6. Empty string.
 	 *
-	 * Usage in Twig: {{ cms.locale.text(post.title, 'de') }}
+	 * Usage in Twig:
+	 *   {{ cms.locale.text(post.title, 'de') }}    {# explicit locale #}
+	 *   {{ cms.locale.text(post.title) }}          {# current locale (cms.locale.get()) #}
 	 *
-	 * @param mixed  $value  Expected: array<string,string>. Other shapes return ''.
-	 * @param string $locale requested locale (case-insensitive on input)
+	 * When the locale is omitted, it defaults to the current intl/Cake locale
+	 * — the same value returned by `cms.locale.get()`. Set it once per page
+	 * with `cms.locale.set('de_DE')` and all subsequent `text()` calls follow.
+	 *
+	 * @param mixed       $value  Expected: array<string,string>. Other shapes return ''.
+	 * @param string|null $locale requested locale (case-insensitive); null = current locale
 	 */
-	public function text(mixed $value, string $locale): string
+	public function text(mixed $value, ?string $locale = null): string
 	{
 		if (!is_array($value) || $value === []) {
 			return '';
 		}
 
-		$canonical = self::canonicalizeLocale($locale);
+		$canonical = self::canonicalizeLocale($locale ?? $this->get());
 		if ($canonical === '') {
 			return '';
 		}
@@ -201,9 +207,11 @@ readonly class LocaleTwigAdapter
 	 * Same as text() but reserved for `localizedstyledtext` content. Returned
 	 * value is HTML — pipe through `|raw` in templates to render unescaped.
 	 *
-	 * Usage in Twig: {{ cms.locale.styledtext(post.body, 'de')|raw }}
+	 * Usage in Twig:
+	 *   {{ cms.locale.styledtext(post.body, 'de')|raw }}    {# explicit locale #}
+	 *   {{ cms.locale.styledtext(post.body)|raw }}          {# current locale #}
 	 */
-	public function styledtext(mixed $value, string $locale): string
+	public function styledtext(mixed $value, ?string $locale = null): string
 	{
 		return $this->text($value, $locale);
 	}
