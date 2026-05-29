@@ -63,7 +63,7 @@ final class SyncServiceTest extends TestCase
 			->method('request')
 			->with(
 				'POST',
-				'https://example.com/api/import/jumpstart',
+				'https://example.com/api/sync/import',
 				$this->callback(function (array $options): bool {
 					expect($options['body'])->toContain('products');
 					// SyncService sends the API key via X-API-Key rather than
@@ -149,8 +149,13 @@ final class SyncServiceTest extends TestCase
 			->with('GET', 'https://example.com/api/export/jumpstart?mode=sync', $this->anything())
 			->willReturn(new HttpResponse(200, (string)$remotePayload));
 
+		// Pull is server-authoritative for the local copy: pass through to
+		// the importer in upsert mode so an existing local row is overwritten
+		// rather than silently skipped (which is the default starter-kit
+		// behaviour of importFromDefinition).
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
+			->with($this->anything(), true)
 			->willReturn(OperationResult::success('Import complete.', [
 				'results' => [],
 				'errors'  => [],
@@ -205,6 +210,116 @@ final class SyncServiceTest extends TestCase
 			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
 
 		$this->service->pull('https://example.com', 'key', ['products']);
+	}
+
+	public function testPullFiltersCollectionsByMapKeys(): void
+	{
+		// objects[] entries carry their owning collection in `collection`.
+		// The per-collection map drops any entry whose collection key
+		// isn't in the map at all — that's how "I didn't pick this one"
+		// is encoded by the form parser.
+		$remotePayload = json_encode([
+			'schemas'   => [],
+			'templates' => [],
+			'objects'   => [
+				['collection' => 'builder-pages', 'id' => 'home', 'data' => []],
+				['collection' => 'mailer',        'id' => 'contact', 'data' => []],
+				['collection' => 'mcp-prompt',    'id' => 'greet', 'data' => []],
+			],
+		]);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
+
+		$this->importer->expects($this->once())
+			->method('importFromDefinition')
+			->with($this->callback(function (array $payload): bool {
+				expect($payload['objects'])->toHaveCount(1);
+				expect($payload['objects'][0]['collection'])->toBe('builder-pages');
+
+				return true;
+			}))
+			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
+
+		// Only builder-pages is in the map (with value null = all of its objects).
+		// mailer and mcp-prompt are absent → dropped.
+		$this->service->pull('https://example.com', 'key', null, null, ['builder-pages' => null]);
+	}
+
+	public function testPullFiltersObjectsWithinACollection(): void
+	{
+		// When the operator picks "specific" with a list of ids, the
+		// matching objects survive and the rest are dropped — even within
+		// a collection that's in the map.
+		$remotePayload = json_encode([
+			'schemas'   => [],
+			'templates' => [],
+			'objects'   => [
+				['collection' => 'builder-pages', 'id' => 'home',  'data' => []],
+				['collection' => 'builder-pages', 'id' => 'about', 'data' => []],
+				['collection' => 'builder-pages', 'id' => 'blog',  'data' => []],
+			],
+		]);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
+
+		$this->importer->expects($this->once())
+			->method('importFromDefinition')
+			->with($this->callback(function (array $payload): bool {
+				expect($payload['objects'])->toHaveCount(2);
+				$ids = array_map(fn (array $o): string => (string)$o['id'], $payload['objects']);
+				expect($ids)->toContain('home');
+				expect($ids)->toContain('blog');
+
+				return true;
+			}))
+			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
+
+		$this->service->pull('https://example.com', 'key', null, null, [
+			'builder-pages' => ['home', 'blog'],
+		]);
+	}
+
+	public function testPushPassesCollectionsMapToExporter(): void
+	{
+		$jumpstart = new JumpStartData();
+		$jumpstart->addSchema(['id' => 'products', 'properties' => []]);
+
+		$map = [
+			'builder-pages' => null,            // all pages
+			'mcp-prompt'    => ['greet'],       // just the greet prompt
+		];
+
+		$this->exporter->expects($this->once())
+			->method('exportSyncData')
+			->with(null, null, $map)
+			->willReturn($jumpstart);
+		$this->exporter->method('setMetadata');
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, '{"success":true}'));
+
+		$this->service->push('https://example.com', 'key', null, null, $map);
+	}
+
+	public function testPullCountsCollectionObjects(): void
+	{
+		$remotePayload = json_encode([
+			'schemas'   => [],
+			'templates' => [],
+			'objects'   => [
+				['collection' => 'builder-pages', 'id' => 'home', 'data' => []],
+				['collection' => 'builder-pages', 'id' => 'about', 'data' => []],
+			],
+		]);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
+
+		$this->importer->method('importFromDefinition')
+			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
+
+		$result = $this->service->pull('https://example.com', 'key');
+
+		expect($result->success)->toBeTrue();
+		expect($result->data['collections'])->toBe(2);
 	}
 
 	public function testPullFiltersTemplates(): void

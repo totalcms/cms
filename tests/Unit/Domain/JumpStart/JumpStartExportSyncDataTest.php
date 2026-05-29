@@ -6,7 +6,9 @@ namespace Tests\Unit\Domain\JumpStart;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
@@ -22,31 +24,34 @@ use TotalCMS\Factory\LoggerFactory;
 final class JumpStartExportSyncDataTest extends TestCase
 {
 	private JumpStartExporter $exporter;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
 	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
 	private \PHPUnit\Framework\MockObject\MockObject $templateFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 
 	protected function setUp(): void
 	{
-		$collectionLister      = $this->createMock(CollectionLister::class);
-		$this->schemaLister    = $this->createMock(SchemaLister::class);
-		$schemaFetcher         = $this->createMock(SchemaFetcher::class);
-		$objectFetcher         = $this->createMock(ObjectFetcher::class);
-		$indexReader           = $this->createMock(IndexReader::class);
-		$this->templateLister  = $this->createMock(TemplateLister::class);
-		$this->templateFetcher = $this->createMock(TemplateFetcher::class);
-		$cacheManager          = $this->createMock(CacheManager::class);
-		$loggerFactory         = $this->createMock(LoggerFactory::class);
+		$this->collectionLister = $this->createMock(CollectionLister::class);
+		$this->schemaLister     = $this->createMock(SchemaLister::class);
+		$schemaFetcher          = $this->createMock(SchemaFetcher::class);
+		$this->objectFetcher    = $this->createMock(ObjectFetcher::class);
+		$this->indexReader      = $this->createMock(IndexReader::class);
+		$this->templateLister   = $this->createMock(TemplateLister::class);
+		$this->templateFetcher  = $this->createMock(TemplateFetcher::class);
+		$cacheManager           = $this->createMock(CacheManager::class);
+		$loggerFactory          = $this->createMock(LoggerFactory::class);
 
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));
 
 		$this->exporter = new JumpStartExporter(
-			$collectionLister,
+			$this->collectionLister,
 			$this->schemaLister,
 			$schemaFetcher,
-			$objectFetcher,
-			$indexReader,
+			$this->objectFetcher,
+			$this->indexReader,
 			$this->templateLister,
 			$this->templateFetcher,
 			new JumpStartData(),
@@ -80,16 +85,73 @@ final class JumpStartExportSyncDataTest extends TestCase
 		expect($result->collections)->toBe(['reserved' => [], 'custom' => []]);
 	}
 
-	public function testExportSyncDataDoesNotExportCollectionsOrObjects(): void
+	public function testExportSyncDataDoesNotExportCustomCollectionsOrFactories(): void
 	{
+		// The legacy guarantee — sync mode never touches custom collections or
+		// the factory pipeline. Reserved-allowlist objects can appear via the
+		// sync-collections feature; that's covered separately below.
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
 		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+		$this->collectionLister->method('listAllCollections')->willReturn([]);
 
 		$result = $this->exporter->exportSyncData();
 
 		expect($result->objects)->toHaveCount(0);
 		expect($result->collections)->toBe(['reserved' => [], 'custom' => []]);
 		expect($result->factory)->toHaveCount(0);
+	}
+
+	public function testExportSyncDataIteratesAllowlistedCollections(): void
+	{
+		// When an allowlist collection exists locally, exportSyncData must call
+		// fetchIndex against it. The end-to-end object marshalling pipeline
+		// (which depends on full SchemaData + Property object wiring) is
+		// exercised in SyncServiceTest with the exporter mocked — here we just
+		// verify the allowlist drives index lookups.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+
+		$builderPages         = new CollectionData();
+		$builderPages->id     = 'builder-pages';
+		$builderPages->schema = 'builder-page';
+		$this->collectionLister->method('listAllCollections')->willReturn([$builderPages]);
+
+		$this->indexReader->expects($this->once())
+			->method('fetchIndex')
+			->with('builder-pages')
+			->willReturn(new IndexData([]));
+
+		$this->exporter->exportSyncData();
+	}
+
+	public function testExportSyncDataCollectionFilterIsAllowlistConstrained(): void
+	{
+		// Defense in depth: even if a malformed filter slips in a non-allowlist
+		// key (here 'image' — which carries files), it MUST be ignored. Only
+		// keys present in SyncableCollections::IDS are iterated.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+		$this->collectionLister->method('listAllCollections')->willReturn([]);
+		$this->indexReader->expects($this->never())->method('fetchIndex');
+
+		$result = $this->exporter->exportSyncData(null, null, ['image' => null]);
+
+		expect($result->objects)->toHaveCount(0);
+	}
+
+	public function testExportSyncDataEmptyCollectionsMapSkipsAllCollections(): void
+	{
+		// An empty map (every section set to "none" in the UI) means
+		// "no collections at all" — distinct from null (which means
+		// "all of them" for back-compat). fetchIndex must never run.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+		$this->collectionLister->expects($this->never())->method('listAllCollections');
+		$this->indexReader->expects($this->never())->method('fetchIndex');
+
+		$result = $this->exporter->exportSyncData(null, null, []);
+
+		expect($result->objects)->toHaveCount(0);
 	}
 
 	public function testExportSyncDataFiltersSchemas(): void

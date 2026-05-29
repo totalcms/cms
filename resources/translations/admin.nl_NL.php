@@ -1119,7 +1119,7 @@ return [
 
 	// Sync Manager
 	'sync.title'              => 'Sync Manager',
-	'sync.desc'               => "Schema's en templates naar de productieserver pushen of van productie pullen.",
+	'sync.desc'               => "Schema's, templates en geselecteerde collectie-objecten naar de productieserver pushen of van productie pullen.",
 	'sync.not_configured'     => 'Sync is nog niet geconfigureerd. Stel de productieserver-URL en API-sleutel in.',
 	'sync.configure_link'     => 'Sync-instellingen configureren',
 	'sync.remote'             => 'Remote',
@@ -1129,9 +1129,11 @@ return [
 	'sync.push_btn'           => 'Naar productie pushen',
 	'sync.pull_btn'           => 'Van productie pullen',
 	'sync.syncing'            => 'Synchroniseren...',
-	'sync.nothing_to_sync'    => "Geen aangepaste schema's of templates om te synchroniseren.",
+	'sync.nothing_to_sync'    => "Niets te synchroniseren — geen aangepaste schema's, templates of synchroniseerbare collecties gevonden.",
 	'sync.specific_schemas'   => "Schema's selecteren",
 	'sync.specific_templates' => 'Templates selecteren',
+	'sync.specific_objects'   => 'Objecten selecteren',
+	'sync.no_objects'         => 'Nog geen objecten in deze collectie.',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

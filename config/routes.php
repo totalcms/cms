@@ -36,6 +36,7 @@ return function (App $app): void {
 		(require __DIR__ . '/routes/api/collections.php')($api);
 		(require __DIR__ . '/routes/api/docs.php')($api);
 		(require __DIR__ . '/routes/api/import.php')($api);
+		(require __DIR__ . '/routes/api/sync.php')($api);
 		(require __DIR__ . '/routes/api/export.php')($api);
 		(require __DIR__ . '/routes/api/report.php')($api);
 		(require __DIR__ . '/routes/api/jobqueue.php')($api);

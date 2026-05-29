@@ -1119,7 +1119,7 @@ return [
 
 	// Sync Manager
 	'sync.title'              => 'Sync-Manager',
-	'sync.desc'               => 'Schemas und Templates auf den Produktionsserver pushen oder von dort pullen.',
+	'sync.desc'               => 'Schemas, Templates und ausgewählte Collection-Objekte auf den Produktionsserver pushen oder von dort pullen.',
 	'sync.not_configured'     => 'Sync ist noch nicht konfiguriert. Legen Sie die Produktionsserver-URL und den API-Schlüssel fest.',
 	'sync.configure_link'     => 'Sync-Einstellungen konfigurieren',
 	'sync.remote'             => 'Remote',
@@ -1129,9 +1129,11 @@ return [
 	'sync.push_btn'           => 'Zur Produktion pushen',
 	'sync.pull_btn'           => 'Von Produktion pullen',
 	'sync.syncing'            => 'Synchronisiere...',
-	'sync.nothing_to_sync'    => 'Keine benutzerdefinierten Schemas oder Templates zum Synchronisieren.',
+	'sync.nothing_to_sync'    => 'Nichts zu synchronisieren — keine benutzerdefinierten Schemas, Templates oder synchronisierbaren Collections gefunden.',
 	'sync.specific_schemas'   => 'Schemas auswählen',
 	'sync.specific_templates' => 'Templates auswählen',
+	'sync.specific_objects'   => 'Objekte auswählen',
+	'sync.no_objects'         => 'Noch keine Objekte in dieser Collection.',
 
 	// Update Manager
 	'update.title'           => 'Update-Manager',

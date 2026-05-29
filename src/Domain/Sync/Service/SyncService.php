@@ -25,29 +25,48 @@ readonly class SyncService
 	}
 
 	/**
-	 * Push schemas and templates to a remote server.
+	 * Push schemas, templates, and objects from sync-allowlisted collections
+	 * to a remote server.
 	 *
-	 * @param list<string>|null $schemaFilter
-	 * @param list<string>|null $templateFilter
+	 * Schemas/templates use a flat tristate: null = all, [] = none, list = ids.
+	 * Collections use a per-collection map because the UI presents each
+	 * allowlisted collection (Pages, Mailer, Prompts, Dataviews) as its
+	 * own section with its own all/specific/none picker over the contained
+	 * object ids:
+	 *   - null               → every object in every allowlisted collection
+	 *   - ['id' => null]     → every object in that collection
+	 *   - ['id' => [...ids]] → only those object ids
+	 *   - key absent         → skip that collection
+	 *
+	 * @param list<string>|null                       $schemaFilter
+	 * @param list<string>|null                       $templateFilter
+	 * @param array<string,list<string>|null>|null    $collectionsFilter
 	 */
-	public function push(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): OperationResult
-	{
+	public function push(
+		string $url,
+		string $key,
+		?array $schemaFilter = null,
+		?array $templateFilter = null,
+		?array $collectionsFilter = null,
+	): OperationResult {
 		$this->jumpStartExporter->setMetadata('Sync Push', 'Pushed via Total CMS sync');
-		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter);
+		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter);
 
 		if ($jumpstart->isEmpty()) {
-			return OperationResult::success('Nothing to push — no matching schemas or templates found.', [
-				'schemas'   => 0,
-				'templates' => 0,
+			return OperationResult::success('Nothing to push — no matching schemas, templates, or collections found.', [
+				'schemas'     => 0,
+				'templates'   => 0,
+				'collections' => 0,
 			]);
 		}
 
-		// Remote import/export endpoints live under the API group at
-		// `/api/import/jumpstart` and `/api/export/jumpstart`. Users configure
-		// the remote `url` setting as the bare site URL (per the placeholder
-		// `https://example.com/tcms` in settings/sync.json), so we append the
-		// full route path here. rtrim guards against accidentally-trailing
-		// slashes producing a double-slash.
+		// Push to the sync-specific receive endpoint, NOT the general
+		// `/api/import/jumpstart` route. The two endpoints behave the same
+		// way auth-wise (both DualAuthMiddleware), but `/api/sync/import`
+		// runs the importer in upsert mode so a sync push lands as a true
+		// mirror of local rather than silently skipping rows that already
+		// exist on the remote (the starter-kit semantics that
+		// `/api/import/jumpstart` is built around).
 		// Use the X-API-Key header instead of `Authorization: Bearer` because
 		// OAuthBearerMiddleware (outer layer on the /api/ group since Phase 4)
 		// intercepts any Bearer token and tries to validate it as a JWT —
@@ -55,7 +74,9 @@ readonly class SyncService
 		// DualAuthMiddleware/ApiKeyAuthMiddleware (which accept both header
 		// formats) ever ran. X-API-Key is invisible to OAuthBearerMiddleware
 		// and falls through to the API-key validator cleanly.
-		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . '/api/import/jumpstart', [
+		// rtrim guards against accidentally-trailing slashes producing a
+		// double-slash in the request URL.
+		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . '/api/sync/import', [
 			'headers' => [
 				'X-API-Key: ' . $key,
 				'Content-Type: application/json',
@@ -78,6 +99,7 @@ readonly class SyncService
 		return OperationResult::success('Push complete.', [
 			'schemas'       => count($jumpstart->schemas),
 			'templates'     => count($jumpstart->templates),
+			'collections'   => count($jumpstart->objects),
 			'remote_result' => is_array($remoteResult) ? $remoteResult : [],
 		]);
 	}
@@ -86,13 +108,19 @@ readonly class SyncService
 	 * Fetch sync data from a remote server without importing.
 	 * Used for dry-run previews.
 	 *
-	 * @param list<string>|null $schemaFilter
-	 * @param list<string>|null $templateFilter
+	 * @param list<string>|null                       $schemaFilter
+	 * @param list<string>|null                       $templateFilter
+	 * @param array<string,list<string>|null>|null    $collectionsFilter
 	 *
 	 * @return array<string,mixed> Filtered JumpStart payload
 	 */
-	public function fetchRemoteSyncData(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): array
-	{
+	public function fetchRemoteSyncData(
+		string $url,
+		string $key,
+		?array $schemaFilter = null,
+		?array $templateFilter = null,
+		?array $collectionsFilter = null,
+	): array {
 		$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/export/jumpstart?mode=sync', [
 			'headers' => [
 				// See push() for why X-API-Key rather than Authorization: Bearer.
@@ -115,49 +143,70 @@ readonly class SyncService
 			throw new \RuntimeException('Pull failed: invalid response from remote.');
 		}
 
-		return $this->applyFilters($payload, $schemaFilter, $templateFilter);
+		return $this->applyFilters($payload, $schemaFilter, $templateFilter, $collectionsFilter);
 	}
 
 	/**
-	 * Pull schemas and templates from a remote server.
+	 * Pull schemas, templates, and objects from sync-allowlisted collections
+	 * from a remote server. See push() for the collectionsFilter map shape.
 	 *
-	 * @param list<string>|null $schemaFilter
-	 * @param list<string>|null $templateFilter
+	 * @param list<string>|null                       $schemaFilter
+	 * @param list<string>|null                       $templateFilter
+	 * @param array<string,list<string>|null>|null    $collectionsFilter
 	 */
-	public function pull(string $url, string $key, ?array $schemaFilter = null, ?array $templateFilter = null): OperationResult
-	{
-		$payload = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter);
+	public function pull(
+		string $url,
+		string $key,
+		?array $schemaFilter = null,
+		?array $templateFilter = null,
+		?array $collectionsFilter = null,
+	): OperationResult {
+		$payload = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter, $collectionsFilter);
 
-		$schemaCount   = count($payload['schemas'] ?? []);
-		$templateCount = count($payload['templates'] ?? []);
+		$schemaCount     = count($payload['schemas'] ?? []);
+		$templateCount   = count($payload['templates'] ?? []);
+		$collectionCount = count($payload['objects'] ?? []);
 
-		if ($schemaCount === 0 && $templateCount === 0) {
-			return OperationResult::success('Nothing to pull — no matching schemas or templates found.', [
-				'schemas'   => 0,
-				'templates' => 0,
+		if ($schemaCount === 0 && $templateCount === 0 && $collectionCount === 0) {
+			return OperationResult::success('Nothing to pull — no matching schemas, templates, or collections found.', [
+				'schemas'     => 0,
+				'templates'   => 0,
+				'collections' => 0,
 			]);
 		}
 
-		$result = $this->jumpStartImporter->importFromDefinition($payload);
+		// Sync semantics: production is treated as the source of truth on
+		// pull, so existing local rows are overwritten rather than skipped.
+		// Same authoritative-source rule as push, just in the other
+		// direction. Public `/api/import/jumpstart` keeps its skip-existing
+		// default for the starter-kit flow.
+		$result = $this->jumpStartImporter->importFromDefinition($payload, true);
 
 		return OperationResult::success('Pull complete.', [
 			'schemas'       => $schemaCount,
 			'templates'     => $templateCount,
+			'collections'   => $collectionCount,
 			'import_result' => $result,
 		]);
 	}
 
 	/**
-	 * Filter a JumpStart payload by schema and template IDs.
+	 * Filter a JumpStart payload by schema ids, template ids, and a
+	 * per-collection object-id map (see push() for the map shape).
 	 *
-	 * @param array<string,mixed>  $payload
-	 * @param list<string>|null    $schemaFilter
-	 * @param list<string>|null    $templateFilter
+	 * @param array<string,mixed>                     $payload
+	 * @param list<string>|null                       $schemaFilter
+	 * @param list<string>|null                       $templateFilter
+	 * @param array<string,list<string>|null>|null    $collectionsFilter
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function applyFilters(array $payload, ?array $schemaFilter, ?array $templateFilter): array
-	{
+	private function applyFilters(
+		array $payload,
+		?array $schemaFilter,
+		?array $templateFilter,
+		?array $collectionsFilter = null,
+	): array {
 		if ($schemaFilter !== null && isset($payload['schemas']) && is_array($payload['schemas'])) {
 			$payload['schemas'] = array_values(array_filter(
 				$payload['schemas'],
@@ -168,6 +217,21 @@ readonly class SyncService
 			$payload['templates'] = array_values(array_filter(
 				$payload['templates'],
 				fn (array $t): bool => in_array($t['id'] ?? '', $templateFilter, true)
+			));
+		}
+		if ($collectionsFilter !== null && isset($payload['objects']) && is_array($payload['objects'])) {
+			$payload['objects'] = array_values(array_filter(
+				$payload['objects'],
+				function (array $o) use ($collectionsFilter): bool {
+					$cid = (string)($o['collection'] ?? '');
+					$oid = (string)($o['id'] ?? '');
+					if (!array_key_exists($cid, $collectionsFilter)) {
+						return false;
+					}
+					$ids = $collectionsFilter[$cid];
+
+					return $ids === null || in_array($oid, $ids, true);
+				}
 			));
 		}
 

@@ -28,10 +28,20 @@ globalThis.TotalCMS = TotalCMS;
 globalThis.QuickAction = QuickAction;
 globalThis.JSONField = JSONField;
 
-// Inject CSRF token into all HTMX requests
+// Inject CSRF token into all HTMX requests.
+//
+// HTMX 4 changed the `htmx:config:request` payload from a flat
+// `{ headers, parameters, ... }` (HTMX 1/2) to `{ ctx }`, where the
+// outgoing headers live at `ctx.request.headers`. Reading the old
+// shape silently no-ops on HTMX 4 — the meta tag is found, but the
+// header is written into an undefined object, so the request hits
+// CSRFProtectionMiddleware bare and 403s. Things like the Twig
+// playground render form (hx-post) and the inline reorder/preview
+// HTMX endpoints all depend on this listener.
 document.addEventListener('htmx:config:request', (e) => {
 	const token = document.querySelector('meta[name="csrf-token"]');
-	if (token && e.detail.headers) e.detail.headers['X-CSRF-Token'] = token.content;
+	const headers = e.detail?.ctx?.request?.headers;
+	if (token && headers) headers['X-CSRF-Token'] = token.content;
 });
 
 // Intercept hx-confirm and route through the custom countdown dialog
