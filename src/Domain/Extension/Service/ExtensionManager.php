@@ -510,11 +510,15 @@ class ExtensionManager
 			}
 		}
 
-		// Save permissions — unchecked toggles won't be submitted, so default to false
+		// Save permissions — unchecked toggles won't be submitted, so default to
+		// false. Always-on capabilities (infrastructure, e.g. container defs) have
+		// no toggle and stay true regardless of what the form submitted.
 		if ($newPermissions !== [] || $permissions !== []) {
 			$mergedPermissions = [];
 			foreach (array_keys($permissions) as $cap) {
-				$mergedPermissions[$cap] = $newPermissions[$cap] ?? false;
+				$mergedPermissions[$cap] = in_array($cap, ExtensionContext::ALWAYS_ON_CAPABILITIES, true)
+					? true
+					: ($newPermissions[$cap] ?? false);
 			}
 			$this->savePermissions($extensionId, $mergedPermissions);
 		}
@@ -1163,11 +1167,13 @@ class ExtensionManager
 
 			// Apply registered container definitions to the running container.
 			// Without this, addContainerDefinition() is a no-op — anything that
-			// depends on container resolution (page middleware that takes
-			// injected services, custom services consumed by Twig functions,
-			// etc.) would silently fail to instantiate. Gated by the `container`
-			// capability so admins can disable it if they want.
-			if ($this->container instanceof \DI\Container && $this->isCapabilityPermitted($id, 'container')) {
+			// depends on container resolution (page middleware that takes injected
+			// services, custom services consumed by Twig functions, etc.) would
+			// silently fail to instantiate. These are infrastructure, not an
+			// independent feature surface (see ExtensionContext::ALWAYS_ON_CAPABILITIES),
+			// so they're always applied for an enabled extension rather than gated
+			// behind a toggle that would only leave the extension enabled-but-broken.
+			if ($this->container instanceof \DI\Container) {
 				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
 					// A compiled PHP-DI container rejects lazy definitions (a bare
 					// closure passed to set() is treated as a FactoryDefinition) added
