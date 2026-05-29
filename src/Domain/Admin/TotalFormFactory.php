@@ -1455,6 +1455,12 @@ readonly class TotalFormFactory
 			collection               : '',
 		);
 		$form->setLogger($this->logger);
+		// Wire the builder-aware option sources so fields rendered via field()
+		// (standalone fields, extension settings) can resolve the `pages`,
+		// `layouts`, and `pageMiddleware` propertyOptions sources — the real
+		// form builders set these too (see loginForm/collection form paths).
+		$form->setTemplateLister($this->templateLister);
+		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 
 		return $form;
 	}
