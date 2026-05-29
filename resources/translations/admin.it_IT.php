@@ -1119,7 +1119,7 @@ return [
 
 	// Sync Manager
 	'sync.title'              => 'Gestore sincronizzazione',
-	'sync.desc'               => 'Invia schemi e template al tuo server di produzione, oppure scaricali dalla produzione al tuo ambiente locale.',
+	'sync.desc'               => 'Invia schemi, template e oggetti di raccolte selezionati al tuo server di produzione, oppure scaricali dalla produzione al tuo ambiente locale.',
 	'sync.not_configured'     => "La sincronizzazione non è ancora configurata. Imposta l'URL del server di produzione e la chiave API per iniziare.",
 	'sync.configure_link'     => 'Configura impostazioni di sincronizzazione',
 	'sync.remote'             => 'Remoto',
@@ -1129,9 +1129,11 @@ return [
 	'sync.push_btn'           => 'Invia alla produzione',
 	'sync.pull_btn'           => 'Scarica dalla produzione',
 	'sync.syncing'            => 'Sincronizzazione in corso...',
-	'sync.nothing_to_sync'    => 'Nessuno schema o template personalizzato da sincronizzare.',
+	'sync.nothing_to_sync'    => 'Niente da sincronizzare — nessuno schema, template o raccolta sincronizzabile trovato.',
 	'sync.specific_schemas'   => 'Seleziona schemi',
 	'sync.specific_templates' => 'Seleziona template',
+	'sync.specific_objects'   => 'Seleziona oggetti',
+	'sync.no_objects'         => 'Nessun oggetto ancora in questa raccolta.',
 
 	// Update Manager
 	'update.title'           => 'Gestore aggiornamenti',

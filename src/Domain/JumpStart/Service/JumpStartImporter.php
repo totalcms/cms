@@ -255,20 +255,54 @@ class JumpStartImporter
 	/** @param array<int,array<string,mixed>> $objects */
 	private function processObjects(array $objects): void
 	{
+		// Track which objects landed where so we can fire one import.completed
+		// per touched collection at the end. saveImportedObject() suspends
+		// `object.created` to keep user-facing listeners out of import-time
+		// writes, which means IndexBuildListener doesn't see the per-object
+		// events. Without the completion signal the remote ends up with the
+		// objects on disk but a stale index — sync push appears to succeed
+		// but the imported pages/prompts/etc. don't show up in lists, search,
+		// or queries until the next manual reindex.
+		/** @var array<string,array{created:list<string>,count:int}> $touchedByCollection */
+		$touchedByCollection = [];
+
 		foreach ($objects as $objectDef) {
 			$collectionId = $objectDef['collection'] ?? '';
 			$objectId     = $objectDef['id'] ?? '';
 			$objectData   = $objectDef['data'] ?? [];
 			try {
-				$this->processObject($collectionId, $objectId, $objectData);
+				$created = $this->processObject($collectionId, $objectId, $objectData);
+				if ($collectionId !== '') {
+					$touchedByCollection[$collectionId] ??= ['created' => [], 'count' => 0];
+					$touchedByCollection[$collectionId]['count']++;
+					if ($created) {
+						$touchedByCollection[$collectionId]['created'][] = (string)$objectId;
+					}
+				}
 			} catch (\Exception $e) {
 				$this->addError(sprintf('Object %s/%s: %s', $collectionId, $objectId, $e->getMessage()));
 			}
 		}
+
+		foreach ($touchedByCollection as $collectionId => $stats) {
+			$this->eventDispatcher->dispatch(
+				'import.completed',
+				new \TotalCMS\Domain\Event\Payload\ImportEventPayload(
+					$collectionId,
+					$stats['count'],
+					$stats['created'],
+				),
+			);
+		}
 	}
 
-	/** @param array<string,mixed> $objectData */
-	private function processObject(string $collectionId, string $objectId, array $objectData): void
+	/**
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return bool true if a new object was written, false if it was skipped
+	 *              because an object with that id already existed
+	 */
+	private function processObject(string $collectionId, string $objectId, array $objectData): bool
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
@@ -279,13 +313,15 @@ class JumpStartImporter
 		if ($this->objectFetcher->existsObject($collectionId, $objectId)) {
 			$this->addResult(sprintf('Object %s/%s: already exists, skipping', $collectionId, $objectId));
 
-			return;
+			return false;
 		}
 
 		// Generate object data using FactoryImporter and save
 		$objectData = $this->generateFactoryObjectDataForImages($collectionId, $objectId, $objectData);
 		$this->saveImportedObject($collectionId, $objectData);
 		$this->addResult(sprintf('Object %s/%s: created', $collectionId, $objectId));
+
+		return true;
 	}
 
 	/**

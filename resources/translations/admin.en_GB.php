@@ -1119,7 +1119,7 @@ return [
 
 	// Sync Manager
 	'sync.title'              => 'Sync Manager',
-	'sync.desc'               => 'Push schemas and templates to your production server, or pull them from production to your local environment.',
+	'sync.desc'               => 'Push schemas, templates, and selected collection objects to your production server, or pull them from production to your local environment.',
 	'sync.not_configured'     => 'Sync is not configured yet. Set your production server URL and API key to get started.',
 	'sync.configure_link'     => 'Configure Sync Settings',
 	'sync.remote'             => 'Remote',
@@ -1129,9 +1129,11 @@ return [
 	'sync.push_btn'           => 'Push to Production',
 	'sync.pull_btn'           => 'Pull from Production',
 	'sync.syncing'            => 'Syncing...',
-	'sync.nothing_to_sync'    => 'No custom schemas or templates to sync.',
+	'sync.nothing_to_sync'    => 'Nothing to sync — no custom schemas, templates, or sync-enabled collections found.',
 	'sync.specific_schemas'   => 'Select Schemas',
 	'sync.specific_templates' => 'Select Templates',
+	'sync.specific_objects'   => 'Select Objects',
+	'sync.no_objects'         => 'No objects in this collection yet.',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

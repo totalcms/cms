@@ -11,6 +11,7 @@ use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
@@ -19,6 +20,7 @@ use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Sync\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
@@ -35,6 +37,7 @@ readonly class AdminUtilsAction
 		private AccessGroupLister $accessGroupLister,
 		private CollectionLister $collectionLister,
 		private CollectionFetcher $collectionFetcher,
+		private IndexReader $indexReader,
 		private BuilderInstaller $builderInstaller,
 		private SchemaLister $schemaLister,
 		private RssImporter $rssImporter,
@@ -172,9 +175,10 @@ readonly class AdminUtilsAction
 		$syncData = null;
 		if ($page === 'sync') {
 			$syncData = [
-				'settings'  => $this->settingsFetcher->loadSection('sync'),
-				'schemas'   => $this->schemaLister->listCustomSchemas(),
-				'templates' => $this->templateLister->listBuilderTemplates(null, true),
+				'settings'    => $this->settingsFetcher->loadSection('sync'),
+				'schemas'     => $this->schemaLister->listCustomSchemas(),
+				'templates'   => $this->templateLister->listBuilderTemplates(null, true),
+				'collections' => $this->resolveSyncableCollections(),
 			];
 		}
 
@@ -423,5 +427,73 @@ readonly class AdminUtilsAction
 		}
 
 		return $this->twigLintService->lintFile($realPath)->toArray();
+	}
+
+	/**
+	 * Return the sync-allowlisted collections that actually exist on this
+	 * site along with their selectable object ids, shaped for sync.twig.
+	 *
+	 * Each entry: {id, name, objects: [{id, label}]}.
+	 * Labels prefer human-friendly fields from the index (title, name,
+	 * subject, route) and fall back to the object id.
+	 *
+	 * @return list<array{id:string,name:string,objects:list<array{id:string,label:string}>}>
+	 */
+	private function resolveSyncableCollections(): array
+	{
+		$out = [];
+		foreach (SyncableCollections::IDS as $id) {
+			$collection = $this->collectionFetcher->fetchCollection($id);
+			if ($collection === null) {
+				continue;
+			}
+
+			try {
+				$index = $this->indexReader->fetchIndex($id);
+			} catch (\Throwable) {
+				$index = null;
+			}
+
+			$objects = [];
+			if ($index !== null) {
+				foreach ($index->objects as $entry) {
+					$objectId = (string)($entry['id'] ?? '');
+					if ($objectId === '') {
+						continue;
+					}
+					$objects[] = [
+						'id'    => $objectId,
+						'label' => $this->labelForIndexEntry($entry, $objectId),
+					];
+				}
+			}
+
+			$out[] = [
+				'id'      => $id,
+				'name'    => $collection->name !== '' ? $collection->name : $id,
+				'objects' => $objects,
+			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Pick a human label for an index entry by walking common display
+	 * fields. Falls back to the object id so the UI always has something
+	 * to render.
+	 *
+	 * @param array<string,mixed> $entry
+	 */
+	private function labelForIndexEntry(array $entry, string $fallback): string
+	{
+		foreach (['title', 'name', 'subject', 'route', 'label'] as $field) {
+			$value = $entry[$field] ?? null;
+			if (is_string($value) && trim($value) !== '') {
+				return $value;
+			}
+		}
+
+		return $fallback;
 	}
 }

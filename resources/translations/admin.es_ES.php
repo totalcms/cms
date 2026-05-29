@@ -1119,7 +1119,7 @@ return [
 
 	// Sync Manager
 	'sync.title'              => 'Gestor de Sincronización',
-	'sync.desc'               => 'Enviar esquemas y plantillas al servidor de producción, o descargarlos desde producción.',
+	'sync.desc'               => 'Enviar esquemas, plantillas y objetos de colecciones seleccionados al servidor de producción, o descargarlos desde producción.',
 	'sync.not_configured'     => 'La sincronización aún no está configurada. Configure la URL del servidor y la clave API.',
 	'sync.configure_link'     => 'Configurar Sincronización',
 	'sync.remote'             => 'Remoto',
@@ -1129,9 +1129,11 @@ return [
 	'sync.push_btn'           => 'Enviar a Producción',
 	'sync.pull_btn'           => 'Descargar de Producción',
 	'sync.syncing'            => 'Sincronizando...',
-	'sync.nothing_to_sync'    => 'No hay esquemas o plantillas personalizados para sincronizar.',
+	'sync.nothing_to_sync'    => 'Nada que sincronizar — no se encontraron esquemas, plantillas ni colecciones sincronizables.',
 	'sync.specific_schemas'   => 'Seleccionar Esquemas',
 	'sync.specific_templates' => 'Seleccionar Plantillas',
+	'sync.specific_objects'   => 'Seleccionar Objetos',
+	'sync.no_objects'         => 'Aún no hay objetos en esta colección.',
 
 	// Update Manager
 	'update.title'           => 'Gestor de Actualizaciones',

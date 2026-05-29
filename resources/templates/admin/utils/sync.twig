@@ -3,6 +3,7 @@
 {% set settings = syncData.settings %}
 {% set schemas = syncData.schemas %}
 {% set templates = syncData.templates %}
+{% set collections = syncData.collections %}
 {% set isConfigured = settings.url is not empty and settings.key is not empty %}
 
 <section class="sync-utility">
@@ -16,7 +17,7 @@
 	<p>{{ t('sync.desc') }}</p>
 	<p class="sync-remote-url"><strong>{{ t('sync.remote') }}:</strong> {{ settings.url }}</p>
 
-	{% if schemas|length == 0 and templates|length == 0 %}
+	{% if schemas|length == 0 and templates|length == 0 and collections|length == 0 %}
 		<p>{{ t('sync.nothing_to_sync') }}</p>
 	{% else %}
 
@@ -94,10 +95,52 @@
 		</div>
 		{% endif %}
 
+		{% for collection in collections %}
+		<div class="sync-section">
+			<h3>{{ collection.name }}</h3>
+
+			{% if collection.objects|length == 0 %}
+				<p class="sync-empty">{{ t('sync.no_objects') }}</p>
+			{% else %}
+
+				{{ cms.form.field("multicheckbox", "collection-" ~ collection.id ~ "-all", {
+					value   : [],
+					options : [
+						{value: "all", label: t('sync.select_all')}
+					],
+					settings : { relationalOptions: false }
+				}) }}
+
+				{% set objectOptions = [] %}
+				{% for obj in collection.objects %}
+					{% set objectOptions = objectOptions|merge([{
+						value: obj.id,
+						label: obj.label
+					}]) %}
+				{% endfor %}
+
+				{{ cms.form.field("multicheckbox", "collection-" ~ collection.id, {
+					label    : t('sync.specific_objects'),
+					value    : [],
+					options  : objectOptions,
+					settings : {
+						fieldGrid: "200px",
+						visibility : {
+							watch    : "collection-" ~ collection.id ~ "-all",
+							value    : "all",
+							operator : "not_in"
+						}
+					}
+				}) }}
+
+			{% endif %}
+		</div>
+		{% endfor %}
+
 	{% endset %}
 
 	{{ cms.form.totalform("", formFields, {
-		class  : "sync-form",
+		class  : "sync-form no-unsaved-warning",
 		method : "POST",
 		save   : false,
 	}) }}
@@ -160,6 +203,12 @@
 	margin-block-start: 1rem;
 }
 
+.sync-section .sync-empty {
+	margin-block: 0;
+	color: oklch(var(--totalform-darkgray));
+	font-style: italic;
+}
+
 .sync-section .multicheckbox-field label {
 	max-width : 200px;
 }
@@ -189,13 +238,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	if (!form || !pushBtn || !pullBtn) return;
 
-	function getSelectedItems(allFieldName, itemsFieldName) {
+	// Encode a section's selection into the form body. Three modes:
+	//   - all:      the "All …" checkbox is checked → send mode=all
+	//   - specific: individual items are checked    → send mode=specific + ids
+	//   - none:     nothing is checked              → send mode=none
+	// The mode is explicit because the previous encoding ("missing keys = all")
+	// couldn't tell "user picked nothing" from "user picked everything" — both
+	// arrived as null at the exporter, which then exported everything.
+	function appendSelection(body, key, allFieldName, itemsFieldName) {
 		const allCheckbox = form.querySelector(`input[name="${allFieldName}"][value="all"]`);
 		if (allCheckbox && allCheckbox.checked) {
-			return null; // null means "all"
+			body.append(`${key}_mode`, 'all');
+			return;
 		}
-		return Array.from(form.querySelectorAll(`input[name="${itemsFieldName}[]"]:checked`))
+		const selected = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}[]"]:checked`))
 			.map(cb => cb.value);
+		if (selected.length === 0) {
+			body.append(`${key}_mode`, 'none');
+			return;
+		}
+		body.append(`${key}_mode`, 'specific');
+		selected.forEach(s => body.append(`${key}[]`, s));
 	}
 
 	async function doSync(action) {
@@ -207,15 +270,31 @@ document.addEventListener('DOMContentLoaded', function() {
 		const csrf = form.querySelector('input[name="csrf_token"]');
 		if (csrf) body.append('csrf_token', csrf.value);
 
-		const schemas = getSelectedItems('schemas-all', 'schemas');
-		const templates = getSelectedItems('templates-all', 'templates');
+		appendSelection(body, 'schemas',   'schemas-all',   'schemas');
+		appendSelection(body, 'templates', 'templates-all', 'templates');
 
-		if (schemas !== null) {
-			schemas.forEach(s => body.append('schemas[]', s));
-		}
-		if (templates !== null) {
-			templates.forEach(t => body.append('templates[]', t));
-		}
+		// Per-collection nested payload:
+		//   collections[<id>][mode]    = all | specific | none
+		//   collections[<id>][items][] = <objectId>
+		// Server parses this into a map of {collectionId: list<ids>|null}
+		// and threads it through to JumpStartExporter, which filters both
+		// which collections to walk AND which object ids inside each.
+		const syncableCollections = {{ collections|map(c => c.id)|json_encode|raw }};
+		syncableCollections.forEach(cid => {
+			const allCheckbox = form.querySelector(`input[name="collection-${cid}-all"][value="all"]`);
+			if (allCheckbox && allCheckbox.checked) {
+				body.append(`collections[${cid}][mode]`, 'all');
+				return;
+			}
+			const selected = Array.from(form.querySelectorAll(`input[name="collection-${cid}[]"]:checked`))
+				.map(cb => cb.value);
+			if (selected.length === 0) {
+				body.append(`collections[${cid}][mode]`, 'none');
+				return;
+			}
+			body.append(`collections[${cid}][mode]`, 'specific');
+			selected.forEach(s => body.append(`collections[${cid}][items][]`, s));
+		});
 
 		spinner.style.display = 'inline';
 		pushBtn.disabled = true;
@@ -234,9 +313,17 @@ document.addEventListener('DOMContentLoaded', function() {
 			const data = await resp.json();
 
 			if (data.success) {
-				const counts = data.pushed || data.pulled || {};
+				// SyncService returns an OperationResult whose `data` array
+				// is flattened into the JSON root, so the counts are
+				// `data.schemas` / `data.templates` / `data.collections` —
+				// not nested under `data.pushed` / `data.pulled`.
+				// `collections` is the total object count across every
+				// allowlisted collection that participated.
+				const schemas   = data.schemas   ?? 0;
+				const templates = data.templates ?? 0;
+				const objects   = data.collections ?? 0;
 				results.innerHTML = `<p style="color:oklch(var(--totalform-success))"><strong>${data.message}</strong></p>` +
-					`<p>Schemas: ${counts.schemas || 0}, Templates: ${counts.templates || 0}</p>`;
+					`<p>Schemas: ${schemas}, Templates: ${templates}, Objects: ${objects}</p>`;
 			} else {
 				results.innerHTML = `<p style="color:oklch(var(--totalform-error))"><strong>Error:</strong> ${data.error}</p>`;
 			}
@@ -250,12 +337,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	pushBtn.addEventListener('click', () => {
-		if (confirm('Are you sure you want to push to production? This will overwrite schemas and templates on the remote server.')) {
+		if (confirm('Are you sure you want to push to production? This will overwrite the selected schemas, templates, and collection objects on the remote server.')) {
 			doSync('push');
 		}
 	});
 	pullBtn.addEventListener('click', () => {
-		if (confirm('Are you sure you want to pull from production? This will overwrite local schemas and templates.')) {
+		if (confirm('Are you sure you want to pull from production? This will overwrite the selected schemas, templates, and collection objects locally.')) {
 			doSync('pull');
 		}
 	});
