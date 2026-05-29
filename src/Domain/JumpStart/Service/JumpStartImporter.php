@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LoggerFactory;
@@ -38,6 +39,7 @@ class JumpStartImporter
 		private readonly CollectionSaver $collectionSaver,
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectSaver $objectSaver,
+		private readonly ObjectUpdater $objectUpdater,
 		private readonly SchemaSaver $schemaSaver,
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
@@ -62,6 +64,33 @@ class JumpStartImporter
 			$object = $this->objectSaver->saveObject($collection, $objectData);
 			$this->eventDispatcher->dispatch(
 				'import.created',
+				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
+			);
+
+			return $object;
+		} finally {
+			$this->eventDispatcher->resumeForImport($collection);
+		}
+	}
+
+	/**
+	 * Mirror of saveImportedObject() for the upsert path (sync push). Calls
+	 * ObjectUpdater so the existing storage row is replaced rather than
+	 * conflicted-out, while keeping the same event semantics: the inner
+	 * `object.updated` is suppressed by the import suspension, and we fire
+	 * `import.updated` so import-specific listeners get a per-object hook
+	 * distinct from the user-driven update path.
+	 *
+	 * @param array<string,mixed> $objectData
+	 */
+	private function updateImportedObject(string $collection, string $id, array $objectData): \TotalCMS\Domain\Object\Data\ObjectData
+	{
+		$this->eventDispatcher->suspendForImport($collection);
+		try {
+			$objectData['id'] = $id;
+			$object           = $this->objectUpdater->updateObject($collection, $id, $objectData);
+			$this->eventDispatcher->dispatch(
+				'import.updated',
 				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
 			);
 
@@ -111,9 +140,26 @@ class JumpStartImporter
 	}
 
 	/**
+	 * Import a JumpStart definition.
+	 *
+	 * When `$upsert` is false (default) the importer preserves the
+	 * starter-kit semantics: an object that already exists in the target
+	 * collection is left untouched and logged as "skipping". That's the
+	 * right behaviour for `tcms jumpstart:import` and for the public
+	 * `POST /api/import/jumpstart` endpoint, where the operator's edits
+	 * must not be trampled by a re-run of a starter kit.
+	 *
+	 * When `$upsert` is true (sync push / sync pull) the importer treats
+	 * the incoming payload as authoritative: existing objects are
+	 * overwritten via ObjectUpdater. This is the mode the dedicated
+	 * `POST /api/sync/import` route turns on so a sync push from a local
+	 * environment lands a true mirror of local on the remote.
+	 *
 	 * @param array<string, mixed> $definition
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function importFromDefinition(array $definition): OperationResult
+	public function importFromDefinition(array $definition, bool $upsert = false): OperationResult
 	{
 		$this->results = [];
 		$this->errors  = [];
@@ -124,6 +170,7 @@ class JumpStartImporter
 		$this->logger->info('Starting jumpstart import', [
 			'name'    => $definition['name'] ?? 'Unknown',
 			'version' => $definition['version'] ?? 'Unknown',
+			'upsert'  => $upsert,
 		]);
 
 		// Need to process in this order to ensure dependencies are met
@@ -137,7 +184,7 @@ class JumpStartImporter
 			$this->processTemplates($definition['templates']);
 		}
 		if (isset($definition['objects'])) {
-			$this->processObjects($definition['objects']);
+			$this->processObjects($definition['objects'], $upsert);
 		}
 		if (isset($definition['factory'])) {
 			$this->processFactory($definition['factory']);
@@ -253,17 +300,22 @@ class JumpStartImporter
 	}
 
 	/** @param array<int,array<string,mixed>> $objects */
-	private function processObjects(array $objects): void
+	/**
+	 * @param array<int,array<string,mixed>> $objects
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	private function processObjects(array $objects, bool $upsert): void
 	{
 		// Track which objects landed where so we can fire one import.completed
-		// per touched collection at the end. saveImportedObject() suspends
-		// `object.created` to keep user-facing listeners out of import-time
-		// writes, which means IndexBuildListener doesn't see the per-object
-		// events. Without the completion signal the remote ends up with the
-		// objects on disk but a stale index — sync push appears to succeed
-		// but the imported pages/prompts/etc. don't show up in lists, search,
-		// or queries until the next manual reindex.
-		/** @var array<string,array{created:list<string>,count:int}> $touchedByCollection */
+		// per touched collection at the end. saveImportedObject() /
+		// updateImportedObject() suspend `object.created` and `object.updated`
+		// respectively, which means IndexBuildListener doesn't see the
+		// per-object events. Without the completion signal the receiving end
+		// ends up with the objects on disk but a stale index — sync push
+		// appears to succeed but imported pages/prompts/etc. don't show up
+		// in lists, search, or queries until the next manual reindex.
+		/** @var array<string,array{created:list<string>,updated:list<string>,count:int}> $touchedByCollection */
 		$touchedByCollection = [];
 
 		foreach ($objects as $objectDef) {
@@ -271,12 +323,14 @@ class JumpStartImporter
 			$objectId     = $objectDef['id'] ?? '';
 			$objectData   = $objectDef['data'] ?? [];
 			try {
-				$created = $this->processObject($collectionId, $objectId, $objectData);
-				if ($collectionId !== '') {
-					$touchedByCollection[$collectionId] ??= ['created' => [], 'count' => 0];
+				$action = $this->processObject($collectionId, $objectId, $objectData, $upsert);
+				if ($collectionId !== '' && $action !== 'skipped') {
+					$touchedByCollection[$collectionId] ??= ['created' => [], 'updated' => [], 'count' => 0];
 					$touchedByCollection[$collectionId]['count']++;
-					if ($created) {
+					if ($action === 'created') {
 						$touchedByCollection[$collectionId]['created'][] = (string)$objectId;
+					} elseif ($action === 'updated') {
+						$touchedByCollection[$collectionId]['updated'][] = (string)$objectId;
 					}
 				}
 			} catch (\Exception $e) {
@@ -291,6 +345,7 @@ class JumpStartImporter
 					$collectionId,
 					$stats['count'],
 					$stats['created'],
+					$stats['updated'],
 				),
 			);
 		}
@@ -299,10 +354,11 @@ class JumpStartImporter
 	/**
 	 * @param array<string,mixed> $objectData
 	 *
-	 * @return bool true if a new object was written, false if it was skipped
-	 *              because an object with that id already existed
+	 * @return 'created'|'updated'|'skipped' outcome of the write
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	private function processObject(string $collectionId, string $objectId, array $objectData): bool
+	private function processObject(string $collectionId, string $objectId, array $objectData, bool $upsert): string
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
@@ -310,18 +366,25 @@ class JumpStartImporter
 			throw new \Exception('Collection not found');
 		}
 
-		if ($this->objectFetcher->existsObject($collectionId, $objectId)) {
-			$this->addResult(sprintf('Object %s/%s: already exists, skipping', $collectionId, $objectId));
+		$exists     = $this->objectFetcher->existsObject($collectionId, $objectId);
+		$objectData = $this->generateFactoryObjectDataForImages($collectionId, $objectId, $objectData);
 
-			return false;
+		if ($exists) {
+			if (!$upsert) {
+				$this->addResult(sprintf('Object %s/%s: already exists, skipping', $collectionId, $objectId));
+
+				return 'skipped';
+			}
+			$this->updateImportedObject($collectionId, $objectId, $objectData);
+			$this->addResult(sprintf('Object %s/%s: updated', $collectionId, $objectId));
+
+			return 'updated';
 		}
 
-		// Generate object data using FactoryImporter and save
-		$objectData = $this->generateFactoryObjectDataForImages($collectionId, $objectId, $objectData);
 		$this->saveImportedObject($collectionId, $objectData);
 		$this->addResult(sprintf('Object %s/%s: created', $collectionId, $objectId));
 
-		return true;
+		return 'created';
 	}
 
 	/**

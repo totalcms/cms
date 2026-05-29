@@ -60,12 +60,13 @@ readonly class SyncService
 			]);
 		}
 
-		// Remote import/export endpoints live under the API group at
-		// `/api/import/jumpstart` and `/api/export/jumpstart`. Users configure
-		// the remote `url` setting as the bare site URL (per the placeholder
-		// `https://example.com/tcms` in settings/sync.json), so we append the
-		// full route path here. rtrim guards against accidentally-trailing
-		// slashes producing a double-slash.
+		// Push to the sync-specific receive endpoint, NOT the general
+		// `/api/import/jumpstart` route. The two endpoints behave the same
+		// way auth-wise (both DualAuthMiddleware), but `/api/sync/import`
+		// runs the importer in upsert mode so a sync push lands as a true
+		// mirror of local rather than silently skipping rows that already
+		// exist on the remote (the starter-kit semantics that
+		// `/api/import/jumpstart` is built around).
 		// Use the X-API-Key header instead of `Authorization: Bearer` because
 		// OAuthBearerMiddleware (outer layer on the /api/ group since Phase 4)
 		// intercepts any Bearer token and tries to validate it as a JWT —
@@ -73,7 +74,9 @@ readonly class SyncService
 		// DualAuthMiddleware/ApiKeyAuthMiddleware (which accept both header
 		// formats) ever ran. X-API-Key is invisible to OAuthBearerMiddleware
 		// and falls through to the API-key validator cleanly.
-		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . '/api/import/jumpstart', [
+		// rtrim guards against accidentally-trailing slashes producing a
+		// double-slash in the request URL.
+		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . '/api/sync/import', [
 			'headers' => [
 				'X-API-Key: ' . $key,
 				'Content-Type: application/json',
@@ -172,7 +175,12 @@ readonly class SyncService
 			]);
 		}
 
-		$result = $this->jumpStartImporter->importFromDefinition($payload);
+		// Sync semantics: production is treated as the source of truth on
+		// pull, so existing local rows are overwritten rather than skipped.
+		// Same authoritative-source rule as push, just in the other
+		// direction. Public `/api/import/jumpstart` keeps its skip-existing
+		// default for the starter-kit flow.
+		$result = $this->jumpStartImporter->importFromDefinition($payload, true);
 
 		return OperationResult::success('Pull complete.', [
 			'schemas'       => $schemaCount,

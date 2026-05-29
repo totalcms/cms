@@ -2,6 +2,13 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.10] - 2026-05-28
+
+### Added
+
+- **Sync push/pull are now createOrUpdate**: New `POST /api/sync/import` route (`SyncImportAction`) receives sync pushes and always runs `JumpStartImporter` in upsert mode — existing objects are overwritten via `ObjectUpdater` instead of being silently skipped. `SyncService::push()` now POSTs to `/api/sync/import` (server-to-server, X-API-Key auth via `DualAuthMiddleware`) and `SyncService::pull()` passes `upsert=true` to the local importer, so both directions treat the sending side as authoritative. `POST /api/import/jumpstart` keeps its original "skip if exists" behaviour — `tcms jumpstart:import` and the starter-kit re-run flow must not trample operator edits, and the route name carries the contract instead of a flag that's easy to forget. `JumpStartImporter::processObjects` now tracks created vs updated ids separately and threads both into the `ImportEventPayload` for `import.completed`, so listeners that diff inserts from edits see the right buckets. Note for the beta window: the local and remote both need to run a build that includes this route — older T3 versions on the remote will 404 on push until they update
+
+
 ## [3.5.0-beta.9] - 2026-05-28
 
 ### Added
@@ -12,11 +19,8 @@ All notable changes to Total CMS will be documented in this file.
 ### Enhanced
 
 - **MCP tools shape: array → keyed deck**: The `tools` property on `mcp-collection` is now a deck keyed by tool id, rendered as a structured deck in the schema editor instead of a raw JSON textarea. Each row gets per-tool validation and the same drag-to-reorder + collapsed-label affordances as other decks (mcp-prompt-arg, card+deck combos). Matches the deck convention already established for prompt arguments. `McpToolsValidator` and `SchemaToolRegistrar` accept both keyed-object and legacy list-array input, with the deck key authoritative when present
-
 - **OAuth key paths in settings UI**: Settings → OAuth now shows the configured signing and public key paths with present/missing badges. Paths come from `config/tcms.php` (when overridden) or the bundled defaults. Fresh installs without keys are no longer indistinguishable from correctly set-up ones — the missing badge appears alongside a hint to run `tcms oauth:setup`
-
 - **Builder frontend scaffold flattened**: `tcms builder:frontend` no longer ships the Vite-default `src/css/` + `src/js/` source layout. Source files now live directly at `frontend/css/style.css` and `frontend/js/app.js` — one less directory level for a scaffold that ships exactly two starter files. Twig references like `cms.builder.css('css/style.css')` follow the same simpler path. Docs (`docs/site-builder/frontend.md`, `docs/site-builder/cli.md`) and the CLI hint text updated to match
-
 - **Form-rendering loggers**: `TotalForm` gained `setLogger()`/`logger()` (setter-injected so the already-large constructor stays out of scope — the future `FormContext` refactor will fold this into a single context arg). `TotalFormFactory` builds one `'totalform'` logger pointed at `totalcms.log` and calls `setLogger()` on every form it constructs. Lets defensive code paths inside `FormField` and friends emit structured warnings instead of dropping diagnostics on the floor
 
 ### Removed

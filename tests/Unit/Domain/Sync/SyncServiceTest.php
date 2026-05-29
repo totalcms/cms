@@ -63,7 +63,7 @@ final class SyncServiceTest extends TestCase
 			->method('request')
 			->with(
 				'POST',
-				'https://example.com/api/import/jumpstart',
+				'https://example.com/api/sync/import',
 				$this->callback(function (array $options): bool {
 					expect($options['body'])->toContain('products');
 					// SyncService sends the API key via X-API-Key rather than
@@ -149,8 +149,13 @@ final class SyncServiceTest extends TestCase
 			->with('GET', 'https://example.com/api/export/jumpstart?mode=sync', $this->anything())
 			->willReturn(new HttpResponse(200, (string)$remotePayload));
 
+		// Pull is server-authoritative for the local copy: pass through to
+		// the importer in upsert mode so an existing local row is overwritten
+		// rather than silently skipped (which is the default starter-kit
+		// behaviour of importFromDefinition).
 		$this->importer->expects($this->once())
 			->method('importFromDefinition')
+			->with($this->anything(), true)
 			->willReturn(OperationResult::success('Import complete.', [
 				'results' => [],
 				'errors'  => [],

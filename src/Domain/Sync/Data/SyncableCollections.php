@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Sync;
+namespace TotalCMS\Domain\Sync\Data;
 
 /**
  * Allowlist of reserved collections whose objects sync push/pull can move.
