@@ -58,6 +58,20 @@ readonly class AdminSettingsAction
 			];
 		}
 
+		// MCP section: surface the resolved connection details. The endpoint is
+		// base-path aware (Config::mcpEndpoint) so subpath / Stacks installs show
+		// the correct `<domain><base>/mcp` rather than the domain-root URL
+		// operators tend to assume — the exact thing they get wrong by hand.
+		if ($section === 'mcp') {
+			$context['mcpConnection'] = [
+				'enabled'      => (bool)($this->config->mcp['enabled'] ?? true),
+				'publicAccess' => (bool)($this->config->mcp['publicAccess'] ?? false),
+				'endpoint'     => $this->config->mcpEndpoint(),
+				'discovery'    => rtrim($this->config->url, '/') . $this->config->api . '/.well-known/mcp.json',
+				'apiKeyHeader' => 'X-API-Key',
+			];
+		}
+
 		return $this->twigRenderer->template($response, 'admin/settings.twig', $context);
 	}
 }

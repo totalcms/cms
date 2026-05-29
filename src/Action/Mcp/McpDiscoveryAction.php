@@ -55,21 +55,20 @@ readonly class McpDiscoveryAction
 			}
 		}
 
-		// Build endpoint URL from the inbound request so we honour the exact
-		// scheme/host/base-path the agent reached us at — avoiding mismatches
-		// between configured `url` / `api` and the host the agent connected to
-		// (e.g. proxies, dev overrides, subpath installs).
+		// Build the endpoint from the inbound request so we honour the exact
+		// scheme/host the agent reached us at (proxies, dev overrides). The base
+		// path is folded in via Config::mcpEndpoint() so subpath / Stacks installs
+		// advertise a reachable `<base>/mcp` rather than the wrong domain-root URL.
 		$uri       = $request->getUri();
 		$authority = $uri->getAuthority();
-		$endpoint  = $uri->getScheme() . '://' . $authority . '/mcp';
 
 		// ...except when the request reached us on a loopback/IP host (typical
-		// inside Docker or behind a proxy that doesn't forward Host) while we have
-		// a real configured domain. Advertising 127.0.0.1 there hands agents an
-		// unreachable endpoint, so prefer the configured domain in that case.
-		if (Config::isNonRoutableHost($authority) && !Config::isNonRoutableHost($this->config->domain)) {
-			$endpoint = rtrim($this->config->url, '/') . '/mcp';
-		}
+		// inside Docker or behind a reverse proxy that doesn't forward Host) while
+		// we have a real configured domain. Advertising 127.0.0.1 there hands
+		// agents an unreachable endpoint, so fall back to the configured site URL.
+		$endpoint = Config::isNonRoutableHost($authority) && !Config::isNonRoutableHost($this->config->domain)
+			? $this->config->mcpEndpoint()
+			: $this->config->mcpEndpoint($uri->getScheme() . '://' . $authority);
 
 		return $this->renderer->json($response, [
 			'mcpVersion'  => $this->serverFactory->protocolVersion(),

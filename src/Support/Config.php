@@ -200,6 +200,25 @@ class Config
 		return filter_var($host, FILTER_VALIDATE_IP) !== false;
 	}
 
+	/**
+	 * Fully-qualified, base-path-aware MCP endpoint URL.
+	 *
+	 * The server is mounted at `<base>/mcp`, where `<base>` is the install's
+	 * subpath (`$api` — empty at the domain root, `/cms` for a subfolder,
+	 * `/rw_common/plugins/stacks/tcms` for Stacks). Operators routinely get this
+	 * wrong by hand — they reach for `domain.com/mcp` and drop the base path —
+	 * so this is the single source of truth shared by the discovery endpoint and
+	 * the admin connection panel.
+	 *
+	 * Pass an explicit `$baseUrl` (scheme://host[:port]) to honour the host the
+	 * caller actually reached us on; the discovery endpoint forwards the request
+	 * authority so proxied hosts resolve. Defaults to the configured site URL.
+	 */
+	public function mcpEndpoint(?string $baseUrl = null): string
+	{
+		return rtrim($baseUrl ?? $this->url, '/') . $this->api . '/mcp';
+	}
+
 	public static function init(): self
 	{
 		return new Config(require PathResolver::packageRoot() . '/config/settings.php');
