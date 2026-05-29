@@ -1169,7 +1169,12 @@ class ExtensionManager
 			// capability so admins can disable it if they want.
 			if ($this->container instanceof \DI\Container && $this->isCapabilityPermitted($id, 'container')) {
 				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
-					$this->container->set($serviceId, $factory);
+					// A compiled PHP-DI container rejects lazy definitions (a bare
+					// closure passed to set() is treated as a FactoryDefinition) added
+					// at runtime. Resolve the factory now and store the built instance
+					// as a raw value, which set() accepts on a compiled container.
+					// The factory contract is fn(ContainerInterface) => object.
+					$this->container->set($serviceId, $factory($this->container));
 				}
 			}
 
