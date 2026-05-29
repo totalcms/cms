@@ -111,7 +111,17 @@ return [
 	'login.email_label'              => 'Correo electrónico',
 	'login.password_label'           => 'Contraseña',
 	'login.submit'                   => 'Iniciar sesión',
-	'login.remember_me'              => 'Recordarme',
+	'login.remember_me'              => 'Mantener la sesión iniciada',
+	'login.forgot_password'          => '¿Olvidó su contraseña?',
+	'login.passkey'                  => 'Iniciar sesión con clave de acceso',
+	'login.or'                       => 'o',
+	'login.username_label'           => 'Nombre de usuario',
+	'login.email_or_username_label'  => 'Correo electrónico o nombre de usuario',
+	'login.email_help'               => 'Correo electrónico para iniciar sesión',
+	'login.username_help'            => 'ID de usuario para iniciar sesión',
+	'login.email_or_username_help'   => 'Correo electrónico o ID de usuario',
+	'login.password_help'            => 'Contraseña para iniciar sesión',
+	'login.remember_help'            => 'Permanecer conectado hasta que cierre sesión o borre los datos del navegador',
 
 	// ── Forgot Password ─────────────────────────────────────────────────────
 	'forgot.title'          => 'Contraseña olvidada',

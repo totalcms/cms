@@ -192,6 +192,9 @@ readonly class TotalFormFactory
 		$options['api']          = $this->config->api;
 		$options['session']      = $this->session;
 		$options['csrfManager']  = $this->csrfManager;
+		// LoginForm resolves all labels/help from the admin translation domain
+		// (with empty label overrides falling through to localized defaults).
+		$options['translator'] = $this->translationService->trans(...);
 		$options['loginWith'] ??= $this->config->auth['loginWith'] ?? 'both';
 		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)
 			&& ($this->config->auth['usePasskeys'] ?? true);

@@ -111,7 +111,17 @@ return [
 	'login.email_label'              => 'E-mail',
 	'login.password_label'           => 'Wachtwoord',
 	'login.submit'                   => 'Inloggen',
-	'login.remember_me'              => 'Onthoud mij',
+	'login.remember_me'              => 'Ingelogd blijven',
+	'login.forgot_password'          => 'Wachtwoord vergeten?',
+	'login.passkey'                  => 'Inloggen met passkey',
+	'login.or'                       => 'of',
+	'login.username_label'           => 'Gebruikersnaam',
+	'login.email_or_username_label'  => 'E-mail of gebruikersnaam',
+	'login.email_help'               => 'E-mailadres om in te loggen',
+	'login.username_help'            => 'Gebruikers-ID om in te loggen',
+	'login.email_or_username_help'   => 'E-mailadres of gebruikers-ID',
+	'login.password_help'            => 'Wachtwoord om in te loggen',
+	'login.remember_help'            => 'Blijf ingelogd totdat u expliciet uitlogt of de browsergegevens wist',
 
 	// ── Forgot Password ─────────────────────────────────────────────────────
 	'forgot.title'          => 'Wachtwoord vergeten',

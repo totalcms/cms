@@ -111,7 +111,17 @@ return [
 	'login.email_label'              => 'Email',
 	'login.password_label'           => 'Password',
 	'login.submit'                   => 'Sign in',
-	'login.remember_me'              => 'Remember me',
+	'login.remember_me'              => 'Keep me signed in',
+	'login.forgot_password'          => 'Forgot Password?',
+	'login.passkey'                  => 'Sign in with Passkey',
+	'login.or'                       => 'or',
+	'login.username_label'           => 'Username',
+	'login.email_or_username_label'  => 'Email or Username',
+	'login.email_help'               => 'Email address for login',
+	'login.username_help'            => 'User ID for login',
+	'login.email_or_username_help'   => 'Email address or user ID',
+	'login.password_help'            => 'Password to login',
+	'login.remember_help'            => 'Stay logged in until you explicitly logout or clear browser data',
 
 	// ── Forgot Password ─────────────────────────────────────────────────────
 	'forgot.title'          => 'Forgot Password',

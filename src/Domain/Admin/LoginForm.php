@@ -20,21 +20,37 @@ readonly class LoginForm implements \Stringable
 	public function __construct(
 		private string $api,
 		private PhpSession $session,
+		private \Closure $translator,
 		private ?CSRFTokenManager $csrfManager = null,
 		private ?string $collection            = null,
 		private ?string $redirect              = null,
 		private bool $showForgotPassword       = true,
-		private string $submitLabel            = 'Sign in',
 		private string $class                  = '',
 		private ?array $flashMessages          = null,
 		private string $loginWith              = 'both',
-		private string $emailLabel             = '',
-		private string $passwordLabel          = 'Password',
-		private string $rememberLabel          = 'Keep me signed in',
-		private string $forgotPasswordLabel    = 'Forgot Password?',
 		private bool $showPasskeys             = true,
-		private string $passkeyLabel           = 'Sign in with Passkey',
+		// Label overrides — empty means "use the localized default". Whitelabel
+		// login-options may set any of these to a literal string to override.
+		private string $submitLabel            = '',
+		private string $emailLabel             = '',
+		private string $passwordLabel          = '',
+		private string $rememberLabel          = '',
+		private string $forgotPasswordLabel    = '',
+		private string $passkeyLabel           = '',
+		private string $orLabel                = '',
 	) {
+	}
+
+	/** Translate an admin-domain key. */
+	private function t(string $key): string
+	{
+		return ($this->translator)($key, [], 'admin');
+	}
+
+	/** A label override if provided, otherwise the localized default for $key. */
+	private function label(string $override, string $key): string
+	{
+		return $override !== '' ? $override : $this->t($key);
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -82,7 +98,7 @@ readonly class LoginForm implements \Stringable
 
 			$forgotPasswordLink = HTMLUtils::element(
 				'p',
-				HTMLUtils::element('a', $this->forgotPasswordLabel, [
+				HTMLUtils::element('a', $this->label($this->forgotPasswordLabel, 'login.forgot_password'), [
 					'href'  => $forgotPasswordUrl,
 					'class' => 'login-forgot-password',
 				]),
@@ -91,7 +107,7 @@ readonly class LoginForm implements \Stringable
 		}
 
 		// Submit button
-		$submitButton = HTMLUtils::button($this->submitLabel, [
+		$submitButton = HTMLUtils::button($this->label($this->submitLabel, 'login.submit'), [
 			'type'  => 'submit',
 			'class' => 'cms-button no-icon',
 		]);
@@ -143,13 +159,14 @@ readonly class LoginForm implements \Stringable
 	{
 		$uuid = uniqid();
 
-		[$inputType, $placeholder, $helpText, $fieldClass, $defaultLabel] = match ($this->loginWith) {
-			'email' => ['email', 'email@company.com', 'Email address for login', 'email-field', 'Email'],
-			'id'    => ['text', 'username', 'User ID for login', 'text-field', 'Username'],
-			default => ['text', 'email@company.com', 'Email address or user ID', 'text-field', 'Email or Username'],
+		[$inputType, $placeholder, $helpKey, $fieldClass, $labelKey] = match ($this->loginWith) {
+			'email' => ['email', 'email@company.com', 'login.email_help', 'email-field', 'login.email_label'],
+			'id'    => ['text', 'username', 'login.username_help', 'text-field', 'login.username_label'],
+			default => ['text', 'email@company.com', 'login.email_or_username_help', 'text-field', 'login.email_or_username_label'],
 		};
 
-		$label = $this->emailLabel !== '' ? $this->emailLabel : $defaultLabel;
+		$label    = $this->label($this->emailLabel, $labelKey);
+		$helpText = $this->t($helpKey);
 
 		$input = HTMLUtils::inlineElement('input', [
 			'type'             => $inputType,
@@ -194,8 +211,8 @@ readonly class LoginForm implements \Stringable
 		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
-		$label = HTMLUtils::element('label', $this->passwordLabel, ['for' => "field-{$uuid}"]);
-		$help  = HTMLUtils::element('p', 'Password to login', [
+		$label = HTMLUtils::element('label', $this->label($this->passwordLabel, 'login.password_label'), ['for' => "field-{$uuid}"]);
+		$help  = HTMLUtils::element('p', $this->t('login.password_help'), [
 			'class' => 'cms-hide help',
 			'id'    => "help-{$uuid}",
 		]);
@@ -218,10 +235,10 @@ readonly class LoginForm implements \Stringable
 			'aria-describedby' => "help-{$uuid}",
 		]);
 
-		$label = HTMLUtils::element('label', $this->rememberLabel, ['for' => "field-{$uuid}"]);
+		$label = HTMLUtils::element('label', $this->label($this->rememberLabel, 'login.remember_me'), ['for' => "field-{$uuid}"]);
 		$group = HTMLUtils::element('div', $input . $label, ['class' => 'form-group']);
 
-		$help = HTMLUtils::element('p', 'Stay logged in until you explicitly logout or clear browser data', [
+		$help = HTMLUtils::element('p', $this->t('login.remember_help'), [
 			'class' => 'help cms-hide',
 			'id'    => "help-{$uuid}",
 		]);
@@ -234,15 +251,15 @@ readonly class LoginForm implements \Stringable
 
 	private function buildPasskeyButton(): string
 	{
-		if (!$this->showPasskeys || $this->passkeyLabel === '') {
+		if (!$this->showPasskeys) {
 			return '';
 		}
 
-		$divider = HTMLUtils::element('div', HTMLUtils::element('span', 'or'), [
+		$divider = HTMLUtils::element('div', HTMLUtils::element('span', $this->label($this->orLabel, 'login.or')), [
 			'class' => 'login-divider',
 		]);
 
-		$button = HTMLUtils::button($this->passkeyLabel, [
+		$button = HTMLUtils::button($this->label($this->passkeyLabel, 'login.passkey'), [
 			'type'     => 'button',
 			'class'    => 'dash-button cms-passkey-login no-icon',
 			'data-api' => $this->api,

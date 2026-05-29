@@ -112,6 +112,16 @@ return [
 	'login.password_label'           => 'Passwort',
 	'login.submit'                   => 'Anmelden',
 	'login.remember_me'              => 'Angemeldet bleiben',
+	'login.forgot_password'          => 'Passwort vergessen?',
+	'login.passkey'                  => 'Mit Passkey anmelden',
+	'login.or'                       => 'oder',
+	'login.username_label'           => 'Benutzername',
+	'login.email_or_username_label'  => 'E-Mail oder Benutzername',
+	'login.email_help'               => 'E-Mail-Adresse für die Anmeldung',
+	'login.username_help'            => 'Benutzer-ID für die Anmeldung',
+	'login.email_or_username_help'   => 'E-Mail-Adresse oder Benutzer-ID',
+	'login.password_help'            => 'Passwort für die Anmeldung',
+	'login.remember_help'            => 'Bleiben Sie angemeldet, bis Sie sich abmelden oder die Browserdaten löschen',
 
 	// ── Forgot Password ─────────────────────────────────────────────────────
 	'forgot.title'          => 'Passwort vergessen',

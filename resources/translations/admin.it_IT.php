@@ -111,7 +111,17 @@ return [
 	'login.email_label'              => 'Email',
 	'login.password_label'           => 'Password',
 	'login.submit'                   => 'Accedi',
-	'login.remember_me'              => 'Ricordami',
+	'login.remember_me'              => 'Resta connesso',
+	'login.forgot_password'          => 'Password dimenticata?',
+	'login.passkey'                  => 'Accedi con passkey',
+	'login.or'                       => 'o',
+	'login.username_label'           => 'Nome utente',
+	'login.email_or_username_label'  => 'Email o nome utente',
+	'login.email_help'               => 'Indirizzo email per accedere',
+	'login.username_help'            => 'ID utente per accedere',
+	'login.email_or_username_help'   => 'Indirizzo email o ID utente',
+	'login.password_help'            => 'Password per accedere',
+	'login.remember_help'            => 'Rimani connesso finché non esci esplicitamente o cancelli i dati del browser',
 
 	// ── Forgot Password ─────────────────────────────────────────────────────
 	'forgot.title'          => 'Password dimenticata',
