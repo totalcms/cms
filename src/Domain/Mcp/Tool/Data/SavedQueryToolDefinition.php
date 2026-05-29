@@ -48,28 +48,35 @@ readonly class SavedQueryToolDefinition
 	}
 
 	/**
+	 * Accepts either an `id` key (preferred — matches the mcp-tool.json schema
+	 * and the T3 convention) or a `name` key (legacy / programmatic
+	 * construction). The PHP value-object property remains `$name` because
+	 * that's the wire-level concept the MCP protocol uses when emitting tools.
+	 *
 	 * @param array<string,mixed> $data
 	 */
 	public static function fromArray(string $collectionName, string $access, array $data): self
 	{
-		if (!isset($data['name']) || !is_string($data['name']) || $data['name'] === '') {
-			throw SavedQueryToolException::forValidation('?', 'missing required field: name');
+		$id = $data['id'] ?? $data['name'] ?? null;
+
+		if (!is_string($id) || $id === '') {
+			throw SavedQueryToolException::forValidation('?', 'missing required field: id');
 		}
 
-		if (!preg_match('/^[a-z][a-z0-9_]*$/', $data['name'])) {
-			throw SavedQueryToolException::forValidation($data['name'], 'name must match ^[a-z][a-z0-9_]*$');
+		if (!preg_match('/^[a-z][a-z0-9_]*$/', $id)) {
+			throw SavedQueryToolException::forValidation($id, 'id must match ^[a-z][a-z0-9_]*$');
 		}
 
-		if (strlen($data['name']) > 64) {
-			throw SavedQueryToolException::forValidation($data['name'], 'name must be <= 64 characters');
+		if (strlen($id) > 64) {
+			throw SavedQueryToolException::forValidation($id, 'id must be <= 64 characters');
 		}
 
 		if (!isset($data['description']) || !is_string($data['description']) || $data['description'] === '') {
-			throw SavedQueryToolException::forValidation($data['name'], 'missing required field: description');
+			throw SavedQueryToolException::forValidation($id, 'missing required field: description');
 		}
 
-		$params  = self::validateParams($data['name'], is_array($data['params'] ?? null) ? $data['params'] : []);
-		$filters = self::validateFilters($data['name'], is_array($data['filters'] ?? null) ? $data['filters'] : []);
+		$params  = self::validateParams($id, is_array($data['params'] ?? null) ? $data['params'] : []);
+		$filters = self::validateFilters($id, is_array($data['filters'] ?? null) ? $data['filters'] : []);
 
 		$limit = (int)($data['limit'] ?? 20);
 		if ($limit > self::LIMIT_CAP) {
@@ -82,11 +89,11 @@ readonly class SavedQueryToolDefinition
 
 		$format = (string)($data['format'] ?? 'markdown');
 		if (!in_array($format, self::ALLOWED_FORMATS, true)) {
-			throw SavedQueryToolException::forValidation($data['name'], "unsupported format: {$format}");
+			throw SavedQueryToolException::forValidation($id, "unsupported format: {$format}");
 		}
 
 		return new self(
-			name: $data['name'],
+			name: $id,
 			description: $data['description'],
 			collectionName: $collectionName,
 			access: $access,

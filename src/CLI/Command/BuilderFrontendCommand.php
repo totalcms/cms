@@ -54,7 +54,7 @@ class BuilderFrontendCommand extends BaseCommand
 			$output->writeln("  1. <comment>cd {$target}</comment>");
 			$output->writeln('  2. <comment>npm install</comment>');
 			$output->writeln('  3. <comment>npm run build</comment>');
-			$output->writeln('  4. Reference assets in your layout: <comment>{{ cms.builder.css(\'src/css/style.css\') }}</comment>');
+			$output->writeln('  4. Reference assets in your layout: <comment>{{ cms.builder.css(\'css/style.css\') }}</comment>');
 		}
 
 		return Command::SUCCESS;

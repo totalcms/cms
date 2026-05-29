@@ -177,21 +177,23 @@
 			}
 		},
 		"formSettings": {
-			"type"     : "object",
-			"label"    : "Object Form Settings",
-			"help"     : "Custom settings for the object creation/edit forms. Available options: helpStyle, helpOnHover, helpOnFocus, newActions, editActions, deleteActions",
-			"field"    : "json",
-			"settings" : {
-				"rows" : 5
+			"type"        : "object",
+			"label"       : "Object Form Settings",
+			"help"        : "Custom settings for the object creation/edit forms. Available options: helpStyle, helpOnHover, helpOnFocus, newActions, editActions, deleteActions",
+			"field"       : "json",
+			"placeholder" : "{\n\t\"helpStyle\": \"tooltip\",\n\t\"newActions\": [\n\t\t{\"action\": \"mailer\", \"mailerId\": \"newobject-1234\"}\n\t]\n}",
+			"settings"    : {
+				"rows" : 6
 			}
 		},
 		"manualSort": {
 			"type"     : "object",
 			"label"    : "Manual Sort Orders",
-			"help"     : "Define custom sort orders by property name. Example: {\"position\": [\"ceo\", \"cfo\", \"cmo\"]}",
+			"placeholder": "{\n\t\"position\": [\"ceo\", \"cfo\", \"cmo\"]\n}",
+			"help"     : "Define custom sort orders by property name.",
 			"field"    : "json",
 			"settings" : {
-				"rows" : 5
+				"rows" : 4
 			}
 		},
 		"sitemap": {

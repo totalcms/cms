@@ -28,8 +28,40 @@ readonly class ImportJumpStartAction
 			return $this->importDemoDefinition($response);
 		}
 
-		// Handle custom import from uploaded file
+		// Two callers use this endpoint with different bodies:
+		//   1. Admin UI's JumpStart Import form posts multipart/form-data with
+		//      a `jumpstart` file field (browser file picker).
+		//   2. Server-to-server callers (SyncService push, future CLI flows)
+		//      POST a raw JSON body with Content-Type: application/json.
+		// Dispatch by Content-Type so both shapes share the same route.
+		$contentType = strtolower($request->getHeaderLine('Content-Type'));
+		if (str_contains($contentType, 'application/json')) {
+			return $this->importFromJsonBody($request, $response);
+		}
+
 		return $this->importFromUploadedFile($request, $response);
+	}
+
+	private function importFromJsonBody(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		$body = (string)$request->getBody();
+		if ($body === '') {
+			throw new HttpBadRequestException($request, 'Empty request body');
+		}
+
+		try {
+			$definition = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+		} catch (\JsonException $e) {
+			throw new HttpBadRequestException($request, 'Invalid JSON: ' . $e->getMessage());
+		}
+
+		if (!is_array($definition)) {
+			throw new HttpBadRequestException($request, 'JSON root must be an object');
+		}
+
+		$result = $this->jumpStartImporter->importFromDefinition($definition);
+
+		return $this->renderer->json($response, $result->toArray());
 	}
 
 	private function importDemoDefinition(ResponseInterface $response): ResponseInterface

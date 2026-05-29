@@ -26,8 +26,8 @@ npm run dev
 In your Twig layout (`tcms-data/builder/layouts/default.twig`):
 
 ```twig
-{{ cms.builder.css('src/css/style.css') }}
-{{ cms.builder.js('src/js/app.js', {module: true}) }}
+{{ cms.builder.css('css/style.css') }}
+{{ cms.builder.js('js/app.js', {module: true}) }}
 ```
 
 T3 reads `public/assets/manifest.json` and outputs the correct hashed filenames automatically.

@@ -12,12 +12,18 @@ This guide covers the recommended setup using **Vite**, with notes on alternativ
 
 ## Quick Start
 
+The fastest path is the bundled scaffold — `tcms builder:frontend` drops a pre-configured `frontend/` directory (with `package.json`, `vite.config.js`, and a starter `css/` + `js/`) into your project. From your project root (same level as `tcms-data/`):
+
 ```bash
-# From your project root (same level as tcms-data/)
-npm create vite@latest frontend -- --template vanilla
+tcms builder:frontend
 cd frontend
 npm install
+npm run build
 ```
+
+That installs Vite, builds the starter assets to `public/assets/`, and writes the manifest T3's asset helpers consume. From there you edit `frontend/css/style.css` and `frontend/js/app.js`, and re-run `npm run build` (or `npm run watch` for continuous rebuild).
+
+If you'd rather build the scaffold yourself instead of using the bundled one, the rest of this guide walks through what `tcms builder:frontend` actually does — `vite.config.js`, package scripts, and the layout conventions T3's helpers expect.
 
 ## Directory Structure
 
@@ -37,11 +43,10 @@ project/
 │   │   └── manifest.json
 │   └── index.php        ← T3 entry point
 └── frontend/            ← source files (not public)
-    ├── src/
-    │   ├── css/
-    │   │   └── style.css
-    │   └── js/
-    │       └── app.js
+    ├── css/
+    │   └── style.css
+    ├── js/
+    │   └── app.js
     ├── vite.config.js
     └── package.json
 ```
@@ -61,13 +66,21 @@ export default defineConfig({
         outDir: resolve(__dirname, '../public/assets'),
         emptyOutDir: true,
 
-        // Generate manifest.json for hashed filenames
-        manifest: true,
+        // Flatten output: hashed files go directly into outDir, not into a
+        // nested `assets/` subdirectory (Vite's default `assetsDir: 'assets'`).
+        // Otherwise paths would double up as `/assets/assets/style-<hash>.css`.
+        assetsDir: '',
+
+        // Vite 5+ writes the manifest to `<outDir>/.vite/manifest.json` by
+        // default. Pin it at `<outDir>/manifest.json` so T3 finds it without
+        // any extra config. (T3 falls back to `.vite/manifest.json` for BYO
+        // projects that don't override this, but it's cleaner to be explicit.)
+        manifest: 'manifest.json',
 
         rollupOptions: {
             input: {
-                style: resolve(__dirname, 'src/css/style.css'),
-                app: resolve(__dirname, 'src/js/app.js'),
+                style: resolve(__dirname, 'css/style.css'),
+                app: resolve(__dirname, 'js/app.js'),
             },
         },
     },
@@ -77,7 +90,8 @@ export default defineConfig({
 ### What This Does
 
 - **`outDir`** — writes compiled files to `public/assets/`
-- **`manifest: true`** — generates `manifest.json` so T3 can resolve hashed filenames
+- **`assetsDir: ''`** — flattens the output (no `assets/assets/` double-prefix)
+- **`manifest: 'manifest.json'`** — places the manifest where T3 looks first
 - **`rollupOptions.input`** — defines your entry points (add as many as needed)
 
 ## Package Scripts
@@ -118,7 +132,7 @@ For hot module replacement (HMR) during development, run the Vite dev server and
 ```twig
 {# layouts/default.twig #}
 {% if cms.env == 'development' %}
-    <script type="module" src="http://localhost:5173/src/js/app.js"></script>
+    <script type="module" src="http://localhost:5173/js/app.js"></script>
 {% else %}
     {{ cms.builder.css('style.css') }}
     {{ cms.builder.js('app.js', {module: true}) }}
@@ -153,10 +167,10 @@ public/assets/
 T3's asset functions read the manifest and output the correct filenames:
 
 ```twig
-{{ cms.builder.css('src/css/style.css') }}
+{{ cms.builder.css('css/style.css') }}
 {# Output: <link rel="stylesheet" href="/assets/style.a1b2c3d4.css"> #}
 
-{{ cms.builder.js('src/js/app.js', {module: true}) }}
+{{ cms.builder.js('js/app.js', {module: true}) }}
 {# Output: <script type="module" src="/assets/app.e5f6a7b8.js"></script> #}
 ```
 
@@ -182,11 +196,12 @@ export default defineConfig({
     build: {
         outDir: resolve(__dirname, '../public/assets'),
         emptyOutDir: true,
-        manifest: true,
+        assetsDir: '',
+        manifest: 'manifest.json',
         rollupOptions: {
             input: {
-                style: resolve(__dirname, 'src/css/style.css'),
-                app: resolve(__dirname, 'src/js/app.js'),
+                style: resolve(__dirname, 'css/style.css'),
+                app: resolve(__dirname, 'js/app.js'),
             },
         },
     },
@@ -194,14 +209,14 @@ export default defineConfig({
 ```
 
 ```css
-/* frontend/src/css/style.css */
+/* frontend/css/style.css */
 @import "tailwindcss";
 ```
 
 Point Tailwind at your templates so it can scan for classes:
 
 ```css
-/* frontend/src/css/style.css */
+/* frontend/css/style.css */
 @import "tailwindcss";
 @source "../../tcms-data/builder/**/*.twig";
 ```
@@ -219,8 +234,8 @@ Vite handles `.scss` files automatically — just change your entry point:
 // vite.config.js
 rollupOptions: {
     input: {
-        style: resolve(__dirname, 'src/css/style.scss'),
-        app: resolve(__dirname, 'src/js/app.js'),
+        style: resolve(__dirname, 'css/style.scss'),
+        app: resolve(__dirname, 'js/app.js'),
     },
 },
 ```
@@ -239,7 +254,7 @@ A complete layout using all asset functions:
     <meta name="description" content="{{ page.description }}">
 
     {{ cms.builder.preload('fonts/inter.woff2', 'font') }}
-    {{ cms.builder.css('src/css/style.css') }}
+    {{ cms.builder.css('css/style.css') }}
 </head>
 <body>
     {% include 'partials/nav.twig' %}
@@ -248,7 +263,7 @@ A complete layout using all asset functions:
 
     {% include 'partials/footer.twig' %}
 
-    {{ cms.builder.js('src/js/app.js', {module: true}) }}
+    {{ cms.builder.js('js/app.js', {module: true}) }}
 </body>
 </html>
 ```
@@ -279,7 +294,7 @@ T3 adds `?v={mtime}` query strings for cache busting. No manifest, no build step
 const esbuild = require('esbuild')
 
 esbuild.build({
-    entryPoints: ['src/css/style.css', 'src/js/app.js'],
+    entryPoints: ['css/style.css', 'js/app.js'],
     outdir: '../public/assets',
     bundle: true,
     minify: true,

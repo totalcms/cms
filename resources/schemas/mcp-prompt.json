@@ -7,6 +7,7 @@
 	"description" : "A templated AI-agent workflow exposed via the MCP server's prompts/list and prompts/get endpoints.",
 	"formgrid"    : "id\ndescription\ntargetCollection\naccess\nargs\nbody",
 	"required"    : ["id", "description", "body"],
+	"index"       : ["id", "description", "targetCollection", "access"],
 	"properties"  : {
 		"id": {
 			"$ref"      : "https://www.totalcms.co/schemas/properties/slug.json",

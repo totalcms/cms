@@ -1,7 +1,7 @@
 /* Your site's stylesheet. Import partials, define variables, write rules.
  *
  * Compiled to ../public/assets/style.<hash>.css by Vite.
- * Reference in your Twig layout with: {{ cms.builder.css('src/css/style.css') }}
+ * Reference in your Twig layout with: {{ cms.builder.css('css/style.css') }}
  */
 
 :root {

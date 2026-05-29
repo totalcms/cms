@@ -459,10 +459,27 @@ class FormField
 			$filters['sort'] = $settings['sort'];
 		}
 
-		if ($view !== '') {
-			$properties = $this->form->propertiesForView($propertiesToFetch, $view, $filters);
-		} else {
-			$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
+		// Degrade gracefully when the referenced collection/view doesn't exist:
+		// the dependency could be missing on a fresh install (reserved
+		// collections not yet seeded), after an admin deletes the source, or
+		// when an extension that registered the view gets disabled. Without
+		// this guard, a single stale `relationalOptions` reference takes the
+		// entire form-rendering pipeline down with an UnexpectedValueException.
+		try {
+			if ($view !== '') {
+				$properties = $this->form->propertiesForView($propertiesToFetch, $view, $filters);
+			} else {
+				$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
+			}
+		} catch (\Throwable $e) {
+			$this->form->logger()?->warning('relationalOptions references missing source — rendering empty options', [
+				'field'      => $this->name,
+				'collection' => $collection,
+				'view'       => $view,
+				'error'      => $e->getMessage(),
+			]);
+
+			return [];
 		}
 
 		// Validate that properties is a list of arrays (not a wrapped structure like {"items": [...]})

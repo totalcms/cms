@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
@@ -358,6 +359,24 @@ class TotalForm implements \Stringable
 	public function getMetaResolver(): PropertyMetaResolver
 	{
 		return $this->metaResolver;
+	}
+
+	/**
+	 * Optional structured logger. TotalFormFactory injects this via
+	 * setLogger() after construction so the existing (already large)
+	 * constructor surface doesn't grow; the eventual FormContext
+	 * refactor will fold this into a single context argument.
+	 */
+	private ?LoggerInterface $logger = null;
+
+	public function setLogger(LoggerInterface $logger): void
+	{
+		$this->logger = $logger;
+	}
+
+	public function logger(): ?LoggerInterface
+	{
+		return $this->logger;
 	}
 
 	protected function initClass(): void

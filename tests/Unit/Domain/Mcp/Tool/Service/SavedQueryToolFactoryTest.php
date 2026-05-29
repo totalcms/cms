@@ -43,7 +43,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 	public function testBuildsASavedQueryToolFromADefinition(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
-			'name'        => 'find_listings',
+			'id'          => 'find_listings',
 			'description' => 'Find listings.',
 			'params'      => [
 				'city' => ['type' => 'string', 'required' => true],
@@ -58,7 +58,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 	public function testGeneratesAnInputSchemaFromTheParamsBlock(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
-			'name'        => 'find_listings',
+			'id'          => 'find_listings',
 			'description' => 'Find listings.',
 			'params'      => [
 				'city'      => ['type' => 'string', 'description' => 'City name.', 'required' => true],
@@ -79,7 +79,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 	public function testGeneratesAnEmptyObjectInputSchemaWhenNoParams(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('blog', 'public', [
-			'name'        => 'find_featured',
+			'id'          => 'find_featured',
 			'description' => 'Find featured posts.',
 			'filters'     => ['featured' => ['value' => true]],
 		]);
@@ -98,7 +98,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 	public function testComposesADescriptionBlockWithTheParamCatalog(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
-			'name'        => 'find_listings',
+			'id'          => 'find_listings',
 			'description' => 'Search active listings.',
 			'params'      => [
 				'city'      => ['type' => 'string', 'description' => 'City name.', 'required' => true],
@@ -122,7 +122,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 	public function testClosureForReturnsNoArgClosureWhenNoParams(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('blog', 'public', [
-			'name'        => 'find_featured',
+			'id'          => 'find_featured',
 			'description' => 'Featured posts.',
 			'filters'     => ['featured' => ['value' => true]],
 		]);
@@ -141,7 +141,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 	public function testClosureForBuildsNamedParameterClosureFromSpec(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
-			'name'        => 'find_listings',
+			'id'          => 'find_listings',
 			'description' => 'Find listings.',
 			'params'      => [
 				'city'      => ['type' => 'string', 'required' => true],

@@ -2,11 +2,21 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-beta.8] - 2026-05-28
+## [3.5.0-beta.9] - 2026-05-28
+
+### Added
+
+- **`tcms deploy` CLI command**: Single command that owns the post-deploy runtime cleanup the library knows how to do safely — wipes the compiled PHP-DI container (`cache/container/`), clears every cache backend (APCu, Redis, Memcached, filesystem, CLI OPcache, image watermarks), and runs pending one-shot migrations via `MigrationRunner`. Each step has a `--skip-*` flag. Companion reference script `bin/deploy.sh` ships in `totalcms/totalcms-project` and wraps `composer install` + frontend build + `tcms deploy` + an optional PHP-FPM reload (off by default so the script runs unattended without sudo prompts). Documented in `docs/operations/deployment.md`
 
 ### Enhanced
 
+- **MCP tools shape: array → keyed deck**: The `tools` property on `mcp-collection` is now a deck keyed by tool id, rendered as a structured deck in the schema editor instead of a raw JSON textarea. Each row gets per-tool validation and the same drag-to-reorder + collapsed-label affordances as other decks (mcp-prompt-arg, card+deck combos). Matches the deck convention already established for prompt arguments. `McpToolsValidator` and `SchemaToolRegistrar` accept both keyed-object and legacy list-array input, with the deck key authoritative when present
+
 - **OAuth key paths in settings UI**: Settings → OAuth now shows the configured signing and public key paths with present/missing badges. Paths come from `config/tcms.php` (when overridden) or the bundled defaults. Fresh installs without keys are no longer indistinguishable from correctly set-up ones — the missing badge appears alongside a hint to run `tcms oauth:setup`
+
+- **Builder frontend scaffold flattened**: `tcms builder:frontend` no longer ships the Vite-default `src/css/` + `src/js/` source layout. Source files now live directly at `frontend/css/style.css` and `frontend/js/app.js` — one less directory level for a scaffold that ships exactly two starter files. Twig references like `cms.builder.css('css/style.css')` follow the same simpler path. Docs (`docs/site-builder/frontend.md`, `docs/site-builder/cli.md`) and the CLI hint text updated to match
+
+- **Form-rendering loggers**: `TotalForm` gained `setLogger()`/`logger()` (setter-injected so the already-large constructor stays out of scope — the future `FormContext` refactor will fold this into a single context arg). `TotalFormFactory` builds one `'totalform'` logger pointed at `totalcms.log` and calls `setLogger()` on every form it constructs. Lets defensive code paths inside `FormField` and friends emit structured warnings instead of dropping diagnostics on the floor
 
 ### Removed
 
@@ -16,6 +26,9 @@ All notable changes to Total CMS will be documented in this file.
 
 - **OAuth 500s on key-less installs**: `OAuthBearerMiddleware` previously declared `ResourceServer` as a constructor dependency, so PHP-DI eagerly built it on every API request — calling `CryptKey` against the public key file and 500-ing every request when keys weren't generated yet. Now built lazily, only after a `Bearer` header is detected. Fresh installs no longer need `tcms oauth:setup` before any non-OAuth API call works
 - **`--totalform-danger` references**: An undefined CSS variable was referenced in eight places across four SCSS files, breaking error styling for dashboard widgets, login forms, the styled-text editor, and admin cards/badges. Migrated all references to the canonical `--totalform-error`
+- **Vite scaffold + manifest lookup**: The bundled `vite.config.js` used Vite's defaults for `assetsDir` (which nests output under `<outDir>/assets/`) and `manifest` (which in Vite 5+ writes to `<outDir>/.vite/manifest.json`). Combined with `outDir: '../public/assets'`, compiled files landed at `public/assets/assets/style-<hash>.css` and the manifest at `public/assets/.vite/manifest.json` — but `BuilderTwigAdapter::loadManifest()` only looked at `public/assets/manifest.json`. Result: `cms.builder.css('css/style.css')` silently fell back to mtime cache busting against a path that didn't exist. Scaffold now sets `assetsDir: ''` (flat output) and `manifest: 'manifest.json'` (pre-Vite-5 location). `BuilderTwigAdapter` also falls back to `.vite/manifest.json` for customers running their own Vite project at its defaults
+- **Auth settings page crash on fresh installs**: A `relationalOptions` field pointing at a not-yet-seeded collection (e.g. the `mailer` collection referenced by `auth.forgotPasswordMailer` before the operator has created it) bubbled an `UnexpectedValueException` out of `FormField::buildRelationalOptions` and took the entire settings page down with it. The lookup now degrades gracefully — empty options + a structured warning carrying the field name and missing source — so the rest of the form still renders. Covers any missing collection/view reference (deleted source, disabled extension's view, etc.), not just mailer
+- **Sync Push button hit a 404**: Cluster of related bugs in the sync round-trip: (a) the local UI POSTed to `/api/sync/push` but the route is registered at `/admin/sync/push`, (b) the CSRF token field was named `_csrf_token` but T3 uses `csrf_token`, (c) `SyncService` constructed remote URLs without the `/api/` prefix the import/export routes are actually mounted under, (d) the remote `Authorization: Bearer <api_key>` header got intercepted by `OAuthBearerMiddleware` (which only accepts JWTs — plain API keys 401'd before `DualAuthMiddleware` ever ran), and (e) the remote `ImportJumpStartAction` only accepted multipart file uploads, so server-to-server JSON pushes 400'd with "Upload failed". All five threads patched: local UI uses `{{ cms.base }}/admin/sync/${action}` + the correct token name, `SyncService` uses `X-API-Key` (invisible to `OAuthBearerMiddleware`) and the right URL path, and the import action now branches on Content-Type to accept either multipart (browser file picker) or `application/json` (server-to-server) bodies. Error reporting also fixed — nested `{"error": {"message": "..."}}` responses were being stringified to the literal "Array"
 
 ## [3.5.0-beta.7] - 2026-05-27
 

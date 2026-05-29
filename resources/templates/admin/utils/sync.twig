@@ -201,9 +201,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	async function doSync(action) {
 		const body = new FormData();
 
-		// Get CSRF token from the form
-		const csrf = form.querySelector('input[name="_csrf_token"]');
-		if (csrf) body.append('_csrf_token', csrf.value);
+		// Get CSRF token from the form. The field is named `csrf_token` per
+		// CSRFTokenManager — not `_csrf_token`. CSRFProtectionMiddleware
+		// looks for that exact name (also accepts an X-CSRF-Token header).
+		const csrf = form.querySelector('input[name="csrf_token"]');
+		if (csrf) body.append('csrf_token', csrf.value);
 
 		const schemas = getSelectedItems('schemas-all', 'schemas');
 		const templates = getSelectedItems('templates-all', 'templates');
@@ -221,7 +223,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		results.innerHTML = '';
 
 		try {
-			const resp = await fetch(`{{ cms.api }}/sync/${action}`, {
+			// The sync route lives at `/admin/sync/{action}` (admin group, not
+			// the API group). `cms.api` is the subpath prefix T3 is mounted at
+			// — typically empty, `/cms` for subpath installs — so prefixing
+			// with it keeps both layouts working.
+			const resp = await fetch(`{{ cms.base }}/admin/sync/${action}`, {
 				method: 'POST',
 				body: body,
 			});

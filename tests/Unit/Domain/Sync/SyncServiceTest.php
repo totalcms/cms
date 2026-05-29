@@ -63,10 +63,13 @@ final class SyncServiceTest extends TestCase
 			->method('request')
 			->with(
 				'POST',
-				'https://example.com/import/jumpstart',
+				'https://example.com/api/import/jumpstart',
 				$this->callback(function (array $options): bool {
 					expect($options['body'])->toContain('products');
-					expect($options['headers'][0])->toContain('Bearer test-key');
+					// SyncService sends the API key via X-API-Key rather than
+					// `Authorization: Bearer` so OAuthBearerMiddleware (mounted
+					// on /api/) doesn't intercept it and try to validate as JWT.
+					expect($options['headers'][0])->toBe('X-API-Key: test-key');
 
 					return true;
 				})
@@ -143,7 +146,7 @@ final class SyncServiceTest extends TestCase
 
 		$this->httpClient->expects($this->once())
 			->method('request')
-			->with('GET', 'https://example.com/export/jumpstart?mode=sync', $this->anything())
+			->with('GET', 'https://example.com/api/export/jumpstart?mode=sync', $this->anything())
 			->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		$this->importer->expects($this->once())

@@ -98,7 +98,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			'access' => 'public',
 			'tools'  => [
 				[
-					'name'        => 'find_featured',
+					'id'          => 'find_featured',
 					'description' => 'Featured posts.',
 					'filters'     => ['featured' => ['value' => true]],
 				],
@@ -123,7 +123,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			'access' => 'public',
 			'tools'  => [
 				[
-					'name'        => 'query_collection',
+					'id'          => 'query_collection',
 					'description' => 'Bad colliding tool.',
 				],
 			],
@@ -152,11 +152,11 @@ final class SchemaToolRegistrarTest extends TestCase
 	{
 		$blog = $this->makeCollection('blog', [
 			'access' => 'public',
-			'tools'  => [['name' => 'latest', 'description' => 'Blog latest.']],
+			'tools'  => [['id' => 'latest', 'description' => 'Blog latest.']],
 		]);
 		$news = $this->makeCollection('news', [
 			'access' => 'public',
-			'tools'  => [['name' => 'latest', 'description' => 'News latest.']],
+			'tools'  => [['id' => 'latest', 'description' => 'News latest.']],
 		]);
 
 		$repo     = $this->makeRepo([$blog, $news]);
@@ -181,8 +181,8 @@ final class SchemaToolRegistrarTest extends TestCase
 		$collection = $this->makeCollection('blog', [
 			'access' => 'public',
 			'tools'  => [
-				['name' => 'BadName', 'description' => '...'],  // invalid name → skip
-				['name' => 'find_good', 'description' => 'Good one.', 'filters' => ['featured' => ['value' => true]]],
+				['id' => 'BadName', 'description' => '...'],  // invalid name → skip
+				['id' => 'find_good', 'description' => 'Good one.', 'filters' => ['featured' => ['value' => true]]],
 			],
 		]);
 
@@ -197,5 +197,67 @@ final class SchemaToolRegistrarTest extends TestCase
 		$tools     = $registry->forPersona(McpPersona::PUBLIC_);
 		$toolNames = array_map(static fn (McpToolDefinition $t): string => $t->name, $tools);
 		$this->assertSame(['find_good'], $toolNames);
+	}
+
+	public function testRegistersToolsFromKeyedObjectShape(): void
+	{
+		// Post-migration shape: tools is a keyed object where the key is the
+		// canonical id. The registrar must accept this alongside the legacy
+		// array shape.
+		$collection = $this->makeCollection('blog', [
+			'access' => 'public',
+			'tools'  => [
+				'find_featured' => [
+					'id'          => 'find_featured',
+					'description' => 'Featured posts.',
+				],
+				'find_drafts'   => [
+					'id'          => 'find_drafts',
+					'description' => 'Drafts pending review.',
+				],
+			],
+		]);
+
+		$repo      = $this->makeRepo([$collection]);
+		$factory   = $this->makeFactory();
+		$registry  = new ToolRegistry();
+		$registrar = new SchemaToolRegistrar($repo, $factory, new RecordingLogger());
+
+		$registrar->register($registry);
+
+		$tools     = $registry->forPersona(McpPersona::PUBLIC_);
+		$toolNames = array_map(static fn (McpToolDefinition $t): string => $t->name, $tools);
+
+		$this->assertContains('find_featured', $toolNames);
+		$this->assertContains('find_drafts', $toolNames);
+	}
+
+	public function testKeyedShapeKeyOverridesEntryIdField(): void
+	{
+		// The deck key is authoritative — if the entry's own `id` disagrees
+		// with the key (e.g. operator renamed via raw-JSON edit but left the
+		// inner id stale), the key wins.
+		$collection = $this->makeCollection('blog', [
+			'access' => 'public',
+			'tools'  => [
+				'find_canonical' => [
+					'id'          => 'stale_id',
+					'description' => 'The key disagrees with the entry.',
+				],
+			],
+		]);
+
+		$repo      = $this->makeRepo([$collection]);
+		$factory   = $this->makeFactory();
+		$registry  = new ToolRegistry();
+		$registrar = new SchemaToolRegistrar($repo, $factory, new RecordingLogger());
+
+		$registrar->register($registry);
+
+		$tools     = $registry->forPersona(McpPersona::PUBLIC_);
+		$toolNames = array_map(static fn (McpToolDefinition $t): string => $t->name, $tools);
+
+		$this->assertContains('find_canonical', $toolNames);
+		$this->assertNotContains('stale_id', $toolNames);
 	}
 }

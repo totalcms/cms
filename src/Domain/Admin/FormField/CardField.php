@@ -145,8 +145,24 @@ class CardField extends FormField
 
 			$resolvedSettings = $this->resolveSubFieldSettings($propertySchema);
 
+			// Mirror TotalFormFactory: deck/card/deckTable sub-fields hydrate
+			// from another schema, so schemaref + deckItemLabel must land in
+			// settings where the field's init() looks for them. Without this,
+			// a nested deck-in-card has no template to clone from and the
+			// add-button errors at runtime with "No deck template found".
+			$fieldType = $propertySchema['field'] ?? 'text';
+			if (in_array($fieldType, ['deck', 'deckTable', 'card'], true)) {
+				$schemaref = PropertyDefinition::extractSchemaRef($propertySchema);
+				if ($schemaref !== null) {
+					$resolvedSettings['schemaref'] = $schemaref;
+				}
+				if (isset($propertySchema['deckItemLabel'])) {
+					$resolvedSettings['deckItemLabel'] = $propertySchema['deckItemLabel'];
+				}
+			}
+
 			$fieldConfig = [
-				'field'        => $propertySchema['field'] ?? 'text',
+				'field'        => $fieldType,
 				'label'        => $propertySchema['label'] ?? ucfirst($propertyName),
 				'help'         => $propertySchema['help'] ?? '',
 				'default'      => $defaultValue,

@@ -15,11 +15,17 @@ export default class CardField extends TotalField {
 
         this.schemaref = container.dataset.schemaref || container.dataset.deckref || '';
 
-        // Sub-field edits propagate up via `subfield-change` (TotalField fires it
-        // from changed() when isSubField() is true). Without this listener the
-        // card itself stays clean even when its children are dirty — same pattern
-        // deck.js, image.js, and file.js use.
-        this.container.addEventListener("subfield-change", () => this.changed());
+        // Sub-field edits propagate up via `subfield-change` (TotalField fires
+        // it from changed() when isSubField() is true). Same pattern deck.js,
+        // image.js, and file.js use. Ignore events the card itself dispatched:
+        // when the card is nested (card-in-card, card-in-deck-item), its own
+        // changed() emits subfield-change from this.container, and this
+        // listener (also on this.container) would catch it and recurse,
+        // re-marking the card as unsaved on every cycle.
+        this.container.addEventListener("subfield-change", e => {
+            if (e.target === this.container) return;
+            this.changed();
+        });
 
         // Visibility lookups (`watch: enabled`) need to resolve against the card's
         // sub-fields, not the parent form's top-level fields. Defer until the form
@@ -40,20 +46,27 @@ export default class CardField extends TotalField {
     //-------------------------
     // Locate sub-fields scoped to this card.
     //
-    // Only DIRECT card children count — i.e. fields whose nearest .form-field
-    // ancestor is the card itself. Without this filter, composite child fields
-    // (image, file, etc.) leak their internal sub-fields (alt, featured,
-    // focalpoint inputs, palette colors) into the card's value, producing
-    // junk like `{0: ..., 1: ..., palette: ...}` on save.
+    // The card's own sub-fields render inside its `.card-fields` wrapper
+    // (built by CardField PHP via FormGridBuilder::renderLayout). Walk only
+    // form-fields whose nearest `.card-fields` ancestor is this card's
+    // wrapper — that excludes:
+    //   - composite child internals (image alt/featured/focalpoint, file
+    //     name/tags, palette colors): they sit inside their parent's own
+    //     form-field, which is the direct child
+    //   - nested deck items' fields: those are inside `.deck-item` inside
+    //     a nested deck's own form-field
+    //   - nested card sub-fields if a card ever nests another card: those
+    //     belong to the inner `.card-fields`, not this one
     //-------------------------
     subFields() {
+        const cardFields = this.container.querySelector('.card-fields');
+        if (!cardFields) return [];
+
         const fields = [];
-        const containers = this.container.querySelectorAll('.form-field');
-        containers.forEach(el => {
-            if (el === this.container) return;
-            const parentFormField = el.parentElement?.closest('.form-field');
-            if (parentFormField !== this.container) return; // nested deeper than direct child
-            if (el.totalfield) fields.push(el.totalfield);
+        cardFields.querySelectorAll('.form-field').forEach(el => {
+            if (el.closest('.card-fields') !== cardFields) return; // belongs to a nested card
+            if (!el.totalfield) return;
+            fields.push(el.totalfield);
         });
         return fields;
     }
@@ -81,6 +94,23 @@ export default class CardField extends TotalField {
             sub.setValue(value[sub.property]);
         });
         this.changed();
+    }
+
+    //-------------------------
+    // Delegate dirty-state to sub-fields so each TotalField's own
+    // isUnsaved/saved logic runs (decks recursively clear their items, image/
+    // file fields know about their queued uploads, etc). A blanket DOM sweep
+    // of `.unsaved` would also clear classes on elements those sub-fields
+    // legitimately want to keep tracking.
+    //-------------------------
+    isUnsaved() {
+        if (this.container.classList.contains("unsaved")) return true;
+        return this.subFields().some(field => field.isUnsaved());
+    }
+
+    saved() {
+        super.saved();
+        this.subFields().forEach(field => field.saved());
     }
 
     schema() {
