@@ -63,6 +63,14 @@ readonly class McpDiscoveryAction
 		$authority = $uri->getAuthority();
 		$endpoint  = $uri->getScheme() . '://' . $authority . '/mcp';
 
+		// ...except when the request reached us on a loopback/IP host (typical
+		// inside Docker or behind a proxy that doesn't forward Host) while we have
+		// a real configured domain. Advertising 127.0.0.1 there hands agents an
+		// unreachable endpoint, so prefer the configured domain in that case.
+		if (Config::isNonRoutableHost($authority) && !Config::isNonRoutableHost($this->config->domain)) {
+			$endpoint = rtrim($this->config->url, '/') . '/mcp';
+		}
+
 		return $this->renderer->json($response, [
 			'mcpVersion'  => $this->serverFactory->protocolVersion(),
 			'endpoint'    => $endpoint,

@@ -87,6 +87,20 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 
 				$this->logger->error($message);
 
+				// Common Docker / reverse-proxy gotcha: the licensing domain is
+				// auto-detected from the request Host header, so when Host isn't
+				// forwarded it resolves to a loopback/bridge IP (e.g. 127.0.0.1)
+				// that has its own — usually trial-expired — license record. Point
+				// the operator at the real fix instead of leaving them to guess.
+				if (Config::isNonRoutableHost($this->config->domain)) {
+					$this->logger->warning(sprintf(
+						"Licensing domain resolved to '%s' from the request Host header. Behind "
+						. 'Docker or a reverse proxy this is almost certainly not your licensed '
+						. 'domain — set `domain` explicitly in config/tcms.php to fix this.',
+						$this->config->domain
+					));
+				}
+
 				// Admin routes: redirect to license manager
 				if ($isAdmin) {
 					return $this->createLicenseRedirect();

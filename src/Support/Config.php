@@ -163,6 +163,43 @@ class Config
 		return SlugData::slugify($this->displayName());
 	}
 
+	/**
+	 * Whether a host string looks non-routable — i.e. `localhost`, a `.localhost`
+	 * subdomain, or a bare IP address (any port/userinfo is stripped first).
+	 *
+	 * `domain` is auto-detected from the request `Host` header, so inside Docker
+	 * or behind a reverse proxy that doesn't forward Host it silently becomes
+	 * something like `127.0.0.1` or a `172.x` bridge IP. A licensed production
+	 * domain is never a bare IP, so this is a reliable signal that the operator
+	 * needs to set `domain` explicitly in config/tcms.php. Used by license
+	 * diagnostics and the MCP discovery endpoint.
+	 */
+	public static function isNonRoutableHost(string $host): bool
+	{
+		$host = strtolower(trim($host));
+		if ($host === '') {
+			return false;
+		}
+
+		// Strip userinfo (user:pass@host)
+		if (str_contains($host, '@')) {
+			$host = substr($host, strrpos($host, '@') + 1);
+		}
+
+		// Strip the port. Bracketed IPv6 — [::1]:8080 → ::1
+		if (str_starts_with($host, '[')) {
+			$host = (string)preg_replace('/^\[(.+?)\](?::\d+)?$/', '$1', $host);
+		} elseif (substr_count($host, ':') === 1) {
+			$host = substr($host, 0, (int)strpos($host, ':'));
+		}
+
+		if ($host === 'localhost' || str_ends_with($host, '.localhost')) {
+			return true;
+		}
+
+		return filter_var($host, FILTER_VALIDATE_IP) !== false;
+	}
+
 	public static function init(): self
 	{
 		return new Config(require PathResolver::packageRoot() . '/config/settings.php');
