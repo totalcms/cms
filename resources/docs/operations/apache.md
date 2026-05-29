@@ -105,6 +105,52 @@ RewriteRule ^rw_common/plugins/stacks/tcms/public/.*$ rw_common/plugins/stacks/t
 
 Adjust the install path if you mounted the plugin somewhere other than `/rw_common/plugins/stacks/tcms/`.
 
+### Root-level Endpoints (MCP, OAuth, `.well-known/*`)
+
+The rules above only route requests *inside* `/rw_common/plugins/stacks/tcms/`. Several Total CMS endpoints live at the **site root** and won't be reached without additional rewrites:
+
+| Endpoint | Used by |
+|---|---|
+| `/.well-known/mcp.json` | AI-agent MCP discovery |
+| `/mcp` | The MCP endpoint itself (JSON-RPC + SSE) |
+| `/.well-known/oauth-authorization-server` | OAuth 2.1 discovery (RFC 8414) — Claude/Cursor fetch this first |
+| `/.well-known/jwks.json` | JWK Set for access-token verification (RFC 7517) |
+| `/oauth/authorize`, `/oauth/token`, `/oauth/register`, `/oauth/revoke` | OAuth authorization, token exchange, dynamic client registration, revocation |
+
+Without these wired up, MCP can still work with API-key auth (`X-API-Key` header), but Claude/Cursor's "connect to my CMS" flows — which depend on OAuth dynamic registration — will fail. Pick one of the two options below.
+
+#### Option 1 — Targeted rewrites (recommended default)
+
+Route only the specific T3 root-level endpoints. Add **above** the two existing Stacks rules in your docroot `.htaccess`:
+
+```apacheconf
+# MCP discovery + endpoint
+RewriteRule ^\.well-known/mcp\.json$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+RewriteRule ^mcp(/.*)?$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+
+# OAuth discovery + endpoints
+RewriteRule ^\.well-known/oauth-authorization-server$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+RewriteRule ^\.well-known/jwks\.json$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+RewriteRule ^oauth/(authorize|token|register|revoke)$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+```
+
+This preserves the host site's 404 behavior — any URL not on this list and not a real file still falls through to Apache's `ErrorDocument 404` (or the host's custom 404 page).
+
+#### Option 2 — Catch-all (anything-not-on-disk routes through T3)
+
+If you want Total CMS to own every unmatched URL at the site root — useful when T3 is the primary content layer and Stacks is just hosting it — append this **after** the two existing Stacks rules:
+
+```apacheconf
+# Route everything that isn't a real file or directory through Total CMS
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+```
+
+**Trade-off:** typos and missing pages anywhere on the site now hit Total CMS's 404 instead of the host's. Stacks-built pages survive (they exist on disk as `/about/index.html` directories), and any future root-level T3 endpoint works automatically without touching `.htaccess` again. If your Stacks site has a hand-styled 404 page you want to keep, use Option 1 instead.
+
+Both options are compatible with the [common customizations](#common-customizations) below — HTTPS redirect, security headers, compression, etc.
+
 ## Common Customizations
 
 The snippets below are optional. Add them to `public/.htaccess` (or your docroot `.htaccess`) to harden, accelerate, or shape your install. Each block is independent — pick the ones you need.
