@@ -1,0 +1,14 @@
+{% extends 'layouts/default.twig' %}
+
+{% block title %}Page Not Found — {{ cms.config('domain') }}{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 6rem 0;">
+	<div class="container">
+		<p style="font-size: 4rem; font-weight: 700; margin: 0;">404</p>
+		<h1>Page not found.</h1>
+		<p style="font-size: 1.25rem; max-width: 560px;">The page you're looking for can't be found. Let's get you back on track.</p>
+		<p style="margin-top: 2rem;"><a href="/">&larr; Back to home</a></p>
+	</div>
+</section>
+{% endblock %}
