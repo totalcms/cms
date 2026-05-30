@@ -58,7 +58,7 @@ class Link implements VisitorInterface
         return $this->hrefLang;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitLinkExtension($this);
     }

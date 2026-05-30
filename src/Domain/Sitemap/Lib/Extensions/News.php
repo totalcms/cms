@@ -236,7 +236,7 @@ class News implements VisitorInterface
         return $this;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitNewsExtension($this);
     }

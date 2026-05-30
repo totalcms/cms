@@ -46,12 +46,12 @@ class Sitemap implements VisitorInterface
     /**
      * @param DateTimeInterface $lastMod
      */
-    public function setLastMod(DateTimeInterface $lastMod)
+    public function setLastMod(DateTimeInterface $lastMod): void
     {
         $this->lastMod = $lastMod;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitSitemap($this);
     }

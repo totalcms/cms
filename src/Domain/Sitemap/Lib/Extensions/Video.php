@@ -105,7 +105,7 @@ class Video implements VisitorInterface
     /**
      * A tag associated with the video.
      *
-     * @var array
+     * @var list<string>
      */
     protected $tags = [];
 
@@ -397,7 +397,7 @@ class Video implements VisitorInterface
     /**
      * A tag associated with the video.
      *
-     * @return array
+     * @return list<string>
      */
     public function getTags()
     {
@@ -407,7 +407,7 @@ class Video implements VisitorInterface
     /**
      * A tag associated with the video.
      *
-     * @param array $tags
+     * @param list<string> $tags
      *
      * @return $this
      */
@@ -529,7 +529,7 @@ class Video implements VisitorInterface
      *
      * @param string $currency
      */
-    public function setCurrency($currency)
+    public function setCurrency($currency): void
     {
         $this->currency = $currency;
     }
@@ -634,7 +634,7 @@ class Video implements VisitorInterface
         return $this;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitVideoExtension($this);
     }

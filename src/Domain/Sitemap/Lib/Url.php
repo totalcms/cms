@@ -67,7 +67,7 @@ class Url implements VisitorInterface
     /**
      * @param DateTimeInterface $lastMod
      */
-    public function setLastMod(DateTimeInterface $lastMod)
+    public function setLastMod(DateTimeInterface $lastMod): void
     {
         $this->lastMod = $lastMod;
     }
@@ -83,7 +83,7 @@ class Url implements VisitorInterface
     /**
      * @param string $changeFreq
      */
-    public function setChangeFreq(string $changeFreq)
+    public function setChangeFreq(string $changeFreq): void
     {
         $this->changeFreq = $changeFreq;
     }
@@ -99,7 +99,7 @@ class Url implements VisitorInterface
     /**
      * @param string $priority
      */
-    public function setPriority(string $priority)
+    public function setPriority(string $priority): void
     {
         $this->priority = $priority;
     }
@@ -107,7 +107,7 @@ class Url implements VisitorInterface
     /**
      * @param VisitorInterface $extension
      */
-    public function addExtension(VisitorInterface $extension)
+    public function addExtension(VisitorInterface $extension): void
     {
         $this->extensions[] = $extension;
     }
@@ -120,7 +120,7 @@ class Url implements VisitorInterface
         return $this->extensions;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitUrl($this);
     }

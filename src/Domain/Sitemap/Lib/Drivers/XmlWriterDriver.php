@@ -30,7 +30,7 @@ class XmlWriterDriver implements DriverInterface
     private $writer;
 
     /**
-     * @var array
+     * @var array<class-string, array{name: string, content: string}>
      */
     private $extensionAttributes = [
         Video::class  => [
@@ -56,7 +56,7 @@ class XmlWriterDriver implements DriverInterface
     ];
 
     /**
-     * @var array
+     * @var list<class-string>
      */
     private $extensions = [];
 
@@ -72,17 +72,17 @@ class XmlWriterDriver implements DriverInterface
         $this->writer = $writer;
     }
 
-    public function addProcessingInstructions(string $target, string $content)
+    public function addProcessingInstructions(string $target, string $content): void
     {
         $this->writer->writePI($target, $content);
     }
 
-    public function addComment(string $comment)
+    public function addComment(string $comment): void
     {
         $this->writer->writeComment($comment);
     }
 
-    private function writeElement(string $name, $content)
+    private function writeElement(string $name, mixed $content): void
     {
         if (!$content) {
             return;
@@ -95,7 +95,7 @@ class XmlWriterDriver implements DriverInterface
         }
     }
 
-    public function visitSitemapIndex(SitemapIndex $sitemapIndex)
+    public function visitSitemapIndex(SitemapIndex $sitemapIndex): void
     {
         $this->writer->startElement('sitemapindex');
         $this->writer->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
@@ -117,7 +117,7 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitSitemap(Sitemap $sitemap)
+    public function visitSitemap(Sitemap $sitemap): void
     {
         $this->writer->startElement('sitemap');
         $this->writer->writeElement('loc', $sitemap->getLoc());
@@ -127,7 +127,7 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitUrlset(Urlset $urlset)
+    public function visitUrlset(Urlset $urlset): void
     {
         $this->writer->startElement('urlset');
 
@@ -168,7 +168,7 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitUrl(Url $url)
+    public function visitUrl(Url $url): void
     {
         $this->writer->startElement('url');
         $this->writeElement('loc', $url->getLoc());
@@ -183,7 +183,7 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitImageExtension(Image $image)
+    public function visitImageExtension(Image $image): void
     {
         $this->writer->startElement('image:image');
         $this->writeElement('image:loc', $image->getLoc());
@@ -194,7 +194,7 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitLinkExtension(Link $link)
+    public function visitLinkExtension(Link $link): void
     {
         $this->writer->startElement('xhtml:link');
         $this->writer->writeAttribute('rel', 'alternate');
@@ -203,12 +203,12 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitMobileExtension(Mobile $mobile)
+    public function visitMobileExtension(Mobile $mobile): void
     {
         $this->writer->writeElement('mobile:mobile');
     }
 
-    public function visitNewsExtension(News $news)
+    public function visitNewsExtension(News $news): void
     {
         $this->writer->startElement('news:news');
 
@@ -226,7 +226,7 @@ class XmlWriterDriver implements DriverInterface
         $this->writer->endElement();
     }
 
-    public function visitVideoExtension(Video $video)
+    public function visitVideoExtension(Video $video): void
     {
         $this->writer->startElement('video:video');
 
@@ -270,6 +270,6 @@ class XmlWriterDriver implements DriverInterface
 
     public function output(): string
     {
-        return $this->writer->flush();
+        return (string) $this->writer->flush();
     }
 }

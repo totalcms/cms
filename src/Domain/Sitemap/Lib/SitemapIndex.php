@@ -11,7 +11,7 @@ class SitemapIndex extends Collection
         return Sitemap::class;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitSitemapIndex($this);
     }

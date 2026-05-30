@@ -158,7 +158,7 @@ class Image implements VisitorInterface
         return $this;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitImageExtension($this);
     }

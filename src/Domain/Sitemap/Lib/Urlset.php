@@ -11,7 +11,7 @@ class Urlset extends Collection
         return Url::class;
     }
 
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitUrlset($this);
     }

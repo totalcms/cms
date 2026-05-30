@@ -13,7 +13,7 @@ use XMLWriter;
  */
 class Mobile implements VisitorInterface
 {
-    public function accept(DriverInterface $driver)
+    public function accept(DriverInterface $driver): void
     {
         $driver->visitMobileExtension($this);
     }

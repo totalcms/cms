@@ -4,5 +4,5 @@ namespace TotalCMS\Domain\Sitemap\Lib\Interfaces;
 
 interface VisitorInterface
 {
-    public function accept(DriverInterface $driver);
+    public function accept(DriverInterface $driver): void;
 }
