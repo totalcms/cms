@@ -64,7 +64,6 @@
     "symfony/serializer": "^7.1",
     "symfony/translation": "^7.4",
     "tecnickcom/tc-lib-barcode": "^2.4",
-    "thepixeldeveloper/sitemap": "dev-master#ee4cbd1406f1250534860b8c9b74020fee0c3650",
     "totalcms/color-thief-php": "^2.5.0",
     "twig/cssinliner-extra": "^3.21",
     "twig/html-extra": "^3.21",

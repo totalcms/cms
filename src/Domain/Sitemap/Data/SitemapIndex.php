@@ -2,9 +2,9 @@
 
 namespace TotalCMS\Domain\Sitemap\Data;
 
-use Thepixeldeveloper\Sitemap\Drivers\XmlWriterDriver;
-use Thepixeldeveloper\Sitemap\Sitemap as SitemapBase;
-use Thepixeldeveloper\Sitemap\SitemapIndex as SitemapIndexBase;
+use TotalCMS\Domain\Sitemap\Lib\Drivers\XmlWriterDriver;
+use TotalCMS\Domain\Sitemap\Lib\Sitemap as SitemapBase;
+use TotalCMS\Domain\Sitemap\Lib\SitemapIndex as SitemapIndexBase;
 
 readonly class SitemapIndex implements \Stringable
 {

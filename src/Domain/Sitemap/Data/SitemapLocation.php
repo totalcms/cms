@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sitemap\Data;
 
-use Thepixeldeveloper\Sitemap\Extensions\Image;
-use Thepixeldeveloper\Sitemap\Extensions\Link;
-use Thepixeldeveloper\Sitemap\Extensions\Video;
-use Thepixeldeveloper\Sitemap\Url;
+use TotalCMS\Domain\Sitemap\Lib\Extensions\Image;
+use TotalCMS\Domain\Sitemap\Lib\Extensions\Link;
+use TotalCMS\Domain\Sitemap\Lib\Extensions\Video;
+use TotalCMS\Domain\Sitemap\Lib\Url;
 
 readonly class SitemapLocation
 {
