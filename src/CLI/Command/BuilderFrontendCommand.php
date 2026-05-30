@@ -57,6 +57,11 @@ class BuilderFrontendCommand extends BaseCommand
 			$output->writeln('  4. Reference assets in your layout: <comment>{{ cms.builder.css(\'css/style.css\') }}</comment>');
 		}
 
+		if (($result->data['gitignore'] ?? null) === 'added') {
+			$output->writeln('');
+			$output->writeln('<comment>Note:</comment> /public/assets/ was added to .gitignore — it now holds compiled build output.');
+		}
+
 		return Command::SUCCESS;
 	}
 }

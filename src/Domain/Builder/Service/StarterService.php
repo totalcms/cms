@@ -50,7 +50,7 @@ readonly class StarterService
 			if ($entry === '.' || $entry === '..') {
 				continue;
 			}
-			$manifest = $this->loadManifest($entry);
+			$manifest = $this->readManifest($this->startersDir() . '/' . $entry);
 			if ($manifest instanceof StarterManifest) {
 				$starters[] = $manifest;
 			}
@@ -119,12 +119,71 @@ readonly class StarterService
 	}
 
 	/**
-	 * Read and parse a starter's manifest.json. Returns null if the starter
-	 * directory or manifest is missing/invalid.
+	 * Resolve a user-supplied starter name to its manifest. Lookup is
+	 * case-insensitive and matches against both the folder name and the
+	 * manifest's display `name`, so the title-case labels shown by
+	 * `builder:init --list` (e.g. "Blog") work as input alongside the
+	 * lowercase folder names (e.g. "blog"). Returns null if no starter
+	 * matches.
 	 */
 	private function loadManifest(string $starterName): ?StarterManifest
 	{
-		$starterDir   = $this->startersDir() . '/' . $starterName;
+		$dir = $this->resolveStarterDir($starterName);
+
+		return $dir === null ? null : $this->readManifest($dir);
+	}
+
+	/**
+	 * Resolve a starter name to its directory path. Tries an exact folder
+	 * match first (the common case — `listStarters()` passes real folder
+	 * names), then falls back to a case-insensitive match against each
+	 * starter's folder name and manifest `name`.
+	 */
+	private function resolveStarterDir(string $starterName): ?string
+	{
+		$base = $this->startersDir();
+		if (!is_dir($base)) {
+			return null;
+		}
+
+		// Exact folder match — cheap, covers the canonical lowercase input.
+		$exact = $base . '/' . $starterName;
+		if (is_dir($exact)) {
+			return $exact;
+		}
+
+		$entries = scandir($base);
+		if ($entries === false) {
+			return null;
+		}
+
+		$needle = strtolower($starterName);
+		foreach ($entries as $entry) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+			$dir = $base . '/' . $entry;
+			if (!is_dir($dir)) {
+				continue;
+			}
+			if (strtolower($entry) === $needle) {
+				return $dir;
+			}
+			$manifest = $this->readManifest($dir);
+			if ($manifest instanceof StarterManifest && strtolower($manifest->name) === $needle) {
+				return $dir;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Read and parse the manifest.json inside a known starter directory.
+	 * Returns null if the manifest is missing or invalid.
+	 */
+	private function readManifest(string $starterDir): ?StarterManifest
+	{
 		$manifestPath = $starterDir . '/manifest.json';
 
 		if (!file_exists($manifestPath)) {

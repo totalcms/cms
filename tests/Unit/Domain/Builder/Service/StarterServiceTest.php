@@ -131,6 +131,30 @@ final class StarterServiceTest extends TestCase
 		$this->assertStringContainsString("'nope' not found", $result->message);
 	}
 
+	public function testScaffoldResolvesTitleCaseManifestNameToLowercaseFolder(): void
+	{
+		// The list output shows the manifest's title-case `name` ("Blog"),
+		// but the folder is lowercase ("blog"). Typing the displayed name
+		// must resolve to the folder rather than erroring.
+		$this->writeManifest('blog', ['name' => 'Blog']);
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('Blog');
+
+		$this->assertTrue($result->success, "Title-case 'Blog' should resolve to the 'blog' starter");
+		$this->assertStringContainsString("'Blog' starter", $result->message);
+	}
+
+	public function testScaffoldResolvesFolderNameCaseInsensitively(): void
+	{
+		$this->writeManifest('business', ['name' => 'Business']);
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		$result = $this->service->scaffold('BUSINESS');
+
+		$this->assertTrue($result->success);
+	}
+
 	public function testScaffoldFailsWhenTemplatesAlreadyExistAndNotForced(): void
 	{
 		$this->writeManifest('blog', ['name' => 'Blog']);
