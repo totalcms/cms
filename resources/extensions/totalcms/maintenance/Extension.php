@@ -17,16 +17,16 @@ class Extension implements ExtensionInterface
 {
 	public function register(ExtensionContext $context): void
 	{
-		$defaultMessage    = (string)$context->setting('message', MaintenanceMiddleware::DEFAULT_MESSAGE);
-		$defaultRetryAfter = (int)$context->setting('retryAfter', MaintenanceMiddleware::DEFAULT_RETRY_AFTER);
-		$defaultHeading    = (string)$context->setting('heading', MaintenanceMiddleware::DEFAULT_HEADING);
-		$template          = (string)$context->setting('template', '');
+		$defaultMessage           = (string)$context->setting('message', MaintenanceMiddleware::DEFAULT_MESSAGE);
+		$defaultRetryAfterMinutes = (int)$context->setting('retryAfterMinutes', MaintenanceMiddleware::DEFAULT_RETRY_AFTER_MINUTES);
+		$defaultHeading           = (string)$context->setting('heading', MaintenanceMiddleware::DEFAULT_HEADING);
+		$template                 = (string)$context->setting('template', '');
 
 		$context->addContainerDefinition(
 			MaintenanceMiddleware::class,
 			static fn (ContainerInterface $container): MaintenanceMiddleware => new MaintenanceMiddleware(
 				$defaultMessage,
-				$defaultRetryAfter,
+				$defaultRetryAfterMinutes,
 				$defaultHeading,
 				$template,
 				// The setting stores a bare page-template name (from the `pages`

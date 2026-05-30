@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Bundled\Protect;
 
+use Psr\Container\ContainerInterface;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Support\Config;
@@ -17,13 +19,34 @@ class Extension implements ExtensionInterface
 		$defaultPasscode    = (string)$context->setting('passcode', '');
 		$defaultPromptTitle = (string)$context->setting('promptTitle', 'Enter passcode to view');
 
+		// Cookie lifetime is configured in hours (168 = 7 days); 0 = session cookie.
+		// The middleware works in seconds, so convert here.
+		$cookieHours = (int)$context->setting('cookieHours', 168);
+		$cookieTtl   = max(0, $cookieHours) * 3600;
+
+		// Site-wide mode: one shared passcode + cookie for every protected page.
+		$globalScope = (bool)$context->setting('globalScope', false);
+
 		/** @var Config $config */
 		$config = $context->get(Config::class);
 		$secret = $this->resolveSecret($config->datadir);
 
 		$context->addContainerDefinition(
 			ProtectMiddleware::class,
-			fn () => new ProtectMiddleware($secret, $defaultPasscode, $defaultPromptTitle),
+			static fn (ContainerInterface $container): ProtectMiddleware => new ProtectMiddleware(
+				$secret,
+				$defaultPasscode,
+				$defaultPromptTitle,
+				// Logged-in admins/operators preview the page instead of the gate —
+				// `userLoggedIn($operatorCollection)` excludes front-end members
+				// (public registration) while still passing super-admins. Resolved
+				// lazily and read at request time so it reflects the live session.
+				static fn (): bool => $container->get(AccessManager::class)->userLoggedIn(
+					(string)($container->get(Config::class)->auth['collection'] ?? ''),
+				),
+				$cookieTtl,
+				$globalScope,
+			),
 		);
 
 		$context->addPageMiddleware('protect', ProtectMiddleware::class);

@@ -77,10 +77,97 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertSame(200, $response->getStatusCode());
 	}
 
-	public function testPassesThroughForNonGetRequests(): void
+	public function testPassesThroughForUnsupportedMethods(): void
 	{
+		// PUT/DELETE/etc. have no page semantics — the router never tries to match.
+		$request = (new ServerRequestFactory())->createServerRequest('DELETE', '/about');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->expects($this->never())->method('match');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testPostToPageRunsMiddlewareAndReturnsShortCircuit(): void
+	{
+		// A page feature (e.g. Protect's passcode form) POSTs back to the page
+		// URL. Slim has no POST route for a builder page, so it 404s; the router
+		// must still run the page-middleware chain so the feature can handle the
+		// POST (validate the passcode, set a cookie, 302 back).
 		$request = (new ServerRequestFactory())->createServerRequest('POST', '/about');
 		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/about.twig',
+			pageData: ['id' => 'about'],
+			params: [],
+		);
+		$this->pageRouter->method('match')->with('/about')->willReturn($match);
+
+		$redirect = (new Response())->withStatus(302)->withHeader('Location', '/about');
+		$runner   = $this->createMock(PageMiddlewareRunner::class);
+		$runner->method('run')->willReturn($redirect);
+
+		// A POST must never render a page body.
+		$this->twigEngine->expects($this->never())->method('render');
+
+		$middleware = new PageRouterMiddleware(
+			$this->pageRouter,
+			$this->twigEngine,
+			$runner,
+			$this->pageInspector,
+			$this->pageReloadInjector,
+		);
+
+		$response = $middleware->process($request, $handler);
+
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertSame('/about', $response->getHeaderLine('Location'));
+	}
+
+	public function testPostToPageWithoutShortCircuitReturns404(): void
+	{
+		// POST to a page whose middleware doesn't handle it → still a 404. Pages
+		// only render on GET; we never render a page body in response to a POST.
+		$request = (new ServerRequestFactory())->createServerRequest('POST', '/about');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/about.twig',
+			pageData: ['id' => 'about'],
+			params: [],
+		);
+		$this->pageRouter->method('match')->willReturn($match);
+		// Default runner (from setUp) returns null — no short-circuit.
+
+		$this->twigEngine->expects($this->never())->method('render');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testPostWithNoPageMatchDoesNotRenderFallback404(): void
+	{
+		// The custom 404 page renders HTML — never do that for a POST.
+		$request = (new ServerRequestFactory())->createServerRequest('POST', '/nope');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(null);
+		$this->pageRouter->expects($this->never())->method('fallback404');
+		$this->twigEngine->expects($this->never())->method('render');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testPostToApiPathPassesThroughWithoutMatching(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('POST', '/api/collections/blog');
+		$handler = $this->createHandler(404, '{"error":"Not Found"}');
 
 		$this->pageRouter->expects($this->never())->method('match');
 

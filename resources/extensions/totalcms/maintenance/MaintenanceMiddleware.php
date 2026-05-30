@@ -24,9 +24,9 @@ use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
  *
  *     {
  *       "maintenance": {
- *         "heading":    "Back Soon",
- *         "message":    "This section is being updated. Back at **5pm EST**.",
- *         "retryAfter": 3600
+ *         "heading":           "Back Soon",
+ *         "message":           "This section is being updated. Back at **5pm EST**.",
+ *         "retryAfterMinutes": 60
  *       }
  *     }
  *
@@ -37,9 +37,9 @@ use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
  */
 class MaintenanceMiddleware implements PageMiddlewareInterface
 {
-	public const DEFAULT_MESSAGE     = 'This page is temporarily unavailable.';
-	public const DEFAULT_HEADING     = 'Temporarily Unavailable';
-	public const DEFAULT_RETRY_AFTER = 3600;
+	public const DEFAULT_MESSAGE             = 'This page is temporarily unavailable.';
+	public const DEFAULT_HEADING             = 'Temporarily Unavailable';
+	public const DEFAULT_RETRY_AFTER_MINUTES = 60;
 
 	/**
 	 * @param \Closure(string, array<string,mixed>): string|null $templateRenderer
@@ -52,7 +52,7 @@ class MaintenanceMiddleware implements PageMiddlewareInterface
 	 */
 	public function __construct(
 		private readonly string $defaultMessage = self::DEFAULT_MESSAGE,
-		private readonly int $defaultRetryAfter = self::DEFAULT_RETRY_AFTER,
+		private readonly int $defaultRetryAfterMinutes = self::DEFAULT_RETRY_AFTER_MINUTES,
 		private readonly string $defaultHeading = self::DEFAULT_HEADING,
 		private readonly string $template = '',
 		private readonly ?\Closure $templateRenderer = null,
@@ -75,19 +75,22 @@ class MaintenanceMiddleware implements PageMiddlewareInterface
 			return null;
 		}
 
-		$heading     = $this->heading($config);
-		$message     = $this->message($config);
-		$retryAfter  = $this->retryAfter($config);
-		$messageHtml = (new ParsedownMarkdown())->convert($message);
+		$heading           = $this->heading($config);
+		$message           = $this->message($config);
+		$retryAfterMinutes = $this->retryAfter($config);
+		$retryAfterSeconds = $retryAfterMinutes * 60;
+		$messageHtml       = (new ParsedownMarkdown())->convert($message);
 
-		$body = $this->renderCustomTemplate($heading, $message, $messageHtml, $retryAfter)
+		$body = $this->renderCustomTemplate($heading, $message, $messageHtml, $retryAfterMinutes)
 			?? $this->renderDefault($heading, $messageHtml);
 
 		$psr17 = new Psr17Factory();
 
+		// Retry-After is an HTTP header, so it must be seconds even though the
+		// operator configures the value in minutes.
 		return $psr17->createResponse(503)
 			->withHeader('Content-Type', 'text/html; charset=utf-8')
-			->withHeader('Retry-After', (string)$retryAfter)
+			->withHeader('Retry-After', (string)$retryAfterSeconds)
 			->withBody($psr17->createStream($body));
 	}
 
@@ -116,9 +119,9 @@ class MaintenanceMiddleware implements PageMiddlewareInterface
 	 */
 	private function retryAfter(array $config): int
 	{
-		$raw = $config['retryAfter'] ?? null;
+		$raw = $config['retryAfterMinutes'] ?? null;
 
-		return is_numeric($raw) ? max(0, (int)$raw) : $this->defaultRetryAfter;
+		return is_numeric($raw) ? max(0, (int)$raw) : $this->defaultRetryAfterMinutes;
 	}
 
 	private function isAdmin(): bool
@@ -131,7 +134,7 @@ class MaintenanceMiddleware implements PageMiddlewareInterface
 	 * Returns null to fall back to the built-in layout — maintenance must never
 	 * 500, so a missing/broken template (or blank value) degrades gracefully.
 	 */
-	private function renderCustomTemplate(string $heading, string $message, string $messageHtml, int $retryAfter): ?string
+	private function renderCustomTemplate(string $heading, string $message, string $messageHtml, int $retryAfterMinutes): ?string
 	{
 		if ($this->template === '' || !$this->templateRenderer instanceof \Closure) {
 			return null;
@@ -139,10 +142,10 @@ class MaintenanceMiddleware implements PageMiddlewareInterface
 
 		try {
 			$html = ($this->templateRenderer)($this->template, [
-				'heading'     => $heading,
-				'message'     => $messageHtml,  // rendered HTML — use `{{ message|raw }}`
-				'messageText' => $message,      // original Markdown source
-				'retryAfter'  => $retryAfter,
+				'heading'           => $heading,
+				'message'           => $messageHtml,  // rendered HTML — use `{{ message|raw }}`
+				'messageText'       => $message,      // original Markdown source
+				'retryAfterMinutes' => $retryAfterMinutes,
 			]);
 
 			return trim($html) !== '' ? $html : null;

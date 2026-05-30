@@ -25,30 +25,93 @@ final class ProtectMiddlewareTest extends TestCase
 		$this->psr17      = new Psr17Factory();
 	}
 
-	// --- no-op cases ---
+	// --- attaching the middleware gates the page (no passcode required to activate) ---
+	//
+	// Like Maintenance, attaching `protect` is what gates the page. With no
+	// passcode configured anywhere the page fails CLOSED: the public sees the
+	// prompt but can never enter a code that doesn't exist, so it's effectively
+	// operators-only (logged-in admins bypass — see the admin-bypass section).
 
-	public function testNoPasscodeIsNoOp(): void
+	public function testNoPasscodeGatesAsOperatorsOnly(): void
 	{
-		$this->assertNull($this->middleware->handle(
+		$response = $this->middleware->handle(
+			$this->get('/preview'),
+			$this->page('preview', []),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
+		$this->assertStringContainsString('name="passcode"', (string)$response->getBody());
+	}
+
+	public function testEmptyPasscodeGatesAsOperatorsOnly(): void
+	{
+		$response = $this->middleware->handle(
+			$this->get('/preview'),
+			$this->page('preview', ['passcode' => '']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
+	}
+
+	public function testNonStringPasscodeGatesAsOperatorsOnly(): void
+	{
+		$response = $this->middleware->handle(
+			$this->get('/preview'),
+			$this->page('preview', ['passcode' => 12345]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
+	}
+
+	// --- admin bypass (logged-in operators preview the page, like Maintenance) ---
+
+	public function testLoggedInAdminBypassesGate(): void
+	{
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, isAdmin: static fn (): bool => true);
+
+		$this->assertNull($middleware->handle(
+			$this->get('/preview'),
+			$this->page('preview', ['passcode' => '1234']),
+		));
+	}
+
+	public function testAdminBypassesEvenWhenNoPasscodeConfigured(): void
+	{
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, isAdmin: static fn (): bool => true);
+
+		$this->assertNull($middleware->handle(
 			$this->get('/preview'),
 			$this->page('preview', []),
 		));
 	}
 
-	public function testEmptyPasscodeIsNoOp(): void
+	public function testNonAdminVisitorIsGated(): void
 	{
-		$this->assertNull($this->middleware->handle(
+		// Logged-out visitors AND front-end members both resolve to false here.
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, isAdmin: static fn (): bool => false);
+
+		$response = $middleware->handle(
 			$this->get('/preview'),
-			$this->page('preview', ['passcode' => '']),
-		));
+			$this->page('preview', ['passcode' => '1234']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
 	}
 
-	public function testNonStringPasscodeIsNoOp(): void
+	public function testNoAdminCheckGates(): void
 	{
-		$this->assertNull($this->middleware->handle(
+		// Default construction (no isAdmin closure) — safe default is to gate.
+		$response = $this->middleware->handle(
 			$this->get('/preview'),
-			$this->page('preview', ['passcode' => 12345]),
-		));
+			$this->page('preview', ['passcode' => '1234']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
 	}
 
 	// --- prompt rendering ---
@@ -165,6 +228,133 @@ final class ProtectMiddlewareTest extends TestCase
 		$this->assertSame(403, $response->getStatusCode());
 	}
 
+	// --- scope groups (one passcode unlocks a group of pages) ---
+
+	public function testProtectScopeSetsScopedCookieName(): void
+	{
+		$response = $this->middleware->handle(
+			$this->post('/about', ['passcode' => '1234']),
+			$this->page('about', ['passcode' => '1234', 'protectScope' => 'vip']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(302, $response->getStatusCode());
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		// Cookie is keyed by the scope, not the page id.
+		$this->assertStringContainsString('tcms_protect_vip=', $cookie);
+		$this->assertStringNotContainsString('tcms_protect_about=', $cookie);
+	}
+
+	public function testSharedScopeUnlocksAnotherPageInTheGroup(): void
+	{
+		// A cookie minted for scope "vip" + passcode "1234" unlocks ANY page that
+		// shares that scope and passcode — enter the code once, unlock the group.
+		$hmac    = hash_hmac('sha256', 'vip:1234', self::TEST_SECRET);
+		$request = $this->get('/pricing', [
+			ProtectMiddleware::COOKIE_PREFIX . 'vip' => $hmac,
+		]);
+
+		// A *different* page (id "pricing") in the same "vip" scope.
+		$this->assertNull($this->middleware->handle(
+			$request,
+			$this->page('pricing', ['passcode' => '1234', 'protectScope' => 'vip']),
+		));
+	}
+
+	public function testCookieFromDifferentScopeIsRejected(): void
+	{
+		$hmac    = hash_hmac('sha256', 'groupA:1234', self::TEST_SECRET);
+		$request = $this->get('/secret', [
+			ProtectMiddleware::COOKIE_PREFIX . 'groupA' => $hmac,
+		]);
+
+		$response = $this->middleware->handle(
+			$request,
+			$this->page('secret', ['passcode' => '1234', 'protectScope' => 'groupB']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
+	}
+
+	public function testProtectScopeIsSanitizedForCookieName(): void
+	{
+		$response = $this->middleware->handle(
+			$this->post('/about', ['passcode' => '1234']),
+			$this->page('about', ['passcode' => '1234', 'protectScope' => 'Client Preview!']),
+		);
+
+		$this->assertNotNull($response);
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		// Spaces and unsafe characters are stripped so the cookie name is valid.
+		$this->assertStringContainsString('tcms_protect_ClientPreview=', $cookie);
+	}
+
+	public function testEmptyScopeFallsBackToPageId(): void
+	{
+		$response = $this->middleware->handle(
+			$this->post('/about', ['passcode' => '1234']),
+			$this->page('about', ['passcode' => '1234', 'protectScope' => '']),
+		);
+
+		$this->assertNotNull($response);
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		$this->assertStringContainsString('tcms_protect_about=', $cookie);
+	}
+
+	// --- global (site-wide) scope ---
+
+	public function testGlobalScopeSharesOneCookieAcrossPages(): void
+	{
+		$mw = new ProtectMiddleware(self::TEST_SECRET, defaultPasscode: '1234', globalScope: true);
+
+		// Unlock on one page → cookie keyed by the global scope, not the page id.
+		$response = $mw->handle(
+			$this->post('/about', ['passcode' => '1234']),
+			$this->page('about', []),
+		);
+		$this->assertNotNull($response);
+		$this->assertSame(302, $response->getStatusCode());
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		$this->assertStringContainsString('tcms_protect_' . ProtectMiddleware::GLOBAL_SCOPE_KEY . '=', $cookie);
+
+		// That same cookie unlocks a completely different page.
+		$hmac    = hash_hmac('sha256', ProtectMiddleware::GLOBAL_SCOPE_KEY . ':1234', self::TEST_SECRET);
+		$request = $this->get('/pricing', [
+			ProtectMiddleware::COOKIE_PREFIX . ProtectMiddleware::GLOBAL_SCOPE_KEY => $hmac,
+		]);
+		$this->assertNull($mw->handle($request, $this->page('pricing', [])));
+	}
+
+	public function testGlobalScopeIgnoresPerPagePasscode(): void
+	{
+		$mw   = new ProtectMiddleware(self::TEST_SECRET, defaultPasscode: '1234', globalScope: true);
+		$page = $this->page('about', ['passcode' => '9999']);
+
+		// The page sets its own passcode, but global mode uses the default.
+		$ok = $mw->handle($this->post('/about', ['passcode' => '1234']), $page);
+		$this->assertNotNull($ok);
+		$this->assertSame(302, $ok->getStatusCode());
+
+		$bad = $mw->handle($this->post('/about', ['passcode' => '9999']), $page);
+		$this->assertNotNull($bad);
+		$this->assertSame(403, $bad->getStatusCode());
+	}
+
+	public function testGlobalScopeIgnoresPerPageScope(): void
+	{
+		$mw = new ProtectMiddleware(self::TEST_SECRET, defaultPasscode: '1234', globalScope: true);
+
+		$response = $mw->handle(
+			$this->post('/about', ['passcode' => '1234']),
+			$this->page('about', ['protectScope' => 'ignored-group']),
+		);
+		$this->assertNotNull($response);
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		$this->assertStringContainsString('tcms_protect_' . ProtectMiddleware::GLOBAL_SCOPE_KEY . '=', $cookie);
+		$this->assertStringNotContainsString('tcms_protect_ignored-group=', $cookie);
+	}
+
 	// --- POST submission ---
 
 	public function testCorrectPasscodeRedirectsWithCookie(): void
@@ -215,6 +405,58 @@ final class ProtectMiddlewareTest extends TestCase
 		$this->assertNotNull($response);
 		$cookie = $response->getHeaderLine('Set-Cookie');
 		$this->assertStringNotContainsString('Secure', $cookie);
+	}
+
+	// --- configurable cookie lifetime ---
+
+	public function testCookieUsesConfiguredTtl(): void
+	{
+		$oneDay     = 86400;
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, cookieTtl: $oneDay);
+
+		$response = $middleware->handle(
+			$this->post('/preview', ['passcode' => '1234']),
+			$this->page('preview', ['passcode' => '1234']),
+		);
+
+		$this->assertNotNull($response);
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		$this->assertStringContainsString('Expires=', $cookie);
+
+		// The Expires date should be ~1 day out, not the 7-day default.
+		$this->assertSame(1, preg_match('/Expires=([^;]+)/', $cookie, $m));
+		$this->assertEqualsWithDelta(time() + $oneDay, (int)strtotime($m[1]), 10);
+	}
+
+	public function testZeroTtlProducesSessionCookie(): void
+	{
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, cookieTtl: 0);
+
+		$response = $middleware->handle(
+			$this->post('/preview', ['passcode' => '1234']),
+			$this->page('preview', ['passcode' => '1234']),
+		);
+
+		$this->assertNotNull($response);
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		// Session cookie: the value is still set, but with no Expires/Max-Age the
+		// browser drops it when it closes.
+		$this->assertStringContainsString('tcms_protect_preview=', $cookie);
+		$this->assertStringNotContainsString('Expires=', $cookie);
+		$this->assertStringNotContainsString('Max-Age=', $cookie);
+	}
+
+	public function testDefaultTtlIsSevenDays(): void
+	{
+		$response = $this->middleware->handle(
+			$this->post('/preview', ['passcode' => '1234']),
+			$this->page('preview', ['passcode' => '1234']),
+		);
+
+		$this->assertNotNull($response);
+		$cookie = $response->getHeaderLine('Set-Cookie');
+		$this->assertSame(1, preg_match('/Expires=([^;]+)/', $cookie, $m));
+		$this->assertEqualsWithDelta(time() + (7 * 86400), (int)strtotime($m[1]), 10);
 	}
 
 	public function testIncorrectPasscodeShowsError(): void

@@ -8,9 +8,10 @@
 			"type": "string",
 			"field": "text",
 			"label": "Default Passcode",
-			"help": "Numeric passcode used when a page doesn't specify its own. Leave empty to require per-page passcodes.",
+			"help": "Numeric passcode visitors enter to unlock protected pages. Change it from the default before going live. Individual pages can override it in their Page Data. A page with Protect attached but no passcode is operators-only — logged-in admins can preview it, the public cannot.",
 			"placeholder": "0000",
-			"default": ""
+			"required": true,
+			"default": "1234"
 		},
 		"promptTitle": {
 			"type": "string",
@@ -19,6 +20,22 @@
 			"help": "Heading shown on the passcode form. Pages can override this in their Page Data.",
 			"placeholder": "Enter passcode to view",
 			"default": "Enter passcode to view"
+		},
+		"cookieHours": {
+			"type": "number",
+			"field": "number",
+			"label": "Remember For (hours)",
+			"help": "How long a visitor stays unlocked after entering the passcode, in hours (168 = 7 days). Set to 0 for a session cookie that clears when the browser closes.",
+			"placeholder": "168",
+			"default": 168,
+			"min": 0
+		},
+		"globalScope": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Site-wide passcode",
+			"help": "Lock the whole site behind one shared passcode instead of locking each page separately. When on, every protected page uses the Default Passcode and a single unlock cookie — enter the code once and the whole site unlocks. Per-page passcodes and protectScope groups are ignored while this is on.",
+			"default": false
 		}
 	}
 }

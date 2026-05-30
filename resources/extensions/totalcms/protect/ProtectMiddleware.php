@@ -17,58 +17,140 @@ use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
  * Per-page configuration lives in the page's `data` JSON blob:
  *
  *     {
- *       "passcode":    "8675",
- *       "promptTitle":  "Enter passcode to view"
+ *       "passcode":     "8675",
+ *       "promptTitle":  "Enter passcode to view",
+ *       "protectScope": "client-preview"
  *     }
  *
- * Cookie: `tcms_protect_<pageId>=<hmac>`, 7-day TTL.
+ * Cookie: `tcms_protect_<scope>=<hmac>`, lifetime configurable (default 7 days).
+ *
+ * The `scope` is the page's own id by default, so each page is gated
+ * independently. Set a shared `protectScope` group id on several pages to let
+ * one passcode unlock the whole group from a single cookie — enter the code on
+ * any page in the group, the rest unlock too (they must share the passcode).
  *
  * The HMAC uses a per-install secret (32 random bytes stored in
  * `.system/protect/secret`) so cookie values are bound to this
  * installation and cannot be computed from public information alone.
- * The message is `pageId:passcode` so a valid cookie for one page
- * cannot be replayed against a different page.
+ * The message is `<scope>:passcode` so a valid cookie for one scope
+ * cannot be replayed against a different one.
+ *
+ * Attaching this middleware to a page is what gates it. A passcode is an
+ * optional unlock code, NOT a required on-switch: with no passcode configured
+ * the page fails CLOSED (the public sees the prompt but can never enter a code
+ * that doesn't exist — effectively operators-only). Logged-in operators always
+ * bypass the gate to preview the page, the same way the Maintenance extension
+ * behaves.
  */
 class ProtectMiddleware implements PageMiddlewareInterface
 {
-	public const COOKIE_PREFIX = 'tcms_protect_';
-	public const COOKIE_TTL    = 7 * 86400;
+	public const COOKIE_PREFIX    = 'tcms_protect_';
+	public const COOKIE_TTL       = 7 * 86400;
+	public const GLOBAL_SCOPE_KEY = 'global';
 
+	/**
+	 * @param \Closure(): bool|null $isAdmin
+	 *        Returns true when an admin/operator is logged in, so they preview the
+	 *        page instead of the gate. Front-end members (public registration) do
+	 *        not count. Null means "no one bypasses" (safe default).
+	 * @param int $cookieTtl
+	 *        How long (in seconds) the unlock cookie lasts. `0` or less makes it a
+	 *        session cookie that the browser drops when it closes.
+	 * @param bool $globalScope
+	 *        Site-wide mode: every protected page shares one scope cookie and the
+	 *        default passcode, so a single code unlocks the whole site. Per-page
+	 *        passcodes and `protectScope` groups are ignored while this is on.
+	 */
 	public function __construct(
 		private readonly string $secret,
 		private readonly string $defaultPasscode = '',
 		private readonly string $defaultPromptTitle = 'Enter passcode to view',
+		private readonly ?\Closure $isAdmin = null,
+		private readonly int $cookieTtl = self::COOKIE_TTL,
+		private readonly bool $globalScope = false,
 	) {
 	}
 
 	public function handle(ServerRequestInterface $request, PageData $page): ?ResponseInterface
 	{
-		$passcode = $this->stringConfig($page, 'passcode') ?: $this->defaultPasscode;
-		if ($passcode === '') {
+		// Logged-in operators preview the page instead of the gate, like Maintenance.
+		if ($this->isAdmin()) {
 			return null;
 		}
 
-		if ($this->hasCookie($request, $page->id, $passcode)) {
+		$passcode = $this->passcode($page);
+
+		// Attached but no passcode configured: fail closed. There is no valid code
+		// to enter, so the public is blocked while operators (above) still preview.
+		if ($passcode === '') {
+			return $this->renderPrompt($page, false);
+		}
+
+		$key = $this->scopeKey($page);
+
+		if ($this->hasCookie($request, $key, $passcode)) {
 			return null;
 		}
 
 		if ($request->getMethod() === 'POST') {
-			return $this->handleSubmit($request, $page, $passcode);
+			return $this->handleSubmit($request, $page, $key, $passcode);
 		}
 
 		return $this->renderPrompt($page, false);
 	}
 
+	/**
+	 * The effective passcode. Site-wide mode always uses the extension default
+	 * (one code for the whole site); otherwise a page's own passcode wins, falling
+	 * back to the default.
+	 */
+	private function passcode(PageData $page): string
+	{
+		if ($this->globalScope) {
+			return $this->defaultPasscode;
+		}
+
+		return $this->stringConfig($page, 'passcode') ?: $this->defaultPasscode;
+	}
+
+	/**
+	 * The cookie scope. In site-wide mode every page shares one fixed scope, so a
+	 * single cookie unlocks the whole site. Otherwise, when a page sets a
+	 * `protectScope` group id, every page in that group shares one unlock cookie —
+	 * enter the passcode once, unlock them all (provided they share the same
+	 * passcode). Without a scope it falls back to the page's own id, so each page
+	 * is gated independently (the default).
+	 *
+	 * The scope is reduced to a cookie-name-safe token; an empty result (e.g. a
+	 * scope of only spaces/symbols) falls back to the page id.
+	 */
+	private function scopeKey(PageData $page): string
+	{
+		if ($this->globalScope) {
+			return self::GLOBAL_SCOPE_KEY;
+		}
+
+		$scope = (string)preg_replace('/[^A-Za-z0-9_-]/', '', $this->stringConfig($page, 'protectScope'));
+
+		return $scope !== '' ? $scope : $page->id;
+	}
+
+	private function isAdmin(): bool
+	{
+		return $this->isAdmin instanceof \Closure && ($this->isAdmin)() === true;
+	}
+
 	private function handleSubmit(
 		ServerRequestInterface $request,
 		PageData $page,
+		string $key,
 		string $passcode,
 	): ResponseInterface {
 		$body  = $request->getParsedBody();
 		$input = is_array($body) ? trim((string)($body['passcode'] ?? '')) : '';
 
 		if ($input === $passcode) {
-			$cookie = $this->cookie($request, $page->id, $passcode);
+			$cookie = $this->cookie($request, $key, $passcode);
 
 			return (new Psr17Factory())->createResponse(302)
 				->withHeader('Location', $request->getUri()->getPath())
@@ -78,41 +160,47 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		return $this->renderPrompt($page, true);
 	}
 
-	private function hasCookie(ServerRequestInterface $request, string $pageId, string $passcode): bool
+	private function hasCookie(ServerRequestInterface $request, string $key, string $passcode): bool
 	{
 		$cookies  = $request->getCookieParams();
-		$existing = $cookies[self::COOKIE_PREFIX . $pageId] ?? null;
+		$existing = $cookies[self::COOKIE_PREFIX . $key] ?? null;
 
 		if (!is_string($existing) || $existing === '') {
 			return false;
 		}
 
-		return hash_equals($this->hmac($pageId, $passcode), $existing);
+		return hash_equals($this->hmac($key, $passcode), $existing);
 	}
 
 	/**
-	 * Compute the HMAC for a (pageId, passcode) pair.
+	 * Compute the HMAC for a (scope key, passcode) pair.
 	 *
 	 * Key:     per-install secret (loaded from .system/protect/secret)
-	 * Message: "pageId:passcode" — binds the token to both the specific
-	 *          page and the correct passcode for that page.
+	 * Message: "<key>:passcode" — binds the token to both the scope (the page's
+	 *          own id, or a shared `protectScope` group) and the correct passcode.
+	 *          A cookie for one scope cannot be replayed against a different one.
 	 */
-	private function hmac(string $pageId, string $passcode): string
+	private function hmac(string $key, string $passcode): string
 	{
-		return hash_hmac('sha256', $pageId . ':' . $passcode, $this->secret);
+		return hash_hmac('sha256', $key . ':' . $passcode, $this->secret);
 	}
 
-	private function cookie(ServerRequestInterface $request, string $pageId, string $passcode): string
+	private function cookie(ServerRequestInterface $request, string $key, string $passcode): string
 	{
-		$expires = gmdate('D, d M Y H:i:s T', time() + self::COOKIE_TTL);
 		$isHttps = $request->getUri()->getScheme() === 'https';
 		$secure  = $isHttps ? '; Secure' : '';
 
+		// A non-positive TTL means a session cookie: omit Expires so the browser
+		// drops it when it closes. Otherwise expire it $cookieTtl seconds out.
+		$expires = $this->cookieTtl > 0
+			? '; Expires=' . gmdate('D, d M Y H:i:s T', time() + $this->cookieTtl)
+			: '';
+
 		return sprintf(
-			'%s%s=%s; Expires=%s; Path=/; SameSite=Lax; HttpOnly%s',
+			'%s%s=%s%s; Path=/; SameSite=Lax; HttpOnly%s',
 			self::COOKIE_PREFIX,
-			$pageId,
-			$this->hmac($pageId, $passcode),
+			$key,
+			$this->hmac($key, $passcode),
 			$expires,
 			$secure,
 		);

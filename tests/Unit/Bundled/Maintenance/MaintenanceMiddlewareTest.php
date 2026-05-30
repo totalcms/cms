@@ -99,11 +99,23 @@ final class MaintenanceMiddlewareTest extends TestCase
 	{
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 1800]]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 30]]),
 		);
 
 		$this->assertNotNull($response);
+		// retryAfter is configured in minutes; the header is emitted in seconds.
 		$this->assertSame('1800', $response->getHeaderLine('Retry-After'));
+	}
+
+	public function testRetryAfterConvertsMinutesToSeconds(): void
+	{
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 2]]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame('120', $response->getHeaderLine('Retry-After'));
 	}
 
 	public function testDefaultRetryAfterIsOneHour(): void
@@ -121,7 +133,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 	{
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 0]]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 0]]),
 		);
 
 		$this->assertNotNull($response);
@@ -132,7 +144,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 	{
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 'soon']]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 'soon']]),
 		);
 
 		$this->assertNotNull($response);
@@ -223,7 +235,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 
 	public function testExtensionDefaultRetryAfterUsedWhenPageOmitsIt(): void
 	{
-		$middleware = new MaintenanceMiddleware(defaultRetryAfter: 900);
+		$middleware = new MaintenanceMiddleware(defaultRetryAfterMinutes: 15);
 
 		$response = $middleware->handle(
 			$this->request(),
@@ -231,19 +243,21 @@ final class MaintenanceMiddlewareTest extends TestCase
 		);
 
 		$this->assertNotNull($response);
+		// 15 minutes → 900 seconds.
 		$this->assertSame('900', $response->getHeaderLine('Retry-After'));
 	}
 
 	public function testPageRetryAfterOverridesExtensionDefault(): void
 	{
-		$middleware = new MaintenanceMiddleware(defaultRetryAfter: 900);
+		$middleware = new MaintenanceMiddleware(defaultRetryAfterMinutes: 15);
 
 		$response = $middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 60]]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 1]]),
 		);
 
 		$this->assertNotNull($response);
+		// Page override (1 minute) wins over the extension default → 60 seconds.
 		$this->assertSame('60', $response->getHeaderLine('Retry-After'));
 	}
 
