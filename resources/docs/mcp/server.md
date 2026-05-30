@@ -180,8 +180,21 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `update_schema` | admin | Replace an existing schema definition. Idempotent (same input → same final state). |
 | `delete_schema` | admin | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
 | `create_collection` | admin | Create a new collection bound to a schema. Errors on duplicate id. |
+| `create_object` | admin | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
+| `update_object` | admin | Replace a content object by id. Idempotent. Full replace, not a partial merge — send the whole object. See *Binary fields* below. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
 | `clear_cache` | admin | **Destructive.** Flush every available cache backend. Returns per-backend status. |
+
+#### Binary fields on `create_object` / `update_object`
+
+Image, file, gallery, and depot fields can't be written through MCP — they need an upload pipeline (multipart bodies, storage handles) that a JSON tool call doesn't carry. The tools handle this at the **payload level**, not the schema level:
+
+- A collection that merely *contains* a binary field is fully writable — just **omit** those fields from your payload. On `create_object` they're left unset; on `update_object` they keep their current value (the update never wipes an image you didn't touch).
+- If the payload actually sets a non-empty value on a binary field, the call is refused with an error naming the offending fields. Drop them and retry, or edit those fields in the admin UI.
+
+This means content-rich collections (blog posts with an optional hero image, etc.) work end-to-end from an agent. Set binary fields afterward in the admin UI, or via the admin clone feature.
+
+> Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send it back to `update_object`, strip the binary fields first (or blank them) — otherwise the call is refused.
 
 ---
 
@@ -444,6 +457,8 @@ Anonymous callers are throttled at `mcp.publicIpPerMinute` requests per IP per 6
 A 429 response includes `Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Window` headers.
 
 **Multi-worker caveat:** APCu-only installs see a per-worker counter, so effective limit ≈ `publicIpPerMinute × worker_count`. Configure Redis for accurate accounting.
+
+**Reverse-proxy rate limits:** This is T3's *application*-layer throttle for anonymous callers. If you also rate-limit at the web server (Nginx `limit_req`, etc.), do **not** put the MCP endpoint in the same low-rate zone you use for admin login — agents batch tool calls in parallel and will hit a 1 req/s login zone instantly, surfacing as timeouts rather than clean 429s. Give `/mcp` its own generous zone with a healthy burst. See [Nginx → Rate limiting the MCP endpoint](docs/operations/nginx) for a worked config.
 
 ### Activity log (G3)
 
