@@ -137,9 +137,9 @@ final class ScheduledMiddlewareTest extends TestCase
 		));
 	}
 
-	// --- outside window ---
+	// --- outside window: before → beforeWindow, after → afterWindow ---
 
-	public function testBeforeWindowRedirects(): void
+	public function testBeforeWindowRedirectsToBeforeWindow(): void
 	{
 		$this->middleware->setNow(new \DateTimeImmutable('2026-11-20T00:00:00Z'));
 
@@ -148,16 +148,16 @@ final class ScheduledMiddlewareTest extends TestCase
 			$this->page('sale', [
 				'scheduledFrom'  => '2026-11-25T00:00:00Z',
 				'scheduledUntil' => '2026-12-31T23:59:59Z',
-				'outsideWindow'  => '/sale-ended',
+				'beforeWindow'   => '/coming-soon',
 			]),
 		);
 
 		$this->assertNotNull($response);
 		$this->assertSame(302, $response->getStatusCode());
-		$this->assertSame('/sale-ended', $response->getHeaderLine('Location'));
+		$this->assertSame('/coming-soon', $response->getHeaderLine('Location'));
 	}
 
-	public function testAfterWindowRedirects(): void
+	public function testAfterWindowRedirectsToAfterWindow(): void
 	{
 		$this->middleware->setNow(new \DateTimeImmutable('2027-01-02T00:00:00Z'));
 
@@ -166,7 +166,7 @@ final class ScheduledMiddlewareTest extends TestCase
 			$this->page('sale', [
 				'scheduledFrom'  => '2026-11-25T00:00:00Z',
 				'scheduledUntil' => '2026-12-31T23:59:59Z',
-				'outsideWindow'  => '/sale-ended',
+				'afterWindow'    => '/sale-ended',
 			]),
 		);
 
@@ -175,7 +175,56 @@ final class ScheduledMiddlewareTest extends TestCase
 		$this->assertSame('/sale-ended', $response->getHeaderLine('Location'));
 	}
 
-	public function testOutsideWindowWithNoRedirectReturns404(): void
+	public function testBeforeWindowIgnoresAfterWindowKey(): void
+	{
+		// Only afterWindow is set, so a not-yet-started page 404s — it must NOT
+		// redirect to the "sale ended" page.
+		$this->middleware->setNow(new \DateTimeImmutable('2026-11-20T00:00:00Z'));
+
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('sale', [
+				'scheduledFrom' => '2026-11-25T00:00:00Z',
+				'afterWindow'   => '/sale-ended',
+			]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testAfterWindowIgnoresBeforeWindowKey(): void
+	{
+		// Only beforeWindow is set, so an expired page 404s rather than bouncing
+		// visitors back to the "coming soon" page.
+		$this->middleware->setNow(new \DateTimeImmutable('2027-01-02T00:00:00Z'));
+
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('sale', [
+				'scheduledUntil' => '2026-12-31T23:59:59Z',
+				'beforeWindow'   => '/coming-soon',
+			]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testBeforeWindowWithNoRedirectReturns404(): void
+	{
+		$this->middleware->setNow(new \DateTimeImmutable('2026-11-20T00:00:00Z'));
+
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('launch', ['scheduledFrom' => '2026-11-25T00:00:00Z']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testAfterWindowWithNoRedirectReturns404(): void
 	{
 		$this->middleware->setNow(new \DateTimeImmutable('2027-01-02T00:00:00Z'));
 
@@ -191,15 +240,45 @@ final class ScheduledMiddlewareTest extends TestCase
 		$this->assertSame(404, $response->getStatusCode());
 	}
 
-	public function testBeforeFromOnlyReturns404(): void
+	// --- operator bypass (logged-in operators preview regardless of schedule) ---
+
+	public function testLoggedInOperatorBypassesSchedule(): void
 	{
+		$mw = new TestableScheduledMiddleware(isAdmin: static fn (): bool => true);
+		$mw->setNow(new \DateTimeImmutable('2026-11-20T00:00:00Z')); // before the window
+
+		// A page that would 404 for the public (before its window) renders for the operator.
+		$this->assertNull($mw->handle(
+			$this->request(),
+			$this->page('sale', [
+				'scheduledFrom'  => '2026-11-25T00:00:00Z',
+				'scheduledUntil' => '2026-12-31T23:59:59Z',
+			]),
+		));
+	}
+
+	public function testNonAdminVisitorIsGatedBySchedule(): void
+	{
+		$mw = new TestableScheduledMiddleware(isAdmin: static fn (): bool => false);
+		$mw->setNow(new \DateTimeImmutable('2026-11-20T00:00:00Z'));
+
+		$response = $mw->handle(
+			$this->request(),
+			$this->page('sale', ['scheduledFrom' => '2026-11-25T00:00:00Z']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	public function testNoAdminCheckGates(): void
+	{
+		// Default construction (no isAdmin closure) — the schedule still applies.
 		$this->middleware->setNow(new \DateTimeImmutable('2026-11-20T00:00:00Z'));
 
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('launch', [
-				'scheduledFrom' => '2026-11-25T00:00:00Z',
-			]),
+			$this->page('sale', ['scheduledFrom' => '2026-11-25T00:00:00Z']),
 		);
 
 		$this->assertNotNull($response);
