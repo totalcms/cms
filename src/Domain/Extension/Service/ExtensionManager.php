@@ -1174,13 +1174,25 @@ class ExtensionManager
 			// so they're always applied for an enabled extension rather than gated
 			// behind a toggle that would only leave the extension enabled-but-broken.
 			if ($this->container instanceof \DI\Container) {
+				$compiled = $this->container instanceof \DI\CompiledContainer;
 				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
-					// A compiled PHP-DI container rejects lazy definitions (a bare
-					// closure passed to set() is treated as a FactoryDefinition) added
-					// at runtime. Resolve the factory now and store the built instance
-					// as a raw value, which set() accepts on a compiled container.
-					// The factory contract is fn(ContainerInterface) => object.
-					$this->container->set($serviceId, $factory($this->container));
+					if ($compiled) {
+						// A compiled PHP-DI container rejects lazy definitions (a bare
+						// closure passed to set() is treated as a FactoryDefinition)
+						// added at runtime. Resolve the factory now and store the built
+						// instance as a raw value, which set() accepts on a compiled
+						// container. Safe here: the compiled core container is fully
+						// built before discovery, so the factory's dependencies exist.
+						// The factory contract is fn(ContainerInterface) => object.
+						$this->container->set($serviceId, $factory($this->container));
+					} else {
+						// Uncompiled container (dev/test): register the factory lazily
+						// so it's resolved on first get() — not eagerly at register()
+						// time. Eager resolution would force the factory's dependencies
+						// (e.g. TwigEngine) to exist this instant and, on failure, skip
+						// the whole extension instead of just that one service.
+						$this->container->set($serviceId, $factory);
+					}
 				}
 			}
 
