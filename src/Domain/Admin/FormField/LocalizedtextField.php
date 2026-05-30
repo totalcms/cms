@@ -73,7 +73,43 @@ class LocalizedtextField extends FormField
 
 		$tabsRow = HTMLUtils::element('div', $tabs, ['class' => 'locale-tabs', 'role' => 'tablist']);
 
-		return HTMLUtils::element('div', $nameCarrier . $tabsRow . $panes, ['class' => 'localized-stack']);
+		// Header row: the field label sits on the left, the locale tabs on the
+		// right. They share a line on wide screens and wrap to stacked rows
+		// (label over tabs) when they don't fit. The base-class field label is
+		// suppressed via createFieldLabel() so it isn't rendered twice.
+		$header = HTMLUtils::element(
+			'div',
+			$this->buildHeaderLabel($activeCode) . $tabsRow,
+			['class' => 'localized-header']
+		);
+
+		return HTMLUtils::element('div', $nameCarrier . $header . $panes, ['class' => 'localized-stack']);
+	}
+
+	/**
+	 * Suppress the default field-level label. The localized field renders its
+	 * own label inside the header row (next to the locale tabs) via
+	 * buildHeaderLabel(); without this override the label would appear twice.
+	 */
+	protected function createFieldLabel(string $tag = 'label'): string
+	{
+		return '';
+	}
+
+	/**
+	 * Render the field label for the header row. Unlike the base label (which
+	 * targets the non-existent `field-{uuid}` id), this points `for` at the
+	 * active locale's input so clicking the label focuses the visible control.
+	 */
+	protected function buildHeaderLabel(string $activeCode): string
+	{
+		if ($this->label === '') {
+			return '';
+		}
+
+		$slug = $this->slugifyLocale($activeCode);
+
+		return HTMLUtils::element('label', $this->label, ['for' => "field-{$this->uuid}-{$slug}"]);
 	}
 
 	/**

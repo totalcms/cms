@@ -1,9 +1,11 @@
 //------------------------------
 // Localized Text Fields (Pro)
 //
-// Lightweight tab strip floating above the active per-locale input. No
-// wrapping box — the input/textarea/styledtext inside renders at full
-// width and inherits the same styling as a non-localized field. The
+// Field label and a lightweight locale tab strip share a header row above
+// the active per-locale input (label left, tabs right; wraps to stacked
+// rows when narrow). No wrapping box — the input/textarea/styledtext inside
+// renders at full width and inherits the same styling as a non-localized
+// field. The
 // JS field class toggles `hidden` on inactive panes and updates
 // `aria-selected` on tabs. RTL locales propagate `dir="rtl"` to both
 // the tab label and the editable element so caret + text alignment
@@ -20,15 +22,30 @@
             gap            : .25rem;
         }
 
-        // Slim, label-style tab bar above the input. No background, no
-        // bottom border — the underline on the active tab is the only
-        // visual affordance, keeping the field as flat as a normal one.
+        // Header row — field label on the left, locale tabs on the right,
+        // sharing a single line. Wraps to stacked rows (label over tabs) on
+        // narrow screens, restoring the original layout when they don't fit.
+        .localized-header {
+            display         : flex;
+            flex-wrap       : wrap;
+            align-items     : center;
+            justify-content : space-between;
+            gap             : .25rem 1rem;
+
+            label {
+                margin : 0;
+            }
+        }
+
+        // Slim, label-style tab bar. No background, no bottom border — the
+        // underline on the active tab is the only visual affordance, keeping
+        // the field as flat as a normal one.
         .locale-tabs {
-            display      : flex;
-            flex-wrap    : wrap;
-            gap          : 1rem;
-            margin-block : 0.5rem;
-            padding      : 0;
+            display   : flex;
+            flex-wrap : wrap;
+            gap       : 1rem;
+            margin    : 0;
+            padding   : 0;
         }
 
         .locale-tab {
