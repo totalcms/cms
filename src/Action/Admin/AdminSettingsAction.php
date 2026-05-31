@@ -42,6 +42,15 @@ readonly class AdminSettingsAction
 			'currentSection' => $section,
 		];
 
+		// General section: detect APP_ENV override so the template can inform
+		// the operator when the Site Environment select is controlled externally.
+		if ($section === 'general') {
+			$appEnv                  = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+			$appEnvLocked            = is_string($appEnv) && $appEnv !== '';
+			$context['appEnvLocked'] = $appEnvLocked;
+			$context['appEnvValue']  = $appEnvLocked ? (string)$appEnv : '';
+		}
+
 		// OAuth section: surface the configured key paths and whether the
 		// files actually exist. Paths live in PHP config (config/defaults.php +
 		// tcms.php overrides), not in the JSON settings form, so the operator

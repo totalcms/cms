@@ -76,6 +76,17 @@
 				{"value": "alert",     "label": "Alert"},
 				{"value": "emergency", "label": "Emergency"}
 			]
+		},
+		"env": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Site Environment",
+			"help"    : "Production protects live visitors and auto-disables repeatedly crashing extensions. Development surfaces extension errors loudly and never auto-disables. Overridden when an APP_ENV environment variable is set.",
+			"default" : "prod",
+			"options" : [
+				{"value": "prod", "label": "Production"},
+				{"value": "dev",  "label": "Development"}
+			]
 		}
 	}
 }

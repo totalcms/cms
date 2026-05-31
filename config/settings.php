@@ -52,6 +52,14 @@ if (file_exists($settingsJsonFile)) {
 	}
 }
 
+// Environment variable wins over the settings.json toggle.
+// (settings.json was merged last above; re-apply APP_ENV so a server-level
+// APP_ENV — including Stacks' 'preview' — always overrides the UI setting.)
+$appEnv = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+if (is_string($appEnv) && $appEnv !== '') {
+	$settings['env'] = strtolower($appEnv);
+}
+
 // Validate test environment - prevent production bypass attempts
 if (($settings['env'] ?? '') === 'test') {
 	// Check multiple indicators that this is a legitimate test environment

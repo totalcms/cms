@@ -47,6 +47,7 @@ use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -463,6 +464,13 @@ return [
 			$container->get(Config::class),
 			$container->get(ManifestValidator::class),
 			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+		);
+	},
+
+	EnvironmentResolver::class => function (ContainerInterface $container): EnvironmentResolver {
+		return new EnvironmentResolver(
+			$container->get(Config::class),
+			\TotalCMS\TotalCMS::isPreview(),
 		);
 	},
 

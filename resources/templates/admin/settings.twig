@@ -230,6 +230,12 @@
 		</div>
 		{% endif %}
 
+		{% if currentSection == 'general' and appEnvLocked is defined and appEnvLocked %}
+		<div class="cms-info">
+			<p><strong>Site Environment is controlled by an environment variable.</strong> The <code>APP_ENV</code> environment variable is set to <code>{{ appEnvValue }}</code>, which overrides the Site Environment selector below. To change the environment via the UI, remove the <code>APP_ENV</code> variable from your server configuration.</p>
+		</div>
+		{% endif %}
+
 		{{ cms.form.settings(currentSection) }}
 
 		{% if currentSection == 'smtp' %}
