@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Template\Repository;
 
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
-use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 
@@ -37,20 +34,18 @@ final class TemplateRepositoryTest extends TestCase
 	}
 
 	/**
-	 * Build a repository whose datadir is the temp root. Pass a project
-	 * builder dir to model a git-managed project (highest read layer).
+	 * Build a repository whose datadir is the temp root. Git-management is
+	 * driven by whether `<root>/builder` ($this->projectBuilder) exists —
+	 * create it before calling to model a git-managed project.
 	 */
-	private function makeRepo(?string $projectTemplates = null): TemplateRepository
+	private function makeRepo(): TemplateRepository
 	{
-		$flysystem = new Filesystem(new LocalFilesystemAdapter($this->tmpRoot));
-		$storage   = new StorageFilesystemAdapter($flysystem);
-
 		$config          = $this->createMock(Config::class);
-		$config->env     = 'dev';
+		$config->root    = $this->tmpRoot . '/project';
 		$config->datadir = $this->tmpRoot;
-		$config->builder = $projectTemplates !== null ? ['projectTemplates' => $projectTemplates] : [];
+		$config->builder = [];
 
-		return new TemplateRepository($storage, new BuilderTemplatePaths($config));
+		return new TemplateRepository(new BuilderTemplatePaths($config));
 	}
 
 	protected function tearDown(): void
@@ -83,7 +78,7 @@ final class TemplateRepositoryTest extends TestCase
 
 	// --- layer-aware builder reads (Phase 1) ---
 
-	public function testFetchBuilderTemplateReadsDataLayerAndTagsSource(): void
+	public function testFetchBuilderTemplateReadsDataLayer(): void
 	{
 		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', '<h1>about</h1>');
 
@@ -91,7 +86,6 @@ final class TemplateRepositoryTest extends TestCase
 
 		$this->assertNotNull($template);
 		$this->assertSame('<h1>about</h1>', $template->contents);
-		$this->assertSame(BuilderTemplatePaths::LAYER_DATA, $template->source);
 	}
 
 	public function testFetchBuilderTemplatePrefersProjectLayer(): void
@@ -100,12 +94,12 @@ final class TemplateRepositoryTest extends TestCase
 		file_put_contents($this->projectBuilder . '/pages/about.twig', '<h1>project</h1>');
 		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', '<h1>data</h1>');
 
-		$repo     = $this->makeRepo($this->projectBuilder);
+		$repo     = $this->makeRepo();
 		$template = $repo->fetchBuilderTemplate('about', 'pages');
 
+		// Project layer wins — proven by the content it returned.
 		$this->assertNotNull($template);
 		$this->assertSame('<h1>project</h1>', $template->contents);
-		$this->assertSame(BuilderTemplatePaths::LAYER_PROJECT, $template->source);
 	}
 
 	public function testFetchBuilderTemplateReturnsNullWhenAbsent(): void
@@ -118,7 +112,7 @@ final class TemplateRepositoryTest extends TestCase
 		mkdir($this->projectBuilder . '/pages', 0755, true);
 		file_put_contents($this->projectBuilder . '/pages/about.twig', 'x');
 
-		$repo = $this->makeRepo($this->projectBuilder);
+		$repo = $this->makeRepo();
 
 		$this->assertTrue($repo->builderTemplateExists('about', 'pages'));
 		$this->assertFalse($repo->builderTemplateExists('missing', 'pages'));
@@ -133,11 +127,25 @@ final class TemplateRepositoryTest extends TestCase
 		file_put_contents($this->projectBuilder . '/pages/about.twig', 'project');
 		file_put_contents($this->projectBuilder . '/pages/home.twig', 'project');
 
-		$repo   = $this->makeRepo($this->projectBuilder);
+		$repo   = $this->makeRepo();
 		$result = $repo->listBuilderTemplates('pages', true);
 
 		// Union, deduped, sorted — about appears once.
 		$this->assertSame(['about', 'contact', 'home'], $result);
+	}
+
+	public function testListKeepsNumericTemplateNamesAsStrings(): void
+	{
+		// A template named "404" (the Not Found page) must come back as the
+		// string '404', not int 404 — array-key dedup would coerce it and break
+		// NestedFileTree's str_contains() in the builder sidebar.
+		file_put_contents($this->tmpRoot . '/builder/pages/404.twig', 'x');
+		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', 'x');
+
+		$result = $this->repo->listBuilderTemplates('pages', true);
+
+		$this->assertContainsOnly('string', $result);
+		$this->assertContains('404', $result);
 	}
 
 	// --- layer-aware writes (Phase 2) ---
@@ -157,7 +165,7 @@ final class TemplateRepositoryTest extends TestCase
 	public function testSaveTemplateWritesToProjectWhenManaged(): void
 	{
 		mkdir($this->projectBuilder, 0755, true);
-		$repo               = $this->makeRepo($this->projectBuilder);
+		$repo               = $this->makeRepo();
 		$template           = new \TotalCMS\Domain\Template\Data\TemplateData();
 		$template->id       = 'about';
 		$template->contents = '<h1>project</h1>';

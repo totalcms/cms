@@ -406,6 +406,12 @@ return [
 	'template.custom_desc'         => 'These are templates you have created. They can be referenced by name in your Twig code using the CMS template functions.',
 	'template.organization_title'  => 'Template Organization',
 	'template.organization_desc'   => 'Use folders to organize your templates. Create subfolders by including a forward slash (/) in the template name when creating it.',
+	'template.locked.title'        => 'Editing Disabled',
+	'template.locked.banner'       => 'Templates are managed via git on this environment. Edit them in your project repository and deploy.',
+	'template.source.project'      => 'Project',
+	'template.source.project_help' => 'Source-controlled in your project repository (project-root/builder).',
+	'template.source.builtin'      => 'Built-in',
+	'template.source.builtin_help' => 'A shipped default. Save a copy to override it.',
 
 	// ── Playground ──────────────────────────────────────────────────────────
 	'playground.filter'            => 'Filter Snippets',

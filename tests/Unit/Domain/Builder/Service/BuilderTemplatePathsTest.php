@@ -10,26 +10,30 @@ use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
 /**
- * Phase 0 of the git-first template workflow (docs/planning/builder-git-workflow.md).
+ * The git-first template workflow (docs/planning/builder-git-workflow.md).
  *
- * BuilderTemplatePaths is the single resolver that owns the builder template
- * read hierarchy, the admin write target, and the edit lock. Pure path/lock
- * logic — no behavior is wired into the app yet.
+ * BuilderTemplatePaths is the single resolver for the builder template read
+ * hierarchy, the admin write target, and the edit lock. Git-management is
+ * detected purely by the presence of `<project-root>/builder` — the same
+ * directory-existence convention T3 uses for `tcms-data`. No config keys.
  */
 final class BuilderTemplatePathsTest extends TestCase
 {
 	private string $tmpRoot;
+	private string $projectRoot;
 	private string $projectBuilder;
 	private string $dataBuilder;
 
 	protected function setUp(): void
 	{
-		// Unique scratch dirs per test. The project/builder dir is intentionally
-		// NOT created here — individual tests create it to model "git-managed".
 		$this->tmpRoot        = sys_get_temp_dir() . '/tcms-btp-' . uniqid('', true);
-		$this->projectBuilder = $this->tmpRoot . '/project/builder';
+		$this->projectRoot    = $this->tmpRoot . '/project';
+		$this->projectBuilder = $this->projectRoot . '/builder';
 		$this->dataBuilder    = $this->tmpRoot . '/tcms-data/builder';
+		// The data-layer builder dir always exists; the project one is created
+		// per-test to model a git-managed project.
 		mkdir($this->dataBuilder, 0o777, true);
+		mkdir($this->projectRoot, 0o777, true);
 	}
 
 	protected function tearDown(): void
@@ -37,15 +41,12 @@ final class BuilderTemplatePathsTest extends TestCase
 		$this->removeDir($this->tmpRoot);
 	}
 
-	/**
-	 * @param array<string,mixed> $builder
-	 */
-	private function makePaths(array $builder = [], string $env = 'prod'): BuilderTemplatePaths
+	private function makePaths(): BuilderTemplatePaths
 	{
 		$config          = $this->createMock(Config::class);
-		$config->env     = $env;
+		$config->root    = $this->projectRoot;
 		$config->datadir = $this->tmpRoot . '/tcms-data';
-		$config->builder = $builder;
+		$config->builder = [];
 
 		return new BuilderTemplatePaths($config);
 	}
@@ -65,213 +66,118 @@ final class BuilderTemplatePathsTest extends TestCase
 		rmdir($dir);
 	}
 
-	// --- projectDir ---
+	// --- directory locations ---
 
-	public function testProjectDirDefaultsToProjectRootBuilder(): void
+	public function testProjectDirIsRootBuilder(): void
 	{
-		$paths = $this->makePaths();
-
-		$this->assertSame(PathResolver::projectRoot() . '/builder', $paths->projectDir());
+		$this->assertSame($this->projectBuilder, $this->makePaths()->projectDir());
 	}
-
-	public function testProjectDirHonorsAbsoluteOverride(): void
-	{
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertSame($this->projectBuilder, $paths->projectDir());
-	}
-
-	public function testProjectDirResolvesRelativeOverrideAgainstProjectRoot(): void
-	{
-		$paths = $this->makePaths(['projectTemplates' => 'site/templates']);
-
-		$this->assertSame(PathResolver::projectRoot() . '/site/templates', $paths->projectDir());
-	}
-
-	// --- dataDir / defaultsDir ---
 
 	public function testDataDirIsDatadirBuilder(): void
 	{
-		$paths = $this->makePaths();
-
-		$this->assertSame($this->tmpRoot . '/tcms-data/builder', $paths->dataDir());
+		$this->assertSame($this->dataBuilder, $this->makePaths()->dataDir());
 	}
 
 	public function testDefaultsDirIsPackagedUnderResources(): void
 	{
-		$paths = $this->makePaths();
-
-		$this->assertSame(PathResolver::packageRoot() . '/resources/builder/defaults', $paths->defaultsDir());
+		$this->assertSame(
+			PathResolver::packageRoot() . '/resources/builder/defaults',
+			$this->makePaths()->defaultsDir(),
+		);
 	}
 
-	// --- isProjectManaged ---
+	// --- isProjectManaged (directory existence) ---
 
-	public function testIsProjectManagedFalseWhenProjectDirAbsent(): void
+	public function testIsProjectManagedFalseWhenProjectBuilderAbsent(): void
 	{
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertFalse($paths->isProjectManaged());
+		$this->assertFalse($this->makePaths()->isProjectManaged());
 	}
 
-	public function testIsProjectManagedTrueWhenProjectDirExists(): void
+	public function testIsProjectManagedTrueWhenProjectBuilderExists(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
-		$this->assertTrue($paths->isProjectManaged());
+		$this->assertTrue($this->makePaths()->isProjectManaged());
+	}
+
+	// --- locked == isProjectManaged (no env, no setting) ---
+
+	public function testLockedFalseForAdminFirstProject(): void
+	{
+		$this->assertFalse($this->makePaths()->locked());
+	}
+
+	public function testLockedTrueWheneverGitManaged(): void
+	{
+		mkdir($this->projectBuilder, 0o777, true);
+
+		// Locked everywhere once git-managed — environment is irrelevant.
+		$this->assertTrue($this->makePaths()->locked());
 	}
 
 	// --- writeTarget ---
 
-	public function testWriteTargetIsDataDirWhenNotProjectManaged(): void
+	public function testWriteTargetIsDataDirWhenAdminFirst(): void
 	{
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertSame($this->dataBuilder, $paths->writeTarget());
+		$this->assertSame($this->dataBuilder, $this->makePaths()->writeTarget());
 	}
 
-	public function testWriteTargetIsProjectDirWhenProjectManaged(): void
+	public function testWriteTargetIsProjectDirWhenGitManaged(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
-		$this->assertSame($this->projectBuilder, $paths->writeTarget());
+		$this->assertSame($this->projectBuilder, $this->makePaths()->writeTarget());
 	}
 
 	// --- readLayers (highest precedence first, existing dirs only) ---
 
 	public function testReadLayersIsDataOnlyForAdminFirstProject(): void
 	{
-		// No project dir, no shipped defaults dir → only tcms-data/builder.
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertSame([$this->dataBuilder], $paths->readLayers());
+		$this->assertSame([$this->dataBuilder], $this->makePaths()->readLayers());
 	}
 
-	public function testReadLayersPutsProjectFirstWhenManaged(): void
+	public function testReadLayersPutsProjectFirstWhenGitManaged(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
-		$this->assertSame([$this->projectBuilder, $this->dataBuilder], $paths->readLayers());
+		$this->assertSame([$this->projectBuilder, $this->dataBuilder], $this->makePaths()->readLayers());
 	}
 
 	public function testReadLayersExcludesDefaultsWhenNotShipped(): void
 	{
-		// The shipped defaults dir doesn't exist until Phase 4 — it must be
-		// filtered out, never returned as a non-existent path.
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+		$paths = $this->makePaths();
 
 		$this->assertNotContains($paths->defaultsDir(), $paths->readLayers());
 	}
 
-	// --- loaderPaths (reserved admin templates always first) ---
-
-	public function testLoaderPathsPrependReservedTemplates(): void
+	public function testReadLayersLabeledTagsSources(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertSame(
-			[
-				rtrim(\TotalCMS\Domain\Template\Repository\TemplateRepository::reservedTemplateDir(), '/'),
-				$this->projectBuilder,
-				$this->dataBuilder,
-			],
-			$paths->loaderPaths(),
-		);
-	}
-
-	// --- locked ---
-
-	public function testLockedTrueWhenExplicitlyEnabled(): void
-	{
-		$paths = $this->makePaths(['lockTemplates' => true], env: 'dev');
-
-		$this->assertTrue($paths->locked());
-	}
-
-	public function testLockedFalseWhenExplicitlyDisabledEvenInProd(): void
-	{
-		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(
-			['projectTemplates' => $this->projectBuilder, 'lockTemplates' => false],
-			env: 'prod',
-		);
-
-		$this->assertFalse($paths->locked());
-	}
-
-	public function testLockedAutoOnForGitManagedProductionSite(): void
-	{
-		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder], env: 'prod');
-
-		$this->assertTrue($paths->locked());
-	}
-
-	public function testLockedAutoOffForGitManagedDevSite(): void
-	{
-		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder], env: 'dev');
-
-		$this->assertFalse($paths->locked());
-	}
-
-	public function testLockedAutoOffForAdminFirstProductionSite(): void
-	{
-		// Back-compat keystone: a prod site with no project-root/builder has
-		// nothing in git to protect, so auto-lock must stay OFF — otherwise the
-		// 200+ existing admin-first sites lose in-admin template editing.
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder], env: 'prod');
-
-		$this->assertFalse($paths->locked());
-	}
-
-	// --- readLayersLabeled (source tagging) ---
-
-	public function testReadLayersLabeledForAdminFirstProject(): void
-	{
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertSame(
-			[['layer' => BuilderTemplatePaths::LAYER_DATA, 'dir' => $this->dataBuilder]],
-			$paths->readLayersLabeled(),
-		);
-	}
-
-	public function testReadLayersLabeledPutsProjectFirstWhenManaged(): void
-	{
-		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
 		$this->assertSame(
 			[
 				['layer' => BuilderTemplatePaths::LAYER_PROJECT, 'dir' => $this->projectBuilder],
 				['layer' => BuilderTemplatePaths::LAYER_DATA, 'dir' => $this->dataBuilder],
 			],
-			$paths->readLayersLabeled(),
+			$this->makePaths()->readLayersLabeled(),
 		);
 	}
 
-	// --- resolveRead (first existing file across layers, with its source) ---
+	// --- resolveRead ---
 
 	public function testResolveReadReturnsNullWhenAbsentEverywhere(): void
 	{
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertNull($paths->resolveRead('pages/about.twig'));
+		$this->assertNull($this->makePaths()->resolveRead('pages/about.twig'));
 	}
 
 	public function testResolveReadFindsFileInDataLayer(): void
 	{
 		mkdir($this->dataBuilder . '/pages', 0o777, true);
 		file_put_contents($this->dataBuilder . '/pages/about.twig', 'x');
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
 		$this->assertSame(
 			['layer' => BuilderTemplatePaths::LAYER_DATA, 'path' => $this->dataBuilder . '/pages/about.twig'],
-			$paths->resolveRead('pages/about.twig'),
+			$this->makePaths()->resolveRead('pages/about.twig'),
 		);
 	}
 
@@ -281,28 +187,40 @@ final class BuilderTemplatePathsTest extends TestCase
 		mkdir($this->dataBuilder . '/pages', 0o777, true);
 		file_put_contents($this->projectBuilder . '/pages/about.twig', 'project');
 		file_put_contents($this->dataBuilder . '/pages/about.twig', 'data');
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
 		$this->assertSame(
 			['layer' => BuilderTemplatePaths::LAYER_PROJECT, 'path' => $this->projectBuilder . '/pages/about.twig'],
-			$paths->resolveRead('pages/about.twig'),
+			$this->makePaths()->resolveRead('pages/about.twig'),
 		);
 	}
 
-	// --- writePath (active primary + relative path) ---
+	// --- writePath ---
 
-	public function testWritePathTargetsDataWhenNotManaged(): void
+	public function testWritePathTargetsDataWhenAdminFirst(): void
 	{
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
-
-		$this->assertSame($this->dataBuilder . '/pages/about.twig', $paths->writePath('pages/about.twig'));
+		$this->assertSame($this->dataBuilder . '/pages/about.twig', $this->makePaths()->writePath('pages/about.twig'));
 	}
 
-	public function testWritePathTargetsProjectWhenManaged(): void
+	public function testWritePathTargetsProjectWhenGitManaged(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
-		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
 
-		$this->assertSame($this->projectBuilder . '/pages/about.twig', $paths->writePath('pages/about.twig'));
+		$this->assertSame($this->projectBuilder . '/pages/about.twig', $this->makePaths()->writePath('pages/about.twig'));
+	}
+
+	// --- loaderPaths (reserved admin templates always first) ---
+
+	public function testLoaderPathsPrependReservedTemplates(): void
+	{
+		mkdir($this->projectBuilder, 0o777, true);
+
+		$this->assertSame(
+			[
+				rtrim(\TotalCMS\Domain\Template\Repository\TemplateRepository::reservedTemplateDir(), '/'),
+				$this->projectBuilder,
+				$this->dataBuilder,
+			],
+			$this->makePaths()->loaderPaths(),
+		);
 	}
 }

@@ -21,10 +21,20 @@
 <section>
 {% if template %}
 
+{% set templatesLocked = cms.admin.templatesLocked() %}
+{% if templatesLocked %}
+<div class="warning-box" role="status">
+	<div>
+		<strong>{{ t('template.locked.title') }}</strong>
+		<p>{{ t('template.locked.banner') }}</p>
+	</div>
+</div>
+{% endif %}
+
 {{ cms.form.template({
 	path        : url.file,
-	save        : cms.auth.canAccessTemplates() ? "Save" : false,
-	delete      : cms.auth.canAccessTemplates() ? "Delete" : false,
+	save        : (cms.auth.canAccessTemplates() and not templatesLocked) ? "Save" : false,
+	delete      : (cms.auth.canAccessTemplates() and not templatesLocked) ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

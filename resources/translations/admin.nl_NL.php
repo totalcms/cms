@@ -406,6 +406,12 @@ return [
 	'template.custom_desc'         => 'Dit zijn sjablonen die u heeft aangemaakt. Ze kunnen op naam worden verwezen in uw Twig-code met de CMS-sjabloonfuncties.',
 	'template.organization_title'  => 'Sjabloonorganisatie',
 	'template.organization_desc'   => 'Gebruik mappen om uw sjablonen te organiseren. Maak submappen aan door een schuine streep (/) op te nemen in de sjabloonnaam bij het aanmaken.',
+	'template.locked.title'        => 'Bewerken uitgeschakeld',
+	'template.locked.banner'       => 'Sjablonen worden in deze omgeving via git beheerd. Bewerk ze in uw projectrepository en deploy.',
+	'template.source.project'      => 'Project',
+	'template.source.project_help' => 'Onder versiebeheer in uw projectrepository (project-root/builder).',
+	'template.source.builtin'      => 'Ingebouwd',
+	'template.source.builtin_help' => 'Een meegeleverd standaardsjabloon. Sla een kopie op om het te overschrijven.',
 
 	// ── Playground ──────────────────────────────────────────────────────────
 	'playground.filter'            => 'Fragmenten filteren',

@@ -378,20 +378,6 @@ $settings['license'] = [
 $settings['builder'] = [
 	'pagesCollection' => 'builder-pages', // Collection ID for page metadata
 	'assetsPath'      => 'assets',        // Public assets directory relative to docroot
-
-	// Git-first template workflow (docs/planning/builder-git-workflow.md).
-	//
-	// projectTemplates: where source-controlled builder templates live. null =
-	//   <project-root>/builder. Set an absolute path, or one relative to the
-	//   project root, to point elsewhere. When this directory exists the builder
-	//   is "git-managed": it becomes the highest-precedence read layer and the
-	//   admin write target, and template sync is disabled (templates travel by
-	//   git, not the Sync Manager).
-	// lockTemplates: disable in-admin template editing. null = auto (locked only
-	//   when git-managed AND env is 'prod', so existing admin-first sites are
-	//   unaffected). true/false forces it on/off.
-	'projectTemplates' => null,
-	'lockTemplates'    => null,
 ];
 
 // MCP (Model Context Protocol) Server

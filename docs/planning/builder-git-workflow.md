@@ -2,7 +2,7 @@
 
 **Status:** Planning. Candidate for 3.6 (or a 3.5.x point release — scope is self-contained).
 
-Let serious developers source-control their Site Builder templates and deploy them via git, without the admin UI dirtying the working tree on production. Achieved with two orthogonal primitives: a **template read hierarchy** (built-in → project-root → tcms-data, resolved as a search path) and an **environment-aware write lock** (admin template editing disabled where templates are managed by git).
+Let serious developers source-control their Site Builder templates and deploy them via git, without the admin UI dirtying the working tree on production. Achieved with two orthogonal primitives: a **template read hierarchy** (built-in → project-root → tcms-data, resolved as a search path) and a **write lock** (admin template editing disabled wherever templates are git-managed — detected, like `tcms-data`, by the presence of a `<project-root>/builder` folder).
 
 ## Motivation
 
@@ -29,8 +29,8 @@ These were settled during design and are load-bearing for the rest of the plan.
 
 1. **project-root wins over tcms-data.** When a template exists in both `project-root/builder` and `tcms-data/builder`, the committed project copy is authoritative. The "admin edit silently masked by a committed file" footgun is avoided by the write-target rule (#3), not by precedence.
 2. **Built-in builder defaults are the floor, not the ceiling.** They are the *lowest*-precedence read source so project and runtime templates override them. (This is the correction to the intuitive "look at built-ins first" ordering — first-match-wins means built-ins-first would make them un-overridable.)
-3. **The admin writes to the active primary,** defined as: `project-root/builder` if that directory exists, else `tcms-data/builder`. This makes the two editable layers effectively mutually exclusive, so "both populated at once" only happens mid-migration (where project-root-wins is the safe choice anyway). No silent drift, no masking in normal use.
-4. **The lock auto-enables for git-managed production sites,** overridable. `builder.lockTemplates` defaults to `null` = "auto" = `true` only when the project is git-managed (`project-root/builder` exists) **and** `cms.env === 'prod'`. An operator can force it on/off explicitly. The git-managed condition is load-bearing: `env` defaults to `'prod'`, so auto-locking on env alone would strip in-admin template editing from the 200+ existing admin-first sites — which have nothing in git to protect. (`'prod'` is T3's production env value; not `'production'`.)
+3. **Git-management is detected by directory existence — no config key.** If `<project-root>/builder` exists, the project is git-managed; absent (default), it's admin-first. This mirrors the convention T3 already uses for `tcms-data` (parent-root first, else docroot). The admin writes to the **active primary** — `<project-root>/builder` when git-managed, else `tcms-data/builder` — so the two editable layers are mutually exclusive (no silent drift/masking). The composer project setup offers to create + seed the folder; that's the explicit opt-in.
+4. **Git-managed ⇒ locked, in every environment.** `locked()` is simply `isProjectManaged()` — no setting, no env coupling. Once templates are source-controlled (the folder exists), the dashboard is read-only everywhere and the repo is the only write path; there's never a competing write surface, even on dev (editing in the IDE is the expectation). Admin-first projects are never locked. This is simpler and more correct than env-gating, which would have *allowed* drift on dev, and it sidesteps the `env`-defaults-to-`'prod'` footgun entirely.
 5. **Reserved / admin-UI templates are NOT part of this chain.** `resources/templates/` (the admin UI) stays first in the loader and unshadowable, exactly as today. This feature only governs *builder/site* templates.
 6. **Fully back-compatible.** A project with no `project-root/builder` directory behaves exactly as it does today: everything in `tcms-data/builder`, freely editable in the admin. No migration forced on the 200+ existing sites.
 7. **Page *records* are never git-controlled.** `builder-pages` objects (`route`, `template` binding, `middleware`, `accessGroups`, `title`, free-form `data`, etc.) stay as data in `tcms-data/builder-pages/` and are promoted local→production via the **Sync Manager** — the workflow they were designed for. They are half-content by nature (edited in the admin, often on prod), so committing them would reintroduce the dirty-working-tree problem this plan exists to remove. This feature governs *templates only*; the route/binding layer travels by sync, not git.
@@ -59,13 +59,12 @@ All admin/runtime writes (template save, designer save, `.designer.json`, `.hist
 
 ### Behavior matrix
 
-| Project setup | Env | `project-root/builder`? | Reads resolve from | Admin writes | Working tree |
-|---|---|---|---|---|---|
-| Git-first | local/dev | yes | project-root → defaults | → project-root (committable) | dev commits; clean repo |
-| Git-first | production | yes | project-root → defaults | **locked (403 / read-only)** | clean → webhooks succeed |
-| Admin-first (today) | any | no | tcms-data → defaults | → tcms-data (gitignored) | n/a (not a repo) |
+| Project setup | `project-root/builder`? | Reads resolve from | Admin editing | Working tree |
+|---|---|---|---|---|
+| Git-first (any env) | yes | project-root → defaults | **locked (403 / read-only)** — edit in IDE, commit, deploy | clean → webhooks succeed |
+| Admin-first (today) | no | tcms-data → defaults | editable in dashboard → writes to tcms-data (gitignored) | n/a (not a repo) |
 
-The git-first project never populates `tcms-data/builder`, so there is no override layer to drift or mask. The admin-first project never gains a `project-root/builder`, so it is byte-for-byte today's behavior.
+Git-management is the same in every environment (locked once the folder exists), so there's no env-dependent surprise. The git-first project never populates `tcms-data/builder`, so there's no override layer to drift or mask. The admin-first project never gains a `project-root/builder`, so it's byte-for-byte today's behavior.
 
 ## Current-state facts (what the plan builds on)
 
@@ -99,17 +98,7 @@ final class BuilderTemplatePaths
 }
 ```
 
-Backed by config:
-
-```php
-// config/defaults.php → builder block
-'builder' => [
-    'projectTemplates' => null,   // null = <project-root>/builder ; or an absolute/relative override
-    'lockTemplates'    => null,   // null = auto (true in production) ; true/false to force
-],
-```
-
-`projectTemplates` resolves relative to the project root (the same root the skeleton's `TCMS_PROJECT_ROOT` establishes), so subpath installs keep working.
+**No config keys.** `projectDir()` is `<project-root>/builder` (`Config::$root`, surfaced from the existing `$settings['root']` = `PathResolver::projectRoot()`). `isProjectManaged()` = `is_dir(projectDir())`; `locked()` = `isProjectManaged()`. Git-management is created by making the folder exist (composer setup, or a manual move), exactly like `tcms-data`.
 
 ### Layer-aware storage in `TemplateRepository`
 
@@ -125,15 +114,16 @@ The repository moves from one datadir-rooted adapter to **one read adapter per l
 
 A small gate consulted by `TemplateSaver` (covers every write path) and surfaced to the UI:
 
-- `BuilderTemplatePaths::locked(): bool` (from `lockTemplates`, auto-resolved against `cms.env`).
+- `BuilderTemplatePaths::locked(): bool` = `isProjectManaged()` (the `<project-root>/builder` folder exists).
 - `TemplateSaver::saveTemplate()` / `deleteTemplate()` throw a `TemplatesLockedException` (→ HTTP 403 with a clear message) when locked. Designer `PUT` returns 403 too.
 - Snapshot capture and `.designer.json` writes short-circuit under lock (nothing to version when editing is disabled).
 
 ## Phases
 
 ### Phase 0 — Config + resolver spine ✅ (done 2026-05-30, not yet committed)
-- Add the `builder.projectTemplates` / `builder.lockTemplates` config keys (`config/defaults.php`, `Config` accessors with `is_array()` guards per house style). ✅ keys added to the `builder` block; `Config::$builder` already exists.
-- Build `BuilderTemplatePaths` + unit tests for: project present/absent → read order & write target; lock auto-resolution by env; explicit lock override; `projectTemplates` override path. ✅ `src/Domain/Builder/Service/BuilderTemplatePaths.php` + 18 tests in `tests/Unit/Domain/Builder/Service/BuilderTemplatePathsTest.php`, all green, PHPStan clean. Resolved via PHP-DI autowiring (single `Config` dependency); no container entry needed until Phase 1 wires consumers.
+- No config keys. ✅ `Config::$root` surfaced (from the existing `$settings['root']`) so `BuilderTemplatePaths::projectDir()` resolves `<project-root>/builder`. Git-management is detected by directory existence (`is_dir`), like `tcms-data` — `defaults.php` carries only an explanatory comment.
+- Build `BuilderTemplatePaths` + unit tests for: project present/absent → read order, write target, `isProjectManaged`, `locked`; `resolveRead` precedence; `loaderPaths`. ✅ `src/Domain/Builder/Service/BuilderTemplatePaths.php` + 19 tests in `tests/Unit/Domain/Builder/Service/BuilderTemplatePathsTest.php`, all green, PHPStan clean. Resolved via PHP-DI autowiring (single `Config` dependency).
+- **Activation model revised 2026-05-30:** dropped the originally-planned `projectTemplates`/`lockTemplates` config keys in favor of directory-existence detection + `locked() == isProjectManaged()` (see Decisions 3–4).
 - No behavior change yet (nothing consumes the resolver until Phase 1).
 
 ### Phase 1 — Read chain (render + repository) ✅ (done 2026-05-30, not yet committed)
@@ -151,10 +141,20 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
 - **Snapshots stay in datadir always** (`.history`) — even for git-managed projects. They're ephemeral local undo, gitignored under `tcms-data` regardless; keeping timestamped history out of the committed project dir is desirable. (Means Phase 5 needs no project `.history` gitignore.)
 - Tests: ✅ write lands in project-root when present / tcms-data otherwise + idempotent delete (`TemplateRepositoryTest`); lock refuses save/designer/delete (`TemplateSaverTest`, `TemplateRemoverTest`); git-managed push forces empty template filter (`SyncServiceTest`); designer sync skip preserved (`TemplateDesignerSyncTest`). 1160 unit + 575 feature green, PHPStan L8 clean.
 
-### Phase 3 — Admin UX
-- Editor: read-only state + banner ("Templates are managed via git on this environment — edit them in your project repo and deploy.") when locked.
-- List: source badges (`Project` / `Data` / `Built-in`) so it's never ambiguous which layer served a template, and an "overriding a built-in default" hint.
-- Builder editor (`AdminBuilderAction`) honors the same read-only/banner treatment.
+**Post-simplification cleanup (2026-05-30) — obsolete code removed.** Once reads + writes went fully native (Phases 1–2), several bits were orphaned and have been deleted:
+- `TemplateRepository` no longer **extends `StorageRepository`** — it never used `$this->filesystem`, the serializer, or `fetchAndDeserialize`. Dropped the base class + the `StorageAdapterInterface` constructor param (now `__construct(BuilderTemplatePaths $paths)`). It's a standalone native-I/O repository; the data repositories still extend `StorageRepository`. (`TemplateSnapshotRepository` legitimately keeps it — snapshots write to datadir via Flysystem.)
+- Removed `TemplateRepository::customPath()` and `designerMetaPath()` — zero callers after writes moved to `relativeTemplatePath()` + `writePath()`.
+- Removed `TemplateData::$source` (+ its `toArray()` key, the `fetchBuilderTemplate` assignment, `TemplateDataTest`) — nothing consumed it; the sidebar badges resolve the layer fresh in `AdminTwigAdapter` via `resolveRead()`.
+- Kept (verified still used): `BUILDER_DIR` (consumed by `TemplateSnapshotRepository` + `TemplateMigrationService`), `defaultsDir()`/`LAYER_BUILTIN` (dormant until Phase 4), `relativeTemplatePath()`, reserved-template methods, `resolveRead()`'s layer (badges).
+
+### Phase 3 — Admin UX ✅ (done 2026-05-30, not yet committed)
+- ✅ Lock state exposed via `cms.admin.templatesLocked()` (`AdminTwigAdapter` gained a `BuilderTemplatePaths` dep). Both editors — `admin/template/edit.twig` and `admin/builder/editor.twig` — show a read-only banner and drop the Save/Delete controls (and the Duplicate action) when locked. Server-side the lock already 403s; this removes the confusing dead-end.
+- ✅ Source badges in the templates sidebar (`templatesByFolder()` tags each entry with its `source` layer via `resolveRead()` — computed fresh in the adapter, not stored on `TemplateData`): a `Project` badge (accent) for git-managed templates and a `Built-in` badge (muted) for shipped defaults. **`data` (the normal admin-edited case) gets no badge** — badging every row would be noise; only the noteworthy sources are flagged.
+- ✅ The lock banner uses the shared `.warning-box` callout (icon + warning-colored `<strong>` header "Editing Disabled" + message) — no bespoke CSS. i18n: `template.locked.title` + `template.locked.banner` + `template.source.{project,project_help,builtin,builtin_help}` added to all six locale files (en_US, en_GB, de_DE, es_ES, nl_NL, it_IT).
+- Tests: `AdminTwigAdapterTemplatesTest` (locked + source tagging, via reflection). PHPStan L8 clean, all locale files lint-clean, translation parity test green.
+- Note: a `TemplateData::$source` field was added then removed — nothing consumed it (the badges resolve source in the adapter; the editor's fetched JSON only uses `id`+content). Kept it out to avoid a dead field.
+- ⚠️ Visual states (banner shown, badges rendered) aren't feature-tested: the test env is admin-first + unlocked, so no project/built-in layer or lock exists to render. Covered by the adapter unit test + the conditional logic; worth a manual browser check before release.
+- Deferred (small): source badges in the **builder file-tree** sidebar (`NestedFileTree`) — the templates-page sidebar has them; the tree would need each node to carry its source.
 
 ### Phase 4 — Built-in defaults as the floor
 - Ship a canonical default builder set at `resources/builder/defaults/` (minimal `layouts/default.twig` + the partials a bare page needs).
@@ -170,7 +170,7 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
   ```
   (Templates in `<project-root>/builder/` are committed; `.history/` snapshots are local undo, not source.)
 - Docs: new page under `resources/docs/operations/` — "Git-first template workflow" — covering the read hierarchy, the lock, the `.history/` exclusion, the deploy-webhook story, and that templates travel by git while page records travel by the Sync Manager (Decisions 7 & 8). Add to `resources/docs/menu.php` (Operations group) and rebuild `search-index.json`.
-- **Migrating an existing site from `tcms-data/builder` to git** is a documented manual step, not a CLI command: move the `builder/` folder to the project root and set `builder.projectTemplates` (the resolver then treats it as the active primary). Cheap enough to not warrant tooling.
+- **Migrating an existing site from `tcms-data/builder` to git** is a documented manual step, not a CLI command: move the `builder/` folder to the project root. Its presence flips the resolver to git-managed — no setting to change. Cheap enough to not warrant tooling.
 
 ### Phase 6 — Tests & regression sweep
 - Full back-compat pass: an admin-first project (no `project-root/builder`) is unchanged across render, edit, designer, JumpStart, starters.
@@ -181,5 +181,5 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
 - Content-as-source-of-truth / auto-commit-from-admin (the Statamic Git Automation persona). Different workflow; not this plan.
 - **Git-controlling `builder-pages` records** (see Decision 7). They are data, promoted local→production via the Sync Manager, not git. A fresh `git clone` brings up the templates; the routes/bindings come over by sync. This is intentional, not a gap.
 - Making the admin-UI/`/admin` route or the `tcms-data` content directory itself source-controlled.
-- A `tcms builder:eject` (or similar) migration command. Moving `builder/` to the project root and setting `builder.projectTemplates` is a trivial manual step — documented, not tooled.
+- A `tcms builder:eject` (or similar) migration command. Moving `builder/` to the project root is a trivial manual step (its presence is the switch) — documented, not tooled.
 - Per-template lock granularity. The lock is environment-wide for builder templates.

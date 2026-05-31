@@ -3,19 +3,20 @@
 namespace TotalCMS\Domain\Template\Repository;
 
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
-use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
 use TotalCMS\Support\PathResolver;
 
 /**
- * Repository.
+ * Reads/writes Site Builder + reserved templates. Pure native file I/O via
+ * {@see BuilderTemplatePaths} (the read hierarchy + write target) — it does
+ * NOT use the Flysystem-backed StorageRepository like the data repositories,
+ * because Twig templates are always local files resolved by absolute path.
  *
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-class TemplateRepository extends StorageRepository
+class TemplateRepository
 {
 	public const FILE_EXT            = '.twig';
 	public const DESIGNER_META_EXT   = '.designer.json';
@@ -38,10 +39,8 @@ class TemplateRepository extends StorageRepository
 	}
 
 	public function __construct(
-		StorageAdapterInterface $filesystem,
 		private readonly BuilderTemplatePaths $paths,
 	) {
-		parent::__construct($filesystem);
 	}
 
 	/**
@@ -68,22 +67,6 @@ class TemplateRepository extends StorageRepository
 		}
 
 		return $rel . $template . $ext;
-	}
-
-	/**
-	 * generate a custom template path (datadir-relative, includes `builder/`).
-	 */
-	public function customPath(string $template, ?string $folder = null): string
-	{
-		return self::BUILDER_DIR . $this->relativeTemplatePath($template, $folder, self::FILE_EXT);
-	}
-
-	/**
-	 * Generate a designer metadata companion file path.
-	 */
-	public function designerMetaPath(string $template, ?string $folder = null): string
-	{
-		return self::BUILDER_DIR . $this->relativeTemplatePath($template, $folder, self::DESIGNER_META_EXT);
 	}
 
 	/**
@@ -278,8 +261,7 @@ class TemplateRepository extends StorageRepository
 		}
 
 		// Empty content is valid for templates - allows editing blank templates
-		$templateData         = TemplateFactory::generateTemplate($template, $contents);
-		$templateData->source = $resolved['layer'];
+		$templateData = TemplateFactory::generateTemplate($template, $contents);
 
 		// Load designer metadata if companion file exists
 		$designerMeta = $this->fetchDesignerMeta($template, $folder);
@@ -338,15 +320,19 @@ class TemplateRepository extends StorageRepository
 		// Union the template names across every read layer (project-root →
 		// tcms-data → built-in defaults), deduped — so a git-managed project's
 		// templates appear in admin listings alongside any datadir leftovers.
+		//
+		// Collect into a flat list and dedupe with array_unique (NOT array keys):
+		// a numeric template name like "404" would be coerced to int if used as a
+		// key, which then breaks string ops (e.g. NestedFileTree's str_contains).
 		$names = [];
 		foreach ($this->paths->readLayers() as $layerDir) {
 			foreach ($this->listLayerTemplates($layerDir, $folder, $recursive) as $name) {
-				$names[$name] = true;
+				$names[] = $name;
 			}
 		}
 
-		$files = array_keys($names);
-		sort($files);
+		$files = array_values(array_unique($names));
+		sort($files, SORT_STRING);
 
 		return $files;
 	}

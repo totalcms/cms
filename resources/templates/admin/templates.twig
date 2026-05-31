@@ -17,6 +17,8 @@
 					<a {% if url.template == template.path %}class="active"{% endif %}
 						href="templates/{{ template.path }}"
 						title="{{ template.id }}">{{ template.id }}</a>
+					{% if template.source == 'project' %}<span class="dash-badge sm accent" title="{{ t('template.source.project_help') }}">{{ t('template.source.project') }}</span>
+					{% elseif template.source == 'built-in' %}<span class="dash-badge sm muted" title="{{ t('template.source.builtin_help') }}">{{ t('template.source.builtin') }}</span>{% endif %}
 				</li>
 			{% endfor %}
 			</ul>

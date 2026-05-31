@@ -54,6 +54,8 @@ class Config
 	/** @var array<string,mixed> */
 	public array $presets  = [];
 	public string $docroot = '';
+	/** Project root (the composer project / install root; `PathResolver::projectRoot()`). */
+	public string $root = '';
 	/** @var array<string,mixed> */
 	public array $builder = [];
 	/** @var array<string,mixed> */
@@ -102,6 +104,7 @@ class Config
 		$this->maxDownloadSize    = (int)($settings['maxDownloadSize'] ?? 2048);
 		$this->timezone           = $settings['timezone'] ?? date_default_timezone_get();
 		$this->docroot            = $settings['docroot'] ?? $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$this->root               = (string)($settings['root'] ?? PathResolver::projectRoot());
 		$this->htmlclean          = is_array($settings['htmlclean'] ?? null) ? $settings['htmlclean'] : [];
 		$this->smtp               = is_array($settings['smtp'] ?? null) ? $settings['smtp'] : [];
 		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];

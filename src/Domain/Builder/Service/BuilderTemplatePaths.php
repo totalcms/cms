@@ -13,15 +13,20 @@ use TotalCMS\Support\PathResolver;
  * templates are read from (and in what precedence), where the admin/runtime
  * writes them, and whether editing is locked because they're managed by git.
  *
+ * Git-management is detected by the presence of `<project-root>/builder` — the
+ * same directory-existence convention T3 uses for `tcms-data`. No config keys:
+ * create the folder (the composer setup offers to) and templates become
+ * source-controlled; leave it absent (default) and they live in `tcms-data`.
+ *
  * Read precedence (first match wins), site/builder templates only:
  *   1. <project-root>/builder   — committed, dev source of truth
  *   2. <datadir>/builder        — runtime / admin-edited
  *   3. <package>/resources/builder/defaults — shipped fallback (the floor)
  *
- * The admin writes to the "active primary": the project dir when it exists,
- * otherwise the datadir dir. This keeps the two editable layers effectively
- * mutually exclusive, so a git-first project never accrues a tcms-data
- * override layer and an admin-first project is byte-for-byte today's behavior.
+ * When git-managed, `<project-root>/builder` is both the top read layer and the
+ * write target, and admin editing is locked (read-only) in every environment —
+ * templates travel by git, not the dashboard. Absent, it's byte-for-byte the
+ * historical admin-first behavior.
  *
  * See docs/planning/builder-git-workflow.md.
  */
@@ -40,20 +45,12 @@ readonly class BuilderTemplatePaths
 	}
 
 	/**
-	 * The project-level builder directory (may not exist). Defaults to
-	 * `<project-root>/builder`; an operator may point it elsewhere via
-	 * `builder.projectTemplates` (absolute, or relative to the project root).
+	 * The project-level builder directory (may not exist): `<project-root>/builder`.
+	 * Its existence is what flips a project into git-managed mode.
 	 */
 	public function projectDir(): string
 	{
-		$override = $this->config->builder['projectTemplates'] ?? null;
-		if (is_string($override) && $override !== '') {
-			return str_starts_with($override, '/')
-				? $override
-				: PathResolver::projectRoot() . '/' . $override;
-		}
-
-		return PathResolver::projectRoot() . '/' . self::BUILDER_DIRNAME;
+		return $this->config->root . '/' . self::BUILDER_DIRNAME;
 	}
 
 	/**
@@ -169,18 +166,13 @@ readonly class BuilderTemplatePaths
 	}
 
 	/**
-	 * Whether admin/runtime template editing is locked. Explicit
-	 * `builder.lockTemplates` wins; otherwise auto: locked only when the
-	 * project is git-managed AND running in production. An admin-first site
-	 * (nothing in git to protect) is never auto-locked.
+	 * Whether admin/runtime template editing is locked. Git-managed projects
+	 * are locked in every environment — templates are source-controlled, so the
+	 * dashboard is read-only and the repo is the only write path. Admin-first
+	 * projects are never locked.
 	 */
 	public function locked(): bool
 	{
-		$explicit = $this->config->builder['lockTemplates'] ?? null;
-		if (is_bool($explicit)) {
-			return $explicit;
-		}
-
-		return $this->isProjectManaged() && $this->config->env === 'prod';
+		return $this->isProjectManaged();
 	}
 }

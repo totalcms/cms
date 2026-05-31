@@ -406,6 +406,12 @@ return [
 	'template.custom_desc'         => 'Estas son las plantillas que usted ha creado. Pueden ser referenciadas por nombre en su código Twig usando las funciones de plantilla del CMS.',
 	'template.organization_title'  => 'Organización de plantillas',
 	'template.organization_desc'   => 'Use carpetas para organizar sus plantillas. Cree subcarpetas incluyendo una barra diagonal (/) en el nombre de la plantilla al crearla.',
+	'template.locked.title'        => 'Edición deshabilitada',
+	'template.locked.banner'       => 'Las plantillas se gestionan mediante git en este entorno. Edítelas en el repositorio de su proyecto y despliegue.',
+	'template.source.project'      => 'Proyecto',
+	'template.source.project_help' => 'Controlada por versiones en el repositorio del proyecto (project-root/builder).',
+	'template.source.builtin'      => 'Integrada',
+	'template.source.builtin_help' => 'Una plantilla predeterminada incluida. Guarde una copia para sobrescribirla.',
 
 	// ── Playground ──────────────────────────────────────────────────────────
 	'playground.filter'            => 'Filtrar fragmentos',

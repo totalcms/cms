@@ -406,6 +406,12 @@ return [
 	'template.custom_desc'         => 'Dies sind von Ihnen erstellte Vorlagen. Sie können in Ihrem Twig-Code über die CMS-Vorlagenfunktionen referenziert werden.',
 	'template.organization_title'  => 'Vorlagen-Organisation',
 	'template.organization_desc'   => 'Verwenden Sie Ordner, um Ihre Vorlagen zu organisieren. Erstellen Sie Unterordner, indem Sie beim Erstellen einen Schrägstrich (/) im Vorlagennamen verwenden.',
+	'template.locked.title'        => 'Bearbeitung deaktiviert',
+	'template.locked.banner'       => 'Vorlagen werden in dieser Umgebung über Git verwaltet. Bearbeiten Sie sie im Projekt-Repository und stellen Sie sie bereit.',
+	'template.source.project'      => 'Projekt',
+	'template.source.project_help' => 'Versioniert im Projekt-Repository (project-root/builder).',
+	'template.source.builtin'      => 'Integriert',
+	'template.source.builtin_help' => 'Eine mitgelieferte Standardvorlage. Speichern Sie eine Kopie, um sie zu überschreiben.',
 
 	// ── Playground ──────────────────────────────────────────────────────────
 	'playground.filter'            => 'Snippets filtern',

@@ -58,7 +58,18 @@ readonly class AdminTwigAdapter
 		private UpdateChecker $updateChecker,
 		private BuilderConfigService $builderConfig,
 		private CollectionFetcher $collectionFetcher,
+		private \TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $paths,
 	) {
+	}
+
+	/**
+	 * Whether builder template editing is locked because templates are
+	 * git-managed on this environment. Admin views use this to show a
+	 * read-only banner and hide the save/delete controls.
+	 */
+	public function templatesLocked(): bool
+	{
+		return $this->paths->locked();
 	}
 
 	/**
@@ -273,10 +284,13 @@ readonly class AdminTwigAdapter
 				$folders[$groupName] = [];
 			}
 
+			$resolved = $this->paths->resolveRead($path . TemplateRepository::FILE_EXT);
+
 			$folders[$groupName][] = [
 				'id'     => $templateId,
 				'folder' => $folder ?? '',
 				'path'   => $path, // Full path for linking
+				'source' => $resolved['layer'] ?? '',
 			];
 		}
 
