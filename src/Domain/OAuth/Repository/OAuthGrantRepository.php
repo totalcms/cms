@@ -13,10 +13,10 @@ use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
  * rename — POSIX guarantees the rename is atomic so concurrent readers
  * never see a partial file.
  */
-final class OAuthGrantRepository
+final readonly class OAuthGrantRepository
 {
 	public function __construct(
-		private readonly string $storagePath,
+		private string $storagePath,
 	) {
 	}
 
@@ -63,7 +63,7 @@ final class OAuthGrantRepository
 	public function all(): array
 	{
 		return array_map(
-			static fn (array $entry): OAuthGrantData => OAuthGrantData::fromArray($entry),
+			OAuthGrantData::fromArray(...),
 			$this->loadAll(),
 		);
 	}
@@ -150,7 +150,7 @@ final class OAuthGrantRepository
 			return [];
 		}
 
-		return array_values(array_filter($data['grants'], 'is_array'));
+		return array_values(array_filter($data['grants'], is_array(...)));
 	}
 
 	/**

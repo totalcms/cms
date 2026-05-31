@@ -343,7 +343,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 
 	public function testCustomTemplateReceivesRenderedMessageHtml(): void
 	{
-		$captured = [];
+		$captured   = [];
 		$middleware = new MaintenanceMiddleware(
 			template: 'maintenance',
 			templateRenderer: function (string $path, array $vars) use (&$captured): string {

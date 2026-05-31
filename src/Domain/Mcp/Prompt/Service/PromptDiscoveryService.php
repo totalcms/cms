@@ -102,7 +102,7 @@ final class PromptDiscoveryService
 			// is confirmed to propagate access into CollectionData::$mcp['access'].
 			try {
 				$collection = $this->collections->fetchCollection($prompt->targetCollection);
-				if ($collection !== null && isset($collection->mcp['access']) && is_string($collection->mcp['access']) && $collection->mcp['access'] !== '') {
+				if ($collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData && isset($collection->mcp['access']) && is_string($collection->mcp['access']) && $collection->mcp['access'] !== '') {
 					return $collection->mcp['access'];
 				}
 			} catch (\Throwable $e) {

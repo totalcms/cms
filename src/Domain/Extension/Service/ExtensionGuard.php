@@ -115,7 +115,7 @@ final class ExtensionGuard
 	private function quarantine(string $extensionId, int $count, \Throwable $e): void
 	{
 		$state = $this->stateRepository->getState($extensionId);
-		if ($state === null || $state->isQuarantined()) {
+		if (!$state instanceof \TotalCMS\Domain\Extension\Data\ExtensionState || $state->isQuarantined()) {
 			return;
 		}
 

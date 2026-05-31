@@ -9,36 +9,37 @@ function configWithEnv(string $env): Config
 {
 	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->env = $env;
+
 	return $config;
 }
 
-describe('EnvironmentResolver', function () {
-	test('quarantine allowed only in prod', function () {
+describe('EnvironmentResolver', function (): void {
+	test('quarantine allowed only in prod', function (): void {
 		$resolver = new EnvironmentResolver(configWithEnv('prod'), isPreview: false);
 		expect($resolver->isQuarantineAllowed())->toBeTrue();
 	});
 
-	test('quarantine blocked in dev', function () {
+	test('quarantine blocked in dev', function (): void {
 		$resolver = new EnvironmentResolver(configWithEnv('dev'), isPreview: false);
 		expect($resolver->isQuarantineAllowed())->toBeFalse();
 	});
 
-	test('quarantine blocked when preview, even if env is prod', function () {
+	test('quarantine blocked when preview, even if env is prod', function (): void {
 		$resolver = new EnvironmentResolver(configWithEnv('prod'), isPreview: true);
 		expect($resolver->isQuarantineAllowed())->toBeFalse();
 	});
 
-	test('unknown env is treated as non-prod', function () {
+	test('unknown env is treated as non-prod', function (): void {
 		$resolver = new EnvironmentResolver(configWithEnv('staging'), isPreview: false);
 		expect($resolver->isQuarantineAllowed())->toBeFalse();
 	});
 
-	test('errors surface loudly when not prod', function () {
+	test('errors surface loudly when not prod', function (): void {
 		$resolver = new EnvironmentResolver(configWithEnv('dev'), isPreview: false);
 		expect($resolver->shouldSurfaceErrors())->toBeTrue();
 	});
 
-	test('errors do not surface loudly in prod', function () {
+	test('errors do not surface loudly in prod', function (): void {
 		$resolver = new EnvironmentResolver(configWithEnv('prod'), isPreview: false);
 		expect($resolver->shouldSurfaceErrors())->toBeFalse();
 	});

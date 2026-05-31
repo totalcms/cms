@@ -11,10 +11,10 @@ use League\OAuth2\Server\Entities\UserEntityInterface;
  * Used internally; the password grant is disabled in T3, so
  * LeagueUserRepository always returns null.
  */
-final class LeagueUserEntity implements UserEntityInterface
+final readonly class LeagueUserEntity implements UserEntityInterface
 {
 	public function __construct(
-		private readonly string $identifier,
+		private string $identifier,
 	) {
 	}
 

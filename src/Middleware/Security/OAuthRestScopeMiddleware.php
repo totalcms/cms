@@ -59,12 +59,12 @@ readonly class OAuthRestScopeMiddleware implements MiddlewareInterface
 			$clientId = (string)$request->getAttribute('oauth_client_id', '');
 			$this->activityLogger->scopeRejected($clientId, $operation, $scopeList);
 
-			$body = (string)(json_encode([
+			$body = json_encode([
 				'error' => [
 					'message'   => 'OAuth token scopes do not permit this REST operation.',
 					'operation' => $operation,
 				],
-			]) ?: '{}');
+			]) ?: '{}';
 
 			return (new Response(403))
 				->withHeader('Content-Type', 'application/json')

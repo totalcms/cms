@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 
-describe('ExtensionState quarantine', function () {
-	test('defaults to not quarantined', function () {
+describe('ExtensionState quarantine', function (): void {
+	test('defaults to not quarantined', function (): void {
 		$state = new ExtensionState(enabled: true);
 		expect($state->isQuarantined())->toBeFalse();
 	});
 
-	test('quarantine round-trips through toArray/fromArray', function () {
-		$state = new ExtensionState(enabled: true);
+	test('quarantine round-trips through toArray/fromArray', function (): void {
+		$state             = new ExtensionState(enabled: true);
 		$state->quarantine = [
 			'reason'        => 'crashed',
 			'failureCount'  => 5,
@@ -26,8 +26,8 @@ describe('ExtensionState quarantine', function () {
 		expect($restored->quarantine['lastError'])->toBe('Boom');
 	});
 
-	test('clearQuarantine removes the block', function () {
-		$state = new ExtensionState(enabled: true);
+	test('clearQuarantine removes the block', function (): void {
+		$state             = new ExtensionState(enabled: true);
 		$state->quarantine = ['reason' => 'crashed', 'failureCount' => 5, 'lastError' => 'x', 'quarantinedAt' => 'now'];
 		$state->clearQuarantine();
 		expect($state->isQuarantined())->toBeFalse();

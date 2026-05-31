@@ -116,9 +116,7 @@ function streamingMcpInit(Slim\App $app): string
  * frames when the tool calls ClientGateway::progress(). Without a token,
  * progress() is a no-op and the tool responds with plain JSON.
  *
- * @param string               $toolName
  * @param array<string,mixed>  $arguments
- * @param string|null          $progressToken
  *
  * @return array<string,mixed>
  */
@@ -148,8 +146,6 @@ function streamingToolCallPayload(
  * POST /mcp with admin API key + session header.
  *
  * @param array<string,mixed> $payload
- *
- * @return Psr\Http\Message\ResponseInterface
  */
 function streamingMcpRequest(
 	Slim\App $app,
@@ -302,7 +298,6 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 						'title' => ['field' => 'text', 'label' => 'Title'],
 					],
 				],
-				null,
 			),
 			$sessionId,
 		);

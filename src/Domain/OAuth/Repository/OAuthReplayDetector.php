@@ -16,13 +16,13 @@ use TotalCMS\Domain\Cache\CacheManager;
  * Refresh tokens get rotated on each use; access tokens get revoked
  * explicitly via /oauth/revoke or via this replay-detection cascade.
  */
-final class OAuthReplayDetector
+final readonly class OAuthReplayDetector
 {
 	private const PREFIX = 'oauth.replay.';
 
 	public function __construct(
-		private readonly CacheManager $cache,
-		private readonly int $refreshTokenTtlSeconds,
+		private CacheManager $cache,
+		private int $refreshTokenTtlSeconds,
 	) {
 	}
 

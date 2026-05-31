@@ -20,45 +20,6 @@ use TotalCMS\Domain\Query\Data\QueryResult;
 
 final class SavedQueryToolTest extends TestCase
 {
-	private function makeTool(
-		SavedQueryToolDefinition $definition,
-		?CollectionData $collectionData = null,
-		?QueryResult $queryResult = null,
-	): SavedQueryTool {
-		$persona = new PersonaContext();
-		$persona->set(McpPersona::ADMIN);
-
-		$indexQuery = $this->createMock(IndexQueryService::class);
-		if ($queryResult !== null) {
-			$indexQuery->method('query')->willReturn($queryResult);
-		}
-
-		$collectionRepo = $this->createMock(CollectionRepository::class);
-		if ($collectionData !== null) {
-			$collectionRepo->method('fetchCollection')->willReturn($collectionData);
-		} else {
-			$collectionRepo->method('fetchCollection')->willReturn(null);
-		}
-
-		$schemaResolver = $this->createMock(McpSchemaResolver::class);
-		$schemaResolver->method('nonExposedProperties')->willReturn([]);
-		$schemaResolver->method('renderableProperties')->willReturn([]);
-
-		$urlBuilder = $this->createMock(ObjectUrlBuilder::class);
-		$urlBuilder->method('buildUrl')->willReturn('');
-
-		return new SavedQueryTool(
-			definition: $definition,
-			indexQueryService: $indexQuery,
-			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
-			personaContext: $persona,
-			objectUrlBuilder: $urlBuilder,
-			schemaResolver: $schemaResolver,
-			collectionRepository: $collectionRepo,
-		);
-	}
-
 	private function makePersonaContext(McpPersona $persona): PersonaContext
 	{
 		$ctx = new PersonaContext();

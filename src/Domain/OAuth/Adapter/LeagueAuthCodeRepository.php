@@ -21,13 +21,13 @@ use TotalCMS\Domain\Cache\CacheManager;
  *        `false` = revoked
  * Missing entry   = treated as revoked (expired or never issued)
  */
-final class LeagueAuthCodeRepository implements AuthCodeRepositoryInterface
+final readonly class LeagueAuthCodeRepository implements AuthCodeRepositoryInterface
 {
 	private const PREFIX = 'oauth.authcode.';
 	private const TTL    = 600; // 10 minutes
 
 	public function __construct(
-		private readonly CacheManager $cache,
+		private CacheManager $cache,
 	) {
 	}
 

@@ -47,7 +47,7 @@ readonly class ReindexJob
 		}
 
 		$provider = $this->registry->active($activeId);
-		if ($provider === null) {
+		if (!$provider instanceof \TotalCMS\Domain\Search\Service\SearchProvider) {
 			throw new \RuntimeException(sprintf(
 				'ReindexJob: active provider "%s" not registered',
 				$activeId,

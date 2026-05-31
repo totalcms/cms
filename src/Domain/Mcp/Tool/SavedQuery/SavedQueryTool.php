@@ -61,7 +61,7 @@ final readonly class SavedQueryTool
 			}
 
 			$collection = $this->collectionRepository->fetchCollection($this->definition->collectionName);
-			if ($collection === null) {
+			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 				return $this->errorResult(sprintf(
 					'Collection "%s" not found. Use list_collections to see available collections.',
 					$this->definition->collectionName,

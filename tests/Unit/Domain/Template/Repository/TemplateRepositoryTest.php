@@ -152,8 +152,8 @@ final class TemplateRepositoryTest extends TestCase
 
 	public function testSaveTemplateWritesToDataLayerWhenAdminFirst(): void
 	{
-		$template          = new \TotalCMS\Domain\Template\Data\TemplateData();
-		$template->id      = 'about';
+		$template           = new \TotalCMS\Domain\Template\Data\TemplateData();
+		$template->id       = 'about';
 		$template->contents = '<h1>about</h1>';
 
 		$this->repo->saveTemplate($template, 'pages');

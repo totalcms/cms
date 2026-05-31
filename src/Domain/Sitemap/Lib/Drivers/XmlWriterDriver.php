@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sitemap\Lib\Drivers;
 
@@ -12,264 +14,258 @@ use TotalCMS\Domain\Sitemap\Lib\Sitemap;
 use TotalCMS\Domain\Sitemap\Lib\SitemapIndex;
 use TotalCMS\Domain\Sitemap\Lib\Url;
 use TotalCMS\Domain\Sitemap\Lib\Urlset;
-use XMLWriter;
 
 /**
- * Class XmlWriterDriver
+ * Class XmlWriterDriver.
  *
  * Because this driver is forward only (can't go back and
  * define additional attributes) there's some logic
- *
- * @package TotalCMS\Domain\Sitemap\Lib\Drivers
  */
 class XmlWriterDriver implements DriverInterface
 {
-    /**
-     * @var XMLWriter
-     */
-    private $writer;
+	private readonly \XMLWriter $writer;
 
-    /**
-     * @var array<class-string, array{name: string, content: string}>
-     */
-    private $extensionAttributes = [
-        Video::class  => [
-            'name'    => 'xmlns:video',
-            'content' => 'http://www.google.com/schemas/sitemap-video/1.1',
-        ],
-        News::class   => [
-            'name'    => 'xmlns:news',
-            'content' => 'http://www.google.com/schemas/sitemap-news/0.9',
-        ],
-        Mobile::class => [
-            'name'    => 'xmlns:mobile',
-            'content' => 'http://www.google.com/schemas/sitemap-mobile/1.0',
-        ],
-        Link::class => [
-            'name'    => 'xmlns:xhtml',
-            'content' => 'http://www.w3.org/1999/xhtml',
-        ],
-        Image::class  => [
-            'name'    => 'xmlns:image',
-            'content' => 'http://www.google.com/schemas/sitemap-image/1.1',
-        ],
-    ];
+	/**
+	 * @var array<class-string, array{name: string, content: string}>
+	 */
+	private array $extensionAttributes = [
+		Video::class  => [
+			'name'    => 'xmlns:video',
+			'content' => 'http://www.google.com/schemas/sitemap-video/1.1',
+		],
+		News::class   => [
+			'name'    => 'xmlns:news',
+			'content' => 'http://www.google.com/schemas/sitemap-news/0.9',
+		],
+		Mobile::class => [
+			'name'    => 'xmlns:mobile',
+			'content' => 'http://www.google.com/schemas/sitemap-mobile/1.0',
+		],
+		Link::class => [
+			'name'    => 'xmlns:xhtml',
+			'content' => 'http://www.w3.org/1999/xhtml',
+		],
+		Image::class  => [
+			'name'    => 'xmlns:image',
+			'content' => 'http://www.google.com/schemas/sitemap-image/1.1',
+		],
+	];
 
-    /**
-     * @var list<class-string>
-     */
-    private $extensions = [];
+	/**
+	 * @var list<class-string>
+	 */
+	private array $extensions = [];
 
-    /**
-     * XmlWriterDriver constructor.
-     */
-    public function __construct()
-    {
-        $writer = new XMLWriter();
-        $writer->openMemory();
-        $writer->startDocument('1.0', 'UTF-8');
+	/**
+	 * XmlWriterDriver constructor.
+	 */
+	public function __construct()
+	{
+		$writer = new \XMLWriter();
+		$writer->openMemory();
+		$writer->startDocument('1.0', 'UTF-8');
 
-        $this->writer = $writer;
-    }
+		$this->writer = $writer;
+	}
 
-    public function addProcessingInstructions(string $target, string $content): void
-    {
-        $this->writer->writePI($target, $content);
-    }
+	public function addProcessingInstructions(string $target, string $content): void
+	{
+		$this->writer->writePI($target, $content);
+	}
 
-    public function addComment(string $comment): void
-    {
-        $this->writer->writeComment($comment);
-    }
+	public function addComment(string $comment): void
+	{
+		$this->writer->writeComment($comment);
+	}
 
-    private function writeElement(string $name, mixed $content): void
-    {
-        if (!$content) {
-            return;
-        }
+	private function writeElement(string $name, mixed $content): void
+	{
+		if (!$content) {
+			return;
+		}
 
-        if ($content instanceof \DateTimeInterface) {
-            $this->writer->writeElement($name, $content->format(DATE_W3C));
-        } else {
-            $this->writer->writeElement($name, (string) $content);
-        }
-    }
+		if ($content instanceof \DateTimeInterface) {
+			$this->writer->writeElement($name, $content->format(DATE_W3C));
+		} else {
+			$this->writer->writeElement($name, (string)$content);
+		}
+	}
 
-    public function visitSitemapIndex(SitemapIndex $sitemapIndex): void
-    {
-        $this->writer->startElement('sitemapindex');
-        $this->writer->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+	public function visitSitemapIndex(SitemapIndex $sitemapIndex): void
+	{
+		$this->writer->startElement('sitemapindex');
+		$this->writer->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
 
-        $this->writer->writeAttribute(
-            'xsi:schemaLocation',
-            'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd'
-        );
-        
-        $this->writer->writeAttribute(
-            'xmlns',
-            'http://www.sitemaps.org/schemas/sitemap/0.9'
-        );
+		$this->writer->writeAttribute(
+			'xsi:schemaLocation',
+			'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd'
+		);
 
-        foreach ($sitemapIndex->all() as $item) {
-            $item->accept($this);
-        }
+		$this->writer->writeAttribute(
+			'xmlns',
+			'http://www.sitemaps.org/schemas/sitemap/0.9'
+		);
 
-        $this->writer->endElement();
-    }
+		foreach ($sitemapIndex->all() as $item) {
+			$item->accept($this);
+		}
 
-    public function visitSitemap(Sitemap $sitemap): void
-    {
-        $this->writer->startElement('sitemap');
-        $this->writer->writeElement('loc', $sitemap->getLoc());
+		$this->writer->endElement();
+	}
 
-        $this->writeElement('lastmod', $sitemap->getLastMod());
+	public function visitSitemap(Sitemap $sitemap): void
+	{
+		$this->writer->startElement('sitemap');
+		$this->writer->writeElement('loc', $sitemap->getLoc());
 
-        $this->writer->endElement();
-    }
+		$this->writeElement('lastmod', $sitemap->getLastMod());
 
-    public function visitUrlset(Urlset $urlset): void
-    {
-        $this->writer->startElement('urlset');
+		$this->writer->endElement();
+	}
 
-        $this->writer->writeAttribute(
-            'xmlns:xsi',
-            'http://www.w3.org/2001/XMLSchema-instance'
-        );
+	public function visitUrlset(Urlset $urlset): void
+	{
+		$this->writer->startElement('urlset');
 
-        $this->writer->writeAttribute(
-            'xsi:schemaLocation',
-            'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'
-        );
+		$this->writer->writeAttribute(
+			'xmlns:xsi',
+			'http://www.w3.org/2001/XMLSchema-instance'
+		);
 
-        $this->writer->writeAttribute(
-            'xmlns',
-            'http://www.sitemaps.org/schemas/sitemap/0.9'
-        );
+		$this->writer->writeAttribute(
+			'xsi:schemaLocation',
+			'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'
+		);
 
-        /**
-         * @var Url $item
-         */
-        foreach ($urlset->all() as $item) {
-            foreach ($item->getExtensions() as $extension) {
-                $extensionClass = get_class($extension);
-                $extensionAttributes = $this->extensionAttributes[$extensionClass];
+		$this->writer->writeAttribute(
+			'xmlns',
+			'http://www.sitemaps.org/schemas/sitemap/0.9'
+		);
 
-                if (!in_array($extensionClass, $this->extensions, true)) {
-                    $this->extensions[] = $extensionClass;
-                    $this->writer->writeAttribute($extensionAttributes['name'], $extensionAttributes['content']);
-                }
-            }
-        }
+		/**
+		 * @var Url $item
+		 */
+		foreach ($urlset->all() as $item) {
+			foreach ($item->getExtensions() as $extension) {
+				$extensionClass      = $extension::class;
+				$extensionAttributes = $this->extensionAttributes[$extensionClass];
 
-        foreach ($urlset->all() as $item) {
-            $item->accept($this);
-        }
+				if (!in_array($extensionClass, $this->extensions, true)) {
+					$this->extensions[] = $extensionClass;
+					$this->writer->writeAttribute($extensionAttributes['name'], $extensionAttributes['content']);
+				}
+			}
+		}
 
-        $this->writer->endElement();
-    }
+		foreach ($urlset->all() as $item) {
+			$item->accept($this);
+		}
 
-    public function visitUrl(Url $url): void
-    {
-        $this->writer->startElement('url');
-        $this->writeElement('loc', $url->getLoc());
-        $this->writeElement('lastmod', $url->getLastMod());
-        $this->writeElement('changefreq', $url->getChangeFreq());
-        $this->writeElement('priority', $url->getPriority());
+		$this->writer->endElement();
+	}
 
-        foreach ($url->getExtensions() as $extension) {
-            $extension->accept($this);
-        }
+	public function visitUrl(Url $url): void
+	{
+		$this->writer->startElement('url');
+		$this->writeElement('loc', $url->getLoc());
+		$this->writeElement('lastmod', $url->getLastMod());
+		$this->writeElement('changefreq', $url->getChangeFreq());
+		$this->writeElement('priority', $url->getPriority());
 
-        $this->writer->endElement();
-    }
+		foreach ($url->getExtensions() as $extension) {
+			$extension->accept($this);
+		}
 
-    public function visitImageExtension(Image $image): void
-    {
-        $this->writer->startElement('image:image');
-        $this->writeElement('image:loc', $image->getLoc());
-        $this->writeElement('image:caption', $image->getCaption());
-        $this->writeElement('image:geo_location', $image->getGeoLocation());
-        $this->writeElement('image:title', $image->getTitle());
-        $this->writeElement('image:license', $image->getLicense());
-        $this->writer->endElement();
-    }
+		$this->writer->endElement();
+	}
 
-    public function visitLinkExtension(Link $link): void
-    {
-        $this->writer->startElement('xhtml:link');
-        $this->writer->writeAttribute('rel', 'alternate');
-        $this->writer->writeAttribute('hreflang', $link->getHrefLang());
-        $this->writer->writeAttribute('href', $link->getHref());
-        $this->writer->endElement();
-    }
+	public function visitImageExtension(Image $image): void
+	{
+		$this->writer->startElement('image:image');
+		$this->writeElement('image:loc', $image->getLoc());
+		$this->writeElement('image:caption', $image->getCaption());
+		$this->writeElement('image:geo_location', $image->getGeoLocation());
+		$this->writeElement('image:title', $image->getTitle());
+		$this->writeElement('image:license', $image->getLicense());
+		$this->writer->endElement();
+	}
 
-    public function visitMobileExtension(Mobile $mobile): void
-    {
-        $this->writer->writeElement('mobile:mobile');
-    }
+	public function visitLinkExtension(Link $link): void
+	{
+		$this->writer->startElement('xhtml:link');
+		$this->writer->writeAttribute('rel', 'alternate');
+		$this->writer->writeAttribute('hreflang', $link->getHrefLang());
+		$this->writer->writeAttribute('href', $link->getHref());
+		$this->writer->endElement();
+	}
 
-    public function visitNewsExtension(News $news): void
-    {
-        $this->writer->startElement('news:news');
+	public function visitMobileExtension(Mobile $mobile): void
+	{
+		$this->writer->writeElement('mobile:mobile');
+	}
 
-        $this->writer->startElement('news:publication');
-        $this->writeElement('news:name', $news->getPublicationName());
-        $this->writeElement('news:language', $news->getPublicationLanguage());
-        $this->writer->endElement();
+	public function visitNewsExtension(News $news): void
+	{
+		$this->writer->startElement('news:news');
 
-        $this->writeElement('news:access', $news->getAccess());
-        $this->writeElement('news:genres', $news->getGenres());
-        $this->writeElement('news:publication_date', $news->getPublicationDate());
-        $this->writeElement('news:title', $news->getTitle());
-        $this->writeElement('news:keywords', $news->getKeywords());
+		$this->writer->startElement('news:publication');
+		$this->writeElement('news:name', $news->getPublicationName());
+		$this->writeElement('news:language', $news->getPublicationLanguage());
+		$this->writer->endElement();
 
-        $this->writer->endElement();
-    }
+		$this->writeElement('news:access', $news->getAccess());
+		$this->writeElement('news:genres', $news->getGenres());
+		$this->writeElement('news:publication_date', $news->getPublicationDate());
+		$this->writeElement('news:title', $news->getTitle());
+		$this->writeElement('news:keywords', $news->getKeywords());
 
-    public function visitVideoExtension(Video $video): void
-    {
-        $this->writer->startElement('video:video');
+		$this->writer->endElement();
+	}
 
-        $this->writeElement('video:thumbnail_loc', $video->getThumbnailLoc());
-        $this->writeElement('video:title', $video->getTitle());
-        $this->writeElement('video:description', $video->getDescription());
-        $this->writeElement('video:content_loc', $video->getContentLoc());
-        $this->writeElement('video:player_loc', $video->getPlayerLoc());
-        $this->writeElement('video:duration', $video->getDuration());
-        $this->writeElement('video:expiration_date', $video->getExpirationDate());
-        $this->writeElement('video:rating', $video->getRating());
-        $this->writeElement('video:view_count', $video->getViewCount());
-        $this->writeElement('video:publication_date', $video->getPublicationDate());
-        $this->writeElement('video:family_friendly', $video->getFamilyFriendly());
-        $this->writeElement('video:category', $video->getCategory());
-        $this->writeElement('video:restriction', $video->getRestriction());
-        $this->writeElement('video:gallery_loc', $video->getGalleryLoc());
+	public function visitVideoExtension(Video $video): void
+	{
+		$this->writer->startElement('video:video');
 
-        if ($price = $video->getPrice()) {
-            $this->writer->startElement('video:price');
+		$this->writeElement('video:thumbnail_loc', $video->getThumbnailLoc());
+		$this->writeElement('video:title', $video->getTitle());
+		$this->writeElement('video:description', $video->getDescription());
+		$this->writeElement('video:content_loc', $video->getContentLoc());
+		$this->writeElement('video:player_loc', $video->getPlayerLoc());
+		$this->writeElement('video:duration', $video->getDuration());
+		$this->writeElement('video:expiration_date', $video->getExpirationDate());
+		$this->writeElement('video:rating', $video->getRating());
+		$this->writeElement('video:view_count', $video->getViewCount());
+		$this->writeElement('video:publication_date', $video->getPublicationDate());
+		$this->writeElement('video:family_friendly', $video->getFamilyFriendly());
+		$this->writeElement('video:category', $video->getCategory());
+		$this->writeElement('video:restriction', $video->getRestriction());
+		$this->writeElement('video:gallery_loc', $video->getGalleryLoc());
 
-            if ($currency = $video->getCurrency()) {
-                $this->writer->writeAttribute('currency', $currency);
-            }
+		if ($price = $video->getPrice()) {
+			$this->writer->startElement('video:price');
 
-            $this->writer->writeRaw($price);
-            $this->writer->endElement();
-        }
+			if ($currency = $video->getCurrency()) {
+				$this->writer->writeAttribute('currency', $currency);
+			}
 
-        $this->writeElement('video:requires_subscription', $video->getRequiresSubscription());
-        $this->writeElement('video:uploader', $video->getUploader());
-        $this->writeElement('video:platform', $video->getPlatform());
-        $this->writeElement('video:live', $video->getLive());
+			$this->writer->writeRaw($price);
+			$this->writer->endElement();
+		}
 
-        foreach ($video->getTags() as $tag) {
-            $this->writeElement('video:tag', $tag);
-        }
+		$this->writeElement('video:requires_subscription', $video->getRequiresSubscription());
+		$this->writeElement('video:uploader', $video->getUploader());
+		$this->writeElement('video:platform', $video->getPlatform());
+		$this->writeElement('video:live', $video->getLive());
 
-        $this->writer->endElement();
-    }
+		foreach ($video->getTags() as $tag) {
+			$this->writeElement('video:tag', $tag);
+		}
 
-    public function output(): string
-    {
-        return (string) $this->writer->flush();
-    }
+		$this->writer->endElement();
+	}
+
+	public function output(): string
+	{
+		return (string)$this->writer->flush();
+	}
 }

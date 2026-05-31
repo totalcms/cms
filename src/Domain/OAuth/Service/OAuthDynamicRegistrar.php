@@ -17,11 +17,11 @@ namespace TotalCMS\Domain\OAuth\Service;
  *   - token_endpoint_auth_method, grant_types, response_types if present
  *     must match what we support; we silently default if absent
  */
-final class OAuthDynamicRegistrar
+final readonly class OAuthDynamicRegistrar
 {
 	public function __construct(
-		private readonly OAuthClientCreator $creator,
-		private readonly OAuthScopeRegistry $scopes,
+		private OAuthClientCreator $creator,
+		private OAuthScopeRegistry $scopes,
 	) {
 	}
 
@@ -36,7 +36,7 @@ final class OAuthDynamicRegistrar
 		if (!is_array($redirectUris) || $redirectUris === []) {
 			throw new \InvalidArgumentException('redirect_uris is required and must be non-empty');
 		}
-		$redirectUris = array_values(array_map('strval', $redirectUris));
+		$redirectUris = array_values(array_map(strval(...), $redirectUris));
 
 		$clientName = isset($metadata['client_name']) ? (string)$metadata['client_name'] : 'Unnamed dynamic client';
 

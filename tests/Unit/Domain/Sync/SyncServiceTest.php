@@ -73,7 +73,7 @@ final class SyncServiceTest extends TestCase
 		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths);
 
 		// Caller asked for "all templates" (null) — git-management overrides it.
-		$service->push('https://example.com', 'key', null, null, null);
+		$service->push('https://example.com', 'key');
 	}
 
 	public function testPushSendsDataToRemote(): void

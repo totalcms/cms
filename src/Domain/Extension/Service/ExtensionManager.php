@@ -313,7 +313,7 @@ class ExtensionManager
 				if (!$this->isCapabilityPermitted($id, 'form-actions')) {
 					continue;
 				}
-				foreach ($context->getRegisteredFormActions() as $name => $formAction) {
+				foreach ($context->getRegisteredFormActions() as $formAction) {
 					$formActionRegistry->register($formAction);
 				}
 			}

@@ -78,10 +78,10 @@ readonly class OAuthBearerMiddleware implements MiddlewareInterface
 					'WWW-Authenticate',
 					'Bearer realm="T3", error="invalid_token", error_description="token revoked"',
 				)
-				->withBody(Stream::create((string)(json_encode([
+				->withBody(Stream::create(json_encode([
 					'error'             => 'invalid_token',
 					'error_description' => 'The access token has been revoked.',
-				]) ?: '{}')));
+				]) ?: '{}'));
 		}
 
 		return $handler->handle($validated);

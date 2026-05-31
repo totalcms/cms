@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Sitemap\Data;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Sitemap\Lib\Url;
 use TotalCMS\Domain\Sitemap\Data\SitemapLocation;
+use TotalCMS\Domain\Sitemap\Lib\Url;
 
 final class SitemapLocationTest extends TestCase
 {

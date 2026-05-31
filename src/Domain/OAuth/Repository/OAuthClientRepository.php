@@ -13,10 +13,10 @@ use TotalCMS\Domain\OAuth\Data\OAuthClientData;
  * rename — POSIX guarantees the rename is atomic so concurrent readers
  * never see a partial file.
  */
-final class OAuthClientRepository
+final readonly class OAuthClientRepository
 {
 	public function __construct(
-		private readonly string $storagePath,
+		private string $storagePath,
 	) {
 	}
 
@@ -37,7 +37,7 @@ final class OAuthClientRepository
 	public function all(): array
 	{
 		return array_map(
-			static fn (array $entry): OAuthClientData => OAuthClientData::fromArray($entry),
+			OAuthClientData::fromArray(...),
 			$this->loadAll(),
 		);
 	}
@@ -82,7 +82,7 @@ final class OAuthClientRepository
 			return [];
 		}
 
-		return array_values(array_filter($data['clients'], 'is_array'));
+		return array_values(array_filter($data['clients'], is_array(...)));
 	}
 
 	/**

@@ -24,7 +24,6 @@ final class OAuthClientDeleteActionTest extends TestCase
 	private OAuthGrantRepository $grants;
 	private JsonRenderer $jsonRenderer;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
 	private string $clientsTmpFile;
 	private string $grantsTmpFile;
 
@@ -36,7 +35,6 @@ final class OAuthClientDeleteActionTest extends TestCase
 		$this->grants         = new OAuthGrantRepository($this->grantsTmpFile);
 		$this->jsonRenderer   = new JsonRenderer();
 		$this->request        = $this->createMock(ServerRequestInterface::class);
-		$this->response       = $this->createMock(ResponseInterface::class);
 
 		$session = new PhpSession();
 		if (!$session->isStarted()) {

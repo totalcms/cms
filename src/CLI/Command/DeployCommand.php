@@ -123,7 +123,7 @@ class DeployCommand extends BaseCommand
 		if (isset($data['container']) && is_array($data['container'])) {
 			$status = ($data['container']['cleared'] ?? false) === true
 				? 'Cleared (' . (int)($data['container']['files_removed'] ?? 0) . ' files)'
-				: 'Skipped (' . (string)($data['container']['reason'] ?? 'unknown') . ')';
+				: 'Skipped (' . ($data['container']['reason'] ?? 'unknown') . ')';
 			$rows[] = ['Compiled DI container', $status];
 		}
 
@@ -140,7 +140,7 @@ class DeployCommand extends BaseCommand
 						$status = empty($result['cleared']) ? 'Skipped' : 'Cleared';
 					}
 				}
-				$rows[] = ['Cache: ' . (string)$name, $status];
+				$rows[] = ['Cache: ' . $name, $status];
 			}
 		}
 

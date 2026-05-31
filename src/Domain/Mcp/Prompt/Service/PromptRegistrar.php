@@ -11,7 +11,7 @@ use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 final readonly class PromptRegistrar
 {
 	public function __construct(
-	    // @phpstan-ignore property.onlyWritten
+		// @phpstan-ignore property.onlyWritten
 		private PromptRenderer $renderer,
 	) {
 	}
@@ -51,7 +51,6 @@ final readonly class PromptRegistrar
 	 * pipeline, so the eval input is bounded to safe identifiers.
 	 *
 	 * @SuppressWarnings("PHPMD.EvalExpression")
-	 *
 	 */
 	private function buildHandler(PromptData $prompt, McpPersona $persona): \Closure
 	{

@@ -430,7 +430,7 @@ readonly class ObjectFilter
 		if (is_array($filterValue)) {
 			$list = array_map(fn (mixed $v): string => (string)$v, $filterValue);
 		} else {
-			$list = array_map('trim', explode('|', (string)$filterValue));
+			$list = array_map(trim(...), explode('|', (string)$filterValue));
 		}
 
 		return in_array((string)$fieldValue, $list, true);

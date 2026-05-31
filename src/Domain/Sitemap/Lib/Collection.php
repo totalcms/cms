@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sitemap\Lib;
 
@@ -6,29 +8,29 @@ use TotalCMS\Domain\Sitemap\Lib\Interfaces\VisitorInterface;
 
 abstract class Collection implements VisitorInterface
 {
-    /**
-     * @var VisitorInterface[]
-     */
-    private $items = [];
+	/**
+	 * @var VisitorInterface[]
+	 */
+	private array $items = [];
 
-    public function add(VisitorInterface $value): void
-    {
-        $type = $this->type();
+	public function add(VisitorInterface $value): void
+	{
+		$type = $this->type();
 
-        if ($value instanceof $type) {
-            $this->items[] = $value;
-        } else {
-            throw new \InvalidArgumentException('$value needs to be an instance of ' . $type);
-        }
-    }
+		if ($value instanceof $type) {
+			$this->items[] = $value;
+		} else {
+			throw new \InvalidArgumentException('$value needs to be an instance of ' . $type);
+		}
+	}
 
-    /**
-     * @return VisitorInterface[]
-     */
-    public function all(): array
-    {
-        return $this->items;
-    }
+	/**
+	 * @return VisitorInterface[]
+	 */
+	public function all(): array
+	{
+		return $this->items;
+	}
 
-    abstract public function type(): string;
+	abstract public function type(): string;
 }

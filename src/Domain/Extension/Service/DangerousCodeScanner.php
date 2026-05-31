@@ -152,7 +152,7 @@ final class DangerousCodeScanner
 			$line = $token[2];
 
 			// Whitespace and comments are never significant and never code.
-			if ($id === T_WHITESPACE || $id === T_COMMENT || $id === T_DOC_COMMENT) {
+			if (in_array($id, [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
 				continue;
 			}
 
@@ -173,11 +173,9 @@ final class DangerousCodeScanner
 				$call  = isset(self::FUNCTION_CALLS[$lower]) || $lower === 'file_get_contents';
 
 				if ($call) {
-					$nextSig = $this->nextSignificantIndex($tokens, $i + 1);
-					$isCall  = $nextSig !== null && $tokens[$nextSig] === '(';
-					$qualified = is_array($prevSignificant)
-						? in_array($prevSignificant[0], $prevDisqualifiers, true)
-						: false;
+					$nextSig   = $this->nextSignificantIndex($tokens, $i + 1);
+					$isCall    = $nextSig !== null && $tokens[$nextSig] === '(';
+					$qualified = is_array($prevSignificant) && in_array($prevSignificant[0], $prevDisqualifiers, true);
 
 					if ($isCall && !$qualified) {
 						if ($lower === 'file_get_contents') {

@@ -623,7 +623,7 @@ abstract class Util
 		);
 
 		$values = \array_map(
-			callback : fn ($v) => \is_numeric($v)
+			callback : fn ($v): mixed => \is_numeric($v)
 				? (float)$v
 				: $v,
 			array    : \array_values(

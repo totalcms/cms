@@ -167,7 +167,7 @@ describe('ExtensionManager guard wrapping', function (): void {
 		$context->addTwigFunction(new TwigFunction(
 			'safe_html',
 			fn (): string => '<b>x</b>',
-			['is_safe' => ['html'], 'needs_context' => true, 'needs_environment' => true],
+			['is_safe'    => ['html'], 'needs_context' => true, 'needs_environment' => true],
 		));
 
 		$functions = $manager->getAllTwigFunctions();
@@ -187,7 +187,7 @@ describe('ExtensionManager guard wrapping', function (): void {
 
 		// is_safe lives on the protected $options property in Twig 4 — read it the
 		// same way the guard rebuild does to prove the flag is preserved verbatim.
-		$optionsProp = new ReflectionProperty(\Twig\AbstractTwigCallable::class, 'options');
+		$optionsProp = new ReflectionProperty(Twig\AbstractTwigCallable::class, 'options');
 		$options     = $optionsProp->getValue($fn);
 		expect($options['is_safe'])->toBe(['html']);
 	});

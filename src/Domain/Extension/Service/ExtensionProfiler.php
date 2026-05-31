@@ -24,7 +24,7 @@ final class ExtensionProfiler
 	public function __construct(
 		EnvironmentResolver $env,
 		private readonly CacheManager $cache,
-		private readonly int $sampleRate,
+		int $sampleRate,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->profiling = $this->decide($env, $sampleRate);

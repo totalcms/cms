@@ -41,7 +41,7 @@ readonly class OAuthClientDeleteAction
 			]);
 		}
 
-		if ($this->clients->find($id) === null) {
+		if (!$this->clients->find($id) instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
 			return $this->jsonRenderer->json($response->withStatus(404), [
 				'error' => ['message' => 'OAuth client not found'],
 			]);

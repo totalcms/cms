@@ -72,7 +72,7 @@ final class SearchServiceTest extends TestCase
 
 	public function testFallsBackWhenProviderThrows(): void
 	{
-		$active   = $this->makeProvider('algolia', throwInSearch: new \RuntimeException('boom'), available: true);
+		$active   = $this->makeProvider('algolia', available: true, throwInSearch: new \RuntimeException('boom'));
 		$fallback = $this->makeFallback([new SearchResult('blog', 'fb', 0.5)]);
 
 		$registry = new SearchProviderRegistry();
@@ -211,7 +211,7 @@ final class SearchServiceTest extends TestCase
 
 			public function search(SearchQuery $query): array
 			{
-				if ($this->throwInSearch !== null) {
+				if ($this->throwInSearch instanceof \Throwable) {
 					throw $this->throwInSearch;
 				}
 
@@ -277,7 +277,7 @@ final class SearchServiceTest extends TestCase
 		Config $config,
 		?CollectionFetcher $fetcher = null,
 	): SearchService {
-		if ($fetcher === null) {
+		if (!$fetcher instanceof CollectionFetcher) {
 			$fetcher = $this->createMock(CollectionFetcher::class);
 			$fetcher->method('fetchCollection')->willReturn(null);
 		}

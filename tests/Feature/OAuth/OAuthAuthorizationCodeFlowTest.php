@@ -303,7 +303,7 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 		);
 		expect($approveResponse->getStatusCode())->toBe(302);
 
-		parse_str((string)parse_url($approveResponse->getHeaderLine('Location'), PHP_URL_QUERY), $cb);
+		parse_str((string)parse_url((string)$approveResponse->getHeaderLine('Location'), PHP_URL_QUERY), $cb);
 		$code = (string)($cb['code'] ?? '');
 		expect($code)->not()->toBeEmpty();
 

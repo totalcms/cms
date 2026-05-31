@@ -398,7 +398,7 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 	// Navigate through: result.content[0].text → {content:[{type,text}]}
 	// → content[0].text → {items:[...], count:N}
 	$outerText  = $result['content'][0]['text'];
-	$toolOutput = json_decode($outerText, true);
+	$toolOutput = json_decode((string)$outerText, true);
 
 	// Handle both single-wrap and double-wrap SDK serialization patterns.
 	if (is_array($toolOutput) && isset($toolOutput['content'])) {

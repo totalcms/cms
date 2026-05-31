@@ -424,7 +424,7 @@ final class ProtectMiddlewareTest extends TestCase
 		$this->assertStringContainsString('Expires=', $cookie);
 
 		// The Expires date should be ~1 day out, not the 7-day default.
-		$this->assertSame(1, preg_match('/Expires=([^;]+)/', $cookie, $m));
+		$this->assertSame(1, preg_match('/Expires=([^;]+)/', (string)$cookie, $m));
 		$this->assertEqualsWithDelta(time() + $oneDay, (int)strtotime($m[1]), 10);
 	}
 
@@ -455,7 +455,7 @@ final class ProtectMiddlewareTest extends TestCase
 
 		$this->assertNotNull($response);
 		$cookie = $response->getHeaderLine('Set-Cookie');
-		$this->assertSame(1, preg_match('/Expires=([^;]+)/', $cookie, $m));
+		$this->assertSame(1, preg_match('/Expires=([^;]+)/', (string)$cookie, $m));
 		$this->assertEqualsWithDelta(time() + (7 * 86400), (int)strtotime($m[1]), 10);
 	}
 

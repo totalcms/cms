@@ -127,7 +127,7 @@ function propertiesArrayViolations(mixed $schema, string $path = '$'): array
 		// the PHP array type, but json_encode will emit `[]` for an empty list.
 		// We detect: $props is a plain PHP array (not stdClass), AND it is
 		// either empty OR is a sequential (list) array — both would become `[]`.
-		if (is_array($props) && (empty($props) || array_is_list($props))) {
+		if (is_array($props) && ($props === [] || array_is_list($props))) {
 			$violations[] = "{$path}.properties serialises as `[]` — must be `{}` (use \\stdClass for empty)";
 		}
 
@@ -413,15 +413,13 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 			// For tools with required params, errors are expected (missing required
 			// fields). For tools with NO required params, there should be no errors.
 			$required = $tool->inputSchema['required'] ?? [];
-			if (is_array($required) && $required === []) {
-				if ($errors !== []) {
-					$errorMessages  = array_column($errors, 'message');
-					$noThrowFails[] = sprintf(
-						'%s: unexpected validation errors for empty args (no required params): %s',
-						$tool->name,
-						implode('; ', $errorMessages),
-					);
-				}
+			if (is_array($required) && $required === [] && $errors !== []) {
+				$errorMessages  = array_column($errors, 'message');
+				$noThrowFails[] = sprintf(
+					'%s: unexpected validation errors for empty args (no required params): %s',
+					$tool->name,
+					implode('; ', $errorMessages),
+				);
 			}
 		}
 

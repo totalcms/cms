@@ -366,10 +366,10 @@ class TemplateRepository
 				new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS),
 			);
 			foreach ($iterator as $file) {
-				if (!$file->isFile() || !str_ends_with($file->getPathname(), self::FILE_EXT)) {
+				if (!$file->isFile() || !str_ends_with((string)$file->getPathname(), self::FILE_EXT)) {
 					continue;
 				}
-				$relativePath = substr($file->getPathname(), strlen($base) + 1);
+				$relativePath = substr((string)$file->getPathname(), strlen($base) + 1);
 				if (str_starts_with($relativePath, '.history/')) {
 					continue;
 				}

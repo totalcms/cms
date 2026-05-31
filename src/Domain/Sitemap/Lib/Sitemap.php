@@ -1,58 +1,44 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sitemap\Lib;
 
-use DateTimeInterface;
 use TotalCMS\Domain\Sitemap\Lib\Interfaces\DriverInterface;
 use TotalCMS\Domain\Sitemap\Lib\Interfaces\VisitorInterface;
 
 class Sitemap implements VisitorInterface
 {
-    /**
-     * Location (URL).
-     *
-     * @var string
-     */
-    private $loc;
+	/**
+	 * Last modified time.
+	 */
+	private ?\DateTimeInterface $lastMod = null;
 
-    /**
-     * Last modified time.
-     *
-     * @var DateTimeInterface
-     */
-    private $lastMod;
+	public function __construct(
+		/**
+		 * Location (URL).
+		 */
+		private readonly string $loc,
+	) {
+	}
 
-    public function __construct(string $loc)
-    {
-        $this->loc = $loc;
-    }
+	public function getLoc(): string
+	{
+		return $this->loc;
+	}
 
-    /**
-     * @return string
-     */
-    public function getLoc(): string
-    {
-        return $this->loc;
-    }
+	public function getLastMod(): ?\DateTimeInterface
+	{
+		return $this->lastMod;
+	}
 
-    /**
-     * @return DateTimeInterface|null
-     */
-    public function getLastMod()
-    {
-        return $this->lastMod;
-    }
+	public function setLastMod(\DateTimeInterface $lastMod): void
+	{
+		$this->lastMod = $lastMod;
+	}
 
-    /**
-     * @param DateTimeInterface $lastMod
-     */
-    public function setLastMod(DateTimeInterface $lastMod): void
-    {
-        $this->lastMod = $lastMod;
-    }
-
-    public function accept(DriverInterface $driver): void
-    {
-        $driver->visitSitemap($this);
-    }
+	public function accept(DriverInterface $driver): void
+	{
+		$driver->visitSitemap($this);
+	}
 }

@@ -206,15 +206,15 @@ function restoreFixtures(): void
  * (NullLogger) and bumps the in-memory counter. This lets ExtensionManager
  * tests pass a genuine guard with a single inserted constructor argument.
  */
-function testExtensionGuard(): \TotalCMS\Domain\Extension\Service\ExtensionGuard
+function testExtensionGuard(): TotalCMS\Domain\Extension\Service\ExtensionGuard
 {
-	$config      = (new ReflectionClass(\TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config      = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
 	$config->env = 'dev';
-	$env         = new \TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
+	$env         = new TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
 
 	// In-memory CacheManager subclass — overrides the two methods the guard's
 	// failure counter uses and skips the heavy 11-dependency parent constructor.
-	$cache = new class extends \TotalCMS\Domain\Cache\CacheManager {
+	$cache = new class extends TotalCMS\Domain\Cache\CacheManager {
 		/** @var array<string,mixed> */
 		private array $store = [];
 
@@ -256,15 +256,15 @@ function testExtensionGuard(): \TotalCMS\Domain\Extension\Service\ExtensionGuard
 			}
 		});
 	}
-	$flysystem = new \League\Flysystem\Filesystem(new \League\Flysystem\Local\LocalFilesystemAdapter($tmpRoot));
-	$storage   = new \TotalCMS\Domain\Storage\StorageFilesystemAdapter($flysystem);
-	$repo      = new \TotalCMS\Domain\Extension\Repository\ExtensionStateRepository($storage);
+	$flysystem = new League\Flysystem\Filesystem(new League\Flysystem\Local\LocalFilesystemAdapter($tmpRoot));
+	$storage   = new TotalCMS\Domain\Storage\StorageFilesystemAdapter($flysystem);
+	$repo      = new TotalCMS\Domain\Extension\Repository\ExtensionStateRepository($storage);
 
-	return new \TotalCMS\Domain\Extension\Service\ExtensionGuard(
+	return new TotalCMS\Domain\Extension\Service\ExtensionGuard(
 		$env,
 		$cache,
 		$repo,
-		new \Psr\Log\NullLogger(),
+		new Psr\Log\NullLogger(),
 		testExtensionProfiler(),
 	);
 }
@@ -277,13 +277,13 @@ function testExtensionGuard(): \TotalCMS\Domain\Extension\Service\ExtensionGuard
  * are real (not PHPUnit mocks) so this works from both Pest closures and
  * class-based TestCases — mirroring testExtensionGuard().
  */
-function testExtensionProfiler(): \TotalCMS\Domain\Extension\Service\ExtensionProfiler
+function testExtensionProfiler(): TotalCMS\Domain\Extension\Service\ExtensionProfiler
 {
-	$config      = (new ReflectionClass(\TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config      = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
 	$config->env = 'dev';
-	$env         = new \TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
+	$env         = new TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
 
-	$cache = new class extends \TotalCMS\Domain\Cache\CacheManager {
+	$cache = new class extends TotalCMS\Domain\Cache\CacheManager {
 		/** @var array<string,mixed> */
 		private array $store = [];
 
@@ -310,11 +310,11 @@ function testExtensionProfiler(): \TotalCMS\Domain\Extension\Service\ExtensionPr
 		}
 	};
 
-	return new \TotalCMS\Domain\Extension\Service\ExtensionProfiler(
+	return new TotalCMS\Domain\Extension\Service\ExtensionProfiler(
 		$env,
 		$cache,
 		1,
-		new \Psr\Log\NullLogger(),
+		new Psr\Log\NullLogger(),
 	);
 }
 

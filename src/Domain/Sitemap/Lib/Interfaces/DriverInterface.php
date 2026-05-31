@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sitemap\Lib\Interfaces;
 
@@ -14,23 +16,23 @@ use TotalCMS\Domain\Sitemap\Lib\Urlset;
 
 interface DriverInterface
 {
-    public function visitSitemapIndex(SitemapIndex $sitemapIndex): void;
+	public function visitSitemapIndex(SitemapIndex $sitemapIndex): void;
 
-    public function visitSitemap(Sitemap $sitemap): void;
+	public function visitSitemap(Sitemap $sitemap): void;
 
-    public function visitUrlset(Urlset $urlset): void;
+	public function visitUrlset(Urlset $urlset): void;
 
-    public function visitUrl(Url $url): void;
+	public function visitUrl(Url $url): void;
 
-    public function visitImageExtension(Image $image): void;
+	public function visitImageExtension(Image $image): void;
 
-    public function visitLinkExtension(Link $link): void;
+	public function visitLinkExtension(Link $link): void;
 
-    public function visitMobileExtension(Mobile $mobile): void;
+	public function visitMobileExtension(Mobile $mobile): void;
 
-    public function visitNewsExtension(News $news): void;
+	public function visitNewsExtension(News $news): void;
 
-    public function visitVideoExtension(Video $video): void;
+	public function visitVideoExtension(Video $video): void;
 
-    public function output(): string;
+	public function output(): string;
 }

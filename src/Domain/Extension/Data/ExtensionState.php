@@ -41,7 +41,7 @@ final class ExtensionState
 
 		$quarantine = null;
 		if (isset($data['quarantine']) && is_array($data['quarantine'])) {
-			$q = $data['quarantine'];
+			$q          = $data['quarantine'];
 			$quarantine = [
 				'reason'        => (string)($q['reason'] ?? ''),
 				'failureCount'  => (int)($q['failureCount'] ?? 0),
@@ -52,7 +52,7 @@ final class ExtensionState
 
 		$updateDisabled = null;
 		if (isset($data['updateDisabled']) && is_array($data['updateDisabled'])) {
-			$u = $data['updateDisabled'];
+			$u              = $data['updateDisabled'];
 			$updateDisabled = [
 				'reason'    => (string)($u['reason'] ?? ''),
 				'findings'  => (int)($u['findings'] ?? 0),
@@ -77,12 +77,12 @@ final class ExtensionState
 	public function toArray(): array
 	{
 		return [
-			'enabled'       => $this->enabled,
-			'installed_at'  => $this->installedAt,
-			'version'       => $this->version,
-			'error'         => $this->error,
-			'permissions'   => $this->permissions,
-			'quarantine'    => $this->quarantine,
+			'enabled'        => $this->enabled,
+			'installed_at'   => $this->installedAt,
+			'version'        => $this->version,
+			'error'          => $this->error,
+			'permissions'    => $this->permissions,
+			'quarantine'     => $this->quarantine,
 			'updateDisabled' => $this->updateDisabled,
 		];
 	}

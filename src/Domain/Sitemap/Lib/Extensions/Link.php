@@ -1,65 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Sitemap\Lib\Extensions;
 
 use TotalCMS\Domain\Sitemap\Lib\Interfaces\DriverInterface;
 use TotalCMS\Domain\Sitemap\Lib\Interfaces\VisitorInterface;
 
 /**
- * Class Link
- *
- * @package TotalCMS\Domain\Sitemap\Lib\Subelements
+ * Class Link.
  */
 class Link implements VisitorInterface
 {
-    /**
-     * Language code for the page.
-     *
-     * @var string
-     */
-    protected $hrefLang;
+	/**
+	 * Link constructor.
+	 */
+	public function __construct(protected string $hrefLang, protected string $href)
+	{
+	}
 
-    /**
-     * Location of the translated page.
-     *
-     * @var string
-     */
-    protected $href;
+	/**
+	 * Location of the translated page.
+	 */
+	public function getHref(): string
+	{
+		return $this->href;
+	}
 
-    /**
-     * Link constructor.
-     *
-     * @param string $hrefLang
-     * @param string $href
-     */
-    public function __construct(string $hrefLang, string $href)
-    {
-        $this->hrefLang = $hrefLang;
-        $this->href = $href;
-    }
+	/**
+	 * Language code for the page.
+	 */
+	public function getHrefLang(): string
+	{
+		return $this->hrefLang;
+	}
 
-    /**
-     * Location of the translated page.
-     *
-     * @return string
-     */
-    public function getHref(): string
-    {
-        return $this->href;
-    }
-
-    /**
-     * Language code for the page.
-     * 
-     * @return string
-     */
-    public function getHrefLang(): string
-    {
-        return $this->hrefLang;
-    }
-
-    public function accept(DriverInterface $driver): void
-    {
-        $driver->visitLinkExtension($this);
-    }
+	public function accept(DriverInterface $driver): void
+	{
+		$driver->visitLinkExtension($this);
+	}
 }

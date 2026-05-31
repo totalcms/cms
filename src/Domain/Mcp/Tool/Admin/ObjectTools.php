@@ -335,7 +335,7 @@ readonly class ObjectTools
 
 	private function isEmpty(mixed $value): bool
 	{
-		return $value === null || $value === '' || $value === [];
+		return in_array($value, [null, '', []], true);
 	}
 
 	/**

@@ -15,17 +15,17 @@ use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
  * OAuthClientData. Public clients (isConfidential = false) may omit the
  * secret — passing null is accepted as valid for them.
  */
-final class LeagueClientRepository implements ClientRepositoryInterface
+final readonly class LeagueClientRepository implements ClientRepositoryInterface
 {
 	public function __construct(
-		private readonly OAuthClientRepository $clients,
+		private OAuthClientRepository $clients,
 	) {
 	}
 
 	public function getClientEntity(string $clientIdentifier): ?ClientEntityInterface
 	{
 		$client = $this->clients->find($clientIdentifier);
-		if ($client === null) {
+		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
 			return null;
 		}
 
@@ -35,7 +35,7 @@ final class LeagueClientRepository implements ClientRepositoryInterface
 	public function validateClient(string $clientIdentifier, ?string $clientSecret, ?string $grantType): bool
 	{
 		$client = $this->clients->find($clientIdentifier);
-		if ($client === null) {
+		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
 			return false;
 		}
 

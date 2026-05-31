@@ -55,44 +55,44 @@ function profCache(): CacheManager
 	return $cache;
 }
 
-describe('ExtensionProfiler', function () {
-	test('dev always profiles', function () {
+describe('ExtensionProfiler', function (): void {
+	test('dev always profiles', function (): void {
 		$p = new ExtensionProfiler(profEnv('dev'), profCache(), sampleRate: 0, logger: new NullLogger());
 		expect($p->isProfiling())->toBeTrue();
 	});
-	test('prod with sampleRate 0 never profiles', function () {
+	test('prod with sampleRate 0 never profiles', function (): void {
 		$p = new ExtensionProfiler(profEnv('prod'), profCache(), sampleRate: 0, logger: new NullLogger());
 		expect($p->isProfiling())->toBeFalse();
 	});
-	test('prod with sampleRate 1 always profiles', function () {
+	test('prod with sampleRate 1 always profiles', function (): void {
 		$p = new ExtensionProfiler(profEnv('prod'), profCache(), sampleRate: 1, logger: new NullLogger());
 		expect($p->isProfiling())->toBeTrue();
 	});
-	test('time() accumulates per extension when profiling', function () {
+	test('time() accumulates per extension when profiling', function (): void {
 		$p = new ExtensionProfiler(profEnv('dev'), profCache(), sampleRate: 1, logger: new NullLogger());
-		$p->time('acme/widget', fn () => usleep(1000));
+		$p->time('acme/widget', fn (): null => usleep(1000));
 		expect($p->totalMicrosFor('acme/widget'))->toBeGreaterThan(0);
 	});
-	test('time() returns the callable result', function () {
+	test('time() returns the callable result', function (): void {
 		$p = new ExtensionProfiler(profEnv('dev'), profCache(), sampleRate: 1, logger: new NullLogger());
-		expect($p->time('acme/widget', fn () => 7))->toBe(7);
+		expect($p->time('acme/widget', fn (): int => 7))->toBe(7);
 	});
-	test('time() does NOT accumulate when not profiling', function () {
+	test('time() does NOT accumulate when not profiling', function (): void {
 		$p = new ExtensionProfiler(profEnv('prod'), profCache(), sampleRate: 0, logger: new NullLogger());
-		$p->time('acme/widget', fn () => usleep(1000));
+		$p->time('acme/widget', fn (): null => usleep(1000));
 		expect($p->totalMicrosFor('acme/widget'))->toBe(0);
 	});
-	test('flush writes per-extension metrics to cache', function () {
+	test('flush writes per-extension metrics to cache', function (): void {
 		[$cache, $readStore] = profCacheWithStore();
 		$p                   = new ExtensionProfiler(profEnv('dev'), $cache, sampleRate: 1, logger: new NullLogger());
-		$p->time('acme/widget', fn () => usleep(1000));
+		$p->time('acme/widget', fn (): null => usleep(1000));
 		$p->flush();
 		expect($readStore('extprof:acme/widget'))->not->toBeNull();
 	});
-	test('flush is a no-op when not profiling', function () {
+	test('flush is a no-op when not profiling', function (): void {
 		[$cache, $readStore] = profCacheWithStore();
 		$p                   = new ExtensionProfiler(profEnv('prod'), $cache, sampleRate: 0, logger: new NullLogger());
-		$p->time('acme/widget', fn () => usleep(1000));
+		$p->time('acme/widget', fn (): null => usleep(1000));
 		$p->flush();
 		expect($readStore('extprof:acme/widget'))->toBeNull();
 	});

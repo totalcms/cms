@@ -4,27 +4,27 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
 
-describe('DangerousCodeScanner', function () {
+describe('DangerousCodeScanner', function (): void {
 	$fixtureDir = __DIR__ . '/../../../fixtures/extensions/test-vendor/dangerous-ext';
 
-	test('flags shell_exec', function () use ($fixtureDir) {
+	test('flags shell_exec', function () use ($fixtureDir): void {
 		$findings = (new DangerousCodeScanner())->scan($fixtureDir);
 		expect(array_column($findings, 'pattern'))->toContain('shell_exec');
 	});
 
-	test('flags network fetches and base64_decode', function () use ($fixtureDir) {
+	test('flags network fetches and base64_decode', function () use ($fixtureDir): void {
 		$findings = (new DangerousCodeScanner())->scan($fixtureDir);
 		$patterns = array_column($findings, 'pattern');
 		expect($patterns)->toContain('file_get_contents(http');
 		expect($patterns)->toContain('base64_decode');
 	});
 
-	test('each finding has file, line, and snippet', function () use ($fixtureDir) {
+	test('each finding has file, line, and snippet', function () use ($fixtureDir): void {
 		$findings = (new DangerousCodeScanner())->scan($fixtureDir);
 		expect($findings[0])->toHaveKeys(['pattern', 'file', 'line', 'snippet']);
 	});
 
-	test('a clean directory returns no findings', function () {
+	test('a clean directory returns no findings', function (): void {
 		$tmp = sys_get_temp_dir() . '/clean-ext-' . bin2hex(random_bytes(4));
 		mkdir($tmp);
 		file_put_contents($tmp . '/Extension.php', "<?php\nfunction ok() { return 1 + 1; }\n");
@@ -32,7 +32,7 @@ describe('DangerousCodeScanner', function () {
 		expect($findings)->toBe([]);
 	});
 
-	test('skips vendor, node_modules and .git directories', function () {
+	test('skips vendor, node_modules and .git directories', function (): void {
 		$tmp = sys_get_temp_dir() . '/vendor-ext-' . bin2hex(random_bytes(4));
 		mkdir($tmp . '/vendor/acme', 0777, true);
 		mkdir($tmp . '/node_modules', 0777, true);
@@ -49,7 +49,7 @@ describe('DangerousCodeScanner', function () {
 		expect($patterns)->not->toContain('eval');
 	});
 
-	test('patterns inside comments and string literals are ignored', function () {
+	test('patterns inside comments and string literals are ignored', function (): void {
 		$tmp = sys_get_temp_dir() . '/comment-ext-' . bin2hex(random_bytes(4));
 		mkdir($tmp);
 		$php = <<<'PHP'
@@ -68,7 +68,7 @@ describe('DangerousCodeScanner', function () {
 		expect($findings)->toBe([]);
 	});
 
-	test('real calls are flagged even when comments are nearby', function () {
+	test('real calls are flagged even when comments are nearby', function (): void {
 		$tmp = sys_get_temp_dir() . '/real-ext-' . bin2hex(random_bytes(4));
 		mkdir($tmp);
 		$php = <<<'PHP'
@@ -89,7 +89,7 @@ describe('DangerousCodeScanner', function () {
 		expect($patterns)->not->toContain('exec');
 	});
 
-	test('eval, backtick, and http file_get_contents are detected; local file_get_contents is not', function () {
+	test('eval, backtick, and http file_get_contents are detected; local file_get_contents is not', function (): void {
 		$tmp = sys_get_temp_dir() . '/lang-ext-' . bin2hex(random_bytes(4));
 		mkdir($tmp);
 		$php = <<<'PHP'

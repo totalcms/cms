@@ -61,17 +61,13 @@ readonly class OAuthAuthorizeAction
 		$client    = $this->clients->find($authRequest->getClient()->getIdentifier());
 		$scopeRows = [];
 		foreach ($authRequest->getScopes() as $scope) {
-			$id = $scope->getIdentifier();
-			if ($this->scopes->has($id)) {
-				$desc = $this->scopes->get($id)->description;
-			} else {
-				$desc = $id;
-			}
+			$id          = $scope->getIdentifier();
+			$desc        = $this->scopes->has($id) ? $this->scopes->get($id)->description : $id;
 			$scopeRows[] = ['identifier' => $id, 'description' => $desc];
 		}
 
 		return $this->twig->template($response, 'oauth/consent.twig', [
-			'clientName' => $client !== null ? $client->name : $authRequest->getClient()->getIdentifier(),
+			'clientName' => $client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData ? $client->name : $authRequest->getClient()->getIdentifier(),
 			'clientIcon' => $client?->iconPath,
 			'scopes'     => $scopeRows,
 			'userId'     => (string)$userId,

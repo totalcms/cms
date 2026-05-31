@@ -33,7 +33,7 @@ readonly class OAuthClientCreateAction
 		$name         = trim((string)($data['name'] ?? ''));
 		$redirectsRaw = (string)($data['redirect_uris'] ?? '');
 		$scopes       = isset($data['scopes']) && is_array($data['scopes'])
-			? array_values(array_map('strval', $data['scopes']))
+			? array_values(array_map(strval(...), $data['scopes']))
 			: [];
 
 		if ($name === '') {
@@ -43,7 +43,7 @@ readonly class OAuthClientCreateAction
 		}
 
 		$redirectUris = array_values(array_filter(
-			array_map('trim', preg_split('/\s+/', $redirectsRaw) ?: []),
+			array_map(trim(...), preg_split('/\s+/', $redirectsRaw) ?: []),
 			static fn (string $s): bool => $s !== '',
 		));
 

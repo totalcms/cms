@@ -31,6 +31,6 @@ final readonly class EnvironmentResolver
 	/** Outside prod, surface extension errors loudly so builders see them. */
 	public function shouldSurfaceErrors(): bool
 	{
-		return !($this->config->env === 'prod') || $this->isPreview;
+		return $this->config->env !== 'prod' || $this->isPreview;
 	}
 }

@@ -1,127 +1,100 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sitemap\Lib;
 
-use DateTimeInterface;
 use TotalCMS\Domain\Sitemap\Lib\Interfaces\DriverInterface;
 use TotalCMS\Domain\Sitemap\Lib\Interfaces\VisitorInterface;
 
 class Url implements VisitorInterface
 {
-    /**
-     * Location (URL).
-     *
-     * @var string
-     */
-    private $loc;
+	/**
+	 * Last modified time.
+	 */
+	private ?\DateTimeInterface $lastMod = null;
 
-    /**
-     * Last modified time.
-     *
-     * @var DateTimeInterface
-     */
-    private $lastMod;
+	/**
+	 * Change frequency of the location.
+	 */
+	private ?string $changeFreq = null;
 
-    /**
-     * Change frequency of the location.
-     *
-     * @var string
-     */
-    private $changeFreq;
+	/**
+	 * Priority of page importance.
+	 */
+	private ?string $priority = null;
 
-    /**
-     * Priority of page importance.
-     *
-     * @var string
-     */
-    private $priority;
+	/**
+	 * Array of sub-elements.
+	 *
+	 * @var VisitorInterface[]
+	 */
+	private array $extensions = [];
 
-    /**
-     * Array of sub-elements.
-     *
-     * @var VisitorInterface[]
-     */
-    private $extensions = [];
+	public function __construct(
+		/**
+		 * Location (URL).
+		 */
+		private readonly string $loc,
+	) {
+	}
 
-    public function __construct(string $loc)
-    {
-        $this->loc = $loc;
-    }
+	public function getLoc(): string
+	{
+		return $this->loc;
+	}
 
-    /**
-     * @return string
-     */
-    public function getLoc(): string
-    {
-        return $this->loc;
-    }
+	public function getLastMod(): ?\DateTimeInterface
+	{
+		return $this->lastMod;
+	}
 
-    /**
-     * @return DateTimeInterface|null
-     */
-    public function getLastMod()
-    {
-        return $this->lastMod;
-    }
+	public function setLastMod(\DateTimeInterface $lastMod): void
+	{
+		$this->lastMod = $lastMod;
+	}
 
-    /**
-     * @param DateTimeInterface $lastMod
-     */
-    public function setLastMod(DateTimeInterface $lastMod): void
-    {
-        $this->lastMod = $lastMod;
-    }
+	/**
+	 * @return string
+	 */
+	public function getChangeFreq(): ?string
+	{
+		return $this->changeFreq;
+	}
 
-    /**
-     * @return string
-     */
-    public function getChangeFreq()
-    {
-        return $this->changeFreq;
-    }
+	public function setChangeFreq(string $changeFreq): void
+	{
+		$this->changeFreq = $changeFreq;
+	}
 
-    /**
-     * @param string $changeFreq
-     */
-    public function setChangeFreq(string $changeFreq): void
-    {
-        $this->changeFreq = $changeFreq;
-    }
+	/**
+	 * @return string
+	 */
+	public function getPriority(): ?string
+	{
+		return $this->priority;
+	}
 
-    /**
-     * @return string
-     */
-    public function getPriority()
-    {
-        return $this->priority;
-    }
+	public function setPriority(string $priority): void
+	{
+		$this->priority = $priority;
+	}
 
-    /**
-     * @param string $priority
-     */
-    public function setPriority(string $priority): void
-    {
-        $this->priority = $priority;
-    }
+	public function addExtension(VisitorInterface $extension): void
+	{
+		$this->extensions[] = $extension;
+	}
 
-    /**
-     * @param VisitorInterface $extension
-     */
-    public function addExtension(VisitorInterface $extension): void
-    {
-        $this->extensions[] = $extension;
-    }
+	/**
+	 * @return VisitorInterface[]
+	 */
+	public function getExtensions(): array
+	{
+		return $this->extensions;
+	}
 
-    /**
-     * @return VisitorInterface[]
-     */
-    public function getExtensions(): array
-    {
-        return $this->extensions;
-    }
-
-    public function accept(DriverInterface $driver): void
-    {
-        $driver->visitUrl($this);
-    }
+	public function accept(DriverInterface $driver): void
+	{
+		$driver->visitUrl($this);
+	}
 }

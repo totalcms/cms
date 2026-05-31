@@ -63,13 +63,11 @@ final readonly class McpToolsValidator
 	 * @param  mixed               $rawTools     value from the incoming request body — may be
 	 *                                           a PHP array (from JSON body), a JSON string
 	 *                                           (direct API caller), null, or ""
-	 *
-	 * @return McpToolsValidationResult
 	 */
 	public function validate(string $collectionId, string $access, mixed $rawTools): McpToolsValidationResult
 	{
 		// No tools key present or explicitly empty — nothing to do.
-		if ($rawTools === null || $rawTools === '' || $rawTools === []) {
+		if (in_array($rawTools, [null, '', []], true)) {
 			return McpToolsValidationResult::ok([]);
 		}
 

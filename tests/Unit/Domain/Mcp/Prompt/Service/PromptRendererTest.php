@@ -16,7 +16,7 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 final class PromptRendererTest extends TestCase
 {
-	private TwigEngine $twig;
+	private \PHPUnit\Framework\MockObject\MockObject $twig;
 	private PromptRenderer $renderer;
 
 	protected function setUp(): void

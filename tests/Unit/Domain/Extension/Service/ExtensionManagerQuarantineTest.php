@@ -156,8 +156,8 @@ describe('ExtensionManager quarantine enforcement', function (): void {
 		);
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
-		$store = [];
-		$guard = quarantineGuard($stateRepo, quarantineCache($store));
+		$store     = [];
+		$guard     = quarantineGuard($stateRepo, quarantineCache($store));
 		[$manager] = quarantineManager($stateRepo, $guard);
 
 		$manager->discoverAndRegister();
@@ -170,8 +170,8 @@ describe('ExtensionManager quarantine enforcement', function (): void {
 		$state     = new ExtensionState(enabled: true, installedAt: '', version: '1.0.0');
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
-		$store = [];
-		$guard = quarantineGuard($stateRepo, quarantineCache($store));
+		$store     = [];
+		$guard     = quarantineGuard($stateRepo, quarantineCache($store));
 		[$manager] = quarantineManager($stateRepo, $guard);
 
 		$manager->discoverAndRegister();
@@ -197,8 +197,8 @@ describe('ExtensionManager re-enable recovery', function (): void {
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
 		// Pre-seed a non-zero rolling failure count.
-		$store = ['extguard:fail:test-vendor/hello-world' => 5];
-		$guard = quarantineGuard($stateRepo, quarantineCache($store));
+		$store     = ['extguard:fail:test-vendor/hello-world' => 5];
+		$guard     = quarantineGuard($stateRepo, quarantineCache($store));
 		[$manager] = quarantineManager($stateRepo, $guard);
 
 		$manager->discoverAndRegister();
@@ -229,8 +229,8 @@ describe('ExtensionManager quarantine info', function (): void {
 		);
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
-		$store = [];
-		$guard = quarantineGuard($stateRepo, quarantineCache($store));
+		$store     = [];
+		$guard     = quarantineGuard($stateRepo, quarantineCache($store));
 		[$manager] = quarantineManager($stateRepo, $guard);
 
 		$manager->discoverAndRegister();
@@ -246,8 +246,8 @@ describe('ExtensionManager quarantine info', function (): void {
 		$state     = new ExtensionState(enabled: true, installedAt: '', version: '1.0.0');
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
-		$store = [];
-		$guard = quarantineGuard($stateRepo, quarantineCache($store));
+		$store     = [];
+		$guard     = quarantineGuard($stateRepo, quarantineCache($store));
 		[$manager] = quarantineManager($stateRepo, $guard);
 
 		$manager->discoverAndRegister();
@@ -265,10 +265,10 @@ describe('ExtensionManager health info', function (): void {
 		$state     = new ExtensionState(enabled: true, installedAt: '', version: '1.0.0');
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
-		$store    = [];
-		$cache    = quarantineCache($store);
-		$guard    = quarantineGuard($stateRepo, $cache);
-		$profiler = quarantineProfiler($cache);
+		$store     = [];
+		$cache     = quarantineCache($store);
+		$guard     = quarantineGuard($stateRepo, $cache);
+		$profiler  = quarantineProfiler($cache);
 		[$manager] = quarantineManager($stateRepo, $guard, $profiler);
 
 		$manager->discoverAndRegister();
@@ -285,12 +285,12 @@ describe('ExtensionManager health info', function (): void {
 		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
 
 		$store = [
-			'extprof:test-vendor/hello-world'   => ['lastMs' => 12.5, 'avgMs' => 9.0, 'samples' => 4],
+			'extprof:test-vendor/hello-world'       => ['lastMs' => 12.5, 'avgMs' => 9.0, 'samples' => 4],
 			'extguard:fail:test-vendor/hello-world' => 3,
 		];
-		$cache    = quarantineCache($store);
-		$guard    = quarantineGuard($stateRepo, $cache);
-		$profiler = quarantineProfiler($cache);
+		$cache     = quarantineCache($store);
+		$guard     = quarantineGuard($stateRepo, $cache);
+		$profiler  = quarantineProfiler($cache);
 		[$manager] = quarantineManager($stateRepo, $guard, $profiler);
 
 		$manager->discoverAndRegister();

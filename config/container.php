@@ -44,11 +44,11 @@ use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Listener\McpResourceSubscriptionListener;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
-use TotalCMS\Domain\Extension\Service\ExtensionManager;
-use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
 use TotalCMS\Domain\Extension\Service\ExtensionGuard;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
@@ -148,7 +148,7 @@ return [
 	// Application settings — plain closure (rather than `Config::init(...)`)
 	// so the entire container is compileable; PHP-DI's compiler rejects
 	// first-class callables because they internally reference `self`.
-	Config::class => fn (): Config => Config::init(),
+	Config::class => Config::init(...),
 
 	App::class => function (ContainerInterface $container): App {
 		AppFactory::setContainer($container);
@@ -469,12 +469,10 @@ return [
 		);
 	},
 
-	EnvironmentResolver::class => function (ContainerInterface $container): EnvironmentResolver {
-		return new EnvironmentResolver(
-			$container->get(Config::class),
-			\TotalCMS\TotalCMS::isPreview(),
-		);
-	},
+	EnvironmentResolver::class => fn (ContainerInterface $container): EnvironmentResolver => new EnvironmentResolver(
+		$container->get(Config::class),
+		TotalCMS\TotalCMS::isPreview(),
+	),
 
 	ExtensionGuard::class => function (ContainerInterface $container): ExtensionGuard {
 		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
@@ -761,17 +759,15 @@ return [
 	// TextSearchProvider autowires (IndexFilter + ObjectSearcher deps,
 	// both resolvable by PHP-DI). No explicit entry needed.
 
-	SearchService::class => function (ContainerInterface $container): SearchService {
-		return new SearchService(
-			$container->get(SearchProviderRegistry::class),
-			$container->get(TextSearchProvider::class),
-			$container->get(LoggerFactory::class)
+	SearchService::class => fn (ContainerInterface $container): SearchService => new SearchService(
+		$container->get(SearchProviderRegistry::class),
+		$container->get(TextSearchProvider::class),
+		$container->get(LoggerFactory::class)
 				->addFileHandler('search.log', level: Level::Info)
 				->createLogger('search'),
-			$container->get(Config::class),
-			$container->get(CollectionFetcher::class),
-		);
-	},
+		$container->get(Config::class),
+		$container->get(CollectionFetcher::class),
+	),
 
 	// Bind the interface to the concrete implementation so PHP-DI autowires
 	// SearchServiceInterface injections (e.g. in the MCP search tools) to

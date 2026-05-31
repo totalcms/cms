@@ -161,8 +161,8 @@ final class AlgoliaSearchLifecycleTest extends TestCase
 				'level' => \Monolog\Level::Debug,
 				'test'  => new NullLogger(),
 			]),
-			EditionFeatureService::class    => fn () => $editionFeatures,
-			SearchProviderRegistry::class   => fn () => $registry,
+			EditionFeatureService::class    => fn (): \PHPUnit\Framework\MockObject\MockObject => $editionFeatures,
+			SearchProviderRegistry::class   => fn (): SearchProviderRegistry => $registry,
 		]);
 		$container = $builder->build();
 

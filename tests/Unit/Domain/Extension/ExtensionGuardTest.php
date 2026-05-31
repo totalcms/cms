@@ -20,6 +20,7 @@ use TotalCMS\Support\Config;
 function guardProfiler(string $env): ExtensionProfiler
 {
 	$store = [];
+
 	return new ExtensionProfiler(guardEnv($env), guardCache($store), $env === 'dev' ? 1 : 0, new NullLogger());
 }
 
@@ -27,6 +28,7 @@ function guardEnv(string $env, bool $preview = false): EnvironmentResolver
 {
 	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->env = $env;
+
 	return new EnvironmentResolver($config, $preview);
 }
 
@@ -51,6 +53,7 @@ function guardCache(array &$store): CacheManager
 	$cache->method('storeData')->willReturnCallback(
 		function (string $key, mixed $data, int $ttl = 0) use (&$store): bool {
 			$store[$key] = $data;
+
 			return true;
 		}
 	);
@@ -89,6 +92,7 @@ function guardStateRepo(array $seed = []): ExtensionStateRepository
 	$storage->method('write')->willReturnCallback(
 		function (string $location, string $contents) use (&$files): bool {
 			$files[$location] = $contents;
+
 			return true;
 		}
 	);
@@ -96,6 +100,7 @@ function guardStateRepo(array $seed = []): ExtensionStateRepository
 		function (string $old, string $new) use (&$files): bool {
 			$files[$new] = $files[$old] ?? '';
 			unset($files[$old]);
+
 			return true;
 		}
 	);
@@ -103,15 +108,15 @@ function guardStateRepo(array $seed = []): ExtensionStateRepository
 	return new ExtensionStateRepository($storage);
 }
 
-describe('ExtensionGuard', function () {
-	test('returns the callable result on success', function () {
+describe('ExtensionGuard', function (): void {
+	test('returns the callable result on success', function (): void {
 		$store = [];
 		$guard = new ExtensionGuard(guardEnv('prod'), guardCache($store), guardStateRepo(), new NullLogger(), guardProfiler('prod'));
 
-		expect($guard->run('acme/widget', 'twig:fn', fn () => 42, fallback: null))->toBe(42);
+		expect($guard->run('acme/widget', 'twig:fn', fn (): int => 42, fallback: null))->toBe(42);
 	});
 
-	test('catches a throw and returns the fallback', function () {
+	test('catches a throw and returns the fallback', function (): void {
 		$store = [];
 		$guard = new ExtensionGuard(guardEnv('prod'), guardCache($store), guardStateRepo(), new NullLogger(), guardProfiler('prod'));
 
@@ -120,7 +125,7 @@ describe('ExtensionGuard', function () {
 		expect($result)->toBe('safe');
 	});
 
-	test('counts at most one failure per extension per request', function () {
+	test('counts at most one failure per extension per request', function (): void {
 		$store = [];
 		$guard = new ExtensionGuard(guardEnv('prod'), guardCache($store), guardStateRepo(), new NullLogger(), guardProfiler('prod'));
 
@@ -131,7 +136,7 @@ describe('ExtensionGuard', function () {
 		expect($store['extguard:fail:acme/widget'])->toBe(1);
 	});
 
-	test('quarantines after threshold on prod', function () {
+	test('quarantines after threshold on prod', function (): void {
 		$store = ['extguard:fail:acme/widget' => 4]; // one more failure reaches threshold of 5
 		$repo  = guardStateRepo(['acme/widget' => new ExtensionState(enabled: true)]);
 		$guard = new ExtensionGuard(guardEnv('prod'), guardCache($store), $repo, new NullLogger(), guardProfiler('prod'));
@@ -145,7 +150,7 @@ describe('ExtensionGuard', function () {
 			->and($state->quarantine['lastError'])->toBe('final straw');
 	});
 
-	test('does not quarantine below threshold', function () {
+	test('does not quarantine below threshold', function (): void {
 		$store = ['extguard:fail:acme/widget' => 1];
 		$repo  = guardStateRepo(['acme/widget' => new ExtensionState(enabled: true)]);
 		$guard = new ExtensionGuard(guardEnv('prod'), guardCache($store), $repo, new NullLogger(), guardProfiler('prod'));
@@ -155,7 +160,7 @@ describe('ExtensionGuard', function () {
 		expect($repo->getState('acme/widget')->isQuarantined())->toBeFalse();
 	});
 
-	test('never quarantines outside prod', function () {
+	test('never quarantines outside prod', function (): void {
 		$store = ['extguard:fail:acme/widget' => 99]; // far above threshold
 		$repo  = guardStateRepo(['acme/widget' => new ExtensionState(enabled: true)]);
 		$guard = new ExtensionGuard(guardEnv('dev'), guardCache($store), $repo, new NullLogger(), guardProfiler('dev'));
@@ -165,14 +170,14 @@ describe('ExtensionGuard', function () {
 		expect($repo->getState('acme/widget')->isQuarantined())->toBeFalse();
 	});
 
-	test('times a successful guarded call through the profiler', function () {
-		$store    = [];
+	test('times a successful guarded call through the profiler', function (): void {
+		$store     = [];
 		$profStore = [];
 		// Dev env + sampleRate 1 => always profiling, so timing accumulates.
 		$profiler = new ExtensionProfiler(guardEnv('dev'), guardCache($profStore), 1, new NullLogger());
 		$guard    = new ExtensionGuard(guardEnv('dev'), guardCache($store), guardStateRepo(), new NullLogger(), $profiler);
 
-		$result = $guard->run('acme/widget', 'twig:fn', function () {
+		$result = $guard->run('acme/widget', 'twig:fn', function (): string {
 			usleep(1000); // ~1ms so timing is reliably > 0 micros
 
 			return 'ok';

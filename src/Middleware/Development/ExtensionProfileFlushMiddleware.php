@@ -25,6 +25,7 @@ final readonly class ExtensionProfileFlushMiddleware implements MiddlewareInterf
 	{
 		$response = $handler->handle($request);
 		$this->profiler->flush();
+
 		return $response;
 	}
 }
