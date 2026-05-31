@@ -11,6 +11,7 @@ final class ExtensionState
 {
 	/**
 	 * @param array<string,bool> $permissions Capability key => enabled
+	 * @param array{reason:string,failureCount:int,lastError:string,quarantinedAt:string}|null $quarantine
 	 */
 	public function __construct(
 		public bool $enabled = false,
@@ -18,6 +19,8 @@ final class ExtensionState
 		public string $version = '',
 		public ?string $error = null,
 		public array $permissions = [],
+		/** @var array{reason:string,failureCount:int,lastError:string,quarantinedAt:string}|null */
+		public ?array $quarantine = null,
 	) {
 	}
 
@@ -33,12 +36,24 @@ final class ExtensionState
 			}
 		}
 
+		$quarantine = null;
+		if (isset($data['quarantine']) && is_array($data['quarantine'])) {
+			$q = $data['quarantine'];
+			$quarantine = [
+				'reason'        => (string)($q['reason'] ?? ''),
+				'failureCount'  => (int)($q['failureCount'] ?? 0),
+				'lastError'     => (string)($q['lastError'] ?? ''),
+				'quarantinedAt' => (string)($q['quarantinedAt'] ?? ''),
+			];
+		}
+
 		return new self(
 			enabled: (bool)($data['enabled'] ?? false),
 			installedAt: (string)($data['installed_at'] ?? ''),
 			version: (string)($data['version'] ?? ''),
 			error: isset($data['error']) ? (string)$data['error'] : null,
 			permissions: $permissions,
+			quarantine: $quarantine,
 		);
 	}
 
@@ -53,7 +68,18 @@ final class ExtensionState
 			'version'      => $this->version,
 			'error'        => $this->error,
 			'permissions'  => $this->permissions,
+			'quarantine'   => $this->quarantine,
 		];
+	}
+
+	public function isQuarantined(): bool
+	{
+		return $this->quarantine !== null;
+	}
+
+	public function clearQuarantine(): void
+	{
+		$this->quarantine = null;
 	}
 
 	/**

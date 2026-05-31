@@ -78,6 +78,7 @@ describe('ExtensionState', function (): void {
 			'version'      => '1.0.0',
 			'error'        => null,
 			'permissions'  => ['twig:functions' => true, 'cli:commands' => false],
+			'quarantine'   => null,
 		]);
 	});
 
@@ -88,6 +89,7 @@ describe('ExtensionState', function (): void {
 			'version'      => '2.0.0',
 			'error'        => 'test error',
 			'permissions'  => ['routes:admin' => true, 'events:listen' => false],
+			'quarantine'   => null,
 		];
 
 		$state  = ExtensionState::fromArray($original);

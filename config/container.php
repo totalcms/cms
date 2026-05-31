@@ -48,6 +48,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
+use TotalCMS\Domain\Extension\Service\ExtensionGuard;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -471,6 +472,17 @@ return [
 		return new EnvironmentResolver(
 			$container->get(Config::class),
 			\TotalCMS\TotalCMS::isPreview(),
+		);
+	},
+
+	ExtensionGuard::class => function (ContainerInterface $container): ExtensionGuard {
+		$extLevel = LoggerFactory::resolveLevel($container->get(Config::class)->extensionsLogLevel, Level::Info);
+
+		return new ExtensionGuard(
+			$container->get(EnvironmentResolver::class),
+			$container->get(CacheManager::class),
+			$container->get(ExtensionStateRepository::class),
+			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
 		);
 	},
 
