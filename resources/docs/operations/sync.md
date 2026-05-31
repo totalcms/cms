@@ -13,6 +13,8 @@ Sync lets you push schemas and templates from a local development instance to a 
 - Custom schemas (`.schemas/` directory)
 - Custom templates
 
+> **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries only schemas and content. See [Git-First Templates](operations/git-first-templates).
+
 ## What Never Gets Synced
 
 - Collection content and objects

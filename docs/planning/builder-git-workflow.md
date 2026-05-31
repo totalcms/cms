@@ -162,15 +162,16 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
 - ✅ Tests: `BuilderDefaultsFloorTest` (integration) renders a page extending `layouts/default.twig` with **no** layout in tcms-data — it resolves from the floor (`<!DOCTYPE html>` + the page's own block). Resolver unit tests updated for the now-shipped defaults (read order, labeled layers, loaderPaths, `resolveRead` → built-in). Full feature/integration suite green, PHPStan L8 clean.
 - No bespoke partials shipped — the default layout includes none, so the floor is just the layout (matches the old `ensureDefaultLayout` content exactly, so existing installs are unaffected: their materialized copy wins over the identical floor).
 
-### Phase 5 — Skeleton, gitignore, docs
-- Project skeleton (`totalcms/totalcms-project`): create `builder/` with a `.gitkeep`; adjust `.gitignore` to keep `tcms-data` content ignored while ignoring `builder/.history/`:
-  ```gitignore
-  /tcms-data/
-  /builder/.history/
-  ```
-  (Templates in `<project-root>/builder/` are committed; `.history/` snapshots are local undo, not source.)
-- Docs: new page under `resources/docs/operations/` — "Git-first template workflow" — covering the read hierarchy, the lock, the `.history/` exclusion, the deploy-webhook story, and that templates travel by git while page records travel by the Sync Manager (Decisions 7 & 8). Add to `resources/docs/menu.php` (Operations group) and rebuild `search-index.json`.
-- **Migrating an existing site from `tcms-data/builder` to git** is a documented manual step, not a CLI command: move the `builder/` folder to the project root. Its presence flips the resolver to git-managed — no setting to change. Cheap enough to not warrant tooling.
+### Phase 5 — Skeleton, gitignore, docs ⏳ (in-repo parts done 2026-05-30, not yet committed; skeleton repo pending)
+
+**In this repo (`totalcms/cms`) — done:**
+- ✅ `StarterService` scaffolding now lands in the **write target**: `TemplateMigrationService::importDirectory()` writes via `BuilderTemplatePaths::writePath()` (native I/O) instead of the datadir Flysystem, so `tcms builder:init` on a git-managed project writes into `project-root/builder` (committable), not gitignored `tcms-data`. (`migrateFromLegacyTemplates` stays datadir-targeted — it's a tcms-data→tcms-data move.) Covered by `TemplateMigrationServiceTest`.
+- ✅ Docs: `resources/docs/operations/git-first-templates.md` (read hierarchy, the read-only lock, `.history/` exclusion, deploy-webhook story, templates→git / pages→Sync). Added to `menu.php` (Operations, after Sync); `search-index.json` rebuilt. Added a cross-reference note to `operations/sync.md` (git-managed templates are excluded from Sync — Decision 8).
+- **Migrating an existing site** is a documented manual move (`mv tcms-data/builder ./builder`) — its presence flips git-managed mode, no setting.
+
+**In the skeleton repo (`totalcms/totalcms-project`) — pending (separate repo, not editable here):**
+- Composer `bin/post-install.php`: offer "manage templates in git?" → if yes, create + **seed** `./builder` (copy a starter / the built-in default so it isn't an empty-but-locked folder). Seeding is load-bearing: an empty `./builder` = git-managed = locked with nothing to edit.
+- `.gitignore`: keep `tcms-data` ignored; add `/builder/.history/` (commit templates, skip local undo snapshots).
 
 ### Phase 6 — Tests & regression sweep
 - Full back-compat pass: an admin-first project (no `project-root/builder`) is unchanged across render, edit, designer, JumpStart, starters.
