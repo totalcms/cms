@@ -211,6 +211,7 @@ return [
 		'sub'    => [
 			['title' => 'Extensions Overview', 'path' => 'extensions/overview'],
 			['title' => 'Manifest',            'path' => 'extensions/manifest'],
+			['title' => 'Stability & Safety',  'path' => 'extensions/safety'],
 			['title' => 'Extension Points',    'path' => 'extensions/extension-points'],
 			['title' => 'Events',              'path' => 'extensions/events'],
 			['title' => 'Schemas',             'path' => 'extensions/schemas'],

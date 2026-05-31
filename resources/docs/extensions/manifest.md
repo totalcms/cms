@@ -15,6 +15,7 @@ Every extension requires an `extension.json` manifest file in its root directory
     "id": "acme/seo-pro",
     "name": "SEO Pro",
     "description": "Advanced SEO tools for Total CMS",
+    "reviewNote": "Adds SEO meta tags to your pages and registers a public sitemap endpoint. Uses only documented Total CMS APIs.",
     "version": "1.2.0",
     "icon": "icon.svg",
     "requires": {
@@ -72,6 +73,16 @@ Short description of what the extension does.
 ```json
 "description": "Advanced SEO tools for Total CMS"
 ```
+
+### `reviewNote`
+
+A plain-language note shown to the operator on the [pre-enable review screen](safety.md#the-pre-enable-review). If your extension uses any sensitive capability (public routes, event listeners, container services, MCP tools/resources) or contains high-risk code patterns, the operator sees a review screen before enabling — and your `reviewNote` leads it.
+
+```json
+"reviewNote": "Receives Stripe webhooks at a public endpoint to confirm payments, and watches new orders to send notifications. No data leaves your site except the Stripe calls you configure."
+```
+
+Write it for the site owner, not a developer: say what the extension does and why it needs each sensitive capability, be specific about public endpoints and data access, and keep it to a sentence or two. Optional — but on an extension that uses sensitive capabilities, a clear note turns a nervous "Enable" into a confident one. See [Stability & Safety](safety.md) for the full picture.
 
 ### `requires`
 
@@ -211,6 +222,6 @@ When an extension is enabled, the system runs a trial registration to discover w
 | `page-middleware` | `$context->addPageMiddleware(...)` | Per-page middleware |
 | `form-actions` | `$context->addFormAction(...)` | Custom form action types (Pro) |
 
-If you add a new capability to an already-enabled extension (for example, you create a `schemas/` directory after the fact), disable + re-enable the extension so the trial registration picks up the new capability and adds it to the permissions list.
+If a new version of an extension adds a capability it didn't have before, Total CMS detects it on update and adds it to the permissions list **turned off** — the operator opts into the new feature from the extension's settings. (For sideloaded extensions, an update whose code contains high-risk patterns disables the extension until the operator reviews it.) See [Stability & Safety](safety.md) for how the review and update protections work.
 
 For details on each capability and how to register it, see [Extension Points](extension-points.md).
