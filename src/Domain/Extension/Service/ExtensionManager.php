@@ -54,6 +54,7 @@ class ExtensionManager
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 		private readonly ManifestValidator $manifestValidator,
+		private readonly ExtensionGuard $guard,
 	) {
 	}
 
@@ -627,7 +628,9 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'twig:functions')) {
 				continue;
 			}
-			$functions = array_merge($functions, $context->getRegisteredTwigFunctions());
+			foreach ($context->getRegisteredTwigFunctions() as $fn) {
+				$functions[] = $this->guardTwigFunction($id, $fn);
+			}
 		}
 
 		return $functions;
@@ -758,10 +761,108 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'twig:filters')) {
 				continue;
 			}
-			$filters = array_merge($filters, $context->getRegisteredTwigFilters());
+			foreach ($context->getRegisteredTwigFilters() as $filter) {
+				$filters[] = $this->guardTwigFilter($id, $filter);
+			}
 		}
 
 		return $filters;
+	}
+
+	/**
+	 * Rebuild an extension TwigFunction with its callable wrapped in the guard.
+	 *
+	 * A broken extension Twig function is the single biggest white-screen source:
+	 * Twig functions run on the live render path, and a throw there bubbles into a
+	 * 500. Wrapping the callable means a broken call renders an empty string and
+	 * is crash-counted (feeding quarantine) instead of taking the page down. The
+	 * original options are preserved so flags (is_safe, needs_environment,
+	 * needs_context) survive — Twig prepends env/context args, which the wrapper
+	 * forwards transparently via ...$args.
+	 *
+	 * KNOWN LIMITATION: the wrapper replaces the original callable's signature
+	 * with a variadic `...$args`. Twig forwards positional args (including
+	 * needs_environment/needs_context injections) faithfully through the
+	 * variadic. However, an extension function invoked with named arguments in a
+	 * template (e.g. `{{ ext_fn(label="x") }}`) will fail to compile because
+	 * Twig reflects the wrapper and cannot match the named parameter against the
+	 * variadic. Positional calls — the common case — are unaffected.
+	 */
+	private function guardTwigFunction(string $id, TwigFunction $fn): TwigFunction
+	{
+		$callable = $this->normalizeTwigCallable($fn->getCallable());
+		$name     = $fn->getName();
+
+		$guarded = fn (mixed ...$args): mixed => $this->guard->run(
+			$id,
+			"twig:fn:{$name}",
+			fn (): mixed => $callable === null ? '' : $callable(...$args),
+			fallback: '',
+		);
+
+		return new TwigFunction($name, $guarded, $this->twigCallableOptions($fn));
+	}
+
+	/**
+	 * Rebuild an extension TwigFilter with its callable wrapped in the guard.
+	 * Same containment rationale as guardTwigFunction() — including the
+	 * KNOWN LIMITATION that named-argument invocations will fail to compile
+	 * (Twig cannot match named params against the variadic wrapper); positional
+	 * calls are unaffected.
+	 */
+	private function guardTwigFilter(string $id, TwigFilter $filter): TwigFilter
+	{
+		$callable = $this->normalizeTwigCallable($filter->getCallable());
+		$name     = $filter->getName();
+
+		$guarded = fn (mixed ...$args): mixed => $this->guard->run(
+			$id,
+			"twig:filter:{$name}",
+			fn (): mixed => $callable === null ? '' : $callable(...$args),
+			fallback: '',
+		);
+
+		return new TwigFilter($name, $guarded, $this->twigCallableOptions($filter));
+	}
+
+	/**
+	 * Normalize a Twig callable (which may be a closure, a [class, method] pair,
+	 * or null) into a uniform ?callable the guard wrapper can invoke with
+	 * arbitrary args. Twig's getCallable() types the array form as
+	 * `array{class-string, string}` rather than `callable`; re-typing the return
+	 * as `?callable` lets the wrapper call it without PHPStan flagging the union.
+	 *
+	 * @param callable|array{class-string, string}|null $raw
+	 */
+	private function normalizeTwigCallable(callable|array|null $raw): ?callable
+	{
+		if ($raw === null || !is_callable($raw)) {
+			return null;
+		}
+
+		return $raw;
+	}
+
+	/**
+	 * Read a Twig callable's full options array.
+	 *
+	 * `Twig\AbstractTwigCallable` in the installed Twig (3.27) stores the merged
+	 * options on a protected $options property (is_safe, needs_environment,
+	 * needs_context, node_class, deprecation_info, …) but exposes no public
+	 * accessor for the raw array. Reading it via reflection and passing it
+	 * verbatim to the rebuilt callable preserves every flag — the alternative of
+	 * reconstructing options from individual needs*() accessors would silently
+	 * drop is_safe and break {{ ... }} escaping on safe HTML.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function twigCallableOptions(TwigFunction|TwigFilter $callable): array
+	{
+		$prop = new \ReflectionProperty(\Twig\AbstractTwigCallable::class, 'options');
+		/** @var array<string,mixed> $options */
+		$options = $prop->getValue($callable);
+
+		return $options;
 	}
 
 	/** @return array<string,mixed> */
@@ -944,7 +1045,19 @@ class ExtensionManager
 			}
 			foreach ($context->getRegisteredEventListeners() as $event => $eventListeners) {
 				foreach ($eventListeners as $listener) {
-					$listeners[$event][] = $listener;
+					[$callable, $priority] = $listener;
+
+					// Wrap each listener so a throwing extension listener is
+					// contained + attributed + crash-counted (feeding quarantine)
+					// here, not just swallowed by the dispatcher's backstop catch.
+					$guarded = fn (mixed ...$args): mixed => $this->guard->run(
+						$id,
+						"event:{$event}",
+						fn (): mixed => $callable(...$args),
+						fallback: null,
+					);
+
+					$listeners[$event][] = [$guarded, $priority];
 				}
 			}
 		}

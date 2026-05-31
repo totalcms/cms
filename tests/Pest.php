@@ -194,6 +194,76 @@ function restoreFixtures(): void
 }
 
 /**
+ * Build a real, dev-environment ExtensionGuard for use in tests.
+ *
+ * Env is 'dev' so auto-quarantine never fires (quarantine is destructive and
+ * prod-only). Collaborators are real (not PHPUnit mocks) so this helper works
+ * from BOTH Pest closures AND class-based PHPUnit TestCases — test() resolves
+ * differently in the two contexts, and createMock() outside a TestCase trips
+ * Pest into treating the call as a test description.
+ *
+ * On the guard's success path it touches nothing; in dev a throw only logs
+ * (NullLogger) and bumps the in-memory counter. This lets ExtensionManager
+ * tests pass a genuine guard with a single inserted constructor argument.
+ */
+function testExtensionGuard(): \TotalCMS\Domain\Extension\Service\ExtensionGuard
+{
+	$config      = (new ReflectionClass(\TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->env = 'dev';
+	$env         = new \TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
+
+	// In-memory CacheManager subclass — overrides the two methods the guard's
+	// failure counter uses and skips the heavy 11-dependency parent constructor.
+	$cache = new class extends \TotalCMS\Domain\Cache\CacheManager {
+		/** @var array<string,mixed> */
+		private array $store = [];
+
+		public function __construct()
+		{
+			// Intentionally bypass parent — the guard never touches the cache
+			// services, only getData()/storeData().
+		}
+
+		public function getData(string $key): mixed
+		{
+			return $this->store[$key] ?? null;
+		}
+
+		public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
+		{
+			$this->store[$key] = $data;
+
+			return true;
+		}
+	};
+
+	// Real state repo over a shared temp dir (no PHPUnit mock needed).
+	// A single directory is created once and reused across all calls; a
+	// shutdown function removes it when the test process exits so it does
+	// not accumulate in the system temp directory.
+	static $tmpRoot = null;
+	if ($tmpRoot === null) {
+		$tmpRoot = sys_get_temp_dir() . '/tcms-test-guard-' . bin2hex(random_bytes(6));
+		@mkdir($tmpRoot, 0777, true);
+		register_shutdown_function(function () use ($tmpRoot): void {
+			if (is_dir($tmpRoot)) {
+				recursiveDelete($tmpRoot, forceComplete: true);
+			}
+		});
+	}
+	$flysystem = new \League\Flysystem\Filesystem(new \League\Flysystem\Local\LocalFilesystemAdapter($tmpRoot));
+	$storage   = new \TotalCMS\Domain\Storage\StorageFilesystemAdapter($flysystem);
+	$repo      = new \TotalCMS\Domain\Extension\Repository\ExtensionStateRepository($storage);
+
+	return new \TotalCMS\Domain\Extension\Service\ExtensionGuard(
+		$env,
+		$cache,
+		$repo,
+		new \Psr\Log\NullLogger(),
+	);
+}
+
+/**
  * Copy a directory tree from $src to $dst, creating dirs as needed and
  * overwriting existing files. Helper for restoreFixtures().
  */

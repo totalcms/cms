@@ -55,6 +55,7 @@ function createTestDependencies(): array
 		$mockContainer,
 		new NullLogger(),
 		$manifestValidator,
+		testExtensionGuard(),
 	);
 
 	return [

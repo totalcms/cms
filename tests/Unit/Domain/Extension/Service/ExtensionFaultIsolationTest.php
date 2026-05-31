@@ -45,6 +45,7 @@ describe('Extension fault isolation', function (): void {
 			$container,
 			new NullLogger(),
 			$manifestValidator,
+			testExtensionGuard(),
 		);
 
 		$manager->discoverAndRegister();
@@ -102,6 +103,7 @@ describe('Extension fault isolation', function (): void {
 			$container,
 			new NullLogger(),
 			$manifestValidator,
+			testExtensionGuard(),
 		);
 
 		$manager->discoverAndRegister();

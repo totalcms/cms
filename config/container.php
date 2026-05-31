@@ -497,6 +497,7 @@ return [
 			$container,
 			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
 			$container->get(ManifestValidator::class),
+			$container->get(ExtensionGuard::class),
 		);
 	},
 

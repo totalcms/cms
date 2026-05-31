@@ -43,6 +43,7 @@ function createExtensionManager(
 		$container,
 		new NullLogger(),
 		$manifestValidator,
+		testExtensionGuard(),
 	);
 }
 
