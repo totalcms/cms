@@ -131,33 +131,44 @@ final class BuilderTemplatePathsTest extends TestCase
 
 	// --- readLayers (highest precedence first, existing dirs only) ---
 
-	public function testReadLayersIsDataOnlyForAdminFirstProject(): void
+	public function testReadLayersForAdminFirstProjectIsDataThenDefaults(): void
 	{
-		$this->assertSame([$this->dataBuilder], $this->makePaths()->readLayers());
+		$defaults = $this->makePaths()->defaultsDir();
+
+		// Built-in defaults ship (Phase 4), so they're the floor under tcms-data.
+		$this->assertSame([$this->dataBuilder, $defaults], $this->makePaths()->readLayers());
 	}
 
-	public function testReadLayersPutsProjectFirstWhenGitManaged(): void
+	public function testReadLayersPutsProjectFirstThenDataThenDefaults(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
+		$defaults = $this->makePaths()->defaultsDir();
 
-		$this->assertSame([$this->projectBuilder, $this->dataBuilder], $this->makePaths()->readLayers());
+		$this->assertSame(
+			[$this->projectBuilder, $this->dataBuilder, $defaults],
+			$this->makePaths()->readLayers(),
+		);
 	}
 
-	public function testReadLayersExcludesDefaultsWhenNotShipped(): void
+	public function testReadLayersIncludesShippedDefaultsAsTheFloor(): void
 	{
-		$paths = $this->makePaths();
+		$layers = $this->makePaths()->readLayers();
 
-		$this->assertNotContains($paths->defaultsDir(), $paths->readLayers());
+		// The shipped defaults dir exists and is the lowest-precedence layer.
+		$this->assertSame($this->makePaths()->defaultsDir(), end($layers));
+		$this->assertDirectoryExists($this->makePaths()->defaultsDir());
 	}
 
 	public function testReadLayersLabeledTagsSources(): void
 	{
 		mkdir($this->projectBuilder, 0o777, true);
+		$defaults = $this->makePaths()->defaultsDir();
 
 		$this->assertSame(
 			[
 				['layer' => BuilderTemplatePaths::LAYER_PROJECT, 'dir' => $this->projectBuilder],
 				['layer' => BuilderTemplatePaths::LAYER_DATA, 'dir' => $this->dataBuilder],
+				['layer' => BuilderTemplatePaths::LAYER_BUILTIN, 'dir' => $defaults],
 			],
 			$this->makePaths()->readLayersLabeled(),
 		);
@@ -179,6 +190,17 @@ final class BuilderTemplatePathsTest extends TestCase
 			['layer' => BuilderTemplatePaths::LAYER_DATA, 'path' => $this->dataBuilder . '/pages/about.twig'],
 			$this->makePaths()->resolveRead('pages/about.twig'),
 		);
+	}
+
+	public function testResolveReadFallsBackToBuiltinDefaultLayout(): void
+	{
+		// Phase 4: the default layout ships in the built-in floor, so it
+		// resolves even with no project dir and an empty tcms-data/builder.
+		$resolved = $this->makePaths()->resolveRead('layouts/default.twig');
+
+		$this->assertNotNull($resolved);
+		$this->assertSame(BuilderTemplatePaths::LAYER_BUILTIN, $resolved['layer']);
+		$this->assertSame($this->makePaths()->defaultsDir() . '/layouts/default.twig', $resolved['path']);
 	}
 
 	public function testResolveReadPrefersProjectOverData(): void
@@ -219,6 +241,7 @@ final class BuilderTemplatePathsTest extends TestCase
 				rtrim(\TotalCMS\Domain\Template\Repository\TemplateRepository::reservedTemplateDir(), '/'),
 				$this->projectBuilder,
 				$this->dataBuilder,
+				$this->makePaths()->defaultsDir(),
 			],
 			$this->makePaths()->loaderPaths(),
 		);

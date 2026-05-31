@@ -6,15 +6,14 @@ namespace TotalCMS\Domain\Builder\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
-use TotalCMS\Domain\Template\Service\TemplateSaver;
 
 /**
  * First-run setup and legacy migration for the Site Builder. Creates the
- * default pages collection and default layout when missing, and migrates
- * templates from the legacy `tcms-data/templates/` directory to the new
- * `tcms-data/builder/` structure.
+ * default pages collection when missing, and migrates templates from the
+ * legacy `tcms-data/templates/` directory to the new `tcms-data/builder/`
+ * structure. The default `layouts/default.twig` ships as a built-in floor
+ * (`resources/builder/defaults/`), so no layout materialization is needed.
  *
  * BuilderConfigService is the source of truth for the configured pages
  * collection ID; this service consumes it to decide what to install.
@@ -26,8 +25,6 @@ readonly class BuilderInstaller
 		private CollectionFetcher $collectionFetcher,
 		private CollectionSaver $collectionSaver,
 		private TemplateMigrationService $templateMigration,
-		private TemplateFetcher $templateFetcher,
-		private TemplateSaver $templateSaver,
 	) {
 	}
 
@@ -56,34 +53,6 @@ readonly class BuilderInstaller
 			'name'   => 'Pages',
 			'sortBy' => 'sort',
 		]);
-	}
-
-	/**
-	 * Ensure a default layout exists in the builder.
-	 */
-	public function ensureDefaultLayout(): void
-	{
-		if ($this->templateFetcher->templateExists('default', 'layouts')) {
-			return;
-		}
-
-		$content = <<<'TWIG'
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
-				<meta name="description" content="{% block description %}{% endblock %}">
-				{% block head %}{% endblock %}
-			</head>
-			<body>
-				{% block content %}{% endblock %}
-			</body>
-			</html>
-			TWIG;
-
-		$this->templateSaver->saveTemplate('default', $content, 'layouts');
 	}
 
 	/**

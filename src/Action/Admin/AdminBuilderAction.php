@@ -39,9 +39,9 @@ readonly class AdminBuilderAction
 		$path    = $args['path'] ?? '';
 		$file    = ($section !== '' && $path !== '') ? $section . '/' . $path : '';
 
-		// First-visit setup
+		// First-visit setup. The default layout ships as a built-in floor
+		// (resources/builder/defaults/), so no layout materialization is needed.
 		$this->builderInstaller->migrateFromTemplatesDir();
-		$this->builderInstaller->ensureDefaultLayout();
 		$this->builderInstaller->ensurePagesCollection();
 
 		$pagesCollectionId = $this->builderConfig->getPagesCollectionId();

@@ -156,11 +156,11 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
 - ⚠️ Visual states (banner shown, badges rendered) aren't feature-tested: the test env is admin-first + unlocked, so no project/built-in layer or lock exists to render. Covered by the adapter unit test + the conditional logic; worth a manual browser check before release.
 - Deferred (small): source badges in the **builder file-tree** sidebar (`NestedFileTree`) — the templates-page sidebar has them; the tree would need each node to carry its source.
 
-### Phase 4 — Built-in defaults as the floor
-- Ship a canonical default builder set at `resources/builder/defaults/` (minimal `layouts/default.twig` + the partials a bare page needs).
-- Add it as the lowest loader/read layer.
-- Retire `BuilderInstaller::ensureDefaultLayout()`'s materialization into `tcms-data` (a fresh builder now works off the floor; starters/projects override it). Keep collection-creation duties.
-- Tests: empty `tcms-data/builder` + no project dir still renders a page off the defaults.
+### Phase 4 — Built-in defaults as the floor ✅ (done 2026-05-30, not yet committed)
+- ✅ Shipped `resources/builder/defaults/layouts/default.twig` (the minimal HTML5 layout that page templates extend). It's the lowest read layer — already wired via `BuilderTemplatePaths::defaultsDir()`, so creating the dir activated it in both the Twig loader and `resolveRead()`.
+- ✅ Retired `BuilderInstaller::ensureDefaultLayout()` (and its call in `AdminBuilderAction`). A fresh builder renders off the floor; the first admin save of `layouts/default.twig` writes a tcms-data override (copy-on-write). Also dropped `BuilderInstaller`'s now-unused `TemplateFetcher` + `TemplateSaver` deps.
+- ✅ Tests: `BuilderDefaultsFloorTest` (integration) renders a page extending `layouts/default.twig` with **no** layout in tcms-data — it resolves from the floor (`<!DOCTYPE html>` + the page's own block). Resolver unit tests updated for the now-shipped defaults (read order, labeled layers, loaderPaths, `resolveRead` → built-in). Full feature/integration suite green, PHPStan L8 clean.
+- No bespoke partials shipped — the default layout includes none, so the floor is just the layout (matches the old `ensureDefaultLayout` content exactly, so existing installs are unaffected: their materialized copy wins over the identical floor).
 
 ### Phase 5 — Skeleton, gitignore, docs
 - Project skeleton (`totalcms/totalcms-project`): create `builder/` with a `.gitkeep`; adjust `.gitignore` to keep `tcms-data` content ignored while ignoring `builder/.history/`:

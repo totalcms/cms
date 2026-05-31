@@ -7,9 +7,7 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
-use TotalCMS\Domain\Template\Service\TemplateSaver;
 
 final class BuilderInstallerTest extends TestCase
 {
@@ -18,8 +16,6 @@ final class BuilderInstallerTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
 	private \PHPUnit\Framework\MockObject\MockObject $templateMigration;
-	private \PHPUnit\Framework\MockObject\MockObject $templateFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $templateSaver;
 
 	protected function setUp(): void
 	{
@@ -27,16 +23,12 @@ final class BuilderInstallerTest extends TestCase
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
 		$this->templateMigration = $this->createMock(TemplateMigrationService::class);
-		$this->templateFetcher   = $this->createMock(TemplateFetcher::class);
-		$this->templateSaver     = $this->createMock(TemplateSaver::class);
 
 		$this->installer = new BuilderInstaller(
 			$this->builderConfig,
 			$this->collectionFetcher,
 			$this->collectionSaver,
 			$this->templateMigration,
-			$this->templateFetcher,
-			$this->templateSaver,
 		);
 	}
 
@@ -76,32 +68,6 @@ final class BuilderInstallerTest extends TestCase
 		$this->collectionSaver->expects($this->never())->method('saveCollection');
 
 		$this->installer->ensurePagesCollection();
-	}
-
-	// --- ensureDefaultLayout ---
-
-	public function testCreatesDefaultLayoutWhenMissing(): void
-	{
-		$this->templateFetcher->method('templateExists')
-			->with('default', 'layouts')
-			->willReturn(false);
-
-		$this->templateSaver->expects($this->once())
-			->method('saveTemplate')
-			->with('default', $this->stringContains('<!DOCTYPE html>'), 'layouts');
-
-		$this->installer->ensureDefaultLayout();
-	}
-
-	public function testSkipsLayoutCreationWhenExists(): void
-	{
-		$this->templateFetcher->method('templateExists')
-			->with('default', 'layouts')
-			->willReturn(true);
-
-		$this->templateSaver->expects($this->never())->method('saveTemplate');
-
-		$this->installer->ensureDefaultLayout();
 	}
 
 	// --- migrateFromTemplatesDir ---
