@@ -46,6 +46,21 @@ class ExtensionManager
 	private bool $registered = false;
 	private bool $booted     = false;
 
+	/**
+	 * Capabilities considered "risky" — they either expose publicly accessible
+	 * surface or grant access to sensitive data. Each maps to a plain-language
+	 * FYI label shown on the pre-enable review screen. Single source of truth.
+	 *
+	 * @var array<string,string>
+	 */
+	private const RISKY_CAPABILITIES = [
+		'routes:public' => 'Exposes public, unauthenticated endpoints.',
+		'events:listen' => 'Can observe all content changes.',
+		'container'     => 'Registers services in the application container.',
+		'mcp:tools'     => 'Registers actions AI agents can call (reachable externally if MCP public access is enabled).',
+		'mcp:resources' => 'Exposes data that AI agents can fetch.',
+	];
+
 	public function __construct(
 		private readonly ExtensionDiscovery $discovery,
 		private readonly ExtensionStateRepository $stateRepository,
@@ -446,6 +461,56 @@ class ExtensionManager
 	public function isEnabled(string $extensionId): bool
 	{
 		return $this->stateRepository->isEnabled($extensionId);
+	}
+
+	/**
+	 * Pre-enable review data: the developer's review note, what the extension
+	 * registers (capabilities), which of those are risky (with plain-language
+	 * labels), and risky source patterns found by a one-time scan. Informational —
+	 * not enforcement. `hasFlags` tells the review page whether there's anything
+	 * worth showing at all.
+	 *
+	 * @return array{
+	 *   capabilities: array<string,bool>,
+	 *   findings: list<array{pattern:string,file:string,line:int,snippet:string}>,
+	 *   reviewNote: string,
+	 *   risky: array<string,string>,
+	 *   hasFlags: bool
+	 * }
+	 */
+	public function getEnableReview(string $extensionId): array
+	{
+		$manifest = $this->discoveredManifests[$extensionId] ?? null;
+		if ($manifest === null) {
+			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false];
+		}
+
+		try {
+			$capabilities = $this->detectCapabilities($extensionId);
+		} catch (\Throwable $e) {
+			$this->logger->warning("getEnableReview capability detection failed for '{$extensionId}': " . $e->getMessage());
+			$capabilities = [];
+		}
+
+		$extPath  = $this->discovery->getExtensionPath($extensionId);
+		$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
+
+		// Intersect detected capabilities with the risky set, preserving the
+		// stable order defined by RISKY_CAPABILITIES.
+		$risky = [];
+		foreach (self::RISKY_CAPABILITIES as $cap => $label) {
+			if (($capabilities[$cap] ?? false) === true) {
+				$risky[$cap] = $label;
+			}
+		}
+
+		return [
+			'capabilities' => $capabilities,
+			'findings'     => $findings,
+			'reviewNote'   => $manifest->reviewNote,
+			'risky'        => $risky,
+			'hasFlags'     => $risky !== [] || $findings !== [],
+		];
 	}
 
 	public function getExtensionPath(string $extensionId): ?string

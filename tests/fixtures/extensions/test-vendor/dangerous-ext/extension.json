@@ -1,0 +1,13 @@
+{
+    "id": "test-vendor/dangerous-ext",
+    "name": "Dangerous Ext (fixture)",
+    "description": "Test fixture with high-risk calls for the scanner.",
+    "reviewNote": "This fixture demonstrates the review screen. It registers a public webhook endpoint so external services can notify it.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

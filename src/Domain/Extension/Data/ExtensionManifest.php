@@ -13,6 +13,8 @@ final readonly class ExtensionManifest
 	 * @param string                                  $id             e.g. "vendor/extension-name"
 	 * @param string                                  $name           Human-readable name
 	 * @param string                                  $description    Short description
+	 * @param string                                  $reviewNote     Developer-authored note shown on the pre-enable review screen,
+	 *                                                                explaining what the extension does and why it needs its capabilities
 	 * @param string                                  $version        Semver version
 	 * @param array<string,string>                    $requires       version constraints: totalcms, php, etc
 	 * @param string                                  $entrypoint     Relative path to the ExtensionInterface class
@@ -47,6 +49,7 @@ final readonly class ExtensionManifest
 		public string $icon = '',
 		public bool $bundled = false,
 		public bool $hidden = false,
+		public string $reviewNote = '',
 	) {
 	}
 
@@ -69,6 +72,7 @@ final readonly class ExtensionManifest
 			links: self::parseLinks($data['links'] ?? null),
 			icon: (string)($data['icon'] ?? ''),
 			hidden: (bool)($data['hidden'] ?? false),
+			reviewNote: (string)($data['reviewNote'] ?? ''),
 		);
 	}
 
@@ -143,6 +147,7 @@ final readonly class ExtensionManifest
 			icon: $this->icon,
 			bundled: $bundled,
 			hidden: $this->hidden,
+			reviewNote: $this->reviewNote,
 		);
 	}
 
@@ -169,6 +174,7 @@ final readonly class ExtensionManifest
 			icon: $this->icon,
 			bundled: $this->bundled,
 			hidden: $this->hidden,
+			reviewNote: $this->reviewNote,
 		);
 	}
 

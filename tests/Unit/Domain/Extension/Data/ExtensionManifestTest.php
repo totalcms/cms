@@ -48,6 +48,21 @@ describe('ExtensionManifest', function (): void {
 		expect($manifest->requires)->toBe([]);
 	});
 
+	test('parses reviewNote from manifest', function (): void {
+		$manifest = ExtensionManifest::fromArray([
+			'id'         => 'vendor/noted-ext',
+			'reviewNote' => 'Registers a public webhook so external services can notify it.',
+		]);
+
+		expect($manifest->reviewNote)->toBe('Registers a public webhook so external services can notify it.');
+	});
+
+	test('reviewNote defaults to empty string when absent', function (): void {
+		$manifest = ExtensionManifest::fromArray([]);
+
+		expect($manifest->reviewNote)->toBe('');
+	});
+
 	test('extracts vendor and short name from ID', function (): void {
 		$manifest = ExtensionManifest::fromArray(['id' => 'joeworkman/seo-pro']);
 

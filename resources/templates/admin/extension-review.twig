@@ -1,0 +1,112 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+<main class="dash-main-content ext-review" style="max-width:1000px;">
+	<header><h1>Enable {{ extensionId }}?</h1></header>
+
+	<section class="dash-content-section">
+
+		{# Developer's note — leads, calm #}
+		{% if reviewNote %}
+		<article class="dash-card">
+			<h2 style="margin-top:0;">From the developer</h2>
+			<p>{{ reviewNote|e }}</p>
+		</article>
+		{% endif %}
+
+		{# Capabilities FYI — neutral tone, NOT a warning #}
+		{% if risky is not empty %}
+		<article class="dash-card">
+			<h2 style="margin-top:0;">What this extension can access</h2>
+			<table class="ext-review-table">
+				<thead><tr><th>Feature</th><th>What it means</th></tr></thead>
+				<tbody>
+				{% for cap, label in risky %}
+					<tr><td><code>{{ cap }}</code></td><td>{{ label }}</td></tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			<p style="margin:0.85rem 0 0; font-size:0.85rem; color:oklch(var(--totalform-darkgray));">
+				These are standard Total CMS extension features, shown so you know what the extension uses. You can disable individual features after enabling, from the extension's settings.
+			</p>
+		</article>
+		{% endif %}
+
+		{# Source-code flags — the ONLY warning-toned section #}
+		{% if findings is not empty %}
+		<div class="warning-box" role="status">
+			<div>
+				<strong>Source-code patterns to review.</strong>
+				The calls below were found in this extension's source. They aren't proof of anything malicious — many legitimate extensions use them — but it's worth a look before enabling.
+			</div>
+		</div>
+		<article class="dash-card">
+			<table class="ext-review-table">
+				<thead><tr><th>Call</th><th>File</th><th>Line</th><th>Code</th></tr></thead>
+				<tbody>
+				{% for f in findings %}
+					<tr>
+						<td><code>{{ f.pattern|e }}</code></td>
+						<td>{{ f.file|e }}</td>
+						<td>{{ f.line }}</td>
+						<td><code>{{ f.snippet|e }}</code></td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</article>
+		{% endif %}
+
+		{# Confirm / cancel #}
+		<footer style="display:flex; gap:0.5rem; margin-top:1rem;">
+			<form method="post" action="{{ cms.dashboard }}/extensions/{{ extensionId }}/enable" style="margin:0;">
+				{{ csrf_field() }}
+				<input type="hidden" name="confirmed" value="1">
+				<button type="submit" class="btn btn-primary">Enable</button>
+			</form>
+			<a href="{{ cms.dashboard }}/extensions" class="btn">Cancel</a>
+		</footer>
+	</section>
+</main>
+
+<style>
+	.ext-review-table {
+		width           : 100%;
+		border-collapse : collapse;
+		font-size       : 0.875rem;
+		border          : 1px solid oklch(var(--totalform-border-color));
+		border-radius   : var(--totalform-radius);
+		overflow        : hidden;
+	}
+	.ext-review-table th,
+	.ext-review-table td {
+		padding        : 0.5rem 0.85rem;
+		text-align     : left;
+		border         : 1px solid oklch(var(--totalform-border-color));
+		vertical-align : top;
+	}
+	.ext-review-table th {
+		background  : oklch(var(--totalform-nearwhite));
+		font-weight : 600;
+	}
+	/* Inline code in the accent color, matching the docs viewer. */
+	.ext-review code {
+		background    : oklch(var(--totalform-nearwhite));
+		border        : 1px solid oklch(var(--totalform-border-color));
+		padding       : 0.05em 0.4em;
+		border-radius : 4px;
+		font-size     : 0.875em;
+		font-family   : 'Fira Code', 'Source Code Pro', monospace;
+		color         : oklch(var(--totalform-accent));
+	}
+	/* dash-card is a grid item in .dash-content-section (display:grid); grid items
+	   default to min-width:auto, so a wide table forces the card past the track.
+	   Let it shrink, and let long code/URLs wrap instead of forcing width. */
+	.ext-review .dash-card {
+		min-width : 0;
+	}
+	.ext-review-table td {
+		overflow-wrap : anywhere;
+	}
+</style>
+{% endblock %}
