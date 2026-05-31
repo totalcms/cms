@@ -54,6 +54,14 @@
 			extId: extension.id,
 		} only %}
 
+		{% include 'admin/partials/extension-health.twig' with {
+			health: extension.health,
+			errorCount: extension.errorCount,
+			extName: extension.name,
+			budgets: budgets,
+			always: true,
+		} only %}
+
 		{{ cms.form.extensionSettings(extensionId) }}
 	</section>
 </main>

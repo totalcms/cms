@@ -336,6 +336,8 @@ return [
 	'settings.cache_desc'              => 'Cache-Backend-Konfiguration',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Admin-Dashboard-Konfiguration',
+	'settings.extensions'              => 'Erweiterungen',
+	'settings.extensions_desc'         => 'Leistungsprofilierung, Warnungen für langsame Erweiterungen und Erweiterungsprotokollierung.',
 	'settings.html_sanitization'       => 'HTML-Bereinigung',
 	'settings.html_sanitization_desc'  => 'HTML-Bereinigung und -Säuberung',
 	'settings.i18n'                    => 'Internationalisierung',

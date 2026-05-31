@@ -336,6 +336,8 @@ return [
 	'settings.cache_desc'              => 'Cache-backendconfiguratie',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Configuratie van het beheerdersdashboard',
+	'settings.extensions'              => 'Extensies',
+	'settings.extensions_desc'         => 'Prestatieprofilering, waarschuwingen voor trage extensies en extensielogging.',
 	'settings.html_sanitization'       => 'HTML-opschoning',
 	'settings.html_sanitization_desc'  => 'HTML-opschoning en -zuivering',
 	'settings.i18n'                    => 'Internationalisering',

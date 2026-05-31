@@ -56,6 +56,7 @@ function createTestDependencies(): array
 		new NullLogger(),
 		$manifestValidator,
 		testExtensionGuard(),
+		testExtensionProfiler(),
 	);
 
 	return [

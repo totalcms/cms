@@ -278,6 +278,28 @@ class CacheManager
 			return null;
 		}
 
+		return $this->readFromBackends($key);
+	}
+
+	/**
+	 * Read operational (non-content) data while bypassing the devmode /
+	 * cacheDisabled read-skip that getData() applies.
+	 *
+	 * getData() suppresses reads during devmode so stale CONTENT cache is never
+	 * served while editing. Operational data — extension health metrics, failure
+	 * counters — is not content and should stay visible regardless of devmode.
+	 */
+	public function getOperationalData(string $key): mixed
+	{
+		return $this->readFromBackends($key);
+	}
+
+	/**
+	 * Tiered backend read (APCu L1 → Redis/Memcached → Filesystem), promoting
+	 * network-cache hits back to APCu. Shared by getData()/getOperationalData().
+	 */
+	private function readFromBackends(string $key): mixed
+	{
 		$apcuAvailable = $this->apcuService->isAvailable();
 
 		// L1: Check APCu first (fastest, local memory)

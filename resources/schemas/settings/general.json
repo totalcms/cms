@@ -60,23 +60,6 @@
 				{"value": "emergency", "label": "Emergency"}
 			]
 		},
-		"extensionsLogLevel": {
-			"type"    : "string",
-			"field"   : "select",
-			"label"   : "Extensions Log Level",
-			"help"    : "Minimum severity written to <code>logs/extensions.log</code> for extension events and extension-emitted log messages. Set to <code>debug</code> while developing or troubleshooting an extension.",
-			"default" : "info",
-			"options" : [
-				{"value": "debug",     "label": "Debug"},
-				{"value": "info",      "label": "Info"},
-				{"value": "notice",    "label": "Notice"},
-				{"value": "warning",   "label": "Warning"},
-				{"value": "error",     "label": "Error"},
-				{"value": "critical",  "label": "Critical"},
-				{"value": "alert",     "label": "Alert"},
-				{"value": "emergency", "label": "Emergency"}
-			]
-		},
 		"env": {
 			"type"    : "string",
 			"field"   : "select",

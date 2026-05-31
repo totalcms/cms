@@ -55,6 +55,7 @@ class ExtensionManager
 		private readonly LoggerInterface $logger,
 		private readonly ManifestValidator $manifestValidator,
 		private readonly ExtensionGuard $guard,
+		private readonly ExtensionProfiler $profiler,
 	) {
 	}
 
@@ -187,6 +188,7 @@ class ExtensionManager
 				continue;
 			}
 
+			$start = hrtime(true);
 			try {
 				$extension->boot($context);
 				$this->stateRepository->clearError($id);
@@ -199,6 +201,7 @@ class ExtensionManager
 				// Remove from loaded extensions so its registrations aren't used
 				unset($this->loadedExtensions[$id], $this->contexts[$id]);
 			}
+			$this->profiler->record($id, (int)((hrtime(true) - $start) / 1000));
 		}
 
 		// Register extension schema directories (Pro+ only)
@@ -633,6 +636,8 @@ class ExtensionManager
 			'error'           => $state?->error,
 			'quarantined'      => $state instanceof ExtensionState && $state->isQuarantined(),
 			'quarantineReason' => $state?->quarantine['lastError'] ?? null,
+			'health'           => $this->profiler->metricsFor($id),
+			'errorCount'       => $this->guard->failureCountFor($id),
 			'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
 			'links'           => $manifest->links,
 			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),

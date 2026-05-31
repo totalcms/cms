@@ -1,0 +1,20 @@
+{# Per-extension performance health.
+   `always` true  → always render the timing line (settings page — more room).
+   `always` false → render the timing line only when noteworthy (over budget or
+                    has recent errors) so list cards stay clean.
+   The budget-warning box always renders when over budget, regardless of `always`. #}
+{% set overBudget = health and budgets is defined and budgets.perExtension > 0 and health.avgMs > budgets.perExtension %}
+
+{% if health and (always|default(false) or overBudget or errorCount > 0) %}
+<div class="ext-health" style="display:flex; gap:1rem; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">
+	<span title="Average ms this extension adds per request">~{{ health.avgMs }}ms avg</span>
+	<span title="Most recent profiled request">{{ health.lastMs }}ms last</span>
+	{% if errorCount > 0 %}<span class="dash-badge sm" style="color:oklch(var(--totalform-warning));">{{ errorCount }} recent errors</span>{% endif %}
+</div>
+{% endif %}
+
+{% if overBudget %}
+<div class="warning-box" role="status">
+	<div>{{ extName }} is adding ~{{ health.avgMs }}ms per request — above the {{ budgets.perExtension }}ms guideline.</div>
+</div>
+{% endif %}

@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 /**
  * Display the settings form for an extension.
@@ -17,6 +18,7 @@ readonly class ExtensionSettingsAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private ExtensionManager $manager,
+		private Config $config,
 	) {
 	}
 
@@ -45,6 +47,10 @@ readonly class ExtensionSettingsAction
 			'extensionId'   => $extensionId,
 			'extensionName' => $extension['name'],
 			'extension'     => $extension,
+			'budgets'       => [
+				'perExtension' => (int)($this->config->extensions['budgetMsPerExtension'] ?? 200),
+				'perStack'     => (int)($this->config->extensions['budgetMsPerStack'] ?? 500),
+			],
 		]);
 	}
 }

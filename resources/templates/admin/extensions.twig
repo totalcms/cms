@@ -18,11 +18,22 @@
 		</div>
 		{% else %}
 
+		{# Per-stack soft budget warning: sum of avg ms across all extensions that
+		   have profiled metrics. Only shown when the combined cost exceeds the
+		   configured per-stack guideline. #}
+		{% set totalAvg = 0 %}
+		{% for e in extensions %}{% if e.health %}{% set totalAvg = totalAvg + e.health.avgMs %}{% endif %}{% endfor %}
+		{% if budgets.perStack > 0 and totalAvg > budgets.perStack %}
+		<div class="warning-box" role="status">
+			<div>Your enabled extensions add ~{{ totalAvg|round }}ms per request combined — above the {{ budgets.perStack }}ms guideline. Consider disabling unused extensions.</div>
+		</div>
+		{% endif %}
+
 		{% if enabledExts|length > 0 %}
 		<h2 class="ext-group-heading">Enabled <span class="dash-badge muted sm">{{ enabledExts|length }}</span></h2>
 		<div class="dash-card-grid">
 			{% for ext in enabledExts %}
-				{{ _self.extensionCard(ext, cms) }}
+				{{ _self.extensionCard(ext, cms, budgets) }}
 			{% endfor %}
 		</div>
 		{% endif %}
@@ -31,7 +42,7 @@
 		<h2 class="ext-group-heading">Disabled <span class="dash-badge muted sm">{{ disabledExts|length }}</span></h2>
 		<div class="dash-card-grid">
 			{% for ext in disabledExts %}
-				{{ _self.extensionCard(ext, cms) }}
+				{{ _self.extensionCard(ext, cms, budgets) }}
 			{% endfor %}
 		</div>
 		{% endif %}
@@ -91,7 +102,7 @@
 
 {% endblock %}
 
-{% macro extensionCard(ext, cms) %}
+{% macro extensionCard(ext, cms, budgets) %}
 <article class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}">
 	<header>
 		{% if ext.hasSettings %}
@@ -113,6 +124,14 @@
 		<span>{% if ext.author.name is defined and ext.author.name %}By {{ ext.author.name }}{% endif %}</span>
 		<span class="dash-badge muted sm">v{{ ext.version }}</span>
 	</div>
+
+	{% include 'admin/partials/extension-health.twig' with {
+		health: ext.health,
+		errorCount: ext.errorCount,
+		extName: ext.name,
+		budgets: budgets,
+		always: false,
+	} only %}
 
 	{% if ext.error %}
 	<div style="background:oklch(var(--totalform-danger) / 0.1); color:oklch(var(--totalform-danger)); border:1px solid oklch(var(--totalform-danger) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">

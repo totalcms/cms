@@ -31,7 +31,6 @@ final class SettingsFetcherTest extends TestCase
 					'timezone'           => ['field' => 'select'],
 					'maxDownloadSize'    => ['field' => 'number'],
 					'appLogLevel'        => ['field' => 'select'],
-					'extensionsLogLevel' => ['field' => 'select'],
 				]
 				: []
 		);

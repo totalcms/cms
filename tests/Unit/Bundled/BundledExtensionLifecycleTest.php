@@ -104,6 +104,7 @@ final class BundledExtensionLifecycleTest extends TestCase
 			new NullLogger(),
 			$validator,
 			testExtensionGuard(),
+			testExtensionProfiler(),
 		);
 	}
 

@@ -336,6 +336,8 @@ return [
 	'settings.cache_desc'              => 'Configuración del backend de caché',
 	'settings.dashboard'               => 'Panel de control',
 	'settings.dashboard_desc'          => 'Configuración del panel de administración',
+	'settings.extensions'              => 'Extensiones',
+	'settings.extensions_desc'         => 'Perfilado de rendimiento, advertencias de extensiones lentas y registro de extensiones.',
 	'settings.html_sanitization'       => 'Sanitización HTML',
 	'settings.html_sanitization_desc'  => 'Limpieza y sanitización de HTML',
 	'settings.i18n'                    => 'Internacionalización',

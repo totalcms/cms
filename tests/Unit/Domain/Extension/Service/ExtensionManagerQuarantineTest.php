@@ -73,6 +73,9 @@ function quarantineCache(array &$store): CacheManager
 	$cache->method('getData')->willReturnCallback(
 		fn (string $key): mixed => $store[$key] ?? null,
 	);
+	$cache->method('getOperationalData')->willReturnCallback(
+		fn (string $key): mixed => $store[$key] ?? null,
+	);
 	$cache->method('storeData')->willReturnCallback(
 		function (string $key, mixed $data, int $ttl = 0) use (&$store): bool {
 			$store[$key] = $data;
@@ -90,7 +93,7 @@ function quarantineCache(array &$store): CacheManager
  *
  * @return array{0: ExtensionManager, 1: ExtensionStateRepository}
  */
-function quarantineManager(ExtensionStateRepository $stateRepo, ExtensionGuard $guard): array
+function quarantineManager(ExtensionStateRepository $stateRepo, ExtensionGuard $guard, ?TotalCMS\Domain\Extension\Service\ExtensionProfiler $profiler = null): array
 {
 	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = dirname(__DIR__, 4) . '/fixtures';
@@ -113,6 +116,7 @@ function quarantineManager(ExtensionStateRepository $stateRepo, ExtensionGuard $
 		new NullLogger(),
 		$manifestValidator,
 		$guard,
+		$profiler ?? testExtensionProfiler(),
 	);
 
 	return [$manager, $stateRepo];
@@ -124,7 +128,17 @@ function quarantineGuard(ExtensionStateRepository $stateRepo, CacheManager $cach
 	$config->env = 'prod';
 	$env         = new EnvironmentResolver($config, false);
 
-	return new ExtensionGuard($env, $cache, $stateRepo, new NullLogger());
+	return new ExtensionGuard($env, $cache, $stateRepo, new NullLogger(), testExtensionProfiler());
+}
+
+/** Build a profiler that reads/writes the shared $cache, so metricsFor() can be exercised. */
+function quarantineProfiler(CacheManager $cache): TotalCMS\Domain\Extension\Service\ExtensionProfiler
+{
+	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->env = 'dev';
+	$env         = new EnvironmentResolver($config, false);
+
+	return new TotalCMS\Domain\Extension\Service\ExtensionProfiler($env, $cache, 0, new NullLogger());
 }
 
 describe('ExtensionManager quarantine enforcement', function (): void {
@@ -243,5 +257,48 @@ describe('ExtensionManager quarantine info', function (): void {
 		expect($info)->not->toBeNull()
 			->and($info['quarantined'])->toBeFalse()
 			->and($info['quarantineReason'])->toBeNull();
+	});
+});
+
+describe('ExtensionManager health info', function (): void {
+	test('surfaces null health and zero errorCount when no metrics recorded', function (): void {
+		$state     = new ExtensionState(enabled: true, installedAt: '', version: '1.0.0');
+		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
+
+		$store    = [];
+		$cache    = quarantineCache($store);
+		$guard    = quarantineGuard($stateRepo, $cache);
+		$profiler = quarantineProfiler($cache);
+		[$manager] = quarantineManager($stateRepo, $guard, $profiler);
+
+		$manager->discoverAndRegister();
+
+		$info = $manager->getExtension('test-vendor/hello-world');
+
+		expect($info)->not->toBeNull()
+			->and($info['health'])->toBeNull()
+			->and($info['errorCount'])->toBe(0);
+	});
+
+	test('surfaces health metrics and errorCount from cache', function (): void {
+		$state     = new ExtensionState(enabled: true, installedAt: '', version: '1.0.0');
+		$stateRepo = quarantineStateRepo(['test-vendor/hello-world' => $state]);
+
+		$store = [
+			'extprof:test-vendor/hello-world'   => ['lastMs' => 12.5, 'avgMs' => 9.0, 'samples' => 4],
+			'extguard:fail:test-vendor/hello-world' => 3,
+		];
+		$cache    = quarantineCache($store);
+		$guard    = quarantineGuard($stateRepo, $cache);
+		$profiler = quarantineProfiler($cache);
+		[$manager] = quarantineManager($stateRepo, $guard, $profiler);
+
+		$manager->discoverAndRegister();
+
+		$info = $manager->getExtension('test-vendor/hello-world');
+
+		expect($info)->not->toBeNull()
+			->and($info['health'])->toBe(['lastMs' => 12.5, 'avgMs' => 9.0, 'samples' => 4])
+			->and($info['errorCount'])->toBe(3);
 	});
 });

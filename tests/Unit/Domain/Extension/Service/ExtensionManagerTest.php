@@ -44,6 +44,7 @@ function createExtensionManager(
 		new NullLogger(),
 		$manifestValidator,
 		testExtensionGuard(),
+		testExtensionProfiler(),
 	);
 }
 

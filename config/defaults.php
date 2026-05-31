@@ -214,7 +214,15 @@ $settings['logger'] = [
 // Names are PSR-3 strings: debug, info, notice, warning, error, critical, alert, emergency.
 // When set, these override $settings['logger']['level'] for the matching log file.
 $settings['appLogLevel']        = 'info';
-$settings['extensionsLogLevel'] = 'info';
+
+// Extension settings (/admin/settings/extensions). Namespaced under `extensions`,
+// read in code as $config->extensions['logLevel'], ['profileSampleRate'], etc.
+$settings['extensions'] = [
+	'logLevel'             => 'info',
+	'profileSampleRate'    => 50,
+	'budgetMsPerExtension' => 200,
+	'budgetMsPerStack'     => 500,
+];
 
 // Session
 $settings['session'] = [

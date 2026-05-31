@@ -86,6 +86,7 @@ final class GeoRedirectLifecycleTest extends TestCase
 			new NullLogger(),
 			$validator,
 			testExtensionGuard(),
+			testExtensionProfiler(),
 		);
 	}
 

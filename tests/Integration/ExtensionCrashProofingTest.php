@@ -82,7 +82,7 @@ function crashProofGuard(
 	$config->env = $env;
 	$resolver    = new EnvironmentResolver($config, $isPreview);
 
-	return new ExtensionGuard($resolver, $cache, $repo, new NullLogger(), $threshold);
+	return new ExtensionGuard($resolver, $cache, $repo, new NullLogger(), testExtensionProfiler(), $threshold);
 }
 
 /**
@@ -134,6 +134,7 @@ function crashProofManager(ExtensionGuard $guard, ExtensionStateRepository $repo
 		new NullLogger(),
 		$manifestValidator,
 		$guard,
+		testExtensionProfiler(),
 	);
 
 	$manifest = ExtensionManifest::fromArray(['id' => 'acme/widget', 'name' => 'Widget']);

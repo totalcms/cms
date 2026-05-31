@@ -27,6 +27,7 @@ final class ExtensionGuard
 		private readonly CacheManager $cache,
 		private readonly ExtensionStateRepository $stateRepository,
 		private readonly LoggerInterface $logger,
+		private readonly ExtensionProfiler $profiler,
 		private readonly int $threshold = 5,
 		private readonly int $windowSeconds = 300,
 	) {
@@ -45,7 +46,7 @@ final class ExtensionGuard
 	public function run(string $extensionId, string $hookType, callable $callable, mixed $fallback): mixed
 	{
 		try {
-			return $callable();
+			return $this->profiler->time($extensionId, $callable);
 		} catch (\Throwable $e) {
 			$this->recordFailure($extensionId, $hookType, $e);
 
@@ -127,6 +128,16 @@ final class ExtensionGuard
 		$this->stateRepository->saveState($extensionId, $state);
 
 		$this->logger->warning("Extension '{$extensionId}' auto-quarantined after {$count} failures.");
+	}
+
+	/** Current rolling failure count for an extension (0 when none recorded). */
+	public function failureCountFor(string $extensionId): int
+	{
+		// Operational read: bypass the devmode/cacheDisabled read-skip so the
+		// recent-errors count stays visible in the admin while devmode is active.
+		$count = $this->cache->getOperationalData($this->cacheKey($extensionId));
+
+		return is_int($count) ? $count : 0;
 	}
 
 	private function cacheKey(string $extensionId): string

@@ -53,6 +53,7 @@ function guardManagerWithContext(): array
 		new NullLogger(),
 		$manifestValidator,
 		testExtensionGuard(),
+		testExtensionProfiler(),
 	);
 
 	$manifest = ExtensionManifest::fromArray(['id' => 'acme/widget', 'name' => 'Widget']);

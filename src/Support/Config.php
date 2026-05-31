@@ -30,7 +30,6 @@ class Config
 	public bool $debug                = false;
 	public bool $sentry               = true;
 	public string $appLogLevel        = 'info';
-	public string $extensionsLogLevel = 'info';
 	/** @var array<string,mixed> */
 	public array $cache = [];
 	/** @var array<string,mixed> */
@@ -59,6 +58,8 @@ class Config
 	/** @var array<string,mixed> */
 	public array $builder = [];
 	/** @var array<string,mixed> */
+	public array $extensions = [];
+	/** @var array<string,mixed> */
 	public array $mcp = [];
 	/** @var array<string,mixed> */
 	public array $oauth = [];
@@ -82,7 +83,6 @@ class Config
 		$this->logger             = $settings['logger'];
 		$this->sentry             = (bool)($settings['sentry'] ?? true);
 		$this->appLogLevel        = (string)($settings['appLogLevel'] ?? 'info');
-		$this->extensionsLogLevel = (string)($settings['extensionsLogLevel'] ?? 'info');
 		$this->error              = $settings['error'];
 		$this->imageworks         = $settings['imageworks'];
 		$this->domain             = $settings['domain'];
@@ -109,6 +109,7 @@ class Config
 		$this->smtp               = is_array($settings['smtp'] ?? null) ? $settings['smtp'] : [];
 		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
+		$this->extensions         = is_array($settings['extensions'] ?? null) ? $settings['extensions'] : [];
 		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
 		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
 		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];

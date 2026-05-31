@@ -188,6 +188,7 @@ final class AlgoliaSearchLifecycleTest extends TestCase
 			new NullLogger(),
 			$validator,
 			testExtensionGuard(),
+			testExtensionProfiler(),
 		);
 
 		return ['manager' => $manager, 'container' => $container];

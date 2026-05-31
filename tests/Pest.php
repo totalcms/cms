@@ -229,6 +229,11 @@ function testExtensionGuard(): \TotalCMS\Domain\Extension\Service\ExtensionGuard
 			return $this->store[$key] ?? null;
 		}
 
+		public function getOperationalData(string $key): mixed
+		{
+			return $this->store[$key] ?? null;
+		}
+
 		public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
 		{
 			$this->store[$key] = $data;
@@ -259,6 +264,56 @@ function testExtensionGuard(): \TotalCMS\Domain\Extension\Service\ExtensionGuard
 		$env,
 		$cache,
 		$repo,
+		new \Psr\Log\NullLogger(),
+		testExtensionProfiler(),
+	);
+}
+
+/**
+ * Build a real, dev-environment ExtensionProfiler for use in tests.
+ *
+ * Env is 'dev' so shouldSurfaceErrors() is true and the profiler always
+ * profiles (no sampling), giving deterministic timing in tests. Collaborators
+ * are real (not PHPUnit mocks) so this works from both Pest closures and
+ * class-based TestCases — mirroring testExtensionGuard().
+ */
+function testExtensionProfiler(): \TotalCMS\Domain\Extension\Service\ExtensionProfiler
+{
+	$config      = (new ReflectionClass(\TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->env = 'dev';
+	$env         = new \TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
+
+	$cache = new class extends \TotalCMS\Domain\Cache\CacheManager {
+		/** @var array<string,mixed> */
+		private array $store = [];
+
+		public function __construct()
+		{
+			// Intentionally bypass parent — the profiler only uses getData()/storeData().
+		}
+
+		public function getData(string $key): mixed
+		{
+			return $this->store[$key] ?? null;
+		}
+
+		public function getOperationalData(string $key): mixed
+		{
+			return $this->store[$key] ?? null;
+		}
+
+		public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
+		{
+			$this->store[$key] = $data;
+
+			return true;
+		}
+	};
+
+	return new \TotalCMS\Domain\Extension\Service\ExtensionProfiler(
+		$env,
+		$cache,
+		1,
 		new \Psr\Log\NullLogger(),
 	);
 }
