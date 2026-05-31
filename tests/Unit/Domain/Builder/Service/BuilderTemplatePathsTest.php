@@ -227,4 +227,82 @@ final class BuilderTemplatePathsTest extends TestCase
 
 		$this->assertFalse($paths->locked());
 	}
+
+	// --- readLayersLabeled (source tagging) ---
+
+	public function testReadLayersLabeledForAdminFirstProject(): void
+	{
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertSame(
+			[['layer' => BuilderTemplatePaths::LAYER_DATA, 'dir' => $this->dataBuilder]],
+			$paths->readLayersLabeled(),
+		);
+	}
+
+	public function testReadLayersLabeledPutsProjectFirstWhenManaged(): void
+	{
+		mkdir($this->projectBuilder, 0o777, true);
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertSame(
+			[
+				['layer' => BuilderTemplatePaths::LAYER_PROJECT, 'dir' => $this->projectBuilder],
+				['layer' => BuilderTemplatePaths::LAYER_DATA, 'dir' => $this->dataBuilder],
+			],
+			$paths->readLayersLabeled(),
+		);
+	}
+
+	// --- resolveRead (first existing file across layers, with its source) ---
+
+	public function testResolveReadReturnsNullWhenAbsentEverywhere(): void
+	{
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertNull($paths->resolveRead('pages/about.twig'));
+	}
+
+	public function testResolveReadFindsFileInDataLayer(): void
+	{
+		mkdir($this->dataBuilder . '/pages', 0o777, true);
+		file_put_contents($this->dataBuilder . '/pages/about.twig', 'x');
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertSame(
+			['layer' => BuilderTemplatePaths::LAYER_DATA, 'path' => $this->dataBuilder . '/pages/about.twig'],
+			$paths->resolveRead('pages/about.twig'),
+		);
+	}
+
+	public function testResolveReadPrefersProjectOverData(): void
+	{
+		mkdir($this->projectBuilder . '/pages', 0o777, true);
+		mkdir($this->dataBuilder . '/pages', 0o777, true);
+		file_put_contents($this->projectBuilder . '/pages/about.twig', 'project');
+		file_put_contents($this->dataBuilder . '/pages/about.twig', 'data');
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertSame(
+			['layer' => BuilderTemplatePaths::LAYER_PROJECT, 'path' => $this->projectBuilder . '/pages/about.twig'],
+			$paths->resolveRead('pages/about.twig'),
+		);
+	}
+
+	// --- writePath (active primary + relative path) ---
+
+	public function testWritePathTargetsDataWhenNotManaged(): void
+	{
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertSame($this->dataBuilder . '/pages/about.twig', $paths->writePath('pages/about.twig'));
+	}
+
+	public function testWritePathTargetsProjectWhenManaged(): void
+	{
+		mkdir($this->projectBuilder, 0o777, true);
+		$paths = $this->makePaths(['projectTemplates' => $this->projectBuilder]);
+
+		$this->assertSame($this->projectBuilder . '/pages/about.twig', $paths->writePath('pages/about.twig'));
+	}
 }

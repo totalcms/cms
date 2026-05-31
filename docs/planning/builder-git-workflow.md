@@ -136,11 +136,13 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
 - Build `BuilderTemplatePaths` + unit tests for: project present/absent → read order & write target; lock auto-resolution by env; explicit lock override; `projectTemplates` override path. ✅ `src/Domain/Builder/Service/BuilderTemplatePaths.php` + 18 tests in `tests/Unit/Domain/Builder/Service/BuilderTemplatePathsTest.php`, all green, PHPStan clean. Resolved via PHP-DI autowiring (single `Config` dependency); no container entry needed until Phase 1 wires consumers.
 - No behavior change yet (nothing consumes the resolver until Phase 1).
 
-### Phase 1 — Read chain (render + repository)
-- `TwigEngine`: build loader paths from `BuilderTemplatePaths::loaderPaths()`. (Rendering now resolves the full chain.)
-- `TemplateRepository`: layer-aware read adapters; `fetch`/`exists`/`fetchDesignerMeta` walk layers; resolved source tagged on the returned `TemplateData`.
-- `TemplateListAction`: merged, source-tagged listing.
-- Tests: a template in defaults renders; project copy overrides default; tcms-data copy used when no project dir; reserved/admin templates still win and remain unshadowable.
+### Phase 1 — Read chain (render + repository) ✅ (done 2026-05-30, not yet committed)
+- `TwigEngine`: build loader paths from `BuilderTemplatePaths::loaderPaths()`. ✅ rendering resolves the full chain; reserved admin templates still first.
+- `TemplateRepository`: layer-aware reads. ✅ `fetchBuilderTemplate`/`builderTemplateExists`/`fetchDesignerMeta` walk the read layers (absolute file IO via the resolver); resolved layer tagged on `TemplateData::$source`. Constructor now takes `BuilderTemplatePaths` (autowired). Shared `relativeTemplatePath()` helper feeds both the datadir-relative `customPath()` (writes, unchanged this phase) and the layer resolver.
+- `listBuilderTemplates`: ✅ now unions template names across all read layers (deduped, sorted) so a git-managed project's templates surface in every listing; return type unchanged (`array<string>`), so all ~12 callers are unaffected. History snapshots still excluded.
+- Per-template **source badges** in the admin list move to Phase 3 (UX) — the data is available via `TemplateData::$source`; merge correctness is done here.
+- ⚠️ Writes still target datadir this phase (Phase 2 redirects them to the write target + adds the lock). Interim only matters for a git-managed project edited via the admin between the Phase 1 and Phase 2 commits on this branch.
+- Tests: ✅ `TemplateRepositoryTest` — data-layer read + source tag, project-over-data precedence, null when absent, exists across layers, merged dedup listing. Plus `BuilderTemplatePathsTest` resolver primitives (`readLayersLabeled`/`resolveRead`/`writePath`). 1145 unit + 575 feature green, PHPStan L8 clean.
 
 ### Phase 2 — Write target + lock
 - Route all writes through the write-target adapter.

@@ -7,30 +7,50 @@ namespace Tests\Unit\Domain\Template\Repository;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Support\Config;
 
 /**
- * Targeted tests for `TemplateRepository::listBuilderTemplates`. We don't
- * mock the filesystem here — the file-listing behavior IS the contract.
+ * Tests for `TemplateRepository` listing and the layer-aware builder reads
+ * (git-first template workflow, Phase 1). We don't mock the filesystem —
+ * the file behavior IS the contract.
  */
 final class TemplateRepositoryTest extends TestCase
 {
 	private string $tmpRoot;
+	private string $projectBuilder;
 	private TemplateRepository $repo;
 
 	protected function setUp(): void
 	{
-		$this->tmpRoot = sys_get_temp_dir() . '/tcms-template-repo-' . uniqid();
+		$this->tmpRoot        = sys_get_temp_dir() . '/tcms-template-repo-' . uniqid();
+		$this->projectBuilder = $this->tmpRoot . '/project/builder';
 		mkdir($this->tmpRoot . '/builder/pages', 0755, true);
 		mkdir($this->tmpRoot . '/builder/layouts', 0755, true);
 		mkdir($this->tmpRoot . '/builder/.history/pages/about', 0755, true);
 		mkdir($this->tmpRoot . '/builder/.history/layouts/default', 0755, true);
 
+		// Default repo: admin-first (no project-root/builder).
+		$this->repo = $this->makeRepo();
+	}
+
+	/**
+	 * Build a repository whose datadir is the temp root. Pass a project
+	 * builder dir to model a git-managed project (highest read layer).
+	 */
+	private function makeRepo(?string $projectTemplates = null): TemplateRepository
+	{
 		$flysystem = new Filesystem(new LocalFilesystemAdapter($this->tmpRoot));
 		$storage   = new StorageFilesystemAdapter($flysystem);
 
-		$this->repo = new TemplateRepository($storage);
+		$config          = $this->createMock(Config::class);
+		$config->env     = 'dev';
+		$config->datadir = $this->tmpRoot;
+		$config->builder = $projectTemplates !== null ? ['projectTemplates' => $projectTemplates] : [];
+
+		return new TemplateRepository($storage, new BuilderTemplatePaths($config));
 	}
 
 	protected function tearDown(): void
@@ -59,6 +79,65 @@ final class TemplateRepositoryTest extends TestCase
 		foreach ($result as $path) {
 			$this->assertStringNotContainsString('.history', $path, "history snapshot leaked: $path");
 		}
+	}
+
+	// --- layer-aware builder reads (Phase 1) ---
+
+	public function testFetchBuilderTemplateReadsDataLayerAndTagsSource(): void
+	{
+		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', '<h1>about</h1>');
+
+		$template = $this->repo->fetchBuilderTemplate('about', 'pages');
+
+		$this->assertNotNull($template);
+		$this->assertSame('<h1>about</h1>', $template->contents);
+		$this->assertSame(BuilderTemplatePaths::LAYER_DATA, $template->source);
+	}
+
+	public function testFetchBuilderTemplatePrefersProjectLayer(): void
+	{
+		mkdir($this->projectBuilder . '/pages', 0755, true);
+		file_put_contents($this->projectBuilder . '/pages/about.twig', '<h1>project</h1>');
+		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', '<h1>data</h1>');
+
+		$repo     = $this->makeRepo($this->projectBuilder);
+		$template = $repo->fetchBuilderTemplate('about', 'pages');
+
+		$this->assertNotNull($template);
+		$this->assertSame('<h1>project</h1>', $template->contents);
+		$this->assertSame(BuilderTemplatePaths::LAYER_PROJECT, $template->source);
+	}
+
+	public function testFetchBuilderTemplateReturnsNullWhenAbsent(): void
+	{
+		$this->assertNull($this->repo->fetchBuilderTemplate('nope', 'pages'));
+	}
+
+	public function testBuilderTemplateExistsFindsProjectLayer(): void
+	{
+		mkdir($this->projectBuilder . '/pages', 0755, true);
+		file_put_contents($this->projectBuilder . '/pages/about.twig', 'x');
+
+		$repo = $this->makeRepo($this->projectBuilder);
+
+		$this->assertTrue($repo->builderTemplateExists('about', 'pages'));
+		$this->assertFalse($repo->builderTemplateExists('missing', 'pages'));
+	}
+
+	public function testListMergesProjectAndDataLayersDeduped(): void
+	{
+		// data layer has about + contact; project layer has about + home.
+		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', 'data');
+		file_put_contents($this->tmpRoot . '/builder/pages/contact.twig', 'data');
+		mkdir($this->projectBuilder . '/pages', 0755, true);
+		file_put_contents($this->projectBuilder . '/pages/about.twig', 'project');
+		file_put_contents($this->projectBuilder . '/pages/home.twig', 'project');
+
+		$repo   = $this->makeRepo($this->projectBuilder);
+		$result = $repo->listBuilderTemplates('pages', true);
+
+		// Union, deduped, sorted — about appears once.
+		$this->assertSame(['about', 'contact', 'home'], $result);
 	}
 
 	private function rrmdir(string $dir): void

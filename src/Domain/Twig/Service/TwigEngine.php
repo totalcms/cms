@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig\Service;
 use Cake\Chronos\Chronos;
 use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Designer\DesignerAwareLoader;
@@ -44,18 +45,17 @@ readonly class TwigEngine
 		DevModeManager $devModeManager,
 		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
+		BuilderTemplatePaths $builderTemplatePaths,
 	) {
 		$internalTemplates = TemplateRepository::reservedTemplateDir();
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
 		}
-		$paths = [$internalTemplates];
 
-		// Add builder templates path (available to all editions)
-		$builderDir = $config->datadir . '/' . TemplateRepository::BUILDER_DIR;
-		if (file_exists($builderDir)) {
-			$paths[] = $builderDir;
-		}
+		// Reserved admin templates first (protected, unshadowable), then the
+		// builder read hierarchy: project-root → tcms-data → built-in defaults.
+		// Twig's FilesystemLoader resolves first-match-wins across these paths.
+		$paths = $builderTemplatePaths->loaderPaths();
 
 		// Twig requires filesystem caching for compiled templates (can't use APCu/Redis)
 		// Always use the cache directory for Twig, regardless of application cache backend settings

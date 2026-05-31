@@ -27,6 +27,10 @@ use TotalCMS\Support\PathResolver;
  */
 readonly class BuilderTemplatePaths
 {
+	public const LAYER_PROJECT = 'project';
+	public const LAYER_DATA    = 'data';
+	public const LAYER_BUILTIN = 'built-in';
+
 	private const BUILDER_DIRNAME = 'builder';
 	private const DEFAULTS_REL    = 'resources/builder/defaults';
 
@@ -89,15 +93,65 @@ readonly class BuilderTemplatePaths
 	}
 
 	/**
+	 * The ordered read layers, highest precedence first, existing dirs only,
+	 * each tagged with its source label.
+	 *
+	 * @return list<array{layer:string,dir:string}>
+	 */
+	public function readLayersLabeled(): array
+	{
+		$candidates = [
+			[self::LAYER_PROJECT, $this->projectDir()],
+			[self::LAYER_DATA, $this->dataDir()],
+			[self::LAYER_BUILTIN, $this->defaultsDir()],
+		];
+
+		$layers = [];
+		foreach ($candidates as [$layer, $dir]) {
+			if (is_dir($dir)) {
+				$layers[] = ['layer' => $layer, 'dir' => $dir];
+			}
+		}
+
+		return $layers;
+	}
+
+	/**
 	 * The ordered read layers, highest precedence first, existing dirs only.
 	 *
 	 * @return list<string>
 	 */
 	public function readLayers(): array
 	{
-		$candidates = [$this->projectDir(), $this->dataDir(), $this->defaultsDir()];
+		return array_map(static fn (array $l): string => $l['dir'], $this->readLayersLabeled());
+	}
 
-		return array_values(array_filter($candidates, static fn (string $dir): bool => is_dir($dir)));
+	/**
+	 * Resolve a builder-relative path (e.g. `pages/about.twig`, no leading
+	 * `builder/`) to the first existing file across the read layers, with the
+	 * source layer it was found in. Null when absent everywhere.
+	 *
+	 * @return array{layer:string,path:string}|null
+	 */
+	public function resolveRead(string $relativePath): ?array
+	{
+		foreach ($this->readLayersLabeled() as $layer) {
+			$candidate = $layer['dir'] . '/' . $relativePath;
+			if (is_file($candidate)) {
+				return ['layer' => $layer['layer'], 'path' => $candidate];
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Absolute file path a builder-relative path writes to, under the active
+	 * primary (write target).
+	 */
+	public function writePath(string $relativePath): string
+	{
+		return $this->writeTarget() . '/' . $relativePath;
 	}
 
 	/**

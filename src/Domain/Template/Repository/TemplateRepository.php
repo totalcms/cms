@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Template\Repository;
 
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
@@ -35,6 +37,13 @@ class TemplateRepository extends StorageRepository
 		return PathResolver::packageRoot() . '/resources/templates/';
 	}
 
+	public function __construct(
+		StorageAdapterInterface $filesystem,
+		private readonly BuilderTemplatePaths $paths,
+	) {
+		parent::__construct($filesystem);
+	}
+
 	/**
 	 * Request-level cache for templates.
 	 *
@@ -43,20 +52,30 @@ class TemplateRepository extends StorageRepository
 	private array $requestCache = [];
 
 	/**
-	 * generate a custom template path.
+	 * Builder-relative path for a template (e.g. `pages/about.twig`) — no
+	 * `builder/` prefix. The shared sanitize step for every path builder; also
+	 * what the layer resolver joins against each read layer.
 	 */
-	public function customPath(string $template, ?string $folder = null): string
+	private function relativeTemplatePath(string $template, ?string $folder, string $ext): string
 	{
-		$basePath = self::BUILDER_DIR;
+		$rel = '';
 
 		if ($folder !== null && $folder !== '') {
 			// Sanitize folder path to prevent directory traversal
 			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
 			$folder = trim($folder, '/');
-			$basePath .= $folder . '/';
+			$rel .= $folder . '/';
 		}
 
-		return $basePath . $template . self::FILE_EXT;
+		return $rel . $template . $ext;
+	}
+
+	/**
+	 * generate a custom template path (datadir-relative, includes `builder/`).
+	 */
+	public function customPath(string $template, ?string $folder = null): string
+	{
+		return self::BUILDER_DIR . $this->relativeTemplatePath($template, $folder, self::FILE_EXT);
 	}
 
 	/**
@@ -64,15 +83,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function designerMetaPath(string $template, ?string $folder = null): string
 	{
-		$basePath = self::BUILDER_DIR;
-
-		if ($folder !== null && $folder !== '') {
-			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
-			$folder = trim($folder, '/');
-			$basePath .= $folder . '/';
-		}
-
-		return $basePath . $template . self::DESIGNER_META_EXT;
+		return self::BUILDER_DIR . $this->relativeTemplatePath($template, $folder, self::DESIGNER_META_EXT);
 	}
 
 	/**
@@ -80,13 +91,16 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function fetchDesignerMeta(string $template, ?string $folder = null): ?DesignerMetadata
 	{
-		$metaPath = $this->designerMetaPath($template, $folder);
+		$resolved = $this->paths->resolveRead($this->relativeTemplatePath($template, $folder, self::DESIGNER_META_EXT));
 
-		if (!$this->filesystem->fileExists($metaPath)) {
+		if ($resolved === null) {
 			return null;
 		}
 
-		$contents = $this->filesystem->read($metaPath);
+		$contents = file_get_contents($resolved['path']);
+		if ($contents === false) {
+			return null;
+		}
 
 		/** @var array<string,mixed>|null $data */
 		$data = json_decode($contents, true);
@@ -145,7 +159,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function builderTemplateExists(string $template, ?string $folder = null): bool
 	{
-		return $this->filesystem->fileExists($this->customPath($template, $folder));
+		return $this->paths->resolveRead($this->relativeTemplatePath($template, $folder, self::FILE_EXT)) !== null;
 	}
 
 	/**
@@ -219,18 +233,26 @@ class TemplateRepository extends StorageRepository
 			return $this->requestCache[$cacheKey];
 		}
 
-		$templateFile = $this->customPath($template, $folder);
+		// Walk the read hierarchy (project-root → tcms-data → built-in
+		// defaults); the first layer that has the file wins.
+		$resolved = $this->paths->resolveRead($this->relativeTemplatePath($template, $folder, self::FILE_EXT));
 
-		if (!$this->filesystem->fileExists($templateFile)) {
+		if ($resolved === null) {
 			$this->requestCache[$cacheKey] = null;
 
 			return null;
 		}
 
-		$contents = $this->filesystem->read($templateFile);
+		$contents = file_get_contents($resolved['path']);
+		if ($contents === false) {
+			$this->requestCache[$cacheKey] = null;
+
+			return null;
+		}
 
 		// Empty content is valid for templates - allows editing blank templates
-		$templateData = TemplateFactory::generateTemplate($template, $contents);
+		$templateData         = TemplateFactory::generateTemplate($template, $contents);
+		$templateData->source = $resolved['layer'];
 
 		// Load designer metadata if companion file exists
 		$designerMeta = $this->fetchDesignerMeta($template, $folder);
@@ -287,46 +309,75 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function listBuilderTemplates(?string $folder = null, bool $recursive = false): array
 	{
-		$basePath = self::BUILDER_DIR;
-
-		if ($folder !== null && $folder !== '') {
-			// Sanitize folder path to prevent directory traversal
-			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
-			$folder = trim($folder, '/');
-			$basePath .= $folder . '/';
+		// Union the template names across every read layer (project-root →
+		// tcms-data → built-in defaults), deduped — so a git-managed project's
+		// templates appear in admin listings alongside any datadir leftovers.
+		$names = [];
+		foreach ($this->paths->readLayers() as $layerDir) {
+			foreach ($this->listLayerTemplates($layerDir, $folder, $recursive) as $name) {
+				$names[$name] = true;
+			}
 		}
 
-		if ($recursive) {
-			// Use flysystem's listContents with recursive flag
-			$contents = $this->filesystem->flysystem()->listContents($basePath, true);
+		$files = array_keys($names);
+		sort($files);
 
-			$files = [];
-			foreach ($contents as $item) {
-				if (!$item->isFile() || !str_ends_with($item->path(), self::FILE_EXT)) {
+		return $files;
+	}
+
+	/**
+	 * List template names within a single absolute layer directory, relative to
+	 * the (optional) folder. History snapshots are excluded — they're version
+	 * payloads, not editable templates, and their paths don't round-trip
+	 * through `fetchBuilderTemplate()`.
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @return array<string>
+	 */
+	private function listLayerTemplates(string $layerDir, ?string $folder, bool $recursive): array
+	{
+		$base = $layerDir;
+		if ($folder !== null && $folder !== '') {
+			$folder = trim(str_replace(['..', '\\'], ['', '/'], $folder), '/');
+			$base .= '/' . $folder;
+		}
+
+		if (!is_dir($base)) {
+			return [];
+		}
+
+		$names = [];
+
+		if ($recursive) {
+			$iterator = new \RecursiveIteratorIterator(
+				new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS),
+			);
+			foreach ($iterator as $file) {
+				if (!$file->isFile() || !str_ends_with($file->getPathname(), self::FILE_EXT)) {
 					continue;
 				}
-				$relativePath = substr($item->path(), strlen($basePath));
-				// Skip TemplateSnapshotRepository's history snapshots — they're
-				// stored as real .twig files but aren't editable templates,
-				// they're version-history payloads. Surfacing them in admin
-				// sidebars / quick-nav / pickers would be confusing and would
-				// also break the editor since their paths don't round-trip
-				// through `fetchBuilderTemplate()`.
+				$relativePath = substr($file->getPathname(), strlen($base) + 1);
 				if (str_starts_with($relativePath, '.history/')) {
 					continue;
 				}
-				$files[] = substr($relativePath, 0, -strlen(self::FILE_EXT));
+				$names[] = substr($relativePath, 0, -strlen(self::FILE_EXT));
 			}
 
-			// Sort alphabetically
-			sort($files);
-
-			return $files;
+			return $names;
 		}
 
-		$files = $this->filesystem->listFiles($basePath);
+		$entries = scandir($base);
+		foreach ($entries === false ? [] : $entries as $entry) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+			if (is_file($base . '/' . $entry) && str_ends_with($entry, self::FILE_EXT)) {
+				$names[] = basename($entry, self::FILE_EXT);
+			}
+		}
 
-		return array_map(fn (string $file): string => basename($file, self::FILE_EXT), $files);
+		return $names;
 	}
 
 	/**
