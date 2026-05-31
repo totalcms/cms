@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\Php84\Rector\Param\ExplicitNullableParamTypeRector;
 use Rector\Set\ValueObject\LevelSetList;
@@ -50,6 +51,12 @@ return RectorConfig::configure()
 		// raising ArgumentCountError at runtime. Keep the call as written.
 		RemoveExtraParametersRector::class => [
 			__DIR__ . '/src/Domain/Mcp/Service/McpServerFactory.php',
+		],
+
+		// Rewrites factory closures to first-class callables, which forwards
+    	// container args into the target call — changes behavior in DI factories
+    	ArrowFunctionDelegatingCallToFirstClassCallableRector::class => [
+			__DIR__ . '/config/container.php',
 		],
 	])
 	->withSets([
