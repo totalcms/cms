@@ -137,6 +137,52 @@ class ExtensionManager
 				continue;
 			}
 
+			// Update re-consent: when a SIDELOADED extension's on-disk version no
+			// longer matches the version it was enabled at, the operator did not
+			// review this code. Statically scan the NEW code before it can register:
+			// risky patterns => disable it (and don't load it); clean => let it load
+			// but record the new version so any newly-registered capability lands
+			// OFF (see updateStoredCapabilities). Built-ins are exempt — they version
+			// with core and ship reviewed in the package.
+			if (
+				$state instanceof ExtensionState
+				&& !$manifest->bundled
+				&& $state->version !== ''
+				&& $manifest->version !== $state->version
+			) {
+				$extPath  = $this->discovery->getExtensionPath($id);
+				$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
+
+				if ($extPath === null) {
+					// No path to scan — treat as clean (nothing to load anyway;
+					// registerExtension will report the missing directory) but log
+					// so a vanished extension dir doesn't silently skip the gate.
+					$this->logger->warning("Extension '{$id}' updated but its directory could not be resolved; skipping update scan.");
+				}
+
+				if ($findings !== []) {
+					// Risky update — disable, record why, bump the stored version so
+					// the gate doesn't re-trigger every request, and do NOT load it.
+					// The new (risky) code never registers or runs.
+					$state->enabled        = false;
+					$state->updateDisabled = [
+						'reason'    => 'A new version of this extension added risky code patterns.',
+						'findings'  => count($findings),
+						'updatedAt' => gmdate('c'),
+					];
+					$state->version = $manifest->version;
+					$this->stateRepository->saveState($id, $state);
+					$this->logger->warning("Extension '{$id}' disabled: an update added risky code (" . count($findings) . ' findings).');
+
+					continue;
+				}
+
+				// Clean update — record the new version and let it load normally.
+				// Newly-registered capabilities land OFF via updateStoredCapabilities.
+				$state->version = $manifest->version;
+				$this->stateRepository->saveState($id, $state);
+			}
+
 			$this->registerExtension($id, $manifest);
 		}
 
@@ -437,6 +483,12 @@ class ExtensionManager
 				$this->guard->resetFailures($extensionId);
 			}
 
+			// Re-enabling after an update-disabled gate: clear the marker so the
+			// banner disappears and the extension boots normally going forward.
+			if ($state->isUpdateDisabled()) {
+				$state->clearUpdateDisabled();
+			}
+
 			// On first enable (no permissions set yet), turn on all detected capabilities.
 			// On re-enable, preserve the user's existing permission choices but add
 			// any new capabilities the extension may have gained.
@@ -690,24 +742,27 @@ class ExtensionManager
 		}
 
 		return [
-			'id'              => $id,
-			'name'            => $manifest->name,
-			'description'     => $manifest->description,
-			'version'         => $manifest->version,
-			'author'          => $manifest->author,
-			'license'         => $manifest->license,
-			'capabilities'    => $capabilities,
-			'enabled'         => $enabled,
-			'error'           => $state?->error,
-			'quarantined'      => $state instanceof ExtensionState && $state->isQuarantined(),
-			'quarantineReason' => $state?->quarantine['lastError'] ?? null,
-			'health'           => $this->profiler->metricsFor($id),
-			'errorCount'       => $this->guard->failureCountFor($id),
-			'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
-			'links'           => $manifest->links,
-			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
-			'icon'            => $this->resolveIcon($id, $manifest),
-			'hidden'          => $manifest->hidden,
+			'id'                   => $id,
+			'name'                 => $manifest->name,
+			'description'          => $manifest->description,
+			'version'              => $manifest->version,
+			'author'               => $manifest->author,
+			'license'              => $manifest->license,
+			'capabilities'         => $capabilities,
+			'enabled'              => $enabled,
+			'error'                => $state?->error,
+			'quarantined'          => $state instanceof ExtensionState && $state->isQuarantined(),
+			'quarantineReason'     => $state?->quarantine['lastError'] ?? null,
+			'updateDisabled'       => $state instanceof ExtensionState && $state->isUpdateDisabled(),
+			'updateDisabledReason' => $state?->updateDisabled['reason'] ?? null,
+			'updateFindings'       => $state?->updateDisabled['findings'] ?? null,
+			'health'               => $this->profiler->metricsFor($id),
+			'errorCount'           => $this->guard->failureCountFor($id),
+			'incompatibility'      => $this->manifestValidator->getIncompatibilityReasons($manifest),
+			'links'                => $manifest->links,
+			'hasSettings'          => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
+			'icon'                 => $this->resolveIcon($id, $manifest),
+			'hidden'               => $manifest->hidden,
 		];
 	}
 
@@ -1420,8 +1475,17 @@ class ExtensionManager
 
 	/**
 	 * After a successful register(), update stored permissions to reflect
-	 * the extension's current capabilities. New capabilities default to ON,
-	 * removed capabilities are pruned, existing choices are preserved.
+	 * the extension's current capabilities. Removed capabilities are pruned,
+	 * existing choices are preserved, and any NEWLY-discovered capability
+	 * (detected now but not already in the stored map) defaults to OFF.
+	 *
+	 * Rationale: a brand-new capability can only appear on an already-enabled
+	 * extension via a code change (an update). Defaulting it OFF means "new
+	 * features stay off until the operator opts in" — the safe-by-default
+	 * complement to the update re-consent scan. This does NOT affect first
+	 * enable: enable() seeds the full consented set into permissions, so on
+	 * the first boot this method finds every cap already present and adds
+	 * nothing — the operator's consented "on" set is preserved.
 	 *
 	 * Skips persisting if nothing changed — avoids hammering the state file
 	 * on every request, which would otherwise create a race with concurrent
@@ -1438,13 +1502,18 @@ class ExtensionManager
 		$original     = $state->permissions;
 
 		if ($state->permissions === []) {
-			// First run — set all detected capabilities to ON
+			// First run — set all detected capabilities to ON. This path only
+			// fires for an extension that has never stored permissions; enable()
+			// normally seeds them first, so in practice this is the legacy
+			// no-permissions case (isPermitted() allows all when the map is empty).
 			$state->permissions = $capabilities;
 		} else {
-			// Add new capabilities as ON, preserve existing choices
+			// Add newly-discovered capabilities as OFF (safe-by-default for an
+			// updated extension), but never override an always-on infrastructure
+			// capability — those have no toggle and must stay true.
 			foreach (array_keys($capabilities) as $cap) {
 				if (!isset($state->permissions[$cap])) {
-					$state->permissions[$cap] = true;
+					$state->permissions[$cap] = in_array($cap, ExtensionContext::ALWAYS_ON_CAPABILITIES, true);
 				}
 			}
 			// Remove capabilities the extension no longer uses

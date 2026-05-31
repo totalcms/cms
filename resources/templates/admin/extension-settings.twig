@@ -54,6 +54,13 @@
 			extId: extension.id,
 		} only %}
 
+		{% include 'admin/partials/extension-update-banner.twig' with {
+			updateDisabled: extension.updateDisabled,
+			updateDisabledReason: extension.updateDisabledReason,
+			updateFindings: extension.updateFindings,
+			extId: extension.id,
+		} only %}
+
 		{% include 'admin/partials/extension-health.twig' with {
 			health: extension.health,
 			errorCount: extension.errorCount,

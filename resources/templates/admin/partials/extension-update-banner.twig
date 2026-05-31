@@ -1,0 +1,12 @@
+{% if updateDisabled %}
+<div class="warning-box" role="alert">
+	<div>
+		<strong>Disabled after an update.</strong>
+		<p>A new version of this extension {% if updateFindings %}introduced {{ updateFindings }} risky code pattern{{ updateFindings == 1 ? '' : 's' }}{% else %}was installed{% endif %}{% if updateDisabledReason %} — {{ updateDisabledReason|e }}{% endif %}. Review the changes before re-enabling.</p>
+		<form method="post" action="{{ cms.dashboard }}/extensions/{{ extId }}/enable" style="margin:0;">
+			{{ csrf_field() }}
+			<button type="submit" class="btn btn-sm btn-primary">Review &amp; re-enable</button>
+		</form>
+	</div>
+</div>
+{% endif %}
