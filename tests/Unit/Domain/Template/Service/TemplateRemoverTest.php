@@ -3,6 +3,8 @@
 namespace Tests\Unit\Domain\Template\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 
@@ -10,11 +12,29 @@ final class TemplateRemoverTest extends TestCase
 {
 	private TemplateRemover $remover;
 	private \PHPUnit\Framework\MockObject\MockObject $storage;
+	private \PHPUnit\Framework\MockObject\MockObject $paths;
 
 	protected function setUp(): void
 	{
 		$this->storage = $this->createMock(TemplateRepository::class);
-		$this->remover = new TemplateRemover($this->storage);
+		$this->paths   = $this->createMock(BuilderTemplatePaths::class);
+		$this->paths->method('locked')->willReturn(false);
+		$this->remover = new TemplateRemover($this->storage, $this->paths);
+	}
+
+	public function testDeleteThrowsWhenTemplatesLocked(): void
+	{
+		$storage = $this->createMock(TemplateRepository::class);
+		$paths   = $this->createMock(BuilderTemplatePaths::class);
+		$paths->method('locked')->willReturn(true);
+
+		// Locked = templates are git-managed; the admin must not delete them.
+		$storage->expects($this->never())->method('deleteTemplate');
+
+		$remover = new TemplateRemover($storage, $paths);
+
+		$this->expectException(TemplatesLockedException::class);
+		$remover->deleteTemplate('about', 'pages');
 	}
 
 	public function testDeleteTemplateSuccessfully(): void

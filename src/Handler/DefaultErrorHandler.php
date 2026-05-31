@@ -127,6 +127,11 @@ readonly class DefaultErrorHandler
 			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
 		}
 
+		if ($exception instanceof \TotalCMS\Domain\Template\Exception\TemplatesLockedException) {
+			// Templates are git-managed on this environment — editing is forbidden.
+			$statusCode = StatusCodeInterface::STATUS_FORBIDDEN;
+		}
+
 		$file = basename($exception->getFile());
 		if ($file === 'CallableResolver.php') {
 			$statusCode = StatusCodeInterface::STATUS_NOT_FOUND;

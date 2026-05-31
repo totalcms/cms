@@ -1,5 +1,6 @@
 <?php
 
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
@@ -26,7 +27,11 @@ function createDesignerSync(
 	$templateSaver ??= test()->createMock(TemplateSaver::class);
 	$registry ??= new TemplateDesignerRegistry();
 
-	return new TemplateDesignerSync($config, $templateSaver, $registry, $editionFeatures, $httpClient);
+	// Not git-managed by default, so the designer sync path runs as before.
+	$paths = test()->createMock(BuilderTemplatePaths::class);
+	$paths->method('isProjectManaged')->willReturn(false);
+
+	return new TemplateDesignerSync($config, $templateSaver, $registry, $editionFeatures, $httpClient, $paths);
 }
 
 function registerBlock(TemplateDesignerRegistry $registry, string $key = 'test-key', string $domain = 'https://production.example.com', string $token = 'test-token', string $content = '<p>Hello</p>', string $template = 'pages/home.twig'): void

@@ -144,11 +144,12 @@ A small gate consulted by `TemplateSaver` (covers every write path) and surfaced
 - ⚠️ Writes still target datadir this phase (Phase 2 redirects them to the write target + adds the lock). Interim only matters for a git-managed project edited via the admin between the Phase 1 and Phase 2 commits on this branch.
 - Tests: ✅ `TemplateRepositoryTest` — data-layer read + source tag, project-over-data precedence, null when absent, exists across layers, merged dedup listing. Plus `BuilderTemplatePathsTest` resolver primitives (`readLayersLabeled`/`resolveRead`/`writePath`). 1145 unit + 575 feature green, PHPStan L8 clean.
 
-### Phase 2 — Write target + lock
-- Route all writes through the write-target adapter.
-- Enforce the lock in `TemplateSaver` (+ designer action). `TemplatesLockedException` → 403.
-- **Exclude templates from sync when git-managed** (Decision 8): the Sync Manager (CLI `pull`/`push`, admin sync util) and `TemplateDesignerSync` skip the builder template categories when the active primary is project-managed; page records and other content still sync. Audit `TemplateDesignerSync` to confirm it never assumes a writable prod under a lock.
-- Tests: write lands in project-root when present / tcms-data otherwise; every write path (save, update, delete, designer, JumpStart, snapshot) is refused under lock; lock auto-on under `env=production`; sync skips templates when git-managed but still carries page records.
+### Phase 2 — Write target + lock ✅ (done 2026-05-30, not yet committed)
+- ✅ `TemplateRepository` writes (`saveTemplate`/`deleteTemplate`/`saveDesignerMeta`/`deleteDesignerMeta`) now go through `writePath()` with absolute IO (mkdir + `file_put_contents`/`unlink`), so a git-managed project writes into `project-root/builder` and admin-first writes into `tcms-data/builder`. `deleteBuilderFile` mirrors the prior Flysystem `!fileExists` semantics (idempotent — returns true when the file is already gone; a regression here 500'd `TemplateDeleteAction` and was caught by the feature suite).
+- ✅ Lock enforced in `TemplateSaver` (`saveTemplate` + `saveDesignerMeta`) **and** `TemplateRemover` (`deleteTemplate`) — both throw `TemplatesLockedException`, mapped to HTTP 403 in `DefaultErrorHandler`. One service-level gate covers admin CRUD, the Designer PUT, JumpStart, and CLI.
+- ✅ **Decision 8 — sync exclusion:** `SyncService` forces `templateFilter = []` when `isProjectManaged()` (covers push + pull); `TemplateDesignerSync::sync()` short-circuits when git-managed. Page records and content still sync.
+- **Snapshots stay in datadir always** (`.history`) — even for git-managed projects. They're ephemeral local undo, gitignored under `tcms-data` regardless; keeping timestamped history out of the committed project dir is desirable. (Means Phase 5 needs no project `.history` gitignore.)
+- Tests: ✅ write lands in project-root when present / tcms-data otherwise + idempotent delete (`TemplateRepositoryTest`); lock refuses save/designer/delete (`TemplateSaverTest`, `TemplateRemoverTest`); git-managed push forces empty template filter (`SyncServiceTest`); designer sync skip preserved (`TemplateDesignerSyncTest`). 1160 unit + 575 feature green, PHPStan L8 clean.
 
 ### Phase 3 — Admin UX
 - Editor: read-only state + banner ("Templates are managed via git on this environment — edit them in your project repo and deploy.") when locked.

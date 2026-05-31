@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sync\Service;
 
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Support\HttpClientInterface;
@@ -21,7 +22,23 @@ readonly class SyncService
 		private JumpStartExporter $jumpStartExporter,
 		private JumpStartImporter $jumpStartImporter,
 		private HttpClientInterface $httpClient,
+		private BuilderTemplatePaths $paths,
 	) {
+	}
+
+	/**
+	 * Git-managed projects deliver templates via git, not sync (Decision 8 of
+	 * the git-first template workflow). Force the template filter to "none"
+	 * ([]) so push/pull carry page records and content but never templates —
+	 * each artifact keeps a single delivery channel.
+	 *
+	 * @param list<string>|null $templateFilter
+	 *
+	 * @return list<string>|null
+	 */
+	private function syncableTemplateFilter(?array $templateFilter): ?array
+	{
+		return $this->paths->isProjectManaged() ? [] : $templateFilter;
 	}
 
 	/**
@@ -49,6 +66,8 @@ readonly class SyncService
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
 	): OperationResult {
+		$templateFilter = $this->syncableTemplateFilter($templateFilter);
+
 		$this->jumpStartExporter->setMetadata('Sync Push', 'Pushed via Total CMS sync');
 		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter);
 
@@ -143,7 +162,7 @@ readonly class SyncService
 			throw new \RuntimeException('Pull failed: invalid response from remote.');
 		}
 
-		return $this->applyFilters($payload, $schemaFilter, $templateFilter, $collectionsFilter);
+		return $this->applyFilters($payload, $schemaFilter, $this->syncableTemplateFilter($templateFilter), $collectionsFilter);
 	}
 
 	/**

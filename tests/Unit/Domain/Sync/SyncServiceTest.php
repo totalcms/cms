@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Sync;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
@@ -19,17 +20,22 @@ final class SyncServiceTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $exporter;
 	private \PHPUnit\Framework\MockObject\MockObject $importer;
 	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
+	private \PHPUnit\Framework\MockObject\MockObject $paths;
 
 	protected function setUp(): void
 	{
 		$this->exporter   = $this->createMock(JumpStartExporter::class);
 		$this->importer   = $this->createMock(JumpStartImporter::class);
 		$this->httpClient = $this->createMock(HttpClientInterface::class);
+		// Admin-first by default — template sync behaves as before.
+		$this->paths = $this->createMock(BuilderTemplatePaths::class);
+		$this->paths->method('isProjectManaged')->willReturn(false);
 
 		$this->service = new SyncService(
 			$this->exporter,
 			$this->importer,
 			$this->httpClient,
+			$this->paths,
 		);
 	}
 
@@ -48,6 +54,26 @@ final class SyncServiceTest extends TestCase
 		expect($result->data['schemas'])->toBe(0);
 		expect($result->data['templates'])->toBe(0);
 		expect($result->message)->toContain('Nothing to push');
+	}
+
+	public function testPushExcludesTemplatesWhenGitManaged(): void
+	{
+		// Git-managed project: templates travel by git, so push must force the
+		// template filter to [] ("none") regardless of what was requested.
+		$paths = $this->createMock(BuilderTemplatePaths::class);
+		$paths->method('isProjectManaged')->willReturn(true);
+
+		$exporter = $this->createMock(JumpStartExporter::class);
+		$exporter->method('setMetadata');
+		$exporter->expects($this->once())
+			->method('exportSyncData')
+			->with(null, [], null)
+			->willReturn(new JumpStartData());
+
+		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths);
+
+		// Caller asked for "all templates" (null) — git-management overrides it.
+		$service->push('https://example.com', 'key', null, null, null);
 	}
 
 	public function testPushSendsDataToRemote(): void

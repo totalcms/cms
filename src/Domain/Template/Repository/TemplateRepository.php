@@ -117,9 +117,8 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function saveDesignerMeta(string $template, ?string $folder, DesignerMetadata $meta): void
 	{
-		$metaPath = $this->designerMetaPath($template, $folder);
-		$json     = json_encode($meta->toArray(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
-		$this->filesystem->write($metaPath, $json);
+		$json = json_encode($meta->toArray(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+		$this->writeBuilderFile($this->relativeTemplatePath($template, $folder, self::DESIGNER_META_EXT), $json);
 	}
 
 	/**
@@ -127,11 +126,39 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function deleteDesignerMeta(string $template, ?string $folder = null): void
 	{
-		$metaPath = $this->designerMetaPath($template, $folder);
+		$this->deleteBuilderFile($this->relativeTemplatePath($template, $folder, self::DESIGNER_META_EXT));
+	}
 
-		if ($this->filesystem->fileExists($metaPath)) {
-			$this->filesystem->delete($metaPath);
+	/**
+	 * Write a builder-relative file to the active primary (write target), via
+	 * absolute IO since the project layer can live outside the datadir-rooted
+	 * storage adapter. Creates intermediate directories as needed.
+	 */
+	private function writeBuilderFile(string $relativePath, string $contents): void
+	{
+		$absolute = $this->paths->writePath($relativePath);
+		$dir      = \dirname($absolute);
+		if (!is_dir($dir)) {
+			mkdir($dir, 0o775, true);
 		}
+		file_put_contents($absolute, $contents);
+	}
+
+	/**
+	 * Delete a builder-relative file from the active primary (write target).
+	 * Idempotent: returns true when the file is gone afterwards (whether it was
+	 * just removed or never existed), mirroring the prior Flysystem delete
+	 * (`!fileExists`). TemplateDeleteAction maps false to HTTP 500, so a no-op
+	 * delete must still report success.
+	 */
+	private function deleteBuilderFile(string $relativePath): bool
+	{
+		$absolute = $this->paths->writePath($relativePath);
+		if (is_file($absolute)) {
+			unlink($absolute);
+		}
+
+		return !is_file($absolute);
 	}
 
 	/**
@@ -270,9 +297,10 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function saveTemplate(TemplateData $template, ?string $folder = null): void
 	{
-		$templateFile = $this->customPath($template->id, $folder);
-
-		$this->filesystem->write($templateFile, $template->contents);
+		$this->writeBuilderFile(
+			$this->relativeTemplatePath($template->id, $folder, self::FILE_EXT),
+			$template->contents,
+		);
 
 		// Invalidate cache for this template
 		$cacheKey = self::CACHE_KEY_BUILDER . ($folder ?? '') . ':' . $template->id;
@@ -284,9 +312,7 @@ class TemplateRepository extends StorageRepository
 	 */
 	public function deleteTemplate(string $template, ?string $folder = null): bool
 	{
-		$templateFile = $this->customPath($template, $folder);
-
-		$deleted = $this->filesystem->delete($templateFile);
+		$deleted = $this->deleteBuilderFile($this->relativeTemplatePath($template, $folder, self::FILE_EXT));
 
 		// Invalidate cache for this template
 		if ($deleted) {

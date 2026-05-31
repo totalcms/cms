@@ -140,6 +140,52 @@ final class TemplateRepositoryTest extends TestCase
 		$this->assertSame(['about', 'contact', 'home'], $result);
 	}
 
+	// --- layer-aware writes (Phase 2) ---
+
+	public function testSaveTemplateWritesToDataLayerWhenAdminFirst(): void
+	{
+		$template          = new \TotalCMS\Domain\Template\Data\TemplateData();
+		$template->id      = 'about';
+		$template->contents = '<h1>about</h1>';
+
+		$this->repo->saveTemplate($template, 'pages');
+
+		$this->assertFileExists($this->tmpRoot . '/builder/pages/about.twig');
+		$this->assertSame('<h1>about</h1>', file_get_contents($this->tmpRoot . '/builder/pages/about.twig'));
+	}
+
+	public function testSaveTemplateWritesToProjectWhenManaged(): void
+	{
+		mkdir($this->projectBuilder, 0755, true);
+		$repo               = $this->makeRepo($this->projectBuilder);
+		$template           = new \TotalCMS\Domain\Template\Data\TemplateData();
+		$template->id       = 'about';
+		$template->contents = '<h1>project</h1>';
+
+		$repo->saveTemplate($template, 'pages');
+
+		$this->assertFileExists($this->projectBuilder . '/pages/about.twig');
+		$this->assertFileDoesNotExist($this->tmpRoot . '/builder/pages/about.twig');
+	}
+
+	public function testDeleteTemplateRemovesFromWriteTarget(): void
+	{
+		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', 'x');
+
+		$deleted = $this->repo->deleteTemplate('about', 'pages');
+
+		$this->assertTrue($deleted);
+		$this->assertFileDoesNotExist($this->tmpRoot . '/builder/pages/about.twig');
+	}
+
+	public function testDeleteTemplateIsIdempotentForMissingFile(): void
+	{
+		// Deleting an absent template reports success (the file is gone), matching
+		// the prior Flysystem delete semantics. TemplateDeleteAction maps false to
+		// HTTP 500, so a non-idempotent delete would 500 on a no-op delete.
+		$this->assertTrue($this->repo->deleteTemplate('never-existed', 'pages'));
+	}
+
 	private function rrmdir(string $dir): void
 	{
 		if (!is_dir($dir)) {

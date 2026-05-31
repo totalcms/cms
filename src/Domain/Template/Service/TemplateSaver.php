@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Template\Service;
 
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\TemplateEventPayload;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
+use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 
 /**
@@ -19,6 +21,7 @@ readonly class TemplateSaver
 		private TemplateRepository $storage,
 		private TemplateSnapshotService $snapshots,
 		private EventDispatcher $eventDispatcher,
+		private BuilderTemplatePaths $paths,
 	) {
 	}
 
@@ -27,9 +30,14 @@ readonly class TemplateSaver
 	 * before overwriting, so users can restore from history.
 	 *
 	 * @throws \DomainException
+	 * @throws TemplatesLockedException when templates are git-managed here
 	 */
 	public function saveTemplate(string $id, string $contents, ?string $folder = null): TemplateData
 	{
+		if ($this->paths->locked()) {
+			throw new TemplatesLockedException();
+		}
+
 		$template = TemplateFactory::generateTemplate($id, $contents);
 
 		if ($this->storage->reservedTemplateExists($id)) {
@@ -50,9 +58,15 @@ readonly class TemplateSaver
 
 	/**
 	 * Save designer metadata for a template.
+	 *
+	 * @throws TemplatesLockedException when templates are git-managed here
 	 */
 	public function saveDesignerMeta(string $id, ?string $folder, DesignerMetadata $meta): void
 	{
+		if ($this->paths->locked()) {
+			throw new TemplatesLockedException();
+		}
+
 		$this->storage->saveDesignerMeta($id, $folder, $meta);
 	}
 }
