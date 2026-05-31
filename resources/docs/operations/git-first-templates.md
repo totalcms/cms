@@ -23,15 +23,7 @@ mv tcms-data/builder ./builder
 
 That's the entire switch. The folder's presence is what activates git-managed mode. (A fresh project can instead run `tcms builder:init <starter>`, which scaffolds straight into `./builder` when it exists, or your `composer create-project` setup can create it for you.)
 
-Commit it, and ignore the local edit-history snapshots:
-
-```gitignore
-# committed: your source-controlled templates
-# but skip the local undo-history snapshots
-/builder/.history/
-```
-
-`tcms-data/` stays gitignored as always — your content and media are not in git.
+Now commit `./builder` — there's nothing special to ignore. `tcms-data/` stays gitignored as always (your content and media are not in git), and edit-history snapshots live under `tcms-data/`, never in `./builder` — so the whole `./builder` folder is clean to commit.
 
 ## What changes when templates are git-managed
 
