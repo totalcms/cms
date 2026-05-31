@@ -30,7 +30,6 @@ class Config
 	public bool $debug                = false;
 	public bool $sentry               = true;
 	public string $appLogLevel        = 'info';
-	public string $extensionsLogLevel = 'info';
 	/** @var array<string,mixed> */
 	public array $cache = [];
 	/** @var array<string,mixed> */
@@ -54,8 +53,12 @@ class Config
 	/** @var array<string,mixed> */
 	public array $presets  = [];
 	public string $docroot = '';
+	/** Project root (the composer project / install root; `PathResolver::projectRoot()`). */
+	public string $root = '';
 	/** @var array<string,mixed> */
 	public array $builder = [];
+	/** @var array<string,mixed> */
+	public array $extensions = [];
 	/** @var array<string,mixed> */
 	public array $mcp = [];
 	/** @var array<string,mixed> */
@@ -80,7 +83,6 @@ class Config
 		$this->logger             = $settings['logger'];
 		$this->sentry             = (bool)($settings['sentry'] ?? true);
 		$this->appLogLevel        = (string)($settings['appLogLevel'] ?? 'info');
-		$this->extensionsLogLevel = (string)($settings['extensionsLogLevel'] ?? 'info');
 		$this->error              = $settings['error'];
 		$this->imageworks         = $settings['imageworks'];
 		$this->domain             = $settings['domain'];
@@ -102,10 +104,12 @@ class Config
 		$this->maxDownloadSize    = (int)($settings['maxDownloadSize'] ?? 2048);
 		$this->timezone           = $settings['timezone'] ?? date_default_timezone_get();
 		$this->docroot            = $settings['docroot'] ?? $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$this->root               = (string)($settings['root'] ?? PathResolver::projectRoot());
 		$this->htmlclean          = is_array($settings['htmlclean'] ?? null) ? $settings['htmlclean'] : [];
 		$this->smtp               = is_array($settings['smtp'] ?? null) ? $settings['smtp'] : [];
 		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
 		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
+		$this->extensions         = is_array($settings['extensions'] ?? null) ? $settings['extensions'] : [];
 		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
 		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
 		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
@@ -161,6 +165,62 @@ class Config
 	public function displaySlug(): string
 	{
 		return SlugData::slugify($this->displayName());
+	}
+
+	/**
+	 * Whether a host string looks non-routable — i.e. `localhost`, a `.localhost`
+	 * subdomain, or a bare IP address (any port/userinfo is stripped first).
+	 *
+	 * `domain` is auto-detected from the request `Host` header, so inside Docker
+	 * or behind a reverse proxy that doesn't forward Host it silently becomes
+	 * something like `127.0.0.1` or a `172.x` bridge IP. A licensed production
+	 * domain is never a bare IP, so this is a reliable signal that the operator
+	 * needs to set `domain` explicitly in config/tcms.php. Used by license
+	 * diagnostics and the MCP discovery endpoint.
+	 */
+	public static function isNonRoutableHost(string $host): bool
+	{
+		$host = strtolower(trim($host));
+		if ($host === '') {
+			return false;
+		}
+
+		// Strip userinfo (user:pass@host)
+		if (str_contains($host, '@')) {
+			$host = substr($host, strrpos($host, '@') + 1);
+		}
+
+		// Strip the port. Bracketed IPv6 — [::1]:8080 → ::1
+		if (str_starts_with($host, '[')) {
+			$host = (string)preg_replace('/^\[(.+?)\](?::\d+)?$/', '$1', $host);
+		} elseif (substr_count($host, ':') === 1) {
+			$host = substr($host, 0, (int)strpos($host, ':'));
+		}
+
+		if ($host === 'localhost' || str_ends_with($host, '.localhost')) {
+			return true;
+		}
+
+		return filter_var($host, FILTER_VALIDATE_IP) !== false;
+	}
+
+	/**
+	 * Fully-qualified, base-path-aware MCP endpoint URL.
+	 *
+	 * The server is mounted at `<base>/mcp`, where `<base>` is the install's
+	 * subpath (`$api` — empty at the domain root, `/cms` for a subfolder,
+	 * `/rw_common/plugins/stacks/tcms` for Stacks). Operators routinely get this
+	 * wrong by hand — they reach for `domain.com/mcp` and drop the base path —
+	 * so this is the single source of truth shared by the discovery endpoint and
+	 * the admin connection panel.
+	 *
+	 * Pass an explicit `$baseUrl` (scheme://host[:port]) to honour the host the
+	 * caller actually reached us on; the discovery endpoint forwards the request
+	 * authority so proxied hosts resolve. Defaults to the configured site URL.
+	 */
+	public function mcpEndpoint(?string $baseUrl = null): string
+	{
+		return rtrim($baseUrl ?? $this->url, '/') . $this->api . '/mcp';
 	}
 
 	public static function init(): self

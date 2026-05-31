@@ -11,6 +11,7 @@ use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\BasePathMiddleware;
 use TotalCMS\Middleware\CacheInvalidationMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
+use TotalCMS\Middleware\Development\ExtensionProfileFlushMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\BundleMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
@@ -67,4 +68,10 @@ return function (App $app): void {
 	// would see an empty session — which is what caused the /admin → builder
 	// page redirect loop.
 	$app->add(SessionStartMiddleware::class);
+
+	// OUTERMOST layer. In Slim, the middleware added LAST wraps everything else,
+	// so its after-handle() code runs LAST — after route rendering AND after
+	// PageRouter's post-Slim builder work (Twig functions, listeners). That makes
+	// this the right place to flush accumulated extension timing for the request.
+	$app->add(ExtensionProfileFlushMiddleware::class);
 };

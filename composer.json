@@ -11,8 +11,7 @@
   "license": "proprietary",
   "repositories": [
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/color-thief-php.git" }
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
   ],
   "require": {
     "php": "^8.2",
@@ -34,7 +33,6 @@
     "halaxa/json-machine": "^1.1",
     "illuminate/collections": "^11.45",
     "khanzadimahdi/uploadmanager": "^1.0",
-    "ksubileau/color-thief-php": "dev-fix-deprecations as 2.0.3",
     "laminas/laminas-feed": "^2.26",
     "league/commonmark": "^2.7",
     "league/csv": "^9.6",
@@ -66,7 +64,7 @@
     "symfony/serializer": "^7.1",
     "symfony/translation": "^7.4",
     "tecnickcom/tc-lib-barcode": "^2.4",
-    "thepixeldeveloper/sitemap": "dev-master#ee4cbd1406f1250534860b8c9b74020fee0c3650",
+    "totalcms/color-thief-php": "^2.5.0",
     "twig/cssinliner-extra": "^3.21",
     "twig/html-extra": "^3.21",
     "twig/inky-extra": "^3.0",

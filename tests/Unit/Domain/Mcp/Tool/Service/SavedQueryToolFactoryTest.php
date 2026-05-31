@@ -24,17 +24,15 @@ final class SavedQueryToolFactoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(function (string $id): mixed {
-			return match ($id) {
-				IndexQueryService::class        => $this->createMock(IndexQueryService::class),
-				FilterValueResolver::class      => new FilterValueResolver(),
-				ContentRenderer::class          => $this->createMock(ContentRenderer::class),
-				PersonaContext::class           => new PersonaContext(),
-				ObjectUrlBuilder::class         => $this->createMock(ObjectUrlBuilder::class),
-				McpSchemaResolver::class        => $this->createMock(McpSchemaResolver::class),
-				CollectionRepository::class     => $this->createMock(CollectionRepository::class),
-				default                         => null,
-			};
+		$container->method('get')->willReturnCallback(fn (string $id): mixed => match ($id) {
+			IndexQueryService::class        => $this->createMock(IndexQueryService::class),
+			FilterValueResolver::class      => new FilterValueResolver(),
+			ContentRenderer::class          => $this->createMock(ContentRenderer::class),
+			PersonaContext::class           => new PersonaContext(),
+			ObjectUrlBuilder::class         => $this->createMock(ObjectUrlBuilder::class),
+			McpSchemaResolver::class        => $this->createMock(McpSchemaResolver::class),
+			CollectionRepository::class     => $this->createMock(CollectionRepository::class),
+			default                         => null,
 		});
 
 		$this->factory = new SavedQueryToolFactory($container);

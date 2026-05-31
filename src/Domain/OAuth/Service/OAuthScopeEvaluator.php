@@ -21,10 +21,10 @@ namespace TotalCMS\Domain\OAuth\Service;
  * "{METHOD} {path}" string against each scope's impliedPaths regex
  * patterns (e.g., `#^GET\s+/api/(collections|objects)#`).
  */
-final class OAuthScopeEvaluator
+final readonly class OAuthScopeEvaluator
 {
 	public function __construct(
-		private readonly OAuthScopeRegistry $registry,
+		private OAuthScopeRegistry $registry,
 	) {
 	}
 

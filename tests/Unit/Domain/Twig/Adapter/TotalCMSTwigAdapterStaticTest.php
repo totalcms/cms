@@ -502,6 +502,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class),
 			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderConfigService::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderTemplatePaths::class),
 		);
 
 		// Mock $_SERVER for test

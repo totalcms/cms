@@ -187,6 +187,30 @@ describe('LocaleTwigAdapter::text — null locale defaults to current locale', f
 		$adapter->set('en_US');
 		expect($adapter->text($value))->toBe('About');
 	});
+
+	test('customer case: set(en_US) but data authored under bare en — fall-up resolves it', function (): void {
+		// Repro of a real support case. Operator set the page locale to the full
+		// `en_US` but saved every localizedtext value under the bare `en` key.
+		// With no locale passed to the macro, text() reads the current locale
+		// (en_US), misses on exact match, then region fall-up (en_US → en) must
+		// find the authored content. If THIS fails, the helper has a bug; if it
+		// passes, the customer's template was using direct array access
+		// (post.title['en_US']) which bypasses the fallback chain entirely.
+		if (!extension_loaded('intl')) {
+			$this->markTestSkipped('intl extension required for set()/get()');
+		}
+
+		$adapter = makeLocaleAdapter();
+		$value   = ['en' => 'About', 'de' => 'Über'];
+
+		$adapter->set('en_US');
+		expect($adapter->text($value))->toBe('About');
+		expect($adapter->styledtext($value))->toBe('About');
+
+		// Same thing with the locale passed explicitly — must match the
+		// no-arg behavior above.
+		expect($adapter->text($value, 'en_US'))->toBe('About');
+	});
 });
 
 describe('LocaleTwigAdapter::text — site-default fallback', function (): void {

@@ -67,6 +67,20 @@
 				"nav": false,
 				"data": {}
 			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "not-found",
+			"data": {
+				"id": "not-found",
+				"title": "Page Not Found",
+				"route": "/404",
+				"template": "404",
+				"status": 404,
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
 		}
 	]
 }

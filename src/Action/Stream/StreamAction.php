@@ -107,28 +107,32 @@ abstract class StreamAction
 			ob_end_clean();
 		}
 
-		// Basic headers for all responses
+		// Cache validators — Safari uses Last-Modified/ETag to confirm chunks
+		// belong to the same file revision while seeking through a non-faststart
+		// MP4. Without them Safari abandons playback partway through.
+		$mtime   = $file->uploadDate->date !== '' ? (int)strtotime($file->uploadDate->date) : 0;
+		$etag    = '"' . dechex($mtime) . '-' . dechex($fileSize) . '"';
+		$lastMod = gmdate('D, d M Y H:i:s', $mtime) . ' GMT';
+
 		$response = $response
 			->withHeader('Content-Type', $file->mime)
 			->withHeader('Content-Disposition', "inline; filename=\"{$file->download}\"")
 			->withHeader('Accept-Ranges', 'bytes')
 			->withHeader('Cache-Control', 'no-cache')
-			->withHeader('X-Accel-Buffering', 'no');
+			->withHeader('Last-Modified', $lastMod)
+			->withHeader('ETag', $etag);
 
-		// Handle range requests for Safari video streaming
 		if ($rangeHeader !== '' && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
 			$start = (int)$matches[1];
 			$end   = empty($matches[2]) ? $fileSize - 1 : (int)$matches[2];
 
-			// Ensure valid range
 			if ($start >= $fileSize || $end >= $fileSize || $start > $end) {
-				return $response->withStatus(416) // Range Not Satisfiable
+				return $response->withStatus(416)
 					->withHeader('Content-Range', "bytes */{$fileSize}");
 			}
 
 			$contentLength = $end - $start + 1;
 
-			// Create range-specific file stream
 			$fileStream   = $this->streamFile();
 			$rangeContent = '';
 			if (is_resource($fileStream) && $contentLength > 0) {
@@ -138,15 +142,21 @@ abstract class StreamAction
 				fclose($fileStream);
 			}
 
+			// No X-Accel-Buffering on 206 responses — range content is already
+			// fully in memory, and setting it caused nginx/PHP-FPM to switch
+			// to chunked transfer encoding, which strips Content-Length.
+			// Safari refuses to play 206 responses without Content-Length.
 			return $response
-				->withStatus(206) // Partial Content
+				->withStatus(206)
 				->withHeader('Content-Length', (string)$contentLength)
 				->withHeader('Content-Range', "bytes {$start}-{$end}/{$fileSize}")
 				->withBody(Stream::create($rangeContent));
 		}
 
-		// Full file response
+		// Full file path keeps X-Accel-Buffering off so nginx streams the
+		// resource without loading the whole file into memory.
 		return $response
+			->withHeader('X-Accel-Buffering', 'no')
 			->withHeader('Content-Length', (string)$fileSize)
 			->withBody(Stream::create($this->streamFile()));
 	}

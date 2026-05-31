@@ -19,11 +19,11 @@ use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
  * in the T3 registry are silently removed by getScopeEntityByIdentifier()
  * before finalizeScopes() is called by league's grant code.
  */
-final class LeagueScopeRepository implements ScopeRepositoryInterface
+final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 {
 	public function __construct(
-		private readonly OAuthScopeRegistry $registry,
-		private readonly OAuthClientRepository $clients,
+		private OAuthScopeRegistry $registry,
+		private OAuthClientRepository $clients,
 	) {
 	}
 
@@ -49,7 +49,7 @@ final class LeagueScopeRepository implements ScopeRepositoryInterface
 		?string $authCodeId = null,
 	): array {
 		$client = $this->clients->find($clientEntity->getIdentifier());
-		if ($client === null) {
+		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
 			return [];
 		}
 

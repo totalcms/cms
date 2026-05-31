@@ -1,0 +1,46 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Extensions Settings",
+	"description" : "Performance profiling, slow-extension warnings, and extension logging.",
+	"type"        : "object",
+	"properties"  : {
+		"logLevel": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Extensions Log Level",
+			"help"    : "Minimum severity written to <code>logs/extensions.log</code> for extension events and extension-emitted log messages. Set to <code>debug</code> while developing or troubleshooting an extension.",
+			"default" : "info",
+			"options" : [
+				{"value": "debug",     "label": "Debug"},
+				{"value": "info",      "label": "Info"},
+				{"value": "notice",    "label": "Notice"},
+				{"value": "warning",   "label": "Warning"},
+				{"value": "error",     "label": "Error"},
+				{"value": "critical",  "label": "Critical"},
+				{"value": "alert",     "label": "Alert"},
+				{"value": "emergency", "label": "Emergency"}
+			]
+		},
+		"profileSampleRate": {
+			"type"    : "number",
+			"field"   : "number",
+			"label"   : "Performance profiling (1 in N requests)",
+			"help"    : "Production only. 0 disables profiling entirely. 50 samples 1 in 50 requests. 1 profiles every request. Development and preview always profile fully.",
+			"default" : 50
+		},
+		"budgetMsPerExtension": {
+			"type"    : "number",
+			"field"   : "number",
+			"label"   : "Per-extension slow warning (ms / request)",
+			"help"    : "Warn when a single extension adds more than this many milliseconds to a request. 0 disables the warning.",
+			"default" : 200
+		},
+		"budgetMsPerStack": {
+			"type"    : "number",
+			"field"   : "number",
+			"label"   : "Total extension slow warning (ms / request)",
+			"help"    : "Warn when all extensions combined add more than this many milliseconds to a request. 0 disables the warning.",
+			"default" : 500
+		}
+	}
+}

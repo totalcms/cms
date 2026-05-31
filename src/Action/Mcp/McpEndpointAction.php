@@ -118,7 +118,7 @@ readonly class McpEndpointAction
 				$rpc = $parsed;
 			} else {
 				$request->getBody()->rewind();
-				$bodyText = (string)$request->getBody()->getContents();
+				$bodyText = $request->getBody()->getContents();
 				$rpc      = json_decode($bodyText, true);
 			}
 			// Always rewind so the SDK's StreamableHttpTransport can call getContents()

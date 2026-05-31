@@ -99,6 +99,7 @@ return function (App $app): void {
 		// Extension management
 		$group->get('/extensions', AdminExtensionsAction::class)->setName('admin-extensions')->add(AdminOnlyMiddleware::class);
 		$group->post('/extensions/{extension:.+}/{action:enable|disable}', ExtensionToggleAction::class)->setName('admin-extension-toggle')->add(AdminOnlyMiddleware::class);
+		$group->get('/extensions/{extension:.+}/review', TotalCMS\Action\Admin\AdminExtensionReviewAction::class)->setName('admin-extension-review')->add(AdminOnlyMiddleware::class);
 		$group->get('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsAction::class)->setName('admin-extension-settings')->add(AdminOnlyMiddleware::class);
 		$group->post('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
 

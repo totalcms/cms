@@ -116,9 +116,7 @@ function streamingMcpInit(Slim\App $app): string
  * frames when the tool calls ClientGateway::progress(). Without a token,
  * progress() is a no-op and the tool responds with plain JSON.
  *
- * @param string               $toolName
  * @param array<string,mixed>  $arguments
- * @param string|null          $progressToken
  *
  * @return array<string,mixed>
  */
@@ -148,8 +146,6 @@ function streamingToolCallPayload(
  * POST /mcp with admin API key + session header.
  *
  * @param array<string,mixed> $payload
- *
- * @return Psr\Http\Message\ResponseInterface
  */
 function streamingMcpRequest(
 	Slim\App $app,
@@ -182,7 +178,11 @@ function streamingMcpRequest(
 function triggerSseBody(Psr\Http\Message\ResponseInterface $response): void
 {
 	ob_start();
-	(string)$response->getBody();
+	// Call __toString() explicitly (not a `(string)` cast) for its side effect:
+	// it reads the whole PSR-7 body, which drives the SSE CallbackStream and runs
+	// the tool's seeding loop. A discarded cast looks pointless to Rector's
+	// dead-code rules and gets stripped; an explicit method call is left alone.
+	$response->getBody()->__toString();
 	ob_end_clean();
 }
 
@@ -298,7 +298,6 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 						'title' => ['field' => 'text', 'label' => 'Title'],
 					],
 				],
-				null,
 			),
 			$sessionId,
 		);

@@ -43,7 +43,7 @@ describe('Search provider extension integration', function (): void {
 
 		$service = $this->app->getContainer()->get(SearchService::class);
 		// Pass null collection so IndexSearcher doesn't try to load a missing schema.
-		$out = $service->search(new SearchQuery(text: 'hello', collection: null));
+		$out = $service->search(new SearchQuery(text: 'hello'));
 
 		// Algolia not in registry (extension disabled in test bootstrap) +
 		// empty data dir → text returns nothing. Just confirms no exception.

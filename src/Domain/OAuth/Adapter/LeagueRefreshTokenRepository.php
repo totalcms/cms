@@ -18,17 +18,17 @@ use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
  * token identifier. Access tokens are stateless JWTs; the grant record carries
  * the client ID, user ID, scopes, and expiry for later introspection.
  */
-final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterface
+final readonly class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterface
 {
 	public function __construct(
-		private readonly OAuthGrantRepository $grants,
-		private readonly OAuthReplayDetector $replayDetector,
-		private readonly OAuthActivityLogger $activityLogger,
+		private OAuthGrantRepository $grants,
+		private OAuthReplayDetector $replayDetector,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
 	// @phpstan-ignore-next-line return.unusedType
-	public function getNewRefreshToken(): ?RefreshTokenEntityInterface
+	public function getNewRefreshToken(): RefreshTokenEntityInterface
 	{
 		// Nullable per interface contract; T3 never returns null here.
 		return new LeagueRefreshTokenEntity();
@@ -41,7 +41,7 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 
 		/** @var list<string> $scopes */
 		$scopes = array_map(
-			static fn ($s): string => $s->getIdentifier(),
+			static fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(),
 			$accessToken->getScopes(),
 		);
 
@@ -64,7 +64,7 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 	{
 		$hash  = hash('sha256', $tokenId);
 		$grant = $this->grants->findByRefreshTokenHash($hash);
-		if ($grant !== null) {
+		if ($grant instanceof OAuthGrantData) {
 			$this->replayDetector->recordRotated($hash, $grant->clientId, $grant->userId);
 			$this->grants->delete($grant->id);
 		}
@@ -74,7 +74,7 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 	{
 		$hash = hash('sha256', $tokenId);
 
-		if ($this->grants->findByRefreshTokenHash($hash) !== null) {
+		if ($this->grants->findByRefreshTokenHash($hash) instanceof OAuthGrantData) {
 			return false; // grant is live
 		}
 
@@ -90,7 +90,7 @@ final class LeagueRefreshTokenRepository implements RefreshTokenRepositoryInterf
 			foreach ($grantsForClient as $g) {
 				if ($g->userId === $userId) {
 					$this->grants->delete($g->id);
-					$revokedGrantId = $revokedGrantId ?? $g->id;
+					$revokedGrantId ??= $g->id;
 				}
 			}
 

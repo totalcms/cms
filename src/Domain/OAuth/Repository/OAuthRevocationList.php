@@ -12,13 +12,13 @@ use TotalCMS\Domain\Cache\CacheManager;
  * so the list self-cleans — a jti that's older than the maximum TTL is
  * guaranteed to be expired anyway, so removing it from the list is safe.
  */
-final class OAuthRevocationList
+final readonly class OAuthRevocationList
 {
 	private const PREFIX = 'oauth.revoked.jti.';
 
 	public function __construct(
-		private readonly CacheManager $cache,
-		private readonly int $accessTokenTtlSeconds,
+		private CacheManager $cache,
+		private int $accessTokenTtlSeconds,
 	) {
 	}
 

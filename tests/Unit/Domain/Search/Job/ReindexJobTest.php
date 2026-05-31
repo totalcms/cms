@@ -55,7 +55,7 @@ final class ReindexJobTest extends TestCase
 
 		$provider = $this->makeProvider(
 			'algolia',
-			indexCallback: function (string $c, string $id, array $data) use (&$indexedCollection, &$indexedId, &$indexedData) {
+			indexCallback: function (string $c, string $id, array $data) use (&$indexedCollection, &$indexedId, &$indexedData): void {
 				$indexedCollection = $c;
 				$indexedId         = $id;
 				$indexedData       = $data;
@@ -91,7 +91,7 @@ final class ReindexJobTest extends TestCase
 
 		$provider = $this->makeProvider(
 			'algolia',
-			deleteCallback: function (string $c, string $id) use (&$deletedCollection, &$deletedId) {
+			deleteCallback: function (string $c, string $id) use (&$deletedCollection, &$deletedId): void {
 				$deletedCollection = $c;
 				$deletedId         = $id;
 			},
@@ -121,7 +121,7 @@ final class ReindexJobTest extends TestCase
 
 		$provider = $this->makeProvider(
 			'algolia',
-			deleteCallback: function (string $c, string $id) use (&$deletedId) {
+			deleteCallback: function (string $c, string $id) use (&$deletedId): void {
 				$deletedId = $id;
 			},
 		);
@@ -212,14 +212,14 @@ final class ReindexJobTest extends TestCase
 
 			public function index(string $collection, string $id, array $data): void
 			{
-				if ($this->indexCallback !== null) {
+				if ($this->indexCallback instanceof \Closure) {
 					($this->indexCallback)($collection, $id, $data);
 				}
 			}
 
 			public function delete(string $collection, string $id): void
 			{
-				if ($this->deleteCallback !== null) {
+				if ($this->deleteCallback instanceof \Closure) {
 					($this->deleteCallback)($collection, $id);
 				}
 			}

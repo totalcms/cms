@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Designer;
 
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Template\Data\TemplatePath;
@@ -24,6 +25,7 @@ class TemplateDesignerSync
 		private readonly TemplateDesignerRegistry $registry,
 		private readonly EditionFeatureService $editionFeatures,
 		private readonly HttpClientInterface $httpClient,
+		private readonly BuilderTemplatePaths $paths,
 	) {
 	}
 
@@ -35,6 +37,12 @@ class TemplateDesignerSync
 	 */
 	public function sync(string $registryKey): string
 	{
+		// Git-managed templates travel by git, not the Designer sync channel
+		// (Decision 8). Skip entirely — also avoids hitting the write lock.
+		if ($this->paths->isProjectManaged()) {
+			return '';
+		}
+
 		// Templates feature requires Standard+ edition
 		if (!$this->editionFeatures->can(EditionFeature::TEMPLATES)) {
 			return '';

@@ -192,6 +192,9 @@ readonly class TotalFormFactory
 		$options['api']          = $this->config->api;
 		$options['session']      = $this->session;
 		$options['csrfManager']  = $this->csrfManager;
+		// LoginForm resolves all labels/help from the admin translation domain
+		// (with empty label overrides falling through to localized defaults).
+		$options['translator'] = $this->translationService->trans(...);
 		$options['loginWith'] ??= $this->config->auth['loginWith'] ?? 'both';
 		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)
 			&& ($this->config->auth['usePasskeys'] ?? true);
@@ -998,12 +1001,25 @@ readonly class TotalFormFactory
 
 		$toggles = '';
 		foreach ($permissions as $capability => $enabled) {
+			// Always-on infrastructure (e.g. container defs) isn't toggleable —
+			// disabling it would only leave the extension enabled-but-broken — so
+			// it's applied unconditionally and omitted from the permissions UI.
+			if (in_array($capability, ExtensionContext::ALWAYS_ON_CAPABILITIES, true)) {
+				continue;
+			}
+
 			$label    = $capabilityLabels[$capability] ?? $capability;
 			$toggles .= $this->field('toggle', 'perm_' . str_replace(':', '_', $capability), [
 				'field' => 'toggle',
 				'label' => $label,
 				'value' => $enabled,
 			]);
+		}
+
+		// Nothing left to toggle (e.g. an extension whose only capability is a
+		// container def) — render no Permissions section at all.
+		if ($toggles === '') {
+			return '';
 		}
 
 		return '<fieldset class="ext-permissions">'
@@ -1452,6 +1468,12 @@ readonly class TotalFormFactory
 			collection               : '',
 		);
 		$form->setLogger($this->logger);
+		// Wire the builder-aware option sources so fields rendered via field()
+		// (standalone fields, extension settings) can resolve the `pages`,
+		// `layouts`, and `pageMiddleware` propertyOptions sources — the real
+		// form builders set these too (see loginForm/collection form paths).
+		$form->setTemplateLister($this->templateLister);
+		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 
 		return $form;
 	}

@@ -12,12 +12,12 @@ use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
  * secret; bcrypt-hashes the secret before persisting. Returns the plaintext
  * secret EXACTLY ONCE in the result tuple — never recoverable afterward.
  */
-final class OAuthClientCreator
+final readonly class OAuthClientCreator
 {
 	public function __construct(
-		private readonly OAuthClientRepository $clients,
-		private readonly OAuthScopeRegistry $scopes,
-		private readonly OAuthActivityLogger $activityLogger,
+		private OAuthClientRepository $clients,
+		private OAuthScopeRegistry $scopes,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 

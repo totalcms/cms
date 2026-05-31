@@ -46,6 +46,21 @@ class ExtensionManager
 	private bool $registered = false;
 	private bool $booted     = false;
 
+	/**
+	 * Capabilities considered "risky" — they either expose publicly accessible
+	 * surface or grant access to sensitive data. Each maps to a plain-language
+	 * FYI label shown on the pre-enable review screen. Single source of truth.
+	 *
+	 * @var array<string,string>
+	 */
+	private const RISKY_CAPABILITIES = [
+		'routes:public' => 'Exposes public, unauthenticated endpoints.',
+		'events:listen' => 'Can observe all content changes.',
+		'container'     => 'Registers services in the application container.',
+		'mcp:tools'     => 'Registers actions AI agents can call (reachable externally if MCP public access is enabled).',
+		'mcp:resources' => 'Exposes data that AI agents can fetch.',
+	];
+
 	public function __construct(
 		private readonly ExtensionDiscovery $discovery,
 		private readonly ExtensionStateRepository $stateRepository,
@@ -54,6 +69,8 @@ class ExtensionManager
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 		private readonly ManifestValidator $manifestValidator,
+		private readonly ExtensionGuard $guard,
+		private readonly ExtensionProfiler $profiler,
 	) {
 	}
 
@@ -100,12 +117,70 @@ class ExtensionManager
 				continue;
 			}
 
+			// Auto-quarantined extensions stay enabled (the operator didn't disable
+			// them — the SYSTEM held them back after repeated crashes), so they pass
+			// the isEnabled() filter above. Skip loading them here until the operator
+			// re-enables (which clears the quarantine) so a crash-looping extension
+			// can't take the request down again.
+			$state = $this->stateRepository->getState($id);
+			if ($state instanceof ExtensionState && $state->isQuarantined()) {
+				$this->logger->warning("Extension '{$id}' is quarantined, skipping load.");
+
+				continue;
+			}
+
 			$reasons = $this->manifestValidator->getIncompatibilityReasons($manifest);
 			if ($reasons !== []) {
 				$this->logger->info("Extension '{$id}' is incompatible, skipping: " . implode('; ', $reasons));
 				$this->stateRepository->recordError($id, implode('; ', $reasons));
 
 				continue;
+			}
+
+			// Update re-consent: when a SIDELOADED extension's on-disk version no
+			// longer matches the version it was enabled at, the operator did not
+			// review this code. Statically scan the NEW code before it can register:
+			// risky patterns => disable it (and don't load it); clean => let it load
+			// but record the new version so any newly-registered capability lands
+			// OFF (see updateStoredCapabilities). Built-ins are exempt — they version
+			// with core and ship reviewed in the package.
+			if (
+				$state instanceof ExtensionState
+				&& !$manifest->bundled
+				&& $state->version !== ''
+				&& $manifest->version !== $state->version
+			) {
+				$extPath  = $this->discovery->getExtensionPath($id);
+				$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
+
+				if ($extPath === null) {
+					// No path to scan — treat as clean (nothing to load anyway;
+					// registerExtension will report the missing directory) but log
+					// so a vanished extension dir doesn't silently skip the gate.
+					$this->logger->warning("Extension '{$id}' updated but its directory could not be resolved; skipping update scan.");
+				}
+
+				if ($findings !== []) {
+					// Risky update — disable, record why, bump the stored version so
+					// the gate doesn't re-trigger every request, and do NOT load it.
+					// The new (risky) code never registers or runs.
+					$state->enabled        = false;
+					$state->updateDisabled = [
+						'reason'    => 'A new version of this extension added risky code patterns.',
+						'findings'  => count($findings),
+						'updatedAt' => gmdate('c'),
+					];
+					$state->version = $manifest->version;
+					$this->stateRepository->saveState($id, $state);
+					$this->logger->warning("Extension '{$id}' disabled: an update added risky code (" . count($findings) . ' findings).');
+
+					continue;
+				}
+
+				// Clean update — record the new version and let it load normally.
+				// Newly-registered capabilities land OFF via updateStoredCapabilities.
+				$state->version = $manifest->version;
+				$this->stateRepository->saveState($id, $state);
 			}
 
 			$this->registerExtension($id, $manifest);
@@ -174,6 +249,7 @@ class ExtensionManager
 				continue;
 			}
 
+			$start = hrtime(true);
 			try {
 				$extension->boot($context);
 				$this->stateRepository->clearError($id);
@@ -186,6 +262,7 @@ class ExtensionManager
 				// Remove from loaded extensions so its registrations aren't used
 				unset($this->loadedExtensions[$id], $this->contexts[$id]);
 			}
+			$this->profiler->record($id, (int)((hrtime(true) - $start) / 1000));
 		}
 
 		// Register extension schema directories (Pro+ only)
@@ -236,7 +313,7 @@ class ExtensionManager
 				if (!$this->isCapabilityPermitted($id, 'form-actions')) {
 					continue;
 				}
-				foreach ($context->getRegisteredFormActions() as $name => $formAction) {
+				foreach ($context->getRegisteredFormActions() as $formAction) {
 					$formActionRegistry->register($formAction);
 				}
 			}
@@ -395,6 +472,23 @@ class ExtensionManager
 			$state->enabled = true;
 			$state->error   = null;
 
+			// Re-enabling clears any auto-quarantine and resets the rolling failure
+			// counter so the extension starts from a clean slate. Without the reset a
+			// counter still sitting at (or near) the threshold would let one fresh
+			// crash immediately re-quarantine the extension. Harmless on a normal
+			// enable where there's no quarantine — it just zeroes an already-empty
+			// counter.
+			if ($state->isQuarantined()) {
+				$state->clearQuarantine();
+				$this->guard->resetFailures($extensionId);
+			}
+
+			// Re-enabling after an update-disabled gate: clear the marker so the
+			// banner disappears and the extension boots normally going forward.
+			if ($state->isUpdateDisabled()) {
+				$state->clearUpdateDisabled();
+			}
+
 			// On first enable (no permissions set yet), turn on all detected capabilities.
 			// On re-enable, preserve the user's existing permission choices but add
 			// any new capabilities the extension may have gained.
@@ -419,6 +513,56 @@ class ExtensionManager
 	public function isEnabled(string $extensionId): bool
 	{
 		return $this->stateRepository->isEnabled($extensionId);
+	}
+
+	/**
+	 * Pre-enable review data: the developer's review note, what the extension
+	 * registers (capabilities), which of those are risky (with plain-language
+	 * labels), and risky source patterns found by a one-time scan. Informational —
+	 * not enforcement. `hasFlags` tells the review page whether there's anything
+	 * worth showing at all.
+	 *
+	 * @return array{
+	 *   capabilities: array<string,bool>,
+	 *   findings: list<array{pattern:string,file:string,line:int,snippet:string}>,
+	 *   reviewNote: string,
+	 *   risky: array<string,string>,
+	 *   hasFlags: bool
+	 * }
+	 */
+	public function getEnableReview(string $extensionId): array
+	{
+		$manifest = $this->discoveredManifests[$extensionId] ?? null;
+		if ($manifest === null) {
+			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false];
+		}
+
+		try {
+			$capabilities = $this->detectCapabilities($extensionId);
+		} catch (\Throwable $e) {
+			$this->logger->warning("getEnableReview capability detection failed for '{$extensionId}': " . $e->getMessage());
+			$capabilities = [];
+		}
+
+		$extPath  = $this->discovery->getExtensionPath($extensionId);
+		$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
+
+		// Intersect detected capabilities with the risky set, preserving the
+		// stable order defined by RISKY_CAPABILITIES.
+		$risky = [];
+		foreach (self::RISKY_CAPABILITIES as $cap => $label) {
+			if (($capabilities[$cap] ?? false) === true) {
+				$risky[$cap] = $label;
+			}
+		}
+
+		return [
+			'capabilities' => $capabilities,
+			'findings'     => $findings,
+			'reviewNote'   => $manifest->reviewNote,
+			'risky'        => $risky,
+			'hasFlags'     => $risky !== [] || $findings !== [],
+		];
 	}
 
 	public function getExtensionPath(string $extensionId): ?string
@@ -510,11 +654,15 @@ class ExtensionManager
 			}
 		}
 
-		// Save permissions — unchecked toggles won't be submitted, so default to false
+		// Save permissions — unchecked toggles won't be submitted, so default to
+		// false. Always-on capabilities (infrastructure, e.g. container defs) have
+		// no toggle and stay true regardless of what the form submitted.
 		if ($newPermissions !== [] || $permissions !== []) {
 			$mergedPermissions = [];
 			foreach (array_keys($permissions) as $cap) {
-				$mergedPermissions[$cap] = $newPermissions[$cap] ?? false;
+				$mergedPermissions[$cap] = in_array($cap, ExtensionContext::ALWAYS_ON_CAPABILITIES, true)
+					? true
+					: ($newPermissions[$cap] ?? false);
 			}
 			$this->savePermissions($extensionId, $mergedPermissions);
 		}
@@ -594,20 +742,27 @@ class ExtensionManager
 		}
 
 		return [
-			'id'              => $id,
-			'name'            => $manifest->name,
-			'description'     => $manifest->description,
-			'version'         => $manifest->version,
-			'author'          => $manifest->author,
-			'license'         => $manifest->license,
-			'capabilities'    => $capabilities,
-			'enabled'         => $enabled,
-			'error'           => $state?->error,
-			'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
-			'links'           => $manifest->links,
-			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
-			'icon'            => $this->resolveIcon($id, $manifest),
-			'hidden'          => $manifest->hidden,
+			'id'                   => $id,
+			'name'                 => $manifest->name,
+			'description'          => $manifest->description,
+			'version'              => $manifest->version,
+			'author'               => $manifest->author,
+			'license'              => $manifest->license,
+			'capabilities'         => $capabilities,
+			'enabled'              => $enabled,
+			'error'                => $state?->error,
+			'quarantined'          => $state instanceof ExtensionState && $state->isQuarantined(),
+			'quarantineReason'     => $state?->quarantine['lastError'] ?? null,
+			'updateDisabled'       => $state instanceof ExtensionState && $state->isUpdateDisabled(),
+			'updateDisabledReason' => $state?->updateDisabled['reason'] ?? null,
+			'updateFindings'       => $state?->updateDisabled['findings'] ?? null,
+			'health'               => $this->profiler->metricsFor($id),
+			'errorCount'           => $this->guard->failureCountFor($id),
+			'incompatibility'      => $this->manifestValidator->getIncompatibilityReasons($manifest),
+			'links'                => $manifest->links,
+			'hasSettings'          => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
+			'icon'                 => $this->resolveIcon($id, $manifest),
+			'hidden'               => $manifest->hidden,
 		];
 	}
 
@@ -623,7 +778,9 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'twig:functions')) {
 				continue;
 			}
-			$functions = array_merge($functions, $context->getRegisteredTwigFunctions());
+			foreach ($context->getRegisteredTwigFunctions() as $fn) {
+				$functions[] = $this->guardTwigFunction($id, $fn);
+			}
 		}
 
 		return $functions;
@@ -754,10 +911,108 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'twig:filters')) {
 				continue;
 			}
-			$filters = array_merge($filters, $context->getRegisteredTwigFilters());
+			foreach ($context->getRegisteredTwigFilters() as $filter) {
+				$filters[] = $this->guardTwigFilter($id, $filter);
+			}
 		}
 
 		return $filters;
+	}
+
+	/**
+	 * Rebuild an extension TwigFunction with its callable wrapped in the guard.
+	 *
+	 * A broken extension Twig function is the single biggest white-screen source:
+	 * Twig functions run on the live render path, and a throw there bubbles into a
+	 * 500. Wrapping the callable means a broken call renders an empty string and
+	 * is crash-counted (feeding quarantine) instead of taking the page down. The
+	 * original options are preserved so flags (is_safe, needs_environment,
+	 * needs_context) survive — Twig prepends env/context args, which the wrapper
+	 * forwards transparently via ...$args.
+	 *
+	 * KNOWN LIMITATION: the wrapper replaces the original callable's signature
+	 * with a variadic `...$args`. Twig forwards positional args (including
+	 * needs_environment/needs_context injections) faithfully through the
+	 * variadic. However, an extension function invoked with named arguments in a
+	 * template (e.g. `{{ ext_fn(label="x") }}`) will fail to compile because
+	 * Twig reflects the wrapper and cannot match the named parameter against the
+	 * variadic. Positional calls — the common case — are unaffected.
+	 */
+	private function guardTwigFunction(string $id, TwigFunction $fn): TwigFunction
+	{
+		$callable = $this->normalizeTwigCallable($fn->getCallable());
+		$name     = $fn->getName();
+
+		$guarded = fn (mixed ...$args): mixed => $this->guard->run(
+			$id,
+			"twig:fn:{$name}",
+			fn (): mixed => $callable === null ? '' : $callable(...$args),
+			fallback: '',
+		);
+
+		return new TwigFunction($name, $guarded, $this->twigCallableOptions($fn));
+	}
+
+	/**
+	 * Rebuild an extension TwigFilter with its callable wrapped in the guard.
+	 * Same containment rationale as guardTwigFunction() — including the
+	 * KNOWN LIMITATION that named-argument invocations will fail to compile
+	 * (Twig cannot match named params against the variadic wrapper); positional
+	 * calls are unaffected.
+	 */
+	private function guardTwigFilter(string $id, TwigFilter $filter): TwigFilter
+	{
+		$callable = $this->normalizeTwigCallable($filter->getCallable());
+		$name     = $filter->getName();
+
+		$guarded = fn (mixed ...$args): mixed => $this->guard->run(
+			$id,
+			"twig:filter:{$name}",
+			fn (): mixed => $callable === null ? '' : $callable(...$args),
+			fallback: '',
+		);
+
+		return new TwigFilter($name, $guarded, $this->twigCallableOptions($filter));
+	}
+
+	/**
+	 * Normalize a Twig callable (which may be a closure, a [class, method] pair,
+	 * or null) into a uniform ?callable the guard wrapper can invoke with
+	 * arbitrary args. Twig's getCallable() types the array form as
+	 * `array{class-string, string}` rather than `callable`; re-typing the return
+	 * as `?callable` lets the wrapper call it without PHPStan flagging the union.
+	 *
+	 * @param callable|array{class-string, string}|null $raw
+	 */
+	private function normalizeTwigCallable(callable|array|null $raw): ?callable
+	{
+		if ($raw === null || !is_callable($raw)) {
+			return null;
+		}
+
+		return $raw;
+	}
+
+	/**
+	 * Read a Twig callable's full options array.
+	 *
+	 * `Twig\AbstractTwigCallable` in the installed Twig (3.27) stores the merged
+	 * options on a protected $options property (is_safe, needs_environment,
+	 * needs_context, node_class, deprecation_info, …) but exposes no public
+	 * accessor for the raw array. Reading it via reflection and passing it
+	 * verbatim to the rebuilt callable preserves every flag — the alternative of
+	 * reconstructing options from individual needs*() accessors would silently
+	 * drop is_safe and break {{ ... }} escaping on safe HTML.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function twigCallableOptions(TwigFunction|TwigFilter $callable): array
+	{
+		$prop = new \ReflectionProperty(\Twig\AbstractTwigCallable::class, 'options');
+		/** @var array<string,mixed> $options */
+		$options = $prop->getValue($callable);
+
+		return $options;
 	}
 
 	/** @return array<string,mixed> */
@@ -940,7 +1195,19 @@ class ExtensionManager
 			}
 			foreach ($context->getRegisteredEventListeners() as $event => $eventListeners) {
 				foreach ($eventListeners as $listener) {
-					$listeners[$event][] = $listener;
+					[$callable, $priority] = $listener;
+
+					// Wrap each listener so a throwing extension listener is
+					// contained + attributed + crash-counted (feeding quarantine)
+					// here, not just swallowed by the dispatcher's backstop catch.
+					$guarded = fn (mixed ...$args): mixed => $this->guard->run(
+						$id,
+						"event:{$event}",
+						fn (): mixed => $callable(...$args),
+						fallback: null,
+					);
+
+					$listeners[$event][] = [$guarded, $priority];
 				}
 			}
 		}
@@ -1163,13 +1430,32 @@ class ExtensionManager
 
 			// Apply registered container definitions to the running container.
 			// Without this, addContainerDefinition() is a no-op — anything that
-			// depends on container resolution (page middleware that takes
-			// injected services, custom services consumed by Twig functions,
-			// etc.) would silently fail to instantiate. Gated by the `container`
-			// capability so admins can disable it if they want.
-			if ($this->container instanceof \DI\Container && $this->isCapabilityPermitted($id, 'container')) {
+			// depends on container resolution (page middleware that takes injected
+			// services, custom services consumed by Twig functions, etc.) would
+			// silently fail to instantiate. These are infrastructure, not an
+			// independent feature surface (see ExtensionContext::ALWAYS_ON_CAPABILITIES),
+			// so they're always applied for an enabled extension rather than gated
+			// behind a toggle that would only leave the extension enabled-but-broken.
+			if ($this->container instanceof \DI\Container) {
+				$compiled = $this->container instanceof \DI\CompiledContainer;
 				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
-					$this->container->set($serviceId, $factory);
+					if ($compiled) {
+						// A compiled PHP-DI container rejects lazy definitions (a bare
+						// closure passed to set() is treated as a FactoryDefinition)
+						// added at runtime. Resolve the factory now and store the built
+						// instance as a raw value, which set() accepts on a compiled
+						// container. Safe here: the compiled core container is fully
+						// built before discovery, so the factory's dependencies exist.
+						// The factory contract is fn(ContainerInterface) => object.
+						$this->container->set($serviceId, $factory($this->container));
+					} else {
+						// Uncompiled container (dev/test): register the factory lazily
+						// so it's resolved on first get() — not eagerly at register()
+						// time. Eager resolution would force the factory's dependencies
+						// (e.g. TwigEngine) to exist this instant and, on failure, skip
+						// the whole extension instead of just that one service.
+						$this->container->set($serviceId, $factory);
+					}
 				}
 			}
 
@@ -1189,8 +1475,17 @@ class ExtensionManager
 
 	/**
 	 * After a successful register(), update stored permissions to reflect
-	 * the extension's current capabilities. New capabilities default to ON,
-	 * removed capabilities are pruned, existing choices are preserved.
+	 * the extension's current capabilities. Removed capabilities are pruned,
+	 * existing choices are preserved, and any NEWLY-discovered capability
+	 * (detected now but not already in the stored map) defaults to OFF.
+	 *
+	 * Rationale: a brand-new capability can only appear on an already-enabled
+	 * extension via a code change (an update). Defaulting it OFF means "new
+	 * features stay off until the operator opts in" — the safe-by-default
+	 * complement to the update re-consent scan. This does NOT affect first
+	 * enable: enable() seeds the full consented set into permissions, so on
+	 * the first boot this method finds every cap already present and adds
+	 * nothing — the operator's consented "on" set is preserved.
 	 *
 	 * Skips persisting if nothing changed — avoids hammering the state file
 	 * on every request, which would otherwise create a race with concurrent
@@ -1207,13 +1502,18 @@ class ExtensionManager
 		$original     = $state->permissions;
 
 		if ($state->permissions === []) {
-			// First run — set all detected capabilities to ON
+			// First run — set all detected capabilities to ON. This path only
+			// fires for an extension that has never stored permissions; enable()
+			// normally seeds them first, so in practice this is the legacy
+			// no-permissions case (isPermitted() allows all when the map is empty).
 			$state->permissions = $capabilities;
 		} else {
-			// Add new capabilities as ON, preserve existing choices
+			// Add newly-discovered capabilities as OFF (safe-by-default for an
+			// updated extension), but never override an always-on infrastructure
+			// capability — those have no toggle and must stay true.
 			foreach (array_keys($capabilities) as $cap) {
 				if (!isset($state->permissions[$cap])) {
-					$state->permissions[$cap] = true;
+					$state->permissions[$cap] = in_array($cap, ExtensionContext::ALWAYS_ON_CAPABILITIES, true);
 				}
 			}
 			// Remove capabilities the extension no longer uses

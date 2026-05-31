@@ -4,22 +4,40 @@
 	"description": "Default settings for per-page maintenance mode. Individual pages can override these in their Page Data JSON.",
 	"type": "object",
 	"properties": {
+		"heading": {
+			"type": "string",
+			"field": "text",
+			"label": "Heading",
+			"help": "The page heading (shown as the <code>&lt;h1&gt;</code>) on the maintenance page.",
+			"placeholder": "Temporarily Unavailable",
+			"default": "Temporarily Unavailable"
+		},
 		"message": {
 			"type": "string",
 			"field": "textarea",
 			"label": "Default Message",
-			"help": "Shown to visitors when a page is in maintenance mode. Pages can override this in their Page Data.",
+			"help": "Shown to visitors when a page is in maintenance mode. Markdown is supported (links, emphasis). Pages can override this in their Page Data.",
 			"placeholder": "This page is temporarily unavailable.",
 			"default": "This page is temporarily unavailable."
 		},
-		"retryAfter": {
+		"retryAfterMinutes": {
 			"type": "number",
 			"field": "number",
-			"label": "Default Retry-After (seconds)",
-			"help": "Value for the <code>Retry-After</code> response header. Tells crawlers and clients how long to wait before retrying.",
-			"placeholder": "3600",
-			"default": 3600,
+			"label": "Default Retry-After (minutes)",
+			"help": "How long to tell crawlers and clients to wait before retrying, in minutes (sent as the <code>Retry-After</code> response header in seconds). Pages can override this in their Page Data.",
+			"placeholder": "60",
+			"default": 60,
 			"min": 0
+		},
+		"template": {
+			"type": "string",
+			"field": "select",
+			"label": "Custom Template",
+			"help": "Optional Site Builder page template (from <code>tcms-data/builder/pages/</code>) used to render the maintenance page. Leave blank to use the built-in layout. The template receives <code>heading</code>, <code>message</code> (rendered HTML &mdash; use <code>{{ message|raw }}</code>), <code>messageText</code>, and <code>retryAfterMinutes</code>.",
+			"placeholder": "Choose a Site Builder Page",
+			"settings": {
+				"propertyOptions": "pages"
+			}
 		}
 	}
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Template\Service;
 
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 
@@ -11,6 +12,7 @@ readonly class TemplateMigrationService
 {
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
+		private BuilderTemplatePaths $paths,
 	) {
 	}
 
@@ -53,7 +55,10 @@ readonly class TemplateMigrationService
 
 	/**
 	 * Import template files from an external directory into a builder category.
-	 * Reads from the local filesystem (package resources), writes via the storage adapter.
+	 * Reads from the local filesystem (package resources / starter), writes to
+	 * the active write target — `project-root/builder` for a git-managed project,
+	 * else `tcms-data/builder` — so `tcms builder:init` lands templates where the
+	 * project can commit them.
 	 *
 	 * @return int Number of files imported
 	 */
@@ -93,13 +98,17 @@ readonly class TemplateMigrationService
 			}
 
 			$relativePath = $subfolder === '' ? $entry : $subfolder . '/' . $entry;
-			$storagePath  = TemplateRepository::BUILDER_DIR . $targetFolder . '/' . $relativePath;
+			$destPath     = $this->paths->writePath($targetFolder . '/' . $relativePath);
 
-			if (!$overwrite && $this->filesystem->fileExists($storagePath)) {
+			if (!$overwrite && is_file($destPath)) {
 				continue;
 			}
 
-			$this->filesystem->write($storagePath, $contents);
+			$destDir = \dirname($destPath);
+			if (!is_dir($destDir)) {
+				mkdir($destDir, 0o775, true);
+			}
+			file_put_contents($destPath, $contents);
 			$imported++;
 		}
 

@@ -164,7 +164,8 @@
 
 .help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field) > label,
 .help-label .form-field.radio-field legend,
-.help-label .form-field.multicheckbox-field legend {
+.help-label .form-field.multicheckbox-field legend,
+.help-label .localized-header > label {
     transition: opacity var(--help-animation-timing);
 }
 
@@ -182,7 +183,9 @@
 .help-on-hover.help-label .form-field.radio-field:has(.help:not(:empty)):hover legend,
 .help-on-hover.help-label .form-field.multicheckbox-field:has(.help:not(:empty)):hover legend,
 .help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field):has(input:focus):has(.help:not(:empty)) > label,
-.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field):has(.help:not(:empty)):hover > label {
+.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field):has(.help:not(:empty)):hover > label,
+.help-on-focus.help-label .form-field:has(input:focus):has(.help:not(:empty)) > .localized-stack > .localized-header > label,
+.help-on-hover.help-label .form-field:has(.help:not(:empty)):hover > .localized-stack > .localized-header > label {
     opacity: 0;
 }
 

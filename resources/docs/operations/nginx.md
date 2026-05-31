@@ -207,6 +207,36 @@ location ~* \.([0-9a-f]{8,})\.(js|css|woff2)$ {
 }
 ```
 
+### Rate limiting the MCP endpoint
+
+If you rate-limit at the Nginx layer, give the MCP endpoint (`/mcp`, or `/cms/mcp`, `/tcms/mcp`, etc. on a subpath install) its **own** zone. AI agents batch tool calls in parallel — a single page-build from Cursor or Claude can fire a dozen requests within a second. Sharing the strict zone you use for admin login (commonly `1r/s`) will throttle those calls and surface as **timeouts**, not clean errors.
+
+Define a dedicated zone in the `http {}` block (in `nginx.conf`):
+
+```nginx
+# Admin login — strict, brute-force resistant.
+limit_req_zone $binary_remote_addr zone=tcms_login:10m rate=1r/s;
+
+# MCP — agents batch calls, so allow a higher sustained rate + burst.
+limit_req_zone $binary_remote_addr zone=tcms_mcp:10m rate=10r/s;
+```
+
+Apply each in its own `location` inside the server block, before the generic `location /`:
+
+```nginx
+location = /mcp {
+	limit_req zone=tcms_mcp burst=30 nodelay;
+	try_files $uri /index.php$is_args$args;
+}
+
+location = /admin/login {
+	limit_req zone=tcms_login burst=5 nodelay;
+	try_files $uri /index.php$is_args$args;
+}
+```
+
+`burst` absorbs the parallel spike; `nodelay` serves the burst immediately rather than queuing it (queuing also reads as latency to the agent). Tune `rate`/`burst` up if you run many concurrent agents. Total CMS also applies its own per-IP throttle for anonymous MCP callers (`mcp.publicIpPerMinute`) — the Nginx zone sits in front of it; size the Nginx limit at or above the application limit so legitimate traffic isn't cut off before T3's own 429 logic runs. See [MCP Server → Rate limiting](docs/mcp/server) for the application-layer side.
+
 ## Verifying Your Configuration
 
 After editing the server block:

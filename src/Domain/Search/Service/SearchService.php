@@ -43,8 +43,8 @@ final readonly class SearchService implements SearchServiceInterface
 	{
 		$provider = $this->resolveProviderForQuery($query);
 
-		if ($provider === null || !$provider->isAvailable()) {
-			if ($provider !== null) {
+		if (!$provider instanceof SearchProvider || !$provider->isAvailable()) {
+			if ($provider instanceof SearchProvider) {
 				// Active provider exists but unavailable; log + fall back
 				$this->logger->info('Active search provider unavailable; falling back to text search', [
 					'requested' => $provider->id(),
@@ -86,7 +86,7 @@ final readonly class SearchService implements SearchServiceInterface
 			}
 			if ($override !== null && $override !== 'default') {
 				$named = $this->registry->active($override);
-				if ($named !== null) {
+				if ($named instanceof SearchProvider) {
 					return $named;
 				}
 				// Declared override not registered — fall through to site-wide
@@ -108,7 +108,7 @@ final readonly class SearchService implements SearchServiceInterface
 	private function resolveCollectionOverride(string $collectionId): ?string
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
-		if ($collection === null) {
+		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 			return null;
 		}
 		$value = (string)($collection->mcp['searchProvider'] ?? '');

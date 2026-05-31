@@ -20,8 +20,8 @@ final class ContentChangeListenerTest extends TestCase
 		$called   = null;
 		$provider = $this->makeProvider(
 			'algolia',
-			indexCallback: function (string $c, string $id, array $data) use (&$called) {
-				$called = compact('c', 'id', 'data');
+			indexCallback: function (string $c, string $id, array $data) use (&$called): void {
+				$called = ['c' => $c, 'id' => $id, 'data' => $data];
 			},
 		);
 
@@ -118,7 +118,7 @@ final class ContentChangeListenerTest extends TestCase
 
 		$provider = $this->makeProvider(
 			'algolia',
-			deleteCallback: function (string $c, string $id) use (&$deletedCollection, &$deletedId) {
+			deleteCallback: function (string $c, string $id) use (&$deletedCollection, &$deletedId): void {
 				$deletedCollection = $c;
 				$deletedId         = $id;
 			},
@@ -175,14 +175,14 @@ final class ContentChangeListenerTest extends TestCase
 
 			public function index(string $collection, string $id, array $data): void
 			{
-				if ($this->indexCallback !== null) {
+				if ($this->indexCallback instanceof \Closure) {
 					($this->indexCallback)($collection, $id, $data);
 				}
 			}
 
 			public function delete(string $collection, string $id): void
 			{
-				if ($this->deleteCallback !== null) {
+				if ($this->deleteCallback instanceof \Closure) {
 					($this->deleteCallback)($collection, $id);
 				}
 			}

@@ -112,6 +112,16 @@ return [
 	'login.password_label'           => 'Passwort',
 	'login.submit'                   => 'Anmelden',
 	'login.remember_me'              => 'Angemeldet bleiben',
+	'login.forgot_password'          => 'Passwort vergessen?',
+	'login.passkey'                  => 'Mit Passkey anmelden',
+	'login.or'                       => 'oder',
+	'login.username_label'           => 'Benutzername',
+	'login.email_or_username_label'  => 'E-Mail oder Benutzername',
+	'login.email_help'               => 'E-Mail-Adresse für die Anmeldung',
+	'login.username_help'            => 'Benutzer-ID für die Anmeldung',
+	'login.email_or_username_help'   => 'E-Mail-Adresse oder Benutzer-ID',
+	'login.password_help'            => 'Passwort für die Anmeldung',
+	'login.remember_help'            => 'Bleiben Sie angemeldet, bis Sie sich abmelden oder die Browserdaten löschen',
 
 	// ── Forgot Password ─────────────────────────────────────────────────────
 	'forgot.title'          => 'Passwort vergessen',
@@ -326,6 +336,8 @@ return [
 	'settings.cache_desc'              => 'Cache-Backend-Konfiguration',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Admin-Dashboard-Konfiguration',
+	'settings.extensions'              => 'Erweiterungen',
+	'settings.extensions_desc'         => 'Leistungsprofilierung, Warnungen für langsame Erweiterungen und Erweiterungsprotokollierung.',
 	'settings.html_sanitization'       => 'HTML-Bereinigung',
 	'settings.html_sanitization_desc'  => 'HTML-Bereinigung und -Säuberung',
 	'settings.i18n'                    => 'Internationalisierung',
@@ -396,6 +408,12 @@ return [
 	'template.custom_desc'         => 'Dies sind von Ihnen erstellte Vorlagen. Sie können in Ihrem Twig-Code über die CMS-Vorlagenfunktionen referenziert werden.',
 	'template.organization_title'  => 'Vorlagen-Organisation',
 	'template.organization_desc'   => 'Verwenden Sie Ordner, um Ihre Vorlagen zu organisieren. Erstellen Sie Unterordner, indem Sie beim Erstellen einen Schrägstrich (/) im Vorlagennamen verwenden.',
+	'template.locked.title'        => 'Bearbeitung deaktiviert',
+	'template.locked.banner'       => 'Vorlagen werden in dieser Umgebung über Git verwaltet. Bearbeiten Sie sie im Projekt-Repository und stellen Sie sie bereit.',
+	'template.source.project'      => 'Projekt',
+	'template.source.project_help' => 'Versioniert im Projekt-Repository (project-root/builder).',
+	'template.source.builtin'      => 'Integriert',
+	'template.source.builtin_help' => 'Eine mitgelieferte Standardvorlage. Speichern Sie eine Kopie, um sie zu überschreiben.',
 
 	// ── Playground ──────────────────────────────────────────────────────────
 	'playground.filter'            => 'Snippets filtern',

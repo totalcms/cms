@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/clean-ext",
+    "name": "Clean Ext (fixture)",
+    "description": "Test fixture that registers no risky capabilities and has no dangerous code.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

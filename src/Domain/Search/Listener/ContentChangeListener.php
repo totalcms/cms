@@ -39,7 +39,7 @@ readonly class ContentChangeListener
 			return;
 		}
 		$provider = $this->activeProvider();
-		if ($provider === null) {
+		if (!$provider instanceof SearchProvider) {
 			return;
 		}
 
@@ -76,7 +76,7 @@ readonly class ContentChangeListener
 			return;
 		}
 		$provider = $this->activeProvider();
-		if ($provider === null) {
+		if (!$provider instanceof SearchProvider) {
 			return;
 		}
 

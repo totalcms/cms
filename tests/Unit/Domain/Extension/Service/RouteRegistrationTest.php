@@ -96,5 +96,7 @@ function createRouteTestManager(): ExtensionManager
 		$container,
 		new NullLogger(),
 		$manifestValidator,
+		testExtensionGuard(),
+		testExtensionProfiler(),
 	);
 }

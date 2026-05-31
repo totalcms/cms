@@ -11,6 +11,7 @@ use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 final readonly class PromptRegistrar
 {
 	public function __construct(
+		// @phpstan-ignore property.onlyWritten
 		private PromptRenderer $renderer,
 	) {
 	}
@@ -48,6 +49,8 @@ final readonly class PromptRegistrar
 	 * Safety: arg names are validated against `^[a-z][a-z0-9_]*$` by the schema
 	 * (mcp-prompt-arg.json) and re-normalised by ObjectFactory's snakeCase
 	 * pipeline, so the eval input is bounded to safe identifiers.
+	 *
+	 * @SuppressWarnings("PHPMD.EvalExpression")
 	 */
 	private function buildHandler(PromptData $prompt, McpPersona $persona): \Closure
 	{

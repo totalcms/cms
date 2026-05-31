@@ -24,10 +24,11 @@ since: "3.5.0"
    {
      "scheduledFrom": "2026-11-25T00:00:00Z",
      "scheduledUntil": "2026-12-31T23:59:59Z",
-     "outsideWindow": "/sale-ended"
+     "beforeWindow": "/coming-soon",
+     "afterWindow": "/sale-ended"
    }
    ```
-4. The page only renders between the two timestamps. Outside that window, visitors are redirected (or see a 404 if no fallback is configured).
+4. The page only renders between the two timestamps. *Before* the window opens, visitors are sent to `beforeWindow` (or get a 404); *after* it closes, they're sent to `afterWindow` (or a 404). **Logged-in operators bypass the schedule** and always see the page, so you can preview it before it goes live.
 
 ## Per-page configuration
 
@@ -37,7 +38,8 @@ Set inside the page's **Page Data** JSON field. All keys are read from `page.dat
 |-----|------|---------|-------------|
 | `scheduledFrom` | string (ISO 8601) | (optional) | Start of the visibility window. Before this time → outside. Missing → no lower bound. |
 | `scheduledUntil` | string (ISO 8601) | (optional) | End of the visibility window. After this time → outside. Missing → no upper bound. |
-| `outsideWindow` | string | (optional) | URL to redirect to when outside the window. Missing → 404 instead of redirect. |
+| `beforeWindow` | string | (optional) | URL to redirect to *before* the window opens ("coming soon"). Missing → 404. |
+| `afterWindow` | string | (optional) | URL to redirect to *after* the window closes ("sale ended"). Missing → 404. |
 
 Both bounds are optional — you can use one or both:
 
@@ -64,7 +66,7 @@ All silent — scheduling breaking should never break the live page:
 - **Both bounds empty or missing** → middleware does nothing; page renders normally.
 - **Malformed date strings** (not parseable by PHP) → that bound is ignored. If both are malformed, page renders normally.
 - **Non-string values** → ignored.
-- **`outsideWindow` empty or missing** when outside the window → 404 instead of redirect.
+- **`beforeWindow` / `afterWindow` empty or missing** for the relevant side → 404 instead of redirect.
 
 ## Testing locally
 
@@ -92,7 +94,7 @@ When disabled, `scheduled` disappears from the page-features picker. Pages that 
 
 ## Implementation notes
 
-The middleware lives at `resources/extensions/totalcms/scheduled/ScheduledMiddleware.php`. It has no DI dependencies — it's a pure reader of page data and the system clock.
+The middleware lives at `resources/extensions/totalcms/scheduled/ScheduledMiddleware.php`. Its one runtime dependency is an injected `isAdmin` closure (wired in `Extension.php` to `AccessManager::userLoggedIn`) so logged-in operators bypass the schedule; otherwise it's a pure reader of page data and the system clock.
 
 Source: `resources/extensions/totalcms/scheduled/`
 

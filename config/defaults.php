@@ -61,7 +61,21 @@ $settings['i18n'] = [
 	'available' => [],
 ];
 
-$settings['domain']   = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'unknown';
+// Auto-detect the site domain. Prefer the request Host header, but when the app
+// sits behind Docker / a reverse proxy that doesn't forward Host, HTTP_HOST is a
+// loopback or bridge IP (127.0.0.1, 172.x, localhost). In that case fall back to
+// SERVER_NAME — the web server's configured server_name — which is usually the
+// real domain. Operators can always override `domain` in config/tcms.php.
+$detectedHost = $_SERVER['HTTP_HOST'] ?? '';
+$serverName   = $_SERVER['SERVER_NAME'] ?? '';
+
+if (($detectedHost === '' || TotalCMS\Support\Config::isNonRoutableHost($detectedHost))
+	&& $serverName !== '' && !TotalCMS\Support\Config::isNonRoutableHost($serverName)
+) {
+	$detectedHost = $serverName;
+}
+
+$settings['domain']   = $detectedHost !== '' ? $detectedHost : ($serverName !== '' ? $serverName : 'unknown');
 
 // Human-readable site name (e.g. "Joe's Bistro"). When blank, T3 falls back
 // to dashboard.title (if customized) and then $domain via Config::displayName().
@@ -200,7 +214,15 @@ $settings['logger'] = [
 // Names are PSR-3 strings: debug, info, notice, warning, error, critical, alert, emergency.
 // When set, these override $settings['logger']['level'] for the matching log file.
 $settings['appLogLevel']        = 'info';
-$settings['extensionsLogLevel'] = 'info';
+
+// Extension settings (/admin/settings/extensions). Namespaced under `extensions`,
+// read in code as $config->extensions['logLevel'], ['profileSampleRate'], etc.
+$settings['extensions'] = [
+	'logLevel'             => 'info',
+	'profileSampleRate'    => 50,
+	'budgetMsPerExtension' => 200,
+	'budgetMsPerStack'     => 500,
+];
 
 // Session
 $settings['session'] = [

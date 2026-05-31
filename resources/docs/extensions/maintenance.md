@@ -23,7 +23,7 @@ since: "3.5.0"
    {
      "maintenance": {
        "message": "This section is being updated. Back at 5pm EST.",
-       "retryAfter": 3600
+       "retryAfterMinutes": 60
      }
    }
    ```
@@ -37,7 +37,7 @@ Set inside the page's **Page Data** JSON field as `maintenance`. The middleware 
 {
   "maintenance": {
     "message": "We're updating this section. Check back shortly.",
-    "retryAfter": 1800
+    "retryAfterMinutes": 30
   }
 }
 ```
@@ -45,7 +45,7 @@ Set inside the page's **Page Data** JSON field as `maintenance`. The middleware 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `message` | string | `"This page is temporarily unavailable."` | The message shown to visitors. Plain text — HTML is escaped. |
-| `retryAfter` | int | `3600` | Value for the `Retry-After` response header (seconds). Tells crawlers and well-behaved clients how long to wait before retrying. |
+| `retryAfterMinutes` | int | `60` | How long to tell crawlers and well-behaved clients to wait before retrying, **in minutes**. Emitted as the `Retry-After` response header in seconds (minutes × 60). |
 
 ## Admin bypass
 
@@ -56,7 +56,7 @@ Logged-in admin users (anyone with an active `AUTH_USER` session) bypass the mai
 | Aspect | Value |
 |--------|-------|
 | Status code | `503 Service Unavailable` |
-| `Retry-After` header | Set to `retryAfter` value (default 3600) |
+| `Retry-After` header | `retryAfterMinutes` × 60 seconds (default 60 min → 3600) |
 | `Content-Type` | `text/html; charset=utf-8` |
 | Body | Minimal styled HTML with the message |
 | `<meta name="robots">` | `noindex, nofollow` |
@@ -68,7 +68,7 @@ The 503 status code tells search engines the page is temporarily down — they w
 - **No `maintenance` key in page data** → middleware does nothing; page renders normally.
 - **`maintenance` is not an object** (e.g. `true`, `"yes"`, a number) → middleware does nothing.
 - **Empty `message`** → falls back to the default message.
-- **Non-numeric `retryAfter`** → falls back to 3600 seconds.
+- **Non-numeric `retryAfterMinutes`** → falls back to the default (60 minutes).
 - **`message` contains HTML** → escaped with `htmlspecialchars()` to prevent XSS.
 
 ## Composing with other features

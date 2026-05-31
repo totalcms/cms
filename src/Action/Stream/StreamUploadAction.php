@@ -61,10 +61,8 @@ readonly class StreamUploadAction
 			->withHeader('Content-Type', $mimeType)
 			->withHeader('Content-Disposition', "inline; filename=\"{$name}\"")
 			->withHeader('Accept-Ranges', 'bytes')
-			->withHeader('Cache-Control', 'no-cache')
-			->withHeader('X-Accel-Buffering', 'no');
+			->withHeader('Cache-Control', 'no-cache');
 
-		// Handle range requests for video seeking
 		$rangeHeader = $request->getHeaderLine('Range');
 
 		if ($rangeHeader !== '' && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
@@ -87,6 +85,7 @@ readonly class StreamUploadAction
 				fclose($fileStream);
 			}
 
+			// No X-Accel-Buffering on 206 — see StreamAction for rationale.
 			return $response
 				->withStatus(206)
 				->withHeader('Content-Length', (string)$contentLength)
@@ -94,8 +93,8 @@ readonly class StreamUploadAction
 				->withBody(Stream::create($rangeContent));
 		}
 
-		// Full file response
 		return $response
+			->withHeader('X-Accel-Buffering', 'no')
 			->withHeader('Content-Length', (string)$fileSize)
 			->withBody(Stream::create($this->uploadFetcher->streamFile($collection, $id, $property, $name, $subpath)));
 	}

@@ -420,7 +420,7 @@ class TotalForm implements \Stringable
 			return match ($actionType) {
 				'mailer'   => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
 				'webhook'  => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
-				default    => $this->formActionRegistry?->get($actionType) !== null
+				default    => $this->formActionRegistry?->get($actionType) instanceof \TotalCMS\Domain\Extension\Data\FormAction
 					? $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS)
 					: true,
 			};
@@ -501,7 +501,7 @@ class TotalForm implements \Stringable
 			}
 		}
 
-		if ($this->formActionRegistry !== null) {
+		if ($this->formActionRegistry instanceof FormActionRegistry) {
 			$jsonMap = $this->formActionRegistry->toJsonMap();
 			if ($jsonMap !== '{}') {
 				$attributes['data-extension-actions'] = $jsonMap;

@@ -138,6 +138,43 @@ final class BuilderFrontendInstallerTest extends TestCase
 		$this->assertSame($this->tmpRoot . '/frontend', $result->data['target'] ?? null);
 	}
 
+	public function testAddsPublicAssetsToExistingGitignore(): void
+	{
+		file_put_contents($this->tmpRoot . '/.gitignore', "/vendor/\n/tcms-data/\n");
+
+		$result = $this->installer->install();
+
+		$this->assertTrue($result->success);
+		$this->assertSame('added', $result->data['gitignore'] ?? null);
+		$contents = (string)file_get_contents($this->tmpRoot . '/.gitignore');
+		$this->assertStringContainsString('/public/assets/', $contents);
+		// Existing entries are preserved.
+		$this->assertStringContainsString('/vendor/', $contents);
+		$this->assertStringContainsString('build output', $contents);
+	}
+
+	public function testDoesNotDuplicatePublicAssetsGitignoreEntry(): void
+	{
+		file_put_contents($this->tmpRoot . '/.gitignore', "/vendor/\n/public/assets/\n");
+
+		$result = $this->installer->install();
+
+		$this->assertSame('present', $result->data['gitignore'] ?? null);
+		$contents = (string)file_get_contents($this->tmpRoot . '/.gitignore');
+		$this->assertSame(1, substr_count($contents, '/public/assets/'));
+	}
+
+	public function testCreatesGitignoreWhenMissing(): void
+	{
+		$this->assertFileDoesNotExist($this->tmpRoot . '/.gitignore');
+
+		$result = $this->installer->install();
+
+		$this->assertSame('added', $result->data['gitignore'] ?? null);
+		$this->assertFileExists($this->tmpRoot . '/.gitignore');
+		$this->assertStringContainsString('/public/assets/', (string)file_get_contents($this->tmpRoot . '/.gitignore'));
+	}
+
 	/** @param array<string,string> $files */
 	private function seedScaffold(array $files): void
 	{

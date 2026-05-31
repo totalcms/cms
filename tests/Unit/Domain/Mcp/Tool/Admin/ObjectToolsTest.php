@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -20,6 +21,7 @@ final class ObjectToolsTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $saver;
 	private \PHPUnit\Framework\MockObject\MockObject $updater;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private ObjectTools $tool;
 
 	protected function setUp(): void
@@ -27,7 +29,8 @@ final class ObjectToolsTest extends TestCase
 		$this->saver         = $this->createMock(ObjectSaver::class);
 		$this->updater       = $this->createMock(ObjectUpdater::class);
 		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
-		$this->tool          = new ObjectTools($this->saver, $this->updater, $this->schemaFetcher);
+		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
+		$this->tool          = new ObjectTools($this->saver, $this->updater, $this->schemaFetcher, $this->objectFetcher);
 	}
 
 	/**
@@ -65,6 +68,19 @@ final class ObjectToolsTest extends TestCase
 		$obj->id         = $id;
 		$obj->properties = new Collection();
 		$obj->method('toArray')->willReturn(['id' => $id]);
+
+		return $obj;
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 */
+	private function objectWith(string $id, array $data): ObjectData
+	{
+		$obj             = $this->createStub(ObjectData::class);
+		$obj->id         = $id;
+		$obj->properties = new Collection();
+		$obj->method('toArray')->willReturn(['id' => $id] + $data);
 
 		return $obj;
 	}
@@ -147,13 +163,13 @@ final class ObjectToolsTest extends TestCase
 		);
 	}
 
-	// ─── create_object refusals ──────────────────────────────────────────────
+	// ─── create_object binary fields (payload-level) ─────────────────────────
 
-	public function testCreateRefusesCollectionsWithImageFields(): void
+	public function testCreateSucceedsWhenBinaryFieldExistsButIsOmitted(): void
 	{
-		// builder-page schema has a top-level image field. The tool must
-		// refuse upfront with the field name in the error so the agent
-		// knows which field is blocking the write.
+		// The schema has a top-level image field, but the payload doesn't set
+		// it. The tool must write the text content and leave the image unset —
+		// not refuse the whole collection.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->schema([
 				'id'        => ['field' => 'id'],
@@ -161,21 +177,41 @@ final class ObjectToolsTest extends TestCase
 				'thumbnail' => ['field' => 'image'],
 			]));
 
-		$this->saver->expects($this->never())->method('saveObject');
+		$this->saver->expects($this->once())
+			->method('saveObject')
+			->with('blog', $this->callback(static fn (array $data): bool => ($data['title'] ?? '') === 'Home'
+					&& !array_key_exists('thumbnail', $data)))
+			->willReturn($this->blogObject('home'));
 
-		try {
-			$this->tool->createHandler(collection: 'builder-pages', data: ['title' => 'Home']);
-			$this->fail('Expected ToolCallException for image field.');
-		} catch (ToolCallException $e) {
-			$this->assertStringContainsString('thumbnail', $e->getMessage());
-			$this->assertStringContainsString('image', $e->getMessage());
-		}
+		$result = $this->tool->createHandler(collection: 'blog', data: ['title' => 'Home']);
+
+		$this->assertSame(['id' => 'home'], $result);
 	}
 
-	public function testCreateRefusesCollectionsWithMultipleBinaryFields(): void
+	public function testCreateStripsEmptyBinaryEchoFromPayload(): void
 	{
-		// All offending fields appear in the same error — saves the agent a
-		// retry round-trip discovering them one at a time.
+		// An agent that echoes a blank binary field back (thumbnail: "") is
+		// allowed — the empty value is treated as "not writing" and stripped
+		// before it reaches the saver.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'        => ['field' => 'id'],
+				'title'     => ['field' => 'text'],
+				'thumbnail' => ['field' => 'image'],
+			]));
+
+		$this->saver->expects($this->once())
+			->method('saveObject')
+			->with('blog', $this->callback(static fn (array $data): bool => !array_key_exists('thumbnail', $data)))
+			->willReturn($this->blogObject('home'));
+
+		$this->tool->createHandler(collection: 'blog', data: ['title' => 'Home', 'thumbnail' => '']);
+	}
+
+	public function testCreateRefusesWhenPayloadSetsBinaryFields(): void
+	{
+		// When the payload actually puts values into binary fields, refuse and
+		// name every offender in one error so the agent learns what to drop.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->schema([
 				'id'       => ['field' => 'id'],
@@ -184,8 +220,14 @@ final class ObjectToolsTest extends TestCase
 				'pics'     => ['field' => 'gallery'],
 			]));
 
+		$this->saver->expects($this->never())->method('saveObject');
+
 		try {
-			$this->tool->createHandler(collection: 'asset-heavy', data: []);
+			$this->tool->createHandler(collection: 'asset-heavy', data: [
+				'cover'    => 'photo.jpg',
+				'attached' => 'doc.pdf',
+				'pics'     => ['a.jpg'],
+			]);
 			$this->fail('Expected ToolCallException.');
 		} catch (ToolCallException $e) {
 			$msg = $e->getMessage();
@@ -262,10 +304,39 @@ final class ObjectToolsTest extends TestCase
 		$this->assertSame(['id' => 'my-post'], $result);
 	}
 
-	public function testUpdateRefusesCollectionsWithBinaryFields(): void
+	public function testUpdatePreservesExistingBinaryWhenOmitted(): void
 	{
-		// Same refusal as create — update mode doesn't change the binary
-		// constraint.
+		// The crux of the data-safety fix: updateObject is a full replace, so
+		// an edit that omits the image would wipe it. The tool must carry the
+		// existing object's binary value forward into the payload.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'        => ['field' => 'id'],
+				'title'     => ['field' => 'text'],
+				'thumbnail' => ['field' => 'image'],
+			]));
+
+		$this->objectFetcher->expects($this->once())
+			->method('fetchObject')
+			->with('blog', 'my-post')
+			->willReturn($this->objectWith('my-post', ['title' => 'Old', 'thumbnail' => 'existing.jpg']));
+
+		$this->updater->expects($this->once())
+			->method('updateObject')
+			->with(
+				'blog',
+				'my-post',
+				$this->callback(static fn (array $data): bool => ($data['title'] ?? '') === 'New'
+						&& ($data['thumbnail'] ?? null) === 'existing.jpg'),
+			)
+			->willReturn($this->blogObject('my-post'));
+
+		$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'New']);
+	}
+
+	public function testUpdateRefusesWhenPayloadSetsBinaryField(): void
+	{
+		// Trying to write a binary value through update is still refused.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->schema([
 				'id'        => ['field' => 'id'],
@@ -273,9 +344,14 @@ final class ObjectToolsTest extends TestCase
 			]));
 
 		$this->updater->expects($this->never())->method('updateObject');
+		$this->objectFetcher->expects($this->never())->method('fetchObject');
 
-		$this->expectException(ToolCallException::class);
-		$this->tool->updateHandler(collection: 'builder-pages', id: 'home', data: ['title' => 'Home']);
+		try {
+			$this->tool->updateHandler(collection: 'blog', id: 'home', data: ['thumbnail' => 'new.jpg']);
+			$this->fail('Expected ToolCallException for binary write.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('thumbnail', $e->getMessage());
+		}
 	}
 
 	public function testUpdateConvertsNotFoundToToolError(): void

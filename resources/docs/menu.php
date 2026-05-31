@@ -211,6 +211,7 @@ return [
 		'sub'    => [
 			['title' => 'Extensions Overview', 'path' => 'extensions/overview'],
 			['title' => 'Manifest',            'path' => 'extensions/manifest'],
+			['title' => 'Stability & Safety',  'path' => 'extensions/safety'],
 			['title' => 'Extension Points',    'path' => 'extensions/extension-points'],
 			['title' => 'Events',              'path' => 'extensions/events'],
 			['title' => 'Schemas',             'path' => 'extensions/schemas'],
@@ -243,6 +244,7 @@ return [
 			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
 			['title' => 'Sync',              'path' => 'operations/sync'],
+			['title' => 'Git-First Templates', 'path' => 'operations/git-first-templates'],
 			['title' => 'Updates',           'path' => 'operations/updates'],
 			['title' => 'JumpStart',         'path' => 'operations/jumpstart'],
 			['title' => 'Search Backends',   'path' => 'operations/search'],

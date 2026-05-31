@@ -136,7 +136,7 @@ final class TextSearchProviderTest extends TestCase
 
 		$provider = new TextSearchProvider($filter, $searcher);
 
-		$out = $provider->search(new SearchQuery(text: 'hello', collection: null));
+		$out = $provider->search(new SearchQuery(text: 'hello'));
 
 		$this->assertSame([], $out);
 	}

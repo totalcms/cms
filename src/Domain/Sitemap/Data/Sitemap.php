@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Sitemap\Data;
 
-use Thepixeldeveloper\Sitemap\Drivers\XmlWriterDriver;
-use Thepixeldeveloper\Sitemap\Urlset;
+use TotalCMS\Domain\Sitemap\Lib\Drivers\XmlWriterDriver;
+use TotalCMS\Domain\Sitemap\Lib\Urlset;
 
 readonly class Sitemap implements \Stringable
 {

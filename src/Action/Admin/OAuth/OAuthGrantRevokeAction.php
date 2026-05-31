@@ -34,7 +34,7 @@ readonly class OAuthGrantRevokeAction
 			]);
 		}
 
-		if ($this->grants->find($id) === null) {
+		if (!$this->grants->find($id) instanceof \TotalCMS\Domain\OAuth\Data\OAuthGrantData) {
 			return $this->jsonRenderer->json($response->withStatus(404), [
 				'error' => ['message' => 'Grant not found'],
 			]);

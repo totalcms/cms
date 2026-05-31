@@ -13,11 +13,11 @@ use TotalCMS\Support\Config;
  * flow to discover endpoints + supported scopes + supported grant
  * types.
  */
-final class OAuthDiscoveryProvider
+final readonly class OAuthDiscoveryProvider
 {
 	public function __construct(
-		private readonly Config $config,
-		private readonly OAuthScopeRegistry $scopes,
+		private Config $config,
+		private OAuthScopeRegistry $scopes,
 	) {
 	}
 
@@ -36,7 +36,7 @@ final class OAuthDiscoveryProvider
 			'token_endpoint'                        => $issuer . '/oauth/token',
 			'revocation_endpoint'                   => $issuer . '/oauth/revoke',
 			'jwks_uri'                              => $issuer . '/.well-known/jwks.json',
-			'scopes_supported'                      => array_map(fn ($s) => $s->identifier, $this->scopes->all()),
+			'scopes_supported'                      => array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
 			'response_types_supported'              => ['code'],
 			'grant_types_supported'                 => array_values($grantTypes),
 			'code_challenge_methods_supported'      => (array)($this->config->oauth['pkceMethods'] ?? ['S256']),

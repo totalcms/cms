@@ -75,7 +75,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 		// bypass CSRF and ride the session cookie instead.
 		if ($this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
 			$validatedKey = $this->apiKeyAuthenticator->authenticate($request);
-			if ($validatedKey === null) {
+			if (!$validatedKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 				throw new HttpForbiddenException(
 					$request,
 					'Invalid API key. Request rejected.'

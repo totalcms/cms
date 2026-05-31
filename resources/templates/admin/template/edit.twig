@@ -1,6 +1,7 @@
+{% set templatesLocked = cms.admin.templatesLocked() %}
 <header>
 	<h1><a href="templates">templates</a> / <span>{{ url.template }}</span></h1>
-	{% if cms.auth.canAccessTemplates() %}
+	{% if cms.auth.canAccessTemplates() and not templatesLocked %}
 	<button class="dash-action-dots" title="Template Actions" popovertarget="template-actions"></button>
 	<nav popover id="template-actions">
 		<ul>
@@ -10,10 +11,19 @@
 	{% endif %}
 </header>
 
+{% if templatesLocked %}
+<div class="warning-box" role="status">
+	<div>
+		<strong>{{ t('template.locked.title') }}</strong>
+		<p>{{ t('template.locked.banner') }}</p>
+	</div>
+</div>
+{% endif %}
+
 {{ cms.form.template({
 	path        : url.template,
-	save        : cms.auth.canAccessTemplates() ? "Save" : false,
-	delete      : cms.auth.canAccessTemplates() ? "Delete" : false,
+	save        : (cms.auth.canAccessTemplates() and not templatesLocked) ? "Save" : false,
+	delete      : (cms.auth.canAccessTemplates() and not templatesLocked) ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

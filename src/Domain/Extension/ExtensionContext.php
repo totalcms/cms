@@ -719,6 +719,18 @@ final class ExtensionContext
 	// -------------------------------------------------------------------------
 
 	/**
+	 * Capabilities that are infrastructure rather than an independent feature
+	 * surface — the extension's other capabilities (routes, page middleware,
+	 * Twig functions, …) resolve against them. They're always applied for an
+	 * enabled extension and shown read-only in the admin, never offered as a
+	 * toggle: disabling one would leave the extension enabled-but-broken, which
+	 * is strictly worse than just disabling the whole extension.
+	 *
+	 * @var list<string>
+	 */
+	public const ALWAYS_ON_CAPABILITIES = ['container'];
+
+	/**
 	 * Capability keys and their human-readable labels.
 	 *
 	 * @return array<string,string>

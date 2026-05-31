@@ -12,23 +12,45 @@ use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
 
 /**
  * Time-window gate — only renders the page between the configured
- * start and end timestamps. Outside the window, redirects to a
- * fallback URL or returns 404.
+ * start and end timestamps. Before the window it redirects to
+ * `beforeWindow` (or 404s); after the window, to `afterWindow` (or 404s).
  *
  * Per-page configuration lives in the page's `data` JSON blob:
  *
  *     {
  *       "scheduledFrom":  "2026-11-25T00:00:00Z",
  *       "scheduledUntil": "2026-12-31T23:59:59Z",
- *       "outsideWindow":  "/sale-ended"
+ *       "beforeWindow":   "/coming-soon",
+ *       "afterWindow":    "/sale-ended"
  *     }
  *
- * Both bounds are optional — open-ended ranges work.
+ * Both bounds and both redirects are optional — open-ended ranges work, and a
+ * missing redirect for a given side means a 404 on that side.
+ *
+ * Logged-in operators bypass the schedule and always see the page, so they can
+ * preview a not-yet-live (or already-expired) page — the same way the
+ * Maintenance and Protect extensions behave.
  */
 class ScheduledMiddleware implements PageMiddlewareInterface
 {
+	/**
+	 * @param \Closure(): bool|null $isAdmin
+	 *        Returns true when an admin/operator is logged in, so they preview the
+	 *        page instead of the time gate. Front-end members (public registration)
+	 *        do not count. Null means "no one bypasses" (safe default).
+	 */
+	public function __construct(
+		private readonly ?\Closure $isAdmin = null,
+	) {
+	}
+
 	public function handle(ServerRequestInterface $request, PageData $page): ?ResponseInterface
 	{
+		// Logged-in operators preview the page regardless of its schedule.
+		if ($this->isAdmin()) {
+			return null;
+		}
+
 		$from  = $this->parseTime($page, 'scheduledFrom');
 		$until = $this->parseTime($page, 'scheduledUntil');
 
@@ -39,11 +61,14 @@ class ScheduledMiddleware implements PageMiddlewareInterface
 		$now = $this->now();
 
 		if ($from !== null && $now < $from) {
-			return $this->outsideResponse($page);
+			// Not live yet — redirect to a "coming soon" page if set, else 404.
+			return $this->outsideResponse($page, 'beforeWindow');
 		}
 
 		if ($until !== null && $now > $until) {
-			return $this->outsideResponse($page);
+			// Window has ended — redirect to a fallback (e.g. "sale ended") if set,
+			// else 404.
+			return $this->outsideResponse($page, 'afterWindow');
 		}
 
 		return null;
@@ -63,9 +88,9 @@ class ScheduledMiddleware implements PageMiddlewareInterface
 		}
 	}
 
-	private function outsideResponse(PageData $page): ResponseInterface
+	private function outsideResponse(PageData $page, string $redirectKey): ResponseInterface
 	{
-		$redirect = $page->data['outsideWindow'] ?? null;
+		$redirect = $page->data[$redirectKey] ?? null;
 		$psr17    = new Psr17Factory();
 
 		if (is_string($redirect) && trim($redirect) !== '') {
@@ -76,6 +101,11 @@ class ScheduledMiddleware implements PageMiddlewareInterface
 		return $psr17->createResponse(404)
 			->withHeader('Content-Type', 'text/html; charset=utf-8')
 			->withBody($psr17->createStream(''));
+	}
+
+	private function isAdmin(): bool
+	{
+		return $this->isAdmin instanceof \Closure && ($this->isAdmin)() === true;
 	}
 
 	protected function now(): \DateTimeImmutable

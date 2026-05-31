@@ -239,7 +239,7 @@ function securityIssueToken(
 describe('OAuthSecurity — open-redirect protection (D4)', function (): void {
 	// Helper: send an authorize GET with the given redirect_uri and a valid
 	// client registered at 'https://app.test/cb'. Returns the response.
-	$authorizeWithUri = function (Slim\App $app, string $clientId, string $maliciousUri) {
+	$authorizeWithUri = function (Slim\App $app, string $clientId, string $maliciousUri): Psr\Http\Message\ResponseInterface {
 		$factory = new Psr17Factory();
 
 		$codeVerifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
@@ -349,7 +349,7 @@ describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
 
 		// League returns 4xx or redirects with error= (not code=)
 		if ($response->getStatusCode() === 302) {
-			parse_str((string)parse_url($response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+			parse_str((string)parse_url((string)$response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
 			expect($params)->toHaveKey('error');
 			expect($params)->not()->toHaveKey('code');
 		} else {
@@ -423,7 +423,7 @@ describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
 		);
 		expect($approveResponse->getStatusCode())->toBe(302);
 
-		parse_str((string)parse_url($approveResponse->getHeaderLine('Location'), PHP_URL_QUERY), $cb);
+		parse_str((string)parse_url((string)$approveResponse->getHeaderLine('Location'), PHP_URL_QUERY), $cb);
 		$code = (string)($cb['code'] ?? '');
 		expect($code)->not()->toBeEmpty();
 
@@ -483,7 +483,7 @@ describe('OAuthSecurity — PKCE enforcement (D5)', function (): void {
 		);
 		expect($approveResponse->getStatusCode())->toBe(302);
 
-		parse_str((string)parse_url($approveResponse->getHeaderLine('Location'), PHP_URL_QUERY), $cb);
+		parse_str((string)parse_url((string)$approveResponse->getHeaderLine('Location'), PHP_URL_QUERY), $cb);
 		$code = (string)($cb['code'] ?? '');
 		expect($code)->not()->toBeEmpty();
 
@@ -663,7 +663,7 @@ describe('OAuthSecurity — scope-downscoping (D8)', function (): void {
 		$parts          = explode('.', $newAccessToken);
 		expect($parts)->toHaveCount(3);
 
-		$claims = json_decode((string)base64_decode(strtr($parts[1], '-_', '+/')), true);
+		$claims = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
 		expect($claims)->toBeArray();
 
 		// League embeds scopes in the `scopes` JWT claim
@@ -710,7 +710,7 @@ describe('OAuthSecurity — scope-downscoping (D8)', function (): void {
 			expect($payload)->toHaveKey('access_token');
 
 			$parts  = explode('.', (string)$payload['access_token']);
-			$claims = json_decode((string)base64_decode(strtr($parts[1], '-_', '+/')), true);
+			$claims = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
 			if (isset($claims['scopes'])) {
 				expect((array)$claims['scopes'])->not()->toContain('cms:write');
 			}
@@ -802,7 +802,7 @@ describe('OAuthSecurity — state parameter (D9)', function (): void {
 		// If the response is 4xx, league has been configured to require state — also fine.
 		if ($response->getStatusCode() === 302) {
 			// If it somehow redirects, there must be an error — no code without state
-			parse_str((string)parse_url($response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
+			parse_str((string)parse_url((string)$response->getHeaderLine('Location'), PHP_URL_QUERY), $params);
 			expect($params)->toHaveKey('error');
 		} else {
 			// 200 = consent page (state-less auth allowed) or 4xx = state required

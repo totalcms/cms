@@ -17,10 +17,10 @@ use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
  * (token identifier) is tracked for revocation via OAuthRevocationList.
  * persistNewAccessToken() is intentionally a no-op.
  */
-final class LeagueAccessTokenRepository implements AccessTokenRepositoryInterface
+final readonly class LeagueAccessTokenRepository implements AccessTokenRepositoryInterface
 {
 	public function __construct(
-		private readonly OAuthRevocationList $revocationList,
+		private OAuthRevocationList $revocationList,
 	) {
 	}
 

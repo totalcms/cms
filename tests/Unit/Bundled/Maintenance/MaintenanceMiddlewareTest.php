@@ -22,30 +22,40 @@ final class MaintenanceMiddlewareTest extends TestCase
 		$this->psr17      = new Psr17Factory();
 	}
 
-	// --- no-op cases ---
+	// --- attaching the middleware activates maintenance (no data block required) ---
 
-	public function testNoConfigIsNoOp(): void
+	public function testNoConfigGatesWithDefaults(): void
 	{
-		$this->assertNull($this->middleware->handle(
+		$response = $this->middleware->handle(
 			$this->request(),
 			$this->page('about', []),
-		));
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(503, $response->getStatusCode());
+		$this->assertStringContainsString('This page is temporarily unavailable.', (string)$response->getBody());
 	}
 
-	public function testNonArrayConfigIsNoOp(): void
+	public function testNonArrayConfigGatesWithDefaults(): void
 	{
-		$this->assertNull($this->middleware->handle(
+		$response = $this->middleware->handle(
 			$this->request(),
 			$this->page('about', ['maintenance' => 'yes']),
-		));
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(503, $response->getStatusCode());
 	}
 
-	public function testBooleanConfigIsNoOp(): void
+	public function testBooleanConfigGatesWithDefaults(): void
 	{
-		$this->assertNull($this->middleware->handle(
+		$response = $this->middleware->handle(
 			$this->request(),
 			$this->page('about', ['maintenance' => true]),
-		));
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(503, $response->getStatusCode());
 	}
 
 	// --- 503 response ---
@@ -89,11 +99,23 @@ final class MaintenanceMiddlewareTest extends TestCase
 	{
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 1800]]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 30]]),
 		);
 
 		$this->assertNotNull($response);
+		// retryAfter is configured in minutes; the header is emitted in seconds.
 		$this->assertSame('1800', $response->getHeaderLine('Retry-After'));
+	}
+
+	public function testRetryAfterConvertsMinutesToSeconds(): void
+	{
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 2]]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame('120', $response->getHeaderLine('Retry-After'));
 	}
 
 	public function testDefaultRetryAfterIsOneHour(): void
@@ -111,7 +133,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 	{
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 0]]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 0]]),
 		);
 
 		$this->assertNotNull($response);
@@ -122,7 +144,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 	{
 		$response = $this->middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 'soon']]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 'soon']]),
 		);
 
 		$this->assertNotNull($response);
@@ -144,36 +166,35 @@ final class MaintenanceMiddlewareTest extends TestCase
 
 	// --- admin bypass ---
 
-	public function testAdminBypassesMaintenanceGate(): void
+	public function testLoggedInAdminBypassesGate(): void
 	{
-		$session = new class {
-			public function get(string $key): mixed
-			{
-				return $key === 'AUTH_USER' ? 'admin@example.com' : null;
-			}
-		};
+		$middleware = new MaintenanceMiddleware(isAdmin: static fn (): bool => true);
 
-		$request = $this->request()->withAttribute('session', $session);
-
-		$this->assertNull($this->middleware->handle(
-			$request,
+		$this->assertNull($middleware->handle(
+			$this->request(),
 			$this->page('about', ['maintenance' => ['message' => 'Down.']]),
 		));
 	}
 
-	public function testNonAdminSessionDoesNotBypass(): void
+	public function testNonAdminVisitorDoesNotBypass(): void
 	{
-		$session = new class {
-			public function get(string $key): mixed
-			{
-				return null;
-			}
-		};
+		// Logged-out visitors AND front-end members both resolve to false here.
+		$middleware = new MaintenanceMiddleware(isAdmin: static fn (): bool => false);
 
-		$request = $this->request()->withAttribute('session', $session);
+		$response = $middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['message' => 'Down.']]),
+		);
 
+		$this->assertNotNull($response);
+		$this->assertSame(503, $response->getStatusCode());
+	}
+
+	public function testNoAdminCheckDoesNotBypass(): void
+	{
+		// Default construction (no isAdmin closure) — safe default is to gate.
 		$response = $this->middleware->handle(
-			$request,
+			$this->request(),
 			$this->page('about', ['maintenance' => ['message' => 'Down.']]),
 		);
 
@@ -214,7 +235,7 @@ final class MaintenanceMiddlewareTest extends TestCase
 
 	public function testExtensionDefaultRetryAfterUsedWhenPageOmitsIt(): void
 	{
-		$middleware = new MaintenanceMiddleware(defaultRetryAfter: 900);
+		$middleware = new MaintenanceMiddleware(defaultRetryAfterMinutes: 15);
 
 		$response = $middleware->handle(
 			$this->request(),
@@ -222,20 +243,151 @@ final class MaintenanceMiddlewareTest extends TestCase
 		);
 
 		$this->assertNotNull($response);
+		// 15 minutes → 900 seconds.
 		$this->assertSame('900', $response->getHeaderLine('Retry-After'));
 	}
 
 	public function testPageRetryAfterOverridesExtensionDefault(): void
 	{
-		$middleware = new MaintenanceMiddleware(defaultRetryAfter: 900);
+		$middleware = new MaintenanceMiddleware(defaultRetryAfterMinutes: 15);
 
 		$response = $middleware->handle(
 			$this->request(),
-			$this->page('about', ['maintenance' => ['retryAfter' => 60]]),
+			$this->page('about', ['maintenance' => ['retryAfterMinutes' => 1]]),
 		);
 
 		$this->assertNotNull($response);
+		// Page override (1 minute) wins over the extension default → 60 seconds.
 		$this->assertSame('60', $response->getHeaderLine('Retry-After'));
+	}
+
+	// --- heading ---
+
+	public function testDefaultHeadingRendered(): void
+	{
+		$response = $this->middleware->handle($this->request(), $this->page('about', []));
+
+		$this->assertNotNull($response);
+		$this->assertStringContainsString('<h1>Temporarily Unavailable</h1>', (string)$response->getBody());
+	}
+
+	public function testExtensionDefaultHeadingUsed(): void
+	{
+		$middleware = new MaintenanceMiddleware(defaultHeading: 'Down for Maintenance');
+
+		$response = $middleware->handle($this->request(), $this->page('about', []));
+
+		$this->assertNotNull($response);
+		$body = (string)$response->getBody();
+		$this->assertStringContainsString('<h1>Down for Maintenance</h1>', $body);
+		$this->assertStringContainsString('<title>Down for Maintenance</title>', $body);
+	}
+
+	public function testPageHeadingOverridesDefault(): void
+	{
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['heading' => 'Back at noon']]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertStringContainsString('<h1>Back at noon</h1>', (string)$response->getBody());
+	}
+
+	public function testHeadingIsEscaped(): void
+	{
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['heading' => '<b>oops</b>']]),
+		);
+
+		$this->assertNotNull($response);
+		$body = (string)$response->getBody();
+		$this->assertStringNotContainsString('<b>oops</b>', $body);
+		$this->assertStringContainsString('&lt;b&gt;', $body);
+	}
+
+	// --- markdown message ---
+
+	public function testMessageRendersMarkdownLink(): void
+	{
+		$response = $this->middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['message' => 'See [status](https://status.example.com).']]),
+		);
+
+		$this->assertNotNull($response);
+		$body = (string)$response->getBody();
+		$this->assertStringContainsString('href="https://status.example.com"', $body);
+		$this->assertStringContainsString('status</a>', $body);
+	}
+
+	// --- custom builder template ---
+
+	public function testCustomTemplateRendererIsUsed(): void
+	{
+		$middleware = new MaintenanceMiddleware(
+			template: 'maintenance',
+			templateRenderer: static fn (string $name, array $vars): string => "RENDERED:{$name}:{$vars['heading']}",
+		);
+
+		$response = $middleware->handle(
+			$this->request(),
+			$this->page('about', ['maintenance' => ['heading' => 'Hi']]),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(503, $response->getStatusCode());
+		$this->assertSame('RENDERED:maintenance:Hi', (string)$response->getBody());
+	}
+
+	public function testCustomTemplateReceivesRenderedMessageHtml(): void
+	{
+		$captured   = [];
+		$middleware = new MaintenanceMiddleware(
+			template: 'maintenance',
+			templateRenderer: function (string $path, array $vars) use (&$captured): string {
+				$captured = $vars;
+
+				return 'ok';
+			},
+		);
+
+		$middleware->handle($this->request(), $this->page('about', ['maintenance' => ['message' => '**bold**']]));
+
+		$this->assertStringContainsString('<strong>bold</strong>', $captured['message']);
+		$this->assertSame('**bold**', $captured['messageText']);
+	}
+
+	public function testFallsBackToDefaultWhenTemplateRendererThrows(): void
+	{
+		$middleware = new MaintenanceMiddleware(
+			template: 'maintenance',
+			templateRenderer: static function (string $path, array $vars): string {
+				throw new \RuntimeException('boom');
+			},
+		);
+
+		$response = $middleware->handle($this->request(), $this->page('about', []));
+
+		$this->assertNotNull($response);
+		$this->assertSame(503, $response->getStatusCode());
+		$this->assertStringContainsString('Temporarily Unavailable', (string)$response->getBody());
+	}
+
+	public function testTemplateRendererIgnoredWhenPathBlank(): void
+	{
+		$middleware = new MaintenanceMiddleware(
+			template: '',
+			templateRenderer: static fn (string $path, array $vars): string => 'SHOULD NOT BE USED',
+		);
+
+		$response = $middleware->handle($this->request(), $this->page('about', []));
+
+		$this->assertNotNull($response);
+		$body = (string)$response->getBody();
+		$this->assertStringNotContainsString('SHOULD NOT BE USED', $body);
+		$this->assertStringContainsString('Temporarily Unavailable', $body);
 	}
 
 	// --- helpers ---

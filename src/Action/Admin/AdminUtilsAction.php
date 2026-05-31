@@ -322,7 +322,7 @@ readonly class AdminUtilsAction
 
 		foreach ($grants as $grant) {
 			$client     = $this->oauthClientRepository->find($grant->clientId);
-			$clientName = $client !== null ? $client->name : $grant->clientId;
+			$clientName = $client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData ? $client->name : $grant->clientId;
 
 			$expiresAt       = null;
 			$isExpired       = false;
@@ -444,7 +444,7 @@ readonly class AdminUtilsAction
 		$out = [];
 		foreach (SyncableCollections::IDS as $id) {
 			$collection = $this->collectionFetcher->fetchCollection($id);
-			if ($collection === null) {
+			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 				continue;
 			}
 
@@ -455,7 +455,7 @@ readonly class AdminUtilsAction
 			}
 
 			$objects = [];
-			if ($index !== null) {
+			if ($index instanceof \TotalCMS\Domain\Index\Data\IndexData) {
 				foreach ($index->objects as $entry) {
 					$objectId = (string)($entry['id'] ?? '');
 					if ($objectId === '') {

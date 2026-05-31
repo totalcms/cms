@@ -8,6 +8,7 @@ use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -24,14 +25,17 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * invalidation, dataview refresh), and `processBeforeSave` property
  * actions all fire for free.
  *
- * Scope for v1 — text-shaped field types only. If the target collection's
- * schema contains an image, file, gallery, or depot field at the top
- * level, the tool refuses with a clear error instead of writing
- * placeholder strings the LLM has no way to populate. Binary upload
- * needs a request-shape MCP doesn't have today (multipart bodies,
- * persistent storage handles), and pretending otherwise — the way the
- * JumpStart sync path silently regenerates fake images — produces
- * worse data than just refusing.
+ * Binary fields are checked at the PAYLOAD level, not the schema level: a
+ * collection that merely *contains* an image / file / gallery / depot field
+ * can still be written, as long as the call doesn't try to set one. Binary
+ * upload needs a request-shape MCP doesn't have today (multipart bodies,
+ * persistent storage handles), so a payload that puts a value into a binary
+ * field is refused with a clear error naming the offenders — but omitting
+ * them is fine. On create the field is left unset; on update the existing
+ * object's value is preserved (updateObject is a full replace, so without
+ * this a partial edit that omits the image would wipe it). This lets agents
+ * build real content-rich collections (blog posts, etc.) that happen to have
+ * an optional image field, instead of being blocked outright.
  *
  * Card and deck fields are allowed at the top level even though they
  * can nest binary fields, because most of the time they don't. If
@@ -58,6 +62,7 @@ readonly class ObjectTools
 		private ObjectSaver $saver,
 		private ObjectUpdater $updater,
 		private SchemaFetcher $schemaFetcher,
+		private ObjectFetcher $objectFetcher,
 	) {
 	}
 
@@ -151,7 +156,16 @@ readonly class ObjectTools
 	 */
 	public function createHandler(string $collection, array $data, ?string $id = null): array
 	{
-		$this->refuseIfSchemaHasBinaryFields($collection, 'create_object');
+		$schema = $this->fetchSchemaOrFail($collection, 'create_object');
+		$binary = $this->binaryFieldsIn($schema);
+
+		// Refuse only if the payload actually tries to write a binary field;
+		// omitted binary fields are fine and left unset.
+		$this->refuseIfPayloadWritesBinary($collection, 'create_object', $data, $binary);
+
+		// Drop any empty binary keys the agent may have echoed back so they
+		// don't reach the saver as stray empties.
+		$data = $this->stripBinaryFields($data, $binary);
 
 		if ($id !== null && $id !== '') {
 			$data['id'] = $id;
@@ -177,13 +191,22 @@ readonly class ObjectTools
 	 */
 	public function updateHandler(string $collection, string $id, array $data): array
 	{
-		$this->refuseIfSchemaHasBinaryFields($collection, 'update_object');
+		$schema = $this->fetchSchemaOrFail($collection, 'update_object');
+		$binary = $this->binaryFieldsIn($schema);
+
+		$this->refuseIfPayloadWritesBinary($collection, 'update_object', $data, $binary);
 
 		// ObjectUpdater::updateObject validates that the resolved object id
 		// matches the route-style $id arg. Stamp the id onto the payload
 		// here so the factory builds the object with the same id and the
 		// equality check passes.
 		$data['id'] = $id;
+
+		// updateObject is a full replace — it regenerates the object from
+		// $data — so any binary field omitted from the payload would be wiped.
+		// Carry the existing object's binary values forward so an MCP edit
+		// that omits the image keeps it.
+		$data = $this->preserveBinaryFields($collection, $id, $data, $binary);
 
 		try {
 			$object = $this->updater->updateObject($collection, $id, $data);
@@ -200,19 +223,14 @@ readonly class ObjectTools
 	}
 
 	/**
-	 * Inspect the collection's resolved schema for any top-level field
-	 * whose type is in UNSUPPORTED_FIELD_TYPES. Throws a ToolCallException
-	 * naming every offending field so the agent learns what's blocking
-	 * the write in one round-trip.
-	 *
-	 * Card and deck children aren't walked — most of the time they hold
-	 * text content, and the property factory's own validation catches
-	 * nonsense submitted to a nested image field at write time.
+	 * Resolve the collection's schema, translating the "unknown collection"
+	 * exception into a ToolCallException that points the agent at
+	 * list_collections.
 	 */
-	private function refuseIfSchemaHasBinaryFields(string $collection, string $toolName): void
+	private function fetchSchemaOrFail(string $collection, string $toolName): SchemaData
 	{
 		try {
-			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+			return $this->schemaFetcher->fetchSchemaForCollection($collection);
 		} catch (\UnexpectedValueException $e) {
 			throw new ToolCallException(sprintf(
 				'%s: collection "%s" not found. Use list_collections to discover available collections.',
@@ -220,21 +238,104 @@ readonly class ObjectTools
 				$collection,
 			), $e->getCode(), $e);
 		}
+	}
 
-		$offending = $this->binaryFieldsIn($schema);
-		if ($offending === []) {
+	/**
+	 * Refuse the write if the payload puts a non-empty value into any binary
+	 * field — those need an upload pipeline MCP doesn't have, and writing the
+	 * LLM's string would corrupt the row. Names every offending field so the
+	 * agent learns what to drop in one round-trip. An empty value (null / ''
+	 * / []) is treated as "not writing it" and allowed through.
+	 *
+	 * Card and deck children aren't walked — most of the time they hold text
+	 * content, and the property factory's own validation catches nonsense
+	 * submitted to a nested image field at write time.
+	 *
+	 * @param array<string,mixed>                  $data
+	 * @param list<array{name:string,type:string}> $binary
+	 */
+	private function refuseIfPayloadWritesBinary(string $collection, string $toolName, array $data, array $binary): void
+	{
+		$attempted = [];
+		foreach ($binary as $field) {
+			$name = $field['name'];
+			if (array_key_exists($name, $data) && !$this->isEmpty($data[$name])) {
+				$attempted[] = $field;
+			}
+		}
+
+		if ($attempted === []) {
 			return;
 		}
 
 		throw new ToolCallException(sprintf(
-			'%s: collection "%s" has binary field(s) [%s]. Image, file, gallery, and depot fields cannot be written via MCP tools yet. Edit this collection in the admin UI instead.',
+			'%s: collection "%s" payload sets binary field(s) [%s]. Image, file, gallery, and depot fields can\'t be written via MCP — omit them from your payload (on update they keep their current value) and edit them in the admin UI.',
 			$toolName,
 			$collection,
 			implode(', ', array_map(
 				fn (array $f): string => $f['name'] . ':' . $f['type'],
-				$offending,
+				$attempted,
 			)),
 		));
+	}
+
+	/**
+	 * Remove every binary field key from the payload. Used on create so a
+	 * stray empty echo doesn't reach the saver — binary fields are simply
+	 * left unset and take their schema default.
+	 *
+	 * @param array<string,mixed>                  $data
+	 * @param list<array{name:string,type:string}> $binary
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function stripBinaryFields(array $data, array $binary): array
+	{
+		foreach ($binary as $field) {
+			unset($data[$field['name']]);
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Carry the existing object's binary-field values into the update payload
+	 * so the full-replace save doesn't wipe them. If the object can't be read
+	 * (first write / missing), the binary keys are stripped and the updater is
+	 * left to surface any not-found error.
+	 *
+	 * @param array<string,mixed>                  $data
+	 * @param list<array{name:string,type:string}> $binary
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function preserveBinaryFields(string $collection, string $id, array $data, array $binary): array
+	{
+		if ($binary === []) {
+			return $data;
+		}
+
+		try {
+			$existing = $this->objectFetcher->fetchObject($collection, $id)->toArray();
+		} catch (\Throwable) {
+			return $this->stripBinaryFields($data, $binary);
+		}
+
+		foreach ($binary as $field) {
+			$name = $field['name'];
+			if (array_key_exists($name, $existing)) {
+				$data[$name] = $existing[$name];
+			} else {
+				unset($data[$name]);
+			}
+		}
+
+		return $data;
+	}
+
+	private function isEmpty(mixed $value): bool
+	{
+		return in_array($value, [null, '', []], true);
 	}
 
 	/**
