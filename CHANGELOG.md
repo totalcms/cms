@@ -2,6 +2,13 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-beta.13] - 2026-05-31
+
+### Fixed
+
+- **500 on every request with a compiled container**: A Rector cleanup pass rewrote the `Config` DI factory in `config/container.php` from `fn (): Config => Config::init()` into the first-class callable `Config::init(...)`. PHP-DI's container compiler inlines the referenced method body and rejects any closure that references `self` / `static` / `parent` / `$this` — and `Config::init(): self` does — so building the compiled container threw `InvalidDefinition: Cannot compile closures which use $this or self/static/parent references`, 500-ing every URL. Production installs compile the container, so they were down; dev/test run uncompiled, which is why it didn't surface locally. Reverted the definition to the arrow-function form and scoped `ArrowFunctionDelegatingCallToFirstClassCallableRector` out of `config/container.php` in `rector.php` so the rewrite can't recur. Affects only `3.5.0-beta.12`
+
+
 ## [3.5.0-beta.12] - 2026-05-31
 
 ### Added
