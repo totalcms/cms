@@ -116,9 +116,15 @@
 
 	{% if ext.error %}
 	<div style="background:oklch(var(--totalform-danger) / 0.1); color:oklch(var(--totalform-danger)); border:1px solid oklch(var(--totalform-danger) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
-		{{ ext.error }}
+		{{ ext.error|e }}
 	</div>
 	{% endif %}
+
+	{% include 'admin/partials/extension-quarantine-banner.twig' with {
+		quarantined: ext.quarantined,
+		quarantineReason: ext.quarantineReason,
+		extId: ext.id,
+	} only %}
 
 	{% if ext.incompatibility %}
 	<div style="background:oklch(var(--totalform-warning) / 0.1); color:oklch(var(--totalform-warning)); border:1px solid oklch(var(--totalform-warning) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">

@@ -101,6 +101,18 @@ class ExtensionManager
 				continue;
 			}
 
+			// Auto-quarantined extensions stay enabled (the operator didn't disable
+			// them — the SYSTEM held them back after repeated crashes), so they pass
+			// the isEnabled() filter above. Skip loading them here until the operator
+			// re-enables (which clears the quarantine) so a crash-looping extension
+			// can't take the request down again.
+			$state = $this->stateRepository->getState($id);
+			if ($state instanceof ExtensionState && $state->isQuarantined()) {
+				$this->logger->warning("Extension '{$id}' is quarantined, skipping load.");
+
+				continue;
+			}
+
 			$reasons = $this->manifestValidator->getIncompatibilityReasons($manifest);
 			if ($reasons !== []) {
 				$this->logger->info("Extension '{$id}' is incompatible, skipping: " . implode('; ', $reasons));
@@ -396,6 +408,17 @@ class ExtensionManager
 			$state->enabled = true;
 			$state->error   = null;
 
+			// Re-enabling clears any auto-quarantine and resets the rolling failure
+			// counter so the extension starts from a clean slate. Without the reset a
+			// counter still sitting at (or near) the threshold would let one fresh
+			// crash immediately re-quarantine the extension. Harmless on a normal
+			// enable where there's no quarantine — it just zeroes an already-empty
+			// counter.
+			if ($state->isQuarantined()) {
+				$state->clearQuarantine();
+				$this->guard->resetFailures($extensionId);
+			}
+
 			// On first enable (no permissions set yet), turn on all detected capabilities.
 			// On re-enable, preserve the user's existing permission choices but add
 			// any new capabilities the extension may have gained.
@@ -608,6 +631,8 @@ class ExtensionManager
 			'capabilities'    => $capabilities,
 			'enabled'         => $enabled,
 			'error'           => $state?->error,
+			'quarantined'      => $state instanceof ExtensionState && $state->isQuarantined(),
+			'quarantineReason' => $state?->quarantine['lastError'] ?? null,
 			'incompatibility' => $this->manifestValidator->getIncompatibilityReasons($manifest),
 			'links'           => $manifest->links,
 			'hasSettings'     => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),

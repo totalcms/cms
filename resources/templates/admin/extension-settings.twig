@@ -48,6 +48,12 @@
 			{% endif %}
 		</article>
 
+		{% include 'admin/partials/extension-quarantine-banner.twig' with {
+			quarantined: extension.quarantined,
+			quarantineReason: extension.quarantineReason,
+			extId: extension.id,
+		} only %}
+
 		{{ cms.form.extensionSettings(extensionId) }}
 	</section>
 </main>

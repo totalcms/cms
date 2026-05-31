@@ -1,0 +1,12 @@
+{% if quarantined %}
+<div class="warning-box" role="alert">
+	<div>
+		<strong>Auto-disabled for stability.</strong>
+		<p>Total CMS disabled this extension after it crashed repeatedly{% if quarantineReason %}: <code>{{ quarantineReason|e }}</code>{% endif %}.</p>
+		<form method="post" action="{{ cms.dashboard }}/extensions/{{ extId }}/enable" style="margin:0;">
+			{{ csrf_field() }}
+			<button type="submit" class="btn btn-sm btn-primary">Re-enable</button>
+		</form>
+	</div>
+</div>
+{% endif %}
