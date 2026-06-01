@@ -13,6 +13,8 @@ At launch the dashboard covers three core sources:
 - **API Key Activity** — new logger, 4 event types
 - **Auth Activity** — refactored existing auth logging to use structured `type` fields
 
+Beyond launch, **Automations** registers as a core source (Pro-gated) once the [Automations](automations.md) feature ships — `run.success` / `run.failed` / `auto_disabled` / `webhook.unauthorized` events from an `AutomationActivityLogger` (mirrors `OAuthActivityLogger`). See `automations.md` → Observability.
+
 Extensions can register their own sources via `ExtensionContext::registerActivitySource()`.
 
 ## Non-goals
