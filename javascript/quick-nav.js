@@ -250,6 +250,7 @@ function categoryFor(item) {
 		'builder'     : 'builder',
 		'extensions'  : 'extensions',
 		'mailer'      : 'mailer',
+		'automations' : 'automations',
 		'playground'  : 'playground',
 		'utils'       : 'utils',
 		'settings'    : 'settings',

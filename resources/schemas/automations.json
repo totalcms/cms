@@ -5,10 +5,25 @@
 	"type"        : "object",
 	"title"       : "Automation",
 	"description" : "A user-authored, server-side automation fired by schedule, webhook, or event triggers.",
-	"formgrid"    : "enabled\nid\nname\ndescription\nerrorMailerId\ntriggers\nhandler",
+	"formgrid"    : "enabled .\nname category\nid id\ndescription description\nerrorMailerId errorMailerId\ntriggers triggers\nhandler handler",
 	"required"    : ["id", "name"],
-	"index"       : ["id", "name", "enabled", "description"],
+	"index"       : ["id", "name", "enabled", "description", "category"],
 	"properties"  : {
+		"name": {
+			"type"  : "string",
+			"label" : "Name",
+			"field" : "text"
+		},
+		"category": {
+			"type"        : "string",
+			"label"       : "Category",
+			"field"       : "text",
+			"placeholder" : "Automations",
+			"help"        : "Category for organizing automations",
+			"settings"    : {
+				"propertyOptions": true
+			}
+		},
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"    : "ID",
@@ -18,11 +33,6 @@
 			"settings" : {
 				"autogen" : "${name}"
 			}
-		},
-		"name": {
-			"type"  : "string",
-			"label" : "Name",
-			"field" : "text"
 		},
 		"description": {
 			"type"     : "string",

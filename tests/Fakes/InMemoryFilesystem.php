@@ -105,7 +105,18 @@ final class InMemoryFilesystem implements StorageAdapterInterface
 	/** @return array<int,string> */
 	public function listDirectories(string $directory): array
 	{
-		return [];
+		$prefix = rtrim($directory, '/') . '/';
+		$dirs   = [];
+		foreach (array_keys($this->files) as $path) {
+			if (str_starts_with($path, $prefix)) {
+				$rest = substr($path, strlen($prefix));
+				if (str_contains($rest, '/')) {
+					$dirs[$prefix . explode('/', $rest)[0]] = true;
+				}
+			}
+		}
+
+		return array_keys($dirs);
 	}
 
 	/** @return array<int,string> */

@@ -105,6 +105,9 @@ body {
 	.mailer {
 		mask-image : var(--icon-mailer);
 	}
+	.automations {
+		mask-image : var(--icon-automations);
+	}
 	.quick-nav-trigger {
 		display          : block;
 		width            : 3rem;
@@ -265,6 +268,9 @@ body {
 			&[class*="mailer-"] {
 				--collection-icon : var(--icon-plane);
 			}
+			&[class*="automation-"] {
+				--collection-icon : var(--icon-automations);
+			}
 			&.schema-auth, &.collection-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
 			&.schema-blog, &.collection-blog { --collection-icon : var(--icon-blog) }
@@ -333,6 +339,17 @@ body {
 				mask-size        : 0.8rem;
 				mask-repeat      : no-repeat;
 				mask-position    : center;
+			}
+		}
+	}
+
+	// Automations sidebar — push the status badges to the end of each row.
+	#automation-links a {
+		.dash-badge {
+			margin-inline-start : 0.35rem;
+
+			&:first-of-type {
+				margin-inline-start : auto;
 			}
 		}
 	}

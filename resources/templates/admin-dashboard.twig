@@ -96,6 +96,11 @@
                         <a class="mailer" href="mailer" title="{{ t('nav.mailer') }}">{{ t('nav.mailer') }}</a>
                     </li>
                     {% endif %}
+                    {% if cms.auth.isAdmin() and cms.edition.can('automations') %}
+                    <li class="menu-item{% if url.page == 'automations' %} active{% endif %}">
+                        <a class="automations" href="automations" title="Automations">Automations</a>
+                    </li>
+                    {% endif %}
                     {% if cms.auth.canAccessPlayground() %}
                     <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
                         <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>

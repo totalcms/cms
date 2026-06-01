@@ -30,6 +30,9 @@ window.TCMS_QUICK_NAV = [
 {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
 {"label":"{{ t('nav.mailer') }}","section":"Navigation","path":"mailer","keywords":"nav email"},
 {% endif %}
+{% if cms.auth.isAdmin() and cms.edition.can('automations') %}
+{"label":"Automations","section":"Navigation","path":"automations","keywords":"nav schedule cron webhook event jobs"},
+{% endif %}
 {% if cms.auth.canAccessPlayground() %}
 {"label":"{{ t('nav.playground') }}","section":"Navigation","path":"playground","keywords":"nav twig test"},
 {% endif %}
