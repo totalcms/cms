@@ -140,33 +140,32 @@ On `*.updated` events, `$ctx->event['previous']` carries the pre-save `ObjectDat
 
 ```jsonc
 "triggers": [
-  { "type": "schedule", "cron": "0 1 * * *", "timezone": "America/New_York" },
-  { "type": "webhook",  "slug": "process-monthly", "auth": "apiKey", "sync": false },
-  { "type": "event",    "event": "object.created", "collection": "orders" }
+  { "id": "t0", "type": "schedule", "cron": "0 1 * * *" },
+  { "id": "t1", "type": "webhook",  "auth": "apiKey", "sync": false },
+  { "id": "t2", "type": "event",    "event": "object.created", "collection": "orders" }
 ]
 ```
 
+The trigger editor uses T3's schema **`visibility`** mechanism (`settings.visibility` → `{watch: "type", value, operator}`, which works inside deck dialogs) so each row shows only the fields for its `type`: `cron` for schedule; `auth` + `sync` for webhook; `event` + `collection` for event.
+
 **Schedule:**
 
-- `cron` — standard 5-field expression, parsed by `dragonmantank/cron-expression`.
-- `timezone` — optional; defaults to site timezone.
-- Last-fire timestamp stored **per-trigger** in `tcms-data/.system/automations/<slug>.state.json` keyed by `<slug>#<triggerIndex>`, so two schedules on one automation never clobber each other.
+- `cron` — standard 5-field expression, parsed by `dragonmantank/cron-expression`, **evaluated in the site timezone** (`$config->timezone`, Settings → General). No per-trigger timezone — one site, one clock. (Add per-trigger tz in v1.x only if a customer needs it.)
+- Last-fire timestamp stored **per-trigger** in `tcms-data/.system/automations/<slug>.state.json` keyed by the trigger `id`, so two schedules on one automation never clobber each other.
 - Due-detection happens in the dedicated `automations:process` tick (see Execution).
 
 **Webhook:**
 
-- `slug` — optional; defaults to the automation id. Mounted at `<urlPrefix>/<slug>` (default `/automations/<slug>`). A distinct per-trigger slug lets you point two URLs at one handler.
+- **Endpoint:** `POST /automations/<automation-id>` — the automation's own id, no per-trigger slug (one automation = one endpoint; a second webhook trigger would be a duplicate). **POST only** — a webhook is a trigger, not a queryable API; supporting GET would imply a response contract and turn this into an API builder, which is out of scope.
 - `auth` — `'apiKey'` | `'none'`. `apiKey` reuses the existing REST-API API-key system (`X-API-Key` header or `?key=` query param) and verifies the key has the new `automations.fire` permission; returns 401 on failure. Admin-session auth is not accepted (webhooks come from external services, not browsers). `none` is public, rate-limited per IP via the existing rate limiter.
-- `methods` — optional; default `['POST']`.
 - `sync` — optional per-trigger flag (see Execution). Default `false`.
 - **Inputs:** query + parsed body arrive merged as `$ctx->args`; raw request as `$ctx->request` (see Trigger inputs).
 
 **Event:**
 
-- `event` — any of the 17 core events.
-- `collection` — optional filter; only fire for this collection.
-- `priority` — optional EventDispatcher priority.
-- Wired into the existing `EventDispatcher` at boot. T3 events are post-action, so automations are reactive, not transformative. Can subscribe to `import.created` / `import.updated` for importer reactions.
+- `event` — a **select** of the core events (single event per trigger; to react to several events, add several event triggers — the multi-trigger model already covers it).
+- `collection` — a **select** of collection ids; optional filter. Blank = all collections.
+- Wired into the existing `EventDispatcher` at boot. T3 events are post-action, so automations are reactive, not transformative. Can subscribe to `import.created` / `import.updated` for importer reactions. (No per-trigger `priority` — event runs are queued async, so listener priority is meaningless.)
 - **Inputs:** the full event payload — including the live `ObjectData` on `object.*` events — arrives as `$ctx->event` (see Trigger inputs).
 
 ## Execution
@@ -239,7 +238,7 @@ POST /automations/<slug>
 
 ## Error Notification
 
-- Optional `errorEmail` per automation (string or array of recipients).
+- Optional `errorMailerId` per automation — a **select of a Mailer object** (the `mailer` reserved collection, via `relationalOptions`, same pattern as `auth.forgotPasswordMailerId`). The mailer object owns the recipients, subject, and Twig body; the runner sends through `EmailService::sendEmail($errorMailerId, $context)` where `$context` carries the automation id + exception. Empty = no email.
 - New bundled schema `automation-error-notification` powers the email template; customers can customize by redefining it.
 - Run record always captures exception + stack regardless of email config.
 - Notification behavior is environment-aware (see Reconciliation).
@@ -250,9 +249,9 @@ The original plan predated several beta 12/13 primitives. The revised design wir
 
 1. **Environment-aware failure handling (`EnvironmentResolver`).** Automation handler failures mirror extension crash containment:
    - **Development** — log loudly, surface exception + full stack in the admin run detail. Stay noisy for the author.
-   - **Production** — contain quietly, capture exception + stack in the run record, send `errorEmail` if configured.
+   - **Production** — contain quietly, capture exception + stack in the run record, send the selected `errorMailerId` mailer if configured.
 2. **`DangerousCodeScanner` on save — warn, don't block.** Saving the `handler` field runs the same scanner extension review uses (`shell_exec`, `eval`, `base64_decode`, raw network, …). Automations are admin-authored and trusted, so flagged patterns surface as an **advisory** in the editor, not a hard gate. This is the deliberate answer to "sandbox / `disabled_functions`": no sandbox, but reuse the scanner for transparency.
-3. **Auto-disable on repeated failure (mirrors extension quarantine).** A handler that throws **N consecutive times in Production** auto-disables (`enabled → false`) with an admin banner + one-click re-enable. **Never in Development.** Stops a broken cron from emailing `errorEmail` every minute forever, or a broken event handler from degrading every matching write. Failure counters live in `<slug>.state.json`. (Extension-registered automations inherit their host extension's `ExtensionGuard`/quarantine instead — same outcome, different owner.)
+3. **Auto-disable on repeated failure (mirrors extension quarantine).** A handler that throws **N consecutive times in Production** auto-disables (`enabled → false`) with an admin banner + one-click re-enable. **Never in Development.** Stops a broken cron from firing its `errorMailerId` notification every minute forever, or a broken event handler from degrading every matching write. Failure counters live in `<slug>.state.json`. (Extension-registered automations inherit their host extension's `ExtensionGuard`/quarantine instead — same outcome, different owner.)
 4. **Compiled-container closure contract.** The beta-13 outage came from PHP-DI's compiler rejecting closures referencing `$this`/`self`/`static`. Forward-Compatibility Contract item #3 (handler is `require`d at runtime, never a container definition) is the explicit guard against this class of failure.
 5. **`ExtensionProfiler` precedent.** The still-deferred concurrent-run/slow-automation guardrail now has a profiling precedent to model on when we build it.
 
@@ -314,7 +313,7 @@ The Option 2 catch-all rule (anything not on disk routes through T3) covers this
 - Run history with disk-based persistence + retention
 - `AutomationActivityLogger` (structured `automations-activity.log`) — Activity Dashboard-ready logging; source registration deferred
 - Sync support (config + handler in one JumpStart payload)
-- Environment-aware error handling + `errorEmail` with customizable schema
+- Environment-aware error handling + `errorMailerId` (select a Mailer object) sent via `EmailService`
 - `DangerousCodeScanner` advisory on save; auto-disable on repeated Production failure
 - "Run now" / "Replay" buttons for ad-hoc execution
 - Extension `addAutomation()` API
@@ -362,7 +361,7 @@ The Option 2 catch-all rule (anything not on disk routes through T3) covers this
 Not blockers — defensible defaults — but worth deciding before locking the spec:
 
 1. **Run-history visibility for `none`-auth public webhooks.** A spammy public endpoint can churn out failed-auth runs. Suggested default: only record runs that pass auth + validation; rate-limited drops don't persist.
-2. **Default `errorEmail` recipient.** Suggested default: require explicit per-automation config — silent fallback to a "default admin" risks misdirected error reports.
+2. **Default error mailer.** Should v1 seed a bundled "Automation Error" mailer object so `errorMailerId` has something to select out of the box (and ship empty-recipient so it's deliberately configured)? Recipients live on the mailer object, so there's no silent-misdirection risk — but an empty mailer list is also fine. Suggested: ship one optional bundled mailer, selection still opt-in.
 3. **Run-record format on disk.** JSON-per-run is simple but makes "list last 10" a directory scan. If some customers exceed ~1000 runs/day, an append-only NDJSON file per automation could be faster. Defer until real load data.
 
 ## Decisions Locked During Brainstorming

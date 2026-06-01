@@ -10,6 +10,12 @@
 
 **Depends on:** Plan 1, Plan 2. **Pairs with:** Plan 4 (admin/hardening).
 
+## Schema decisions (locked, applied to `automation-trigger.json` in Plan 2)
+
+- **Webhook endpoint is `POST /automations/<automation-id>`** — no per-trigger `slug`, no `methods`. One automation = one endpoint; a webhook is a trigger, not a queryable API (no GET). `AutomationResolver::webhook()` therefore matches on the **automation id**, not a slug.
+- **No per-trigger timezone** (cron runs in `$config->timezone`) and **no per-trigger `priority`** (event runs are queued async). These fields were removed from the trigger schema.
+- **`event` and `collection` are single selects.** To react to multiple events, add multiple event triggers — the multi-trigger model covers it; the resolver matches `event === trigger.event`.
+
 ---
 
 ## File Structure
@@ -276,17 +282,18 @@ final readonly class AutomationResolver
 	}
 
 	/**
+	 * The endpoint path segment IS the automation id (no per-trigger slug).
+	 *
 	 * @return array{slug:string, trigger:array<string,mixed>}|null
 	 */
-	public function webhook(string $slug): ?array
+	public function webhook(string $automationId): ?array
 	{
 		foreach ($this->loader->enabled() as $automation) {
+			if ($automation->id !== $automationId) {
+				continue;
+			}
 			foreach ($this->triggers($automation) as $trigger) {
-				if (($trigger['type'] ?? '') !== 'webhook') {
-					continue;
-				}
-				$triggerSlug = (string)($trigger['slug'] ?? $automation->id);
-				if ($triggerSlug === $slug) {
+				if (($trigger['type'] ?? '') === 'webhook') {
 					return ['slug' => $automation->id, 'trigger' => $trigger];
 				}
 			}
@@ -458,8 +465,8 @@ final readonly class AutomationWebhookAction
 	/** @param array<string,mixed> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$slug    = (string)($args['slug'] ?? '');
-		$webhook = $this->resolver->webhook($slug);
+		$id      = (string)($args['id'] ?? '');
+		$webhook = $this->resolver->webhook($id);
 
 		if ($webhook === null) {
 			throw new HttpNotFoundException($request);
@@ -504,7 +511,7 @@ use TotalCMS\Middleware\Automation\AutomationTriggerAuthMiddleware;
 return function (RouteCollectorProxyInterface $app): void {
 	$prefix = '/automations'; // Config override (automations.urlPrefix) applied at a higher level if set
 
-	$app->map(['GET', 'POST'], $prefix . '/{slug}', AutomationWebhookAction::class)
+	$app->post($prefix . '/{id}', AutomationWebhookAction::class)
 		->add(AutomationTriggerAuthMiddleware::class) // dispatches to apiKey-auth or rate-limit per resolved trigger
 		->setName('automation-webhook');
 };
@@ -575,20 +582,14 @@ final readonly class AutomationEventSubscriber
 	}
 
 	/**
-	 * Core events automations may subscribe to.
+	 * Core events automations may subscribe to — the canonical list lives on
+	 * CoreEvent (src/Domain/Event/Data/CoreEvent.php), the single source of truth.
 	 *
 	 * @return list<string>
 	 */
 	public static function events(): array
 	{
-		return [
-			'object.created', 'object.updated', 'object.deleted',
-			'collection.created', 'collection.updated', 'collection.deleted',
-			'schema.saved', 'schema.deleted', 'template.saved',
-			'user.login', 'user.logout',
-			'import.created', 'import.updated', 'import.completed',
-			'extension.enabled', 'extension.disabled', 'cache.cleared',
-		];
+		return \TotalCMS\Domain\Event\Data\CoreEvent::ALL;
 	}
 
 	/**

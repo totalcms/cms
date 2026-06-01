@@ -306,7 +306,7 @@ and on success, after `resetFailures`:
 			$this->activity->runSucceeded($slug, (string)($trigger['type'] ?? ''), $record->durationMs ?? 0);
 ```
 
-Add `disable()` (load the automation, set `enabled=false`, `objectUpdater->updateObject('automations', $slug, [...])` — verify the updater signature) and `sendErrorEmail()` (read `errorEmail` from the object; if set and `!shouldSurfaceErrors()` i.e. prod, send via `EmailService`).
+Add `disable()` (load the automation, set `enabled=false`, `objectUpdater->updateObject('automations', $slug, [...])` — verify the updater signature) and `sendErrorNotification()` (read `errorMailerId` from the object; if set and `!shouldSurfaceErrors()` i.e. prod, call `EmailService::sendEmail($errorMailerId, ['automation' => $slug, 'error' => $message, ...])` — the mailer object owns recipients/subject/body, so no address handling here).
 
 > **Verify:** `ObjectUpdater` update method signature (partial vs full object). Setting a single field may require fetching, merging, and saving the full object — mirror how `AdminMailerAction`/other services do partial updates.
 
@@ -460,7 +460,7 @@ it('renders the automations admin list for an authenticated admin', function ():
 
 - [ ] **Step 3: Implement `AdminAutomationsAction`** (mirror `AdminMailerAction`): `fetchOrCreateReserved('automations')`, read `?id=` for editor mode, build `templateData` with the automations index + (in editor mode) the selected object + `HandlerScanner` findings + any auto-disable state, render `admin/automations.twig`. Register the route in the admin utils route group with `AutomationsEditionMiddleware`.
 
-- [ ] **Step 4: Build `admin/automations.twig`** — list view: name, trigger-type icons, enabled toggle, last-run status pill (read newest run record), last-run time, "Run now" button; an auto-disabled banner with a one-click re-enable (POST that sets `enabled=true` + `AutomationGuard::reset`). Editor view: left CodeMirror `handler` field (the `code` field renders it), right metadata form (name/description/triggers deck/errorEmail), and a `DangerousCodeScanner` advisory panel (reuse the `extension-review.twig:36-58` findings-table markup). Run-history view: per-run detail (status, duration, args, return, log, exception) + "Replay".
+- [ ] **Step 4: Build `admin/automations.twig`** — list view: name, trigger-type icons, enabled toggle, last-run status pill (read newest run record), last-run time, "Run now" button; an auto-disabled banner with a one-click re-enable (POST that sets `enabled=true` + `AutomationGuard::reset`). Editor view: left CodeMirror `handler` field (the `code` field renders it), right metadata form (name/description/triggers deck/errorMailerId), and a `DangerousCodeScanner` advisory panel (reuse the `extension-review.twig:36-58` findings-table markup). Run-history view: per-run detail (status, duration, args, return, log, exception) + "Replay".
 
 - [ ] **Step 5: Add the nav entry** in `utils.twig` — add `{ "title": "Automations", "path": "automations" }` to the appropriate System group, wrapped so it only shows when `cms.auth.isAdmin() and cms.edition.can('automations')`.
 

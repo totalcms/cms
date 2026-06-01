@@ -24,6 +24,8 @@ class SchemaData
 	];
 	public const RESERVED_SCHEMAS = [
 		'auth',
+		'automation-trigger',
+		'automations',
 		'blog-legacy',
 		'blog',
 		'code',

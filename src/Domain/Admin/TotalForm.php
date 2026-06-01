@@ -948,6 +948,17 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Return the core event names as `{value, label}` options — feeds
+	 * `propertyOptions: "events"` (e.g. automation event triggers).
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function eventsList(): array
+	{
+		return \TotalCMS\Domain\Event\Data\CoreEvent::options();
+	}
+
+	/**
 	 * Render a field as a sub-field of a composite property (file, image, depot,
 	 * gallery, deck-table, etc.). Skips parent-object schema inheritance so that
 	 * a sub-field with a name matching a top-level property (e.g. `name`, `alt`,

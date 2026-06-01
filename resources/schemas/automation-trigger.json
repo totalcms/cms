@@ -1,0 +1,84 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/automation-trigger.json",
+	"id"          : "automation-trigger",
+	"type"        : "object",
+	"title"       : "Automation Trigger",
+	"description" : "One trigger for an automation. Stored as a deck item; the deck key is the trigger id.",
+	"required"    : ["id", "type"],
+	"index"       : ["id", "type"],
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Trigger ID",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"autogen" : "${type}_${uid}",
+				"hide"    : true
+        	}
+		},
+		"type": {
+			"type"    : "string",
+			"label"   : "Type",
+			"field"   : "select",
+			"default" : "schedule",
+			"options" : [
+				{ "value": "schedule", "label": "Schedule (cron)" },
+				{ "value": "webhook",  "label": "Webhook (HTTP POST)" },
+				{ "value": "event",    "label": "Event" }
+			]
+		},
+		"cron": {
+			"type"        : "string",
+			"label"       : "Cron expression",
+			"help"        : "Standard 5-field cron in the site timezone, e.g. <code>0 1 * * *</code> (daily at 1am).",
+			"field"       : "text",
+			"placeholder" : "*/15 * * * *",
+			"pattern"     : "^$|^@\\w+$|^[\\d*/,?#A-Za-z-]+(\\s+[\\d*/,?#A-Za-z-]+){4}$",
+			"settings"    : { "visibility": { "watch": "type", "value": "schedule", "operator": "==" } }
+		},
+		"auth": {
+			"type"    : "string",
+			"label"   : "Webhook auth",
+			"help"    : "Endpoint is <code>POST /automations/{id}</code>.",
+			"field"   : "select",
+			"default" : "apiKey",
+			"options" : [
+				{ "value": "apiKey", "label": "API key (automations.fire)" },
+				{ "value": "none",   "label": "None (public, rate-limited)" }
+			],
+			"settings" : { "visibility": { "watch": "type", "value": "webhook", "operator": "==" } }
+		},
+		"sync": {
+			"type"     : "boolean",
+			"label"    : "Synchronous",
+			"help"     : "Run inline and return the result instead of queueing.",
+			"field"    : "toggle",
+			"default"  : false,
+			"settings" : { "visibility": { "watch": "type", "value": "webhook", "operator": "==" } }
+		},
+		"event": {
+			"type"        : "string",
+			"label"       : "Event",
+			"help"        : "The T3 event that fires this automation.",
+			"field"       : "select",
+			"placeholder" : "Select an event",
+			"settings"    : {
+				"propertyOptions" : "events",
+				"visibility"      : { "watch": "type", "value": "event", "operator": "==" }
+			}
+		},
+		"collection": {
+			"type"        : "string",
+			"label"       : "Collection filter",
+			"help"        : "Only fire for this collection. Leave blank for all collections.",
+			"field"       : "select",
+			"placeholder" : "All collections",
+			"settings"    : {
+				"propertyOptions" : "collectionIds",
+				"visibility"      : { "watch": "type", "value": "event", "operator": "==" }
+			}
+		}
+	}
+}

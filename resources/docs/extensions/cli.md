@@ -510,6 +510,24 @@ tcms jobs:process --json
 
 ---
 
+### `automations:process`
+
+Fire due **scheduled** automations. Runs on its **own** cron line, parallel to `jobs:process`, so a large import backlog in the job queue never delays a time-sensitive scheduled automation. Single-flight locked, so overlapping cron ticks can't double-fire the same run.
+
+```bash
+tcms automations:process
+tcms automations:process --json
+```
+
+Webhook and event triggers do not depend on this command — webhooks fire on HTTP request and events fire when the originating write happens; their async runs are drained on the next tick.
+
+**Cron setup** (add this as a second line, alongside `jobs:process`):
+```bash
+* * * * * php /path/to/resources/bin/tcms automations:process
+```
+
+---
+
 ## Update Commands
 
 ### `update:check`
