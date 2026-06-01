@@ -136,6 +136,11 @@ readonly class AdminTwigAdapter
 		return $this->tcmsCommandPrefix() . ' jobs:process';
 	}
 
+	public function processAutomationsCommand(): string
+	{
+		return $this->tcmsCommandPrefix() . ' automations:process';
+	}
+
 	/**
 	 * Get development mode status.
 	 *

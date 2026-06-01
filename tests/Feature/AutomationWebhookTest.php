@@ -78,6 +78,44 @@ it('rejects an apiKey webhook for a key not scoped for /automations (401)', func
 	expect(postJson('/automations/secure2', [], ['X-API-Key' => $key->key])->getStatusCode())->toBe(401);
 });
 
+it('allows a sameOrigin webhook from the site\'s own host', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'form', 'sameOrigin', true, "<?php\n\nreturn function (\$ctx) { return ['ok' => true]; };\n");
+
+	$response = postJson('/automations/form', ['name' => 'Joe'], [
+		'X-Forwarded-Host' => 'mysite.test',
+		'Origin'           => 'https://mysite.test',
+	]);
+
+	expect($response->getStatusCode())->toBe(200);
+	expect(json_decode((string)$response->getBody(), true)['return'])->toBe(['ok' => true]);
+});
+
+it('allows a sameOrigin webhook via the Referer fallback when Origin is absent', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'form-ref', 'sameOrigin', true, "<?php\n\nreturn function (\$ctx) { return 'ok'; };\n");
+
+	$response = postJson('/automations/form-ref', [], [
+		'X-Forwarded-Host' => 'mysite.test',
+		'Referer'          => 'https://mysite.test/contact',
+	]);
+
+	expect($response->getStatusCode())->toBe(200);
+});
+
+it('rejects a sameOrigin webhook from a different origin (403)', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'form2', 'sameOrigin', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
+
+	expect(postJson('/automations/form2', [], [
+		'X-Forwarded-Host' => 'mysite.test',
+		'Origin'           => 'https://evil.test',
+	])->getStatusCode())->toBe(403);
+});
+
+it('rejects a sameOrigin webhook with no Origin or Referer (403)', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'form3', 'sameOrigin', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
+
+	expect(postJson('/automations/form3', [], ['X-Forwarded-Host' => 'mysite.test'])->getStatusCode())->toBe(403);
+});
+
 it('404s for an unknown webhook id', function (): void {
 	expect(postJson('/automations/nope', [])->getStatusCode())->toBe(404);
 });

@@ -25,6 +25,14 @@ Set the trigger's `auth` field to one of:
 
 No credentials required. Requests are **rate-limited per IP** to blunt abuse. Use this for trusted internal callers or low-risk endpoints, and keep the handler's side effects modest.
 
+### `sameOrigin` — browser forms from this site
+
+Rate-limited like `none`, **and** the request must come from this site's own host. The browser's `Origin` header (falling back to `Referer`) must match the host the webhook was served on — otherwise the request is rejected with `403`. A request with neither header is rejected.
+
+This is the mode for a **public-facing form on your own site** that posts to an automation: your form is allowed, but another website's embedded JavaScript or form is not (a browser stamps a truthful `Origin` that page scripts cannot forge).
+
+> **It is not a substitute for a key.** `sameOrigin` is CSRF-grade: it stops *browser* requests from other origins, but a non-browser client (`curl`, a script, another server) can set any `Origin` header and bypass it. For anything sensitive, use `apiKey` or validate a shared secret in the handler.
+
 ### `apiKey` — protected
 
 The request must carry a valid API key **scoped to `POST` the `/automations` endpoint** — the same method-and-path model as every other API key. Send the key in a header (never the body):

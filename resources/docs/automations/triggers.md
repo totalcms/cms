@@ -38,7 +38,7 @@ POST /automations/{id}
 
 | Field | Description |
 |-------|-------------|
-| `auth` | `none` (public, rate-limited per IP) or `apiKey` (requires an API key with the `automations.fire` scope). |
+| `auth` | `apiKey` (key scoped to `POST /automations`), `sameOrigin` (browser form posts from this site only), or `none` (public, rate-limited per IP). See [Webhooks](webhooks.md). |
 | `sync` | When on, the request blocks and the response is the handler's return value. When off, the run is queued and the endpoint returns `202 Accepted` immediately. |
 
 Request query and body are passed to the handler as `$ctx->args`. See [Webhooks](webhooks.md) for authentication and payload details.

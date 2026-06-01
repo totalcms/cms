@@ -44,7 +44,7 @@
 	</nav>
 
 	<footer>
-		<a class="dash-button full transparent" href="automations/new">New Automation</a>
+		<a class="dash-button full transparent" href="automations/new">+ New Automation</a>
 	</footer>
 </aside>
 {% include "admin/sidebar-details.twig" %}
@@ -55,10 +55,22 @@
 
 	<h1>Automations</h1>
 	<section class="dash-content-section">
-		<p>Automations run a PHP handler you write on a <strong>schedule</strong>, an incoming <strong>webhook</strong>, or a content <strong>event</strong> (such as an object being created or updated).</p>
-		<p>Create one, define its triggers, and write the handler. Scheduled automations require the <code>tcms automations:process</code> command to be run by cron — see the documentation for setup.</p>
-		<p><a class="dash-button" href="automations/new">New Automation</a></p>
+		<p>Automations run a PHP handler you write on a <strong>schedule</strong>, an incoming <strong>webhook</strong>,
+		or a content <strong>event</strong> (such as an object being created or updated).Create one, define its triggers, and write the handler.</p>
+		<a class="dash-button" href="automations/new">+ New Automation</a>
+
+		<section>
+			<h3>Schedule Automation Processing</h3>
+			<p>Schedule triggers, plus queued async webhook and event runs, are processed by a single command. Add it to your crontab to run <strong>every minute</strong> — the command checks what's actually due each tick, so running it often is cheap and safe.</p>
+			<p><em>Adjust the PHP path and working directory to match your server if needed.</em></p>
+		</section>
+
+		<section>
+			<pre class="automations-command"><code id="automations-command-text">{{ cms.admin.processAutomationsCommand() }}</code></pre>
+			<button type="button" class="cms-clip-button dash-button transparent" data-clip="#automations-command-text">{{ t('btn.copy_command') }}</button>
+		</section>
 	</section>
+
 
 {% else %}
 
@@ -245,6 +257,25 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 .ext-review-table thead {
 	text-align: left;
+}
+.automations-command {
+	width         : 100%;
+	max-width     : 100%;
+	overflow-x    : auto;
+	white-space   : nowrap;
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+	font-size     : 0.9em;
+	box-sizing    : border-box;
+}
+.automations-command code {
+	white-space : nowrap;
+	display     : block;
+}
+.automations-command + .cms-clip-button {
+	margin-top : 0.5rem;
 }
 </style>
 {% endblock %}

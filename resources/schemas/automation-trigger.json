@@ -41,12 +41,13 @@
 		"auth": {
 			"type"    : "string",
 			"label"   : "Webhook auth",
-			"help"    : "Endpoint is <code>POST /automations/{id}</code>.",
+			"help"    : "Endpoint is <code>POST /automations/{id}</code>. <code>Same origin</code> allows browser form posts from this site only — handy for a public form, but it can be spoofed by non-browser clients, so it is not a substitute for a key.",
 			"field"   : "select",
 			"default" : "apiKey",
 			"options" : [
-				{ "value": "apiKey", "label": "API key (automations.fire)" },
-				{ "value": "none",   "label": "None (public, rate-limited)" }
+				{ "value": "apiKey",     "label": "API key (scoped to POST /automations)" },
+				{ "value": "sameOrigin", "label": "Same origin (browser forms only)" },
+				{ "value": "none",       "label": "None (public, rate-limited)" }
 			],
 			"settings" : { "visibility": { "watch": "type", "value": "webhook", "operator": "==" } }
 		},

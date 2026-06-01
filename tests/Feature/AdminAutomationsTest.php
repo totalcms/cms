@@ -61,8 +61,12 @@ it('renders the automations list', function (): void {
 
 	$result = $container->get(AdminAutomationsAction::class)(adminRequest('GET', '/admin/automations'), new Response(), []);
 
+	$body = (string)$result->getBody();
 	expect($result->getStatusCode())->toBe(200);
-	expect((string)$result->getBody())->toContain('Daily');
+	expect($body)->toContain('Daily');
+	// The copy-the-cron-command helper renders the process command + run guidance.
+	expect($body)->toContain('automations:process');
+	expect($body)->toContain('every minute');
 });
 
 it('renders the editor with a handler advisory for a risky handler', function (): void {
