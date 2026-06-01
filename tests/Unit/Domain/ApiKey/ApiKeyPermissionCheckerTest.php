@@ -17,6 +17,27 @@ final class ApiKeyPermissionCheckerTest extends TestCase
 		$this->checker = new ApiKeyPermissionChecker();
 	}
 
+	public function testCanFireAutomationsRequiresTheScopeFlag(): void
+	{
+		$with = new ApiKeyData([
+			'id'      => 'k1',
+			'name'    => 'With',
+			'key'     => 'tcms_with',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['POST'], 'paths' => [], 'automations.fire' => true],
+		]);
+		$without = new ApiKeyData([
+			'id'      => 'k2',
+			'name'    => 'Without',
+			'key'     => 'tcms_without',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['POST'], 'paths' => []],
+		]);
+
+		$this->assertTrue($this->checker->canFireAutomations($with));
+		$this->assertFalse($this->checker->canFireAutomations($without));
+	}
+
 	public function testAllowsMethodReturnsTrueForAllowedMethod(): void
 	{
 		$apiKey = new ApiKeyData([

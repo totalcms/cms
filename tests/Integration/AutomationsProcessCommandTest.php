@@ -28,6 +28,30 @@ function makeAutomationsCommand(object $container): AutomationsProcessCommand
 	return new AutomationsProcessCommand($totalcms);
 }
 
+it('drains a queued async run on the next tick', function (): void {
+	$container = $this->app->getContainer();
+	$container->get(ObjectSaver::class)->saveObject('automations', [
+		'id'       => 'queued',
+		'name'     => 'Queued',
+		'enabled'  => true,
+		'triggers' => ['t0' => ['id' => 't0', 'type' => 'webhook', 'auth' => 'none']],
+		'handler'  => "<?php\n\nreturn function (\$ctx) { return \$ctx->args; };\n",
+	]);
+	$container->get(\TotalCMS\Domain\Automation\Service\AutomationQueue::class)
+		->enqueue('queued', ['type' => 'webhook'], ['hello' => 'world']);
+
+	$tester = new CommandTester(makeAutomationsCommand($container));
+	$tester->execute(['--json' => true]);
+
+	expect($tester->getStatusCode())->toBe(0);
+	expect((int)(json_decode($tester->getDisplay(), true)['drained'] ?? 0))->toBe(1);
+
+	$runs = glob(cmsDataDir() . '.system/automations/queued/runs/*.json');
+	expect($runs)->not->toBeEmpty();
+	$record = json_decode((string)file_get_contents($runs[0]), true);
+	expect($record['return'])->toBe(['hello' => 'world']);
+});
+
 it('fires a due schedule automation and writes a run record', function (): void {
 	$container = $this->app->getContainer();
 	$container->get(ObjectSaver::class)->saveObject('automations', [

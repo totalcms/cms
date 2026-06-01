@@ -53,6 +53,20 @@ class AutomationsProcessCommand extends BaseCommand
 		$state  = $this->totalcms->container()->get(AutomationStateStore::class);
 		$ticker = $this->totalcms->container()->get(ScheduleTicker::class);
 
+		// Drain queued async runs (webhook async + event triggers) first.
+		$queue   = $this->totalcms->container()->get(\TotalCMS\Domain\Automation\Service\AutomationQueue::class);
+		$drained = 0;
+		$queue->drain(function (array $job) use ($runner, &$drained): void {
+			$runner->run(
+				(string)($job['slug'] ?? ''),
+				is_array($job['trigger'] ?? null) ? $job['trigger'] : [],
+				is_array($job['args'] ?? null) ? $job['args'] : [],
+				null,
+				is_array($job['event'] ?? null) ? $job['event'] : null,
+			);
+			$drained++;
+		});
+
 		$now   = new \DateTimeImmutable('now', $this->siteTimezone());
 		$fired = [];
 
@@ -76,7 +90,7 @@ class AutomationsProcessCommand extends BaseCommand
 			}
 		}
 
-		return $this->outputData($input, $output, ['fired' => $fired, 'count' => count($fired)]);
+		return $this->outputData($input, $output, ['fired' => $fired, 'count' => count($fired), 'drained' => $drained]);
 	}
 
 	/**
