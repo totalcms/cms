@@ -47,6 +47,18 @@ expect()->extend('toBeOne', fn () => $this->toBe(1));
 
 function bootstrap()
 {
+	// Tests reset state by wiping the data dir (recursiveDelete) and rebuilding
+	// the app, but APCu lives in shared memory for the WHOLE php process and is
+	// not touched by a filesystem wipe. Under php-test.ini (which enables APCu
+	// as CacheManager's L1 backend) that lets cached collections/objects/indexes
+	// leak across tests — causing order-dependent, flaky failures ("object
+	// already exists", X-Total 0, etc.). Clearing it on every app boot makes the
+	// reset complete so each test starts from a clean cache. No-op when APCu
+	// isn't loaded (default php.ini).
+	if (function_exists('apcu_clear_cache')) {
+		apcu_clear_cache();
+	}
+
 	return require __DIR__ . '/../config/bootstrap.php';
 }
 
