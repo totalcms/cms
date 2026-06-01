@@ -9,6 +9,7 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Property\Service\ExternalFieldStore;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -33,6 +34,7 @@ class ObjectRepository extends StorageRepository
 		private readonly CacheManager $cacheManager,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly IndexRepository $indexRepository,
+		private readonly ExternalFieldStore $externalFields,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -61,7 +63,22 @@ class ObjectRepository extends StorageRepository
 
 		$objectFile = $this->buildObjectPath($collection, $object->id);
 
-		$this->filesystem->write($objectFile, $object->toJson());
+		// Externalize `external: true` code fields to sidecar files, then blank
+		// them in the canonical object JSON so the value lives in one place.
+		$persisted = $this->externalFields->persist($collection, $object);
+
+		if ($persisted === []) {
+			$this->filesystem->write($objectFile, $object->toJson());
+		} else {
+			$data = $object->toArray();
+			foreach ($persisted as $name) {
+				$data[$name] = '';
+			}
+			$this->filesystem->write(
+				$objectFile,
+				(string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+			);
+		}
 
 		// Invalidate object cache when saved (data has changed)
 		$cacheKey = "object:{$collection}:{$object->id}";
@@ -81,7 +98,7 @@ class ObjectRepository extends StorageRepository
 
 		// Try request-level cache first (fastest - in-memory)
 		if (isset($this->requestCache[$cacheKey])) {
-			return $this->factory->generateObject($collection, $this->requestCache[$cacheKey]);
+			return $this->buildObject($collection, $this->requestCache[$cacheKey]);
 		}
 
 		// Try persistent cache second (Redis/APCu/etc - fast)
@@ -92,7 +109,7 @@ class ObjectRepository extends StorageRepository
 			// Store in request cache for subsequent access in this request
 			$this->requestCache[$cacheKey] = $cached;
 
-			return $this->factory->generateObject($collection, $cached);
+			return $this->buildObject($collection, $cached);
 		}
 
 		// Cache miss - fetch from filesystem (slowest)
@@ -105,7 +122,7 @@ class ObjectRepository extends StorageRepository
 				$this->cacheManager->storeComputedData($cacheKey, $contents, CacheManager::TTL_OBJECT_DATA);
 				$this->requestCache[$cacheKey] = $contents;
 
-				return $this->factory->generateObject($collection, $contents);
+				return $this->buildObject($collection, $contents);
 			}
 		}
 
@@ -132,7 +149,21 @@ class ObjectRepository extends StorageRepository
 			return null;
 		}
 
-		return $this->factory->generateObject($collection, $contents);
+		return $this->buildObject($collection, $contents);
+	}
+
+	/**
+	 * Build an ObjectData from raw JSON contents, then hydrate any external
+	 * (file-backed) fields from their sidecar files.
+	 *
+	 * @param array<string,mixed> $contents
+	 */
+	private function buildObject(string $collection, array $contents): ObjectData
+	{
+		$object = $this->factory->generateObject($collection, $contents);
+		$this->externalFields->hydrate($collection, $object);
+
+		return $object;
 	}
 
 	public function deleteObject(string $collection, string $id): bool
