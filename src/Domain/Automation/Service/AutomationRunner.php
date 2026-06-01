@@ -48,7 +48,7 @@ final class AutomationRunner
 	 * @param array<string,mixed> $args
 	 * @param array<string,mixed>|null $event
 	 */
-	public function run(string $slug, array $trigger, array $args, ?ServerRequestInterface $request = null, ?array $event = null): RunRecord
+	public function run(string $id, array $trigger, array $args, ?ServerRequestInterface $request = null, ?array $event = null): RunRecord
 	{
 		$runId     = gmdate('Ymd\THis') . '-' . bin2hex(random_bytes(6));
 		$startedAt = gmdate('c');
@@ -74,19 +74,19 @@ final class AutomationRunner
 		$exception = null;
 
 		try {
-			$fn     = $this->loader->handler($slug);
+			$fn     = $this->loader->handler($id);
 			$return = $fn($ctx);
-			$this->state->resetFailures($slug);
+			$this->state->resetFailures($id);
 		} catch (\Throwable $e) {
 			$status    = 'failed';
 			$exception = $e->getMessage() . "\n" . $e->getTraceAsString();
-			$this->state->incrementFailures($slug);
-			$this->logger->error("Automation '{$slug}' failed: {$e->getMessage()}", ['exception' => $e]);
+			$this->state->incrementFailures($id);
+			$this->logger->error("Automation '{$id}' failed: {$e->getMessage()}", ['exception' => $e]);
 		}
 
 		$record = new RunRecord(
 			runId      : $runId,
-			automation : $slug,
+			automation : $id,
 			trigger    : $trigger,
 			status     : $status,
 			startedAt  : $startedAt,
@@ -96,14 +96,14 @@ final class AutomationRunner
 			exception  : $exception,
 		);
 
-		$this->persistRun($slug, $record);
+		$this->persistRun($id, $record);
 
 		return $record;
 	}
 
-	private function persistRun(string $slug, RunRecord $record): void
+	private function persistRun(string $id, RunRecord $record): void
 	{
-		$dir = '.system/automations/' . $slug . '/runs';
+		$dir = '.system/automations/' . $id . '/runs';
 		$this->filesystem->write(
 			$dir . '/' . $record->runId . '.json',
 			(string)json_encode($record->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),

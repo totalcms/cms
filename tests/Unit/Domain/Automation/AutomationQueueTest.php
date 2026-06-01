@@ -23,7 +23,7 @@ final class AutomationQueueTest extends TestCase
 		});
 
 		expect($drained)->toHaveCount(1);
-		expect($drained[0]['slug'])->toBe('daily');
+		expect($drained[0]['id'])->toBe('daily');
 		expect($drained[0]['args'])->toBe(['x' => 1]);
 		expect($drained[0]['event'])->toBe(['collection' => 'orders']);
 

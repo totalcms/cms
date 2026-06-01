@@ -22,7 +22,7 @@ final readonly class AutomationResolver
 	/**
 	 * The webhook trigger for an automation id, or null if none/disabled.
 	 *
-	 * @return array{slug: string, trigger: array<string,mixed>}|null
+	 * @return array{id: string, trigger: array<string,mixed>}|null
 	 */
 	public function webhook(string $automationId): ?array
 	{
@@ -32,7 +32,7 @@ final readonly class AutomationResolver
 			}
 			foreach ($this->triggers($automation) as $trigger) {
 				if (($trigger['type'] ?? '') === 'webhook') {
-					return ['slug' => $automation->id, 'trigger' => $trigger];
+					return ['id' => $automation->id, 'trigger' => $trigger];
 				}
 			}
 		}
@@ -44,7 +44,7 @@ final readonly class AutomationResolver
 	 * All event triggers (across enabled automations) matching an event +
 	 * collection. A blank collection filter on a trigger matches any collection.
 	 *
-	 * @return list<array{slug: string, trigger: array<string,mixed>}>
+	 * @return list<array{id: string, trigger: array<string,mixed>}>
 	 */
 	public function eventTriggers(string $event, string $collection): array
 	{
@@ -59,7 +59,7 @@ final readonly class AutomationResolver
 				if ($filter !== '' && $filter !== $collection) {
 					continue;
 				}
-				$out[] = ['slug' => $automation->id, 'trigger' => $trigger];
+				$out[] = ['id' => $automation->id, 'trigger' => $trigger];
 			}
 		}
 

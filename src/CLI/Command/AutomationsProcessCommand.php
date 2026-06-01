@@ -58,7 +58,7 @@ class AutomationsProcessCommand extends BaseCommand
 		$drained = 0;
 		$queue->drain(function (array $job) use ($runner, &$drained): void {
 			$runner->run(
-				(string)($job['slug'] ?? ''),
+				(string)($job['id'] ?? ''),
 				is_array($job['trigger'] ?? null) ? $job['trigger'] : [],
 				is_array($job['args'] ?? null) ? $job['args'] : [],
 				null,
@@ -71,7 +71,7 @@ class AutomationsProcessCommand extends BaseCommand
 		$fired = [];
 
 		foreach ($loader->enabled() as $automation) {
-			$slug = $automation->id;
+			$id = $automation->id;
 
 			foreach ($this->triggers($automation->properties->get('triggers')) as $triggerKey => $trigger) {
 				if (($trigger['type'] ?? '') !== 'schedule') {
@@ -80,13 +80,13 @@ class AutomationsProcessCommand extends BaseCommand
 
 				$triggerId = (string)($trigger['id'] ?? $triggerKey);
 
-				if (!$ticker->isDue((string)($trigger['cron'] ?? ''), $state->lastFire($slug, $triggerId), $now)) {
+				if (!$ticker->isDue((string)($trigger['cron'] ?? ''), $state->lastFire($id, $triggerId), $now)) {
 					continue;
 				}
 
-				$runner->run($slug, $trigger, []);
-				$state->recordFire($slug, $triggerId, $now->format('c'));
-				$fired[] = $slug;
+				$runner->run($id, $trigger, []);
+				$state->recordFire($id, $triggerId, $now->format('c'));
+				$fired[] = $id;
 			}
 		}
 

@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TotalCMS\Action\Automation;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Automation\Service\AutomationQueue;
+use TotalCMS\Domain\Automation\Service\AutomationRunner;
+use TotalCMS\Middleware\Automation\AutomationWebhookMiddleware;
+use TotalCMS\Renderer\JsonRenderer;
+
+/**
+ * `POST /automations/{id}` — fires an automation's webhook trigger. Auth has
+ * already been enforced by AutomationWebhookMiddleware, which stashed the
+ * resolved trigger on the request.
+ *
+ * Async (default): enqueue + 202. Sync (`sync: true`): run inline and return
+ * the run result.
+ */
+final readonly class AutomationWebhookAction
+{
+	public function __construct(
+		private AutomationQueue $queue,
+		private AutomationRunner $runner,
+		private JsonRenderer $renderer,
+	) {
+	}
+
+	/** @param array<string,mixed> $args */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$webhook = $request->getAttribute(AutomationWebhookMiddleware::ATTRIBUTE);
+		if (!is_array($webhook) || !is_array($webhook['trigger'] ?? null)) {
+			throw new HttpNotFoundException($request);
+		}
+
+		$id      = (string)($webhook['id'] ?? '');
+		$trigger = $webhook['trigger'];
+
+		$body   = $request->getParsedBody();
+		$inputs = array_merge($request->getQueryParams(), is_array($body) ? $body : []);
+
+		// Sync: run inline and return the run result. Async: enqueue + 202.
+		if (($trigger['sync'] ?? false) === true) {
+			$record = $this->runner->run($id, $trigger, $inputs, $request);
+
+			return $this->renderer->json($response, [
+				'runId'     => $record->runId,
+				'status'    => $record->status,
+				'return'    => $record->return,
+				'exception' => $record->exception,
+			], $record->status === 'success' ? 200 : 500);
+		}
+
+		$runId = $this->queue->enqueue($id, $trigger, $inputs);
+
+		return $this->renderer->json($response, ['runId' => $runId, 'status' => 'queued'], 202);
+	}
+}

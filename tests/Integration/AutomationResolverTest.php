@@ -33,14 +33,14 @@ it('finds the webhook trigger by automation id and lists matching event triggers
 
 	$webhook = $resolver->webhook('multi');
 	expect($webhook)->not->toBeNull();
-	expect($webhook['slug'])->toBe('multi');
+	expect($webhook['id'])->toBe('multi');
 	expect($webhook['trigger']['auth'])->toBe('apiKey');
 
 	expect($resolver->webhook('does-not-exist'))->toBeNull();
 
 	$matches = $resolver->eventTriggers('object.created', 'orders');
 	expect($matches)->toHaveCount(1);
-	expect($matches[0]['slug'])->toBe('multi');
+	expect($matches[0]['id'])->toBe('multi');
 
 	// Collection filter excludes other collections.
 	expect($resolver->eventTriggers('object.created', 'posts'))->toBeEmpty();

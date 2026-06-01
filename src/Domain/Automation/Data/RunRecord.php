@@ -6,7 +6,7 @@ namespace TotalCMS\Domain\Automation\Data;
 
 /**
  * A single automation run, persisted to
- * `.system/automations/<slug>/runs/<runId>.json`.
+ * `.system/automations/<id>/runs/<runId>.json`.
  */
 final readonly class RunRecord
 {

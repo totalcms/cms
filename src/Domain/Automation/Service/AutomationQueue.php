@@ -28,11 +28,11 @@ final class AutomationQueue
 	 * @param array<string,mixed> $args
 	 * @param array<string,mixed>|null $event
 	 */
-	public function enqueue(string $slug, array $trigger, array $args, ?array $event = null): string
+	public function enqueue(string $id, array $trigger, array $args, ?array $event = null): string
 	{
 		// Time-prefixed id → lexical sort == roughly FIFO drain order.
 		$runId = gmdate('Ymd\THis') . '-' . bin2hex(random_bytes(6));
-		$job   = ['runId' => $runId, 'slug' => $slug, 'trigger' => $trigger, 'args' => $args, 'event' => $event];
+		$job   = ['runId' => $runId, 'id' => $id, 'trigger' => $trigger, 'args' => $args, 'event' => $event];
 
 		$this->filesystem->write(self::DIR . '/' . $runId . '.json', (string)json_encode($job, JSON_UNESCAPED_SLASHES));
 

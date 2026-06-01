@@ -132,6 +132,9 @@ RewriteRule ^mcp(/.*)?$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
 RewriteRule ^\.well-known/oauth-authorization-server$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
 RewriteRule ^\.well-known/jwks\.json$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
 RewriteRule ^oauth/(authorize|token|register|revoke)$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+
+# Automation webhooks (POST /automations/<id>)
+RewriteRule ^automations/.+$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
 ```
 
 This preserves the host site's 404 behavior — any URL not on this list and not a real file still falls through to Apache's `ErrorDocument 404` (or the host's custom 404 page).

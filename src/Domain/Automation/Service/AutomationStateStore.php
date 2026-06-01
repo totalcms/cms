@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Automation\Service;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 
 /**
- * Per-automation runtime state at `.system/automations/<slug>.state.json`:
+ * Per-automation runtime state at `.system/automations/<id>.state.json`:
  * per-trigger last-fire timestamps and a consecutive-failure counter.
  */
 final class AutomationStateStore
@@ -16,48 +16,48 @@ final class AutomationStateStore
 	{
 	}
 
-	public function lastFire(string $slug, string $triggerKey): ?string
+	public function lastFire(string $id, string $triggerKey): ?string
 	{
-		$value = $this->load($slug)['lastFire'][$triggerKey] ?? null;
+		$value = $this->load($id)['lastFire'][$triggerKey] ?? null;
 
 		return is_string($value) ? $value : null;
 	}
 
-	public function recordFire(string $slug, string $triggerKey, string $isoTime): void
+	public function recordFire(string $id, string $triggerKey, string $isoTime): void
 	{
-		$state                          = $this->load($slug);
+		$state                          = $this->load($id);
 		$lastFire                       = is_array($state['lastFire'] ?? null) ? $state['lastFire'] : [];
 		$lastFire[$triggerKey]          = $isoTime;
 		$state['lastFire']              = $lastFire;
-		$this->save($slug, $state);
+		$this->save($id, $state);
 	}
 
-	public function failures(string $slug): int
+	public function failures(string $id): int
 	{
-		return (int)($this->load($slug)['failures'] ?? 0);
+		return (int)($this->load($id)['failures'] ?? 0);
 	}
 
-	public function incrementFailures(string $slug): int
+	public function incrementFailures(string $id): int
 	{
-		$state             = $this->load($slug);
+		$state             = $this->load($id);
 		$count             = (int)($state['failures'] ?? 0) + 1;
 		$state['failures'] = $count;
-		$this->save($slug, $state);
+		$this->save($id, $state);
 
 		return $count;
 	}
 
-	public function resetFailures(string $slug): void
+	public function resetFailures(string $id): void
 	{
-		$state             = $this->load($slug);
+		$state             = $this->load($id);
 		$state['failures'] = 0;
-		$this->save($slug, $state);
+		$this->save($id, $state);
 	}
 
 	/** @return array<string,mixed> */
-	private function load(string $slug): array
+	private function load(string $id): array
 	{
-		$path = $this->path($slug);
+		$path = $this->path($id);
 		if (!$this->filesystem->fileExists($path)) {
 			return [];
 		}
@@ -67,16 +67,16 @@ final class AutomationStateStore
 	}
 
 	/** @param array<string,mixed> $state */
-	private function save(string $slug, array $state): void
+	private function save(string $id, array $state): void
 	{
 		$json = (string)json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-		$tmp  = $this->path($slug) . '.tmp.' . bin2hex(random_bytes(4));
+		$tmp  = $this->path($id) . '.tmp.' . bin2hex(random_bytes(4));
 		$this->filesystem->write($tmp, $json);
-		$this->filesystem->move($tmp, $this->path($slug));
+		$this->filesystem->move($tmp, $this->path($id));
 	}
 
-	private function path(string $slug): string
+	private function path(string $id): string
 	{
-		return '.system/automations/' . $slug . '.state.json';
+		return '.system/automations/' . $id . '.state.json';
 	}
 }

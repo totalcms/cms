@@ -36,6 +36,8 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
+use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
@@ -452,6 +454,20 @@ return [
 		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.deleted', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
+
+		// AutomationEventSubscriber — fans every core event out to matching
+		// event-trigger automations (enqueued async). Priority 100 = after all
+		// core listeners, so index/cache are already updated when an automation
+		// reads. Lazily resolved so a fresh automation is picked up per dispatch.
+		foreach (CoreEvent::ALL as $automationEvent) {
+			$dispatcher->listen(
+				$automationEvent,
+				static function (array $payload) use ($container, $automationEvent): void {
+					$container->get(AutomationEventSubscriber::class)->handle($automationEvent, $payload);
+				},
+				100,
+			);
+		}
 
 		return $dispatcher;
 	},
