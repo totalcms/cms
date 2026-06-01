@@ -34,5 +34,5 @@ You can get any data passed to a page through the `$_SESSION` php variable.
 If the variable name contains a hyphen, use bracket notation instead:
 
 ```
-{{ sessionData['agent-location'] }}
+{{ sessionData['agent-lang'] }}
 ```
