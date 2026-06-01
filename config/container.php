@@ -764,6 +764,12 @@ return [
 			->createLogger('oauth-activity'),
 	),
 
+	TotalCMS\Domain\Automation\Service\AutomationActivityLogger::class => fn (ContainerInterface $container): TotalCMS\Domain\Automation\Service\AutomationActivityLogger => new TotalCMS\Domain\Automation\Service\AutomationActivityLogger(
+		$container->get(LoggerFactory::class)
+			->addFileHandler('automations-activity.log', level: Level::Info)
+			->createLogger('automations-activity'),
+	),
+
 	// === Search Providers Phase 5 ===
 
 	SearchProviderRegistry::class => function (ContainerInterface $container): SearchProviderRegistry {

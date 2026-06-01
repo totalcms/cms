@@ -28,6 +28,7 @@ final class SyncableCollections
 		'mailer',
 		'mcp-prompt',
 		'dataviews',
+		'automations',
 	];
 
 	public static function contains(string $id): bool
