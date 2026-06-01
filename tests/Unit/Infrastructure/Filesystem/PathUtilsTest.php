@@ -23,6 +23,21 @@ final class PathUtilsTest extends TestCase
 		$this->assertSame('blog/post-1/image', PathUtils::buildPath('blog', 'post-1', 'image'));
 	}
 
+	// ──────────────────────────────────────────────────────────────────────
+	// absolutePath
+	// ──────────────────────────────────────────────────────────────────────
+
+	public function testAbsolutePathJoinsBaseAndRelative(): void
+	{
+		$this->assertSame('/var/www/tcms-data/automations/x/handler/handler.php', PathUtils::absolutePath('/var/www/tcms-data', 'automations/x/handler/handler.php'));
+	}
+
+	public function testAbsolutePathNormalizesTrailingAndLeadingSlashes(): void
+	{
+		$this->assertSame('/var/www/tcms-data/a/b', PathUtils::absolutePath('/var/www/tcms-data/', '/a/b'));
+		$this->assertSame('/var/www/tcms-data/a/b', PathUtils::absolutePath('/var/www/tcms-data', 'a/b'));
+	}
+
 	public function testBuildPathWithFilename(): void
 	{
 		$this->assertSame(

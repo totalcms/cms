@@ -43,6 +43,17 @@ class PathUtils
 	}
 
 	/**
+	 * Join a storage-relative path onto an absolute base (typically the data
+	 * dir), normalizing slashes. Use when you need a real filesystem path — for
+	 * `require`, `is_file`, lock files, etc. — rather than the Flysystem-relative
+	 * path that `buildPath()` produces.
+	 */
+	public static function absolutePath(string $base, string $relative): string
+	{
+		return rtrim($base, '/\\') . '/' . ltrim($relative, '/\\');
+	}
+
+	/**
 	 * Sanitize subpath segments to prevent directory traversal attacks.
 	 */
 	public static function sanitizeSubpath(string $subpath): string
