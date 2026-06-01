@@ -914,6 +914,7 @@ return [
 	'api_keys.choose_dataviews'      => 'Bestimmte Data Views auswählen',
 	'api_keys.select_endpoints'      => 'Endpunkte auswählen',
 	'api_keys.select_endpoints_help' => 'Aktivieren Sie die Endpunkte, auf die dieser Schlüssel Zugriff haben soll.',
+	'api_keys.all_automations_ep'    => 'Alle Automatisierungen',
 	'api_keys.create_submit'         => 'API-Schlüssel erstellen',
 	'api_keys.success_title'         => 'API-Schlüssel erfolgreich erstellt',
 	'api_keys.save_warning'          => 'Speichern Sie diesen Schlüssel jetzt!',

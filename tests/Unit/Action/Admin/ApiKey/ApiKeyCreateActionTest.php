@@ -211,6 +211,43 @@ final class ApiKeyCreateActionTest extends TestCase
 		$this->assertSame($jsonResponse, $actualResponse);
 	}
 
+	public function testPersistsTheAutomationsEndpointAsAPlainPathScope(): void
+	{
+		// The automations webhook endpoint is just another selectable path — no
+		// special-casing in the action.
+		$requestData = [
+			'name'          => 'Automation Key',
+			'endpoint-type' => 'specific',
+			'methods'       => ['POST'],
+			'paths'         => ['/automations'],
+		];
+
+		$expectedScopes = [
+			'methods' => ['POST'],
+			'paths'   => ['/automations'],
+		];
+
+		$apiKeyData = new ApiKeyData([
+			'id'      => 'auto-key',
+			'name'    => 'Automation Key',
+			'key'     => 'tcms_auto1234567890abcdef1234567890',
+			'created' => gmdate('Y-m-d\TH:i:s\Z'),
+			'scopes'  => $expectedScopes,
+		]);
+
+		$this->request->method('getParsedBody')->willReturn($requestData);
+		$this->apiKeyCreator->expects($this->once())
+			->method('createApiKey')
+			->with('Automation Key', $expectedScopes)
+			->willReturn($apiKeyData);
+		$this->response->method('withStatus')->willReturn($this->createMock(ResponseInterface::class));
+		$this->jsonRenderer->method('json')->willReturn($this->createMock(ResponseInterface::class));
+
+		$actualResponse = ($this->action)($this->request, $this->response);
+
+		$this->assertNotNull($actualResponse);
+	}
+
 	public function testHandlesMultiplePaths(): void
 	{
 		$requestData = [

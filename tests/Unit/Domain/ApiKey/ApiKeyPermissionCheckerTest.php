@@ -17,25 +17,35 @@ final class ApiKeyPermissionCheckerTest extends TestCase
 		$this->checker = new ApiKeyPermissionChecker();
 	}
 
-	public function testCanFireAutomationsRequiresTheScopeFlag(): void
+	public function testAuthorizesAutomationWebhookViaMethodAndPathScope(): void
 	{
-		$with = new ApiKeyData([
+		// Firing a webhook is just POST /automations/<id> — gated by the normal
+		// method+path scopes, no special automations flag.
+		$scoped = new ApiKeyData([
 			'id'      => 'k1',
-			'name'    => 'With',
-			'key'     => 'tcms_with',
+			'name'    => 'Scoped',
+			'key'     => 'tcms_scoped',
 			'created' => '2025-01-15T10:30:00Z',
-			'scopes'  => ['methods' => ['POST'], 'paths' => [], 'automations.fire' => true],
+			'scopes'  => ['methods' => ['POST'], 'paths' => ['/automations']],
 		]);
-		$without = new ApiKeyData([
+		$wrongPath = new ApiKeyData([
 			'id'      => 'k2',
-			'name'    => 'Without',
-			'key'     => 'tcms_without',
+			'name'    => 'Wrong path',
+			'key'     => 'tcms_wrongpath',
 			'created' => '2025-01-15T10:30:00Z',
-			'scopes'  => ['methods' => ['POST'], 'paths' => []],
+			'scopes'  => ['methods' => ['POST'], 'paths' => ['/collections']],
+		]);
+		$wrongMethod = new ApiKeyData([
+			'id'      => 'k3',
+			'name'    => 'Wrong method',
+			'key'     => 'tcms_wrongmethod',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['GET'], 'paths' => ['/automations']],
 		]);
 
-		$this->assertTrue($this->checker->canFireAutomations($with));
-		$this->assertFalse($this->checker->canFireAutomations($without));
+		$this->assertTrue($this->checker->allows($scoped, 'POST', '/automations/daily'));
+		$this->assertFalse($this->checker->allows($wrongPath, 'POST', '/automations/daily'));
+		$this->assertFalse($this->checker->allows($wrongMethod, 'POST', '/automations/daily'));
 	}
 
 	public function testAllowsMethodReturnsTrueForAllowedMethod(): void

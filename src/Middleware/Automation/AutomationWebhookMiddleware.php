@@ -11,7 +11,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Domain\ApiKey\Service\ApiKeyPermissionChecker;
 use TotalCMS\Domain\Automation\Service\AutomationResolver;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Renderer\JsonRenderer;
@@ -19,8 +18,8 @@ use TotalCMS\Support\Config;
 
 /**
  * Guards `POST /automations/{id}`. Resolves the automation's webhook trigger,
- * then enforces its `auth` mode: `apiKey` (must carry a key with the
- * `automations.fire` scope) or `none` (public, per-IP rate-limited). The
+ * then enforces its `auth` mode: `apiKey` (must carry a key scoped to POST the
+ * `/automations` endpoint) or `none` (public, per-IP rate-limited). The
  * resolved trigger is stashed on the request so the action doesn't re-resolve.
  */
 final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
@@ -33,7 +32,6 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 	public function __construct(
 		private AutomationResolver $resolver,
 		private ApiKeyAuthenticator $authenticator,
-		private ApiKeyPermissionChecker $permissions,
 		private CacheManager $cache,
 		private JsonRenderer $renderer,
 		private ResponseFactoryInterface $responseFactory,
@@ -60,12 +58,12 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 				return $denied;
 			}
 		} else {
+			// authenticate() validates the key's method+path scope against the
+			// request (via ApiKeyFetcher::validateKey), so a key that isn't scoped
+			// to POST /automations is rejected here — same as the REST API.
 			$apiKey = $this->authenticator->authenticate($request);
 			if (!$apiKey instanceof ApiKeyData) {
-				return $this->error(401, 'Invalid or missing API key.');
-			}
-			if (!$this->permissions->canFireAutomations($apiKey)) {
-				return $this->error(403, 'API key lacks the automations.fire permission.');
+				return $this->error(401, 'API key is missing, invalid, or not scoped for the automations endpoint.');
 			}
 		}
 

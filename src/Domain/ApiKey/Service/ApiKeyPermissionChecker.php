@@ -55,15 +55,4 @@ readonly class ApiKeyPermissionChecker
 	{
 		return $this->allowsMethod($apiKey, $method) && $this->allowsPath($apiKey, $path);
 	}
-
-	/**
-	 * Check if the API key is permitted to fire automation webhooks. A single
-	 * opt-in scope (`automations.fire`) gates every `auth: apiKey` webhook —
-	 * not the method/path model, since automation webhooks live outside the
-	 * REST API surface.
-	 */
-	public function canFireAutomations(ApiKeyData $apiKey): bool
-	{
-		return ($apiKey->scopes['automations.fire'] ?? false) === true;
-	}
 }

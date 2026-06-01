@@ -17,7 +17,7 @@ If you missed the snippets on the [Setup Wizard's Server Configuration step](#th
 
 Two things have to happen for a Total CMS site to serve correctly:
 
-1. **Front-controller routing** — Any URL that doesn't match a real file or directory under `public/` is passed to `public/index.php`. That's how `/admin`, `/api/...`, `/sitemap`, and your Site Builder pages all reach the framework.
+1. **Front-controller routing** — Any URL that doesn't match a real file or directory under `public/` is passed to `public/index.php`. That's how `/admin`, `/api/...`, `/sitemap`, automation webhooks (`POST /automations/<id>`), and your Site Builder pages all reach the framework.
 2. **Data protection** — `tcms-data/` is the flat-file store for collections, uploads, secrets, and runtime state. It must never be served directly. The simplest defense is to keep `tcms-data/` outside your docroot. If it has to live under the docroot, deny it explicitly.
 
 The two snippets below cover both concerns.

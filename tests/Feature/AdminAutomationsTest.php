@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
+
+use function Nekofar\Slim\Pest\get;
 use TotalCMS\Action\Admin\AdminAutomationsAction;
 use TotalCMS\Action\Automation\AutomationReenableAction;
 use TotalCMS\Action\Automation\AutomationRunNowAction;
@@ -44,6 +46,14 @@ function adminRequest(string $method, string $path): \Psr\Http\Message\ServerReq
 {
 	return (new ServerRequestFactory())->createServerRequest($method, $path);
 }
+
+it('wires the /admin/automations route + middleware stack (no 500/404)', function (): void {
+	// Goes through the real route + AutomationsEditionMiddleware + AdminOnlyMiddleware
+	// stack (unauthenticated → redirect/403), confirming all DI resolves.
+	$response = get('/admin/automations');
+
+	expect($response->getStatusCode())->toBeIn([200, 302, 403]);
+});
 
 it('renders the automations list', function (): void {
 	$container = $this->app->getContainer();

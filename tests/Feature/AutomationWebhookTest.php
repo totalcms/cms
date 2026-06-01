@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
@@ -54,6 +55,27 @@ it('rejects an apiKey webhook with no key (401)', function (): void {
 	saveWebhookAutomation($this->app->getContainer(), 'secure', 'apiKey', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
 
 	expect(postJson('/automations/secure', [])->getStatusCode())->toBe(401);
+});
+
+it('fires an apiKey webhook for a key scoped to POST /automations', function (): void {
+	$container = $this->app->getContainer();
+	saveWebhookAutomation($container, 'syncsecure', 'apiKey', true, "<?php\n\nreturn function (\$ctx) { return ['ok' => true]; };\n");
+	$key = $container->get(ApiKeyCreator::class)->createApiKey('hook', ['methods' => ['POST'], 'paths' => ['/automations']]);
+
+	$response = postJson('/automations/syncsecure', ['x' => 1], ['X-API-Key' => $key->key]);
+
+	expect($response->getStatusCode())->toBe(200);
+	expect(json_decode((string)$response->getBody(), true)['return'])->toBe(['ok' => true]);
+});
+
+it('rejects an apiKey webhook for a key not scoped for /automations (401)', function (): void {
+	// The key is valid but scoped to /collections, so authenticate() rejects it
+	// against POST /automations — same 401 the REST API returns for a scope miss.
+	$container = $this->app->getContainer();
+	saveWebhookAutomation($container, 'secure2', 'apiKey', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
+	$key = $container->get(ApiKeyCreator::class)->createApiKey('wrong', ['methods' => ['POST'], 'paths' => ['/collections']]);
+
+	expect(postJson('/automations/secure2', [], ['X-API-Key' => $key->key])->getStatusCode())->toBe(401);
 });
 
 it('404s for an unknown webhook id', function (): void {
