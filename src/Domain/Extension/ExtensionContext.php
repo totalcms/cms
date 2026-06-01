@@ -70,6 +70,9 @@ final class ExtensionContext
 	/** @var array<string,list<array{callable, int}>> */
 	private array $eventListeners = [];
 
+	/** @var list<\TotalCMS\Domain\Extension\Data\AutomationDefinition> */
+	private array $automations = [];
+
 	/** @var array<string,callable> */
 	private array $containerDefinitions = [];
 
@@ -555,6 +558,28 @@ final class ExtensionContext
 	}
 
 	/**
+	 * Contribute an automation (schedule / webhook / event) whose handler is a
+	 * closure held in memory. Surfaced read-only in the automations admin — the
+	 * operator can run/disable it but cannot edit the closure (it lives in the
+	 * extension's code, not a sidecar file).
+	 *
+	 * @param string                    $id       Automation id (unique within the extension)
+	 * @param string                    $label    Human label for the admin list
+	 * @param list<array<string,mixed>> $triggers Trigger definitions, e.g. [['type' => 'schedule', 'cron' => '0 6 * * *']]
+	 * @param \Closure                  $handler  fn(AutomationContext $ctx): mixed
+	 */
+	public function addAutomation(string $id, string $label, array $triggers, \Closure $handler): void
+	{
+		$this->automations[] = new \TotalCMS\Domain\Extension\Data\AutomationDefinition($id, $label, $triggers, $handler);
+	}
+
+	/** @return list<\TotalCMS\Domain\Extension\Data\AutomationDefinition> */
+	public function getRegisteredAutomations(): array
+	{
+		return $this->automations;
+	}
+
+	/**
 	 * Register an additional container definition.
 	 *
 	 * @param string   $id      Service identifier (typically a class name)
@@ -750,6 +775,7 @@ final class ExtensionContext
 			'admin:assets'    => 'Admin Assets',
 			'frontend:assets' => 'Frontend Assets',
 			'events:listen'   => 'Event Listeners',
+			'automations'     => 'Automations',
 			'fields'          => 'Custom Fields',
 			'schemas'         => 'Schemas',
 			'container'       => 'Container Defs',
@@ -808,6 +834,9 @@ final class ExtensionContext
 		}
 		if ($this->eventListeners !== []) {
 			$caps['events:listen'] = true;
+		}
+		if ($this->automations !== []) {
+			$caps['automations'] = true;
 		}
 		if ($this->fieldTypes !== []) {
 			$caps['fields'] = true;

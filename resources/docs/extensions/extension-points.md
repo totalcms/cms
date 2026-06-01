@@ -285,6 +285,36 @@ public function register(ExtensionContext $context): void
 
 **Capability:** `events:listen`
 
+## Automations
+
+Ship a server-side [automation](../automations/overview.md) as part of your extension. Like the user-authored automations in the admin, an extension automation runs on a **schedule** or a content **event** — but its handler is the closure you register here, held in memory (never written to disk). The handler receives an `AutomationContext` with pre-injected services (`objectFetcher`, `objectSaver`, `objectUpdater`, `objectRemover`, `indexReader`, `mailer`, `config`, `logger`) plus the run payload (`trigger`, `args`, `event`).
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $context->addAutomation(
+        id: 'prune-drafts',
+        label: 'Prune stale drafts',
+        triggers: [
+            ['type' => 'schedule', 'cron' => '0 3 * * *'],                 // daily at 03:00
+            // ['type' => 'event', 'event' => 'object.created', 'collection' => 'members'],
+        ],
+        handler: function (\TotalCMS\Domain\Automation\Data\AutomationContext $ctx): array {
+            $ctx->logger->info('[acme/starter] prune-drafts tick');
+            // ... do work via $ctx->objectFetcher / $ctx->objectRemover ...
+
+            return ['pruned' => 0];
+        },
+    );
+}
+```
+
+Extension automations appear in the automations admin **read-only** — operators can run or disable them (via the capability toggle) but cannot edit the closure, since it lives in your code. Returning a value records it on the run record; throwing marks the run failed.
+
+For **HTTP triggers**, register a [public route](#public-routes) rather than a `webhook` trigger — an extension automation's id (`vendor/name:id`) isn't a URL path, so webhook triggers stay reserved for user-authored automations.
+
+**Capability:** `automations`
+
 ## Container Definitions
 
 Register services in the DI container for dependency injection.

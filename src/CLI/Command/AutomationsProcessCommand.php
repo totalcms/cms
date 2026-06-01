@@ -11,7 +11,6 @@ use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Domain\Automation\Service\AutomationStateStore;
 use TotalCMS\Domain\Automation\Service\ScheduleTicker;
-use TotalCMS\Domain\Property\Data\DeckData;
 
 /**
  * Fires due scheduled automations. Runs on its own cron line, parallel to
@@ -70,10 +69,10 @@ class AutomationsProcessCommand extends BaseCommand
 		$now   = new \DateTimeImmutable('now', $this->siteTimezone());
 		$fired = [];
 
-		foreach ($loader->enabled() as $automation) {
+		foreach ($loader->all() as $automation) {
 			$id = $automation->id;
 
-			foreach ($this->triggers($automation->properties->get('triggers')) as $triggerKey => $trigger) {
+			foreach ($automation->triggers as $triggerKey => $trigger) {
 				if (($trigger['type'] ?? '') !== 'schedule') {
 					continue;
 				}
@@ -106,24 +105,6 @@ class AutomationsProcessCommand extends BaseCommand
 		} catch (\Exception) {
 			return new \DateTimeZone('UTC');
 		}
-	}
-
-	/**
-	 * @param mixed $triggers the triggers deck property
-	 * @return array<string,array<string,mixed>>
-	 */
-	private function triggers(mixed $triggers): array
-	{
-		$rows = $triggers instanceof DeckData ? $triggers->transform() : $triggers;
-		$out  = [];
-
-		foreach (is_array($rows) ? $rows : [] as $key => $row) {
-			if (is_array($row)) {
-				$out[(string)$key] = $row;
-			}
-		}
-
-		return $out;
 	}
 
 	/**

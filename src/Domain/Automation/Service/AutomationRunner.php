@@ -112,13 +112,19 @@ final class AutomationRunner
 		} else {
 			$failures = $this->state->incrementFailures($id);
 			$this->activity->runFailed($id, $triggerType, $throwable->getMessage(), $failures);
-			$this->notifyError($id, $throwable);
 
-			// Production only: trip the auto-disable breaker once failures pile up
-			// so a broken handler can't fail (and email) forever.
-			if ($this->guard->recordFailure($id)) {
-				$this->disable($id);
-				$this->activity->autoDisabled($id, $failures);
+			// Extension automations (id is `vendor/name:autoId`) are read-only —
+			// no collection record to disable and no errorMailerId — so the
+			// error-email + auto-disable breaker apply to file-based ones only.
+			if (!str_contains($id, ':')) {
+				$this->notifyError($id, $throwable);
+
+				// Production only: trip the auto-disable breaker once failures pile
+				// up so a broken handler can't fail (and email) forever.
+				if ($this->guard->recordFailure($id)) {
+					$this->disable($id);
+					$this->activity->autoDisabled($id, $failures);
+				}
 			}
 		}
 

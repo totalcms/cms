@@ -50,8 +50,9 @@ final readonly class AutomationResolver
 	{
 		$out = [];
 
-		foreach ($this->loader->enabled() as $automation) {
-			foreach ($this->triggers($automation) as $trigger) {
+		// all() so extension-contributed automations match events too.
+		foreach ($this->loader->all() as $automation) {
+			foreach ($automation->triggers as $trigger) {
 				if (($trigger['type'] ?? '') !== 'event' || ($trigger['event'] ?? '') !== $event) {
 					continue;
 				}

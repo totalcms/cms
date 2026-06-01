@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Automation\Service;
 
+use TotalCMS\Domain\Automation\Data\AutomationDescriptor;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Service\ExternalFieldStore;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
- * Lists enabled automation objects and resolves a handler closure by requiring
- * its externalized handler file. The handler is loaded at runtime and invoked
- * directly — never registered as a container definition.
+ * Lists enabled automations (file-based objects + extension-contributed ones)
+ * and resolves a handler callable. File handlers are required from their
+ * externalized `.php` sidecar; extension handlers are the in-memory closure the
+ * extension registered. Either way the handler is invoked directly — never
+ * registered as a container definition.
  */
 final readonly class AutomationLoader
 {
@@ -24,6 +28,7 @@ final readonly class AutomationLoader
 		private ObjectFetcher $objectFetcher,
 		private ExternalFieldStore $externalFields,
 		private CollectionFetcher $collectionFetcher,
+		private AutomationRegistry $registry,
 		private Config $config,
 	) {
 	}
@@ -65,10 +70,55 @@ final readonly class AutomationLoader
 	}
 
 	/**
-	 * Resolve a handler closure by requiring its external handler file.
+	 * Every enabled automation flattened to {id, triggers, isExtension} — the
+	 * shape the schedule + event dispatch paths consume. File-based automations
+	 * come from enabled(); extension automations come from the registry (already
+	 * filtered to enabled, permitted extensions). Webhooks deliberately do NOT
+	 * use this (they stay file-only — see AutomationResolver::webhook()).
+	 *
+	 * @return list<AutomationDescriptor>
+	 */
+	public function all(): array
+	{
+		$descriptors = [];
+
+		foreach ($this->enabled() as $object) {
+			$descriptors[] = new AutomationDescriptor(
+				(string)$object->id,
+				$this->normalizeTriggers($object->properties->get('triggers')),
+				false,
+			);
+		}
+
+		foreach ($this->registry->all() as $key => $definition) {
+			$descriptors[] = new AutomationDescriptor(
+				$key,
+				array_values(array_filter($definition->triggers, 'is_array')),
+				true,
+			);
+		}
+
+		return $descriptors;
+	}
+
+	/**
+	 * Resolve a handler callable. An id containing ':' is an extension
+	 * automation (`{vendor/name}:{id}`) whose handler is an in-memory closure;
+	 * otherwise it is a file-based automation whose handler is required from its
+	 * externalized sidecar. (File automation ids are slug-formatted and never
+	 * contain a colon, so the split is unambiguous.)
 	 */
 	public function handler(string $id): callable
 	{
+		if (str_contains($id, ':')) {
+			$definition = $this->registry->get($id);
+			if ($definition === null) {
+				throw new \RuntimeException("Extension automation '{$id}' is not registered.");
+			}
+
+			return $definition->handler;
+		}
+
 		$relative = $this->externalFields->sidecarPath('automations', $id, 'handler', 'php');
 		$absolute = PathUtils::absolutePath($this->config->datadir, $relative);
 
@@ -82,5 +132,18 @@ final readonly class AutomationLoader
 		}
 
 		return $fn;
+	}
+
+	/**
+	 * Normalize a triggers property (DeckData or array) to a plain list of
+	 * trigger rows.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private function normalizeTriggers(mixed $triggers): array
+	{
+		$rows = $triggers instanceof DeckData ? $triggers->transform() : $triggers;
+
+		return array_values(array_filter(is_array($rows) ? $rows : [], 'is_array'));
 	}
 }

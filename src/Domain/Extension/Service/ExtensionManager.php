@@ -56,6 +56,7 @@ class ExtensionManager
 	private const RISKY_CAPABILITIES = [
 		'routes:public' => 'Exposes public, unauthenticated endpoints.',
 		'events:listen' => 'Can observe all content changes.',
+		'automations'   => 'Runs server-side code automatically on a schedule or content events.',
 		'container'     => 'Registers services in the application container.',
 		'mcp:tools'     => 'Registers actions AI agents can call (reachable externally if MCP public access is enabled).',
 		'mcp:resources' => 'Exposes data that AI agents can fetch.',
@@ -284,6 +285,20 @@ class ExtensionManager
 				/** @var \TotalCMS\Domain\Event\EventDispatcher $dispatcher */
 				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\EventDispatcher::class);
 				$dispatcher->registerAll($eventListeners);
+			}
+		}
+
+		// Wire extension-contributed automations into the shared registry so they
+		// join the schedule/event dispatch (read-only — handler is an in-memory
+		// closure). Permission-gated inside getAllAutomations().
+		if ($this->container->has(\TotalCMS\Domain\Automation\Service\AutomationRegistry::class)) {
+			$extensionAutomations = $this->getAllAutomations();
+			if ($extensionAutomations !== []) {
+				/** @var \TotalCMS\Domain\Automation\Service\AutomationRegistry $automationRegistry */
+				$automationRegistry = $this->container->get(\TotalCMS\Domain\Automation\Service\AutomationRegistry::class);
+				foreach ($extensionAutomations as $key => $definition) {
+					$automationRegistry->register($key, $definition);
+				}
 			}
 		}
 
@@ -1219,6 +1234,30 @@ class ExtensionManager
 		}
 
 		return $listeners;
+	}
+
+	/**
+	 * Automations contributed by enabled, permitted extensions, keyed
+	 * `{extensionId}:{automationId}` so they share a flat namespace with
+	 * file-based automations while staying attributable. Permission-gated by the
+	 * auto-detected `automations` capability — disabling it hides the
+	 * extension's automations without uninstalling.
+	 *
+	 * @return array<string,\TotalCMS\Domain\Extension\Data\AutomationDefinition>
+	 */
+	public function getAllAutomations(): array
+	{
+		$automations = [];
+		foreach ($this->contexts as $id => $context) {
+			if (!$this->isCapabilityPermitted($id, 'automations')) {
+				continue;
+			}
+			foreach ($context->getRegisteredAutomations() as $automation) {
+				$automations["{$id}:{$automation->id}"] = $automation;
+			}
+		}
+
+		return $automations;
 	}
 
 	/**
