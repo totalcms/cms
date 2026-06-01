@@ -2,15 +2,9 @@
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"title"       : "General Settings",
 	"description" : "Core application settings",
+	"formgrid"    : "siteName\nenv\ntimezone\n---\nnotfound\nmaxDownloadSize\n---\nappLogLevel\nsentry",
 	"type"        : "object",
 	"properties"  : {
-		"sentry": {
-			"type"    : "boolean",
-			"field"   : "toggle",
-			"label"   : "Share Application Errors with Developer",
-			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
-			"default" : true
-		},
 		"siteName": {
 			"type"        : "string",
 			"field"       : "text",
@@ -18,12 +12,16 @@
 			"help"        : "Human-readable name for your site (e.g. 'Joe's Bistro'). Used in the MCP server identity, the <code>site_info</code> MCP tool, and other public-facing surfaces as they adopt it. When blank, T3 falls back to the admin dashboard title and then the domain.",
 			"placeholder" : "Joe's Bistro"
 		},
-		"notfound": {
-			"type"        : "string",
-			"field"       : "text",
-			"label"       : "404 - Page Not Found Path",
-			"help"        : "The path to the 404 page that will be used when a page is not found. This is used by the CMS to redirect when an object is not found.",
-			"placeholder" : "/404"
+		"env": {
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Site Environment",
+			"help"    : "Production protects live visitors and auto-disables repeatedly crashing extensions. Development surfaces extension errors loudly and never auto-disables. Overridden when an APP_ENV environment variable is set.",
+			"default" : "prod",
+			"options" : [
+				{"value": "prod", "label": "Production"},
+				{"value": "dev",  "label": "Development"}
+			]
 		},
 		"timezone": {
 			"type"        : "string",
@@ -34,6 +32,13 @@
 			"settings"    : {
 				"timezoneOptions": true
 			}
+		},
+		"notfound": {
+			"type"        : "string",
+			"field"       : "text",
+			"label"       : "404 - Page Not Found Path",
+			"help"        : "The path to the 404 page that will be used when a page is not found. This is used by the CMS to redirect when an object is not found.",
+			"placeholder" : "/404"
 		},
 		"maxDownloadSize": {
 			"type"        : "number",
@@ -60,16 +65,12 @@
 				{"value": "emergency", "label": "Emergency"}
 			]
 		},
-		"env": {
-			"type"    : "string",
-			"field"   : "select",
-			"label"   : "Site Environment",
-			"help"    : "Production protects live visitors and auto-disables repeatedly crashing extensions. Development surfaces extension errors loudly and never auto-disables. Overridden when an APP_ENV environment variable is set.",
-			"default" : "prod",
-			"options" : [
-				{"value": "prod", "label": "Production"},
-				{"value": "dev",  "label": "Development"}
-			]
+		"sentry": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Share Application Errors with Developer",
+			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
+			"default" : true
 		}
 	}
 }
