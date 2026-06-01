@@ -91,6 +91,19 @@ final class DangerousCodeScanner
 	}
 
 	/**
+	 * Scan a single in-memory PHP source string (e.g. an automation handler)
+	 * rather than a directory tree. Same heuristic, same finding shape minus the
+	 * `file` key. Used by the automations admin to surface a non-blocking
+	 * advisory next to a handler that reaches for high-risk calls.
+	 *
+	 * @return list<array{pattern:string,line:int,snippet:string}>
+	 */
+	public function scanCode(string $php): array
+	{
+		return $this->scanContents($php);
+	}
+
+	/**
 	 * Tokenize a single file's contents and return its findings.
 	 *
 	 * @return list<array{pattern:string,line:int,snippet:string}>

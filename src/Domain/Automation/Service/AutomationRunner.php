@@ -38,6 +38,8 @@ final class AutomationRunner
 		private readonly ObjectRemover $objectRemover,
 		private readonly EmailService $mailer,
 		private readonly Config $config,
+		private readonly AutomationGuard $guard,
+		private readonly AutomationActivityLogger $activity,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('automations.log')->createLogger('automations');
@@ -69,20 +71,25 @@ final class AutomationRunner
 			event: $event,
 		);
 
+		$triggerType = (string)($trigger['type'] ?? '');
+		$this->activity->runStarted($id, $triggerType);
+
 		$status    = 'success';
 		$return    = null;
 		$exception = null;
+		$throwable = null;
 
 		try {
 			$fn     = $this->loader->handler($id);
 			$return = $fn($ctx);
-			$this->state->resetFailures($id);
 		} catch (\Throwable $e) {
 			$status    = 'failed';
 			$exception = $e->getMessage() . "\n" . $e->getTraceAsString();
-			$this->state->incrementFailures($id);
+			$throwable = $e;
 			$this->logger->error("Automation '{$id}' failed: {$e->getMessage()}", ['exception' => $e]);
 		}
+
+		$durationMs = (int)((hrtime(true) - $start) / 1_000_000);
 
 		$record = new RunRecord(
 			runId      : $runId,
@@ -91,12 +98,29 @@ final class AutomationRunner
 			status     : $status,
 			startedAt  : $startedAt,
 			finishedAt : gmdate('c'),
-			durationMs : (int)((hrtime(true) - $start) / 1_000_000),
+			durationMs : $durationMs,
 			return     : $return,
 			exception  : $exception,
 		);
 
 		$this->persistRun($id, $record);
+
+		if ($throwable === null) {
+			$this->state->resetFailures($id);
+			$this->guard->reset($id);
+			$this->activity->runSucceeded($id, $triggerType, $durationMs);
+		} else {
+			$failures = $this->state->incrementFailures($id);
+			$this->activity->runFailed($id, $triggerType, $throwable->getMessage(), $failures);
+			$this->notifyError($id, $throwable);
+
+			// Production only: trip the auto-disable breaker once failures pile up
+			// so a broken handler can't fail (and email) forever.
+			if ($this->guard->recordFailure($id)) {
+				$this->disable($id);
+				$this->activity->autoDisabled($id, $failures);
+			}
+		}
 
 		return $record;
 	}
@@ -124,6 +148,49 @@ final class AutomationRunner
 		sort($files);
 		foreach (array_slice($files, 0, count($files) - $limit) as $old) {
 			$this->filesystem->delete($old);
+		}
+	}
+
+	/**
+	 * Auto-disable a misbehaving automation by flipping its `enabled` flag.
+	 * Silent so the resulting object.updated does not re-enter the event
+	 * pipeline (an event-triggered automation must not be able to disable-loop).
+	 */
+	private function disable(string $id): void
+	{
+		try {
+			$data            = $this->objectFetcher->fetchObject('automations', $id)->toArray();
+			$data['enabled'] = false;
+			$this->objectUpdater->updateObject('automations', $id, $data, true);
+		} catch (\Throwable $e) {
+			$this->logger->error("Failed to auto-disable automation '{$id}': {$e->getMessage()}");
+		}
+	}
+
+	/**
+	 * Email the operator when a handler throws — but only where errors are
+	 * contained (Production). In dev/preview errors surface loudly instead, so
+	 * we skip the mail. No-ops when the automation has no errorMailerId set.
+	 */
+	private function notifyError(string $id, \Throwable $e): void
+	{
+		if ($this->guard->shouldSurfaceErrors()) {
+			return;
+		}
+
+		try {
+			$data     = $this->objectFetcher->fetchObject('automations', $id)->toArray();
+			$mailerId = trim((string)($data['errorMailerId'] ?? ''));
+			if ($mailerId === '') {
+				return;
+			}
+
+			$this->mailer->sendEmail($mailerId, [
+				'automation' => $id,
+				'error'      => $e->getMessage(),
+			]);
+		} catch (\Throwable $ex) {
+			$this->logger->error("Failed to send automation error notification for '{$id}': {$ex->getMessage()}");
 		}
 	}
 }

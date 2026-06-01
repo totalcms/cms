@@ -112,4 +112,38 @@ describe('DangerousCodeScanner', function (): void {
 		// Local file_get_contents is not flagged at all.
 		expect($patterns)->not->toContain('file_get_contents');
 	});
+
+	test('scanCode flags an in-memory automation handler string', function (): void {
+		$handler = <<<'PHP'
+			<?php
+
+			return function ($ctx) {
+			    shell_exec('rm -rf /');
+
+			    return ['ok' => true];
+			};
+			PHP;
+
+		$findings = (new DangerousCodeScanner())->scanCode($handler);
+		$patterns = array_column($findings, 'pattern');
+
+		expect($patterns)->toContain('shell_exec');
+		// Finding shape has no `file` key (string scan, not a directory walk).
+		expect($findings[0])->toHaveKeys(['pattern', 'line', 'snippet']);
+		expect($findings[0])->not->toHaveKey('file');
+	});
+
+	test('scanCode returns nothing for a benign handler', function (): void {
+		$handler = <<<'PHP'
+			<?php
+
+			return function ($ctx) {
+			    $ctx->objects->save('blog', ['title' => 'Hi']);
+
+			    return ['saved' => 1];
+			};
+			PHP;
+
+		expect((new DangerousCodeScanner())->scanCode($handler))->toBe([]);
+	});
 });

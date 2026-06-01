@@ -2,11 +2,23 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
+use TotalCMS\Domain\Automation\Service\AutomationGuard;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Domain\Automation\Service\AutomationStateStore;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -65,4 +77,63 @@ it('captures a thrown handler as a failed run record and increments failures', f
 	expect($record->status)->toBe('failed');
 	expect($record->exception)->toContain('nope');
 	expect($container->get(AutomationStateStore::class)->failures('boom'))->toBe(1);
+});
+
+/**
+ * Build a runner whose guard believes it is running in Production, so the
+ * auto-disable breaker actually trips. Everything else is the real container
+ * wiring.
+ */
+function prodRunner(object $container): AutomationRunner
+{
+	$prodConfig      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$prodConfig->env = 'prod';
+	$guard           = new AutomationGuard(new EnvironmentResolver($prodConfig, false), $container->get(CacheManager::class));
+
+	return new AutomationRunner(
+		$container->get(AutomationLoader::class),
+		$container->get(AutomationStateStore::class),
+		$container->get(StorageAdapterInterface::class),
+		$container->get(IndexReader::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectSaver::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(ObjectRemover::class),
+		$container->get(EmailService::class),
+		$container->get(Config::class),
+		$guard,
+		$container->get(AutomationActivityLogger::class),
+		$container->get(LoggerFactory::class),
+	);
+}
+
+it('auto-disables an automation after repeated Production failures', function (): void {
+	$container = $this->app->getContainer();
+	$container->get(CacheManager::class)->clearData('auto_fail_' . md5('breaker'));
+	saveAutomation($container, 'breaker', "<?php\n\nreturn function (\$ctx) {\n    throw new \\RuntimeException('always');\n};\n");
+
+	$runner = prodRunner($container);
+
+	// Threshold is 5: the first four failures keep it enabled.
+	for ($i = 0; $i < 4; $i++) {
+		$runner->run('breaker', ['type' => 'schedule'], []);
+	}
+	expect($container->get(ObjectFetcher::class)->fetchObject('automations', 'breaker')->toArray()['enabled'])->toBeTrue();
+
+	// The fifth trips the breaker.
+	$runner->run('breaker', ['type' => 'schedule'], []);
+	expect($container->get(ObjectFetcher::class)->fetchObject('automations', 'breaker')->toArray()['enabled'])->toBeFalse();
+});
+
+it('never auto-disables in development no matter how many times it fails', function (): void {
+	$container = $this->app->getContainer();
+	saveAutomation($container, 'devboom', "<?php\n\nreturn function (\$ctx) {\n    throw new \\RuntimeException('still here');\n};\n");
+
+	$runner = $container->get(AutomationRunner::class); // dev/test environment
+
+	for ($i = 0; $i < 8; $i++) {
+		$runner->run('devboom', ['type' => 'schedule'], []);
+	}
+
+	expect($container->get(ObjectFetcher::class)->fetchObject('automations', 'devboom')->toArray()['enabled'])->toBeTrue();
 });
