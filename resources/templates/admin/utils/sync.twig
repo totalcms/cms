@@ -251,7 +251,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			body.append(`${key}_mode`, 'all');
 			return;
 		}
-		const selected = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}[]"]:checked`))
+		// multicheckbox renders each option with a bare `name` (no `[]`), so the
+		// selector must match that — `${itemsFieldName}`, not `${itemsFieldName}[]`.
+		// The body.append below still uses `[]` so PHP parses it as an array.
+		const selected = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}"]:checked`))
 			.map(cb => cb.value);
 		if (selected.length === 0) {
 			body.append(`${key}_mode`, 'none');
@@ -286,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				body.append(`collections[${cid}][mode]`, 'all');
 				return;
 			}
-			const selected = Array.from(form.querySelectorAll(`input[name="collection-${cid}[]"]:checked`))
+			const selected = Array.from(form.querySelectorAll(`input[name="collection-${cid}"]:checked`))
 				.map(cb => cb.value);
 			if (selected.length === 0) {
 				body.append(`collections[${cid}][mode]`, 'none');

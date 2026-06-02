@@ -35,6 +35,23 @@ describe('MulticheckboxField', function (): void {
 			->toContain('choice-field--columns');
 	});
 
+	test('MulticheckboxField → option inputs use a bare name (no []) — the Sync Manager JS relies on this', function (): void {
+		// Each checkbox option renders name="schemas", NOT name="schemas[]". The
+		// Sync Manager serializes its selection by reading input[name="schemas"]:checked,
+		// so a bracketed name here would break specific-selection sync (only "All"
+		// would work). Guards against reintroducing that mismatch.
+		$field = new MulticheckboxField($this->form, 'schemas', options: [
+			['value' => 'blog', 'label' => 'blog'],
+			['value' => 'page', 'label' => 'page'],
+		]);
+
+		$html = $field->build();
+
+		expect($html)
+			->toContain('name="schemas"')
+			->not->toContain('name="schemas[]"');
+	});
+
 	test('MulticheckboxField → does not duplicate predefined options when value already matches', function (): void {
 		$field = new MulticheckboxField(
 			$this->form,
