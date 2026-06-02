@@ -36,7 +36,21 @@
 			"field"       : "text",
 			"placeholder" : "*/15 * * * *",
 			"pattern"     : "^$|^@\\w+$|^[\\d*/,?#A-Za-z-]+(\\s+[\\d*/,?#A-Za-z-]+){4}$",
-			"settings"    : { "visibility": { "watch": "type", "value": "schedule", "operator": "==" } }
+			"settings"    : { "visibility": { "watch": "type", "value": "schedule", "operator": "==" } },
+			"options" : [
+				{ "value": "* * * * *",     "label": "Every minute" },
+				{ "value": "*/15 * * * *",  "label": "Every 15 minutes" },
+				{ "value": "*/30 * * * *",  "label": "Every 30 minutes" },
+				{ "value": "15 * * * *",    "label": "Hourly at :15" },
+				{ "value": "0 */6 * * *",   "label": "Every 6 hours" },
+				{ "value": "20 5 * * *",    "label": "Daily at 05:20" },
+				{ "value": "0 8,17 * * *",  "label": "Twice daily (8am & 5pm)" },
+				{ "value": "0 2 * * 0",     "label": "Sundays at 02:00" },
+				{ "value": "0 8 * * 1",     "label": "Mondays at 08:00" },
+				{ "value": "0 9 * * 1-5",   "label": "Weekdays at 09:00" },
+				{ "value": "30 9 1 * *",    "label": "Monthly on the 1st at 09:30" },
+				{ "value": "0 0 1 1 *",     "label": "Yearly on the Jan 1st at 00:00" }
+			]
 		},
 		"auth": {
 			"type"    : "string",

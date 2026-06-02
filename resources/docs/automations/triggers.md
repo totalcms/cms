@@ -19,14 +19,26 @@ Runs the handler on a cron schedule. Requires the [`automations:process` command
 |-------|-------------|
 | `cron` | A standard 5-field cron expression, e.g. `*/15 * * * *` (every 15 minutes) or `0 3 * * *` (daily at 03:00). Evaluated in the site timezone. |
 
-The editor validates the cron syntax as you type. Macros like `@daily` are also accepted.
+The cron field offers a **dropdown of common schedules** — pick one to fill in the expression, or type your own. The editor validates the syntax as you type, and macros like `@daily` / `@hourly` are also accepted.
+
+The built-in suggestions:
 
 ```
-*/15 * * * *     every 15 minutes
-0 3 * * *        every day at 03:00
-0 9 * * 1        every Monday at 09:00
-@hourly          top of every hour
+* * * * *       Every minute
+*/15 * * * *    Every 15 minutes
+*/30 * * * *    Every 30 minutes
+15 * * * *      Hourly at :15
+0 */6 * * *     Every 6 hours
+20 5 * * *      Daily at 05:20
+0 8,17 * * *    Twice daily (8am & 5pm)
+0 2 * * 0       Sundays at 02:00
+0 8 * * 1       Mondays at 08:00
+0 9 * * 1-5     Weekdays at 09:00
+30 9 1 * *      Monthly on the 1st at 09:30
+0 0 1 1 *       Yearly on the Jan 1st at 00:00
 ```
+
+These are starting points — any valid 5-field cron works.
 
 ## Webhook
 
