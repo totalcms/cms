@@ -38,6 +38,17 @@ final class DangerousCodeScanner
 	];
 
 	/**
+	 * The subset of finding patterns serious enough to BLOCK a save rather than
+	 * merely warn — shell/eval primitives that are almost never legitimate in an
+	 * operator-authored handler. The remaining (dual-use) patterns — file/network
+	 * functions like `file_put_contents`, `curl_exec`, `base64_decode` — stay
+	 * advisory, since a real handler may legitimately use them.
+	 *
+	 * @var list<string>
+	 */
+	public const BLOCKING_PATTERNS = ['eval', 'backtick', 'exec', 'system', 'shell_exec', 'passthru', 'proc_open', 'popen'];
+
+	/**
 	 * Directories skipped during the walk — third-party dependencies and VCS
 	 * metadata. We review the extension author's own code, not their libraries.
 	 *
@@ -101,6 +112,21 @@ final class DangerousCodeScanner
 	public function scanCode(string $php): array
 	{
 		return $this->scanContents($php);
+	}
+
+	/**
+	 * Scan a PHP source string and return only the findings serious enough to
+	 * block a save (see {@see self::BLOCKING_PATTERNS}). Used at the object-save
+	 * seam to reject a handler that reaches for shell/eval primitives.
+	 *
+	 * @return list<array{pattern:string,line:int,snippet:string}>
+	 */
+	public function scanCodeForBlocking(string $php): array
+	{
+		return array_values(array_filter(
+			$this->scanCode($php),
+			static fn (array $finding): bool => in_array($finding['pattern'], self::BLOCKING_PATTERNS, true),
+		));
 	}
 
 	/**

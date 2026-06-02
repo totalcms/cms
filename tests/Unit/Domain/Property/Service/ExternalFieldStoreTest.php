@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Property\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\CodeData;
 use TotalCMS\Domain\Property\Service\ExternalFieldStore;
@@ -20,6 +21,7 @@ final class ExternalFieldStoreTest extends TestCase
 		return new ExternalFieldStore(
 			$this->createMock(StorageAdapterInterface::class),
 			$this->createMock(SchemaFetcher::class),
+			new DangerousCodeScanner(),
 		);
 	}
 
@@ -49,7 +51,7 @@ final class ExternalFieldStoreTest extends TestCase
 		$fs->method('fileExists')->willReturnCallback(fn (string $path): bool => isset($files[$path]));
 		$fs->method('read')->willReturnCallback(fn (string $path): string => $files[$path] ?? '');
 
-		return new ExternalFieldStore($fs, $fetcher);
+		return new ExternalFieldStore($fs, $fetcher, new DangerousCodeScanner());
 	}
 
 	public function testExternalFieldsMapsExternalCodeFieldsToTheirExtension(): void
@@ -101,6 +103,42 @@ final class ExternalFieldStoreTest extends TestCase
 		expect($blanked)->toBe(['handler']);
 		expect($files['automations/process-monthly/handler/handler.php'])
 			->toBe('<?php return fn($ctx) => 1;');
+	}
+
+	public function testPersistRejectsPhpHandlerWithBlockingPatterns(): void
+	{
+		$files = [];
+		$store = $this->storeWithSchema($files);
+
+		$object = new ObjectData('evil', [
+			'handler' => new CodeData('<?php exec("rm -rf /");', ['mode' => 'php', 'external' => true]),
+		]);
+
+		try {
+			$store->persist('automations', $object);
+			$this->fail('expected the dangerous handler to be rejected');
+		} catch (\DomainException $e) {
+			expect($e->getMessage())->toContain('exec');
+		}
+
+		// Aborts before the sidecar is written (persist runs before the JSON write).
+		expect($files)->toBe([]);
+	}
+
+	public function testPersistAllowsDualUseFileAndNetworkCalls(): void
+	{
+		$files = [];
+		$store = $this->storeWithSchema($files);
+
+		// file_put_contents is advisory-only, not in BLOCKING_PATTERNS, so it saves.
+		$object = new ObjectData('writer', [
+			'handler' => new CodeData('<?php file_put_contents("/tmp/x", "y");', ['mode' => 'php', 'external' => true]),
+		]);
+
+		$blanked = $store->persist('automations', $object);
+
+		expect($blanked)->toBe(['handler']);
+		expect($files['automations/writer/handler/handler.php'])->toBe('<?php file_put_contents("/tmp/x", "y");');
 	}
 
 	public function testHydrateReadsSidecarFilesIntoTheObject(): void

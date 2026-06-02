@@ -71,13 +71,16 @@ it('renders the automations list', function (): void {
 
 it('renders the editor with a handler advisory for a risky handler', function (): void {
 	$container = $this->app->getContainer();
-	saveAdminAutomation($container, 'risky', "<?php\n\nreturn function (\$ctx) {\n    shell_exec('whoami');\n    return 1;\n};\n");
+	// A dual-use pattern (file_put_contents): advisory-only, so it saves and
+	// still surfaces a finding. Shell/eval primitives are now rejected on save
+	// (see ExternalFieldStoreTest), so the advisory only applies to these.
+	saveAdminAutomation($container, 'risky', "<?php\n\nreturn function (\$ctx) {\n    file_put_contents('/tmp/x', 'y');\n    return 1;\n};\n");
 
 	$result = $container->get(AdminAutomationsAction::class)(adminRequest('GET', '/admin/automations/risky'), new Response(), ['id' => 'risky']);
 
 	$body = (string)$result->getBody();
 	expect($result->getStatusCode())->toBe(200);
-	expect($body)->toContain('shell_exec');          // advisory finding rendered
+	expect($body)->toContain('file_put_contents'); // advisory finding rendered
 	expect($body)->toContain('Handler patterns to review');
 	// The form must load the existing object's data + show Save/Delete (the
 	// builder needs id/save/delete options — regression guard).

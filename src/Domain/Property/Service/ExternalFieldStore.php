@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\CodeData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -35,6 +36,7 @@ readonly class ExternalFieldStore
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 		private SchemaFetcher $schemaFetcher,
+		private DangerousCodeScanner $scanner,
 	) {
 	}
 
@@ -99,11 +101,41 @@ readonly class ExternalFieldStore
 				continue;
 			}
 
-			$this->filesystem->write($this->sidecarPath($collection, $object->id, $name, $ext), (string)$property);
+			$value = (string)$property;
+
+			// Reject a PHP handler that reaches for shell/eval primitives before
+			// it ever lands on disk. persist() runs before the object JSON write,
+			// so a throw here aborts the whole save cleanly. Dual-use file/network
+			// calls (file_put_contents, curl_exec, …) remain advisory, not blocked.
+			if ($ext === 'php') {
+				$blocking = $this->scanner->scanCodeForBlocking($value);
+				if ($blocking !== []) {
+					throw new \DomainException($this->blockedMessage($name, $blocking));
+				}
+			}
+
+			$this->filesystem->write($this->sidecarPath($collection, $object->id, $name, $ext), $value);
 			$persisted[] = $name;
 		}
 
 		return $persisted;
+	}
+
+	/**
+	 * @param list<array{pattern:string,line:int,snippet:string}> $findings
+	 */
+	private function blockedMessage(string $field, array $findings): string
+	{
+		$parts = array_map(
+			static fn (array $finding): string => sprintf('%s (line %d)', $finding['pattern'], $finding['line']),
+			$findings,
+		);
+
+		return sprintf(
+			'The "%s" handler was rejected: disallowed code detected — %s. Remove these calls to save.',
+			$field,
+			implode(', ', $parts),
+		);
 	}
 
 	/**
