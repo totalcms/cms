@@ -44,4 +44,37 @@ class TemplatePlaceholder
 			$template,
 		);
 	}
+
+	/**
+	 * Resolve a (possibly dotted) placeholder key against a nested data array
+	 * and coerce it to a display string.
+	 *
+	 * Dot notation walks into nested values, so one rule covers every composite
+	 * field a deck item can hold:
+	 *   - `text.es`         localizedtext → locale value
+	 *   - `card.title`      card → sub-field value
+	 *   - `card.headline.es` card → localizedtext sub-field → locale value
+	 *   - `id`, `type`, …   plain top-level keys (no dot)
+	 *
+	 * A key that resolves to a non-scalar (e.g. a bare `card`/`text`, or a path
+	 * that lands on a nested object) returns '' rather than dumping the array —
+	 * so labels never show `Array` / `[object Object]`. Mirror of the
+	 * `resolveLabelKey()` walk in `javascript/totalform/deckItem.js`.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	public static function resolvePath(array $data, string $key): string
+	{
+		$segments = explode('.', $key);
+		$value    = $data[array_shift($segments)] ?? '';
+
+		foreach ($segments as $segment) {
+			if (!is_array($value) || !array_key_exists($segment, $value)) {
+				return '';
+			}
+			$value = $value[$segment];
+		}
+
+		return is_scalar($value) ? trim((string)$value) : '';
+	}
 }

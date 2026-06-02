@@ -21,6 +21,11 @@ The `deckItemLabel` setting controls how deck items are labeled in the admin int
 
 - **Field values:** `${fieldName}` - Any field from the deck item schema
 - **Multiple fields:** `${id} - ${title}` - Combine multiple fields with separators
+- **Nested values (dot notation):** `${field.key}` - Reach into a composite field's value:
+  - `${card.title}` - a sub-field of a `card` field
+  - `${headline.es}` - a single locale of a `localizedtext` / `localizedstyledtext` field
+  - `${card.headline.es}` - both at once (a localized sub-field inside a card)
+  - A bare `${card}` or `${headline}` (a composite value with no sub-key) resolves to nothing rather than a raw dump — point at the part you want.
 - **Dynamic values (new items only):**
   - `${uid}` - Random unique ID
   - `${uuid}` - Full UUID

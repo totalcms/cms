@@ -190,14 +190,13 @@ class DeckItem
 	 */
 	protected function generateLabel(): string
 	{
-		$label = TemplatePlaceholder::render($this->deckItemLabel, function (string $fieldName): string {
-			if ($fieldName === 'id') {
+		$label = TemplatePlaceholder::render($this->deckItemLabel, function (string $key): string {
+			if ($key === 'id') {
 				return $this->itemId;
 			}
 
-			$value = $this->itemData[$fieldName] ?? '';
-
-			return is_string($value) ? trim($value) : '';
+			// Dot notation walks into composite values — card.title, text.es, …
+			return TemplatePlaceholder::resolvePath($this->itemData, $key);
 		});
 
 		$label = trim($label);
