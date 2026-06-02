@@ -13,7 +13,7 @@ At launch the dashboard covers three core sources:
 - **API Key Activity** — new logger, 4 event types
 - **Auth Activity** — refactored existing auth logging to use structured `type` fields
 
-Beyond launch, **Automations** registers as a core source (Pro-gated) once the [Automations](automations.md) feature ships — `run.success` / `run.failed` / `auto_disabled` / `webhook.unauthorized` events from an `AutomationActivityLogger` (mirrors `OAuthActivityLogger`). See `automations.md` → Observability.
+Beyond launch, **Automations** registers as a core source (Pro-gated). **The Automations feature has now shipped** (3.5) with `AutomationActivityLogger` (`src/Domain/Automation/Service/AutomationActivityLogger.php`, mirrors `OAuthActivityLogger`) already writing structured, `type`-tagged events to the rotating `automations-activity.log` channel — so the only remaining work to light up the dashboard source is the `ActivitySource` registration (no logging retrofit). The emitted event types are `run.started`, `run.success`, `run.failed`, and `auto_disabled` (the `run.failed` / `auto_disabled` ones are the warnings to surface). Note: there is **no** `webhook.unauthorized` event — an unscoped webhook is rejected at the middleware (401) and not logged to this channel.
 
 Extensions can register their own sources via `ExtensionContext::registerActivitySource()`.
 
