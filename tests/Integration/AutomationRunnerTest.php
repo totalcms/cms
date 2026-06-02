@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
+use TotalCMS\Domain\Automation\Service\AutomationContextFactory;
 use TotalCMS\Domain\Automation\Service\AutomationGuard;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
@@ -10,10 +11,8 @@ use TotalCMS\Domain\Automation\Service\AutomationStateStore;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
-use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -94,11 +93,9 @@ function prodRunner(object $container): AutomationRunner
 		$container->get(AutomationLoader::class),
 		$container->get(AutomationStateStore::class),
 		$container->get(StorageAdapterInterface::class),
-		$container->get(IndexReader::class),
+		$container->get(AutomationContextFactory::class),
 		$container->get(ObjectFetcher::class),
-		$container->get(ObjectSaver::class),
 		$container->get(ObjectUpdater::class),
-		$container->get(ObjectRemover::class),
 		$container->get(EmailService::class),
 		$container->get(Config::class),
 		$guard,

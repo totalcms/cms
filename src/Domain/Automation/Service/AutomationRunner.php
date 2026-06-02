@@ -6,13 +6,9 @@ namespace TotalCMS\Domain\Automation\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Automation\Data\AutomationContext;
 use TotalCMS\Domain\Automation\Data\RunRecord;
-use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectRemover;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
@@ -31,11 +27,9 @@ final class AutomationRunner
 		private readonly AutomationLoader $loader,
 		private readonly AutomationStateStore $state,
 		private readonly StorageAdapterInterface $filesystem,
-		private readonly IndexReader $indexReader,
+		private readonly AutomationContextFactory $contextFactory,
 		private readonly ObjectFetcher $objectFetcher,
-		private readonly ObjectSaver $objectSaver,
 		private readonly ObjectUpdater $objectUpdater,
-		private readonly ObjectRemover $objectRemover,
 		private readonly EmailService $mailer,
 		private readonly Config $config,
 		private readonly AutomationGuard $guard,
@@ -56,20 +50,7 @@ final class AutomationRunner
 		$startedAt = gmdate('c');
 		$start     = hrtime(true);
 
-		$ctx = new AutomationContext(
-			indexReader: $this->indexReader,
-			objectFetcher: $this->objectFetcher,
-			objectSaver: $this->objectSaver,
-			objectUpdater: $this->objectUpdater,
-			objectRemover: $this->objectRemover,
-			mailer: $this->mailer,
-			config: $this->config,
-			logger: $this->logger,
-			trigger: $trigger,
-			args: $args,
-			request: $request,
-			event: $event,
-		);
+		$ctx = $this->contextFactory->create($trigger, $args, $request, $event);
 
 		$triggerType = (string)($trigger['type'] ?? '');
 		$this->activity->runStarted($id, $triggerType);
