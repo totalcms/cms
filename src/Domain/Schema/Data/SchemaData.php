@@ -55,6 +55,17 @@ class SchemaData
 		'toggle',
 		'url',
 	];
+	/**
+	 * Reserved collections that can execute code or carry security-sensitive
+	 * config, and are therefore writable through the generic object API only by
+	 * a super-admin (their admin UI is already AdminOnly-gated). `automations`
+	 * ships an `external mode:php` handler field — a direct RCE vector.
+	 *
+	 * @var list<string>
+	 */
+	public const SYSTEM_COLLECTIONS = [
+		'automations',
+	];
 	public const PROPERTY_TYPES = [
 		'array',
 		'boolean',
