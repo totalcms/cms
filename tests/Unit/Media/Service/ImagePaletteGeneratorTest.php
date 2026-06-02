@@ -210,6 +210,56 @@ final class ImagePaletteGeneratorTest extends TestCase
 		$this->assertLessThanOrEqual(5, count($palette));
 	}
 
+	/**
+	 * A large image must NOT OOM-kill the worker. On a GD-only install ColorThief
+	 * would decode the full bitmap and exhaust memory_limit with an uncatchable
+	 * fatal — the guard converts that into a RuntimeException so the caller can
+	 * skip the palette and still save the image with correct metadata.
+	 *
+	 * Uses a tiny PNG whose header *declares* huge dimensions, so getimagesize
+	 * reports them without allocating any pixels and the guard trips before any
+	 * decode is attempted.
+	 */
+	public function testGetPaletteThrowsWhenGdDecodeWouldExceedMemoryLimit(): void
+	{
+		if (!extension_loaded('gd')) {
+			$this->markTestSkipped('GD extension is required for this test');
+		}
+		if (extension_loaded('imagick')) {
+			$this->markTestSkipped('Guard is GD-only; ColorThief uses Imagick when it is present');
+		}
+
+		$imagePath = $this->createHugeHeaderPng('huge.png', 25000, 25000);
+
+		// Generous headroom above current usage so the test process is never at
+		// risk, while the ~3GB decode estimate for 25000x25000 still far exceeds it.
+		$original = ini_get('memory_limit');
+		ini_set('memory_limit', (string)(memory_get_usage(true) + 256 * 1024 * 1024));
+
+		try {
+			$this->expectException(\RuntimeException::class);
+			$this->expectExceptionMessage('too large to decode with GD');
+			ImagePaletteGenerator::getPalette($imagePath);
+		} finally {
+			ini_set('memory_limit', (string)$original);
+		}
+	}
+
+	/** Write a minimal PNG (signature + IHDR) that declares the given dimensions. */
+	private function createHugeHeaderPng(string $filename, int $width, int $height): string
+	{
+		$imagePath = $this->tempDir . '/' . $filename;
+
+		$ihdr = pack('N', $width) . pack('N', $height) . chr(8) . chr(2) . chr(0) . chr(0) . chr(0);
+		$png  = "\x89PNG\r\n\x1a\n"
+			. pack('N', strlen($ihdr)) . 'IHDR' . $ihdr . pack('N', crc32('IHDR' . $ihdr))
+			. pack('N', 0) . 'IEND' . pack('N', crc32('IEND'));
+
+		file_put_contents($imagePath, $png);
+
+		return $imagePath;
+	}
+
 	public function testGetPaletteWithSingleColorImage(): void
 	{
 		if (!extension_loaded('gd')) {
