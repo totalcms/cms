@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Cache\Service;
 
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 
 /**

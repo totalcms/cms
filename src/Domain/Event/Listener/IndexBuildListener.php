@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Event\Listener;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 

@@ -280,11 +280,11 @@ class ExtensionManager
 		}
 
 		// Wire event listeners from extensions into the EventDispatcher
-		if ($this->container->has(\TotalCMS\Domain\Event\EventDispatcher::class)) {
+		if ($this->container->has(\TotalCMS\Domain\Event\Service\EventDispatcher::class)) {
 			$eventListeners = $this->getAllEventListeners();
 			if ($eventListeners !== []) {
-				/** @var \TotalCMS\Domain\Event\EventDispatcher $dispatcher */
-				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\EventDispatcher::class);
+				/** @var \TotalCMS\Domain\Event\Service\EventDispatcher $dispatcher */
+				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\Service\EventDispatcher::class);
 				$dispatcher->registerAll($eventListeners);
 			}
 		}
@@ -1383,9 +1383,9 @@ class ExtensionManager
 	private function dispatchEvent(string $event, ExtensionEventPayload $payload): void
 	{
 		try {
-			if ($this->container->has(\TotalCMS\Domain\Event\EventDispatcher::class)) {
-				/** @var \TotalCMS\Domain\Event\EventDispatcher $dispatcher */
-				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\EventDispatcher::class);
+			if ($this->container->has(\TotalCMS\Domain\Event\Service\EventDispatcher::class)) {
+				/** @var \TotalCMS\Domain\Event\Service\EventDispatcher $dispatcher */
+				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\Service\EventDispatcher::class);
 				$dispatcher->dispatch($event, $payload);
 			}
 		} catch (\Throwable) {

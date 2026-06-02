@@ -7,7 +7,7 @@ namespace Tests\Unit\Domain\Event\Listener;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;

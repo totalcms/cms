@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Event\Listener;
 
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 readonly class CollectionMetadataListener
 {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;

@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;

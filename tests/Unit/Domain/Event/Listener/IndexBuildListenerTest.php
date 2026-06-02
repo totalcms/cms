@@ -9,7 +9,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;

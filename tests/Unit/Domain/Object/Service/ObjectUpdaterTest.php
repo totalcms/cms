@@ -22,7 +22,7 @@ final class ObjectUpdaterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $repository;
 	private \PHPUnit\Framework\MockObject\MockObject $factory;
 	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
-	private \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher;
+	private \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher;
 
 	/** @var array<string,mixed>|null */
 	private ?array $dispatchedPayload = null;
@@ -33,7 +33,7 @@ final class ObjectUpdaterTest extends TestCase
 		$this->repository        = $this->createMock(ObjectRepository::class);
 		$this->factory           = $this->createMock(ObjectFactory::class);
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
-		$this->eventDispatcher   = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
+		$this->eventDispatcher   = new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger());
 
 		$this->eventDispatcher->listen('object.updated', function (array $payload): void {
 			$this->dispatchedPayload = $payload;

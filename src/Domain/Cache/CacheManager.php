@@ -12,7 +12,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\License\Data\LicenseData;

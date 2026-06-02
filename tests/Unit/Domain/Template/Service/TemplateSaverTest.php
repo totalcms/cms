@@ -6,7 +6,7 @@ namespace Tests\Unit\Domain\Template\Service;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;

@@ -44,7 +44,7 @@ class JumpStartImporter
 		private readonly SchemaSaver $schemaSaver,
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
-		private readonly \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher,
+		private readonly \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-importer');

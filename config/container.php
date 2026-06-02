@@ -38,7 +38,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
 use TotalCMS\Domain\Event\Listener\DataViewListener;

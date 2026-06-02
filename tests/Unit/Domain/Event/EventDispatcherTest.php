@@ -1,7 +1,7 @@
 <?php
 
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;

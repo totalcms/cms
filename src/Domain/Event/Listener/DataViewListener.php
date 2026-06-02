@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Event\Listener;
 
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 readonly class DataViewListener
 {
