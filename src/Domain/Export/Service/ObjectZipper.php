@@ -33,7 +33,7 @@ readonly class ObjectZipper
 		$objectFile = PathUtils::buildPath(collection: $collection, filename: $id . '.json');
 		$assetsPath = PathUtils::buildPath(collection: $collection, filename: $id);
 
-		$fullObjectPath = $datadir . DIRECTORY_SEPARATOR . $objectFile;
+		$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
 
 		// Verify object exists
 		if (!file_exists($fullObjectPath)) {
@@ -55,7 +55,7 @@ readonly class ObjectZipper
 		$zip->addFile($fullObjectPath, $id . '.json');
 
 		// Add assets folder if exists and has non-cache contents
-		$fullAssetsPath = $datadir . DIRECTORY_SEPARATOR . $assetsPath;
+		$fullAssetsPath = PathUtils::absolutePath($datadir, $assetsPath);
 		if (is_dir($fullAssetsPath) && $this->hasNonCacheContents($fullAssetsPath)) {
 			$this->addDirectoryToZip($zip, $fullAssetsPath, $id);
 		}

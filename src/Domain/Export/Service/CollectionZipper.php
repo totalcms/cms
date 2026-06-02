@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Export\Service;
 
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -25,7 +26,7 @@ readonly class CollectionZipper
 	 */
 	public function createCollectionZip(string $collection): string
 	{
-		$collectionPath = $this->config->datadir . DIRECTORY_SEPARATOR . $collection;
+		$collectionPath = PathUtils::absolutePath($this->config->datadir, $collection);
 
 		if (!is_dir($collectionPath)) {
 			throw new \RuntimeException(sprintf('Collection directory not found: %s', $collectionPath));

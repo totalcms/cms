@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mailer\Repository;
 
 use TotalCMS\Domain\Mailer\Data\BulkMailLogData;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -20,7 +21,7 @@ class BulkMailerRepository
 
 	private function getDbPath(): string
 	{
-		return $this->config->datadir . '/.system/bulkmailer';
+		return PathUtils::absolutePath($this->config->datadir, '.system/bulkmailer');
 	}
 
 	private function dbExists(): bool

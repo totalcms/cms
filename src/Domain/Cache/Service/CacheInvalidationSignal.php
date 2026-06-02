@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Cache\Service;
 
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -20,7 +21,7 @@ class CacheInvalidationSignal
 	public function __construct(
 		private readonly Config $config,
 	) {
-		$this->signalFile = $this->config->datadir . '/.system/.cache_invalidate';
+		$this->signalFile = PathUtils::absolutePath($this->config->datadir, '.system/.cache_invalidate');
 		$dir              = dirname($this->signalFile);
 		if (!is_dir($dir)) {
 			@mkdir($dir, 0755, true);

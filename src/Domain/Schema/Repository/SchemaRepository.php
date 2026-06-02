@@ -8,6 +8,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -54,7 +55,7 @@ class SchemaRepository extends StorageRepository
 	{
 		// Return the absolute path to the custom schemas directory
 		// Since the filesystem adapter is rooted at tcms-data/, we can construct the full path
-		return $this->config->datadir . '/' . self::CUSTOM_SCHEMA_DIR;
+		return PathUtils::absolutePath($this->config->datadir, self::CUSTOM_SCHEMA_DIR);
 	}
 
 	/**

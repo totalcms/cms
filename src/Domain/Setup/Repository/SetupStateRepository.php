@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Setup\Repository;
 
 use TotalCMS\Domain\Setup\Data\SetupState;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -70,7 +71,7 @@ readonly class SetupStateRepository
 			return;
 		}
 
-		$systemDir = $this->config->datadir . '/.system';
+		$systemDir = PathUtils::absolutePath($this->config->datadir, '.system');
 		if (!is_dir($systemDir)) {
 			@mkdir($systemDir, 0755, true);
 		}
@@ -83,7 +84,7 @@ readonly class SetupStateRepository
 
 	private function path(): string
 	{
-		return $this->config->datadir . '/' . self::RELATIVE_PATH;
+		return PathUtils::absolutePath($this->config->datadir, self::RELATIVE_PATH);
 	}
 
 	private function dataPathExists(): bool

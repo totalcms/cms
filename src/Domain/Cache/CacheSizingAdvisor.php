@@ -7,6 +7,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -94,7 +95,7 @@ readonly class CacheSizingAdvisor
 		$collectionCount   = 0;
 
 		foreach ($collections as $collection) {
-			$collectionPath = $datadir . '/' . $collection->id;
+			$collectionPath = PathUtils::absolutePath($datadir, $collection->id);
 
 			if (!is_dir($collectionPath)) {
 				continue;

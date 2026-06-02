@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -29,7 +30,7 @@ readonly class ImageCacheService
 	public function clearCollectionImageCache(string $collection): bool
 	{
 		// Get the collection path from config
-		$collectionPath = $this->config->datadir . '/' . $collection;
+		$collectionPath = PathUtils::absolutePath($this->config->datadir, $collection);
 
 		if (!is_dir($collectionPath)) {
 			throw new \RuntimeException("Collection directory does not exist: {$collectionPath}");
@@ -75,7 +76,7 @@ readonly class ImageCacheService
 	 */
 	public function getCollectionImageCacheStats(string $collection): array
 	{
-		$collectionPath = $this->config->datadir . '/' . $collection;
+		$collectionPath = PathUtils::absolutePath($this->config->datadir, $collection);
 
 		$stats = [
 			'collection'        => $collection,
@@ -175,7 +176,7 @@ readonly class ImageCacheService
 		// Get all collection directories
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir(PathUtils::absolutePath($datadir, $item))
 		);
 
 		foreach ($collections as $collection) {
@@ -213,7 +214,7 @@ readonly class ImageCacheService
 		// Get all collection directories
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir(PathUtils::absolutePath($datadir, $item))
 		);
 
 		foreach ($collections as $collection) {
