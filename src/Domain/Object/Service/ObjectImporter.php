@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -83,7 +84,7 @@ class ObjectImporter
 			$result = $this->objectFetcher->fetchObject($collection, $this->objectID);
 
 			$this->eventDispatcher->dispatch(
-				'import.created',
+				CoreEvent::IMPORT_CREATED,
 				new ObjectEventPayload($collection, $result->id, $result),
 			);
 
@@ -145,7 +146,7 @@ class ObjectImporter
 			$result = $this->objectFetcher->fetchObject($collection, $this->objectID);
 
 			$this->eventDispatcher->dispatch(
-				'import.updated',
+				CoreEvent::IMPORT_UPDATED,
 				new ObjectEventPayload($collection, $result->id, $result, $previous),
 			);
 

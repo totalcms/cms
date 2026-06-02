@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -37,7 +38,7 @@ readonly class ObjectSaver
 
 		$this->storage->saveObject($collection, $object);
 
-		$this->eventDispatcher->dispatch('object.created', new ObjectEventPayload($collection, $object->id, $object));
+		$this->eventDispatcher->dispatch(CoreEvent::OBJECT_CREATED, new ObjectEventPayload($collection, $object->id, $object));
 
 		return $object;
 	}

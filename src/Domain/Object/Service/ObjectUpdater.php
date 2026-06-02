@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -59,7 +60,7 @@ readonly class ObjectUpdater
 		// bookkeeping writes where no listener legitimately needs to react —
 		// e.g. recording a login timestamp.
 		if (!$silent) {
-			$this->eventDispatcher->dispatch('object.updated', new ObjectEventPayload($collection, $object->id, $object, $previous));
+			$this->eventDispatcher->dispatch(CoreEvent::OBJECT_UPDATED, new ObjectEventPayload($collection, $object->id, $object, $previous));
 		}
 
 		return $object;

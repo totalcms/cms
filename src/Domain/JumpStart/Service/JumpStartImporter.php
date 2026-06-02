@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -63,7 +64,7 @@ class JumpStartImporter
 		try {
 			$object = $this->objectSaver->saveObject($collection, $objectData);
 			$this->eventDispatcher->dispatch(
-				'import.created',
+				CoreEvent::IMPORT_CREATED,
 				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
 			);
 
@@ -90,7 +91,7 @@ class JumpStartImporter
 			$objectData['id'] = $id;
 			$object           = $this->objectUpdater->updateObject($collection, $id, $objectData);
 			$this->eventDispatcher->dispatch(
-				'import.updated',
+				CoreEvent::IMPORT_UPDATED,
 				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
 			);
 
@@ -340,7 +341,7 @@ class JumpStartImporter
 
 		foreach ($touchedByCollection as $collectionId => $stats) {
 			$this->eventDispatcher->dispatch(
-				'import.completed',
+				CoreEvent::IMPORT_COMPLETED,
 				new \TotalCMS\Domain\Event\Payload\ImportEventPayload(
 					$collectionId,
 					$stats['count'],

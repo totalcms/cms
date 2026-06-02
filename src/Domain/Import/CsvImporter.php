@@ -6,6 +6,7 @@ use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
@@ -123,7 +124,7 @@ class CsvImporter
 		}
 
 		// Single index rebuild at end of import
-		$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
+		$this->eventDispatcher->dispatch(CoreEvent::IMPORT_COMPLETED, new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
 
 		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
 

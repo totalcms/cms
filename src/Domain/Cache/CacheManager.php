@@ -11,6 +11,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
@@ -846,7 +847,7 @@ class CacheManager
 			$this->invalidationSignal->signalFull();
 		}
 
-		$this->eventDispatcher->dispatch('cache.cleared', new SystemEventPayload($results));
+		$this->eventDispatcher->dispatch(CoreEvent::CACHE_CLEARED, new SystemEventPayload($results));
 
 		return $results;
 	}

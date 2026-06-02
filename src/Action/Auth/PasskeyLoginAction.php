@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\LastLoginUpdateService;
 use TotalCMS\Domain\Auth\Service\PasskeyService;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -46,7 +47,7 @@ readonly class PasskeyLoginAction
 
 			// Mirror LoginService: dispatch user.login so listeners (audit, webhooks,
 			// extensions) see passkey logins the same as password logins.
-			$this->eventDispatcher->dispatch('user.login', new UserEventPayload((string)$user['id']));
+			$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload((string)$user['id']));
 
 			// Set up session (mirrors AuthLoginSubmitAction)
 			$this->session->destroy();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 
@@ -24,7 +25,7 @@ readonly class CollectionRemover
 		$result = $this->storage->deleteCollection($collection);
 
 		if ($result) {
-			$this->eventDispatcher->dispatch('collection.deleted', new CollectionEventPayload($collection));
+			$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_DELETED, new CollectionEventPayload($collection));
 		}
 
 		return $result;

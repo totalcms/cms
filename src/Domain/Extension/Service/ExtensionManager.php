@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Extension\Service;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
@@ -522,7 +523,7 @@ class ExtensionManager
 		}
 
 		$this->stateRepository->saveState($extensionId, $state);
-		$this->dispatchEvent('extension.enabled', new ExtensionEventPayload($extensionId));
+		$this->dispatchEvent(CoreEvent::EXTENSION_ENABLED, new ExtensionEventPayload($extensionId));
 	}
 
 	public function isEnabled(string $extensionId): bool
@@ -596,7 +597,7 @@ class ExtensionManager
 			$state->enabled = false;
 			$state->error   = null;
 			$this->stateRepository->saveState($extensionId, $state);
-			$this->dispatchEvent('extension.disabled', new ExtensionEventPayload($extensionId));
+			$this->dispatchEvent(CoreEvent::EXTENSION_DISABLED, new ExtensionEventPayload($extensionId));
 		}
 	}
 

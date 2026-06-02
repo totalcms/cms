@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
@@ -91,7 +92,7 @@ readonly class CollectionSaver
 		// Clear request-level cache so subsequent fetches get fresh data
 		$this->collectionFetcher->clearCache($collection->id);
 
-		$this->eventDispatcher->dispatch('collection.created', new CollectionEventPayload($collection->id));
+		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_CREATED, new CollectionEventPayload($collection->id));
 
 		return $collection;
 	}
@@ -165,7 +166,7 @@ readonly class CollectionSaver
 		// Clear request-level cache so subsequent fetches get fresh data
 		$this->collectionFetcher->clearCache($collectionId);
 
-		$this->eventDispatcher->dispatch('collection.updated', new CollectionEventPayload($collectionId));
+		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_UPDATED, new CollectionEventPayload($collectionId));
 
 		return $collection;
 	}
