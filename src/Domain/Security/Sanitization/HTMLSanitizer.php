@@ -50,13 +50,18 @@ class HTMLSanitizer
 
 	private static function removeEventHandlers(string $html): string
 	{
+		// The separator before an attribute may be whitespace OR a slash — the
+		// HTML tokenizer treats `<svg/onload=…>` the same as `<svg onload=…>`,
+		// so anchoring on `\s+` alone let slash-separated handlers slip through.
+		// Match `[\s/]+` for all three quoting styles.
+
 		// Remove event handlers with double quotes
-		$html = (string)preg_replace('/\s+on\w+\s*=\s*"[^"]*"/i', '', $html);
+		$html = (string)preg_replace('/[\s\/]+on\w+\s*=\s*"[^"]*"/i', '', $html);
 		// Remove event handlers with single quotes
-		$html = (string)preg_replace('/\s+on\w+\s*=\s*\'[^\']*\'/i', '', $html);
+		$html = (string)preg_replace('/[\s\/]+on\w+\s*=\s*\'[^\']*\'/i', '', $html);
 		// Remove event handlers without quotes - but be more specific to avoid matching URLs
-		// Only match when preceded by whitespace and followed by whitespace or tag closing
-		$html = (string)preg_replace('/\s+on\w+\s*=\s*[^"\'\s>]+(?=\s|>)/i', '', $html);
+		// Only match when preceded by whitespace/slash and followed by whitespace, slash or tag closing
+		$html = (string)preg_replace('/[\s\/]+on\w+\s*=\s*[^"\'\s>]+(?=[\s\/]|>)/i', '', $html);
 
 		return $html;
 	}

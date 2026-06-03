@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
+use Odan\Session\SessionManagerInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -148,7 +149,21 @@ class PersistentLoginService
 		}
 
 		[$selector, $token] = $parts;
-		$tokenFile          = $this->tokenDir . '/' . $selector . '.json';
+
+		// The selector is the filename of the token file (and is also used to
+		// build the unlink path). It is a 32-char hex string when we mint it
+		// (bin2hex(random_bytes(16))). An attacker controls the cookie, so an
+		// unvalidated selector like `../../tcms-data/.system/apikeys` would read
+		// and DELETE arbitrary `.json` files. Reject anything that isn't our
+		// exact format before it touches the filesystem.
+		if (preg_match('/^[a-f0-9]{32}$/', $selector) !== 1) {
+			$this->logger->warning('Invalid persistent cookie selector format');
+			$this->clearPersistentCookie();
+
+			return false;
+		}
+
+		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
 
 		// Check if token file exists (also check grace file from concurrent rotation)
 		$graceFile = $this->tokenDir . '/' . $selector . '.grace.json';
@@ -234,6 +249,14 @@ class PersistentLoginService
 			$this->clearPersistentToken($selector);
 
 			return false;
+		}
+
+		// Regenerate the session id before elevating to an authenticated session
+		// (remember-me restore is a privilege boundary — prevents session
+		// fixation). This path sets the auth keys directly rather than via
+		// SessionLogin::establish(), so it needs its own regeneration.
+		if ($this->session instanceof SessionManagerInterface) {
+			$this->session->regenerateId();
 		}
 
 		// Restore session FIRST

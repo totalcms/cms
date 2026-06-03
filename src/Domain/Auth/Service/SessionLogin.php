@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
+use Odan\Session\SessionManagerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
@@ -35,6 +36,16 @@ readonly class SessionLogin
 	 */
 	public function establish(string $userId, string $collection, bool $persistent = false): void
 	{
+		// Regenerate the session id at the privilege boundary so every entry
+		// point that logs a user in (login form, setup wizard, public
+		// registration, extension flows) is fixation-safe by default — without
+		// each caller having to remember to do it. regenerateId() lives on
+		// SessionManagerInterface; the bound PhpSession implements it, while the
+		// data-only SessionInterface contract (and test doubles) may not.
+		if ($this->session instanceof SessionManagerInterface) {
+			$this->session->regenerateId();
+		}
+
 		$this->session->set(SessionKeys::AUTH_USER, $userId);
 		$this->session->set(SessionKeys::AUTH_COLLECTION, $collection);
 		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistent);
