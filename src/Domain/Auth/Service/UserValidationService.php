@@ -11,6 +11,13 @@ readonly class UserValidationService
 {
 	public const ADMINGROUP = 'admin';
 
+	/**
+	 * The reserved fallback group. In the file-access context (see
+	 * {@see validateFileAccess()}) its presence in a collection's File Access
+	 * Groups means "any authenticated user", not just groupless users.
+	 */
+	public const DEFAULTGROUP = 'default';
+
 	public function __construct(
 		private IndexSearcher $searcher,
 		private ObjectFetcher $objectFetcher,
@@ -126,6 +133,38 @@ readonly class UserValidationService
 		$found    = array_intersect($groups, $user['groups']);
 
 		return $found !== [];
+	}
+
+	/**
+	 * Authorize access to a collection's protected files.
+	 *
+	 * Identical to {@see validateUserInGroups()} except the reserved
+	 * {@see DEFAULTGROUP} group grants access to ANY authenticated user
+	 * (regardless of their own group membership), not just groupless users.
+	 * Used only by the file download/stream consumers — group gating elsewhere
+	 * (builder pages, registration) continues to use validateUserInGroups().
+	 *
+	 * @param string|array<string> $groups
+	 */
+	public function validateFileAccess(string $userId, string|array $groups, string $collection = ''): bool
+	{
+		if (is_string($groups)) {
+			$groups = [$groups];
+		}
+
+		if (in_array(self::DEFAULTGROUP, $groups, true)) {
+			// "default" in File Access Groups means any logged-in user — the
+			// only requirement is that the user actually exists.
+			try {
+				$this->validateUserById($userId, $collection);
+
+				return true;
+			} catch (\Exception) {
+				return false;
+			}
+		}
+
+		return $this->validateUserInGroups($userId, $groups, $collection);
 	}
 
 	public function isSuperAdmin(string $userId): bool

@@ -147,3 +147,28 @@ For depot (multiple file) fields, the setting works the same way:
 - **Existing Files:** This setting only affects the default for new uploads. Existing files retain their current `protected` value.
 - **Manual Override:** Users can still manually change the `protected` flag for individual files in the file management interface, regardless of this setting.
 - **Security:** Setting to `false` makes files publicly accessible. Use with caution for sensitive content.
+
+## File Access Groups
+
+When a file is protected (`protected: true`), who may download or stream it is
+controlled by the collection's **File Access Groups** setting (the collection's
+`groups`). There are three tiers:
+
+| File Access Groups | Who can access protected files |
+|---|---|
+| *(empty)* | Anyone, including anonymous visitors — the file is effectively public |
+| `default` | **Any logged-in user** — login is required, but any group (or no group) qualifies |
+| named groups (e.g. `members`, `editors`) | Only users who belong to one of those groups |
+
+The reserved `default` group is the way to say *"must be signed in, but I don't
+care which group."* Because the groups list is non-empty, anonymous visitors are
+redirected to login (downloads) or rejected with `403` (streams) before the
+access check runs. Super admins always have access.
+
+You can combine `default` with named groups, but `default` already matches every
+authenticated user, so it broadens access to all signed-in users regardless of
+the other entries.
+
+> **Note:** File Access Groups only gate file downloads and streaming. They are
+> separate from the [access group permissions](auth/access-groups) that control
+> admin and API access to collections.

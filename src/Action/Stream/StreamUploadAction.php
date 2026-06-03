@@ -126,7 +126,7 @@ readonly class StreamUploadAction
 			return;
 		}
 
-		if (!$this->userValidator->validateUserInGroups($userID, $collectionData->groups, $userCollection)) {
+		if (!$this->userValidator->validateFileAccess($userID, $collectionData->groups, $userCollection)) {
 			throw new HttpForbiddenException($request, 'Access denied');
 		}
 	}
