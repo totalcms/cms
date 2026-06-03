@@ -58,6 +58,9 @@ class CliApplication
 		// Search commands
 		$app->addCommand(new Command\Search\SearchReindexCommand($totalcms));
 
+		// Maintenance commands
+		$app->addCommand(new Command\Maintenance\RepairFilesCommand($totalcms));
+
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));
 		$app->addCommand(new Command\SchemaGetCommand($totalcms));
