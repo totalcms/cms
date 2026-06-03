@@ -411,6 +411,10 @@ class FormField
 			return $this->form->localeList();
 		}
 
+		if ($source === 'events') {
+			return $this->form->eventsList();
+		}
+
 		// Default: fetch from current collection
 		return $this->form->propertyListForCollection($this->name);
 	}

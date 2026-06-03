@@ -17,6 +17,37 @@ final class ApiKeyPermissionCheckerTest extends TestCase
 		$this->checker = new ApiKeyPermissionChecker();
 	}
 
+	public function testAuthorizesAutomationWebhookViaMethodAndPathScope(): void
+	{
+		// Firing a webhook is just POST /automations/<id> — gated by the normal
+		// method+path scopes, no special automations flag.
+		$scoped = new ApiKeyData([
+			'id'      => 'k1',
+			'name'    => 'Scoped',
+			'key'     => 'tcms_scoped',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['POST'], 'paths' => ['/automations']],
+		]);
+		$wrongPath = new ApiKeyData([
+			'id'      => 'k2',
+			'name'    => 'Wrong path',
+			'key'     => 'tcms_wrongpath',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['POST'], 'paths' => ['/collections']],
+		]);
+		$wrongMethod = new ApiKeyData([
+			'id'      => 'k3',
+			'name'    => 'Wrong method',
+			'key'     => 'tcms_wrongmethod',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['GET'], 'paths' => ['/automations']],
+		]);
+
+		$this->assertTrue($this->checker->allows($scoped, 'POST', '/automations/daily'));
+		$this->assertFalse($this->checker->allows($wrongPath, 'POST', '/automations/daily'));
+		$this->assertFalse($this->checker->allows($wrongMethod, 'POST', '/automations/daily'));
+	}
+
 	public function testAllowsMethodReturnsTrueForAllowedMethod(): void
 	{
 		$apiKey = new ApiKeyData([

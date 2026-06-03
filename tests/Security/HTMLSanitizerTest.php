@@ -49,6 +49,25 @@ final class HTMLSanitizerTest extends TestCase
 		$this->assertStringNotContainsString('alert', $result);
 	}
 
+	public function testSanitizeRichContentRemovesSlashSeparatedEventHandlers(): void
+	{
+		// `/` is a valid attribute separator in the HTML tokenizer, so these are
+		// live XSS vectors that a whitespace-only anchor previously missed.
+		$cases = [
+			'<svg/onload=alert(1)>',
+			'<img/onerror=alert(1)>',
+			'<svg/onload=alert(1)/>',
+			'<svg/onload="alert(1)">',
+		];
+
+		foreach ($cases as $input) {
+			$result = HTMLSanitizer::sanitizeRichContent($input);
+			$this->assertStringNotContainsString('onload', $result, $input);
+			$this->assertStringNotContainsString('onerror', $result, $input);
+			$this->assertStringNotContainsString('alert', $result, $input);
+		}
+	}
+
 	public function testSanitizeRichContentRemovesStyleWithJavaScript(): void
 	{
 		$input  = '<div style="background: url(javascript:alert(\'XSS\'))">Content</div>';

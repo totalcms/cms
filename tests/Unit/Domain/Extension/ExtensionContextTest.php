@@ -251,6 +251,26 @@ describe('ExtensionContext', function (): void {
 		expect($ctx->getCapabilities())->toBe([]);
 	});
 
+	test('registers an extension automation in memory', function (): void {
+		$ctx = createTestContext();
+		$ctx->addAutomation('check-subs', 'Check subscriptions', [['type' => 'schedule', 'cron' => '0 */6 * * *']], fn ($c): null => null);
+
+		$registered = $ctx->getRegisteredAutomations();
+		expect($registered)->toHaveCount(1);
+		expect($registered[0]->id)->toBe('check-subs');
+		expect($registered[0]->label)->toBe('Check subscriptions');
+		expect($registered[0]->triggers[0]['cron'])->toBe('0 */6 * * *');
+		expect(($registered[0]->handler)('x'))->toBeNull();
+	});
+
+	test('addAutomation surfaces the automations capability', function (): void {
+		$ctx = createTestContext();
+		expect($ctx->getCapabilities())->not->toHaveKey('automations');
+
+		$ctx->addAutomation('a', 'A', [], fn ($c): null => null);
+		expect($ctx->getCapabilities())->toHaveKey('automations');
+	});
+
 	test('detects schemas capability when schemas directory exists', function (): void {
 		$tmpPath = sys_get_temp_dir() . '/tcms-ext-test-' . uniqid();
 		mkdir($tmpPath . '/schemas', 0o777, true);

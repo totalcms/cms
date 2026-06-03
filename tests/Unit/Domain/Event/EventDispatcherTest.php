@@ -1,10 +1,10 @@
 <?php
 
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 describe('EventDispatcher', function (): void {
 	test('dispatches event to registered listener', function (): void {

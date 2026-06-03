@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\Admin404Action;
+use TotalCMS\Action\Admin\AdminAutomationsAction;
 use TotalCMS\Action\Admin\AdminBuilderAction;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
@@ -26,6 +27,8 @@ use TotalCMS\Action\Admin\ExtensionToggleAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Action\Admin\UpdateAction;
+use TotalCMS\Action\Automation\AutomationReenableAction;
+use TotalCMS\Action\Automation\AutomationRunNowAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
@@ -40,6 +43,7 @@ use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
+use TotalCMS\Middleware\License\AutomationsEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
@@ -89,6 +93,11 @@ return function (App $app): void {
 
 		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail')->add(MailerEditionMiddleware::class)->add(MailerAccessMiddleware::class);
 		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post')->add(MailerEditionMiddleware::class)->add(MailerAccessMiddleware::class);
+
+		$group->get('/automations[/{id}]', AdminAutomationsAction::class)->setName('admin-automations')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
+		$group->post('/automations[/{id}]', AdminAutomationsAction::class)->setName('admin-automations-post')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
+		$group->post('/automations/{id}/run', AutomationRunNowAction::class)->setName('admin-automations-run')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
+		$group->post('/automations/{id}/enable', AutomationReenableAction::class)->setName('admin-automations-enable')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 
 		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(AdminOnlyMiddleware::class);
 		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(AdminOnlyMiddleware::class);

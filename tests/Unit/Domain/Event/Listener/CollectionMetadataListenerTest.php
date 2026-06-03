@@ -7,9 +7,9 @@ namespace Tests\Unit\Domain\Event\Listener;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Event\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 final class CollectionMetadataListenerTest extends TestCase
 {

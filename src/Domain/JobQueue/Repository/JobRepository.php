@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\JobQueue\Repository;
 
 use TotalCMS\Domain\JobQueue\Data\JobData;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
@@ -16,7 +17,7 @@ class JobRepository
 
 	private function getDbPath(): string
 	{
-		return $this->config->datadir . '/.system/jobqueue';
+		return PathUtils::absolutePath($this->config->datadir, '.system/jobqueue');
 	}
 
 	private function dbExists(): bool

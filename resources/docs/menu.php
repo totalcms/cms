@@ -164,6 +164,16 @@ return [
 		],
 	],
 	[
+		'title' => 'Automations',
+		'sub'   => [
+			['title' => 'Overview',              'path' => 'automations/overview'],
+			['title' => 'Triggers',              'path' => 'automations/triggers'],
+			['title' => 'Writing Handlers',      'path' => 'automations/handlers'],
+			['title' => 'Webhooks',              'path' => 'automations/webhooks'],
+			['title' => 'Extension Automations', 'path' => 'automations/extensions'],
+		],
+	],
+	[
 		'title' => 'Admin',
 		'sub'   => [
 			['title' => 'Dashboard',   'path' => 'admin/dashboard'],

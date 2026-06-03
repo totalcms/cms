@@ -21,6 +21,7 @@
     "cakephp/i18n": "^5.2",
     "cakephp/validation": "^5.0",
     "cocur/slugify": "^4.0",
+    "dragonmantank/cron-expression": "^3.3",
     "embed/embed": "^4.3",
     "enshrined/svg-sanitize": "^0.22.0",
     "erusev/parsedown": "^1.8",

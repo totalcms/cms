@@ -914,6 +914,7 @@ return [
 	'api_keys.choose_dataviews'      => 'Specifieke Data Views kiezen',
 	'api_keys.select_endpoints'      => 'Eindpunten selecteren',
 	'api_keys.select_endpoints_help' => 'Vink de eindpunten aan waartoe deze sleutel toegang moet hebben.',
+	'api_keys.all_automations_ep'    => 'Alle automatiseringen',
 	'api_keys.create_submit'         => 'API-sleutel aanmaken',
 	'api_keys.success_title'         => 'API-sleutel succesvol aangemaakt',
 	'api_keys.save_warning'          => 'Sla deze sleutel nu op!',

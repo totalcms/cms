@@ -3,8 +3,9 @@
 namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Admin\TotalForm;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
@@ -88,7 +89,7 @@ readonly class SchemaSaver
 
 		$this->storage->saveSchema($schema);
 
-		$this->eventDispatcher->dispatch('schema.saved', new SchemaEventPayload($schema->id));
+		$this->eventDispatcher->dispatch(CoreEvent::SCHEMA_SAVED, new SchemaEventPayload($schema->id));
 
 		return $schema;
 	}

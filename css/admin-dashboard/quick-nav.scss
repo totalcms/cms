@@ -106,6 +106,7 @@ dialog.quick-nav {
 		&[data-icon="dataviews"]   { mask-image : var(--icon-data-views); }
 		&[data-icon="builder"]     { mask-image : var(--icon-templates); }
 		&[data-icon="mailer"]      { mask-image : var(--icon-mailer); }
+		&[data-icon="automations"] { mask-image : var(--icon-automations); }
 		&[data-icon="playground"]  { mask-image : var(--icon-twig-playground); }
 		&[data-icon="utils"]       { mask-image : var(--icon-tools); }
 		&[data-icon="settings"]    { mask-image : var(--icon-cog); }

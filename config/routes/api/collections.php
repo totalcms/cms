@@ -10,6 +10,7 @@ use TotalCMS\Action\Property;
 use TotalCMS\Action\Schema;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Access\SystemCollectionGuardMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
@@ -104,6 +105,7 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}/{path:.+}', Property\File\FileSaveAction::class)->setName('property-file-save-nested');
 	})->add(NoCacheMiddleware::class)
 		->add(CollectionEditionMiddleware::class)
+		->add(SystemCollectionGuardMiddleware::class)
 		->add(CollectionAccessMiddleware::class)
 		->add(DualAuthMiddleware::class)
 		->add(ExternalCorsMiddleware::class);

@@ -10,12 +10,36 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\PathResolver;
 
 /**
- * Applies downloaded updates by swapping the application directory.
+ * Applies a downloaded update by swapping the shipped code, in place.
  *
- * Process: extract zip → backup current → swap → clear cache → log
+ * Two rules make this safe to run from the web request that triggered it:
+ *
+ *  1. **Never replace user data.** Only the top-level items the update archive
+ *     actually ships are touched, and the PRESERVE list is skipped even if the
+ *     archive contains them — so `tcms-data/`, `.env`, the writable config, and
+ *     `logs/` survive the update untouched. (The old approach moved the WHOLE
+ *     install dir aside and refilled it from the zip, which deleted anything the
+ *     zip didn't carry — i.e. the customer's content.)
+ *
+ *  2. **No application code after the swap.** Once the files are swapped, the
+ *     running process can no longer reliably autoload any class it hadn't
+ *     already loaded (the files on disk are now a different version). So caches
+ *     are cleared BEFORE the swap (old code still fully loadable), and after the
+ *     swap we only touch PHP built-ins — `opcache_reset()` / `clearstatcache()`
+ *     — never an app service. The next request boots cleanly on the new code.
+ *     (This is what caused "Class TextWatermarkFactory not found": clearAllCaches
+ *     ran AFTER the swap and tried to autoload the watermark cleanup service.)
  */
 class UpdateApplier
 {
+	/**
+	 * Paths an update must never overwrite or move, even if the archive happens
+	 * to contain them — user content, config, logs, and VCS metadata.
+	 *
+	 * @var list<string>
+	 */
+	private const PRESERVE = ['tcms-data', '.env', 'tcms.php', 'logs', '.git'];
+
 	private readonly LoggerInterface $logger;
 	private readonly string $appRoot;
 
@@ -23,9 +47,10 @@ class UpdateApplier
 		private readonly MaintenanceMode $maintenanceMode,
 		private readonly CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,
+		?string $appRoot = null,
 	) {
 		$this->logger  = $loggerFactory->addFileHandler('updates.log')->createLogger('update');
-		$this->appRoot = PathResolver::projectRoot();
+		$this->appRoot = $appRoot ?? PathResolver::projectRoot();
 	}
 
 	/**
@@ -39,46 +64,47 @@ class UpdateApplier
 
 		$this->logger->info("Starting update to {$version}");
 
-		$extractDir = sys_get_temp_dir() . '/totalcms-update-extract';
-		$backupDir  = $this->appRoot . ".backup-{$version}-" . date('Ymd-His');
+		$extractDir = sys_get_temp_dir() . '/totalcms-update-extract-' . bin2hex(random_bytes(4));
+		$backupDir  = $this->appRoot . '.backup-' . $version . '-' . date('Ymd-His');
 
 		try {
-			// Extract zip
-			$this->extract($zipPath, $extractDir);
+			// Extract zip — `$source` is the real root of the new files (a single
+			// wrapping directory, if any, is unwrapped).
+			$source = $this->extract($zipPath, $extractDir);
 
-			// Enable maintenance mode
 			$this->maintenanceMode->enable();
 			$this->logger->info('Maintenance mode enabled');
 
-			// Backup current app
-			$this->backup($this->appRoot, $backupDir);
-			$this->logger->info("Current app backed up to {$backupDir}");
-
-			// Swap files from extracted dir into app root
-			$this->swapFiles($extractDir, $this->appRoot);
-			$this->logger->info('Files swapped');
-
-			// Clear all caches
+			// Clear caches BEFORE the swap — the old code is still fully loadable,
+			// so this can't fault on a half-swapped filesystem.
 			$this->cacheManager->clearAllCaches();
 			$this->logger->info('Caches cleared');
 
-			// Disable maintenance mode
+			// Replace each shipped item, moving the old copy into the backup.
+			// PRESERVE paths (tcms-data, .env, …) are never touched.
+			$this->swapItems($source, $this->appRoot, $backupDir);
+			$this->logger->info('Files swapped');
+
+			// Past this point: PHP built-ins only — no app service may be called,
+			// its class might not be loadable from the just-swapped files.
+			$this->resetRuntimeCaches();
+
 			$this->maintenanceMode->disable();
 			$this->logger->info('Maintenance mode disabled');
 
-			// Clean up backup after successful update
 			$this->deleteDirectory($backupDir);
-			$this->logger->info('Backup cleaned up');
-
 			$this->logger->info("Update to {$version} complete");
 		} catch (\Throwable $e) {
 			$this->maintenanceMode->disable();
 			$this->logger->error("Update failed: {$e->getMessage()}");
 
-			// Attempt rollback if backup exists
+			// Restore the items we replaced. User data was never moved, so it's
+			// still in place.
 			if (is_dir($backupDir)) {
 				try {
-					$this->swapFiles($backupDir, $this->appRoot);
+					$this->rollbackItems($backupDir, $this->appRoot);
+					$this->resetRuntimeCaches();
+					$this->deleteDirectory($backupDir);
 					$this->logger->info('Rolled back to previous version after failure');
 				} catch (\Throwable $rollbackError) {
 					$this->logger->critical("Rollback also failed: {$rollbackError->getMessage()}");
@@ -87,9 +113,7 @@ class UpdateApplier
 
 			throw new \RuntimeException("Update to {$version} failed: {$e->getMessage()}", 0, $e);
 		} finally {
-			// Clean up extract directory
 			$this->deleteDirectory($extractDir);
-			// Clean up downloaded zip
 			if (file_exists($zipPath)) {
 				unlink($zipPath);
 			}
@@ -97,7 +121,7 @@ class UpdateApplier
 	}
 
 	/**
-	 * Roll back to the most recent backup.
+	 * Roll back to the most recent backup left by a failed update.
 	 */
 	public function rollback(): void
 	{
@@ -111,12 +135,14 @@ class UpdateApplier
 		$this->maintenanceMode->enable();
 
 		try {
-			$this->swapFiles($backupDir, $this->appRoot);
+			// Old code is being restored; clearing caches here is safe — the
+			// restored classes are fully present once rollbackItems finishes.
+			$this->rollbackItems($backupDir, $this->appRoot);
 			$this->cacheManager->clearAllCaches();
+			$this->resetRuntimeCaches();
 			$this->maintenanceMode->disable();
 			$this->logger->info('Rollback complete');
 
-			// Remove the backup after successful rollback
 			$this->deleteDirectory($backupDir);
 		} catch (\Throwable $e) {
 			$this->maintenanceMode->disable();
@@ -124,7 +150,13 @@ class UpdateApplier
 		}
 	}
 
-	private function extract(string $zipPath, string $extractDir): void
+	/**
+	 * Extract the archive and return the directory that actually holds the new
+	 * files — unwrapping a single top-level wrapper directory if the archive has
+	 * one (e.g. `totalcms-3.5.0/…`), which would otherwise land the whole tree
+	 * one level too deep.
+	 */
+	private function extract(string $zipPath, string $extractDir): string
 	{
 		if (is_dir($extractDir)) {
 			$this->deleteDirectory($extractDir);
@@ -138,32 +170,69 @@ class UpdateApplier
 
 		$zip->extractTo($extractDir);
 		$zip->close();
-	}
 
-	private function backup(string $source, string $destination): void
-	{
-		if (!rename($source, $destination)) {
-			throw new \RuntimeException("Failed to backup {$source} to {$destination}");
+		$scanned = scandir($extractDir);
+		$entries = $scanned === false ? [] : array_values(array_filter(
+			$scanned,
+			static fn (string $e): bool => $e !== '.' && $e !== '..',
+		));
+
+		if (count($entries) === 1 && is_dir($extractDir . '/' . $entries[0])) {
+			return $extractDir . '/' . $entries[0];
 		}
 
-		// Recreate the app root (rename moved it)
-		mkdir($source, 0755, true);
+		return $extractDir;
 	}
 
 	/**
-	 * Move files from source directory into destination.
+	 * Replace each item shipped in $source into $destination, moving any existing
+	 * copy into $backupDir first. PRESERVE paths are skipped entirely so user
+	 * content and config are never moved or overwritten.
 	 */
-	private function swapFiles(string $source, string $destination): void
+	private function swapItems(string $source, string $destination, string $backupDir): void
 	{
-		$iterator = new \DirectoryIterator($source);
-		foreach ($iterator as $item) {
+		if (!is_dir($backupDir)) {
+			mkdir($backupDir, 0755, true);
+		}
+
+		foreach (new \DirectoryIterator($source) as $item) {
 			if ($item->isDot()) {
 				continue;
 			}
 
-			$destPath = $destination . '/' . $item->getFilename();
+			$name = $item->getFilename();
+			if (in_array($name, self::PRESERVE, true)) {
+				$this->logger->info("Preserving user path, not replacing: {$name}");
 
-			// Remove existing file/dir at destination
+				continue;
+			}
+
+			$destPath = $destination . '/' . $name;
+
+			if (file_exists($destPath) && !rename($destPath, $backupDir . '/' . $name)) {
+				throw new \RuntimeException("Failed to back up {$destPath}");
+			}
+
+			if (!rename($item->getPathname(), $destPath)) {
+				throw new \RuntimeException("Failed to install {$name}");
+			}
+		}
+	}
+
+	/**
+	 * Restore items previously moved into $backupDir back into $destination,
+	 * removing the (new, possibly broken) copy first.
+	 */
+	private function rollbackItems(string $backupDir, string $destination): void
+	{
+		foreach (new \DirectoryIterator($backupDir) as $item) {
+			if ($item->isDot()) {
+				continue;
+			}
+
+			$name     = $item->getFilename();
+			$destPath = $destination . '/' . $name;
+
 			if (file_exists($destPath)) {
 				if (is_dir($destPath)) {
 					$this->deleteDirectory($destPath);
@@ -174,6 +243,18 @@ class UpdateApplier
 
 			rename($item->getPathname(), $destPath);
 		}
+	}
+
+	/**
+	 * Invalidate the PHP runtime caches so the next request loads the new files.
+	 * Built-ins only — safe to call after the code has been swapped.
+	 */
+	private function resetRuntimeCaches(): void
+	{
+		if (function_exists('opcache_reset')) {
+			@opcache_reset();
+		}
+		clearstatcache(true);
 	}
 
 	private function findLatestBackup(): ?string
@@ -201,7 +282,7 @@ class UpdateApplier
 
 		$iterator = new \RecursiveIteratorIterator(
 			new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::CHILD_FIRST
+			\RecursiveIteratorIterator::CHILD_FIRST,
 		);
 
 		foreach ($iterator as $file) {

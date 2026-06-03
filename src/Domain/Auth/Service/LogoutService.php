@@ -6,8 +6,9 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -36,7 +37,7 @@ readonly class LogoutService
 			$this->persistentLoginService->clearPersistentLogin();
 		}
 
-		$this->eventDispatcher->dispatch('user.logout', new UserEventPayload((string)$user));
+		$this->eventDispatcher->dispatch(CoreEvent::USER_LOGOUT, new UserEventPayload((string)$user));
 
 		$this->session->clear();
 		$this->session->destroy();

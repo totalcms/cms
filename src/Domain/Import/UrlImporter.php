@@ -8,9 +8,10 @@ use League\Uri\Uri;
 use Psr\Log\LoggerInterface;
 use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
@@ -65,11 +66,11 @@ readonly class UrlImporter
 			// shape they would for any other importer. UrlImporter bypasses
 			// ObjectSaver so we dispatch this manually.
 			$this->eventDispatcher->dispatch(
-				'import.created',
+				CoreEvent::IMPORT_CREATED,
 				new ObjectEventPayload($collection, $savedObject->id, $savedObject),
 			);
 
-			$this->eventDispatcher->dispatch('import.completed', new ImportEventPayload($collection, 1, [$record['id']]));
+			$this->eventDispatcher->dispatch(CoreEvent::IMPORT_COMPLETED, new ImportEventPayload($collection, 1, [$record['id']]));
 		} catch (\Exception $exception) {
 			$this->logger->error(
 				sprintf('Error importing URL: %s', $exception->getMessage())

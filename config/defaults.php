@@ -328,6 +328,12 @@ $settings['auth'] = [
 	// inactive — bots can still fill the table with junk records, so gate
 	// this with a CAPTCHA or rate limit even when verification is on.
 	'publicRegistration'      => [],
+	// Access group id force-assigned to users created via public registration.
+	// Empty = no access group (safest default; registrants get no gated access
+	// until an operator grants it). Set to a member/customer group id to grant
+	// new signups that group. A `groups` value submitted in the form is always
+	// ignored — only this server-side value is honored.
+	'publicRegistrationGroup' => '',
 ];
 
 $settings['htmlclean'] = [

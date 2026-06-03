@@ -78,3 +78,48 @@ describe('TemplatePlaceholder::render', function (): void {
 		expect($capturedKeys)->toBe(['title', 'oid-000']);
 	});
 });
+
+describe('TemplatePlaceholder::resolvePath', function (): void {
+	test('resolves a plain top-level key', function (): void {
+		expect(TemplatePlaceholder::resolvePath(['type' => 'webhook'], 'type'))->toBe('webhook');
+	});
+
+	test('walks into a card sub-field via dot notation', function (): void {
+		expect(TemplatePlaceholder::resolvePath(['card' => ['title' => 'My Title']], 'card.title'))
+			->toBe('My Title');
+	});
+
+	test('walks into a localizedtext locale via dot notation', function (): void {
+		$data = ['text' => ['es' => 'Hola', 'en' => 'Hello']];
+		expect(TemplatePlaceholder::resolvePath($data, 'text.es'))->toBe('Hola');
+		expect(TemplatePlaceholder::resolvePath($data, 'text.en'))->toBe('Hello');
+	});
+
+	test('walks arbitrary nesting — card → localizedtext sub-field → locale', function (): void {
+		$data = ['card' => ['headline' => ['es' => 'Hola', 'en' => 'Hi']]];
+		expect(TemplatePlaceholder::resolvePath($data, 'card.headline.es'))->toBe('Hola');
+	});
+
+	test('returns empty for a bare composite key (no [object Object] / Array dump)', function (): void {
+		expect(TemplatePlaceholder::resolvePath(['card' => ['title' => 'X']], 'card'))->toBe('');
+		expect(TemplatePlaceholder::resolvePath(['text' => ['es' => 'Hola']], 'text'))->toBe('');
+	});
+
+	test('returns empty for a missing top-level key', function (): void {
+		expect(TemplatePlaceholder::resolvePath([], 'nope'))->toBe('');
+	});
+
+	test('returns empty for a missing nested segment', function (): void {
+		expect(TemplatePlaceholder::resolvePath(['card' => ['title' => 'X']], 'card.subtitle'))->toBe('');
+	});
+
+	test('returns empty when a path goes deeper than a scalar', function (): void {
+		// `text.es` is a string, so `text.es.foo` cannot go deeper.
+		expect(TemplatePlaceholder::resolvePath(['text' => ['es' => 'Hola']], 'text.es.foo'))->toBe('');
+	});
+
+	test('trims the resolved value and stringifies scalars', function (): void {
+		expect(TemplatePlaceholder::resolvePath(['t' => '  hi  '], 't'))->toBe('hi');
+		expect(TemplatePlaceholder::resolvePath(['n' => 5], 'n'))->toBe('5');
+	});
+});

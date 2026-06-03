@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Event;
+namespace TotalCMS\Domain\Event\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\EventPayload;
 
 /**
@@ -20,7 +21,7 @@ final class EventDispatcher
 	 * who care about import-time writes can subscribe to `import.created` /
 	 * `import.updated` instead — those fire per-object during import.
 	 */
-	private const IMPORT_SUSPENDED_EVENTS = ['object.created', 'object.updated'];
+	private const IMPORT_SUSPENDED_EVENTS = [CoreEvent::OBJECT_CREATED, CoreEvent::OBJECT_UPDATED];
 
 	/** @var array<string,list<array{callable, int}>> */
 	private array $listeners = [];

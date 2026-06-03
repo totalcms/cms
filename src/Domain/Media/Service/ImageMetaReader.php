@@ -27,6 +27,11 @@ class ImageMetaReader
 	{
 		$imageData = @getimagesize($imagepath);
 		if (!is_array($imageData)) {
+			// getimagesize() failed (unreadable, truncated, or unsupported header).
+			// Surface it instead of silently returning empty metadata — callers
+			// otherwise write name/mime/width/height as blanks with no trace.
+			error_log("ImageMetaReader: getimagesize() failed to read image header: {$imagepath}");
+
 			return [];
 		}
 

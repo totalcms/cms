@@ -28,6 +28,7 @@ export default class Code extends TotalField {
 
         const config = {
             value          : this.input.value || '',
+            placeholder    : this.input.getAttribute('placeholder') || '',
             indentUnit     : editorOptions.indentUnit || 2,
             tabSize        : editorOptions.tabSize || 2,
             lineNumbers    : editorOptions.lineNumbers !== false,
@@ -209,8 +210,14 @@ export default class Code extends TotalField {
             // user types something.
             this.input.value = savedContent;
         } else if (!this.input.value || this.input.value.trim() === '') {
-            this.editor.setValue('\n\n\n\n\n\n\n\n\n');
-            this.editor.setCursor(0, 0);
+            // Pre-fill blank lines to give the empty editor some height — but
+            // only when there's no placeholder. A non-empty doc suppresses
+            // CodeMirror's placeholder, so fields with a placeholder must stay
+            // empty for it to show (minHeight still gives them height).
+            if (!this.input.getAttribute('placeholder')) {
+                this.editor.setValue('\n\n\n\n\n\n\n\n\n');
+                this.editor.setCursor(0, 0);
+            }
         }
 
         this.editor.on('change', () => {

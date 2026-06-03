@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Builder\Service;
 
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -59,7 +60,7 @@ readonly class BuilderTemplatePaths
 	 */
 	public function dataDir(): string
 	{
-		return $this->config->datadir . '/' . self::BUILDER_DIRNAME;
+		return PathUtils::absolutePath($this->config->datadir, self::BUILDER_DIRNAME);
 	}
 
 	/**

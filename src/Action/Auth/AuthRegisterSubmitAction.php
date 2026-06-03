@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Auth;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
@@ -61,6 +62,7 @@ readonly class AuthRegisterSubmitAction
 		private ObjectSaver $objectSaver,
 		private LoginService $loginService,
 		private SessionLogin $sessionLogin,
+		private AuthFieldPolicy $authFieldPolicy,
 		private CollectionFetcher $collectionFetcher,
 		private EmailVerificationService $verificationService,
 		private EmailService $emailService,
@@ -89,17 +91,27 @@ readonly class AuthRegisterSubmitAction
 
 		$data = (array)$request->getParsedBody();
 
+		// A public registrant may NEVER set privileged fields (groups, active,
+		// expiration, maxLoginCount, passkeys) — strip them, then assign our own
+		// server-side defaults below. Without this, anyone could self-register as
+		// `groups:['admin']` + `active:true`.
+		$data = $this->authFieldPolicy->stripProtected($collection, $data);
+
 		// Branch on the collection's verification flag. We must fetch the
 		// collection BEFORE saving so we know whether to force-disable the
 		// new account.
 		$collectionData         = $this->collectionFetcher->fetchCollection($collection);
 		$requiresVerification   = $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData && $collectionData->requireEmailVerification;
 
-		if ($requiresVerification) {
-			// Force the new account inactive regardless of what the form
-			// submitted. The user becomes active only after clicking the link.
-			$data['active'] = false;
-		}
+		// Force account state server-side in ALL cases (previously `active` was
+		// only forced under verification, leaving it form-controllable otherwise):
+		// inactive until verified, active immediately when verification is off.
+		$data['active'] = !$requiresVerification;
+
+		// Force the configured default access group. Empty config => no groups,
+		// so a registrant gains no group-gated access until an operator grants it.
+		$defaultGroup   = (string)($this->config->auth['publicRegistrationGroup'] ?? '');
+		$data['groups'] = $defaultGroup !== '' ? [$defaultGroup] : [];
 
 		// Save the user record. Errors (validation, duplicate id, etc.) bubble
 		// up to Slim's error handler — same as ObjectSaveAction.

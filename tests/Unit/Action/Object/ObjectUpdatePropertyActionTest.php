@@ -2,12 +2,19 @@
 
 namespace Tests\Unit\Action\Object;
 
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Object\ObjectUpdatePropertyAction;
+use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class ObjectUpdatePropertyActionTest extends TestCase
@@ -25,7 +32,18 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 		$this->request       = $this->createMock(ServerRequestInterface::class);
 		$this->response      = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ObjectUpdatePropertyAction($this->renderer, $this->objectUpdater);
+		// Real guard with an empty-schema policy: protectedFieldsFor() is always
+		// empty for these non-auth collections, so guardProperty() never blocks.
+		$schemaFetcher = $this->createMock(SchemaFetcher::class);
+		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
+		$policy = new AuthFieldPolicy(
+			$schemaFetcher,
+			$this->createMock(UserValidationService::class),
+			$this->createMock(ObjectFetcher::class),
+		);
+		$guard = new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class));
+
+		$this->action = new ObjectUpdatePropertyAction($this->renderer, $this->objectUpdater, $guard);
 	}
 
 	public function testUpdatesPropertySuccessfully(): void

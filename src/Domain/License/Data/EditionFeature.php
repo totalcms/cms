@@ -52,6 +52,7 @@ enum EditionFeature: string
 	// Utility features
 	case ACCESS_GROUPS = 'access_groups';
 	case API_KEYS      = 'api_keys';
+	case AUTOMATIONS   = 'automations';
 
 	/**
 	 * Get a human-readable label for this feature.
@@ -81,6 +82,7 @@ enum EditionFeature: string
 			self::PASSKEYS             => 'Passkeys',
 			self::ACCESS_GROUPS        => 'Access Groups',
 			self::API_KEYS             => 'API Keys',
+			self::AUTOMATIONS          => 'Automations',
 		};
 	}
 
@@ -116,6 +118,7 @@ enum EditionFeature: string
 			self::WHITELABEL_PRO,
 			self::DATA_VIEWS,
 			self::API_KEYS,
+			self::AUTOMATIONS,
 			self::BULK_MAILER => Edition::PRO,
 		};
 	}

@@ -1,0 +1,77 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/automations.json",
+	"id"          : "automations",
+	"type"        : "object",
+	"title"       : "Automation",
+	"description" : "A user-authored, server-side automation fired by schedule, webhook, or event triggers.",
+	"formgrid"    : "enabled .\nname category\nid id\ndescription description\nerrorMailerId errorMailerId\ntriggers triggers\nhandler handler",
+	"required"    : ["id", "name"],
+	"index"       : ["id", "name", "enabled", "description", "category"],
+	"properties"  : {
+		"name": {
+			"type"  : "string",
+			"label" : "Name",
+			"field" : "text"
+		},
+		"category": {
+			"type"        : "string",
+			"label"       : "Category",
+			"field"       : "text",
+			"placeholder" : "Automations",
+			"help"        : "Category for organizing automations",
+			"settings"    : {
+				"propertyOptions": true
+			}
+		},
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "ID",
+			"help"     : "URL-safe identifier (also the default webhook slug + handler folder name).",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"autogen" : "${name}"
+			}
+		},
+		"description": {
+			"type"     : "string",
+			"label"    : "Description",
+			"field"    : "textarea",
+			"settings" : { "rows" : 2 }
+		},
+		"enabled": {
+			"type"    : "boolean",
+			"label"   : "Enabled",
+			"field"   : "toggle",
+			"default" : true
+		},
+		"errorMailerId": {
+			"type"        : "string",
+			"label"       : "Error notification mailer",
+			"help"        : "Optional. A Mailer template sent when the handler throws (Production). The mailer object owns the recipients, subject, and body. Leave empty for none.",
+			"field"       : "select",
+			"placeholder" : "Select a mailer template",
+			"settings"    : { "relationalOptions": { "collection": "mailer", "label": "name", "value": "id" } }
+		},
+		"triggers": {
+			"field"            : "deck",
+			"label"            : "Triggers",
+			"help"             : "One or more of: schedule (cron), webhook (HTTP), event (T3 events).",
+			"schemaref"        : "https://www.totalcms.co/schemas/automation-trigger.json",
+			"$ref"             : "https://www.totalcms.co/schemas/properties/deck.json",
+			"settings"         : { "deckItemLabel": "${type}: ${cron}${event}" },
+			"patternProperties": {
+				"^[a-z0-9][a-z0-9-]*$": { "$ref": "https://www.totalcms.co/schemas/automation-trigger.json" }
+			}
+		},
+		"handler": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/code.json",
+			"label"       : "PHP Automation Handler",
+			"help"        : "PHP returning a closure: <code>return function (AutomationContext $ctx) { ... };</code>",
+			"field"       : "code",
+			"placeholder" : "<?php\n\nreturn function (AutomationContext $ctx) {\n\t// Services:\n\t//   $ctx->indexReader, $ctx->objectFetcher, $ctx->objectSaver\n\t//   $ctx->objectUpdater, $ctx->objectRemover, $ctx->mailer\n\t//   $ctx->config\n\t// Inputs:\n\t//   $ctx->args   - webhook query + body, or manual run\n\t//   $ctx->event  - event payload (event triggers)\n\t// Logging:\n\t//   $ctx->logger->info('...')\n\n\t$ctx->logger->info('Automation ran');\n\n\t// The return value is saved to the run history.\n\treturn ['ok' => true];\n};",
+			"settings"    : { "mode" : "php", "rows" : 24, "external" : true }
+		}
+	}
+}

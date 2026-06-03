@@ -1,0 +1,281 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" name="filter" class="filter" placeholder="Filter automations…" autofocus />
+	</header>
+
+	<nav class="links" id="automation-links">
+		{% set automations = cms.collection.objects("automations") %}
+		{% if automations|length == 0 %}
+			<h3>Automations</h3>
+			<ul>
+				<li class="no-automations">No automations yet.</li>
+			</ul>
+		{% else %}
+			{% set automationsByCategory = {} %}
+			{% for automation in automations %}
+				{% set category = automation.category | default('Automations') %}
+				{% set automationsByCategory = automationsByCategory|merge({(category): (automationsByCategory[category]|default([]))|merge([automation])}) %}
+			{% endfor %}
+
+			{% for category, categoryAutomations in automationsByCategory %}
+			<details id="category-{{ category | slug }}" open>
+				<summary>{{ category }}</summary>
+				<ul>
+					{% for automation in sortByKey(categoryAutomations) %}
+					{% set last = (lastRuns is defined and lastRuns[automation.id] is defined) ? lastRuns[automation.id] : null %}
+					<li class="automation-item">
+						<a {% if url.id == automation.id %}class="active"{% endif %}
+							href="automations/{{ automation.id }}"
+							title="{{ automation.description | default('') | escape }}">
+							{{ automation.name | default(automation.id) }}
+							{% if not automation.enabled %}<span class="dash-badge muted">⊘</span>{% endif %}
+							{% if last %}<span class="dash-badge {{ last.status == 'success' ? 'success' : 'danger' }}">{{ last.status == 'success' ? '✔' : '⚠' }}</span>{% endif %}
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</details>
+			{% endfor %}
+		{% endif %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="automations/new">+ New Automation</a>
+	</footer>
+</aside>
+{% include "admin/sidebar-details.twig" %}
+
+<main class="dash-main-content">
+
+{% if url.id is empty %}
+
+	<h1>Automations</h1>
+	<section class="dash-content-section">
+		<p>Automations run a PHP handler you write on a <strong>schedule</strong>, an incoming <strong>webhook</strong>,
+		or a content <strong>event</strong> (such as an object being created or updated).Create one, define its triggers, and write the handler.</p>
+		<a class="dash-button" href="automations/new">+ New Automation</a>
+
+		<section>
+			<h3>Schedule Automation Processing</h3>
+			<p>Schedule triggers, plus queued async webhook and event runs, are processed by a single command. Add it to your crontab to run <strong>every minute</strong> — the command checks what's actually due each tick, so running it often is cheap and safe.</p>
+			<p><em>Adjust the PHP path and working directory to match your server if needed.</em></p>
+		</section>
+
+		<section>
+			<pre class="automations-command"><code id="automations-command-text">{{ cms.admin.processAutomationsCommand() }}</code></pre>
+			<button type="button" class="cms-clip-button dash-button transparent" data-clip="#automations-command-text">{{ t('btn.copy_command') }}</button>
+		</section>
+	</section>
+
+
+{% else %}
+
+	<header>
+		<h1><a href="automations">automations</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) }}</span></h1>
+		<button class="dash-action-dots" title="Actions" popovertarget="automation-actions"></button>
+		<nav popover id="automation-actions">
+			<ul>
+				{% if url.id and url.id != 'new' and url.id[:1] != '-' %}
+				<li class="duplicate"><a href="#" onclick="duplicateAutomation(event)">{{ t('btn.duplicate') }}</a></li>
+				{% endif %}
+				<li class="export"><a href="automations/-export">{{ t('btn.export') }}</a></li>
+				<li class="import"><a href="automations/-import">{{ t('btn.import') }}</a></li>
+			</ul>
+		</nav>
+	</header>
+
+{% if url.id == '-export' %}
+
+	{% include "admin/collection/export.twig" %}
+
+{% elseif url.id == '-import' %}
+
+	{% include "admin/collection/import.twig" %}
+
+{% else %}
+	<section class="dash-content-section">
+
+		{% if disabled is defined and disabled and failures is defined and failures > 0 %}
+		<div class="warning-box" role="status">
+			<div>
+				<strong>This automation was auto-disabled</strong> after {{ failures }} consecutive failures in production. Fix the handler, then re-enable it.
+			</div>
+			<form method="post" action="automations/{{ url.id }}/enable" style="margin:0">
+				<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+				<button class="dash-button" type="submit">Re-enable</button>
+			</form>
+		</div>
+		{% endif %}
+
+		{% set canSave   = cms.auth.canAccessCollection('automations', url.id == 'new' ? 'create' : 'update') %}
+		{% set canDelete = cms.auth.canAccessCollection('automations', 'delete') %}
+		{% set automationOptions = {
+			id            : url.id == 'new' ? '' : url.id,
+			save          : canSave ? "Save" : false,
+			delete        : (canDelete and url.id != 'new') ? "Delete" : false,
+			class         : 'help-on-hover help-box automation-form',
+			deleteActions : [{
+				"action" : "redirect",
+				"link"   : "automations"
+			}],
+			newActions   : [{
+				"action" : "redirect-object",
+				"link"   : "automations/{id}"
+			}],
+		} %}
+		{% if duplicateData is defined %}
+			{% set automationOptions = automationOptions|merge({ data: duplicateData }) %}
+		{% endif %}
+		{% set form = cms.form.builder('automations', automationOptions) %}
+		{{ form.autoBuild() }}
+
+		{# Handler advisory — non-blocking, mirrors the extension-review findings table. #}
+		{% if findings is defined and findings is not empty %}
+		<article class="dash-card">
+			<div class="warning-box" role="status">
+				<div>
+					<strong>Handler patterns to review.</strong>
+					These high-risk calls were found in the handler. They aren't proof of a problem — many legitimate handlers use them — but it's worth a look.
+				</div>
+			</div>
+			<table class="ext-review-table">
+				<thead><tr><th>Call</th><th>Line</th><th>Code</th></tr></thead>
+				<tbody>
+				{% for f in findings %}
+					<tr>
+						<td><code>{{ f.pattern|e }}</code></td>
+						<td>{{ f.line }}</td>
+						<td><code>{{ f.snippet|e }}</code></td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</article>
+		{% endif %}
+
+		{# Run now + run history. #}
+		{% if url.id != 'new' %}
+		<section class="dash-content-section automation-runs">
+			<header style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+				<h2 style="margin:0">Runs</h2>
+				<button type="button" class="dash-button transparent" id="automation-run-now" data-id="{{ url.id }}">Run now</button>
+			</header>
+			<span class="automation-run-status" role="status" aria-live="polite"></span>
+
+			{% if runs is defined and runs is not empty %}
+			<table class="ext-review-table">
+				<thead><tr><th>Status</th><th>Started</th><th>Duration</th><th>Trigger</th><th>Detail</th></tr></thead>
+				<tbody>
+				{% for run in runs %}
+					<tr>
+						<td><span class="dash-badge {{ run.status == 'success' ? 'success' : 'danger' }}">{{ run.status == 'success' ? '✔' : '⚠' }}</span></td>
+						<td>{{ run.startedAt }}</td>
+						<td>{{ run.durationMs }} ms</td>
+						<td>{{ run.trigger.type | default('—') }}</td>
+						<td>
+							{% if run.exception %}
+								<details><summary>error</summary><pre><code>{{ run.exception|e }}</code></pre></details>
+							{% elseif run.return is not null %}
+								<details><summary>return</summary><pre><code>{{ run.return|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</code></pre></details>
+							{% else %}—{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			{% else %}
+			<p>This automation has not run yet.</p>
+			{% endif %}
+		</section>
+		{% endif %}
+
+	</section>
+
+{% endif %}
+
+{% endif %}
+
+{% if url.id and url.id != 'new' and url.id[:1] != '-' %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+	const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+	// Run now — fires the automation immediately, then reloads to show the run.
+	const runBtn = document.getElementById('automation-run-now');
+	const status = document.querySelector('.automation-run-status');
+	if (runBtn) {
+		runBtn.addEventListener('click', async () => {
+			runBtn.disabled = true;
+			if (status) status.textContent = 'Running…';
+			try {
+				const res = await fetch(`automations/${runBtn.dataset.id}/run`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+					body: JSON.stringify({ csrf_token: csrf }),
+				});
+				const record = await res.json();
+				if (status) status.textContent = `Run ${record.status}.`;
+				window.location.reload();
+			} catch (e) {
+				if (status) status.textContent = 'Run failed to start.';
+				runBtn.disabled = false;
+			}
+		});
+	}
+
+	// Duplicate — POST the id to automations/new, server clones the object.
+	window.duplicateAutomation = (event) => {
+		event.preventDefault();
+		const form = document.createElement('form');
+		form.method = 'POST';
+		form.action = 'automations/new';
+		form.style.display = 'none';
+		for (const [name, value] of Object.entries({ duplicate: '{{ url.id }}', csrf_token: csrf })) {
+			const input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = name;
+			input.value = value;
+			form.appendChild(input);
+		}
+		document.body.appendChild(form);
+		form.submit();
+	};
+});
+</script>
+{% endif %}
+
+<style>
+.automation-runs {
+	max-width: 800px;
+}
+.full-width-forms .automation-runs {
+	max-width: 100%;
+}
+.ext-review-table thead {
+	text-align: left;
+}
+.automations-command {
+	width         : 100%;
+	max-width     : 100%;
+	overflow-x    : auto;
+	white-space   : nowrap;
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+	font-size     : 0.9em;
+	box-sizing    : border-box;
+}
+.automations-command code {
+	white-space : nowrap;
+	display     : block;
+}
+.automations-command + .cms-clip-button {
+	margin-top : 0.5rem;
+}
+</style>
+{% endblock %}

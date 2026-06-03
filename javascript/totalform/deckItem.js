@@ -105,8 +105,8 @@ export default class DeckItem {
 				return oidValue.toString().padStart(paddingLength, '0');
 			}
 
-			// Get value from field data
-			const value = fieldData[key] || '';
+			// Get value from field data — dot notation walks into nested values.
+			const value = this.resolveLabelKey(fieldData, key);
 
 			// Check if value looks like SVG
 			if (typeof value === 'string' && value.trim().startsWith('<svg')) {
@@ -125,6 +125,29 @@ export default class DeckItem {
 		}
 
 		return label;
+	}
+
+	// Resolve a (possibly dotted) label-pattern key against the item data,
+	// walking dot notation into nested values: card.title (card sub-field),
+	// text.es (localizedtext locale), card.headline.es (both). Mirror of
+	// TemplatePlaceholder::resolvePath() on the server. A key that lands on a
+	// non-scalar (a bare ${card}/${text}, or a nested object) returns '' so the
+	// label never shows [object Object].
+	resolveLabelKey(data, key) {
+		const segments = key.split('.');
+		let value = data[segments.shift()];
+
+		for (const segment of segments) {
+			if (value === null || typeof value !== 'object' || !(segment in value)) {
+				return '';
+			}
+			value = value[segment];
+		}
+
+		if (value === null || value === undefined || typeof value === 'object') {
+			return '';
+		}
+		return value;
 	}
 
 	generateUuid() {

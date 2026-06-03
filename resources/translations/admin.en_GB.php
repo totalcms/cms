@@ -914,6 +914,7 @@ return [
 	'api_keys.choose_dataviews'      => 'Choose Specific Data Views',
 	'api_keys.select_endpoints'      => 'Select Endpoints',
 	'api_keys.select_endpoints_help' => 'Check the endpoints this key should have access to.',
+	'api_keys.all_automations_ep'    => 'All Automations',
 	'api_keys.create_submit'         => 'Create API Key',
 	'api_keys.success_title'         => 'API Key Created Successfully',
 	'api_keys.save_warning'          => 'Save this key now!',

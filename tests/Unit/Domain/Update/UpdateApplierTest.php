@@ -13,20 +13,22 @@ use TotalCMS\Factory\LoggerFactory;
 /**
  * Tests for UpdateApplier.
  *
- * These tests verify the applier's behavior using mocks since the actual
- * apply/rollback methods manipulate the real app root directory and are
- * better suited for integration/manual testing. Here we focus on error
- * conditions and the rollback lookup logic.
+ * Error-condition tests use the real app root (they fault before touching any
+ * files). The filesystem-behaviour tests inject a temp app root so they can
+ * assert the in-place swap installs new code while NEVER moving user content,
+ * and rolls back cleanly on failure.
  */
 final class UpdateApplierTest extends TestCase
 {
 	private string $tmpDir;
+	private string $appRoot;
 
 	protected function setUp(): void
 	{
 		$this->tmpDir = sys_get_temp_dir() . '/tcms-applier-test-' . uniqid();
 		mkdir($this->tmpDir, 0755, true);
 		mkdir($this->tmpDir . '/logs', 0755, true);
+		$this->appRoot = $this->tmpDir . '/app';
 	}
 
 	protected function tearDown(): void
@@ -34,45 +36,159 @@ final class UpdateApplierTest extends TestCase
 		$this->deleteDir($this->tmpDir);
 	}
 
-	private function createApplier(): UpdateApplier
-	{
-		$maintenanceMode = $this->createMock(MaintenanceMode::class);
-		$cacheManager    = $this->createMock(CacheManager::class);
-		$loggerFactory   = new LoggerFactory(['path' => $this->tmpDir . '/logs', 'level' => \Monolog\Level::Debug]);
-
-		return new UpdateApplier($maintenanceMode, $cacheManager, $loggerFactory);
-	}
+	// ── Error conditions (real app root; faults before any file work) ────────
 
 	public function testApplyFailsWithInvalidZip(): void
 	{
-		$applier = $this->createApplier();
-
 		$badZip = $this->tmpDir . '/bad.zip';
 		file_put_contents($badZip, 'not a zip');
 
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('Failed to open update zip');
 
-		$applier->apply($badZip, '3.3.0');
+		$this->createApplier()->apply($badZip, '3.3.0');
 	}
 
 	public function testApplyFailsWithMissingZip(): void
 	{
-		$applier = $this->createApplier();
-
 		$this->expectException(\RuntimeException::class);
 
-		$applier->apply($this->tmpDir . '/nonexistent.zip', '3.3.0');
+		$this->createApplier()->apply($this->tmpDir . '/nonexistent.zip', '3.3.0');
 	}
 
 	public function testRollbackFailsWithNoBackup(): void
 	{
-		$applier = $this->createApplier();
-
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('No backup found');
 
-		$applier->rollback();
+		$this->createApplier()->rollback();
+	}
+
+	// ── Filesystem behaviour (injected temp app root) ────────────────────────
+
+	public function testInstallsNewCodeAndPreservesUserData(): void
+	{
+		$this->seedInstall();
+		$zip = $this->makeZip('9.9.9');
+
+		$this->createApplier($this->appRoot)->apply($zip, '9.9.9');
+
+		// New code installed; the old src/ was fully replaced.
+		$this->assertFileExists($this->appRoot . '/src/New.php');
+		$this->assertFileDoesNotExist($this->appRoot . '/src/Old.php');
+		$this->assertFileExists($this->appRoot . '/composer.json');
+		$this->assertStringContainsString('new index', (string)file_get_contents($this->appRoot . '/public/index.php'));
+
+		// User content + config + logs preserved untouched.
+		$this->assertSame('{"title":"keep me"}', (string)file_get_contents($this->appRoot . '/tcms-data/blog/post-1.json'));
+		$this->assertFileExists($this->appRoot . '/.env');
+		$this->assertFileExists($this->appRoot . '/tcms.php');
+		$this->assertFileExists($this->appRoot . '/logs/updates.log');
+
+		// Backup cleaned up + downloaded zip removed.
+		$this->assertSame([], glob($this->appRoot . '.backup-*') ?: []);
+		$this->assertFileDoesNotExist($zip);
+	}
+
+	public function testUnwrapsASingleTopLevelWrapperDirectory(): void
+	{
+		$this->seedInstall();
+		$zip = $this->makeZip('9.9.8', wrapped: true);
+
+		$this->createApplier($this->appRoot)->apply($zip, '9.9.8');
+
+		$this->assertFileExists($this->appRoot . '/src/New.php');
+		$this->assertDirectoryDoesNotExist($this->appRoot . '/totalcms-9.9.8');
+	}
+
+	public function testKeepsUsersTcmsDataEvenIfTheArchiveShipsIt(): void
+	{
+		$this->seedInstall();
+		$zip = $this->makeZip('9.9.6', includeTcmsData: true);
+
+		$this->createApplier($this->appRoot)->apply($zip, '9.9.6');
+
+		$this->assertSame('{"title":"keep me"}', (string)file_get_contents($this->appRoot . '/tcms-data/blog/post-1.json'));
+	}
+
+	public function testRollsBackAndPreservesDataWhenFinalizeFailsAfterSwap(): void
+	{
+		$this->seedInstall();
+
+		// disable() throws on the FIRST (post-swap) call and succeeds on the
+		// catch-path call — a failure that occurs after the swap.
+		$maintenance = $this->createMock(MaintenanceMode::class);
+		$calls       = 0;
+		$maintenance->method('disable')->willReturnCallback(function () use (&$calls): void {
+			if ($calls++ === 0) {
+				throw new \RuntimeException('boom after swap');
+			}
+		});
+
+		$zip = $this->makeZip('9.9.7');
+
+		try {
+			$this->createApplier($this->appRoot, $maintenance)->apply($zip, '9.9.7');
+			$this->fail('expected the update to throw');
+		} catch (\RuntimeException $e) {
+			$this->assertStringContainsString('failed', $e->getMessage());
+		}
+
+		// Old code restored, new code reverted, user data intact.
+		$this->assertFileExists($this->appRoot . '/src/Old.php');
+		$this->assertFileDoesNotExist($this->appRoot . '/src/New.php');
+		$this->assertFileExists($this->appRoot . '/tcms-data/blog/post-1.json');
+		$this->assertFileExists($this->appRoot . '/.env');
+	}
+
+	// ── helpers ──────────────────────────────────────────────────────────────
+
+	private function createApplier(?string $appRoot = null, ?MaintenanceMode $maintenance = null): UpdateApplier
+	{
+		return new UpdateApplier(
+			$maintenance ?? $this->createMock(MaintenanceMode::class),
+			$this->createMock(CacheManager::class),
+			new LoggerFactory(['path' => $this->tmpDir . '/logs', 'level' => \Monolog\Level::Debug]),
+			$appRoot,
+		);
+	}
+
+	/** A representative install: shipped code + user content + config + logs. */
+	private function seedInstall(): void
+	{
+		$this->write($this->appRoot . '/src/Old.php', '<?php // old code');
+		$this->write($this->appRoot . '/public/index.php', '<?php // old index');
+		$this->write($this->appRoot . '/tcms-data/blog/post-1.json', '{"title":"keep me"}');
+		$this->write($this->appRoot . '/.env', 'APP_ENV=prod');
+		$this->write($this->appRoot . '/tcms.php', "<?php return ['site' => 'mine'];");
+		$this->write($this->appRoot . '/logs/updates.log', "previous\n");
+	}
+
+	private function makeZip(string $version, bool $wrapped = false, bool $includeTcmsData = false): string
+	{
+		$zipPath = $this->tmpDir . "/update-{$version}.zip";
+		$prefix  = $wrapped ? "totalcms-{$version}/" : '';
+
+		$zip = new \ZipArchive();
+		$zip->open($zipPath, \ZipArchive::CREATE);
+		$zip->addFromString($prefix . 'src/New.php', '<?php // new code');
+		$zip->addFromString($prefix . 'public/index.php', '<?php // new index');
+		$zip->addFromString($prefix . 'composer.json', '{"name":"totalcms/cms"}');
+		if ($includeTcmsData) {
+			$zip->addFromString($prefix . 'tcms-data/blog/post-1.json', '{"title":"OVERWRITTEN"}');
+		}
+		$zip->close();
+
+		return $zipPath;
+	}
+
+	private function write(string $path, string $contents): void
+	{
+		$dir = dirname($path);
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		file_put_contents($path, $contents);
 	}
 
 	private function deleteDir(string $dir): void
@@ -83,7 +199,7 @@ final class UpdateApplierTest extends TestCase
 
 		$iterator = new \RecursiveIteratorIterator(
 			new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::CHILD_FIRST
+			\RecursiveIteratorIterator::CHILD_FIRST,
 		);
 
 		foreach ($iterator as $file) {

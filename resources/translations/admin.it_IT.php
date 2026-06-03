@@ -914,6 +914,7 @@ return [
 	'api_keys.choose_dataviews'      => 'Scegli viste dati specifiche',
 	'api_keys.select_endpoints'      => 'Seleziona endpoint',
 	'api_keys.select_endpoints_help' => 'Seleziona gli endpoint a cui questa chiave deve avere accesso.',
+	'api_keys.all_automations_ep'    => 'Tutte le automazioni',
 	'api_keys.create_submit'         => 'Crea chiave API',
 	'api_keys.success_title'         => 'Chiave API creata con successo',
 	'api_keys.save_warning'          => 'Salva subito questa chiave!',

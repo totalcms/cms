@@ -42,6 +42,33 @@ class ImagePaletteGenerator
 			throw new \RuntimeException("Image has invalid dimensions ({$imageInfo[0]}x{$imageInfo[1]}): {$imagepath}");
 		}
 
+		// Guard against a fatal out-of-memory while decoding the full bitmap.
+		// ColorThief decodes the entire image; under GD that allocates the whole
+		// truecolor canvas in PHP's memory budget, so a large image (e.g. a
+		// 7500x5001 JPEG) can exhaust memory_limit and kill the worker with an
+		// UNCATCHABLE fatal — which silently leaves the object's image metadata
+		// empty. ColorThief uses Imagick when it's available (bounded
+		// differently), so the guard only applies to GD-only installs. Throwing
+		// RuntimeException here routes the large image into the caller's graceful
+		// "skip palette, continue the save" path instead of OOM-killing the request.
+		if (!extension_loaded('imagick') && extension_loaded('gd')) {
+			$limit = self::memoryLimitBytes();
+			if ($limit > 0) {
+				$bits      = $imageInfo['bits'] ?? 8;
+				$channels  = $imageInfo['channels'] ?? 3;
+				$estimate  = (int)(($imageInfo[0] * $imageInfo[1] * $bits / 8 * $channels + 65536) * 1.8);
+				$available = $limit - memory_get_usage(true);
+				if ($estimate > $available) {
+					throw new \RuntimeException(sprintf(
+						'Image too large to decode with GD for palette generation (~%dMB needed, %dMB available): %s',
+						intdiv($estimate, 1048576),
+						intdiv(max(0, $available), 1048576),
+						$imagepath,
+					));
+				}
+			}
+		}
+
 		// Getting the top 15 colors from the image then reduce to top 5
 		// This produces the best results after a lot of testing
 		try {
@@ -58,5 +85,27 @@ class ImagePaletteGenerator
 		}
 
 		return array_slice($palette, 0, 5);
+	}
+
+	/**
+	 * Parse PHP's `memory_limit` into bytes. Returns -1 when unlimited or unset,
+	 * signalling that no decode guard should be applied.
+	 */
+	private static function memoryLimitBytes(): int
+	{
+		$limit = trim(ini_get('memory_limit'));
+		if ($limit === '' || $limit === '-1') {
+			return -1;
+		}
+
+		$unit  = strtolower($limit[strlen($limit) - 1]);
+		$value = (int)$limit;
+
+		return match ($unit) {
+			'g'     => $value * 1024 * 1024 * 1024,
+			'm'     => $value * 1024 * 1024,
+			'k'     => $value * 1024,
+			default => $value,
+		};
 	}
 }

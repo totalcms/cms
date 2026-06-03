@@ -1,0 +1,99 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/automation-trigger.json",
+	"id"          : "automation-trigger",
+	"type"        : "object",
+	"title"       : "Automation Trigger",
+	"description" : "One trigger for an automation. Stored as a deck item; the deck key is the trigger id.",
+	"required"    : ["id", "type"],
+	"index"       : ["id", "type"],
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Trigger ID",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"autogen" : "${type}_${uid}",
+				"hide"    : true
+        	}
+		},
+		"type": {
+			"type"    : "string",
+			"label"   : "Type",
+			"field"   : "select",
+			"default" : "schedule",
+			"options" : [
+				{ "value": "schedule", "label": "Schedule (cron)" },
+				{ "value": "webhook",  "label": "Webhook (HTTP POST)" },
+				{ "value": "event",    "label": "Event" }
+			]
+		},
+		"cron": {
+			"type"        : "string",
+			"label"       : "Cron expression",
+			"help"        : "Standard 5-field cron in the site timezone, e.g. <code>0 1 * * *</code> (daily at 1am).",
+			"field"       : "text",
+			"placeholder" : "*/15 * * * *",
+			"pattern"     : "^$|^@\\w+$|^[\\d*/,?#A-Za-z-]+(\\s+[\\d*/,?#A-Za-z-]+){4}$",
+			"settings"    : { "visibility": { "watch": "type", "value": "schedule", "operator": "==" } },
+			"options" : [
+				{ "value": "* * * * *",     "label": "Every minute" },
+				{ "value": "*/15 * * * *",  "label": "Every 15 minutes" },
+				{ "value": "*/30 * * * *",  "label": "Every 30 minutes" },
+				{ "value": "15 * * * *",    "label": "Hourly at :15" },
+				{ "value": "0 */6 * * *",   "label": "Every 6 hours" },
+				{ "value": "20 5 * * *",    "label": "Daily at 05:20" },
+				{ "value": "0 8,17 * * *",  "label": "Twice daily (8am & 5pm)" },
+				{ "value": "0 2 * * 0",     "label": "Sundays at 02:00" },
+				{ "value": "0 8 * * 1",     "label": "Mondays at 08:00" },
+				{ "value": "0 9 * * 1-5",   "label": "Weekdays at 09:00" },
+				{ "value": "30 9 1 * *",    "label": "Monthly on the 1st at 09:30" },
+				{ "value": "0 0 1 1 *",     "label": "Yearly on the Jan 1st at 00:00" }
+			]
+		},
+		"auth": {
+			"type"    : "string",
+			"label"   : "Webhook auth",
+			"help"    : "Endpoint is <code>POST /automations/{id}</code>. <code>Same origin</code> allows browser form posts from this site only — handy for a public form, but it can be spoofed by non-browser clients, so it is not a substitute for a key.",
+			"field"   : "select",
+			"default" : "apiKey",
+			"options" : [
+				{ "value": "apiKey",     "label": "API key (scoped to POST /automations)" },
+				{ "value": "sameOrigin", "label": "Same origin (browser forms only)" },
+				{ "value": "none",       "label": "None (public, rate-limited)" }
+			],
+			"settings" : { "visibility": { "watch": "type", "value": "webhook", "operator": "==" } }
+		},
+		"sync": {
+			"type"     : "boolean",
+			"label"    : "Synchronous",
+			"help"     : "Run inline and return the result instead of queueing.",
+			"field"    : "toggle",
+			"default"  : false,
+			"settings" : { "visibility": { "watch": "type", "value": "webhook", "operator": "==" } }
+		},
+		"event": {
+			"type"        : "string",
+			"label"       : "Event",
+			"help"        : "The T3 event that fires this automation.",
+			"field"       : "select",
+			"placeholder" : "Select an event",
+			"settings"    : {
+				"propertyOptions" : "events",
+				"visibility"      : { "watch": "type", "value": "event", "operator": "==" }
+			}
+		},
+		"collection": {
+			"type"        : "string",
+			"label"       : "Collection filter",
+			"help"        : "Only fire for this collection. Leave blank for all collections.",
+			"field"       : "select",
+			"placeholder" : "All collections",
+			"settings"    : {
+				"propertyOptions" : "collectionIds",
+				"visibility"      : { "watch": "type", "value": "event", "operator": "==" }
+			}
+		}
+	}
+}

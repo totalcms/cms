@@ -1,9 +1,11 @@
 <?php
 
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Action\Property\File\FileSaveAction;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -26,7 +28,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	return new FileSaveAction($renderer, $factory, $config, $heicConverter, $httpClient);
+	return new FileSaveAction($renderer, $factory, $config, $heicConverter, $httpClient, new FileUploadValidator());
 }
 
 function createDownloadRequest(string $url): ServerRequestInterface
@@ -68,6 +70,18 @@ describe('FileSaveAction URL Download', function (): void {
 
 		// Cleanup
 		unlink($result);
+	});
+
+	test('rejects a URL upload with a dangerous extension before downloading', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->never())->method('request'); // download must be prevented
+
+		$action  = createFileSaveAction($httpClient);
+		$request = createDownloadRequest('https://evil.test/shell.php');
+
+		$result = $action($request, new Response(), ['collection' => 'blog', 'id' => 'x', 'property' => 'testfile']);
+
+		expect($result->getStatusCode())->toBe(400);
 	});
 
 	test('throws exception on HTTP error status', function (): void {

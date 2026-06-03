@@ -7,7 +7,7 @@ namespace Tests\Domain\Cache\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 /**
  * @covers \TotalCMS\Domain\Cache\Service\DevModeManager

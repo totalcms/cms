@@ -77,6 +77,37 @@ class ImageSaverTest extends TestCase
 		$this->imageSaver->save($collection, $objectID, $property, $filePath);
 	}
 
+	public function testSaveRejectsSvgByExtension(): void
+	{
+		// SVG must never land in an image field (it would be served back raw as
+		// image/svg+xml → stored XSS). Rejected before any storage interaction.
+		$this->mockObjectFetcher->expects($this->never())->method('existsObject');
+		$this->mockStorage->expects($this->never())->method('saveFile');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage('SVG files are not supported');
+
+		$this->imageSaver->save('image', 'obj', 'photo', '/tmp/evil.svg');
+	}
+
+	public function testSaveRejectsSvgByContentEvenWhenRenamed(): void
+	{
+		// The served mime is content-detected, so a .png-named SVG would still
+		// execute — the guard must sniff content, not just the extension.
+		$tmp = tempnam(sys_get_temp_dir(), 'svgtest') . '.png';
+		file_put_contents($tmp, '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+
+		$this->mockStorage->expects($this->never())->method('saveFile');
+
+		try {
+			$this->expectException(\DomainException::class);
+			$this->expectExceptionMessage('SVG files are not supported');
+			$this->imageSaver->save('image', 'obj', 'photo', $tmp);
+		} finally {
+			@unlink($tmp);
+		}
+	}
+
 	public function testInheritsFromFileSaver(): void
 	{
 		// Test that ImageSaver properly extends FileSaver

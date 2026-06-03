@@ -85,6 +85,40 @@ The editor also has a drag handle on the bottom edge that allows users to manual
 }
 ```
 
+## External File Storage (`external: true`)
+
+For large code blocks, you can store a code field's value in a real file on disk instead of inline in the object's JSON. Set `"external": true` in the field settings:
+
+```json
+{
+  "handler": {
+    "$ref"     : "https://www.totalcms.co/schemas/properties/code.json",
+    "label"    : "Handler",
+    "field"    : "code",
+    "settings" : {
+      "mode"     : "php",
+      "external" : true
+    }
+  }
+}
+```
+
+With this enabled, the value is written to:
+
+```
+<collection>/<id>/<property>/<property>.<ext>
+```
+
+where `<ext>` is derived from `mode` (e.g. `php`, `twig`, `js`, `css`, `html`, `json`, otherwise `txt`). For the example above, an object `widgets/alpha` stores its handler at `widgets/alpha/handler/handler.php`, and the object's `alpha.json` keeps the field blank.
+
+**Why use it:**
+
+- The value lives as a real file — clean git diffs, editable in an external IDE, no escaped strings in the JSON.
+- Everything else is transparent: the field still edits in the admin and reads in Twig as a normal string, and the value travels with **Sync** and **JumpStart** (it is inlined into the transfer payload, then re-written to disk on the receiving end).
+- The file is removed and duplicated automatically with its object.
+
+> **Requires the `code.json` `$ref` form** (as shown above), not `"type": "string"`. The `$ref` makes the field resolve to a code property, which stores the value byte-for-byte. A plain `"type": "string"` code field is treated as rich text — it is HTML-sanitized and trimmed, which corrupts source code (e.g. PHP).
+
 ## Code Fields for Embed Codes and Third-Party Widgets
 
 **IMPORTANT:** When using code fields for third-party embed codes (like TidyCal, Google Analytics, social media widgets, etc.), you **must disable HTML sanitization** to preserve scripts and data attributes.

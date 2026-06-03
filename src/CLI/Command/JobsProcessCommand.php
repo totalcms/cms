@@ -8,6 +8,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Process the job queue.
@@ -40,7 +41,7 @@ class JobsProcessCommand extends BaseCommand
 		}
 
 		// Lock file
-		$lockFilePath = $this->totalcms->config->datadir . '/.system/.processJobs.lock';
+		$lockFilePath = PathUtils::absolutePath($this->totalcms->config->datadir, '.system/.processJobs.lock');
 		$lockFile     = @fopen($lockFilePath, 'c');
 		if ($lockFile === false) {
 			return $this->outputError($input, $output, 'Unable to open lock file.');

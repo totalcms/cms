@@ -84,6 +84,40 @@ class FileSaver
 		return $this->updateObject($collection, $objectID, $property, $fileData, $subpath);
 	}
 
+	/**
+	 * Re-derive this property's data from files already on disk (recovery path).
+	 * Unlike save(), it does NOT import/move an upload and does NOT write the
+	 * object — the caller patches the returned PropertyData. Returns null when
+	 * there are no files to rebuild from. A file field is single-file; subclasses
+	 * override for image/gallery/depot.
+	 */
+	public function rebuildFromStorage(string $collection, string $id, string $property, ?string $subpath = null): ?PropertyData
+	{
+		$files = $this->storage->listPropertyFiles($collection, $id, $property, $subpath);
+		if ($files === []) {
+			return null;
+		}
+
+		return new FileData($this->describeStoredFile($collection, $id, $property, (string)$files[0]['name'], $subpath));
+	}
+
+	/**
+	 * Build the base fileData array (name/size/mime/uploadDate) for a file that
+	 * is ALREADY in storage — the equivalent of what saveFile() returns, without
+	 * the move. uploadDate is "now" (the original is unknowable for an orphan).
+	 *
+	 * @return array<string,string|int>
+	 */
+	protected function describeStoredFile(string $collection, string $id, string $property, string $filename, ?string $subpath): array
+	{
+		return [
+			'name'       => $filename,
+			'size'       => $this->storage->fileSize($collection, $id, $property, $filename, $subpath),
+			'mime'       => $this->storage->mimeType($collection, $id, $property, $filename, $subpath),
+			'uploadDate' => date('c'),
+		];
+	}
+
 	protected function createObject(string $collection, string $objectID, string $property): void
 	{
 		try {
@@ -184,6 +218,36 @@ class FileSaver
 		}
 
 		return $instance;
+	}
+
+	/**
+	 * Reject SVG uploads. Image and gallery fields are raster-only; SVG belongs
+	 * in the dedicated (sanitized) SVG field. Without this, an SVG stored in an
+	 * image/gallery field is served back raw as `image/svg+xml` by the public
+	 * imageworks endpoint — stored XSS. Content is sniffed (not just the
+	 * extension) because the served mime is content-detected, so a renamed SVG
+	 * would still execute. File and depot savers do NOT call this — SVG is a
+	 * legitimate file there.
+	 */
+	protected function assertNotSvg(string $filePath): void
+	{
+		if (strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) === 'svg') {
+			throw new \DomainException('SVG files are not supported in image or gallery fields. Use an SVG field instead.');
+		}
+
+		if (!is_file($filePath)) {
+			return; // nothing to sniff; a missing upload is handled downstream
+		}
+
+		// Raster images start with binary magic bytes (never '<'); an SVG/XML
+		// document starts with '<'. Anchoring on that first means a legit image
+		// that merely contains the bytes "<svg" in its EXIF/XMP metadata can't be
+		// false-flagged, while a renamed SVG (served back as content-detected
+		// image/svg+xml → XSS) is still caught.
+		$head = ltrim((string)file_get_contents($filePath, false, null, 0, 4096), "\xEF\xBB\xBF \t\r\n");
+		if ($head !== '' && $head[0] === '<' && preg_match('/<svg[\s>\/]/i', $head) === 1) {
+			throw new \DomainException('SVG files are not supported in image or gallery fields. Use an SVG field instead.');
+		}
 	}
 
 	protected function updateObject(

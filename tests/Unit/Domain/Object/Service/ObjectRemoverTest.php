@@ -19,7 +19,7 @@ final class ObjectRemoverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $storage;
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \TotalCMS\Domain\Event\EventDispatcher $eventDispatcher;
+	private \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher;
 
 	/** @var array<string,mixed>|null */
 	private ?array $dispatchedPayload = null;
@@ -30,7 +30,7 @@ final class ObjectRemoverTest extends TestCase
 		$this->storage         = $this->createMock(ObjectRepository::class);
 		$this->objectFetcher   = $this->createMock(ObjectFetcher::class);
 		$this->objectUpdater   = $this->createMock(ObjectUpdater::class);
-		$this->eventDispatcher = new \TotalCMS\Domain\Event\EventDispatcher(new \Psr\Log\NullLogger());
+		$this->eventDispatcher = new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger());
 
 		$this->eventDispatcher->listen('object.deleted', function (array $payload): void {
 			$this->dispatchedPayload = $payload;

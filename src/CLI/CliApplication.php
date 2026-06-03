@@ -45,6 +45,7 @@ class CliApplication
 		$app->addCommand(new Command\CacheClearCommand($totalcms));
 		$app->addCommand(new Command\DeployCommand($totalcms));
 		$app->addCommand(new Command\JobsProcessCommand($totalcms));
+		$app->addCommand(new Command\AutomationsProcessCommand($totalcms));
 
 		// MCP server status + local tool dispatch helper
 		$app->addCommand(new Command\Mcp\McpStatusCommand($totalcms));
@@ -56,6 +57,9 @@ class CliApplication
 
 		// Search commands
 		$app->addCommand(new Command\Search\SearchReindexCommand($totalcms));
+
+		// Maintenance commands
+		$app->addCommand(new Command\Maintenance\RepairFilesCommand($totalcms));
 
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));

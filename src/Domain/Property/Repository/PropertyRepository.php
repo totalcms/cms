@@ -198,4 +198,20 @@ class PropertyRepository extends StorageRepository
 			'path' => $filePath,
 		], array_values($files));
 	}
+
+	/**
+	 * List the immediate sub-folder names under a property (or a depot subpath),
+	 * excluding hidden dirs like `.cache`. Used to walk the depot folder tree.
+	 *
+	 * @return list<string>
+	 */
+	public function listPropertyDirectories(string $collection, string $objectID, string $property, ?string $subpath = null): array
+	{
+		$path = PathUtils::buildPath($collection, $objectID, $property, null, $subpath);
+
+		return array_values(array_filter(
+			array_map(basename(...), $this->filesystem->listDirectories($path)),
+			static fn (string $name): bool => !str_starts_with($name, '.'),
+		));
+	}
 }

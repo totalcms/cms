@@ -7,7 +7,7 @@ namespace TotalCMS\Tests\Unit\Cache;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 /**
  * Test DevModeManager service.

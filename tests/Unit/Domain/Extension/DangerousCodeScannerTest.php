@@ -112,4 +112,65 @@ describe('DangerousCodeScanner', function (): void {
 		// Local file_get_contents is not flagged at all.
 		expect($patterns)->not->toContain('file_get_contents');
 	});
+
+	test('scanCode flags an in-memory automation handler string', function (): void {
+		$handler = <<<'PHP'
+			<?php
+
+			return function ($ctx) {
+			    shell_exec('rm -rf /');
+
+			    return ['ok' => true];
+			};
+			PHP;
+
+		$findings = (new DangerousCodeScanner())->scanCode($handler);
+		$patterns = array_column($findings, 'pattern');
+
+		expect($patterns)->toContain('shell_exec');
+		// Finding shape has no `file` key (string scan, not a directory walk).
+		expect($findings[0])->toHaveKeys(['pattern', 'line', 'snippet']);
+		expect($findings[0])->not->toHaveKey('file');
+	});
+
+	test('scanCode returns nothing for a benign handler', function (): void {
+		$handler = <<<'PHP'
+			<?php
+
+			return function ($ctx) {
+			    $ctx->objects->save('blog', ['title' => 'Hi']);
+
+			    return ['saved' => 1];
+			};
+			PHP;
+
+		expect((new DangerousCodeScanner())->scanCode($handler))->toBe([]);
+	});
+
+	test('scanCodeForBlocking returns only the shell/eval subset, not dual-use file/network calls', function (): void {
+		$handler = <<<'PHP'
+			<?php
+
+			return function ($ctx) {
+			    file_put_contents('/tmp/log', 'x');   // advisory only
+			    curl_exec($ch);                        // advisory only
+			    base64_decode('abc');                  // advisory only
+			    exec('rm -rf /');                      // BLOCK
+			    eval($code);                           // BLOCK
+			};
+			PHP;
+
+		$scanner = new DangerousCodeScanner();
+
+		// The advisory scan still surfaces everything.
+		$allPatterns = array_column($scanner->scanCode($handler), 'pattern');
+		expect($allPatterns)->toContain('file_put_contents')->toContain('exec')->toContain('eval');
+
+		// The blocking scan keeps only the shell/eval primitives.
+		$blockingPatterns = array_column($scanner->scanCodeForBlocking($handler), 'pattern');
+		expect($blockingPatterns)->toContain('exec')->toContain('eval');
+		expect($blockingPatterns)->not->toContain('file_put_contents');
+		expect($blockingPatterns)->not->toContain('curl_exec');
+		expect($blockingPatterns)->not->toContain('base64_decode');
+	});
 });

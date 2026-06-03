@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Cache\Service;
 
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\SystemEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 /**
  * Manages temporary development mode state.
@@ -37,7 +38,7 @@ class DevModeManager
 			json_encode($devModeData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)
 		);
 
-		$this->eventDispatcher->dispatch('devmode.enabled', new SystemEventPayload([
+		$this->eventDispatcher->dispatch(CoreEvent::DEVMODE_ENABLED, new SystemEventPayload([
 			'duration' => $this->devModeDuration,
 		]));
 	}
@@ -51,7 +52,7 @@ class DevModeManager
 			unlink($this->devModeFile);
 		}
 
-		$this->eventDispatcher->dispatch('devmode.disabled', new SystemEventPayload());
+		$this->eventDispatcher->dispatch(CoreEvent::DEVMODE_DISABLED, new SystemEventPayload());
 	}
 
 	/**

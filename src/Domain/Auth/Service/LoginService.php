@@ -4,8 +4,9 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -81,7 +82,7 @@ class LoginService
 
 		$this->logger->info("User {$this->account} logged in");
 
-		$this->eventDispatcher->dispatch('user.login', new UserEventPayload($user['id'] ?? $this->account));
+		$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload($user['id'] ?? $this->account));
 
 		return $user;
 	}

@@ -64,6 +64,30 @@ final class PersistentLoginServiceTest extends TestCase
 		}
 	}
 
+	public function testRestoreRejectsTraversalSelectorAndDeletesNothing(): void
+	{
+		// A crafted cookie selector must not read or @unlink arbitrary files.
+		// tokenDir is <tmpDir>/persistent_tokens, so selector `../victim` would
+		// resolve to <tmpDir>/victim.json and be deleted without the guard.
+		$victim = $this->tmpDir . '/victim.json';
+		file_put_contents($victim, '{"keep":true}');
+
+		$this->session->method('has')->willReturn(false); // not already logged in
+		$_COOKIE[PersistentLoginService::PERSISTENT_COOKIE_NAME] = '../victim:' . str_repeat('a', 64);
+
+		try {
+			$result = $this->service->restoreFromPersistentToken();
+
+			$this->assertFalse($result);
+			$this->assertFileExists($victim); // selector rejected before any file op
+		} finally {
+			unset($_COOKIE[PersistentLoginService::PERSISTENT_COOKIE_NAME]);
+			if (is_file($victim)) {
+				unlink($victim);
+			}
+		}
+	}
+
 	// ==================== Has Persistent Login Tests ====================
 
 	public function testHasPersistentLoginReturnsTrueWhenSet(): void

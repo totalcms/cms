@@ -208,6 +208,7 @@ class TotalCMSTwigAdapter
 			'dashboardSystemStatus'      => ['admin', 'dashboardSystemStatus'],
 			'dashboardRecentObjects'     => ['admin', 'dashboardRecentObjects'],
 			'processJobQueueCommand'     => ['admin', 'processJobQueueCommand'],
+			'processAutomationsCommand'  => ['admin', 'processAutomationsCommand'],
 			'jobQueuePendingInfo'        => ['admin', 'jobQueuePendingInfo'],
 			'jobQueueFailedInfo'         => ['admin', 'jobQueueFailedInfo'],
 			'getDevModeStatus'           => ['admin', 'devModeStatus'],

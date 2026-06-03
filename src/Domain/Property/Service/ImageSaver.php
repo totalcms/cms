@@ -6,10 +6,24 @@ use TotalCMS\Domain\Media\Service\ImageMetaReader;
 use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Service\Concerns\DerivesImageData;
 
 class ImageSaver extends FileSaver
 {
+	use DerivesImageData;
+
 	public string $type = 'image';
+
+	public function rebuildFromStorage(string $collection, string $id, string $property, ?string $subpath = null): ?PropertyData
+	{
+		$files = $this->storage->listPropertyFiles($collection, $id, $property, $subpath);
+		if ($files === []) {
+			return null;
+		}
+
+		return new ImageData($this->deriveImageData($collection, $id, $property, $files[0], $subpath));
+	}
 
 	public function save(
 		string $collection,
@@ -18,6 +32,8 @@ class ImageSaver extends FileSaver
 		string $filePath,
 		?string $subpath = null,
 	): ObjectData {
+		$this->assertNotSvg($filePath);
+
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);

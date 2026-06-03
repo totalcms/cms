@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Template\Service;
 
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\TemplateEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
@@ -51,7 +52,7 @@ readonly class TemplateSaver
 
 		$this->storage->saveTemplate($template, $folder);
 
-		$this->eventDispatcher->dispatch('template.saved', new TemplateEventPayload($id, $folder));
+		$this->eventDispatcher->dispatch(CoreEvent::TEMPLATE_SAVED, new TemplateEventPayload($id, $folder));
 
 		return $template;
 	}

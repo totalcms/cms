@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth\Service;
 
+use Odan\Session\MemorySession;
 use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
@@ -43,5 +44,19 @@ final class SessionLoginTest extends TestCase
 		(new SessionLogin($session))->establish('alice', 'members', true);
 
 		$this->assertTrue($captured[SessionKeys::AUTH_PERSISTENT_LOGIN]);
+	}
+
+	public function testEstablishRegeneratesTheSessionId(): void
+	{
+		// MemorySession implements SessionManagerInterface, so establish() must
+		// regenerate the id at the login privilege boundary (session fixation).
+		$session = new MemorySession();
+		$session->set('seed', 'pre-login-state');
+		$before = $session->getId();
+
+		(new SessionLogin($session))->establish('alice', 'members');
+
+		$this->assertNotSame($before, $session->getId(), 'session id should be regenerated on login');
+		$this->assertSame('alice', $session->get(SessionKeys::AUTH_USER));
 	}
 }

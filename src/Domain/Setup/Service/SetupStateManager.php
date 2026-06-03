@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Setup\Service;
 use Odan\Session\SessionInterface;
 use TotalCMS\Domain\Setup\Data\SetupState;
 use TotalCMS\Domain\Setup\Repository\SetupStateRepository;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -178,7 +179,7 @@ class SetupStateManager
 		}
 
 		$authCollection = $this->config->auth['collection'] ?? 'auth';
-		$authPath       = $this->config->datadir . '/' . $authCollection;
+		$authPath       = PathUtils::absolutePath($this->config->datadir, $authCollection);
 
 		return is_dir($authPath);
 	}
@@ -190,7 +191,7 @@ class SetupStateManager
 		}
 
 		$authCollection = $this->config->auth['collection'] ?? 'auth';
-		$authPath       = $this->config->datadir . '/' . $authCollection;
+		$authPath       = PathUtils::absolutePath($this->config->datadir, $authCollection);
 
 		$entries = @scandir($authPath);
 		if ($entries === false) {

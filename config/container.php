@@ -30,19 +30,21 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
-use TotalCMS\Domain\Event\EventDispatcher;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
 use TotalCMS\Domain\Event\Listener\DataViewListener;
 use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Listener\McpResourceSubscriptionListener;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
@@ -90,6 +92,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Migration\Migration\EnsureAutomationsCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
@@ -452,6 +455,20 @@ return [
 		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.deleted', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
 
+		// AutomationEventSubscriber — fans every core event out to matching
+		// event-trigger automations (enqueued async). Priority 100 = after all
+		// core listeners, so index/cache are already updated when an automation
+		// reads. Lazily resolved so a fresh automation is picked up per dispatch.
+		foreach (CoreEvent::ALL as $automationEvent) {
+			$dispatcher->listen(
+				$automationEvent,
+				static function (array $payload) use ($container, $automationEvent): void {
+					$container->get(AutomationEventSubscriber::class)->handle($automationEvent, $payload);
+				},
+				100,
+			);
+		}
+
 		return $dispatcher;
 	},
 
@@ -522,6 +539,7 @@ return [
 		[
 			$container->get(LegacyTemplatesMigration::class),
 			$container->get(EnsureMcpPromptCollectionMigration::class),
+			$container->get(EnsureAutomationsCollectionMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->addFileHandler('migrations.log')->createLogger('migrations'),
@@ -744,6 +762,12 @@ return [
 		$container->get(LoggerFactory::class)
 			->addFileHandler('oauth-activity.log', level: Level::Info)
 			->createLogger('oauth-activity'),
+	),
+
+	TotalCMS\Domain\Automation\Service\AutomationActivityLogger::class => fn (ContainerInterface $container): TotalCMS\Domain\Automation\Service\AutomationActivityLogger => new TotalCMS\Domain\Automation\Service\AutomationActivityLogger(
+		$container->get(LoggerFactory::class)
+			->addFileHandler('automations-activity.log', level: Level::Info)
+			->createLogger('automations-activity'),
 	),
 
 	// === Search Providers Phase 5 ===

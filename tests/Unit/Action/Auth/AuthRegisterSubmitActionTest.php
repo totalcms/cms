@@ -9,15 +9,20 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Auth\AuthRegisterSubmitAction;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -54,17 +59,35 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$this->config->auth = [
 			'collection'              => 'admin',
 			'publicRegistration'      => ['members'],
+			'publicRegistrationGroup' => '',
 			'verificationTokenExpiry' => 1440,
 			'verificationMailerId'    => '',
 		];
 		$this->config->url = 'https://example.test';
 		$this->config->api = '/api';
 
+		// Real AuthFieldPolicy: the 'members' schema carries the privileged
+		// fields so stripProtected() actually removes them.
+		$schema             = new SchemaData();
+		$schema->id         = 'auth';
+		$schema->properties = array_fill_keys(
+			['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'name', 'email', 'password'],
+			[],
+		);
+		$schemaFetcher = $this->createMock(SchemaFetcher::class);
+		$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$authFieldPolicy = new AuthFieldPolicy(
+			$schemaFetcher,
+			$this->createMock(UserValidationService::class),
+			$this->createMock(ObjectFetcher::class),
+		);
+
 		$this->action = new AuthRegisterSubmitAction(
 			$this->renderer,
 			$this->objectSaver,
 			$this->loginService,
 			$this->sessionLogin,
+			$authFieldPolicy,
 			$this->collectionFetcher,
 			$this->verificationService,
 			$this->emailService,
@@ -128,6 +151,72 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		);
 
 		$this->assertSame($jsonResponse, $result);
+	}
+
+	public function testStripsPrivilegedFieldsAndForcesDefaultsWithoutVerification(): void
+	{
+		$this->config->auth['publicRegistrationGroup'] = 'member';
+		$this->withCollection('members', requireVerification: false);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+
+		// The attacker submits privileged fields; the action must strip them and
+		// force the server-side group + active state.
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static function (array $d): bool {
+				expect($d['groups'])->toBe(['member']);              // forced, not ['admin']
+				expect($d['active'])->toBe(true);                    // forced (non-verification)
+				expect($d)->not->toHaveKey('expiration');            // stripped
+				expect($d)->not->toHaveKey('maxLoginCount');         // stripped
+				expect($d)->not->toHaveKey('passkeys');              // stripped
+				expect($d['email'])->toBe('a@b.test');               // user field kept
+
+				return true;
+			}))
+			->willReturn($saved);
+
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest([
+				'email'         => 'a@b.test',
+				'password'      => 'sekret123',
+				'groups'        => ['admin'],
+				'active'        => true,
+				'expiration'    => '2099-01-01',
+				'maxLoginCount' => 999,
+				'passkeys'      => [['id' => 'forged']],
+			]),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testForcesEmptyGroupWhenNoDefaultConfigured(): void
+	{
+		// publicRegistrationGroup defaults to '' in setUp.
+		$this->withCollection('members', requireVerification: false);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static function (array $d): bool {
+				expect($d['groups'])->toBe([]); // no group granted
+
+				return true;
+			}))
+			->willReturn($saved);
+
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', 'groups' => ['admin']]),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
 	}
 
 	public function testSaveFailureBubblesUpAsForSlimErrorHandler(): void

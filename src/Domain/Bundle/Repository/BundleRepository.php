@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Bundle\Repository;
 use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -30,7 +31,7 @@ class BundleRepository extends StorageRepository
 
 	private function getLocalBundlePath(): string
 	{
-		return $this->config->datadir . '/.system/.bundle';
+		return PathUtils::absolutePath($this->config->datadir, '.system/.bundle');
 	}
 
 	public function saveLocalBundle(BundleData $bundle): bool
