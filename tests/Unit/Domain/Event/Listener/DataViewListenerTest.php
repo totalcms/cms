@@ -7,9 +7,9 @@ namespace Tests\Unit\Domain\Event\Listener;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\DataView\Service\DataViewUpdateScheduler;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Listener\DataViewListener;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 final class DataViewListenerTest extends TestCase
 {

@@ -12,7 +12,6 @@ final readonly class RunRecord
 {
 	/**
 	 * @param array<string,mixed> $trigger
-	 * @param mixed $return
 	 */
 	public function __construct(
 		public string $runId,

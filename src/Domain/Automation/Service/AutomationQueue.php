@@ -15,11 +15,11 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
  * The PSR-7 request is intentionally NOT serialized — async handlers use
  * `$ctx->args`; raw-request access requires a `sync: true` webhook.
  */
-final class AutomationQueue
+final readonly class AutomationQueue
 {
 	private const DIR = '.system/automations/_queue';
 
-	public function __construct(private readonly StorageAdapterInterface $filesystem)
+	public function __construct(private StorageAdapterInterface $filesystem)
 	{
 	}
 

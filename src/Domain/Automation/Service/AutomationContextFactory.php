@@ -41,35 +41,35 @@ use TotalCMS\Support\Config;
  * runner stays focused on orchestration and asks the factory for a context per
  * run, supplying only the per-trigger payload.
  */
-final class AutomationContextFactory
+final readonly class AutomationContextFactory
 {
-	private readonly LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	public function __construct(
-		private readonly IndexReader $indexReader,
-		private readonly ObjectFetcher $objectFetcher,
-		private readonly ObjectSaver $objectSaver,
-		private readonly ObjectUpdater $objectUpdater,
-		private readonly ObjectRemover $objectRemover,
-		private readonly ObjectPropertyIncrementer $propertyIncrementer,
-		private readonly ObjectCloner $objectCloner,
-		private readonly DeckItemSaver $deckItemSaver,
-		private readonly DeckItemUpdater $deckItemUpdater,
-		private readonly DeckItemRemover $deckItemRemover,
-		private readonly DeckItemFetcher $deckItemFetcher,
-		private readonly IndexBuilder $indexBuilder,
-		private readonly IndexSearcher $indexSearcher,
-		private readonly IndexQueryService $indexQueryService,
-		private readonly CollectionFetcher $collectionFetcher,
-		private readonly SchemaFetcher $schemaFetcher,
-		private readonly FileSaver $fileSaver,
-		private readonly ImageSaver $imageSaver,
-		private readonly CsvImporter $csvImporter,
-		private readonly JsonImporter $jsonImporter,
-		private readonly RssImporter $rssImporter,
-		private readonly SyncService $syncService,
-		private readonly EmailService $mailer,
-		private readonly Config $config,
+		private IndexReader $indexReader,
+		private ObjectFetcher $objectFetcher,
+		private ObjectSaver $objectSaver,
+		private ObjectUpdater $objectUpdater,
+		private ObjectRemover $objectRemover,
+		private ObjectPropertyIncrementer $propertyIncrementer,
+		private ObjectCloner $objectCloner,
+		private DeckItemSaver $deckItemSaver,
+		private DeckItemUpdater $deckItemUpdater,
+		private DeckItemRemover $deckItemRemover,
+		private DeckItemFetcher $deckItemFetcher,
+		private IndexBuilder $indexBuilder,
+		private IndexSearcher $indexSearcher,
+		private IndexQueryService $indexQueryService,
+		private CollectionFetcher $collectionFetcher,
+		private SchemaFetcher $schemaFetcher,
+		private FileSaver $fileSaver,
+		private ImageSaver $imageSaver,
+		private CsvImporter $csvImporter,
+		private JsonImporter $jsonImporter,
+		private RssImporter $rssImporter,
+		private SyncService $syncService,
+		private EmailService $mailer,
+		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('automations.log')->createLogger('automations');

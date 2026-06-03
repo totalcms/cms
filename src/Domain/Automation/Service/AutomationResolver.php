@@ -75,6 +75,6 @@ final readonly class AutomationResolver
 		$triggers = $automation->properties->get('triggers');
 		$rows     = $triggers instanceof DeckData ? $triggers->transform() : $triggers;
 
-		return array_values(array_filter(is_array($rows) ? $rows : [], 'is_array'));
+		return array_values(array_filter(is_array($rows) ? $rows : [], is_array(...)));
 	}
 }

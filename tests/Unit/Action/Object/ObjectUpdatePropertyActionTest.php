@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Action\Object;
 
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Odan\Session\SessionInterface;
 use TotalCMS\Action\Object\ObjectUpdatePropertyAction;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;

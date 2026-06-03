@@ -44,8 +44,8 @@ it('newest returns the most recent run, or null when none', function (): void {
 
 it('latestPerAutomation returns the newest run for each automation that has any', function (): void {
 	$fs = new InMemoryFilesystem();
-	writeRun($fs, 'daily',  '20260101T010000-a', ['runId' => 'd1', 'status' => 'success']);
-	writeRun($fs, 'daily',  '20260103T010000-b', ['runId' => 'd2', 'status' => 'failed']);
+	writeRun($fs, 'daily', '20260101T010000-a', ['runId' => 'd1', 'status' => 'success']);
+	writeRun($fs, 'daily', '20260103T010000-b', ['runId' => 'd2', 'status' => 'failed']);
 	writeRun($fs, 'weekly', '20260102T010000-c', ['runId' => 'w1', 'status' => 'success']);
 
 	$latest = (new AutomationRunReader($fs))->latestPerAutomation();

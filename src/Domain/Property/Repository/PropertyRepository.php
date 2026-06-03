@@ -210,7 +210,7 @@ class PropertyRepository extends StorageRepository
 		$path = PathUtils::buildPath($collection, $objectID, $property, null, $subpath);
 
 		return array_values(array_filter(
-			array_map(static fn (string $dirPath): string => basename($dirPath), $this->filesystem->listDirectories($path)),
+			array_map(basename(...), $this->filesystem->listDirectories($path)),
 			static fn (string $name): bool => !str_starts_with($name, '.'),
 		));
 	}

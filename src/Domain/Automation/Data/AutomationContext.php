@@ -36,7 +36,7 @@ use TotalCMS\Support\Config;
  * plus per-trigger payload data. Schedule runs leave `request`/`event` null;
  * webhook runs populate `request`, event runs populate `event`.
  */
-final class AutomationContext
+final readonly class AutomationContext
 {
 	/**
 	 * @param array<string,mixed> $trigger the trigger row that fired this run
@@ -44,35 +44,35 @@ final class AutomationContext
 	 * @param array<string,mixed>|null $event event payload (event triggers only)
 	 */
 	public function __construct(
-		public readonly IndexReader $indexReader,
-		public readonly ObjectFetcher $objectFetcher,
-		public readonly ObjectSaver $objectSaver,
-		public readonly ObjectUpdater $objectUpdater,
-		public readonly ObjectRemover $objectRemover,
-		public readonly ObjectPropertyIncrementer $propertyIncrementer,
-		public readonly ObjectCloner $objectCloner,
-		public readonly DeckItemSaver $deckItemSaver,
-		public readonly DeckItemUpdater $deckItemUpdater,
-		public readonly DeckItemRemover $deckItemRemover,
-		public readonly DeckItemFetcher $deckItemFetcher,
-		public readonly IndexBuilder $indexBuilder,
-		public readonly IndexSearcher $indexSearcher,
-		public readonly IndexQueryService $indexQueryService,
-		public readonly CollectionFetcher $collectionFetcher,
-		public readonly SchemaFetcher $schemaFetcher,
-		public readonly FileSaver $fileSaver,
-		public readonly ImageSaver $imageSaver,
-		public readonly CsvImporter $csvImporter,
-		public readonly JsonImporter $jsonImporter,
-		public readonly RssImporter $rssImporter,
-		public readonly SyncService $syncService,
-		public readonly EmailService $mailer,
-		public readonly Config $config,
-		public readonly LoggerInterface $logger,
-		public readonly array $trigger = [],
-		public readonly array $args = [],
-		public readonly ?ServerRequestInterface $request = null,
-		public readonly ?array $event = null,
+		public IndexReader $indexReader,
+		public ObjectFetcher $objectFetcher,
+		public ObjectSaver $objectSaver,
+		public ObjectUpdater $objectUpdater,
+		public ObjectRemover $objectRemover,
+		public ObjectPropertyIncrementer $propertyIncrementer,
+		public ObjectCloner $objectCloner,
+		public DeckItemSaver $deckItemSaver,
+		public DeckItemUpdater $deckItemUpdater,
+		public DeckItemRemover $deckItemRemover,
+		public DeckItemFetcher $deckItemFetcher,
+		public IndexBuilder $indexBuilder,
+		public IndexSearcher $indexSearcher,
+		public IndexQueryService $indexQueryService,
+		public CollectionFetcher $collectionFetcher,
+		public SchemaFetcher $schemaFetcher,
+		public FileSaver $fileSaver,
+		public ImageSaver $imageSaver,
+		public CsvImporter $csvImporter,
+		public JsonImporter $jsonImporter,
+		public RssImporter $rssImporter,
+		public SyncService $syncService,
+		public EmailService $mailer,
+		public Config $config,
+		public LoggerInterface $logger,
+		public array $trigger = [],
+		public array $args = [],
+		public ?ServerRequestInterface $request = null,
+		public ?array $event = null,
 	) {
 	}
 }

@@ -99,7 +99,7 @@ class AutomationsProcessCommand extends BaseCommand
 	private function siteTimezone(): \DateTimeZone
 	{
 		try {
-			$tz = (string)($this->totalcms->config->timezone ?? '');
+			$tz = $this->totalcms->config->timezone ?? '';
 
 			return new \DateTimeZone($tz !== '' ? $tz : 'UTC');
 		} catch (\Exception) {

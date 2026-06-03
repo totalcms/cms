@@ -66,7 +66,7 @@ it('does not attempt to disable a failing extension automation', function (): vo
 	$container->get(AutomationRegistry::class)->register(
 		'test-vendor/ext:bad',
 		new AutomationDefinition('bad', 'Bad', [['type' => 'event', 'event' => 'object.created']], function ($ctx): void {
-			throw new \RuntimeException('boom');
+			throw new RuntimeException('boom');
 		}),
 	);
 

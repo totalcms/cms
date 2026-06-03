@@ -114,7 +114,7 @@ final readonly class CollectionFileRepairService
 			return;
 		}
 
-		if ($rebuilt === null) {
+		if (!$rebuilt instanceof PropertyData) {
 			$report->blankWithoutFiles++; // blank, but nothing on disk to rebuild from
 
 			return;
@@ -196,7 +196,7 @@ final readonly class CollectionFileRepairService
 			return;
 		}
 
-		if ($rebuilt === null) {
+		if (!$rebuilt instanceof PropertyData) {
 			$report->blankWithoutFiles++; // blank, but nothing on disk to rebuild from
 
 			return;
@@ -359,12 +359,12 @@ final readonly class CollectionFileRepairService
 	private function isBlank(?PropertyData $property): bool
 	{
 		return match (true) {
-			$property === null              => true,
-			$property instanceof ImageData  => $property->name === '',
-			$property instanceof FileData   => $property->name === '',
-			$property instanceof GalleryData => $property->images === [],
-			$property instanceof DepotData  => $property->files === [],
-			default                         => false,
+			!$property instanceof PropertyData              => true,
+			$property instanceof ImageData                  => $property->name === '',
+			$property instanceof FileData                   => $property->name === '',
+			$property instanceof GalleryData                => $property->images === [],
+			$property instanceof DepotData                  => $property->files === [],
+			default                                         => false,
 		};
 	}
 

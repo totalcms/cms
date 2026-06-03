@@ -6,8 +6,8 @@ namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**

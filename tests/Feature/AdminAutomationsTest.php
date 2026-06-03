@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
-
-use function Nekofar\Slim\Pest\get;
 use TotalCMS\Action\Admin\AdminAutomationsAction;
 use TotalCMS\Action\Automation\AutomationReenableAction;
 use TotalCMS\Action\Automation\AutomationRunNowAction;
@@ -14,6 +12,8 @@ use TotalCMS\Domain\Automation\Service\AutomationStateStore;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+
+use function Nekofar\Slim\Pest\get;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -42,7 +42,7 @@ function saveAdminAutomation(object $container, string $id, string $handler, boo
 	]);
 }
 
-function adminRequest(string $method, string $path): \Psr\Http\Message\ServerRequestInterface
+function adminRequest(string $method, string $path): Psr\Http\Message\ServerRequestInterface
 {
 	return (new ServerRequestFactory())->createServerRequest($method, $path);
 }

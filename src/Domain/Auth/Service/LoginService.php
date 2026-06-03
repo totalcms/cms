@@ -5,8 +5,8 @@ namespace TotalCMS\Domain\Auth\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 

@@ -29,8 +29,7 @@ final readonly class AutomationWebhookAction
 	) {
 	}
 
-	/** @param array<string,mixed> $args */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$webhook = $request->getAttribute(AutomationWebhookMiddleware::ATTRIBUTE);
 		if (!is_array($webhook) || !is_array($webhook['trigger'] ?? null)) {

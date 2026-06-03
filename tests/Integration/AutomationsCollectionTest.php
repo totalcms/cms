@@ -24,7 +24,7 @@ it('creates the reserved automations collection on demand', function (): void {
 });
 
 it('labels the automations collection Automation / Automations', function (): void {
-	$fetcher = $this->app->getContainer()->get(CollectionFetcher::class);
+	$fetcher    = $this->app->getContainer()->get(CollectionFetcher::class);
 	$collection = $fetcher->fetchOrCreateReserved('automations');
 
 	$data = $collection->toArray();
@@ -37,7 +37,7 @@ it('loads the bundled automations schema with the externalized handler field', f
 	$fetcher->fetchOrCreateReserved('automations');
 
 	$schema = $this->app->getContainer()
-		->get(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class)
+		->get(TotalCMS\Domain\Schema\Service\SchemaFetcher::class)
 		->fetchSchemaForCollection('automations');
 
 	expect($schema->properties)->toHaveKey('handler');

@@ -59,7 +59,7 @@ final class AuthFieldPolicyTest extends TestCase
 
 	public function testStripsPrivilegedFieldsOnCreateForNonAdmin(): void
 	{
-		$policy = $this->makePolicy(isSuperAdmin: false, existing: null);
+		$policy = $this->makePolicy(isSuperAdmin: false);
 
 		$out = $policy->enforce('u1', 'auth', 'newuser', ['groups' => ['admin'], 'name' => 'X']);
 
@@ -120,7 +120,7 @@ final class AuthFieldPolicyTest extends TestCase
 
 	public function testStripProtectedRemovesOnlySchemaPresentPrivilegedFields(): void
 	{
-		$policy = $this->makePolicy(isSuperAdmin: false, existing: null);
+		$policy = $this->makePolicy(isSuperAdmin: false);
 
 		$out = $policy->stripProtected('auth', ['name' => 'x', 'groups' => ['admin'], 'active' => true]);
 

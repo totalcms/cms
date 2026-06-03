@@ -13,8 +13,8 @@ namespace TotalCMS\Domain\Repair\Data;
  */
 final class RepairCandidate
 {
-	public ?bool $applied = null;
-	public ?string $error = null;
+	public ?bool $applied   = null;
+	public ?string $error   = null;
 	public ?string $subpath = null;
 
 	public function __construct(
