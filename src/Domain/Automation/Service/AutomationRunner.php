@@ -19,21 +19,21 @@ use TotalCMS\Support\Config;
  * a RunRecord on disk, and tracks consecutive-failure counts. Environment-aware
  * notification and auto-disable are layered on in Plan 4.
  */
-final class AutomationRunner
+final readonly class AutomationRunner
 {
 	private LoggerInterface $logger;
 
 	public function __construct(
-		private readonly AutomationLoader $loader,
-		private readonly AutomationStateStore $state,
-		private readonly StorageAdapterInterface $filesystem,
-		private readonly AutomationContextFactory $contextFactory,
-		private readonly ObjectFetcher $objectFetcher,
-		private readonly ObjectUpdater $objectUpdater,
-		private readonly EmailService $mailer,
-		private readonly Config $config,
-		private readonly AutomationGuard $guard,
-		private readonly AutomationActivityLogger $activity,
+		private AutomationLoader $loader,
+		private AutomationStateStore $state,
+		private StorageAdapterInterface $filesystem,
+		private AutomationContextFactory $contextFactory,
+		private ObjectFetcher $objectFetcher,
+		private ObjectUpdater $objectUpdater,
+		private EmailService $mailer,
+		private Config $config,
+		private AutomationGuard $guard,
+		private AutomationActivityLogger $activity,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('automations.log')->createLogger('automations');
@@ -86,7 +86,7 @@ final class AutomationRunner
 
 		$this->persistRun($id, $record);
 
-		if ($throwable === null) {
+		if (!$throwable instanceof \Throwable) {
 			$this->state->resetFailures($id);
 			$this->guard->reset($id);
 			$this->activity->runSucceeded($id, $triggerType, $durationMs);

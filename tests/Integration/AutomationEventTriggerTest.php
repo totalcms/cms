@@ -21,9 +21,9 @@ beforeEach(function (): void {
 function createOrdersCollection(object $container): void
 {
 	$container->get(SchemaSaver::class)->saveSchema([
-		'id'         => 'orders',
+		'id'          => 'orders',
 		'description' => 'Orders',
-		'properties' => [
+		'properties'  => [
 			'id'    => ['type' => 'string', 'field' => 'text'],
 			'total' => ['type' => 'number', 'field' => 'number'],
 		],
@@ -88,8 +88,8 @@ it('runs the drained event handler with $ctx->event populated end-to-end', funct
 	// Dispatch (save an order) → enqueue → drain → run.
 	$container->get(ObjectSaver::class)->saveObject('orders', ['id' => 'o9', 'total' => 99]);
 
-	$runner = $container->get(\TotalCMS\Domain\Automation\Service\AutomationRunner::class);
-	$container->get(\TotalCMS\Domain\Automation\Service\AutomationQueue::class)->drain(function (array $job) use ($runner): void {
+	$runner = $container->get(TotalCMS\Domain\Automation\Service\AutomationRunner::class);
+	$container->get(TotalCMS\Domain\Automation\Service\AutomationQueue::class)->drain(function (array $job) use ($runner): void {
 		$runner->run((string)$job['id'], $job['trigger'], $job['args'], null, $job['event']);
 	});
 

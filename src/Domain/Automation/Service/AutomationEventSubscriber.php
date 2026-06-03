@@ -43,6 +43,7 @@ final readonly class AutomationEventSubscriber
 	 * next tick (they are not re-fetched).
 	 *
 	 * @param array<string,mixed> $payload
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function snapshot(array $payload): array

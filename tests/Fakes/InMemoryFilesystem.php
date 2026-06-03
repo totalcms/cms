@@ -27,7 +27,7 @@ final class InMemoryFilesystem implements StorageAdapterInterface
 		return $this->files[$location] ?? '';
 	}
 
-	public function readStream(string $location)
+	public function readStream(string $location): null
 	{
 		return null;
 	}

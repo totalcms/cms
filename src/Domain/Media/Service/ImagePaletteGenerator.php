@@ -54,9 +54,9 @@ class ImagePaletteGenerator
 		if (!extension_loaded('imagick') && extension_loaded('gd')) {
 			$limit = self::memoryLimitBytes();
 			if ($limit > 0) {
-				$bits      = (int)($imageInfo['bits'] ?? 8);
-				$channels  = (int)($imageInfo['channels'] ?? 3);
-				$estimate  = (int)(((int)$imageInfo[0] * (int)$imageInfo[1] * $bits / 8 * $channels + 65536) * 1.8);
+				$bits      = $imageInfo['bits'] ?? 8;
+				$channels  = $imageInfo['channels'] ?? 3;
+				$estimate  = (int)(($imageInfo[0] * $imageInfo[1] * $bits / 8 * $channels + 65536) * 1.8);
 				$available = $limit - memory_get_usage(true);
 				if ($estimate > $available) {
 					throw new \RuntimeException(sprintf(
@@ -93,7 +93,7 @@ class ImagePaletteGenerator
 	 */
 	private static function memoryLimitBytes(): int
 	{
-		$limit = trim((string)ini_get('memory_limit'));
+		$limit = trim(ini_get('memory_limit'));
 		if ($limit === '' || $limit === '-1') {
 			return -1;
 		}

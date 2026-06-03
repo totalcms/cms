@@ -11,7 +11,7 @@ final class AutomationsConfigTest extends TestCase
 {
 	public function testAutomationsConfigSectionIsReadable(): void
 	{
-		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config              = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->automations = ['urlPrefix' => '/automations', 'runHistoryLimit' => 100];
 
 		expect($config->automations['urlPrefix'])->toBe('/automations');

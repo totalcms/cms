@@ -21,7 +21,7 @@ beforeEach(function (): void {
  * Create a `widgets` collection whose schema carries an external `handler`
  * code field — the contract this feature must support.
  */
-function createWidgetsCollection(\Psr\Container\ContainerInterface $container): void
+function createWidgetsCollection(Psr\Container\ContainerInterface $container): void
 {
 	$container->get(SchemaSaver::class)->saveSchema([
 		'id'          => 'widgets',

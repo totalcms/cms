@@ -65,7 +65,7 @@ readonly class ExternalFieldStore
 				continue;
 			}
 
-			$mode                  = (string)($settings['mode'] ?? '');
+			$mode                    = (string)($settings['mode'] ?? '');
 			$external[(string)$name] = self::EXT_BY_MODE[$mode] ?? 'txt';
 		}
 

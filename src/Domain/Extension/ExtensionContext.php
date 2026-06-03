@@ -70,7 +70,7 @@ final class ExtensionContext
 	/** @var array<string,list<array{callable, int}>> */
 	private array $eventListeners = [];
 
-	/** @var list<\TotalCMS\Domain\Extension\Data\AutomationDefinition> */
+	/** @var list<Data\AutomationDefinition> */
 	private array $automations = [];
 
 	/** @var array<string,callable> */
@@ -570,10 +570,10 @@ final class ExtensionContext
 	 */
 	public function addAutomation(string $id, string $label, array $triggers, \Closure $handler): void
 	{
-		$this->automations[] = new \TotalCMS\Domain\Extension\Data\AutomationDefinition($id, $label, $triggers, $handler);
+		$this->automations[] = new Data\AutomationDefinition($id, $label, $triggers, $handler);
 	}
 
-	/** @return list<\TotalCMS\Domain\Extension\Data\AutomationDefinition> */
+	/** @return list<Data\AutomationDefinition> */
 	public function getRegisteredAutomations(): array
 	{
 		return $this->automations;

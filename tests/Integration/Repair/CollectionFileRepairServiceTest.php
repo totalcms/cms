@@ -43,7 +43,7 @@ function repairSeedJpeg(string $collection, string $id, string $property, string
  * and a `file` (`doc`) inside both a card (`mycard`) and a deck (`mydeck`),
  * via a shared `widget-card` child schema.
  */
-function createWidgetCollection(\Psr\Container\ContainerInterface $container): void
+function createWidgetCollection(Psr\Container\ContainerInterface $container): void
 {
 	$container->get(SchemaSaver::class)->saveSchema([
 		'id'         => 'widget-card',

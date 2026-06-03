@@ -51,8 +51,7 @@ final readonly class AutomationLoader
 		// rows first and only fetch the automations that survive — disabled ones
 		// are never loaded.
 		$ids = $this->indexReader->fetchIndex('automations')->objects
-			->filter(static fn (array $row): bool =>
-				($row['id'] ?? '') !== '' && filter_var($row['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN))
+			->filter(static fn (array $row): bool => ($row['id'] ?? '') !== '' && filter_var($row['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN))
 			->pluck('id')
 			->all();
 
@@ -93,7 +92,7 @@ final readonly class AutomationLoader
 		foreach ($this->registry->all() as $key => $definition) {
 			$descriptors[] = new AutomationDescriptor(
 				$key,
-				array_values(array_filter($definition->triggers, 'is_array')),
+				array_values(array_filter($definition->triggers, is_array(...))),
 				true,
 			);
 		}
@@ -106,13 +105,13 @@ final readonly class AutomationLoader
 	 * automation (`{vendor/name}:{id}`) whose handler is an in-memory closure;
 	 * otherwise it is a file-based automation whose handler is required from its
 	 * externalized sidecar. (File automation ids are slug-formatted and never
-	 * contain a colon, so the split is unambiguous.)
+	 * contain a colon, so the split is unambiguous.).
 	 */
 	public function handler(string $id): callable
 	{
 		if (str_contains($id, ':')) {
 			$definition = $this->registry->get($id);
-			if ($definition === null) {
+			if (!$definition instanceof \TotalCMS\Domain\Extension\Data\AutomationDefinition) {
 				throw new \RuntimeException("Extension automation '{$id}' is not registered.");
 			}
 
@@ -144,6 +143,6 @@ final readonly class AutomationLoader
 	{
 		$rows = $triggers instanceof DeckData ? $triggers->transform() : $triggers;
 
-		return array_values(array_filter(is_array($rows) ? $rows : [], 'is_array'));
+		return array_values(array_filter(is_array($rows) ? $rows : [], is_array(...)));
 	}
 }

@@ -86,6 +86,6 @@ readonly class SystemCollectionGuardMiddleware implements MiddlewareInterface
 			return '';
 		}
 
-		return (string)($route->getArgument('collection') ?? '');
+		return $route->getArgument('collection') ?? '';
 	}
 }

@@ -10,9 +10,9 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
  * Per-automation runtime state at `.system/automations/<id>.state.json`:
  * per-trigger last-fire timestamps and a consecutive-failure counter.
  */
-final class AutomationStateStore
+final readonly class AutomationStateStore
 {
-	public function __construct(private readonly StorageAdapterInterface $filesystem)
+	public function __construct(private StorageAdapterInterface $filesystem)
 	{
 	}
 
