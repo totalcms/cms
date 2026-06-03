@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Automation;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Automation\Service\AutomationGuard;
 use TotalCMS\Domain\Automation\Service\AutomationQueue;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Middleware\Automation\AutomationWebhookMiddleware;
@@ -26,6 +27,7 @@ final readonly class AutomationWebhookAction
 		private AutomationQueue $queue,
 		private AutomationRunner $runner,
 		private JsonRenderer $renderer,
+		private AutomationGuard $guard,
 	) {
 	}
 
@@ -46,11 +48,21 @@ final readonly class AutomationWebhookAction
 		if (($trigger['sync'] ?? false) === true) {
 			$record = $this->runner->run($id, $trigger, $inputs, $request);
 
+			// The run record's exception carries the full message + stack trace
+			// for the admin run-history (and it's already logged server-side).
+			// Never leak that to a public webhook caller in production — surface
+			// it only where errors are meant to be loud (dev/preview). In prod
+			// the caller gets a generic message; the trace stays in the log.
+			$exception = $record->exception;
+			if ($exception !== null && !$this->guard->shouldSurfaceErrors()) {
+				$exception = 'Automation handler failed. See the server logs for details.';
+			}
+
 			return $this->renderer->json($response, [
 				'runId'     => $record->runId,
 				'status'    => $record->status,
 				'return'    => $record->return,
-				'exception' => $record->exception,
+				'exception' => $exception,
 			], $record->status === 'success' ? 200 : 500);
 		}
 
