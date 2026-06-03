@@ -333,7 +333,10 @@ export default class GalleryField extends ImageField {
 			paramName        : this.property,
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
-			acceptedFiles    : "image/*",
+			// Raster image types only — NOT image/svg+xml (which `image/*` would
+			// allow). SVG belongs in the dedicated SVG field; the server also
+			// rejects SVG here (GallerySaver). Defense-in-depth + cleaner UX.
+			acceptedFiles    : "image/jpeg,image/png,image/gif,image/webp,image/bmp,image/x-icon,image/avif,image/heic,image/heif,image/tiff",
 			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());

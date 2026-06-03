@@ -21,6 +21,8 @@ class GallerySaver extends FileSaver
 		string $filePath,
 		?string $subpath = null,
 	): ObjectData {
+		$this->assertNotSvg($filePath);
+
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);

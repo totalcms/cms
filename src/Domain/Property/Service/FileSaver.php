@@ -186,6 +186,36 @@ class FileSaver
 		return $instance;
 	}
 
+	/**
+	 * Reject SVG uploads. Image and gallery fields are raster-only; SVG belongs
+	 * in the dedicated (sanitized) SVG field. Without this, an SVG stored in an
+	 * image/gallery field is served back raw as `image/svg+xml` by the public
+	 * imageworks endpoint — stored XSS. Content is sniffed (not just the
+	 * extension) because the served mime is content-detected, so a renamed SVG
+	 * would still execute. File and depot savers do NOT call this — SVG is a
+	 * legitimate file there.
+	 */
+	protected function assertNotSvg(string $filePath): void
+	{
+		if (strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) === 'svg') {
+			throw new \DomainException('SVG files are not supported in image or gallery fields. Use an SVG field instead.');
+		}
+
+		if (!is_file($filePath)) {
+			return; // nothing to sniff; a missing upload is handled downstream
+		}
+
+		// Raster images start with binary magic bytes (never '<'); an SVG/XML
+		// document starts with '<'. Anchoring on that first means a legit image
+		// that merely contains the bytes "<svg" in its EXIF/XMP metadata can't be
+		// false-flagged, while a renamed SVG (served back as content-detected
+		// image/svg+xml → XSS) is still caught.
+		$head = ltrim((string)file_get_contents($filePath, false, null, 0, 4096), "\xEF\xBB\xBF \t\r\n");
+		if ($head !== '' && $head[0] === '<' && preg_match('/<svg[\s>\/]/i', $head) === 1) {
+			throw new \DomainException('SVG files are not supported in image or gallery fields. Use an SVG field instead.');
+		}
+	}
+
 	protected function updateObject(
 		string $collection,
 		string $objectID,
