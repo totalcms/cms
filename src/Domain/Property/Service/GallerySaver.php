@@ -9,10 +9,32 @@ use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Service\Concerns\DerivesImageData;
 
 class GallerySaver extends FileSaver
 {
+	use DerivesImageData;
+
 	public string $type = 'gallery';
+
+	public function rebuildFromStorage(string $collection, string $id, string $property, ?string $subpath = null): ?PropertyData
+	{
+		$files = $this->storage->listPropertyFiles($collection, $id, $property, $subpath);
+		if ($files === []) {
+			return null;
+		}
+
+		// Stable, predictable order (original manual ordering is unrecoverable).
+		usort($files, static fn (array $a, array $b): int => strcmp((string)$a['name'], (string)$b['name']));
+
+		$images = array_map(
+			fn (array $file): array => $this->deriveImageData($collection, $id, $property, $file, $subpath),
+			$files,
+		);
+
+		return new GalleryData($images);
+	}
 
 	public function save(
 		string $collection,

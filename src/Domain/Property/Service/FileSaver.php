@@ -84,6 +84,40 @@ class FileSaver
 		return $this->updateObject($collection, $objectID, $property, $fileData, $subpath);
 	}
 
+	/**
+	 * Re-derive this property's data from files already on disk (recovery path).
+	 * Unlike save(), it does NOT import/move an upload and does NOT write the
+	 * object — the caller patches the returned PropertyData. Returns null when
+	 * there are no files to rebuild from. A file field is single-file; subclasses
+	 * override for image/gallery/depot.
+	 */
+	public function rebuildFromStorage(string $collection, string $id, string $property, ?string $subpath = null): ?PropertyData
+	{
+		$files = $this->storage->listPropertyFiles($collection, $id, $property, $subpath);
+		if ($files === []) {
+			return null;
+		}
+
+		return new FileData($this->describeStoredFile($collection, $id, $property, (string)$files[0]['name'], $subpath));
+	}
+
+	/**
+	 * Build the base fileData array (name/size/mime/uploadDate) for a file that
+	 * is ALREADY in storage — the equivalent of what saveFile() returns, without
+	 * the move. uploadDate is "now" (the original is unknowable for an orphan).
+	 *
+	 * @return array<string,string|int>
+	 */
+	protected function describeStoredFile(string $collection, string $id, string $property, string $filename, ?string $subpath): array
+	{
+		return [
+			'name'       => $filename,
+			'size'       => $this->storage->fileSize($collection, $id, $property, $filename, $subpath),
+			'mime'       => $this->storage->mimeType($collection, $id, $property, $filename, $subpath),
+			'uploadDate' => date('c'),
+		];
+	}
+
 	protected function createObject(string $collection, string $objectID, string $property): void
 	{
 		try {

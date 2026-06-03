@@ -7,10 +7,57 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\PropertyData;
 
 class DepotSaver extends FileSaver
 {
 	public string $type = 'depot';
+
+	public function rebuildFromStorage(string $collection, string $id, string $property, ?string $subpath = null): ?PropertyData
+	{
+		// Walk the on-disk folder tree (listPropertyFiles is non-recursive and
+		// hides folders) and re-insert every file via DepotPropertyManager, which
+		// recreates the folder hierarchy exactly as an upload would. Empty folders
+		// and a previously-set depot password/protected flag cannot be recovered.
+		$entries = $this->scanDepotTree($collection, $id, $property, '');
+		if ($entries === []) {
+			return null;
+		}
+
+		$depot   = new DepotData();
+		$manager = new DepotPropertyManager($depot);
+		foreach ($entries as $entry) {
+			$childPath            = $entry['subpath'] !== '' ? $entry['subpath'] : null;
+			$fileData             = $this->describeStoredFile($collection, $id, $property, $entry['name'], $childPath);
+			$fileData['download'] = $entry['name'];
+			$manager->addFile(new FileData($fileData), $childPath);
+		}
+
+		return $depot;
+	}
+
+	/**
+	 * Depth-first collect every file under the property, with the folder subpath
+	 * it lives in (relative to the property root, '' = top level).
+	 *
+	 * @return list<array{name:string,subpath:string}>
+	 */
+	private function scanDepotTree(string $collection, string $id, string $property, string $subpath): array
+	{
+		$resolved = $subpath !== '' ? $subpath : null;
+		$entries  = [];
+
+		foreach ($this->storage->listPropertyFiles($collection, $id, $property, $resolved) as $file) {
+			$entries[] = ['name' => (string)$file['name'], 'subpath' => $subpath];
+		}
+
+		foreach ($this->storage->listPropertyDirectories($collection, $id, $property, $resolved) as $dir) {
+			$child   = $subpath === '' ? $dir : $subpath . '/' . $dir;
+			$entries = array_merge($entries, $this->scanDepotTree($collection, $id, $property, $child));
+		}
+
+		return $entries;
+	}
 
 	public function save(
 		string $collection,
