@@ -72,7 +72,7 @@ class RepairFilesCommand extends BaseCommand
 				$candidate->applied === false => '<error>apply failed</error>',
 				default                       => 'would rebuild',
 			};
-			$output->writeln(sprintf('  %-24s %-14s %-8s %d file(s)  → %s', $candidate->objectId, $candidate->property, $candidate->type, $candidate->fileCount, $status));
+			$output->writeln(sprintf('  %-24s %-18s %-8s %d file(s)  → %s', $candidate->objectId, $candidate->path(), $candidate->type, $candidate->fileCount, $status));
 		}
 
 		if ($report->candidates === []) {

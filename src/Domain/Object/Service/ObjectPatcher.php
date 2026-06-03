@@ -51,6 +51,8 @@ readonly class ObjectPatcher
 	 * level.
 	 *
 	 * @param array<string,mixed> $newData
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
 	public function patchNestedProperty(
 		string $collection,
@@ -58,6 +60,7 @@ readonly class ObjectPatcher
 		string $parent,
 		string $path,
 		array $newData,
+		bool $silent = false,
 	): ObjectData {
 		$object     = $this->objectFetcher->fetchObject($collection, $id);
 		$objectData = $object->toArray();
@@ -80,7 +83,7 @@ readonly class ObjectPatcher
 		$existing      = isset($cursor[$leaf]) && is_array($cursor[$leaf]) ? $cursor[$leaf] : [];
 		$cursor[$leaf] = array_merge($existing, $newData);
 
-		return $this->objectUpdater->updateObject($collection, $id, $objectData);
+		return $this->objectUpdater->updateObject($collection, $id, $objectData, $silent);
 	}
 
 	/**
