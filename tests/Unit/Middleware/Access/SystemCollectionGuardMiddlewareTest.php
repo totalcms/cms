@@ -11,29 +11,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
-use TotalCMS\Middleware\Access\SystemCollectionGuardMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
-/** Overrides route-argument resolution so the gate logic can be tested directly. */
-final readonly class TestableSystemCollectionGuardMiddleware extends SystemCollectionGuardMiddleware
-{
-	public function __construct(
-		SessionInterface $session,
-		UserValidationService $userValidation,
-		JsonRenderer $jsonRenderer,
-		ResponseFactoryInterface $responseFactory,
-		Config $config,
-		private string $collection,
-	) {
-		parent::__construct($session, $userValidation, $jsonRenderer, $responseFactory, $config);
-	}
-
-	protected function resolveCollection(ServerRequestInterface $request): string
-	{
-		return $this->collection;
-	}
-}
+// TestableSystemCollectionGuardMiddleware (the test double) lives in its own file
+// in this namespace and autoloads via PSR-4 — see the note in that class for why.
 
 describe('SystemCollectionGuardMiddleware', function (): void {
 	beforeEach(function (): void {
