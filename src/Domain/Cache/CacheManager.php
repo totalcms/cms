@@ -367,10 +367,14 @@ class CacheManager
 			$success &= $this->filesystemService->delete($key);
 		}
 
-		// Always clear OPcache to ensure no stale cached data
-		if ($this->opcacheService->isAvailable()) {
-			$success &= $this->opcacheService->clear();
-		}
+		// Intentionally NOT touching OPcache here. OPcache caches compiled PHP
+		// bytecode, not this key/value data — filesystem entries are serialized
+		// data (not includable PHP), and APCu/Redis/Memcached are in-memory — so
+		// a data-key delete never leaves stale bytecode. `opcache_reset()` is
+		// pool-wide, so calling it on every key delete (~4x per object save) flushed
+		// the bytecode cache for EVERY co-located site on a shared FPM pool.
+		// OPcache is reset only when PHP/template files actually change:
+		// clearAllCaches() (updates) and per-file OPcacheService::delete().
 
 		// Signal for cross-process invalidation (CLI → web)
 		// Strip domain prefix so the web process can re-apply its own correct prefix
