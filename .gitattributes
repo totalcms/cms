@@ -60,3 +60,8 @@ yarn.lock            export-ignore
 # `binary` keeps local diffs/merges clean; `linguist-generated` collapses it
 # in GitHub PRs and excludes it from language stats. It still ships.
 /resources/bundle    binary linguist-generated
+
+# Built CSS/JS are generated release artifacts. `linguist-generated` keeps them
+# out of PR diffs and language stats; `binary` stops unreadable minified diffs
+# and line-level merge conflicts on the release "Build assets" commit. They ship.
+/public/assets/**    binary linguist-generated
