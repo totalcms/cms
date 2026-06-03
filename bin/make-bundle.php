@@ -35,6 +35,13 @@ foreach ($folders as $folder) {
 			if ($file->getFilename() === 'swagger.php') {
 				continue;
 			}
+			// Our personal dev/test env configs are export-ignored from the
+			// Composer dist (.gitattributes), so they must NOT be in the
+			// integrity manifest either — BundleChecker throws "corrupted" for
+			// any manifested file that's missing on a customer install.
+			if ($file->getFilename() === 'local.dev.php' || $file->getFilename() === 'local.test.php') {
+				continue;
+			}
 			$filePath     = $file->getPathname();
 			$key          = (string)str_replace($baseDir, '', $filePath);
 			$bundle[$key] = hash_file('sha256', $filePath);

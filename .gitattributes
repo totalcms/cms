@@ -2,6 +2,12 @@ dist/* linguist-generated
 legacy/* linguist-generated
 
 # Exclude dev files from Composer dist archives (--prefer-dist)
+# Our personal dev/test env configs must never ship: they hard-set our domain,
+# datadir and `auth.enable=false`, so a customer who ever set APP_ENV=dev/test
+# would load them. local.preview.php / local.stacks.php DO ship (Stacks needs
+# them) and contain no such overrides.
+/config/local.dev.php   export-ignore
+/config/local.test.php  export-ignore
 /.claude             export-ignore
 /.github             export-ignore
 /.vscode             export-ignore
@@ -23,6 +29,7 @@ legacy/* linguist-generated
 .editorconfig        export-ignore
 .env                 export-ignore
 .eslintrc.json       export-ignore
+.gitignore           export-ignore
 .gitattributes       export-ignore
 .gitignore-dist      export-ignore
 .gitmodules          export-ignore
@@ -32,7 +39,6 @@ checksums.txt        export-ignore
 code-report.txt      export-ignore
 CLAUDE.md            export-ignore
 esbuild.config.js    export-ignore
-nginx.sample.conf    export-ignore
 package.json         export-ignore
 php-test.ini         export-ignore
 phpcbf.xml           export-ignore
@@ -45,3 +51,7 @@ phpunit.xml          export-ignore
 rector.php           export-ignore
 total-cms-context.md export-ignore
 yarn.lock            export-ignore
+
+# Source maps are built for Sentry upload, not for shipping. Keep the 12MB of
+# *.map out of the dist so customer sites don't serve our unminified source.
+*.map                export-ignore

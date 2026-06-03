@@ -111,9 +111,14 @@ readonly class AdminTwigAdapter
 
 	/**
 	 * Prefix shared by every cron-displayable `tcms` command — the absolute
-	 * PHP binary + the absolute path to the `tcms` executable, with the
-	 * `APP_ENV=dev` env wedge in dev. Concrete commands (jobs:process,
-	 * rss:import, …) append their own arguments.
+	 * PHP binary + the absolute path to the `tcms` executable, with an
+	 * `APP_ENV=<value>` wedge only when a real APP_ENV is in play.
+	 *
+	 * We key off `appEnv` (the actual env-var value), NOT the merged `env`: when
+	 * env came from the settings.json UI toggle there is no APP_ENV to reproduce,
+	 * and the CLI resolves the same settings.json on its own. Injecting
+	 * `APP_ENV=dev` there would wrongly load `config/local.dev.php` in the cron.
+	 * Concrete commands (jobs:process, rss:import, …) append their own arguments.
 	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 */
@@ -126,7 +131,7 @@ readonly class AdminTwigAdapter
 		// Quote path if it contains spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
 
-		$envPrefix = $this->config->env === 'dev' ? 'APP_ENV=dev ' : '';
+		$envPrefix = $this->config->appEnv !== '' ? 'APP_ENV=' . $this->config->appEnv . ' ' : '';
 
 		return sprintf('%s%s %s', $envPrefix, $phpPath, $quotedCommand);
 	}
