@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// Mark the test environment via real APP_ENV provenance. BundleMiddleware (and
+// anything else gated on appEnv) keys off this; with it set, the bundle
+// integrity check is skipped during tests so the suite no longer needs to
+// regenerate resources/bundle first. Pest sets this in tests/Pest.php too; this
+// covers the phpunit bootstrap path.
+$_SERVER['APP_ENV'] = 'test';
+
 // may need to increase memory limit for tests in php.ini
 ini_set('memory_limit', '1G');
 

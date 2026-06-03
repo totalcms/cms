@@ -10,6 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
+use TotalCMS\Support\Config;
 
 /**
  * Stacks Preview middleware.
@@ -20,11 +21,17 @@ readonly class BundleMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private BundleChecker $bundleChecker,
+		private Config $config,
 	) {
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
+		// Skip it for dev/test environment
+		if ($this->config->appEnv === 'dev' || $this->config->appEnv === 'test') {
+			return $handler->handle($request);
+		}
+
 		$method = $request->getMethod();
 
 		// Skip bundle check during setup to prevent premature file creation

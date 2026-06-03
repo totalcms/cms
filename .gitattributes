@@ -55,3 +55,8 @@ yarn.lock            export-ignore
 # Source maps are built for Sentry upload, not for shipping. Keep the 12MB of
 # *.map out of the dist so customer sites don't serve our unminified source.
 *.map                export-ignore
+
+# The integrity manifest is a generated, release-only artifact (base64 blob).
+# `binary` keeps local diffs/merges clean; `linguist-generated` collapses it
+# in GitHub PRs and excludes it from language stats. It still ships.
+/resources/bundle    binary linguist-generated
