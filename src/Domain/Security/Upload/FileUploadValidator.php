@@ -152,6 +152,25 @@ class FileUploadValidator
 	}
 
 	/**
+	 * Lightweight name-only check: reject dangerous (executable/script)
+	 * extensions, WITHOUT the size cap or category MIME allow-lists of
+	 * validateFile(). Used by the property-upload path, which accepts a broad
+	 * range of file types but must never store executables/scripts.
+	 *
+	 * @return array{valid:bool, errors:list<string>}
+	 */
+	public function validateFilename(string $filename): array
+	{
+		$extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+		if (in_array($extension, self::DANGEROUS_EXTENSIONS, true)) {
+			return ['valid' => false, 'errors' => ["File extension '.{$extension}' is not allowed for security reasons"]];
+		}
+
+		return ['valid' => true, 'errors' => []];
+	}
+
+	/**
 	 * Validate MIME type against file content (requires file to be saved to disk).
 	 *
 	 * @param string $filepath Path to uploaded file on disk

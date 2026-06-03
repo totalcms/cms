@@ -490,4 +490,15 @@ describe('FileUploadValidator', function (): void {
 		expect($result2['sanitized_filename'])->not->toContain("\0");
 		expect($result2['sanitized_filename'])->toBe('image.jpg_.php');
 	});
+	test('validateFilename rejects dangerous extensions and allows safe ones', function (): void {
+		$validator = new FileUploadValidator();
+
+		foreach (['shell.php', 'x.phtml', 'evil.PHP', 'app.exe', 'run.sh', 'a.htaccess', 'b.js'] as $bad) {
+			expect($validator->validateFilename($bad)['valid'])->toBeFalse($bad);
+		}
+
+		foreach (['photo.jpg', 'doc.pdf', 'data.csv', 'archive.zip', 'image.svg', 'noext'] as $ok) {
+			expect($validator->validateFilename($ok)['valid'])->toBeTrue($ok);
+		}
+	});
 });

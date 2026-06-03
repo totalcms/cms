@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -19,6 +20,7 @@ readonly class FileSaveAction
 		private Config $config,
 		private HeicConverter $heicConverter,
 		private HttpClientInterface $httpClient,
+		private FileUploadValidator $validator,
 	) {
 	}
 
@@ -59,6 +61,15 @@ readonly class FileSaveAction
 					throw new \RuntimeException('Invalid URL provided for property: ' . $bodyKey);
 				}
 
+				// Never store an executable/script, even from a URL.
+				$nameCheck = $this->validator->validateFilename($this->extractFilenameFromUrl($fileUrl));
+				if (!$nameCheck['valid']) {
+					return $this->renderer->json($response, [
+						'error'   => 'File upload validation failed',
+						'details' => $nameCheck['errors'],
+					])->withStatus(400);
+				}
+
 				// Download the file from the URL
 				$finalFilePath = $this->downloadFileFromUrl($fileUrl);
 			} else {
@@ -69,6 +80,19 @@ readonly class FileSaveAction
 				throw new \Slim\Exception\HttpNotFoundException($request, 'No file found in request for property: ' . $paramName);
 			}
 		} else {
+			// Block executables/scripts before storing — applies to every
+			// property upload (image/file/gallery/depot), which the media-library
+			// UploadFileAction already does but this handler previously did not.
+			// Checked on the first chunk too (the client filename is sent with
+			// each chunk), so a dangerous upload fails fast.
+			$nameCheck = $this->validator->validateFilename((string)$file->getClientFilename());
+			if (!$nameCheck['valid']) {
+				return $this->renderer->json($response, [
+					'error'   => 'File upload validation failed',
+					'details' => $nameCheck['errors'],
+				])->withStatus(400);
+			}
+
 			// Handle normal file upload with chunking
 			$uploadResult = $this->handleFileUpload($file, $body, $response);
 
