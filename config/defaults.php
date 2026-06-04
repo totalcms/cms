@@ -6,7 +6,16 @@
 error_reporting(0);
 ini_set('display_errors', '0');
 
-if (isset($_GET['debugstart'])) {
+if (PHP_SAPI === 'cli') {
+	// The CLI/cron has no public HTTP response to protect, so suppressing
+	// errors here buys nothing — it just turns a fatal into a silent exit 255
+	// that's invisible on cron (and there's no ?debugstart query string to
+	// flip). Surface problems to STDERR so operators and cron logs see them;
+	// stderr (not stdout) keeps command output — tables and --json — clean.
+	// Deprecations are masked so routine runs don't spam the logs.
+	error_reporting(E_ALL & ~E_DEPRECATED);
+	ini_set('display_errors', 'stderr');
+} elseif (isset($_GET['debugstart'])) {
 	error_reporting(E_ALL);
 	ini_set('display_errors', '1');
 }
