@@ -145,6 +145,14 @@ return [
 	'reset.confirm_help'        => 'Must match the password above',
 	'reset.submit'              => 'Reset Password',
 
+	// ── Auth Template Headings (default above-form templates) ────────────────
+	'login.welcome_title'    => 'Welcome to Total CMS',
+	'login.welcome_subtitle' => 'Please log in to continue.',
+	'forgot.heading'         => 'Reset Your Password',
+	'forgot.subtitle'        => "Enter your email address and we'll send you a link to reset your password.",
+	'reset.heading'          => 'Set New Password',
+	'reset.subtitle'         => 'Enter your new password below.',
+
 	// ── Access Denied ───────────────────────────────────────────────────────
 	'denied.title'        => 'Access Denied',
 	'denied.message'      => 'You do not have permission to access this page.',
