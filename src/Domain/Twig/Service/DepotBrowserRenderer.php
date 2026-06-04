@@ -46,7 +46,7 @@ class DepotBrowserRenderer
 		$content = '';
 
 		if ($options['filter']) {
-			$content .= $this->buildFilter();
+			$content .= $this->buildFilter($options['filterPlaceholder'] ?? 'Filter files...');
 		}
 
 		if ($options['folders']) {
@@ -296,9 +296,9 @@ class DepotBrowserRenderer
 		return $result;
 	}
 
-	private function buildFilter(): string
+	private function buildFilter(string $placeholder): string
 	{
-		$input = HTMLUtils::inlineElement('input', ['type' => 'search', 'placeholder' => 'Filter files...']);
+		$input = HTMLUtils::inlineElement('input', ['type' => 'search', 'placeholder' => $placeholder]);
 
 		return HTMLUtils::element('div', $input, ['class' => 'depot-browser-filter']);
 	}
