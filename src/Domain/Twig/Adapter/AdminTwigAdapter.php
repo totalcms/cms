@@ -15,7 +15,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -59,7 +61,18 @@ readonly class AdminTwigAdapter
 		private BuilderConfigService $builderConfig,
 		private CollectionFetcher $collectionFetcher,
 		private \TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $paths,
+		private JobQueueHealth $jobQueueHealth,
 	) {
+	}
+
+	/**
+	 * Job-queue health for the dashboard + Job Queue Manager warning. Returns a
+	 * stalled flag (oldest waiting job past the threshold with no processor
+	 * running) plus context for the message.
+	 */
+	public function dashboardJobQueueHealth(): JobQueueHealthData
+	{
+		return $this->jobQueueHealth->status();
 	}
 
 	/**
@@ -111,9 +124,14 @@ readonly class AdminTwigAdapter
 
 	/**
 	 * Prefix shared by every cron-displayable `tcms` command — the absolute
-	 * PHP binary + the absolute path to the `tcms` executable, with the
-	 * `APP_ENV=dev` env wedge in dev. Concrete commands (jobs:process,
-	 * rss:import, …) append their own arguments.
+	 * PHP binary + the absolute path to the `tcms` executable, with an
+	 * `APP_ENV=<value>` wedge only when a real APP_ENV is in play.
+	 *
+	 * We key off `appEnv` (the actual env-var value), NOT the merged `env`: when
+	 * env came from the settings.json UI toggle there is no APP_ENV to reproduce,
+	 * and the CLI resolves the same settings.json on its own. Injecting
+	 * `APP_ENV=dev` there would wrongly load `config/local.dev.php` in the cron.
+	 * Concrete commands (jobs:process, rss:import, …) append their own arguments.
 	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 */
@@ -126,7 +144,7 @@ readonly class AdminTwigAdapter
 		// Quote path if it contains spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
 
-		$envPrefix = $this->config->env === 'dev' ? 'APP_ENV=dev ' : '';
+		$envPrefix = $this->config->appEnv !== '' ? 'APP_ENV=' . $this->config->appEnv . ' ' : '';
 
 		return sprintf('%s%s %s', $envPrefix, $phpPath, $quotedCommand);
 	}

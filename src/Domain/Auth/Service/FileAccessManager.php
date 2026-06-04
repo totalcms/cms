@@ -95,7 +95,7 @@ class FileAccessManager
 		$userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? '';
 
 		try {
-			if ($this->userValidator->validateUserInGroups($userID, $this->collection->groups, $userCollection)) {
+			if ($this->userValidator->validateFileAccess($userID, $this->collection->groups, $userCollection)) {
 				return true;
 			}
 		} catch (\Throwable $th) {

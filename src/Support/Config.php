@@ -8,16 +8,18 @@ class Config
 {
 	public const LICENSE_API_URL = 'https://license.totalcms.co';
 
-	public string $env                = 'prod';
-	public string $template           = '';
-	public string $datadir            = '';
-	public string $tmpdir             = '';
-	public string $cachedir           = '';
-	public string $domain             = '';
-	public string $siteName           = '';
-	public string $url                = '';
-	public string $api                = '';
-	public string $locale             = '';
+	public string $env        = 'prod';
+	public string $appEnv     = ''; // Actual `APP_ENV` env-var value
+	public string $template   = '';
+	public string $datadir    = '';
+	public string $tmpdir     = '';
+	public string $cachedir   = '';
+	public string $domain     = '';
+	public string $siteName   = '';
+	public string $url        = '';
+	public string $api        = '';
+	public string $licenseUrl = self::LICENSE_API_URL;
+	public string $locale     = '';
 	/**
 	 * Internationalization config bucket.
 	 *
@@ -76,6 +78,7 @@ class Config
 	public function __construct(array $settings)
 	{
 		$this->env                = $settings['env'] ?? 'prod';
+		$this->appEnv             = (string)($settings['appEnv'] ?? '');
 		$this->template           = $settings['template'];
 		$this->dashboard          = $settings['dashboard'];
 		$this->datadir            = $settings['datadir'];
@@ -91,6 +94,7 @@ class Config
 		$this->siteName           = (string)($settings['siteName'] ?? '');
 		$this->url                = $settings['url'];
 		$this->api                = $settings['api'];
+		$this->licenseUrl         = (string)($settings['licenseUrl'] ?? self::LICENSE_API_URL);
 		$this->i18n               = $this->normalizeI18nSettings($settings);
 		// System locale: an explicit top-level `$settings['locale']` in tcms.php
 		// is the advanced-override path for sites that need formatting to differ

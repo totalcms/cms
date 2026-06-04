@@ -254,7 +254,7 @@ final class FileAccessManagerTest extends TestCase
 
 		$this->userValidator->method('isSuperAdmin')->willReturn(false);
 		$this->userValidator->expects($this->once())
-			->method('validateUserInGroups')
+			->method('validateFileAccess')
 			->with('user-123', ['editors'], 'auth')
 			->willReturn(true);
 
@@ -271,7 +271,7 @@ final class FileAccessManagerTest extends TestCase
 		$this->setupSessionWithUser('user', 'auth');
 
 		$this->userValidator->method('isSuperAdmin')->willReturn(false);
-		$this->userValidator->method('validateUserInGroups')->willReturn(false);
+		$this->userValidator->method('validateFileAccess')->willReturn(false);
 
 		$this->assertFalse($this->fileAccessManager->userHasAccess());
 	}
@@ -286,7 +286,7 @@ final class FileAccessManagerTest extends TestCase
 		$this->setupSessionWithUser('user', 'auth');
 
 		$this->userValidator->method('isSuperAdmin')->willReturn(false);
-		$this->userValidator->method('validateUserInGroups')
+		$this->userValidator->method('validateFileAccess')
 			->willThrowException(new \Exception('Validation error'));
 
 		$this->assertFalse($this->fileAccessManager->userHasAccess());

@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Playground\Service\PlaygroundLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -14,6 +15,7 @@ readonly class AdminPlaygroundAction
 		private TwigRenderer $twigRenderer,
 		private TwigEngine $twigEngine,
 		private RawRenderer $rawRenderer,
+		private PlaygroundLister $playgroundLister,
 	) {
 	}
 
@@ -24,6 +26,11 @@ readonly class AdminPlaygroundAction
 		if ($request->getMethod() === 'POST' && $request->getHeaderLine('HX-Request') === 'true') {
 			return $this->renderResultsFragment($request, $response);
 		}
+
+		// Provision the reserved playground collection on first visit so the
+		// snippet list/autosave have somewhere to write (mirrors how the
+		// automations/mailer admin pages ensure their collections on entry).
+		$this->playgroundLister->ensureCollection();
 
 		// Handle GET requests for the playground page
 		return $this->twigRenderer->template($response, 'admin/playground.twig', [

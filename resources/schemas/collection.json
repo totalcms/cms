@@ -72,7 +72,7 @@
 		"groups": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"    : "File Access Groups",
-			"help"     : "Access Groups to control access to download/stream the collection files",
+			"help"     : "Control who can download/stream this collection's protected files. Leave empty for public access. Add the 'default' group to allow any logged-in user, or pick specific groups to limit access to their members.",
 			"field"    : "list",
 			"settings" : {
 				"accessGroupOptions"    : true,

@@ -572,6 +572,9 @@ return [
 	'jobqueue.command_desc'         => 'El siguiente comando debe ser el comando exacto que debe copiar en su tarea cron.',
 	'jobqueue.php_path_note'        => 'Si no aparece la ruta al comando PHP, necesitará encontrar la ruta al comando PHP en su servidor.',
 	'jobqueue.server_note'          => 'Dependiendo de su servidor, puede que necesite ajustar el comando para que coincida con la ruta PHP de su servidor.',
+	'jobqueue.stalled_title'        => 'La cola de trabajos no se está procesando',
+	'jobqueue.stalled_desc'         => '{count} trabajos llevan más de {minutes} minutos esperando: la cola no parece estar procesándose.',
+	'jobqueue.stalled_link'         => 'Abrir el gestor de la cola de trabajos',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
 	'jumpstart.title'               => 'Datos de JumpStart',

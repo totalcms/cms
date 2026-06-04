@@ -14,11 +14,12 @@ $settings['env'] = 'dev';
 $settings['sentry']           = false;
 $settings['auth']['enable']   = false;
 
-$settings['docroot']   = $settings['root'];
-$settings['datadir']   = $settings['root'] . '/tcms-data';
-$settings['domain']    = 'totalcms.test';
-$settings['url']       = 'https://totalcms.test';
-$settings['api']       = '';
+$settings['docroot']    = $settings['root'];
+$settings['datadir']    = $settings['root'] . '/tcms-data';
+$settings['domain']     = 'totalcms.test';
+$settings['url']        = 'https://totalcms.test';
+$settings['api']        = '';
+$settings['licenseUrl'] = 'https://license.totalcms.test';
 
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;

@@ -27,11 +27,11 @@ readonly class PlaygroundLister
 		return $index->objects->toArray();
 	}
 
-	/** Ensure the playground collection exists */
+	/** Ensure the playground collection exists, creating it if missing. */
 	public function ensureCollection(): void
 	{
-		if (!$this->collectionFetcher->collectionExists(PlaygroundData::COLLECTION_ID)) {
-			$this->collectionFetcher->fetchCollection(PlaygroundData::COLLECTION_ID);
-		}
+		// fetchOrCreateReserved() actually provisions a missing reserved
+		// collection; plain fetchCollection() returns null and creates nothing.
+		$this->collectionFetcher->fetchOrCreateReserved(PlaygroundData::COLLECTION_ID);
 	}
 }

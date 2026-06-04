@@ -1,13 +1,12 @@
 #!/bin/bash
 
 bin/build-assets.sh
-php bin/make-bundle.php
 
 echo "Watching..."
 echo ""
 
 DEBOUNCE=2
-ignore=("totalform.twig" "content.twig" "resources/bundle")
+ignore=("totalform.twig" "content.twig")
 last_build=0
 
 fswatch -0 css javascript src config resources | while read -d "" file; do
@@ -31,7 +30,6 @@ fswatch -0 css javascript src config resources | while read -d "" file; do
     echo "  ↳ $file"
 
     bin/build-assets.sh
-    php bin/make-bundle.php
     last_build=$(date +%s)
 
     echo "Watching..."

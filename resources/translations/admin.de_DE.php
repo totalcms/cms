@@ -572,6 +572,9 @@ return [
 	'jobqueue.command_desc'         => 'Der folgende Befehl sollte genau so in Ihren Cron-Job kopiert werden.',
 	'jobqueue.php_path_note'        => 'Wenn kein Pfad zum PHP-Befehl angegeben ist, müssen Sie den Pfad zum PHP-Befehl auf Ihrem Server ermitteln.',
 	'jobqueue.server_note'          => 'Je nach Server müssen Sie den Befehl möglicherweise an den PHP-Pfad Ihres Servers anpassen.',
+	'jobqueue.stalled_title'        => 'Job-Warteschlange wird nicht verarbeitet',
+	'jobqueue.stalled_desc'         => '{count} Jobs warten seit über {minutes} Minuten — die Warteschlange scheint nicht verarbeitet zu werden.',
+	'jobqueue.stalled_link'         => 'Job-Warteschlange öffnen',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
 	'jumpstart.title'               => 'JumpStart-Daten',

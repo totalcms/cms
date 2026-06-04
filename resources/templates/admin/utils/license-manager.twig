@@ -2,12 +2,7 @@
 
 {% set offlineDetails = cms.license.getOfflineLicenseDetails() %}
 {% set isOffline = cms.license.isOffline() %}
-
-{% if cms.env == "dev" %}
-	{% set licenseUrl = "https://license.totalcms.test/store/" ~ cms.domain %}
-{% else %}
-	{% set licenseUrl = "https://license.totalcms.co/store/" ~ cms.domain %}
-{% endif %}
+{% set licenseUrl = cms.config('licenseUrl') ~ "/store/" ~ cms.domain %}
 
 {# Offline License Section #}
 {% if offlineDetails is not null %}

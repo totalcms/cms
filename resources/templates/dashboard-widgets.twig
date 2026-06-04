@@ -304,6 +304,23 @@
 {% endif %}
 {% endmacro %}
 
+{# Job queue health — warns when the queue is stalled (jobs:process not running).
+   Renders nothing when healthy. showLink is false on the Job Queue Manager page
+   itself (already there). #}
+{% macro jobQueueHealthAlert(health, showLink = true) %}
+{% if health.stalled %}
+<div class="warning-box jobqueue-health-alert" role="status">
+	<div>
+		<strong>{{ t('jobqueue.stalled_title') }}</strong>
+		{{ t('jobqueue.stalled_desc', {'{count}': health.pendingCount, '{minutes}': health.thresholdMinutes}) }}
+		{% if showLink %}
+		<a href="utils/jobqueue">{{ t('jobqueue.stalled_link') }}</a>
+		{% endif %}
+	</div>
+</div>
+{% endif %}
+{% endmacro %}
+
 {# New User Welcome - Shows when no collections exist #}
 {% macro newUserWelcome() %}
 <div class="dashboard-new-user-welcome">

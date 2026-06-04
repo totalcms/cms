@@ -1,6 +1,7 @@
 <?php
 
 use TotalCMS\Action\Admin\AdminPlaygroundAction;
+use TotalCMS\Domain\Playground\Service\PlaygroundLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -19,12 +20,13 @@ describe('AdminPlaygroundAction', function (): void {
 		expect($constructor)->not()->toBeNull();
 
 		$parameters = $constructor->getParameters();
-		expect($parameters)->toHaveCount(3);
+		expect($parameters)->toHaveCount(4);
 
 		// Check parameter types
 		expect($parameters[0]->getType()->getName())->toBe(TwigRenderer::class);
 		expect($parameters[1]->getType()->getName())->toBe(TwigEngine::class);
 		expect($parameters[2]->getType()->getName())->toBe(RawRenderer::class);
+		expect($parameters[3]->getType()->getName())->toBe(PlaygroundLister::class);
 	});
 
 	it('has invoke method for handling requests', function (): void {

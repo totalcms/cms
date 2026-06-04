@@ -15,7 +15,7 @@ final class OAuthDiscoveryProviderTest extends TestCase
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	private function makeConfig(string $url = 'https://example.com', array $oauth = []): Config
+	private function makeConfig(string $url = 'https://example.com', array $oauth = [], string $api = ''): Config
 	{
 		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$reflection = new \ReflectionClass($config);
@@ -25,6 +25,10 @@ final class OAuthDiscoveryProviderTest extends TestCase
 
 		$oauthProp = $reflection->getProperty('oauth');
 		$oauthProp->setValue($config, $oauth);
+
+		// The subpath mount prefix ('' for a root install, '/tcms' for a subfolder).
+		$apiProp = $reflection->getProperty('api');
+		$apiProp->setValue($config, $api);
 
 		return $config;
 	}
@@ -95,6 +99,44 @@ final class OAuthDiscoveryProviderTest extends TestCase
 
 		$this->assertSame('https://auth.mysite.com', $meta['issuer']);
 		$this->assertSame('https://auth.mysite.com/oauth/authorize', $meta['authorization_endpoint']);
+	}
+
+	public function testSubpathInstallIncludesBaseInIssuerAndEndpoints(): void
+	{
+		// App mounted at https://example.com/tcms/ — config.url is host-only,
+		// config.api carries the subpath. Discovery must advertise the subpath
+		// or clients hit 404s.
+		$meta = $this->makeProvider(
+			$this->makeConfig('https://example.com', [], '/tcms'),
+		)->metadata();
+
+		$this->assertSame('https://example.com/tcms', $meta['issuer']);
+		$this->assertSame('https://example.com/tcms/oauth/authorize', $meta['authorization_endpoint']);
+		$this->assertSame('https://example.com/tcms/oauth/token', $meta['token_endpoint']);
+		$this->assertSame('https://example.com/tcms/oauth/revoke', $meta['revocation_endpoint']);
+		$this->assertSame('https://example.com/tcms/.well-known/jwks.json', $meta['jwks_uri']);
+		$this->assertSame('https://example.com/tcms/oauth/register', $meta['registration_endpoint']);
+	}
+
+	public function testSubpathStripsTrailingSlash(): void
+	{
+		$meta = $this->makeProvider(
+			$this->makeConfig('https://example.com/', [], '/tcms/'),
+		)->metadata();
+
+		$this->assertSame('https://example.com/tcms', $meta['issuer']);
+	}
+
+	public function testExplicitJwtIssuerIgnoresSubpath(): void
+	{
+		// An operator-supplied issuer is a full URL — we must not append the
+		// local mount prefix onto it.
+		$meta = $this->makeProvider(
+			$this->makeConfig('https://example.com', ['jwtIssuer' => 'https://auth.example.com'], '/tcms'),
+		)->metadata();
+
+		$this->assertSame('https://auth.example.com', $meta['issuer']);
+		$this->assertSame('https://auth.example.com/oauth/authorize', $meta['authorization_endpoint']);
 	}
 
 	// -------------------------------------------------------------------------

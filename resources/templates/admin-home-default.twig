@@ -1,5 +1,8 @@
 {% import 'dashboard-widgets.twig' as dashboard %}
 
+{# Job queue health warning — stalled queue (jobs:process not running) #}
+{{ dashboard.jobQueueHealthAlert(cms.admin.dashboardJobQueueHealth()) }}
+
 {# Edition simulation warning #}
 {% if cms.edition.isSimulating %}
 <div class="simulation-warning">

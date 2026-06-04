@@ -441,9 +441,118 @@ final class UserValidationServiceTest extends TestCase
 		expect($result['id'])->toBe('test-user');
 	}
 
+	public function testValidateFileAccessWithDefaultGroupAllowsUserInAnotherGroup(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		// User belongs to 'editor' only — NOT 'default'.
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'editor-user',
+			'groups' => ['editor'],
+		]);
+
+		$objectFetcher->method('existsObject')->with('users', 'editor-user')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('users', 'editor-user')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		// 'default' in File Access Groups means any authenticated user — the
+		// editor gets in even though 'editor' is not in the required list.
+		expect($service->validateFileAccess('editor-user', ['default']))->toBeTrue();
+	}
+
+	public function testValidateFileAccessWithDefaultGroupAllowsGrouplessUser(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'groupless-user',
+			'groups' => [],
+		]);
+
+		$objectFetcher->method('existsObject')->with('users', 'groupless-user')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('users', 'groupless-user')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->validateFileAccess('groupless-user', ['default']))->toBeTrue();
+	}
+
+	public function testValidateFileAccessWithDefaultGroupReturnsFalseWhenUserDoesNotExist(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		// A session may reference a deleted user — "default" must still verify existence.
+		$objectFetcher->method('existsObject')->with('users', 'ghost')->willReturn(false);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->validateFileAccess('ghost', ['default']))->toBeFalse();
+	}
+
+	public function testValidateFileAccessWithoutDefaultGroupExcludesNonMembers(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'editor-user',
+			'groups' => ['editor'],
+		]);
+
+		$objectFetcher->method('existsObject')->with('users', 'editor-user')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('users', 'editor-user')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		// No 'default' — falls through to group membership, editor is not a member.
+		expect($service->validateFileAccess('editor-user', ['members']))->toBeFalse();
+	}
+
+	public function testValidateFileAccessWithoutDefaultGroupAllowsMembers(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'users'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'member-user',
+			'groups' => ['members'],
+		]);
+
+		$objectFetcher->method('existsObject')->with('users', 'member-user')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('users', 'member-user')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->validateFileAccess('member-user', ['members']))->toBeTrue();
+	}
+
 	public function testConstants(): void
 	{
 		expect(UserValidationService::ADMINGROUP)->toBe('admin');
+		expect(UserValidationService::DEFAULTGROUP)->toBe('default');
 	}
 
 	public function testFindUserByEmailReturnsObjectDataWhenFound(): void

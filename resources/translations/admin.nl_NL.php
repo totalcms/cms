@@ -572,6 +572,9 @@ return [
 	'jobqueue.command_desc'         => 'De volgende opdracht is de exacte opdracht die u naar uw cron-taak moet kopiëren.',
 	'jobqueue.php_path_note'        => 'Als er geen pad naar de PHP-opdracht is, moet u het pad naar de PHP-opdracht op uw server zoeken.',
 	'jobqueue.server_note'          => 'Afhankelijk van uw server moet u de opdracht mogelijk aanpassen aan het PHP-pad van uw server.',
+	'jobqueue.stalled_title'        => 'Taakwachtrij wordt niet verwerkt',
+	'jobqueue.stalled_desc'         => '{count} taken wachten al meer dan {minutes} minuten — de wachtrij lijkt niet te worden verwerkt.',
+	'jobqueue.stalled_link'         => 'Taakwachtrij-beheer openen',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
 	'jumpstart.title'               => 'JumpStart-gegevens',

@@ -35,3 +35,4 @@ config/env.php
 # Audit reports in particular can contain unpatched-vulnerability detail.
 /docs/planning
 /docs/audits
+/docs/superpowers

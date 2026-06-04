@@ -51,6 +51,38 @@ it('runs a sync webhook inline and returns the result', function (): void {
 	expect($json['return'])->toBe(['echo' => ['x' => 1]]);
 });
 
+it('surfaces handler error detail in a sync webhook outside production', function (): void {
+	// Test env is 'test' (non-prod), so errors surface loudly for the builder.
+	saveWebhookAutomation($this->app->getContainer(), 'boom', 'none', true, "<?php\n\nreturn function (\$ctx) { throw new \\RuntimeException('kaboom from handler'); };\n");
+
+	$response = postJson('/automations/boom', []);
+
+	expect($response->getStatusCode())->toBe(500);
+	$json = json_decode((string)$response->getBody(), true);
+	expect($json['status'])->toBe('failed');
+	// Full detail (message + trace) is visible in dev/preview.
+	expect($json['exception'])->toContain('kaboom from handler');
+	expect($json['exception'])->toContain('#0'); // stack trace frame
+});
+
+it('hides handler error detail in a sync webhook in production', function (): void {
+	// Flip to a true production request: the public caller must not see the
+	// message or stack trace, only a generic failure. The app is rebuilt per
+	// test (beforeEach), so this mutation does not leak.
+	$this->app->getContainer()->get(TotalCMS\Support\Config::class)->env = 'prod';
+
+	saveWebhookAutomation($this->app->getContainer(), 'boom-prod', 'none', true, "<?php\n\nreturn function (\$ctx) { throw new \\RuntimeException('secret path /var/www leaked'); };\n");
+
+	$response = postJson('/automations/boom-prod', []);
+
+	expect($response->getStatusCode())->toBe(500);
+	$json = json_decode((string)$response->getBody(), true);
+	expect($json['status'])->toBe('failed');
+	expect($json['exception'])->toBe('Automation handler failed. See the server logs for details.');
+	expect($json['exception'])->not->toContain('secret path');
+	expect($json['exception'])->not->toContain('#0');
+});
+
 it('rejects an apiKey webhook with no key (401)', function (): void {
 	saveWebhookAutomation($this->app->getContainer(), 'secure', 'apiKey', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
 

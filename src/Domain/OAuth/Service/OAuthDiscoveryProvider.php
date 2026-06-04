@@ -52,12 +52,18 @@ final readonly class OAuthDiscoveryProvider
 
 	private function resolveIssuer(): string
 	{
-		// Prefer explicit oauth.jwtIssuer; fall back to $config->url which holds T3's canonical site URL.
+		// Prefer explicit oauth.jwtIssuer (operator supplies a full URL); fall
+		// back to $config->url which holds T3's canonical scheme+host.
 		$issuer = (string)($this->config->oauth['jwtIssuer'] ?? '');
 		if ($issuer !== '') {
 			return rtrim($issuer, '/');
 		}
 
-		return rtrim($this->config->url, '/');
+		// $config->url is scheme+host only — it does NOT carry the subpath the
+		// app is mounted under. On a subpath install (e.g. /tcms) the OAuth
+		// routes live at {host}/tcms/oauth/*, so the discovery document must
+		// advertise that base or clients hit 404s. $config->api is that mount
+		// prefix ('' for a root install, '/tcms' for a subfolder install).
+		return rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
 	}
 }

@@ -369,14 +369,14 @@ print_success "Checksums generated"
 #
 # Bundles five things into one commit on the release branch:
 #   - public/assets/      built CSS/JS (gitignored — needs -f)
-#   - resources/bundle    runtime integrity manifest (gitignored — needs -f)
+#   - resources/bundle    runtime integrity manifest (regenerated just below)
 #   - version.json        regenerated above with NEW_VERSION + GIT_HASH
 #   - code-report.txt     phploc-style stats for this release
 #   - checksums.txt       sha256s of php/js/css for the update system
 #
-# public/assets/ and resources/bundle stay gitignored after this commit,
-# so ongoing dev rebuilds on develop won't drift the diff — the committed
-# snapshots just sit frozen until the next release supersedes them.
+print_info "Regenerating bundle integrity manifest..."
+composer run bundle
+
 print_info "Committing release artifacts..."
 git add -f public/assets/
 git add version.json code-report.txt checksums.txt resources/bundle
