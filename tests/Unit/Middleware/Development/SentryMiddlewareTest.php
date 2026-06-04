@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middleware\Development;
 
-use DI\DependencyException;
 use DI\Definition\Exception\InvalidDefinition;
+use DI\DependencyException;
 use DI\NotFoundException;
 use PHPUnit\Framework\TestCase;
 use Slim\Exception\HttpNotFoundException;

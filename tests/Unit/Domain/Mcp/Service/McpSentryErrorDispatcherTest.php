@@ -48,7 +48,7 @@ final class McpSentryErrorDispatcherTest extends TestCase
 
 			protected static function fromParams(?array $params): static
 			{
-				return new static();
+				return new self();
 			}
 
 			protected function getParams(): ?array

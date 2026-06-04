@@ -64,6 +64,6 @@ final readonly class OAuthDiscoveryProvider
 		// routes live at {host}/tcms/oauth/*, so the discovery document must
 		// advertise that base or clients hit 404s. $config->api is that mount
 		// prefix ('' for a root install, '/tcms' for a subfolder install).
-		return rtrim($this->config->url, '/') . rtrim((string)$this->config->api, '/');
+		return rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
 	}
 }

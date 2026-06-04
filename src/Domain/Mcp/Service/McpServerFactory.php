@@ -83,7 +83,7 @@ readonly class McpServerFactory
 		// Gated on config.sentry so a Sentry-disabled install keeps its exact
 		// protocol surface — setting any SDK event dispatcher flips the
 		// advertised listChanged capabilities to true.
-		if ($this->config->sentry === true) {
+		if ($this->config->sentry) {
 			$builder->setEventDispatcher(new McpSentryErrorDispatcher());
 		}
 

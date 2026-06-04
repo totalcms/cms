@@ -158,7 +158,7 @@ class CliApplication
 	 */
 	private static function enableSentry(Application $app, TotalCMS $totalcms): void
 	{
-		if ($totalcms->config->sentry !== true) {
+		if (!$totalcms->config->sentry) {
 			return;
 		}
 
@@ -188,7 +188,7 @@ class CliApplication
 				$scope->setTag('context', 'cli');
 
 				$command = $event->getCommand();
-				if ($command !== null && $command->getName() !== null) {
+				if ($command instanceof \Symfony\Component\Console\Command\Command && $command->getName() !== null) {
 					$scope->setTag('command', $command->getName());
 				}
 			});

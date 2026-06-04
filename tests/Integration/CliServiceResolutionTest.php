@@ -61,7 +61,7 @@ it('resolves every TotalCMS service accessor from the container', function (): v
 
 		try {
 			$container->get($serviceClass);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			$failures[] = sprintf('%s() -> %s: %s', $method->getName(), $serviceClass, $e->getMessage());
 		}
 	}
@@ -98,7 +98,7 @@ it('resolves services CLI commands fetch directly from the container', function 
 	foreach ($services as $service) {
 		try {
 			$container->get($service);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			$failures[] = sprintf('%s: %s', $service, $e->getMessage());
 		}
 	}

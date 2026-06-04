@@ -67,7 +67,7 @@ function runBatchImport(object $container, string $collection, int $count): arra
 			$created[] = $container->get(ObjectImporter::class)
 				->importObject($collection, ['title' => "Widget {$i}"])
 				->id;
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			// Real importers log + continue on a per-object failure.
 		}
 	}

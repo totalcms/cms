@@ -60,7 +60,7 @@ it('renders nothing when the queue is healthy', function (): void {
 	$twig   = $this->app->getContainer()->get(TwigEngine::class);
 	$health = new JobQueueHealthData(stalled: false, pendingCount: 0, oldestAgeMinutes: 0, thresholdMinutes: 30);
 
-	$html = trim($twig->renderString(
+	$html = trim((string)$twig->renderString(
 		"{% import 'dashboard-widgets.twig' as d %}{{ d.jobQueueHealthAlert(health) }}",
 		['health' => $health],
 	));

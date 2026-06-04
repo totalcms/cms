@@ -36,7 +36,7 @@ final class McpSentryErrorDispatcher implements EventDispatcherInterface
 		// error), not a code bug. InvalidArgumentException is invalid client
 		// params — the MCP equivalent of an HTTP 4xx, a caller mistake. Both are
 		// noise, mirroring how the web filter ignores 4xx HTTP exceptions.
-		if ($throwable === null || $throwable instanceof \InvalidArgumentException) {
+		if (!$throwable instanceof \Throwable || $throwable instanceof \InvalidArgumentException) {
 			return $event;
 		}
 
