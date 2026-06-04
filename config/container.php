@@ -36,6 +36,7 @@ use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
@@ -651,6 +652,13 @@ return [
 		$container->get(LoggerFactory::class)
 			->addFileHandler('mcp-activity.log', level: Level::Debug)
 			->createLogger('mcp-schema-tools'),
+	),
+
+	// DataViewDependencyResolver needs an explicit definition because LoggerInterface
+	// is not bound to a concrete class by default in this container.
+	DataViewDependencyResolver::class => fn (ContainerInterface $container): DataViewDependencyResolver => new DataViewDependencyResolver(
+		$container->get(IndexReader::class),
+		$container->get(LoggerFactory::class)->createLogger('dataviews'),
 	),
 
 	// PromptDiscoveryService needs an explicit definition so it gets the mcp-activity
