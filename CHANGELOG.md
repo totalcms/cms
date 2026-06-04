@@ -2,6 +2,39 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.3] - 2026-06-04
+
+### Fixed
+
+- **CLI broken on bundled installs (silent exit 255)**: Every `tcms` command — including the `jobs:process` and `automations:process` cron runners — died at startup with a silent exit 255 on any `--no-dev` install (i.e. every shipped Stacks/zip bundle). The CLI→Sentry wiring added in rc.2 instantiated `Symfony\Component\EventDispatcher\EventDispatcher`, but that package was only ever present transitively via dev-only tools, so production bundles didn't ship it and the missing class fatalled the whole CLI before any command ran. The fatal was invisible because `config/defaults.php` suppressed errors on the CLI exactly as it does for a public web response. Fixed three ways: the Sentry dispatcher is now guarded by `class_exists()` (a missing observability dependency can never take the CLI down again — no error reporting, but the command still runs), `symfony/event-dispatcher` is now a declared dependency so bundles include it, and the CLI surfaces errors to STDERR (cron has no public response to protect, so a suppressed fatal there is pure loss). This makes the silent-255 class of failure impossible regardless of cause
+- **In-place updates killed by timeouts or cross-filesystem moves**: Two failures in the one-click updater that only surfaced on real servers. (1) Downloading the release zip and swapping the app in place took longer than the default 30s web limit, so the worker was killed mid-update with an empty 500 the app couldn't even log; the update now lifts its own time limit and sets `ignore_user_abort` so a browser disconnect can't leave a half-updated install. (2) The file swap installs with `rename()`, which fails with `EXDEV` across filesystems — and extraction staged into the system temp dir, often a different mount than the web root, producing "Failed to install src". Extraction now stages next to the app root so every rename (back up, install, roll back) stays same-device
+- **Job Queue pending times shown in UTC**: Pending-job timestamps in the Job Queue Manager rendered in UTC rather than the site's configured timezone. They now convert through the configured timezone via `DateData::utcToTimezone()`
+
+### Enhanced
+
+- **Depot browser filter placeholder + warning-box polish**: The depot browser's filter input now shows placeholder text, and the dashboard's job-queue-stalled alert uses the standard warning-box component styling
+
+## [3.5.0-rc.2] - 2026-06-04
+
+### Added
+
+- **"default" File Access Group = any authenticated user**: Protected file download/stream access could be granted to the public or to specific access groups, but there was no way to say "any logged-in user." Adding the existing `default` group to a collection's File Access Groups now grants access to any authenticated user, reusing the access-group machinery already in place (with a note added to the collection schema's groups help)
+- **Job-queue-stalled warning**: When the job queue stops draining — the oldest pending job is older than 30 minutes (configurable via `dashboard.jobQueueStalledMinutes`) and no processor is currently running — a standard warning now appears on the dashboard and the Job Queue Manager, linking to the queue page. Stall detection probes the processor lock with a non-blocking `flock`, so a queue that's merely busy doesn't false-alarm. Most often this fires when the `tcms jobs:process` cron isn't wired up (or, before rc.3, when the CLI was silently crashing)
+- **CLI/cron and MCP errors reported to Sentry**: Sentry was wired only into the web request lifecycle, so exceptions thrown by a `tcms` command on cron — or by an MCP tool handler — only ever reached stderr (or were swallowed into a JSON-RPC error), invisible in Sentry. CLI commands now forward errors to Sentry via a `ConsoleEvents::ERROR` listener tagged with the command name, and MCP handler errors are captured before the SDK turns them into a protocol response. The CLI path also surfaces DI/container failures that the web context treats as bot-during-upload noise — on cron they're real bugs. (Note: the CLI wiring shipped here introduced a regression fixed in rc.3)
+
+### Enhanced
+
+- **Twig Playground auto-provisions its collection**: The Twig Playground's backing collection is now created automatically on first access, instead of erroring when it didn't exist yet
+
+### Fixed
+
+- **Mass-import autogen IDs collided / collection count stuck**: Importing from CSV or JSON without supplying an ID worked for most autogen ID types but not `oid` — every imported object got the same OID and the collection's counter never advanced. The importer now increments the collection count correctly during import (in memory while the collection is suspended, flushed once on completion) for **all** imports, so OIDs stay unique and the counter is accurate
+- **Dataviews not rebuilding after collection updates (`jobs:process` crash)**: Customers reported dataviews going stale after collection edits. Root cause: `jobs:process` crashed whenever it reached a `ReindexJob`, because the job injected an unbound `Psr\Log\LoggerInterface` and the resulting DI error aborted the entire queue run before the reindex could complete. `ReindexJob` now self-wires its logger via `LoggerFactory`
+- **Sync webhook leaked handler stack traces**: A synchronous webhook automation whose handler threw returned the exception's stack trace in the HTTP response, exposing server paths and internals to the caller. The response is now a generic error; the detail goes to the log
+- **OAuth discovery URLs wrong on subpath installs**: The OAuth/MCP `.well-known` discovery documents advertised endpoint URLs rooted at the domain, ignoring an install's base path — so a subpath install (e.g. Stacks `/tcms`) pointed clients at the wrong URLs. Discovery URLs now fold in the subpath base
+- **Dev-only behavior and artifacts leaking into customer installs**: Several development-only behaviors and build artifacts (including dev churn in `resources/bundle` and `public/assets`) were shipping into or regenerating on customer installs. These are now release-only artifacts, and dev-only paths no longer leak
+- **Broken link on the 404 page**: Fixed a broken link in the default 404 page
+
 ## [3.5.0-rc.1] - 2026-06-01
 
 ### Added
