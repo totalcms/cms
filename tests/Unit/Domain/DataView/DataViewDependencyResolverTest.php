@@ -14,7 +14,7 @@ final class DataViewDependencyResolverTest extends TestCase
 	private function order(array $views, string $collection): array
 	{
 		$resolver = (new \ReflectionClass(DataViewDependencyResolver::class))->newInstanceWithoutConstructor();
-		$prop = new \ReflectionProperty(DataViewDependencyResolver::class, 'logger');
+		$prop     = new \ReflectionProperty(DataViewDependencyResolver::class, 'logger');
 		$prop->setValue($resolver, new NullLogger());
 
 		return $resolver->order($views, $collection);

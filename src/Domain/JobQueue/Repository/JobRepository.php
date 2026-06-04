@@ -234,7 +234,7 @@ class JobRepository
 		$params = ['type' => $type, 'collection' => $collection];
 
 		if ($payload !== '') {
-			$sql               .= ' AND payload = :payload';
+			$sql .= ' AND payload = :payload';
 			$params['payload']  = $payload;
 		}
 

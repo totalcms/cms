@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Admin;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 
 final class ViewIdListTest extends TestCase
 {

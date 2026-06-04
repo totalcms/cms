@@ -26,6 +26,7 @@ final class QueueViewUpdatesTest extends TestCase
 		$repo->method('queueJob')->willReturnCallback(
 			function (string $type, string $collection, string $payload) use (&$queued): JobData {
 				$queued[] = $payload;
+
 				// Return value is ignored by queueViewUpdates; build without ctor.
 				return (new \ReflectionClass(JobData::class))->newInstanceWithoutConstructor();
 			}

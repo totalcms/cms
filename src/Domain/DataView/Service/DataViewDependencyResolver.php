@@ -22,7 +22,7 @@ readonly class DataViewDependencyResolver
 	}
 
 	/**
-	 * @return array<int,string> Ordered view IDs to rebuild for the collection.
+	 * @return array<int,string> ordered view IDs to rebuild for the collection
 	 */
 	public function resolveForCollection(string $collection): array
 	{
@@ -105,7 +105,7 @@ readonly class DataViewDependencyResolver
 
 		$ordered = [];
 		$queue   = [];
-		foreach ($affected as $id => $_) {
+		foreach (array_keys($affected) as $id) {
 			if ($inDegree[$id] === 0) {
 				$queue[] = $id;
 			}
@@ -114,12 +114,10 @@ readonly class DataViewDependencyResolver
 		while ($queue !== []) {
 			$id        = array_shift($queue);
 			$ordered[] = $id;
-			foreach ($affected as $other => $_) {
+			foreach (array_keys($affected) as $other) {
 				// $other is always in $affected, so $inDegree[$other] is always set.
-				if (in_array($id, $nodes[$other]['viewDeps'], true)) {
-					if (--$inDegree[$other] === 0) {
-						$queue[] = $other;
-					}
+				if (in_array($id, $nodes[$other]['viewDeps'], true) && --$inDegree[$other] === 0) {
+					$queue[] = $other;
 				}
 			}
 		}
@@ -129,7 +127,7 @@ readonly class DataViewDependencyResolver
 			$this->logger->warning('DataView dependency cycle detected; rebuilding in best-effort order.', [
 				'collection' => $collection,
 			]);
-			foreach ($affected as $id => $_) {
+			foreach (array_keys($affected) as $id) {
 				if (!in_array($id, $ordered, true)) {
 					$ordered[] = $id;
 				}
@@ -140,8 +138,6 @@ readonly class DataViewDependencyResolver
 	}
 
 	/**
-	 * @param mixed $value
-	 *
 	 * @return array<int,string>
 	 */
 	private function stringList(mixed $value): array
