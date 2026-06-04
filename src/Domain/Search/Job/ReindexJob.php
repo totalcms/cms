@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -25,12 +26,18 @@ use TotalCMS\Support\Config;
  */
 readonly class ReindexJob
 {
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private SearchProviderRegistry $registry,
 		private ObjectFetcher $objects,
-		private LoggerInterface $logger,
+		LoggerFactory $loggerFactory,
 		private Config $config,
 	) {
+		// Inject LoggerFactory (autowirable) rather than the bare
+		// Psr\Log\LoggerInterface, which has no concrete container binding —
+		// autowiring the interface crashed JobRunner (and thus `jobs:process`).
+		$this->logger = $loggerFactory->addFileHandler('jobs.log')->createLogger('reindex');
 	}
 
 	public function run(JobData $job): void

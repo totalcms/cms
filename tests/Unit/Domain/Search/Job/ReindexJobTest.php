@@ -13,6 +13,7 @@ use TotalCMS\Domain\Search\Data\SearchQuery;
 use TotalCMS\Domain\Search\Job\ReindexJob;
 use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 final class ReindexJobTest extends TestCase
@@ -22,7 +23,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			new SearchProviderRegistry(),
 			$this->createMock(ObjectFetcher::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'text']),
 		);
 
@@ -37,7 +38,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			new SearchProviderRegistry(),
 			$this->createMock(ObjectFetcher::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia']),
 		);
 
@@ -73,7 +74,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$fetcher,
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
@@ -105,7 +106,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$fetcher,
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
@@ -131,7 +132,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$this->createMock(ObjectFetcher::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
@@ -158,7 +159,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$fetcher,
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
