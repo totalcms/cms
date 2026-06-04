@@ -4,7 +4,7 @@
  "id"          : "dataviews",
  "type"        : "object",
  "description" : "A schema for a Total CMS Data View",
- "formgrid"    : "id .\nname name\ndescription description\ndependencies dependencies\ndefinition definition\n---MCP Server---\nmcp mcp\n---\nlastBuilt .",
+ "formgrid"    : "id .\nname name\ndescription description\ndependencies dependencies\nviewDependencies viewDependencies\ndefinition definition\n---MCP Server---\nmcp mcp\n---\nlastBuilt .",
  "properties"  : {
         "id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -35,6 +35,15 @@
 			"field"    : "list",
 			"settings" : {
 				"propertyOptions" : "collectionIds"
+			}
+		},
+		"viewDependencies": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "View Dependencies",
+			"help"     : "Other Data Views this view reads via <code>cms.view.get()</code>. Listing them here guarantees this view rebuilds <em>after</em> those views, and inherits their collection dependencies — so you don't have to re-list the collections those views already depend on.",
+			"field"    : "list",
+			"settings" : {
+				"propertyOptions" : "viewIds"
 			}
 		},
         "definition": {
@@ -88,6 +97,7 @@
         "name",
         "description",
         "dependencies",
+        "viewDependencies",
         "lastBuilt",
         "mcp"
     ]
