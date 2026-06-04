@@ -50,6 +50,29 @@ class DateData extends PropertyData implements \Stringable
 		}
 	}
 
+	/**
+	 * Convert a UTC datetime string (e.g. a SQLite CURRENT_TIMESTAMP value) to
+	 * the given timezone for display.
+	 *
+	 * Unlike cleanDate(), which parses the input AS the target timezone, this
+	 * interprets the input as UTC and converts. Returns the input unchanged if
+	 * it can't be parsed.
+	 */
+	public static function utcToTimezone(string $utcDate, string $timezone, string $format = 'Y-m-d H:i:s'): string
+	{
+		if ($utcDate === '') {
+			return '';
+		}
+
+		try {
+			return (new \DateTimeImmutable($utcDate, new \DateTimeZone('UTC')))
+				->setTimezone(new \DateTimeZone($timezone !== '' ? $timezone : 'UTC'))
+				->format($format);
+		} catch (\Exception) {
+			return $utcDate;
+		}
+	}
+
 	public function transform(): string
 	{
 		return (string)$this;

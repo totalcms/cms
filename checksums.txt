@@ -20,7 +20,7 @@ cc8fe3eacd05488039a9c1fe9b8c611cd2a7eafa410d33897361df32daced1f3  ./dist/config/
 6060cddcd2f7fafbfc9ea76f680e44602ef3c658ed64d650a0f0c92bed687031  ./dist/config/bootstrap.php
 68755615e1e08e6742cad502c202e3808a1920d3922075df1a8c0197ff601c1d  ./dist/config/tcms-sample.php
 da4ed45231b8cbeacd09eff7d2870e3ae5c01f7d8b9358f70f858464d04f1cd8  ./dist/config/routes.php
-97063e4faa3ae2d8c769e164c534278e9a2de482e7ecd4142e68525eb26783ad  ./dist/config/defaults.php
+90364e3f7b4cbfb466986acd35b3b02b9bc65b022a52d5076e1db6c55dadee01  ./dist/config/defaults.php
 a18869decd9a6b4674d982eaa4427364ed8475f389740e9da0b38da3c18c7804  ./dist/config/middleware.php
 c55336abced86ceee519439d63373abee14d6a15ca67ad973035b1255e885e87  ./dist/config/routes/admin/auth.php
 33d5e966645cf37b1ec9ab428d669f0b6159ba587171dfa1ae6fc0c2cce2dab4  ./dist/config/routes/admin/setup.php
@@ -112,7 +112,7 @@ dd7601d30505e080c7a1df0e3741eed402a7cb6a0db7a50fc1a4013ede24769f  ./dist/public/
 7d2c73de892a1c651f58e4b8bec91c363c077fedab69cd35c74ef88de969f60b  ./dist/public/assets/chunk-JWMLBNOT.js
 930e877a0d7d3b53197cc364bbf93c80184fec4477feaa9d65a14b0056672a2f  ./dist/public/assets/htmx.min.js
 51b86d3f02c1f17cbb0712be57fce8a731434d7b360f8c5867a942d8cdc291f2  ./dist/public/assets/swagger.js
-461555b345fa16352725d30cd456892c07b310d30d905690679c314812b4d1d8  ./dist/public/assets/dashboard.css
+d1131e9ab8a3da2994f30b2d2ea2a303de786d69c48cd36582094ce46e583a99  ./dist/public/assets/dashboard.css
 e8211205bd0bf1a3783e37111f331d9559c3240768a42757072ca406b6e73fbe  ./dist/public/assets/gallery.css
 b583db20144a5cf6d1c664e2ac7356825fe473f840ad81847d01d42bebb79623  ./dist/public/assets/mailto-decoder.js
 888302912a132d938ae75c93de4e6a1b7452d9017131afcc5c79d7f1258990e7  ./dist/public/assets/codemirror-totalcms.css
@@ -147,7 +147,7 @@ c0b225b1eab0b0cee0f11f473a7ff935697e55ad267a6eca27234585a2963c6e  ./dist/vendor/
 07874b69ba61b438a22a719d7718de7e2f17b1f7126ffbf92f56b5a5d2239d68  ./dist/vendor/dasprid/enum/src/Exception/ExpectationException.php
 d6072d330097ef643df673c5c40c51729a4fdbd0aa197980ba8d8d53efa11ba9  ./dist/vendor/dasprid/enum/src/Exception/SerializeNotSupportedException.php
 a3c266842dcbc83fa57a7d4ba7314cd2c4e588d5f7e2734619b343b201f9a08e  ./dist/vendor/dasprid/enum/src/Exception/CloneNotSupportedException.php
-6b98be6f534af92004442ea65958e2c85894dfd9604cec89d2e35b89624f25f8  ./dist/vendor/autoload.php
+f7b9d9e94eef85022845eb78f6898ebc01561c2bd54bca6c43089145ec92c25c  ./dist/vendor/autoload.php
 c0c60e80a9e592dd1e54fadda0e6e5915b547a526c1af9c5f31ac418d9314be3  ./dist/vendor/phpstan/phpdoc-parser/src/Lexer/Lexer.php
 6e58e5f0b56e4727799f338eca8911e03926383984f3ebde7878576b015f09e9  ./dist/vendor/phpstan/phpdoc-parser/src/Printer/DiffElem.php
 b2e523030e4ee59a122377e694a8e7956bf6663632a1c98cbf296cc881ed2f12  ./dist/vendor/phpstan/phpdoc-parser/src/Printer/Differ.php
@@ -1523,14 +1523,14 @@ d7aaa22a5d9e802aade11b0708e4cb3f654690aad33d04905efe9e6175acaecc  ./dist/vendor/
 854b326e1a6ce17847eadff68a294432e47eea01cda5968023d4ee2686560112  ./dist/vendor/composer/autoload_namespaces.php
 d4b2313e562edf942838ec316d983c1a3459ca67da3e5658e861200b0b3693c2  ./dist/vendor/composer/ClassLoader.php
 fba835c2798995adb6cdd52541a48780dd2526de871b811cca192c3fe53cafa5  ./dist/vendor/composer/ca-bundle/src/CaBundle.php
-261b153319559e2f3177fbffd406c660a7d26c9026a5f8c962229845cd5b34a2  ./dist/vendor/composer/autoload_psr4.php
-20d342a74fbf2e2a012072cac13757c1eb5f1fb91cdf3537aad985bf136d5664  ./dist/vendor/composer/autoload_classmap.php
+dbcc3fde9a12802d7a73ea4e5dfef71e9cb6f6dbbfeec2e2c9dd529de4e9dec5  ./dist/vendor/composer/autoload_psr4.php
+a2a3ba15aa7689bc8fb5b9d44b63308db99228ffd46233bfe67fd7aab3de0616  ./dist/vendor/composer/autoload_classmap.php
 d9d67386b623922c4821f6a1a25980950a0d7815c0eb909759e79c4bab12474e  ./dist/vendor/composer/platform_check.php
-87aefe3f7385f33ce85811aba43f1b28597f2c90c682929224d0269f405c00e9  ./dist/vendor/composer/autoload_static.php
-fc57db00fa64da8378f47c5a6c7373bd2fde73027e3baf7878a97ee16880b4e0  ./dist/vendor/composer/autoload_real.php
+1a585794086361faac6b6cf48c7466743df0bcf856e502e9344d5223b9587379  ./dist/vendor/composer/autoload_static.php
+349ff43b9ae07641e14743a51273bdb6d748d7f652bf16e99d90f0c7f5140a4f  ./dist/vendor/composer/autoload_real.php
 c81595c34a27e6b686bdc8ebf5248fe9b15ee23988ea4e3835dc45750fb530e3  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-0e12f54516da3d94d6a92f25102262a45bcefb353c2dce5edb9bc76d49f102a2  ./dist/vendor/composer/installed.php
+c33dc76d5ab2de93bfbb67669c3716f5d00d0522d464ab3c70ad950cbedaad4c  ./dist/vendor/composer/installed.php
 fec395a82f06c0eb9b09bc8583d3a7f36ac111448acd3f1513eea4a62764bd75  ./dist/vendor/phpdocumentor/reflection-common/src/Element.php
 29f7a07e25f56e9071c997cb101c8296399ecb5fd7fdd1fc00925d10b44c5cb9  ./dist/vendor/phpdocumentor/reflection-common/src/ProjectFactory.php
 26839d4f4a439b3543212ce7631d3a56cf367a50c3aebc7229ca789feaa8ea98  ./dist/vendor/phpdocumentor/reflection-common/src/File.php
@@ -5563,6 +5563,16 @@ f802dc50281fd9678c377b8b0353e52011719d3855e70beb26fa65f2c9006b03  ./dist/vendor/
 f6770a760912decfb29def47b54680b8da64d0a7e3139e98c2acce8350ffda34  ./dist/vendor/symfony/uid/TimeBasedUidInterface.php
 2f3c5bcaa386549cad58ed33974f632a2a4bb58e80ff4a85b95c9280f55554d6  ./dist/vendor/symfony/uid/UuidV5.php
 6dd5954c550a799f91e506d5ca260177794c8de8bb626439e78b8214e836e7b4  ./dist/vendor/symfony/uid/UuidV4.php
+021eb92df55086f88ed54c5ee18c6e041e03643e86360f529c9d93f960ebfeef  ./dist/vendor/symfony/event-dispatcher/EventDispatcherInterface.php
+821aaf3a6385dac7eba84761427dc96eef52fed15a1aacf176843a6002a9e5e5  ./dist/vendor/symfony/event-dispatcher/Attribute/AsEventListener.php
+212bc21d00210a52c56901aec7dd6ec4b9544bde241890e93470211a18aa2e45  ./dist/vendor/symfony/event-dispatcher/EventDispatcher.php
+f71ae7f536f108367c06d233c3f87874507fff860172407a417c4ed3f98e93a1  ./dist/vendor/symfony/event-dispatcher/EventSubscriberInterface.php
+d8d9420d7b2ebde24dc53f6f4b67c4eab5666ec4d7cb8557f77166e00fa0909a  ./dist/vendor/symfony/event-dispatcher/ImmutableEventDispatcher.php
+6f163b94208c00c71c57c0777e317e1974054f8121ca2e74e29060b4a789c591  ./dist/vendor/symfony/event-dispatcher/GenericEvent.php
+24c3a244a3f525fe06b438fccd26c52f56f5adb029c5630a559cb5afaa884ebb  ./dist/vendor/symfony/event-dispatcher/DependencyInjection/RegisterListenersPass.php
+7f8bacce54e1173736e7d25b4d90d9123b14058802e6ada27e221bc98263b6e2  ./dist/vendor/symfony/event-dispatcher/DependencyInjection/AddEventAliasesPass.php
+c18e5db3cbea01e388c5375cfe2c36ac37a097a9e8cc1b0c632c6198d7185c90  ./dist/vendor/symfony/event-dispatcher/Debug/TraceableEventDispatcher.php
+28546e29661629ecdf874282e8266567d1a56cb2a4f9f3cef6bd21280111ab9d  ./dist/vendor/symfony/event-dispatcher/Debug/WrappedListener.php
 19e58a7fb57bf9fd135db397ef8579a47feecc1c8e7ba894439ebb37843bdae3  ./dist/vendor/symfony/options-resolver/OptionConfigurator.php
 803cca4a64f1657ccea9b3ea29e3747356fe2b8a36751f2ebfa35e80267b3dd0  ./dist/vendor/symfony/options-resolver/OptionsResolver.php
 6b40adb3743bc3e32608aa17980700facdaa4fc2401cffc3856279ad34e2f096  ./dist/vendor/symfony/options-resolver/Options.php
@@ -5652,6 +5662,8 @@ d53e93548a4e6fa417d364caf67f551e25cd8d1389bd2c805388dca617d2509d  ./dist/vendor/
 0c526d8f3cccf21111db37806c50b15742135e60c49174f53cb9af2e7372da68  ./dist/vendor/symfony/css-selector/Exception/ParseException.php
 0712a06173e21dfe95b489340ce20f55ef690f84a1983a8cadc6a9b36970d4cd  ./dist/vendor/symfony/css-selector/Exception/ExpressionErrorException.php
 a654d439de9dcf327390c55cea8ec54c0270c378e5b72a36f01d6a72516a1f34  ./dist/vendor/symfony/css-selector/CssSelectorConverter.php
+0f609cee73991ce7b0f8d6545b02de3e44ed00da85da3254a4e20c2fd5678ab8  ./dist/vendor/symfony/event-dispatcher-contracts/EventDispatcherInterface.php
+fefa2d1a68a006824e21d3baeb8c2b6e0c18d175fa5087148996b664646177ad  ./dist/vendor/symfony/event-dispatcher-contracts/Event.php
 3a3bb028f47b77cf23626f34cdbf074767b7295a77720e3e62b2c075dfa9d6dd  ./dist/vendor/symfony/property-access/PropertyPathInterface.php
 a2c885291d1cda8b6d5e95fff4db29ddac285f03ae845642d97020a343eccbd1  ./dist/vendor/symfony/property-access/PropertyPathIterator.php
 665ebf89a2ef8176bc08da78d248e61c2b82c889f44cd3b2b0d081750cec9929  ./dist/vendor/symfony/property-access/PropertyPathIteratorInterface.php
@@ -6948,7 +6960,7 @@ a549a086ac67693af645ddcf0cdf882a8ede6d95cf4c10d9ba3549a5e22bbc15  ./dist/src/Uti
 e40b048949e070dd914ea74a3d6d479881c4d9dd200e7b3cd9b7cec3d28f2819  ./dist/src/Utils/Color/ColorInterface.php
 9990f4346d823ecd3f33c479fc24953e5181ef698b0274755fef233723e80269  ./dist/src/Utils/Color/Util.php
 c29b8e9bd5d098c4a0290e837f72866c4ea9c42a7319ccaeed8c8d2f2b1bc9ce  ./dist/src/CLI/Config/SyncConfig.php
-9e9e33ab3dbc5695aa93fcd5563aaf9dafe02dafba46486f65de022629e2af6c  ./dist/src/CLI/CliApplication.php
+cd96acc12f3c54cd72671f714114c4ce591524b900e5f49846a0011e999c16c1  ./dist/src/CLI/CliApplication.php
 76fcbf5bff0f9bf011a049ff34d90fe869548575d392ea73133c4a016d2189a6  ./dist/src/CLI/Formatter/TableHelper.php
 66198f3a57d41b52faff9453d24fff51b50a9aa9b09e8100fb6e09f198b99bd8  ./dist/src/CLI/Formatter/FileHelper.php
 61d8407048eb9509de3285519502dd3048f857b9ea3ffe3d797333e19e793f8b  ./dist/src/CLI/Command/SchemaExportCommand.php
@@ -7100,7 +7112,7 @@ d437914d158e7e8f70c7c9049b05d6b5d2670fd201ccc38015ce052edbb39c6b  ./dist/src/Act
 f87bbeae1e8bd5fba9647fb4eae49e3943c939a72a32bda15c7678b741a4f321  ./dist/src/Action/Admin/AdminMailerAction.php
 11079a23583a1ab2d0d537cb5d1d92a59649a344b0dba5c63288a4085b80b297  ./dist/src/Action/Admin/Admin404Action.php
 ffcb78750e8491bdd5b435228fe92293d5a78f93f439662e13965922dd5b8760  ./dist/src/Action/Admin/AdminImageworksAction.php
-ece682108afc06e03831ecce6777e9b45bc36eff4ba0f197df5f2e2fd79f3a2b  ./dist/src/Action/Admin/UpdateAction.php
+601291736fbd1e2f9f79e13e5a28db1796c1285d47541142a21c1c6f0d0f4c4e  ./dist/src/Action/Admin/UpdateAction.php
 62b3094c0191a976b5acee01a53d0c313cbdba003a66e6d3ea846304d5a9d754  ./dist/src/Action/Admin/AdminExtensionReviewAction.php
 aec493d91c5d1bcf834bd11fd55c9e7710da92c8255bc6d308d0028fb78259ba  ./dist/src/Action/Admin/ExtensionSettingsAction.php
 5538dd5f31a9c6b0798ca64c1dfa9781c91ad260627632f68dc9ec60dad8e4d8  ./dist/src/Action/Admin/ApiKey/ApiKeyDeleteAction.php
@@ -7323,7 +7335,7 @@ bdf2c5eb1466b5c389b59336fcb63579ca52ac14a7595dad886c125727627496  ./dist/src/Dom
 ed4bbd525cd736a09a05ae865d04e338ab9eedc17c6f53d8e8b707f2f0f59e24  ./dist/src/Domain/License/Data/Edition.php
 edbf148027a7e4cefa16bad5f19c28852cf85e0f81d70e4a6db1ecadbea46766  ./dist/src/Domain/License/Exception/EditionFeatureException.php
 cafd821007757696578bcc987a276af4e54d7f85452ab5981b1bce3e63050dfe  ./dist/src/Domain/License/Exception/LicenseException.php
-5105c806102644e093e4c9e5c9dd3419249dd2c23e005cdacf889cb64a7c7949  ./dist/src/Domain/Update/Service/UpdateApplier.php
+b17d4cb290b664fb93981b9214db539b3c2e3273ab9e4855fbfc64198de1ef99  ./dist/src/Domain/Update/Service/UpdateApplier.php
 c96767d5244c23a319f815c9a04264890b2d1ad8e6acd0f681b99b2ee5c77715  ./dist/src/Domain/Update/Service/UpdateChecker.php
 200abfe444fd5a885249ba616b772f669df21bf5fbe7dffadc50aecc643c36c9  ./dist/src/Domain/Update/Service/MaintenanceMode.php
 151d4f711d893f5705774b034faf514a231cb9e56d39a060a8669bf2da2ca51f  ./dist/src/Domain/Update/Service/UpdateDownloader.php
@@ -7401,7 +7413,7 @@ ec512d3c06392b5848119ecbb0c6604f725bb1e518a6df1ac03f0d90d98bec9b  ./dist/src/Dom
 df19ce3c5287e35657c041a252a60a35a82103526d9a25d074bbabcc599e7aae  ./dist/src/Domain/Property/Data/StringData.php
 5d1d37c27a6102dcdd6c5e24a36ad9cf082c770d3c01380be921876089dc552e  ./dist/src/Domain/Property/Data/FileData.php
 bb47683f3fe96d22e1a6ab04add68e90e5ee781c7bd65304e5dbb98bc39d1076  ./dist/src/Domain/Property/Data/SlugData.php
-35057d8b09bf67933994e692586c66c2a37d2d7c1ee5064d11e5b5de9fccded4  ./dist/src/Domain/Property/Data/DateData.php
+ac2d741bb00d27437e82b6cdbe2148c7d654bc070f2ba79c430ce1d7c92b8b70  ./dist/src/Domain/Property/Data/DateData.php
 db9c7bf148ca34b4811955621fc08d135b69c5c4257ac1b6c0a4220eaf9bb0c1  ./dist/src/Domain/Property/Data/FolderData.php
 576dee5878b545ed2f0ba4f737035335d4b17a28077b6d84836c9ed02f430f3e  ./dist/src/Domain/Property/Data/JsonData.php
 80337d0716209dfe56702e74460763ff0cee0a92b9c6af26e2f81c52c921191e  ./dist/src/Domain/Property/Data/PropertyData.php
@@ -7711,8 +7723,8 @@ d4926bafbf50e753b12e1a5427c740d34351b96e40ddd1c489ef3afc7a3cc294  ./dist/src/Dom
 f6961a1a005f8ba721fffd00958db93831e0642eb0199c5b0835588ac6dbe74d  ./dist/src/Domain/Twig/Adapter/BuilderTwigAdapter.php
 ed1a093356722f54a8b8f815bffd002947b524171da91ea54703feccd51ce5a9  ./dist/src/Domain/Twig/Adapter/MediaTwigAdapter.php
 522b8ae41d54b01019bead6fe125c0de42282030b459a3f7c6e1147a0b4084c8  ./dist/src/Domain/Twig/Adapter/QRCodeTwigAdapter.php
-ecc39e5df4bf6cfc03522f3b8f6fd7d18ea875b039c129e62981fe6a8675d694  ./dist/src/Domain/Twig/Adapter/AdminTwigAdapter.php
-9ddb00172b9fd80f897530f9d1bd2015725f316a1b8e9e7d161fd66cdc9baddb  ./dist/src/Domain/Twig/Adapter/RenderTwigAdapter.php
+d8ead992a79b20bfba8267e3af19aa1e1290e67d544fd4314deafc428098088f  ./dist/src/Domain/Twig/Adapter/AdminTwigAdapter.php
+d4d916555bf0e854337d8858d7b816ecd8e000c6efe46d7f2c237e7d6939d91e  ./dist/src/Domain/Twig/Adapter/RenderTwigAdapter.php
 c50c29d8bef470a8be252ffb83865bbfce7e3b179cf34cb90efbd4981e97dc5c  ./dist/src/Domain/Twig/Adapter/EditionTwigAdapter.php
 bb3a92d08f6104310e7b7a5137b370bf557f2f2721bde29a39c73c93ccc70ffa  ./dist/src/Domain/Twig/Adapter/CollectionTwigAdapter.php
 88a174b1aa86599256e8eae6da02da161be34e550d09d8fb98561a3ba8a69442  ./dist/src/Domain/Twig/Adapter/BarcodeTwigAdapter.php
@@ -7729,7 +7741,7 @@ f980b10db744df696007cdc5c92baa68ee5b495836c35cb9926cf619de964a0c  ./dist/src/Dom
 ff740816b1106b414d918d4c368bec533e362d8f79c1d40617d3e4f894864aa7  ./dist/src/Domain/Twig/Designer/DesignerAwareLoader.php
 a3c95a8c245c6c1681097aa779c8377ce80833037290f1bd935f2a2e908a978a  ./dist/src/Domain/Twig/Service/TwigEngine.php
 f1ba47061a221b60ee65adb39589deec5573943b0d2f4a370e8b3c43c3694913  ./dist/src/Domain/Twig/Service/TwigFunctionCache.php
-ac91ee93a74a693c1c942539df5bb8304dc59a331e86bd68735eb8cd1355cbe6  ./dist/src/Domain/Twig/Service/DepotBrowserRenderer.php
+f32f61a56820d54716f93ff886c42e102505910fb32e959bf54f2e99abd3ca1d  ./dist/src/Domain/Twig/Service/DepotBrowserRenderer.php
 1f79ac93d72de073935bd99c341c481d3894c8736dec613fee0ed574e910d8bf  ./dist/src/Domain/Twig/Service/CoreFrontendAssetRegistrar.php
 ee0af8a6530d2eebb60c012c3520366fd55042bebab012691cae1a02e08e27d4  ./dist/src/Domain/Twig/Service/CoreAdminAssetRegistrar.php
 f57ba403260c0d4b264fc195ce6a21188bb416e427f97ec1bf30372cdd99ee73  ./dist/src/Domain/Twig/Service/HtmxRenderer.php
@@ -7834,7 +7846,7 @@ cc8fe3eacd05488039a9c1fe9b8c611cd2a7eafa410d33897361df32daced1f3  ./config/conta
 68755615e1e08e6742cad502c202e3808a1920d3922075df1a8c0197ff601c1d  ./config/tcms-sample.php
 da4ed45231b8cbeacd09eff7d2870e3ae5c01f7d8b9358f70f858464d04f1cd8  ./config/routes.php
 01df804d4984fe43e598a23a54ea5430ea8979e78b03e9c18d5e2e652e5e86fe  ./config/local.dev.php
-97063e4faa3ae2d8c769e164c534278e9a2de482e7ecd4142e68525eb26783ad  ./config/defaults.php
+90364e3f7b4cbfb466986acd35b3b02b9bc65b022a52d5076e1db6c55dadee01  ./config/defaults.php
 a18869decd9a6b4674d982eaa4427364ed8475f389740e9da0b38da3c18c7804  ./config/middleware.php
 c55336abced86ceee519439d63373abee14d6a15ca67ad973035b1255e885e87  ./config/routes/admin/auth.php
 33d5e966645cf37b1ec9ab428d669f0b6159ba587171dfa1ae6fc0c2cce2dab4  ./config/routes/admin/setup.php
@@ -8064,7 +8076,7 @@ dabaaee1e007adc48e5673ce871d1474548bcf917a7227dcfa039c5502ae2ff5  ./tests/Unit/P
 09ded50bf5313849d8f131c5aea6abe22e7a6457dea556ee8d4a25cdcc91fafd  ./tests/Unit/Property/Data/DeckDataTest.php
 1ceaa07c409da728447d3db2f5b26d03abcbd26853035138c7e370ef98cc652f  ./tests/Unit/Property/Data/SlugDataTest.php
 ebed13580874d79a8a76f1d8b22c6c6e426ee6f3d8ca083507193bd72c9aedd9  ./tests/Unit/Property/Data/StringDataTest.php
-d0f8b60fda8e4c73e5bb63777570d16fef6d1723c0531e5d37cce1598a05c81b  ./tests/Unit/Property/Data/DateDataTest.php
+33f5199af793cc67045079c1b583a6024a4790c53d94ef57c72222c0e442ac2d  ./tests/Unit/Property/Data/DateDataTest.php
 ab79105d77312ba87603a44843fe6ec40c2eba87ad25cbd9e3f5c66028641b62  ./tests/Unit/Property/Data/SvgDataTest.php
 2587a0c5645e7dfccd63a87cb5824164f556ffaffaa500ed89dbfce0cf2b1315  ./tests/Unit/Property/Data/TimeDataTest.php
 1881cf2862371abb8834beeebfa11867f56eacb7497cc4b2b1480fe2ed9a4442  ./tests/Unit/Property/Data/PropertyDataNullEmptyTest.php
@@ -8746,7 +8758,7 @@ dd7601d30505e080c7a1df0e3741eed402a7cb6a0db7a50fc1a4013ede24769f  ./public/asset
 7d2c73de892a1c651f58e4b8bec91c363c077fedab69cd35c74ef88de969f60b  ./public/assets/chunk-JWMLBNOT.js
 930e877a0d7d3b53197cc364bbf93c80184fec4477feaa9d65a14b0056672a2f  ./public/assets/htmx.min.js
 51b86d3f02c1f17cbb0712be57fce8a731434d7b360f8c5867a942d8cdc291f2  ./public/assets/swagger.js
-461555b345fa16352725d30cd456892c07b310d30d905690679c314812b4d1d8  ./public/assets/dashboard.css
+d1131e9ab8a3da2994f30b2d2ea2a303de786d69c48cd36582094ce46e583a99  ./public/assets/dashboard.css
 e8211205bd0bf1a3783e37111f331d9559c3240768a42757072ca406b6e73fbe  ./public/assets/gallery.css
 b583db20144a5cf6d1c664e2ac7356825fe473f840ad81847d01d42bebb79623  ./public/assets/mailto-decoder.js
 888302912a132d938ae75c93de4e6a1b7452d9017131afcc5c79d7f1258990e7  ./public/assets/codemirror-totalcms.css
@@ -8993,7 +9005,7 @@ a549a086ac67693af645ddcf0cdf882a8ede6d95cf4c10d9ba3549a5e22bbc15  ./src/Utils/Co
 e40b048949e070dd914ea74a3d6d479881c4d9dd200e7b3cd9b7cec3d28f2819  ./src/Utils/Color/ColorInterface.php
 9990f4346d823ecd3f33c479fc24953e5181ef698b0274755fef233723e80269  ./src/Utils/Color/Util.php
 c29b8e9bd5d098c4a0290e837f72866c4ea9c42a7319ccaeed8c8d2f2b1bc9ce  ./src/CLI/Config/SyncConfig.php
-9e9e33ab3dbc5695aa93fcd5563aaf9dafe02dafba46486f65de022629e2af6c  ./src/CLI/CliApplication.php
+cd96acc12f3c54cd72671f714114c4ce591524b900e5f49846a0011e999c16c1  ./src/CLI/CliApplication.php
 76fcbf5bff0f9bf011a049ff34d90fe869548575d392ea73133c4a016d2189a6  ./src/CLI/Formatter/TableHelper.php
 66198f3a57d41b52faff9453d24fff51b50a9aa9b09e8100fb6e09f198b99bd8  ./src/CLI/Formatter/FileHelper.php
 61d8407048eb9509de3285519502dd3048f857b9ea3ffe3d797333e19e793f8b  ./src/CLI/Command/SchemaExportCommand.php
@@ -9145,7 +9157,7 @@ d437914d158e7e8f70c7c9049b05d6b5d2670fd201ccc38015ce052edbb39c6b  ./src/Action/A
 f87bbeae1e8bd5fba9647fb4eae49e3943c939a72a32bda15c7678b741a4f321  ./src/Action/Admin/AdminMailerAction.php
 11079a23583a1ab2d0d537cb5d1d92a59649a344b0dba5c63288a4085b80b297  ./src/Action/Admin/Admin404Action.php
 ffcb78750e8491bdd5b435228fe92293d5a78f93f439662e13965922dd5b8760  ./src/Action/Admin/AdminImageworksAction.php
-ece682108afc06e03831ecce6777e9b45bc36eff4ba0f197df5f2e2fd79f3a2b  ./src/Action/Admin/UpdateAction.php
+601291736fbd1e2f9f79e13e5a28db1796c1285d47541142a21c1c6f0d0f4c4e  ./src/Action/Admin/UpdateAction.php
 62b3094c0191a976b5acee01a53d0c313cbdba003a66e6d3ea846304d5a9d754  ./src/Action/Admin/AdminExtensionReviewAction.php
 aec493d91c5d1bcf834bd11fd55c9e7710da92c8255bc6d308d0028fb78259ba  ./src/Action/Admin/ExtensionSettingsAction.php
 5538dd5f31a9c6b0798ca64c1dfa9781c91ad260627632f68dc9ec60dad8e4d8  ./src/Action/Admin/ApiKey/ApiKeyDeleteAction.php
@@ -9368,7 +9380,7 @@ bdf2c5eb1466b5c389b59336fcb63579ca52ac14a7595dad886c125727627496  ./src/Domain/L
 ed4bbd525cd736a09a05ae865d04e338ab9eedc17c6f53d8e8b707f2f0f59e24  ./src/Domain/License/Data/Edition.php
 edbf148027a7e4cefa16bad5f19c28852cf85e0f81d70e4a6db1ecadbea46766  ./src/Domain/License/Exception/EditionFeatureException.php
 cafd821007757696578bcc987a276af4e54d7f85452ab5981b1bce3e63050dfe  ./src/Domain/License/Exception/LicenseException.php
-5105c806102644e093e4c9e5c9dd3419249dd2c23e005cdacf889cb64a7c7949  ./src/Domain/Update/Service/UpdateApplier.php
+b17d4cb290b664fb93981b9214db539b3c2e3273ab9e4855fbfc64198de1ef99  ./src/Domain/Update/Service/UpdateApplier.php
 c96767d5244c23a319f815c9a04264890b2d1ad8e6acd0f681b99b2ee5c77715  ./src/Domain/Update/Service/UpdateChecker.php
 200abfe444fd5a885249ba616b772f669df21bf5fbe7dffadc50aecc643c36c9  ./src/Domain/Update/Service/MaintenanceMode.php
 151d4f711d893f5705774b034faf514a231cb9e56d39a060a8669bf2da2ca51f  ./src/Domain/Update/Service/UpdateDownloader.php
@@ -9446,7 +9458,7 @@ ec512d3c06392b5848119ecbb0c6604f725bb1e518a6df1ac03f0d90d98bec9b  ./src/Domain/P
 df19ce3c5287e35657c041a252a60a35a82103526d9a25d074bbabcc599e7aae  ./src/Domain/Property/Data/StringData.php
 5d1d37c27a6102dcdd6c5e24a36ad9cf082c770d3c01380be921876089dc552e  ./src/Domain/Property/Data/FileData.php
 bb47683f3fe96d22e1a6ab04add68e90e5ee781c7bd65304e5dbb98bc39d1076  ./src/Domain/Property/Data/SlugData.php
-35057d8b09bf67933994e692586c66c2a37d2d7c1ee5064d11e5b5de9fccded4  ./src/Domain/Property/Data/DateData.php
+ac2d741bb00d27437e82b6cdbe2148c7d654bc070f2ba79c430ce1d7c92b8b70  ./src/Domain/Property/Data/DateData.php
 db9c7bf148ca34b4811955621fc08d135b69c5c4257ac1b6c0a4220eaf9bb0c1  ./src/Domain/Property/Data/FolderData.php
 576dee5878b545ed2f0ba4f737035335d4b17a28077b6d84836c9ed02f430f3e  ./src/Domain/Property/Data/JsonData.php
 80337d0716209dfe56702e74460763ff0cee0a92b9c6af26e2f81c52c921191e  ./src/Domain/Property/Data/PropertyData.php
@@ -9756,8 +9768,8 @@ d4926bafbf50e753b12e1a5427c740d34351b96e40ddd1c489ef3afc7a3cc294  ./src/Domain/T
 f6961a1a005f8ba721fffd00958db93831e0642eb0199c5b0835588ac6dbe74d  ./src/Domain/Twig/Adapter/BuilderTwigAdapter.php
 ed1a093356722f54a8b8f815bffd002947b524171da91ea54703feccd51ce5a9  ./src/Domain/Twig/Adapter/MediaTwigAdapter.php
 522b8ae41d54b01019bead6fe125c0de42282030b459a3f7c6e1147a0b4084c8  ./src/Domain/Twig/Adapter/QRCodeTwigAdapter.php
-ecc39e5df4bf6cfc03522f3b8f6fd7d18ea875b039c129e62981fe6a8675d694  ./src/Domain/Twig/Adapter/AdminTwigAdapter.php
-9ddb00172b9fd80f897530f9d1bd2015725f316a1b8e9e7d161fd66cdc9baddb  ./src/Domain/Twig/Adapter/RenderTwigAdapter.php
+d8ead992a79b20bfba8267e3af19aa1e1290e67d544fd4314deafc428098088f  ./src/Domain/Twig/Adapter/AdminTwigAdapter.php
+d4d916555bf0e854337d8858d7b816ecd8e000c6efe46d7f2c237e7d6939d91e  ./src/Domain/Twig/Adapter/RenderTwigAdapter.php
 c50c29d8bef470a8be252ffb83865bbfce7e3b179cf34cb90efbd4981e97dc5c  ./src/Domain/Twig/Adapter/EditionTwigAdapter.php
 bb3a92d08f6104310e7b7a5137b370bf557f2f2721bde29a39c73c93ccc70ffa  ./src/Domain/Twig/Adapter/CollectionTwigAdapter.php
 88a174b1aa86599256e8eae6da02da161be34e550d09d8fb98561a3ba8a69442  ./src/Domain/Twig/Adapter/BarcodeTwigAdapter.php
@@ -9774,7 +9786,7 @@ f980b10db744df696007cdc5c92baa68ee5b495836c35cb9926cf619de964a0c  ./src/Domain/T
 ff740816b1106b414d918d4c368bec533e362d8f79c1d40617d3e4f894864aa7  ./src/Domain/Twig/Designer/DesignerAwareLoader.php
 a3c95a8c245c6c1681097aa779c8377ce80833037290f1bd935f2a2e908a978a  ./src/Domain/Twig/Service/TwigEngine.php
 f1ba47061a221b60ee65adb39589deec5573943b0d2f4a370e8b3c43c3694913  ./src/Domain/Twig/Service/TwigFunctionCache.php
-ac91ee93a74a693c1c942539df5bb8304dc59a331e86bd68735eb8cd1355cbe6  ./src/Domain/Twig/Service/DepotBrowserRenderer.php
+f32f61a56820d54716f93ff886c42e102505910fb32e959bf54f2e99abd3ca1d  ./src/Domain/Twig/Service/DepotBrowserRenderer.php
 1f79ac93d72de073935bd99c341c481d3894c8736dec613fee0ed574e910d8bf  ./src/Domain/Twig/Service/CoreFrontendAssetRegistrar.php
 ee0af8a6530d2eebb60c012c3520366fd55042bebab012691cae1a02e08e27d4  ./src/Domain/Twig/Service/CoreAdminAssetRegistrar.php
 f57ba403260c0d4b264fc195ce6a21188bb416e427f97ec1bf30372cdd99ee73  ./src/Domain/Twig/Service/HtmxRenderer.php

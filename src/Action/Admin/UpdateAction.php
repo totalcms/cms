@@ -26,6 +26,14 @@ readonly class UpdateAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
+		// Downloading the release zip and swapping the app in place takes far
+		// longer than the default 30s web limit — without this the worker is
+		// killed mid-update (an empty 500 the app can't even log). ignore_user_abort
+		// keeps the swap running to completion if the browser disconnects, so a
+		// timeout can't leave a half-updated install.
+		@set_time_limit(0);
+		ignore_user_abort(true);
+
 		try {
 			// Check for available update
 			$updateInfo = $this->updateChecker->checkForUpdate(forceRefresh: true);

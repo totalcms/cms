@@ -220,4 +220,31 @@ final class DateDataTest extends TestCase
 		$european = new DateData('15/01/2024');
 		$this->assertEquals('', $european->date);
 	}
+
+	public function testUtcToTimezoneConvertsFromUtc(): void
+	{
+		// A SQLite CURRENT_TIMESTAMP (UTC) shown in a US Pacific (PDT, -7) site.
+		$this->assertSame(
+			'2026-06-04 05:59:13',
+			DateData::utcToTimezone('2026-06-04 12:59:13', 'America/Los_Angeles'),
+		);
+	}
+
+	public function testUtcToTimezoneEmptyTimezoneStaysUtc(): void
+	{
+		$this->assertSame(
+			'2026-06-04 12:59:13',
+			DateData::utcToTimezone('2026-06-04 12:59:13', ''),
+		);
+	}
+
+	public function testUtcToTimezoneEmptyInputReturnsEmpty(): void
+	{
+		$this->assertSame('', DateData::utcToTimezone('', 'America/Los_Angeles'));
+	}
+
+	public function testUtcToTimezoneUnparseableInputReturnedUnchanged(): void
+	{
+		$this->assertSame('not-a-date', DateData::utcToTimezone('not-a-date', 'America/Los_Angeles'));
+	}
 }

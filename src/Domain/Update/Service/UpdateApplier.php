@@ -64,7 +64,14 @@ class UpdateApplier
 
 		$this->logger->info("Starting update to {$version}");
 
-		$extractDir = sys_get_temp_dir() . '/totalcms-update-extract-' . bin2hex(random_bytes(4));
+		// Extract NEXT TO the app root (same parent as the backup dir), NOT into
+		// sys_get_temp_dir(). The swap installs files with rename(), which fails
+		// with EXDEV across filesystems — and on many servers the system temp dir
+		// is a different mount/tmpfs than the web root. Keeping the staging dir on
+		// the app root's filesystem guarantees every rename (back up, install,
+		// roll back) stays same-device. (Symptom of getting this wrong:
+		// "Failed to install src".)
+		$extractDir = $this->appRoot . '.update-extract-' . bin2hex(random_bytes(4));
 		$backupDir  = $this->appRoot . '.backup-' . $version . '-' . date('Ymd-His');
 
 		try {

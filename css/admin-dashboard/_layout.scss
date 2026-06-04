@@ -796,6 +796,7 @@ pre {
 	font-size             : 0.9375rem;
 	color                 : oklch(var(--totalform-darkgray));
 	align-items           : start;
+	align-self            : start;
 
 	&::before {
 		content          : '';

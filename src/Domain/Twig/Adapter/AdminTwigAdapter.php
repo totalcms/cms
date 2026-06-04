@@ -198,7 +198,7 @@ readonly class AdminTwigAdapter
 				htmlspecialchars($job->type),
 				htmlspecialchars($job->collection),
 				htmlspecialchars((string)$objectId),
-				htmlspecialchars($job->createdAt)
+				htmlspecialchars($this->formatJobDate($job->createdAt))
 			);
 		}
 
@@ -221,6 +221,15 @@ readonly class AdminTwigAdapter
 			</section>',
 			$rows
 		);
+	}
+
+	/**
+	 * Job timestamps are stored UTC (SQLite CURRENT_TIMESTAMP). Display them in
+	 * the site's configured timezone so the queue manager shows local time.
+	 */
+	private function formatJobDate(string $utcDate): string
+	{
+		return \TotalCMS\Domain\Property\Data\DateData::utcToTimezone($utcDate, $this->config->timezone);
 	}
 
 	/**
