@@ -145,6 +145,14 @@ return [
 	'reset.confirm_help'        => 'Moet overeenkomen met het bovenstaande wachtwoord',
 	'reset.submit'              => 'Wachtwoord herstellen',
 
+	// ── Auth Template Headings (default above-form templates) ────────────────
+	'login.welcome_title'    => 'Welkom bij Total CMS',
+	'login.welcome_subtitle' => 'Log in om door te gaan.',
+	'forgot.heading'         => 'Wachtwoord opnieuw instellen',
+	'forgot.subtitle'        => 'Voer uw e-mailadres in en we sturen u een link om uw wachtwoord opnieuw in te stellen.',
+	'reset.heading'          => 'Nieuw wachtwoord instellen',
+	'reset.subtitle'         => 'Voer hieronder uw nieuwe wachtwoord in.',
+
 	// ── Access Denied ───────────────────────────────────────────────────────
 	'denied.title'        => 'Toegang geweigerd',
 	'denied.message'      => 'U heeft geen toestemming om deze pagina te bekijken.',

@@ -145,6 +145,14 @@ return [
 	'reset.confirm_help'        => 'Muss mit dem oben eingegebenen Passwort übereinstimmen',
 	'reset.submit'              => 'Passwort zurücksetzen',
 
+	// ── Auth Template Headings (default above-form templates) ────────────────
+	'login.welcome_title'    => 'Willkommen bei Total CMS',
+	'login.welcome_subtitle' => 'Bitte melden Sie sich an, um fortzufahren.',
+	'forgot.heading'         => 'Passwort zurücksetzen',
+	'forgot.subtitle'        => 'Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.',
+	'reset.heading'          => 'Neues Passwort festlegen',
+	'reset.subtitle'         => 'Geben Sie unten Ihr neues Passwort ein.',
+
 	// ── Access Denied ───────────────────────────────────────────────────────
 	'denied.title'        => 'Zugriff verweigert',
 	'denied.message'      => 'Sie haben keine Berechtigung, auf diese Seite zuzugreifen.',
