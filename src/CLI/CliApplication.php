@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI;
 
+use Sentry\State\Scope;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleErrorEvent;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 use TotalCMS\TotalCMS;
@@ -39,6 +44,12 @@ class CliApplication
 		$totalcms->disableCache();
 
 		$app = new Application('Total CMS', Version::number());
+
+		// Forward CLI/cron errors to Sentry. Without this, exceptions thrown
+		// during a command (e.g. by `jobs:process` on cron) only ever reach
+		// stderr — invisible in Sentry, which is wired solely into the web
+		// request lifecycle.
+		self::enableSentry($app, $totalcms);
 
 		// Info & cache
 		$app->addCommand(new Command\InfoCommand($totalcms));
@@ -136,5 +147,56 @@ class CliApplication
 		}
 
 		$app->run();
+	}
+
+	/**
+	 * Wire Sentry into the CLI when enabled. Symfony Console catches command
+	 * exceptions and renders them to stderr without forwarding them anywhere,
+	 * so a ConsoleEvents::ERROR listener is the seam that gets them to Sentry.
+	 * Observability must never take the CLI down — a failed init is swallowed
+	 * and the command runs on unreported.
+	 */
+	private static function enableSentry(Application $app, TotalCMS $totalcms): void
+	{
+		if ($totalcms->config->sentry !== true) {
+			return;
+		}
+
+		try {
+			// cli: true surfaces DI/container failures that the web context
+			// ignores as bot-during-upload noise — on cron they're real bugs.
+			SentryMiddleware::initSentry(cli: true);
+		} catch (\Throwable) {
+			return;
+		}
+
+		$app->setDispatcher(self::sentryErrorDispatcher());
+	}
+
+	/**
+	 * Event dispatcher that captures command errors to Sentry. Tags the event
+	 * with the CLI context + command name, then flushes — the transport is
+	 * async and this process is about to exit, so an explicit flush is required
+	 * or the event is lost.
+	 */
+	public static function sentryErrorDispatcher(): EventDispatcher
+	{
+		$dispatcher = new EventDispatcher();
+
+		$dispatcher->addListener(ConsoleEvents::ERROR, static function (ConsoleErrorEvent $event): void {
+			\Sentry\configureScope(static function (Scope $scope) use ($event): void {
+				$scope->setTag('context', 'cli');
+
+				$command = $event->getCommand();
+				if ($command !== null && $command->getName() !== null) {
+					$scope->setTag('command', $command->getName());
+				}
+			});
+
+			\Sentry\captureException($event->getError());
+			\Sentry\flush();
+		});
+
+		return $dispatcher;
 	}
 }

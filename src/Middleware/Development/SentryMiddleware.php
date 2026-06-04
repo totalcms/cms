@@ -40,9 +40,6 @@ class SentryMiddleware implements MiddlewareInterface
 			\Opis\JsonSchema\Exceptions\InvalidKeywordException::class, // Invalid schema definition - user error
 			\ParseError::class, // Corrupted PHP files - user installation issue
 			\ArgumentCountError::class, // Constructor mismatch - stale deployment or corrupted installation
-			\DI\DependencyException::class, // Corrupted installation - missing classes or version mismatch
-			\DI\NotFoundException::class,
-			\DI\Definition\Exception\InvalidDefinition::class, // Partial install — container.php and class files out of sync (different uploaded versions)
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
@@ -143,6 +140,22 @@ class SentryMiddleware implements MiddlewareInterface
 		],
 	];
 
+	/**
+	 * DI / container-resolution exceptions. On the WEB these are pure noise —
+	 * almost always a bot hitting a half-uploaded site (container.php and class
+	 * files briefly out of sync), so they're ignored. On the CLI there are no
+	 * bots, and the same exception means a real, actionable failure: a wiring
+	 * regression that hard-downs a command (e.g. `jobs:process`). So these are
+	 * surfaced in CLI context and ignored only in web context.
+	 *
+	 * @var array<class-string>
+	 */
+	private const WEB_ONLY_IGNORE = [
+		\DI\DependencyException::class,
+		\DI\NotFoundException::class,
+		\DI\Definition\Exception\InvalidDefinition::class,
+	];
+
 	/** @var array<string,mixed> */
 	private static array $filterConfig = [];
 
@@ -162,11 +175,35 @@ class SentryMiddleware implements MiddlewareInterface
 		return $handler->handle($request);
 	}
 
-	public static function initSentry(): void
+	/**
+	 * The effective ignore list for the given context. Web ignores the DI /
+	 * install-corruption family; CLI surfaces it (see {@see WEB_ONLY_IGNORE}).
+	 *
+	 * @return array<class-string>
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public static function ignoredExceptions(bool $cli = false): array
+	{
+		$ignore = self::DEFAULT_OPTIONS['ignore_exceptions'];
+
+		if (!$cli) {
+			$ignore = array_merge($ignore, self::WEB_ONLY_IGNORE);
+		}
+
+		return $ignore;
+	}
+
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public static function initSentry(bool $cli = false): void
 	{
 		$options = self::DEFAULT_OPTIONS;
 
-		// Store config for use in before_send callback
+		// Surface DI/container failures on the CLI; keep ignoring them on the web.
+		$options['ignore_exceptions'] = self::ignoredExceptions($cli);
+
+		// Store config for use in before_send callback (uses the same list, so
+		// the belt-and-suspenders filter stays consistent with the native one).
 		self::$filterConfig = $options;
 
 		// Decode the DSN
