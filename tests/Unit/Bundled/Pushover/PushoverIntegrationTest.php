@@ -77,6 +77,7 @@ final class PushoverIntegrationTest extends TestCase
 		$result = $this->service->send(
 			message: 'Basic notification from PushoverIntegrationTest',
 			title: 'Total CMS Test',
+			sound: 'none', // Deliver silently — these run on every Pest pass.
 		);
 
 		$this->assertTrue($result->success, 'Failed: ' . ($result->message ?? 'unknown'));
@@ -89,7 +90,7 @@ final class PushoverIntegrationTest extends TestCase
 			message: 'Notification with all options from integration test',
 			priority: -1,
 			title: 'Total CMS Full Test',
-			sound: 'cashregister',
+			sound: 'none', // Silent — still exercises the sound parameter plumbing.
 			link: 'https://totalcms.co',
 			linkTitle: 'Visit Total CMS',
 			image: ['collection' => 'test', 'id' => 'test-obj', 'property' => 'photo'],
@@ -104,6 +105,7 @@ final class PushoverIntegrationTest extends TestCase
 			message: 'High priority notification test',
 			priority: 1,
 			title: 'Total CMS Priority Test',
+			sound: 'none', // Silent — priority is independent of sound.
 		);
 
 		$this->assertTrue($result->success, 'Failed: ' . ($result->message ?? 'unknown'));
