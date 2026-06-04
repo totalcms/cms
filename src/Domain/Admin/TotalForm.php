@@ -14,6 +14,7 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -597,6 +598,7 @@ class TotalForm implements \Stringable
 
 	protected ?TemplateLister $templateLister                  = null;
 	protected ?PageMiddlewareRegistry $pageMiddlewareRegistry  = null;
+	protected ?DataViewLister $dataViewLister                  = null;
 
 	public function setTemplateLister(TemplateLister $lister): void
 	{
@@ -606,6 +608,32 @@ class TotalForm implements \Stringable
 	public function setPageMiddlewareRegistry(PageMiddlewareRegistry $registry): void
 	{
 		$this->pageMiddlewareRegistry = $registry;
+	}
+
+	public function setDataViewLister(DataViewLister $lister): void
+	{
+		$this->dataViewLister = $lister;
+	}
+
+	/**
+	 * View IDs for propertyOptions: "viewIds".
+	 *
+	 * @return array<string>
+	 */
+	public function viewIdList(): array
+	{
+		if (!$this->dataViewLister instanceof DataViewLister) {
+			return [];
+		}
+
+		$ids = [];
+		foreach ($this->dataViewLister->listViews() as $view) {
+			if (is_array($view) && isset($view['id']) && is_string($view['id'])) {
+				$ids[] = $view['id'];
+			}
+		}
+
+		return $ids;
 	}
 
 	/**

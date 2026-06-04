@@ -29,7 +29,7 @@ final class UserLocaleMiddlewareTest extends TestCase
 	}
 
 	/** @param array<string,mixed> $userData */
-	private function run(array $userData): ResponseInterface
+	private function runMiddleware(array $userData): ResponseInterface
 	{
 		$this->accessManager->method('userData')->willReturn($userData);
 
@@ -46,24 +46,24 @@ final class UserLocaleMiddlewareTest extends TestCase
 	public function testSetsLocaleWhenUserHasPreference(): void
 	{
 		$this->translationService->expects($this->once())->method('setLocale')->with('de_DE');
-		$this->run(['locale' => 'de_DE']);
+		$this->runMiddleware(['locale' => 'de_DE']);
 	}
 
 	public function testPassesThroughWhenNoLocaleField(): void
 	{
 		$this->translationService->expects($this->never())->method('setLocale');
-		$this->run(['name' => 'Joe']);
+		$this->runMiddleware(['name' => 'Joe']);
 	}
 
 	public function testSkipsEmptyLocale(): void
 	{
 		$this->translationService->expects($this->never())->method('setLocale');
-		$this->run(['locale' => '']);
+		$this->runMiddleware(['locale' => '']);
 	}
 
 	public function testSkipsWhenNotLoggedIn(): void
 	{
 		$this->translationService->expects($this->never())->method('setLocale');
-		$this->run([]);
+		$this->runMiddleware([]);
 	}
 }

@@ -225,6 +225,23 @@ class JobRepository
 		return $stmt->fetch(\PDO::FETCH_ASSOC) !== false;
 	}
 
+	/**
+	 * Delete any pending jobs matching type + collection (+ optional payload).
+	 */
+	public function deletePendingJob(string $type, string $collection, string $payload = ''): void
+	{
+		$sql    = "DELETE FROM jobqueue WHERE status = 'pending' AND type = :type AND collection = :collection";
+		$params = ['type' => $type, 'collection' => $collection];
+
+		if ($payload !== '') {
+			$sql .= ' AND payload = :payload';
+			$params['payload']  = $payload;
+		}
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->execute($params);
+	}
+
 	public function hasPendingJobs(): bool
 	{
 		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' AND (scheduledAt IS NULL OR scheduledAt <= CURRENT_TIMESTAMP) LIMIT 1");
