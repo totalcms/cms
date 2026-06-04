@@ -30,7 +30,7 @@
 		},
 		"dependencies": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"    : "Dependencies",
+			"label"    : "Collection Dependencies",
 			"help"     : "Collections this view depends on. The view will rebuild when these change.",
 			"field"    : "list",
 			"settings" : {
