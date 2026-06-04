@@ -98,6 +98,17 @@ Set your dependencies to match the collections used in your definition. For the 
 
 If dependencies are not set, the view will only rebuild when you manually trigger it.
 
+### View Dependencies
+
+A Data View can read another view's output with `cms.view.get('other-view')`. List those view IDs under **View Dependencies** so Total CMS knows the build order.
+
+Listing a view dependency does two things:
+
+- **Order** — this view always rebuilds *after* the views it depends on, so it never reads stale upstream output.
+- **Inheritance** — this view transitively inherits the collection dependencies of the views it lists. If `sales-summary` depends on the `orders` collection and your view lists `sales-summary` under View Dependencies, you do **not** also need to add `orders` to this view's Dependencies — a change to `orders` rebuilds `sales-summary` and then this view automatically.
+
+Cycles (two views that list each other) are detected at rebuild time and broken in a best-effort order with a logged warning; avoid them.
+
 ## Testing a View
 
 Before saving, you can test your definition using the **Test Run** button in the admin interface. This executes the template without saving the result, so you can verify the output is correct.
