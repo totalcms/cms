@@ -166,11 +166,19 @@ class CliApplication
 			// cli: true surfaces DI/container failures that the web context
 			// ignores as bot-during-upload noise — on cron they're real bugs.
 			SentryMiddleware::initSentry(cli: true);
+
+			// The error listener needs symfony/event-dispatcher — an OPTIONAL
+			// Console dependency that a slim (--no-dev) install can lack. A
+			// missing class here would otherwise fatal EVERY command with a
+			// silent 255, so guard on it: no dispatcher means no CLI error
+			// reporting, but the command still runs. (This is the promise the
+			// docblock makes — observability must never take the CLI down.)
+			if (class_exists(EventDispatcher::class)) {
+				$app->setDispatcher(self::sentryErrorDispatcher());
+			}
 		} catch (\Throwable) {
 			return;
 		}
-
-		$app->setDispatcher(self::sentryErrorDispatcher());
 	}
 
 	/**
