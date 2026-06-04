@@ -9,7 +9,7 @@
 			"field"       : "select",
 			"label"       : "Default Locale",
 			"placeholder" : "Select default locale",
-			"help"        : "The single canonical locale for this site. Drives date / number / currency formatting (PHP intl, CakePHP I18n, Faker), the admin UI translation language, and — for Pro sites using localized content fields — the default tab on render plus the fallback when a template requests a locale that has no content. Should be one of the available locales below when content localization is in use. Advanced operators who need to split the formatting locale from the content default can override `$settings['locale']` directly in <code>config/tcms.php</code>.",
+			"help"        : "The single canonical locale for this site. Drives date / number / currency formatting (PHP intl, CakePHP I18n, Faker), the admin UI translation language, and — for Pro sites using localized content fields — the default tab on render plus the fallback when a template requests a locale that has no content. Should be one of the available locales below when content localization is in use.",
 			"settings"    : {
 				"propertyOptions" : "locales"
 			}

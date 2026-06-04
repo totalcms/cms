@@ -10,7 +10,7 @@ related:
 
 Total CMS ships a curated registry of locale codes used by:
 
-- **Default locale** (Settings → Internationalization → Default Locale) — drives PHP `intl`, CakePHP I18n, and Faker for date / number / currency formatting, the admin UI translation language, and (Pro) the default tab on localized content fields. One setting drives both runtime formatting and the content default. Operators who need the two to differ can override `$settings['locale']` at the top level in `config/tcms.php` — that wins for `$config->locale` while `i18n.default` keeps driving content defaults.
+- **Default locale** (Settings → Internationalization → Default Locale) — drives PHP `intl`, CakePHP I18n, and Faker for date / number / currency formatting, the admin UI translation language, and (Pro) the default tab on localized content fields. This single setting is the source of truth for `$config->locale` — there is no separate formatting-locale override.
 - **Available content locales** (Settings → Internationalization → Available Content Locales) — Pro edition. List of codes that show up as tabs in `localizedtext`, `localizedtextarea`, and `localizedstyledtext` fields.
 
 All codes use the **mixed-case POSIX format** (lowercase language, uppercase region, underscore separator: `en_US`, `pt_BR`, `zh_CN`). Bare language codes (`de`, `fr`, `pt`) are also valid and stand for "any region speaking that language" — useful when a site doesn't care about regional variants.

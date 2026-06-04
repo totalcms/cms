@@ -60,11 +60,6 @@ $settings['env'] = 'prod';
 //       'default'   => 'en_US',
 //       'available' => ['en_US', 'de', 'ar'],
 //   ];
-//
-// Advanced override: operators who need the formatting / admin-UI locale to differ
-// from the content default can set `$settings['locale']` at the top level here or
-// in their `config/tcms.php`. That value wins for `$config->locale` while
-// `$config->i18n['default']` continues to drive content-default behavior.
 $settings['i18n'] = [
 	'default'   => 'en_US',
 	'available' => [],

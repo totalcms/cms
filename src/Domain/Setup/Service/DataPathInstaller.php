@@ -121,11 +121,9 @@ readonly class DataPathInstaller
 	 * guaranteed to exist and Config has the new datadir.
 	 *
 	 * Writes:
-	 *   - `$settings['i18n']['default']` — canonical location for the site's
-	 *     default locale after the 3.5 consolidation. `$config->locale`
+	 *   - `$settings['i18n']['default']` — canonical (and only) location for the
+	 *     site's default locale after the 3.5 consolidation. `$config->locale`
 	 *     mirrors that value, so PHP intl / CakePHP I18n / Faker pick it up.
-	 *     Top-level `$settings['locale']` is reserved for an advanced override
-	 *     (formatting locale ≠ content default) and is not what the wizard sets.
 	 *   - `$settings['siteName']` — canonical human-readable identity; surfaced
 	 *     via `Config::displayName()` to feeds, sitemaps, MCP serverInfo, etc.
 	 *     Empty `$siteName` is skipped — operator can fill it in later via

@@ -83,6 +83,36 @@ final class TranslationServiceTest extends TestCase
 		$this->assertSame('Text Colour', $service->trans('imageworks.text_color'));
 	}
 
+	// ── Region fall-down ──────────────────────────────────────────────────────
+
+	public function testBareLanguageCodeFallsDownToRegionFile(): void
+	{
+		// A bare `es` has no admin.es.php; it should load admin.es_ES.php so the
+		// admin UI is Spanish rather than silently falling back to English.
+		$service = $this->createService('es');
+		$this->assertSame('Guardar', $service->trans('btn.save'));
+	}
+
+	public function testUnshippedRegionFallsDownToShippedRegion(): void
+	{
+		// es_AR has no file; falls down to the first es_* file (es_ES).
+		$service = $this->createService('es_AR');
+		$this->assertSame('Guardar', $service->trans('btn.save'));
+	}
+
+	public function testBareGermanFallsDownToGerman(): void
+	{
+		$service = $this->createService('de');
+		$this->assertSame('Speichern', $service->trans('btn.save'));
+	}
+
+	public function testBareLanguageWithNoShippedFileFallsBackToEnglish(): void
+	{
+		// No French file ships at all, bare or regional.
+		$service = $this->createService('fr');
+		$this->assertSame('Save', $service->trans('btn.save'));
+	}
+
 	// ── Fallback ────────────────────────────────────────────────────────────
 
 	public function testFallbackForUnknownLocale(): void
