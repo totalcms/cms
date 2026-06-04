@@ -215,7 +215,7 @@ return [
 	'collection.import_json_desc'    => 'Choose a JSON file. The main stucture of the JSON document should be an array of objects. <a href="docs/import">See Import Docs</a>.',
 	'collection.import_manage_title' => 'Manage Import Queue for {collection}',
 	'collection.import_manage_desc'  => 'This will clear the all the pending import jobs for <em><u>just this collection</u></em>. This will not delete any items that have already been imported.',
-	'collection.clear_import_queue'  => 'Clear Import Queue',
+	'collection.clear_import_queue'  => 'Clear Job Queue',
 
 	// ── Collection Factory ──────────────────────────────────────────────────
 	'collection.factory_title'        => 'Factory Generation Options',
@@ -572,6 +572,9 @@ return [
 	'jobqueue.command_desc'         => 'The following command should be the exact command that you should copy to your cron job.',
 	'jobqueue.php_path_note'        => 'If there is no path to the PHP command, you will need to find the path to the PHP command on your server.',
 	'jobqueue.server_note'          => 'Depending on your server, you may need to adjust the command to match your server\'s PHP path.',
+	'jobqueue.stalled_title'        => 'Job queue not processing',
+	'jobqueue.stalled_desc'         => '{count} jobs have been waiting over {minutes} minutes — the queue does not appear to be processing.',
+	'jobqueue.stalled_link'         => 'Open Job Queue Manager',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
 	'jumpstart.title'               => 'JumpStart Data',

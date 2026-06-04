@@ -572,6 +572,9 @@ return [
 	'jobqueue.command_desc'         => 'Il comando seguente è quello esatto da copiare nel tuo cron job.',
 	'jobqueue.php_path_note'        => 'Se non è presente un percorso al comando PHP, dovrai trovare il percorso al comando PHP sul tuo server.',
 	'jobqueue.server_note'          => 'A seconda del tuo server, potrebbe essere necessario modificare il comando per adattarlo al percorso PHP del tuo server.',
+	'jobqueue.stalled_title'        => 'La coda dei lavori non viene elaborata',
+	'jobqueue.stalled_desc'         => '{count} lavori sono in attesa da oltre {minutes} minuti: la coda non sembra essere in elaborazione.',
+	'jobqueue.stalled_link'         => 'Apri il gestore della coda dei lavori',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
 	'jumpstart.title'               => 'Dati JumpStart',

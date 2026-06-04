@@ -1,5 +1,9 @@
+{% import 'dashboard-widgets.twig' as dashboard %}
 
 <h1>{{ t('jobqueue.title') }}</h1>
+
+{# Stalled-queue warning — no "Open Job Queue Manager" link since we're here #}
+{{ dashboard.jobQueueHealthAlert(cms.admin.dashboardJobQueueHealth(), false) }}
 
 <section style="display:grid;align-content:start;gap:1rem">
 

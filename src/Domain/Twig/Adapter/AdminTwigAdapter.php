@@ -15,7 +15,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -59,7 +61,18 @@ readonly class AdminTwigAdapter
 		private BuilderConfigService $builderConfig,
 		private CollectionFetcher $collectionFetcher,
 		private \TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $paths,
+		private JobQueueHealth $jobQueueHealth,
 	) {
+	}
+
+	/**
+	 * Job-queue health for the dashboard + Job Queue Manager warning. Returns a
+	 * stalled flag (oldest waiting job past the threshold with no processor
+	 * running) plus context for the message.
+	 */
+	public function dashboardJobQueueHealth(): JobQueueHealthData
+	{
+		return $this->jobQueueHealth->status();
 	}
 
 	/**
