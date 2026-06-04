@@ -2,6 +2,22 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.4] - 2026-06-04
+
+### Added
+
+- **DataView view dependencies**: Data Views can now depend on **other Data Views**, not just collections. A new **View Dependencies** field (alongside the existing collection Dependencies) records the views a definition reads via `cms.view.get()`. When a collection changes, the rebuild scheduler resolves the full affected set — the views that depend on that collection, plus *transitively* the views that depend on those views — and rebuilds them in dependency order (producers before consumers), so a downstream view never reads stale upstream output. Ordering is computed with a topological sort (cycle-safe: a mutual dependency is broken in best-effort order and logged rather than looping), and rebuilds are enqueued through an ordered, dedup-safe batch so the order holds even across overlapping change events. Listing a view dependency also makes a view **inherit that view's collection dependencies transitively** — a view that reads `sales-summary` no longer needs to re-declare the `orders` collection `sales-summary` already depends on. Previously views depended only on collections, so two views sharing a collection rebuilt in undefined order and the consumer could read stale data. A guard ensures the builder's own `lastBuilt` write (which fires `object.updated` on the `dataviews` collection) can never re-trigger a view's own rebuild
+- **Per-user admin locale**: Each user can now pick a preferred admin-interface language. A new optional `locale` field on the auth schema — surfaced on the Edit Profile form — drives it; on every authenticated admin request `UserLocaleMiddleware` switches the translation catalog (both the server-rendered `t()` strings and the injected JS catalog) plus PHP `intl` / CakePHP I18n formatting to the user's locale, falling back to the site default when blank. Combined with the locale region fall-down below, picking a bare `es` resolves to `es_ES`
+
+### Enhanced
+
+- **Translatable default auth screens**: The default above-form templates on the login, forgot-password, and reset-password screens shipped hardcoded English, forcing operators to whitelabel them just to translate. They now use the `t()` translation system, with the new strings added across all six shipped admin locales (en_US, en_GB, de_DE, es_ES, it_IT, nl_NL)
+- **Admin UI locale region fall-down**: Choosing a bare language code (e.g. `es`) as the site's default locale left the admin UI in English, because the translation files are region-coded (`admin.es_ES.php`) and the loader looked for an exact `admin.es.php` that doesn't exist. The translation loader now falls down to the first matching region file — `es` → `es_ES`, `de` → `de_DE`, and even an unshipped region like `es_AR` → `es_ES` — mirroring the region fall-down the content-locale Twig helper already performs
+
+### Fixed
+
+- **Admin locale stopped following the default-locale setting**: After 3.5 moved the locale setting out of **General** settings into the new **Internationalization** settings (`i18n.default`), the admin dashboard's language stopped updating when the locale was changed. Root cause: `$config->locale` still honored a top-level `$settings['locale']` key — the *old* General-settings storage location — so on any site that had ever set a locale there, that orphaned value silently shadowed the new `i18n.default`. `$config->locale` now derives solely from `i18n.default` (falling back to `en_US`) and the orphaned key is ignored everywhere, so affected sites self-heal with no migration
+
 ## [3.5.0-rc.3] - 2026-06-04
 
 ### Fixed
