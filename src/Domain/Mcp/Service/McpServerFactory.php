@@ -77,6 +77,16 @@ readonly class McpServerFactory
 			->setSession($this->sessionStore)
 			->setLogger($this->logger);
 
+		// Forward MCP handler/SDK errors to Sentry. The SDK swallows every
+		// Throwable into a JSON-RPC error response without rethrowing, so
+		// without this hook tool bugs reach only mcp-activity.log, never Sentry.
+		// Gated on config.sentry so a Sentry-disabled install keeps its exact
+		// protocol surface — setting any SDK event dispatcher flips the
+		// advertised listChanged capabilities to true.
+		if ($this->config->sentry === true) {
+			$builder->setEventDispatcher(new McpSentryErrorDispatcher());
+		}
+
 		// Resource subscriptions: when enabled, swap in T3's manager so subscribe/
 		// unsubscribe also writes to the reverse URI→sessionIds index that the
 		// McpResourceSubscriptionListener queries on object.* events. When the
