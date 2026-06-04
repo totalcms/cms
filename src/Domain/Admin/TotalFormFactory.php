@@ -493,6 +493,7 @@ readonly class TotalFormFactory
 		$form = new TemplateForm(...$options);
 		$form->setTemplateLister($this->templateLister);
 		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
+		$form->setDataViewLister($this->dataViewLister);
 
 		return $form->autoBuild();
 	}
@@ -778,6 +779,7 @@ readonly class TotalFormFactory
 		$form->setLogger($this->logger);
 		$form->setTemplateLister($this->templateLister);
 		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
+		$form->setDataViewLister($this->dataViewLister);
 
 		return $form;
 	}
@@ -1474,6 +1476,7 @@ readonly class TotalFormFactory
 		// form builders set these too (see loginForm/collection form paths).
 		$form->setTemplateLister($this->templateLister);
 		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
+		$form->setDataViewLister($this->dataViewLister);
 
 		return $form;
 	}

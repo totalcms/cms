@@ -53,4 +53,15 @@ final class DataViewListenerTest extends TestCase
 
 		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('posts', 'test-id'));
 	}
+
+	public function testDataviewsSelfWriteDoesNotScheduleRebuilds(): void
+	{
+		// DataViewBuilder's lastBuilt write fires object.updated on `dataviews`;
+		// it must not re-enter the rebuild scheduler (infinite-loop guard).
+		$this->viewUpdateScheduler
+			->expects($this->never())
+			->method('scheduleUpdatesForCollection');
+
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('dataviews', 'some-view'));
+	}
 }

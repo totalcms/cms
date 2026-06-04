@@ -44,15 +44,25 @@ readonly class JobQueuer
 		return $this->queueJob(JobData::TYPE_EXPORT, $collection, $data);
 	}
 
-	public function queueViewUpdate(string $viewId): void
+	/**
+	 * Enqueue a topologically-ordered batch of view rebuilds. Existing pending
+	 * jobs for these views are cleared first so the batch order is authoritative
+	 * (producers before consumers) regardless of prior pending state.
+	 *
+	 * @param array<int,string> $viewIds
+	 */
+	public function queueViewUpdates(array $viewIds): void
 	{
-		$payload = json_encode(['viewId' => $viewId], JSON_THROW_ON_ERROR);
-		if ($this->jobRepository->hasPendingJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', $payload)) {
-			return;
+		foreach ($viewIds as $viewId) {
+			$payload = json_encode(['viewId' => $viewId], JSON_THROW_ON_ERROR);
+			$this->jobRepository->deletePendingJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', $payload);
 		}
-		$this->queueJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', [
-			'viewId' => $viewId,
-		]);
+
+		foreach ($viewIds as $viewId) {
+			$this->queueJob(JobData::TYPE_VIEW_UPDATE, 'dataviews', [
+				'viewId' => $viewId,
+			]);
+		}
 	}
 
 	public function queueBuildIndex(string $collection): void

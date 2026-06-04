@@ -391,6 +391,10 @@ class FormField
 			return $this->form->collectionIdList();
 		}
 
+		if ($source === 'viewIds') {
+			return $this->form->viewIdList();
+		}
+
 		if ($source === 'layouts') {
 			return $this->form->layoutListForBuilder();
 		}
