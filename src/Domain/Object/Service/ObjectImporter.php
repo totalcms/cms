@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -47,6 +49,8 @@ class ObjectImporter
 		private readonly FileSaver $fileSaver,
 		private readonly DepotSaver $depotSaver,
 		private readonly EventDispatcher $eventDispatcher,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionSaver $collectionSaver,
 	) {
 	}
 
@@ -87,6 +91,24 @@ class ObjectImporter
 				CoreEvent::IMPORT_CREATED,
 				new ObjectEventPayload($collection, $result->id, $result),
 			);
+
+			// Maintain the collection's object counter (the oid-autogen source).
+			// object.created is suppressed during import, so the normal
+			// CollectionMetadataListener increment never runs — do it here.
+			// Batch (an outer importer owns the lifecycle): bump the cached count
+			// in memory only, so the next object's OID is unique without a
+			// per-object disk write; import.completed flushes it once. Standalone
+			// / queued single object (owns its own lifecycle): persist now, since
+			// no batch import.completed will follow.
+			if ($wasSuspended) {
+				$this->collectionFetcher->incrementCachedCount($collection);
+			} else {
+				// incrementCount alone: updateCollection self-heals totalObjects
+				// from the object files. Calling incrementTotalObjects too would
+				// double it (it adds to an already self-healed value, and the
+				// count >= totalObjects clamp then bumps count as well).
+				$this->collectionSaver->incrementCount($collection);
+			}
 
 			return $result;
 		} finally {

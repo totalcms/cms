@@ -84,6 +84,23 @@ class CollectionFetcher
 	}
 
 	/**
+	 * Bump the cached collection's count in memory, with no disk write.
+	 *
+	 * During a batch import the OID counter must advance per object so
+	 * oid-autogen IDs stay unique, but writing the collection meta on every
+	 * object would defeat the import optimisation. So the running count is held
+	 * in the request-level cache here and flushed to disk once at
+	 * import.completed (see CollectionMetadataListener::onImportCompleted).
+	 */
+	public function incrementCachedCount(string $collectionId, int $incrementBy = 1): void
+	{
+		$collection = $this->fetchCollection($collectionId);
+		if ($collection instanceof CollectionData) {
+			$collection->count += $incrementBy;
+		}
+	}
+
+	/**
 	 * Clear the request-level cache.
 	 * Useful after saving/updating a collection.
 	 */
