@@ -9,6 +9,7 @@
 		action="{{ cms.dashboard }}/utils/pretty-url-builder"
 		method="POST"
 		data-disabled>
+		{{ csrf_field() }}
 		<div>
 			<label for="collection">{{ t('label.collection') }}</label>
 			<select name="collection" id="collection">

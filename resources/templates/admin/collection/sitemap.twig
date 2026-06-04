@@ -19,6 +19,7 @@
 		class="totalform"
 		method="POST"
 		data-disabled>
+		{{ csrf_field() }}
 		<div>
 			<label for="date">{{ t('collection.sitemap_date_prop') }}</label>
 			<select name="date">
