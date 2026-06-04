@@ -91,13 +91,45 @@ class TranslationService
 				$this->translator->addResource('php', $enFile, 'en_US', $domain);
 			}
 
-			// Load the configured locale if different from English
+			// Load the configured locale if different from English. A bare
+			// language code (es) or an unshipped region (es_AR) falls down to
+			// the first matching region file (es_ES) — mirrors the region
+			// fall-down the content-locale Twig helper does. Messages are
+			// registered under the requested code so the active locale resolves.
 			if ($locale !== 'en_US') {
-				$localeFile = $this->translationsPath . "/{$domain}.{$locale}.php";
-				if (file_exists($localeFile)) {
+				$localeFile = $this->resolveTranslationFile($domain, $locale);
+				if ($localeFile !== null) {
 					$this->translator->addResource('php', $localeFile, $locale, $domain);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Resolve the translation file for a domain + locale, applying region
+	 * fall-down. Tries the exact `{domain}.{locale}.php` first, then the first
+	 * `{domain}.{language}_*.php` variant (e.g. es → es_ES). Returns null when
+	 * no file is shipped for the language.
+	 */
+	private function resolveTranslationFile(string $domain, string $locale): ?string
+	{
+		$exact = $this->translationsPath . "/{$domain}.{$locale}.php";
+		if (file_exists($exact)) {
+			return $exact;
+		}
+
+		$language = strtok($locale, '_');
+		if ($language === false) {
+			return null;
+		}
+
+		$matches = glob($this->translationsPath . "/{$domain}.{$language}_*.php");
+		if ($matches === false || $matches === []) {
+			return null;
+		}
+
+		sort($matches);
+
+		return $matches[0];
 	}
 }

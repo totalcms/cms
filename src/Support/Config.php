@@ -96,13 +96,12 @@ class Config
 		$this->api                = $settings['api'];
 		$this->licenseUrl         = (string)($settings['licenseUrl'] ?? self::LICENSE_API_URL);
 		$this->i18n               = $this->normalizeI18nSettings($settings);
-		// System locale: an explicit top-level `$settings['locale']` in tcms.php
-		// is the advanced-override path for sites that need formatting to differ
-		// from content default. Otherwise `$config->locale` mirrors the i18n
-		// default, falling back to `en_US`.
-		$this->locale             = isset($settings['locale']) && is_string($settings['locale']) && $settings['locale'] !== ''
-			? $settings['locale']
-			: ($this->i18n['default'] !== '' ? $this->i18n['default'] : 'en_US');
+		// System locale always mirrors the i18n default (Settings →
+		// Internationalization → Default Locale), falling back to `en_US`.
+		// A top-level `$settings['locale']` is deliberately ignored — it was the
+		// storage key for the old General-settings locale field, and honouring
+		// it caused orphaned values to silently shadow the new i18n default.
+		$this->locale             = $this->i18n['default'] !== '' ? $this->i18n['default'] : 'en_US';
 		$this->session            = $settings['session'];
 		$this->auth               = $settings['auth'];
 		$this->debug              = $settings['debug'];
@@ -247,10 +246,13 @@ class Config
 	 *
 	 * 2. **Sliver shape (pre-bucket-rename):** `$settings['locales']` (flat
 	 *    array OR pre-expanded dict-of-dicts) + `$settings['defaultLocale']`
-	 *    at top level. System locale stays at top-level `$settings['locale']`.
+	 *    at top level.
 	 *
-	 * 3. **Pre-3.5:** only `$settings['locale']` (system locale string)
-	 *    exists; content-localization config is absent.
+	 * 3. **Pre-3.5:** no localization config at all; `$config->locale` falls
+	 *    back to `en_US`.
+	 *
+	 * A top-level `$settings['locale']` (the old General-settings storage key) is
+	 * ignored everywhere — `$config->locale` derives solely from the i18n default.
 	 *
 	 * @param array<string,mixed> $settings
 	 *

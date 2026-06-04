@@ -96,19 +96,19 @@ describe('Config i18n normalization', function (): void {
 		expect($config->i18n['available'])->toBe([]);
 	});
 
-	test('top-level $settings[locale] wins over i18n.default for $config->locale', function () use ($baseline): void {
-		// Advanced split: operators who need formatting to differ from the
-		// content default set `$settings['locale']` at the top level in tcms.php.
-		// That override wins for `$config->locale` while `i18n.default` keeps
-		// driving content defaults.
+	test('stale top-level $settings[locale] is ignored; i18n.default drives $config->locale', function () use ($baseline): void {
+		// Regression: `locale` used to be a General-settings field stored at the
+		// top level. After the i18n consolidation that orphaned key must NOT
+		// shadow the i18n default — otherwise changing the locale in Settings →
+		// Internationalization has no effect on a previously-configured site.
 		$settings = array_merge($baseline, [
-			'locale' => 'en_US',                                  // formatting locale
-			'i18n'   => ['default' => 'de', 'available' => []],   // content default
+			'locale' => 'en_US',                                  // orphaned legacy key
+			'i18n'   => ['default' => 'de', 'available' => []],   // the real setting
 		]);
 
 		$config = new Config($settings);
 
-		expect($config->locale)->toBe('en_US');
+		expect($config->locale)->toBe('de');
 		expect($config->i18n['default'])->toBe('de');
 	});
 
