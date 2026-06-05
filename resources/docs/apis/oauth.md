@@ -25,7 +25,7 @@ Both authenticate requests to T3's REST API and MCP endpoint. Choose based on th
 |---|---|
 | Your own server-side scripts, cron jobs, CI pipelines | **API key** — simpler, no consent flow |
 | Third-party app that needs access to your site | **OAuth** — scoped, revocable, audited |
-| AI client (Claude Desktop, Cursor) connecting to your site | **OAuth** — self-registers automatically |
+| AI client (Claude Desktop, Cursor) connecting to your site | **OAuth** — self-registers automatically once you enable dynamic registration |
 | ActivePieces, Zapier, n8n workflows | **OAuth** — pre-register a static client in the admin |
 
 The two methods coexist. The same REST and MCP endpoints accept either an `X-API-Key` header or a Bearer token — you don't have to pick one globally.
@@ -131,11 +131,11 @@ In Claude Desktop, add a remote MCP server and paste your site URL:
 }
 ```
 
-Claude Desktop fetches `/.well-known/oauth-authorization-server`, self-registers as a client via RFC 7591, and opens the consent screen in your browser. You log in as a T3 admin, review the requested scopes, and approve. Claude Desktop saves the tokens and reconnects automatically on expiry.
+Dynamic registration is **off by default** (see [Dynamic registration toggle](#dynamic-registration-toggle)), so enable it first if you want this zero-touch flow. With it on, Claude Desktop fetches `/.well-known/oauth-authorization-server`, self-registers as a client via RFC 7591, and opens the consent screen in your browser. You log in as a T3 admin, review the requested scopes, and approve. Claude Desktop saves the tokens and reconnects automatically on expiry.
 
 Cursor and other conformant MCP clients follow the same pattern. No manual client setup, no secret to paste.
 
-If you've disabled dynamic registration, you must create a static client in the admin first and configure the MCP client with those credentials manually — the self-registration step gets a 403.
+If dynamic registration is left off, you must create a static client in the admin first and configure the MCP client with those credentials manually — the self-registration step gets a 403.
 
 ---
 
@@ -199,14 +199,14 @@ Connected apps can revoke their own tokens at `POST /oauth/revoke`. This is the 
 
 ## Dynamic registration toggle
 
-**Admin → Settings → OAuth Server → Allow Dynamic Registration** (default: on) controls whether `POST /oauth/register` is accessible.
+**Admin → Settings → OAuth Server → Allow Dynamic Registration** (default: off) controls whether `POST /oauth/register` is accessible.
 
 | State | Effect |
 |---|---|
-| **On** (default) | AI clients (Claude, Cursor) auto-register and connect without manual setup |
-| **Off** | `/oauth/register` returns 403. Every integration requires a manually-created static client |
+| **Off** (default) | `/oauth/register` returns 403. Every integration requires a manually-created static client |
+| **On** | AI clients (Claude, Cursor) auto-register and connect without manual setup |
 
-Turn it off in locked-down environments where you want complete control over which apps can ever connect. Be aware this breaks the zero-touch AI client flow — users get an error instead of a consent screen when they try to add your site in Claude Desktop.
+Dynamic registration is **off by default** because `/oauth/register` is an unauthenticated endpoint that writes persistent server state. Note that self-registration alone never grants data access — a registered client still can't get a token until a logged-in admin approves its consent screen — but leaving the endpoint open lets anyone create client records and invites consent-phishing attempts. Turn it **on** when you want the zero-touch AI client flow (type your URL into Claude Desktop and it self-registers); leave it off and create static clients in the admin for each integration otherwise.
 
 Dynamic registration is rate-limited by default (10 registrations/hour per IP) to prevent client-record flooding even when enabled. Adjust in **Settings → OAuth Server → Dynamic Registration Rate Limit**.
 
@@ -313,7 +313,7 @@ Settings live in **Admin → Settings → OAuth Server**.
 
 | Key | Default | Effect |
 |---|---|---|
-| `oauth.dynamicRegistration` | `true` | Enable RFC 7591 self-registration at `/oauth/register` |
+| `oauth.dynamicRegistration` | `false` | Enable RFC 7591 self-registration at `/oauth/register` (off by default — unauthenticated endpoint) |
 | `oauth.accessTokenTtl` | `PT1H` | PHP DateInterval — access token lifetime |
 | `oauth.refreshTokenTtl` | `P30D` | PHP DateInterval — refresh token lifetime |
 | `oauth.authCodeTtl` | `PT10M` | PHP DateInterval — authorization code lifetime (should stay short) |

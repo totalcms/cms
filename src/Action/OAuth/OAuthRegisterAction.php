@@ -23,7 +23,7 @@ readonly class OAuthRegisterAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		if (($this->config->oauth['dynamicRegistration'] ?? true) === false) {
+		if (($this->config->oauth['dynamicRegistration'] ?? false) !== true) {
 			return $this->renderer->json($response, [
 				'error'             => 'access_denied',
 				'error_description' => 'Dynamic client registration is disabled on this server.',

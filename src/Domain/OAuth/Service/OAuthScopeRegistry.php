@@ -95,7 +95,7 @@ final class OAuthScopeRegistry
 			new OAuthScopeData(
 				identifier: 'cms:admin',
 				description: 'Administer your site (implies read + write)',
-				impliedPaths: ['#^[A-Z]+\s+/api/(schemas|cache|extensions)#'],
+				impliedPaths: ['#^[A-Z]+\s+/api/(schemas|cache|ext)#'],
 				mcpOperations: ['tool:schema_create', 'tool:schema_update', 'tool:schema_delete', 'tool:clear_cache', 'tool:extension_list'],
 				implies: ['cms:read', 'cms:write'],
 			),

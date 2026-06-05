@@ -6,10 +6,12 @@ namespace TotalCMS\Middleware\Security;
 
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\Stream;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\App;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 
@@ -31,7 +33,11 @@ use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
  */
 readonly class OAuthRestScopeMiddleware implements MiddlewareInterface
 {
+	/**
+	 * @param App<ContainerInterface> $app
+	 */
 	public function __construct(
+		private App $app,
 		private OAuthScopeEvaluator $scopeEvaluator,
 		private OAuthActivityLogger $activityLogger,
 	) {
@@ -53,7 +59,11 @@ readonly class OAuthRestScopeMiddleware implements MiddlewareInterface
 			$scopes,
 		));
 
-		$operation = $request->getMethod() . ' ' . $request->getUri()->getPath();
+		// Strip the mount prefix so the scope regexes (which expect /api/...)
+		// match on subfolder installs where the URI carries a basePath like
+		// /tcms. Same approach as SetupCheckMiddleware.
+		$path      = $this->stripBasePath($request->getUri()->getPath());
+		$operation = $request->getMethod() . ' ' . $path;
 
 		if (!$this->scopeEvaluator->isRestPathAllowed($scopeList, $operation)) {
 			$clientId = (string)$request->getAttribute('oauth_client_id', '');
@@ -73,5 +83,23 @@ readonly class OAuthRestScopeMiddleware implements MiddlewareInterface
 		}
 
 		return $handler->handle($request);
+	}
+
+	/**
+	 * Remove the app's basePath prefix from a request path so the scope
+	 * regexes match on subfolder installs. Returns the path unchanged when
+	 * there's no basePath or the path doesn't start with it.
+	 */
+	private function stripBasePath(string $path): string
+	{
+		$basePath = $this->app->getBasePath();
+
+		if ($basePath === '' || !str_starts_with($path, $basePath)) {
+			return $path;
+		}
+
+		$stripped = substr($path, strlen($basePath));
+
+		return $stripped === '' ? '/' : $stripped;
 	}
 }

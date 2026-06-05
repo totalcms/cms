@@ -26,7 +26,9 @@ beforeEach(function (): void {
 	// accumulates across calls within the same test run.
 	/** @var Config $config */
 	$config        = $this->app->getContainer()->get(Config::class);
-	$config->oauth = array_merge($config->oauth, ['dynamicRegistrationLimit' => 1000]);
+	// dynamicRegistration ships off by default (secure-by-default); turn it on
+	// for the happy-path tests here. The "disabled" test below overrides it.
+	$config->oauth = array_merge($config->oauth, ['dynamicRegistrationLimit' => 1000, 'dynamicRegistration' => true]);
 });
 
 // ---------------------------------------------------------------------------

@@ -28,7 +28,7 @@ final readonly class OAuthDiscoveryProvider
 	{
 		$issuer     = $this->resolveIssuer();
 		$grantTypes = (array)($this->config->oauth['allowedGrantTypes'] ?? ['authorization_code', 'refresh_token']);
-		$dynamic    = (bool)($this->config->oauth['dynamicRegistration'] ?? true);
+		$dynamic    = (bool)($this->config->oauth['dynamicRegistration'] ?? false);
 
 		$meta = [
 			'issuer'                                => $issuer,

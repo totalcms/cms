@@ -107,7 +107,7 @@ final class OAuthDiscoveryProviderTest extends TestCase
 		// config.api carries the subpath. Discovery must advertise the subpath
 		// or clients hit 404s.
 		$meta = $this->makeProvider(
-			$this->makeConfig('https://example.com', [], '/tcms'),
+			$this->makeConfig('https://example.com', ['dynamicRegistration' => true], '/tcms'),
 		)->metadata();
 
 		$this->assertSame('https://example.com/tcms', $meta['issuer']);
@@ -181,12 +181,13 @@ final class OAuthDiscoveryProviderTest extends TestCase
 		$this->assertArrayNotHasKey('registration_endpoint', $meta);
 	}
 
-	public function testRegistrationEndpointPresentByDefaultWhenOauthConfigEmpty(): void
+	public function testRegistrationEndpointAbsentByDefaultWhenOauthConfigEmpty(): void
 	{
-		// dynamicRegistration defaults to true when not set
+		// dynamicRegistration is off by default (secure-by-default) when not set,
+		// so discovery must not advertise the registration endpoint.
 		$meta = $this->makeProvider($this->makeConfig('https://mysite.com'))->metadata();
 
-		$this->assertArrayHasKey('registration_endpoint', $meta);
+		$this->assertArrayNotHasKey('registration_endpoint', $meta);
 	}
 
 	// -------------------------------------------------------------------------
