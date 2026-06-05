@@ -288,6 +288,63 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Flattened docs menu for the quick-nav index. Reads the same
+	 * resources/docs/menu.php that AdminDocsAction and the search-index
+	 * builder consume, so quick-nav can never drift from the real doc tree.
+	 * Walks both flat (`sub`) and nested (`groups`) top-level groups; the
+	 * top-level group title becomes each entry's group label.
+	 *
+	 * @return list<array{group:string,title:string,path:string}>
+	 */
+	public function docsMenu(): array
+	{
+		$menuFile = PathResolver::packageRoot() . '/resources/docs/menu.php';
+		if (!file_exists($menuFile)) {
+			return [];
+		}
+		$menu = require $menuFile;
+		if (!is_array($menu)) {
+			return [];
+		}
+
+		$items = [];
+		foreach ($menu as $group) {
+			if (!is_array($group)) {
+				continue;
+			}
+			$groupTitle = is_string($group['title'] ?? null) ? $group['title'] : '';
+
+			$collect = function (mixed $sub) use (&$items, $groupTitle): void {
+				if (!is_array($sub)) {
+					return;
+				}
+				foreach ($sub as $page) {
+					if (is_array($page) && isset($page['title'], $page['path'])
+						&& is_string($page['title']) && is_string($page['path'])) {
+						$items[] = [
+							'group' => $groupTitle,
+							'title' => $page['title'],
+							'path'  => $page['path'],
+						];
+					}
+				}
+			};
+
+			$collect($group['sub'] ?? null);
+
+			if (is_array($group['groups'] ?? null)) {
+				foreach ($group['groups'] as $subgroup) {
+					if (is_array($subgroup)) {
+						$collect($subgroup['sub'] ?? null);
+					}
+				}
+			}
+		}
+
+		return $items;
+	}
+
+	/**
 	 * Group templates by folder for display in admin sidebar.
 	 *
 	 * @return array<string,array<array<string,string>>>
