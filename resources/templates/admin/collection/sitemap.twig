@@ -76,7 +76,7 @@
 		<button class="cms-button" type="submit">{{ t('collection.sitemap_generate') }}</button>
 	</form>
 
-	{% set query = http_build_query(postData) %}
+	{% set query = http_build_query(postData | filter((v, k) => k != "csrf_token")) %}
 	{% if str_starts_with(cms.base, "http") %}
 		{% set base = cms.base %}
 	{% else %}

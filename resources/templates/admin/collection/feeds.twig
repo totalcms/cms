@@ -106,7 +106,7 @@
 		<button class="cms-button" type="submit">{{ t('collection.feeds_generate') }}</button>
 	</form>
 
-	{% set query = http_build_query(postData | filter((v, k) => k != "type")) %}
+	{% set query = http_build_query(postData | filter((v, k) => k != "type" and k != "csrf_token")) %}
 	{% if str_starts_with(cms.base, "http") %}
 		{% set base = cms.base %}
 	{% else %}
