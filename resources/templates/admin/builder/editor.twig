@@ -33,8 +33,8 @@
 
 {{ cms.form.template({
 	path        : url.file,
-	save        : (cms.auth.canAccessTemplates() and not templatesLocked) ? "Save" : false,
-	delete      : (cms.auth.canAccessTemplates() and not templatesLocked) ? "Delete" : false,
+	save        : (cms.auth.canAccessBuilder() and not templatesLocked) ? "Save" : false,
+	delete      : (cms.auth.canAccessBuilder() and not templatesLocked) ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

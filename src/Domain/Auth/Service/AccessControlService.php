@@ -225,32 +225,6 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access templates with the given CRUD operation.
-	 */
-	public function canAccessTemplates(string $userId): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessTemplate($group)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
 	 * Check if user can access a specific util with the given CRUD operation.
 	 */
 	public function canAccessUtils(string $userId, string $util): bool
@@ -526,16 +500,6 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if a single group can access templates.
-	 * Templates use simple boolean access (no operation-specific permissions).
-	 */
-	private function groupCanAccessTemplate(AccessGroupData $group): bool
-	{
-		// If templates is enabled, grant access
-		return $group->permissions['templates'] ?? false;
-	}
-
-	/**
 	 * Check if a single group can access a util.
 	 * Utils use simple page-based access (no operation-specific permissions).
 	 */
@@ -638,5 +602,45 @@ readonly class AccessControlService
 	private function groupCanAccessDataViews(AccessGroupData $group): bool
 	{
 		return $group->permissions['dataviews'] ?? false;
+	}
+
+	/**
+	 * Check if user can access the Site Builder.
+	 */
+	public function canAccessBuilder(string $userId): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanAccessBuilder($group)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if a single group can access the Site Builder.
+	 *
+	 * Groups saved before the dedicated `builder` permission existed fall
+	 * back to their `templates` permission — that is what effectively gated
+	 * Builder access until now (the builder routes ran behind
+	 * TemplateAccessMiddleware), so upgrades preserve who could already use
+	 * it. Once the group is re-saved, the explicit value wins.
+	 */
+	private function groupCanAccessBuilder(AccessGroupData $group): bool
+	{
+		return $group->permissions['builder'] ?? ($group->permissions['templates'] ?? false);
 	}
 }

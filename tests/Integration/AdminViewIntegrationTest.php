@@ -242,14 +242,14 @@ describe('Utility and Management Views', function (): void {
 });
 
 describe('Template and Design Views', function (): void {
-	it('loads template editor without errors', function (): void {
-		$response = get('/admin/templates');
-		assertNoAdminErrors($response, '/admin/templates');
+	it('loads the builder without errors', function (): void {
+		$response = get('/admin/builder');
+		assertNoAdminErrors($response, '/admin/builder');
 	});
 
-	it('loads template creation form without errors', function (): void {
-		$response = get('/admin/templates/new');
-		assertNoAdminErrors($response, '/admin/templates/new');
+	it('loads the builder template editor without errors', function (): void {
+		$response = get('/admin/builder/templates');
+		assertNoAdminErrors($response, '/admin/builder/templates');
 	});
 });
 

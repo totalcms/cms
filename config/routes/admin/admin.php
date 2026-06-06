@@ -30,6 +30,7 @@ use TotalCMS\Action\Admin\UpdateAction;
 use TotalCMS\Action\Automation\AutomationReenableAction;
 use TotalCMS\Action\Automation\AutomationRunNowAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
+use TotalCMS\Middleware\Access\BuilderAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
@@ -37,7 +38,6 @@ use TotalCMS\Middleware\Access\DocsAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
-use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
@@ -61,9 +61,9 @@ return function (App $app): void {
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate')->add(SchemaEditionMiddleware::class)->add(SchemaAccessMiddleware::class);
 
 		// Builder (replaces Templates) — available to all editions
-		$group->post('/builder/preview', BuilderPreviewAction::class)->setName('admin-builder-preview')->add(TemplateAccessMiddleware::class);
-		$group->post('/builder/reorder', BuilderReorderAction::class)->setName('admin-builder-reorder')->add(TemplateAccessMiddleware::class);
-		$group->get('/builder[/{section}[/{path:.*}]]', AdminBuilderAction::class)->setName('admin-builder')->add(TemplateAccessMiddleware::class);
+		$group->post('/builder/preview', BuilderPreviewAction::class)->setName('admin-builder-preview')->add(BuilderAccessMiddleware::class);
+		$group->post('/builder/reorder', BuilderReorderAction::class)->setName('admin-builder-reorder')->add(BuilderAccessMiddleware::class);
+		$group->get('/builder[/{section}[/{path:.*}]]', AdminBuilderAction::class)->setName('admin-builder')->add(BuilderAccessMiddleware::class);
 
 		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);
 		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionEditionMiddleware::class)->add(CollectionMetaAccessMiddleware::class);

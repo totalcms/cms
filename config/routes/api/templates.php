@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Template;
-use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
+use TotalCMS\Middleware\Access\BuilderAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
@@ -25,6 +25,6 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->put('/{path:.*}', Template\TemplateUpdateAction::class)->setName('template-update');
 		$group->delete('/{path:.*}', Template\TemplateDeleteAction::class)->setName('template-delete');
 		$group->map(['HEAD'], '/{path:.*}', Template\TemplateExistsAction::class)->setName('template-exists');
-	})->add(TemplateAccessMiddleware::class)
+	})->add(BuilderAccessMiddleware::class)
 		->add(AuthMiddleware::class);
 };

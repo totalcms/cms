@@ -169,20 +169,22 @@
 				label    : t('access_groups.dashboard_features'),
 				help     : t('access_groups.select_features'),
 				value    : group ? (
-					(group.permissions.templates ? ["templates"] : [])|merge(
-						group.permissions.mailer ? ["mailer"] : []
-					)|merge(
+					(group.permissions.mailer ? ["mailer"] : [])|merge(
 						group.permissions.playground ? ["playground"] : []
 					)|merge(
 						group.permissions.dataviews ? ["dataviews"] : []
 					)|merge(
 						group.permissions.docs ? ["docs"] : []
+					)|merge(
+						{# legacy fallback: groups saved before the builder permission existed
+						   inherit their templates access (which is what gated Builder) #}
+						group.permissions.builder ?? group.permissions.templates ? ["builder"] : []
 					)
-				) : ["docs", "mailer", "templates", "playground", "dataviews"],
+				) : ["docs", "mailer", "playground", "dataviews", "builder"],
 				options  : [
+					{value: "builder", label: t('access_groups.feature_builder')},
 					{value: "docs", label: t('access_groups.feature_docs')},
 					{value: "mailer", label: t('access_groups.feature_mailer')},
-					{value: "templates", label: t('access_groups.feature_templates')},
 					{value: "playground", label: t('access_groups.feature_playground')},
 					{value: "dataviews", label: t('access_groups.feature_dataviews')},
 				],

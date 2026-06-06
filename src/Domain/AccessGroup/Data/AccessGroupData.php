@@ -55,7 +55,7 @@ readonly class AccessGroupData
 				'all'        => true,
 				'allowed'    => [],
 			],
-			'templates'  => false,
+			'builder'    => false,
 			'mailer'     => false,
 			'playground' => true,
 			'dataviews'  => false,

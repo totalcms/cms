@@ -88,9 +88,11 @@
                         <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
                     </li>
                     {% endif %}
+                    {% if cms.auth.canAccessBuilder() %}
                     <li class="menu-item{% if url.page == 'builder' %} active{% endif %}">
                         <a class="builder" href="builder" title="Builder">Builder</a>
                     </li>
+                    {% endif %}
                     {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
                     <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
                         <a class="mailer" href="mailer" title="{{ t('nav.mailer') }}">{{ t('nav.mailer') }}</a>
