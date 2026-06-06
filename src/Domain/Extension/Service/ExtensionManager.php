@@ -58,7 +58,11 @@ class ExtensionManager
 		'routes:public' => 'Exposes public, unauthenticated endpoints.',
 		'events:listen' => 'Can observe all content changes.',
 		'automations'   => 'Runs server-side code automatically on a schedule or content events.',
-		'container'     => 'Registers services in the application container.',
+		// 'container' is deliberately NOT here: it is always-on infrastructure
+		// (ExtensionContext::ALWAYS_ON_CAPABILITIES) and extensions can only
+		// register their OWN services — core/known service IDs are strict-denied
+		// at apply time (see isProtectedServiceId), so there is nothing risky
+		// to disclose.
 		'mcp:tools'     => 'Registers actions AI agents can call (reachable externally if MCP public access is enabled).',
 		'mcp:resources' => 'Exposes data that AI agents can fetch.',
 	];
@@ -1478,7 +1482,19 @@ class ExtensionManager
 			// behind a toggle that would only leave the extension enabled-but-broken.
 			if ($this->container instanceof \DI\Container) {
 				$compiled = $this->container instanceof \DI\CompiledContainer;
+				// Strict-deny on core service overrides (same policy as Twig
+				// functions and MCP tools). set() entries join the known list,
+				// so cross-extension duplicates are denied here too.
+				$knownEntries = array_flip($this->container->getKnownEntryNames());
 				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
+					if ($this->isProtectedServiceId($serviceId, $knownEntries)) {
+						$this->logger->warning("Extension '{$id}' attempted to override protected service '{$serviceId}'; definition skipped.", [
+							'extension' => $id,
+							'service'   => $serviceId,
+						]);
+
+						continue;
+					}
 					if ($compiled) {
 						// A compiled PHP-DI container rejects lazy definitions (a bare
 						// closure passed to set() is treated as a FactoryDefinition)
@@ -1511,6 +1527,31 @@ class ExtensionManager
 			]);
 			$this->stateRepository->recordError($id, 'register() failed: ' . $e->getMessage());
 		}
+	}
+
+	/**
+	 * Whether a container service ID is protected from extension override.
+	 *
+	 * Two checks:
+	 * - Core namespace: anything under TotalCMS\ except TotalCMS\Bundled\
+	 *   (bundled extensions register their own services there). Catches
+	 *   autowired core classes, which never appear in the known-entry list.
+	 * - Known entries: everything config/container.php defines explicitly
+	 *   (PSR-7 factories, Slim\App, third-party bindings) plus definitions
+	 *   already set by previously-registered extensions.
+	 *
+	 * Extensions register services under their own vendor namespace, so
+	 * legitimate usage never trips this.
+	 *
+	 * @param array<string,int> $knownEntries Flipped getKnownEntryNames()
+	 */
+	private function isProtectedServiceId(string $serviceId, array $knownEntries): bool
+	{
+		if (str_starts_with($serviceId, 'TotalCMS\\') && !str_starts_with($serviceId, 'TotalCMS\\Bundled\\')) {
+			return true;
+		}
+
+		return isset($knownEntries[$serviceId]);
 	}
 
 	/**

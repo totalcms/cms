@@ -75,9 +75,11 @@ You'll see the review when an extension uses any of these capabilities:
 |---|---|
 | `routes:public` | Exposes public, unauthenticated endpoints |
 | `events:listen` | Can observe all content changes |
-| `container` | Registers services in the application container |
+| `automations` | Runs server-side code automatically on a schedule or content events |
 | `mcp:tools` | Registers actions AI agents can call (reachable externally if MCP public access is on) |
 | `mcp:resources` | Exposes data that AI agents can fetch |
+
+Container definitions (`container`) are deliberately **not** flagged: extensions can only register services under their own namespace — any attempt to override a core Total CMS service is denied at load time and logged. Registering your own services is infrastructure, not a risk surface.
 
 …or when a quick **static scan** of the extension's source finds high-risk calls (`shell_exec`, `eval`, raw network requests, `base64_decode`, and similar). The scan reads the code as text — it never runs the extension to check it.
 

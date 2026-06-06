@@ -329,7 +329,9 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-**Capability:** `container`
+Register services under your own vendor namespace. Core service IDs cannot be overridden — a definition whose ID belongs to Total CMS (the `TotalCMS\` namespace or any service the core container already defines) is skipped with a warning in `extensions.log`. The rest of your extension still loads.
+
+**Capability:** `container` — always-on infrastructure: it is applied whenever the extension is enabled and never appears as a permission toggle, since your other capabilities (routes, page middleware, Twig functions) resolve against these services.
 
 ## Page Middleware
 
