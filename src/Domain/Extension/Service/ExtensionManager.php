@@ -564,8 +564,14 @@ class ExtensionManager
 			$capabilities = [];
 		}
 
+		// Bundled extensions are exempt from the source scan — they version
+		// with core and ship reviewed in the package (same rationale as the
+		// update re-consent gate). Capability FYIs still show below; only the
+		// pattern findings are skipped.
 		$extPath  = $this->discovery->getExtensionPath($extensionId);
-		$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
+		$findings = ($extPath !== null && !$manifest->bundled)
+			? (new DangerousCodeScanner())->scan($extPath)
+			: [];
 
 		// Intersect detected capabilities with the risky set, preserving the
 		// stable order defined by RISKY_CAPABILITIES.

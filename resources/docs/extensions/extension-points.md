@@ -503,6 +503,29 @@ Settings access is not a separate capability — `$context->setting()` and `$con
 
 Define a `settings_schema` in your manifest to enable a settings form in the admin UI. Settings are managed by admins through the extension settings page in the dashboard.
 
+## File Storage
+
+When your extension needs to persist files — generated secrets, caches, state — use the storage API instead of raw file functions:
+
+```php
+public function register(ExtensionContext $context): void
+{
+    $storage = $context->storage();
+
+    $storage->write('state.json', json_encode($state));   // creates directories as needed
+    $data   = $storage->read('state.json');               // null when missing
+    $exists = $storage->exists('state.json');
+    $storage->delete('state.json');
+    $path   = $storage->path('state.json');               // absolute path, e.g. for streaming
+}
+```
+
+Files land in `tcms-data/.system/extension-data/{vendor}/{name}/` — protected behind the web server's deny rules, excluded from version control, and **safe across application updates**. Directories are created `0700` and files `0600`. Paths are relative to your extension's directory; absolute paths and `..` traversal throw.
+
+`write()` throws when the datadir isn't writable — let it propagate from `register()`/`boot()` so the failure is recorded as a visible extension error instead of a silent no-op.
+
+Prefer this over `file_put_contents()`: raw file writes in your source are flagged on the pre-enable review screen (they're unconstrained — the operator deserves a heads-up), while storage API calls are not. Storage access is not a separate capability — like settings, it is always available.
+
 ## Service Resolution (Boot Phase)
 
 During `boot()`, resolve any service from the DI container:

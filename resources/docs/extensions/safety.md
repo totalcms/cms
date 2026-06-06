@@ -83,6 +83,8 @@ Container definitions (`container`) are deliberately **not** flagged: extensions
 
 …or when a quick **static scan** of the extension's source finds high-risk calls (`shell_exec`, `eval`, raw network requests, `base64_decode`, and similar). The scan reads the code as text — it never runs the extension to check it.
 
+Bundled extensions (the ones that ship with Total CMS) are exempt from the source scan — they version with core and ship reviewed in the package. Their capability list still shows. For extension developers: persisting files through the [storage API](extension-points.md#file-storage) instead of raw `file_put_contents()` keeps your scan clean — the flag exists for unconstrained writes, not for state kept in the sanctioned per-extension directory.
+
 The review screen has up to three parts:
 
 1. **From the developer** — a plain-language note (the extension's [`reviewNote`](manifest.md)) explaining what it does and why it needs the access it asks for.

@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
+use TotalCMS\Domain\Extension\ExtensionStorage;
 use TotalCMS\Support\Config;
 
 require_once __DIR__ . '/ProtectMiddleware.php';
@@ -27,14 +28,15 @@ class Extension implements ExtensionInterface
 		// Site-wide mode: one shared passcode + cookie for every protected page.
 		$globalScope = (bool)$context->setting('globalScope', false);
 
-		/** @var Config $config */
-		$config = $context->get(Config::class);
-		$secret = $this->resolveSecret($config->datadir);
+		$storage = $context->storage();
 
 		$context->addContainerDefinition(
 			ProtectMiddleware::class,
-			static fn (ContainerInterface $container): ProtectMiddleware => new ProtectMiddleware(
-				$secret,
+			fn (ContainerInterface $container): ProtectMiddleware => new ProtectMiddleware(
+				// Resolved here — inside the factory — so the secret file is
+				// only read (or created) when a page actually opts into the
+				// `protect` middleware, not on every request at register time.
+				$this->resolveSecret($storage),
 				$defaultPasscode,
 				$defaultPromptTitle,
 				// Logged-in admins/operators preview the page instead of the gate —
@@ -59,29 +61,22 @@ class Extension implements ExtensionInterface
 	/**
 	 * Return the per-install HMAC secret, generating it if it does not exist.
 	 *
-	 * The secret is stored at `<datadir>/.system/protect/secret` as a
-	 * 64-character hex string (32 random bytes). The file is created with
-	 * mode 0600 so it is readable only by the web-server user.
+	 * Stored via the extension storage API (a 64-character hex string — 32
+	 * random bytes) so it lands in the protected, update-safe
+	 * `.system/extension-data/totalcms/protect/` directory. A failed write
+	 * throws rather than continuing with an unpersisted secret — that would
+	 * mint a new secret per request, silently invalidating every unlock
+	 * cookie the moment it was issued.
 	 */
-	private function resolveSecret(string $datadir): string
+	private function resolveSecret(ExtensionStorage $storage): string
 	{
-		$dir  = $datadir . '/.system/protect';
-		$file = $dir . '/secret';
-
-		if (is_file($file)) {
-			$contents = file_get_contents($file);
-			if (is_string($contents) && strlen(trim($contents)) === 64) {
-				return trim($contents);
-			}
-		}
-
-		if (!is_dir($dir)) {
-			mkdir($dir, 0700, true);
+		$existing = $storage->read('secret');
+		if (is_string($existing) && strlen(trim($existing)) === 64) {
+			return trim($existing);
 		}
 
 		$secret = bin2hex(random_bytes(32));
-		file_put_contents($file, $secret);
-		chmod($file, 0600);
+		$storage->write('secret', $secret);
 
 		return $secret;
 	}
