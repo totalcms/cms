@@ -437,7 +437,7 @@ $settings['oauth'] = [
 	'accessTokenTtl'      => 'PT1H',   // 1 hour
 	'refreshTokenTtl'     => 'P30D',   // 30 days
 	'authCodeTtl'         => 'PT10M',  // 10 minutes
-	'dynamicRegistration' => true,     // RFC 7591 — set false to disable self-registration
+	'dynamicRegistration' => false,    // RFC 7591 self-registration — off by default (unauthenticated endpoint); set true to let MCP clients self-register
 ];
 
 // https://www.php.net/manual/en/timezones.php

@@ -150,4 +150,35 @@ final class OAuthScopeEvaluatorTest extends TestCase
 		// prefix match only fires when the colon separator is present.
 		$this->assertFalse($this->evaluator->isAllowed(['mcp:tools'], 'tools/callx'));
 	}
+
+	// ── REST path gating (isRestPathAllowed) ────────────────────────────────
+
+	public function testCmsReadAllowsRestCollectionRead(): void
+	{
+		$this->assertTrue($this->evaluator->isRestPathAllowed(['cms:read'], 'GET /api/collections'));
+		$this->assertTrue($this->evaluator->isRestPathAllowed(['cms:read'], 'GET /api/objects/blog'));
+	}
+
+	public function testCmsReadDoesNotAllowRestWrite(): void
+	{
+		$this->assertFalse($this->evaluator->isRestPathAllowed(['cms:read'], 'POST /api/collections'));
+	}
+
+	public function testCmsAdminAllowsSchemasAndCacheRest(): void
+	{
+		$this->assertTrue($this->evaluator->isRestPathAllowed(['cms:admin'], 'GET /api/schemas'));
+		$this->assertTrue($this->evaluator->isRestPathAllowed(['cms:admin'], 'POST /api/cache/clear'));
+	}
+
+	public function testCmsAdminAllowsExtensionRoutes(): void
+	{
+		// Regression: extension API routes live under /api/ext/, not
+		// /api/extensions. cms:admin must grant them. (ANOM-PKCE-2)
+		$this->assertTrue($this->evaluator->isRestPathAllowed(['cms:admin'], 'GET /api/ext/acme/widget/status'));
+	}
+
+	public function testCmsReadDoesNotAllowExtensionRoutes(): void
+	{
+		$this->assertFalse($this->evaluator->isRestPathAllowed(['cms:read'], 'GET /api/ext/acme/widget/status'));
+	}
 }

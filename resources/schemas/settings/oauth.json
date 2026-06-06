@@ -8,8 +8,8 @@
 			"type"    : "boolean",
 			"field"   : "toggle",
 			"label"   : "Allow Dynamic Registration",
-			"help"    : "Enable RFC 7591 self-registration at <code>POST /oauth/register</code>. MCP clients (Claude Desktop, Cursor) need this to connect without manual setup. Turn off to require admin-created static clients for every integration — locks the door but breaks the AI-client zero-touch flow.",
-			"default" : true
+			"help"    : "Enable RFC 7591 self-registration at <code>POST /oauth/register</code>. Off by default — it's an unauthenticated endpoint that writes server state. MCP clients (Claude Desktop, Cursor) need this on to connect without manual setup. Left off, create admin static clients for each integration. Self-registration alone never grants data access (a registered client still needs admin consent), but an open endpoint invites client-record flooding and consent-phishing.",
+			"default" : false
 		},
 		"accessTokenTtl": {
 			"type"        : "string",

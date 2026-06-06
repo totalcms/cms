@@ -29,6 +29,8 @@ beforeEach(function (): void {
 	$config->oauth = array_merge($config->oauth, [
 		'tokenEndpointLimit'       => 10000,
 		'dynamicRegistrationLimit' => 10000,
+		// dynamicRegistration is off by default now; this suite self-registers.
+		'dynamicRegistration'      => true,
 	]);
 });
 
