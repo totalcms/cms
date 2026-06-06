@@ -2,6 +2,20 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.5] - 2026-06-05
+
+### Fixed
+
+- **OAuth REST API rejected every Bearer request on subpath installs**: On any install with a mount prefix (e.g. Stacks `api => '/tcms'`), `OAuthRestScopeMiddleware` built its scope-check operation string from the *full* request path including the prefix. The scope regexes expect `/api/...` without the prefix, so `/tcms/api/collections` never matched and every OAuth REST operation returned 403 regardless of token validity or scope. The middleware now strips the app base path before the scope check, the same way `SetupCheckMiddleware` already does
+- **`cms:admin` OAuth scope never granted extension routes**: The `cms:admin` scope's implied-path pattern targeted `/api/extensions`, but extension API routes are mounted at `/api/ext/` — so a `cms:admin` token was never authorized for any extension route, even on a root install. Corrected the path segment; added regression tests so the scope→route mapping can't silently drift again
+- **CSRF rejection on hand-rolled admin forms**: The pretty-url-builder, collection feeds, and collection sitemap pages use hand-written `<form method="POST">` tags inside the CSRF-protected admin route group but lacked the token field. Because they submit as plain browser POSTs (not HTMX, not via `cms.form.totalform()`), they received the token through none of the usual channels and were rejected by `CSRFProtectionMiddleware`. Added `{{ csrf_field() }}` to each, matching the convention used by the other hand-rolled admin forms
+- **`csrf_token` leaking into generated sitemap & feed URLs**: A side effect of the CSRF fix above — once the sitemap and feeds builder forms carried a token, the submitted `csrf_token` flowed into `postData` and was appended to the generated `/sitemap/{collection}` and `/feed/rss/{collection}` API URLs shown to the user. It's now filtered out of the query string on both forms
+- **Broken documentation links in admin quick-nav**: The quick-nav search kept a hand-maintained copy of the docs menu that had drifted badly from the reorganized docs tree — 65 of 106 entries pointed at folders that no longer exist (so e.g. *Styled Text* at `property-settings/styled-text` 404'd). Quick-nav now derives its doc entries from the same `resources/docs/menu.php` the docs viewer and search index already consume, so the two can't drift apart again
+
+### Security
+
+- **Dynamic OAuth client registration now off by default**: `oauth.dynamicRegistration` (RFC 7591 self-registration at `POST /oauth/register`) shipped enabled — an unauthenticated endpoint that writes persistent server state. It now defaults to **off**; operators opt in when they want zero-touch MCP client onboarding (Claude Desktop, Cursor). Self-registration alone never granted data access — a registered client still can't obtain a token until a logged-in admin approves its consent screen, and there is no `client_credentials` grant — but leaving the endpoint open invited client-record flooding and consent-phishing, and secure-by-default closes that. The `.well-known` discovery document omits `registration_endpoint` when disabled, so conformant clients detect that registration is unavailable instead of hitting a surprise 403
+
 ## [3.5.0-rc.4] - 2026-06-04
 
 ### Added
