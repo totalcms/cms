@@ -94,7 +94,7 @@ readonly class DataViewDependencyResolver
 
 		// 3. Topological sort (Kahn) within the affected set.
 		$inDegree = [];
-		foreach ($affected as $id => $_) {
+		foreach (array_keys($affected) as $id) {
 			$inDegree[$id] = 0;
 			foreach ($nodes[$id]['viewDeps'] as $dep) {
 				if (isset($affected[$dep])) {
