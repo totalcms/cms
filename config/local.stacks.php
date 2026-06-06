@@ -9,4 +9,15 @@ $settings['env'] = 'stacks';
 
 $settings['session']['name'] = null;
 
-// ! The published stacks settings are stored inside the tcms.php file that Stacks puts in this directory
+$settings['api'] = '/site-assets/stacks/tcms3/tcms';
+if (str_contains(__DIR__, 'rw_common')) {
+	$settings['api'] = '/rw_common/plugins/stacks/tcms';
+}
+
+if (php_sapi_name() === 'cli-server') {
+	// Preview mode for CLI server
+	$settings['api'] = '/site-assets/stacks/tcms3/tcms/public/index.php';
+	if (str_contains(__DIR__, 'rw_common')) {
+		$settings['api'] = '/rw_common/plugins/stacks/tcms/public/index.php';
+	}
+}
