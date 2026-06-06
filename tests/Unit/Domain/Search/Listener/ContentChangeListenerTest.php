@@ -11,6 +11,7 @@ use TotalCMS\Domain\Search\Data\SearchQuery;
 use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 final class ContentChangeListenerTest extends TestCase
@@ -31,7 +32,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
@@ -56,7 +57,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'text', 'indexOnSave' => true]),
 		);
 
@@ -75,7 +76,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => false]),
 		);
 
@@ -104,7 +105,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$jobs,
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
@@ -130,7 +131,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new NullLogger(),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
