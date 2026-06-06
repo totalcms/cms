@@ -14,6 +14,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 class FactoryImporter
@@ -50,7 +51,7 @@ class FactoryImporter
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger        = $loggerFactory->addFileHandler('factory.log')->createLogger('factory');
+		$this->logger        = $loggerFactory->channelLogger(LogChannel::Factory);
 		$this->faker         = $fakerFactory->createFaker();
 		$this->fallbackFaker = $fakerFactory->createFallbackFaker();
 		$this->cacheDir      = $fakerFactory->cacheDir;

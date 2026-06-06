@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -29,7 +30,7 @@ readonly class PageMiddlewareRunner
 		private PageMiddlewareRegistry $registry,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('builder.log')->createLogger('builder');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Builder);
 	}
 
 	/**

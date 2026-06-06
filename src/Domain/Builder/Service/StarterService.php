@@ -9,6 +9,7 @@ use TotalCMS\Domain\Builder\Data\StarterManifest;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
@@ -25,7 +26,7 @@ readonly class StarterService
 		private JumpStartImporter $jumpStartImporter,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('builder.log')->createLogger('builder');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Builder);
 	}
 
 	/**

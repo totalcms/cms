@@ -48,7 +48,41 @@ class LoggerFactory
 	}
 
 	/**
+	 * Build a logger for a core channel.
+	 *
+	 * This is the standard way core services obtain a logger. The channel
+	 * routes to its log file via LogChannel::file() — services declare what
+	 * they are, never which file they write. Warning+ records are mirrored
+	 * to totalcms.log (LogFile::App) so operators always have a single
+	 * place to look for errors; the channel name on each line says which
+	 * subsystem to dig into.
+	 *
+	 * @param LogChannel $channel The logging channel
+	 * @param ?Level $level Level for the channel's own file (null uses the factory default)
+	 *
+	 * @return LoggerInterface The logger
+	 */
+	public function channelLogger(LogChannel $channel, ?Level $level = null): LoggerInterface
+	{
+		$file = $channel->file();
+		$this->addFileHandler($file->value, level: $level);
+
+		// Mirror Warning+ into the central app log — unless this channel's
+		// own file IS the app log (no double-write).
+		if ($file !== LogFile::App) {
+			$this->addFileHandler(LogFile::App->value, level: Level::Warning);
+		}
+
+		return $this->createLogger($channel->value);
+	}
+
+	/**
 	 * Build the logger.
+	 *
+	 * Prefer channelLogger() for core services — it routes the channel to
+	 * the right file and mirrors errors to the central app log. This method
+	 * remains for dynamic channels (custom scripts via TotalCMS::createLogger,
+	 * config-driven handlers) where no LogChannel case exists.
 	 *
 	 * @param string|null $name The logging channel
 	 *

@@ -38,8 +38,7 @@ final class EmailServiceTest extends TestCase
 		$this->logger          = $this->createMock(LoggerInterface::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn($this->logger);
+		$loggerFactory->method('channelLogger')->willReturn($this->logger);
 
 		$this->service = new EmailService(
 			$this->mailerFetcher,

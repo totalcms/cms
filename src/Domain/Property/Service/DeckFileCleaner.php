@@ -9,6 +9,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -32,8 +33,7 @@ readonly class DeckFileCleaner
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('deck-file-cleaner');
+			->channelLogger(LogChannel::DeckFileCleaner);
 	}
 
 	public function cleanup(string $collection, string $objectId, ObjectData $previous, ObjectData $current): void

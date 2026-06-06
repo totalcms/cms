@@ -12,6 +12,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 readonly class IndexBuilder
@@ -31,8 +32,7 @@ readonly class IndexBuilder
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('indexbuilder');
+			->channelLogger(LogChannel::IndexBuilder);
 	}
 
 	public function buildIndex(string $collection): IndexData

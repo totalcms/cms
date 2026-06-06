@@ -14,6 +14,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -84,7 +85,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		if (!$operation) {
 			// Unable to detect operation, deny access and log in dev/debug mode
 			if ($this->config->env === 'dev' || $this->config->debug) {
-				$logger       = $this->loggerFactory->addFileHandler('access.log')->createLogger('access');
+				$logger       = $this->loggerFactory->channelLogger(LogChannel::Access);
 				$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
 				$route        = $routeContext->getRoute();
 				$routeName    = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : 'unknown';

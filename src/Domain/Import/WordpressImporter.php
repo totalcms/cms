@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Import;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
 
@@ -27,7 +28,7 @@ class WordpressImporter
 		private readonly HttpClientInterface $httpClient,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('wordpress-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::WordpressImporter);
 	}
 
 	/**

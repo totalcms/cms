@@ -264,7 +264,7 @@ Adjust the path to match your install location. The `>> ... 2>&1` redirect appen
 
 ## OAuth activity log
 
-Every OAuth lifecycle event is appended to `tcms-data/logs/oauth-activity.log`. The log is the authoritative record for incident response — if a token was issued, refreshed, or revoked, it's here.
+Every OAuth lifecycle event is appended to `tcms-data/logs/mcp.log` under the `oauth-activity` channel. The log is the authoritative record for incident response — if a token was issued, refreshed, or revoked, it's here.
 
 ### Event types
 

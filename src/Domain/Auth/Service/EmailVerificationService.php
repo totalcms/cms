@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
@@ -35,7 +36,7 @@ readonly class EmailVerificationService
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('auth.log')->createLogger('email-verification');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::EmailVerification);
 	}
 
 	/**

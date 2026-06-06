@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -32,7 +33,7 @@ class PageMiddlewareRegistry
 		private readonly ContainerInterface $container,
 		?LoggerFactory $loggerFactory = null,
 	) {
-		$this->logger = $loggerFactory?->addFileHandler('builder.log')->createLogger('builder')
+		$this->logger = $loggerFactory?->channelLogger(LogChannel::Builder)
 			?? new NullLogger();
 	}
 

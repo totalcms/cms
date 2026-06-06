@@ -85,7 +85,7 @@ The handler is stored in its own `.php` file next to the automation object (an *
 |----------|------------|
 | `$ctx->mailer` | Send a [Mailer](../notifications/mailer.md) email — `sendEmail($mailerId, $data)` |
 | `$ctx->config` | Core configuration |
-| `$ctx->logger` | PSR-3 logger writing to `automations.log` |
+| `$ctx->logger` | PSR-3 logger writing to `jobs.log` (channel `automations`) |
 | `$ctx->trigger` | The trigger row that fired this run (e.g. `$ctx->trigger['type']`) |
 | `$ctx->args` | Caller inputs — webhook query + body, or manual *Run now* args |
 | `$ctx->event` | Event payload (`collection`, `id`) — event triggers only |

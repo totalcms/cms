@@ -13,6 +13,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Support\Config;
@@ -32,7 +33,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		private PhpSession $session,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('license.log')->createLogger('license');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::License);
 	}
 
 	/**

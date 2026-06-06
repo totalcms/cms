@@ -53,6 +53,7 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Update\Service\UpdateApplier;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Update\Service\UpdateDownloader;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
@@ -81,7 +82,7 @@ class TotalCMS
 		$this->container = ContainerFactory::build();
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
-		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger  = $loggerFactory->channelLogger(LogChannel::Twig);
 
 		// Initialize services needed for both CLI and web
 		$this->cacheManager = $this->container->get(CacheManager::class);

@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Service\AssetRenderer;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\VersionData;
@@ -60,7 +61,7 @@ class TotalCMSTwigAdapter
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
 	) {
-		$this->logger     = $this->loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger     = $this->loggerFactory->channelLogger(LogChannel::Twig);
 		$this->env        = $this->config->env;
 		$this->base       = $this->config->api;
 		$this->api        = $this->base . '/api';

@@ -17,6 +17,7 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Search\Job\ReindexJob;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -45,8 +46,7 @@ readonly class JobRunner
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-		->addFileHandler('jobs.log')
-		->createLogger('jobrunner');
+		->channelLogger(LogChannel::JobRunner);
 	}
 
 	/**

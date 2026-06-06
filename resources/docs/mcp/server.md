@@ -462,7 +462,7 @@ A 429 response includes `Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Win
 
 ### Activity log (G3)
 
-Tool dispatch is logged to `tcms-data/logs/mcp-activity.log` at DEBUG level. Each call writes:
+Tool dispatch is logged to `tcms-data/logs/mcp.log` under the `mcp-activity` channel at DEBUG level. Each call writes:
 
 ```
 [2026-05-21T10:22:33-07:00] mcp-activity.DEBUG: Executing tool {"name":"query_collection","arguments":{"collection":"blog","limit":3}}

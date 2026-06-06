@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -40,7 +41,7 @@ readonly class CollectionTwigAdapter
 		private ObjectUrlBuilder $objectUrlBuilder,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
 	}
 
 	/**

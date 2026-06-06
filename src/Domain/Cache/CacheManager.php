@@ -16,6 +16,7 @@ use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Domain\License\Data\LicenseData;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
@@ -93,8 +94,7 @@ class CacheManager
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('cachemanager');
+			->channelLogger(LogChannel::Cache);
 		// Initialize cache services and version
 		$this->cacheServices = [
 			'filesystem' => $this->filesystemService,

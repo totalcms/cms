@@ -14,6 +14,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 final class FileAccessManagerTest extends TestCase
@@ -37,11 +38,8 @@ final class FileAccessManagerTest extends TestCase
 
 		// Mock logger factory chain
 		$logger = $this->createMock(LoggerInterface::class);
-		$this->loggerFactory->method('addFileHandler')
-			->with(FileAccessManager::DOWNLOAD_LOG)
-			->willReturnSelf();
-		$this->loggerFactory->method('createLogger')
-			->with('fileaccess')
+		$this->loggerFactory->method('channelLogger')
+			->with(LogChannel::FileAccess)
 			->willReturn($logger);
 
 		$this->fileAccessManager = new FileAccessManager(

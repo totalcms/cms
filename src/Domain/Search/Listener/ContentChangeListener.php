@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -37,9 +38,9 @@ readonly class ContentChangeListener
 		// autowiring the interface made this listener unresolvable, so every
 		// object.created/updated/deleted dispatch logged a DI error instead
 		// of pushing the change to the active search provider (same failure
-		// family as the ReindexJob/jobs:process crash). search.log channel
+		// family as the ReindexJob/jobs:process crash). Search channel
 		// matches SearchService.
-		$this->logger = $loggerFactory->addFileHandler('search.log', level: Level::Info)->createLogger('search');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Search, Level::Info);
 	}
 
 	/**

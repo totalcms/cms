@@ -8,6 +8,7 @@ use Laminas\Feed\Reader\Reader;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
 
@@ -22,7 +23,7 @@ class RssImporter
 		private readonly HttpClientInterface $httpClient,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('rss-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::RssImporter);
 	}
 
 	/**

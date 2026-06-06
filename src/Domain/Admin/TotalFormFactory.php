@@ -39,6 +39,7 @@ use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
@@ -93,8 +94,7 @@ readonly class TotalFormFactory
 	) {
 		$this->api    = $this->config->api . '/api';
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('totalform');
+			->channelLogger(LogChannel::TotalForm);
 	}
 
 	private LoggerInterface $logger;

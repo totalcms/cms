@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -22,8 +23,7 @@ readonly class WatermarkCleanupService
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('watermark-cleanup');
+			->channelLogger(LogChannel::WatermarkCleanup);
 	}
 
 	/**

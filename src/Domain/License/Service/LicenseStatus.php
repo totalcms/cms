@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Data\LicenseStatusData;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -21,7 +22,7 @@ readonly class LicenseStatus
 		private LicenseValidator $licenseValidator,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('license.log')->createLogger('license');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::License);
 	}
 
 	/**

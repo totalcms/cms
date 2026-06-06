@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -33,7 +34,7 @@ class LicenseValidator
 		?LoggerFactory $loggerFactory = null,
 	) {
 		$this->logger = $loggerFactory instanceof LoggerFactory
-			? $loggerFactory->addFileHandler('license.log')->createLogger('license')
+			? $loggerFactory->channelLogger(LogChannel::License)
 			: new \Psr\Log\NullLogger();
 	}
 

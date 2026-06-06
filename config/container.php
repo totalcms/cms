@@ -137,6 +137,7 @@ use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Middleware\BasePathMiddleware;
@@ -225,8 +226,8 @@ return [
 
 	// The logger factory.
 	// The admin-controlled appLogLevel overrides the default level baked into
-	// $config['logger']['level'] so scattered addFileHandler('totalcms.log')
-	// callers pick up the user's choice without being individually rewired.
+	// $config['logger']['level'] so channelLogger() callers pick up the
+	// user's choice without being individually rewired.
 	LoggerFactory::class => function (ContainerInterface $container): LoggerFactory {
 		$config            = $container->get(Config::class);
 		$settings          = $config->logger;
@@ -375,7 +376,7 @@ return [
 	EventDispatcher::class => function (ContainerInterface $container): EventDispatcher {
 		$extLevel   = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
 		$dispatcher = new EventDispatcher(
-			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('events'),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Events, $extLevel),
 		);
 
 		// Register internal listeners with lazy resolution to avoid circular deps.
@@ -488,7 +489,7 @@ return [
 		return new ExtensionDiscovery(
 			$container->get(Config::class),
 			$container->get(ManifestValidator::class),
-			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 		);
 	},
 
@@ -504,7 +505,7 @@ return [
 			$container->get(EnvironmentResolver::class),
 			$container->get(CacheManager::class),
 			$container->get(ExtensionStateRepository::class),
-			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 			$container->get(ExtensionProfiler::class),
 		);
 	},
@@ -517,7 +518,7 @@ return [
 			$container->get(EnvironmentResolver::class),
 			$container->get(CacheManager::class),
 			(int)($config->extensions['profileSampleRate'] ?? 50),
-			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 		);
 	},
 
@@ -530,7 +531,7 @@ return [
 			$container->get(ExtensionDependencySorter::class),
 			$container->get(ExtensionSettingsManager::class),
 			$container,
-			$container->get(LoggerFactory::class)->addFileHandler('extensions.log', level: $extLevel)->createLogger('extensions'),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 			$container->get(ManifestValidator::class),
 			$container->get(ExtensionGuard::class),
 			$container->get(ExtensionProfiler::class),
@@ -548,7 +549,7 @@ return [
 			$container->get(EnsureAutomationsCollectionMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
-		$container->get(LoggerFactory::class)->addFileHandler('migrations.log')->createLogger('migrations'),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
 	),
 
 	// Per-page middleware infrastructure. Registry holds name → service-id
@@ -638,8 +639,7 @@ return [
 	McpToolsValidator::class => fn (ContainerInterface $container): McpToolsValidator => new McpToolsValidator(
 		$container->get(ToolRegistry::class),
 		$container->get(LoggerFactory::class)
-			->addFileHandler('mcp-activity.log', level: Level::Debug)
-			->createLogger('mcp-tools-validator'),
+			->channelLogger(LogChannel::McpToolsValidator, Level::Debug),
 		$container->get(Config::class),
 	),
 
@@ -650,15 +650,14 @@ return [
 		$container->get(CollectionRepository::class),
 		$container->get(SavedQueryToolFactory::class),
 		$container->get(LoggerFactory::class)
-			->addFileHandler('mcp-activity.log', level: Level::Debug)
-			->createLogger('mcp-schema-tools'),
+			->channelLogger(LogChannel::McpSchemaTools, Level::Debug),
 	),
 
 	// DataViewDependencyResolver needs an explicit definition because LoggerInterface
 	// is not bound to a concrete class by default in this container.
 	DataViewDependencyResolver::class => fn (ContainerInterface $container): DataViewDependencyResolver => new DataViewDependencyResolver(
 		$container->get(IndexReader::class),
-		$container->get(LoggerFactory::class)->createLogger('dataviews'),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::DataViews),
 	),
 
 	// PromptDiscoveryService needs an explicit definition so it gets the mcp-activity
@@ -667,8 +666,7 @@ return [
 		$container->get(IndexFilter::class),
 		$container->get(CollectionRepository::class),
 		$container->get(LoggerFactory::class)
-			->addFileHandler('mcp-activity.log', level: Level::Debug)
-			->createLogger('mcp-prompts'),
+			->channelLogger(LogChannel::McpPrompts, Level::Debug),
 	),
 
 	// McpServerFactory needs an explicit definition for its custom logger
@@ -687,8 +685,7 @@ return [
 		$container->get(Config::class),
 		$container->get(McpSessionStoreInterface::class),
 		$container->get(LoggerFactory::class)
-			->addFileHandler('mcp-activity.log', level: Level::Debug)
-			->createLogger('mcp-activity'),
+			->channelLogger(LogChannel::McpActivity, Level::Debug),
 		$container->get(SchemaToolRegistrar::class),
 		$container->get(PromptDiscoveryService::class),
 		$container->get(PromptRegistrar::class),
@@ -710,8 +707,7 @@ return [
 	McpSubscriptionManager::class => fn (ContainerInterface $container): McpSubscriptionManager => new McpSubscriptionManager(
 		$container->get(SubscriptionIndex::class),
 		$container->get(LoggerFactory::class)
-				->addFileHandler('mcp-activity.log', level: Level::Debug)
-				->createLogger('mcp-subscription'),
+				->channelLogger(LogChannel::McpSubscription, Level::Debug),
 	),
 
 	// McpNotificationService fans out notifications/resources/updated to
@@ -737,8 +733,7 @@ return [
 			$protocol,
 			$sessionManager,
 			$container->get(LoggerFactory::class)
-				->addFileHandler('mcp-activity.log', level: Level::Debug)
-				->createLogger('mcp-notification'),
+				->channelLogger(LogChannel::McpNotification, Level::Debug),
 		);
 	},
 
@@ -773,14 +768,12 @@ return [
 
 	OAuthActivityLogger::class => fn (ContainerInterface $container): OAuthActivityLogger => new OAuthActivityLogger(
 		$container->get(LoggerFactory::class)
-			->addFileHandler('oauth-activity.log', level: Level::Info)
-			->createLogger('oauth-activity'),
+			->channelLogger(LogChannel::OAuthActivity, Level::Info),
 	),
 
 	TotalCMS\Domain\Automation\Service\AutomationActivityLogger::class => fn (ContainerInterface $container): TotalCMS\Domain\Automation\Service\AutomationActivityLogger => new TotalCMS\Domain\Automation\Service\AutomationActivityLogger(
 		$container->get(LoggerFactory::class)
-			->addFileHandler('automations-activity.log', level: Level::Info)
-			->createLogger('automations-activity'),
+			->channelLogger(LogChannel::AutomationsActivity, Level::Info),
 	),
 
 	// === Search Providers Phase 5 ===
@@ -800,8 +793,7 @@ return [
 		$container->get(SearchProviderRegistry::class),
 		$container->get(TextSearchProvider::class),
 		$container->get(LoggerFactory::class)
-				->addFileHandler('search.log', level: Level::Info)
-				->createLogger('search'),
+				->channelLogger(LogChannel::Search, Level::Info),
 		$container->get(Config::class),
 		$container->get(CollectionFetcher::class),
 	),

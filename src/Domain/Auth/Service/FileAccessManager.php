@@ -11,12 +11,11 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 class FileAccessManager
 {
-	public const DOWNLOAD_LOG = 'totalcms-download.log';
-
 	private readonly LoggerInterface $logger;
 
 	private FileData|DepotData $file;
@@ -30,7 +29,7 @@ class FileAccessManager
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly FileFetcher $fileFetcher,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger('fileaccess');
+		$this->logger = $this->loggerFactory->channelLogger(LogChannel::FileAccess);
 	}
 
 	public function loadDepotFile(string $collection, string $object, string $property): void

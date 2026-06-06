@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -25,7 +26,7 @@ readonly class MediaTwigAdapter
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
 	}
 
 	/**

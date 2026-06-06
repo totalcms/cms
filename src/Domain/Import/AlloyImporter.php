@@ -7,6 +7,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use Webuni\FrontMatter\FrontMatter;
 
@@ -24,7 +25,7 @@ class AlloyImporter
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger            = $loggerFactory->addFileHandler('importer.log')->createLogger('alloy-importer');
+		$this->logger            = $loggerFactory->channelLogger(LogChannel::AlloyImporter);
 		$this->frontMatterParser = new FrontMatter();
 		$this->markdownParser    = new \Parsedown();
 	}

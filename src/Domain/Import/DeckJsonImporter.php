@@ -16,6 +16,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -36,7 +37,7 @@ class DeckJsonImporter
 		private readonly EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('deck-json-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::DeckJsonImporter);
 	}
 
 	/**

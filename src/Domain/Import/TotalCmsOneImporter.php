@@ -9,6 +9,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 class TotalCmsOneImporter
@@ -25,7 +26,7 @@ class TotalCmsOneImporter
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('totalcms-one-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::TotalCmsOneImporter);
 	}
 
 	public function import(string $cmsDataPath): int

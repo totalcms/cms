@@ -8,6 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Orphan\Data\OrphanEntry;
 use TotalCMS\Domain\Orphan\Data\OrphanReport;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 readonly class OrphanScanner
@@ -23,8 +24,7 @@ readonly class OrphanScanner
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('orphan-scanner');
+			->channelLogger(LogChannel::OrphanScanner);
 	}
 
 	/**

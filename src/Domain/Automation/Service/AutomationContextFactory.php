@@ -30,6 +30,7 @@ use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -72,7 +73,7 @@ final readonly class AutomationContextFactory
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('automations.log')->createLogger('automations');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Automations);
 	}
 
 	/**

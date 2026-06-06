@@ -15,6 +15,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
@@ -47,7 +48,7 @@ class JumpStartImporter
 		private readonly \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartImporter);
 	}
 
 	/**

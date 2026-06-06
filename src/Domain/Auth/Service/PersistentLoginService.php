@@ -6,6 +6,7 @@ use Odan\Session\SessionInterface;
 use Odan\Session\SessionManagerInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -33,7 +34,7 @@ class PersistentLoginService
 		if (!is_dir($this->tokenDir)) {
 			@mkdir($this->tokenDir, 0755, true);
 		}
-		$this->logger = $loggerFactory->addFileHandler('access.log')->createLogger('persistent-login');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::PersistentLogin);
 	}
 
 	/**
