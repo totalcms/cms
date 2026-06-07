@@ -98,7 +98,16 @@ export default class DepotDroplet
     }
 
     onQueueComplete(callback) {
-        this.dropzone.on("success", () => {
+        // Bind the per-BATCH "queuecomplete" event (matching the base
+        // Droplet class), not the per-FILE "success" event. Binding
+        // "success" fired the completion callback as soon as the FIRST
+        // file finished: saveDroplets() decremented its droplet counter
+        // once per file (multi-file batches over-decremented it past other
+        // pending droplets), afterSaveAction ran — edit actions, success
+        // banner — while the rest of the batch was still uploading, and
+        // depot fields finalized (saved state) per file instead of once.
+        // Per-file work belongs in the "success" handler (event_success).
+        this.dropzone.on("queuecomplete", () => {
             if (typeof callback === "function") callback();
         });
     }

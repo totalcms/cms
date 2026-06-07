@@ -1342,6 +1342,14 @@ readonly class TotalFormFactory
 		$property = $formSettings['property'];
 		unset($formSettings['property']);
 
+		// Mark the form as a DEDICATED depot-drop form. It has no save
+		// button — dropping files IS the edit — so DepotDropField runs the
+		// form's edit actions when an upload batch completes. The JS gates
+		// on this class: depot-drop fields inside regular forms must NOT
+		// fire edit actions on upload (the save flow already runs them;
+		// firing both ran every edit action twice per drop-and-save).
+		$formSettings['class'] = trim(($formSettings['class'] ?? 'custom-layout') . ' depot-drop-form');
+
 		return $this->singleFieldFormBuilder($id, $formSettings['collection'], $property, 'depotDrop', $formSettings, $fieldSettings);
 	}
 
