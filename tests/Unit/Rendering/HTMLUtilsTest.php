@@ -172,6 +172,23 @@ test('options marks selected on value/label pairs', function (): void {
 		->not->toContain('<option value="3" selected');
 });
 
+test('options marks selected when option values are integers', function (): void {
+	// JSON-decoded data yields int values; the selected value is always a
+	// string (form values are string-cast). The match must not be type-sensitive.
+	$options = [
+		['value' => 100, 'label' => 'First'],
+		['value' => 200, 'label' => 'Second'],
+		['value' => 300, 'label' => 'Third'],
+	];
+
+	$result = HTMLUtils::options($options, '200');
+
+	expect($result)
+		->toContain('<option value="200" selected>Second</option>')
+		->not->toContain('<option value="100" selected')
+		->not->toContain('<option value="300" selected');
+});
+
 test('options renders optgroups when string keys map to arrays', function (): void {
 	$options = [
 		'Fruits'     => ['Apple', 'Banana'],

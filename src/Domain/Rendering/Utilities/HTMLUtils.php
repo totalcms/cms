@@ -245,11 +245,13 @@ class HTMLUtils
 	private static function buildOptionElement(string|array $option, array $selectedValues): string
 	{
 		if (is_array($option)) {
-			$value = $option['value'] ?? '';
-			$label = $option['label'] ?? $value;
+			// String-cast so the strict selected match below isn't defeated by
+			// int/float values coming from JSON-decoded option sources.
+			$value = (string)($option['value'] ?? '');
+			$label = (string)($option['label'] ?? $value);
 		} else {
-			$value = $option;
-			$label = $option;
+			$value = (string)$option;
+			$label = (string)$option;
 		}
 
 		$attrs = ['value' => $value];
