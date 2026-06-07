@@ -255,7 +255,7 @@ The command is safe to run at any time. It touches only grants whose refresh tok
 Prune once a day via cron. Add a line to the crontab of the web server user (typically `www-data` or the PHP-FPM pool user):
 
 ```
-0 3 * * * cd /var/www/your-site && php resources/bin/tcms oauth:gc >> tcms-data/logs/oauth-gc.log 2>&1
+0 3 * * * cd /var/www/your-site && php resources/bin/tcms oauth:gc >> tcms-data/.system/logs/oauth-gc.log 2>&1
 ```
 
 Adjust the path to match your install location. The `>> ... 2>&1` redirect appends output to a log file so you can confirm it ran. On low-traffic sites a weekly schedule is sufficient; on sites with many OAuth connections (public AI client deployments) daily is recommended.
@@ -264,7 +264,7 @@ Adjust the path to match your install location. The `>> ... 2>&1` redirect appen
 
 ## OAuth activity log
 
-Every OAuth lifecycle event is appended to `tcms-data/logs/mcp.log` under the `oauth-activity` channel. The log is the authoritative record for incident response — if a token was issued, refreshed, or revoked, it's here.
+Every OAuth lifecycle event is appended to `tcms-data/.system/logs/mcp.log` under the `oauth-activity` channel. The log is the authoritative record for incident response — if a token was issued, refreshed, or revoked, it's here.
 
 ### Event types
 

@@ -86,6 +86,17 @@ class Config
 		$this->cachedir           = $settings['cachedir'];
 		$this->cache              = $settings['cache'];
 		$this->logger             = $settings['logger'];
+		// Layout-aware log directory, resolved AFTER the tcms.php merge so a
+		// datadir override is respected (defaults.php can't know the final
+		// datadir — see the logger block there). An explicit logger.path in
+		// tcms.php wins. Composer installs keep logs at the project root,
+		// which composer update never touches; zip installs write into the
+		// datadir so logs survive the app-directory swap during updates.
+		if (($this->logger['path'] ?? '') === '') {
+			$this->logger['path'] = PathResolver::isComposerInstall()
+				? PathResolver::projectRoot() . '/logs'
+				: $this->datadir . '/.system/logs';
+		}
 		$this->sentry             = (bool)($settings['sentry'] ?? true);
 		$this->appLogLevel        = (string)($settings['appLogLevel'] ?? 'info');
 		$this->error              = $settings['error'];

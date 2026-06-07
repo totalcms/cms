@@ -147,3 +147,20 @@ fields get added to the collection digest.
 
 Custom schemas will be stored inside of a
 `.schemas` folder inside the `tcms-data` directory.
+
+## Logs
+
+Total CMS writes its log files to a layout-aware location:
+
+- **Standard (zip) installs** — `tcms-data/.system/logs/`. Keeping logs inside the data directory means they **survive application updates**: the updater swaps the entire application directory, so logs stored there would be orphaned into the backup folder on every update.
+- **Composer installs** — `logs/` at the project root. The project root is never touched by `composer update`, and a top-level `logs/` directory is the ecosystem convention.
+
+Each log file covers one operational domain (`totalcms.log`, `access.log`, `importer.log`, `jobs.log`, `email.log`, `mcp.log`, `extensions.log`, `twig.log`, `license.log`). Warnings and errors from every domain are **also mirrored into `totalcms.log`** — when something is wrong, that is the one file to check; the channel prefix on each line (e.g. `license.WARNING:`) tells you which subsystem to dig into.
+
+To override the location entirely, set `logger.path` in your `tcms.php`:
+
+```php
+$settings['logger']['path'] = '/var/log/totalcms';
+```
+
+The Log Analyzer in the admin dashboard (**Utilities → Log Analyzer**) reads from the configured location automatically.

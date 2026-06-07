@@ -68,7 +68,7 @@ When an update is applied:
 5. The new files are extracted into place
 6. All caches are cleared
 7. Maintenance mode is disabled
-8. The update is logged to `tcms-data/logs/totalcms.log` (channel `update`)
+8. The update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
 
 The entire process typically takes a few seconds.
 
