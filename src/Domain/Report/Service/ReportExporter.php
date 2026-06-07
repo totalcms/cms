@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -29,8 +30,7 @@ readonly class ReportExporter
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('report-exporter');
+			->channelLogger(LogChannel::ReportExporter);
 	}
 
 	/**

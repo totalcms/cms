@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mailer\Service;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
@@ -22,7 +23,7 @@ readonly class EmailSender
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('email.log')->createLogger('email-sender');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::EmailSender);
 	}
 
 	/**

@@ -17,6 +17,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 readonly class JumpStartExporter
@@ -35,7 +36,7 @@ readonly class JumpStartExporter
 		private CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-exporter');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartExporter);
 	}
 
 	public function setMetadata(string $name = '', string $description = ''): void

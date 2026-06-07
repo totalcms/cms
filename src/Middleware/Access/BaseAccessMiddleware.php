@@ -14,6 +14,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -80,11 +81,11 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		}
 
 		// Detect CRUD operation for permission checking
-		$operation = $this->operationDetector->detectOperation($request);
+		$operation = $this->detectOperation($request);
 		if (!$operation) {
 			// Unable to detect operation, deny access and log in dev/debug mode
 			if ($this->config->env === 'dev' || $this->config->debug) {
-				$logger       = $this->loggerFactory->addFileHandler('access.log')->createLogger('access');
+				$logger       = $this->loggerFactory->channelLogger(LogChannel::Access);
 				$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
 				$route        = $routeContext->getRoute();
 				$routeName    = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : 'unknown';
@@ -122,6 +123,18 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 * @return bool True if access allowed, false otherwise
 	 */
 	abstract protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool;
+
+	/**
+	 * Resolve the CRUD operation for this request. The default maps the
+	 * route name through OperationDetector's explicit lists; subclasses
+	 * guarding routes that aren't in those lists (e.g. the extension admin
+	 * dispatcher's single catch-all route) can override with their own
+	 * mapping instead of being denied on detection failure.
+	 */
+	protected function detectOperation(ServerRequestInterface $request): ?string
+	{
+		return $this->operationDetector->detectOperation($request);
+	}
 
 	/**
 	 * Return a 403 Forbidden response (JSON for API, HTML for admin UI).

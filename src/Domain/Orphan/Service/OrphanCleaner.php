@@ -7,6 +7,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Orphan\Data\OrphanEntry;
 use TotalCMS\Domain\Orphan\Data\OrphanReport;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 
@@ -20,8 +21,7 @@ readonly class OrphanCleaner
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('orphan-cleaner');
+			->channelLogger(LogChannel::OrphanCleaner);
 	}
 
 	/**

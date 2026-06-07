@@ -514,7 +514,10 @@ class FormField
 				$label = $o[$labelProperties[0]] ?? '';
 			}
 
-			return ['value' => $o[$valueProperty], 'label' => $label];
+			// Normalize to strings: JSON-decoded objects yield int/float values,
+			// but the selected-value match in HTMLUtils::options() is a strict
+			// string comparison against the string-cast stored value.
+			return ['value' => (string)($o[$valueProperty] ?? ''), 'label' => (string)$label];
 		}, $properties);
 	}
 

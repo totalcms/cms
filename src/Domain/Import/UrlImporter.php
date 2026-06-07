@@ -15,6 +15,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 readonly class UrlImporter
@@ -27,7 +28,7 @@ readonly class UrlImporter
 		private EventDispatcher $eventDispatcher,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('url-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::UrlImporter);
 	}
 
 	/** @param array<string,mixed> $properties */

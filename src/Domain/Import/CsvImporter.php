@@ -14,6 +14,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Property\Data\SlugData;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 class CsvImporter
@@ -31,7 +32,7 @@ class CsvImporter
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('csv-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::CsvImporter);
 	}
 
 	public function queueJobs(): void

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Search\Listener;
 
+use Monolog\Level;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -22,12 +25,22 @@ use TotalCMS\Support\Config;
  */
 readonly class ContentChangeListener
 {
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private SearchProviderRegistry $registry,
 		private JobQueuer $jobs,
-		private LoggerInterface $logger,
+		LoggerFactory $loggerFactory,
 		private Config $config,
 	) {
+		// Inject LoggerFactory (autowirable) rather than the bare
+		// Psr\Log\LoggerInterface, which has no concrete container binding —
+		// autowiring the interface made this listener unresolvable, so every
+		// object.created/updated/deleted dispatch logged a DI error instead
+		// of pushing the change to the active search provider (same failure
+		// family as the ReindexJob/jobs:process crash). Search channel
+		// matches SearchService.
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Search, Level::Info);
 	}
 
 	/**

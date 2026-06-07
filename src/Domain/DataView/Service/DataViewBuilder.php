@@ -11,6 +11,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 
@@ -29,8 +30,7 @@ readonly class DataViewBuilder
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('dataviews.log')
-			->createLogger('viewbuilder');
+			->channelLogger(LogChannel::ViewBuilder);
 	}
 
 	public function buildView(string $viewId): void

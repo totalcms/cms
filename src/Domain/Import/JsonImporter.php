@@ -12,6 +12,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 class JsonImporter
@@ -29,7 +30,7 @@ class JsonImporter
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('json-importer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::JsonImporter);
 	}
 
 	public function queueJobs(): void

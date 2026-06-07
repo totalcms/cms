@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
@@ -27,7 +28,7 @@ readonly class EmailService
 		private EditionFeatureService $editionFeatures,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('email.log')->createLogger('email-service');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Email);
 	}
 
 	/**

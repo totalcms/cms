@@ -14,13 +14,27 @@ namespace TotalCMS\Domain\Extension\Data;
  */
 final readonly class AdminNavItem
 {
+	/**
+	 * $extensionId is stamped by ExtensionManager when items are collected —
+	 * extensions don't (and shouldn't) set it themselves. Templates use it
+	 * to apply the access-group extension grant.
+	 */
 	public function __construct(
 		public string $label,
 		public string $icon = '',
 		public string $url = '',
 		public string $permission = 'admin',
 		public int $priority = 50,
+		public string $extensionId = '',
 	) {
+	}
+
+	/**
+	 * Copy of this item attributed to the extension that registered it.
+	 */
+	public function withExtensionId(string $extensionId): self
+	{
+		return new self($this->label, $this->icon, $this->url, $this->permission, $this->priority, $extensionId);
 	}
 
 	/**

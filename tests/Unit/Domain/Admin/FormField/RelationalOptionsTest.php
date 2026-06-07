@@ -202,6 +202,46 @@ describe('Relational Options', function (): void {
 		]);
 	});
 
+	test('numeric property values are normalized to strings', function (): void {
+		// JSON-decoded objects yield int/float values. Options must carry string
+		// values so the strict selected-value match in HTMLUtils::options() works
+		// against the string-cast stored value.
+		$this->form->method('propertiesForCollection')
+			->with(['title', 'code'], 'items', [])
+			->willReturn([
+				['code' => 100, 'title' => 'First'],
+				['code' => 200, 'title' => 'Second'],
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'items',
+			'label'      => 'title',
+			'value'      => 'code',
+		]);
+
+		expect($result)->toBe([
+			['value' => '100', 'label' => 'First'],
+			['value' => '200', 'label' => 'Second'],
+		]);
+	});
+
+	test('missing value property yields empty string instead of warning', function (): void {
+		$this->form->method('propertiesForCollection')
+			->willReturn([
+				['title' => 'No code here'],
+			]);
+
+		$result = callBuildRelationalOptions($this->form, [
+			'collection' => 'items',
+			'label'      => 'title',
+			'value'      => 'code',
+		]);
+
+		expect($result)->toBe([
+			['value' => '', 'label' => 'No code here'],
+		]);
+	});
+
 	// --- Format template (new behavior) ---
 
 	test('format template renders with literal text around placeholders', function (): void {

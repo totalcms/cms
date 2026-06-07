@@ -118,7 +118,7 @@
 					<div class="dash-card-detail">
 						<strong>{{ t('access_groups.other_access') }}</strong>
 						<div class="dash-badge-group">
-							{% if group.permissions.templates %}<span class="dash-badge success">{{ t('access_groups.feature_templates') }}</span>{% endif %}
+							{% if group.permissions.builder ?? group.permissions.templates %}<span class="dash-badge success">{{ t('access_groups.feature_builder') }}</span>{% endif %}
 							{% if group.permissions.mailer %}<span class="dash-badge success">{{ t('access_groups.feature_mailer') }}</span>{% endif %}
 							{% if group.permissions.playground %}<span class="dash-badge success">{{ t('access_groups.feature_playground') }}</span>{% endif %}
 							{% if group.permissions.dataviews %}<span class="dash-badge success">{{ t('access_groups.feature_dataviews') }}</span>{% endif %}

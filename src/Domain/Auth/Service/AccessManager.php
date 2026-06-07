@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -22,7 +23,7 @@ class AccessManager
 		private readonly UserValidationService $userValidator,
 		private readonly LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('access');
+		$this->logger = $this->loggerFactory->channelLogger(LogChannel::Access);
 
 		$this->defaultAuthCollection = $this->config->auth['collection'];
 	}

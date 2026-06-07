@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -34,8 +35,7 @@ readonly class DefaultErrorHandler
 		private OPcacheService $opcacheService,
 	) {
 		$this->logger          = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('totalcms');
+			->channelLogger(LogChannel::App);
 	}
 
 	/**

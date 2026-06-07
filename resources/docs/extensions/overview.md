@@ -105,7 +105,7 @@ Extension-provided schemas always require Pro or higher, regardless of the `min_
 
 A broken extension cannot crash Total CMS. If an extension throws an exception during `register()` or `boot()`:
 
-- The exception is caught and logged to `logs/extensions.log`
+- The exception is caught and logged to `extensions.log` in the [logs directory](docs/operations/filesystem)
 - The error is recorded in the extension's state (visible in the admin UI)
 - Other extensions continue loading normally
 - The site operates without the broken extension

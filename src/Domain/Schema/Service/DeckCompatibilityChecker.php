@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Schema\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -22,7 +23,7 @@ readonly class DeckCompatibilityChecker
 		?LoggerFactory $loggerFactory = null,
 	) {
 		$this->logger = $loggerFactory instanceof LoggerFactory
-			? $loggerFactory->addFileHandler('totalcms.log')->createLogger('deckcompatibility')
+			? $loggerFactory->channelLogger(LogChannel::DeckCompatibility)
 			: null;
 	}
 	/**

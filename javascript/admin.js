@@ -28,6 +28,19 @@ globalThis.TotalCMS = TotalCMS;
 globalThis.QuickAction = QuickAction;
 globalThis.JSONField = JSONField;
 
+// Idempotency guard: a page can end up including this bundle twice with
+// DIFFERENT cache-buster query strings (e.g. a legacy hardcoded
+// `?v={{ cms.version }}` tag plus the adminAssetsBody() tag) — the browser
+// module map only dedupes identical URLs, so the module body executes
+// twice. Without this guard every listener below double-binds: one save
+// click became two saves (duplicate mailer-action emails, "object already
+// exists" races on new objects). Initialize once; later executions no-op.
+const duplicateLoad = globalThis.__tcmsAdminLoaded === true;
+globalThis.__tcmsAdminLoaded = true;
+if (duplicateLoad) {
+	console.warn("Total CMS admin.js loaded more than once — skipping duplicate initialization. Check for multiple admin.js script tags with differing cache-busters.");
+}
+
 // Inject CSRF token into all HTMX requests.
 //
 // HTMX 4 changed the `htmx:config:request` payload from a flat
@@ -38,14 +51,14 @@ globalThis.JSONField = JSONField;
 // CSRFProtectionMiddleware bare and 403s. Things like the Twig
 // playground render form (hx-post) and the inline reorder/preview
 // HTMX endpoints all depend on this listener.
-document.addEventListener('htmx:config:request', (e) => {
+if (!duplicateLoad) document.addEventListener('htmx:config:request', (e) => {
 	const token = document.querySelector('meta[name="csrf-token"]');
 	const headers = e.detail?.ctx?.request?.headers;
 	if (token && headers) headers['X-CSRF-Token'] = token.content;
 });
 
 // Intercept hx-confirm and route through the custom countdown dialog
-document.body.addEventListener('htmx:confirm', (e) => {
+if (!duplicateLoad) document.body.addEventListener('htmx:confirm', (e) => {
 	const elt = e.target;
 	const message = e.detail?.ctx?.confirm || elt?.getAttribute?.('hx-confirm');
 	if (!elt || !message) return;
@@ -67,6 +80,7 @@ document.body.addEventListener('htmx:confirm', (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", event => {
+	if (duplicateLoad) return;
 	const manager = new TotalFormManager();
 
 	const simpleForms = Array.from(document.getElementsByClassName("simple-form"));
@@ -179,6 +193,20 @@ document.addEventListener("DOMContentLoaded", event => {
 	if (passkeyMgr) new PasskeyManager(passkeyMgr);
 
 	initExternalLinks();
+
+	// Wire cache-clear buttons (.cms-clear-cache). Stacks admin pages render
+	// these; the T3 dashboard has none, so this is a no-op there. Previously
+	// wired by an inline bootstrap script the Stacks plugin emitted — owning
+	// it here lets stack pages drop that inline script entirely. The API
+	// base is derived from this bundle's own script tag, which carries it on
+	// every page that loaded us.
+	if (document.querySelector(".cms-clear-cache")) {
+		const adminScript = document.querySelector('script[src*="/assets/admin.js"]');
+		if (adminScript) {
+			const apiBase = adminScript.src.split("/assets/")[0];
+			new TotalCMS({ url: apiBase }).clearTwigCacheListeners();
+		}
+	}
 
 	// Quick navigation (Shift+Cmd+O)
 	if (window.TCMS_QUICK_NAV) new QuickNav();

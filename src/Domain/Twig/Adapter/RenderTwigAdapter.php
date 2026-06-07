@@ -18,6 +18,7 @@ use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
@@ -55,7 +56,7 @@ class RenderTwigAdapter
 		/** @var (\Closure(): TwigEngine)|null */
 		private readonly ?\Closure $twigEngineFactory = null,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
 	}
 
 	private function getDataViewQueryService(): ?DataViewQueryService

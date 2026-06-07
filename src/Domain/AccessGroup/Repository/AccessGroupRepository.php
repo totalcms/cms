@@ -43,7 +43,7 @@ class AccessGroupRepository extends StorageRepository
 				'all'        => true,
 				'allowed'    => [],
 			],
-			'templates'  => true,
+			'builder'    => true,
 			'mailer'     => true,
 			'playground' => true,
 			'dataviews'  => true,
@@ -53,6 +53,10 @@ class AccessGroupRepository extends StorageRepository
 				'allowed' => [],
 			],
 			'settings' => [
+				'all'     => true,
+				'allowed' => [],
+			],
+			'extensions' => [
 				'all'     => true,
 				'allowed' => [],
 			],
@@ -80,7 +84,7 @@ class AccessGroupRepository extends StorageRepository
 				'all'        => true,
 				'allowed'    => [],
 			],
-			'templates'  => true,
+			'builder'    => true,
 			'mailer'     => true,
 			'playground' => false,
 			'dataviews'  => false,
@@ -92,6 +96,10 @@ class AccessGroupRepository extends StorageRepository
 			'settings' => [
 				'all'     => false,
 				'allowed' => ['general', 'dashboard'],
+			],
+			'extensions' => [
+				'all'     => true,
+				'allowed' => [],
 			],
 		],
 	];
@@ -117,7 +125,7 @@ class AccessGroupRepository extends StorageRepository
 				'all'        => true,
 				'allowed'    => [],
 			],
-			'templates'  => false,
+			'builder'    => false,
 			'mailer'     => false,
 			'playground' => false,
 			'dataviews'  => false,
@@ -128,6 +136,10 @@ class AccessGroupRepository extends StorageRepository
 			],
 			'settings' => [
 				'all'     => false,
+				'allowed' => [],
+			],
+			'extensions' => [
+				'all'     => true,
 				'allowed' => [],
 			],
 		],
@@ -154,7 +166,7 @@ class AccessGroupRepository extends StorageRepository
 				'all'        => true,
 				'allowed'    => [],
 			],
-			'templates'  => false,
+			'builder'    => false,
 			'mailer'     => false,
 			'playground' => false,
 			'dataviews'  => false,
@@ -165,6 +177,10 @@ class AccessGroupRepository extends StorageRepository
 			],
 			'settings' => [
 				'all'     => false,
+				'allowed' => [],
+			],
+			'extensions' => [
+				'all'     => true,
 				'allowed' => [],
 			],
 		],

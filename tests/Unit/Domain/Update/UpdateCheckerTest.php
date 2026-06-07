@@ -11,6 +11,7 @@ use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\Version;
 
 final class UpdateCheckerTest extends TestCase
 {
@@ -190,8 +191,40 @@ final class UpdateCheckerTest extends TestCase
 
 	public function testClearCache(): void
 	{
-		$this->cacheManager->expects($this->once())->method('clearComputedData')->with('update_check');
+		$this->cacheManager->expects($this->once())
+			->method('clearComputedData')
+			->with('update_check_' . Version::number());
 
 		$this->checker->clearCache();
+	}
+
+	/**
+	 * The cache key must be scoped to the RUNNING version. A static key meant
+	 * a site that fetched the check while an older release was latest kept
+	 * serving that stale answer for up to 24h after updating — an RC-2 site
+	 * kept offering rc.4 from cache after rc.5 had shipped. Version-scoped
+	 * keys make any version change (including manual/Composer updates that
+	 * never run the cache-clearing updater) fetch fresh; old keys age out
+	 * via the TTL.
+	 */
+	public function testCacheReadAndWriteAreScopedToTheRunningVersion(): void
+	{
+		$expectedKey = 'update_check_' . Version::number();
+
+		$this->cacheManager->expects($this->once())
+			->method('getComputedData')
+			->with($expectedKey)
+			->willReturn(null);
+		$this->cacheManager->expects($this->once())
+			->method('storeComputedData')
+			->with($expectedKey, $this->isType('array'), 86400);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'available' => true,
+			'version'   => '99.99.99',
+			'severity'  => 'patch',
+		])));
+
+		$this->checker->checkForUpdate();
 	}
 }

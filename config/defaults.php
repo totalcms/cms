@@ -204,10 +204,19 @@ $settings['error'] = [
 	'log_error_details' => true,
 ];
 
-// Logger settings
+// Logger settings.
+// `path` is intentionally empty here: the default is layout-aware AND
+// datadir-relative, and tcms.php can override `datadir` after this file
+// loads (the same load-order trap as the OAuth key paths — see
+// local.test.php). Config resolves it post-merge:
+//   - Composer installs → <projectRoot>/logs (survives `composer update`)
+//   - Zip installs      → <datadir>/.system/logs (survives app-directory
+//     replacement during updates; the old <app>/logs was orphaned into the
+//     backup on every update)
+// Set `path` explicitly in tcms.php to override both.
 $settings['logger'] = [
 	'name'        => 'totalcms',
-	'path'        => TotalCMS\Support\PathResolver::projectRoot() . '/logs',
+	'path'        => '',
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
 	'maxFiles'    => 10,

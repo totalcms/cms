@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 
@@ -28,7 +29,7 @@ readonly class AuthTokenService
 		private CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('auth.log')->createLogger('auth-token');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::AuthToken);
 	}
 
 	/**

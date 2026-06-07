@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -22,7 +23,7 @@ readonly class DataTwigAdapter
 		private ObjectFetcher $objectFetcher,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
 	}
 
 	/**

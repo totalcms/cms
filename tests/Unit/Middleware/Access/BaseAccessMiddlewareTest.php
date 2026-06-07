@@ -159,7 +159,7 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->operationDetector->method('detectOperation')->willReturn(null);
 
-		$this->loggerFactory->expects($this->never())->method('addFileHandler');
+		$this->loggerFactory->expects($this->never())->method('channelLogger');
 		$this->handler->expects($this->never())->method('handle');
 
 		($this->make)()->process(($this->requestFor)(), $this->handler);
@@ -193,8 +193,7 @@ describe('BaseAccessMiddleware', function (): void {
 
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
-		$this->loggerFactory->expects($this->once())->method('addFileHandler')->willReturnSelf();
-		$this->loggerFactory->expects($this->once())->method('createLogger')->willReturn($logger);
+		$this->loggerFactory->expects($this->once())->method('channelLogger')->willReturn($logger);
 
 		($this->make)()->process($request, $this->handler);
 	});

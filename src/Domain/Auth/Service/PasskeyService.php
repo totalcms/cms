@@ -13,6 +13,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
@@ -48,7 +49,7 @@ class PasskeyService
 		private readonly IndexReader $indexReader,
 		private readonly LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('passkey');
+		$this->logger = $this->loggerFactory->channelLogger(LogChannel::Passkey);
 
 		$ceremonyFactory = new CeremonyStepManagerFactory();
 

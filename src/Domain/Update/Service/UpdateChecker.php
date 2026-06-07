@@ -17,8 +17,8 @@ use TotalCMS\Support\Version;
  */
 readonly class UpdateChecker
 {
-	private const CACHE_KEY = 'update_check';
-	private const CACHE_TTL = 86400; // 24 hours
+	private const CACHE_KEY_PREFIX = 'update_check';
+	private const CACHE_TTL        = 86400; // 24 hours
 
 	public function __construct(
 		private HttpClientInterface $httpClient,
@@ -35,7 +35,7 @@ readonly class UpdateChecker
 	public function checkForUpdate(bool $forceRefresh = false): UpdateInfo
 	{
 		if (!$forceRefresh) {
-			$cached = $this->cacheManager->getComputedData(self::CACHE_KEY);
+			$cached = $this->cacheManager->getComputedData($this->cacheKey());
 			if (is_array($cached)) {
 				return UpdateInfo::fromApiResponse(
 					$cached,
@@ -84,14 +84,27 @@ readonly class UpdateChecker
 		$data['updatesValid']      = $updatesValid;
 		$data['updatesExpireDate'] = $updatesExpireDate;
 
-		$this->cacheManager->storeComputedData(self::CACHE_KEY, $data, self::CACHE_TTL);
+		$this->cacheManager->storeComputedData($this->cacheKey(), $data, self::CACHE_TTL);
 
 		return UpdateInfo::fromApiResponse($data, $updatesValid, $updatesExpireDate);
 	}
 
 	public function clearCache(): void
 	{
-		$this->cacheManager->clearComputedData(self::CACHE_KEY);
+		$this->cacheManager->clearComputedData($this->cacheKey());
+	}
+
+	/**
+	 * Cache key scoped to the RUNNING version. Any version change — including
+	 * manual or Composer updates that never run the cache-clearing updater —
+	 * therefore gets a fresh answer on the next check instead of up to 24h of
+	 * stale info fetched while the previous version was installed (an RC-2
+	 * site kept offering rc.4 from cache after rc.5 had shipped). Keys for
+	 * prior versions simply age out via the TTL.
+	 */
+	private function cacheKey(): string
+	{
+		return self::CACHE_KEY_PREFIX . '_' . Version::number();
 	}
 
 	/**

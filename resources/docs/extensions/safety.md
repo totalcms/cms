@@ -75,11 +75,15 @@ You'll see the review when an extension uses any of these capabilities:
 |---|---|
 | `routes:public` | Exposes public, unauthenticated endpoints |
 | `events:listen` | Can observe all content changes |
-| `container` | Registers services in the application container |
+| `automations` | Runs server-side code automatically on a schedule or content events |
 | `mcp:tools` | Registers actions AI agents can call (reachable externally if MCP public access is on) |
 | `mcp:resources` | Exposes data that AI agents can fetch |
 
+Container definitions (`container`) are deliberately **not** flagged: extensions can only register services under their own namespace — any attempt to override a core Total CMS service is denied at load time and logged. Registering your own services is infrastructure, not a risk surface.
+
 …or when a quick **static scan** of the extension's source finds high-risk calls (`shell_exec`, `eval`, raw network requests, `base64_decode`, and similar). The scan reads the code as text — it never runs the extension to check it.
+
+Bundled extensions (the ones that ship with Total CMS) are exempt from the source scan — they version with core and ship reviewed in the package. Their capability list still shows. For extension developers: persisting files through the [storage API](extension-points.md#file-storage) instead of raw `file_put_contents()` keeps your scan clean — the flag exists for unconstrained writes, not for state kept in the sanctioned per-extension directory.
 
 The review screen has up to three parts:
 

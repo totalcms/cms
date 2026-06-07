@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
@@ -32,8 +33,7 @@ readonly class TextWatermarkFactory
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('textwatermark');
+			->channelLogger(LogChannel::TextWatermark);
 	}
 
 	/**

@@ -225,6 +225,18 @@ describe('Utility and Management Views', function (): void {
 		assertNoAdminErrors($response, '/admin/utils/project-setup');
 	});
 
+	it('loads the access groups list without errors', function (): void {
+		$response = get('/admin/utils/access-groups');
+		assertNoAdminErrors($response, '/admin/utils/access-groups');
+	});
+
+	it('loads the access group form without errors', function (): void {
+		// The form template only renders with an action segment — the list
+		// page alone compiled fine while the form had a Twig syntax error.
+		$response = get('/admin/utils/access-groups/new');
+		assertNoAdminErrors($response, '/admin/utils/access-groups/new');
+	});
+
 	it('loads cache management without errors', function (): void {
 		$response = get('/admin/cache');
 		assertNoAdminErrors($response, '/admin/cache');
@@ -242,14 +254,14 @@ describe('Utility and Management Views', function (): void {
 });
 
 describe('Template and Design Views', function (): void {
-	it('loads template editor without errors', function (): void {
-		$response = get('/admin/templates');
-		assertNoAdminErrors($response, '/admin/templates');
+	it('loads the builder without errors', function (): void {
+		$response = get('/admin/builder');
+		assertNoAdminErrors($response, '/admin/builder');
 	});
 
-	it('loads template creation form without errors', function (): void {
-		$response = get('/admin/templates/new');
-		assertNoAdminErrors($response, '/admin/templates/new');
+	it('loads the builder template editor without errors', function (): void {
+		$response = get('/admin/builder/templates');
+		assertNoAdminErrors($response, '/admin/builder/templates');
 	});
 });
 

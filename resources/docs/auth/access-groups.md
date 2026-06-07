@@ -42,7 +42,7 @@ Access groups are defined in `tcms-data/.system/access-groups.json`:
                     "all": false,
                     "allowed": ["blog", "news"]
                 },
-                "templates": true,
+                "builder": true,
                 "mailer": false,
                 "playground": true,
                 "docs": true,
@@ -130,13 +130,13 @@ Controls access to objects within collections:
 - **`all`** - If `true`, access all schemas; if `false`, only those in `allowed`
 - **`allowed`** - Array of specific schema names
 
-### Templates
+### Site Builder
 
 ```json
-"templates": true  // or false
+"builder": true  // or false
 ```
 
-Simple boolean for full access or no access to templates. Templates don't have granular CRUD permissions.
+Simple boolean for full access or no access to the Site Builder (pages and templates). Groups saved before this permission existed fall back to their legacy `templates` value.
 
 ### Settings
 
@@ -149,6 +149,20 @@ Simple boolean for full access or no access to templates. Templates don't have g
 
 - **`all`** - If `true`, access all settings sections
 - **`allowed`** - Array of specific setting section names (e.g., "general", "cache", "auth", "mailer")
+
+### Extensions
+
+```json
+"extensions": {
+    "all": true,
+    "allowed": []
+}
+```
+
+- **`all`** - If `true`, the group can see and use every extension's admin surface
+- **`allowed`** - Array of extension IDs (e.g., `"acme/seo-pro"`) when `all` is `false`
+
+Controls which extensions' **nav items, dashboard widgets, and admin pages** this group can see and open. It only applies to extension pages registered with `permission: 'any'` — pages an extension marks `admin` always require a super admin, and groups cannot widen that. Groups saved before this block existed behave as `all: true`, so restricting is always an explicit operator choice. The form only lists extensions that actually register admin surface.
 
 ### Utils
 
@@ -166,8 +180,10 @@ Simple boolean for full access or no access to templates. Templates don't have g
 
 Simple `true`/`false` for features without granular control:
 
+- **`builder`** - Access to the Site Builder, including template editing (groups saved before this permission existed fall back to their legacy `templates` value)
 - **`mailer`** - Access to mailer/email functionality
 - **`playground`** - Access to Twig playground
+- **`dataviews`** - Access to Data Views
 - **`docs`** - Access to documentation
 
 ## Twig Helper Functions
@@ -263,12 +279,21 @@ Total CMS provides helper functions to check permissions in your templates, allo
 {% endif %}
 ```
 
-### Templates
+### Site Builder
 
-**Check templates access (boolean):**
+**Check Site Builder access (boolean):**
 ```twig
-{% if cms.canAccessTemplates() %}
-    <a href="/admin/templates">Templates</a>
+{% if cms.canAccessBuilder() %}
+    <a href="/admin/builder">Builder</a>
+{% endif %}
+```
+
+### Extensions
+
+**Check extension access (boolean):**
+```twig
+{% if cms.canAccessExtension('acme/seo-pro') %}
+    <a href="/admin/ext/acme/seo-pro/reports">SEO Reports</a>
 {% endif %}
 ```
 
@@ -342,8 +367,8 @@ Super admins bypass all access checks and have full access to everything.
     <a href="/admin/schemas">Schemas</a>
     {% endif %}
 
-    {% if cms.canAccessTemplates() %}
-    <a href="/admin/templates">Templates</a>
+    {% if cms.canAccessBuilder() %}
+    <a href="/admin/builder">Builder</a>
     {% endif %}
 
     {% if cms.canAccessUtils() %}
@@ -438,7 +463,7 @@ Super admins bypass all access checks and have full access to everything.
             "all": true,
             "allowed": []
         },
-        "templates": true,
+        "builder": true,
         "mailer": true,
         "playground": true,
         "docs": true,
@@ -476,7 +501,6 @@ Super admins bypass all access checks and have full access to everything.
             "all": false,
             "allowed": ["blog", "news"]
         },
-        "templates": false,
         "mailer": false,
         "playground": true,
         "docs": true,
@@ -514,7 +538,7 @@ Super admins bypass all access checks and have full access to everything.
             "all": true,
             "allowed": []
         },
-        "templates": true,
+        "builder": true,
         "mailer": false,
         "playground": true,
         "docs": true,
@@ -552,7 +576,6 @@ Super admins bypass all access checks and have full access to everything.
             "all": false,
             "allowed": ["blog"]
         },
-        "templates": false,
         "mailer": false,
         "playground": true,
         "docs": true,

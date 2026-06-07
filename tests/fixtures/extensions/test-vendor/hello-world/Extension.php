@@ -89,6 +89,13 @@ class Extension implements ExtensionInterface
 
 				return $response;
 			});
+
+			// Page for any logged-in dashboard user (default is admin-only)
+			$group->get('/everyone', function ($request, $response) {
+				$response->getBody()->write('any-user page');
+
+				return $response;
+			}, permission: 'any');
 		});
 	}
 

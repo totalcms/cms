@@ -141,6 +141,28 @@ final class ExtensionContext
 	}
 
 	// -------------------------------------------------------------------------
+	// File storage (per-extension, survives application updates)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Per-extension file storage rooted at
+	 * `<datadir>/.system/extension-data/{vendor}/{name}/`.
+	 *
+	 * The sanctioned place to persist files (generated secrets, caches,
+	 * state). Prefer this over raw file functions — writes land in a
+	 * protected, update-safe location, and your source stays clean on the
+	 * pre-enable scan (which flags raw `file_put_contents` as worth a look).
+	 */
+	public function storage(): ExtensionStorage
+	{
+		return new ExtensionStorage(
+			$this->container->get(\TotalCMS\Domain\Storage\StorageAdapterInterface::class),
+			(string)$this->container->get(\TotalCMS\Support\Config::class)->datadir,
+			'.system/extension-data/' . $this->manifest->vendor() . '/' . $this->manifest->shortName(),
+		);
+	}
+
+	// -------------------------------------------------------------------------
 	// Logging
 	// -------------------------------------------------------------------------
 

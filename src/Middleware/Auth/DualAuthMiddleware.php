@@ -19,6 +19,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -54,7 +55,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private EditionFeatureService $editionFeatures,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('access.log')->createLogger('dual-auth-middleware');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

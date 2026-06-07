@@ -11,6 +11,7 @@ use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -29,7 +30,7 @@ readonly class SchemaTwigAdapter
 		private CollectionEditionService $collectionEditionService,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
 	}
 
 	/**

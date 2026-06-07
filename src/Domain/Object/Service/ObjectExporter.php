@@ -11,6 +11,7 @@ use TotalCMS\Domain\Property\Data\LocalizedtextData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -27,8 +28,7 @@ readonly class ObjectExporter
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('object-exporter');
+			->channelLogger(LogChannel::ObjectExporter);
 	}
 
 	/** @return array<array<string,mixed>> */

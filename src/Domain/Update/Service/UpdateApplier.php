@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Update\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\PathResolver;
 
@@ -49,7 +50,7 @@ class UpdateApplier
 		LoggerFactory $loggerFactory,
 		?string $appRoot = null,
 	) {
-		$this->logger  = $loggerFactory->addFileHandler('updates.log')->createLogger('update');
+		$this->logger  = $loggerFactory->channelLogger(LogChannel::Update);
 		$this->appRoot = $appRoot ?? PathResolver::projectRoot();
 	}
 

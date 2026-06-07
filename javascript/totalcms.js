@@ -62,8 +62,14 @@ export default class TotalCMS {
 	}
 
 	clearTwigCacheListeners() {
+		// Idempotent: admin.js wires these buttons automatically now, but
+		// pages published with older stacks still carry an inline script
+		// that calls this too — mark each button so the second caller
+		// doesn't double-bind (one click would clear the cache twice).
 		const clearCacheButtons = Array.from(document.querySelectorAll("button.cms-clear-cache,a.cms-clear-cache,.cms-clear-cache a,.cms-clear-cache button"));
 		clearCacheButtons.forEach(button => {
+			if (button.dataset.tcmsCacheBound === "1") return;
+			button.dataset.tcmsCacheBound = "1";
 			button.addEventListener("click", event => {
 				event.preventDefault();
 				this.clearTwigCache(event.target);

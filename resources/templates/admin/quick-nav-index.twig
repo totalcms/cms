@@ -26,7 +26,9 @@ window.TCMS_QUICK_NAV = [
 {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
 {"label":"{{ t('nav.dataviews') }}","section":"Navigation","path":"dataviews","keywords":"nav"},
 {% endif %}
+{% if cms.auth.canAccessBuilder() %}
 {"label":"Builder","section":"Navigation","path":"builder","keywords":"nav site pages templates"},
+{% endif %}
 {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
 {"label":"{{ t('nav.mailer') }}","section":"Navigation","path":"mailer","keywords":"nav email"},
 {% endif %}
@@ -151,12 +153,12 @@ window.TCMS_QUICK_NAV = [
 {% endif %}
 
 {# ── Builder pages ── #}
-{% if cms.auth.canAccessTemplates() %}
+{% if cms.auth.canAccessBuilder() %}
 {{ _self.builderPageItems(cms.builder.pagesTree(), '') }}
 {% endif %}
 
 {# ── Builder templates (layouts, partials, macros, pages, etc.) ── #}
-{% if cms.auth.canAccessTemplates() %}
+{% if cms.auth.canAccessBuilder() %}
 {% for folder, templates in cms.admin.templatesByFolder() %}
 {% for tpl in templates %}
 {"label":"{{ tpl.path | e('js') }}","section":"Builder Templates","path":"builder/{{ tpl.path | e('js') }}","keywords":"builder template {{ folder | e('js') }}"},
@@ -167,7 +169,7 @@ window.TCMS_QUICK_NAV = [
 {# ── Extension nav items ── #}
 {% if extensionNavItems is defined and extensionNavItems is iterable %}
 {% for item in extensionNavItems %}
-{% if item.permission == 'any' or (item.permission == 'admin' and cms.auth.isAdmin()) %}
+{% if (item.permission == 'any' and cms.auth.canAccessExtension(item.extensionId)) or (item.permission == 'admin' and cms.auth.isAdmin()) %}
 {"label":"{{ item.label | e('js') }}","section":"Extensions","path":"{{ item.url | e('js') }}","keywords":"extension plugin"},
 {% endif %}
 {% endfor %}

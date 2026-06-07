@@ -15,6 +15,7 @@ use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
@@ -39,8 +40,7 @@ class ImageGenerator
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
-			->addFileHandler('totalcms.log')
-			->createLogger('imagegenerator');
+			->channelLogger(LogChannel::ImageGenerator);
 	}
 
 	/** @param array<string,mixed> $params */

@@ -133,6 +133,14 @@ export default class DepotDropField extends TotalField {
     onQueueComplete() {
         if (!this.hadSuccess || !this.form) return;
         this.hadSuccess = false;
+
+        // Only DEDICATED depot-drop forms (cms.form.depotDrop — no save
+        // button, the drop IS the edit) run the form's edit actions when an
+        // upload batch completes. Inside a regular form the save flow
+        // already runs edit actions (afterSaveAction); firing here too
+        // meant drop-files-then-save executed every edit action twice —
+        // duplicate mailer-action emails on any form with a dropzone.
+        if (!this.form.form.classList.contains("depot-drop-form")) return;
         this.form.runEditActions();
     }
 

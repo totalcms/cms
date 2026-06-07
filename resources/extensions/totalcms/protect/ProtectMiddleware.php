@@ -30,7 +30,7 @@ use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
  * any page in the group, the rest unlock too (they must share the passcode).
  *
  * The HMAC uses a per-install secret (32 random bytes stored in
- * `.system/protect/secret`) so cookie values are bound to this
+ * `.system/extension-data/totalcms/protect/secret`) so cookie values are bound to this
  * installation and cannot be computed from public information alone.
  * The message is `<scope>:passcode` so a valid cookie for one scope
  * cannot be replayed against a different one.
@@ -175,7 +175,7 @@ class ProtectMiddleware implements PageMiddlewareInterface
 	/**
 	 * Compute the HMAC for a (scope key, passcode) pair.
 	 *
-	 * Key:     per-install secret (loaded from .system/protect/secret)
+	 * Key:     per-install secret (loaded from .system/extension-data/totalcms/protect/secret)
 	 * Message: "<key>:passcode" — binds the token to both the scope (the page's
 	 *          own id, or a shared `protectScope` group) and the correct passcode.
 	 *          A cookie for one scope cannot be replayed against a different one.

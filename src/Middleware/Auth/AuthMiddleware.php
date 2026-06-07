@@ -13,6 +13,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -42,7 +43,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		LoggerFactory $loggerFactory,
 	) {
 		$this->defaultAuthCollection = $this->config->auth['collection'];
-		$this->logger                = $loggerFactory->addFileHandler('access.log')->createLogger('auth-middleware');
+		$this->logger                = $loggerFactory->channelLogger(LogChannel::AuthMiddleware);
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

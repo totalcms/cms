@@ -83,6 +83,7 @@
                     ]
                 },
                 "templates": false,
+                "builder": true,
                 "mailer": false,
                 "playground": true,
                 "docs": true,
@@ -93,6 +94,10 @@
                 "settings": {
                     "all": false,
                     "allowed": []
+                },
+                "extensions": {
+                    "all": false,
+                    "allowed": ["test-vendor/hello-world"]
                 }
             }
         },
@@ -269,6 +274,10 @@
                     "allowed": []
                 },
                 "settings": {
+                    "all": false,
+                    "allowed": []
+                },
+                "extensions": {
                     "all": false,
                     "allowed": []
                 }

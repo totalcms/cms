@@ -1,0 +1,35 @@
+# graphify corpus exclusions — keep the knowledge graph scoped to the
+# actual architecture: src/, config/, resources/, javascript/, bin/, docs/.
+#
+# NOTE: when .graphifyignore exists, graphify ignores .gitignore entirely —
+# so this file must repeat the relevant .gitignore rules too.
+
+# --- from .gitignore (dependency/build/runtime dirs) ---
+*.log
+.idea
+.claude
+vendor/
+build/
+node_modules/
+dist/
+tmp/
+logs/
+cache/
+tcms-data/
+.env
+
+# --- graphify-specific additions ---
+# Test code, runtime sandbox, and fixtures: churn on every test run and
+# flood incremental updates (998 "changed" files after one suite run).
+tests/
+
+# Build artifacts — the watch script rebuilds these constantly, and
+# minified bundles produce garbage AST nodes (e4(), Oc(), ...).
+public/
+*.min.js
+
+# Third-party locale data, not architecture.
+vendor-locales/
+
+# graphify's own output.
+graphify-out/

@@ -11,6 +11,7 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 
@@ -30,7 +31,7 @@ readonly class BulkMailerService
 		private TwigEngine $twigEngine,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('bulk-mailer.log')->createLogger('bulk-mailer');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::BulkMailer);
 	}
 
 	/**

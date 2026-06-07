@@ -11,6 +11,7 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -36,7 +37,7 @@ final readonly class AutomationRunner
 		private AutomationActivityLogger $activity,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('automations.log')->createLogger('automations');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Automations);
 	}
 
 	/**

@@ -10,6 +10,7 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 readonly class LogoutService
@@ -22,7 +23,7 @@ readonly class LogoutService
 		private PersistentLoginService $persistentLoginService,
 		private EventDispatcher $eventDispatcher,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('logout');
+		$this->logger = $this->loggerFactory->channelLogger(LogChannel::Logout);
 	}
 
 	public function logout(): bool

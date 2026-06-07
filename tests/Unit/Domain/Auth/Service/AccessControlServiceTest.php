@@ -18,7 +18,6 @@ describe('AccessControlService - Admin Access', function (): void {
 		expect($this->accessControl->canAccessCollection('admin', 'blog', 'update'))->toBeTrue();
 		expect($this->accessControl->canAccessCollection('admin', 'blog', 'delete'))->toBeTrue();
 		expect($this->accessControl->canAccessSchema('admin', 'blog', 'create'))->toBeTrue();
-		expect($this->accessControl->canAccessTemplates('admin'))->toBeTrue();
 		expect($this->accessControl->canAccessUtils('admin', 'jumpstart'))->toBeTrue();
 		expect($this->accessControl->canAccessMailer('admin'))->toBeTrue();
 		expect($this->accessControl->canAccessPlayground('admin'))->toBeTrue();
@@ -127,24 +126,6 @@ describe('AccessControlService - Schemas Operation Access', function (): void {
 	});
 });
 
-describe('AccessControlService - Templates Access', function (): void {
-	it('allows admin template access', function (): void {
-		expect($this->accessControl->canAccessTemplates('admin'))->toBeTrue();
-	});
-
-	it('allows editor template access', function (): void {
-		expect($this->accessControl->canAccessTemplates('editor-user-test-com'))->toBeTrue();
-	});
-
-	it('denies blogger template access', function (): void {
-		expect($this->accessControl->canAccessTemplates('blogger-user-test-com'))->toBeFalse();
-	});
-
-	it('denies viewer template access', function (): void {
-		expect($this->accessControl->canAccessTemplates('viewer-user-test-com'))->toBeFalse();
-	});
-});
-
 describe('AccessControlService - Utils Access', function (): void {
 	it('allows admin access to all utils', function (): void {
 		expect($this->accessControl->canAccessUtils('admin', 'jumpstart'))->toBeTrue();
@@ -200,6 +181,53 @@ describe('AccessControlService - Playground Access', function (): void {
 
 	it('denies limited-blogger playground access', function (): void {
 		expect($this->accessControl->canAccessPlayground('limited-user-test-com'))->toBeFalse();
+	});
+});
+
+describe('AccessControlService - Builder Access', function (): void {
+	it('allows admin builder access', function (): void {
+		expect($this->accessControl->canAccessBuilder('admin'))->toBeTrue();
+	});
+
+	it('falls back to the templates permission for groups without a builder key', function (): void {
+		// editor has templates=true and no builder key — legacy groups keep
+		// the access that TemplateAccessMiddleware effectively granted them.
+		expect($this->accessControl->canAccessBuilder('editor-user-test-com'))->toBeTrue();
+
+		// viewer has templates=false and no builder key.
+		expect($this->accessControl->canAccessBuilder('viewer-user-test-com'))->toBeFalse();
+	});
+
+	it('honors an explicit builder grant over the templates fallback', function (): void {
+		// blogger has templates=false but builder=true.
+		expect($this->accessControl->canAccessBuilder('blogger-user-test-com'))->toBeTrue();
+	});
+
+	it('denies limited-blogger builder access', function (): void {
+		expect($this->accessControl->canAccessBuilder('limited-user-test-com'))->toBeFalse();
+	});
+});
+
+describe('AccessControlService - Extensions Access', function (): void {
+	it('allows admin access to any extension', function (): void {
+		expect($this->accessControl->canAccessExtension('admin', 'test-vendor/hello-world'))->toBeTrue();
+	});
+
+	it('falls back to all-granted for groups without an extensions block', function (): void {
+		// editor predates the extensions block — extension nav marked 'any'
+		// was visible to every dashboard user, so upgrades preserve that.
+		expect($this->accessControl->canAccessExtension('editor-user-test-com', 'test-vendor/hello-world'))->toBeTrue();
+	});
+
+	it('honors an explicit allowed list', function (): void {
+		// blogger has extensions all=false, allowed=[test-vendor/hello-world].
+		expect($this->accessControl->canAccessExtension('blogger-user-test-com', 'test-vendor/hello-world'))->toBeTrue();
+		expect($this->accessControl->canAccessExtension('blogger-user-test-com', 'acme/other-ext'))->toBeFalse();
+	});
+
+	it('denies a group with all=false and an empty allowed list', function (): void {
+		// viewer has extensions all=false, allowed=[].
+		expect($this->accessControl->canAccessExtension('viewer-user-test-com', 'test-vendor/hello-world'))->toBeFalse();
 	});
 });
 

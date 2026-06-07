@@ -3,6 +3,7 @@
 namespace TotalCMS\Traits;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Factory\LogFile;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
@@ -28,12 +29,15 @@ trait LoggerAwareTrait
 
 	/**
 	 * Create a logger instance using LoggerFactory.
-	 * Override this method in services that need custom log files.
+	 *
+	 * The channel is dynamic (the consuming class name), so this writes to
+	 * the central app log directly rather than going through a LogChannel
+	 * case. Override in services that need a real channel.
 	 */
 	protected function createLogger(): LoggerInterface
 	{
 		return $this->loggerFactory
-			->addFileHandler('totalcms.log')
+			->addFileHandler(LogFile::App->value)
 			->createLogger(static::class);
 	}
 

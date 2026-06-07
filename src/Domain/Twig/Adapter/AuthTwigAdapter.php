@@ -245,20 +245,6 @@ readonly class AuthTwigAdapter
 		return $this->accessControl->canAccessSchemasOperation($userData['id'], $operation);
 	}
 
-	public function canAccessTemplates(): bool
-	{
-		if ($this->config->auth['enable'] === false) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessTemplates($userData['id']);
-	}
-
 	public function canAccessUtil(string $page): bool
 	{
 		if ($this->config->auth['enable'] === false) {
@@ -327,6 +313,34 @@ readonly class AuthTwigAdapter
 		}
 
 		return $this->accessControl->canAccessDataViews($userData['id']);
+	}
+
+	public function canAccessBuilder(): bool
+	{
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessBuilder($userData['id']);
+	}
+
+	public function canAccessExtension(string $extensionId): bool
+	{
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessExtension($userData['id'], $extensionId);
 	}
 
 	public function canAccessDocs(): bool

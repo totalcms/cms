@@ -240,7 +240,7 @@ See the [Whitelabel documentation](docs/admin/whitelabel) for more information.
 
 1. **Check SMTP Configuration**: Verify your SMTP settings in `config/settings.php`
 2. **Check Spam Folder**: Password reset emails may be flagged as spam
-3. **Verify Email Service**: Check `storage/logs/email.log` for sending errors
+3. **Verify Email Service**: Check `email.log` in the [logs directory](docs/operations/filesystem) for sending errors
 4. **Test Email Service**: Use the Mailer collection to send a test email
 
 ### Token Expired Error
@@ -256,7 +256,7 @@ If users consistently report expired tokens:
 1. Verify the mailer ID exists in the Mailer collection
 2. Check `forgotPasswordMailerId` matches exactly (case-sensitive)
 3. Ensure mailer template includes all required variables
-4. Check `storage/logs/email.log` for template rendering errors
+4. Check `email.log` in the [logs directory](docs/operations/filesystem) for template rendering errors
 
 ## API Reference
 

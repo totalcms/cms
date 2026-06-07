@@ -38,10 +38,10 @@ class ExtensionManager
 	/** @var array<string,ExtensionInterface> */
 	private array $loadedExtensions = [];
 
-	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool}>> */
+	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}>> */
 	private array $extensionRoutes = [];
 
-	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool}>> */
+	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}>> */
 	private array $extensionAdminRoutes = [];
 
 	private bool $registered = false;
@@ -58,7 +58,11 @@ class ExtensionManager
 		'routes:public' => 'Exposes public, unauthenticated endpoints.',
 		'events:listen' => 'Can observe all content changes.',
 		'automations'   => 'Runs server-side code automatically on a schedule or content events.',
-		'container'     => 'Registers services in the application container.',
+		// 'container' is deliberately NOT here: it is always-on infrastructure
+		// (ExtensionContext::ALWAYS_ON_CAPABILITIES) and extensions can only
+		// register their OWN services — core/known service IDs are strict-denied
+		// at apply time (see isProtectedServiceId), so there is nothing risky
+		// to disclose.
 		'mcp:tools'     => 'Registers actions AI agents can call (reachable externally if MCP public access is enabled).',
 		'mcp:resources' => 'Exposes data that AI agents can fetch.',
 	];
@@ -560,8 +564,14 @@ class ExtensionManager
 			$capabilities = [];
 		}
 
+		// Bundled extensions are exempt from the source scan — they version
+		// with core and ship reviewed in the package (same rationale as the
+		// update re-consent gate). Capability FYIs still show below; only the
+		// pattern findings are skipped.
 		$extPath  = $this->discovery->getExtensionPath($extensionId);
-		$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
+		$findings = ($extPath !== null && !$manifest->bundled)
+			? (new DangerousCodeScanner())->scan($extPath)
+			: [];
 
 		// Intersect detected capabilities with the risky set, preserving the
 		// stable order defined by RISKY_CAPABILITIES.
@@ -1067,7 +1077,11 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'admin:nav')) {
 				continue;
 			}
-			$items = array_merge($items, $context->getRegisteredAdminNavItems());
+			foreach ($context->getRegisteredAdminNavItems() as $item) {
+				// Stamp the owning extension so templates can apply the
+				// access-group extension grant — never author-supplied.
+				$items[] = $item->withExtensionId($id);
+			}
 		}
 
 		usort($items, fn (AdminNavItem $a, AdminNavItem $b): int => $a->priority <=> $b->priority);
@@ -1083,12 +1097,45 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'admin:widgets')) {
 				continue;
 			}
-			$widgets = array_merge($widgets, $context->getRegisteredDashboardWidgets());
+			foreach ($context->getRegisteredDashboardWidgets() as $widget) {
+				// Stamp the owning extension so templates can apply the
+				// access-group extension grant — never author-supplied.
+				$widgets[] = $widget->withExtensionId($id);
+			}
 		}
 
 		usort($widgets, fn (DashboardWidget $a, DashboardWidget $b): int => $a->priority <=> $b->priority);
 
 		return $widgets;
+	}
+
+	/**
+	 * Enabled extensions that registered any admin surface (nav items,
+	 * dashboard widgets, or admin routes), as id => display name. Drives the
+	 * Extension Access list in the access-group form — extensions with no
+	 * admin surface have nothing to grant, so they don't clutter the list.
+	 *
+	 * @return array<string,string>
+	 */
+	public function listExtensionsWithAdminSurface(): array
+	{
+		$result = [];
+		foreach ($this->contexts as $id => $context) {
+			$hasSurface = $context->getRegisteredAdminNavItems() !== []
+				|| $context->getRegisteredDashboardWidgets() !== []
+				|| $context->getRegisteredAdminRoutes() !== [];
+
+			if (!$hasSurface) {
+				continue;
+			}
+
+			$manifest    = $this->discoveredManifests[$id] ?? null;
+			$result[$id] = $manifest instanceof ExtensionManifest ? $manifest->name : $id;
+		}
+
+		ksort($result);
+
+		return $result;
 	}
 
 	/** @return array<string,class-string> */
@@ -1286,7 +1333,14 @@ class ExtensionManager
 
 		foreach ($routes as $route) {
 			if ($route['method'] === $method && $route['path'] === $path) {
-				return new ExtensionRoute(handler: $route['handler']);
+				// Admin routes default to super-admin only; 'any' is the
+				// explicit opt-out for pages meant for every logged-in
+				// dashboard user. Unknown values normalize to 'admin'
+				// (fail closed).
+				return new ExtensionRoute(
+					handler: $route['handler'],
+					permission: ($route['permission'] ?? null) === 'any' ? 'any' : 'admin',
+				);
 			}
 		}
 
@@ -1478,7 +1532,19 @@ class ExtensionManager
 			// behind a toggle that would only leave the extension enabled-but-broken.
 			if ($this->container instanceof \DI\Container) {
 				$compiled = $this->container instanceof \DI\CompiledContainer;
+				// Strict-deny on core service overrides (same policy as Twig
+				// functions and MCP tools). set() entries join the known list,
+				// so cross-extension duplicates are denied here too.
+				$knownEntries = array_flip($this->container->getKnownEntryNames());
 				foreach ($context->getRegisteredContainerDefinitions() as $serviceId => $factory) {
+					if ($this->isProtectedServiceId($serviceId, $knownEntries)) {
+						$this->logger->warning("Extension '{$id}' attempted to override protected service '{$serviceId}'; definition skipped.", [
+							'extension' => $id,
+							'service'   => $serviceId,
+						]);
+
+						continue;
+					}
 					if ($compiled) {
 						// A compiled PHP-DI container rejects lazy definitions (a bare
 						// closure passed to set() is treated as a FactoryDefinition)
@@ -1511,6 +1577,31 @@ class ExtensionManager
 			]);
 			$this->stateRepository->recordError($id, 'register() failed: ' . $e->getMessage());
 		}
+	}
+
+	/**
+	 * Whether a container service ID is protected from extension override.
+	 *
+	 * Two checks:
+	 * - Core namespace: anything under TotalCMS\ except TotalCMS\Bundled\
+	 *   (bundled extensions register their own services there). Catches
+	 *   autowired core classes, which never appear in the known-entry list.
+	 * - Known entries: everything config/container.php defines explicitly
+	 *   (PSR-7 factories, Slim\App, third-party bindings) plus definitions
+	 *   already set by previously-registered extensions.
+	 *
+	 * Extensions register services under their own vendor namespace, so
+	 * legitimate usage never trips this.
+	 *
+	 * @param array<string,int> $knownEntries Flipped getKnownEntryNames()
+	 */
+	private function isProtectedServiceId(string $serviceId, array $knownEntries): bool
+	{
+		if (str_starts_with($serviceId, 'TotalCMS\\') && !str_starts_with($serviceId, 'TotalCMS\\Bundled\\')) {
+			return true;
+		}
+
+		return isset($knownEntries[$serviceId]);
 	}
 
 	/**

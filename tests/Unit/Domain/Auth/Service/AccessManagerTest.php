@@ -6,9 +6,9 @@ use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -29,11 +29,8 @@ final class AccessManagerTest extends TestCase
 
 		// Mock logger factory chain
 		$logger = $this->createMock(LoggerInterface::class);
-		$this->loggerFactory->method('addFileHandler')
-			->with(LoginService::ACCESS_LOG)
-			->willReturnSelf();
-		$this->loggerFactory->method('createLogger')
-			->with('access')
+		$this->loggerFactory->method('channelLogger')
+			->with(LogChannel::Access)
 			->willReturn($logger);
 
 		$this->accessManager = new AccessManager(

@@ -7,13 +7,12 @@ use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 class LoginService
 {
-	public const ACCESS_LOG = 'access.log';
-
 	private readonly LoggerInterface $logger;
 	private string $account = '';
 
@@ -25,7 +24,7 @@ class LoginService
 		private readonly Config $config,
 		private readonly EventDispatcher $eventDispatcher,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger('login');
+		$this->logger = $this->loggerFactory->channelLogger(LogChannel::Login);
 	}
 
 	/**

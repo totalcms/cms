@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/container-defs-ext",
+    "name": "Container Defs",
+    "description": "Test extension for the container-definition override guard",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

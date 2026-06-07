@@ -26,6 +26,9 @@ $settings['error']['log_errors']            = true;
 $settings['error']['log_error_details']     = true;
 
 $settings['logger']['level']  = Monolog\Level::Debug;
+// Keep dev logs at the repo root (explicit override — the zip-layout default
+// would otherwise put them in tcms-data/.system/logs).
+$settings['logger']['path']   = $settings['root'] . '/logs';
 $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 

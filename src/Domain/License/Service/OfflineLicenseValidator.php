@@ -7,6 +7,7 @@ use Firebase\JWT\Key;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Repository\OfflineLicenseRepository;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
@@ -52,7 +53,7 @@ EOD;
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('license.log')->createLogger('license');
+		$this->logger = $loggerFactory->channelLogger(LogChannel::License);
 	}
 
 	/**
