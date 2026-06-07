@@ -14,7 +14,6 @@ use TotalCMS\Support\Config;
  * whole `jobs:process` run down. createFaker() must normalize any bad locale
  * to en_US instead of crashing.
  */
-
 function fakerFactoryWithLocale(string $locale): FakerFactory
 {
 	$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
