@@ -43,6 +43,7 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
 	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
+	private \PHPUnit\Framework\MockObject\MockObject $extensionManager;
 	private OAuthClientRepository $oauthClientRepository;
 	private OAuthGrantRepository $oauthGrantRepository;
 	private OAuthScopeRegistry $oauthScopeRegistry;
@@ -68,6 +69,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
 		$this->templateLister        = $this->createMock(TemplateLister::class);
 		$this->updateChecker         = $this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class);
+		$this->extensionManager      = $this->createMock(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
 		// OAuth repositories + scope registry are all final classes (can't be
 		// doubled). Use real instances pointed at empty tmp files — the tests
 		// here exercise the action's plumbing, not OAuth data shape.
@@ -98,6 +100,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->oauthClientRepository,
 			$this->oauthGrantRepository,
 			$this->oauthScopeRegistry,
+			$this->extensionManager,
 		);
 	}
 
