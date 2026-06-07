@@ -114,7 +114,7 @@ return function (App $app): void {
 		$group->post('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
 
 		// Extension admin pages (routed by extension system)
-		$group->any('/ext/{vendor}/{name}/{path:.+}', TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route');
+		$group->any('/ext/{vendor}/{name}/{path:.+}', TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route')->add(TotalCMS\Middleware\Access\ExtensionAdminAccessMiddleware::class);
 
 		// Catch-all 404 route - MUST BE LAST (excludes /admin/ext/ which is handled by extensions)
 		$group->any('/{path:(?!ext/).*}', Admin404Action::class)->setName('admin-404');

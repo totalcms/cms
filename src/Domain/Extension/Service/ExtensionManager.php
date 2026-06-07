@@ -38,10 +38,10 @@ class ExtensionManager
 	/** @var array<string,ExtensionInterface> */
 	private array $loadedExtensions = [];
 
-	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool}>> */
+	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}>> */
 	private array $extensionRoutes = [];
 
-	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool}>> */
+	/** @var array<string,list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}>> */
 	private array $extensionAdminRoutes = [];
 
 	private bool $registered = false;
@@ -1296,7 +1296,14 @@ class ExtensionManager
 
 		foreach ($routes as $route) {
 			if ($route['method'] === $method && $route['path'] === $path) {
-				return new ExtensionRoute(handler: $route['handler']);
+				// Admin routes default to super-admin only; 'any' is the
+				// explicit opt-out for pages meant for every logged-in
+				// dashboard user. Unknown values normalize to 'admin'
+				// (fail closed).
+				return new ExtensionRoute(
+					handler: $route['handler'],
+					permission: ($route['permission'] ?? null) === 'any' ? 'any' : 'admin',
+				);
 			}
 		}
 

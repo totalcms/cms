@@ -44,6 +44,26 @@ describe('Extension route registration', function (): void {
 		expect($match)->not->toBeNull();
 	});
 
+	test('admin routes default to admin-only permission', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		$match = $manager->matchExtensionAdminRoute('test-vendor/hello-world', 'GET', '/dashboard');
+
+		expect($match->permission)->toBe('admin');
+	});
+
+	test('admin routes registered with permission any keep it', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		$match = $manager->matchExtensionAdminRoute('test-vendor/hello-world', 'GET', '/everyone');
+
+		expect($match->permission)->toBe('any');
+	});
+
 	test('unknown route returns null', function (): void {
 		$manager = createRouteTestManager();
 		$manager->discoverAndRegister();

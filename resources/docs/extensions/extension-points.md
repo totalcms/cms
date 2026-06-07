@@ -151,7 +151,7 @@ The routes above are accessible at:
 
 ### Admin Routes
 
-Register routes under `/admin/ext/{vendor}/{name}/`. These routes are protected by admin authentication middleware. Templates can extend `admin-dashboard.twig` for the admin layout.
+Register routes under `/admin/ext/{vendor}/{name}/`. These routes require a logged-in dashboard user and are **super-admin only by default**. Templates can extend `admin-dashboard.twig` for the admin layout.
 
 ```php
 use Slim\Routing\RouteCollectorProxy;
@@ -161,6 +161,9 @@ public function register(ExtensionContext $context): void
     $context->addAdminRoutes(function (RouteCollectorProxy $group): void {
         $group->get('/dashboard', MyDashboardAction::class);
         $group->get('/settings', MySettingsAction::class);
+
+        // Open a page to every logged-in dashboard user (not just admins)
+        $group->get('/reports', MyReportsAction::class, permission: 'any');
     });
 }
 ```
@@ -170,6 +173,8 @@ public function register(ExtensionContext $context): void
 The routes above are accessible at:
 - `/admin/ext/acme/seo-pro/dashboard`
 - `/admin/ext/acme/seo-pro/settings`
+
+Pass `permission: 'any'` per route to open a page to non-admin dashboard users; anything else means admin-only. Set the same value on the [admin navigation item](#admin-navigation) that links to the page — the nav `permission` controls who *sees the link*, the route `permission` controls who *can load the page*.
 
 ### Public Routes
 
@@ -542,7 +547,7 @@ Only use `$context->get()` in `boot()`, never in `register()`. The container is 
 
 ## Logging
 
-Extensions can write to the shared `extensions.log` file (`tcms-data/logs/extensions.log`) using the same logger Total CMS uses internally. Get it from the context with `$context->logger()` — it returns a `Psr\Log\LoggerInterface`.
+Extensions can write to the shared `extensions.log` file (`tcms-data/.system/logs/extensions.log`) using the same logger Total CMS uses internally. Get it from the context with `$context->logger()` — it returns a `Psr\Log\LoggerInterface`.
 
 ```php
 public function register(ExtensionContext $context): void
