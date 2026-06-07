@@ -182,3 +182,25 @@ test('rendered head output contains api-prefixed URLs after registration', funct
 
 	expect($html)->toContain('href="/myapi/assets/');
 });
+
+
+// ===== Cache-busting =====
+
+test('core asset URLs cache-bust with the file mtime', function (): void {
+	// mtime busting is deliberate: per-file granularity and automatic dev
+	// freshness. The trade-off — a published page carrying an old hardcoded
+	// `?v={{ cms.version }}` include of the same bundle gets two different
+	// URLs and the module executes twice — is contained by the idempotency
+	// guards in admin.js/content.js (double-execution once double-bound the
+	// save machinery: duplicate mailer emails, "object already exists").
+	$adapter = makeAdapter('/api');
+	(new CoreAdminAssetRegistrar())->register($adapter);
+	(new CoreFrontendAssetRegistrar())->register($adapter);
+
+	$all = array_merge(readList($adapter, 'adminAssetsList'), readList($adapter, 'frontendAssetsList'));
+
+	expect($all)->not->toBe([]);
+	foreach ($all as $asset) {
+		expect($asset->url)->toMatch('/\?v=\d+$/');
+	}
+});
